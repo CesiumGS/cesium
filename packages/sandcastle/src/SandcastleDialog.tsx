@@ -1,8 +1,15 @@
-import { Dialog, DialogHeading, DialogProps } from "@ariakit/react";
+import {
+  Dialog,
+  DialogDismiss,
+  DialogHeading,
+  DialogProps,
+} from "@ariakit/react";
 import classNames from "classnames";
 import { ReactNode } from "react";
 import "./SandcastleDialog.css";
 import { Text } from "@stratakit/bricks";
+import { Icon } from "@stratakit/foundations";
+import { close } from "./icons";
 
 export function SandcastleDialogHeading({ children }: { children: ReactNode }) {
   return (
@@ -26,6 +33,9 @@ export function SandcastleDialog(
   return (
     <Dialog {...rest} className={classNames("sc-dialog", className)}>
       {children}
+      <DialogDismiss className="sc-dialog-close">
+        <Icon href={close} />
+      </DialogDismiss>
     </Dialog>
   );
 }

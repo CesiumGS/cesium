@@ -3,6 +3,7 @@ import { useContext } from "react";
 import {
   AvailableFontId,
   availableFonts,
+  initialSettings,
   LeftPanel,
   SettingsContext,
 } from "./SettingsContext";
@@ -21,7 +22,8 @@ import {
 } from "./SandcastleDialog";
 import "./SettingsModal.css";
 import InfoBadge from "./InfoBadge";
-import { moon, sun } from "./icons";
+import { moon, retry, sun } from "./icons";
+import { Input } from "@stratakit/bricks/TextBox";
 
 export function SettingsModal({
   open,
@@ -44,7 +46,7 @@ export function SettingsModal({
             icon={sun}
             // @ts-expect-error tone works but is not passed through the types from Button
             tone={settings.theme === "light" ? "accent" : "neutral"}
-            label="Light Mode"
+            label="Light mode"
             onClick={() => {
               if (settings.theme === "dark") {
                 updateSettings({ theme: "light" });
@@ -55,7 +57,7 @@ export function SettingsModal({
             icon={moon}
             // @ts-expect-error tone works but is not passed through the types from Button
             tone={settings.theme === "dark" ? "accent" : "neutral"}
-            label="Dark Mode"
+            label="Dark mode"
             onClick={() => {
               if (settings.theme === "light") {
                 updateSettings({ theme: "dark" });
@@ -65,7 +67,7 @@ export function SettingsModal({
         </div>
       </div>
       <div className="settings-row">
-        <div>Editor Font</div>
+        <div>Editor font</div>
         <div className="multi-option">
           <Select.Root>
             <Select.HtmlSelect
@@ -97,7 +99,7 @@ export function SettingsModal({
               }
             />
             <Field.Label>
-              Use Font Ligatures
+              Font ligatures
               <InfoBadge
                 content="Not all fonts support ligatures"
                 placement="bottom"
@@ -107,11 +109,33 @@ export function SettingsModal({
         </div>
       </div>
       <div className="settings-row">
+        <div>Editor font size (px)</div>
+        <div className="multi-option horizontal">
+          {settings.fontSize !== initialSettings.fontSize && (
+            <IconButton
+              label="Reset"
+              icon={retry}
+              onClick={() => {
+                updateSettings({ fontSize: initialSettings.fontSize });
+              }}
+            />
+          )}
+          <Input
+            type="number"
+            value={settings.fontSize}
+            min={5}
+            max={50}
+            onChange={(e) => {
+              updateSettings({ fontSize: Number.parseInt(e.target.value) });
+            }}
+          />
+        </div>
+      </div>
+      <div className="settings-row">
         <div>
-          Starting panel
+          Show on startup
           <Text variant="caption-lg" className="caption">
-            Dictates which panel to start on when not loading a specific
-            Sandcastle
+            Select the default view mode
           </Text>
         </div>
         <Select.Root>

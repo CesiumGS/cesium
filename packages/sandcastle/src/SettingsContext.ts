@@ -29,6 +29,7 @@ export type LeftPanel = "editor" | "gallery";
 export type Settings = {
   theme: "dark" | "light";
   fontFamily: AvailableFontId;
+  fontSize: number;
   fontLigatures: boolean;
   defaultPanel: LeftPanel;
 };
@@ -36,6 +37,7 @@ export type Settings = {
 export const initialSettings: Settings = {
   theme: "dark",
   fontFamily: "droid-sans",
+  fontSize: 14,
   fontLigatures: false,
   defaultPanel: "gallery",
 };

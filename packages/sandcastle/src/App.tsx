@@ -510,7 +510,7 @@ function App() {
               theme: settings.theme === "dark" ? "light" : "dark",
             })
           }
-          label="Toggle Theme"
+          label="Toggle theme"
         >
           <Icon href={settings.theme === "dark" ? moon : sun} size="large" />
         </AppBarButton>

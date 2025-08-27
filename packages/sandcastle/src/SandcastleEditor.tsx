@@ -81,7 +81,7 @@ function SandcastleEditor({
   const internalEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
 
   const {
-    settings: { fontFamily, fontLigatures },
+    settings: { fontFamily, fontSize, fontLigatures },
   } = useContext(SettingsContext);
   useEffect(() => {
     internalEditorRef.current?.updateOptions({
@@ -93,6 +93,11 @@ function SandcastleEditor({
       fontLigatures: fontLigatures,
     });
   }, [fontLigatures]);
+  useEffect(() => {
+    internalEditorRef.current?.updateOptions({
+      fontSize: fontSize,
+    });
+  }, [fontSize]);
 
   useImperativeHandle(ref, () => {
     return {
@@ -319,6 +324,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
             tabSize: 2,
             fontFamily:
               availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono",
+            fontSize: fontSize,
             fontLigatures: fontLigatures,
           }}
           path={activeTab === "js" ? "script.js" : "index.html"}
