@@ -12,12 +12,12 @@ if (!scene.specularEnvironmentMapsSupported) {
 
 //     ***    MODELS    ***
 
-const modelViewModel = {
+const heightViewModel = {
   height: 200.0,
 };
 
 function computeModelMatrixFromHeight() {
-  const height = Number(modelViewModel.height);
+  const height = Number(heightViewModel.height);
   if (isNaN(height)) {
     return;
   }
@@ -31,12 +31,12 @@ function computeModelMatrixFromHeight() {
   return Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
 }
 
-Cesium.knockout.track(modelViewModel);
-const modelsToolbar = document.getElementById("modelsToolbar");
-Cesium.knockout.applyBindings(modelViewModel, modelsToolbar);
+Cesium.knockout.track(heightViewModel);
+const heightToolbar = document.getElementById("heightToolbar");
+Cesium.knockout.applyBindings(heightViewModel, heightToolbar);
 
 let model;
-Cesium.knockout.getObservable(modelViewModel, "height").subscribe(function () {
+Cesium.knockout.getObservable(heightViewModel, "height").subscribe(function () {
   const modelMatrix = computeModelMatrixFromHeight();
 
   if (!Cesium.defined(modelMatrix)) {
