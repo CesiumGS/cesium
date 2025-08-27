@@ -37,6 +37,62 @@
       #toolbar .header {
         font-weight: bold;
       }
+
+      /* Styles for indicating to the user to press the play button */
+      .cesium-animation-rectButton.highlight-animation .cesium-animation-buttonGlow {
+        display: block;
+        fill: #fff;
+        animation: highlight-animation-button 1.2s ease-in-out infinite;
+      }
+      .cesium-animation-rectButton.highlight-animation .cesium-animation-buttonMain {
+        stroke: #aef;
+        stroke-width: 2;
+      }
+      .cesium-animation-rectButton.highlight-animation .cesium-animation-buttonPath {
+        fill: #fff;
+      }
+
+      .cesium-animation-shuttleRingG.highlight-animation
+        .cesium-animation-shuttleRingBack {
+        stroke: #aef;
+        stroke-width: 4;
+        animation: highlight-animation-ring 1.2s ease-in-out infinite;
+      }
+      .cesium-animation-shuttleRingG.highlight-animation
+        .cesium-animation-shuttleRingSwoosh
+        line {
+        stroke: #aef;
+        stroke-opacity: 0.5;
+      }
+
+      @keyframes highlight-animation-button {
+        0% {
+          opacity: 0.25;
+          stroke-width: 0;
+        }
+        50% {
+          opacity: 1;
+          stroke-width: 2;
+        }
+        100% {
+          opacity: 0.25;
+          stroke-width: 0;
+        }
+      }
+      @keyframes highlight-animation-ring {
+        0% {
+          stroke-opacity: 0.25;
+          stroke: #333;
+        }
+        50% {
+          stroke-opacity: 1;
+          stroke: #aef;
+        }
+        100% {
+          stroke-opacity: 0.25;
+          stroke: #333;
+        }
+      }
     </style>
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -46,6 +102,9 @@
         "use strict";
         //Sandcastle_Begin
 
+        Cesium.Ion.defaultServer = "https://api-staging.cesium.com";
+        Cesium.Ion.defaultAccessToken =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2YjA2MzFlNy0yYWRiLTQzNDQtYTJkNi03N2M1M2RlZGZkZjciLCJpZCI6MTE2LCJpYXQiOjE2OTQxMDk1NTh9.oPPXDZH9LdDT2Fyn1zo4dxO8Afv4K2p_nkZ--vztDXE";
         Cesium.Ellipsoid.default = Cesium.Ellipsoid.MARS;
         const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: false,
@@ -54,12 +113,30 @@
           geocoder: false,
           shadows: true,
           globe: false,
+          skyBox: Cesium.SkyBox.createEarthSkyBox(),
+          skyAtmosphere: new Cesium.SkyAtmosphere(Cesium.Ellipsoid.MARS),
         });
         const scene = viewer.scene;
         const clock = viewer.clock;
 
+        // Adjust the default atmosphere coefficients to be more Mars-like
+        scene.skyAtmosphere.atmosphereMieCoefficient = new Cesium.Cartesian3(
+          3.67e-5,
+          3.33e-5,
+          2.33e-5,
+        );
+        scene.skyAtmosphere.atmosphereRayleighCoefficient = new Cesium.Cartesian3(
+          8.16e-7,
+          2.75e-7,
+          4.01e-7,
+        );
+        scene.skyAtmosphere.atmosphereRayleighScaleHeight = 10800;
+        scene.skyAtmosphere.atmosphereMieScaleHeight = 6000.0;
+        scene.atmosphereMieAnisotropy = 0.67;
+
+        // Load Mars tileset
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(3644333, {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(1665, {
             enableCollision: true,
           });
           viewer.scene.primitives.add(tileset);
@@ -67,131 +144,42 @@
           console.log(error);
         }
 
-        const pointsOfInterest = [
-          {
-            text: "Olympus Mons",
-            latitude: 18.65,
-            longitude: 226.2,
-          },
-          {
-            text: "Valles Marineris",
-            latitude: -13.9,
-            longitude: -59.2,
-          },
-          {
-            text: "Gale Crater",
-            latitude: -5.4,
-            longitude: 137.8,
-          },
-          {
-            text: "Schiaparelli Crater",
-            latitude: -2.7,
-            longitude: 16.7,
-          },
-          {
-            text: "Sojourner Landing Site",
-            latitude: 19.13,
-            longitude: -33.22,
-          },
-          {
-            text: "Spirit Landing Site",
-            latitude: -14.5684,
-            longitude: 175.472636,
-          },
-          {
-            text: "Opportunity Landing Site",
-            latitude: -1.9462,
-            longitude: 354.4734,
-          },
-          {
-            text: "Curiosity Landing Site",
-            latitude: -4.589467,
-            longitude: 137.441633,
-          },
-          {
-            text: "Perseverance Landing Site",
-            latitude: 18.44462715,
-            longitude: 77.45088572,
-          },
-        ];
-
-        const olympusMons = {
-          destination: new Cesium.Cartesian3(-2549089.8672, -2720744.9822, 604987.2427),
-          orientation: new Cesium.HeadingPitchRoll(6.2232, -0.7135, 0.0),
-          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
-        };
-
-        const vallesMarineris = {
-          destination: new Cesium.Cartesian3(1962773.9022, -2712650.0794, -1111175.4271),
-          orientation: new Cesium.HeadingPitchRoll(5.4566, -0.4563, 0.0),
-          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
-        };
-
-        const galeCrater = {
-          destination: new Cesium.Cartesian3(-2791535.3207, 2189446.3646, -616541.9385),
-          orientation: new Cesium.HeadingPitchRoll(5.5684, -0.636, 0.0),
-          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
-        };
-
-        const schiaparelliCrater = {
-          destination: new Cesium.Cartesian3(3513269.5521, 664880.5211, -498902.5607),
-          orientation: new Cesium.HeadingPitchRoll(0.8318, -0.5309, 0.0),
-          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
-        };
-
-        for (const poi of pointsOfInterest) {
-          viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(poi.longitude, poi.latitude),
-            label: {
-              text: poi.text,
-              font: "18pt Verdana",
-              outlineColor: Cesium.Color.DARKSLATEGREY,
-              outlineWidth: 2,
-              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-              pixelOffset: new Cesium.Cartesian2(0, -22),
-              scaleByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.5),
-              translucencyByDistance: new Cesium.NearFarScalar(2.5e7, 1.0, 4.0e7, 0.0),
-              heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-              disableDepthTestDistance: new Cesium.CallbackProperty(() => {
-                return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
-              }, false),
-            },
-            point: {
-              pixelSize: 10,
-              color: Cesium.Color.fromBytes(243, 242, 99),
-              outlineColor: Cesium.Color.fromBytes(219, 218, 111),
-              outlineWidth: 2,
-              scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1.0, 4.0e7, 0.1),
-              heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-              disableDepthTestDistance: new Cesium.CallbackProperty(() => {
-                return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
-              }, false),
-            },
-          });
-        }
-
-        // Define a callback property to dynamically change the width of polyline paths
-        const widthCallbackProperty = new Cesium.CallbackProperty(function (time) {
-          // Change width based on camera distance, via linear interpolation
-          const cameraDistance = viewer.camera.positionCartographic.height;
-          const minDistance = 0;
-          const maxDistance = 1e5;
-          const minWidth = 0;
-          const maxWidth = 20;
-          const t = Math.max(
-            0,
-            Math.min(1, (cameraDistance - minDistance) / (maxDistance - minDistance)),
-          );
-          const width = Cesium.Math.lerp(maxWidth, minWidth, t);
-          return width;
-        }, false);
-
-        let curiosity, perseverance;
+        // Load the rovers and path from The Martian (by Andy Weir), from CZML data source.
+        let curiosity, perseverance, theMartianpath;
         try {
           const dataSource = await Cesium.CzmlDataSource.load(
             "../../SampleData/Mars.czml",
           );
           viewer.dataSources.add(dataSource);
+
+          const toolbarMenuEntries = [
+            {
+              text: "Fly to rover...",
+              onselect: () => {
+                reset();
+                scene.camera.flyHome(3.0);
+              },
+            },
+          ];
+
+          const onSelectRover = (rover) => {
+            reset();
+            clock.multiplier = 100000;
+            clock.currentTime = rover.availability.start;
+            viewer.timeline.zoomTo(rover.availability.start, rover.availability.stop);
+
+            const boundingSphere = new Cesium.BoundingSphere(
+              rover.position.getValue(clock.currentTime),
+              10000.0,
+            );
+
+            highlightAnimationViewModel(); // Draw attention to the play button
+
+            scene.camera.flyToBoundingSphere(boundingSphere, {
+              offset: new Cesium.HeadingPitchRoll(4.9791, -0.5294, 0.0),
+              easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+            });
+          };
 
           const setupRover = function (entityId, startSol, outRover) {
             outRover = dataSource.entities.getById(entityId);
@@ -209,19 +197,49 @@
             }, false);
 
             const roverPath = dataSource.entities.getById(`${entityId}Path`);
-            roverPath.polyline.width = widthCallbackProperty;
+            roverPath.polyline.width = createWidthCallbackProperty(
+              new Cesium.NearFarScalar(0.0, 15.0, 1.0e5, 0.0),
+            );
+
+            toolbarMenuEntries.push({
+              text: entityId,
+              onselect: () => onSelectRover(outRover),
+            });
 
             return outRover;
           };
 
           curiosity = setupRover("Curiosity", 3, curiosity);
           perseverance = setupRover("Perseverance", 13, perseverance);
+          theMartianpath = dataSource.entities.getById("TheMartianPath");
+          theMartianpath.polyline.width = createWidthCallbackProperty(
+            new Cesium.NearFarScalar(0.0, 10.0, 1.0e7, 0.0),
+          );
+          toolbarMenuEntries.push({
+            text: "The Martian Path",
+            onselect: () => {
+              reset();
+              viewer.zoomTo(theMartianpath);
+            },
+          });
+
+          Sandcastle.addToolbarMenu(toolbarMenuEntries);
         } catch (error) {
           console.log(`Error loading CZML: ${error}`);
         }
 
-        clock.shouldAnimate = true;
+        // For changing the width of polylines based on distance from the camera
+        function createWidthCallbackProperty(nearFarScalar) {
+          return new Cesium.CallbackProperty(function () {
+            const distance = viewer.camera.positionCartographic.height;
+            let t =
+              (distance - nearFarScalar.near) / (nearFarScalar.far - nearFarScalar.near);
+            t = Cesium.Math.clamp(t, 0.0, 1.0);
+            return Cesium.Math.lerp(nearFarScalar.nearValue, nearFarScalar.farValue, t);
+          }, false);
+        }
 
+        // Converts a Julian date to a Mars Sol number, given a start date / sol number
         function createJulianDateToSolConverter(startJulianDate, startSol) {
           return function (julianDate) {
             const secondsPerSol = 24 * 60 * 60 + 39 * 60 + 35;
@@ -232,6 +250,83 @@
             const solNumber = Math.floor(differenceInSeconds / secondsPerSol) + startSol;
             return `Sol ${solNumber}`;
           };
+        }
+
+        // Load points of interest from GeoJSON data source
+        try {
+          const dataSource = await Cesium.GeoJsonDataSource.load(
+            "../../SampleData/MarsPointsOfInterest.geojson",
+          );
+          viewer.dataSources.add(dataSource);
+
+          const onSelectLandmark = (landmark) => {
+            reset();
+            scene.camera.flyTo(landmark);
+          };
+
+          const toolbarMenuEntries = [
+            {
+              text: "Fly to landmark...",
+              onselect: () => {
+                reset();
+                scene.camera.flyHome(3.0);
+              },
+            },
+          ];
+
+          const entities = dataSource.entities.values;
+          entities.forEach((entity) => {
+            entity.label = new Cesium.LabelGraphics({
+              text: entity.properties.text,
+              font: "18pt Verdana",
+              outlineColor: Cesium.Color.DARKSLATEGREY,
+              outlineWidth: 2,
+              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+              pixelOffset: new Cesium.Cartesian2(0, -22),
+              scaleByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.5),
+              translucencyByDistance: new Cesium.NearFarScalar(2.5e7, 1.0, 4.0e7, 0.0),
+              heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+              disableDepthTestDistance: new Cesium.CallbackProperty(() => {
+                return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
+              }, false),
+            });
+
+            entity.point = new Cesium.PointGraphics({
+              pixelSize: 10,
+              color: Cesium.Color.fromBytes(243, 242, 99),
+              outlineColor: Cesium.Color.fromBytes(219, 218, 111),
+              outlineWidth: 2,
+              scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1.0, 4.0e7, 0.1),
+              heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+              disableDepthTestDistance: new Cesium.CallbackProperty(() => {
+                return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
+              }, false),
+            });
+
+            const flyToDestination = new Cesium.Cartesian3.fromArray(
+              entity.properties.destination.getValue(),
+            );
+            const orientationArray = entity.properties.orientation.getValue();
+            const flyToOrientation = new Cesium.HeadingPitchRoll(
+              orientationArray[0],
+              orientationArray[1],
+              orientationArray[2],
+            );
+
+            toolbarMenuEntries.push({
+              text: entity.properties.text.getValue(),
+              onselect: () =>
+                onSelectLandmark({
+                  destination: flyToDestination,
+                  orientation: flyToOrientation,
+                  easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+                }),
+            });
+          });
+
+          Sandcastle.addToolbarMenu(toolbarMenuEntries);
+        } catch (error) {
+          console.log(`Error loading GeoJSON: ${error}`);
         }
 
         // Spin Mars on first load but disable the spinning upon any input
@@ -257,111 +352,63 @@
         );
         handler.setInputAction(() => removeRotation(), Cesium.ScreenSpaceEventType.WHEEL);
 
-        // Toolbar options to track various rovers / entities
-        const flyToOrientation = new Cesium.HeadingPitchRoll(4.9791, -0.5294, 0.0);
-
-        let activeEntity;
-        let tracking = false;
-        const onSelectRover = (rover) => {
-          clock.multiplier = 100000;
-          activeEntity = rover;
-          removeRotation();
-          clock.currentTime = rover.availability.start;
-          const boundingSphere = new Cesium.BoundingSphere(
-            rover.position.getValue(clock.currentTime),
-            10000.0,
-          );
-
-          scene.camera.flyToBoundingSphere(boundingSphere, {
-            offset: flyToOrientation,
-            easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
-            complete: () => {
-              if (tracking) {
-                viewer.trackedEntity = activeEntity;
-              }
-            },
-          });
-        };
-
-        const options1 = [
-          {
-            text: "Fly to rover...",
-            onselect: () => {
-              clock.multiplier = 1;
-              activeEntity = undefined;
-              scene.camera.flyHome(3.0);
-            },
-          },
-          {
-            text: "Curiosity",
-            onselect: () => onSelectRover(curiosity),
-          },
-          {
-            text: "Perseverance",
-            onselect: () => onSelectRover(perseverance),
-          },
-        ];
-        Sandcastle.addToolbarMenu(options1);
-
-        const onSelectLandmark = (landmark) => {
-          removeRotation();
-          clock.multiplier = 1;
-          activeEntity = undefined;
-          scene.camera.flyTo(landmark);
-        };
-
-        const options2 = [
-          {
-            text: "Fly to landmark...",
-            onselect: () => {
-              removeRotation();
-              scene.camera.flyHome(3.0);
-            },
-          },
-          {
-            text: "Olympus Mons",
-            onselect: () => {
-              onSelectLandmark(olympusMons);
-            },
-          },
-          {
-            text: "Valles Marineris",
-            onselect: () => {
-              onSelectLandmark(vallesMarineris);
-            },
-          },
-          {
-            text: "Gale Crater",
-            onselect: () => {
-              onSelectLandmark(galeCrater);
-            },
-          },
-          {
-            text: "Schiaparelli Crater",
-            onselect: () => {
-              onSelectLandmark(schiaparelliCrater);
-            },
-          },
-        ];
-        Sandcastle.addToolbarMenu(options2);
-
-        Sandcastle.addToggleButton("Track Rover", false, function (tracked) {
-          if (activeEntity && tracked) {
-            viewer.trackedEntity = activeEntity;
-            tracking = true;
-          } else {
-            viewer.trackedEntity = undefined;
-            tracking = false;
+        function highlightAnimationViewModel() {
+          if (clock.shouldAnimate) {
+            // Animation already playing
+            return;
           }
-        });
+
+          const playPath =
+            viewer.animation.container.querySelector("#animation_pathPlay");
+          const playButton = playPath.closest("g.cesium-animation-rectButton");
+          const ringG = viewer.animation.container.querySelector(
+            ".cesium-animation-shuttleRingG",
+          );
+          playButton.classList.add("highlight-animation");
+          ringG.classList.add("highlight-animation");
+
+          playButton.addEventListener("click", removeHighlight, { once: true });
+          setTimeout(removeHighlight, 30000); // Remove after 30 seconds if not clicked
+        }
+
+        function removeHighlight() {
+          const playPath =
+            viewer.animation.container.querySelector("#animation_pathPlay");
+          const playButton = playPath.closest("g.cesium-animation-rectButton");
+          const ringG = viewer.animation.container.querySelector(
+            ".cesium-animation-shuttleRingG",
+          );
+          playButton.classList.remove("highlight-animation");
+          ringG.classList.remove("highlight-animation");
+        }
+
+        function reset() {
+          clock.multiplier = 1;
+          viewer.trackedEntity = undefined;
+          viewer.shadows = true;
+          viewer.timeline.zoomTo(clock.startTime, clock.stopTime);
+          removeRotation();
+          removeHighlight();
+        }
 
         // Add a listener for when the home button is clicked
         viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
           function (commandInfo) {
-            clock.multiplier = 1;
-            activeEntity = undefined;
+            reset();
           },
         );
+
+        Cesium.knockout
+          .getObservable(viewer.clockViewModel, "shouldAnimate")
+          .subscribe(function (shouldAnimate) {
+            // When animating, if the multiplier is very high (which is necessary to see rover movement),
+            // shadows flicker distractingly, so disable them
+            if (shouldAnimate && clock.multiplier >= 100000) {
+              viewer.shadows = false;
+            } else {
+              viewer.shadows = true;
+            }
+          });
 
         //Sandcastle_End
       };

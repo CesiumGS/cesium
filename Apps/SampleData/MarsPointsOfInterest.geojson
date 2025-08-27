@@ -1,0 +1,245 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Olympus Mons",
+        "destination": [-2549089.8672, -2720744.9822, 604987.2427],
+        "orientation": [6.2232, -0.7135, 0.0]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [226.2, 18.65]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Valles Marineris",
+        "destination": [1962773.9022, -2712650.0794, -1111175.4271],
+        "orientation": [5.4566, -0.4563, 0.0]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-59.2, -13.9]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Gale Crater",
+        "destination": [-2791535.3207, 2189446.3646, -616541.9385],
+        "orientation": [5.5684, -0.636, 0.0]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [137.8, -5.4]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Schiaparelli Crater",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [0.8318, -0.5309, 0.0]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [16.7, -2.7]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Sojourner Landing Site",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-33.22, 19.13]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Spirit Landing Site",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [175.472636, -14.5684]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Opportunity Landing Site",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [354.4734, -1.9462]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Curiosity Landing Site",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [137.441633, -4.589467]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Perseverance Landing Site",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [77.45088572, 18.44462715]
+      }
+    },
+    {
+        "type": "Feature",
+        "properties": { 
+          "text": "The Hab",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+         },
+        "geometry": {
+        "type": "Point",
+        "coordinates": [-28.57, 31.27]
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": { 
+          "text": "Acidalia Planitia (Sols 1-456)",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+         },
+        "geometry": {
+        "type": "Point",
+        "coordinates": [-28.039999999999999, 31.210000000000001]
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": { 
+          "text": "Initial Dust Storm (Sol 6)",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+         },
+        "geometry": {
+        "type": "Point",
+        "coordinates": [-28.017700272061091, 31.183645776072201]
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": { 
+          "text": "Mawrth Vallis (Sol 457)",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+         },
+        "geometry": {
+        "type": "Point",
+        "coordinates": [-20.5, 26.350000000000001]
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": { 
+          "text": "Sol 462",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+         },
+        "geometry": {
+        "type": "Point",
+        "coordinates": [-18.510000000000005, 22.93]
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": { 
+          "text": "Arabia Terra (Sol 466)",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+         },
+        "geometry": {
+        "type": "Point",
+        "coordinates": [-11.870000000000001, 18.02]
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": { 
+          "text": "Watney Triangle (Sol 473)",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+         },
+        "geometry": {
+        "type": "Point",
+        "coordinates": [-7.6717428056727446, 15.243062604535314]
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": { 
+          "text": "Marth Crater and the Second Dust Storm (Sol 475)",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+         },
+        "geometry": {
+        "type": "Point",
+        "coordinates": [-4.2680995373239057, 12.660926420007353]
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": { 
+          "text": "Terra Meridiani (Sol 487)",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+         },
+        "geometry": {
+        "type": "Point",
+        "coordinates": [-4.8900000000000006, 4.6100000000000003]
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": { 
+          "text": "Entrance Crater (Sol 497)",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+         },
+        "geometry": {
+        "type": "Point",
+        "coordinates": [13.59, -0.37000000000000011]
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": { 
+          "text": "McLaughlin",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [5.4566, -0.4563, 0.0]
+         },
+        "geometry": {
+        "type": "Point",
+        "coordinates": [-22.370000000000001, 21.870000000000001]
+        }
+    }
+  ]
+}

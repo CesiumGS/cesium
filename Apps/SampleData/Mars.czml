@@ -16,8 +16,32 @@
     "model": {
       "gltf": "models/Mars/Curiosity.glb",
       "heightReference": "CLAMP_TO_3D_TILE",
-      "minimumPixelSize": 64,
-      "maximumScale": 1000
+      "minimumPixelSize": 128,
+      "maximumScale": 2000
+    },
+    "orientation" : {
+      "velocityReference": "#position"
+    },
+    "label": {
+      "text": "Placeholder",
+      "font": "15pt Verdana",
+      "disableDepthTestDistance": 1e+308,
+      "heightReference": "CLAMP_TO_3D_TILE",
+      "eyeOffset": {
+        "cartesian": [0, -3, 0]
+      },
+      "pixelOffset": {
+        "cartesian2": [0, -1]
+      },
+      "pixelOffsetScaleByDistance": {
+        "nearFarScalar": [10, 0, 1e2, -25]
+      },
+      "scaleByDistance": {
+        "nearFarScalar": [0, 1, 1e6, 0]
+      },
+      "fillColor": {
+        "rgba": [243, 242, 99, 255]
+      }
     },
     "position": {
       "interpolationAlgorithm": "LINEAR",
@@ -5216,31 +5240,6 @@
         -4.80635617,
         -3609.909
       ]
-    },
-    "label": {
-      "text": "Placeholder",
-      "disableDepthTestDistance": 1e+308,
-      "heightReference": "CLAMP_TO_3D_TILE",
-      "eyeOffset": {
-        "cartesian": [0, 3, 0]
-      },
-      "pixelOffset": {
-        "cartesian2": [0, 1]
-      },
-      "pixelOffsetScaleByDistance": {
-        "nearFarScalar": [20, 0, 1e2, -45]
-      },
-      "scaleByDistance": {
-        "nearFarScalar": [0, 1, 1.5e5, 0]
-      },
-      "fillColor": {
-        "rgba": [255, 255, 50, 255]
-      },
-      "outlineColor": {
-        "rgba": [120, 120, 20, 255]
-      },
-      "outlineWidth": 2,
-      "style": "FILL_AND_OUTLINE"
     }
   },
   {
@@ -9148,10 +9147,10 @@
       "material": {
         "polylineOutline": {
           "color": {
-              "rgba": [76, 74, 99, 200]
+              "rgba": [76, 74, 99, 255]
           },
           "outlineColor": {
-              "rgba": [76, 74, 99, 200]
+              "rgba": [0, 0, 0, 175]
           }
         }
       },
@@ -9159,14 +9158,43 @@
       "clampToGround": true
     }
   },
-{
+  {
     "id": "Perseverance",
     "availability": "2021-03-03T12:00:00Z/2025-08-20T11:30:00Z",
     "model": {
       "gltf": "models/Mars/Perseverance.glb",
       "heightReference": "CLAMP_TO_3D_TILE",
-      "minimumPixelSize": 64,
-      "maximumScale": 1000
+      "minimumPixelSize": 128,
+      "maximumScale": 2000
+    },
+    "orientation" : {
+      "velocityReference": "#position"
+    },
+    "label": {
+      "text": "Placeholder",
+      "font": "15pt Verdana",
+      "disableDepthTestDistance": 1e+308,
+      "heightReference": "CLAMP_TO_3D_TILE",
+      "eyeOffset": {
+        "cartesian": [0, 3, 0]
+      },
+      "pixelOffset": {
+        "cartesian2": [0, 1]
+      },
+      "pixelOffsetScaleByDistance": {
+        "nearFarScalar": [20, 0, 100.0, -45]
+      },
+      "scaleByDistance": {
+        "nearFarScalar": [0, 1, 150000.0 ,0]
+      },
+      "fillColor": {
+        "rgba": [255, 255, 0, 255]
+      },
+      "outlineColor": {
+        "rgba": [120, 120, 20, 255]
+      },
+      "outlineWidth": 2,
+      "style": "FILL_AND_OUTLINE"
     },
     "position": {
       "interpolationAlgorithm": "LINEAR",
@@ -11497,58 +11525,6 @@
         18.4465246,
         -1911.229858
       ]
-    },
-    "label": {
-      "text": "Placeholder",
-      "disableDepthTestDistance": 1e+308,
-      "heightReference": "CLAMP_TO_3D_TILE",
-      "eyeOffset": {
-        "cartesian": [
-          0,
-          3,
-          0
-        ]
-      },
-      "pixelOffset": {
-        "cartesian2": [
-          0,
-          1
-        ]
-      },
-      "pixelOffsetScaleByDistance": {
-        "nearFarScalar": [
-          20,
-          0,
-          100.0,
-          -45
-        ]
-      },
-      "scaleByDistance": {
-        "nearFarScalar": [
-          0,
-          1,
-          150000.0,
-          0
-        ]
-      },
-      "fillColor": {
-        "rgba": [
-          255,
-          255,
-          0,
-          255
-        ]
-      },
-      "outlineColor": {
-        "rgba": [
-          120,
-          120,
-          20,
-          255
-        ]
-      },
-      "outlineWidth": 2,
-      "style": "FILL_AND_OUTLINE"
     }
   },
   {
@@ -13315,6 +13291,220 @@
             ]
           },
           "outlineWidth": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "TheMartianPath",
+    "name": "TheMartianPath",
+    "polyline": {
+      "positions": {
+        "cartographicDegrees": [
+          -28.57,
+          31.27,
+          0.0,
+          -28.04,
+          31.21,
+          0.0,
+          -26.72,
+          29.65,
+          0.0,
+          -23.54,
+          27.88,
+          0.0,
+          -21.77,
+          26.77,
+          0.0,
+          -21.45,
+          26.57,
+          0.0,
+          -20.5,
+          26.35,
+          0.0,
+          -19.97,
+          26.17,
+          0.0,
+          -19.89,
+          26.07,
+          0.0,
+          -19.69,
+          25.98,
+          0.0,
+          -19.53,
+          25.91,
+          0.0,
+          -19.33,
+          25.93,
+          0.0,
+          -19.03,
+          25.83,
+          0.0,
+          -18.92,
+          25.76,
+          0.0,
+          -18.77,
+          25.6,
+          0.0,
+          -18.639035688046643,
+          25.463049530247893,
+          0.0,
+          -18.57,
+          24.96,
+          0.0,
+          -18.52,
+          24.71,
+          0.0,
+          -18.54,
+          24.2,
+          0.0,
+          -18.48,
+          23.92,
+          0.0,
+          -18.48,
+          23.29,
+          0.0,
+          -18.51,
+          22.93,
+          0.0,
+          -18.25,
+          22.65,
+          0.0,
+          -17.98,
+          22.51,
+          0.0,
+          -17.57,
+          22.46,
+          0.0,
+          -17.162855353206997,
+          22.419993736224487,
+          0.0,
+          -16.69844078411073,
+          22.374245447157417,
+          0.0,
+          -16,
+          22.16,
+          0.0,
+          -15.58,
+          21.83,
+          0.0,
+          -15.24,
+          21.27,
+          0.0,
+          -14.92,
+          20.73,
+          0.0,
+          -14.67,
+          20.24,
+          0.0,
+          -14.51,
+          19.84,
+          0.0,
+          -14.17,
+          19.61,
+          0.0,
+          -13.51,
+          19.18,
+          0.0,
+          -12.87,
+          18.86,
+          0.0,
+          -11.87,
+          18.02,
+          0.0,
+          -9.96,
+          17.06,
+          0.0,
+          -9.01,
+          16.48,
+          0.0,
+          -8.28,
+          15.48,
+          0.0,
+          -6.56,
+          14.81,
+          0.0,
+          -6.1,
+          14.58,
+          0.0,
+          -5.72,
+          14.36,
+          0.0,
+          -4.91,
+          13.37,
+          0.0,
+          -4.268099537323906,
+          12.660926420007353,
+          0.0,
+          -4.77,
+          10.67,
+          0.0,
+          -4.43,
+          9.38,
+          0.0,
+          -4.44,
+          7.16,
+          0.0,
+          -4.95,
+          6.03,
+          0.0,
+          -4.89,
+          4.61,
+          0.0,
+          -1.26,
+          3.22,
+          0.0,
+          1.05,
+          2.33,
+          0.0,
+          1.7,
+          2.11,
+          0.0,
+          2.91,
+          2.15,
+          0.0,
+          9.36,
+          0.81,
+          0.0,
+          11.9,
+          0.28,
+          0.0,
+          13.35,
+          0.06,
+          0.0,
+          13.45,
+          -0.21,
+          0.0,
+          13.59,
+          -0.37,
+          0.0,
+          13.67,
+          -0.61,
+          0.0,
+          14.13,
+          -1.16,
+          0.0,
+          15,
+          -2.87,
+          0.0,
+          15.20400753507344,
+          -3.954787839899166,
+          0.0
+        ]
+      },
+      "width": 2,
+      "clampToGround": true,
+      "material": {
+        "polylineOutline": {
+          "color": {
+            "rgba": [
+              100,
+              149,
+              237,
+              140
+            ]
+          },
+          "outlineWidth": 0
         }
       }
     }

@@ -254,7 +254,13 @@ Ellipsoid.MOON = Object.freeze(
   ),
 );
 
-Ellipsoid.MARS = Object.freeze(new Ellipsoid(3396190.0, 3396190.0, 3371726.0));
+/**
+ * An Ellipsoid instance initialized to a sphere with the mean radii of Mars.
+ *
+ * @type {Ellipsoid}
+ * @constant
+ */
+Ellipsoid.MARS = Object.freeze(new Ellipsoid(3396190.0, 3396190.0, 3376200.0));
 
 Ellipsoid._default = Ellipsoid.WGS84;
 Object.defineProperties(Ellipsoid, {
