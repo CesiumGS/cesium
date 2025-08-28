@@ -16,19 +16,19 @@ import pollToPromise from "../../../../Specs/pollToPromise.js";
 describe(
   "Scene/GaussianSplatPrimitive",
   function () {
-    const tilesetUrl = "./Data/Cesium3DTiles/GaussianSplats/tower/tileset.json";
     const sphericalHarmonicUrl =
       "./Data/Cesium3DTiles/GaussianSplats/sh_unit_cube/tileset.json";
 
     let scene;
     let options;
     let camera;
-    let canvas;
 
     const canvassize = { width: 512, height: 512 };
+    const samplePosition =
+      ((canvassize.width / 2) * canvassize.height + canvassize.width / 2) * 4;
 
     beforeAll(function () {
-      canvas = createCanvas(canvassize.width, canvassize.height);
+      const canvas = createCanvas(canvassize.width, canvassize.height);
       scene = createScene({ canvas });
     });
 
@@ -57,10 +57,10 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    xit("loads a Gaussian splats tileset", async function () {
+    it("loads a Gaussian splats tileset", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetUrl,
+        sphericalHarmonicUrl,
         options,
       );
       scene.camera.lookAt(
@@ -68,11 +68,18 @@ describe(
         new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
       );
       expect(tileset.hasExtension("3DTILES_content_gltf")).toBe(true);
+      expect(tileset.isGltfExtensionUsed("KHR_gaussian_splatting")).toBe(true);
+      expect(tileset.isGltfExtensionRequired("KHR_gaussian_splatting")).toBe(
+        true,
+      );
+
       expect(
-        tileset.isGltfExtensionUsed("KHR_spz_gaussian_splats_compression"),
+        tileset.isGltfExtensionUsed("KHR_gaussian_splatting_compression_spz_2"),
       ).toBe(true);
       expect(
-        tileset.isGltfExtensionRequired("KHR_spz_gaussian_splats_compression"),
+        tileset.isGltfExtensionRequired(
+          "KHR_gaussian_splatting_compression_spz_2",
+        ),
       ).toBe(true);
 
       const tile = await Cesium3DTilesTester.waitForTileContentReady(
@@ -84,10 +91,10 @@ describe(
       expect(tile.content instanceof GaussianSplat3DTileContent).toBe(true);
     });
 
-    xit("loads a Gaussian splats tileset and toggles visibility", async function () {
+    it("loads a Gaussian splats tileset and toggles visibility", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetUrl,
+        sphericalHarmonicUrl,
         options,
       );
       scene.camera.lookAt(
@@ -107,17 +114,22 @@ describe(
 
       await pollToPromise(function () {
         scene.renderForSpecs();
-        return gsPrim._hasGaussianSplatTexture;
+        return gsPrim._dirty === false && gsPrim._sorterPromise === undefined;
       });
-
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return gsPrim._dirty === false && gsPrim._sorterState === 0;
+      scene.renderForSpecs();
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[samplePosition + 0]).not.toBe(0);
+        expect(rgba[samplePosition + 1]).not.toBe(0);
+        expect(rgba[samplePosition + 2]).not.toBe(0);
       });
-      expect(scene).notToRender([0, 0, 0, 255]);
 
       tileset.show = false;
-      expect(scene).toRender([0, 0, 0, 255]);
+      scene.renderForSpecs();
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[samplePosition + 0]).toBe(0);
+        expect(rgba[samplePosition + 1]).toBe(0);
+        expect(rgba[samplePosition + 2]).toBe(0);
+      });
     });
 
     it("Check Spherical Harmonic specular on a Gaussian splats tileset", async function () {
@@ -147,8 +159,7 @@ describe(
       const targetYellow = { red: 189, green: 173, blue: 97 };
       const targetPurple = { red: 127, green: 80, blue: 141 };
 
-      const samplePosition =
-        ((canvassize.width / 2) * canvassize.height + canvassize.width / 2) * 4;
+      tileset.show = true;
 
       const enu = Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
 
@@ -159,13 +170,12 @@ describe(
       const gsPrim = tileset.gaussianSplatPrimitive;
       await pollToPromise(function () {
         scene.renderForSpecs();
-        return gsPrim._hasGaussianSplatTexture;
+        return gsPrim._dirty === false && gsPrim._sorterPromise === undefined;
       });
 
-      await pollToPromise(function () {
+      for (let i = 0; i < 100; ++i) {
         scene.renderForSpecs();
-        return gsPrim._dirty === false && gsPrim._sorterState === 0;
-      });
+      }
 
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
@@ -177,12 +187,6 @@ describe(
       scene.camera.lookAtTransform(enu, orangeish);
 
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
-
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return gsPrim._hasGaussianSplatTexture;
-      });
-
       await pollToPromise(function () {
         scene.renderForSpecs();
         return gsPrim._dirty === false && gsPrim._sorterState === 0;
@@ -197,12 +201,6 @@ describe(
       scene.camera.lookAtTransform(enu, purplish);
 
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
-
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return gsPrim._hasGaussianSplatTexture;
-      });
-
       await pollToPromise(function () {
         scene.renderForSpecs();
         return gsPrim._dirty === false && gsPrim._sorterState === 0;
