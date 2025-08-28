@@ -2,6 +2,11 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: var(--stratakit-space-x3);
+
+  & :nth-child(1) {
+    flex-grow: 1;
+  }
 
   & :nth-child(2) {
     flex-shrink: 0;

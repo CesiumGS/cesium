@@ -15,6 +15,18 @@
   padding: var(--stratakit-space-x4);
   box-shadow: var(--stratakit-shadow-dialog-base);
 
+  .sc-dialog-close {
+    position: absolute;
+    top: var(--stratakit-space-x4);
+    right: var(--stratakit-space-x4);
+    border-radius: var(--stratakit-ext-radius-full);
+    padding: var(--stratakit-space-x1);
+
+    &:hover {
+      background-color: var(--stratakit-color-bg-mono-muted);
+    }
+  }
+
   .sc-dialog-footer {
     align-self: flex-end;
     margin-top: var(--stratakit-space-x4);

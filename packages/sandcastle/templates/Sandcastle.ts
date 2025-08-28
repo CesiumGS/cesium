@@ -127,8 +127,8 @@ const Sandcastle = {
     label.className = "stratakit-mimic-label";
 
     const field = document.createElement("div");
-    // button.type = "button";
     field.className = "stratakit-mimic-field";
+    // stratakit was previously known as kiwi and still uses it for some internal attributes
     field.dataset.kiwiLabelPlacement = "after";
     field.dataset.kiwiControlType = "checkable";
     field.appendChild(input);
@@ -161,6 +161,7 @@ const Sandcastle = {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "stratakit-mimic-button";
+    // stratakit was previously known as kiwi and still uses it for some internal attributes
     button.dataset.kiwiVariant = "solid";
     button.dataset.kiwiTone = "neutral";
     button.onclick = function () {
@@ -202,6 +203,7 @@ const Sandcastle = {
   addToolbarMenu(options: SelectOption[], toolbarId?: string) {
     const menu = document.createElement("select");
     menu.className = "stratakit-mimic-button stratakit-mimic-select";
+    // stratakit was previously known as kiwi and still uses it for some internal attributes
     menu.dataset.kiwiVariant = "solid";
     menu.dataset.kiwiTone = "neutral";
     menu.onchange = function () {

@@ -1,6 +1,10 @@
 import { createContext } from "react";
 
-export type AvailableFontId = "droid-sans" | "fira-code" | "dejavu-sans";
+export type AvailableFontId =
+  | "droid-sans"
+  | "fira-code"
+  | "cascadia-code"
+  | "jetbrains-mono";
 type FontDefinition = {
   readableName: string;
   cssValue: string;
@@ -17,10 +21,15 @@ export const availableFonts: Record<AvailableFontId, FontDefinition> = {
     cssValue: "Fira Code",
     supportsLigatures: true,
   },
-  "dejavu-sans": {
-    readableName: "DejaVu Sans Mono",
-    cssValue: "DejaVu Sans Mono",
-    supportsLigatures: false,
+  "cascadia-code": {
+    readableName: "Cascadia Code",
+    cssValue: "Cascadia Code",
+    supportsLigatures: true,
+  },
+  "jetbrains-mono": {
+    readableName: "JetBrains Mono",
+    cssValue: "JetBrains Mono",
+    supportsLigatures: true,
   },
 };
 
@@ -29,6 +38,7 @@ export type LeftPanel = "editor" | "gallery";
 export type Settings = {
   theme: "dark" | "light";
   fontFamily: AvailableFontId;
+  fontSize: number;
   fontLigatures: boolean;
   defaultPanel: LeftPanel;
 };
@@ -36,6 +46,7 @@ export type Settings = {
 export const initialSettings: Settings = {
   theme: "dark",
   fontFamily: "droid-sans",
+  fontSize: 14,
   fontLigatures: false,
   defaultPanel: "gallery",
 };

@@ -369,6 +369,7 @@ ModelUtility.supportedExtensions = {
   KHR_texture_basisu: true,
   KHR_texture_transform: true,
   KHR_gaussian_splatting: true,
+  KHR_gaussian_splatting_compression_spz_2: true,
   KHR_spz_gaussian_splats_compression: true,
   WEB3D_quantized_attributes: true,
 };

@@ -18,6 +18,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         return JSON.stringify({
           theme: value.theme ?? initialSettings.theme,
           fontFamily: value.fontFamily ?? initialSettings.fontFamily,
+          fontSize: value.fontSize ?? initialSettings.fontSize,
           fontLigatures: value.fontLigatures ?? initialSettings.fontLigatures,
           defaultPanel: value.defaultPanel ?? initialSettings.defaultPanel,
         });
@@ -31,9 +32,16 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           // sanitize while loading to avoid removed fonts or user editied values
           fontFamily = "droid-sans";
         }
+
+        let fontSize = parsedValue.fontSize ?? initialSettings.fontSize;
+        if (Number.isNaN(fontSize)) {
+          fontSize = initialSettings.fontSize;
+        }
+
         return {
           theme: parsedValue.theme ?? initialSettings.theme,
           fontFamily: fontFamily,
+          fontSize: fontSize,
           fontLigatures:
             parsedValue.fontLigatures ?? initialSettings.fontLigatures,
           defaultPanel:
