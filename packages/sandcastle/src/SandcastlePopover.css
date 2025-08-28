@@ -1,3 +1,16 @@
+:root {
+  --popover-border-color: var(--stratakit-color-border-neutral-base);
+  --popover-background-color: var(--stratakit-color-bg-elevation-base);
+  /* This should match the --stratakit-shadow-dialog-base value but with the inset part
+   * removed to avoid a border over the arrow. A border color is added instead */
+  --popover-shadow:
+    0px 1px 0px 0px oklch(0% none none / 0.08),
+    0px 0px 0px 1px oklch(0% none none / 0.8),
+    0px 1px 1px -0.5px oklch(0% none none / 0.16),
+    0px 3px 3px -1.5px oklch(0% none none / 0.16),
+    0px 6px 6px -3px oklch(0% none none / 0.16);
+}
+
 .sc-popover {
   z-index: 50;
   display: flex;
@@ -5,18 +18,10 @@
   flex-direction: column;
   gap: var(--stratakit-space-x2);
   border-radius: var(--stratakit-ext-radius-lg);
-  --popover-border-color: var(--stratakit-color-border-neutral-muted);
   border: 1px solid var(--popover-border-color);
-  background-color: var(--stratakit-color-bg-page-base);
+  background-color: var(--popover-background-color);
+  box-shadow: var(--popover-shadow);
   padding: var(--stratakit-space-x4);
-  /* This should match the --stratakit-shadow-surface-md value but with the inset part
-   * removed to avoid a border over the arrow. A border color is added instead */
-  box-shadow:
-    0px 1px 0px 0px oklch(0% none none/.08),
-    0px 0px 0px 1px oklch(0% none none/.16),
-    0px 1px 1px -0.5px oklch(0% none none/.16),
-    0px 3px 3px -1.5px oklch(0% none none/.16),
-    0px 6px 6px -3px oklch(0% none none/.16);
 
   &:focus-visible,
   &[data-focus-visible] {
@@ -25,8 +30,10 @@
   }
 
   .sc-popover-arrow > svg {
-    fill: var(--stratakit-color-bg-page-base);
+    fill: var(--popover-background-color);
     stroke: var(--popover-border-color);
+    -webkit-filter: drop-shadow(var(--popover-shadow));
+    filter: drop-shadow(var(--popover-shadow));
   }
 
   .heading {

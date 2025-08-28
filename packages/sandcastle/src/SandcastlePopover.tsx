@@ -1,5 +1,6 @@
 import {
   Popover,
+  type PopoverProps,
   PopoverArrow,
   PopoverDescription,
   PopoverDisclosure,
@@ -10,6 +11,7 @@ import {
 import "./SandcastlePopover.css";
 import { ReactElement, ReactNode, useEffect } from "react";
 import { Text } from "@stratakit/bricks";
+import classNames from "classnames";
 
 export function SandcastlePopover({
   children,
@@ -17,7 +19,9 @@ export function SandcastlePopover({
   disabled = false,
   title,
   description,
-}: {
+  className,
+  ...inhertedProps
+}: PopoverProps & {
   /** Added to the popover after the title and description */
   children?: ReactNode;
   /** Element to act as the popover anchor and disclosure */
@@ -49,7 +53,12 @@ export function SandcastlePopover({
   return (
     <PopoverProvider store={localStore}>
       <PopoverDisclosure render={disclosure} disabled={disabled} />
-      <Popover className="sc-popover">
+      <Popover
+        className={classNames("sc-popover", {
+          [className as string]: className,
+        })}
+        {...inhertedProps}
+      >
         <PopoverArrow className="sc-popover-arrow" />
         {title && (
           <PopoverHeading render={<Text variant="body-lg">{title}</Text>} />

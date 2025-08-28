@@ -551,7 +551,11 @@ function App() {
           />
         </a>
         <MetadataPopover title={title} description={description} />
-        <SharePopover code={codeState.code} html={codeState.html} />
+        <SharePopover
+          title={title}
+          code={codeState.code}
+          html={codeState.html}
+        />
         <Divider aria-orientation="vertical" />
         <Button onClick={() => openStandalone()}>
           Standalone <Icon href={windowPopout} />

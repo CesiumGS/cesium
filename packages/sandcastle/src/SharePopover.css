@@ -1,9 +1,18 @@
+.share-popover {
+  --popover-background-color: var(--stratakit-color-bg-elevation-level-1);
+}
+
 .input-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--stratakit-space-x2);
 
+  textarea,
   input {
     flex-grow: 1;
+    /** mono-sm */
+    font-family: var(--stratakit-font-family-mono);
+    font-size: var(--stratakit-font-size-12);
+    line-height: 1.3333;
   }
 }
