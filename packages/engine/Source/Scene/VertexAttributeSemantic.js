@@ -79,7 +79,6 @@ const VertexAttributeSemantic = {
    * @type {string}
    * @constant
    */
-  _SCALE: "_SCALE",
   SCALE: "KHR_gaussian_splatting:SCALE",
   /**
    * Gaussian Splat Rotation
@@ -87,7 +86,6 @@ const VertexAttributeSemantic = {
    * @type {string}
    * @constant
    */
-  _ROTATION: "_ROTATION",
   ROTATION: "KHR_gaussian_splatting:ROTATION",
 };
 
@@ -194,11 +192,11 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
       return VertexAttributeSemantic.WEIGHTS;
     case "_FEATURE_ID":
       return VertexAttributeSemantic.FEATURE_ID;
-    case "_SCALE":
     case "KHR_gaussian_splatting:SCALE":
+    case "_SCALE":
       return VertexAttributeSemantic.SCALE;
-    case "_ROTATION":
     case "KHR_gaussian_splatting:ROTATION":
+    case "_ROTATION":
       return VertexAttributeSemantic.ROTATION;
   }
 

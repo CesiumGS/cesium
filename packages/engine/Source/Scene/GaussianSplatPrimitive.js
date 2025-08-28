@@ -85,7 +85,7 @@ function createGaussianSplatTexture(context, splatTextureData) {
 /** A primitive that renders Gaussian splats.
  * <p>
  * This primitive is used to render Gaussian splats in a 3D Tileset.
- * It is designed to work with the KHR_spz_gaussian_splats_compression extension.
+ * It is designed to work with the KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extensions.
  * </p>
  * @alias GaussianSplatPrimitive
  * @constructor

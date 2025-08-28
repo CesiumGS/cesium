@@ -93,14 +93,19 @@ const Cesium3DTileContentFactory = {
     const dataView = new DataView(arrayBuffer, byteOffset);
     const byteLength = dataView.getUint32(8, true);
     const glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
-    if (GaussianSplat3DTileContent.tilesetHasGaussianSplattingExt(tileset)) {
+
+    if (
+      GaussianSplat3DTileContent.tilesetRequiresGaussianSplattingExt(tileset)
+    ) {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
 
     return Model3DTileContent.fromGltf(tileset, tile, resource, glb);
   },
   gltf: function (tileset, tile, resource, json) {
-    if (GaussianSplat3DTileContent.tilesetHasGaussianSplattingExt(tileset)) {
+    if (
+      GaussianSplat3DTileContent.tilesetRequiresGaussianSplattingExt(tileset)
+    ) {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, json);
     }
 

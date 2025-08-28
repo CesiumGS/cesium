@@ -10,7 +10,7 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 
 /**
- * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-spz-splat-compression/extensions/2.0/Khronos/KHR_spz_gaussian_splats_compression|KHR_spz_gaussian_splats_compression} extension.
+ * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting | KHR_gaussian_splatting} and {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting_compression_spz_2 | KHR_gaussian_splatting_compression_spz_2} extensions.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
@@ -101,6 +101,43 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
    */
   this._packedSphericalHarmonicsData = undefined;
 }
+
+/**
+ * Performs checks to ensure that the provided tileset has the Gaussian Splatting extensions.
+ *
+ * @param {Cesium3DTileset} tileset The tileset to check for the extensions.
+ * @returns {boolean} Returns <code>true</code> if the necessary extensions are included in the tileset.
+ * @static
+ */
+GaussianSplat3DTileContent.tilesetRequiresGaussianSplattingExt = function (
+  tileset,
+) {
+  let hasGaussianSplatExtension = false;
+  let hasLegacyGaussianSplatExtension = false;
+  if (tileset.isGltfExtensionRequired instanceof Function) {
+    hasGaussianSplatExtension =
+      tileset.isGltfExtensionRequired("KHR_gaussian_splatting") &&
+      tileset.isGltfExtensionRequired(
+        "KHR_gaussian_splatting_compression_spz_2",
+      );
+
+    hasLegacyGaussianSplatExtension = tileset.isGltfExtensionRequired(
+      "KHR_spz_gaussian_splats_compression",
+    );
+  }
+
+  if (hasLegacyGaussianSplatExtension) {
+    deprecationWarning(
+      "KHR_spz_gaussian_splats_compression",
+      "Support for the original KHR_spz_gaussian_splats_compression extension has been deprecated in favor " +
+        "of the up to date KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extensions and will be " +
+        "removed in CesiumJS 1.135.\n\nPlease retile your tileset with the KHR_gaussian_splatting and " +
+        "KHR_gaussian_splatting_compression_spz_2 extensions.",
+    );
+  }
+
+  return hasGaussianSplatExtension || hasLegacyGaussianSplatExtension;
+};
 
 Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   /**

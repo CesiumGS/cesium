@@ -335,13 +335,14 @@ function processSpz(vertexBufferLoader) {
   if (vertexBufferLoader._attributeSemantic === "POSITION") {
     vertexBufferLoader._typedArray = gcloudData.positions;
   } else if (
-    vertexBufferLoader._attributeSemantic === "_SCALE" ||
-    vertexBufferLoader._attributeSemantic === "KHR_gaussian_splatting:SCALE"
+    vertexBufferLoader._attributeSemantic === "KHR_gaussian_splatting:SCALE" ||
+    vertexBufferLoader._attributeSemantic === "_SCALE"
   ) {
     vertexBufferLoader._typedArray = gcloudData.scales;
   } else if (
-    vertexBufferLoader._attributeSemantic === "_ROTATION" ||
-    vertexBufferLoader._attributeSemantic === "KHR_gaussian_splatting:ROTATION"
+    vertexBufferLoader._attributeSemantic ===
+      "KHR_gaussian_splatting:ROTATION" ||
+    vertexBufferLoader._attributeSemantic === "_ROTATION"
   ) {
     vertexBufferLoader._typedArray = gcloudData.rotations;
   } else if (vertexBufferLoader._attributeSemantic === "COLOR_0") {
