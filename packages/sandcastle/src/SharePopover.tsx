@@ -9,14 +9,7 @@ import { PopoverDescription } from "@ariakit/react";
 import "./SharePopover.css";
 import { sleep } from "./util/sleep";
 
-export function SharePopover({
-  code,
-  html,
-}: {
-  title?: string;
-  code: string;
-  html: string;
-}) {
+export function SharePopover({ code, html }: { code: string; html: string }) {
   const latestCode = useRef("");
   const latestHtml = useRef("");
   const inputRef = useRef<HTMLInputElement>(null);
