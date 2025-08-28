@@ -1,6 +1,13 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import "./Gallery.css";
-import { Badge, IconButton, Select, Spinner, TextBox } from "@stratakit/bricks";
+import {
+  Badge,
+  IconButton,
+  Select,
+  Spinner,
+  Text,
+  TextBox,
+} from "@stratakit/bricks";
 import { getBaseUrl } from "./util/getBaseUrl";
 import classNames from "classnames";
 import { close, script, search } from "./icons";
@@ -193,8 +200,12 @@ export const GalleryCard = memo(function GalleryCard({
     >
       <img src={thumbnailPath} alt="" />
       <div className="details">
-        <h2 className="title">{item.title}</h2>
-        <div className="description">{item.description}</div>
+        <Text variant="body-lg" render={<h3 />} className="title">
+          {item.title}
+        </Text>
+        <Text variant="body-sm" className="description">
+          {item.description}
+        </Text>
         <div className="labels">
           {item.labels
             .sort((a, b) => a.localeCompare(b))
