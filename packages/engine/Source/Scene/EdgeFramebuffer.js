@@ -21,7 +21,7 @@ function EdgeFramebuffer(options) {
 
   // Create framebuffer manager with multiple render targets (MRT)
   // Color attachment 0: color
-  // Color attachment 1: ID for picking and edge detection
+  // Color attachment 1: R: Edge Type, G: featureID
   this._framebufferManager = new FramebufferManager({
     colorAttachmentsLength: 2, // MRT: Color + ID textures
     createColorAttachments: true,
@@ -69,7 +69,7 @@ Object.defineProperties(EdgeFramebuffer.prototype, {
   },
 
   /**
-   * Gets the ID texture for picking.
+   * Gets the ID texture.
    * @memberof EdgeFramebuffer.prototype
    * @type {Texture}
    * @readonly
