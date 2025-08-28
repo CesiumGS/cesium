@@ -15,6 +15,7 @@
     "build-gallery": "node scripts/buildGallery.js"
   },
   "dependencies": {
+    "@ariakit/react": "^0.4.17",
     "@monaco-editor/react": "^4.7.0",
     "@stratakit/bricks": "^0.3.4",
     "@stratakit/foundations": "^0.2.4",
@@ -27,7 +28,8 @@
     "prettier": "^3.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-stay-scrolled": "^9.0.0"
+    "react-stay-scrolled": "^9.0.0",
+    "react-use": "^17.6.0"
   },
   "devDependencies": {
     "@types/pako": "^2.0.3",
