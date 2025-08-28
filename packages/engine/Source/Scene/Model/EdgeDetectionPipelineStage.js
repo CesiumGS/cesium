@@ -1,9 +1,10 @@
 import EdgeDetectionStageFS from "../../Shaders/Model/EdgeDetectionStageFS.js";
 
 /**
- * A pipeline stage for edge detection and discard logic for planar surfaces.
- * This stage adds shader code to discard fragments that would cause z-fighting
- * with edges by reading from the ID buffer and depth texture.
+ * A pipeline stage for edge visibility control and feature ID matching.
+ * This stage adds shader code to control when edges are displayed by comparing
+ * fragment depth with globe depth texture and matching feature IDs between edges
+ * and underlying geometry.
  *
  * @namespace EdgeDetectionPipelineStage
  *
@@ -17,8 +18,8 @@ const EdgeDetectionPipelineStage = {
  * Process a primitive. This modifies the following parts of the render
  * resources:
  * <ul>
- *  <li>Adds shader code to read from the edge ID buffer and depth texture</li>
- *  <li>Implements edge detection logic to discard fragments near edges</li>
+ *  <li>Adds shader code to read from edge color and ID textures</li>
+ *  <li>Implements edge visibility control based on depth and feature ID comparison</li>
  * </ul>
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @private

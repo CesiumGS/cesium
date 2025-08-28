@@ -573,12 +573,6 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
     return;
   }
 
-  // // Push edge commands if they exist
-  // if (defined(this._edgeCommand)) {
-  //   pushCommand(result, this._edgeCommand, use2D);
-  //   return result;
-  // }
-
   pushCommand(result, this._originalCommand, use2D);
 
   return result;
@@ -689,6 +683,7 @@ function derive2DCommands(drawCommand) {
   derive2DCommand(drawCommand, drawCommand._skipLodStencilCommand);
   derive2DCommand(drawCommand, drawCommand._silhouetteModelCommand);
   derive2DCommand(drawCommand, drawCommand._silhouetteColorCommand);
+  derive2DCommand(drawCommand, drawCommand._edgeCommand);
 }
 
 function deriveTranslucentCommand(command) {
@@ -821,18 +816,8 @@ function deriveEdgeCommand(command, renderResources, model) {
   };
   edgeCommand.uniformMap = uniformMap;
 
-  // DEBUG: Disable depth testing to ensure edges are visible
-  const originalRenderState = command.renderState;
-  const edgeRenderState = RenderState.fromCache({
-    ...originalRenderState,
-    depthTest: {
-      enabled: false, // Disable depth testing for debugging
-    },
-    cull: {
-      enabled: false, // Disable culling for debugging
-    },
-  });
-  edgeCommand.renderState = edgeRenderState;
+  const renderState = clone(command.renderState, true);
+  edgeCommand.renderState = RenderState.fromCache(renderState);
 
   // Use a very large bounding volume to avoid culling issues
   edgeCommand.boundingVolume = new BoundingSphere(
@@ -840,11 +825,8 @@ function deriveEdgeCommand(command, renderResources, model) {
     Number.MAX_VALUE,
   );
 
-  // Edges don't cast or receive shadows
   edgeCommand.castShadows = false;
   edgeCommand.receiveShadows = false;
-
-  // Debug removed to reduce noise
 
   return edgeCommand;
 }

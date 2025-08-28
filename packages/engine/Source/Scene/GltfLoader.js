@@ -1472,8 +1472,6 @@ function loadIndices(
   let outputTypedArray =
     loadAttributesAsTypedArray || loadForCpuOperations || loadForClassification;
 
-  // TODO: Allow features to force loading indices as a typed array
-  // edge visibility test. Do we need to declare loadForEdgeVisibility?
   if (loader._forceLoadIndicesTypedArray === true) {
     outputTypedArray = true;
   }
@@ -2071,8 +2069,6 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       primitivePlan.edgeVisibility.lineStrings =
         edgeVisibilityExtension.lineStrings;
     }
-    // needsPostProcessing = true;
-    // primitivePlan.needsOutlines = true;
   }
 
   const spzExtension = extensions.KHR_spz_gaussian_splats_compression;
