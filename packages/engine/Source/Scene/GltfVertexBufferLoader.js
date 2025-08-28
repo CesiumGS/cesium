@@ -374,10 +374,10 @@ function processSpz(vertexBufferLoader) {
     const { l, n } = extractSHDegreeAndCoef(
       vertexBufferLoader._attributeSemantic,
     );
-    const shDegree = gcloudData.shDegree;
+    const sphericalHarmonicDegree = gcloudData.shDegree;
     let stride = 0;
     const base = [0, 9, 24];
-    switch (shDegree) {
+    switch (sphericalHarmonicDegree) {
       case 1:
         stride = 9;
         break;

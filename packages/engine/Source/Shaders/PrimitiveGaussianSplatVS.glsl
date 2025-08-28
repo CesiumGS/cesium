@@ -31,7 +31,7 @@ const float SH_C3[7] = float[7](
 //Retrieve SH coefficient. Currently RG32UI format
 uvec2 loadSHCoeff(uint splatID, int index) {
     ivec2 shTexSize = textureSize(u_gaussianSplatSHTexture, 0);
-    uint dims = coefficientCount[uint(u_shDegree)-1u];
+    uint dims = coefficientCount[uint(u_sphericalHarmonicsDegree)-1u];
     uint splatsPerRow = uint(shTexSize.x) / dims;
     uint shIndex = (splatID%splatsPerRow) * dims + uint(index);
     ivec2 shPosCoord = ivec2(shIndex, splatID / splatsPerRow);
@@ -53,13 +53,13 @@ vec3 evaluateSH(uint splatID, vec3 viewDir) {
     int coeffIndex = 0;
     float x = viewDir.x, y = viewDir.y, z = viewDir.z;
 
-    if (u_shDegree >= 1.) {
+    if (u_sphericalHarmonicsDegree >= 1.) {
         vec3 sh1 = loadAndExpandSHCoeff(splatID, coeffIndex++);
         vec3 sh2 = loadAndExpandSHCoeff(splatID, coeffIndex++);
         vec3 sh3 = loadAndExpandSHCoeff(splatID, coeffIndex++);
         result += -SH_C1 * y * sh1 + SH_C1 * z * sh2 - SH_C1 * x * sh3;
 
-        if (u_shDegree >= 2.) {
+        if (u_sphericalHarmonicsDegree >= 2.) {
             float xx = x * x;
             float yy = y * y;
             float zz = z * z;
@@ -78,7 +78,7 @@ vec3 evaluateSH(uint splatID, vec3 viewDir) {
                     SH_C2[3] * xz * sh7 +
                     SH_C2[4] * (xx - yy) * sh8;
 
-            if (u_shDegree >= 3.) {
+            if (u_sphericalHarmonicsDegree >= 3.) {
                 vec3 sh9 = loadAndExpandSHCoeff(splatID, coeffIndex++);
                 vec3 sh10 = loadAndExpandSHCoeff(splatID, coeffIndex++);
                 vec3 sh11 = loadAndExpandSHCoeff(splatID, coeffIndex++);

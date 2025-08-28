@@ -630,7 +630,11 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     ShaderDestination.VERTEX,
   );
 
-  shaderBuilder.addUniform("float", "u_shDegree", ShaderDestination.VERTEX);
+  shaderBuilder.addUniform(
+    "float",
+    "u_sphericalHarmonicsDegree",
+    ShaderDestination.VERTEX,
+  );
 
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
 
@@ -652,7 +656,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     return primitive.gaussianSplatTexture;
   };
 
-  if (primitive._shDegree > 0) {
+  if (primitive._sphericalHarmonicsDegree > 0) {
     shaderBuilder.addDefine(
       "HAS_SPHERICAL_HARMONICS",
       "1",
@@ -667,8 +671,8 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
       return primitive.gaussianSplatSHTexture;
     };
   }
-  uniformMap.u_shDegree = function () {
-    return primitive._shDegree;
+  uniformMap.u_sphericalHarmonicsDegree = function () {
+    return primitive._sphericalHarmonicsDegree;
   };
 
   uniformMap.u_cameraPositionWC = function () {
@@ -872,11 +876,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       const aggregateShData = () => {
         let offset = 0;
         for (const tile of tiles) {
-          const shData = tile.content._packedShData;
-          if (tile.content.shDegree > 0) {
+          const shData = tile.content.packedSphericalHarmonicsData;
+          if (tile.content.sphericalHarmonicsDegree > 0) {
             if (!defined(this._shData)) {
               let coefs;
-              switch (tile.content.shDegree) {
+              switch (tile.content.sphericalHarmonicsDegree) {
                 case 1:
                   coefs = 9;
                   break;
@@ -931,7 +935,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       );
 
       aggregateShData();
-      this._shDegree = tiles[0].content.shDegree;
+      this._sphericalHarmonicsDegree =
+        tiles[0].content.sphericalHarmonicsDegree;
 
       this._numSplats = totalElements;
       this.selectedTileLength = tileset._selectedTiles.length;
@@ -947,7 +952,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         if (defined(this._shData)) {
           const oldTex = this.gaussianSplatSHTexture;
           const width = ContextLimits.maximumTextureSize;
-          const dims = tileset._selectedTiles[0].content.shCoefficientCount / 3;
+          const dims =
+            tileset._selectedTiles[0].content
+              .sphericalHarmonicsCoefficientCount / 3;
           const splatsPerRow = Math.floor(width / dims);
           const floatsPerRow = splatsPerRow * (dims * 2);
           const texBuf = new Uint32Array(

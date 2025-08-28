@@ -85,14 +85,21 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
    * @type {number}
    * @private
    */
-  this.shDegree = 0;
+  this._sphericalHarmonicsDegree = 0;
 
   /**
    * The number of spherical harmonic coefficients used for the Gaussian splats.
    * @type {number}
    * @private
    */
-  this.shCoefficientCount = 0;
+  this._sphericalHarmonicsCoefficientCount = 0;
+
+  /**
+   * Spherical Harmonic data that has been packed for use in a texture or shader.
+   * @type {undefined|Uint32Array}
+   * @private
+   */
+  this._packedSphericalHarmonicsData = undefined;
 }
 
 Object.defineProperties(GaussianSplat3DTileContent.prototype, {
@@ -324,6 +331,41 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
       this._group = value;
     },
   },
+
+  /**
+   * The number of spherical harmonic coefficients used for the Gaussian splats.
+   * @type {number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  sphericalHarmonicsCoefficientCount: {
+    get: function () {
+      return this._sphericalHarmonicsCoefficientCount;
+    },
+  },
+  /**
+   * The degree of the spherical harmonics used for the Gaussian splats.
+   * @type {number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  sphericalHarmonicsDegree: {
+    get: function () {
+      return this._sphericalHarmonicsDegree;
+    },
+  },
+
+  /**
+   * The packed spherical harmonic data for the Gaussian splats for use a shader or texture.
+   * @type {number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  packedSphericalHarmonicsData: {
+    get: function () {
+      return this._packedSphericalHarmonicsData;
+    },
+  },
 });
 
 GaussianSplat3DTileContent.tilesetHasGaussianSplattingExt = function (tileset) {
@@ -444,12 +486,12 @@ function extractSHDegreeAndCoef(attribute) {
 /**
  * Packs spherical harmonic data into half-precision floats.
  * @param {*} data - The input data to pack.
- * @param {*} shDegree - The spherical harmonic degree.
+ * @param {*} sphericalHarmonicsDegree - The spherical harmonic degree.
  * @returns {Uint32Array} - The packed data.
  */
-function packSphericalHarmonicData(tileContent) {
-  const degree = tileContent.shDegree;
-  const coefs = tileContent.shCoefficientCount;
+function packSphericalHarmonicsData(tileContent) {
+  const degree = tileContent.sphericalHarmonicsDegree;
+  const coefs = tileContent.sphericalHarmonicsCoefficientCount;
   const totalLength = tileContent.pointsLength * (coefs * (2 / 3)); //3 packs into 2
   const packedData = new Uint32Array(totalLength);
 
@@ -602,10 +644,10 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
     const { l, n } = degreeAndCoefFromAttributes(
       this.splatPrimitive.attributes,
     );
-    this.shDegree = l;
-    this.shCoefficientCount = n;
+    this._sphericalHarmonicsDegree = l;
+    this._sphericalHarmonicsCoefficientCount = n;
 
-    this._packedShData = packSphericalHarmonicData(this);
+    this._packedSphericalHarmonicsData = packSphericalHarmonicsData(this);
 
     return;
   }
