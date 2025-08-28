@@ -25,12 +25,15 @@ export type GalleryItem = {
   isNew: boolean;
 };
 
+type Tag = string | "All";
+const defaultTag: Tag = "Showcases";
+
 export function GallerySearch({
   setSearchResults,
   setTag,
 }: {
   setSearchResults: (newSearchResults: PagefindSearchFragment[] | null) => void;
-  setTag: (newTag: string | "All") => void;
+  setTag: (newTag: Tag) => void;
 }) {
   const pagefind = useRef<Pagefind>(null);
   const isFirstLoad = useRef(true);
@@ -39,7 +42,7 @@ export function GallerySearch({
     useState<PagefindFilterCounts>({ tags: {} });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentTag, setCurrentTag] = useState<string | "All">("All");
+  const [currentTag, setCurrentTag] = useState<Tag>(defaultTag);
   const [searchState, setSearchState] = useState<ProcessStatus>("NOT_STARTED");
 
   const requestId = useRef<number>(0);
@@ -166,12 +169,17 @@ export function GallerySearch({
             setTag(e.target.value);
           }}
         >
+          <option value={defaultTag} selected>
+            {defaultTag}
+          </option>
           <option value={"All"}>All</option>
-          {Object.keys(availableFilters.tags).map((label) => (
-            <option value={label} key={label}>
-              {label}
-            </option>
-          ))}
+          {Object.keys(availableFilters.tags)
+            .filter((label) => label !== defaultTag)
+            .map((label) => (
+              <option value={label} key={label}>
+                {label}
+              </option>
+            ))}
         </Select.HtmlSelect>
       </Select.Root>
     </>
@@ -238,7 +246,7 @@ function Gallery({
   const [searchResults, setSearchResults] = useState<
     PagefindSearchFragment[] | null
   >(null);
-  const [currentTag, setCurrentTag] = useState<string | "All">("All");
+  const [currentTag, setCurrentTag] = useState<Tag>(defaultTag);
 
   const filteredList = useMemo(() => {
     const taggedItems =
