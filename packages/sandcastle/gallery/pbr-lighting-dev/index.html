@@ -3,22 +3,31 @@
 
   #toolbar > div {
     display: flex;
-    width: 34em;
   }
 
-  #modelsToolbar,
+  #modelsToolbar {
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #heightToolbar,
   #lightingToolbar {
     display: flex;
     flex-direction: column;
   }
 
-  #modelsToolbar div,
-  #lightingToolbar div {
+  #heightToolbar > div,
+  #lightingToolbar > div {
     display: flex;
+    justify-content: space-between;
   }
 
   #toolbar input[type="range"] {
     flex-grow: 1;
+  }
+
+  #toolbar input[type="number"] {
+    max-width: 7ch;
   }
 
   #toolbar label {
@@ -30,99 +39,126 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
   <div id="modelsToolbar">
-    <div class="cesium-button">
+    <label>Model</label>
+  </div>
+  <div id="heightToolbar">
+    <div>
       <label>Height</label>
-      <input
-        type="range"
-        min="0.0"
-        max="280000.0"
-        step="200"
-        data-bind="value: height, valueUpdate: 'input'"
-      />
-      <input type="number" size="5" step="200" data-bind="value: height" />
+      <div>
+        <input
+          type="range"
+          min="0.0"
+          max="280000.0"
+          step="200"
+          data-bind="value: height, valueUpdate: 'input'"
+        />
+        <input type="number" size="5" step="200" data-bind="value: height" />
+      </div>
     </div>
   </div>
   <div id="lightingToolbar">
-    <div class="cesium-button">
+    <div>
       <label>Directional Light Intensity</label>
-      <input
-        type="range"
-        min="0.0"
-        max="3.0"
-        step="0.5"
-        data-bind="value: directionalLightIntensity, valueUpdate: 'input'"
-      />
-      <input
-        type="number"
-        size="5"
-        step="0.5"
-        data-bind="value: directionalLightIntensity"
-      />
+      <div>
+        <input
+          type="range"
+          min="0.0"
+          max="3.0"
+          step="0.5"
+          data-bind="value: directionalLightIntensity, valueUpdate: 'input'"
+        />
+        <input
+          type="number"
+          size="5"
+          step="0.5"
+          data-bind="value: directionalLightIntensity"
+        />
+      </div>
     </div>
-    <div class="cesium-button">
+    <div>
       <label>Atmospheric Intensity</label>
-      <input
-        type="range"
-        min="0.0"
-        max="5.0"
-        step="0.5"
-        data-bind="value: atmosphereScatteringIntensity, valueUpdate: 'input'"
-      />
-      <input
-        type="number"
-        size="5"
-        step="0.5"
-        data-bind="value: atmosphereScatteringIntensity"
-      />
+      <div>
+        <input
+          type="range"
+          min="0.0"
+          max="5.0"
+          step="0.5"
+          data-bind="value: atmosphereScatteringIntensity, valueUpdate: 'input'"
+        />
+        <input
+          type="number"
+          size="5"
+          step="0.5"
+          data-bind="value: atmosphereScatteringIntensity"
+        />
+      </div>
     </div>
-    <div class="cesium-button">
+    <div>
       <label>Gamma</label>
-      <input
-        type="range"
-        min="0.0"
-        max="5.0"
-        step="0.5"
-        data-bind="value: gamma, valueUpdate: 'input'"
-      />
-      <input type="number" size="5" step="0.5" data-bind="value: gamma" />
+      <div>
+        <input
+          type="range"
+          min="0.0"
+          max="5.0"
+          step="0.5"
+          data-bind="value: gamma, valueUpdate: 'input'"
+        />
+        <input type="number" size="5" step="0.5" data-bind="value: gamma" />
+      </div>
     </div>
-    <div class="cesium-button">
+    <div>
       <label>Brightness</label>
-      <input
-        type="range"
-        min="0.0"
-        max="5.0"
-        step="0.5"
-        data-bind="value: brightness, valueUpdate: 'input'"
-      />
-      <input type="number" size="5" step="0.5" data-bind="value: brightness" />
+      <div>
+        <input
+          type="range"
+          min="0.0"
+          max="5.0"
+          step="0.5"
+          data-bind="value: brightness, valueUpdate: 'input'"
+        />
+        <input
+          type="number"
+          size="5"
+          step="0.5"
+          data-bind="value: brightness"
+        />
+      </div>
     </div>
-    <div class="cesium-button">
+    <div>
       <label>Saturation</label>
-      <input
-        type="range"
-        min="0.0"
-        max="5.0"
-        step="0.5"
-        data-bind="value: saturation, valueUpdate: 'input'"
-      />
-      <input type="number" size="5" step="0.5" data-bind="value: saturation" />
+      <div>
+        <input
+          type="range"
+          min="0.0"
+          max="5.0"
+          step="0.5"
+          data-bind="value: saturation, valueUpdate: 'input'"
+        />
+        <input
+          type="number"
+          size="5"
+          step="0.5"
+          data-bind="value: saturation"
+        />
+      </div>
     </div>
-    <div class="cesium-button">
+    <div>
       <label>Ground Albedo</label>
-      <input
-        type="range"
-        min="0.0"
-        max="1.0"
-        step="0.01"
-        data-bind="value: groundAlbedo, valueUpdate: 'input'"
-      />
-      <input
-        type="number"
-        step="0.01"
-        size="5"
-        data-bind="value: groundAlbedo"
-      />
+      <div>
+        <input
+          type="range"
+          min="0.0"
+          max="1.0"
+          step="0.01"
+          data-bind="value: groundAlbedo, valueUpdate: 'input'"
+        />
+        <input
+          type="number"
+          step="0.01"
+          size="5"
+          data-bind="value: groundAlbedo"
+        />
+      </div>
     </div>
   </div>
   <div id="environmentToolbar"></div>

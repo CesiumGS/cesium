@@ -16,6 +16,9 @@ import play from "@stratakit/icons/play.svg";
 import textAlignLeft from "@stratakit/icons/text-align-left.svg";
 import search from "@stratakit/icons/search.svg";
 import close from "@stratakit/icons/close.svg";
+import documentation from "@stratakit/icons/documentation.svg";
+import info from "@stratakit/icons/info.svg";
+import retry from "@stratakit/icons/retry.svg";
 
 export {
   add,
@@ -36,4 +39,7 @@ export {
   textAlignLeft,
   search,
   close,
+  documentation,
+  info,
+  retry,
 };

@@ -1,4 +1,4 @@
-import GalleryItemListProvider from "./GalleryItemListProvider.tsx";
+import { CompositeProvider, useCompositeStore } from "@ariakit/react";
 import { type GalleryItem } from "./GalleryItemStore.ts";
 import GalleryItemSearch from "./GalleryItemSearch.tsx";
 import GalleryItemList from "./GalleryItemList.tsx";
@@ -18,8 +18,9 @@ type GalleryProps = {
 };
 
 function Gallery({ hidden, onRunCode, onOpenCode }: GalleryProps) {
+  const composite = useCompositeStore();
   return (
-    <GalleryItemListProvider>
+    <CompositeProvider store={composite}>
       <div
         className={classNames("gallery", {
           hidden: hidden,
@@ -31,7 +32,7 @@ function Gallery({ hidden, onRunCode, onOpenCode }: GalleryProps) {
         </div>
         <GalleryItemList onRunCode={onRunCode} onOpenCode={onOpenCode} />
       </div>
-    </GalleryItemListProvider>
+    </CompositeProvider>
   );
 }
 

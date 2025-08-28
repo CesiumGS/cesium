@@ -1,12 +1,13 @@
+import { access, cp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { basename, dirname, join, relative } from "node:path";
+import { exit } from "node:process";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { access, cp, mkdir, readFile, writeFile } from "fs/promises";
 import { rimraf } from "rimraf";
 import { parse } from "yaml";
 import { globby } from "globby";
-import { basename, dirname, join, relative } from "path";
-import { exit } from "process";
-import { fileURLToPath, pathToFileURL } from "node:url";
 import * as pagefind from "pagefind";
 
 import createGalleryRecord from "./createGalleryRecord.js";
@@ -32,9 +33,7 @@ async function createPagefindIndex() {
 
     return index;
   } catch (error) {
-    throw new Error(`Could not create search index. ${error.message}`, {
-      cause: error,
-    });
+    throw new Error(`Could not create search index. ${error.message}`);
   }
 }
 
@@ -67,7 +66,7 @@ export async function buildGalleryList(options = {}) {
   const rootDirectory = options.rootDirectory ?? defaultRootDirectory;
   const publicDirectory = options.publicDirectory ?? defaultPublicDirectory;
   const galleryFilesPattern = options.galleryFiles ?? defaultGalleryFiles;
-  const sourceUrl = options.sourceUrl ?? "";  
+  const sourceUrl = options.sourceUrl ?? "";
   const defaultThumbnail = options.defaultThumbnail ?? defaultThumbnailPath;
   const searchOptions = options.searchOptions ?? {};
   const metadataKeys = options.metadata ?? {};
@@ -102,7 +101,7 @@ export async function buildGalleryList(options = {}) {
     searchOptions,
   };
 
-  let errors = [];
+  const errors = [];
   const check = (condition, messageIfTrue) => {
     if (condition) {
       errors.push(new Error(messageIfTrue));
@@ -111,9 +110,11 @@ export async function buildGalleryList(options = {}) {
   };
 
   const galleryFiles = await globby(
-    galleryFilesPattern.map((pattern) => join(rootDirectory, pattern))
+    galleryFilesPattern.map((pattern) => join(rootDirectory, pattern)),
   );
- const yamlFiles = galleryFiles.filter((path) => basename(path).match(galleryItemConfig));
+  const yamlFiles = galleryFiles.filter((path) =>
+    basename(path).match(galleryItemConfig),
+  );
 
   for (const filePath of yamlFiles) {
     let metadata;
@@ -123,9 +124,7 @@ export async function buildGalleryList(options = {}) {
       metadata = parse(file);
     } catch (error) {
       errors.push(
-        new Error(`Could not read file "${filePath}: ${error.message}"`, {
-          cause: error,
-        }),
+        new Error(`Could not read file "${filePath}: ${error.message}"`),
       );
       continue;
     }
@@ -133,7 +132,7 @@ export async function buildGalleryList(options = {}) {
     const expectedKeys = [
       ...requiredMetadataKeys,
       "thumbnail",
-      ...Object.keys(metadataKeys)
+      ...Object.keys(metadataKeys),
     ];
 
     if (!metadata) {
@@ -158,7 +157,7 @@ export async function buildGalleryList(options = {}) {
     const slug = basename(galleryDirectory);
     const relativePath = relative(rootDirectory, galleryDirectory);
     const galleryBase = join(rootDirectory, relativePath);
-    
+
     const { title, description, legacyId, thumbnail, labels, development } =
       metadata;
 
@@ -187,7 +186,8 @@ export async function buildGalleryList(options = {}) {
     const thumbnailImage = thumbnail
       ? join(relativePath, thumbnail)
       : defaultThumbnail;
-    const hasThumbnail = !thumbnail || (await exists(join(rootDirectory, thumbnailImage)));
+    const hasThumbnail =
+      !thumbnail || (await exists(join(rootDirectory, thumbnailImage)));
     if (!hasThumbnail) {
       errors.push(new Error(`Missing "${thumbnailImage}"`));
     }
@@ -211,7 +211,7 @@ export async function buildGalleryList(options = {}) {
 
     try {
       const jsFile = await readFile(indexJs, "utf-8");
-      const lineCount = jsFile.split('\n').length;
+      const lineCount = jsFile.split("\n").length;
       const editSourceUrl = join(sourceUrl, relativePath);
 
       output.entries.push({
@@ -237,9 +237,9 @@ export async function buildGalleryList(options = {}) {
       );
     } catch (error) {
       errors.push(
-        new Error(`Could not build gallery record for "${filePath}"`, {
-          cause: error,
-        }),
+        new Error(
+          `Could not build gallery record for "${filePath}": ${error.message}`,
+        ),
       );
       continue;
     }
@@ -256,7 +256,7 @@ export async function buildGalleryList(options = {}) {
   const outputDirectory = join(publicDirectory, "gallery");
   await rimraf(outputDirectory);
   await mkdir(outputDirectory, { recursive: true });
-  
+
   await writeFile(join(outputDirectory, "list.json"), JSON.stringify(output));
 
   await pagefindIndex.writeFiles({
@@ -264,10 +264,16 @@ export async function buildGalleryList(options = {}) {
   });
 
   // Copy all static gallery files
-  const staticGalleryFiles = galleryFiles.filter((path) => !basename(path).match(galleryItemConfig));
+  const staticGalleryFiles = galleryFiles.filter(
+    (path) => !basename(path).match(galleryItemConfig),
+  );
   try {
     for (const file of staticGalleryFiles) {
-      const destination = join(rootDirectory, publicDirectory, relative(rootDirectory, file));
+      const destination = join(
+        rootDirectory,
+        publicDirectory,
+        relative(rootDirectory, file),
+      );
       await cp(file, destination, { recursive: true });
     }
   } catch (error) {

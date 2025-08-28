@@ -4,6 +4,7 @@ import {
   ReactNode,
   RefObject,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useReducer,
@@ -19,10 +20,13 @@ import { Button, Divider, Tooltip } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";
 import { makeCompressedBase64String } from "./Helpers.ts";
 import { getBaseUrl } from "./util/getBaseUrl.ts";
-import { useLocalStorage } from "./util/useLocalStorage.ts";
-import { useLoadFromUrl } from "./util/useLoadFromUrl.ts";
+import { loadFromUrl } from "./util/loadFromUrl.ts";
 
-import { type GalleryItem } from "./Gallery/GalleryItemStore.ts";
+import {
+  StoreContext,
+  useGalleryItemStore,
+  type GalleryItem,
+} from "./Gallery/GalleryItemStore.ts";
 import Gallery from "./Gallery/Gallery.js";
 
 import Bucket from "./Bucket.tsx";
@@ -33,15 +37,18 @@ import {
   moon,
   share as shareIcon,
   script,
-  settings,
+  settings as settingsIcon,
   sun,
   windowPopout,
+  documentation,
 } from "./icons.ts";
 import {
   ConsoleMessage,
   ConsoleMessageType,
   ConsoleMirror,
 } from "./ConsoleMirror.tsx";
+import { SettingsModal } from "./SettingsModal.tsx";
+import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -54,6 +61,11 @@ const defaultHtmlCode = `<style>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 `;
+
+const cesiumVersion = __CESIUM_VERSION__;
+const versionString = __COMMIT_SHA__
+  ? `Commit: ${__COMMIT_SHA__.substring(0, 7)} - ${cesiumVersion}`
+  : cesiumVersion;
 
 type RightSideRef = {
   toggleExpanded: () => void;
@@ -141,16 +153,18 @@ function AppBarButton({
   onClick,
   active = false,
   label,
+  onAuxClick,
 }: {
   children: ReactNode;
   onClick: MouseEventHandler;
   active?: boolean;
   label: string;
+  onAuxClick?: MouseEventHandler;
 }) {
   if (active) {
     return (
       <Tooltip content={label} type="label" placement="right">
-        <Button tone="accent" onClick={onClick}>
+        <Button tone="accent" onClick={onClick} onAuxClick={onAuxClick}>
           {children}
         </Button>
       </Tooltip>
@@ -158,7 +172,7 @@ function AppBarButton({
   }
   return (
     <Tooltip content={label} type="label" placement="right">
-      <Button variant="ghost" onClick={onClick}>
+      <Button variant="ghost" onClick={onClick} onAuxClick={onAuxClick}>
         {children}
       </Button>
     </Tooltip>
@@ -167,27 +181,26 @@ function AppBarButton({
 
 export type SandcastleAction =
   | { type: "reset" }
+  | { type: "resetDirty" }
   | { type: "setCode"; code: string }
   | { type: "setHtml"; html: string }
   | { type: "runSandcastle" }
   | { type: "setAndRun"; code?: string; html?: string };
 
 function App() {
-  const [theme, setTheme] = useLocalStorage<"dark" | "light">(
-    "sandcastle/theme",
-    "dark",
-  );
+  const { settings, updateSettings } = useContext(SettingsContext);
   const rightSideRef = useRef<RightSideRef>(null);
   const consoleCollapsedHeight = 26;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
 
-  const cesiumVersion = __CESIUM_VERSION__;
-  const versionString = __COMMIT_SHA__ ? `Commit: ${__COMMIT_SHA__}` : "";
-
-  const startOnEditor = !!(window.location.search || window.location.hash);
-  const [leftPanel, setLeftPanel] = useState<"editor" | "gallery">(
+  const isStartingWithCode = !!(window.location.search || window.location.hash);
+  const startOnEditor =
+    isStartingWithCode || settings.defaultPanel === "editor";
+  const [leftPanel, setLeftPanel] = useState<LeftPanel>(
     startOnEditor ? "editor" : "gallery",
   );
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   const [title, setTitle] = useState("New Sandcastle");
 
   type CodeState = {
@@ -196,6 +209,7 @@ function App() {
     committedCode: string;
     committedHtml: string;
     runNumber: number;
+    dirty: boolean;
   };
 
   const initialState: CodeState = {
@@ -204,6 +218,7 @@ function App() {
     committedCode: defaultJsCode,
     committedHtml: defaultHtmlCode,
     runNumber: 0,
+    dirty: false,
   };
 
   const [codeState, dispatch] = useReducer(function reducer(
@@ -218,12 +233,14 @@ function App() {
         return {
           ...state,
           code: action.code,
+          dirty: true,
         };
       }
       case "setHtml": {
         return {
           ...state,
           html: action.html,
+          dirty: true,
         };
       }
       case "runSandcastle": {
@@ -241,21 +258,59 @@ function App() {
           committedCode: action.code ?? state.code,
           committedHtml: action.html ?? state.html,
           runNumber: state.runNumber + 1,
+          dirty: false,
+        };
+      }
+      case "resetDirty": {
+        return {
+          ...state,
+          dirty: false,
         };
       }
     }
   }, initialState);
 
-  const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
-  function appendConsole(type: ConsoleMessageType, message: string) {
-    setConsoleMessages((prevConsoleMessages) => [
-      ...prevConsoleMessages,
-      { type, message, id: crypto.randomUUID() },
-    ]);
-    if (!consoleExpanded && type !== "log") {
-      rightSideRef.current?.toggleExpanded();
+  useEffect(() => {
+    const host = window.location.host;
+    let envString = "";
+    if (host.includes("localhost") && host !== "localhost:8080") {
+      // this helps differentiate tabs for local sandcastle development or other testing
+      envString = `${host.replace("localhost:", "")} `;
     }
-  }
+
+    const dirtyIndicator = codeState.dirty ? "*" : "";
+    if (title === "" || title === "New Sandcastle") {
+      // No need to clutter the window/tab with a name if not viewing a named gallery demo
+      document.title = `${envString}Sandcastle${dirtyIndicator} | CesiumJS`;
+    } else {
+      document.title = `${envString}${title}${dirtyIndicator} | Sandcastle | CesiumJS`;
+    }
+  }, [title, codeState.dirty]);
+
+  const confirmLeave = useCallback(() => {
+    if (!codeState.dirty) {
+      return true;
+    }
+
+    /* eslint-disable-next-line no-alert */
+    return window.confirm(
+      "You have unsaved changes. Are you sure you want to navigate away from this demo?",
+    );
+  }, [codeState.dirty]);
+
+  const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
+  const appendConsole = useCallback(
+    function appendConsole(type: ConsoleMessageType, message: string) {
+      setConsoleMessages((prevConsoleMessages) => [
+        ...prevConsoleMessages,
+        { type, message, id: crypto.randomUUID() },
+      ]);
+      if (!consoleExpanded && type !== "log") {
+        rightSideRef.current?.toggleExpanded();
+      }
+    },
+    [consoleExpanded],
+  );
 
   function resetConsole() {
     // the console should only be cleared by the Bucket when the viewer page
@@ -273,6 +328,9 @@ function App() {
   }
 
   function resetSandcastle() {
+    if (!confirmLeave()) {
+      return;
+    }
     dispatch({ type: "reset" });
 
     window.history.pushState({}, "", getBaseUrl());
@@ -288,6 +346,7 @@ function App() {
 
     const shareUrl = `${getBaseUrl()}#c=${base64String}`;
     window.history.replaceState({}, "", shareUrl);
+    dispatch({ type: "resetDirty" });
   }
 
   function openStandalone() {
@@ -309,66 +368,109 @@ function App() {
     window.focus();
   }
 
-  // This is used to avoid a "double render" when loading from the URL
-  const [isLoadPending, startLoadFromUrl] = useTransition();
-  const loadFromUrl = useLoadFromUrl();
+  const galleryItemStore = useGalleryItemStore();
+  const { isPending: isGalleryPending, fetchItems } = galleryItemStore;
   useEffect(() => {
-    // Listen to browser forward/back navigation and try to load from URL
-    // this is necessary because of the pushState used for faster gallery loading
-    window.addEventListener("popstate", loadFromUrl);
-
-    if (isLoadPending) {
+    if (isGalleryPending) {
       return;
     }
 
-    startLoadFromUrl(async () => {
-      const data = loadFromUrl();
-      if (!data) {
-        return;
-      }
+    fetchItems();
+  }, []);
 
-      const { getJsCode, getHtmlCode, title } = data;
-      setTitle(title);
-      dispatch({
-        type: "setAndRun",
-        code: await getJsCode(),
-        html: await getHtmlCode(),
+  const [isLoadPending, startLoadFromUrl] = useTransition();
+  useEffect(() => {
+    // Listen to browser forward/back navigation and try to load from URL
+    // this is necessary because of the pushState used for faster gallery loading
+    const load = () =>
+      confirmLeave() &&
+      startLoadFromUrl(async () => {
+        try {
+          const data = await loadFromUrl(galleryItemStore);
+          if (!data) {
+            return;
+          }
+
+          const { code, html, title } = data;
+          setTitle(title);
+          dispatch({
+            type: "setAndRun",
+            code: code ?? defaultJsCode,
+            html: html ?? defaultHtmlCode,
+          });
+        } catch (error) {
+          const message = (error as Error)?.message;
+          console.error(message);
+          appendConsole("error", message);
+        }
       });
-      
-    });
+    window.addEventListener("popstate", load);
 
-    return () => window.removeEventListener("popstate", loadFromUrl);
-  }, [loadFromUrl]);
+    if (!isLoadPending && !isGalleryPending) {
+      load();
+    }
+
+    return () => window.removeEventListener("popstate", load);
+  }, [isGalleryPending]);
+
+  useEffect(() => {
+    // if the code has been edited listen for navigation away and warn
+    if (codeState.dirty) {
+      function beforeUnloadListener(e: BeforeUnloadEvent) {
+        e.preventDefault();
+        return ""; // modern browsers ignore the contents of this string
+      }
+      window.addEventListener("beforeunload", beforeUnloadListener);
+      return () =>
+        window.removeEventListener("beforeunload", beforeUnloadListener);
+    }
+  }, [codeState.dirty]);
+
+  function openDocsPage() {
+    const docsUrl = "https://cesium.com/learn/cesiumjs/ref-doc/index.html";
+    window.open(docsUrl, "_blank")?.focus();
+  }
 
   const onRunCode = useCallback(
     async ({ id, title, getJsCode, getHtmlCode }: GalleryItem) => {
-      const searchParams = new URLSearchParams(window.location.search);
-      if (
-        !searchParams.has("id") ||
-        (searchParams.has("id") && searchParams.get("id") !== id)
-      ) {
-        // only push state if it's not the current url to prevent duplicated in history
-        window.history.pushState({}, "", `${getBaseUrl()}?id=${id}`);
+      if (!confirmLeave()) {
+        return;
+      }
+
+      try {
+        const [code, html] = await Promise.all([getJsCode(), getHtmlCode()]);
+        const searchParams = new URLSearchParams(window.location.search);
         if (
           !searchParams.has("id") ||
           (searchParams.has("id") && searchParams.get("id") !== id)
         ) {
           // only push state if it's not the current url to prevent duplicated in history
           window.history.pushState({}, "", `${getBaseUrl()}?id=${id}`);
+          if (
+            !searchParams.has("id") ||
+            (searchParams.has("id") && searchParams.get("id") !== id)
+          ) {
+            // only push state if it's not the current url to prevent duplicated in history
+            window.history.pushState({}, "", `${getBaseUrl()}?id=${id}`);
+          }
         }
-      }
 
-      setTitle(title);
-      dispatch({
-        type: "setAndRun",
-        code: await getJsCode(),
-        html: await getHtmlCode(),
-      });
+        setTitle(title);
+        dispatch({
+          type: "setAndRun",
+          code: code ?? defaultJsCode,
+          html: html ?? defaultJsCode,
+        });
+      } catch (error) {
+        const message = (error as Error)?.message;
+        console.error(message);
+        appendConsole("error", message);
+      }
     },
-    [],
+    [confirmLeave, appendConsole],
   );
 
-  const onOpenCode = useCallback((_item: GalleryItem) => {
+  const onOpenCode = useCallback(() => {
     setLeftPanel("editor");
   }, []);
 
@@ -377,14 +479,14 @@ function App() {
       id="root"
       className="sandcastle-root"
       density="dense"
-      colorScheme={theme}
+      colorScheme={settings.theme}
       synchronizeColorScheme
     >
       <header className="header">
         <a className="logo" href={getBaseUrl()}>
           <img
             src={
-              theme === "dark"
+              settings.theme === "dark"
                 ? "./images/Cesium_Logo_overlay.png"
                 : "./images/Cesium_Logo_Color_Overlay.png"
             }
@@ -392,7 +494,7 @@ function App() {
           />
         </a>
         <div className="metadata">{title}</div>
-        <Button tone="accent" onClick={() => share()}>
+        <Button tone="accent" onClick={share}>
           <Icon href={shareIcon} /> Share
         </Button>
         <Divider aria-orientation="vertical" />
@@ -401,8 +503,7 @@ function App() {
         </Button>
         <div className="flex-spacer"></div>
         <div className="version">
-          {versionString && <pre>{versionString.substring(0, 7)} - </pre>}
-          <pre>{cesiumVersion}</pre>
+          {versionString && <pre>{versionString}</pre>}
         </div>
       </header>
       <div className="application-bar">
@@ -430,23 +531,40 @@ function App() {
         >
           <Icon href={add} size="large" />
         </AppBarButton>
+        <AppBarButton
+          label="Documentation"
+          onClick={openDocsPage}
+          onAuxClick={openDocsPage}
+        >
+          <Icon href={documentation} size="large" />
+        </AppBarButton>
         <div className="flex-spacer"></div>
         <Divider />
         <AppBarButton
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          label="Toggle Theme"
+          onClick={() =>
+            updateSettings({
+              theme: settings.theme === "dark" ? "light" : "dark",
+            })
+          }
+          label="Toggle theme"
         >
-          <Icon href={theme === "dark" ? moon : sun} size="large" />
+          <Icon href={settings.theme === "dark" ? moon : sun} size="large" />
         </AppBarButton>
-        <AppBarButton label="Settings" onClick={() => {}}>
-          <Icon href={settings} size="large" />
+        <AppBarButton
+          label="Settings"
+          onClick={() => {
+            setSettingsOpen(true);
+          }}
+        >
+          <Icon href={settingsIcon} size="large" />
         </AppBarButton>
+        <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
       </div>
       <Allotment defaultSizes={[40, 60]}>
         <Allotment.Pane minSize={400} className="left-panel">
           {leftPanel === "editor" && (
             <SandcastleEditor
-              darkTheme={theme === "dark"}
+              darkTheme={settings.theme === "dark"}
               onJsChange={(value: string = "") =>
                 dispatch({ type: "setCode", code: value })
               }
@@ -459,11 +577,13 @@ function App() {
               setJs={(newCode) => dispatch({ type: "setCode", code: newCode })}
             />
           )}
-          <Gallery
-            hidden={leftPanel !== "gallery"}
-            onRunCode={onRunCode}
-            onOpenCode={onOpenCode}
-          />
+          <StoreContext value={galleryItemStore}>
+            <Gallery
+              hidden={leftPanel !== "gallery"}
+              onRunCode={onRunCode}
+              onOpenCode={onOpenCode}
+            />
+          </StoreContext>
         </Allotment.Pane>
         <Allotment.Pane className="right-panel">
           <RightSideAllotment

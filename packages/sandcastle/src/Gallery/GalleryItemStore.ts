@@ -37,6 +37,9 @@ export function useGalleryItemStore() {
   const [filters, setFilters] = useState<GalleryFilters>(null);
 
   const pagefindRef = useRef<Pagefind>(null);
+  const getPagefind = () => {
+    return pagefindRef.current;
+  };
 
   const fetchItems = () =>
     startFetch(async () => {
@@ -44,9 +47,13 @@ export function useGalleryItemStore() {
       const galleryListUrl = new URL(galleryListPath, baseUrl);
       const request = await fetch(galleryListUrl.href);
       const { entries, searchOptions, legacyIds } = await request.json();
-      const items = entries.map((entry: any) => {
-        const galleryBaseUrl = new URL(entry.url + "/", baseUrl);
-        
+      const items = entries.map((entry: GalleryItem) => {
+        let entryUrl = entry.url;
+        if (!entryUrl.endsWith("/")) {
+          entryUrl += "/";
+        }
+        const galleryBaseUrl = new URL(entryUrl, baseUrl);
+
         const getJsCode = async () => {
           const url = new URL("main.js", galleryBaseUrl);
           const req = await fetch(url.href);
@@ -63,7 +70,7 @@ export function useGalleryItemStore() {
           ...entry,
           getJsCode,
           getHtmlCode,
-        }
+        };
       });
       setItems(items);
       setLegacyIds(legacyIds);
@@ -90,10 +97,6 @@ export function useGalleryItemStore() {
       setFilters(await pagefind.filters());
     });
 
-  const getPagefind = () => {
-    return pagefindRef.current;
-  };
-
   const [searchTerm, setSearchTerm] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState<GalleryFilter>(null);
   const [searchResults, setSearchResults] = useState<
@@ -110,7 +113,7 @@ export function useGalleryItemStore() {
         return;
       }
 
-      /* @ts-ignore: null is a valid search term value */
+      /* @ts-expect-error: null is a valid search term value */
       const { results } = await pagefind.search(term, {
         filters,
       });
@@ -143,8 +146,10 @@ export function useGalleryItemStore() {
     });
   }, [items, searchResults]);
 
-  const selectItemById = (searchId: string) => items.find(({ id }) => id === searchId);
-  const selectItemByLegacyId = (searchId: string) => selectItemById(legacyIds[searchId]);
+  const selectItemById = (searchId: string) =>
+    items.find(({ id }) => id === searchId);
+  const selectItemByLegacyId = (searchId: string) =>
+    selectItemById(legacyIds[searchId]);
 
   return {
     items,
