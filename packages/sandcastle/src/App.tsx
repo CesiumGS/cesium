@@ -4,6 +4,7 @@ import {
   ReactNode,
   RefObject,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useReducer,
@@ -26,17 +27,19 @@ import {
   moon,
   share as shareIcon,
   script,
-  settings,
+  settings as settingsIcon,
   sun,
   windowPopout,
+  documentation,
 } from "./icons.ts";
 import {
   ConsoleMessage,
   ConsoleMessageType,
   ConsoleMirror,
 } from "./ConsoleMirror.tsx";
-import { useLocalStorage } from "./util/useLocalStorage.ts";
 import { getBaseUrl } from "./util/getBaseUrl.ts";
+import { SettingsModal } from "./SettingsModal.tsx";
+import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -142,16 +145,18 @@ function AppBarButton({
   onClick,
   active = false,
   label,
+  onAuxClick,
 }: {
   children: ReactNode;
   onClick: MouseEventHandler;
   active?: boolean;
   label: string;
+  onAuxClick?: MouseEventHandler;
 }) {
   if (active) {
     return (
       <Tooltip content={label} type="label" placement="right">
-        <Button tone="accent" onClick={onClick}>
+        <Button tone="accent" onClick={onClick} onAuxClick={onAuxClick}>
           {children}
         </Button>
       </Tooltip>
@@ -159,7 +164,7 @@ function AppBarButton({
   }
   return (
     <Tooltip content={label} type="label" placement="right">
-      <Button variant="ghost" onClick={onClick}>
+      <Button variant="ghost" onClick={onClick} onAuxClick={onAuxClick}>
         {children}
       </Button>
     </Tooltip>
@@ -175,18 +180,19 @@ export type SandcastleAction =
   | { type: "setAndRun"; code?: string; html?: string };
 
 function App() {
-  const [theme, setTheme] = useLocalStorage<"dark" | "light">(
-    "sandcastle/theme",
-    "dark",
-  );
+  const { settings, updateSettings } = useContext(SettingsContext);
   const rightSideRef = useRef<RightSideRef>(null);
   const consoleCollapsedHeight = 26;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
 
-  const startOnEditor = !!(window.location.search || window.location.hash);
-  const [leftPanel, setLeftPanel] = useState<"editor" | "gallery">(
+  const isStartingWithCode = !!(window.location.search || window.location.hash);
+  const startOnEditor =
+    isStartingWithCode || settings.defaultPanel === "editor";
+  const [leftPanel, setLeftPanel] = useState<LeftPanel>(
     startOnEditor ? "editor" : "gallery",
   );
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   const [title, setTitle] = useState("New Sandcastle");
 
   // This is used to avoid a "double render" when loading from the URL
@@ -388,6 +394,36 @@ function App() {
     [galleryItems],
   );
 
+  const loadDemo = useCallback(
+    function loadDemo(item: GalleryItem, switchToCode: boolean) {
+      if (!confirmLeave()) {
+        return;
+      }
+      // Load the gallery item every time it's clicked
+      loadGalleryItem(item.id);
+
+      const searchParams = new URLSearchParams(window.location.search);
+      if (
+        !searchParams.has("id") ||
+        (searchParams.has("id") && searchParams.get("id") !== item.id)
+      ) {
+        // only push state if it's not the current url to prevent duplicated in history
+        window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
+        if (
+          !searchParams.has("id") ||
+          (searchParams.has("id") && searchParams.get("id") !== item.id)
+        ) {
+          // only push state if it's not the current url to prevent duplicated in history
+          window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
+        }
+        if (switchToCode) {
+          setLeftPanel("editor");
+        }
+      }
+    },
+    [loadGalleryItem, confirmLeave],
+  );
+
   useEffect(() => {
     let ignore = false;
     async function fetchGallery() {
@@ -497,19 +533,24 @@ function App() {
     }
   }, [codeState.dirty]);
 
+  function openDocsPage() {
+    const docsUrl = "https://cesium.com/learn/cesiumjs/ref-doc/index.html";
+    window.open(docsUrl, "_blank")?.focus();
+  }
+
   return (
     <Root
       id="root"
       className="sandcastle-root"
       density="dense"
-      colorScheme={theme}
+      colorScheme={settings.theme}
       synchronizeColorScheme
     >
       <header className="header">
         <a className="logo" href={getBaseUrl()}>
           <img
             src={
-              theme === "dark"
+              settings.theme === "dark"
                 ? "./images/Cesium_Logo_overlay.png"
                 : "./images/Cesium_Logo_Color_Overlay.png"
             }
@@ -517,7 +558,7 @@ function App() {
           />
         </a>
         <div className="metadata">{title}</div>
-        <Button tone="accent" onClick={() => share()}>
+        <Button tone="accent" onClick={share}>
           <Icon href={shareIcon} /> Share
         </Button>
         <Divider aria-orientation="vertical" />
@@ -554,23 +595,40 @@ function App() {
         >
           <Icon href={add} size="large" />
         </AppBarButton>
+        <AppBarButton
+          label="Documentation"
+          onClick={openDocsPage}
+          onAuxClick={openDocsPage}
+        >
+          <Icon href={documentation} size="large" />
+        </AppBarButton>
         <div className="flex-spacer"></div>
         <Divider />
         <AppBarButton
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          label="Toggle Theme"
+          onClick={() =>
+            updateSettings({
+              theme: settings.theme === "dark" ? "light" : "dark",
+            })
+          }
+          label="Toggle theme"
         >
-          <Icon href={theme === "dark" ? moon : sun} size="large" />
+          <Icon href={settings.theme === "dark" ? moon : sun} size="large" />
         </AppBarButton>
-        <AppBarButton label="Settings" onClick={() => {}}>
-          <Icon href={settings} size="large" />
+        <AppBarButton
+          label="Settings"
+          onClick={() => {
+            setSettingsOpen(true);
+          }}
+        >
+          <Icon href={settingsIcon} size="large" />
         </AppBarButton>
+        <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
       </div>
       <Allotment defaultSizes={[40, 60]}>
         <Allotment.Pane minSize={400} className="left-panel">
           {leftPanel === "editor" && (
             <SandcastleEditor
-              darkTheme={theme === "dark"}
+              darkTheme={settings.theme === "dark"}
               onJsChange={(value: string = "") =>
                 dispatch({ type: "setCode", code: value })
               }
@@ -586,40 +644,7 @@ function App() {
           <Gallery
             hidden={leftPanel !== "gallery"}
             galleryItems={galleryItems}
-            loadDemo={(item, switchToCode) => {
-              if (!confirmLeave()) {
-                return;
-              }
-              // Load the gallery item every time it's clicked
-              loadGalleryItem(item.id);
-
-              const searchParams = new URLSearchParams(window.location.search);
-              if (
-                !searchParams.has("id") ||
-                (searchParams.has("id") && searchParams.get("id") !== item.id)
-              ) {
-                // only push state if it's not the current url to prevent duplicated in history
-                window.history.pushState(
-                  {},
-                  "",
-                  `${getBaseUrl()}?id=${item.id}`,
-                );
-                if (
-                  !searchParams.has("id") ||
-                  (searchParams.has("id") && searchParams.get("id") !== item.id)
-                ) {
-                  // only push state if it's not the current url to prevent duplicated in history
-                  window.history.pushState(
-                    {},
-                    "",
-                    `${getBaseUrl()}?id=${item.id}`,
-                  );
-                }
-                if (switchToCode) {
-                  setLeftPanel("editor");
-                }
-              }
-            }}
+            loadDemo={loadDemo}
           />
         </Allotment.Pane>
         <Allotment.Pane className="right-panel">
