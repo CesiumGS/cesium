@@ -9147,11 +9147,9 @@
       "material": {
         "polylineOutline": {
           "color": {
-              "rgba": [76, 74, 99, 255]
+              "rgba": [100, 149, 237, 140]
           },
-          "outlineColor": {
-              "rgba": [0, 0, 0, 175]
-          }
+          "outlineWidth": 1
         }
       },
       "width": 20,
@@ -13283,12 +13281,7 @@
       "material": {
         "polylineOutline": {
           "color": {
-            "rgba": [
-              100,
-              149,
-              237,
-              140
-            ]
+            "rgba": [100, 149, 237, 140]
           },
           "outlineWidth": 1
         }
@@ -13296,8 +13289,38 @@
     }
   },
   {
-    "id": "TheMartianPath",
-    "name": "TheMartianPath",
+    "id": "Ingenuity",
+    "availability": "2021-03-03T12:00:00Z/2025-08-20T11:30:00Z",
+    "model": {
+      "gltf": "models/Mars/Ingenuity.glb",
+      "heightReference": "RELATIVE_TO_3D_TILE",
+      "minimumPixelSize": 128,
+      "maximumScale": 2000
+    },
+    "orientation" : {
+      "velocityReference": "#position"
+    },
+    "position": {
+      "cartographicDegrees": [77.45088572, 18.44062715, 10]
+    },
+    "runAnimations": true,
+    "clampAnimations": false
+  },
+  {
+    "id": "TheMartianJourney",
+    "name": "TheMartianJourney",
+    "rectangle": {
+      "height": 0,
+      "heightReference": "CLAMP_TO_GROUND",
+      "coordinates": {
+        "wsenDegrees": [-30, 5, 25, 25]
+      },
+      "rotation": -0.7,
+      "stRotation": -0.7,
+      "distanceDisplayCondition": {
+        "distanceDisplayCondition": [0, 7e6]
+      }
+    },
     "polyline": {
       "positions": {
         "cartographicDegrees": [
@@ -13497,12 +13520,7 @@
       "material": {
         "polylineOutline": {
           "color": {
-            "rgba": [
-              100,
-              149,
-              237,
-              140
-            ]
+            "rgba": [100, 149, 237, 140]
           },
           "outlineWidth": 0
         }

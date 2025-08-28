@@ -40,21 +40,33 @@
     {
       "type": "Feature",
       "properties": { 
-        "text": "Schiaparelli Crater",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [0.8318, -0.5309, 0.0]
+        "text": "Alba Mons",
+        "destination": [-1656684.84292118, -1721283.0587047334, -3512745.6912886756],
+        "orientation": [3.2968413720330583, -0.8878989804876842, 6.281338152600349]
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [16.7, -2.7]
+        "coordinates": [40.5, 250.4]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Elysium Volcanic Region",
+        "destination": [-3358410.5839802977, -1114430.1745489987, 3758279.9655353623],
+        "orientation": [2.785601393609798, -1.0110789548033488, 0.001974784953528541]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [24.7, 150]
       }
     },
     {
       "type": "Feature",
       "properties": { 
         "text": "Sojourner Landing Site",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+        "destination": [2836760.1674759886, -1720671.795540616, 988936.7771798471],
+        "orientation": [-1.2346469388185872, 0.6220485760889243, 2.298679542056436]
       },
       "geometry": {
         "type": "Point",
@@ -65,8 +77,8 @@
       "type": "Feature",
       "properties": { 
         "text": "Spirit Landing Site",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+        "destination": [-3423579.7851325544, -54759.407162915566, -1146586.4166207185],
+        "orientation": [1.8099248247206499, 0.8129045978343149, 2.952066556955016]
       },
       "geometry": {
         "type": "Point",
@@ -77,8 +89,8 @@
       "type": "Feature",
       "properties": { 
         "text": "Opportunity Landing Site",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+        "destination": [3423645.5182105238, -362371.7686187621, 34789.38475912786],
+        "orientation": [1.6743459148565303, -0.193232347455288, -0.3078175442453684]
       },
       "geometry": {
         "type": "Point",
@@ -89,8 +101,8 @@
       "type": "Feature",
       "properties": { 
         "text": "Curiosity Landing Site",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+        "destination": [-2489494.483232154, 2295046.910030254, -260410.0096480062],
+        "orientation": [-0.7920455935510625, -0.4284473897594938, -0.4004959882784809]
       },
       "geometry": {
         "type": "Point",
@@ -101,8 +113,8 @@
       "type": "Feature",
       "properties": { 
         "text": "Perseverance Landing Site",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+        "destination": [695452.0920392117, 3147105.00795836, 1069218.4959202465],
+        "orientation": [0.5384229131482771, 0.7549269761921702, -0.07394242861353649]
       },
       "geometry": {
         "type": "Point",
@@ -112,9 +124,9 @@
     {
         "type": "Feature",
         "properties": { 
-          "text": "The Hab",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+          "text": "\"The Hab\"",
+          "destination": [2482963.8874656125, -1390493.34713116, 2003606.997020314],
+          "orientation": [2.9706346891645325, -0.39288074608352463, 0.00013399155612248137]
          },
         "geometry": {
         "type": "Point",
@@ -124,9 +136,9 @@
     {
         "type": "Feature",
         "properties": { 
-          "text": "Acidalia Planitia (Sols 1-456)",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+          "text": "Acidalia Planitia",
+          "destination": [2482963.8874656125, -1390493.34713116, 2003606.997020314],
+          "orientation": [2.9706346891645325, -0.39288074608352463, 0.00013399155612248137]
          },
         "geometry": {
         "type": "Point",
@@ -136,21 +148,9 @@
     {
         "type": "Feature",
         "properties": { 
-          "text": "Initial Dust Storm (Sol 6)",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
-         },
-        "geometry": {
-        "type": "Point",
-        "coordinates": [-28.017700272061091, 31.183645776072201]
-        }
-    },
-    {
-        "type": "Feature",
-        "properties": { 
-          "text": "Mawrth Vallis (Sol 457)",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+          "text": "Mawrth Vallis",
+          "destination": [2880337.0763509087, -1422487.4666314998, 1778960.0256092676],
+          "orientation": [2.059623110400561, -0.6237026798827308, 0.0017318644099715286]
          },
         "geometry": {
         "type": "Point",
@@ -160,21 +160,9 @@
     {
         "type": "Feature",
         "properties": { 
-          "text": "Sol 462",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
-         },
-        "geometry": {
-        "type": "Point",
-        "coordinates": [-18.510000000000005, 22.93]
-        }
-    },
-    {
-        "type": "Feature",
-        "properties": { 
-          "text": "Arabia Terra (Sol 466)",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+          "text": "Arabia Terra",
+					"destination": [3173625.979675759, -925087.3184430292, 1281260.6050768741],
+					"orientation": [2.210739895697892, -0.4557150936475227, 0.0003490992512000801]
          },
         "geometry": {
         "type": "Point",
@@ -184,9 +172,9 @@
     {
         "type": "Feature",
         "properties": { 
-          "text": "Watney Triangle (Sol 473)",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+          "text": "\"Watney Triangle\"",
+					"destination": [3286701.2244228586, -654675.1932169931, 1071261.3465401786],
+					"orientation": [2.215118283105494, -0.4393789184089627, 6.283005739536628]
          },
         "geometry": {
         "type": "Point",
@@ -196,9 +184,9 @@
     {
         "type": "Feature",
         "properties": { 
-          "text": "Marth Crater and the Second Dust Storm (Sol 475)",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+          "text": "Mawrth Crater",
+					"destination": [3327216.4788566492, -218466.2408178681, 946551.8768631018],
+					"orientation": [3.331697871424215, -0.29366873064196347, 6.281659377334691]
          },
         "geometry": {
         "type": "Point",
@@ -208,9 +196,9 @@
     {
         "type": "Feature",
         "properties": { 
-          "text": "Terra Meridiani (Sol 487)",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
+          "text": "Terra Meridiani",
+					"destination": [3527603.695520859, -689644.450481964, 483920.0646853684],
+					"orientation": [2.04380225538318, -0.5700974895821371, 6.2830672295985615]
          },
         "geometry": {
         "type": "Point",
@@ -218,28 +206,16 @@
         }
     },
     {
-        "type": "Feature",
-        "properties": { 
-          "text": "Entrance Crater (Sol 497)",
+      "type": "Feature",
+      "properties": { 
+        "text": "Schiaparelli Crater",
         "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
-         },
-        "geometry": {
+        "orientation": [0.8318, -0.5309, 0.0]
+      },
+      "geometry": {
         "type": "Point",
-        "coordinates": [13.59, -0.37000000000000011]
-        }
-    },
-    {
-        "type": "Feature",
-        "properties": { 
-          "text": "McLaughlin",
-        "destination": [3513269.5521, 664880.5211, -498902.5607],
-        "orientation": [5.4566, -0.4563, 0.0]
-         },
-        "geometry": {
-        "type": "Point",
-        "coordinates": [-22.370000000000001, 21.870000000000001]
-        }
+        "coordinates": [16.7, -2.7]
+      }
     }
   ]
 }

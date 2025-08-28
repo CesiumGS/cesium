@@ -42,11 +42,14 @@
       .cesium-animation-rectButton.highlight-animation .cesium-animation-buttonGlow {
         display: block;
         fill: #fff;
+        /* keep the built-in blur and add extra glow layers */
+        filter: url(#animation_blurred) drop-shadow(0 0 3px #aef)
+          drop-shadow(0 0 3px #fff);
         animation: highlight-animation-button 1.2s ease-in-out infinite;
       }
       .cesium-animation-rectButton.highlight-animation .cesium-animation-buttonMain {
-        stroke: #aef;
-        stroke-width: 2;
+        stroke: #fff;
+        stroke-width: 3;
       }
       .cesium-animation-rectButton.highlight-animation .cesium-animation-buttonPath {
         fill: #fff;
@@ -54,28 +57,29 @@
 
       .cesium-animation-shuttleRingG.highlight-animation
         .cesium-animation-shuttleRingBack {
-        stroke: #aef;
-        stroke-width: 4;
+        stroke: #fff;
+        stroke-width: 6;
+        filter: drop-shadow(0 0 3px #aef) drop-shadow(0 0 3px rgba(174, 238, 255, 0.95));
         animation: highlight-animation-ring 1.2s ease-in-out infinite;
       }
       .cesium-animation-shuttleRingG.highlight-animation
         .cesium-animation-shuttleRingSwoosh
         line {
-        stroke: #aef;
-        stroke-opacity: 0.5;
+        stroke: #fff;
+        stroke-opacity: 0.8;
       }
 
       @keyframes highlight-animation-button {
         0% {
-          opacity: 0.25;
+          opacity: 0.3;
           stroke-width: 0;
         }
         50% {
           opacity: 1;
-          stroke-width: 2;
+          stroke-width: 4;
         }
         100% {
-          opacity: 0.25;
+          opacity: 0.3;
           stroke-width: 0;
         }
       }
@@ -86,7 +90,7 @@
         }
         50% {
           stroke-opacity: 1;
-          stroke: #aef;
+          stroke: #fff;
         }
         100% {
           stroke-opacity: 0.25;
@@ -145,7 +149,7 @@
         }
 
         // Load the rovers and path from The Martian (by Andy Weir), from CZML data source.
-        let curiosity, perseverance, theMartianpath;
+        let curiosity, perseverance, ingenuity, theMartianJourney;
         try {
           const dataSource = await Cesium.CzmlDataSource.load(
             "../../SampleData/Mars.czml",
@@ -170,7 +174,7 @@
 
             const boundingSphere = new Cesium.BoundingSphere(
               rover.position.getValue(clock.currentTime),
-              10000.0,
+              5000.0,
             );
 
             highlightAnimationViewModel(); // Draw attention to the play button
@@ -211,15 +215,21 @@
 
           curiosity = setupRover("Curiosity", 3, curiosity);
           perseverance = setupRover("Perseverance", 13, perseverance);
-          theMartianpath = dataSource.entities.getById("TheMartianPath");
-          theMartianpath.polyline.width = createWidthCallbackProperty(
+          ingenuity = dataSource.entities.getById("Ingenuity"); // Only for viewing - no data for flight paths
+          theMartianJourney = dataSource.entities.getById("TheMartianJourney");
+          theMartianJourney.polyline.width = createWidthCallbackProperty(
             new Cesium.NearFarScalar(0.0, 10.0, 1.0e7, 0.0),
           );
+          theMartianJourney.rectangle.material = new Cesium.ImageMaterialProperty({
+            image: createCanvasAsTexture('Mark Watney\'s Journey in "The Martian"'),
+            transparent: true,
+          });
+
           toolbarMenuEntries.push({
-            text: "The Martian Path",
+            text: '"The Martian" Journey',
             onselect: () => {
               reset();
-              viewer.zoomTo(theMartianpath);
+              viewer.zoomTo(theMartianJourney);
             },
           });
 
@@ -398,17 +408,50 @@
           },
         );
 
+        const entitiesToDisableLightingFor = [curiosity, perseverance, ingenuity];
         Cesium.knockout
           .getObservable(viewer.clockViewModel, "shouldAnimate")
           .subscribe(function (shouldAnimate) {
             // When animating, if the multiplier is very high (which is necessary to see rover movement),
             // shadows flicker distractingly, so disable them
             if (shouldAnimate && clock.multiplier >= 100000) {
+              entitiesToDisableLightingFor.forEach(function (entity) {
+                entity.model.lightColor = new Cesium.Color(0, 0, 0);
+              });
               viewer.shadows = false;
             } else {
+              entitiesToDisableLightingFor.forEach(function (entity) {
+                entity.model.lightColor = new Cesium.Color(1, 1, 1);
+              });
               viewer.shadows = true;
             }
           });
+
+        // To create a rectangle with text that conforms to the terrain, we can create a canvas
+        // with text and use it as a texture on a rectangle entity.
+        function createCanvasAsTexture(text) {
+          const canvas = document.createElement("canvas");
+          canvas.width = 1024;
+          canvas.height = 256;
+
+          const ctx = canvas.getContext("2d");
+          // Background
+          ctx.fillStyle = "rgba(0, 0, 0, 0)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Text
+          ctx.font = "36px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.strokeStyle = "rgba(0,0,0,0.1)";
+          ctx.lineWidth = 1;
+          ctx.fillStyle = "#ffffff";
+
+          ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
+          ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+          return canvas;
+        }
 
         //Sandcastle_End
       };
