@@ -34,11 +34,22 @@ void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
         float dotA = dot(normalA, viewDir);
         float dotB = dot(normalB, viewDir);
         
-        // Silhouette edge is visible when one triangle is front-facing and other is back-facing
-        // Same sign = both front or both back = not silhouette, discard
-        float tolerance = 0.01;
-        if (dotA * dotB > tolerance) {
-            discard; // Both triangles face same direction
+        // Use strict sign-based detection with epsilon to avoid instability
+        const float eps = 1e-3;
+        bool frontA = dotA > eps;
+        bool backA  = dotA < -eps;
+        bool frontB = dotB > eps;
+        bool backB  = dotB < -eps;
+        
+        // True silhouette: one triangle front-facing, other back-facing
+        bool oppositeFacing = (frontA && backB) || (backA && frontB);
+        
+        // Exclude edges where both triangles are nearly grazing (perpendicular to view)
+        // This handles the top-view cylinder case where both normals are ~horizontal
+        bool bothNearGrazing = (abs(dotA) <= eps && abs(dotB) <= eps);
+        
+        if (!(oppositeFacing && !bothNearGrazing)) {
+            discard; // Not a true silhouette edge
         } else {
             // True silhouette
             edgeColor = vec4(1.0, 0.0, 0.0, 1.0);
