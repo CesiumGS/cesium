@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import "./Gallery.css";
 import {
   Badge,
@@ -178,7 +178,7 @@ export function GallerySearch({
   );
 }
 
-export function GalleryCard({
+export const GalleryCard = memo(function GalleryCard({
   item,
   loadDemo,
 }: {
@@ -224,7 +224,7 @@ export function GalleryCard({
       />
     </a>
   );
-}
+});
 
 function Gallery({
   galleryItems,
