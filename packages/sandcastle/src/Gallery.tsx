@@ -168,14 +168,18 @@ export function GallerySearch({
             setCurrentTag(e.target.value);
             setTag(e.target.value);
           }}
-          value={defaultTag}
         >
+          <option value={defaultTag} selected>
+            {defaultTag}
+          </option>
           <option value={"All"}>All</option>
-          {Object.keys(availableFilters.tags).map((label) => (
-            <option value={label} key={label}>
-              {label}
-            </option>
-          ))}
+          {Object.keys(availableFilters.tags)
+            .filter((label) => label !== defaultTag)
+            .map((label) => (
+              <option value={label} key={label}>
+                {label}
+              </option>
+            ))}
         </Select.HtmlSelect>
       </Select.Root>
     </>
