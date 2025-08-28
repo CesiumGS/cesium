@@ -534,7 +534,9 @@ function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
   fs.sources.splice(
     0,
     0,
-    `vec4 czm_out_FragColor;\n` + `bool czm_discard = false;\n`,
+    `#define CESIUM_OIT_ENABLED\n` +
+      `vec4 czm_out_FragColor;\n` +
+      `bool czm_discard = false;\n`,
   );
 
   const fragDataMatches = [...source.matchAll(/out_FragData_(\d+)/g)];

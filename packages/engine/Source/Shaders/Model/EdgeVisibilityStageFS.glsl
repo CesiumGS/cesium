@@ -1,5 +1,4 @@
-#ifdef HAS_EDGE_VISIBILITY_MRT
-layout(location = 0) out vec4 out_FragColor;
+#if defined(HAS_EDGE_VISIBILITY_MRT) && !defined(CESIUM_OIT_ENABLED)
 layout(location = 1) out vec4 out_id;
 #endif
 
@@ -53,8 +52,7 @@ void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
     
     color = edgeColor;
     
-    #ifdef HAS_EDGE_VISIBILITY_MRT
-        out_FragColor = edgeColor;
+    #if defined(HAS_EDGE_VISIBILITY_MRT) && !defined(CESIUM_OIT_ENABLED)
         out_id.r = edgeTypeInt;                    // Edge type
         out_id.g = float(featureIds.featureId_0); // Feature ID from current geometry
     #endif
