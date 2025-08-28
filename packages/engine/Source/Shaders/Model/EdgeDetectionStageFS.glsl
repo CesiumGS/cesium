@@ -9,24 +9,21 @@ void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
     vec4 edgeId = texture(czm_edgeIdTexture, screenCoord);
     
     if (edgeId.r > 0.0) {
-        // Comment out feature ID for now:
-        // float edgeFeatureId = edgeId.g;
-        // float currentFeatureId = float(featureIds.featureId_0);
-        
-        // if (edgeFeatureId == currentFeatureId) {
-        //     color = edgeColor;
-        //     return;
-        // }
-
         color = edgeColor;
+        float edgeFeatureId = edgeId.g;
+        float currentFeatureId = float(featureIds.featureId_0);
+        float globeDepth = czm_unpackDepth(texture(czm_globeDepthTexture, screenCoord));
+        
+        // Background/sky/Globe Etc.: show all edges
+        if (gl_FragCoord.z > globeDepth) {
+            return;
+        }
+        
+        // Feature ID matching
+        if (edgeFeatureId > 0.0 && currentFeatureId > 0.0) {
+            if (edgeFeatureId != currentFeatureId) {
+                discard;
+            }
+        }
     }
-    
-    /*
-    float edgeDepth = texture(czm_globeDepthTexture, screenCoord).r;
-    float fragmentDepth = gl_FragCoord.z;
-    
-    if (edgeId.a > 0.0 && abs(fragmentDepth - edgeDepth) < czm_edgeDepthTolerance) {
-        discard;
-    }
-    */
 }

@@ -54,6 +54,12 @@ EdgeVisibilityPipelineStage.process = function (
   const edgeTypeLocation = shaderBuilder.addAttribute("float", "a_edgeType");
   shaderBuilder.addVarying("float", "v_edgeType", "flat");
 
+  // Add edge feature ID attribute and varying
+  const edgeFeatureIdLocation = shaderBuilder.addAttribute(
+    "float",
+    "a_edgeFeatureId",
+  );
+
   // Add silhouette normal attribute and varying for silhouette edges
   const silhouetteNormalLocation = shaderBuilder.addAttribute(
     "vec3",
@@ -79,14 +85,17 @@ EdgeVisibilityPipelineStage.process = function (
   // Pass edge type, silhouette normal, and face normals from vertex to fragment shader
   shaderBuilder.addFunctionLines("setDynamicVaryingsVS", [
     "#ifdef HAS_EDGE_VISIBILITY",
-    "  v_edgeType = a_edgeType;",
-    "  // Transform normals from model space to view space",
-    "  v_silhouetteNormalView = czm_normal * a_silhouetteNormal;",
-    "  v_faceNormalAView = czm_normal * a_faceNormalA;",
-    "  v_faceNormalBView = czm_normal * a_faceNormalB;",
-    "  // Pass view space position for perspective-correct silhouette detection",
-    "  // Use the edge position from attributes (edge domain VAO provides correct positions)",
-    "  v_positionView = (czm_modelView * vec4(attributes.positionMC, 1.0)).xyz;",
+    "  if (u_isEdgePass) {",
+    "    v_edgeType = a_edgeType;",
+    "    v_featureId_0 = a_edgeFeatureId;",
+    "    // Transform normals from model space to view space",
+    "    v_silhouetteNormalView = czm_normal * a_silhouetteNormal;",
+    "    v_faceNormalAView = czm_normal * a_faceNormalA;",
+    "    v_faceNormalBView = czm_normal * a_faceNormalB;",
+    "    // Pass view space position for perspective-correct silhouette detection",
+    "    // Use the edge position from attributes (edge domain VAO provides correct positions)",
+    "    v_positionView = (czm_modelView * vec4(attributes.positionMC, 1.0)).xyz;",
+    "  }",
     "#endif",
   ]);
 
@@ -119,6 +128,7 @@ EdgeVisibilityPipelineStage.process = function (
     silhouetteNormalLocation,
     faceNormalALocation,
     faceNormalBLocation,
+    edgeFeatureIdLocation,
     primitive.edgeVisibility,
     edgeFaceNormals,
   );
@@ -430,6 +440,7 @@ function createCPULineEdgeGeometry(
   silhouetteNormalLocation,
   faceNormalALocation,
   faceNormalBLocation,
+  edgeFeatureIdLocation,
   edgeVisibility,
   edgeFaceNormals,
 ) {
@@ -663,6 +674,61 @@ function createCPULineEdgeGeometry(
       normalize: false,
     },
   ];
+
+  // Get feature ID from original geometry
+  const primitive = renderResources.runtimePrimitive.primitive;
+  const getFeatureIdForEdge = function () {
+    // Try to get the first feature ID from the original primitive
+    if (defined(primitive.featureIds) && primitive.featureIds.length > 0) {
+      const firstFeatureIdSet = primitive.featureIds[0];
+
+      // Handle FeatureIdAttribute objects directly using setIndex
+      if (defined(firstFeatureIdSet.setIndex)) {
+        const featureIdAttribute = primitive.attributes.find(
+          (attr) =>
+            attr.semantic === VertexAttributeSemantic.FEATURE_ID &&
+            attr.setIndex === firstFeatureIdSet.setIndex,
+        );
+
+        if (defined(featureIdAttribute)) {
+          const featureIds = defined(featureIdAttribute.typedArray)
+            ? featureIdAttribute.typedArray
+            : ModelReader.readAttributeAsTypedArray(featureIdAttribute);
+
+          // Create edge feature ID buffer based on edge indices
+          const edgeFeatureIds = new Float32Array(totalVerts);
+          for (let i = 0; i < numEdges; i++) {
+            const a = edgeIndices[i * 2];
+            const featureId = a < featureIds.length ? featureIds[a] : 0;
+            edgeFeatureIds[i * 2] = featureId;
+            edgeFeatureIds[i * 2 + 1] = featureId;
+          }
+
+          return edgeFeatureIds;
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const edgeFeatureIds = getFeatureIdForEdge();
+
+  if (defined(edgeFeatureIds)) {
+    const edgeFeatureIdBuffer = Buffer.createVertexBuffer({
+      context,
+      typedArray: edgeFeatureIds,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+
+    attributes.push({
+      index: edgeFeatureIdLocation,
+      vertexBuffer: edgeFeatureIdBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    });
+  }
 
   const vertexArray = new VertexArray({ context, indexBuffer, attributes });
 

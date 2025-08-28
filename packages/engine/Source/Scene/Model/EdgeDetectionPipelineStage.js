@@ -1,4 +1,3 @@
-import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import EdgeDetectionStageFS from "../../Shaders/Model/EdgeDetectionStageFS.js";
 
 /**
@@ -26,16 +25,6 @@ const EdgeDetectionPipelineStage = {
  */
 EdgeDetectionPipelineStage.process = function (renderResources) {
   const shaderBuilder = renderResources.shaderBuilder;
-  const uniformMap = renderResources.uniformMap;
-
-  shaderBuilder.addUniform(
-    "float",
-    "czm_edgeDepthTolerance",
-    ShaderDestination.FRAGMENT,
-  );
-  uniformMap.czm_edgeDepthTolerance = function () {
-    return 0.001;
-  };
 
   shaderBuilder.addFragmentLines([EdgeDetectionStageFS]);
 };
