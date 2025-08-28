@@ -5,11 +5,11 @@ import { checkmark, copy, share as shareIcon } from "./icons";
 import { makeCompressedBase64String } from "./Helpers";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { getBaseUrl } from "./util/getBaseUrl";
-
+import { PopoverDescription } from "@ariakit/react";
 import "./SharePopover.css";
+import { sleep } from "./util/sleep";
 
 export function SharePopover({
-  title,
   code,
   html,
 }: {
@@ -41,13 +41,21 @@ export function SharePopover({
   }
 
   const [wasCopied, setWasCopied] = useState(false);
-  const [isCopied, startCopy] = useTransition();
+  const [isCopying, startCopy] = useTransition();
   const copyShareUrl = () =>
     startCopy(async () => {
       try {
         setWasCopied(false);
         await navigator.clipboard.writeText(shareUrl);
-        setWasCopied(true);
+        // need to wrap state updates after await in a new startTransition function
+        // https://react.dev/reference/react/useTransition#react-doesnt-treat-my-state-update-after-await-as-a-transition
+        startCopy(async () => {
+          setWasCopied(true);
+          await sleep(1000);
+          startCopy(() => {
+            setWasCopied(false);
+          });
+        });
       } catch (error) {
         if (error instanceof DOMException) {
           // Note localhost should always work regardless of https
@@ -65,7 +73,7 @@ export function SharePopover({
   return (
     <SandcastlePopover
       className="share-popover"
-      title={title ? `Share "${title}"` : "Share"}
+      title="Share"
       disclosure={
         <Button tone="accent" onClick={generateShareUrl}>
           <Icon href={shareIcon} /> Share
@@ -95,13 +103,15 @@ export function SharePopover({
             }
           />
           <Field.Description>
-            Copy this link to share the current Sandcastle. Be sure to re-share
-            if you make any changes.
+            <PopoverDescription>
+              Copy this link to share the current Sandcastle. Be sure to
+              re-share if you make any changes.
+            </PopoverDescription>
           </Field.Description>
         </Field.Root>
         <IconButton
-          icon={wasCopied ? checkmark : copy}
-          isActive={isCopied || wasCopied}
+          icon={isCopying || wasCopied ? checkmark : copy}
+          isActive={isCopying || wasCopied}
           label="Copy to clipboard"
           onClick={copyShareUrl}
         ></IconButton>
