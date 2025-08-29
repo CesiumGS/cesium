@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Create 3D models using glTF." />
+    <meta name="cesium-sandcastle-labels" content="Tutorials,Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
+        let model;
+        try {
+          model = await Cesium.Model.fromGltfAsync({
+            url: "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
+            minimumPixelSize: 64,
+          });
+          viewer.scene.primitives.add(model);
+        } catch (error) {
+          console.log(`Failed to load model. ${error}`);
+        }
+
+        const lng = -75.1652;
+        const lat = 39.9526;
+
+        let position;
+
+        let instanceTransform;
+        for (let i = 0; i < 10; i++) {
+          position = Cesium.Cartesian3.fromDegrees(
+            lng + i * Math.random() * 0.0001,
+            lat + i * 0.0001,
+          );
+          instanceTransform = new Cesium.Transforms.eastNorthUpToFixedFrame(position);
+          model.instances.add(instanceTransform);
+        }
+
+        viewer.scene.camera.setView({
+          destination: new Cesium.Cartesian3(
+            1253512.5232461668,
+            -4732922.214567729,
+            4074115.474546098,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            2.205737333179613,
+            -0.7255022564055849,
+            6.283181225638178,
+          ),
+        });
+
+        let instance;
+        let rotation = new Cesium.Matrix3();
+        let newTransform;
+        // modify the instance transform by supplying a new rotations after a delay
+        setTimeout(() => {
+          for (let i = 0; i < model.instances.length; i++) {
+            instance = model.instances.get(i);
+            rotation = Cesium.Matrix4.getRotation(instance.transform, rotation);
+            newTransform = Cesium.clone(instance.transform);
+
+            const angleDegrees = Math.random() * 180;
+            const angleRadians = Cesium.Math.toRadians(angleDegrees);
+            const rotationZ = Cesium.Matrix3.fromRotationZ(angleRadians);
+            const newRotation = Cesium.Matrix3.multiply(
+              rotationZ,
+              rotation,
+              new Cesium.Matrix3(),
+            );
+            newTransform = Cesium.clone(instance.transform);
+            Cesium.Matrix4.setRotation(newTransform, newRotation, newTransform);
+            instance.transform = newTransform;
+          }
+        }, "6000");
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

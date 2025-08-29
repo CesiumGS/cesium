@@ -269,6 +269,7 @@ function GltfLoader(options) {
   this._loadResourcesPromise = undefined;
   this._resourcesLoaded = false;
   this._texturesLoaded = false;
+  this._hasMeshGpuInstancing = false;
 
   this._supportedImageFormats = undefined;
 
@@ -2439,6 +2440,7 @@ function loadNode(loader, gltfNode, frameState) {
         "Models with the EXT_mesh_gpu_instancing extension cannot be used for classification.",
       );
     }
+    loader._hasMeshGpuInstancing = true;
     node.instances = loadInstances(loader, nodeExtensions, frameState);
   }
 

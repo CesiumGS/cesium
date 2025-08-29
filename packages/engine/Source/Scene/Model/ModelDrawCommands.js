@@ -116,34 +116,30 @@ function buildDrawCommandForModel(
   const pass = primitiveRenderResources.alphaOptions.pass;
   const sceneGraph = model.sceneGraph;
 
-  const is3D = frameState.mode === SceneMode.SCENE3D;
-  let modelMatrix, boundingSphere;
+  const useBoundingSphere2D =
+    !frameState.scene3DOnly && sceneGraph._projectTo2D;
+  const useModelMatrix2D =
+    frameState.mode !== SceneMode.SCENE3D && !useBoundingSphere2D;
 
-  if (!is3D && !frameState.scene3DOnly && model._projectTo2D) {
-    modelMatrix = Matrix4.multiplyTransformation(
-      sceneGraph._computedModelMatrix,
-      primitiveRenderResources.runtimeNode.computedTransform,
-      new Matrix4(),
-    );
+  const runtimeNode = primitiveRenderResources.runtimeNode;
+  const modelMatrix = ModelDrawCommands.createCommandModelMatrix(
+    model.modelMatrix,
+    sceneGraph,
+    runtimeNode,
+    useModelMatrix2D,
+  );
 
-    const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
-    boundingSphere = runtimePrimitive.boundingSphere2D;
-  } else {
-    const computedModelMatrix = is3D
-      ? sceneGraph._computedModelMatrix
-      : sceneGraph._computedModelMatrix2D;
-
-    modelMatrix = Matrix4.multiplyTransformation(
-      computedModelMatrix,
-      primitiveRenderResources.runtimeNode.computedTransform,
-      new Matrix4(),
-    );
-
-    boundingSphere = BoundingSphere.transform(
-      primitiveRenderResources.boundingSphere,
-      modelMatrix,
-    );
-  }
+  const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
+  const primitiveBoundingSphere =
+    frameState.mode !== SceneMode.SCENE3D && useBoundingSphere2D
+      ? runtimePrimitive.boundingSphere2D
+      : runtimePrimitive.boundingSphere;
+  const boundingSphere = ModelDrawCommands.createCommandBoundingSphere(
+    modelMatrix,
+    sceneGraph,
+    runtimeNode,
+    primitiveBoundingSphere,
+  );
 
   // Initialize render state with default values
   let renderState = clone(
@@ -191,6 +187,133 @@ function buildDrawCommandForModel(
   });
   return command;
 }
+
+/**
+ * Returns the model matrix based on the supplied parameters
+ *
+ * @param {Matrix4} modelMatrix
+ * @param {ModelSceneGraph} sceneGraph
+ * @param {ModelRuntimeNode} runtimeNode
+ * @param {Boolean} use2D
+ * @param {Matrix4} result
+ *
+ * @returns {Matrix4} The model matrix
+ *
+ * @private
+ */
+ModelDrawCommands.createCommandModelMatrix = function (
+  modelMatrix,
+  sceneGraph,
+  runtimeNode,
+  use2D = false,
+  result,
+) {
+  if (!defined(result)) {
+    result = new Matrix4();
+  }
+
+  if (sceneGraph.hasInstances) {
+    return modelMatrix;
+  }
+
+  if (use2D) {
+    return Matrix4.multiplyTransformation(
+      sceneGraph._computedModelMatrix2D,
+      runtimeNode.computedTransform,
+      result,
+    );
+  }
+
+  return Matrix4.multiplyTransformation(
+    sceneGraph.computedModelMatrix,
+    runtimeNode.computedTransform,
+    result,
+  );
+};
+
+/**
+ * Returns the bounding sphere based on the supplied parameters
+ *
+ * @param {Matrix4} modelMatrix
+ * @param {ModelSceneGraph} sceneGraph
+ * @param {ModelRuntimeNode} runtimeNode
+ * @param {BoundingSphere} primitiveBoundingSphere
+ * @param {BoundingSphere} result
+ *
+ * @returns {BoundingSphere}
+ */
+ModelDrawCommands.createCommandBoundingSphere = function (
+  commandModelMatrix,
+  sceneGraph,
+  runtimeNode,
+  primitiveBoundingSphere,
+  result,
+) {
+  if (!defined(result)) {
+    result = new BoundingSphere();
+  }
+
+  if (sceneGraph.hasInstances) {
+    const instanceBoundingSpheres = [];
+
+    for (const modelInstance of sceneGraph.modelInstances._instances) {
+      const boundingSphere = modelInstance.getPrimitiveBoundingSphere(
+        commandModelMatrix,
+        sceneGraph,
+        runtimeNode,
+        primitiveBoundingSphere,
+      );
+      instanceBoundingSpheres.push(boundingSphere);
+    }
+
+    return BoundingSphere.fromBoundingSpheres(instanceBoundingSpheres, result);
+  }
+
+  return BoundingSphere.transform(
+    primitiveBoundingSphere,
+    commandModelMatrix,
+    result,
+  );
+};
+
+ModelDrawCommands.updateDrawCommand = function (
+  drawCommand,
+  model,
+  runtimeNode,
+  runtimePrimitive,
+  frameState,
+) {
+  const sceneGraph = model.sceneGraph;
+  const useBoundingSphere2D =
+    !frameState.scene3DOnly && sceneGraph._projectTo2D;
+  const useModelMatrix2D =
+    frameState.mode !== SceneMode.SCENE3D && !useBoundingSphere2D;
+
+  const modelMatrix = ModelDrawCommands.createCommandModelMatrix(
+    model.modelMatrix,
+    sceneGraph,
+    runtimeNode,
+    useModelMatrix2D,
+    drawCommand.modelMatrix,
+  );
+
+  drawCommand.cullFace = ModelUtility.getCullFace(
+    modelMatrix,
+    drawCommand.primitiveType,
+  );
+
+  const primitiveBoundingSphere =
+    frameState.mode !== SceneMode.SCENE3D && useBoundingSphere2D
+      ? runtimePrimitive.boundingSphere2D
+      : runtimePrimitive.boundingSphere;
+  ModelDrawCommands.createCommandBoundingSphere(
+    modelMatrix,
+    sceneGraph,
+    runtimeNode,
+    primitiveBoundingSphere,
+    drawCommand.boundingVolume,
+  );
+};
 
 /**
  * @private

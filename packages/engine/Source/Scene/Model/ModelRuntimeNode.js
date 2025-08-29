@@ -7,6 +7,8 @@ import Matrix4 from "../../Core/Matrix4.js";
 import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
+import RuntimeModelInstancingPipelineStage from "./RuntimeModelInstancingPipelineStage.js";
+import ModelInstancesUpdateStage from "./ModelInstancesUpdateStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
 
@@ -49,11 +51,13 @@ function ModelRuntimeNode(options) {
   this._children = children;
 
   this._originalTransform = Matrix4.clone(transform, this._originalTransform);
-  this._transform = Matrix4.clone(transform, this._transform);
-  this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
 
-  this._computedTransform = new Matrix4(); // Computed in initialize()
-  this._transformDirty = false;
+  this._transform = Matrix4.clone(transform, this._transform);
+  this._transformToRoot = new Matrix4();
+  this._computedTransform = new Matrix4();
+  this._isComputedTransformDirty = false;
+
+  this.updateComputedTransform(transformToRoot);
 
   // Used for animation
   this._transformParameters = undefined;
@@ -68,9 +72,7 @@ function ModelRuntimeNode(options) {
    * by the user through {@link ModelNode}.
    *
    * @type {boolean}
-   *
    * @default true
-   *
    * @private
    */
   this.show = true;
@@ -248,8 +250,23 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
       return this._transform;
     },
     set: function (value) {
-      this._transformDirty = true;
       this._transform = Matrix4.clone(value, this._transform);
+      this._isComputedTransformDirty = true;
+    },
+  },
+
+  /**
+   * True if the node's transform is dirty. If dirty, it's <code>transformToRoot</code>
+   * and <code>computedTransform</code> properties, as well as both properties for all
+   * it's children recursively, will be recomputed during the next update.
+   * @type {boolean}
+   * @default false
+   * @readonly
+   * @private
+   */
+  isComputedTransformDirty: {
+    get: function () {
+      return this._isComputedTransformDirty;
     },
   },
 
@@ -493,15 +510,6 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
 });
 
 function initialize(runtimeNode) {
-  const transform = runtimeNode.transform;
-  const transformToRoot = runtimeNode.transformToRoot;
-  const computedTransform = runtimeNode._computedTransform;
-  runtimeNode._computedTransform = Matrix4.multiply(
-    transformToRoot,
-    transform,
-    computedTransform,
-  );
-
   const node = runtimeNode.node;
   if (!defined(node.matrix)) {
     runtimeNode._transformParameters = new TranslationRotationScale(
@@ -530,12 +538,11 @@ function initialize(runtimeNode) {
 }
 
 function updateTransformFromParameters(runtimeNode, transformParameters) {
-  runtimeNode._transformDirty = true;
-
   runtimeNode._transform = Matrix4.fromTranslationRotationScale(
     transformParameters,
     runtimeNode._transform,
   );
+  runtimeNode._isComputedTransformDirty = true;
 }
 
 /**
@@ -571,7 +578,7 @@ ModelRuntimeNode.prototype.getChild = function (index) {
  * Configure the node pipeline stages. If the pipeline needs to be re-run, call
  * this method again to ensure the correct sequence of pipeline stages are
  * used.
- *
+ * @param {Model} model
  * @private
  */
 ModelRuntimeNode.prototype.configurePipeline = function () {
@@ -585,22 +592,39 @@ ModelRuntimeNode.prototype.configurePipeline = function () {
     pipelineStages.push(InstancingPipelineStage);
   }
 
-  pipelineStages.push(NodeStatisticsPipelineStage);
-
   updateStages.push(ModelMatrixUpdateStage);
+
+  const sceneGraph = this.sceneGraph;
+  if (sceneGraph.hasInstances) {
+    pipelineStages.push(RuntimeModelInstancingPipelineStage);
+    updateStages.push(ModelInstancesUpdateStage);
+  }
+
+  pipelineStages.push(NodeStatisticsPipelineStage);
 };
 
 /**
- * Updates the computed transform used for rendering and instancing.
- *
+ * Updates the computed transform used for rendering and instancing
+ * when the tree of node hierarchy transforms changes. The new result
+ * applies the updated transforms of the parent node to this node's
+ * transform, and is used to transform positions from local node
+ * coordinates to the root glTF's local coordinates.
+ * @param {Matrix4} transformToRoot
+ * @return {Matrix4} The computed transform that can be applied to each child
  * @private
  */
-ModelRuntimeNode.prototype.updateComputedTransform = function () {
+ModelRuntimeNode.prototype.updateComputedTransform = function (
+  transformToRoot,
+) {
+  this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
   this._computedTransform = Matrix4.multiply(
-    this._transformToRoot,
+    transformToRoot,
     this._transform,
     this._computedTransform,
   );
+  this._isComputedTransformDirty = false;
+
+  return this._computedTransform;
 };
 
 /**

@@ -18,6 +18,7 @@
 #### Additions :tada:
 
 - Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
+- Adds support for instancing a model at runtime via `ModelInstance` and `ModelInstanceCollection` classes. [#12588](https://github.com/CesiumGS/cesium/pull/12588)
 
 #### Deprecated :hourglass_flowing_sand:
 
