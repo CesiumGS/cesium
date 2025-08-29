@@ -414,7 +414,7 @@ function getShAttributePrefix(attribute) {
 
 /**
  * Determine Spherical Harmonics degree and coefficient count from attributes
- * @param {Array} attributes - The list of attributes.
+ * @param {VertexAttributeSemantic[]} attributes - The list of attributes.
  * @returns {object} An object containing the degree (l) and coefficient (n).
  */
 function degreeAndCoefFromAttributes(attributes) {
