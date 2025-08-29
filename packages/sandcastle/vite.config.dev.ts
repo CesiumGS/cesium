@@ -16,7 +16,6 @@ export default defineConfig(({ command }) => {
   config.define = {
     ...config.define,
     __PAGE_BASE_URL__: JSON.stringify("/"),
-    __GALLERY_BASE_URL__: JSON.stringify("/gallery"),
   };
 
   // When running the local dev server these are just server routes.
@@ -30,10 +29,9 @@ export default defineConfig(({ command }) => {
       { src: `${cesiumSource}/Widgets`, dest: cesiumBaseUrl },
       { src: `${cesiumSource}/*.(js|cjs)`, dest: cesiumBaseUrl },
       { src: "../../Apps/SampleData", dest: "Apps" },
-      { src: "../../Apps/SampleData", dest: "" },
-      { src: "gallery", dest: "" },
       { src: `../../Source/Cesium.d.ts`, dest: "Source" },
       { src: "templates/Sandcastle.d.ts", dest: "templates" },
+      { src: "../../Apps/SampleData", dest: "" },
     ],
   });
 

@@ -5,11 +5,13 @@ import {
   RefObject,
   useCallback,
   useContext,
+  useDeferredValue,
   useEffect,
   useImperativeHandle,
   useReducer,
   useRef,
   useState,
+  useTransition,
 } from "react";
 import { Allotment, AllotmentHandle } from "allotment";
 import "allotment/dist/style.css";
@@ -17,8 +19,17 @@ import "./App.css";
 
 import { Button, Divider, Tooltip } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";
-import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
-import Gallery, { GalleryItem } from "./Gallery.js";
+import { makeCompressedBase64String } from "./Helpers.ts";
+import { getBaseUrl } from "./util/getBaseUrl.ts";
+import { loadFromUrl } from "./util/loadFromUrl.ts";
+
+import {
+  StoreContext,
+  useGalleryItemStore,
+  type GalleryItem,
+} from "./Gallery/GalleryItemStore.ts";
+import Gallery from "./Gallery/Gallery.js";
+
 import Bucket from "./Bucket.tsx";
 import SandcastleEditor from "./SandcastleEditor.tsx";
 import {
@@ -36,7 +47,6 @@ import {
   ConsoleMessageType,
   ConsoleMirror,
 } from "./ConsoleMirror.tsx";
-import { getBaseUrl } from "./util/getBaseUrl.ts";
 import { SettingsModal } from "./SettingsModal.tsx";
 import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
 import { MetadataPopover } from "./MetadataPopover.tsx";
@@ -54,7 +64,6 @@ const defaultHtmlCode = `<style>
 <div id="toolbar"></div>
 `;
 
-const GALLERY_BASE = __GALLERY_BASE_URL__;
 const cesiumVersion = __CESIUM_VERSION__;
 const versionString = __COMMIT_SHA__
   ? `Commit: ${__COMMIT_SHA__.substring(0, 7)} - ${cesiumVersion}`
@@ -197,9 +206,6 @@ function App() {
   const [title, setTitle] = useState("New Sandcastle");
   const [description, setDescription] = useState("");
 
-  // This is used to avoid a "double render" when loading from the URL
-  const [readyForViewer, setReadyForViewer] = useState(false);
-
   type CodeState = {
     code: string;
     html: string;
@@ -295,10 +301,6 @@ function App() {
     );
   }, [codeState.dirty]);
 
-  const [legacyIdMap, setLegacyIdMap] = useState<Record<string, string>>({});
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
-  const [galleryLoaded, setGalleryLoaded] = useState(false);
-
   const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
   const appendConsole = useCallback(
     function appendConsole(type: ConsoleMessageType, message: string) {
@@ -313,12 +315,14 @@ function App() {
     [consoleExpanded],
   );
 
-  function resetConsole() {
-    // the console should only be cleared by the Bucket when the viewer page
-    // has actually reloaded and stopped sending console statements
-    // otherwise some could bleed into the "next run"
-    setConsoleMessages([]);
-  }
+  const resetConsole = useCallback(() => {
+    if (codeState.runNumber > 0) {
+      // the console should only be cleared by the Bucket when the viewer page
+      // has actually reloaded and stopped sending console statements
+      // otherwise some could bleed into the "next run"
+      setConsoleMessages([]);
+    }
+  }, [codeState.runNumber]);
 
   function runSandcastle() {
     dispatch({ type: "runSandcastle" });
@@ -359,159 +363,49 @@ function App() {
     window.focus();
   }
 
-  const loadGalleryItem = useCallback(
-    async function loadGalleryItem(galleryId: string) {
-      const galleryItem = galleryItems.find((item) => item.id === galleryId);
-      if (!galleryItem) {
-        console.error("Unable to find gallery item with id:", galleryId);
+  const galleryItemStore = useGalleryItemStore();
+  const { fetchItems, items } = galleryItemStore;
+  useEffect(fetchItems, []);
+
+  const isGalleryLoaded = useDeferredValue(items.length > 0);
+  const [isLoadPending, startLoadPending] = useTransition();
+  const load = () =>
+    startLoadPending(async () => {
+      if (!isGalleryLoaded || isLoadPending) {
         return;
       }
 
-      const itemBaseUrl = `${GALLERY_BASE}/${galleryItem.id}`;
-
-      const codeReq = fetch(`${itemBaseUrl}/main.js`);
-      const htmlReq = fetch(`${itemBaseUrl}/index.html`);
-
-      const code = await (await codeReq).text();
-      const html = await (await htmlReq).text();
-
-      dispatch({
-        type: "setAndRun",
-        code: code,
-        html: html,
-      });
-      setTitle(galleryItem.title);
-      setDescription(galleryItem.description);
-      setReadyForViewer(true);
-    },
-    [galleryItems],
-  );
-
-  const loadDemo = useCallback(
-    function loadDemo(item: GalleryItem, switchToCode: boolean) {
-      if (!confirmLeave()) {
-        return;
-      }
-      // Load the gallery item every time it's clicked
-      loadGalleryItem(item.id);
-
-      const searchParams = new URLSearchParams(window.location.search);
-      if (
-        !searchParams.has("id") ||
-        (searchParams.has("id") && searchParams.get("id") !== item.id)
-      ) {
-        // only push state if it's not the current url to prevent duplicated in history
-        window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
-        if (
-          !searchParams.has("id") ||
-          (searchParams.has("id") && searchParams.get("id") !== item.id)
-        ) {
-          // only push state if it's not the current url to prevent duplicated in history
-          window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
+      try {
+        const data = await loadFromUrl(galleryItemStore);
+        if (!data) {
+          return;
         }
-        if (switchToCode) {
-          setLeftPanel("editor");
-        }
-      }
-    },
-    [loadGalleryItem, confirmLeave],
-  );
 
-  useEffect(() => {
-    let ignore = false;
-    async function fetchGallery() {
-      const req = await fetch(`${GALLERY_BASE}/list.json`);
-      const resp = await req.json();
+        const { code, html, title } = data;
 
-      if (!ignore) {
-        setGalleryItems(resp.entries);
-        setLegacyIdMap(resp.legacyIdMap);
-        setGalleryLoaded(true);
-      }
-    }
-    fetchGallery();
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  const loadFromUrl = useCallback(
-    function loadFromUrl() {
-      if (galleryLoaded) {
-        const searchParams = new URLSearchParams(window.location.search);
-
-        if (window.location.hash.indexOf("#c=") === 0) {
-          const base64String = window.location.hash.substr(3);
-          const data = decodeBase64Data(base64String);
-
+        startLoadPending(() => {
+          setTitle(title);
           dispatch({
             type: "setAndRun",
-            code: data.code,
-            html: data.html,
+            code: code ?? defaultJsCode,
+            html: html ?? defaultHtmlCode,
           });
-          setReadyForViewer(true);
-        } else if (searchParams.has("gist")) {
-          // This is currently for legacy support only so old links on GH or the forums don't break
-          fetch(`https://api.github.com/gists/${searchParams.get("gist")}`)
-            .then((data) => data.json())
-            .then(function (data) {
-              const files = data.files;
-              const code = files["Cesium-Sandcastle.js"].content;
-              const html =
-                files["Cesium-Sandcastle.html"]?.content ?? defaultHtmlCode;
-              dispatch({ type: "setAndRun", code: code, html: html });
-              setTitle("Gist Import");
-              setReadyForViewer(true);
-            })
-            .catch(function (error) {
-              appendConsole(
-                "error",
-                `Unable to GET gist from GitHub API. This could be due to too many requests from your IP or an incorrect id. Try again in an hour or copy and paste the code from the gist: https://gist.github.com/${searchParams.get("gist")}`,
-              );
-              console.log(error);
-            });
-        } else if (searchParams.has("src")) {
-          const legacyId = searchParams.get("src");
-          if (!legacyId) {
-            return;
-          }
-          const galleryId = legacyIdMap[legacyId];
-          if (!galleryId) {
-            console.warn("Unable to map legacy id to new id");
-            return;
-          }
-          window.history.replaceState(
-            {},
-            "",
-            `${getBaseUrl()}?id=${galleryId}`,
-          );
-          loadGalleryItem(galleryId);
-        } else if (searchParams.has("id")) {
-          const galleryId = searchParams.get("id");
-          if (!galleryId) {
-            return;
-          }
-          loadGalleryItem(galleryId);
-        } else {
-          setReadyForViewer(true);
-        }
+        });
+      } catch (error) {
+        const message = (error as Error)?.message;
+        appendConsole("error", message);
+        console.error(message);
       }
-    },
-    [galleryLoaded, legacyIdMap, loadGalleryItem, appendConsole],
-  );
+    });
+  useEffect(load, [isGalleryLoaded]);
 
-  useEffect(() => loadFromUrl(), [galleryLoaded, galleryItems, loadFromUrl]);
   useEffect(() => {
     // Listen to browser forward/back navigation and try to load from URL
     // this is necessary because of the pushState used for faster gallery loading
-    function popStateListener() {
-      if (confirmLeave()) {
-        loadFromUrl();
-      }
-    }
-    window.addEventListener("popstate", popStateListener);
-    return () => window.removeEventListener("popstate", popStateListener);
-  }, [loadFromUrl, confirmLeave]);
+    const stateLoad = () => confirmLeave() && load();
+    window.addEventListener("popstate", stateLoad);
+    return () => window.removeEventListener("popstate", stateLoad);
+  }, []);
 
   useEffect(() => {
     // if the code has been edited listen for navigation away and warn
@@ -530,6 +424,49 @@ function App() {
     const docsUrl = "https://cesium.com/learn/cesiumjs/ref-doc/index.html";
     window.open(docsUrl, "_blank")?.focus();
   }
+
+  const onRunCode = useCallback(
+    async ({ id, title, getJsCode, getHtmlCode }: GalleryItem) => {
+      if (!confirmLeave()) {
+        return;
+      }
+
+      try {
+        const [code, html] = await Promise.all([getJsCode(), getHtmlCode()]);
+        const searchParams = new URLSearchParams(window.location.search);
+        if (
+          !searchParams.has("id") ||
+          (searchParams.has("id") && searchParams.get("id") !== id)
+        ) {
+          // only push state if it's not the current url to prevent duplicated in history
+          window.history.pushState({}, "", `${getBaseUrl()}?id=${id}`);
+          if (
+            !searchParams.has("id") ||
+            (searchParams.has("id") && searchParams.get("id") !== id)
+          ) {
+            // only push state if it's not the current url to prevent duplicated in history
+            window.history.pushState({}, "", `${getBaseUrl()}?id=${id}`);
+          }
+        }
+
+        setTitle(title);
+        dispatch({
+          type: "setAndRun",
+          code: code ?? defaultJsCode,
+          html: html ?? defaultJsCode,
+        });
+      } catch (error) {
+        const message = (error as Error)?.message;
+        appendConsole("error", message);
+        console.error(message);
+      }
+    },
+    [confirmLeave],
+  );
+
+  const onOpenCode = useCallback(() => {
+    setLeftPanel("editor");
+  }, []);
 
   return (
     <Root
@@ -632,11 +569,13 @@ function App() {
               setJs={(newCode) => dispatch({ type: "setCode", code: newCode })}
             />
           )}
-          <Gallery
-            hidden={leftPanel !== "gallery"}
-            galleryItems={galleryItems}
-            loadDemo={loadDemo}
-          />
+          <StoreContext value={galleryItemStore}>
+            <Gallery
+              hidden={leftPanel !== "gallery"}
+              onRunCode={onRunCode}
+              onOpenCode={onOpenCode}
+            />
+          </StoreContext>
         </Allotment.Pane>
         <Allotment.Pane className="right-panel">
           <RightSideAllotment
@@ -646,7 +585,7 @@ function App() {
             setConsoleExpanded={setConsoleExpanded}
           >
             <Allotment.Pane minSize={200}>
-              {readyForViewer && (
+              {!isLoadPending && (
                 <Bucket
                   code={codeState.committedCode}
                   html={codeState.committedHtml}
