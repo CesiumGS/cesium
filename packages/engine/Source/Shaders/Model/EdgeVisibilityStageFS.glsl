@@ -34,7 +34,6 @@ void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
         float dotA = dot(normalA, viewDir);
         float dotB = dot(normalB, viewDir);
         
-        // Use strict sign-based detection with epsilon to avoid instability
         const float eps = 1e-3;
         bool frontA = dotA > eps;
         bool backA  = dotA < -eps;
