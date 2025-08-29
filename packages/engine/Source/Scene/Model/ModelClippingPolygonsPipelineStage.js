@@ -79,10 +79,14 @@ ModelClippingPolygonsPipelineStage.process = function (
 
   const uniformMap = {
     model_clippingDistance: function () {
-      return clippingPolygons.clippingTexture;
+      return (
+        clippingPolygons.clippingTexture ?? frameState.context.defaultTexture
+      );
     },
     model_clippingExtents: function () {
-      return clippingPolygons.extentsTexture;
+      return (
+        clippingPolygons.extentsTexture ?? frameState.context.defaultTexture
+      );
     },
   };
 
