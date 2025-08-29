@@ -720,7 +720,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     this._rootTransform = tileset.root.computedTransform;
   }
 
-  if (this._drawCommand && tileset.show) {
+  if (!tileset.show || tileset._selectedTiles.length === 0) {
+    return;
+  }
+
+  if (this._drawCommand) {
     frameState.commandList.push(this._drawCommand);
   }
 
