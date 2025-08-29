@@ -142,9 +142,6 @@
         "use strict";
         //Sandcastle_Begin
 
-        Cesium.Ion.defaultServer = "https://api-staging.cesium.com";
-        Cesium.Ion.defaultAccessToken =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2YjA2MzFlNy0yYWRiLTQzNDQtYTJkNi03N2M1M2RlZGZkZjciLCJpZCI6MTE2LCJpYXQiOjE2OTQxMDk1NTh9.oPPXDZH9LdDT2Fyn1zo4dxO8Afv4K2p_nkZ--vztDXE";
         Cesium.Ellipsoid.default = Cesium.Ellipsoid.MARS;
         const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: false,
@@ -188,7 +185,7 @@
 
         // Load Mars tileset
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(1671, {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(3644333, {
             enableCollision: true,
           });
           viewer.scene.primitives.add(tileset);
