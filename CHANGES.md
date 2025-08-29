@@ -12,7 +12,8 @@
 #### Fixes :wrench:
 
 - Removes the minimum tile threshold of four for WMTS. [#4372](https://github.com/CesiumGS/cesium/issues/4372)
-- Fixed a crash that could happen when loading PNTS (point cloud) data that contained a batch table without a binary part [#11166](https://github.com/CesiumGS/cesium/issues/11166)
+- Fixes issue where multiple instances of a Gaussian splat tileset would transform tile positions incorrectly and render out of position. [12795](https://github.com/CesiumGS/cesium/issues/12795)
+- Fixed a crash that could happen when loading PNTS (point cloud) data that contained a batch table without a binary part. [#11166](https://github.com/CesiumGS/cesium/issues/11166)
 
 #### Additions :tada:
 
