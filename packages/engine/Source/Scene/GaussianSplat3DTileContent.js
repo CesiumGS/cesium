@@ -437,7 +437,7 @@ function degreeAndCoefFromAttributes(attributes) {
 
 /**
  * Converts a 32-bit floating point number to a 16-bit floating point number.
- * @param {Float} float32 input
+ * @param {number} float32 input
  * @returns {number} Half precision float
  * @private
  */
@@ -476,7 +476,7 @@ function float32ToFloat16(float32) {
 /**
  * Extracts the spherical harmonic degree and coefficient from the attribute name.
  * @param {string} attribute - The attribute name.
- * @returns {Object} An object containing the degree (l) and coefficient (n).
+ * @returns {object} An object containing the degree (l) and coefficient (n).
  * @private
  */
 function extractSHDegreeAndCoef(attribute) {
