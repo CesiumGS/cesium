@@ -160,7 +160,7 @@ function PrimitiveLoadPlan(primitive) {
 
   /**
    * Set this true to indicate that the primitive has the
-   * KHR_gaussian_splatting extension and needs to be post-processed
+   * KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extension and needs to be post-processed
    *
    * @type {boolean}
    * @private
