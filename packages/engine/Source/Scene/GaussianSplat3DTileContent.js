@@ -47,7 +47,7 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
    * @type {undefined|Primitive}
    * @private
    */
-  this.splatPrimitive = undefined;
+  this.gltfPrimitive = undefined;
 
   /**
    * Transform matrix to turn model coordinates into world coordinates.
@@ -165,7 +165,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    */
   pointsLength: {
     get: function () {
-      return this.splatPrimitive.attributes[0].count;
+      return this.gltfPrimitive.attributes[0].count;
     },
   },
   /**
@@ -190,7 +190,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    */
   geometryByteLength: {
     get: function () {
-      return this.splatPrimitive.attributes.reduce((totalLength, attribute) => {
+      return this.gltfPrimitive.attributes.reduce((totalLength, attribute) => {
         return totalLength + attribute.byteLength;
       }, 0);
     },
@@ -503,7 +503,7 @@ function packSphericalHarmonicsData(tileContent) {
   const totalLength = tileContent.pointsLength * (coefs * (2 / 3)); //3 packs into 2
   const packedData = new Uint32Array(totalLength);
 
-  const shAttributes = tileContent.splatPrimitive.attributes.filter((attr) =>
+  const shAttributes = tileContent.gltfPrimitive.attributes.filter((attr) =>
     attr.name.includes("SH_DEGREE_"),
   );
   let stride = 0;
@@ -624,34 +624,32 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
   }
 
   if (this._resourcesLoaded) {
-    this.splatPrimitive = loader.components.scene.nodes[0].primitives[0];
+    this.gltfPrimitive = loader.components.scene.nodes[0].primitives[0];
     this.worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
 
     this._originalPositions = new Float32Array(
       ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
+        this.gltfPrimitive,
         VertexAttributeSemantic.POSITION,
       ).typedArray,
     );
 
     this._originalRotations = new Float32Array(
       ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
+        this.gltfPrimitive,
         VertexAttributeSemantic.ROTATION,
       ).typedArray,
     );
 
     this._originalScales = new Float32Array(
       ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
+        this.gltfPrimitive,
         VertexAttributeSemantic.SCALE,
       ).typedArray,
     );
 
-    const { l, n } = degreeAndCoefFromAttributes(
-      this.splatPrimitive.attributes,
-    );
+    const { l, n } = degreeAndCoefFromAttributes(this.gltfPrimitive.attributes);
     this._sphericalHarmonicsDegree = l;
     this._sphericalHarmonicsCoefficientCount = n;
 

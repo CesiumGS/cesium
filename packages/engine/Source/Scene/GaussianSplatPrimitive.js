@@ -424,7 +424,7 @@ GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {};
  */
 GaussianSplatPrimitive.transformTile = function (tile) {
   const computedTransform = tile.computedTransform;
-  const splatPrimitive = tile.content.splatPrimitive;
+  const gltfPrimitive = tile.content.gltfPrimitive;
   const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
 
   const computedModelMatrix = Matrix4.multiplyTransformation(
@@ -454,17 +454,17 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const rotations = tile.content._originalRotations;
   const scales = tile.content._originalScales;
   const attributePositions = ModelUtility.getAttributeBySemantic(
-    splatPrimitive,
+    gltfPrimitive,
     VertexAttributeSemantic.POSITION,
   ).typedArray;
 
   const attributeRotations = ModelUtility.getAttributeBySemantic(
-    splatPrimitive,
+    gltfPrimitive,
     VertexAttributeSemantic.ROTATION,
   ).typedArray;
 
   const attributeScales = ModelUtility.getAttributeBySemantic(
-    splatPrimitive,
+    gltfPrimitive,
     VertexAttributeSemantic.SCALE,
   ).typedArray;
 
@@ -858,7 +858,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         let aggregate;
         let offset = 0;
         for (const tile of tiles) {
-          const primitive = tile.content.splatPrimitive;
+          const primitive = tile.content.gltfPrimitive;
           const attribute = getAttributeCallback(primitive);
           if (!defined(aggregate)) {
             aggregate = ComponentDatatype.createTypedArray(
@@ -900,36 +900,36 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
       this._positions = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
+        (gltfPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            gltfPrimitive,
             VertexAttributeSemantic.POSITION,
           ),
       );
 
       this._scales = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
+        (gltfPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            gltfPrimitive,
             VertexAttributeSemantic.SCALE,
           ),
       );
 
       this._rotations = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
+        (gltfPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            gltfPrimitive,
             VertexAttributeSemantic.ROTATION,
           ),
       );
 
       this._colors = aggregateAttributeValues(
         ComponentDatatype.UNSIGNED_BYTE,
-        (splatPrimitive) =>
+        (gltfPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            gltfPrimitive,
             VertexAttributeSemantic.COLOR,
           ),
       );
