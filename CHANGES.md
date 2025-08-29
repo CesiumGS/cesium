@@ -12,11 +12,16 @@
 #### Fixes :wrench:
 
 - Removes the minimum tile threshold of four for WMTS. [#4372](https://github.com/CesiumGS/cesium/issues/4372)
-- Fixes issue where a GaussianSplatPrimitive would be rendered even if out of current camera view.
+- Fixes issue where a Gaussian splat tileset would be rendered even if out of current camera view. [#12840](https://github.com/CesiumGS/cesium/pull/12840)
+- Fixed a crash that could happen when loading PNTS (point cloud) data that contained a batch table without a binary part. [#11166](https://github.com/CesiumGS/cesium/issues/11166)
 
 #### Additions :tada:
 
 - Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- Deprecated support of the `KHR_spz_gaussian_splats_compression` extension in favor of the latest 3D Gaussian Splatting extensions for glTF, `KHR_gaussian_splatting` and `KHR_gaussian_splatting_compression_spz_2`. The deprecated extension will be removed in version 1.135. Please retile your existing 3D Tiles using Gaussian splatting before that time. [#12837](https://github.com/CesiumGS/cesium/issues/12837)
 
 ## 1.132 - 2025-08-01
 
