@@ -100,6 +100,23 @@
     },
     {
       "type": "Feature",
+      "properties": {
+        "text": "Jezero Crater",
+        "destination": [596565.83388002, 3353778.00627982, 923026.06801835],
+        "orientation": [5.59008567, -0.59978189, 0.00060998],
+        "distanceDisplayCondition": true,
+        "description": "Jezero is a crater on Mars in the Syrtis Major quadrangle, about 45.0 km (28.0 mi) in diameter. Thought to have once been flooded with water, the crater contains a fan-delta deposit rich in clays. The lake in the crater was present when valley networks were forming on Mars. Besides having a delta, the crater shows point bars and inverted channels. From a study of the delta and channels, it was concluded that the lake inside the crater probably formed during a period in which there was continual surface runoff.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Jezero_(crater)",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/d/d6/Perseverance%27s_First_Full-Color_Look_at_Mars.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [77.58, 18.38]
+      }
+    },
+    {
+      "type": "Feature",
       "properties": { 
         "text": "Marth Crater",
         "destination": [3327216.4788566492, -218466.2408178681, 946551.8768631018],
