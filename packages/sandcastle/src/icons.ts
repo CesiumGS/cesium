@@ -3,6 +3,7 @@ import caretUp from "@stratakit/icons/caret-up.svg";
 import caretDown from "@stratakit/icons/caret-down.svg";
 import developer from "@stratakit/icons/developer.svg";
 import filter from "@stratakit/icons/filter.svg";
+import checkmark from "@stratakit/icons/checkmark.svg";
 import statusWarning from "@stratakit/icons/status-warning.svg";
 import statusError from "@stratakit/icons/status-error.svg";
 import sun from "@stratakit/icons/sun.svg";
@@ -18,6 +19,7 @@ import search from "@stratakit/icons/search.svg";
 import close from "@stratakit/icons/close.svg";
 import documentation from "@stratakit/icons/documentation.svg";
 import info from "@stratakit/icons/info.svg";
+import copy from "@stratakit/icons/copy.svg";
 import retry from "@stratakit/icons/retry.svg";
 
 export {
@@ -26,6 +28,7 @@ export {
   caretDown,
   developer,
   filter,
+  checkmark,
   statusWarning,
   statusError,
   sun,
@@ -41,5 +44,6 @@ export {
   close,
   documentation,
   info,
+  copy,
   retry,
 };
