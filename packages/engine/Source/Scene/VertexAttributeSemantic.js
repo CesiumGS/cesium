@@ -286,7 +286,7 @@ VertexAttributeSemantic.getGlslType = function (semantic) {
  * @param {VertexAttributeSemantic} semantic The semantic.
  * @param {number} [setIndex] The set index.
  *
- * @returns {string} The varia_SCALEble name.
+ * @returns {string} The variable name.
  *
  * @private
  */
