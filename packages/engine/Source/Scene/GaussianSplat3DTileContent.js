@@ -405,34 +405,6 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   },
 });
 
-GaussianSplat3DTileContent.tilesetHasGaussianSplattingExt = function (tileset) {
-  let hasGaussianSplatExtension = false;
-  let hasLegacyGaussianSplatExtension = false;
-  if (tileset.isGltfExtensionRequired instanceof Function) {
-    hasGaussianSplatExtension =
-      tileset.isGltfExtensionRequired("KHR_gaussian_splatting") &&
-      tileset.isGltfExtensionRequired(
-        "KHR_gaussian_splatting_compression_spz_2",
-      );
-
-    hasLegacyGaussianSplatExtension = tileset.isGltfExtensionRequired(
-      "KHR_spz_gaussian_splats_compression",
-    );
-  }
-
-  if (hasLegacyGaussianSplatExtension) {
-    deprecationWarning(
-      "KHR_spz_gaussian_splats_compression",
-      "Support for the original KHR_spz_gaussian_splats_compression extension has been deprecated in favor " +
-        "of the up to date KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extensions and will be " +
-        "removed in CesiumJS 1.134.\n\nPlease retile your tileset with the KHR_gaussian_splatting and " +
-        "KHR_gaussian_splatting_compression_spz_2 extensions.",
-    );
-  }
-
-  return hasGaussianSplatExtension || hasLegacyGaussianSplatExtension;
-};
-
 function getShAttributePrefix(attribute) {
   const prefix = attribute.startsWith("KHR_gaussian_splatting:")
     ? "KHR_gaussian_splatting:"
@@ -503,7 +475,7 @@ function float32ToFloat16(float32) {
 
 /**
  * Extracts the spherical harmonic degree and coefficient from the attribute name.
- * @param {String} attribute - The attribute name.
+ * @param {string} attribute - The attribute name.
  * @returns {Object} An object containing the degree (l) and coefficient (n).
  * @private
  */
@@ -522,9 +494,8 @@ function extractSHDegreeAndCoef(attribute) {
 
 /**
  * Packs spherical harmonic data into half-precision floats.
- * @param {*} data - The input data to pack.
- * @param {*} sphericalHarmonicsDegree - The spherical harmonic degree.
- * @returns {Uint32Array} - The packed data.
+ * @param {GaussianSplat3DTileContent} tileContent - The tile content containing the spherical harmonic data.
+ * @returns {Uint32Array} - The Float16 packed spherical harmonic data.
  */
 function packSphericalHarmonicsData(tileContent) {
   const degree = tileContent.sphericalHarmonicsDegree;

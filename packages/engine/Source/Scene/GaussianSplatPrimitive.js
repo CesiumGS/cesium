@@ -46,7 +46,7 @@ const GaussianSplatSortingState = {
   ERROR: 4,
 };
 
-function createGaussianSplatSHTexture(context, shData) {
+function createSphericalHarmonicsTexture(context, shData) {
   const texture = new Texture({
     context: context,
     source: {
@@ -175,7 +175,7 @@ function GaussianSplatPrimitive(options) {
    * @type {undefined|Texture}
    * @private
    */
-  this.gaussianSplatSHTexture = undefined;
+  this.sphericalHarmonicsTexture = undefined;
 
   /**
    * The last width of the Gaussian splat texture.
@@ -664,11 +664,11 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     );
     shaderBuilder.addUniform(
       "highp usampler2D",
-      "u_gaussianSplatSHTexture",
+      "u_sphericalHarmonicsTexture",
       ShaderDestination.VERTEX,
     );
-    uniformMap.u_gaussianSplatSHTexture = function () {
-      return primitive.gaussianSplatSHTexture;
+    uniformMap.u_sphericalHarmonicsTexture = function () {
+      return primitive.sphericalHarmonicsTexture;
     };
   }
   uniformMap.u_sphericalHarmonicsDegree = function () {
@@ -950,7 +950,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       if (!this._gaussianSplatTexturePending) {
         GaussianSplatPrimitive.generateSplatTexture(this, frameState);
         if (defined(this._shData)) {
-          const oldTex = this.gaussianSplatSHTexture;
+          const oldTex = this.sphericalHarmonicsTexture;
           const width = ContextLimits.maximumTextureSize;
           const dims =
             tileset._selectedTiles[0].content
@@ -969,7 +969,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
             );
             dataIndex += floatsPerRow;
           }
-          this.gaussianSplatSHTexture = createGaussianSplatSHTexture(
+          this.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
             frameState.context,
             {
               data: texBuf,
