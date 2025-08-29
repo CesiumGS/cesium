@@ -15,7 +15,7 @@ import { Allotment, AllotmentHandle } from "allotment";
 import "allotment/dist/style.css";
 import "./App.css";
 
-import { Button, Divider, Tooltip } from "@stratakit/bricks";
+import { Anchor, Button, Divider, Text, Tooltip } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";
 import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
 import Gallery, { GalleryItem } from "./Gallery.js";
@@ -41,6 +41,7 @@ import { SettingsModal } from "./SettingsModal.tsx";
 import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
 import { MetadataPopover } from "./MetadataPopover.tsx";
 import { SharePopover } from "./SharePopover.tsx";
+import { SandcastlePopover } from "./SandcastlePopover.tsx";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -539,6 +540,11 @@ function App() {
       colorScheme={settings.theme}
       synchronizeColorScheme
     >
+      <div className="banner">
+        <Anchor href="https://sandcastle.cesium.com" tone="accent">
+          Switch back to the previous version of Sandcastle
+        </Anchor>
+      </div>
       <header className="header">
         <a className="logo" href={getBaseUrl()}>
           <img
@@ -557,6 +563,22 @@ function App() {
           Standalone <Icon href={windowPopout} />
         </Button>
         <div className="flex-spacer"></div>
+        <SandcastlePopover
+          disclosure={
+            <Text variant="body-md" className="metadata">
+              Feedback? Issues?
+            </Text>
+          }
+          autoFocus={false}
+        >
+          <p>
+            What are your thoughts? Did you run into any problems? We'd love to
+            know! Please post your thoughts in{" "}
+            <Anchor href="https://github.com" target="_blank">
+              this issue
+            </Anchor>
+          </p>
+        </SandcastlePopover>
         <div className="version">
           {versionString && <pre>{versionString}</pre>}
         </div>
@@ -615,7 +637,7 @@ function App() {
         </AppBarButton>
         <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
       </div>
-      <Allotment defaultSizes={[40, 60]}>
+      <Allotment defaultSizes={[40, 60]} className="content">
         <Allotment.Pane minSize={400} className="left-panel">
           {leftPanel === "editor" && (
             <SandcastleEditor

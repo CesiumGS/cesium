@@ -49,6 +49,15 @@ body {
   float: right;
 }
 
+#banner {
+  text-align: center;
+  background: #daf6ff;
+
+  a {
+    color: blue;
+  }
+}
+
 #codeContainer {
   width: 40%;
 }
@@ -184,25 +193,6 @@ a.linkButton:hover {
 .bottomPanel #innerPanel_tablist {
   max-height: 28px;
   overflow: auto !important;
-}
-
-.feedback {
-  width: 250px;
-
-  .future-banner {
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-    text-align: center;
-    flex-direction: column;
-
-    h3 {
-      margin: 0 1em;
-    }
-    p {
-      margin: 1em 1.5em;
-    }
-  }
 }
 
 .claro .dijitTabContainerTop-tabs .dijitTabChecked .dijitTabContent {
