@@ -2667,9 +2667,9 @@ function handleTileFailure(error, tileset, tile) {
       message: message,
     });
   } else {
-    console.log(`A 3D tile failed to load: ${url}`);
-    console.log(`Error: ${message}`);
-    console.log(error.stack);
+    //console.log(`A 3D tile failed to load: ${url}`);
+    //console.log(`Error: ${message}`);
+    //console.log(error.stack);
   }
 }
 

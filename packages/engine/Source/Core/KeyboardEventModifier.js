@@ -28,5 +28,13 @@ const KeyboardEventModifier = {
    * @constant
    */
   ALT: 2,
+
+  /**
+   * Represents the space key being held down.
+   *
+   * @type {number}
+   * @constant
+   */
+  SPACE: 3,
 };
 export default Object.freeze(KeyboardEventModifier);
