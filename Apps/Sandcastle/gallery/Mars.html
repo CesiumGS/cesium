@@ -237,10 +237,6 @@
 
           const setupRover = function (entityId, startSol, outRover) {
             outRover = dataSource.entities.getById(entityId);
-            const positionProperty = outRover.position;
-            outRover.orientation = new Cesium.VelocityOrientationProperty(
-              positionProperty,
-            );
 
             const julianDateToSol = createJulianDateToSolConverter(
               outRover.availability.start,
@@ -335,9 +331,6 @@
           ];
 
           const entities = dataSource.entities.values;
-          const distanceDisplayCondition = new Cesium.DistanceDisplayCondition(); // Far defaults to max value
-          distanceDisplayCondition.near = 3e4;
-
           entities.forEach((entity) => {
             entity.label = new Cesium.LabelGraphics({
               text: entity.properties.text,
@@ -353,7 +346,7 @@
                 return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
               }, false),
               distanceDisplayCondition: entity.properties.distanceDisplayCondition
-                ? distanceDisplayCondition
+                ? new Cesium.DistanceDisplayCondition(3e4, Number.MAX_VALUE)
                 : undefined,
             });
 
@@ -368,7 +361,7 @@
                 return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
               }, false),
               distanceDisplayCondition: entity.properties.distanceDisplayCondition
-                ? distanceDisplayCondition
+                ? new Cesium.DistanceDisplayCondition(3e4, Number.MAX_VALUE)
                 : undefined,
             });
 
