@@ -415,7 +415,7 @@ function getShAttributePrefix(attribute) {
 /**
  * Determine Spherical Harmonics degree and coefficient count from attributes
  * @param {Array} attributes - The list of attributes.
- * @returns {Object} An object containing the degree (l) and coefficient (n).
+ * @returns {object} An object containing the degree (l) and coefficient (n).
  */
 function degreeAndCoefFromAttributes(attributes) {
   const shAttributes = attributes.filter((attr) =>
