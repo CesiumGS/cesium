@@ -542,7 +542,7 @@ function App() {
     >
       <div className="banner">
         <Anchor href="https://sandcastle.cesium.com" tone="accent">
-          Switch back to the previous version of Sandcastle
+          Looking for the old Sandcastle? It's still here (for a little while) →
         </Anchor>
       </div>
       <header className="header">
@@ -566,15 +566,18 @@ function App() {
         <SandcastlePopover
           disclosure={
             <Text variant="body-md" className="metadata">
-              Feedback? Issues?
+              Feedback & Issues
             </Text>
           }
           autoFocus={false}
         >
           <p>
-            What are your thoughts? Did you run into any problems? We'd love to
-            know! Please post your thoughts in{" "}
-            <Anchor href="https://github.com" target="_blank">
+            Help us continue to improve Sandcastle. Report a problem or share
+            your thoughts in{" "}
+            <Anchor
+              href="https://github.com/CesiumGS/cesium/issues/12857"
+              target="_blank"
+            >
               this issue
             </Anchor>
           </p>
