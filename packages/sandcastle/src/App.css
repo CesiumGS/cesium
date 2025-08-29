@@ -22,6 +22,7 @@
     .metadata {
       margin-left: var(--stratakit-space-x2);
       color: var(--stratakit-color-text-accent-strong);
+      cursor: pointer;
     }
 
     .version {

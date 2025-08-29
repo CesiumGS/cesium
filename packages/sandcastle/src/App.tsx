@@ -25,7 +25,6 @@ import {
   add,
   image,
   moon,
-  share as shareIcon,
   script,
   settings as settingsIcon,
   sun,
@@ -40,6 +39,8 @@ import {
 import { getBaseUrl } from "./util/getBaseUrl.ts";
 import { SettingsModal } from "./SettingsModal.tsx";
 import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
+import { MetadataPopover } from "./MetadataPopover.tsx";
+import { SharePopover } from "./SharePopover.tsx";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -194,6 +195,7 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const [title, setTitle] = useState("New Sandcastle");
+  const [description, setDescription] = useState("");
 
   // This is used to avoid a "double render" when loading from the URL
   const [readyForViewer, setReadyForViewer] = useState(false);
@@ -335,17 +337,7 @@ function App() {
     window.history.pushState({}, "", getBaseUrl());
 
     setTitle("New Sandcastle");
-  }
-
-  function share() {
-    const base64String = makeCompressedBase64String({
-      code: codeState.code,
-      html: codeState.html,
-    });
-
-    const shareUrl = `${getBaseUrl()}#c=${base64String}`;
-    window.history.replaceState({}, "", shareUrl);
-    dispatch({ type: "resetDirty" });
+    setDescription("");
   }
 
   function openStandalone() {
@@ -389,6 +381,7 @@ function App() {
         html: html,
       });
       setTitle(galleryItem.title);
+      setDescription(galleryItem.description);
       setReadyForViewer(true);
     },
     [galleryItems],
@@ -557,10 +550,8 @@ function App() {
             style={{ width: "118px" }}
           />
         </a>
-        <div className="metadata">{title}</div>
-        <Button tone="accent" onClick={share}>
-          <Icon href={shareIcon} /> Share
-        </Button>
+        <MetadataPopover title={title} description={description} />
+        <SharePopover code={codeState.code} html={codeState.html} />
         <Divider aria-orientation="vertical" />
         <Button onClick={() => openStandalone()}>
           Standalone <Icon href={windowPopout} />
