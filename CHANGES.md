@@ -19,6 +19,10 @@
 - Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
 - Added spherical harmonics support for Gaussian splats. Currently supported with the SPZ compression format.
 
+#### Deprecated :hourglass_flowing_sand:
+
+- Deprecated support of the `KHR_spz_gaussian_splats_compression` extension in favor of the latest 3D Gaussian Splatting extensions for glTF, `KHR_gaussian_splatting` and `KHR_gaussian_splatting_compression_spz_2`. The deprecated extension will be removed in version 1.135. Please retile your existing 3D Tiles using Gaussian splatting before that time. [#12837](https://github.com/CesiumGS/cesium/issues/12837)
+
 ## 1.132 - 2025-08-01
 
 ### @cesium/engine
