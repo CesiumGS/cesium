@@ -9174,25 +9174,20 @@
       "disableDepthTestDistance": 1e+308,
       "heightReference": "CLAMP_TO_3D_TILE",
       "eyeOffset": {
-        "cartesian": [0, 3, 0]
+        "cartesian": [0, -3, 0]
       },
       "pixelOffset": {
-        "cartesian2": [0, 1]
+        "cartesian2": [0, -1]
       },
       "pixelOffsetScaleByDistance": {
-        "nearFarScalar": [20, 0, 100.0, -45]
+        "nearFarScalar": [10, 0, 1e2, -25]
       },
       "scaleByDistance": {
-        "nearFarScalar": [0, 1, 150000.0 ,0]
+        "nearFarScalar": [0, 1, 1e6, 0]
       },
       "fillColor": {
-        "rgba": [255, 255, 0, 255]
-      },
-      "outlineColor": {
-        "rgba": [120, 120, 20, 255]
-      },
-      "outlineWidth": 2,
-      "style": "FILL_AND_OUTLINE"
+        "rgba": [243, 242, 99, 255]
+      }
     },
     "position": {
       "interpolationAlgorithm": "LINEAR",
@@ -13301,7 +13296,7 @@
       "velocityReference": "#position"
     },
     "position": {
-      "cartographicDegrees": [77.45088572, 18.44062715, 10]
+      "cartographicDegrees": [77.42088572, 18.44062715, 10]
     },
     "runAnimations": true,
     "clampAnimations": false
@@ -13318,7 +13313,7 @@
       "rotation": -0.7,
       "stRotation": -0.7,
       "distanceDisplayCondition": {
-        "distanceDisplayCondition": [0, 7e6]
+        "distanceDisplayCondition": [1, 7e6]
       }
     },
     "polyline": {
