@@ -10,8 +10,8 @@ import { getBaseUrl } from "../util/getBaseUrl.ts";
 import { applyHighlightToItem } from "./applyHighlight.tsx";
 import "../../@types/pagefind-client.d.ts";
 
-const galleryListPath = `/gallery/list.json`;
-const pagefindUrl = `/gallery/pagefind/pagefind.js`;
+const galleryListPath = `gallery/list.json`;
+const pagefindUrl = `gallery/pagefind/pagefind.js`;
 
 export type GalleryItem = {
   url: string;
