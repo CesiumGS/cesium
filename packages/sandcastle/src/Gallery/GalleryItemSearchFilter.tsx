@@ -31,23 +31,51 @@ export default function GalleryItemSearchFilter() {
       return;
     }
 
-    const clear = () => {
-      search({
-        filters: null,
-      });
-    };
-
-    const { searchFilter, search } = store;
-    const filtered = (searchFilter as Record<string, any>)?.[type];
+    const { defaultSearchFilter, searchFilter, search } = store;
+    const defaultFilters = defaultSearchFilter?.[type] ?? [];
+    const filtered = searchFilter?.[type];
     const checked = (label: string) => filtered === label;
 
-    const onChange = (label: string) => checked(label) ? clear : () => {
-      search({
-        filters: {
-          [type]: label,
-        },
-      });
+    const onChange = (label: string) => () => {
+      search(
+        checked(label)
+          ? { filters: null }
+          : {
+              filters: {
+                [type]: label,
+              },
+            },
+      );
     };
+
+    const renderOption = (label: string) =>
+      label && (
+        <DropdownMenu.CheckboxItem
+          className="filter-menu-item"
+          checked={checked(label)}
+          onChange={onChange(label)}
+          icon={
+            <Chip
+              className="filter-menu-item-chip"
+              label={filters[type][label]}
+            />
+          }
+          key={label}
+          name={label}
+          value={label}
+          label={label}
+        />
+      );
+
+    let defaults = defaultFilters;
+    if (!Array.isArray(defaultFilters)) {
+      defaults = [defaultFilters];
+    }
+
+    const values = filters[type].values ?? [];
+    const labels = values.filter((label: string) => !defaults.includes(label));
+
+    const options = [...defaults, ...labels];
 
     return (
       <DropdownMenu.Root key={type}>
@@ -60,31 +88,8 @@ export default function GalleryItemSearchFilter() {
         </DropdownMenu.Button>
         <DropdownMenu.Content className="filter-menu">
           <Label htmlFor={type}>Filter by {type}</Label>
-          <DropdownMenu.CheckboxItem
-            name="All"
-            label="All"
-            checked={!filtered}
-            onClick={clear}
-          />
           <Divider />
-          {filters[type] &&
-            filters[type].values.map((label: string) => (
-              <DropdownMenu.CheckboxItem
-                className="filter-menu-item"
-                checked={checked(label)}
-                onChange={onChange(label)}
-                icon={
-                  <Chip
-                    className="filter-menu-item-chip"
-                    label={filters[type][label]}
-                  />
-                }
-                key={label}
-                name={label}
-                value={label}
-                label={label}
-              />
-            ))}
+          {options.map(renderOption)}
         </DropdownMenu.Content>
       </DropdownMenu.Root>
     );

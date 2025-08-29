@@ -30,23 +30,58 @@ export type GalleryFilter = Record<string, string | string[]> | null;
 export type GalleryFilters = PagefindFilterCounts | null;
 
 export function useGalleryItemStore() {
+  const pagefindRef = useRef<Pagefind>(null);
+  const getPagefind = () => {
+    return pagefindRef.current;
+  };
+
   const [isPending, startFetch] = useTransition();
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [legacyIds, setLegacyIds] = useState<Record<string, string>>({});
 
   const [filters, setFilters] = useState<GalleryFilters>(null);
+  const [defaultSearchFilter, setDefaultSearchFilter] =
+    useState<GalleryFilter>(null);
+  const [searchFilter, setSearchFilter] = useState<GalleryFilter>(null);
 
-  const pagefindRef = useRef<Pagefind>(null);
-  const getPagefind = () => {
-    return pagefindRef.current;
-  };
+  const [searchTerm, setSearchTerm] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<
+    PagefindSearchFragment[] | null
+  >(null);
+  const [isSearchPending, startSearch] = useTransition();
+  const search = ({ term = searchTerm, filters = searchFilter }) =>
+    startSearch(async () => {
+      setSearchTerm(term);
+      setSearchFilter(filters);
+
+      const pagefind = getPagefind();
+      if (!pagefind) {
+        return;
+      }
+
+      /* @ts-expect-error: null is a valid search term value */
+      const { results } = await pagefind.search(term, {
+        filters,
+      });
+      const data = await Promise.allSettled(
+        results.map((result) => result.data()),
+      );
+
+      const isFulfilled = <T>(
+        input: PromiseSettledResult<T>,
+      ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
+
+      const values = data.filter(isFulfilled).map(({ value }) => value);
+      setSearchResults(values);
+    });
 
   const fetchItems = () =>
     startFetch(async () => {
       const baseUrl = getBaseUrl();
       const galleryListUrl = new URL(galleryListPath, baseUrl);
       const request = await fetch(galleryListUrl.href);
-      const { entries, searchOptions, legacyIds } = await request.json();
+      const { entries, searchOptions, legacyIds, defaultFilters } =
+        await request.json();
       const items = entries.map((entry: GalleryItem) => {
         let entryUrl = entry.url;
         if (!entryUrl.endsWith("/")) {
@@ -95,38 +130,8 @@ export function useGalleryItemStore() {
       }
 
       setFilters(await pagefind.filters());
-    });
-
-  const [searchTerm, setSearchTerm] = useState<string | null>(null);
-  const [searchFilter, setSearchFilter] = useState<GalleryFilter>(null);
-  const [searchResults, setSearchResults] = useState<
-    PagefindSearchFragment[] | null
-  >(null);
-  const [isSearchPending, startSearch] = useTransition();
-  const search = ({ term = searchTerm, filters = searchFilter }) =>
-    startSearch(async () => {
-      setSearchTerm(term);
-      setSearchFilter(filters);
-
-      const pagefind = getPagefind();
-      if (!pagefind) {
-        return;
-      }
-
-      /* @ts-expect-error: null is a valid search term value */
-      const { results } = await pagefind.search(term, {
-        filters,
-      });
-      const data = await Promise.allSettled(
-        results.map((result) => result.data()),
-      );
-
-      const isFulfilled = <T>(
-        input: PromiseSettledResult<T>,
-      ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
-
-      const values = data.filter(isFulfilled).map(({ value }) => value);
-      setSearchResults(values);
+      setDefaultSearchFilter(defaultFilters);
+      search({ filters: defaultFilters });
     });
 
   const useSearchResults = useMemo(() => {
@@ -159,6 +164,7 @@ export function useGalleryItemStore() {
     fetchItems,
 
     filters,
+    defaultSearchFilter,
     searchFilter,
     searchTerm,
     isSearchPending,

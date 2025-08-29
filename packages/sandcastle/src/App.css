@@ -8,61 +8,31 @@
   grid-template-columns: var(--app-bar-width) auto;
   grid-template-areas: "header header" "app-bar content";
 
-  --highlight-color-bg: var(--stratakit-color-bg-attention-muted);
+  --highlight-color-bg: var(--stratakit-color-bg-accent-muted);
   --highlight-color-bg-hover: color-mix(
     in oklch,
     var(--stratakit-color-glow-hue) var(--stratakit-color-bg-glow-base-hover-\%),
-    var(--stratakit-color-bg-attention-muted)
+    var(--highlight-color-bg)
   );
   --highlight-color-bg-pressed: color-mix(
     in oklch,
     var(--stratakit-color-glow-hue)
       var(--stratakit-color-bg-glow-base-pressed-\%),
-    var(--stratakit-color-bg-attention-muted)
+    var(--highlight-color-bg)
   );
   --highlight-color-text: var(--stratakit-color-text-neutral-primary);
-  --highlight-color-border: var(--stratakit-color-border-attention-muted);
+  --highlight-color-border: var(--stratakit-color-border-accent-muted);
   --highlight-color-border-hover: color-mix(
     in oklch,
     var(--stratakit-color-glow-hue)
       var(--stratakit-color-border-glow-base-hover-\%),
-    var(--stratakit-color-border-attention-muted)
+    var(--highlight-color-border)
   );
   --highlight-color-border-pressed: color-mix(
     in oklch,
     var(--stratakit-color-glow-hue)
       var(--stratakit-color-border-glow-base-pressed-\%),
-    var(--stratakit-color-border-attention-muted)
-  );
-
-  --button-background-color: var(--stratakit-color-bg-neutral-base);
-  --button-background-color-hover: color-mix(
-    in oklch,
-    var(--stratakit-color-bg-neutral-base) 100%,
-    var(--stratakit-color-glow-hue) var(--stratakit-color-bg-glow-base-hover-\%)
-  );
-  --button-background-color-pressed: color-mix(
-    in oklch,
-    var(--stratakit-color-bg-neutral-base) 100%,
-    var(--stratakit-color-glow-hue)
-      var(--stratakit-color-bg-glow-base-pressed-\%)
-  );
-  --button-background-color-active: var(
-    --stratakit-color-bg-glow-on-surface-accent-pressed
-  );
-
-  --button-border-color: var(--stratakit-color-border-shadow-base);
-  --button-border-color-hover: color-mix(
-    in oklch,
-    var(--stratakit-color-border-shadow-base) 100%,
-    var(--stratakit-color-glow-hue)
-      var(--stratakit-color-border-glow-base-hover-\%)
-  );
-  --button-border-color-pressed: color-mix(
-    in oklch,
-    var(--stratakit-color-border-shadow-base) 100%,
-    var(--stratakit-color-glow-hue)
-      var(--stratakit-color-border-glow-base-pressed-\%)
+    var(--highlight-color-border)
   );
 
   header {

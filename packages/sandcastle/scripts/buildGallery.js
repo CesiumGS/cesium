@@ -47,6 +47,10 @@ async function exists(path) {
 }
 
 /**
+ * @typedef {Record<string, string | string[]> | null} GalleryFilter
+ */
+
+/**
  * @typedef {Object} BuildGalleryOptions
  * @property {string} [rootDirectory = ".."] The root directory to which all other paths are relative.
  * @property {string} [publicDirectory = "./public"] The static directory where the gallery list and search index will be written.
@@ -54,6 +58,7 @@ async function exists(path) {
  * @property {string} [sourceUrl=""] The source code repository URL corresponding to the root directory of the gallery files.
  * @property {string} [defaultThumbnail = "images/placeholder-thumbnail.jpg"] The default thumbnail image to use if not is specified in the gallery yaml file.
  * @property {Pagefind.SearchOptions} [searchOptions={}] The search options to use when initializing Pagefind.
+ * @property {GalleryFilter} [defaultFilters=null] The default filter option to use, e.g., { "label" : "Showcases"}.
  * @property {Record<string, any>} [metadata={}] A map of metadata to pass through to pagefind, and their default if unspecified.
  * @property {boolean} [includeDevelopment = true] Whether to include sandcastles marked as development.
  */
@@ -69,6 +74,7 @@ export async function buildGalleryList(options = {}) {
   const sourceUrl = options.sourceUrl ?? "";
   const defaultThumbnail = options.defaultThumbnail ?? defaultThumbnailPath;
   const searchOptions = options.searchOptions ?? {};
+  const defaultFilters = options.defaultFilters ?? null;
   const metadataKeys = options.metadata ?? {};
   const includeDevelopment = options.includeDevelopment ?? true;
 
@@ -90,6 +96,7 @@ export async function buildGalleryList(options = {}) {
    * @property {GalleryListItem[]} entries
    * @property {Record<string, string>} legacyIds
    * @property {Pagefind.SearchOptions} searchOptions
+   * @property {GalleryFilter} defaultFilters
    */
 
   /**
@@ -99,6 +106,7 @@ export async function buildGalleryList(options = {}) {
     entries: [],
     legacyIds: {},
     searchOptions,
+    defaultFilters,
   };
 
   const errors = [];
@@ -297,8 +305,14 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
     // Paths are specified relative to the config file
     const configDir = dirname(configPath);
     const configRoot = root ? join(configDir, root) : configDir;
-    const { files, development, defaultThumbnail, searchOptions, metadata } =
-      gallery ?? {};
+    const {
+      files,
+      includeDevelopment,
+      defaultThumbnail,
+      searchOptions,
+      defaultFilters,
+      metadata,
+    } = gallery ?? {};
 
     buildGalleryOptions = {
       rootDirectory: configRoot,
@@ -307,8 +321,9 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
       sourceUrl,
       defaultThumbnail,
       searchOptions,
+      defaultFilters,
       metadata,
-      includeDevelopment: development,
+      includeDevelopment,
     };
   } catch (error) {
     console.error(`Could not read config file: ${error.message}`, {

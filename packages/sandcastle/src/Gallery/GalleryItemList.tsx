@@ -42,10 +42,9 @@ export function GalleryItemList({
   const searchFilterDisplay =
     searchFilters.length === 0
       ? null
-      : " in " +
-        Object.keys(searchFilter)
+      : ` in ${Object.keys(searchFilter)
           .map((type) => `${type}:"${searchFilter[type]}"`)
-          .join(", ");
+          .join(", ")}`;
 
   const summary = (
     <summary>
@@ -68,19 +67,19 @@ export function GalleryItemList({
     return (
       <GalleryItemCard
         onClick={() => onRunCode(item as GalleryItem)}
-        key={index}
+        key={item?.id}
         index={index}
       >
-      <IconButton
-        icon={developer}
-        label="Open and view code"
-        onClick={() => {
-          const target = item as GalleryItem;
-          onRunCode(target);
-          onOpenCode(target);
-        }}
-        variant="ghost"
-      />
+        <IconButton
+          icon={developer}
+          label="Open and view code"
+          onClick={() => {
+            const target = item as GalleryItem;
+            onRunCode(target);
+            onOpenCode(target);
+          }}
+          variant="ghost"
+        />
       </GalleryItemCard>
     );
   });

@@ -3,6 +3,7 @@ import {
   CompositeItem,
   type CompositeItemProps,
 } from "@ariakit/react";
+import { Text } from "@stratakit/bricks";
 import { Chip } from "@stratakit/structures";
 import { useGalleryItemContext } from "./GalleryItemStore.ts";
 
@@ -77,8 +78,12 @@ export function GalleryItemCard({
         </div>
         <section>
           <header>
-            <h3>{title}</h3>
-            <p>{description}</p>
+            <Text variant="body-lg" render={<h3 />}>
+              {item.title}
+            </Text>
+            <Text variant="body-sm" render={<p />}>
+              {description}
+            </Text>
             {codeExerpts}
           </header>
           <ul>{tags}</ul>

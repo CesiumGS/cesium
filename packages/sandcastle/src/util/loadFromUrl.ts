@@ -10,7 +10,10 @@ const loadGist = async (gist: string) => {
     const response = await fetch(`https://api.github.com/gists/${gist}`);
     const data = await response.json();
     const files = data.files;
-    const code = files["Cesium-Sandcastle.js"].content;
+    if (!files) {
+      throw new Error(data.message);
+    }
+    const code = files["Cesium-Sandcastle.js"]?.content;
     const html = files["Cesium-Sandcastle.html"]?.content;
     return {
       title: "Gist Import",
@@ -19,8 +22,7 @@ const loadGist = async (gist: string) => {
     };
   } catch (error) {
     throw new Error(
-      `Unable to requets gist from GitHub. This could be due to too many requests from your IP or an incorrect gist ID. Instead, copy and paste the code from: "https://gist.github.com/${gist}".
-      ${error}`,
+      `${error}. Unable to requets gist from GitHub. This could be due to too many requests from your IP or an incorrect gist ID. Instead, copy and paste the code from "https://gist.github.com/${gist}"`,
     );
   }
 };

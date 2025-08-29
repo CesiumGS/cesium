@@ -5,6 +5,7 @@ import {
   RefObject,
   useCallback,
   useContext,
+  useDeferredValue,
   useEffect,
   useImperativeHandle,
   useReducer,
@@ -312,12 +313,14 @@ function App() {
     [consoleExpanded],
   );
 
-  function resetConsole() {
-    // the console should only be cleared by the Bucket when the viewer page
-    // has actually reloaded and stopped sending console statements
-    // otherwise some could bleed into the "next run"
-    setConsoleMessages([]);
-  }
+  const resetConsole = useCallback(() => {
+    if (codeState.runNumber > 0) {
+      // the console should only be cleared by the Bucket when the viewer page
+      // has actually reloaded and stopped sending console statements
+      // otherwise some could bleed into the "next run"
+      setConsoleMessages([]);
+    }
+  }, [codeState.runNumber]);
 
   function runSandcastle() {
     dispatch({ type: "runSandcastle" });
@@ -369,49 +372,48 @@ function App() {
   }
 
   const galleryItemStore = useGalleryItemStore();
-  const { isPending: isGalleryPending, fetchItems } = galleryItemStore;
-  useEffect(() => {
-    if (isGalleryPending) {
-      return;
-    }
+  const { fetchItems, items } = galleryItemStore;
+  useEffect(fetchItems, []);
 
-    fetchItems();
-  }, []);
+  const isGalleryLoaded = useDeferredValue(items.length > 0);
+  const [isLoadPending, startLoadPending] = useTransition();
+  const load = () =>
+    startLoadPending(async () => {
+      if (!isGalleryLoaded || isLoadPending) {
+        return;
+      }
 
-  const [isLoadPending, startLoadFromUrl] = useTransition();
-  useEffect(() => {
-    // Listen to browser forward/back navigation and try to load from URL
-    // this is necessary because of the pushState used for faster gallery loading
-    const load = () =>
-      confirmLeave() &&
-      startLoadFromUrl(async () => {
-        try {
-          const data = await loadFromUrl(galleryItemStore);
-          if (!data) {
-            return;
-          }
+      try {
+        const data = await loadFromUrl(galleryItemStore);
+        if (!data) {
+          return;
+        }
 
-          const { code, html, title } = data;
+        const { code, html, title } = data;
+
+        startLoadPending(() => {
           setTitle(title);
           dispatch({
             type: "setAndRun",
             code: code ?? defaultJsCode,
             html: html ?? defaultHtmlCode,
           });
-        } catch (error) {
-          const message = (error as Error)?.message;
-          console.error(message);
-          appendConsole("error", message);
-        }
-      });
-    window.addEventListener("popstate", load);
+        });
+      } catch (error) {
+        const message = (error as Error)?.message;
+        appendConsole("error", message);
+        console.error(message);
+      }
+    });
+  useEffect(load, [isGalleryLoaded]);
 
-    if (!isLoadPending && !isGalleryPending) {
-      load();
-    }
-
-    return () => window.removeEventListener("popstate", load);
-  }, [isGalleryPending]);
+  useEffect(() => {
+    // Listen to browser forward/back navigation and try to load from URL
+    // this is necessary because of the pushState used for faster gallery loading
+    const stateLoad = () => confirmLeave() && load();
+    window.addEventListener("popstate", stateLoad);
+    return () => window.removeEventListener("popstate", stateLoad);
+  }, []);
 
   useEffect(() => {
     // if the code has been edited listen for navigation away and warn
@@ -463,11 +465,11 @@ function App() {
         });
       } catch (error) {
         const message = (error as Error)?.message;
-        console.error(message);
         appendConsole("error", message);
+        console.error(message);
       }
     },
-    [confirmLeave, appendConsole],
+    [confirmLeave],
   );
 
   const onOpenCode = useCallback(() => {

@@ -9,7 +9,7 @@ export function GalleryItemSearchInput() {
   const isPending = !store || store.isPending;
   const inputRef = useRef<HTMLInputElement>(null);
   const value = inputRef.current?.value;
-  const hasInput = !!(value) && value !== "";
+  const hasInput = !!value && value !== "";
 
   const clearSearch = () => {
     if (store) {
@@ -30,7 +30,7 @@ export function GalleryItemSearchInput() {
     let term = e.target.value;
     if (store) {
       const { search } = store;
-      
+
       if (term) {
         term = term.trim();
       }
@@ -41,6 +41,7 @@ export function GalleryItemSearchInput() {
 
       search({
         term,
+        filters: null,
       });
     }
   };
