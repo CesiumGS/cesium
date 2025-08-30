@@ -11,7 +11,7 @@ import {
 import createContext from "../../../../../Specs/createContext.js";
 import EdgeVisibilityPipelineStage from "../../../Source/Scene/Model/EdgeVisibilityPipelineStage.js";
 
-describe("Scene/EdgeVisibilityPipelineStage", function () {
+describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
   let context;
 
   beforeAll(function () {
