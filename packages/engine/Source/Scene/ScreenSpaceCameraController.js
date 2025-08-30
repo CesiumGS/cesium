@@ -171,7 +171,7 @@ function ScreenSpaceCameraController(scene) {
     CameraEventType.PINCH,
     {
       eventType: CameraEventType.RIGHT_DRAG,
-      modifier: KeyboardEventModifier.SHIFT,
+      modifier: KeyboardEventModifier.ALT,
     },
   ];
   /**
@@ -190,6 +190,11 @@ function ScreenSpaceCameraController(scene) {
       eventType: CameraEventType.LEFT_DRAG,
       modifier: KeyboardEventModifier.SPACE,
     },
+    {
+      eventType: CameraEventType.RIGHT_DRAG,
+      modifier: KeyboardEventModifier.SHIFT,
+    },
+    // TODO: left + right drag type
   ];
   /**
    * The input that allows the user to tilt in 3D and Columbus view or twist in 2D.
@@ -207,7 +212,14 @@ function ScreenSpaceCameraController(scene) {
    *     modifier : {@link KeyboardEventModifier.CTRL}
    * }]
    */
-  this.tiltEventTypes = [CameraEventType.RIGHT_DRAG, CameraEventType.PINCH];
+  this.tiltEventTypes = [
+    CameraEventType.RIGHT_DRAG,
+    CameraEventType.PINCH,
+    {
+      eventType: CameraEventType.LEFT_DRAG,
+      modifier: KeyboardEventModifier.ALT,
+    },
+  ];
   /**
    * The input that allows the user to change the direction the camera is viewing. This only applies in 3D and Columbus view modes.
    * <p>
