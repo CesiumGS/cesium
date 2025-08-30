@@ -42,6 +42,11 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
   }
 
   it("validates u_isEdgePass uniform and framebuffer attachments", async function () {
+    // Skip this test in WebGL stub environment
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
     await loadEdgeVisibilityModel();
 
     scene._enableEdgeVisibility = true;
@@ -90,6 +95,11 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
   });
 
   it("validates EdgeVisibility shader code and uniforms", async function () {
+    // Skip this test in WebGL stub environment
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
     await loadEdgeVisibilityModel();
 
     scene._enableEdgeVisibility = true;
@@ -147,6 +157,11 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
   });
 
   it("validates EdgeDetection shader code and texture sampling", async function () {
+    // Skip this test in WebGL stub environment
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
     await loadEdgeVisibilityModel();
 
     scene._enableEdgeVisibility = true;
