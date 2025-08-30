@@ -83,7 +83,6 @@ function VoxelBoxShape() {
 
   this._shaderDefines = {
     BOX_INTERSECTION_INDEX: undefined,
-    BOX_HAS_SHAPE_BOUNDS: undefined,
   };
 
   this._shaderMaximumIntersectionsLength = 0; // not known until update
@@ -312,8 +311,6 @@ VoxelBoxShape.prototype.update = function (
 
   shaderDefines["BOX_INTERSECTION_INDEX"] = intersectionCount;
   intersectionCount += 1;
-
-  shaderDefines["BOX_HAS_SHAPE_BOUNDS"] = true;
 
   const min = minBounds;
   const max = maxBounds;

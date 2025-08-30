@@ -1,11 +1,7 @@
-/* Box defines (set in Scene/VoxelBoxShape.js)
-#define BOX_HAS_SHAPE_BOUNDS
-*/
+uniform mat3 u_transformDirectionViewToTile;
 
-#if defined(BOX_HAS_SHAPE_BOUNDS)
-    uniform vec3 u_boxUvToShapeUvScale;
-    uniform vec3 u_boxUvToShapeUvTranslate;
-#endif
+uniform vec3 u_boxUvToShapeUvScale;
+uniform vec3 u_boxUvToShapeUvTranslate;
 
 PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
     // For BOX, UV space = shape space, so we can use positionUv as-is,
@@ -15,11 +11,7 @@ PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
 }
 
 vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
-#if defined(BOX_HAS_SHAPE_BOUNDS)
     return positionShape * u_boxUvToShapeUvScale + u_boxUvToShapeUvTranslate;
-#else
-    return positionShape;
-#endif
 }
 
 PointJacobianT convertUvToShapeUvSpaceDerivative(in vec3 positionUv) {
@@ -29,17 +21,13 @@ PointJacobianT convertUvToShapeUvSpaceDerivative(in vec3 positionUv) {
 }
 
 vec3 convertShapeUvToUvSpace(in vec3 shapeUv) {
-#if defined(BOX_HAS_SHAPE_BOUNDS)
     return (shapeUv - u_boxUvToShapeUvTranslate) / u_boxUvToShapeUvScale;
-#else
-    return shapeUv;
-#endif
 }
 
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
-#if defined(BOX_HAS_SHAPE_BOUNDS)
     return shapeUv / u_boxUvToShapeUvScale;
-#else
-    return shapeUv;
-#endif
+}
+
+vec3 convertECtoDeltaTile(in vec3 positionEC) {
+    return u_boxUvToShapeUvScale * (u_transformDirectionViewToTile * positionEC);
 }

@@ -131,6 +131,14 @@ function VoxelPrimitive(options) {
   this._paddingAfter = new Cartesian3();
 
   /**
+   * This member is not created until the provider is ready.
+   *
+   * @type {number}
+   * @private
+   */
+  this._availableLevels = 1;
+
+  /**
    * This member is not known until the provider is ready.
    *
    * @type {Cartesian3}
@@ -448,7 +456,8 @@ function VoxelPrimitive(options) {
     paddingBefore: new Cartesian3(),
     paddingAfter: new Cartesian3(),
     transformPositionViewToUv: new Matrix4(),
-    transformPositionUvToView: new Matrix4(),
+    transformDirectionViewToTile: new Matrix3(),
+    transformPositionUvToView: new Matrix4(), // TODO: remove
     transformDirectionViewToLocal: new Matrix3(),
     cameraPositionUv: new Cartesian3(),
     cameraDirectionUv: new Cartesian3(),
@@ -1300,6 +1309,14 @@ VoxelPrimitive.prototype.update = function (frameState) {
     transformPositionViewToWorld,
     uniforms.transformPositionViewToUv,
   );
+  uniforms.transformDirectionViewToTile = Matrix3.multiplyByUniformScale(
+    Matrix4.getMatrix3(
+      uniforms.transformPositionViewToUv,
+      uniforms.transformDirectionViewToTile,
+    ),
+    2 ** (this._availableLevels - 1),
+    uniforms.transformDirectionViewToTile,
+  );
   const transformPositionWorldToView = context.uniformState.view;
   uniforms.transformPositionUvToView = Matrix4.multiplyTransformation(
     transformPositionWorldToView,
@@ -1318,7 +1335,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
     scratchTransformPositionViewToLocal,
   );
   this._transformPlaneUvToView = Matrix4.transpose(
-    //uniforms.transformPositionViewToUv,
     transformPositionViewToLocal,
     this._transformPlaneUvToView,
   );
@@ -1403,7 +1419,7 @@ function getTileCoordinates(primitive, positionUv, result) {
     scratchCameraPositionShapeUv,
   );
 
-  const availableLevels = primitive._provider.availableLevels ?? 1;
+  const availableLevels = primitive._availableLevels;
   const numTiles = 2 ** (availableLevels - 1);
 
   return Cartesian4.fromElements(
@@ -1597,6 +1613,7 @@ function initFromProvider(primitive, provider, context) {
     primitive._inputDimensions,
     uniforms.inputDimensions,
   );
+  primitive._availableLevels = provider.availableLevels ?? 1;
 
   // Create the VoxelTraversal, and set related uniforms
   const keyframeCount = provider.keyframeCount ?? 1;

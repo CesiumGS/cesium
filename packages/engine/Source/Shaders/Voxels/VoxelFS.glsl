@@ -15,11 +15,14 @@
     #define ALPHA_ACCUM_MAX 0.98 // Must be > 0.0 and <= 1.0
 #endif
 
-uniform mat4 u_transformPositionUvToView;
+uniform mat4 u_transformPositionViewToUv;
 uniform mat3 u_transformDirectionViewToLocal;
 uniform vec3 u_cameraPositionUv;
 uniform vec3 u_cameraDirectionUv;
 uniform float u_stepSize;
+
+uniform ivec4 u_cameraTileCoordinates;
+uniform vec3 u_cameraTileUv;
 
 #if defined(PICKING)
     uniform vec4 u_pickColor;
@@ -148,6 +151,15 @@ Ray getViewRayEC() {
     return Ray(viewPosEC, viewDirEC, viewDirEC);
 }
 
+TileAndUvCoordinate getTileAndUvCoordinate(in vec3 positionEC) {
+    vec3 deltaTileCoordinate = convertECtoDeltaTile(positionEC);
+    vec3 tileUvSum = u_cameraTileUv + deltaTileCoordinate;
+    vec3 tileCoordinateChange = floor(tileUvSum);
+    ivec4 tileCoordinate = u_cameraTileCoordinates + ivec4(tileCoordinateChange, 0.0);
+    vec3 tileUv = tileUvSum - tileCoordinateChange;
+    return TileAndUvCoordinate(tileCoordinate, tileUv);
+}
+
 void main()
 {
     Ray viewRayUv = getViewRayUv();
@@ -163,20 +175,17 @@ void main()
 
     float currentT = shapeIntersection.entry.w;
     float endT = shapeIntersection.exit.w;
-    vec3 positionUv = viewRayUv.pos + currentT * viewRayUv.dir;
+
+    vec3 positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
+    TileAndUvCoordinate tileAndUv = getTileAndUvCoordinate(positionEC);
+    vec3 positionUv = viewRayUv.pos + 0.5 * currentT * viewRayUv.dir; // 0.5 for EC to UV
     PointJacobianT pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
 
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(pointJacobian.point, traversalData, sampleDatas);
-    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
-
-    #if defined(JITTER)
-        float noise = hash(screenCoord); // [0,1]
-        currentT += noise * step.w;
-        positionUv += noise * step.w * viewRayUv.dir;
-    #endif
+    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, 0.5 * currentT); // 0.5 for EC to UV
 
     FragmentInput fragmentInput;
     #if defined(STATISTICS)
@@ -193,7 +202,7 @@ void main()
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
 
-        fragmentInput.attributes.positionEC = vec3(u_transformPositionUvToView * vec4(positionUv, 1.0));
+        fragmentInput.attributes.positionEC = positionEC;
         fragmentInput.attributes.normalEC = normalize(czm_normal * step.xyz);
 
         fragmentInput.voxel.viewDirUv = viewRayUv.dir;
@@ -228,7 +237,7 @@ void main()
         }
 
         // Keep raymarching
-        currentT += step.w;
+        currentT += 2.0 * step.w; // 2.0 for UV to EC
         // Check if there's more intersections.
         if (currentT > endT) {
             #if (INTERSECTION_COUNT == 1)
@@ -244,13 +253,16 @@ void main()
                 }
             #endif
         }
-        positionUv = viewRayUv.pos + currentT * viewRayUv.dir;
+        positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
+        tileAndUv = getTileAndUvCoordinate(positionEC);
+        positionUv = viewRayUv.pos + 0.5 * currentT * viewRayUv.dir; // 0.5 for EC to UV
+        pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
 
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
-        pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
-        traverseOctreeFromExisting(pointJacobian.point, traversalData, sampleDatas);
-        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
+        //traverseOctreeFromExisting(pointJacobian.point, traversalData, sampleDatas);
+        traverseOctreeFromBeginning(pointJacobian.point, traversalData, sampleDatas);
+        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, 0.5 * currentT); // 0.5 for EC to UV
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]

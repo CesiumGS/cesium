@@ -352,8 +352,6 @@ function computeTextureResolution(pixelsNeeded, result) {
   return result;
 }
 
-let boundCounter = 0;
-
 const textureResolutionScratch = new Cartesian2();
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -426,10 +424,6 @@ VoxelBoundCollection.prototype.update = function (frameState, transform) {
       arrayBufferView: this._float32View,
     },
   });
-  if (boundCounter < 2) {
-    console.log(`VoxelBoundCollection: float32View = ${this._float32View}`);
-    boundCounter++;
-  }
 };
 
 /**

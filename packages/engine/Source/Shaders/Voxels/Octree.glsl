@@ -29,8 +29,14 @@ struct TraversalData {
     int parentOctreeIndex;
 };
 
+struct TileAndUvCoordinate {
+    ivec4 tileCoords;
+    vec3 tileUv;
+};
+
 struct SampleData {
     int megatextureIndex;
+    // TODO: use TileAndUvCoordinate
     ivec4 tileCoords;
     vec3 tileUv;
     vec3 inputCoordinate;
