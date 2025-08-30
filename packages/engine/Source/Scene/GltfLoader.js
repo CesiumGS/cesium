@@ -1469,8 +1469,12 @@ function loadIndices(
   // after loading and post-processing.
   const outputTypedArrayOnly = loadAttributesAsTypedArray;
   const outputBuffer = !outputTypedArrayOnly;
-  const outputTypedArray =
+  let outputTypedArray =
     loadAttributesAsTypedArray || loadForCpuOperations || loadForClassification;
+
+  if (loader._forceLoadIndicesTypedArray === true) {
+    outputTypedArray = true;
+  }
 
   // Determine what to load right now:
   //
@@ -2036,7 +2040,43 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
+  // Edge Visibility
+  const edgeVisibilityExtension = extensions.EXT_mesh_primitive_edge_visibility;
+  const hasEdgeVisibility = defined(edgeVisibilityExtension);
+  if (hasEdgeVisibility) {
+    const visibilityAccessor =
+      loader.gltfJson.accessors[edgeVisibilityExtension.visibility];
+    if (!defined(visibilityAccessor)) {
+      throw new RuntimeError("Edge visibility accessor not found!");
+    }
+    const visibilityValues = loadAccessor(loader, visibilityAccessor);
+    primitive.edgeVisibility = {
+      visibility: visibilityValues,
+      material: edgeVisibilityExtension.material,
+    };
+
+    // Load silhouette normals
+    if (defined(edgeVisibilityExtension.silhouetteNormals)) {
+      const silhouetteNormalsAccessor =
+        loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
+      if (defined(silhouetteNormalsAccessor)) {
+        const silhouetteNormalsValues = loadAccessor(
+          loader,
+          silhouetteNormalsAccessor,
+        );
+        primitive.edgeVisibility.silhouetteNormals = silhouetteNormalsValues;
+      }
+    }
+
+    // Load line strings
+    if (defined(edgeVisibilityExtension.lineStrings)) {
+      primitivePlan.edgeVisibility.lineStrings =
+        edgeVisibilityExtension.lineStrings;
+    }
+  }
+
   const spzExtension = fetchSpzExtensionFrom(extensions);
+
   if (defined(spzExtension)) {
     needsPostProcessing = true;
     primitivePlan.needsGaussianSplats = true;
@@ -2103,6 +2143,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
 
   const indices = gltfPrimitive.indices;
   if (defined(indices)) {
+    // If edge visibility is present, force indices typed array to be loaded.
+    if (hasEdgeVisibility) {
+      loader._forceLoadIndicesTypedArray = true;
+    }
     const indicesPlan = loadIndices(
       loader,
       indices,
@@ -2116,6 +2160,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     if (defined(indicesPlan)) {
       primitivePlan.indicesPlan = indicesPlan;
       primitive.indices = indicesPlan.indices;
+    }
+
+    if (hasEdgeVisibility) {
+      loader._forceLoadIndicesTypedArray = undefined;
     }
   }
 
