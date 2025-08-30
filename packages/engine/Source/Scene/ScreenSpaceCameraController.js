@@ -167,9 +167,12 @@ function ScreenSpaceCameraController(scene) {
    * @default [{@link CameraEventType.RIGHT_DRAG}, {@link CameraEventType.WHEEL}, {@link CameraEventType.PINCH}]
    */
   this.zoomEventTypes = [
-    CameraEventType.RIGHT_DRAG,
     CameraEventType.WHEEL,
     CameraEventType.PINCH,
+    {
+      eventType: CameraEventType.RIGHT_DRAG,
+      modifier: KeyboardEventModifier.ALT,
+    },
   ];
   /**
    * The input that allows the user to rotate around the globe or another object. This only applies in 3D and Columbus view modes.
@@ -181,7 +184,18 @@ function ScreenSpaceCameraController(scene) {
    * @type {CameraEventType|Array|undefined}
    * @default {@link CameraEventType.LEFT_DRAG}
    */
-  this.rotateEventTypes = CameraEventType.LEFT_DRAG;
+  this.rotateEventTypes = [
+    CameraEventType.MIDDLE_DRAG,
+    {
+      eventType: CameraEventType.LEFT_DRAG,
+      modifier: KeyboardEventModifier.SPACE,
+    },
+    {
+      eventType: CameraEventType.RIGHT_DRAG,
+      modifier: KeyboardEventModifier.SHIFT,
+    },
+    // TODO: left + right drag type
+  ];
   /**
    * The input that allows the user to tilt in 3D and Columbus view or twist in 2D.
    * <p>
@@ -199,15 +213,11 @@ function ScreenSpaceCameraController(scene) {
    * }]
    */
   this.tiltEventTypes = [
-    CameraEventType.MIDDLE_DRAG,
+    CameraEventType.RIGHT_DRAG,
     CameraEventType.PINCH,
     {
       eventType: CameraEventType.LEFT_DRAG,
-      modifier: KeyboardEventModifier.CTRL,
-    },
-    {
-      eventType: CameraEventType.RIGHT_DRAG,
-      modifier: KeyboardEventModifier.CTRL,
+      modifier: KeyboardEventModifier.ALT,
     },
   ];
   /**
@@ -222,7 +232,7 @@ function ScreenSpaceCameraController(scene) {
    */
   this.lookEventTypes = {
     eventType: CameraEventType.LEFT_DRAG,
-    modifier: KeyboardEventModifier.SHIFT,
+    modifier: KeyboardEventModifier.ALT,
   };
 
   const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);

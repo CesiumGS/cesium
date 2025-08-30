@@ -31,13 +31,15 @@ function getInputEventKey(type, modifier) {
   return key;
 }
 
-function getModifier(event) {
+function getModifier(event, screenSpaceEventHandler) {
   if (event.shiftKey) {
     return KeyboardEventModifier.SHIFT;
   } else if (event.ctrlKey) {
     return KeyboardEventModifier.CTRL;
   } else if (event.altKey) {
     return KeyboardEventModifier.ALT;
+  } else if (screenSpaceEventHandler && screenSpaceEventHandler._spaceKeyDown) {
+    return KeyboardEventModifier.SPACE;
   }
 
   return undefined;
@@ -48,6 +50,21 @@ const MouseButton = {
   MIDDLE: 1,
   RIGHT: 2,
 };
+
+function handleKeyDown(screenSpaceEventHandler, event) {
+  if (event.keyCode === 32) {
+    // Space key code
+    screenSpaceEventHandler._spaceKeyDown = true;
+    event.preventDefault(); // Prevent page scrolling
+  }
+}
+
+function handleKeyUp(screenSpaceEventHandler, event) {
+  if (event.keyCode === 32) {
+    // Space key code
+    screenSpaceEventHandler._spaceKeyDown = false;
+  }
+}
 
 function registerListener(screenSpaceEventHandler, domType, element, callback) {
   function listener(e) {
@@ -169,6 +186,20 @@ function registerListeners(screenSpaceEventHandler) {
   }
 
   registerListener(screenSpaceEventHandler, wheelEvent, element, handleWheel);
+
+  // Add keyboard event listeners for space key tracking
+  registerListener(
+    screenSpaceEventHandler,
+    "keydown",
+    alternateElement,
+    handleKeyDown,
+  );
+  registerListener(
+    screenSpaceEventHandler,
+    "keyup",
+    alternateElement,
+    handleKeyUp,
+  );
 }
 
 function unregisterListeners(screenSpaceEventHandler) {
@@ -228,7 +259,7 @@ function handleMouseDown(screenSpaceEventHandler, event) {
   Cartesian2.clone(position, screenSpaceEventHandler._primaryStartPosition);
   Cartesian2.clone(position, screenSpaceEventHandler._primaryPreviousPosition);
 
-  const modifier = getModifier(event);
+  const modifier = getModifier(event, screenSpaceEventHandler);
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
@@ -257,7 +288,7 @@ function cancelMouseEvent(
   clickScreenSpaceEventType,
   event,
 ) {
-  const modifier = getModifier(event);
+  const modifier = getModifier(event, screenSpaceEventHandler);
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
@@ -352,7 +383,7 @@ function handleMouseMove(screenSpaceEventHandler, event) {
     return;
   }
 
-  const modifier = getModifier(event);
+  const modifier = getModifier(event, screenSpaceEventHandler);
 
   const position = getPosition(
     screenSpaceEventHandler,
@@ -398,7 +429,7 @@ function handleDblClick(screenSpaceEventHandler, event) {
     return;
   }
 
-  const modifier = getModifier(event);
+  const modifier = getModifier(event, screenSpaceEventHandler);
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
@@ -442,7 +473,7 @@ function handleWheel(screenSpaceEventHandler, event) {
     return;
   }
 
-  const modifier = getModifier(event);
+  const modifier = getModifier(event, screenSpaceEventHandler);
   const action = screenSpaceEventHandler.getInputAction(
     ScreenSpaceEventType.WHEEL,
     modifier,
@@ -535,7 +566,7 @@ const touchHoldEvent = {
 };
 
 function fireTouchEvents(screenSpaceEventHandler, event) {
-  const modifier = getModifier(event);
+  const modifier = getModifier(event, screenSpaceEventHandler);
   const positions = screenSpaceEventHandler._positions;
   const numberOfTouches = positions.length;
   let action;
@@ -745,7 +776,7 @@ const touchPinchMovementEvent = {
 };
 
 function fireTouchMoveEvents(screenSpaceEventHandler, event) {
-  const modifier = getModifier(event);
+  const modifier = getModifier(event, screenSpaceEventHandler);
   const positions = screenSpaceEventHandler._positions;
   const previousPositions = screenSpaceEventHandler._previousPositions;
   const numberOfTouches = positions.length;
@@ -988,6 +1019,7 @@ function ScreenSpaceEventHandler(element) {
   };
   this._isPinching = false;
   this._isTouchHolding = false;
+  this._spaceKeyDown = false;
   this._lastSeenTouchEvent =
     -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
 

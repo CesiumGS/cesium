@@ -424,7 +424,12 @@ Object.defineProperties(CameraEventAggregator.prototype, {
         !this._update[
           getKey(CameraEventType.WHEEL, KeyboardEventModifier.CTRL)
         ] ||
-        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.ALT)];
+        !this._update[
+          getKey(CameraEventType.WHEEL, KeyboardEventModifier.ALT)
+        ] ||
+        !this._update[
+          getKey(CameraEventType.WHEEL, KeyboardEventModifier.SPACE)
+        ];
       return this._buttonsDown > 0 || wheelMoved;
     },
   },
