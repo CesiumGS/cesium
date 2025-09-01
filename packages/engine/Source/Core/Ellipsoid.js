@@ -256,6 +256,7 @@ Ellipsoid.MOON = Object.freeze(
 
 /**
  * An Ellipsoid instance initialized to a sphere with the mean radii of Mars.
+ * Source: https://epsg.io/104905
  *
  * @type {Ellipsoid}
  * @constant

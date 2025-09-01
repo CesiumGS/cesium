@@ -43,6 +43,9 @@
         "rgba": [243, 242, 99, 255]
       }
     },
+    "properties": {
+      "animationStartTime": "2013-08-02T01:00:00Z"
+    },
     "position": {
       "interpolationAlgorithm": "LINEAR",
       "forwardExtrapolationType": "HOLD",
@@ -9189,6 +9192,9 @@
         "rgba": [243, 242, 99, 255]
       }
     },
+    "properties": {
+      "animationStartTime": "2022-02-14T23:00:00Z"
+    },
     "position": {
       "interpolationAlgorithm": "LINEAR",
       "forwardExtrapolationType": "HOLD",
@@ -13305,8 +13311,7 @@
     "id": "TheMartianJourney",
     "name": "TheMartianJourney",
     "rectangle": {
-      "height": 0,
-      "heightReference": "CLAMP_TO_GROUND",
+      "height": 50000,
       "coordinates": {
         "wsenDegrees": [-30, 5, 25, 25]
       },

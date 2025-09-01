@@ -52,23 +52,6 @@
     {
       "type": "Feature",
       "properties": { 
-        "text": "Curiosity Landing Site",
-        "destination": [-2528120.05413259, 2327121.41796176, -175115.37377759],
-        "orientation": [3.05551342, -0.50384108, 0.00103872],
-        "distanceDisplayCondition": true,
-        "description": "Curiosity is a car-sized Mars rover that is exploring Gale crater and Mount Sharp on Mars as part of NASA's Mars Science Laboratory (MSL) mission. Launched in 2011 and landed the following year, the rover continues to operate more than a decade after its original two-year mission. Mission goals include an investigation of the Martian climate and geology, an assessment of whether the selected field site inside Gale has ever offered environmental conditions favorable for microbial life (including investigation of the role of water), and planetary habitability studies in preparation for human exploration.",
-        "sourceURL": "https://en.wikipedia.org/wiki/Curiosity_(rover)",
-        "source": "Wikipedia",
-        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg/1280px-Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [137.441633, -4.589467]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": { 
         "text": "Elysium Volcanic Region",
         "destination": [-3390705.18743154, 1723996.087561009, 1009387.4502178654],
         "orientation": [5.95184286595793, -0.8844046974415081, 0.005041989289460425],
@@ -85,13 +68,13 @@
     {
       "type": "Feature",
       "properties": { 
-        "text": "Gale Crater",
+        "text": "Gale Crater (Curiosity)",
         "destination": [-2791535.3207, 2189446.3646, -616541.9385],
         "orientation": [5.5684, -0.636, 0.0],
-        "description": "Gale, named for Walter F. Gale (1865-1945), an amateur astronomer from Australia, spans 154 km (96 mi) in diameter and holds a mountain, Aeolis Mons (informally named \"Mount Sharp\" to pay tribute to geologist Robert P. Sharp) rising 18,000 ft (5,500 m) from the crater floor, higher than Mount Rainier rises above Seattle. Gale is roughly the size of Connecticut and Rhode Island.",
-        "sourceURL": "https://en.wikipedia.org/wiki/Gale_(crater)",
+        "description": "Curiosity is a car-sized Mars rover that is exploring Gale crater and Mount Sharp on Mars as part of NASA's Mars Science Laboratory (MSL) mission. Launched in 2011 and landed the following year, the rover continues to operate more than a decade after its original two-year mission. Mission goals include an investigation of the Martian climate and geology, an assessment of whether the selected field site inside Gale has ever offered environmental conditions favorable for microbial life (including investigation of the role of water), and planetary habitability studies in preparation for human exploration.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Curiosity_(rover)",
         "source": "Wikipedia",
-        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Curiosity_Cradled_by_Gale_Crater.jpg"
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg/1280px-Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg"
       },
       "geometry": {
         "type": "Point",
@@ -101,14 +84,13 @@
     {
       "type": "Feature",
       "properties": {
-        "text": "Jezero Crater",
+        "text": "Jezero Crater (Perseverance)",
         "destination": [596565.83388002, 3353778.00627982, 923026.06801835],
         "orientation": [5.59008567, -0.59978189, 0.00060998],
-        "distanceDisplayCondition": true,
-        "description": "Jezero is a crater on Mars in the Syrtis Major quadrangle, about 45.0 km (28.0 mi) in diameter. Thought to have once been flooded with water, the crater contains a fan-delta deposit rich in clays. The lake in the crater was present when valley networks were forming on Mars. Besides having a delta, the crater shows point bars and inverted channels. From a study of the delta and channels, it was concluded that the lake inside the crater probably formed during a period in which there was continual surface runoff.",
-        "sourceURL": "https://en.wikipedia.org/wiki/Jezero_(crater)",
+        "description": "Perseverance is a car-sized Mars rover designed to explore the Jezero crater on Mars as part of NASA's Mars 2020 mission. Perseverance has a similar design to its predecessor rover, Curiosity, although it was moderately upgraded. It carries seven primary payload instruments, nineteen cameras, and two microphones. The rover also carried the mini-helicopter Ingenuity to Mars, an experimental technology testbed that made the first powered aircraft flight on another planet on April 19, 2021.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Perseverance_(rover)",
         "source": "Wikipedia",
-        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/d/d6/Perseverance%27s_First_Full-Color_Look_at_Mars.png"
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Perseverance-Selfie-at-Rochette-Horizontal-V2.gif"
       },
       "geometry": {
         "type": "Point",
@@ -166,7 +148,7 @@
     {
       "type": "Feature",
       "properties": { 
-        "text": "Opportunity Landing Site",
+        "text": "Meridiani Planum (Opportunity)",
         "destination": [3528252.21590355, -6454.59498861, -190095.70073928],
         "orientation": [4.91589709, -0.43114195, 5.97503936],
         "description": "Opportunity, also known as MER-B (Mars Exploration Rover - B) or MER-1, and nicknamed Oppy, is a robotic rover that was active on Mars from 2004 until 2018. Opportunity was operational on Mars for 5111 sols (14 years, 138 days on Earth). Launched on July 7, 2003, as part of NASA's Mars Exploration Rover program, it landed in Meridiani Planum on January 25, 2004, three weeks after its twin, Spirit (MER-A), touched down on the other side of the planet. With a planned 90-sol duration of activity (slightly less than 92.5 Earth days), Spirit functioned until it got stuck in 2009 and ceased communications in 2010, while Opportunity was able to stay operational for 5111 sols after landing, maintaining its power and key systems through continual recharging of its batteries using solar power, and hibernating during events such as dust storms to save power. This careful operation allowed Opportunity to operate for 57 times its designed lifespan, exceeding the initial plan by 14 years, 47 days (in Earth time). By June 10, 2018, when it last contacted NASA, the rover had traveled a distance of 45.16 kilometers (28.06 miles).",
@@ -177,23 +159,6 @@
       "geometry": {
         "type": "Point",
         "coordinates": [354.4734, -1.9462]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": { 
-        "text": "Perseverance Landing Site",
-        "destination": [596565.83388002, 3353778.00627982, 923026.06801835],
-        "orientation": [5.59008567, -0.59978189, 0.00060998],
-        "distanceDisplayCondition": true,
-        "description": "Perseverance is a car-sized Mars rover designed to explore the Jezero crater on Mars as part of NASA's Mars 2020 mission. Perseverance has a similar design to its predecessor rover, Curiosity, although it was moderately upgraded. It carries seven primary payload instruments, nineteen cameras, and two microphones. The rover also carried the mini-helicopter Ingenuity to Mars, an experimental technology testbed that made the first powered aircraft flight on another planet on April 19, 2021.",
-        "sourceURL": "https://en.wikipedia.org/wiki/Perseverance_(rover)",
-        "source": "Wikipedia",
-        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Perseverance-Selfie-at-Rochette-Horizontal-V2.gif"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [77.45088572, 18.44462715]
       }
     },
     {
@@ -215,7 +180,7 @@
     {
       "type": "Feature",
       "properties": { 
-        "text": "Sojourner Landing Site",
+        "text": "Ares Vallis (Sojourner)",
         "destination": [3002746.35818072, -1674150.97664144, 1015018.06707550],
         "orientation": [5.27982625, -0.63635512, 0.00167013],
         "description": "The robotic Sojourner rover reached Mars on July 4, 1997 as part of the Mars Pathfinder mission. Sojourner was operational on Mars for 92 sols (95 Earth days), and was the first wheeled vehicle to operate on an astronomical object other than the Earth or Moon. The landing site was in the Ares Vallis channel in the Chryse Planitia region of the Oxia Palus quadrangle.",
@@ -231,7 +196,7 @@
     {
       "type": "Feature",
       "properties": { 
-        "text": "Spirit Landing Site",
+        "text": "Gusev Crater (Spirit)",
         "destination": [-3318104.44189717, 143085.57854143, -986175.00294181],
         "orientation": [5.53211415, -0.38597730, 0.00036546],
         "description": "Spirit, also known as MER-A (Mars Exploration Rover - A) or MER-2, is a Mars robotic rover, active from 2004 to 2010. Spirit was operational on Mars for 2208 sols or 3.3 Martian years (2269 days; 6 years, 77 days). It was one of two rovers of NASA's Mars Exploration Rover Mission managed by the Jet Propulsion Laboratory (JPL). Spirit landed successfully within the impact crater Gusev on Mars at 04:35 Ground UTC on January 4, 2004, three weeks before its twin, Opportunity (MER-B), which landed on the other side of the planet. Its name was chosen through a NASA-sponsored student essay competition. The rover got stuck in a \"sand trap\" in late 2009 at an angle that hampered recharging of its batteries; its last communication with Earth was on March 22, 2010.",

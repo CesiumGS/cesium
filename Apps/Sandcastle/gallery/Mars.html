@@ -148,11 +148,12 @@
           baseLayer: false,
           baseLayerPicker: false,
           geocoder: false,
-          shadows: true,
-          globe: false,
+          shadows: false,
+          globe: new Cesium.Globe(Cesium.Ellipsoid.MARS),
           skyBox: Cesium.SkyBox.createEarthSkyBox(),
           skyAtmosphere: new Cesium.SkyAtmosphere(Cesium.Ellipsoid.MARS),
         });
+        viewer.scene.globe.show = false;
         const scene = viewer.scene;
         const clock = viewer.clock;
         const navHelp = viewer.navigationHelpButton;
@@ -201,20 +202,20 @@
           );
           viewer.dataSources.add(dataSource);
 
-          const toolbarMenuEntries = [
+          const roverMenuEntries = [
             {
               text: "Fly to rover...",
-              onselect: () => {
-                reset();
-                scene.camera.flyHome(3.0);
-              },
+              onselect: () => {},
             },
           ];
 
           const onSelectRover = (rover) => {
             reset();
-            clock.multiplier = 100000;
-            clock.currentTime = rover.availability.start;
+            const roverAnimStartIso = rover.properties.animationStartTime.getValue(
+              Cesium.JulianDate.now(),
+            );
+            clock.multiplier = 604800;
+            clock.currentTime = new Cesium.JulianDate.fromIso8601(roverAnimStartIso);
             viewer.timeline.zoomTo(rover.availability.start, rover.availability.stop);
 
             const boundingSphere = new Cesium.BoundingSphere(
@@ -225,6 +226,9 @@
             scene.camera.flyToBoundingSphere(boundingSphere, {
               offset: new Cesium.HeadingPitchRoll(4.9791, -0.5294, 0.0),
               easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+              maximumHeight: 5e6,
+              pitchAdjustHeight: 2.5e6,
+              duration: 3.0,
               complete: function () {
                 highlightAnimationViewModel(); // Draw attention to the play button
                 navHelp.viewModel.showInstructions = true;
@@ -248,7 +252,7 @@
               new Cesium.NearFarScalar(0.0, 15.0, 1.0e5, 0.0),
             );
 
-            toolbarMenuEntries.push({
+            roverMenuEntries.push({
               text: entityId,
               onselect: () => onSelectRover(outRover),
             });
@@ -268,7 +272,7 @@
             transparent: true,
           });
 
-          toolbarMenuEntries.push({
+          roverMenuEntries.push({
             text: '"The Martian" Journey',
             onselect: () => {
               reset();
@@ -276,7 +280,7 @@
             },
           });
 
-          Sandcastle.addToolbarMenu(toolbarMenuEntries);
+          Sandcastle.addToolbarMenu(roverMenuEntries);
         } catch (error) {
           console.log(`Error loading CZML: ${error}`);
         }
@@ -317,13 +321,10 @@
             scene.camera.flyTo(landmark);
           };
 
-          const toolbarMenuEntries = [
+          const landmarkMenuEntries = [
             {
               text: "Fly to landmark...",
-              onselect: () => {
-                reset();
-                scene.camera.flyHome(3.0);
-              },
+              onselect: () => {},
             },
           ];
 
@@ -342,9 +343,6 @@
               disableDepthTestDistance: new Cesium.CallbackProperty(() => {
                 return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
               }, false),
-              distanceDisplayCondition: entity.properties.distanceDisplayCondition
-                ? new Cesium.DistanceDisplayCondition(3e4, Number.MAX_VALUE)
-                : undefined,
             });
 
             entity.point = new Cesium.PointGraphics({
@@ -357,9 +355,6 @@
               disableDepthTestDistance: new Cesium.CallbackProperty(() => {
                 return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
               }, false),
-              distanceDisplayCondition: entity.properties.distanceDisplayCondition
-                ? new Cesium.DistanceDisplayCondition(3e4, Number.MAX_VALUE)
-                : undefined,
             });
 
             entity.name = entity.properties.text.getValue();
@@ -375,13 +370,16 @@
               orientationArray[2],
             );
 
-            toolbarMenuEntries.push({
+            landmarkMenuEntries.push({
               text: entity.properties.text.getValue(),
               onselect: () =>
                 onSelectLandmark({
                   destination: flyToDestination,
                   orientation: flyToOrientation,
                   easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+                  maximumHeight: 5e6,
+                  pitchAdjustHeight: 2.5e6,
+                  duration: 3.0,
                   complete: function () {
                     viewer.selectedEntity = entity;
                     viewer.infoBox.viewModel.showInfo = true;
@@ -390,7 +388,7 @@
             });
           });
 
-          Sandcastle.addToolbarMenu(toolbarMenuEntries);
+          Sandcastle.addToolbarMenu(landmarkMenuEntries);
         } catch (error) {
           console.log(`Error loading GeoJSON: ${error}`);
         }
@@ -453,7 +451,6 @@
           clock.multiplier = 1;
           viewer.selectedEntity = undefined;
           viewer.trackedEntity = undefined;
-          viewer.shadows = true;
           viewer.timeline.zoomTo(clock.startTime, clock.stopTime);
           removeRotation();
           removeHighlight();
@@ -467,7 +464,7 @@
         );
 
         // When animating, if the multiplier is very high (which is necessary to see rover movement),
-        // shadows flicker distractingly, so disable them
+        // model lighting flickers distractingly, so disable it
         const entitiesToDisableLightingFor = [curiosity, perseverance, ingenuity];
         Cesium.knockout
           .getObservable(viewer.clockViewModel, "shouldAnimate")
@@ -476,12 +473,10 @@
               entitiesToDisableLightingFor.forEach(function (entity) {
                 entity.model.lightColor = new Cesium.Color(0, 0, 0);
               });
-              viewer.shadows = false;
             } else {
               entitiesToDisableLightingFor.forEach(function (entity) {
                 entity.model.lightColor = new Cesium.Color(1, 1, 1);
               });
-              viewer.shadows = true;
             }
           });
 
