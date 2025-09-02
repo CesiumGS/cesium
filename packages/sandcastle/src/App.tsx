@@ -385,7 +385,6 @@ function App() {
 
           startLoadPending(() => {
             if (isLoadPending) {
-              console.log("hullo?");
               return;
             }
             setTitle(title);
