@@ -66,10 +66,7 @@ RayShapeIntersection getVoxelIntersection(in vec3 tileUv, in vec3 sampleSizeAlon
 }
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in mat3 jacobianT, in float currentT) {
-    // The Jacobian is computed in a space where the shape spans [-1, 1].
-    // But the ray is marched in a space where the shape fills [0, 1].
-    // So we need to scale the Jacobian by 2.
-    vec3 gradient = 2.0 * viewRay.rawDir * jacobianT;
+    vec3 gradient = viewRay.rawDir * jacobianT;
     vec3 sampleSizeAlongRay = getSampleSize(sampleData.tileCoords.w) / gradient;
 
     RayShapeIntersection voxelIntersection = getVoxelIntersection(sampleData.tileUv, sampleSizeAlongRay);
@@ -185,7 +182,7 @@ void main()
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(pointJacobian.point, traversalData, sampleDatas);
-    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, 0.5 * currentT); // 0.5 for EC to UV
+    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
 
     FragmentInput fragmentInput;
     #if defined(STATISTICS)
@@ -237,7 +234,7 @@ void main()
         }
 
         // Keep raymarching
-        currentT += 2.0 * step.w; // 2.0 for UV to EC
+        currentT += step.w;
         // Check if there's more intersections.
         if (currentT > endT) {
             #if (INTERSECTION_COUNT == 1)
@@ -262,7 +259,7 @@ void main()
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
         //traverseOctreeFromExisting(pointJacobian.point, traversalData, sampleDatas);
         traverseOctreeFromBeginning(pointJacobian.point, traversalData, sampleDatas);
-        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, 0.5 * currentT); // 0.5 for EC to UV
+        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
