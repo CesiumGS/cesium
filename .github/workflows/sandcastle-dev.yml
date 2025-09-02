@@ -2,7 +2,7 @@ name: sandcastle-dev
 on:
   push:
     branches:
-      - 'sandcastle-v2'
+      - 'cesium.com'
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -16,7 +16,7 @@ jobs:
       GITHUB_REPO: ${{ github.repository }}
       GITHUB_SHA: ${{ github.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: install node 22
         uses: actions/setup-node@v4
         with:

@@ -5,27 +5,36 @@ import {
   RefObject,
   useCallback,
   useContext,
+  useDeferredValue,
   useEffect,
   useImperativeHandle,
   useReducer,
   useRef,
   useState,
+  useTransition,
 } from "react";
 import { Allotment, AllotmentHandle } from "allotment";
 import "allotment/dist/style.css";
 import "./App.css";
 
-import { Button, Divider, Tooltip } from "@stratakit/bricks";
+import { Anchor, Button, Divider, Text, Tooltip } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";
-import { decodeBase64Data, makeCompressedBase64String } from "./Helpers.ts";
-import Gallery, { GalleryItem } from "./Gallery.js";
+import { makeCompressedBase64String } from "./Helpers.ts";
+import { getBaseUrl } from "./util/getBaseUrl.ts";
+
+import {
+  StoreContext,
+  useGalleryItemStore,
+  type GalleryItem,
+} from "./Gallery/GalleryItemStore.ts";
+import Gallery from "./Gallery/Gallery.js";
+
 import Bucket from "./Bucket.tsx";
 import SandcastleEditor from "./SandcastleEditor.tsx";
 import {
   add,
   image,
   moon,
-  share as shareIcon,
   script,
   settings as settingsIcon,
   sun,
@@ -37,9 +46,11 @@ import {
   ConsoleMessageType,
   ConsoleMirror,
 } from "./ConsoleMirror.tsx";
-import { getBaseUrl } from "./util/getBaseUrl.ts";
 import { SettingsModal } from "./SettingsModal.tsx";
 import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
+import { MetadataPopover } from "./MetadataPopover.tsx";
+import { SharePopover } from "./SharePopover.tsx";
+import { SandcastlePopover } from "./SandcastlePopover.tsx";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -53,7 +64,6 @@ const defaultHtmlCode = `<style>
 <div id="toolbar"></div>
 `;
 
-const GALLERY_BASE = __GALLERY_BASE_URL__;
 const cesiumVersion = __CESIUM_VERSION__;
 const versionString = __COMMIT_SHA__
   ? `Commit: ${__COMMIT_SHA__.substring(0, 7)} - ${cesiumVersion}`
@@ -79,17 +89,10 @@ function RightSideAllotment({
   const rightSideRef = useRef<AllotmentHandle>(null);
   const rightSideSizes = useRef<number[]>([0, 0]);
 
-  useImperativeHandle(ref, () => {
-    return {
-      toggleExpanded: () => toggleExpanded(),
-    };
-  });
-
   const [previousConsoleHeight, setPreviousConsoleHeight] = useState<
     number | undefined
   >(undefined);
-
-  function toggleExpanded() {
+  const toggleExpanded = useCallback(() => {
     const [top, bottom] = rightSideSizes.current;
     const totalHeight = top + bottom;
     if (!consoleExpanded) {
@@ -103,7 +106,13 @@ function RightSideAllotment({
       ]);
     }
     setConsoleExpanded(!consoleExpanded);
-  }
+  }, [consoleExpanded, previousConsoleHeight]);
+
+  useImperativeHandle(ref, () => {
+    return {
+      toggleExpanded: () => toggleExpanded(),
+    };
+  });
 
   return (
     <Allotment
@@ -194,9 +203,7 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const [title, setTitle] = useState("New Sandcastle");
-
-  // This is used to avoid a "double render" when loading from the URL
-  const [readyForViewer, setReadyForViewer] = useState(false);
+  const [description, setDescription] = useState("");
 
   type CodeState = {
     code: string;
@@ -293,10 +300,6 @@ function App() {
     );
   }, [codeState.dirty]);
 
-  const [legacyIdMap, setLegacyIdMap] = useState<Record<string, string>>({});
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
-  const [galleryLoaded, setGalleryLoaded] = useState(false);
-
   const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
   const appendConsole = useCallback(
     function appendConsole(type: ConsoleMessageType, message: string) {
@@ -311,12 +314,14 @@ function App() {
     [consoleExpanded],
   );
 
-  function resetConsole() {
-    // the console should only be cleared by the Bucket when the viewer page
-    // has actually reloaded and stopped sending console statements
-    // otherwise some could bleed into the "next run"
-    setConsoleMessages([]);
-  }
+  const resetConsole = useCallback(() => {
+    if (codeState.runNumber > 0) {
+      // the console should only be cleared by the Bucket when the viewer page
+      // has actually reloaded and stopped sending console statements
+      // otherwise some could bleed into the "next run"
+      setConsoleMessages([]);
+    }
+  }, [codeState.runNumber]);
 
   function runSandcastle() {
     dispatch({ type: "runSandcastle" });
@@ -335,17 +340,7 @@ function App() {
     window.history.pushState({}, "", getBaseUrl());
 
     setTitle("New Sandcastle");
-  }
-
-  function share() {
-    const base64String = makeCompressedBase64String({
-      code: codeState.code,
-      html: codeState.html,
-    });
-
-    const shareUrl = `${getBaseUrl()}#c=${base64String}`;
-    window.history.replaceState({}, "", shareUrl);
-    dispatch({ type: "resetDirty" });
+    setDescription("");
   }
 
   function openStandalone() {
@@ -367,158 +362,63 @@ function App() {
     window.focus();
   }
 
-  const loadGalleryItem = useCallback(
-    async function loadGalleryItem(galleryId: string) {
-      const galleryItem = galleryItems.find((item) => item.id === galleryId);
-      if (!galleryItem) {
-        console.error("Unable to find gallery item with id:", galleryId);
-        return;
-      }
+  // Starts fetching data
+  const galleryItemStore = useGalleryItemStore();
 
-      const itemBaseUrl = `${GALLERY_BASE}/${galleryItem.id}`;
-
-      const codeReq = fetch(`${itemBaseUrl}/main.js`);
-      const htmlReq = fetch(`${itemBaseUrl}/index.html`);
-
-      const code = await (await codeReq).text();
-      const html = await (await htmlReq).text();
-
-      dispatch({
-        type: "setAndRun",
-        code: code,
-        html: html,
-      });
-      setTitle(galleryItem.title);
-      setReadyForViewer(true);
-    },
-    [galleryItems],
-  );
-
-  const loadDemo = useCallback(
-    function loadDemo(item: GalleryItem, switchToCode: boolean) {
-      if (!confirmLeave()) {
-        return;
-      }
-      // Load the gallery item every time it's clicked
-      loadGalleryItem(item.id);
-
-      const searchParams = new URLSearchParams(window.location.search);
-      if (
-        !searchParams.has("id") ||
-        (searchParams.has("id") && searchParams.get("id") !== item.id)
-      ) {
-        // only push state if it's not the current url to prevent duplicated in history
-        window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
-        if (
-          !searchParams.has("id") ||
-          (searchParams.has("id") && searchParams.get("id") !== item.id)
-        ) {
-          // only push state if it's not the current url to prevent duplicated in history
-          window.history.pushState({}, "", `${getBaseUrl()}?id=${item.id}`);
-        }
-        if (switchToCode) {
-          setLeftPanel("editor");
-        }
-      }
-    },
-    [loadGalleryItem, confirmLeave],
-  );
-
+  const [initialized, setInitialized] = useState(false);
+  const [isLoadPending, startLoadPending] = useTransition();
+  const deferredIsLoading = useDeferredValue(isLoadPending);
+  const { useLoadFromUrl } = galleryItemStore;
+  const loadFromUrl = useLoadFromUrl();
   useEffect(() => {
-    let ignore = false;
-    async function fetchGallery() {
-      const req = await fetch(`${GALLERY_BASE}/list.json`);
-      const resp = await req.json();
+    const load = () =>
+      startLoadPending(async () => {
+        try {
+          if (isLoadPending || !loadFromUrl) {
+            return;
+          }
+          const data = await loadFromUrl();
+          if (!data) {
+            return;
+          }
 
-      if (!ignore) {
-        setGalleryItems(resp.entries);
-        setLegacyIdMap(resp.legacyIdMap);
-        setGalleryLoaded(true);
-      }
-    }
-    fetchGallery();
-    return () => {
-      ignore = true;
-    };
-  }, []);
+          const { code, html, title } = data;
 
-  const loadFromUrl = useCallback(
-    function loadFromUrl() {
-      if (galleryLoaded) {
-        const searchParams = new URLSearchParams(window.location.search);
-
-        if (window.location.hash.indexOf("#c=") === 0) {
-          const base64String = window.location.hash.substr(3);
-          const data = decodeBase64Data(base64String);
-
-          dispatch({
-            type: "setAndRun",
-            code: data.code,
-            html: data.html,
-          });
-          setReadyForViewer(true);
-        } else if (searchParams.has("gist")) {
-          // This is currently for legacy support only so old links on GH or the forums don't break
-          fetch(`https://api.github.com/gists/${searchParams.get("gist")}`)
-            .then((data) => data.json())
-            .then(function (data) {
-              const files = data.files;
-              const code = files["Cesium-Sandcastle.js"].content;
-              const html =
-                files["Cesium-Sandcastle.html"]?.content ?? defaultHtmlCode;
-              dispatch({ type: "setAndRun", code: code, html: html });
-              setTitle("Gist Import");
-              setReadyForViewer(true);
-            })
-            .catch(function (error) {
-              appendConsole(
-                "error",
-                `Unable to GET gist from GitHub API. This could be due to too many requests from your IP or an incorrect id. Try again in an hour or copy and paste the code from the gist: https://gist.github.com/${searchParams.get("gist")}`,
-              );
-              console.log(error);
+          startLoadPending(() => {
+            if (isLoadPending) {
+              return;
+            }
+            setTitle(title);
+            dispatch({
+              type: "setAndRun",
+              code: code ?? defaultJsCode,
+              html: html ?? defaultHtmlCode,
             });
-        } else if (searchParams.has("src")) {
-          const legacyId = searchParams.get("src");
-          if (!legacyId) {
-            return;
-          }
-          const galleryId = legacyIdMap[legacyId];
-          if (!galleryId) {
-            console.warn("Unable to map legacy id to new id");
-            return;
-          }
-          window.history.replaceState(
-            {},
-            "",
-            `${getBaseUrl()}?id=${galleryId}`,
-          );
-          loadGalleryItem(galleryId);
-        } else if (searchParams.has("id")) {
-          const galleryId = searchParams.get("id");
-          if (!galleryId) {
-            return;
-          }
-          loadGalleryItem(galleryId);
-        } else {
-          setReadyForViewer(true);
+          });
+        } catch (error) {
+          const message = (error as Error)?.message;
+          appendConsole("error", message);
+          console.error(message);
         }
-      }
-    },
-    [galleryLoaded, legacyIdMap, loadGalleryItem, appendConsole],
-  );
+      });
 
-  useEffect(() => loadFromUrl(), [galleryLoaded, galleryItems, loadFromUrl]);
-  useEffect(() => {
+    if (!initialized && loadFromUrl) {
+      setInitialized(true);
+      load();
+    }
+
     // Listen to browser forward/back navigation and try to load from URL
     // this is necessary because of the pushState used for faster gallery loading
-    function popStateListener() {
-      if (confirmLeave()) {
-        loadFromUrl();
+    const stateLoad = () => {
+      if (!confirmLeave()) {
+        return false;
       }
-    }
-    window.addEventListener("popstate", popStateListener);
-    return () => window.removeEventListener("popstate", popStateListener);
-  }, [loadFromUrl, confirmLeave]);
+
+      load();
+    };
+    window.addEventListener("popstate", stateLoad);
+    return () => window.removeEventListener("popstate", stateLoad);
+  }, [initialized, isLoadPending, loadFromUrl, confirmLeave, appendConsole]);
 
   useEffect(() => {
     // if the code has been edited listen for navigation away and warn
@@ -538,6 +438,42 @@ function App() {
     window.open(docsUrl, "_blank")?.focus();
   }
 
+  const onRunCode = useCallback(
+    async ({ id, title, getJsCode, getHtmlCode }: GalleryItem) => {
+      if (!confirmLeave()) {
+        return;
+      }
+
+      try {
+        const [code, html] = await Promise.all([getJsCode(), getHtmlCode()]);
+        const searchParams = new URLSearchParams(window.location.search);
+        if (
+          !searchParams.has("id") ||
+          (searchParams.has("id") && searchParams.get("id") !== id)
+        ) {
+          // only push state if it's not the current url to prevent duplicated in history
+          window.history.pushState({}, "", `${getBaseUrl()}?id=${id}`);
+        }
+
+        setTitle(title);
+        dispatch({
+          type: "setAndRun",
+          code: code ?? defaultJsCode,
+          html: html ?? defaultJsCode,
+        });
+      } catch (error) {
+        const message = (error as Error)?.message;
+        appendConsole("error", message);
+        console.error(message);
+      }
+    },
+    [confirmLeave, appendConsole],
+  );
+
+  const onOpenCode = useCallback(() => {
+    setLeftPanel("editor");
+  }, []);
+
   return (
     <Root
       id="root"
@@ -546,6 +482,11 @@ function App() {
       colorScheme={settings.theme}
       synchronizeColorScheme
     >
+      <div className="banner">
+        <Anchor href="https://sandcastle.cesium.com" tone="accent">
+          Looking for the old Sandcastle? It's still here (for a little while) →
+        </Anchor>
+      </div>
       <header className="header">
         <a className="logo" href={getBaseUrl()}>
           <img
@@ -557,15 +498,32 @@ function App() {
             style={{ width: "118px" }}
           />
         </a>
-        <div className="metadata">{title}</div>
-        <Button tone="accent" onClick={share}>
-          <Icon href={shareIcon} /> Share
-        </Button>
+        <MetadataPopover title={title} description={description} />
+        <SharePopover code={codeState.code} html={codeState.html} />
         <Divider aria-orientation="vertical" />
         <Button onClick={() => openStandalone()}>
           Standalone <Icon href={windowPopout} />
         </Button>
         <div className="flex-spacer"></div>
+        <SandcastlePopover
+          disclosure={
+            <Text variant="body-md" className="metadata">
+              Feedback & Issues
+            </Text>
+          }
+          autoFocus={false}
+        >
+          <p>
+            Help us continue to improve Sandcastle. Report a problem or share
+            your thoughts in{" "}
+            <Anchor
+              href="https://github.com/CesiumGS/cesium/issues/12857"
+              target="_blank"
+            >
+              this issue
+            </Anchor>
+          </p>
+        </SandcastlePopover>
         <div className="version">
           {versionString && <pre>{versionString}</pre>}
         </div>
@@ -624,7 +582,7 @@ function App() {
         </AppBarButton>
         <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
       </div>
-      <Allotment defaultSizes={[40, 60]}>
+      <Allotment defaultSizes={[40, 60]} className="content">
         <Allotment.Pane minSize={400} className="left-panel">
           {leftPanel === "editor" && (
             <SandcastleEditor
@@ -641,11 +599,13 @@ function App() {
               setJs={(newCode) => dispatch({ type: "setCode", code: newCode })}
             />
           )}
-          <Gallery
-            hidden={leftPanel !== "gallery"}
-            galleryItems={galleryItems}
-            loadDemo={loadDemo}
-          />
+          <StoreContext value={galleryItemStore}>
+            <Gallery
+              hidden={leftPanel !== "gallery"}
+              onRunCode={onRunCode}
+              onOpenCode={onOpenCode}
+            />
+          </StoreContext>
         </Allotment.Pane>
         <Allotment.Pane className="right-panel">
           <RightSideAllotment
@@ -655,7 +615,7 @@ function App() {
             setConsoleExpanded={setConsoleExpanded}
           >
             <Allotment.Pane minSize={200}>
-              {readyForViewer && (
+              {!deferredIsLoading && (
                 <Bucket
                   code={codeState.committedCode}
                   html={codeState.committedHtml}

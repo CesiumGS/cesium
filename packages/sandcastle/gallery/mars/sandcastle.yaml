@@ -1,0 +1,8 @@
+legacyId: Mars.html
+title: Cesium Mars
+description: Mars terrain visualized using 3D Tiles, tiled and hosted by Cesium ion, and shown with points of interest and additional data layers.
+labels:
+  - Showcases
+  - ion Assets
+  - 3D Tiles
+thumbnail: thumbnail.jpg

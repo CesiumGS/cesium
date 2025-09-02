@@ -90,6 +90,9 @@ ITwinData.createTilesetFromIModelId = async function ({
  * If the <code>type</code> or <code>rootDocument</code> are not provided this function
  * will first request the full metadata for the specified reality data to fill these values.
  *
+ * The <code>maximumScreenSpaceError</code> of the resulting tileset will default to 4,
+ * unless it is explicitly overridden with the given tileset options.
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @param {Object} options
@@ -97,6 +100,8 @@ ITwinData.createTilesetFromIModelId = async function ({
  * @param {string} options.realityDataId The id of the reality data to load
  * @param {ITwinPlatform.RealityDataType} [options.type] The type of this reality data
  * @param {string} [options.rootDocument] The path of the root document for this reality data
+ * @param {Cesium3DTileset.ConstructorOptions} [options.tilesetOptions] Object containing
+ * options to pass to the internally created {@link Cesium3DTileset}.
  * @returns {Promise<Cesium3DTileset>}
  *
  * @throws {RuntimeError} if the type of reality data is not supported by this function
@@ -106,6 +111,7 @@ ITwinData.createTilesetForRealityDataId = async function ({
   realityDataId,
   type,
   rootDocument,
+  tilesetOptions,
 }) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iTwinId", iTwinId);
@@ -144,9 +150,16 @@ ITwinData.createTilesetForRealityDataId = async function ({
     rootDocument,
   );
 
-  return Cesium3DTileset.fromUrl(tilesetAccessUrl, {
+  // The maximum screen space error was defined to default to 4 for
+  // reality data tilesets, because they did not show the expected
+  // amount of detail with the default value of 16. Values that are
+  // given in the tilesetOptions should still override that default.
+  const internalTilesetOptions = {
     maximumScreenSpaceError: 4,
-  });
+    ...tilesetOptions,
+  };
+
+  return Cesium3DTileset.fromUrl(tilesetAccessUrl, internalTilesetOptions);
 };
 
 /**

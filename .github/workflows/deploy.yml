@@ -25,7 +25,7 @@ jobs:
       BASE_URL: /cesium/${{ github.ref_name }}/
       DEPLOYED_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: install node 22
         uses: actions/setup-node@v4
         with:
