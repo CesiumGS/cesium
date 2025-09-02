@@ -2,6 +2,7 @@ legacyId: Classification.html
 title: Classification
 description: Draw the intersection of a volume and a photgrammetry dataset.
 labels:
-  - Tutorials
-  - Showcases
+  - 3D Tiles
+  - Classification
+  - Photogrammetry
 thumbnail: thumbnail.jpg

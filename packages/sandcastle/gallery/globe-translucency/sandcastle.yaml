@@ -2,5 +2,6 @@ legacyId: Globe Translucency.html
 title: Globe Translucency
 description: View datasets underneath the surface with globe translucency.
 labels:
-  - Showcases
+  - Terrain
+  - Styling
 thumbnail: thumbnail.jpg

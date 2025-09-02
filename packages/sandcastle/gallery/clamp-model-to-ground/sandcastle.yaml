@@ -2,8 +2,8 @@ legacyId: Clamp Model to Ground.html
 title: Clamp Model to Ground
 description: Clamp a dynamic 3D model to a 3D Tileset or terrain using height references.
 labels:
-  - Showcases
   - 3D Tiles
   - Terrain
-  - Entity
+  - Entities
+  - Clamping
 thumbnail: thumbnail.jpg

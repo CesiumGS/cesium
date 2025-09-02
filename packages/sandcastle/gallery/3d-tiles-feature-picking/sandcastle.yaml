@@ -2,6 +2,7 @@ legacyId: 3D Tiles Feature Picking.html
 title: 3D Tiles Feature Picking
 description: Pick features in a 3D Tiles tileset.
 labels:
-  - Showcases
   - 3D Tiles
+  - Metadata
+  - Picking
 thumbnail: thumbnail.jpg

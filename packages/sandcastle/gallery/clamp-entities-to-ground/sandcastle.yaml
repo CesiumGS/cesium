@@ -2,8 +2,8 @@ legacyId: Clamp Entities to Ground.html
 title: Clamp Entities to Ground
 description: Clamp entities to terrain and 3D Tiles
 labels:
-  - Showcases
   - 3D Tiles
   - Terrain
-  - Entity
+  - Entities
+  - Clamping
 thumbnail: thumbnail.jpg

@@ -1,6 +1,8 @@
 legacyId: 3D Models Coloring.html
-title: 3D Models Coloring
-description: Change color of 3D models.
+title: Coloring and Styling glTF Models
+description: Customize the appearance of glTF models in CesiumJS using colors, blend modes, transparency, and silhouettes. Useful for highlighting, theming, and differentiating models in a scene at runtime.
 labels:
-  - Showcases
+  - 3D Models
+  - Entities
+  - Styling
 thumbnail: thumbnail.jpg

@@ -1,6 +1,7 @@
 legacyId: 3D Tiles Adjust Height.html
-title: 3D Tiles Adjust Height
-description: Adjust the height of a 3D Tiles tileset.
+title: Offset 3D Tileset Height
+description: Change the vertical position of a 3D Tileset by applying a translation matrix. Useful for aligning datasets with terrain.
 labels:
   - 3D Tiles
+  - Transformations
 thumbnail: thumbnail.jpg

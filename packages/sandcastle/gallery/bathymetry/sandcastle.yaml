@@ -1,7 +1,8 @@
 legacyId: Bathymetry.html
-title: Bathymetry
-description: Visualize worldwide, high-resolution bathymetry.
+title: Global Bathymetry
+description: Worldwide, high-resolution bathymetry data using World Bathymetry Terrain from Cesium ion. Includes lighting, contour lines, and elevation color ramps to highlight seafloor features—useful for oceanographic visualization, geospatial analysis, and educational exploration.
 labels:
-  - Tutorials
   - Showcases
+  - ion Asset
+  - Terrain
 thumbnail: thumbnail.jpg

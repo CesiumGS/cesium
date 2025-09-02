@@ -1,6 +1,8 @@
 legacyId: 3D Tiles Batch Table Hierarchy.html
-title: 3D Tiles Batch Table Hierarchy
-description: Demonstrates use cases for a batch table hierarchy.
+title: 3D Tiles Styling
+description: Shows how to style 3D Tiles by hierarchical class and properties (e.g., buildings → doors → doorknobs). Demonstrates 3D Tiles Style predicates like `isClass` and `isExactClass` and coloring or filtering by element property data.
 labels:
   - 3D Tiles
+  - Metadata
+  - Styling
 thumbnail: thumbnail.jpg

@@ -2,6 +2,6 @@ legacyId: Entity tracking.html
 title: Entity tracking
 description: Apply different tracking reference frames to tracked entities.
 labels:
-  - Beginner
-  - Showcases
+  - Entities
+  - Camera
 thumbnail: thumbnail.jpg

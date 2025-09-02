@@ -2,6 +2,6 @@ legacyId: Sample Height from 3D Tiles.html
 title: Sample Height from 3D Tiles
 description: Sample the most detailed heights of a 3D Tileset.
 labels:
-  - Showcases
   - 3D Tiles
+  - Picking
 thumbnail: thumbnail.jpg

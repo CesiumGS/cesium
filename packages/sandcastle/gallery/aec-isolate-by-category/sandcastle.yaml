@@ -1,7 +1,9 @@
 legacyId: AEC Isolate by Category.html
-title: AEC Isolate by Category
-description: Isolate elements of an architectural design model by the category.
+title: Design Model – Category Filtering
+description: Filter and isolate elements of an architectural design model using 3D Tiles metadata. By toggling categories such as walls, floors, stairs, and doors, metadata-driven styling simplifies inspection of complex AEC datasets.
 labels:
   - Showcases
   - 3D Tiles
+  - Metadata
+  - Filtering
 thumbnail: thumbnail.jpg

@@ -2,5 +2,6 @@ legacyId: Cesium Inspector.html
 title: Cesium Inspector
 description: Use the cesium inspector as a debugging tool for different primitives.
 labels:
-  - Showcases
+  - Development
+  - Entities
 thumbnail: thumbnail.jpg

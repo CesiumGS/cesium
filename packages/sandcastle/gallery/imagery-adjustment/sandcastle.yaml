@@ -2,5 +2,6 @@ legacyId: Imagery Adjustment.html
 title: Imagery Adjustment
 description: Adjust brightness, contrast, hue, saturation, and gamma of an imagery layer.
 labels:
-  - Showcases
+  - Imagery
+  - Styling
 thumbnail: thumbnail.jpg

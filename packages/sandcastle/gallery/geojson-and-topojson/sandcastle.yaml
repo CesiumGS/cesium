@@ -2,7 +2,5 @@ legacyId: GeoJSON and TopoJSON.html
 title: GeoJSON and TopoJSON
 description: Load GeoJSON or TopoJSON data and apply custom styling.
 labels:
-  - Showcases
-  - Tutorials
-  - DataSources
+  - Entities
 thumbnail: thumbnail.jpg

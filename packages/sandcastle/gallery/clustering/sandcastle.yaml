@@ -2,6 +2,7 @@ legacyId: Clustering.html
 title: Clustering
 description: Cluster labels, billboards and points.
 labels:
-  - Tutorials
-  - Showcases
+  - Entities
+  - Labels
+  - Clustering
 thumbnail: thumbnail.jpg

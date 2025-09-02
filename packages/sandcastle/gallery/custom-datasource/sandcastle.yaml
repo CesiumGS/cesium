@@ -2,7 +2,5 @@ legacyId: Custom DataSource.html
 title: Custom DataSource
 description: A custom DataSource implementation.
 labels:
-  - Showcases
-  - DataSources
-  - Tutorials
+  - Entities
 thumbnail: thumbnail.jpg

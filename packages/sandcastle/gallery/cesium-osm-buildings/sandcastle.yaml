@@ -2,7 +2,6 @@ legacyId: Cesium OSM Buildings.html
 title: Cesium OSM Buildings
 description: Worldwide 3D buildings with rich metadata from OpenStreetMap.
 labels:
-  - Beginner
-  - Showcases
+  - 3D Tiles
   - ion Assets
 thumbnail: thumbnail.jpg

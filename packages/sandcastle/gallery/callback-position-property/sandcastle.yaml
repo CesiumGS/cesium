@@ -2,6 +2,5 @@ legacyId: Callback Position Property.html
 title: Callback Position Property
 description: Use a CallbackPositionProperty when your data can't be pre-computed or needs to be derived from other properties at runtime.
 labels:
-  - Beginner
-  - Showcases
+  - Entities
 thumbnail: thumbnail.jpg
