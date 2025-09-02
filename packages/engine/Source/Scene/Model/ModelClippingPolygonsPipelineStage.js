@@ -80,11 +80,13 @@ ModelClippingPolygonsPipelineStage.process = function (
   const uniformMap = {
     model_clippingDistance: function () {
       return (
+        // The later should never happen during a render pass, see https://github.com/CesiumGS/cesium/issues/12725
         clippingPolygons.clippingTexture ?? frameState.context.defaultTexture
       );
     },
     model_clippingExtents: function () {
       return (
+        // The later should never happen during a render pass, see https://github.com/CesiumGS/cesium/issues/12725
         clippingPolygons.extentsTexture ?? frameState.context.defaultTexture
       );
     },
