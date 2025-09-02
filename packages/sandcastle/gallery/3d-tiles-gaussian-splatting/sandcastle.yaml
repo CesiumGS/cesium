@@ -1,6 +1,6 @@
 legacyId: 3D Tiles Gaussian Splatting.html
-title: Gaussian Splatting 3D Tiles 
-description: View the same 3D Tiles power station dataset as a 3D Gaussian splatting tileset and a mesh tileset.
+title: 3D Tiles Gaussian Splatting
+description: A 3D Gaussian splatting (or Gaussian splats) dataset rendered with 3D Tiles.
 labels:
   - Showcases
   - 3D Tiles
