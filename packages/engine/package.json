@@ -47,7 +47,7 @@
     "ktx-parse": "^1.0.0",
     "lerc": "^2.0.0",
     "mersenne-twister": "^1.1.0",
-    "meshoptimizer": "^0.24.0",
+    "meshoptimizer": "^0.25.0",
     "pako": "^2.0.4",
     "protobufjs": "^7.1.0",
     "rbush": "^4.0.1",
