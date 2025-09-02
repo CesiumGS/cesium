@@ -1,9 +1,6 @@
-import {
-  type GalleryItemStore,
-  type GalleryItem,
-} from "../Gallery/GalleryItemStore.ts";
+import { type GalleryItem } from "./GalleryItemStore.ts";
 import { decodeBase64Data } from "../Helpers.ts";
-import { getBaseUrl } from "./getBaseUrl.ts";
+import { getBaseUrl } from "../util/getBaseUrl.ts";
 
 const loadGist = async (gist: string) => {
   try {
@@ -40,7 +37,10 @@ const fromItem = async ({ getHtmlCode, getJsCode, title }: GalleryItem) => {
   }
 };
 
-export function loadFromUrl(store: NonNullable<GalleryItemStore>) {
+export function loadFromUrl(
+  items: GalleryItem[],
+  legacyIds: Record<string, string>,
+) {
   const searchParams = new URLSearchParams(window.location.search);
 
   if (window.location.hash.indexOf("#c=") === 0) {
@@ -59,9 +59,13 @@ export function loadFromUrl(store: NonNullable<GalleryItemStore>) {
     return loadGist(gist);
   }
 
+  const selectItemById = (searchId: string) =>
+    items.find(({ id }) => id === searchId);
+  const selectItemByLegacyId = (searchId: string) =>
+    selectItemById(legacyIds[searchId]);
+
   const legacyId = searchParams.get("src");
   if (legacyId) {
-    const { selectItemByLegacyId, items } = store;
     const item = selectItemByLegacyId(legacyId);
     if (!item) {
       if (items.length > 0) {
@@ -80,7 +84,6 @@ export function loadFromUrl(store: NonNullable<GalleryItemStore>) {
 
   const galleryId = searchParams.get("id");
   if (galleryId) {
-    const { selectItemById, selectItemByLegacyId, items } = store;
     let item = selectItemById(galleryId);
     if (!item) {
       item = selectItemByLegacyId(galleryId);

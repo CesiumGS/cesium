@@ -1,3 +1,4 @@
+import { useDeferredValue, useMemo } from "react";
 import classNames from "classnames";
 import { Composite, useCompositeContext } from "@ariakit/react";
 import { Divider, IconButton } from "@stratakit/bricks";
@@ -27,73 +28,93 @@ export function GalleryItemList({
 }: GalleryItemListProps) {
   const composite = useCompositeContext();
   const store = useGalleryItemContext();
-  const items = store?.items ?? [];
-  const results = store?.useSearchResults ?? [];
+  const { isSearchPending, items, searchResults, searchTerm, searchFilter } =
+    store ?? {};
 
-  const isEmpty = !store?.isPending && results.length === 0;
-  const totalDisplay =
-    results.length === items.length ? null : ` (of ${items.length} total)`;
+  const totalDisplay = useMemo(
+    () =>
+      searchResults?.length === items?.length
+        ? null
+        : ` (of ${items?.length} total)`,
+    [searchResults, items],
+  );
 
-  const searchTerm = store?.searchTerm;
-  const searchTermDisplay = !searchTerm ? null : ` for "${searchTerm}"`;
+  const searchTermDisplay = useMemo(
+    () => (!searchTerm ? null : ` for "${searchTerm}"`),
+    [searchTerm],
+  );
 
-  const searchFilter = store?.searchFilter ?? {};
-  const searchFilters = Object.keys(searchFilter);
-  const searchFilterDisplay =
-    searchFilters.length === 0
+  const searchFilterDisplay = useMemo(() => {
+    const filter = searchFilter ?? {};
+    const searchFilters = Object.keys(filter);
+    return searchFilters.length === 0
       ? null
-      : ` in ${Object.keys(searchFilter)
-          .map((type) => `${type}:"${searchFilter[type]}"`)
+      : ` in ${searchFilters
+          .map((type) => `${type}:"${filter[type]}"`)
           .join(", ")}`;
+  }, [searchFilter]);
 
   const summary = (
     <summary>
       <h3>Results</h3>
-      {results.length}
+      {searchResults?.length}
       {searchTermDisplay}
       {searchFilterDisplay}
       {totalDisplay}
     </summary>
   );
 
-  const placeholder = !isEmpty ? null : (
-    <div>
-      <h3>No results</h3>
-      <p>Try adjusting your search filters</p>
-    </div>
+  const isEmpty = useMemo(
+    () => !searchResults || searchResults.length === 0,
+    [searchResults],
+  );
+  const deferredIsEmpty = useDeferredValue(isEmpty);
+  const emptyPlaceholder = useMemo(
+    () =>
+      isSearchPending || !isEmpty ? null : (
+        <div>
+          <h3>No results</h3>
+          <p>Try adjusting your search filters</p>
+        </div>
+      ),
+    [isEmpty, isSearchPending],
   );
 
-  const list = results.map((item, index) => {
-    return (
-      <GalleryItemCard
-        onClick={() => onRunCode(item as GalleryItem)}
-        key={item?.id}
-        index={index}
-      >
-        <IconButton
-          icon={developer}
-          label="Open and view code"
-          onClick={() => {
-            const target = item as GalleryItem;
-            onRunCode(target);
-            onOpenCode(target);
-          }}
-          variant="ghost"
-        />
-      </GalleryItemCard>
-    );
-  });
+  const list = useMemo(
+    () =>
+      searchResults?.map((item, index) => {
+        return (
+          <GalleryItemCard
+            onClick={() => onRunCode(item as GalleryItem)}
+            key={item?.id}
+            index={index}
+          >
+            <IconButton
+              icon={developer}
+              label="Open and view code"
+              onClick={() => {
+                const target = item as GalleryItem;
+                onRunCode(target);
+                onOpenCode(target);
+              }}
+              variant="ghost"
+            />
+          </GalleryItemCard>
+        );
+      }),
+    [searchResults, onOpenCode, onRunCode],
+  );
 
   return (
     <>
       <Composite
         id="gallery-item-list"
         store={composite}
-        className={classNames("list", { "empty-list": isEmpty })}
+        className={classNames("list", { "empty-list": deferredIsEmpty })}
       >
         {summary}
         <Divider />
-        {placeholder}
+        {emptyPlaceholder}
         {list}
       </Composite>
     </>

@@ -1,13 +1,17 @@
 import {
+  startTransition,
+  useEffect,
   useState,
   useTransition,
   createContext,
+  useCallback,
   useContext,
   useMemo,
   useRef,
 } from "react";
 import { getBaseUrl } from "../util/getBaseUrl.ts";
 import { applyHighlightToItem } from "./applyHighlight.tsx";
+import { loadFromUrl } from "./loadFromUrl.ts";
 import "../../@types/pagefind-client.d.ts";
 
 const galleryListPath = `gallery/list.json`;
@@ -26,42 +30,48 @@ export type GalleryItem = {
   codeExerpts?: string;
 };
 
+export type HighlightedGalleryItem = ReturnType<typeof applyHighlightToItem>;
+
 export type GalleryFilter = Record<string, string | string[]> | null;
 export type GalleryFilters = PagefindFilterCounts | null;
 
 export function useGalleryItemStore() {
+  // Pagefind library and config
   const pagefindRef = useRef<Pagefind>(null);
   const getPagefind = () => {
     return pagefindRef.current;
   };
+  const [searchOptions, setSearchOptions] = useState<null | Record<
+    string,
+    string | object
+  >>(null);
 
-  const [isPending, startFetch] = useTransition();
+  // Gallery items
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [legacyIds, setLegacyIds] = useState<Record<string, string>>({});
 
-  const [filters, setFilters] = useState<GalleryFilters>(null);
+  // Filters
+  const [galleryFilters, setGalleryFilters] = useState<GalleryFilters>(null);
   const [defaultSearchFilter, setDefaultSearchFilter] =
     useState<GalleryFilter>(null);
-  const [searchFilter, setSearchFilter] = useState<GalleryFilter>(null);
 
+  // Searches
   const [searchTerm, setSearchTerm] = useState<string | null>(null);
+  const [searchFilter, setSearchFilter] = useState<GalleryFilter>(null);
   const [searchResults, setSearchResults] = useState<
     PagefindSearchFragment[] | null
   >(null);
   const [isSearchPending, startSearch] = useTransition();
-  const search = ({ term = searchTerm, filters = searchFilter }) =>
+  useEffect(() => {
+    const pagefind = getPagefind();
+    if (!pagefind) {
+      return;
+    }
+
     startSearch(async () => {
-      setSearchTerm(term);
-      setSearchFilter(filters);
-
-      const pagefind = getPagefind();
-      if (!pagefind) {
-        return;
-      }
-
       /* @ts-expect-error: null is a valid search term value */
-      const { results } = await pagefind.search(term, {
-        filters,
+      const { results } = await pagefind.search(searchTerm, {
+        filters: searchFilter,
       });
       const data = await Promise.allSettled(
         results.map((result) => result.data()),
@@ -72,11 +82,68 @@ export function useGalleryItemStore() {
       ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
 
       const values = data.filter(isFulfilled).map(({ value }) => value);
-      setSearchResults(values);
+      startSearch(() => setSearchResults(values));
     });
+  }, [searchTerm, searchFilter]);
 
-  const fetchItems = () =>
-    startFetch(async () => {
+  const memoizedSearchResults = useMemo(() => {
+    if (!searchResults) {
+      return items ?? [];
+    }
+
+    return searchResults.map((result) => {
+      const { id } = result.meta;
+      const item = items.find((item) => item.id === id);
+
+      if (!item) {
+        return;
+      }
+
+      return applyHighlightToItem(item, result);
+    });
+  }, [items, searchResults]);
+
+  // Pagefind search configuration is loaded with the rest of the gallery options.
+  // Once we've loaded those options, load and intiate pagefind.
+  useEffect(() => {
+    const fetchPagefindAction = async () => {
+      let pagefind = getPagefind();
+      if (!pagefind) {
+        const baseUrl = getBaseUrl();
+        const url = new URL(pagefindUrl, baseUrl);
+        pagefind = await import(/* @vite-ignore */ url.href);
+        pagefindRef.current = pagefind;
+
+        if (!pagefind) {
+          console.error(`Pagefind failed to load from ${pagefindUrl}`);
+          return;
+        }
+
+        pagefind.init();
+
+        await pagefind.options({
+          baseUrl,
+          ...searchOptions,
+        });
+      }
+
+      const filters = await pagefind.filters();
+
+      // See https://react.dev/reference/react/useTransition#react-doesnt-treat-my-state-update-after-await-as-a-transition
+      startTransition(() => {
+        setGalleryFilters(filters);
+        setSearchFilter(defaultSearchFilter);
+      });
+    };
+
+    if (searchOptions) {
+      startTransition(fetchPagefindAction);
+    }
+  }, [searchOptions, defaultSearchFilter]);
+
+  // Kick off initial gallery fetch
+  useEffect(() => {
+    const fetchItemsAction = async () => {
       const baseUrl = getBaseUrl();
       const galleryListUrl = new URL(galleryListPath, baseUrl);
       const request = await fetch(galleryListUrl.href);
@@ -107,70 +174,37 @@ export function useGalleryItemStore() {
           getHtmlCode,
         };
       });
-      setItems(items);
-      setLegacyIds(legacyIds);
 
-      let pagefind = getPagefind();
-      if (!pagefind) {
-        const url = new URL(pagefindUrl, baseUrl);
-        pagefind = await import(/* @vite-ignore */ url.href);
-        pagefindRef.current = pagefind;
+      // See https://react.dev/reference/react/useTransition#react-doesnt-treat-my-state-update-after-await-as-a-transition
+      startTransition(() => {
+        setItems(items);
+        setLegacyIds(legacyIds);
+        setSearchOptions(searchOptions);
+        setDefaultSearchFilter(defaultFilters);
+      });
+    };
 
-        if (!pagefind) {
-          console.error(`Pagefind failed to load from ${pagefindUrl}`);
-          return;
-        }
+    startTransition(fetchItemsAction);
+  }, []);
 
-        pagefind.init();
-
-        await pagefind.options({
-          baseUrl,
-          ...searchOptions,
-        });
-      }
-
-      setFilters(await pagefind.filters());
-      setDefaultSearchFilter(defaultFilters);
-      search({ filters: defaultFilters });
-    });
-
-  const useSearchResults = useMemo(() => {
-    if (!searchResults) {
-      return items;
-    }
-
-    return searchResults.map((result) => {
-      const { id } = result.meta;
-      const item = items.find((item) => item.id === id);
-
-      if (!item) {
-        return;
-      }
-
-      return applyHighlightToItem(item, result);
-    });
-  }, [items, searchResults]);
-
-  const selectItemById = (searchId: string) =>
-    items.find(({ id }) => id === searchId);
-  const selectItemByLegacyId = (searchId: string) =>
-    selectItemById(legacyIds[searchId]);
+  const useLoadFromUrl = useCallback(() => {
+    const isGalleryLoaded = items.length > 0;
+    return isGalleryLoaded ? () => loadFromUrl(items, legacyIds) : null;
+  }, [items, legacyIds]);
 
   return {
     items,
-    selectItemById,
-    selectItemByLegacyId,
-    isPending,
-    fetchItems,
 
-    filters,
+    filters: galleryFilters,
     defaultSearchFilter,
     searchFilter,
     searchTerm,
     isSearchPending,
-    search,
+    setSearchTerm,
+    setSearchFilter,
+    searchResults: memoizedSearchResults,
 
-    useSearchResults,
+    useLoadFromUrl,
   };
 }
 

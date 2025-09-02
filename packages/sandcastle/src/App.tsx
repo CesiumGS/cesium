@@ -21,7 +21,6 @@ import { Button, Divider, Tooltip } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";
 import { makeCompressedBase64String } from "./Helpers.ts";
 import { getBaseUrl } from "./util/getBaseUrl.ts";
-import { loadFromUrl } from "./util/loadFromUrl.ts";
 
 import {
   StoreContext,
@@ -89,17 +88,10 @@ function RightSideAllotment({
   const rightSideRef = useRef<AllotmentHandle>(null);
   const rightSideSizes = useRef<number[]>([0, 0]);
 
-  useImperativeHandle(ref, () => {
-    return {
-      toggleExpanded: () => toggleExpanded(),
-    };
-  });
-
   const [previousConsoleHeight, setPreviousConsoleHeight] = useState<
     number | undefined
   >(undefined);
-
-  function toggleExpanded() {
+  const toggleExpanded = useCallback(() => {
     const [top, bottom] = rightSideSizes.current;
     const totalHeight = top + bottom;
     if (!consoleExpanded) {
@@ -113,7 +105,13 @@ function RightSideAllotment({
       ]);
     }
     setConsoleExpanded(!consoleExpanded);
-  }
+  }, [consoleExpanded, previousConsoleHeight]);
+
+  useImperativeHandle(ref, () => {
+    return {
+      toggleExpanded: () => toggleExpanded(),
+    };
+  });
 
   return (
     <Allotment
@@ -363,49 +361,64 @@ function App() {
     window.focus();
   }
 
+  // Starts fetching data
   const galleryItemStore = useGalleryItemStore();
-  const { fetchItems, items } = galleryItemStore;
-  useEffect(fetchItems, []);
 
-  const isGalleryLoaded = useDeferredValue(items.length > 0);
+  const [initialized, setInitialized] = useState(false);
   const [isLoadPending, startLoadPending] = useTransition();
-  const load = () =>
-    startLoadPending(async () => {
-      if (!isGalleryLoaded || isLoadPending) {
-        return;
-      }
-
-      try {
-        const data = await loadFromUrl(galleryItemStore);
-        if (!data) {
-          return;
-        }
-
-        const { code, html, title } = data;
-
-        startLoadPending(() => {
-          setTitle(title);
-          dispatch({
-            type: "setAndRun",
-            code: code ?? defaultJsCode,
-            html: html ?? defaultHtmlCode,
-          });
-        });
-      } catch (error) {
-        const message = (error as Error)?.message;
-        appendConsole("error", message);
-        console.error(message);
-      }
-    });
-  useEffect(load, [isGalleryLoaded]);
-
+  const deferredIsLoading = useDeferredValue(isLoadPending);
+  const { useLoadFromUrl } = galleryItemStore;
+  const loadFromUrl = useLoadFromUrl();
   useEffect(() => {
+    const load = () =>
+      startLoadPending(async () => {
+        try {
+          if (isLoadPending || !loadFromUrl) {
+            return;
+          }
+          const data = await loadFromUrl();
+          if (!data) {
+            return;
+          }
+
+          const { code, html, title } = data;
+
+          startLoadPending(() => {
+            if (isLoadPending) {
+              console.log("hullo?");
+              return;
+            }
+            setTitle(title);
+            dispatch({
+              type: "setAndRun",
+              code: code ?? defaultJsCode,
+              html: html ?? defaultHtmlCode,
+            });
+          });
+        } catch (error) {
+          const message = (error as Error)?.message;
+          appendConsole("error", message);
+          console.error(message);
+        }
+      });
+
+    if (!initialized && loadFromUrl) {
+      setInitialized(true);
+      load();
+    }
+
     // Listen to browser forward/back navigation and try to load from URL
     // this is necessary because of the pushState used for faster gallery loading
-    const stateLoad = () => confirmLeave() && load();
+    const stateLoad = () => {
+      if (!confirmLeave()) {
+        return false;
+      }
+
+      load();
+    };
     window.addEventListener("popstate", stateLoad);
     return () => window.removeEventListener("popstate", stateLoad);
-  }, []);
+  }, [initialized, isLoadPending, loadFromUrl, confirmLeave, appendConsole]);
 
   useEffect(() => {
     // if the code has been edited listen for navigation away and warn
@@ -461,7 +474,7 @@ function App() {
         console.error(message);
       }
     },
-    [confirmLeave],
+    [confirmLeave, appendConsole],
   );
 
   const onOpenCode = useCallback(() => {
@@ -585,7 +598,7 @@ function App() {
             setConsoleExpanded={setConsoleExpanded}
           >
             <Allotment.Pane minSize={200}>
-              {!isLoadPending && (
+              {!deferredIsLoading && (
                 <Bucket
                   code={codeState.committedCode}
                   html={codeState.committedHtml}
