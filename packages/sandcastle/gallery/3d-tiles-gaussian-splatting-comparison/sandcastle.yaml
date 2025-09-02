@@ -1,6 +1,6 @@
 legacyId: 3D Tiles Gaussian Splatting Comparison.html
-title: 3D Tiles Gaussian Splatting Comparison
-description: View the same 3D Tiles power station dataset with Gaussian splatting (or Gaussian splats) rendering versus triangle-based mesh rendering.
+title: 3D Tiles Gaussian Splatting — Mesh Comparison
+description: Comapre a 3D Tiles power station dataset with Gaussian splatting (or Gaussian splats) rendering versus the same dataset using triangle-based mesh rendering. Notably, fine details like powerlines are better preserved when rendering the Gaussian splatting dataset.
 labels:
   - Showcases
   - 3D Tiles
