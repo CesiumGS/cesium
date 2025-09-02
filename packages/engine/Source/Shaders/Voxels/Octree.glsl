@@ -100,8 +100,51 @@ vec3 getClampedTileUv(in vec3 shapePosition, in ivec4 octreeCoords) {
     return clamp(tileUv, vec3(0.0), vec3(1.0));
 }
 
+vec3 getTileUv(in TileAndUvCoordinate tileAndUv, in ivec4 octreeCoords) {
+    int levelDifference = tileAndUv.tileCoords.w - octreeCoords.w;
+    float scalar = exp2(-1.0 * float(levelDifference));
+    vec3 originShift = vec3(tileAndUv.tileCoords.xyz - (octreeCoords.xyz << levelDifference)) * scalar;
+    return tileAndUv.tileUv * scalar + originShift;
+}
+
+vec3 getClampedTileUv(in TileAndUvCoordinate tileAndUv, in ivec4 octreeCoords) {
+    vec3 tileUv = getTileUv(tileAndUv, octreeCoords);
+    return clamp(tileUv, vec3(0.0), vec3(1.0));
+}
+
 void addSampleCoordinates(in vec3 shapePosition, inout SampleData sampleData) {
     vec3 tileUv = getClampedTileUv(shapePosition, sampleData.tileCoords);
+
+    vec3 inputCoordinate = tileUv * vec3(u_dimensions);
+#if defined(PADDING)
+    inputCoordinate += vec3(u_paddingBefore);
+#endif
+#if defined(Y_UP_METADATA_ORDER)
+#if defined(SHAPE_BOX)
+    float inputY = inputCoordinate.y;
+    inputCoordinate.y = float(u_inputDimensions.y) - inputCoordinate.z;
+    inputCoordinate.z = inputY;
+#elif defined(SHAPE_CYLINDER)
+    float angle = inputCoordinate.y;
+    float height = inputCoordinate.z;
+    #if (!defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE))
+    // Account for the different 0-angle convention in glTF vs 3DTiles
+    if (sampleData.tileCoords.w == 0) {
+        float angleCount = float(u_inputDimensions.z);
+        angle = mod(angle + angleCount / 2.0, angleCount);
+    }
+    #endif
+    inputCoordinate.y = height;
+    inputCoordinate.z = angle;
+#endif
+#endif
+
+    sampleData.tileUv = tileUv;
+    sampleData.inputCoordinate = inputCoordinate;
+}
+
+void addSampleCoordinates(in TileAndUvCoordinate tileAndUv, inout SampleData sampleData) {
+    vec3 tileUv = getClampedTileUv(tileAndUv, sampleData.tileCoords);
 
     vec3 inputCoordinate = tileUv * vec3(u_dimensions);
 #if defined(PADDING)
@@ -200,26 +243,52 @@ OctreeNodeData traverseOctreeDownwards(in vec3 shapePosition, inout TraversalDat
     return childData;
 }
 
+OctreeNodeData traverseOctreeDownwards(in ivec4 tileCoordinate, inout TraversalData traversalData) {
+    OctreeNodeData childData;
+
+    for (int i = 0; i < OCTREE_MAX_LEVELS; ++i) {
+        // tileCoordinate.xyz is defined at the level of detail tileCoordinate.w.
+        // Find the corresponding coordinate at the level traversalData.octreeCoords.w
+        int level = traversalData.octreeCoords.w + 1;
+        int levelDifference = tileCoordinate.w - level;
+        // TODO: what if levelDifference < 0?
+        ivec3 coordinateAtLevel = tileCoordinate.xyz >> levelDifference;
+        traversalData.octreeCoords = ivec4(coordinateAtLevel, level);
+
+        ivec3 childCoordinate = coordinateAtLevel & 1;
+        childData = getOctreeChildData(traversalData.parentOctreeIndex, childCoordinate);
+
+        if (childData.flag != OCTREE_FLAG_INTERNAL) {
+            // leaf tile - stop traversing
+            break;
+        }
+
+        traversalData.parentOctreeIndex = childData.data;
+    }
+
+    return childData;
+}
+
 /**
 * Transform a given position to an octree tile coordinate and a position within that tile,
 * and find the corresponding megatexture index and texture coordinates
 */
-void traverseOctreeFromBeginning(in vec3 shapePosition, out TraversalData traversalData, out SampleData sampleDatas[SAMPLE_COUNT]) {
+void traverseOctreeFromBeginning(in TileAndUvCoordinate tileAndUv, out TraversalData traversalData, out SampleData sampleDatas[SAMPLE_COUNT]) {
     traversalData.octreeCoords = ivec4(0);
     traversalData.parentOctreeIndex = 0;
 
     OctreeNodeData nodeData = getOctreeNodeData(vec2(0.0));
     if (nodeData.flag != OCTREE_FLAG_LEAF) {
-        nodeData = traverseOctreeDownwards(shapePosition, traversalData);
+        nodeData = traverseOctreeDownwards(tileAndUv.tileCoords, traversalData);
     }
 
     #if (SAMPLE_COUNT == 1)
         getOctreeLeafSampleData(nodeData, traversalData.octreeCoords, sampleDatas[0]);
-        addSampleCoordinates(shapePosition, sampleDatas[0]);
+        addSampleCoordinates(tileAndUv, sampleDatas[0]);
     #else
         getOctreeLeafSampleDatas(nodeData, traversalData.octreeCoords, sampleDatas);
-        addSampleCoordinates(shapePosition, sampleDatas[0]);
-        addSampleCoordinates(shapePosition, sampleDatas[1]);
+        addSampleCoordinates(tileAndUv, sampleDatas[0]);
+        addSampleCoordinates(tileAndUv, sampleDatas[1]);
     #endif
 }
 

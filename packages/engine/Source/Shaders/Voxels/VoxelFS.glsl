@@ -151,10 +151,11 @@ Ray getViewRayEC() {
 TileAndUvCoordinate getTileAndUvCoordinate(in vec3 positionEC) {
     vec3 deltaTileCoordinate = convertECtoDeltaTile(positionEC);
     vec3 tileUvSum = u_cameraTileUv + deltaTileCoordinate;
-    vec3 tileCoordinateChange = floor(tileUvSum);
-    ivec4 tileCoordinate = u_cameraTileCoordinates + ivec4(tileCoordinateChange, 0.0);
-    vec3 tileUv = tileUvSum - tileCoordinateChange;
-    return TileAndUvCoordinate(tileCoordinate, tileUv);
+    ivec3 tileCoordinate = u_cameraTileCoordinates.xyz + ivec3(floor(tileUvSum));
+    tileCoordinate = min(max(ivec3(0), tileCoordinate), ivec3((1 << u_cameraTileCoordinates.w) - 1));
+    ivec3 tileCoordinateChange = tileCoordinate - u_cameraTileCoordinates.xyz;
+    vec3 tileUv = clamp(tileUvSum - vec3(tileCoordinateChange), 0.0, 1.0);
+    return TileAndUvCoordinate(ivec4(tileCoordinate, u_cameraTileCoordinates.w), tileUv);
 }
 
 void main()
@@ -181,7 +182,7 @@ void main()
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
-    traverseOctreeFromBeginning(pointJacobian.point, traversalData, sampleDatas);
+    traverseOctreeFromBeginning(tileAndUv, traversalData, sampleDatas);
     vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
 
     FragmentInput fragmentInput;
@@ -258,7 +259,7 @@ void main()
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
         //traverseOctreeFromExisting(pointJacobian.point, traversalData, sampleDatas);
-        traverseOctreeFromBeginning(pointJacobian.point, traversalData, sampleDatas);
+        traverseOctreeFromBeginning(tileAndUv, traversalData, sampleDatas);
         step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
     }
 
