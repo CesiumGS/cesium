@@ -3,5 +3,4 @@ title: Custom Geocoder
 description: Attach a custom data source to the geocoder widget.
 labels:
   - Widgets
-  - Geocoding
 thumbnail: thumbnail.jpg

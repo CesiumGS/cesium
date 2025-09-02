@@ -3,5 +3,5 @@ title: Imagery Layers Texture Filters
 description: Set the texture minification and magnification filters of an imagery layer.
 labels:
   - Imagery
-  - Advanced Rendering
+  - Graphics
 thumbnail: thumbnail.jpg

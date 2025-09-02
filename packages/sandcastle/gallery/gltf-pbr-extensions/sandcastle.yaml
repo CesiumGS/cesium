@@ -1,6 +1,6 @@
 legacyId: glTF PBR Extensions.html
-title: glTF PBR Extensions
-description: Use glTF extensions for physically-based rendering.
+title: glTF PBR Next
+description: Use glTF extensions for materials designed for physically-based rendering (PBR). Useful for effects like metal, automotive paint, and anisotropic reflections.
 labels:
   - Showcases
   - 3D Models

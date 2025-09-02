@@ -3,5 +3,4 @@ title: Cardboard
 description: Configure viewer to add a button enabling look at a mobile device with cardboard.
 labels:
   - Camera
-  - Interaction
 thumbnail: thumbnail.jpg

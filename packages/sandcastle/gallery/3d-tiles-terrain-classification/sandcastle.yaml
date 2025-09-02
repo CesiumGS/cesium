@@ -4,6 +4,5 @@ description: A sample Vector dataset on terrain rendered with 3D Tiles.
 labels:
   - 3D Tiles
   - Classification
-  - Polygons
   - Terrain
 thumbnail: thumbnail.jpg
