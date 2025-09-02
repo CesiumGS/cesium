@@ -9,7 +9,7 @@ export function GalleryItemSearchInput() {
   const inputRef = useRef<HTMLInputElement>(null);
   const value = inputRef.current?.value;
   const { setSearchTerm, items } = store ?? {};
-  const hasInput = !!value && value !== "";
+  const hasValue = !!value && value !== "";
 
   const clearSearch = useCallback(() => {
     const input = inputRef.current;
@@ -54,7 +54,7 @@ export function GalleryItemSearchInput() {
       />
       <IconButton
         className="gallery-search-input-clear-btn"
-        hidden={!hasInput}
+        hidden={!hasValue}
         icon={close}
         label="Clear"
         onClick={clearSearch}

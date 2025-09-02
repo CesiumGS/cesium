@@ -47,6 +47,7 @@ export function useGalleryItemStore() {
   >>(null);
 
   // Gallery items
+  const [galleryLoaded, setGalleryLoaded] = useState(false);
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [legacyIds, setLegacyIds] = useState<Record<string, string>>({});
 
@@ -181,6 +182,7 @@ export function useGalleryItemStore() {
         setLegacyIds(legacyIds);
         setSearchOptions(searchOptions);
         setDefaultSearchFilter(defaultFilters);
+        setGalleryLoaded(true);
       });
     };
 
@@ -194,6 +196,7 @@ export function useGalleryItemStore() {
 
   return {
     items,
+    galleryLoaded,
 
     filters: galleryFilters,
     defaultSearchFilter,

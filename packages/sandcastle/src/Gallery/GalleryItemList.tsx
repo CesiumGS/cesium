@@ -28,8 +28,14 @@ export function GalleryItemList({
 }: GalleryItemListProps) {
   const composite = useCompositeContext();
   const store = useGalleryItemContext();
-  const { isSearchPending, items, searchResults, searchTerm, searchFilter } =
-    store ?? {};
+  const {
+    isSearchPending,
+    items,
+    searchResults,
+    searchTerm,
+    searchFilter,
+    galleryLoaded,
+  } = store ?? {};
 
   const totalDisplay = useMemo(
     () =>
@@ -69,16 +75,26 @@ export function GalleryItemList({
     [searchResults],
   );
   const deferredIsEmpty = useDeferredValue(isEmpty);
-  const emptyPlaceholder = useMemo(
-    () =>
-      isSearchPending || !isEmpty ? null : (
+  const emptyPlaceholder = useMemo(() => {
+    if (!galleryLoaded) {
+      return (
         <div>
-          <h3>No results</h3>
-          <p>Try adjusting your search filters</p>
+          <h3>Gallery loading...</h3>
         </div>
-      ),
-    [isEmpty, isSearchPending],
-  );
+      );
+    }
+
+    if (isSearchPending || !isEmpty) {
+      return null;
+    }
+
+    return (
+      <div>
+        <h3>No results</h3>
+        <p>Try adjusting your search filters</p>
+      </div>
+    );
+  }, [isEmpty, isSearchPending, galleryLoaded]);
 
   const list = useMemo(
     () =>

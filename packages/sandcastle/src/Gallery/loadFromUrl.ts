@@ -47,7 +47,7 @@ export function loadFromUrl(
     const base64String = window.location.hash.substr(3);
     const { code, html } = decodeBase64Data(base64String);
     return {
-      title: "Sandcaste",
+      title: "New Sandcastle",
       code,
       html,
     };

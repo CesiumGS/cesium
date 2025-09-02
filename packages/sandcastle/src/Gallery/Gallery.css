@@ -110,6 +110,11 @@
     padding: var(--stratakit-space-x2);
     gap: var(--stratakit-space-x2);
     overflow-y: auto;
+    &:focus-visible {
+      /* small margin to allow focus highlight to be visible all the way around */
+      margin: 0 3px 4px;
+      border-radius: var(--stratakit-ext-radius-xs);
+    }
   }
 
   .empty-list div {
@@ -148,7 +153,7 @@
     align-items: flex-start;
     flex: 1 0 116px;
     padding: var(--stratakit-space-x2);
-    gap: var(--stratakit-space-x1);
+    gap: var(--stratakit-space-x2);
     border-radius: var(--stratakit-ext-radius-md);
     color: inherit;
     transition: all 150ms ease-out;
@@ -207,6 +212,7 @@
       justify-content: space-between;
       flex-grow: 1;
       overflow: hidden;
+      gap: var(--stratakit-space-x1);
     }
 
     header {
@@ -215,7 +221,7 @@
       align-items: flex-start;
       border: none;
       gap: 0;
-      padding-top: 0;
+      padding-right: var(--stratakit-space-x6);
     }
 
     h2 {
@@ -237,7 +243,6 @@
       color: var(--stratakit-color-text-neutral-tertiary);
       padding: var(--stratakit-space-x1);
       margin: var(--stratakit-space-x1) 0;
-      cursor: text;
     }
 
     ul {

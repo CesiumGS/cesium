@@ -452,13 +452,6 @@ function App() {
         ) {
           // only push state if it's not the current url to prevent duplicated in history
           window.history.pushState({}, "", `${getBaseUrl()}?id=${id}`);
-          if (
-            !searchParams.has("id") ||
-            (searchParams.has("id") && searchParams.get("id") !== id)
-          ) {
-            // only push state if it's not the current url to prevent duplicated in history
-            window.history.pushState({}, "", `${getBaseUrl()}?id=${id}`);
-          }
         }
 
         setTitle(title);

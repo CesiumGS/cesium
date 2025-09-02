@@ -35,7 +35,7 @@
     var(--highlight-color-border)
   );
 
-  header {
+  & > header {
     grid-area: header;
     display: flex;
     align-items: center;
