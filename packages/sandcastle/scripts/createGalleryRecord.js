@@ -17,7 +17,7 @@ export function createRecordHtml({
         <img id="thumbnail" src="${image}" alt="${title} thumbnail" />
 
         <h2 id="description" 
-            data-pagefind-ignore">Description</h2> 
+            data-pagefind-ignore>Description</h2> 
         <p data-pagefind-meta="description" 
             data-pagefind-weight="5">${description}</p>
         
