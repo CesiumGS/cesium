@@ -21,6 +21,7 @@
 
 - Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
 - Added spherical harmonics support for Gaussian splats. Currently supported with the SPZ compression format.
+- Added sandcastle demo for new Mars terrain and imagery [#12828](https://github.com/CesiumGS/cesium/pull/12828)
 
 #### Deprecated :hourglass_flowing_sand:
 
