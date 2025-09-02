@@ -1,6 +1,9 @@
-legacyId: 3D Tiles 1.1 CDB Yemen.html
-title: 3D Tiles 1.1 CDB Yemen
-description: Load a 3D Tiles 1.1 tileset converted from CDB.
+title: CDB Metadata in 3D Tiles
+description: Demonstrates loading a 3D Tiles 1.1 tileset converted from CDB, carrying through detailed metadata. 3D Tiles enables runtime styling, filtering, and querying features using CDB attributes.
 labels:
   - 3D Tiles
+  - Metadata
+  - Styling
+  - Picking
 thumbnail: thumbnail.jpg
+legacyId: 3D Tiles 1.1 CDB Yemen.html

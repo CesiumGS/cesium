@@ -2,6 +2,6 @@ legacyId: 3D Tiles Photogrammetry Classification.html
 title: 3D Tiles Photogrammetry Classification
 description: Sample photogrammetry and classification datasets both rendered with 3D Tiles.
 labels:
-  - Showcases
   - 3D Tiles
+  - Classification
 thumbnail: thumbnail.jpg

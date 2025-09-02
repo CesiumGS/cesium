@@ -1,7 +1,8 @@
 legacyId: 3D Tiles BIM.html
-title: 3D Tiles BIM
-description: A sample BIM dataset rendered with 3D Tiles.
+title: BIM Design Model with 3D Tiles
+description: Render and interact with a Building Information Modeling (BIM) design model dataset using 3D Tiles. Highlights per-feature selection, global element IDs, and visibility control—useful for inspecting and managing complex engineering or infrastructure models.
 labels:
-  - Showcases
   - 3D Tiles
+  - Metadata
+  - Picking
 thumbnail: thumbnail.jpg

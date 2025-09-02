@@ -2,5 +2,5 @@ legacyId: Material with Custom GLSL.html
 title: Material with Custom GLSL
 description: Browse Cesium's built in materials and define new ones using the Fabric schema.
 labels:
-  - Showcases
+  - Graphics
 thumbnail: thumbnail.jpg

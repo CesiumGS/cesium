@@ -2,8 +2,8 @@ legacyId: development/3D Tiles Picking.html
 title: 3D Tiles Picking - Dev
 description: A sample BIM dataset rendered with 3D Tiles.
 labels:
-  - Showcases
   - 3D Tiles
   - Development
+  - Picking
 thumbnail: thumbnail.jpg
 development: true

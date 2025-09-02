@@ -1,3 +1,19 @@
+[popover]:has(.filter-menu) {
+  overflow: hidden;
+  border-radius: var(--stratakit-ext-radius-md);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  box-shadow: var(--stratakit-shadow-dropdown-base);
+}
+
+.filter-menu {
+  max-height: 50vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--stratakit-color-bg-control-scrollbar-surface)
+    transparent;
+  box-shadow: none;
+}
+
 .filter-menu label {
   margin: var(--stratakit-space-x1);
   font-size: var(--stratakit-font-size-10);

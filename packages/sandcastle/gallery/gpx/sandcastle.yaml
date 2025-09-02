@@ -2,6 +2,5 @@ legacyId: GPX.html
 title: GPX
 description: A simple GPX example.
 labels:
-  - Showcases
-  - DataSources
+  - Entities
 thumbnail: thumbnail.jpg

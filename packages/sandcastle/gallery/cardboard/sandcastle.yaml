@@ -2,6 +2,5 @@ legacyId: Cardboard.html
 title: Cardboard
 description: Configure viewer to add a button enabling look at a mobile device with cardboard.
 labels:
-  - Beginner
-  - Showcases
+  - Camera
 thumbnail: thumbnail.jpg

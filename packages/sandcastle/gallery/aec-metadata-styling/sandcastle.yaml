@@ -1,7 +1,9 @@
 legacyId: AEC Metadata Styling.html
-title: AEC Metadata Styling
-description: Style an architectural design model based on metadata and an interactive UI.
+title: Design Model – Metadata Styling
+description: Dynamically style an architectural design model from Autodesk Revit based on embedded metadata. 3D Tiles metadata can drive interactive visualization—such as highlighting HVAC pipes by length—supporting analysis of complex AEC datasets.
 labels:
   - Showcases
   - 3D Tiles
+  - Metadata
+  - Styling
 thumbnail: thumbnail.jpg

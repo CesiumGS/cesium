@@ -1,7 +1,6 @@
 legacyId: 3D Tiles Clipping Planes.html
 title: 3D Tiles Clipping Planes
-description: User-defined clipping planes applied to a batched 3D Tileset, point cloud, and model.
+description: Add clipping planes to a mesh 3D Tileset, point cloud 3D Tileset, and glTF model. Useful for exploring interiors or cutting away parts of geometry.
 labels:
-  - Showcases
   - 3D Tiles
 thumbnail: thumbnail.jpg

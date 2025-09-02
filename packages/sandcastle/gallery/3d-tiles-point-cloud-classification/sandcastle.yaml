@@ -2,6 +2,9 @@ legacyId: 3D Tiles Point Cloud Classification.html
 title: 3D Tiles Point Cloud Classification
 description: A sample Vector dataset on terrain rendered with 3D Tiles.
 labels:
-  - Showcases
   - 3D Tiles
+  - Point Clouds
+  - Classification
+  - Picking
+  - Styling
 thumbnail: thumbnail.jpg

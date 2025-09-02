@@ -2,6 +2,6 @@ legacyId: GeoJSON simplestyle.html
 title: GeoJSON simplestyle
 description: Load GeoJSON with simplestyle information.
 labels:
-  - Showcases
-  - DataSources
+  - Styling
+  - Entities
 thumbnail: thumbnail.jpg

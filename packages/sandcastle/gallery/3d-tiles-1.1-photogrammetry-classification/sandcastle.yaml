@@ -1,6 +1,11 @@
 legacyId: 3D Tiles 1.1 Photogrammetry Classification.html
-title: 3D Tiles 1.1 Photogrammetry Classification
-description: Load a photogrammetry dataset with feature ID textures from EXT_mesh_features.
+title: 3D Tiles Photogrammetry Classification
+description: Demonstrates a photogrammetry dataset using feature ID textures to encode metadata with EXT_mesh_features. 3D Tiles 1.1 enables classification, styling, and querying individual features in photogrammetry datasets.
 labels:
   - 3D Tiles
+  - Photogrammetry
+  - Classification
+  - Metadata
+  - Styling
+  - Picking
 thumbnail: thumbnail.jpg

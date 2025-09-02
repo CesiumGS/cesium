@@ -2,5 +2,7 @@ legacyId: Clamp to 3D Model.html
 title: Clamp to 3D Model
 description: Clamp a point and label to a model using the sampleHeight function.
 labels:
-  - Showcases
+  - 3D Models
+  - Clamping
+  - Entities
 thumbnail: thumbnail.jpg

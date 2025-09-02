@@ -2,6 +2,6 @@ legacyId: 3D Tiles Point Cloud.html
 title: 3D Tiles Point Cloud
 description: A sample point cloud dataset rendered with 3D Tiles.
 labels:
-  - Showcases
   - 3D Tiles
+  - Point Clouds
 thumbnail: thumbnail.jpg

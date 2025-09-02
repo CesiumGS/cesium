@@ -1,6 +1,6 @@
 legacyId: Mars.html
-title: Cesium Mars
-description: Mars terrain visualized using 3D Tiles, tiled and hosted by Cesium ion, and shown with points of interest and additional data layers.
+title: Mars Terrain
+description: Mars terrain visualized using 3D Tiles, tiled and hosted by Cesium ion, with atmospheric effects, points of interest, and rover paths of NASA's Curiosity and Perseverance. Combine a 3D dataset with CZML/GeoJSON to create an interactive Mars exploration app.
 labels:
   - Showcases
   - ion Assets

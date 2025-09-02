@@ -1,6 +1,6 @@
 legacyId: iModel Mesh Export Service.html
 title: iModel Mesh Export Service
-description: Demonstrate loading iModel data from the iTwin platform.
+description: Stream iModel design data from the iTwin platform with 3D Tiles, enabling a sharable workflow with feature picking, styling, and integration with surrounding reality meshes.
 labels:
   - Showcases
   - 3D Tiles

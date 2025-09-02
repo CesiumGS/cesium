@@ -2,6 +2,5 @@ legacyId: Custom Geocoder.html
 title: Custom Geocoder
 description: Attach a custom data source to the geocoder widget.
 labels:
-  - Tutorials
-  - Showcases
+  - Widgets
 thumbnail: thumbnail.jpg

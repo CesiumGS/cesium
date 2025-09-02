@@ -1,7 +1,9 @@
 legacyId: AEC Clipping.html
-title: AEC Clipping
+title: Design Model – Terrain Inset
 description: Use clipping regions to hide the area under a model or 3D tileset.
 labels:
-  - Beginner
+  - 3D Tiles
   - Showcases
+  - Clipping
+  - Terrain
 thumbnail: thumbnail.jpg

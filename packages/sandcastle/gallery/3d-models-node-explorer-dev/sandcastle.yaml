@@ -3,5 +3,7 @@ title: 3D Models Node Explorer - Dev
 description: Explore node transformations of 3D models.
 labels:
   - Development
+  - 3D Models
+  - Transformations
 thumbnail: thumbnail.jpg
 development: true

@@ -1,7 +1,9 @@
 legacyId: AEC Architectural Design.html
-title: AEC Architectural Design
-description: An architectural design model with layer visibility toggles and metadata picking.
+title: Design Model – Layer Control and Metadata Picking
+description: Explore an architectural design model using layer visibility toggles and metadata-driven picking. Useful for understanding complex AEC datasets, highlighting specific building systems (e.g., facade, HVAC, structural), and inspecting detailed attributes at runtime.
 labels:
   - Showcases
   - 3D Tiles
+  - Metadata
+  - Picking
 thumbnail: thumbnail.jpg

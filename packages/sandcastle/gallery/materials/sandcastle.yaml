@@ -2,5 +2,5 @@ legacyId: Materials.html
 title: Materials
 description: Browse Cesium's built in materials and define new ones using the Fabric schema.
 labels:
-  - Showcases
+  - Entities
 thumbnail: thumbnail.jpg

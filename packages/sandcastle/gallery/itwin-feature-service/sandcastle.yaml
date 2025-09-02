@@ -1,7 +1,9 @@
 legacyId: iTwin Feature Service.html
 title: iTwin Feature Service
-description: Use Viewer to start building new applications or easily embed Cesium into existing applications.
+description: Connect to the iTwin Feature Service to stream and style geospatial features (points, lines, areas), derrived by AI from reality data, alongside 3D reality meshes and point clouds to build a contextual digital twin app.
 labels:
-  - Beginner
   - Showcases
+  - Point Clouds
+  - Photogrammetry
+  - Classification 
 thumbnail: thumbnail.jpg
