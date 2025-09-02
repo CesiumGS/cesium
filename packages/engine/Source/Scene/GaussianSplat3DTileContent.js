@@ -17,7 +17,6 @@ import deprecationWarning from "../Core/deprecationWarning.js";
  *
  * @alias GaussianSplat3DTileContent
  * @constructor
- * @private
  */
 function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
   this._tileset = tileset;
@@ -414,8 +413,9 @@ function getShAttributePrefix(attribute) {
 
 /**
  * Determine Spherical Harmonics degree and coefficient count from attributes
- * @param {VertexAttributeSemantic[]} attributes - The list of attributes.
+ * @param {Attribute[]} attributes - The list of glTF attributes.
  * @returns {object} An object containing the degree (l) and coefficient (n).
+ * @private
  */
 function degreeAndCoefFromAttributes(attributes) {
   const shAttributes = attributes.filter((attr) =>
@@ -496,6 +496,7 @@ function extractSHDegreeAndCoef(attribute) {
  * Packs spherical harmonic data into half-precision floats.
  * @param {GaussianSplat3DTileContent} tileContent - The tile content containing the spherical harmonic data.
  * @returns {Uint32Array} - The Float16 packed spherical harmonic data.
+ * @private
  */
 function packSphericalHarmonicsData(tileContent) {
   const degree = tileContent.sphericalHarmonicsDegree;
