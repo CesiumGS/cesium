@@ -12,6 +12,8 @@
 #### Fixes :wrench:
 
 - Removes the minimum tile threshold of four for WMTS. [#4372](https://github.com/CesiumGS/cesium/issues/4372)
+- Fixed a crash that could happen when loading PNTS (point cloud) data that contained a batch table without a binary part [#11166](https://github.com/CesiumGS/cesium/issues/11166)
+- Fixed an error picking an area hidden by a `ClippingPolygon`. [#12725](https://github.com/CesiumGS/cesium/issues/12725)
 - Fixes issue where a Gaussian splat tileset would be rendered even if out of current camera view. [#12840](https://github.com/CesiumGS/cesium/pull/12840)
 - Fixed a crash that could happen when loading PNTS (point cloud) data that contained a batch table without a binary part. [#11166](https://github.com/CesiumGS/cesium/issues/11166)
 
