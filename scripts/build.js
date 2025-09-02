@@ -612,7 +612,33 @@ const externalResolvePlugin = {
  * @returns {Promise<any>}
  */
 export async function createGalleryList(noDevelopmentGallery) {
-  await buildGalleryList("packages/sandcastle/gallery", !noDevelopmentGallery);
+  const configPath = path.join(
+    import.meta.url,
+    "../../packages/sandcastle/sandcastle.config.js",
+  );
+  const config = await import(configPath);
+  const { root: rootDirectory, gallery, sourceUrl } = config.default;
+
+  // Paths are specified relative to the config file
+  const {
+    files: galleryFiles,
+    defaultThumbnail,
+    searchOptions,
+    defaultFilters,
+    metadata,
+  } = gallery ?? {};
+
+  await buildGalleryList({
+    rootDirectory,
+    publicDirectory: "../../Apps/Sandcastle2",
+    galleryFiles,
+    sourceUrl,
+    defaultThumbnail,
+    searchOptions,
+    defaultFilters,
+    metadata,
+    includeDevelopment: !noDevelopmentGallery,
+  });
 
   const demoObjects = [];
   const demoJSONs = [];

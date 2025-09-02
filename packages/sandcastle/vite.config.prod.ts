@@ -23,7 +23,6 @@ export default defineConfig(() => {
   config.define = {
     ...config.define,
     __PAGE_BASE_URL__: JSON.stringify(""),
-    __GALLERY_BASE_URL__: JSON.stringify(`${config.base}/gallery`),
     __COMMIT_SHA__: JSON.stringify(env.GITHUB_SHA),
   };
 
@@ -36,7 +35,6 @@ export default defineConfig(() => {
       { src: `${cesiumSource}/*.(js|cjs)`, dest: cesiumBaseUrl },
       { src: "../../Apps/SampleData", dest: "Apps" },
       { src: "../../Apps/SampleData", dest: "" },
-      { src: "gallery", dest: "" },
       { src: `../../Source/Cesium.d.ts`, dest: "Source" },
       { src: "templates/Sandcastle.(d.ts|js)", dest: "templates" },
     ],
