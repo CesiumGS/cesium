@@ -19,7 +19,6 @@ import {
   createIndexJs,
   buildCesium,
 } from "./scripts/build.js";
-import { buildGalleryList } from "./packages/sandcastle/scripts/buildGallery.js";
 
 const argv = yargs(process.argv)
   .options({
@@ -274,11 +273,16 @@ async function generateDevelopmentBuild() {
         !!stats?.isFile() && !file.endsWith(".yml") && !file.endsWith(".yaml"),
       ignoreInitial: true,
     });
-    galleryWatcher.on("all", async (event) => {
-      if (event === "add" || event === "change" || event === "unlink") {
-        await buildGalleryList(galleryDirectory);
-      }
-    });
+    if (!production) {
+      const { buildGalleryList } = await import(
+        "./packages/sandcastle/scripts/buildGallery.js"
+      );
+      galleryWatcher.on("all", async (event) => {
+        if (event === "add" || event === "change" || event === "unlink") {
+          await buildGalleryList(galleryDirectory);
+        }
+      });
+    }
 
     // Rebuild jsHintOptions as needed and serve as-is
     app.get(

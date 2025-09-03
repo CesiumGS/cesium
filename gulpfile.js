@@ -543,6 +543,7 @@ async function pruneScriptsForZip(packageJsonPath) {
   delete scripts["build-ts"];
   delete scripts["build-third-party"];
   delete scripts["build-apps"];
+  delete scripts["build-sandcastle"];
   delete scripts.clean;
   delete scripts.cloc;
   delete scripts["build-docs"];

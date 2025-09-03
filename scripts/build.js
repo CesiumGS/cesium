@@ -13,7 +13,6 @@ import gulp from "gulp";
 import { rimraf } from "rimraf";
 
 import { mkdirp } from "mkdirp";
-import { buildGalleryList } from "../packages/sandcastle/scripts/buildGallery.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -627,6 +626,11 @@ export async function createGalleryList(noDevelopmentGallery) {
     defaultFilters,
     metadata,
   } = gallery ?? {};
+
+  // Import asynchronously for now while this script is excluded from the release zip
+  const { buildGalleryList } = await import(
+    "../packages/sandcastle/scripts/buildGallery.js"
+  );
 
   await buildGalleryList({
     rootDirectory,
