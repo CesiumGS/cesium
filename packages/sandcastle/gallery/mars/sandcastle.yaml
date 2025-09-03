@@ -1,0 +1,8 @@
+legacyId: Mars.html
+title: Mars Terrain
+description: Mars terrain visualized using 3D Tiles, tiled and hosted by Cesium ion, with atmospheric effects, points of interest, and rover paths of NASA's Curiosity and Perseverance. Combine a 3D dataset with CZML/GeoJSON to create an interactive Mars exploration app.
+labels:
+  - Showcases
+  - ion Assets
+  - 3D Tiles
+thumbnail: thumbnail.jpg

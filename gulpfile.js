@@ -43,8 +43,18 @@ if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
 const karmaConfigFile = resolve("./Specs/karma.conf.cjs");
+function getWorkspaces(onlyDependencies = false) {
+  const dependencies = Object.keys(packageJson.dependencies);
+  return onlyDependencies
+    ? packageJson.workspaces.filter((workspace) => {
+        return dependencies.includes(
+          workspace.replace("packages", `@${scope}`),
+        );
+      })
+    : packageJson.workspaces;
+}
 
-const devDeployUrl = "https://ci-builds.cesium.com/cesium/";
+const devDeployUrl = process.env.DEPLOYED_URL;
 const isProduction = process.env.PROD;
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
@@ -247,7 +257,7 @@ export async function buildTs() {
   } else if (argv.workspace) {
     workspaces = argv.workspace;
   } else {
-    workspaces = packageJson.workspaces;
+    workspaces = getWorkspaces(true);
   }
 
   // Generate types for passed packages in order.
@@ -400,7 +410,7 @@ export async function buildDocs() {
       stdio: "inherit",
       env: Object.assign({}, process.env, {
         CESIUM_VERSION: version,
-        CESIUM_PACKAGES: packageJson.workspaces,
+        CESIUM_PACKAGES: getWorkspaces(true),
       }),
     },
   );
@@ -540,6 +550,7 @@ async function pruneScriptsForZip(packageJsonPath) {
   delete scripts["build-ts"];
   delete scripts["build-third-party"];
   delete scripts["build-apps"];
+  delete scripts["build-sandcastle"];
   delete scripts.clean;
   delete scripts.cloc;
   delete scripts["build-docs"];
@@ -705,12 +716,10 @@ export async function deployStatus() {
   const status = argv.status;
   const message = argv.message;
 
-  const deployUrl = `${devDeployUrl + process.env.BRANCH}/`;
+  const deployUrl = `${devDeployUrl}`;
   const zipUrl = `${deployUrl}Cesium-${version}.zip`;
   const npmUrl = `${deployUrl}cesium-${version}.tgz`;
-  const coverageUrl = `${
-    devDeployUrl + process.env.BRANCH
-  }/Build/Coverage/index.html`;
+  const coverageUrl = `${devDeployUrl}Build/Coverage/index.html`;
 
   return Promise.all([
     setStatus(status, deployUrl, message, "deployment"),
@@ -1497,8 +1506,8 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
           return result;
         }
 
-        // Resursively check the workspaces
-        for (const workspace of packageJson.workspaces) {
+        // Recursively check the workspaces
+        for (const workspace of getWorkspaces(true)) {
           const workspacePackageJson = require(`./${workspace}/package.json`);
           result = await getLicenseDataFromPackage(
             workspacePackageJson,

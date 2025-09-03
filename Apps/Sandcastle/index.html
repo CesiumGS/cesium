@@ -94,6 +94,15 @@
       data-dojo-props="design: 'headline', gutters: true, liveSplitters: true"
     >
       <div
+        id="banner"
+        data-dojo-type="dijit.layout.ContentPane"
+        data-dojo-props="region: 'top'"
+      >
+        <a href="https://dev-sandcastle.cesium.com"
+          >Try the new version of Sandcastle today!</a
+        >
+      </div>
+      <div
         id="toolbar"
         data-dojo-type="dijit.Toolbar"
         data-dojo-props="region: 'top'"
@@ -358,36 +367,8 @@
             </div>
           </div>
         </div>
-        <div
-          class="feedback"
-          data-dojo-type="dijit.layout.TabContainer"
-          data-dojo-props="region: 'right'"
-        >
-          <div
-            class="future-banner"
-            data-dojo-type="dijit.layout.ContentPane"
-            data-dojo-props="title: 'Feedback'"
-          >
-            <h3>Help needed</h3>
-            <p>
-              We're currently gathering user feedback to make Sandcastle even
-              better.
-            </p>
-            <button data-dojo-type="dijit/form/Button" type="button">
-              Please share your thoughts!
-              <script
-                type="dojo/on"
-                data-dojo-event="click"
-                data-dojo-args="evt"
-              >
-                window.open("https://community.cesium.com/t/upgrading-sandcastle-we-need-your-input/39715/", "_blank")
-              </script>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
-
     <div class="dijitTooltip dijitTooltipBelow" id="docPopup">
       <div
         class="dijitTooltipContainer dijitTooltipContents"
