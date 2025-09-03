@@ -13,7 +13,7 @@ in vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, far
 in vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistance, dimensions
 in vec2 sdf;                                        // sdf outline color (rgb) and width (w)
 in float splitDirection;                            // splitDirection
-#if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
+#if defined(VS_THREE_POINT_DEPTH_CHECK) || defined(FS_THREE_POINT_DEPTH_CHECK)
 in vec4 textureCoordinateBoundsOrLabelTranslate;    // the min and max x and y values for the texture coordinates
 #endif
 #ifdef VECTOR_TILE
@@ -21,7 +21,7 @@ in float a_batchId;
 #endif
 
 out vec2 v_textureCoordinates;
-#ifdef FRAGMENT_DEPTH_CHECK
+#ifdef FS_THREE_POINT_DEPTH_CHECK
 out vec4 v_textureCoordinateBounds;
 out vec4 v_originTextureCoordinateAndTranslate;
 out mat2 v_rotationMatrix;
@@ -93,7 +93,7 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
     return positionEC;
 }
 
-#ifdef VERTEX_DEPTH_CHECK
+#ifdef VS_THREE_POINT_DEPTH_CHECK
 float getGlobeDepth(vec4 positionEC)
 {
     vec4 posWC = czm_eyeToWindowCoordinates(positionEC);
@@ -138,7 +138,7 @@ void main()
     origin.y = floor(compressed * SHIFT_RIGHT3);
     compressed -= origin.y * SHIFT_LEFT3;
 
-#ifdef FRAGMENT_DEPTH_CHECK
+#ifdef FS_THREE_POINT_DEPTH_CHECK
     vec2 depthOrigin = origin.xy;
 #endif
     origin -= vec2(1.0);
@@ -175,7 +175,7 @@ void main()
 
     vec2 imageSize = vec2(floor(temp), temp2);
 
-#ifdef FRAGMENT_DEPTH_CHECK
+#ifdef FS_THREE_POINT_DEPTH_CHECK
     float labelHorizontalOrigin = floor(compressedAttribute2.w - (temp2 * SHIFT_LEFT2));
     float applyTranslate = 0.0;
     if (labelHorizontalOrigin != 0.0) // is a billboard, so set apply translate to false
@@ -199,7 +199,7 @@ void main()
     translucencyByDistance.w = ((temp - floor(temp)) * SHIFT_LEFT8) / 255.0;
 #endif
 
-#if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
+#if defined(VS_THREE_POINT_DEPTH_CHECK) || defined(FS_THREE_POINT_DEPTH_CHECK)
     temp = compressedAttribute3.w;
     temp = temp * SHIFT_RIGHT12;
 
@@ -322,7 +322,7 @@ void main()
 
     v_compressed.y = enableDepthCheck;
 
-#ifdef VERTEX_DEPTH_CHECK
+#ifdef VS_THREE_POINT_DEPTH_CHECK
 if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) && (enableDepthCheck == 1.0)) {
     float depthsilon = 10.0;
 
@@ -374,7 +374,7 @@ if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &
     }
 #endif
 
-#ifdef FRAGMENT_DEPTH_CHECK
+#ifdef FS_THREE_POINT_DEPTH_CHECK
     if (sizeInMeters) {
         translate /= mpp;
         dimensions /= mpp;

@@ -20,7 +20,7 @@ in vec4 v_compressed;                               // x: eyeDepth, y: applyTran
 const float SHIFT_LEFT1 = 2.0;
 const float SHIFT_RIGHT1 = 1.0 / 2.0;
 
-#ifdef FRAGMENT_DEPTH_CHECK
+#ifdef FS_THREE_POINT_DEPTH_CHECK
 in vec4 v_textureCoordinateBounds;                  // the min and max x and y values for the texture coordinates
 in vec4 v_originTextureCoordinateAndTranslate;      // texture coordinate at the origin, billboard translate (used for label glyphs)
 in mat2 v_rotationMatrix;
@@ -42,7 +42,7 @@ float getGlobeDepthAtCoords(vec2 st)
     return eyeCoordinate.z / eyeCoordinate.w;
 }
 
-#ifdef FRAGMENT_DEPTH_CHECK
+#ifdef FS_THREE_POINT_DEPTH_CHECK
 float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST, bool applyTranslate, vec2 dimensions, vec2 imageSize)
 {
     vec2 lookupVector = imageSize * (depthLookupST - adjustedST);
@@ -181,7 +181,7 @@ bool applyTranslate = floor(temp) != 0.0;
 
 // If the billboard is clamped to the ground and within a given distance, we do a 3-point depth test. This test is performed in the vertex shader, unless
 // vertex texture sampling is not supported, in which case we do it here.
-#ifdef FRAGMENT_DEPTH_CHECK
+#ifdef FS_THREE_POINT_DEPTH_CHECK
 if (eyeDepth > -u_threePointDepthTestDistance) {
     temp = v_compressed.z;
     temp = temp * SHIFT_RIGHT12;
@@ -222,7 +222,7 @@ if (eyeDepth > -u_threePointDepthTestDistance) {
 
 // If the billboard is clamped to the ground and within a given distance, we do a 3-point depth test. If vertex texture sampling is supported, this has already been performed.
 // Since discarding vertices is not possible, the vertex shader sets eyeDepth to 0 to indicate the depth test failed. Apply the discard here.
-#ifdef VERTEX_DEPTH_CHECK
+#ifdef VS_THREE_POINT_DEPTH_CHECK
 if (eyeDepth > -u_threePointDepthTestDistance) {
     if (eyeDepth == 0.0) {
         discard;

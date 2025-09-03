@@ -2137,9 +2137,9 @@ BillboardCollection.prototype.update = function (frameState) {
     }
     if (this._shaderClampToGround) {
       if (supportVSTextureReads) {
-        vs.defines.push("VERTEX_DEPTH_CHECK");
+        vs.defines.push("VS_THREE_POINT_DEPTH_CHECK");
       } else {
-        vs.defines.push("FRAGMENT_DEPTH_CHECK");
+        vs.defines.push("FS_THREE_POINT_DEPTH_CHECK");
       }
     }
 
@@ -2158,9 +2158,9 @@ BillboardCollection.prototype.update = function (frameState) {
       });
       if (this._shaderClampToGround) {
         if (supportVSTextureReads) {
-          fs.defines.push("VERTEX_DEPTH_CHECK");
+          fs.defines.push("VS_THREE_POINT_DEPTH_CHECK");
         } else {
-          fs.defines.push("FRAGMENT_DEPTH_CHECK");
+          fs.defines.push("FS_THREE_POINT_DEPTH_CHECK");
         }
       }
 
@@ -2183,9 +2183,9 @@ BillboardCollection.prototype.update = function (frameState) {
       });
       if (this._shaderClampToGround) {
         if (supportVSTextureReads) {
-          fs.defines.push("VERTEX_DEPTH_CHECK");
+          fs.defines.push("VS_THREE_POINT_DEPTH_CHECK");
         } else {
-          fs.defines.push("FRAGMENT_DEPTH_CHECK");
+          fs.defines.push("FS_THREE_POINT_DEPTH_CHECK");
         }
       }
       if (this._sdf) {
@@ -2208,9 +2208,9 @@ BillboardCollection.prototype.update = function (frameState) {
       });
       if (this._shaderClampToGround) {
         if (supportVSTextureReads) {
-          fs.defines.push("VERTEX_DEPTH_CHECK");
+          fs.defines.push("VS_THREE_POINT_DEPTH_CHECK");
         } else {
-          fs.defines.push("FRAGMENT_DEPTH_CHECK");
+          fs.defines.push("FS_THREE_POINT_DEPTH_CHECK");
         }
       }
       if (this._sdf) {
@@ -2233,9 +2233,9 @@ BillboardCollection.prototype.update = function (frameState) {
       });
       if (this._shaderClampToGround) {
         if (supportVSTextureReads) {
-          fs.defines.push("VERTEX_DEPTH_CHECK");
+          fs.defines.push("VS_THREE_POINT_DEPTH_CHECK");
         } else {
-          fs.defines.push("FRAGMENT_DEPTH_CHECK");
+          fs.defines.push("FS_THREE_POINT_DEPTH_CHECK");
         }
       }
       if (this._sdf) {
