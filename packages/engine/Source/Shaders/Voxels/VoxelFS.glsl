@@ -258,8 +258,7 @@ void main()
 
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
-        //traverseOctreeFromExisting(pointJacobian.point, traversalData, sampleDatas);
-        traverseOctreeFromBeginning(tileAndUv, traversalData, sampleDatas);
+        traverseOctreeFromExisting(tileAndUv, traversalData, sampleDatas);
         step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
     }
 
