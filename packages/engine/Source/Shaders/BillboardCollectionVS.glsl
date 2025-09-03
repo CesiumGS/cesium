@@ -1,3 +1,4 @@
+uniform float u_threePointDepthTestDistance;
 #ifdef INSTANCED
 in vec2 direction;
 #endif
@@ -23,9 +24,9 @@ out vec2 v_textureCoordinates;
 #ifdef FRAGMENT_DEPTH_CHECK
 out vec4 v_textureCoordinateBounds;
 out vec4 v_originTextureCoordinateAndTranslate;
-out vec4 v_compressed;                                 // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
 out mat2 v_rotationMatrix;
 #endif
+out vec4 v_compressed;                                 // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
 
 out vec4 v_pickColor;
 out vec4 v_color;
@@ -248,10 +249,6 @@ void main()
     vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
     vec4 positionEC = czm_modelViewRelativeToEye * p;
 
-#if defined(FRAGMENT_DEPTH_CHECK) || defined(VERTEX_DEPTH_CHECK)
-    float eyeDepth = positionEC.z;
-#endif
-
     positionEC = czm_eyeOffset(positionEC, eyeOffset.xyz);
     positionEC.xyz *= show;
 
@@ -309,26 +306,37 @@ void main()
     mat2 rotationMatrix;
     float mpp;
 
+    float enableDepthCheck = 1.0;
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = compressedAttribute3.z;
+    if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
+    {
+        disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
+    }
+
+    if (lengthSq < disableDepthTestDistance || disableDepthTestDistance < 0.0)
+    {
+        enableDepthCheck = 0.0;
+    }
 #endif
 
+    v_compressed.y = enableDepthCheck;
+
 #ifdef VERTEX_DEPTH_CHECK
-if (lengthSq < disableDepthTestDistance) {
+if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) && (enableDepthCheck == 1.0)) {
     float depthsilon = 10.0;
 
-    vec2 labelTranslate = textureCoordinateBoundsOrLabelTranslate.xy;
-    vec4 pEC1 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+    vec4 pEC1 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0), origin, vec2(0.0), pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
     float globeDepth1 = getGlobeDepth(pEC1);
 
     if (globeDepth1 != 0.0 && pEC1.z + depthsilon < globeDepth1)
     {
-        vec4 pEC2 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0, 1.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+        vec4 pEC2 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0, 1.0), origin, vec2(0.0), pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
         float globeDepth2 = getGlobeDepth(pEC2);
 
         if (globeDepth2 != 0.0 && pEC2.z + depthsilon < globeDepth2)
         {
-            vec4 pEC3 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(1.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+            vec4 pEC3 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(1.0), origin, vec2(0.0), pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
             float globeDepth3 = getGlobeDepth(pEC3);
             if (globeDepth3 != 0.0 && pEC3.z + depthsilon < globeDepth3)
             {
@@ -338,6 +346,7 @@ if (lengthSq < disableDepthTestDistance) {
     }
 }
 #endif
+    v_compressed.x = positionEC.z;
 
     positionEC = addScreenSpaceOffset(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
     gl_Position = czm_projection * positionEC;
@@ -348,10 +357,6 @@ if (lengthSq < disableDepthTestDistance) {
 #endif
 
 #ifdef DISABLE_DEPTH_DISTANCE
-    if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
-    {
-        disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
-    }
 
     if (disableDepthTestDistance != 0.0)
     {
@@ -381,21 +386,13 @@ if (lengthSq < disableDepthTestDistance) {
 #else
     v_rotationMatrix = mat2(1.0, 0.0, 0.0, 1.0);
 #endif
-
-    float enableDepthCheck = 0.0;
-    if (lengthSq < disableDepthTestDistance)
-    {
-        enableDepthCheck = 1.0;
-    }
-
     float dw = floor(clamp(dimensions.x, 0.0, SHIFT_LEFT12));
     float dh = floor(clamp(dimensions.y, 0.0, SHIFT_LEFT12));
 
     float iw = floor(clamp(imageSize.x, 0.0, SHIFT_LEFT12));
     float ih = floor(clamp(imageSize.y, 0.0, SHIFT_LEFT12));
 
-    v_compressed.x = eyeDepth;
-    v_compressed.y = applyTranslate * SHIFT_LEFT1 + enableDepthCheck;
+    v_compressed.y += applyTranslate * SHIFT_LEFT1;
     v_compressed.z = dw * SHIFT_LEFT12 + dh;
     v_compressed.w = iw * SHIFT_LEFT12 + ih;
     v_originTextureCoordinateAndTranslate.xy = depthOrigin;

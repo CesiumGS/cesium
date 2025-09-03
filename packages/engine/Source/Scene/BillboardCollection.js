@@ -13,7 +13,6 @@ import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
@@ -315,6 +314,8 @@ function BillboardCollection(options) {
   ];
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
+  this._coarseDepthTestDistance = 50000.0;
+  this._threePointDepthTestDistance = 5000.0;
 
   this._uniforms = {
     u_atlas: () => {
@@ -322,6 +323,16 @@ function BillboardCollection(options) {
     },
     u_highlightColor: () => {
       return this._highlightColor;
+    },
+    // An eye-space distance, beyond which, the billboard is simply tested against a camera-facing plane at the ellipsoid's center,
+    // rather than against a depth texture. Note: only if the disableDepthTestingDistance property permits.
+    u_coarseDepthTestDistance: () => {
+      return this._coarseDepthTestDistance;
+    },
+    // Within this distance, if the billboard is clamped to the ground, we'll depth-test 3 key points.
+    // If any key point is visible, the whole billboard will be visible.
+    u_threePointDepthTestDistance: () => {
+      return this._threePointDepthTestDistance;
     },
   };
 
@@ -1365,9 +1376,6 @@ function writeCompressedAttribute3(
   const clampToGround =
     isHeightReferenceClamp(billboard.heightReference) &&
     frameState.context.depthTexture;
-  if (!defined(disableDepthTestDistance)) {
-    disableDepthTestDistance = clampToGround ? 5000.0 : 0.0;
-  }
 
   disableDepthTestDistance *= disableDepthTestDistance;
   if (clampToGround || disableDepthTestDistance > 0.0) {
@@ -2023,8 +2031,7 @@ BillboardCollection.prototype.update = function (frameState) {
     ) {
       this._rsOpaque = RenderState.fromCache({
         depthTest: {
-          enabled: true,
-          func: WebGLConstants.LESS,
+          enabled: false,
         },
         depthMask: true,
       });
@@ -2035,7 +2042,6 @@ BillboardCollection.prototype.update = function (frameState) {
     // If OPAQUE_AND_TRANSLUCENT is in use, only the opaque pass gets the benefit of the depth buffer,
     // not the translucent pass.  Otherwise, if the TRANSLUCENT pass is on its own, it turns on
     // a depthMask in lieu of full depth sorting (because it has opaque-ish fragments that look bad in OIT).
-    // When the TRANSLUCENT depth mask is in use, label backgrounds require the depth func to be LEQUAL.
     const useTranslucentDepthMask =
       this._blendOption === BlendOption.TRANSLUCENT;
 
@@ -2045,10 +2051,7 @@ BillboardCollection.prototype.update = function (frameState) {
     ) {
       this._rsTranslucent = RenderState.fromCache({
         depthTest: {
-          enabled: true,
-          func: useTranslucentDepthMask
-            ? WebGLConstants.LEQUAL
-            : WebGLConstants.LESS,
+          enabled: false,
         },
         depthMask: useTranslucentDepthMask,
         blending: BlendingState.ALPHA_BLEND,
