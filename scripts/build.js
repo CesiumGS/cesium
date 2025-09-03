@@ -13,6 +13,7 @@ import gulp from "gulp";
 import { rimraf } from "rimraf";
 
 import { mkdirp } from "mkdirp";
+import { buildGalleryList } from "../packages/sandcastle/scripts/buildGallery.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -611,6 +612,34 @@ const externalResolvePlugin = {
  * @returns {Promise<any>}
  */
 export async function createGalleryList(noDevelopmentGallery) {
+  const configPath = path.join(
+    import.meta.url,
+    "../../packages/sandcastle/sandcastle.config.js",
+  );
+  const config = await import(configPath);
+  const { root: rootDirectory, gallery, sourceUrl } = config.default;
+
+  // Paths are specified relative to the config file
+  const {
+    files: galleryFiles,
+    defaultThumbnail,
+    searchOptions,
+    defaultFilters,
+    metadata,
+  } = gallery ?? {};
+
+  await buildGalleryList({
+    rootDirectory,
+    publicDirectory: "../../Apps/Sandcastle2",
+    galleryFiles,
+    sourceUrl,
+    defaultThumbnail,
+    searchOptions,
+    defaultFilters,
+    metadata,
+    includeDevelopment: !noDevelopmentGallery,
+  });
+
   const demoObjects = [];
   const demoJSONs = [];
   const output = path.join("Apps", "Sandcastle", "gallery", "gallery-index.js");
