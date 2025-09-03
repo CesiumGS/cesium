@@ -360,9 +360,9 @@ function VoxelPrimitive(options) {
   this._transformPositionUvToWorld = new Matrix4();
 
   /**
+   * TODO: explain
    * @type {Matrix4}
    * @private
-   * TODO: explain
    */
   this._transformPlaneUvToView = new Matrix4();
 
