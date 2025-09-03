@@ -1,0 +1,8 @@
+legacyId: 3D Models.html
+title: glTF Models
+description: Load and visualize glTF and glb models with entities, including examples with compression (Draco, KTX2), instancing, and animations. Useful for learning how to place, orient, and scale 3D models in the scene for use cases like vehicles, characters, or custom assets.
+labels:
+  - 3D Models
+  - Entities
+  - Animation 
+thumbnail: thumbnail.jpg

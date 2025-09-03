@@ -1,0 +1,33 @@
+/*
+ * This file is just to define some extra stratakit tokens not in the library yet.
+ * Names are meant to match the expected values later but with the extra prefix
+ * --stratakit-ext for "stratakit extensions"
+ */
+
+body {
+  /* Radius values */
+  /* For sharp corners and precise edges */
+  --stratakit-ext-radius-none: 0px;
+  /* For subtle softening */
+  --stratakit-ext-radius-xs: 2px;
+  --stratakit-ext-radius-sm: 4px;
+  /* For standard component styling */
+  --stratakit-ext-radius-md: 8px;
+  --stratakit-ext-radius-lg: 12px;
+  /* For prominent or featured elements */
+  --stratakit-ext-radius-xl: 16px;
+  --stratakit-ext-radius-xxl: 24px;
+  /* For fully circular or pill shaped */
+  --stratakit-ext-radius-full: 9999px;
+
+  /* Border thicknesses */
+  --stratakit-ext-border-highlight: 0.5px;
+  --stratakit-ext-border-border: 1px;
+  --stratakit-ext-border-focus-ring: 2px;
+  --stratakit-ext-border-emphasis: 4px;
+
+  /* Focus outline */
+  --stratakit-ext-focus-outline: 2px solid
+    var(--stratakit-color-border-accent-strong);
+  --stratakit-ext-focus-outline-offset: 1px;
+}

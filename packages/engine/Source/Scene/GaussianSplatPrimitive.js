@@ -31,10 +31,12 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Quaternion from "../Core/Quaternion.js";
 import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
+import ContextLimits from "../Renderer/ContextLimits.js";
 
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4B = new Matrix4();
 const scratchMatrix4C = new Matrix4();
+const scratchMatrix4D = new Matrix4();
 
 const GaussianSplatSortingState = {
   IDLE: 0,
@@ -43,6 +45,25 @@ const GaussianSplatSortingState = {
   SORTED: 3,
   ERROR: 4,
 };
+
+function createSphericalHarmonicsTexture(context, shData) {
+  const texture = new Texture({
+    context: context,
+    source: {
+      width: shData.width,
+      height: shData.height,
+      arrayBufferView: shData.data,
+    },
+    preMultiplyAlpha: false,
+    skipColorSpaceConversion: true,
+    pixelFormat: PixelFormat.RG_INTEGER,
+    pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    flipY: false,
+    sampler: Sampler.NEAREST,
+  });
+
+  return texture;
+}
 
 function createGaussianSplatTexture(context, splatTextureData) {
   return new Texture({
@@ -64,7 +85,7 @@ function createGaussianSplatTexture(context, splatTextureData) {
 /** A primitive that renders Gaussian splats.
  * <p>
  * This primitive is used to render Gaussian splats in a 3D Tileset.
- * It is designed to work with the KHR_spz_gaussian_splats_compression extension.
+ * It is designed to work with the KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extensions.
  * </p>
  * @alias GaussianSplatPrimitive
  * @constructor
@@ -148,6 +169,14 @@ function GaussianSplatPrimitive(options) {
    * @see {@link GaussianSplatTextureGenerator}
    */
   this.gaussianSplatTexture = undefined;
+
+  /**
+   * The texture used to store the spherical harmonics coefficients for the Gaussian splats.
+   * @type {undefined|Texture}
+   * @private
+   */
+  this.sphericalHarmonicsTexture = undefined;
+
   /**
    * The last width of the Gaussian splat texture.
    * This is used to track changes in the texture size and update the primitive accordingly.
@@ -395,7 +424,7 @@ GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {};
  */
 GaussianSplatPrimitive.transformTile = function (tile) {
   const computedTransform = tile.computedTransform;
-  const splatPrimitive = tile.content.splatPrimitive;
+  const gltfPrimitive = tile.content.gltfPrimitive;
   const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
 
   const computedModelMatrix = Matrix4.multiplyTransformation(
@@ -425,17 +454,17 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const rotations = tile.content._originalRotations;
   const scales = tile.content._originalScales;
   const attributePositions = ModelUtility.getAttributeBySemantic(
-    splatPrimitive,
+    gltfPrimitive,
     VertexAttributeSemantic.POSITION,
   ).typedArray;
 
   const attributeRotations = ModelUtility.getAttributeBySemantic(
-    splatPrimitive,
+    gltfPrimitive,
     VertexAttributeSemantic.ROTATION,
   ).typedArray;
 
   const attributeScales = ModelUtility.getAttributeBySemantic(
-    splatPrimitive,
+    gltfPrimitive,
     VertexAttributeSemantic.SCALE,
   ).typedArray;
 
@@ -601,10 +630,67 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     ShaderDestination.VERTEX,
   );
 
+  shaderBuilder.addUniform(
+    "float",
+    "u_sphericalHarmonicsDegree",
+    ShaderDestination.VERTEX,
+  );
+
+  shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
+
+  shaderBuilder.addUniform(
+    "vec3",
+    "u_cameraPositionWC",
+    ShaderDestination.VERTEX,
+  );
+
+  shaderBuilder.addUniform(
+    "mat3",
+    "u_inverseModelRotation",
+    ShaderDestination.VERTEX,
+  );
+
   const uniformMap = renderResources.uniformMap;
 
   uniformMap.u_splatAttributeTexture = function () {
     return primitive.gaussianSplatTexture;
+  };
+
+  if (primitive._sphericalHarmonicsDegree > 0) {
+    shaderBuilder.addDefine(
+      "HAS_SPHERICAL_HARMONICS",
+      "1",
+      ShaderDestination.VERTEX,
+    );
+    shaderBuilder.addUniform(
+      "highp usampler2D",
+      "u_sphericalHarmonicsTexture",
+      ShaderDestination.VERTEX,
+    );
+    uniformMap.u_sphericalHarmonicsTexture = function () {
+      return primitive.sphericalHarmonicsTexture;
+    };
+  }
+  uniformMap.u_sphericalHarmonicsDegree = function () {
+    return primitive._sphericalHarmonicsDegree;
+  };
+
+  uniformMap.u_cameraPositionWC = function () {
+    return Cartesian3.clone(frameState.camera.positionWC);
+  };
+
+  uniformMap.u_inverseModelRotation = function () {
+    const tileset = primitive._tileset;
+    const modelMatrix = Matrix4.multiply(
+      tileset.modelMatrix,
+      Matrix4.fromArray(tileset.root.transform),
+      scratchMatrix4A,
+    );
+    const inverseModelRotation = Matrix4.getRotation(
+      Matrix4.inverse(modelMatrix, scratchMatrix4C),
+      scratchMatrix4D,
+    );
+    return inverseModelRotation;
   };
 
   uniformMap.u_splitDirection = function () {
@@ -720,7 +806,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     this._rootTransform = tileset.root.computedTransform;
   }
 
-  if (this._drawCommand && tileset.show) {
+  if (!tileset.show || tileset._selectedTiles.length === 0) {
+    return;
+  }
+
+  if (this._drawCommand) {
     frameState.commandList.push(this._drawCommand);
   }
 
@@ -756,6 +846,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._scales = undefined;
       this._colors = undefined;
       this._indexes = undefined;
+      this._shData = undefined;
       this._needsGaussianSplatTexture = true;
       this._gaussianSplatTexturePending = false;
 
@@ -771,7 +862,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         let aggregate;
         let offset = 0;
         for (const tile of tiles) {
-          const primitive = tile.content.splatPrimitive;
+          const primitive = tile.content.gltfPrimitive;
           const attribute = getAttributeCallback(primitive);
           if (!defined(aggregate)) {
             aggregate = ComponentDatatype.createTypedArray(
@@ -786,41 +877,70 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         return aggregate;
       };
 
+      const aggregateShData = () => {
+        let offset = 0;
+        for (const tile of tiles) {
+          const shData = tile.content.packedSphericalHarmonicsData;
+          if (tile.content.sphericalHarmonicsDegree > 0) {
+            if (!defined(this._shData)) {
+              let coefs;
+              switch (tile.content.sphericalHarmonicsDegree) {
+                case 1:
+                  coefs = 9;
+                  break;
+                case 2:
+                  coefs = 24;
+                  break;
+                case 3:
+                  coefs = 45;
+              }
+              this._shData = new Uint32Array(totalElements * (coefs * (2 / 3)));
+            }
+            this._shData.set(shData, offset);
+            offset += shData.length;
+          }
+        }
+      };
+
       this._positions = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
+        (gltfPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            gltfPrimitive,
             VertexAttributeSemantic.POSITION,
           ),
       );
 
       this._scales = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
+        (gltfPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            gltfPrimitive,
             VertexAttributeSemantic.SCALE,
           ),
       );
 
       this._rotations = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
+        (gltfPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            gltfPrimitive,
             VertexAttributeSemantic.ROTATION,
           ),
       );
 
       this._colors = aggregateAttributeValues(
         ComponentDatatype.UNSIGNED_BYTE,
-        (splatPrimitive) =>
+        (gltfPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
+            gltfPrimitive,
             VertexAttributeSemantic.COLOR,
           ),
       );
+
+      aggregateShData();
+      this._sphericalHarmonicsDegree =
+        tiles[0].content.sphericalHarmonicsDegree;
 
       this._numSplats = totalElements;
       this.selectedTileLength = tileset._selectedTiles.length;
@@ -833,6 +953,38 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     if (this._needsGaussianSplatTexture) {
       if (!this._gaussianSplatTexturePending) {
         GaussianSplatPrimitive.generateSplatTexture(this, frameState);
+        if (defined(this._shData)) {
+          const oldTex = this.sphericalHarmonicsTexture;
+          const width = ContextLimits.maximumTextureSize;
+          const dims =
+            tileset._selectedTiles[0].content
+              .sphericalHarmonicsCoefficientCount / 3;
+          const splatsPerRow = Math.floor(width / dims);
+          const floatsPerRow = splatsPerRow * (dims * 2);
+          const texBuf = new Uint32Array(
+            width * Math.ceil(this._numSplats / splatsPerRow) * 2,
+          );
+
+          let dataIndex = 0;
+          for (let i = 0; dataIndex < this._shData.length; i += width * 2) {
+            texBuf.set(
+              this._shData.subarray(dataIndex, dataIndex + floatsPerRow),
+              i,
+            );
+            dataIndex += floatsPerRow;
+          }
+          this.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
+            frameState.context,
+            {
+              data: texBuf,
+              width: width,
+              height: Math.ceil(this._numSplats / splatsPerRow),
+            },
+          );
+          if (defined(oldTex)) {
+            oldTex.destroy();
+          }
+        }
       }
       return;
     }
