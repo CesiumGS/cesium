@@ -32,6 +32,8 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
 import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
+import addAllToArray from "../Core/addAllToArray.js";
+import getMeshPrimitives from "./getMeshPrimitives.js";
 
 const {
   Attribute,
@@ -1981,6 +1983,22 @@ function loadMorphTarget(
   return morphTarget;
 }
 
+function fetchSpzExtensionFrom(extensions) {
+  const gaussianSplatting = extensions?.KHR_gaussian_splatting;
+  const gsExtensions = gaussianSplatting?.extensions;
+  const spz = gsExtensions?.KHR_gaussian_splatting_compression_spz_2;
+  if (defined(spz)) {
+    return spz;
+  }
+
+  const legacySpz = extensions?.KHR_spz_gaussian_splats_compression;
+  if (defined(legacySpz)) {
+    return legacySpz;
+  }
+
+  return undefined;
+}
+
 /**
  * Load resources associated with a mesh primitive for a glTF node
  * @param {GltfLoader} loader
@@ -2018,7 +2036,8 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
-  const spzExtension = extensions.KHR_spz_gaussian_splats_compression;
+  //support the latest glTF spec and the legacy extension
+  const spzExtension = fetchSpzExtensionFrom(extensions);
   if (defined(spzExtension)) {
     needsPostProcessing = true;
     primitivePlan.needsGaussianSplats = true;
@@ -2431,7 +2450,7 @@ function loadNode(loader, gltfNode, frameState) {
   const meshId = gltfNode.mesh;
   if (defined(meshId)) {
     const mesh = loader.gltfJson.meshes[meshId];
-    const primitives = mesh.primitives;
+    const primitives = getMeshPrimitives(mesh);
     for (let i = 0; i < primitives.length; ++i) {
       node.primitives.push(
         loadPrimitive(
@@ -2827,12 +2846,12 @@ function parse(loader, frameState) {
 
   // Gather promises and handle any errors
   const readyPromises = [];
-  readyPromises.push.apply(readyPromises, loader._loaderPromises);
+  addAllToArray(readyPromises, loader._loaderPromises);
 
   // When incrementallyLoadTextures is true, the errors are caught and thrown individually
   // since it doesn't affect the overall loader state
   if (!loader._incrementallyLoadTextures) {
-    readyPromises.push.apply(readyPromises, loader._texturesPromises);
+    addAllToArray(readyPromises, loader._texturesPromises);
   }
 
   return Promise.all(readyPromises);

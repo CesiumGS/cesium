@@ -1,0 +1,8 @@
+legacyId: Moon.html
+title: Moon Terrain
+description: High-resolution lunar terrain using 3D Tiles from Cesium ion, with Apollo landing sites, craters, mare boundaries, and potential Artemis landing regions. Combining 3D data with GeoJSON overlays and interactive camera flights to create an immersive Moon app.
+labels:
+  - Showcases
+  - ion Assets
+  - 3D Tiles
+thumbnail: thumbnail.jpg

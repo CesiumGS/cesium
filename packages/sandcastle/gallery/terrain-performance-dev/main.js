@@ -1,0 +1,237 @@
+import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
+
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  terrain: Cesium.Terrain.fromWorldTerrain(),
+});
+const scene = viewer.scene;
+const camera = scene.camera;
+const globe = scene.globe;
+const statistics = Cesium.RequestScheduler.statistics;
+
+let startTime;
+let flightComplete;
+let monitor;
+let minFrameRate = 1000;
+let maxFrameRate = 0;
+let sumFrameRate = 0.0;
+let frameRateSamples = 0;
+
+function startTest() {
+  flightComplete = false;
+  statistics.numberOfActiveRequestsEver = 0;
+  monitor = new Cesium.FrameRateMonitor({
+    scene: scene,
+    samplingWindow: 1.0,
+    quietPeriod: 0.0,
+    warmupPeriod: 0.0,
+    minimumFrameRateDuringWarmup: 0,
+    minimumFrameRateAfterWarmup: 0,
+  });
+  scene.preUpdate.addEventListener(measureFrameRate);
+  startTime = window.performance.now();
+  window.setTimeout(function () {
+    scene.postRender.addEventListener(viewReady);
+  }, 500);
+}
+
+function measureFrameRate() {
+  const frameRate = monitor.lastFramesPerSecond;
+  if (frameRate === undefined || frameRate !== frameRate) {
+    return;
+  }
+
+  ++frameRateSamples;
+  sumFrameRate += frameRate;
+  minFrameRate = Math.min(minFrameRate, frameRate);
+  maxFrameRate = Math.max(maxFrameRate, frameRate);
+}
+
+function viewReady(scene, time) {
+  const ready =
+    globe._surface.tileProvider.ready &&
+    globe._surface._tileLoadQueueHigh.length === 0 &&
+    globe._surface._tileLoadQueueMedium.length === 0 &&
+    globe._surface._tileLoadQueueLow.length === 0 &&
+    globe._surface._debug.tilesWaitingForChildren === 0;
+  if (flightComplete && ready) {
+    const endTime = window.performance.now();
+    const duration = endTime - startTime;
+    alert(
+      `${(duration / 1000).toFixed(2)} seconds ${
+        statistics.numberOfActiveRequestsEver
+      } requests, min/max/avg frame FPS ${minFrameRate}/${maxFrameRate}/${
+        sumFrameRate / frameRateSamples
+      }`,
+    );
+    scene.postRender.removeEventListener(viewReady);
+  }
+}
+
+function goToEverestHorizontal() {
+  camera.position = new Cesium.Cartesian3(
+    302950.1757410969,
+    5637093.359233209,
+    2976894.491577989,
+  );
+  camera.direction = new Cesium.Cartesian3(
+    -0.9648960658153797,
+    -0.24110066659365145,
+    -0.10414437451009724,
+  );
+  camera.right = new Cesium.Cartesian3(
+    -0.02152846103178338,
+    0.46781654381873394,
+    -0.8835633574877908,
+  );
+  camera.up = new Cesium.Cartesian3(
+    -0.26174817580950865,
+    0.8503047394302772,
+    0.456584868959543,
+  );
+  flightComplete = true;
+}
+
+function goToEverestTopDown() {
+  camera.position = new Cesium.Cartesian3(
+    301989.1870802739,
+    5637745.915399717,
+    2977153.0443453398,
+  );
+  camera.direction = new Cesium.Cartesian3(
+    0.021398841015326783,
+    -0.8909524564021135,
+    -0.45359211857597476,
+  );
+  camera.right = new Cesium.Cartesian3(
+    0.21237352569072232,
+    0.4473925820246778,
+    -0.8687562161705573,
+  );
+  camera.up = new Cesium.Cartesian3(
+    -0.9769542339275126,
+    0.07774058129659328,
+    -0.19878839712310903,
+  );
+  flightComplete = true;
+}
+
+function goToEverest45Degrees() {
+  camera.position = new Cesium.Cartesian3(
+    302760.41072832496,
+    5637092.977453635,
+    2977284.6758398763,
+  );
+  camera.direction = new Cesium.Cartesian3(
+    -0.7254568510163212,
+    -0.3330925403210976,
+    -0.6022970337764594,
+  );
+  camera.right = new Cesium.Cartesian3(
+    0.4750641658993092,
+    0.39087207931336604,
+    -0.7883736778277414,
+  );
+  camera.up = new Cesium.Cartesian3(
+    -0.49802248502640617,
+    0.8580608237157107,
+    0.12532049797395203,
+  );
+  flightComplete = true;
+}
+
+function zoomToEverest() {
+  const position = new Cesium.Cartesian3(
+    302955.90876054496,
+    5639614.4908250235,
+    2981096.1048591887,
+  );
+  camera.flyTo({
+    destination: position,
+    easingFunction: Cesium.EasingFunction.QUADRATIC_OUT,
+    complete: function () {
+      flightComplete = true;
+    },
+  });
+}
+
+function panAroundEverest() {
+  camera.position = new Cesium.Cartesian3(
+    302950.1757410969,
+    5637093.359233209,
+    2976894.491577989,
+  );
+  camera.direction = new Cesium.Cartesian3(
+    -0.9648960658153797,
+    -0.24110066659365145,
+    -0.10414437451009724,
+  );
+  camera.right = new Cesium.Cartesian3(
+    -0.02152846103178338,
+    0.46781654381873394,
+    -0.8835633574877908,
+  );
+  camera.up = new Cesium.Cartesian3(
+    -0.26174817580950865,
+    0.8503047394302772,
+    0.456584868959543,
+  );
+
+  const startCartographic = Cesium.Cartographic.fromCartesian(camera.position);
+  let longitude = startCartographic.longitude;
+  const endLongitude = longitude + 0.01;
+  const latitude = startCartographic.latitude;
+  const height = startCartographic.height;
+  let startTime = window.performance.now();
+  const removeCallback = scene.preRender.addEventListener(
+    function (scene, time) {
+      const endTime = window.performance.now();
+      const delta = endTime - startTime;
+      startTime = endTime;
+      longitude += delta * 0.000001;
+      if (longitude >= endLongitude) {
+        flightComplete = true;
+        removeCallback();
+      }
+      camera.position = Cesium.Cartesian3.fromRadians(
+        longitude,
+        latitude,
+        height,
+      );
+    },
+  );
+}
+
+Sandcastle.addToolbarButton("Timer Static Horizontal", function () {
+  startTest();
+  goToEverestHorizontal();
+});
+
+Sandcastle.addToolbarButton("Timer Static Top Down", function () {
+  startTest();
+  goToEverestTopDown();
+});
+
+Sandcastle.addToolbarButton("Timer Static 45 degrees", function () {
+  startTest();
+  goToEverest45Degrees();
+});
+
+Sandcastle.addToolbarButton("Timer Zoom", function () {
+  startTest();
+  zoomToEverest();
+});
+
+Sandcastle.addToolbarButton("Timer Pan", function () {
+  startTest();
+  panAroundEverest();
+});
+
+Sandcastle.addToolbarButton("Save camera", function () {
+  const cameraString =
+    `camera.position = new Cesium.Cartesian3(${camera.positionWC.x}, ${camera.positionWC.y}, ${camera.positionWC.z});\n` +
+    `camera.direction = new Cesium.Cartesian3(${camera.directionWC.x}, ${camera.directionWC.y}, ${camera.directionWC.z});\n` +
+    `camera.right = new Cesium.Cartesian3(${camera.rightWC.x}, ${camera.rightWC.y}, ${camera.rightWC.z});\n` +
+    `camera.up = new Cesium.Cartesian3(${camera.upWC.x}, ${camera.upWC.y}, ${camera.upWC.z});\n`;
+  console.log(cameraString);
+});

@@ -1,0 +1,6 @@
+legacyId: Cesium Widget.html
+title: Cesium Widget
+description: A minimal CesiumJS example that initializes a 3D globe and loads default imagery. Use the CesiumWidget to create a 3D view without the default UI widgets.
+labels:
+  - Getting Started
+thumbnail: thumbnail.jpg

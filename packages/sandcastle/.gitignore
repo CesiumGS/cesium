@@ -13,6 +13,6 @@ dist-ssr
 *.local
 *.tsbuildinfo
 
-gallery/list.json
+public/gallery
 templates/Sandcastle.d.ts
 templates/Sandcastle.js
