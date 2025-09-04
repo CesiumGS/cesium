@@ -1,0 +1,20 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <select data-bind="options: exampleTypes, value: currentExampleType"></select>
+  <input
+    type="checkbox"
+    value="false"
+    data-bind="checked: clippingPlanesEnabled, valueUpdate: 'input'"
+  />
+  Globe clipping planes enabled
+  <input
+    type="checkbox"
+    value="false"
+    data-bind="checked: edgeStylingEnabled, valueUpdate: 'input'"
+  />
+  Edge styling enabled
+</div>
