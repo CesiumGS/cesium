@@ -13,6 +13,7 @@ import SingleTileImageryProvider from "./SingleTileImageryProvider.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 import WebMapServiceImageryProvider from "./WebMapServiceImageryProvider.js";
 import WebMapTileServiceImageryProvider from "./WebMapTileServiceImageryProvider.js";
+import Google2DImageryProvider from "./Google2DImageryProvider.js";
 
 // These values are the list of supported external imagery
 // assets in the Cesium ion beta. They are subject to change.
@@ -48,6 +49,12 @@ const ImageryProviderAsyncMapping = {
   },
   WMTS: (url, options) => {
     return new WebMapTileServiceImageryProvider({
+      url: url,
+      ...options,
+    });
+  },
+  GOOGLE_2D: (url, options) => {
+    return new Google2DImageryProvider({
       url: url,
       ...options,
     });
