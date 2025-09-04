@@ -18,6 +18,8 @@ import {
   glslToJavaScript,
   createIndexJs,
   buildCesium,
+  getSandcastleConfig,
+  buildSandcastleGallery,
 } from "./scripts/build.js";
 
 const argv = yargs(process.argv)
@@ -267,20 +269,22 @@ async function generateDevelopmentBuild() {
       specsCache.clear();
     });
 
-    const galleryDirectory = "packages/sandcastle/gallery";
-    const galleryWatcher = chokidar.watch([galleryDirectory], {
-      ignored: (file, stats) =>
-        !!stats?.isFile() && !file.endsWith(".yml") && !file.endsWith(".yaml"),
-      ignoreInitial: true,
-    });
     if (!production) {
-      const { buildGalleryList } = await import(
-        "./packages/sandcastle/scripts/buildGallery.js"
+      const { configPath, root, gallery } = await getSandcastleConfig();
+      const baseDirectory = path.relative(root, path.dirname(configPath));
+      const galleryFiles = gallery.files.map((pattern) =>
+        path.join(baseDirectory, pattern),
       );
-      galleryWatcher.on("all", async (event) => {
-        if (event === "add" || event === "change" || event === "unlink") {
-          await buildGalleryList(galleryDirectory);
-        }
+      const galleryWatcher = chokidar.watch(galleryFiles, {
+        ignoreInitial: true,
+      });
+
+      galleryWatcher.on("all", async () => {
+        const startTime = performance.now();
+        await buildSandcastleGallery();
+        console.log(
+          `Gallery built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
+        );
       });
     }
 
