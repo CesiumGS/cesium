@@ -24,9 +24,6 @@ RayShapeIntersection intersectBoundPlanes(in Ray ray) {
         }
     }
 
-    // Temporary: transform normal from eye to model coordinates. TODO: remove this
-    lastEntry.xyz = normalize(czm_inverseNormal * lastEntry.xyz);
-
     if (lastEntry.w < firstExit.w) {
         return RayShapeIntersection(lastEntry, firstExit);
     } else {

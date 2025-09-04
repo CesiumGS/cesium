@@ -71,8 +71,10 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
 
     RayShapeIntersection voxelIntersection = getVoxelIntersection(sampleData.tileUv, sampleSizeAlongRay);
 
-    // Transform normal from shape space to Cartesian space
-    vec3 voxelNormal = normalize(jacobianT * voxelIntersection.entry.xyz);
+    // Transform normal from shape space to Cartesian space to eye space
+    vec3 voxelNormal = jacobianT * voxelIntersection.entry.xyz;
+    voxelNormal = normalize(czm_normal * voxelNormal);
+
     // Compare with the shape intersection, to choose the appropriate normal
     vec4 voxelEntry = vec4(voxelNormal, currentT + voxelIntersection.entry.w);
     vec4 entry = intersectionMax(shapeIntersection.entry, voxelEntry);
@@ -201,7 +203,7 @@ void main()
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
 
         fragmentInput.attributes.positionEC = positionEC;
-        fragmentInput.attributes.normalEC = normalize(czm_normal * step.xyz);
+        fragmentInput.attributes.normalEC = step.xyz;
 
         fragmentInput.voxel.viewDirUv = viewRayUv.dir;
 
