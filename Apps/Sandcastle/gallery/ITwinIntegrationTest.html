@@ -177,6 +177,7 @@
             far: 1000000,
             fov: undefined,
             near: 0.01,
+            width: 224.26011669769352,
           },
           position: [1255389.8978600262, -4732988.808369093, 4073555.356273554],
           up: [0.6188478278988585, -0.4540867701756252, 0.6409622227997012],
@@ -185,13 +186,20 @@
         orthoFrustum.aspectRatio = viewer.camera.frustum.aspectRatio;
         orthoFrustum.near = orthoView.frustum.near;
         orthoFrustum.far = orthoView.frustum.far;
+        orthoFrustum.width = orthoView.frustum.width;
+        viewer.camera.frustum = orthoFrustum;
 
         const testView = {
           destination: Cesium.Cartesian3.fromArray(orthoView.position),
-          up: Cesium.Cartesian3.fromArray(orthoView.up),
-          direction: Cesium.Cartesian3.fromArray(orthoView.direction),
+          orientation: {
+            up: Cesium.Cartesian3.fromArray(orthoView.up),
+            direction: Cesium.Cartesian3.fromArray(orthoView.direction),
+          },
         };
         viewer.camera.setView(testView);
+
+        console.log(testView);
+        console.log(viewer.camera);
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
