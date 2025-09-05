@@ -782,6 +782,7 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
       );
     };
 
+    // XXX primitiveOptions.asynchronous = false;
     this._primitive = new Primitive(primitiveOptions);
   }
 
@@ -805,7 +806,9 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
       if (this.releaseGeometryInstances) {
         this.geometryInstances = undefined;
       }
+      return true;
     }
+    return false;
   });
 };
 
