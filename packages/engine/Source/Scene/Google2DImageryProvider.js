@@ -2,7 +2,6 @@ import Credit from "../Core/Credit.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import Google2DImageryStyle from "./Google2DImageryStyle.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
@@ -14,12 +13,16 @@ const defaultCredit = new Credit(
 /**
  * @typedef {object} Google2DImageryProvider.ConstructorOptions
  *
- * Initialization options for the Google2DImageryProvider constructor
+ * Initialization options for the Google2DImageryProvider constructor.
+ * Google requires a session token to use the 2D Tiles api. You can fetch your own session token and provide it to the constructor, or you can
+ * provide mapType, language and region and the imagery provider class will create your session token
  *
- * @property {Resource|string} [url='https://api.mapbox.com/styles/v1/'] The Mapbox server url.
- * @property {string} [username='mapbox'] The username of the map account.
- * @property {string} styleId The Mapbox Style ID.
- * @property {string} accessToken The public access token for the imagery.
+ * @property {Resource|string} [url='https://tile.googleapis.com/v1/2dtiles/'] The Google server url.
+ * @property {string} apiKey the api key
+ * @property {string} sessionToken The Google session token that tracks the current state of your map and viewport.
+ * @property {string} mapType the type of basemap, accepted values are roadmap, satellite, terrain, & imagery
+ * @property {string} language an IETF language tag that specifies the language used to display information on the tiles
+ * @property {string} region A Common Locale Data Repository region identifier (two uppercase letters) that represents the physical location of the user.
  * @property {number} [tilesize=512] The size of the image tiles.
  * @property {boolean} [scaleFactor] Determines if tiles are rendered at a @2x scale factor.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
@@ -40,71 +43,28 @@ const defaultCredit = new Credit(
  * @param {Google2DImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @example
- * // Mapbox style provider
+ * // Google 2D imagery provider
  * const mapbox = new Cesium.Google2DImageryProvider({
- *     styleId: 'streets-v11',
- *     accessToken: 'thisIsMyAccessToken'
+ *     apiKey: 'thisIsMyApiKey',
+ *     sessionToken: 'thisIsSessionToken'
+ * });
+ *
+ * @example
+ * // Google 2D imagery provider
+ * const mapbox = new Cesium.Google2DImageryProvider({
+ *     apiKey: 'thisIsMyApiKey',
+ *     mapType: "SATELLITE",
+ *     language: "en_US",
+ *     region: "US"
  * });
  *
  * @see {@link https://docs.mapbox.com/api/maps/#styles}
  * @see {@link https://docs.mapbox.com/api/#access-tokens-and-token-scopes}
+ * @see {@link https://en.wikipedia.org/wiki/IETF_language_tag|IETF Language Tags}
+ * @see {@link https://cldr.unicode.org/|Common Locale Data Repository region identifiers}
  */
 function Google2DImageryProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  const styleId = options.style ?? Google2DImageryStyle.SATELLITE;
-
-  const accessToken = options.accessToken;
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(accessToken)) {
-    throw new DeveloperError("options.accessToken is required.");
-  }
-  //>>includeEnd('debug');
-
-  const resource = Resource.createIfNeeded(
-    options.url ?? "https://api.mapbox.com/styles/v1/",
-  );
-
-  this._styleId = styleId;
-  this._accessToken = accessToken;
-
-  const tilesize = options.tilesize ?? 512;
-  this._tilesize = tilesize;
-
-  const username = options.username ?? "mapbox";
-  this._username = username;
-
-  const scaleFactor = defined(options.scaleFactor) ? "@2x" : "";
-
-  let templateUrl = resource.getUrlComponent();
-  if (!trailingSlashRegex.test(templateUrl)) {
-    templateUrl += "/";
-  }
-  templateUrl += `${this._username}/${styleId}/tiles/${this._tilesize}/{z}/{x}/{y}${scaleFactor}`;
-  resource.url = templateUrl;
-
-  resource.setQueryParameters({
-    access_token: accessToken,
-  });
-
-  let credit;
-  if (defined(options.credit)) {
-    credit = options.credit;
-    if (typeof credit === "string") {
-      credit = new Credit(credit);
-    }
-  } else {
-    credit = defaultCredit;
-  }
-
-  this._resource = resource;
-  this._imageryProvider = new UrlTemplateImageryProvider({
-    url: resource,
-    credit: credit,
-    ellipsoid: options.ellipsoid,
-    minimumLevel: options.minimumLevel,
-    maximumLevel: options.maximumLevel,
-    rectangle: options.rectangle,
-  });
 }
 
 Object.defineProperties(Google2DImageryProvider.prototype, {
@@ -266,6 +226,72 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
   },
 });
 
+Google2DImageryProvider.fromMapType = async function (options) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.mapType)) {
+    throw new DeveloperError("options.mapType is required.");
+  }
+  //>>includeEnd('debug');
+
+  options = options ?? Frozen.EMPTY_OBJECT;
+
+  const apiKey = options.apiKey;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(apiKey)) {
+    throw new DeveloperError("options.apiKey is required.");
+  }
+  //>>includeEnd('debug');
+
+  if (!defined(options.sessionToken)) {
+    const sessionJson = await createGoogleImagerySession(options);
+    this._sessionToken = sessionJson.session;
+    this._tileWidth = sessionJson.tileWidth;
+    this._tileHeight = sessionJson.tileHeight;
+  }
+
+  const resource = Resource.createIfNeeded(
+    options.url ?? "https://tile.googleapis.com/v1/2dtiles/",
+  );
+
+  let templateUrl = resource.getUrlComponent();
+  if (!trailingSlashRegex.test(templateUrl)) {
+    templateUrl += "/";
+  }
+  //templateUrl += `${this._username}/${styleId}/tiles/${this._tilesize}/{z}/{x}/{y}${scaleFactor}`;
+  //templateUrl += `{z}/{x}/{y}?session=${this._sessionToken}&key=${this.apiKey}`;
+  templateUrl += `{z}/{x}/{y}`;
+
+  resource.url = templateUrl;
+
+  resource.setQueryParameters({
+    session: this._sessionToken,
+    key: apiKey,
+  });
+
+  let credit;
+  if (defined(options.credit)) {
+    credit = options.credit;
+    if (typeof credit === "string") {
+      credit = new Credit(credit);
+    }
+  } else {
+    credit = defaultCredit;
+  }
+
+  const provider = new UrlTemplateImageryProvider({
+    url: resource,
+    credit: credit,
+    // ellipsoid: options.ellipsoid,
+    // minimumLevel: options.minimumLevel,
+    tileWidth: this._tileWidth,
+    tileHeight: this._tileHeight,
+    maximumLevel: 22,
+    //rectangle: options.rectangle,
+  });
+  provider._resource = resource;
+  return provider;
+};
+
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
@@ -321,6 +347,21 @@ Google2DImageryProvider.prototype.pickFeatures = function (
 ) {
   return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
 };
+
+async function createGoogleImagerySession(options) {
+  const { mapType, language, region, apiKey } = options;
+  const response = await Resource.post({
+    url: "https://tile.googleapis.com/v1/createSession",
+    queryParameters: { key: apiKey },
+    data: JSON.stringify({
+      mapType: mapType,
+      language: language,
+      region: region,
+    }),
+  });
+  const responseJson = JSON.parse(response);
+  return responseJson;
+}
 
 // Exposed for tests
 Google2DImageryProvider._defaultCredit = defaultCredit;
