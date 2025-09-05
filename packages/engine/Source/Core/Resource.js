@@ -231,6 +231,8 @@ Resource.supportsImageBitmapOptions = function () {
   })
     .then(function (blob) {
       const imageBitmapOptions = {
+        // 'from-image' is deprecated, new option is 'none'. However, we still need to support older browsers,
+        // and there's no good way to detect support for these options. For now, continue to use 'from-image'. See: https://github.com/CesiumGS/cesium/issues/12846
         imageOrientation: "flipY", // default is "from-image"
         premultiplyAlpha: "none", // default is "default"
         colorSpaceConversion: "none", // default is "default"
@@ -2036,7 +2038,9 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
   );
 
   return createImageBitmap(blob, {
-    imageOrientation: options.flipY ? "flipY" : "from-image",
+    // 'from-image' is deprecated, new option is 'none'. However, we still need to support older browsers,
+    // and there's no good way to detect support for these options. For now, continue to use 'from-image'. See: https://github.com/CesiumGS/cesium/issues/12846
+    imageOrientation: options.flipY ? "flipY" : "none",
     premultiplyAlpha: options.premultiplyAlpha ? "premultiply" : "none",
     colorSpaceConversion: options.skipColorSpaceConversion ? "none" : "default",
   });
