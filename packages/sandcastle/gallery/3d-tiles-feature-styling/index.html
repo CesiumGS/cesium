@@ -1,0 +1,23 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay">
+  <h1>Loading...</h1>
+</div>
+<div id="toolbar">
+  <select class="cesium-button" id="dropdown">
+    <option value="0">Color By Building Material</option>
+    <option value="1">Color By Distance To Selected Location</option>
+    <option value="2">Highlight Residential Buildings</option>
+    <option value="3">Show Office Buildings Only</option>
+    <option value="4">Show Apartment Buildings Only</option>
+  </select>
+  <table class="infoPanel">
+    <tbody>
+      <tr>
+        <td>Click on a building to select as the central location</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

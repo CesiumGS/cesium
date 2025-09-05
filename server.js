@@ -267,6 +267,23 @@ async function generateDevelopmentBuild() {
       specsCache.clear();
     });
 
+    const galleryDirectory = "packages/sandcastle/gallery";
+    const galleryWatcher = chokidar.watch([galleryDirectory], {
+      ignored: (file, stats) =>
+        !!stats?.isFile() && !file.endsWith(".yml") && !file.endsWith(".yaml"),
+      ignoreInitial: true,
+    });
+    if (!production) {
+      const { buildGalleryList } = await import(
+        "./packages/sandcastle/scripts/buildGallery.js"
+      );
+      galleryWatcher.on("all", async (event) => {
+        if (event === "add" || event === "change" || event === "unlink") {
+          await buildGalleryList(galleryDirectory);
+        }
+      });
+    }
+
     // Rebuild jsHintOptions as needed and serve as-is
     app.get(
       "/Apps/Sandcastle/jsHintOptions.js",

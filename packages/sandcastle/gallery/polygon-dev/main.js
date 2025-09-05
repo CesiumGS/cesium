@@ -1,0 +1,224 @@
+import * as Cesium from "cesium";
+
+// Create the viewer.
+const viewer = new Cesium.Viewer("cesiumContainer");
+const scene = viewer.scene;
+
+// Example 1: Draw a red polygon on the globe surface.
+
+// Create the polygon geometry. The positions here are
+// in counter clockwise order.
+let positions = Cesium.Cartesian3.fromDegreesArray([
+  -115.0, 37.0, -115.0, 32.0, -107.0, 33.0, -102.0, 31.0, -102.0, 35.0,
+]);
+// Create a geometry instance using the polygon geometry.
+const redPolygonInstance = new Cesium.GeometryInstance({
+  geometry: Cesium.PolygonGeometry.fromPositions({
+    positions: positions,
+    vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+  }),
+  attributes: {
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED),
+  },
+});
+
+// Example 2: Draw a blue polygon with holes.
+
+// To draw a polygon with holes, create a nested position
+// hierarchy defining the positions of the polygon
+// edges and the positions of the holes.
+const polygonHierarchy = {
+  positions: Cesium.Cartesian3.fromDegreesArray([
+    -99.0, 30.0, -85.0, 30.0, -85.0, 40.0, -99.0, 40.0,
+  ]),
+  holes: [
+    {
+      positions: Cesium.Cartesian3.fromDegreesArray([
+        -97.0, 31.0, -97.0, 39.0, -87.0, 39.0, -87.0, 31.0,
+      ]),
+      holes: [
+        {
+          positions: Cesium.Cartesian3.fromDegreesArray([
+            -95.0, 33.0, -89.0, 33.0, -89.0, 37.0, -95.0, 37.0,
+          ]),
+          holes: [
+            {
+              positions: Cesium.Cartesian3.fromDegreesArray([
+                -93.0, 34.0, -91.0, 34.0, -91.0, 36.0, -93.0, 36.0,
+              ]),
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+// Create a geometry instance using the polygon geometry.
+const bluePolygonInstance = new Cesium.GeometryInstance({
+  geometry: new Cesium.PolygonGeometry({
+    polygonHierarchy: polygonHierarchy,
+    vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+  }),
+  attributes: {
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE),
+  },
+});
+
+// Example 3: Draw a green extruded polygon.
+
+// To extrude, use the extruded height option to specify
+// the height of the polygon geometry.
+positions = Cesium.Cartesian3.fromDegreesArray([
+  -108.0, 42.0, -100.0, 42.0, -104.0, 40.0,
+]);
+const greenPolygonInstance = new Cesium.GeometryInstance({
+  geometry: Cesium.PolygonGeometry.fromPositions({
+    positions: positions,
+    extrudedHeight: 500000.0,
+    vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+  }),
+  attributes: {
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN),
+  },
+});
+
+// Example 4: Draw an orange extruded polygon with
+// per position heights.
+
+positions = Cesium.Cartesian3.fromDegreesArrayHeights([
+  -108.0, 25.0, 100000, -100.0, 25.0, 100000, -100.0, 30.0, 100000, -108.0,
+  30.0, 300000,
+]);
+// Set the perPositionHeight option to true for the polygon
+// to use the heights each position.  In this case, we are
+// also seting extrudedHeight to zero for the polygon
+// to be extruded down to the globe surface.
+const orangePolygonInstance = new Cesium.GeometryInstance({
+  geometry: Cesium.PolygonGeometry.fromPositions({
+    positions: positions,
+    extrudedHeight: 0,
+    vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+    perPositionHeight: true,
+  }),
+  attributes: {
+    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.ORANGE),
+  },
+});
+
+// Example 5: Draw a textured polygon with per-position heights,
+// holes and custom texture coordinates
+
+let hierarchy = {
+  positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+    -130, 40.0, 50000, -130, 36.0, 30000, -125, 37, 35000, -120, 36.0, 30000,
+    -120, 40.0, 50000,
+  ]),
+  holes: [
+    {
+      positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+        -128, 39.2, 46000, -128, 38.6, 42000, -127, 38.6, 42000, -127, 39.2,
+        46000,
+      ]),
+    },
+  ],
+};
+
+let textureCoordinates = {
+  positions: [
+    new Cesium.Cartesian2(0, 1),
+    new Cesium.Cartesian2(0, 0),
+    new Cesium.Cartesian2(0.5, 0),
+    new Cesium.Cartesian2(1, 0),
+    new Cesium.Cartesian2(1, 1),
+  ],
+  holes: [
+    {
+      positions: [
+        new Cesium.Cartesian2(0.2, 0.8),
+        new Cesium.Cartesian2(0.2, 0.6),
+        new Cesium.Cartesian2(0.4, 0.6),
+        new Cesium.Cartesian2(0.4, 0.8),
+      ],
+    },
+  ],
+};
+
+const texturedPolygonWithHolesInstance = new Cesium.GeometryInstance({
+  geometry: new Cesium.PolygonGeometry({
+    polygonHierarchy: hierarchy,
+    perPositionHeight: true,
+    vertexFormat:
+      Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+    textureCoordinates: textureCoordinates,
+  }),
+});
+
+hierarchy = {
+  positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+    -118.4, 40.4, 50000, -118.4, 37, 30000, -114.2, 38.0, 35000, -108.0, 37,
+    30000, -108.0, 40.4, 50000,
+  ]),
+};
+
+textureCoordinates = {
+  positions: [
+    new Cesium.Cartesian2(0, 1),
+    new Cesium.Cartesian2(0, 0),
+    new Cesium.Cartesian2(0.5, 0),
+    new Cesium.Cartesian2(1, 0),
+    new Cesium.Cartesian2(1, 1),
+  ],
+};
+
+// Example 6: Draw a textured extruded polygon with per-position heights,
+// and custom texture coordinates.
+
+const extrudedTexturedPolygonInstance = new Cesium.GeometryInstance({
+  geometry: new Cesium.PolygonGeometry({
+    polygonHierarchy: hierarchy,
+    perPositionHeight: true,
+    extrudedHeight: 0,
+    vertexFormat:
+      Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+    textureCoordinates: textureCoordinates,
+  }),
+});
+
+// Add each polygon instance to primitives.
+scene.primitives.add(
+  new Cesium.Primitive({
+    geometryInstances: [
+      redPolygonInstance,
+      greenPolygonInstance,
+      bluePolygonInstance,
+      orangePolygonInstance,
+    ],
+    appearance: new Cesium.PerInstanceColorAppearance({
+      closed: true,
+      translucent: false,
+    }),
+  }),
+);
+
+// Add each textured polygon instance to primitives.
+scene.primitives.add(
+  new Cesium.Primitive({
+    geometryInstances: [
+      texturedPolygonWithHolesInstance,
+      extrudedTexturedPolygonInstance,
+    ],
+    appearance: new Cesium.EllipsoidSurfaceAppearance({
+      aboveGround: false,
+      material: new Cesium.Material({
+        fabric: {
+          type: "Image",
+          uniforms: {
+            image: "../images/Cesium_Logo_Color.jpg",
+          },
+        },
+      }),
+    }),
+    materialSupport: Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
+    translucent: false,
+  }),
+);
