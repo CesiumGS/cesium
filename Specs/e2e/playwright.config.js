@@ -1,14 +1,16 @@
 import { defineConfig, devices } from "@playwright/test";
 import yargs from "yargs";
 
-const argv = yargs(process.argv).options({
-  "update-snapshots": {
-    alias: "u",
-    description: "Update test snapshots.",
-    type: "boolean",
-    default: false,
-  },
-}).argv;
+const argv = yargs(process.argv)
+  .options({
+    "update-snapshots": {
+      alias: "u",
+      description: "Update test snapshots.",
+      type: "boolean",
+      default: false,
+    },
+  })
+  .parse();
 
 const baseUrl = `http://localhost:3000`;
 const updateSnapshots = argv["update-snapshots"];
@@ -53,10 +55,11 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
+        channel: "chromium",
         viewport: defaultViewport,
         launchOptions: {
           // this forces chrome to use the gpu for webgl which greatly speeds up tests
-          args: ["--use-angle=gl"],
+          args: ["--use-angle=gl", "--enable-features=Vulkan"],
         },
       },
     },
