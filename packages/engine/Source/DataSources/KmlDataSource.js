@@ -48,7 +48,7 @@ import {
   Data64URIWriter,
   TextWriter,
   ZipReader,
-} from "@zip.js/zip.js/lib/zip.js"; // TODO: zip-core.js?
+} from "@zip.js/zip.js/lib/zip-core.js";
 import getElement from "./getElement.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";

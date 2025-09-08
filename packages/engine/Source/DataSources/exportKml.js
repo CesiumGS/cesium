@@ -26,7 +26,7 @@ import {
   BlobWriter,
   TextReader,
   ZipWriter,
-} from "@zip.js/zip.js/lib/zip.js"; // TODO: zip-core.js?
+} from "@zip.js/zip.js/lib/zip-core.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import ModelGraphics from "./ModelGraphics.js";

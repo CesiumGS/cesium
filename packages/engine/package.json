@@ -35,7 +35,7 @@
     "@cesium/wasm-splats": "^0.1.0-alpha.2",
     "@spz-loader/core": "0.3.0",
     "@tweenjs/tween.js": "^25.0.0",
-    "@zip.js/zip.js": "^2.8.0",
+    "@zip.js/zip.js": "^2.8.1",
     "autolinker": "^4.0.0",
     "bitmap-sdf": "^1.0.3",
     "dompurify": "^3.0.2",
