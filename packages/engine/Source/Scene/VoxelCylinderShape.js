@@ -48,8 +48,7 @@ function VoxelCylinderShape() {
     cylinderUvToShapeUvRadius: new Cartesian2(),
     cylinderUvToShapeUvAngle: new Cartesian2(),
     cylinderUvToShapeUvHeight: new Cartesian2(),
-    cylinderShapeUvAngleMinMax: new Cartesian2(),
-    cylinderShapeUvAngleRangeZeroMid: 0.0,
+    cylinderShapeUvAngleRangeOrigin: 0.0,
   };
 
   this._shaderDefines = {
@@ -59,14 +58,6 @@ function VoxelCylinderShape() {
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF: undefined,
-
-    CYLINDER_HAS_SHAPE_BOUNDS_RADIUS: undefined,
-    CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT: undefined,
-    CYLINDER_HAS_SHAPE_BOUNDS_ANGLE: undefined,
-    CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY: undefined,
-    CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY: undefined,
-    CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED: undefined,
-
     CYLINDER_INTERSECTION_INDEX_RADIUS_MAX: undefined,
     CYLINDER_INTERSECTION_INDEX_RADIUS_MIN: undefined,
     CYLINDER_INTERSECTION_INDEX_ANGLE: undefined,
@@ -206,11 +197,10 @@ VoxelCylinderShape.prototype.update = function (
   maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
 
   const { DefaultMinBounds, DefaultMaxBounds } = VoxelCylinderShape;
-  const defaultAngleRange = DefaultMaxBounds.y - DefaultMinBounds.y;
-  const defaultAngleRangeHalf = 0.5 * defaultAngleRange;
+  const defaultAngleRange = DefaultMaxBounds.y - DefaultMinBounds.y; // == 2 * PI
+  const defaultAngleRangeHalf = 0.5 * defaultAngleRange; // == PI
 
   const epsilonZeroScale = CesiumMath.EPSILON10;
-  const epsilonAngleDiscontinuity = CesiumMath.EPSILON3; // 0.001 radians = 0.05729578 degrees
   const epsilonAngle = CesiumMath.EPSILON10;
 
   // Clamp the bounds to the valid range
@@ -273,35 +263,9 @@ VoxelCylinderShape.prototype.update = function (
     this._boundingSphere,
   );
 
-  const shapeIsDefaultRadius =
-    minBounds.x === DefaultMinBounds.x && maxBounds.x === DefaultMaxBounds.x;
   const shapeIsAngleReversed = maxBounds.y < minBounds.y;
   const shapeAngleRange =
     maxBounds.y - minBounds.y + shapeIsAngleReversed * defaultAngleRange;
-  const shapeIsAngleRegular =
-    shapeAngleRange > defaultAngleRangeHalf + epsilonAngle &&
-    shapeAngleRange < defaultAngleRange - epsilonAngle;
-  const shapeIsAngleFlipped =
-    shapeAngleRange < defaultAngleRangeHalf - epsilonAngle;
-  const shapeIsAngleRangeHalf =
-    shapeAngleRange >= defaultAngleRangeHalf - epsilonAngle &&
-    shapeAngleRange <= defaultAngleRangeHalf + epsilonAngle;
-  const shapeHasAngle =
-    shapeIsAngleRegular || shapeIsAngleFlipped || shapeIsAngleRangeHalf;
-  const shapeIsMinAngleDiscontinuity = CesiumMath.equalsEpsilon(
-    minBounds.y,
-    DefaultMinBounds.y,
-    undefined,
-    epsilonAngleDiscontinuity,
-  );
-  const shapeIsMaxAngleDiscontinuity = CesiumMath.equalsEpsilon(
-    maxBounds.y,
-    DefaultMaxBounds.y,
-    undefined,
-    epsilonAngleDiscontinuity,
-  );
-  const shapeIsDefaultHeight =
-    minBounds.z === DefaultMinBounds.z && maxBounds.z === DefaultMaxBounds.z;
 
   const renderIsDefaultMinRadius = renderMinBounds.x === DefaultMinBounds.x;
   const renderIsAngleReversed = renderMaxBounds.y < renderMinBounds.y;
@@ -349,65 +313,42 @@ VoxelCylinderShape.prototype.update = function (
   if (renderMinBounds.x === renderMaxBounds.x) {
     shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT"] = true;
   }
-  if (!shapeIsDefaultRadius) {
-    shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_RADIUS"] = true;
 
-    // delerp(radius, minRadius, maxRadius)
-    // (radius - minRadius) / (maxRadius - minRadius)
-    // radius / (maxRadius - minRadius) - minRadius / (maxRadius - minRadius)
-    // scale = 1.0 / (maxRadius - minRadius)
-    // offset = -minRadius / (maxRadius - minRadius)
-    // offset = minRadius / (minRadius - maxRadius)
-    const radiusRange = maxBounds.x - minBounds.x;
-    let scale = 0.0;
-    let offset = 1.0;
-    if (radiusRange !== 0.0) {
-      scale = 1.0 / radiusRange;
-      offset = -minBounds.x / radiusRange;
-    }
-    shaderUniforms.cylinderUvToShapeUvRadius = Cartesian2.fromElements(
-      scale,
-      offset,
-      shaderUniforms.cylinderUvToShapeUvRadius,
-    );
+  const radiusRange = maxBounds.x - minBounds.x;
+  let radialScale = 0.0;
+  let radialOffset = 1.0;
+  if (radiusRange !== 0.0) {
+    radialScale = 1.0 / radiusRange;
+    radialOffset = -minBounds.x / radiusRange;
   }
+  shaderUniforms.cylinderUvToShapeUvRadius = Cartesian2.fromElements(
+    radialScale,
+    radialOffset,
+    shaderUniforms.cylinderUvToShapeUvRadius,
+  );
 
-  if (!shapeIsDefaultHeight) {
-    shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT"] = true;
-
-    // delerp(heightUv, minHeightUv, maxHeightUv)
-    // (heightUv - minHeightUv) / (maxHeightUv - minHeightUv)
-    // heightUv / (maxHeightUv - minHeightUv) - minHeightUv / (maxHeightUv - minHeightUv)
-    // scale = 1.0 / (maxHeightUv - minHeightUv)
-    // scale = 1.0 / ((maxHeight * 0.5 + 0.5) - (minHeight * 0.5 + 0.5))
-    // scale = 2.0 / (maxHeight - minHeight)
+  const heightRange = maxBounds.z - minBounds.z; // Default 2.0
+  let heightScale = 0.0;
+  let heightOffset = 1.0;
+  if (heightRange !== 0.0) {
+    heightScale = 2.0 / heightRange;
+    // TODO: drop all this UV stuff. We are now using physical bounds in meters.
     // offset = -minHeightUv / (maxHeightUv - minHeightUv)
-    // offset = -minHeightUv / ((maxHeight * 0.5 + 0.5) - (minHeight * 0.5 + 0.5))
-    // offset = -2.0 * (minHeight * 0.5 + 0.5) / (maxHeight - minHeight)
+    // offset = -(minHeight * 0.5 + 0.5) / ((maxHeight * 0.5 + 0.5) - (minHeight * 0.5 + 0.5))
     // offset = -(minHeight + 1.0) / (maxHeight - minHeight)
-    // offset = (minHeight + 1.0) / (minHeight - maxHeight)
-    const heightRange = maxBounds.z - minBounds.z;
-    let scale = 0.0;
-    let offset = 1.0;
-    if (heightRange !== 0.0) {
-      scale = 2.0 / heightRange;
-      offset = -(minBounds.z + 1.0) / heightRange;
-    }
-    shaderUniforms.cylinderUvToShapeUvHeight = Cartesian2.fromElements(
-      scale,
-      offset,
-      shaderUniforms.cylinderUvToShapeUvHeight,
-    );
+    heightOffset = -(minBounds.z + 1.0) / heightRange;
   }
+  shaderUniforms.cylinderUvToShapeUvHeight = Cartesian2.fromElements(
+    heightScale,
+    heightOffset,
+    shaderUniforms.cylinderUvToShapeUvHeight,
+  );
+
   shaderUniforms.cylinderRenderHeightMinMax = Cartesian2.fromElements(
     renderMinBounds.z,
     renderMaxBounds.z,
     shaderUniforms.cylinderRenderHeightMinMax,
   );
-
-  if (shapeIsAngleReversed) {
-    shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED"] = true;
-  }
 
   if (renderHasAngle) {
     shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE"] = true;
@@ -431,51 +372,29 @@ VoxelCylinderShape.prototype.update = function (
     );
   }
 
-  if (shapeHasAngle) {
-    shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_ANGLE"] = true;
-    if (shapeIsMinAngleDiscontinuity) {
-      shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY"] = true;
-    }
-    if (shapeIsMaxAngleDiscontinuity) {
-      shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY"] = true;
-    }
+  const uvMinAngle = (minBounds.y - DefaultMinBounds.y) / defaultAngleRange;
+  const uvMaxAngle = (maxBounds.y - DefaultMinBounds.y) / defaultAngleRange;
+  const uvAngleRangeZero = 1.0 - shapeAngleRange / defaultAngleRange;
 
-    const uvMinAngle = (minBounds.y - DefaultMinBounds.y) / defaultAngleRange;
-    const uvMaxAngle = (maxBounds.y - DefaultMinBounds.y) / defaultAngleRange;
-    const uvAngleRangeZero = 1.0 - shapeAngleRange / defaultAngleRange;
+  // Translate the origin of UV angles (in [0,1]) to the center of the unoccupied space
+  const uvAngleRangeOrigin = (uvMaxAngle + 0.5 * uvAngleRangeZero) % 1.0;
+  shaderUniforms.cylinderShapeUvAngleRangeOrigin = uvAngleRangeOrigin;
 
-    shaderUniforms.cylinderShapeUvAngleMinMax = Cartesian2.fromElements(
-      uvMinAngle,
-      uvMaxAngle,
-      shaderUniforms.cylinderShapeUvAngleMinMax,
+  if (shapeAngleRange <= epsilonAngle) {
+    shaderUniforms.cylinderUvToShapeUvAngle = Cartesian2.fromElements(
+      0.0,
+      1.0,
+      shaderUniforms.cylinderUvToShapeUvAngle,
     );
-    shaderUniforms.cylinderShapeUvAngleRangeZeroMid =
-      (uvMaxAngle + 0.5 * uvAngleRangeZero) % 1.0;
-
-    // delerp(angleUv, uvMinAngle, uvMaxAngle)
-    // (angelUv - uvMinAngle) / (uvMaxAngle - uvMinAngle)
-    // angleUv / (uvMaxAngle - uvMinAngle) - uvMinAngle / (uvMaxAngle - uvMinAngle)
-    // scale = 1.0 / (uvMaxAngle - uvMinAngle)
-    // scale = 1.0 / (((maxAngle - pi) / (2.0 * pi)) - ((minAngle - pi) / (2.0 * pi)))
-    // scale = 2.0 * pi / (maxAngle - minAngle)
-    // offset = -uvMinAngle / (uvMaxAngle - uvMinAngle)
-    // offset = -((minAngle - pi) / (2.0 * pi)) / (((maxAngle - pi) / (2.0 * pi)) - ((minAngle - pi) / (2.0 * pi)))
-    // offset = -(minAngle - pi) / (maxAngle - minAngle)
-    if (shapeAngleRange <= epsilonAngle) {
-      shaderUniforms.cylinderUvToShapeUvAngle = Cartesian2.fromElements(
-        0.0,
-        1.0,
-        shaderUniforms.cylinderUvToShapeUvAngle,
-      );
-    } else {
-      const scale = defaultAngleRange / shapeAngleRange;
-      const offset = -(minBounds.y - DefaultMinBounds.y) / shapeAngleRange;
-      shaderUniforms.cylinderUvToShapeUvAngle = Cartesian2.fromElements(
-        scale,
-        offset,
-        shaderUniforms.cylinderUvToShapeUvAngle,
-      );
-    }
+  } else {
+    const scale = defaultAngleRange / shapeAngleRange;
+    const shiftedMinAngle = uvMinAngle - uvAngleRangeOrigin;
+    const offset = -scale * (shiftedMinAngle - Math.floor(shiftedMinAngle));
+    shaderUniforms.cylinderUvToShapeUvAngle = Cartesian2.fromElements(
+      scale,
+      offset,
+      shaderUniforms.cylinderUvToShapeUvAngle,
+    );
   }
 
   this._shaderMaximumIntersectionsLength = intersectionCount;
@@ -507,11 +426,27 @@ VoxelCylinderShape.prototype.convertUvToShapeUvSpace = function (
     result,
   );
 
-  const radius = Math.hypot(positionLocal.x, positionLocal.y);
-  const angle = Math.atan2(positionLocal.y, positionLocal.x);
-  const height = positionLocal.z;
+  let radius = Math.hypot(positionLocal.x, positionLocal.y);
+  let angle = Math.atan2(positionLocal.y, positionLocal.x);
+  let height = positionLocal.z;
 
-  // TODO: Assume we always have shape bounds? Then simplify convertShapeToShapeUvSpace and implement here.
+  const {
+    cylinderUvToShapeUvRadius,
+    cylinderUvToShapeUvAngle,
+    cylinderShapeUvAngleRangeOrigin,
+    cylinderUvToShapeUvHeight,
+  } = this._shaderUniforms;
+
+  radius = radius * cylinderUvToShapeUvRadius.x + cylinderUvToShapeUvRadius.y;
+
+  // Convert angle to a "UV" in [0,1] with 0 defined at the center of the unoccupied space.
+  angle = (angle + Math.PI) / (2.0 * Math.PI);
+  angle -= cylinderShapeUvAngleRangeOrigin;
+  angle = angle - Math.floor(angle);
+  // Scale and shift so [0,1] covers the occupied space.
+  angle = angle * cylinderUvToShapeUvAngle.x + cylinderUvToShapeUvAngle.y;
+
+  height = height * cylinderUvToShapeUvHeight.x + cylinderUvToShapeUvHeight.y;
 
   return Cartesian3.fromElements(radius, angle, height, result);
 };
