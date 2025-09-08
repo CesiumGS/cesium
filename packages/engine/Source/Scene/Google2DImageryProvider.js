@@ -239,7 +239,21 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
 /**
  * Creates an {@link ImageryProvider} which provides 2D global tiled imagery from Google.
  * @param {Google2DImageryMapType} mapType The map type of the Google map imagery. Valid options are {@link ArcGisBaseMapType.SATELLITE}, {@link ArcGisBaseMapType.OCEANS}, and {@link ArcGisBaseMapType.HILLSHADE}.
- * @param {Google2DImageryProvider.ConstructorOptions} [options] Object describing initialization options.
+ * @param {object} options Object with the following properties:
+ * @property {string} apiKey the Google api key
+ * @property {string} sessionToken The Google session token that tracks the current state of your map and viewport.
+ * @property {number} [tilesize=512] The size of the image tiles.
+ * @property {boolean} [scaleFactor] Determines if tiles are rendered at a @2x scale factor.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+ *                 to result in rendering problems.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+
+
+* @param {Google2DImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<Google2DImageryProvider>} A promise that resolves to the created Google2DImageryProvider.
  *
  * @example
@@ -303,7 +317,9 @@ Google2DImageryProvider.fromMapType = async function (options) {
  * Creates an {@link ImageryProvider} which provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
  *
- * @param {Resource|String} url The URL of the ArcGIS MapServer service.
+ * @param {object} options Object with the following properties:
+ * @property {string} mapType the type of basemap, accepted values are roadmap, satellite, terrain, & imagery
+ * @property {string} [language='en_US'] an IETF language tag that specifies the language used to display information on the tiles
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<ArcGisMapServerImageryProvider>} A promise that resolves to the created ArcGisMapServerImageryProvider.
  *
