@@ -18,11 +18,12 @@ const defaultCredit = new Credit(
  * provide mapType, language and region and the imagery provider class will create your session token
  *
  * @property {Resource|string} [url='https://tile.googleapis.com/v1/2dtiles/'] The Google server url.
- * @property {string} apiKey the api key
+ * @property {string} apiKey the Google api key
  * @property {string} sessionToken The Google session token that tracks the current state of your map and viewport.
  * @property {string} mapType the type of basemap, accepted values are roadmap, satellite, terrain, & imagery
- * @property {string} language an IETF language tag that specifies the language used to display information on the tiles
- * @property {string} region A Common Locale Data Repository region identifier (two uppercase letters) that represents the physical location of the user.
+ * @property {string} [language='en_US'] an IETF language tag that specifies the language used to display information on the tiles
+ * @property {string} [region='US'] A Common Locale Data Repository region identifier (two uppercase letters) that represents the physical location of the user.
+ * @property {string} [imageFormat] The file format to return. Valid values are either jpeg or png. If you don't specify an imageFormat, then the best format for the tile is chosen automatically by the Google tile service.
  * @property {number} [tilesize=512] The size of the image tiles.
  * @property {boolean} [scaleFactor] Determines if tiles are rendered at a @2x scale factor.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
@@ -35,7 +36,12 @@ const defaultCredit = new Credit(
  */
 
 /**
- * Provides tiled imagery hosted by Mapbox.
+ * <div class="notice">
+ * This object is normally not instantiated directly, use {@link Google2DImageryProvider.fromMapType} or {@link Google2DImageryProvider.fromSessionToken}.
+ * </div>
+ *
+ *
+ * Provides 2D image tiles from Google.
  *
  * @alias Google2DImageryProvider
  * @constructor
@@ -44,27 +50,31 @@ const defaultCredit = new Credit(
  *
  * @example
  * // Google 2D imagery provider
- * const mapbox = new Cesium.Google2DImageryProvider({
+ * const googleTilesProvider = Cesium.Google2DImageryProvider.fromSessionToken({
  *     apiKey: 'thisIsMyApiKey',
  *     sessionToken: 'thisIsSessionToken'
  * });
  *
  * @example
  * // Google 2D imagery provider
- * const mapbox = new Cesium.Google2DImageryProvider({
+ * const googleTilesProvider = Cesium.Google2DImageryProvider.fromMapType({
  *     apiKey: 'thisIsMyApiKey',
  *     mapType: "SATELLITE",
  *     language: "en_US",
  *     region: "US"
  * });
  *
- * @see {@link https://docs.mapbox.com/api/maps/#styles}
- * @see {@link https://docs.mapbox.com/api/#access-tokens-and-token-scopes}
+ * @see {@link https://developers.google.com/maps/documentation/tile/2d-tiles-overview}
+ * @see {@link https://developers.google.com/maps/documentation/tile/session_tokens}
  * @see {@link https://en.wikipedia.org/wiki/IETF_language_tag|IETF Language Tags}
  * @see {@link https://cldr.unicode.org/|Common Locale Data Repository region identifiers}
  */
 function Google2DImageryProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
+  this._sessionToken = options.sessionToken;
+  this._tileWidth = options.tileWidth;
+  this._tileHeight = options.tileHeight;
+  this._imageFormat = options.imageFormat;
 }
 
 Object.defineProperties(Google2DImageryProvider.prototype, {
@@ -226,6 +236,33 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
   },
 });
 
+/**
+ * Creates an {@link ImageryProvider} which provides 2D global tiled imagery from Google.
+ * @param {Google2DImageryMapType} mapType The map type of the Google map imagery. Valid options are {@link ArcGisBaseMapType.SATELLITE}, {@link ArcGisBaseMapType.OCEANS}, and {@link ArcGisBaseMapType.HILLSHADE}.
+ * @param {Google2DImageryProvider.ConstructorOptions} [options] Object describing initialization options.
+ * @returns {Promise<Google2DImageryProvider>} A promise that resolves to the created Google2DImageryProvider.
+ *
+ * @example
+ * // Set the default access token for accessing ArcGIS Image Tile service
+ * Cesium.ArcGisMapService.defaultAccessToken = "<ArcGIS Access Token>";
+ *
+ * // Add a base layer from a default ArcGIS basemap
+ * const provider = await Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
+ *   Cesium.ArcGisBaseMapType.SATELLITE);
+ *
+ * @example
+ * // Add a base layer from a default ArcGIS Basemap
+ * const viewer = new Cesium.Viewer("cesiumContainer", {
+ *   baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+ *     Cesium.Google2DImageryProvider.fromMapType(
+ *       Cesium.Google2DMapType.HILLSHADE, {
+ *         token: "<Google 2D tiles Access Token>"
+ *       }
+ *     )
+ *   ),
+ * });
+ */
+
 Google2DImageryProvider.fromMapType = async function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.mapType)) {
@@ -242,12 +279,74 @@ Google2DImageryProvider.fromMapType = async function (options) {
   }
   //>>includeEnd('debug');
 
-  if (!defined(options.sessionToken)) {
-    const sessionJson = await createGoogleImagerySession(options);
-    this._sessionToken = sessionJson.session;
-    this._tileWidth = sessionJson.tileWidth;
-    this._tileHeight = sessionJson.tileHeight;
+  //>>includeStart('debug', pragmas.debug);
+  if (defined(options.sessionToken)) {
+    throw new DeveloperError(
+      "use Google2DImageryProvider.fromSessionToken if you have a valid session token",
+    );
   }
+  //>>includeEnd('debug');
+
+  const sessionJson = await createGoogleImagerySession(options);
+
+  return Google2DImageryProvider.fromSessionToken({
+    sessionToken: sessionJson.session,
+    apiKey: options.apiKey,
+    tileWidth: sessionJson.tileWidth,
+    tileHeight: sessionJson.tileHeight,
+    imageFormat: sessionJson.imageFormat,
+    ...options,
+  });
+};
+
+/**
+ * Creates an {@link ImageryProvider} which provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
+ * used, if available.
+ *
+ * @param {Resource|String} url The URL of the ArcGIS MapServer service.
+ * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options.
+ * @returns {Promise<ArcGisMapServerImageryProvider>} A promise that resolves to the created ArcGisMapServerImageryProvider.
+ *
+ * @example
+ * const esri = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+ *     "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"
+ * );
+ *
+ * @exception {RuntimeError} metadata spatial reference specifies an unknown WKID
+ * @exception {RuntimeError} metadata fullExtent.spatialReference specifies an unknown WKID
+ */
+
+Google2DImageryProvider.fromSessionToken = function (options) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.sessionToken)) {
+    throw new DeveloperError("options.sessionToken is required.");
+  }
+  //>>includeEnd('debug');
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.tileWidth)) {
+    throw new DeveloperError("options.tileWidth is required.");
+  }
+  //>>includeEnd('debug');
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.tileHeight)) {
+    throw new DeveloperError("options.tileHeight is required.");
+  }
+  //>>includeEnd('debug');
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.imageFormat)) {
+    throw new DeveloperError("options.imageFormat is required.");
+  }
+  //>>includeEnd('debug');
+
+  const apiKey = options.apiKey;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(apiKey)) {
+    throw new DeveloperError("options.apiKey is required.");
+  }
+  //>>includeEnd('debug');
 
   const resource = Resource.createIfNeeded(
     options.url ?? "https://tile.googleapis.com/v1/2dtiles/",
@@ -257,14 +356,12 @@ Google2DImageryProvider.fromMapType = async function (options) {
   if (!trailingSlashRegex.test(templateUrl)) {
     templateUrl += "/";
   }
-  //templateUrl += `${this._username}/${styleId}/tiles/${this._tilesize}/{z}/{x}/{y}${scaleFactor}`;
-  //templateUrl += `{z}/{x}/{y}?session=${this._sessionToken}&key=${this.apiKey}`;
   templateUrl += `{z}/{x}/{y}`;
 
   resource.url = templateUrl;
 
   resource.setQueryParameters({
-    session: this._sessionToken,
+    session: options.sessionToken,
     key: apiKey,
   });
 
@@ -281,15 +378,17 @@ Google2DImageryProvider.fromMapType = async function (options) {
   const provider = new UrlTemplateImageryProvider({
     url: resource,
     credit: credit,
-    // ellipsoid: options.ellipsoid,
-    // minimumLevel: options.minimumLevel,
     tileWidth: this._tileWidth,
     tileHeight: this._tileHeight,
     maximumLevel: 22,
-    //rectangle: options.rectangle,
+    ellipsoid: options.ellipsoid,
+    rectangle: options.rectangle,
   });
   provider._resource = resource;
-  return provider;
+
+  const imageryProvider = new Google2DImageryProvider(options);
+  imageryProvider._imageryProvider = provider;
+  return imageryProvider;
 };
 
 /**
@@ -354,9 +453,9 @@ async function createGoogleImagerySession(options) {
     url: "https://tile.googleapis.com/v1/createSession",
     queryParameters: { key: apiKey },
     data: JSON.stringify({
-      mapType: mapType,
-      language: language,
-      region: region,
+      mapType,
+      language,
+      region,
     }),
   });
   const responseJson = JSON.parse(response);
