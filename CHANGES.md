@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.133.1 - 2025-09-08
+
+This is an npm-only release to fix a dependency issue published in 1.133.0
+
 ## 1.133 - 2025-09-02
 
 - Give the [new version of Sandcastle](https://dev-sandcastle.cesium.com/) a try today!
