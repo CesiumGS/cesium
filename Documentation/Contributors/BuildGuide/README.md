@@ -39,6 +39,7 @@
   - Double-check your settings for name and email: `git config --get-regexp user.*`.
   - Recommended Git settings:
     - `git config --global fetch.prune true` - when fetching remote changes, remove any remote branches that no longer exist on the remote.
+    - `git config blame.ignoreRevsFile .git-blame-ignore-revs` - uses the ignore file to skip certain noisy revisions (like formatting) when running git blame. Alternatively, for VSCode users, install the GitLens extension, which will automatically use the ignore file.
 - Have [commit access](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/CommittersGuide/README.md) to CesiumJS?
   - No
     - Fork [cesium](https://github.com/CesiumGS/cesium).
