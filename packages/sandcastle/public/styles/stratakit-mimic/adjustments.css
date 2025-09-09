@@ -44,6 +44,16 @@
   input[type="radio"] {
     margin: revert-layer;
   }
+
+  .cesium-viewer {
+    /* Cesium defines it's own styles for all elements in the viewer and those
+     * styles don't expect a reset. Remove from everything in that section of the page */
+    *,
+    :before,
+    :after {
+      all: revert-layer;
+    }
+  }
 }
 
 /*
@@ -51,7 +61,7 @@
  * The values for these styles were extracted from the matching stratakit components
  */
 
-select:not(.stratakit-mimic-button) {
+select:not(.stratakit-mimic-button):not(.cesium-viewer select) {
   background: var(--stratakit-color-bg-neutral-base);
   padding: var(--stratakit-space-x1);
   border-radius: var(--stratakit-ext-radius-sm);
@@ -75,7 +85,7 @@ select:not(.stratakit-mimic-button) {
   }
 }
 
-button:not(.stratakit-mimic-button) {
+button:not(.stratakit-mimic-button):not(.cesium-viewer button) {
   /* Missing shadows and pressed, active and disabled states but "good enough" for now */
   background: var(--stratakit-color-bg-neutral-base);
   padding: var(--stratakit-space-x1) var(--stratakit-space-x3);
@@ -101,8 +111,8 @@ button:not(.stratakit-mimic-button) {
   }
 }
 
-input[type="text"],
-input[type="number"] {
+input[type="text"]:not(.cesium-viewer input),
+input[type="number"]:not(.cesium-viewer input) {
   background: var(--stratakit-color-bg-page-base);
   border-radius: var(--stratakit-ext-radius-sm);
   border: var(--stratakit-ext-border-border) solid;
