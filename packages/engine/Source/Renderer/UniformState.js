@@ -26,6 +26,14 @@ function UniformState() {
    */
   this.globeDepthTexture = undefined;
   /**
+   * @type {Texture}
+   */
+  this.edgeIdTexture = undefined;
+  /**
+   * @type {Texture}
+   */
+  this.edgeColorTexture = undefined;
+  /**
    * @type {number}
    */
   this.gamma = undefined;

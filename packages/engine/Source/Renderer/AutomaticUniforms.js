@@ -162,6 +162,47 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform representing a texture containing edge IDs
+   * from the 3D Tiles edge rendering pass. Used for edge detection and
+   * avoiding z-fighting between edges and surfaces.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform sampler2D czm_edgeIdTexture;
+   *
+   * // Get the edge ID at the current fragment
+   * vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
+   * vec4 edgeId = texture(czm_edgeIdTexture, coords);
+   */
+  czm_edgeIdTexture: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.SAMPLER_2D,
+    getValue: function (uniformState) {
+      return uniformState.edgeIdTexture;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing the edge color texture.
+   * This texture contains the edge content rendered during the CESIUM_3D_TILE_EDGES pass.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform sampler2D czm_edgeColorTexture;
+   *
+   * // Sample the edge color at the current fragment
+   * vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
+   * vec4 edgeColor = texture(czm_edgeColorTexture, coords);
+   */
+  czm_edgeColorTexture: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.SAMPLER_2D,
+    getValue: function (uniformState) {
+      return uniformState.edgeColorTexture;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform representing a 4x4 model transformation matrix that
    * transforms model coordinates to world coordinates.
    *
