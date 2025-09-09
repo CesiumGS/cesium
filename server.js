@@ -35,7 +35,8 @@ const argv = yargs(process.argv)
       description: "If true, skip build step and serve existing built files.",
     },
   })
-  .help().argv;
+  .help()
+  .parse();
 
 const outputDirectory = path.join("Build", "CesiumDev");
 
