@@ -143,7 +143,7 @@ function GaussianSplatPrimitive(options) {
    * @type {boolean}
    * @private
    */
-  this._needsGaussianSplatTexture = true;
+  this._needsGaussianSplatTextureUpdate = true;
 
   /**
    * The previous view matrix used to determine if the primitive needs to be updated.
@@ -237,13 +237,6 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._ready = false;
-
-  /**
-   * Indicates whether or not the primitive has a Gaussian splat texture.
-   * @type {boolean}
-   * @private
-   */
-  this._hasGaussianSplatTexture = false;
 
   /**
    * Indicates whether or not the primitive is currently generating a Gaussian splat texture.
@@ -430,9 +423,12 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const gltfPrimitive = tile.content.gltfPrimitive;
   const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
 
-  gaussianSplatPrimitive._rootTransform = Transforms.eastNorthUpToFixedFrame(
-    tile.tileset.boundingSphere.center,
-  );
+  if (gaussianSplatPrimitive._rootTransform === undefined) {
+    gaussianSplatPrimitive._rootTransform = Transforms.eastNorthUpToFixedFrame(
+      tile.tileset.boundingSphere.center,
+    );
+  }
+
   const rootTransform = gaussianSplatPrimitive._rootTransform;
 
   const computedModelMatrix = Matrix4.multiplyTransformation(
@@ -578,8 +574,7 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
       primitive._lastTextureHeight = splatTextureData.height;
       primitive._lastTextureWidth = splatTextureData.width;
 
-      primitive._hasGaussianSplatTexture = true;
-      primitive._needsGaussianSplatTexture = false;
+      primitive._needsGaussianSplatTextureUpdate = false;
       primitive._gaussianSplatTexturePending = false;
 
       if (
@@ -663,7 +658,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   uniformMap.u_splatAttributeTexture = function () {
     return primitive.gaussianSplatTexture;
   };
-  primitive._sphericalHarmonicsDegree = 0;
+
   if (primitive._sphericalHarmonicsDegree > 0) {
     shaderBuilder.addDefine(
       "HAS_SPHERICAL_HARMONICS",
@@ -810,10 +805,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
-  if (!defined(this._rootTransform)) {
-    this._rootTransform = tileset.root.computedTransform;
-  }
-
   if (!tileset.show || tileset._selectedTiles.length === 0) {
     return;
   }
@@ -870,7 +861,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._colors = undefined;
       this._indexes = undefined;
       this._shData = undefined;
-      this._needsGaussianSplatTexture = true;
+      this._needsGaussianSplatTextureUpdate = true;
       this._gaussianSplatTexturePending = false;
 
       const tiles = tileset._selectedTiles;
@@ -973,7 +964,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       return;
     }
 
-    if (this._needsGaussianSplatTexture) {
+    if (this._needsGaussianSplatTextureUpdate) {
       if (!this._gaussianSplatTexturePending) {
         GaussianSplatPrimitive.generateSplatTexture(this, frameState);
         if (defined(this._shData)) {
