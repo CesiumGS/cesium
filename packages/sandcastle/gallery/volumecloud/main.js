@@ -281,14 +281,14 @@ const vertexShader = /* glsl */ `
       void main()
       {
           vec4 p = translateRelativeToEye(position3DHigh, position3DLow);
-          
+
           vOrigin = czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow;
 
           vec3 modelPosition = position3DHigh + position3DLow;
           vPosition = modelPosition;
 
           vDirection = modelPosition - vOrigin;
- 
+
           gl_Position = czm_modelViewProjectionRelativeToEye * p;
       }`;
 
@@ -525,7 +525,6 @@ function createSlider(
   slider.style.cssText = `
           width: 100px;
           cursor: pointer;
-          accent-color: #4CAF50;
         `;
   slider.addEventListener("input", (e) => callback(e.target.value));
 
