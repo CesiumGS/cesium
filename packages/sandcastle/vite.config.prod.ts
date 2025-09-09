@@ -1,8 +1,11 @@
 import { defineConfig, UserConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import { env } from "process";
-
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import baseConfig, { cesiumPathReplace } from "./vite.config.ts";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(() => {
   const cesiumSource = "../../Build/CesiumUnminified";
@@ -17,7 +20,7 @@ export default defineConfig(() => {
 
   config.build = {
     ...config.build,
-    outDir: "../../Build/Sandcastle2",
+    outDir: join(__dirname, "../../Build/Sandcastle2"),
   };
 
   config.define = {
