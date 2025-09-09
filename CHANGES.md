@@ -14,6 +14,10 @@
 
 - Adds an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
 
+## 1.133.1 - 2025-09-08
+
+This is an npm-only release to fix a dependency issue published in 1.133.0
+
 ## 1.133 - 2025-09-02
 
 - Give the [new version of Sandcastle](https://dev-sandcastle.cesium.com/) a try today!
