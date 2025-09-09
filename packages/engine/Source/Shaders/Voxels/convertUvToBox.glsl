@@ -20,10 +20,6 @@ PointJacobianT convertUvToShapeUvSpaceDerivative(in vec3 positionUv) {
     return pointJacobian;
 }
 
-vec3 convertShapeUvToUvSpace(in vec3 shapeUv) {
-    return (shapeUv - u_boxUvToShapeUvTranslate) / u_boxUvToShapeUvScale;
-}
-
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
     return shapeUv / u_boxUvToShapeUvScale;
 }

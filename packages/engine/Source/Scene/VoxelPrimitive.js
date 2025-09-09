@@ -457,7 +457,6 @@ function VoxelPrimitive(options) {
     paddingAfter: new Cartesian3(),
     transformPositionViewToUv: new Matrix4(),
     transformDirectionViewToTile: new Matrix3(),
-    transformPositionUvToView: new Matrix4(), // TODO: remove
     transformDirectionViewToLocal: new Matrix3(),
     cameraPositionUv: new Cartesian3(),
     cameraDirectionUv: new Cartesian3(),
@@ -1316,12 +1315,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
     ),
     2 ** (this._availableLevels - 1),
     uniforms.transformDirectionViewToTile,
-  );
-  const transformPositionWorldToView = context.uniformState.view;
-  uniforms.transformPositionUvToView = Matrix4.multiplyTransformation(
-    transformPositionWorldToView,
-    this._transformPositionUvToWorld,
-    uniforms.transformPositionUvToView,
   );
 
   const transformPositionLocalToWorld = this._shape.shapeTransform;
