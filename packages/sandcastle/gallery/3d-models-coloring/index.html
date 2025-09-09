@@ -1,0 +1,95 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td><b>Model Color</b></td>
+      </tr>
+      <tr>
+        <td>Mode</td>
+        <td>
+          <select
+            data-bind="options: colorBlendModes, value: colorBlendMode"
+          ></select>
+        </td>
+      </tr>
+      <tr>
+        <td>Color</td>
+        <td><select data-bind="options: colors, value: color"></select></td>
+      </tr>
+      <tr>
+        <td>Alpha</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            data-bind="value: alpha, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: alpha" />
+        </td>
+      </tr>
+      <tr>
+        <td data-bind="style: { color: colorBlendAmountEnabled ? '' : 'gray'}">
+          Mix
+        </td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            data-bind="value: colorBlendAmount, valueUpdate: 'input', enable: colorBlendAmountEnabled"
+          />
+          <input
+            type="text"
+            size="5"
+            data-bind="value: colorBlendAmount, enable: colorBlendAmountEnabled"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td><b>Model Silhouette</b></td>
+      </tr>
+      <tr>
+        <td>Color</td>
+        <td>
+          <select
+            data-bind="options: silhouetteColors, value: silhouetteColor"
+          ></select>
+        </td>
+      </tr>
+      <tr>
+        <td>Alpha</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            data-bind="value: silhouetteAlpha, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: silhouetteAlpha" />
+        </td>
+      </tr>
+      <tr>
+        <td>Size</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="10.0"
+            step="0.01"
+            data-bind="value: silhouetteSize, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: silhouetteSize" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

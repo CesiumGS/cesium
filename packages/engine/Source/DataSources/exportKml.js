@@ -20,7 +20,13 @@ import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
 import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
-import * as zip from "@zip.js/zip.js/lib/zip-no-worker.js";
+import {
+  configure,
+  BlobReader,
+  BlobWriter,
+  TextReader,
+  ZipWriter,
+} from "@zip.js/zip.js/lib/zip-core.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import ModelGraphics from "./ModelGraphics.js";
@@ -322,43 +328,34 @@ function exportKml(options) {
   });
 }
 
-function createKmz(kmlString, externalFiles) {
-  const zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
-  zip.configure({
-    workerScripts: {
-      deflate: [zWorkerUrl, "./pako_deflate.min.js"],
-      inflate: [zWorkerUrl, "./pako_inflate.min.js"],
-    },
+async function createKmz(kmlString, externalFiles) {
+  const zWorkerUri = buildModuleUrl("ThirdParty/Workers/zip-web-worker.js");
+  const zWasmUri = buildModuleUrl("ThirdParty/zip-module.wasm");
+  configure({
+    workerURI: zWorkerUri,
+    wasmURI: zWasmUri,
   });
-  const blobWriter = new zip.BlobWriter();
-  const writer = new zip.ZipWriter(blobWriter);
+  const blobWriter = new BlobWriter("application/vnd.google-earth.kmz");
+  const writer = new ZipWriter(blobWriter);
+
   // We need to only write one file at a time so the zip doesn't get corrupted
-  return writer
-    .add("doc.kml", new zip.TextReader(kmlString))
-    .then(function () {
-      const keys = Object.keys(externalFiles);
-      return addExternalFilesToZip(writer, keys, externalFiles, 0);
-    })
-    .then(function () {
-      return writer.close();
-    })
-    .then(function (blob) {
-      return {
-        kmz: blob,
-      };
-    });
+  await writer.add("doc.kml", new TextReader(kmlString));
+  const keys = Object.keys(externalFiles);
+  await addExternalFilesToZip(writer, keys, externalFiles, 0);
+  await writer.close();
+  const blob = await blobWriter.getData();
+  return {
+    kmz: blob,
+  };
 }
 
-function addExternalFilesToZip(writer, keys, externalFiles, index) {
+async function addExternalFilesToZip(writer, keys, externalFiles, index) {
   if (keys.length === index) {
     return;
   }
   const filename = keys[index];
-  return writer
-    .add(filename, new zip.BlobReader(externalFiles[filename]))
-    .then(function () {
-      return addExternalFilesToZip(writer, keys, externalFiles, index + 1);
-    });
+  await writer.add(filename, new BlobReader(externalFiles[filename]));
+  return addExternalFilesToZip(writer, keys, externalFiles, index + 1);
 }
 
 exportKml._createState = function (options) {

@@ -1,0 +1,31 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #trailer {
+    position: absolute;
+    bottom: 75px;
+    right: 0;
+    width: 320px;
+    height: 180px;
+  }
+</style>
+
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+
+<video id="trailer" muted="" autoplay="" loop="" crossorigin="" controls="">
+  <source
+    src="https://cesium.com/public/SandcastleSampleData/big-buck-bunny_trailer.webm"
+    type="video/webm"
+  />
+  <source
+    src="https://cesium.com/public/SandcastleSampleData/big-buck-bunny_trailer.mp4"
+    type="video/mp4"
+  />
+  <source
+    src="https://cesium.com/public/SandcastleSampleData/big-buck-bunny_trailer.mov"
+    type="video/quicktime"
+  />
+  Your browser does not support the <code>video</code> element.
+</video>

@@ -1,0 +1,101 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #slider {
+    position: absolute;
+    left: 50%;
+    top: 0px;
+    background-color: #d3d3d3;
+    width: 5px;
+    height: 100%;
+    z-index: 9999;
+  }
+
+  #slider:hover {
+    cursor: ew-resize;
+  }
+
+  #statsContainer {
+    position: absolute;
+    top: 15%;
+    width: 100%;
+  }
+
+  .panel {
+    background-color: rgba(42, 42, 42, 0.8);
+    padding: 4px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .statsPane {
+    position: relative;
+    z-index: 9998;
+  }
+
+  .statsTitle {
+    font-size: 20px;
+  }
+
+  #left {
+    float: left;
+    text-align: left;
+  }
+
+  #right {
+    float: right;
+    text-align: right;
+  }
+
+  .benchmarkNotice {
+    color: #ffee00;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize">
+  <div id="slider"></div>
+  <div id="statsContainer">
+    <div id="left" class="statsPane panel">
+      <div id="leftTitle" class="statsTitle">3D Tiles 1.0 (JPEG textures)</div>
+      <div id="leftStats">
+        Tiles Loaded: <span id="leftTilesLoaded">---</span> /
+        <span id="leftTilesTotal">---</span>
+        <br />
+        GPU Memory: <span id="leftGpuMemoryMB">---</span> MB
+        <br />
+        <span id="leftBenchmarkNotice" class="benchmarkNotice"></span>
+        <br />
+        Tile Load Time (s): <span id="leftTileLoadTime">---</span>
+        <br />
+      </div>
+    </div>
+    <div id="right" class="statsPane panel">
+      <div id="rightTitle" class="statsTitle">3D Tiles 1.1 (KTX2 textures)</div>
+      <div id="rightStats">
+        Tiles Loaded: <span id="rightTilesLoaded">---</span> /
+        <span id="rightTilesTotal">---</span>
+        <br />
+        GPU Memory: <span id="rightGpuMemoryMB">---</span> MB
+        <br />
+        <span id="rightBenchmarkNotice" class="benchmarkNotice"></span>
+        <br />
+        Tile Load Time (s): <span id="rightTileLoadTime">---</span>
+        <br />
+      </div>
+    </div>
+  </div>
+</div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar" class="panel">
+  <div id="toolbarSelect"></div>
+  <div id="maxSSE">
+    Maximum Screen Space Error
+    <input
+      type="range"
+      min="0.0"
+      max="64.0"
+      step="0.1"
+      data-bind="value: maximumScreenSpaceError, valueUpdate: 'input'"
+    />
+    <input type="text" size="5" data-bind="value: maximumScreenSpaceError" />
+  </div>
+</div>

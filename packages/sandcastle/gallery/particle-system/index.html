@@ -1,0 +1,136 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>Rate</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="100.0"
+            step="1"
+            data-bind="value: emissionRate, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: emissionRate" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>Size</td>
+        <td>
+          <input
+            type="range"
+            min="2"
+            max="60.0"
+            step="1"
+            data-bind="value: particleSize, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: particleSize" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>Min Life</td>
+        <td>
+          <input
+            type="range"
+            min="0.1"
+            max="30.0"
+            step="1"
+            data-bind="value: minimumParticleLife, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: minimumParticleLife" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>Max Life</td>
+        <td>
+          <input
+            type="range"
+            min="0.1"
+            max="30.0"
+            step="1"
+            data-bind="value: maximumParticleLife, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: maximumParticleLife" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>Min Speed</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="30.0"
+            step="1"
+            data-bind="value: minimumSpeed, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: minimumSpeed" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>Max Speed</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="30.0"
+            step="1"
+            data-bind="value: maximumSpeed, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: maximumSpeed" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>Start Scale</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="10.0"
+            step="1"
+            data-bind="value: startScale, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: startScale" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>End Scale</td>
+        <td>
+          <input
+            type="range"
+            min="0.0"
+            max="10.0"
+            step="1"
+            data-bind="value: endScale, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: endScale" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>Gravity</td>
+        <td>
+          <input
+            type="range"
+            min="-20.0"
+            max="20.0"
+            step="1"
+            data-bind="value: gravity, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: gravity" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

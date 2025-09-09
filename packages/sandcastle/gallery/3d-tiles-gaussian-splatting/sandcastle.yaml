@@ -1,0 +1,7 @@
+legacyId: 3D Tiles Gaussian Splatting.html
+title: 3D Tiles Gaussian Splatting
+description: A minimal code example of a 3D Gaussian splatting (or Gaussian splats) dataset rendered with 3D Tiles. This technique provides smooth, photorealistic surfaces, and is typically derrived from reality capture, LiDAR, or photogrammetry data.
+labels:
+  - Showcases
+  - 3D Tiles
+thumbnail: thumbnail.jpg

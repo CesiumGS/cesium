@@ -2075,6 +2075,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     }
   }
 
+  //support the latest glTF spec and the legacy extension
   const spzExtension = fetchSpzExtensionFrom(extensions);
 
   if (defined(spzExtension)) {
