@@ -231,6 +231,54 @@ describe("ITwinData", () => {
         maximumScreenSpaceError: 4,
       });
     });
+
+    it("creates a tileset with the given tilesetOptions", async () => {
+      const tilesetUrl =
+        "https://example.com/root/document/path.json?auth=token";
+      getUrlSpy.and.resolveTo(tilesetUrl);
+
+      await ITwinData.createTilesetForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.Cesium3DTiles,
+        rootDocument: "root/document/path.json",
+        tilesetOptions: {
+          cacheBytes: 500000000,
+        },
+      });
+
+      // The createTilesetForRealityDataId was defined to use a
+      // maximum screen space error of 4 by default
+      expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl, {
+        maximumScreenSpaceError: 4,
+        cacheBytes: 500000000,
+      });
+    });
+
+    it("creates a tileset with tilesetOptions overriding the defaults", async () => {
+      const tilesetUrl =
+        "https://example.com/root/document/path.json?auth=token";
+      getUrlSpy.and.resolveTo(tilesetUrl);
+
+      await ITwinData.createTilesetForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.Cesium3DTiles,
+        rootDocument: "root/document/path.json",
+        tilesetOptions: {
+          maximumScreenSpaceError: 32,
+          cacheBytes: 500000000,
+        },
+      });
+
+      // The createTilesetForRealityDataId was defined to use a
+      // maximum screen space error of 4 by default, which should
+      // be overridden with the value from the given options
+      expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl, {
+        maximumScreenSpaceError: 32,
+        cacheBytes: 500000000,
+      });
+    });
   });
 
   describe("createDataSourceForRealityDataId", () => {

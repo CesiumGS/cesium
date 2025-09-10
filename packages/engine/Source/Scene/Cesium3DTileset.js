@@ -147,7 +147,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  *
  * @alias Cesium3DTileset
  * @constructor
- * @experimental Support for loading Gaussian splats content encoded with SPZ compression using the draft glTF extension {@link https://github.com/KhronosGroup/glTF/pull/2490 | KHR_spz_gaussian_splats_compression} is experimental and is subject change without Cesium's standard deprecation policy.
+ * @experimental Support for loading Gaussian splats content encoded with SPZ compression using the draft glTF extensions {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting | KHR_gaussian_splatting} and {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting_compression_spz_2 | KHR_gaussian_splatting_compression_spz_2} is experimental and is subject change without Cesium's standard deprecation policy.
  * @param {Cesium3DTileset.ConstructorOptions} options An object describing initialization options
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.

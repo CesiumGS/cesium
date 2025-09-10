@@ -1,0 +1,50 @@
+.sc-dialog {
+  --inset: var(--stratakit-space-x3);
+  position: fixed;
+  inset: var(--inset);
+  z-index: 50;
+  margin: auto;
+  display: flex;
+  height: fit-content;
+  max-height: calc(100dvh - var(--inset) * 2);
+  flex-direction: column;
+  gap: var(--stratakit-space-x4);
+  overflow: auto;
+  border-radius: var(--stratakit-ext-radius-lg);
+  background-color: var(--stratakit-color-bg-page-base);
+  padding: var(--stratakit-space-x4);
+  box-shadow: var(--stratakit-shadow-dialog-base);
+
+  .sc-dialog-close {
+    position: absolute;
+    top: var(--stratakit-space-x4);
+    right: var(--stratakit-space-x4);
+    border-radius: var(--stratakit-ext-radius-full);
+    padding: var(--stratakit-space-x1);
+
+    &:hover {
+      background-color: var(--stratakit-color-bg-mono-muted);
+    }
+  }
+
+  .sc-dialog-footer {
+    align-self: flex-end;
+    margin-top: var(--stratakit-space-x4);
+  }
+
+  @media (min-width: 500px) {
+    top: 10vh;
+    bottom: 10vh;
+    margin-top: 0px;
+    max-height: 80vh;
+    width: 420px;
+    border-radius: var(--stratakit-ext-radius-xl);
+    padding: var(--stratakit-space-x6);
+  }
+
+  [data-backdrop]:has(+ &) {
+    background: color(
+      from var(--stratakit-color-bg-elevation-emphasis) xyz x y z / 80%
+    );
+  }
+}
