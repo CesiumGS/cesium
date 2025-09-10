@@ -4,9 +4,11 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
+import ClippingPlane from "./ClippingPlane.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
+import VoxelBoundCollection from "./VoxelBoundCollection.js";
 
 /**
  * A cylinder {@link VoxelShape}.
@@ -41,10 +43,20 @@ function VoxelCylinderShape() {
    */
   this._maxBounds = VoxelCylinderShape.DefaultMaxBounds.clone();
 
+  const { DefaultMinBounds, DefaultMaxBounds } = VoxelCylinderShape;
+  const boundPlanes = [
+    new ClippingPlane(
+      Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
+      DefaultMinBounds.z,
+    ),
+    new ClippingPlane(Cartesian3.UNIT_Z, -DefaultMaxBounds.z),
+  ];
+
+  this._renderBoundPlanes = new VoxelBoundCollection({ planes: boundPlanes });
+
   this._shaderUniforms = {
     cylinderRenderRadiusMinMax: new Cartesian2(),
     cylinderRenderAngleMinMax: new Cartesian2(),
-    cylinderRenderHeightMinMax: new Cartesian2(),
     cylinderUvToShapeUvRadius: new Cartesian2(),
     cylinderUvToShapeUvAngle: new Cartesian2(),
     cylinderUvToShapeUvHeight: new Cartesian2(),
@@ -78,6 +90,19 @@ Object.defineProperties(VoxelCylinderShape.prototype, {
   orientedBoundingBox: {
     get: function () {
       return this._orientedBoundingBox;
+    },
+  },
+
+  /**
+   * A collection of planes used for the render bounds
+   * @memberof VoxelCylinderShape.prototype
+   * @type {VoxelBoundCollection}
+   * @readonly
+   * @private
+   */
+  renderBoundPlanes: {
+    get: function () {
+      return this._renderBoundPlanes;
     },
   },
 
@@ -205,6 +230,7 @@ VoxelCylinderShape.prototype.update = function (
 
   // Clamp the bounds to the valid range
   minBounds.x = Math.max(0.0, minBounds.x);
+  // TODO: require maxBounds.x >= minBounds.x ?
   maxBounds.x = Math.max(0.0, maxBounds.x);
   minBounds.y = CesiumMath.negativePiToPi(minBounds.y);
   maxBounds.y = CesiumMath.negativePiToPi(maxBounds.y);
@@ -212,6 +238,10 @@ VoxelCylinderShape.prototype.update = function (
   clipMinBounds.y = CesiumMath.negativePiToPi(clipMinBounds.y);
   clipMaxBounds.y = CesiumMath.negativePiToPi(clipMaxBounds.y);
 
+  // TODO: what does this do with partial volumes crossing the antimeridian?
+  // We could have minBounds.y = +PI/2 and maxBounds.y = -PI/2.
+  // Then clipMinBounds.y = +PI/4 and clipMaxBounds.y = -PI/4.
+  // This maximumByComponent would cancel the clipping.
   const renderMinBounds = Cartesian3.maximumByComponent(
     minBounds,
     clipMinBounds,
@@ -242,6 +272,11 @@ VoxelCylinderShape.prototype.update = function (
   ) {
     return false;
   }
+
+  // Update the render bounds planes
+  const renderBoundPlanes = this._renderBoundPlanes;
+  renderBoundPlanes.get(0).distance = renderMinBounds.z;
+  renderBoundPlanes.get(1).distance = -renderMaxBounds.z;
 
   this._shapeTransform = Matrix4.clone(modelMatrix, this._shapeTransform);
 
@@ -342,12 +377,6 @@ VoxelCylinderShape.prototype.update = function (
     heightScale,
     heightOffset,
     shaderUniforms.cylinderUvToShapeUvHeight,
-  );
-
-  shaderUniforms.cylinderRenderHeightMinMax = Cartesian2.fromElements(
-    renderMinBounds.z,
-    renderMaxBounds.z,
-    shaderUniforms.cylinderRenderHeightMinMax,
   );
 
   if (renderHasAngle) {

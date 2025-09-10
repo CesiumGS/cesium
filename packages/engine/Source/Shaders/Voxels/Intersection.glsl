@@ -13,7 +13,8 @@
 
 RayShapeIntersection intersectScene(in vec2 screenCoord, in Ray ray, in Ray rayEC, out Intersections ix) {
     // Do a ray-shape intersection to find the exact starting and ending points.
-    intersectShape(rayEC, ix);
+    // TODO: use eye coordinate ray only
+    intersectShape(ray, rayEC, ix);
 
     // Exit early if the positive shape was completely missed or behind the ray.
     RayShapeIntersection intersection = getFirstIntersection(ix);

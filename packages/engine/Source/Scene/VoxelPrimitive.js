@@ -1386,10 +1386,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
 };
 
 function updateRenderBoundPlanes(primitive, frameState) {
-  // TODO: apply to all shape types. Move to shape.update? Would need to pass frameState.
-  if (primitive.shape !== VoxelShapeType.BOX) {
-    return;
-  }
   const uniforms = primitive._uniforms;
   const { renderBoundPlanes } = primitive._shape;
   // TODO: copy renderBoundPlanes from the shape to the primitive?

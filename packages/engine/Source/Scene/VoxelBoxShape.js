@@ -244,16 +244,6 @@ VoxelBoxShape.prototype.update = function (
     this._renderMaxBounds,
   );
 
-  // Update the render bounds planes
-  // TODO: after we switch to eye coordinate bounds, we will need to update the normals and transform the distances
-  const renderBoundPlanes = this._renderBoundPlanes;
-  renderBoundPlanes.get(0).distance = renderMinBounds.x;
-  renderBoundPlanes.get(1).distance = renderMinBounds.y;
-  renderBoundPlanes.get(2).distance = renderMinBounds.z;
-  renderBoundPlanes.get(3).distance = -renderMaxBounds.x;
-  renderBoundPlanes.get(4).distance = -renderMaxBounds.y;
-  renderBoundPlanes.get(5).distance = -renderMaxBounds.z;
-
   // Box is not visible if:
   // - any of the min render bounds exceed the max render bounds
   // - two or more of the min bounds equal the max bounds (line / point)
@@ -273,6 +263,15 @@ VoxelBoxShape.prototype.update = function (
   ) {
     return false;
   }
+
+  // Update the render bounds planes
+  const renderBoundPlanes = this._renderBoundPlanes;
+  renderBoundPlanes.get(0).distance = renderMinBounds.x;
+  renderBoundPlanes.get(1).distance = renderMinBounds.y;
+  renderBoundPlanes.get(2).distance = renderMinBounds.z;
+  renderBoundPlanes.get(3).distance = -renderMaxBounds.x;
+  renderBoundPlanes.get(4).distance = -renderMaxBounds.y;
+  renderBoundPlanes.get(5).distance = -renderMaxBounds.z;
 
   this._shapeTransform = Matrix4.clone(modelMatrix, this._shapeTransform);
 

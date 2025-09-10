@@ -8,8 +8,6 @@
 uniform sampler2D u_renderBoundPlanesTexture;
 
 RayShapeIntersection intersectBoundPlanes(in Ray ray) {
-    // Transform from [0,1] UV space to [-1,1] shape space.
-
     vec4 lastEntry = vec4(ray.dir, -INF_HIT);
     vec4 firstExit = vec4(-ray.dir, +INF_HIT);
     for (int i = 0; i < 6; i++) {

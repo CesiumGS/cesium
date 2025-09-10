@@ -47,3 +47,8 @@ vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
 
     return vec3(radius, angle, height);
 }
+
+vec3 convertECtoDeltaTile(in vec3 positionEC) {
+    // TODO
+    return positionEC;
+}
