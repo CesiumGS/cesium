@@ -42,7 +42,7 @@ function updateAccessorComponentTypes(gltf) {
 function convertType(gltf, accessor, updatedComponentType) {
   const typedArray = ComponentDatatype.createTypedArray(
     updatedComponentType,
-    readAccessorPacked(gltf, accessor)
+    readAccessorPacked(gltf, accessor),
   );
   const newBuffer = new Uint8Array(typedArray.buffer);
   accessor.bufferView = addBuffer(gltf, newBuffer);

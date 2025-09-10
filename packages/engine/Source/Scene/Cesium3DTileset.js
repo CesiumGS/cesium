@@ -102,6 +102,8 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {ClippingPlaneCollection} [clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
  * @property {ClippingPolygonCollection} [clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the tileset.
  * @property {ClassificationType} [classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
+ * @property {HeightReference} [heightReference] Sets the {@link HeightReference} for point features in vector tilesets.
+ * @property {Scene} [scene] The {@link CesiumWidget#scene} that the tileset will be rendered in, required for tilesets that specify a {@link heightReference} value for clamping 3D Tiles vector data content- like points, lines, and labels- to terrain or 3D tiles.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
  * @property {object} [pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @property {Cartesian3} [lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
@@ -117,7 +119,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {string|number} [instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {boolean} [showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @property {SplitDirection} [splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
- * @property {boolean} [enableCollision=false] When <code>true</code>, enables collisions for camera or CPU picking. While this is <code>true</code> the camera will be prevented from going below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true.
+ * @property {boolean} [enableCollision=false] When <code>true</code>, enables collisions for camera or CPU picking. While this is <code>true</code> the camera will be prevented from going below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true. This also affects the behavior of {@link HeightReference.CLAMP_TO_GROUND} when clamping to 3D Tiles surfaces. If <code>enableCollision</code> is <code>false</code>, entities may not be correctly clamped to the tileset geometry.
  * @property {boolean} [projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has been created.
  * @property {boolean} [enablePick=false] Whether to allow collision and CPU picking with <code>pick</code> when using WebGL 1. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the tileset has loaded.
  * @property {boolean} [asynchronouslyLoadImagery=false] Whether loading imagery that is draped over the tileset should be done asynchronously. If this is <code>true</code>, then tile content will be displayed with its original texture until the imagery texture is loaded. If this is <code>false</code>, then the tile content will not be displayed until the imagery is ready.
@@ -145,7 +147,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  *
  * @alias Cesium3DTileset
  * @constructor
- *
+ * @experimental Support for loading Gaussian splats content encoded with SPZ compression using the draft glTF extensions {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting | KHR_gaussian_splatting} and {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting_compression_spz_2 | KHR_gaussian_splatting_compression_spz_2} is experimental and is subject change without Cesium's standard deprecation policy.
  * @param {Cesium3DTileset.ConstructorOptions} options An object describing initialization options
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
@@ -196,7 +198,6 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  *      dynamicScreenSpaceErrorHeightFalloff: 0.25
  * });
  * scene.primitives.add(tileset);
- *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles specification}
  */
 function Cesium3DTileset(options) {
@@ -337,6 +338,8 @@ function Cesium3DTileset(options) {
   this._tileDebugLabels = undefined;
 
   this._classificationType = options.classificationType;
+  this._heightReference = options.heightReference;
+  this._scene = options.scene;
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
 
@@ -1809,6 +1812,43 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
+   * Specifies if the height is relative to terrain, 3D Tiles, or both.
+   * <p>
+   * This option is only applied to point features in tilesets containing vector data.
+   * This option requires the Viewer's scene to be passed in through options.scene.
+   * </p>
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {HeightReference | undefined}
+   * @default undefined
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   * @readonly
+   */
+  heightReference: {
+    get: function () {
+      return this._heightReference;
+    },
+  },
+
+  /**
+   * The {@link CesiumWidget#scene} that the tileset will be rendered in, required for tilesets that specify a {@link heightReference} value for clamping 3D Tiles vector data content- like points, lines, and labels- to terrain or 3D tiles.
+   *
+   * @member of Cesium3DTileset.prototype
+   *
+   * @type {Scene | undefined}
+   * @default undefined
+   * @readonly
+   *
+   */
+  scene: {
+    get: function () {
+      return this._scene;
+    },
+  },
+
+  /**
    * Gets an ellipsoid describing the shape of the globe.
    *
    * @memberof Cesium3DTileset.prototype
@@ -2757,6 +2797,7 @@ function filterProcessingQueue(tileset) {
 const scratchUpdateHeightCartographic = new Cartographic();
 const scratchUpdateHeightCartographic2 = new Cartographic();
 const scratchUpdateHeightCartesian = new Cartesian3();
+
 function processUpdateHeight(tileset, tile, frameState) {
   if (!tileset.enableCollision || !tileset.show) {
     return;
@@ -3817,6 +3858,63 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
       return intersection;
     }
   }
+};
+
+/**
+ * Returns true if the given glTF extension is used by this tileset.
+ * <br/><br/>
+ * Relies on the <code>3DTILES_content_gltf</code> extension and will return
+ * false if that extension is not used.
+ *
+ * @param {string} gltfExtensionName The name of the glTF extension to check.
+ * @returns {boolean} <code>true</code> if the glTF extension is used by this tileset; otherwise, <code>false</code>.
+ *
+ * @private
+ */
+Cesium3DTileset.prototype.isGltfExtensionUsed = function (gltfExtensionName) {
+  if (this.hasExtension("3DTILES_content_gltf")) {
+    if (!defined(this.extensions)) {
+      return false;
+    }
+    const extensionsUsed =
+      this.extensions["3DTILES_content_gltf"]?.extensionsUsed;
+
+    if (!defined(extensionsUsed)) {
+      return false;
+    }
+
+    return extensionsUsed.indexOf(gltfExtensionName) > -1;
+  }
+
+  return false;
+};
+
+/**
+ * Returns true if the given glTF extension is used and required by this tileset.
+ * <br/><br/>
+ * Relies on the <code>3DTILES_content_gltf</code> extension and will return
+ * <code>false</code> if that extension is not used.
+ *
+ * @param {string} gltfExtensionName The name of the glTF extension to check.
+ * @returns {boolean} <code>true</code> if the glTF extension is required by this tileset; otherwise, <code>false</code>.
+ *
+ * @private
+ */
+Cesium3DTileset.prototype.isGltfExtensionRequired = function (
+  gltfExtensionName,
+) {
+  if (this.isGltfExtensionUsed(gltfExtensionName)) {
+    const extensionsRequired =
+      this.extensions["3DTILES_content_gltf"].extensionsRequired;
+
+    if (!defined(extensionsRequired)) {
+      return false;
+    }
+
+    return extensionsRequired.indexOf(gltfExtensionName) > -1;
+  }
+
+  return false;
 };
 
 /**

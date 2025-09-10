@@ -1,0 +1,51 @@
+.console-mirror {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .console-snapshot {
+    display: flex;
+    align-items: center;
+    gap: var(--stratakit-space-x1);
+    padding: var(--stratakit-space-x1);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: var(--stratakit-ext-border-border) solid
+      var(--stratakit-color-border-neutral-muted);
+
+    .title {
+      /* Match the height of the badge to avoid flow shifts when adding them */
+      height: 20px;
+      align-content: center;
+      margin-right: var(--stratakit-space-x1);
+    }
+  }
+  .logs {
+    overflow: auto;
+    padding: 0 var(--stratakit-space-x2);
+
+    .message {
+      display: flex;
+      gap: var(--stratakit-space-x2);
+      margin: var(--stratakit-space-x1);
+      padding: var(--stratakit-space-x1) 0 var(--stratakit-space-x05);
+    }
+    .message + .message {
+      border-top: var(--stratakit-ext-border-border) solid
+        var(--stratakit-color-border-neutral-muted);
+    }
+    .content {
+      text-wrap: wrap;
+    }
+
+    .message.info {
+      color: var(--stratakit-color-text-neutral-tertiary);
+    }
+    .message.warning {
+      color: var(--stratakit-color-text-attention-base);
+    }
+    .message.error {
+      color: var(--stratakit-color-text-critical-base);
+    }
+  }
+}

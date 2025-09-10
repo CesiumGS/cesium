@@ -16,11 +16,11 @@ function getComponentReader(componentType) {
         byteOffset,
         numberOfComponents,
         componentTypeByteLength,
-        result
+        result,
       ) {
         for (let i = 0; i < numberOfComponents; ++i) {
           result[i] = dataView.getInt8(
-            byteOffset + i * componentTypeByteLength
+            byteOffset + i * componentTypeByteLength,
           );
         }
       };
@@ -30,11 +30,11 @@ function getComponentReader(componentType) {
         byteOffset,
         numberOfComponents,
         componentTypeByteLength,
-        result
+        result,
       ) {
         for (let i = 0; i < numberOfComponents; ++i) {
           result[i] = dataView.getUint8(
-            byteOffset + i * componentTypeByteLength
+            byteOffset + i * componentTypeByteLength,
           );
         }
       };
@@ -44,12 +44,12 @@ function getComponentReader(componentType) {
         byteOffset,
         numberOfComponents,
         componentTypeByteLength,
-        result
+        result,
       ) {
         for (let i = 0; i < numberOfComponents; ++i) {
           result[i] = dataView.getInt16(
             byteOffset + i * componentTypeByteLength,
-            true
+            true,
           );
         }
       };
@@ -59,12 +59,12 @@ function getComponentReader(componentType) {
         byteOffset,
         numberOfComponents,
         componentTypeByteLength,
-        result
+        result,
       ) {
         for (let i = 0; i < numberOfComponents; ++i) {
           result[i] = dataView.getUint16(
             byteOffset + i * componentTypeByteLength,
-            true
+            true,
           );
         }
       };
@@ -74,12 +74,12 @@ function getComponentReader(componentType) {
         byteOffset,
         numberOfComponents,
         componentTypeByteLength,
-        result
+        result,
       ) {
         for (let i = 0; i < numberOfComponents; ++i) {
           result[i] = dataView.getInt32(
             byteOffset + i * componentTypeByteLength,
-            true
+            true,
           );
         }
       };
@@ -89,12 +89,12 @@ function getComponentReader(componentType) {
         byteOffset,
         numberOfComponents,
         componentTypeByteLength,
-        result
+        result,
       ) {
         for (let i = 0; i < numberOfComponents; ++i) {
           result[i] = dataView.getUint32(
             byteOffset + i * componentTypeByteLength,
-            true
+            true,
           );
         }
       };
@@ -104,12 +104,12 @@ function getComponentReader(componentType) {
         byteOffset,
         numberOfComponents,
         componentTypeByteLength,
-        result
+        result,
       ) {
         for (let i = 0; i < numberOfComponents; ++i) {
           result[i] = dataView.getFloat32(
             byteOffset + i * componentTypeByteLength,
-            true
+            true,
           );
         }
       };
@@ -119,12 +119,12 @@ function getComponentReader(componentType) {
         byteOffset,
         numberOfComponents,
         componentTypeByteLength,
-        result
+        result,
       ) {
         for (let i = 0; i < numberOfComponents; ++i) {
           result[i] = dataView.getFloat64(
             byteOffset + i * componentTypeByteLength,
-            true
+            true,
           );
         }
       };

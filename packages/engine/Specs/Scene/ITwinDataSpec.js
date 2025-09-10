@@ -55,7 +55,7 @@ describe("ITwinData", () => {
         ],
       });
       await expectAsync(
-        ITwinData.createTilesetFromIModelId("imodel-id-1"),
+        ITwinData.createTilesetFromIModelId({ iModelId: "imodel-id-1" }),
       ).toBeRejectedWithError(RuntimeError, /All exports for this iModel/);
     });
 
@@ -63,7 +63,9 @@ describe("ITwinData", () => {
       spyOn(ITwinPlatform, "getExports").and.resolveTo({
         exports: [],
       });
-      const tileset = await ITwinData.createTilesetFromIModelId("imodel-id-1");
+      const tileset = await ITwinData.createTilesetFromIModelId({
+        iModelId: "imodel-id-1",
+      });
       expect(tileset).toBeUndefined();
     });
 
@@ -74,7 +76,9 @@ describe("ITwinData", () => {
           createMockExport(2, ITwinPlatform.ExportStatus.NotStarted),
         ],
       });
-      const tileset = await ITwinData.createTilesetFromIModelId("imodel-id-1");
+      const tileset = await ITwinData.createTilesetFromIModelId({
+        iModelId: "imodel-id-1",
+      });
       expect(tileset).toBeUndefined();
     });
 
@@ -85,7 +89,9 @@ describe("ITwinData", () => {
           createMockExport(2, ITwinPlatform.ExportStatus.NotStarted),
         ],
       });
-      const tileset = await ITwinData.createTilesetFromIModelId("imodel-id-1");
+      const tileset = await ITwinData.createTilesetFromIModelId({
+        iModelId: "imodel-id-1",
+      });
       expect(tileset).toBeUndefined();
     });
 
@@ -97,7 +103,7 @@ describe("ITwinData", () => {
         ],
       });
       const tilesetSpy = spyOn(Cesium3DTileset, "fromUrl");
-      await ITwinData.createTilesetFromIModelId("imodel-id-1");
+      await ITwinData.createTilesetFromIModelId({ iModelId: "imodel-id-1" });
       expect(tilesetSpy).toHaveBeenCalledTimes(1);
       // Check that the resource url created is for the second export because
       // the first is invalid
@@ -113,7 +119,10 @@ describe("ITwinData", () => {
       });
       const tilesetSpy = spyOn(Cesium3DTileset, "fromUrl");
       const tilesetOptions = { show: false };
-      await ITwinData.createTilesetFromIModelId("imodel-id-1", tilesetOptions);
+      await ITwinData.createTilesetFromIModelId({
+        iModelId: "imodel-id-1",
+        tilesetOptions,
+      });
       expect(tilesetSpy).toHaveBeenCalledTimes(1);
       expect(tilesetSpy.calls.mostRecent().args[1]).toEqual(tilesetOptions);
     });
@@ -131,22 +140,22 @@ describe("ITwinData", () => {
 
     it("rejects if the type is not supported", async () => {
       await expectAsync(
-        ITwinData.createTilesetForRealityDataId(
-          "imodel-id-1",
-          "reality-data-id-1",
-          "DGN",
-          "root/path.json",
-        ),
+        ITwinData.createTilesetForRealityDataId({
+          iTwinId: "imodel-id-1",
+          realityDataId: "reality-data-id-1",
+          type: "DGN",
+          rootDocument: "root/path.json",
+        }),
       ).toBeRejectedWithError(RuntimeError, /type is not/);
     });
 
     it("does not fetch metadata if type and rootDocument are defined", async () => {
-      await ITwinData.createTilesetForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        ITwinPlatform.RealityDataType.Cesium3DTiles,
-        "root/document/path.json",
-      );
+      await ITwinData.createTilesetForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.Cesium3DTiles,
+        rootDocument: "root/document/path.json",
+      });
 
       expect(getMetadataSpy).not.toHaveBeenCalled();
       expect(getUrlSpy).toHaveBeenCalledOnceWith(
@@ -163,12 +172,12 @@ describe("ITwinData", () => {
         type: ITwinPlatform.RealityDataType.Cesium3DTiles,
         rootDocument: "root/document/path.json",
       });
-      await ITwinData.createTilesetForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        undefined,
-        "root/document/path.json",
-      );
+      await ITwinData.createTilesetForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: undefined,
+        rootDocument: "root/document/path.json",
+      });
 
       expect(getMetadataSpy).toHaveBeenCalledOnceWith(
         "itwin-id-1",
@@ -188,12 +197,12 @@ describe("ITwinData", () => {
         type: ITwinPlatform.RealityDataType.Cesium3DTiles,
         rootDocument: "root/document/path.json",
       });
-      await ITwinData.createTilesetForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        ITwinPlatform.RealityDataType.Cesium3DTiles,
-        undefined,
-      );
+      await ITwinData.createTilesetForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.Cesium3DTiles,
+        rootDocument: undefined,
+      });
 
       expect(getMetadataSpy).toHaveBeenCalledOnceWith(
         "itwin-id-1",
@@ -211,15 +220,63 @@ describe("ITwinData", () => {
         "https://example.com/root/document/path.json?auth=token";
       getUrlSpy.and.resolveTo(tilesetUrl);
 
-      await ITwinData.createTilesetForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        ITwinPlatform.RealityDataType.Cesium3DTiles,
-        "root/document/path.json",
-      );
+      await ITwinData.createTilesetForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.Cesium3DTiles,
+        rootDocument: "root/document/path.json",
+      });
 
       expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl, {
         maximumScreenSpaceError: 4,
+      });
+    });
+
+    it("creates a tileset with the given tilesetOptions", async () => {
+      const tilesetUrl =
+        "https://example.com/root/document/path.json?auth=token";
+      getUrlSpy.and.resolveTo(tilesetUrl);
+
+      await ITwinData.createTilesetForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.Cesium3DTiles,
+        rootDocument: "root/document/path.json",
+        tilesetOptions: {
+          cacheBytes: 500000000,
+        },
+      });
+
+      // The createTilesetForRealityDataId was defined to use a
+      // maximum screen space error of 4 by default
+      expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl, {
+        maximumScreenSpaceError: 4,
+        cacheBytes: 500000000,
+      });
+    });
+
+    it("creates a tileset with tilesetOptions overriding the defaults", async () => {
+      const tilesetUrl =
+        "https://example.com/root/document/path.json?auth=token";
+      getUrlSpy.and.resolveTo(tilesetUrl);
+
+      await ITwinData.createTilesetForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.Cesium3DTiles,
+        rootDocument: "root/document/path.json",
+        tilesetOptions: {
+          maximumScreenSpaceError: 32,
+          cacheBytes: 500000000,
+        },
+      });
+
+      // The createTilesetForRealityDataId was defined to use a
+      // maximum screen space error of 4 by default, which should
+      // be overridden with the value from the given options
+      expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl, {
+        maximumScreenSpaceError: 32,
+        cacheBytes: 500000000,
       });
     });
   });
@@ -238,22 +295,22 @@ describe("ITwinData", () => {
 
     it("rejects if the type is not supported", async () => {
       await expectAsync(
-        ITwinData.createDataSourceForRealityDataId(
-          "imodel-id-1",
-          "reality-data-id-1",
-          "DGN",
-          "root/path.json",
-        ),
+        ITwinData.createDataSourceForRealityDataId({
+          iTwinId: "imodel-id-1",
+          realityDataId: "reality-data-id-1",
+          type: "DGN",
+          rootDocument: "root/path.json",
+        }),
       ).toBeRejectedWithError(RuntimeError, /type is not/);
     });
 
     it("does not fetch metadata if type and rootDocument are defined", async () => {
-      await ITwinData.createDataSourceForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        ITwinPlatform.RealityDataType.GeoJSON,
-        "root/document/path.json",
-      );
+      await ITwinData.createDataSourceForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.GeoJSON,
+        rootDocument: "root/document/path.json",
+      });
 
       expect(getMetadataSpy).not.toHaveBeenCalled();
       expect(getUrlSpy).toHaveBeenCalledOnceWith(
@@ -271,12 +328,12 @@ describe("ITwinData", () => {
         type: ITwinPlatform.RealityDataType.GeoJSON,
         rootDocument: "root/document/path.json",
       });
-      await ITwinData.createDataSourceForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        undefined,
-        "root/document/path.json",
-      );
+      await ITwinData.createDataSourceForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: undefined,
+        rootDocument: "root/document/path.json",
+      });
 
       expect(getMetadataSpy).toHaveBeenCalledOnceWith(
         "itwin-id-1",
@@ -296,12 +353,12 @@ describe("ITwinData", () => {
         type: ITwinPlatform.RealityDataType.GeoJSON,
         rootDocument: "root/document/path.json",
       });
-      await ITwinData.createDataSourceForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        ITwinPlatform.RealityDataType.Cesium3DTiles,
-        undefined,
-      );
+      await ITwinData.createDataSourceForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.Cesium3DTiles,
+        rootDocument: undefined,
+      });
 
       expect(getMetadataSpy).toHaveBeenCalledOnceWith(
         "itwin-id-1",
@@ -319,12 +376,12 @@ describe("ITwinData", () => {
         "https://example.com/root/document/path.json?auth=token";
       getUrlSpy.and.resolveTo(tilesetUrl);
 
-      await ITwinData.createDataSourceForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        ITwinPlatform.RealityDataType.GeoJSON,
-        "root/document/path.json",
-      );
+      await ITwinData.createDataSourceForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.GeoJSON,
+        rootDocument: "root/document/path.json",
+      });
 
       expect(geojsonSpy).toHaveBeenCalledOnceWith(tilesetUrl);
       expect(kmlSpy).not.toHaveBeenCalled();
@@ -335,12 +392,12 @@ describe("ITwinData", () => {
         "https://example.com/root/document/path.json?auth=token";
       getUrlSpy.and.resolveTo(tilesetUrl);
 
-      await ITwinData.createDataSourceForRealityDataId(
-        "itwin-id-1",
-        "reality-data-id-1",
-        ITwinPlatform.RealityDataType.KML,
-        "root/document/path.json",
-      );
+      await ITwinData.createDataSourceForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.KML,
+        rootDocument: "root/document/path.json",
+      });
 
       expect(kmlSpy).toHaveBeenCalledOnceWith(tilesetUrl);
       expect(geojsonSpy).not.toHaveBeenCalled();
@@ -355,8 +412,7 @@ describe("ITwinData", () => {
 
     it("rejects with no iTwinId", async () => {
       await expectAsync(
-        // @ts-expect-error
-        ITwinData.loadGeospatialFeatures(undefined),
+        ITwinData.loadGeospatialFeatures({ iTwinId: undefined }),
       ).toBeRejectedWithDeveloperError(
         "Expected iTwinId to be typeof string, actual typeof was undefined",
       );
@@ -364,8 +420,10 @@ describe("ITwinData", () => {
 
     it("rejects with no collectionId", async () => {
       await expectAsync(
-        // @ts-expect-error
-        ITwinData.loadGeospatialFeatures("itwin-id-1", undefined),
+        ITwinData.loadGeospatialFeatures({
+          iTwinId: "itwin-id-1",
+          collectionId: undefined,
+        }),
       ).toBeRejectedWithDeveloperError(
         "Expected collectionId to be typeof string, actual typeof was undefined",
       );
@@ -373,7 +431,11 @@ describe("ITwinData", () => {
 
     it("rejects with limit < 1", async () => {
       await expectAsync(
-        ITwinData.loadGeospatialFeatures("itwin-id-1", "collection-id-1", 0),
+        ITwinData.loadGeospatialFeatures({
+          iTwinId: "itwin-id-1",
+          collectionId: "collection-id-1",
+          limit: 0,
+        }),
       ).toBeRejectedWithDeveloperError(
         "Expected limit to be greater than or equal to 1, actual value was 0",
       );
@@ -381,11 +443,11 @@ describe("ITwinData", () => {
 
     it("rejects with limit > 10000", async () => {
       await expectAsync(
-        ITwinData.loadGeospatialFeatures(
-          "itwin-id-1",
-          "collection-id-1",
-          20000,
-        ),
+        ITwinData.loadGeospatialFeatures({
+          iTwinId: "itwin-id-1",
+          collectionId: "collection-id-1",
+          limit: 20000,
+        }),
       ).toBeRejectedWithDeveloperError(
         "Expected limit to be less than or equal to 10000, actual value was 20000",
       );
@@ -395,14 +457,20 @@ describe("ITwinData", () => {
       ITwinPlatform.defaultAccessToken = undefined;
       ITwinPlatform.defaultShareKey = undefined;
       await expectAsync(
-        ITwinData.loadGeospatialFeatures("itwin-id-1", "collection-id-1"),
+        ITwinData.loadGeospatialFeatures({
+          iTwinId: "itwin-id-1",
+          collectionId: "collection-id-1",
+        }),
       ).toBeRejectedWithDeveloperError(
         /Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey/,
       );
     });
 
     it("creates a GeoJsonDataSource from the constructed blob url if the type is GeoJSON", async () => {
-      await ITwinData.loadGeospatialFeatures("itwin-id-1", "collection-id-1");
+      await ITwinData.loadGeospatialFeatures({
+        iTwinId: "itwin-id-1",
+        collectionId: "collection-id-1",
+      });
 
       expect(geojsonSpy).toHaveBeenCalledTimes(1);
       expect(geojsonSpy.calls.mostRecent().args[0].url).toEqual(

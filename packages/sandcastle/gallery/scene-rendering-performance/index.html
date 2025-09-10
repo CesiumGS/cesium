@@ -1,0 +1,106 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #toolbar h3,
+  h4 {
+    margin: 0 0 2px 0;
+  }
+
+  #toolbar i {
+    font-size: 85%;
+  }
+
+  #toolbar table {
+    margin: 2px 3px;
+    max-width: 280px;
+  }
+
+  #toolbar td {
+    padding-bottom: 10px;
+  }
+
+  #toolbar .cesium-button {
+    margin: 6px 0 0;
+  }
+
+  #toolbar input {
+    vertical-align: middle;
+  }
+
+  #toolbar input:disabled {
+    color: darkgray;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>
+          <h3>
+            <code><span data-bind="text: lastRenderTime"></span></code>
+          </h3>
+          Simulation time at last render frame
+          <button
+            type="button"
+            class="cesium-button"
+            data-bind="click: requestRender"
+          >
+            Render new frame
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <h3>
+            <input
+              value="true"
+              data-bind="checked: requestRenderMode, valueUpdate: 'input'"
+              type="checkbox"
+            />
+            <code>requestRenderMode</code> enabled
+          </h3>
+          <i
+            >When enabled, a new frame is only rendered when scene updates
+            occur, or a new frame is explicitly rendered.</i
+          >
+        </td>
+      </tr>
+      <tr data-bind="visible: showTimeOptions">
+        <td>
+          <h4>
+            <input
+              value="true"
+              data-bind="checked: timeChangeEnabled, valueUpdate: 'input'"
+              type="checkbox"
+            />
+            Render when simulation time changes
+          </h4>
+          <i
+            >Automatically render when the simulation time changes by "Max delta
+            time". Adjust the simulation time on the animation widget and "Max
+            delta time" value to see their relationship.</i
+          >
+        </td>
+      </tr>
+      <tr data-bind="visible: showTimeOptions">
+        <td>
+          <h4>Max delta time</h4>
+          <input
+            min="0"
+            max="20"
+            step="0.1"
+            data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled"
+            type="range"
+          />
+          <input
+            size="2"
+            data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled"
+            type="text"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

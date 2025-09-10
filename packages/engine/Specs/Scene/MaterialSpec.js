@@ -14,6 +14,7 @@ import {
   Primitive,
   TextureMagnificationFilter,
   TextureMinificationFilter,
+  DeveloperError,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
@@ -24,7 +25,6 @@ describe(
   function () {
     let scene;
 
-    const rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
     let polygon;
     const backgroundColor = [0, 0, 128, 255];
     let polylines;
@@ -40,7 +40,9 @@ describe(
         scene.backgroundColor,
       );
       scene.primitives.destroyPrimitives = false;
-      scene.camera.setView({ destination: rectangle });
+      scene.camera.setView({
+        destination: Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0),
+      });
     });
 
     afterAll(function () {
@@ -54,7 +56,7 @@ describe(
         geometryInstances: new GeometryInstance({
           geometry: new RectangleGeometry({
             vertexFormat: vertexFormat,
-            rectangle: rectangle,
+            rectangle: Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0),
           }),
         }),
         asynchronous: false,
@@ -82,6 +84,19 @@ describe(
       polylines = polylines && polylines.destroy();
     });
 
+    function itRenders(initialColor = backgroundColor) {
+      it("renders", function () {
+        expect(scene).toRender(initialColor);
+
+        scene.primitives.removeAll();
+        scene.primitives.add(polygon);
+
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(backgroundColor);
+        });
+      });
+    }
+
     function renderMaterial(material, ignoreBackground, callback) {
       ignoreBackground = ignoreBackground ?? false;
       polygon.appearance.material = material;
@@ -100,116 +115,63 @@ describe(
       });
     }
 
-    function renderPolylineMaterial(material) {
-      polyline.material = material;
-      expect(scene).toRender(backgroundColor);
-
-      scene.primitives.removeAll();
-      scene.primitives.add(polylines);
-
-      let result;
-      expect(scene).toRenderAndCall(function (rgba) {
-        result = rgba;
-        expect(rgba).not.toEqual(backgroundColor);
-      });
-      return result;
-    }
-
     function verifyMaterial(type) {
-      const material = new Material({
-        strict: true,
-        fabric: {
-          type: type,
-        },
+      describe(`${type} built-in material`, function () {
+        beforeEach(function () {
+          const material = new Material({
+            strict: true,
+            fabric: {
+              type: type,
+            },
+          });
+          polygon.appearance.material = material;
+        });
+
+        itRenders();
       });
-      renderMaterial(material);
     }
 
     function verifyPolylineMaterial(type) {
-      const material = new Material({
-        strict: true,
-        fabric: {
-          type: type,
-        },
+      describe(`${type} built-in material`, function () {
+        it("renders", function () {
+          const material = new Material({
+            strict: true,
+            fabric: {
+              type: type,
+            },
+          });
+
+          polyline.material = material;
+          expect(scene).toRender(backgroundColor);
+
+          scene.primitives.removeAll();
+          scene.primitives.add(polylines);
+
+          expect(scene).notToRender(backgroundColor);
+        });
       });
-      renderPolylineMaterial(material);
     }
 
-    it("draws Color built-in material", function () {
-      verifyMaterial("Color");
-    });
+    verifyMaterial("Color");
+    verifyMaterial("Image");
+    verifyMaterial("DiffuseMap");
+    verifyMaterial("AlphaMap");
+    verifyMaterial("SpecularMap");
+    verifyMaterial("EmissionMap");
+    verifyMaterial("BumpMap");
+    verifyMaterial("NormalMap");
+    verifyMaterial("Grid");
+    verifyMaterial("Stripe");
+    verifyMaterial("Checkerboard");
+    verifyMaterial("Dot");
+    verifyMaterial("Water");
+    verifyMaterial("RimLighting");
+    verifyMaterial("Fade");
 
-    it("draws Image built-in material", function () {
-      verifyMaterial("Image");
-    });
-
-    it("draws DiffuseMap built-in material", function () {
-      verifyMaterial("DiffuseMap");
-    });
-
-    it("draws AlphaMap built-in material", function () {
-      verifyMaterial("AlphaMap");
-    });
-
-    it("draws SpecularMap built-in material", function () {
-      verifyMaterial("SpecularMap");
-    });
-
-    it("draws EmissionMap built-in material", function () {
-      verifyMaterial("EmissionMap");
-    });
-
-    it("draws BumpMap built-in material", function () {
-      verifyMaterial("BumpMap");
-    });
-
-    it("draws NormalMap built-in material", function () {
-      verifyMaterial("NormalMap");
-    });
-
-    it("draws Grid built-in material", function () {
-      verifyMaterial("Grid");
-    });
-
-    it("draws Stripe built-in material", function () {
-      verifyMaterial("Stripe");
-    });
-
-    it("draws Checkerboard built-in material", function () {
-      verifyMaterial("Checkerboard");
-    });
-
-    it("draws Dot built-in material", function () {
-      verifyMaterial("Dot");
-    });
-
-    it("draws Water built-in material", function () {
-      verifyMaterial("Water");
-    });
-
-    it("draws RimLighting built-in material", function () {
-      verifyMaterial("RimLighting");
-    });
-
-    it("draws Fade built-in material", function () {
-      verifyMaterial("Fade");
-    });
-
-    it("draws PolylineArrow built-in material", function () {
-      verifyPolylineMaterial("PolylineArrow");
-    });
-
-    it("draws PolylineDash built-in material", function () {
-      verifyPolylineMaterial("PolylineDash");
-    });
-
-    it("draws PolylineGlow built-in material", function () {
-      verifyPolylineMaterial("PolylineGlow");
-    });
-
-    it("draws PolylineOutline built-in material", function () {
-      verifyPolylineMaterial("PolylineOutline");
-    });
+    verifyPolylineMaterial("PolylineArrow");
+    verifyPolylineMaterial("PolylineDash");
+    verifyPolylineMaterial("PolylineGlow");
+    verifyPolylineMaterial("PolylineOutline");
 
     it("gets the material type", function () {
       const material = new Material({
@@ -363,6 +325,44 @@ describe(
           type: "DiffuseMap",
           uniforms: {
             image: canvas,
+          },
+        },
+      });
+
+      renderMaterial(material);
+    });
+
+    it("creates a material with an image offscreen canvas uniform", function () {
+      const canvas = new OffscreenCanvas(1, 1);
+      const context2D = canvas.getContext("2d");
+      context2D.fillStyle = "rgb(0,0,255)";
+      context2D.fillRect(0, 0, 1, 1);
+
+      const material = new Material({
+        strict: true,
+        fabric: {
+          type: "DiffuseMap",
+          uniforms: {
+            image: canvas,
+          },
+        },
+      });
+
+      renderMaterial(material);
+    });
+
+    it("creates a material with an image bitmap", function () {
+      const canvas = new OffscreenCanvas(1, 1);
+      const context2D = canvas.getContext("2d");
+      context2D.fillStyle = "rgb(0,0,255)";
+      context2D.fillRect(0, 0, 1, 1);
+
+      const material = new Material({
+        strict: true,
+        fabric: {
+          type: "DiffuseMap",
+          uniforms: {
+            image: canvas.transferToImageBitmap(),
           },
         },
       });
@@ -592,55 +592,117 @@ describe(
       });
     });
 
-    it("creates material with custom texture filter", function () {
-      const materialLinear = new Material({
+    it("creates a material using fromTypeAsync", async function () {
+      const material = await Material.fromTypeAsync("Color");
+      renderMaterial(material);
+    });
+
+    it("loads a 2D texture image synchronously when awaiting fromTypeAsync", async function () {
+      const imageMaterial = await Material.fromTypeAsync("Image", {
+        image: "./Data/Images/Blue.png",
+      });
+      renderMaterial(imageMaterial, false, function (rgba) {
+        expect(rgba).toEqual([0, 0, 255, 255]);
+      });
+    });
+
+    it("loads cubemap images synchronously when awaiting fromTypeAsync", async function () {
+      // First make a material with a cubemap, then use its type to make a second cubemap material asynchronously.
+      const material = new Material({
+        strict: true,
         fabric: {
-          type: "DiffuseMap",
           uniforms: {
-            image: "./Data/Images/BlueOverRed.png",
+            cubeMap: {
+              positiveX: "./Data/Images/Blue.png",
+              negativeX: "./Data/Images/Blue.png",
+              positiveY: "./Data/Images/Blue.png",
+              negativeY: "./Data/Images/Blue.png",
+              positiveZ: "./Data/Images/Blue.png",
+              negativeZ: "./Data/Images/Blue.png",
+            },
           },
+          source:
+            "uniform samplerCube cubeMap;\n" +
+            "czm_material czm_getMaterial(czm_materialInput materialInput)\n" +
+            "{\n" +
+            "    czm_material material = czm_getDefaultMaterial(materialInput);\n" +
+            "    material.diffuse = czm_textureCube(cubeMap, vec3(1.0)).xyz;\n" +
+            "    return material;\n" +
+            "}\n",
         },
-        minificationFilter: TextureMinificationFilter.LINEAR,
-        magnificationFilter: TextureMagnificationFilter.LINEAR,
       });
 
-      const materialNearest = new Material({
-        fabric: {
-          type: "DiffuseMap",
-          uniforms: {
-            image: "./Data/Images/BlueOverRed.png",
+      const materialFromTypeAsync = await Material.fromTypeAsync(
+        material.type,
+        {
+          cubeMap: {
+            positiveX: "./Data/Images/Green.png",
+            negativeX: "./Data/Images/Green.png",
+            positiveY: "./Data/Images/Green.png",
+            negativeY: "./Data/Images/Green.png",
+            positiveZ: "./Data/Images/Green.png",
+            negativeZ: "./Data/Images/Green.png",
           },
         },
-        minificationFilter: TextureMinificationFilter.NEAREST,
-        magnificationFilter: TextureMagnificationFilter.NEAREST,
+      );
+
+      renderMaterial(materialFromTypeAsync);
+    });
+
+    it("loads sub-materials synchronously when awaiting fromTypeAsync", async function () {
+      // First make a material with submaterials, then use its type to make a second material asynchronously.
+      const material = new Material({
+        strict: true,
+        fabric: {
+          materials: {
+            greenMaterial: {
+              type: "Image",
+              uniforms: {
+                image: "./Data/Images/Green.png", // Green image
+              },
+            },
+            blueMaterial: {
+              type: "Image",
+              uniforms: {
+                image: "./Data/Images/Blue.png", // Blue image
+              },
+            },
+          },
+          components: {
+            diffuse:
+              "clamp(greenMaterial.diffuse + blueMaterial.diffuse, 0.0, 1.0)",
+          },
+        },
       });
+
+      const materialFromTypeAsync = await Material.fromTypeAsync(material.type);
+      renderMaterial(materialFromTypeAsync, false, function (rgba) {
+        expect(rgba).toEqual([0, 255, 255, 255]); // Expect cyan from green + blue
+      });
+    });
+
+    it("creates material with custom texture filter", async function () {
+      const materialLinear = await Material.fromTypeAsync("DiffuseMap", {
+        image: "./Data/Images/BlueOverRed.png",
+      });
+      materialLinear.minificationFilter = TextureMinificationFilter.LINEAR;
+      materialLinear.magnificationFilter = TextureMagnificationFilter.LINEAR;
+
+      const materialNearest = await Material.fromTypeAsync("DiffuseMap", {
+        image: "./Data/Images/BlueOverRed.png",
+      });
+      materialNearest.minificationFilter = TextureMinificationFilter.NEAREST;
+      materialNearest.magnificationFilter = TextureMagnificationFilter.NEAREST;
 
       const purple = [127, 0, 127, 255];
 
       const ignoreBackground = true;
-      renderMaterial(materialLinear, ignoreBackground); // Populate the scene with the primitive prior to updating
-      return pollToPromise(function () {
-        const imageLoaded = materialLinear._loadedImages.length !== 0;
-        scene.renderForSpecs();
-        return imageLoaded;
-      })
-        .then(function () {
-          renderMaterial(materialLinear, ignoreBackground, function (rgba) {
-            expect(rgba).toEqualEpsilon(purple, 1);
-          });
-        })
-        .then(function () {
-          renderMaterial(materialNearest, ignoreBackground); // Populate the scene with the primitive prior to updating
-          return pollToPromise(function () {
-            const imageLoaded = materialNearest._loadedImages.length !== 0;
-            scene.renderForSpecs();
-            return imageLoaded;
-          }).then(function () {
-            renderMaterial(materialNearest, ignoreBackground, function (rgba) {
-              expect(rgba).not.toEqualEpsilon(purple, 1);
-            });
-          });
-        });
+      renderMaterial(materialLinear, ignoreBackground, function (rgba) {
+        expect(rgba).toEqualEpsilon(purple, 1);
+      });
+      renderMaterial(materialNearest, ignoreBackground, function (rgba) {
+        expect(rgba).not.toEqualEpsilon(purple, 1);
+      });
     });
 
     it("handles when material image is undefined", function () {
@@ -1046,6 +1108,18 @@ describe(
       const material = Material.fromType(Material.DiffuseMapType);
       renderMaterial(material);
       material.destroy();
+    });
+
+    it("throws when loaded async and image loading fails", async function () {
+      spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
+        return Promise.reject(new DeveloperError("Image loading failed"));
+      });
+
+      await expectAsync(
+        Material.fromTypeAsync("DiffuseMap", {
+          image: "i_dont_exist.png",
+        }),
+      ).toBeRejectedWithDeveloperError("Image loading failed");
     });
   },
   "WebGL",
