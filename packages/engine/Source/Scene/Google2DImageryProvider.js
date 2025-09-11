@@ -3,6 +3,7 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
+import Rectangle from "../Core/Rectangle.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 const trailingSlashRegex = /\/$/;
@@ -47,6 +48,7 @@ const defaultCredit = new Credit(
 function Google2DImageryProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   this._sessionToken = options.sessionToken;
+  this._apiKey = options.apiKey;
   this._tileWidth = options.tileWidth;
   this._tileHeight = options.tileHeight;
 }
@@ -318,9 +320,8 @@ Google2DImageryProvider.fromSessionToken = function (options) {
   }
   //>>includeEnd('debug');
 
-  const apiKey = options.apiKey;
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(apiKey)) {
+  if (!defined(options.apiKey)) {
     throw new DeveloperError("options.apiKey is required.");
   }
   //>>includeEnd('debug');
@@ -339,7 +340,7 @@ Google2DImageryProvider.fromSessionToken = function (options) {
 
   resource.setQueryParameters({
     session: options.sessionToken,
-    key: apiKey,
+    key: options.apiKey,
   });
 
   let credit;
@@ -368,6 +369,8 @@ Google2DImageryProvider.fromSessionToken = function (options) {
   return imageryProvider;
 };
 
+const rectangleScratch = new Rectangle();
+
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
@@ -376,8 +379,39 @@ Google2DImageryProvider.fromSessionToken = function (options) {
  * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  */
-Google2DImageryProvider.prototype.getTileCredits = function (x, y, level) {
-  return undefined;
+Google2DImageryProvider.prototype.getTileCredits = async function (
+  x,
+  y,
+  level,
+) {
+  const rectangle = this._imageryProvider._tilingScheme.tileXYToRectangle(
+    x,
+    y,
+    level,
+    rectangleScratch,
+  );
+  console.log("rectangle --> ", rectangle);
+  console.log("this --> ", this);
+  //const { mapType, language, region, apiKey } = options;
+
+  //curl "https://tile.googleapis.com/tile/v1/viewport?session=YOUR_SESSION_TOKEN&key=YOUR_API_KEY&zoom=zoom&north=north&south=south&east=east&west=west"
+
+  const response = await Resource.post({
+    url: "https://tile.googleapis.com/tile/v1/viewport",
+    queryParameters: {
+      session: this._sessionToken,
+      key: this._apiKey,
+      zoom: level,
+      north: rectangle.north,
+      south: rectangle.south,
+      east: rectangle.east,
+      west: rectangle.west,
+    },
+    data: JSON.stringify({}),
+  });
+  const responseJson = JSON.parse(response);
+  return responseJson.copyright;
+  //return undefined;
 };
 
 /**
