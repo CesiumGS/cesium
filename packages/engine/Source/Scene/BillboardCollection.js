@@ -1021,7 +1021,7 @@ function writeCompressedAttrib0(
       CesiumMath.clamp(pixelOffsetY, -UPPER_BOUND, UPPER_BOUND) + UPPER_BOUND,
     ) * LEFT_SHIFT8;
 
-  // We scale `translate` by LEFT_SHIFT2 before encoding it
+  // We scale `translate` by LEFT_SHIFT2 before encoding it (and unscale after decoding in the shader)
   // to preserve some subpixel precision (1 / 4 = 0.25 pixels). This mitigates rounding errors in aligning glyphs.
   // The cost of increasing this scaling factor is that it decreases the range of representable `translate` values
   // by the same scaling factor. Value must be kept in sync with the shader.
