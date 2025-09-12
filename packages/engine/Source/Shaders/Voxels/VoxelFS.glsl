@@ -16,13 +16,8 @@
 #endif
 
 uniform mat4 u_transformPositionViewToUv;
-uniform mat3 u_transformDirectionViewToLocal;
-uniform vec3 u_cameraPositionUv;
 uniform vec3 u_cameraDirectionUv;
 uniform float u_stepSize;
-
-uniform ivec4 u_cameraTileCoordinates;
-uniform vec3 u_cameraTileUv;
 
 #if defined(PICKING)
     uniform vec4 u_pickColor;
@@ -148,16 +143,6 @@ Ray getViewRayEC() {
     vec3 viewDirEC = normalize(eyeCoordinates.xyz);
     // TODO: handle ellipsoid shape scaling?
     return Ray(viewPosEC, viewDirEC, viewDirEC);
-}
-
-TileAndUvCoordinate getTileAndUvCoordinate(in vec3 positionEC) {
-    vec3 deltaTileCoordinate = convertECtoDeltaTile(positionEC);
-    vec3 tileUvSum = u_cameraTileUv + deltaTileCoordinate;
-    ivec3 tileCoordinate = u_cameraTileCoordinates.xyz + ivec3(floor(tileUvSum));
-    tileCoordinate = min(max(ivec3(0), tileCoordinate), ivec3((1 << u_cameraTileCoordinates.w) - 1));
-    ivec3 tileCoordinateChange = tileCoordinate - u_cameraTileCoordinates.xyz;
-    vec3 tileUv = clamp(tileUvSum - vec3(tileCoordinateChange), 0.0, 1.0);
-    return TileAndUvCoordinate(ivec4(tileCoordinate, u_cameraTileCoordinates.w), tileUv);
 }
 
 void main()

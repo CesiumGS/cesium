@@ -366,7 +366,7 @@ VoxelCylinderShape.prototype.update = function (
   let heightScale = 0.0;
   let heightOffset = 1.0;
   if (heightRange !== 0.0) {
-    heightScale = 2.0 / heightRange;
+    heightScale = 1.0 / heightRange;
     // TODO: drop all this UV stuff. We are now using physical bounds in meters.
     // offset = -minHeightUv / (maxHeightUv - minHeightUv)
     // offset = -(minHeight * 0.5 + 0.5) / ((maxHeight * 0.5 + 0.5) - (minHeight * 0.5 + 0.5))

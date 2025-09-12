@@ -3,6 +3,10 @@ uniform mat3 u_transformDirectionViewToTile;
 uniform vec3 u_boxUvToShapeUvScale;
 uniform vec3 u_boxUvToShapeUvTranslate;
 
+uniform ivec4 u_cameraTileCoordinates;
+uniform vec3 u_cameraTileUv;
+uniform vec3 u_cameraPositionUv;
+
 PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
     // For BOX, UV space = shape space, so we can use positionUv as-is,
     // and the Jacobian is the identity matrix, except that a step of 1
@@ -26,4 +30,14 @@ vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
 
 vec3 convertECtoDeltaTile(in vec3 positionEC) {
     return u_boxUvToShapeUvScale * (u_transformDirectionViewToTile * positionEC);
+}
+
+TileAndUvCoordinate getTileAndUvCoordinate(in vec3 positionEC) {
+    vec3 deltaTileCoordinate = convertECtoDeltaTile(positionEC);
+    vec3 tileUvSum = u_cameraTileUv + deltaTileCoordinate;
+    ivec3 tileCoordinate = u_cameraTileCoordinates.xyz + ivec3(floor(tileUvSum));
+    tileCoordinate = min(max(ivec3(0), tileCoordinate), ivec3((1 << u_cameraTileCoordinates.w) - 1));
+    ivec3 tileCoordinateChange = tileCoordinate - u_cameraTileCoordinates.xyz;
+    vec3 tileUv = clamp(tileUvSum - vec3(tileCoordinateChange), 0.0, 1.0);
+    return TileAndUvCoordinate(ivec4(tileCoordinate, u_cameraTileCoordinates.w), tileUv);
 }

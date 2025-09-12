@@ -26,9 +26,6 @@ uniform vec2 u_cylinderRenderRadiusMinMax;
 uniform sampler2D u_renderBoundPlanesTexture;
 
 RayShapeIntersection intersectBoundPlanes(in Ray ray) {
-    // Transform from [0,1] UV space to [-1,1] shape space.
-    ray.dir = ray.dir * 2.0;
-
     vec4 lastEntry = vec4(ray.dir, -INF_HIT);
     vec4 firstExit = vec4(-ray.dir, +INF_HIT);
     for (int i = 0; i < 2; i++) {
@@ -95,7 +92,7 @@ void intersectShape(Ray ray, Ray rayEC, inout Intersections ix)
     // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
     // Direction is scaled as well to be in sync with position.
     ray.pos = ray.pos * 2.0 - 1.0;
-    ray.dir *= 2.0;
+    //ray.dir *= 2.0;
 
     RayShapeIntersection outerIntersect = intersectBoundedCylinder(ray, rayEC, u_cylinderRenderRadiusMinMax.y);
 

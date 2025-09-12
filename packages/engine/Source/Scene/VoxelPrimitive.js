@@ -1339,6 +1339,11 @@ VoxelPrimitive.prototype.update = function (frameState) {
     transformDirectionViewToWorld,
     uniforms.transformDirectionViewToLocal,
   );
+  // TODO: not sure if transformDirectionViewToWorld is unitary. Getting rotation just in case.
+  uniforms.transformDirectionViewToLocal = Matrix3.getRotation(
+    uniforms.transformDirectionViewToLocal,
+    uniforms.transformDirectionViewToLocal,
+  );
   uniforms.cameraPositionUv = Matrix4.multiplyByPoint(
     this._transformPositionWorldToUv,
     frameState.camera.positionWC,
@@ -1713,7 +1718,8 @@ function updateShapeAndTransforms(primitive) {
     transformPositionUvToLocal,
     primitive._transformPositionUvToWorld,
   );
-  primitive._transformDirectionWorldToLocal = Matrix4.getMatrix3(
+  // TODO: is rotation OK here?
+  primitive._transformDirectionWorldToLocal = Matrix4.getRotation(
     transformPositionWorldToLocal,
     primitive._transformDirectionWorldToLocal,
   );

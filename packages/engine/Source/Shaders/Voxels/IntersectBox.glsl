@@ -29,8 +29,9 @@ RayShapeIntersection intersectBoundPlanes(in Ray ray) {
     }
 }
 
-void intersectShape(in Ray ray, inout Intersections ix)
+// TODO: drop rayUV param once other shapes are updated
+void intersectShape(in Ray rayUV, in  Ray rayEC, inout Intersections ix)
 {
-    RayShapeIntersection intersection = intersectBoundPlanes(ray);
+    RayShapeIntersection intersection = intersectBoundPlanes(rayEC);
     setShapeIntersection(ix, BOX_INTERSECTION_INDEX, intersection);
 }
