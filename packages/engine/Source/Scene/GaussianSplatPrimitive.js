@@ -2,12 +2,9 @@ import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
-import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import PixelFormat from "../Core/PixelFormat.js";
-import Sampler from "../Renderer/Sampler.js";
-import Texture from "../Renderer/Texture.js";
 import GaussianSplatRenderResources from "./GaussianSplatRenderResources.js";
 import BlendingState from "./BlendingState.js";
 import Pass from "../Renderer/Pass.js";
@@ -31,7 +28,10 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Quaternion from "../Core/Quaternion.js";
 import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
+import GaussianSplatMegatexture from "./GaussianSplatMegatexture.js";
+import { GaussianSplatTextureGeneratorState } from "./GaussianSplat3DTileContent.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
+import Transforms from "../Core/Transforms.js";
 
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4B = new Matrix4();
@@ -45,42 +45,6 @@ const GaussianSplatSortingState = {
   SORTED: 3,
   ERROR: 4,
 };
-
-function createSphericalHarmonicsTexture(context, shData) {
-  const texture = new Texture({
-    context: context,
-    source: {
-      width: shData.width,
-      height: shData.height,
-      arrayBufferView: shData.data,
-    },
-    preMultiplyAlpha: false,
-    skipColorSpaceConversion: true,
-    pixelFormat: PixelFormat.RG_INTEGER,
-    pixelDatatype: PixelDatatype.UNSIGNED_INT,
-    flipY: false,
-    sampler: Sampler.NEAREST,
-  });
-
-  return texture;
-}
-
-function createGaussianSplatTexture(context, splatTextureData) {
-  return new Texture({
-    context: context,
-    source: {
-      width: splatTextureData.width,
-      height: splatTextureData.height,
-      arrayBufferView: splatTextureData.data,
-    },
-    preMultiplyAlpha: false,
-    skipColorSpaceConversion: true,
-    pixelFormat: PixelFormat.RGBA_INTEGER,
-    pixelDatatype: PixelDatatype.UNSIGNED_INT,
-    flipY: false,
-    sampler: Sampler.NEAREST,
-  });
-}
 
 /** A primitive that renders Gaussian splats.
  * <p>
@@ -305,6 +269,8 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._sorterError = undefined;
+
+  this._previousSelectionLength = -1;
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -349,6 +315,63 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
 GaussianSplatPrimitive.prototype._wrappedUpdate = function (frameState) {
   this._baseTilesetUpdate.call(this._tileset, frameState);
   this.update(frameState);
+};
+
+GaussianSplatPrimitive.prototype.initMegaTextures = function (
+  context,
+  shDegree,
+) {
+  this.positionMegaTexture = new GaussianSplatMegatexture({
+    context: context,
+    width: ContextLimits.maximumTextureSize,
+    height: 1024,
+    pixelFormat: PixelFormat.RGB, //RG_INTEGER,
+    pixelDatatype: PixelDatatype.FLOAT,
+  });
+  this.colorMegaTexture = new GaussianSplatMegatexture({
+    context: context,
+    width: ContextLimits.maximumTextureSize,
+    height: 1024,
+    pixelFormat: PixelFormat.RED_INTEGER,
+    pixelDatatype: PixelDatatype.UNSIGNED_INT,
+  });
+  this.covarianceMegaTexture = new GaussianSplatMegatexture({
+    context: context,
+    width: ContextLimits.maximumTextureSize,
+    height: 1024,
+    pixelFormat: PixelFormat.RGBA_INTEGER,
+    pixelDatatype: PixelDatatype.UNSIGNED_INT,
+  });
+
+  if (shDegree > 0) {
+    this.sh1MegaTexture = new GaussianSplatMegatexture({
+      context: context,
+      width: ContextLimits.maximumTextureSize,
+      height: 1024,
+      pixelFormat: PixelFormat.RGBA_INTEGER,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    });
+  }
+
+  if (shDegree > 1) {
+    this.sh2MegaTexture = new GaussianSplatMegatexture({
+      context: context,
+      width: ContextLimits.maximumTextureSize,
+      height: 1024,
+      pixelFormat: PixelFormat.RGBA_INTEGER,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    });
+  }
+
+  if (shDegree > 2) {
+    this.sh3MegaTexture = new GaussianSplatMegatexture({
+      context: context,
+      width: ContextLimits.maximumTextureSize,
+      height: 1024,
+      pixelFormat: PixelFormat.RGBA_INTEGER,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    });
+  }
 };
 
 /**
@@ -427,6 +450,12 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const gltfPrimitive = tile.content.gltfPrimitive;
   const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
 
+  if (gaussianSplatPrimitive._rootTransform === undefined) {
+    gaussianSplatPrimitive._rootTransform = Transforms.eastNorthUpToFixedFrame(
+      tile.tileset.boundingSphere.center,
+    );
+  }
+  const rootTransform = gaussianSplatPrimitive._rootTransform;
   const computedModelMatrix = Matrix4.multiplyTransformation(
     computedTransform,
     gaussianSplatPrimitive._axisCorrectionMatrix,
@@ -441,7 +470,7 @@ GaussianSplatPrimitive.transformTile = function (tile) {
 
   const toGlobal = Matrix4.multiply(
     tile.tileset.modelMatrix,
-    Matrix4.fromArray(tile.tileset.root.transform),
+    Matrix4.fromArray(rootTransform),
     scratchMatrix4B,
   );
   const toLocal = Matrix4.inverse(toGlobal, scratchMatrix4C);
@@ -514,83 +543,6 @@ GaussianSplatPrimitive.transformTile = function (tile) {
 };
 
 /**
- * Generates the Gaussian splat texture for the primitive.
- * This method creates a texture from the splat attributes (positions, scales, rotations, colors)
- * and updates the primitive's state accordingly.
- *
- * @see {@link GaussianSplatTextureGenerator}
- *
- * @param {GaussianSplatPrimitive} primitive
- * @param {FrameState} frameState
- * @private
- */
-GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
-  primitive._gaussianSplatTexturePending = true;
-  const promise = GaussianSplatTextureGenerator.generateFromAttributes({
-    attributes: {
-      positions: new Float32Array(primitive._positions),
-      scales: new Float32Array(primitive._scales),
-      rotations: new Float32Array(primitive._rotations),
-      colors: new Uint8Array(primitive._colors),
-    },
-    count: primitive._numSplats,
-  });
-  if (!defined(promise)) {
-    primitive._gaussianSplatTexturePending = false;
-    return;
-  }
-  promise
-    .then((splatTextureData) => {
-      if (!primitive._gaussianSplatTexture) {
-        // First frame, so create the texture.
-        primitive.gaussianSplatTexture = createGaussianSplatTexture(
-          frameState.context,
-          splatTextureData,
-        );
-      } else if (
-        primitive._lastTextureHeight !== splatTextureData.height ||
-        primitive._lastTextureWidth !== splatTextureData.width
-      ) {
-        const oldTex = primitive.gaussianSplatTexture;
-        primitive._gaussianSplatTexture = createGaussianSplatTexture(
-          frameState.context,
-          splatTextureData,
-        );
-        oldTex.destroy();
-      } else {
-        primitive.gaussianSplatTexture.copyFrom({
-          source: {
-            width: splatTextureData.width,
-            height: splatTextureData.height,
-            arrayBufferView: splatTextureData.data,
-          },
-        });
-      }
-      primitive._vertexArray = undefined;
-      primitive._lastTextureHeight = splatTextureData.height;
-      primitive._lastTextureWidth = splatTextureData.width;
-
-      primitive._hasGaussianSplatTexture = true;
-      primitive._needsGaussianSplatTexture = false;
-      primitive._gaussianSplatTexturePending = false;
-
-      if (
-        !defined(primitive._indexes) ||
-        primitive._indexes.length < primitive._numSplats
-      ) {
-        primitive._indexes = new Uint32Array(primitive._numSplats);
-      }
-      for (let i = 0; i < primitive._numSplats; ++i) {
-        primitive._indexes[i] = i;
-      }
-    })
-    .catch((error) => {
-      console.error("Error generating Gaussian splat texture:", error);
-      primitive._gaussianSplatTexturePending = false;
-    });
-};
-
-/**
  * Builds the draw command for the Gaussian splat primitive.
  * This method sets up the shader program, render state, and vertex array for rendering the Gaussian splats.
  * It also configures the attributes and uniforms required for rendering.
@@ -624,9 +576,20 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     ShaderDestination.VERTEX,
   );
   shaderBuilder.addVarying("float", "v_splitDirection");
+
+  shaderBuilder.addUniform(
+    "highp sampler2D",
+    "u_splatPositionTexture",
+    ShaderDestination.VERTEX,
+  );
   shaderBuilder.addUniform(
     "highp usampler2D",
-    "u_splatAttributeTexture",
+    "u_splatColorTexture",
+    ShaderDestination.VERTEX,
+  );
+  shaderBuilder.addUniform(
+    "highp usampler2D",
+    "u_splatCovarianceTexture",
     ShaderDestination.VERTEX,
   );
 
@@ -651,30 +614,62 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   );
 
   const uniformMap = renderResources.uniformMap;
-
-  const textureCache = primitive.gaussianSplatTexture;
-  uniformMap.u_splatAttributeTexture = function () {
-    return textureCache;
+  const posTexCache = primitive.positionMegaTexture.texture;
+  uniformMap.u_splatPositionTexture = function () {
+    return posTexCache;
   };
 
-  if (primitive._sphericalHarmonicsDegree > 0) {
-    shaderBuilder.addDefine(
-      "HAS_SPHERICAL_HARMONICS",
-      "1",
-      ShaderDestination.VERTEX,
-    );
+  const covTexCache = primitive.covarianceMegaTexture.texture;
+  uniformMap.u_splatCovarianceTexture = function () {
+    return covTexCache;
+  };
+
+  const colorTexCache = primitive.colorMegaTexture.texture;
+  uniformMap.u_splatColorTexture = function () {
+    return colorTexCache;
+  };
+
+  if (primitive.shDegree > 0) {
+    shaderBuilder.addDefine("SH1_ENABLED", "1");
     shaderBuilder.addUniform(
       "highp usampler2D",
-      "u_sphericalHarmonicsTexture",
+      "u_splatSh1Texture",
       ShaderDestination.VERTEX,
     );
-    uniformMap.u_sphericalHarmonicsTexture = function () {
-      return primitive.sphericalHarmonicsTexture;
+
+    const sh1TexCache = primitive.sh1MegaTexture.texture;
+    uniformMap.u_splatSh1Texture = function () {
+      return sh1TexCache;
     };
   }
-  uniformMap.u_sphericalHarmonicsDegree = function () {
-    return primitive._sphericalHarmonicsDegree;
-  };
+
+  if (primitive.shDegree > 1) {
+    shaderBuilder.addDefine("SH2_ENABLED", "1");
+    shaderBuilder.addUniform(
+      "highp usampler2D",
+      "u_splatSh2Texture",
+      ShaderDestination.VERTEX,
+    );
+
+    const sh2TexCache = primitive.sh2MegaTexture.texture;
+    uniformMap.u_splatSh2Texture = function () {
+      return sh2TexCache;
+    };
+  }
+
+  if (primitive.shDegree > 2) {
+    shaderBuilder.addDefine("SH3_ENABLED", "1");
+    shaderBuilder.addUniform(
+      "highp usampler2D",
+      "u_splatSh3Texture",
+      ShaderDestination.VERTEX,
+    );
+
+    const sh3TexCache = primitive.sh3MegaTexture.texture;
+    uniformMap.u_splatSh3Texture = function () {
+      return sh3TexCache;
+    };
+  }
 
   uniformMap.u_cameraPositionWC = function () {
     return Cartesian3.clone(frameState.camera.positionWC);
@@ -765,7 +760,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   const modelMatrix = Matrix4.multiply(
     tileset.modelMatrix,
-    Matrix4.fromArray(tileset.root.transform),
+    Matrix4.fromArray(primitive._rootTransform),
     scratchMatrix4B,
   );
 
@@ -791,6 +786,8 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   primitive._drawCommand = command;
 };
 
+const scratchAttributeRefs = [];
+
 /**
  * Updates the Gaussian splat primitive for the current frame.
  * This method checks if the primitive needs to be updated based on the current frame state,
@@ -804,8 +801,18 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
-  if (!defined(this._rootTransform)) {
-    this._rootTransform = tileset.root.computedTransform;
+  if (this._hasGaussianSplatTexture === false) {
+    const sphericalHarmonicsDegree = defined(
+      tileset.root?.content?._sphericalHarmonicsDegree,
+    )
+      ? tileset.root.content._sphericalHarmonicsDegree
+      : tileset.root?.children[0]?.content?._sphericalHarmonicsDegree;
+
+    if (!defined(sphericalHarmonicsDegree)) {
+      return;
+    }
+    this.initMegaTextures(frameState.context, sphericalHarmonicsDegree);
+    this._hasGaussianSplatTexture = true;
   }
 
   if (!tileset.show || tileset._selectedTiles.length === 0) {
@@ -838,21 +845,34 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       return;
     }
 
-    if (
-      tileset._selectedTiles.length !== 0 &&
-      tileset._selectedTiles.length !== this.selectedTileLength
-    ) {
+    const tiles = tileset._selectedTiles.filter(
+      (tile) =>
+        tile.content._textureGeneratorState ===
+        GaussianSplatTextureGeneratorState.READY,
+    );
+
+    const selectionChanged = () => {
+      const currentSelection = tiles;
+      if (this._previousSelectionLength !== currentSelection.length) {
+        this._previousSelectionLength = currentSelection.length;
+        return true;
+      }
+      for (let i = 0; i < currentSelection.length; i++) {
+        if (!currentSelection[i]._wasSelectedLastFrame) {
+          this._previousSelectionLength = currentSelection.length;
+          return true;
+        }
+      }
+
+      this._previousSelectionLength = currentSelection.length;
+      return false;
+    };
+
+    if (selectionChanged()) {
       this._numSplats = 0;
       this._positions = undefined;
-      this._rotations = undefined;
-      this._scales = undefined;
-      this._colors = undefined;
       this._indexes = undefined;
-      this._shData = undefined;
-      this._needsGaussianSplatTexture = true;
-      this._gaussianSplatTexturePending = false;
 
-      const tiles = tileset._selectedTiles;
       const totalElements = tiles.reduce(
         (total, tile) => total + tile.content.pointsLength,
         0,
@@ -879,68 +899,58 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         return aggregate;
       };
 
-      const aggregateShData = () => {
-        let offset = 0;
-        for (const tile of tiles) {
-          const shData = tile.content.packedSphericalHarmonicsData;
-          if (tile.content.sphericalHarmonicsDegree > 0) {
-            if (!defined(this._shData)) {
-              let coefs;
-              switch (tile.content.sphericalHarmonicsDegree) {
-                case 1:
-                  coefs = 9;
-                  break;
-                case 2:
-                  coefs = 24;
-                  break;
-                case 3:
-                  coefs = 45;
-              }
-              this._shData = new Uint32Array(totalElements * (coefs * (2 / 3)));
-            }
-            this._shData.set(shData, offset);
-            offset += shData.length;
-          }
-        }
-      };
-
+      //unfortunately we still need raw position values for sorting
       this._positions = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
-        (gltfPrimitive) =>
+        (splatPrimitive) =>
           ModelUtility.getAttributeBySemantic(
-            gltfPrimitive,
+            splatPrimitive,
             VertexAttributeSemantic.POSITION,
           ),
       );
 
-      this._scales = aggregateAttributeValues(
-        ComponentDatatype.FLOAT,
-        (gltfPrimitive) =>
-          ModelUtility.getAttributeBySemantic(
-            gltfPrimitive,
-            VertexAttributeSemantic.SCALE,
-          ),
+      scratchAttributeRefs.length = 0;
+      for (const tile of tiles) {
+        scratchAttributeRefs.push(tile.content.positionTextureData);
+      }
+      this.positionMegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
+      scratchAttributeRefs.length = 0;
+      for (const tile of tiles) {
+        scratchAttributeRefs.push(tile.content.covarianceTextureData);
+      }
+      this.covarianceMegaTexture.insertTextureDataMultiple(
+        scratchAttributeRefs,
       );
 
-      this._rotations = aggregateAttributeValues(
-        ComponentDatatype.FLOAT,
-        (gltfPrimitive) =>
-          ModelUtility.getAttributeBySemantic(
-            gltfPrimitive,
-            VertexAttributeSemantic.ROTATION,
-          ),
-      );
+      scratchAttributeRefs.length = 0;
+      for (const tile of tiles) {
+        scratchAttributeRefs.push(tile.content.colorTextureData);
+      }
+      this.colorMegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
 
-      this._colors = aggregateAttributeValues(
-        ComponentDatatype.UNSIGNED_BYTE,
-        (gltfPrimitive) =>
-          ModelUtility.getAttributeBySemantic(
-            gltfPrimitive,
-            VertexAttributeSemantic.COLOR,
-          ),
-      );
+      const shDegree = tiles[0].content.shDegree;
+      if (shDegree > 0) {
+        scratchAttributeRefs.length = 0;
+        for (const tile of tiles) {
+          scratchAttributeRefs.push(tile.content.sh1TextureData);
+        }
+        this.sh1MegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
+      }
+      if (shDegree > 1) {
+        scratchAttributeRefs.length = 0;
+        for (const tile of tiles) {
+          scratchAttributeRefs.push(tile.content.sh2TextureData);
+        }
+        this.sh2MegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
+      }
+      if (shDegree > 2) {
+        scratchAttributeRefs.length = 0;
+        for (const tile of tiles) {
+          scratchAttributeRefs.push(tile.content.sh3TextureData);
+        }
+        this.sh3MegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
+      }
 
-      aggregateShData();
       this._sphericalHarmonicsDegree =
         tiles[0].content.sphericalHarmonicsDegree;
 
@@ -949,45 +959,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     }
 
     if (this._numSplats === 0) {
-      return;
-    }
-
-    if (this._needsGaussianSplatTexture) {
-      if (!this._gaussianSplatTexturePending) {
-        GaussianSplatPrimitive.generateSplatTexture(this, frameState);
-        if (defined(this._shData)) {
-          const oldTex = this.sphericalHarmonicsTexture;
-          const width = ContextLimits.maximumTextureSize;
-          const dims =
-            tileset._selectedTiles[0].content
-              .sphericalHarmonicsCoefficientCount / 3;
-          const splatsPerRow = Math.floor(width / dims);
-          const floatsPerRow = splatsPerRow * (dims * 2);
-          const texBuf = new Uint32Array(
-            width * Math.ceil(this._numSplats / splatsPerRow) * 2,
-          );
-
-          let dataIndex = 0;
-          for (let i = 0; dataIndex < this._shData.length; i += width * 2) {
-            texBuf.set(
-              this._shData.subarray(dataIndex, dataIndex + floatsPerRow),
-              i,
-            );
-            dataIndex += floatsPerRow;
-          }
-          this.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
-            frameState.context,
-            {
-              data: texBuf,
-              width: width,
-              height: Math.ceil(this._numSplats / splatsPerRow),
-            },
-          );
-          if (defined(oldTex)) {
-            oldTex.destroy();
-          }
-        }
-      }
       return;
     }
 
