@@ -6,6 +6,7 @@ uniform vec3 u_boxUvToShapeUvTranslate;
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
 uniform vec3 u_cameraPositionUv;
+uniform mat3 u_transformDirectionViewToLocal;
 
 PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
     // For BOX, UV space = shape space, so we can use positionUv as-is,
