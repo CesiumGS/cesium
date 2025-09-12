@@ -38,18 +38,18 @@ const birdsEyeView = {
 viewer.scene.camera.flyTo(birdsEyeView);
 
 // Load feature service geojson files
-const points = await Cesium.ITwinData.loadGeospatialFeatures(
-  iTwinId,
-  "2380dc1b-1dac-4709-aa5c-f6cb38c4e9f5",
-);
-const lines = await Cesium.ITwinData.loadGeospatialFeatures(
-  iTwinId,
-  "613d2310-4d01-43b7-bc92-873a2ca4a4a0",
-);
-const areas = await Cesium.ITwinData.loadGeospatialFeatures(
-  iTwinId,
-  "93e7ef51-5210-49f2-92a3-c7f6685e102f",
-);
+const points = await Cesium.ITwinData.loadGeospatialFeatures({
+  iTwinId: iTwinId,
+  collectionId: "2380dc1b-1dac-4709-aa5c-f6cb38c4e9f5",
+});
+const lines = await Cesium.ITwinData.loadGeospatialFeatures({
+  iTwinId: iTwinId,
+  collectionId: "613d2310-4d01-43b7-bc92-873a2ca4a4a0",
+});
+const areas = await Cesium.ITwinData.loadGeospatialFeatures({
+  iTwinId: iTwinId,
+  collectionId: "93e7ef51-5210-49f2-92a3-c7f6685e102f",
+});
 
 // Add some styling to the lines and points to differentiate types
 const pinBuilder = new Cesium.PinBuilder();
@@ -90,17 +90,15 @@ viewer.dataSources.add(lines);
 viewer.dataSources.add(areas);
 
 // Create tileset of the reality data mesh and pointcloud
-const realityMeshId = "62e4432d-621d-489a-87ff-1fc56a2b5369";
-const realityMesh = await Cesium.ITwinData.createTilesetForRealityDataId(
-  iTwinId,
-  realityMeshId,
-);
+const realityMesh = await Cesium.ITwinData.createTilesetForRealityDataId({
+  iTwinId: iTwinId,
+  realityDataId: "62e4432d-621d-489a-87ff-1fc56a2b5369",
+});
 viewer.scene.primitives.add(realityMesh);
-const pointcloudId = "ebf2ee74-f0de-4cd6-a311-19a169c55fdc";
-const pointcloud = await Cesium.ITwinData.createTilesetForRealityDataId(
-  iTwinId,
-  pointcloudId,
-);
+const pointcloud = await Cesium.ITwinData.createTilesetForRealityDataId({
+  iTwinId: iTwinId,
+  realityDataId: "ebf2ee74-f0de-4cd6-a311-19a169c55fdc",
+});
 // increase the size of the pointcloud points and turn on attenuation to
 // make them more visible in the viewer
 pointcloud.maximumScreenSpaceError = 1;

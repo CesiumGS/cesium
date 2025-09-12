@@ -56,6 +56,14 @@ viewer.zoomTo(imageryLayer);
 // Add a button to toggle the display of the Bing Maps Labels Only layer
 Sandcastle.addToggleButton("Show Bing Maps Labels Only", true, (checked) => {
   bingMapsLabelsOnly.show = checked;
+  const rightLabel = document.querySelector(".split-label.right");
+  if (checked) {
+    rightLabel.innerHTML =
+      "Bing Maps (unlabeled)<br />+<br />Washington Imagery<br />+<br />Bing Maps (labels only)";
+  } else {
+    rightLabel.innerHTML =
+      "Bing Maps (unlabeled)<br />+<br />Washington Imagery";
+  }
 });
 
 // The remaining code synchronizes the position of the slider with the split position
