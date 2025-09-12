@@ -500,19 +500,19 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const position = new Cartesian3();
   const rotation = new Quaternion();
   const scale = new Cartesian3();
-  for (let i = 0; i < positions.length / 3; ++i) {
-    position.x = positions[i * 3];
-    position.y = positions[i * 3 + 1];
-    position.z = positions[i * 3 + 2];
+  for (let i = 0; i < attributePositions.length / 3; ++i) {
+    position.x = attributePositions[i * 3];
+    position.y = attributePositions[i * 3 + 1];
+    position.z = attributePositions[i * 3 + 2];
 
-    rotation.x = rotations[i * 4];
-    rotation.y = rotations[i * 4 + 1];
-    rotation.z = rotations[i * 4 + 2];
-    rotation.w = rotations[i * 4 + 3];
+    rotation.x = attributeRotations[i * 4];
+    rotation.y = attributeRotations[i * 4 + 1];
+    rotation.z = attributeRotations[i * 4 + 2];
+    rotation.w = attributeRotations[i * 4 + 3];
 
-    scale.x = scales[i * 3];
-    scale.y = scales[i * 3 + 1];
-    scale.z = scales[i * 3 + 2];
+    scale.x = attributeScales[i * 3];
+    scale.y = attributeScales[i * 3 + 1];
+    scale.z = attributeScales[i * 3 + 2];
 
     Matrix4.fromTranslationQuaternionRotationScale(
       position,
@@ -527,18 +527,18 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     Matrix4.getRotation(scratchMatrix4C, rotation);
     Matrix4.getScale(scratchMatrix4C, scale);
 
-    attributePositions[i * 3] = position.x;
-    attributePositions[i * 3 + 1] = position.y;
-    attributePositions[i * 3 + 2] = position.z;
+    positions[i * 3] = position.x;
+    positions[i * 3 + 1] = position.y;
+    positions[i * 3 + 2] = position.z;
 
-    attributeRotations[i * 4] = rotation.x;
-    attributeRotations[i * 4 + 1] = rotation.y;
-    attributeRotations[i * 4 + 2] = rotation.z;
-    attributeRotations[i * 4 + 3] = rotation.w;
+    rotations[i * 4] = rotation.x;
+    rotations[i * 4 + 1] = rotation.y;
+    rotations[i * 4 + 2] = rotation.z;
+    rotations[i * 4 + 3] = rotation.w;
 
-    attributeScales[i * 3] = scale.x;
-    attributeScales[i * 3 + 1] = scale.y;
-    attributeScales[i * 3 + 2] = scale.z;
+    scales[i * 3] = scale.x;
+    scales[i * 3 + 1] = scale.y;
+    scales[i * 3 + 2] = scale.z;
   }
 };
 
@@ -871,41 +871,20 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         (total, tile) => total + tile.content.pointsLength,
         0,
       );
-      const aggregateAttributeValues = (
-        componentDatatype,
-        getAttributeCallback,
-      ) => {
-        let aggregate;
-        let offset = 0;
-        for (const tile of tiles) {
-          const primitive = tile.content.gltfPrimitive;
-          const attribute = getAttributeCallback(primitive);
-          if (!defined(aggregate)) {
-            aggregate = ComponentDatatype.createTypedArray(
-              componentDatatype,
-              totalElements *
-                AttributeType.getNumberOfComponents(attribute.type),
-            );
-          }
-          aggregate.set(attribute.typedArray, offset);
-          offset += attribute.typedArray.length;
-        }
-        return aggregate;
-      };
 
-      //unfortunately we still need raw position values for sorting
-      this._positions = aggregateAttributeValues(
+      let offset = 0;
+      this._positions = ComponentDatatype.createTypedArray(
         ComponentDatatype.FLOAT,
-        (splatPrimitive) =>
-          ModelUtility.getAttributeBySemantic(
-            splatPrimitive,
-            VertexAttributeSemantic.POSITION,
-          ),
+        totalElements * 3,
       );
+      for (const tile of tiles) {
+        this._positions.set(tile.content._originalPositions, offset);
+        offset += tile.content._originalPositions.length;
+      }
 
       scratchAttributeRefs.length = 0;
       for (const tile of tiles) {
-        scratchAttributeRefs.push(tile.content.positionTextureData);
+        scratchAttributeRefs.push(tile.content._originalPositions);
       }
       this.positionMegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
       scratchAttributeRefs.length = 0;

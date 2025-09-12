@@ -486,33 +486,17 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
     ) {
       this._textureGeneratorState = GaussianSplatTextureGeneratorState.PENDING;
 
-      const attributePositions = ModelUtility.getAttributeBySemantic(
-        this.gltfPrimitive,
-        VertexAttributeSemantic.POSITION,
-      ).typedArray;
-
       const attributeColors = ModelUtility.getAttributeBySemantic(
         this.gltfPrimitive,
         VertexAttributeSemantic.COLOR,
       ).typedArray;
 
-      const attributeRotations = ModelUtility.getAttributeBySemantic(
-        this.gltfPrimitive,
-        VertexAttributeSemantic.ROTATION,
-      ).typedArray;
-
-      const attributeScales = ModelUtility.getAttributeBySemantic(
-        this.gltfPrimitive,
-        VertexAttributeSemantic.SCALE,
-      ).typedArray;
-
       // Create texture data. Colors are already how we want them.
-      this.positionTextureData = attributePositions;
       this.colorTextureData =
         GaussianSplatData.makeColorTextureData(attributeColors);
       this.covarianceTextureData = GaussianSplatData.makeCovarianceTextureData(
-        attributeScales,
-        attributeRotations,
+        this._originalScales,
+        this._originalRotations,
         this.pointsLength,
       );
 
