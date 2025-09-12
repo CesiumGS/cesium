@@ -22,8 +22,7 @@ import defined from "./defined.js";
  * evt.removeEventListener(MyObject.prototype.myListener);
  */
 function Event() {
-  this._listeners = [];
-  this._scopes = [];
+  this._listeners = new Map();
   this._toRemove = [];
   this._insideRaiseEvent = false;
 }
@@ -37,7 +36,7 @@ Object.defineProperties(Event.prototype, {
    */
   numberOfListeners: {
     get: function () {
-      return this._listeners.length - this._toRemove.length;
+      return this._listeners.size - this._toRemove.length;
     },
   },
 });
@@ -60,8 +59,7 @@ Event.prototype.addEventListener = function (listener, scope) {
   Check.typeOf.func("listener", listener);
   //>>includeEnd('debug');
 
-  this._listeners.push(listener);
-  this._scopes.push(scope);
+  this._listeners.set(listener, scope);
 
   const event = this;
   return function () {
@@ -84,38 +82,19 @@ Event.prototype.removeEventListener = function (listener, scope) {
   Check.typeOf.func("listener", listener);
   //>>includeEnd('debug');
 
-  const listeners = this._listeners;
-  const scopes = this._scopes;
-
-  let index = -1;
-  for (let i = 0; i < listeners.length; i++) {
-    if (listeners[i] === listener && scopes[i] === scope) {
-      index = i;
-      break;
-    }
+  if (!this._listeners.has(listener)) {
+    return false;
   }
 
-  if (index !== -1) {
-    if (this._insideRaiseEvent) {
-      //In order to allow removing an event subscription from within
-      //a callback, we don't actually remove the items here.  Instead
-      //remember the index they are at and undefined their value.
-      this._toRemove.push(index);
-      listeners[index] = undefined;
-      scopes[index] = undefined;
-    } else {
-      listeners.splice(index, 1);
-      scopes.splice(index, 1);
-    }
-    return true;
+  if (this._insideRaiseEvent) {
+    // Mark for removal after raiseEvent
+    this._toRemove.push(listener);
+    this._listeners.set(listener, undefined);
+  } else {
+    this._listeners.delete(listener);
   }
-
-  return false;
+  return true;
 };
-
-function compareNumber(a, b) {
-  return b - a;
-}
 
 /**
  * Raises the event by calling each registered listener with all supplied arguments.
@@ -128,29 +107,18 @@ function compareNumber(a, b) {
 Event.prototype.raiseEvent = function () {
   this._insideRaiseEvent = true;
 
-  let i;
-  const listeners = this._listeners;
-  const scopes = this._scopes;
-  let length = listeners.length;
-
-  for (i = 0; i < length; i++) {
-    const listener = listeners[i];
+  for (const [listener, scope] of this._listeners.entries()) {
     if (defined(listener)) {
-      listeners[i].apply(scopes[i], arguments);
+      listener.apply(scope, arguments);
     }
   }
 
-  //Actually remove items removed in removeEventListener.
-  const toRemove = this._toRemove;
-  length = toRemove.length;
-  if (length > 0) {
-    toRemove.sort(compareNumber);
-    for (i = 0; i < length; i++) {
-      const index = toRemove[i];
-      listeners.splice(index, 1);
-      scopes.splice(index, 1);
+  // Actually remove items marked for removal
+  if (this._toRemove.length > 0) {
+    for (const listener of this._toRemove) {
+      this._listeners.delete(listener);
     }
-    toRemove.length = 0;
+    this._toRemove.length = 0;
   }
 
   this._insideRaiseEvent = false;
