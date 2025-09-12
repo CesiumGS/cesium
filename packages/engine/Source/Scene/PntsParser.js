@@ -5,6 +5,7 @@ import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import AttributeType from "./AttributeType.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
@@ -185,8 +186,72 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     parsedContent.batchTableBinary = batchTableBinary;
   }
 
+  // Handle the case that binary body references are contained in the
+  // batch table without a batch table binary being present
+  removeInvalidBinaryBodyReferences(parsedContent);
+
   return parsedContent;
 };
+
+/**
+ * Remove all invalid binary body references from the batch table
+ * JSON of the given parsed content.
+ *
+ * This is a workaround for gracefully handling the invalid PNTS
+ * files that may have been created by the point cloud tiler.
+ * See https://github.com/CesiumGS/cesium/issues/12872
+ *
+ * When the batch table JSON is undefined, nothing will be done.
+ * When the batch table binary is defined, nothing will be done
+ * (assuming that any binary body references are valid - this is
+ * not checked here).
+ *
+ * Otherwise, this will remove all binary body references from the
+ * batch table JSON that are not resolved from draco via the
+ * `parsedContent.draco.batchTableProperties`.
+ *
+ * If any (invalid) binary body reference is found (and removed),
+ * a one-time warning will be printed.
+ *
+ * @param {object} parsedContent The parsed content
+ */
+function removeInvalidBinaryBodyReferences(parsedContent) {
+  const batchTableJson = parsedContent.batchTableJson;
+  if (!defined(batchTableJson)) {
+    return;
+  }
+  const batchTableBinary = parsedContent.batchTableBinary;
+  if (defined(batchTableBinary)) {
+    return;
+  }
+  const dracoBatchTablePropertyNames = Object.keys(
+    parsedContent.draco?.batchTableProperties ?? {},
+  );
+
+  // Collect the names of all binary body references (identified
+  // by the property having a `byteOffset`) that have not been
+  // resolved via the parsedContent.draco.batchTableProperties
+  const invalidBinaryBodyReferenceNames = [];
+  for (const name of Object.keys(batchTableJson)) {
+    const property = batchTableJson[name];
+    const byteOffset = property.byteOffset;
+    if (defined(byteOffset)) {
+      if (!dracoBatchTablePropertyNames.includes(name)) {
+        invalidBinaryBodyReferenceNames.push(name);
+      }
+    }
+  }
+
+  // If there have been invalid binary body references, print
+  // a one-time warning for each of them, and delete them.
+  for (const name of invalidBinaryBodyReferenceNames) {
+    oneTimeWarning(
+      `PntsParser-invalidBinaryBodyReference`,
+      `The point cloud data contained a binary property ${name} that could not be resolved - skipping`,
+    );
+    delete batchTableJson[name];
+  }
+}
 
 function parseDracoProperties(featureTable, batchTableJson) {
   const featureTableJson = featureTable.json;
