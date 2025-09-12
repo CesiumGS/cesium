@@ -42,7 +42,13 @@ import LabelStyle from "../Scene/LabelStyle.js";
 import SceneMode from "../Scene/SceneMode.js";
 import Autolinker from "autolinker";
 import Uri from "urijs";
-import * as zip from "@zip.js/zip.js/lib/zip-no-worker.js";
+import {
+  configure,
+  BlobReader,
+  Data64URIWriter,
+  TextWriter,
+  ZipReader,
+} from "@zip.js/zip.js/lib/zip-core.js";
 import getElement from "./getElement.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
@@ -390,24 +396,18 @@ function removeDuplicateNamespaces(text) {
   return text;
 }
 
-function loadXmlFromZip(entry, uriResolver) {
-  return Promise.resolve(entry.getData(new zip.TextWriter())).then(
-    function (text) {
-      text = insertNamespaces(text);
-      text = removeDuplicateNamespaces(text);
-      uriResolver.kml = parser.parseFromString(text, "application/xml");
-    },
-  );
+async function loadXmlFromZip(entry, uriResolver) {
+  let text = await entry.getData(new TextWriter());
+  text = insertNamespaces(text);
+  text = removeDuplicateNamespaces(text);
+  uriResolver.kml = parser.parseFromString(text, "application/xml");
 }
 
-function loadDataUriFromZip(entry, uriResolver) {
+async function loadDataUriFromZip(entry, uriResolver) {
   const mimeType =
     MimeTypes.detectFromFilename(entry.filename) ?? "application/octet-stream";
-  return Promise.resolve(entry.getData(new zip.Data64URIWriter(mimeType))).then(
-    function (dataUri) {
-      uriResolver[entry.filename] = dataUri;
-    },
-  );
+  const dataUri = await entry.getData(new Data64URIWriter(mimeType));
+  uriResolver[entry.filename] = dataUri;
 }
 
 function embedDataUris(div, elementType, attributeName, uriResolver) {
@@ -3287,69 +3287,68 @@ function loadKml(
   });
 }
 
-function loadKmz(
+async function loadKmz(
   dataSource,
   entityCollection,
   blob,
   sourceResource,
   screenOverlayContainer,
 ) {
-  const zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
-  zip.configure({
-    workerScripts: {
-      deflate: [zWorkerUrl, "./pako_deflate.min.js"],
-      inflate: [zWorkerUrl, "./pako_inflate.min.js"],
-    },
+  const zWorkerUri = buildModuleUrl("ThirdParty/Workers/zip-web-worker.js");
+  const zWasmUri = buildModuleUrl("ThirdParty/zip-module.wasm");
+  configure({
+    workerURI: zWorkerUri,
+    wasmURI: zWasmUri,
   });
 
-  const reader = new zip.ZipReader(new zip.BlobReader(blob));
-  return Promise.resolve(reader.getEntries()).then(function (entries) {
-    const promises = [];
-    const uriResolver = {};
-    let docEntry;
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
-      if (!entry.directory) {
-        if (/\.kml$/i.test(entry.filename)) {
-          // We use the first KML document we come across
-          //  https://developers.google.com/kml/documentation/kmzarchives
-          // Unless we come across a .kml file at the root of the archive because GE does this
-          if (!defined(docEntry) || !/\//i.test(entry.filename)) {
-            if (defined(docEntry)) {
-              // We found one at the root so load the initial kml as a data uri
-              promises.push(loadDataUriFromZip(docEntry, uriResolver));
-            }
-            docEntry = entry;
-          } else {
-            // Wasn't the first kml and wasn't at the root
-            promises.push(loadDataUriFromZip(entry, uriResolver));
+  const reader = new ZipReader(new BlobReader(blob));
+  const entries = await reader.getEntries();
+
+  const promises = [];
+  const uriResolver = {};
+  let docEntry;
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    if (!entry.directory) {
+      if (/\.kml$/i.test(entry.filename)) {
+        // We use the first KML document we come across
+        //  https://developers.google.com/kml/documentation/kmzarchives
+        // Unless we come across a .kml file at the root of the archive because GE does this
+        if (!defined(docEntry) || !/\//i.test(entry.filename)) {
+          if (defined(docEntry)) {
+            // We found one at the root so load the initial kml as a data uri
+            promises.push(loadDataUriFromZip(docEntry, uriResolver));
           }
+          docEntry = entry;
         } else {
+          // Wasn't the first kml and wasn't at the root
           promises.push(loadDataUriFromZip(entry, uriResolver));
         }
+      } else {
+        promises.push(loadDataUriFromZip(entry, uriResolver));
       }
     }
+  }
 
-    // Now load the root KML document
-    if (defined(docEntry)) {
-      promises.push(loadXmlFromZip(docEntry, uriResolver));
-    }
-    return Promise.all(promises).then(function () {
-      reader.close();
-      if (!defined(uriResolver.kml)) {
-        throw new RuntimeError("KMZ file does not contain a KML document.");
-      }
-      uriResolver.keys = Object.keys(uriResolver);
-      return loadKml(
-        dataSource,
-        entityCollection,
-        uriResolver.kml,
-        sourceResource,
-        uriResolver,
-        screenOverlayContainer,
-      );
-    });
-  });
+  // Now load the root KML document
+  if (defined(docEntry)) {
+    promises.push(loadXmlFromZip(docEntry, uriResolver));
+  }
+  await Promise.all(promises);
+  reader.close();
+  if (!defined(uriResolver.kml)) {
+    throw new RuntimeError("KMZ file does not contain a KML document.");
+  }
+  uriResolver.keys = Object.keys(uriResolver);
+
+  return loadKml(
+    dataSource,
+    entityCollection,
+    uriResolver.kml,
+    sourceResource,
+    uriResolver,
+    screenOverlayContainer,
+  );
 }
 
 function load(dataSource, entityCollection, data, options) {

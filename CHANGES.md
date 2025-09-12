@@ -7,10 +7,16 @@
 #### Fixes :wrench:
 
 - Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
+- Reverts `createImageBitmap` options update to continue support for older browsers [#12846](https://github.com/CesiumGS/cesium/issues/12846)
+- Fix flickering artifact in Gaussian splat models caused by incorrect sorting results. [#12662](https://github.com/CesiumGS/cesium/issues/12662)
 
 #### Additions :tada:
 
 - Adds an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
+
+## 1.133.1 - 2025-09-08
+
+This is an npm-only release to fix a dependency issue published in 1.133.0
 
 ## 1.133 - 2025-09-02
 
