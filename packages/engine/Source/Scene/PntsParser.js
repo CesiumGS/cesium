@@ -135,12 +135,6 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   // Start with the draco compressed properties and add in uncompressed
   // properties.
   const parsedContent = parseDracoProperties(featureTable, batchTableJson);
-
-  // Handle the case that binary body references are contained in the
-  // batch table without a batch table binary being present
-  removeInvalidBinaryBodyReferences(batchTableJson, batchTableBinary);
-  console.log("parsedContent now ", parsedContent);
-
   parsedContent.rtcCenter = rtcCenter;
   parsedContent.pointsLength = pointsLength;
 
@@ -192,12 +186,16 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     parsedContent.batchTableBinary = batchTableBinary;
   }
 
+  // Handle the case that binary body references are contained in the
+  // batch table without a batch table binary being present
+  removeInvalidBinaryBodyReferences(parsedContent);
+
   return parsedContent;
 };
 
 /**
- * Remove all binary body references from the given batch table
- * JSON if and only if there is no batch table binary.
+ * Remove all invalid binary body references from the batch table
+ * JSON of the given parsed content.
  *
  * This is a workaround for gracefully handling the invalid PNTS
  * files that may have been created by the point cloud tiler.
@@ -208,46 +206,50 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
  * (assuming that any binary body references are valid - this is
  * not checked here).
  *
- * Otherwise, this will remove all binary body references from
- * the given batch table JSON, IN PLACE (!).
+ * Otherwise, this will remove all binary body references from the
+ * batch table JSON that are not resolved from draco via the
+ * `parsedContent.draco.batchTableProperties`.
  *
- * If any binary body reference is found (and removed), a
- * one-time warning will be printed.
+ * If any (invalid) binary body reference is found (and removed),
+ * a one-time warning will be printed.
  *
- * @param {object|undefined} batchTableJson The batch table JSON
- * @param {object|undefined} batchTableBinary The batch table binary
+ * @param {object} parsedContent The parsed content
  */
-function removeInvalidBinaryBodyReferences(batchTableJson, batchTableBinary) {
+function removeInvalidBinaryBodyReferences(parsedContent) {
+  const batchTableJson = parsedContent.batchTableJson;
   if (!defined(batchTableJson)) {
     return;
   }
+  const batchTableBinary = parsedContent.batchTableBinary;
   if (defined(batchTableBinary)) {
     return;
   }
+  const dracoBatchTablePropertyNames = Object.keys(
+    parsedContent.draco?.batchTableProperties ?? {},
+  );
 
   // Collect the names of all binary body references (identified
-  // by the property having a `byteOffset`)
-  const binaryBodyReferenceNames = [];
+  // by the property having a `byteOffset`) that have not been
+  // resolved via the parsedContent.draco.batchTableProperties
+  const invalidBinaryBodyReferenceNames = [];
   for (const name of Object.keys(batchTableJson)) {
     const property = batchTableJson[name];
     const byteOffset = property.byteOffset;
     if (defined(byteOffset)) {
-      binaryBodyReferenceNames.push(name);
+      if (!dracoBatchTablePropertyNames.includes(name)) {
+        invalidBinaryBodyReferenceNames.push(name);
+      }
     }
   }
 
-  // If there have been (invalid) binary body references, print
-  // a one-time warning, and delete them.
-  if (binaryBodyReferenceNames.length > 0) {
+  // If there have been invalid binary body references, print
+  // a one-time warning for each of them, and delete them.
+  for (const name of invalidBinaryBodyReferenceNames) {
     oneTimeWarning(
       `PntsParser-invalidBinaryBodyReference`,
-      `The point cloud data contained binary properties that could not be resolved - skipping`,
+      `The point cloud data contained a binary property ${name} that could not be resolved - skipping`,
     );
-
-    for (const name of binaryBodyReferenceNames) {
-      console.log("DELETE BINARY BODY REFERENCE ", name);
-      delete batchTableJson[name];
-    }
+    delete batchTableJson[name];
   }
 }
 
