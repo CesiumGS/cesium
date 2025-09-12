@@ -3,7 +3,7 @@ const config = {
   sourceUrl: "https://github.com/CesiumGS/cesium/blob/main/packages/sandcastle",
   publicDir: "./public",
   gallery: {
-    files: ["gallery/**/*"],
+    files: ["gallery"],
     searchOptions: {
       excerptLength: 10,
       ranking: {
