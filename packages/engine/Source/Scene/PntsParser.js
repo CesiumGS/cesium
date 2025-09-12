@@ -253,8 +253,6 @@ function removeInvalidBinaryBodyReferences(parsedContent) {
   }
 }
 
-// What does this function do? Let me take a wild effing guess:
-// It "parses" the "Draco" "properties", right?
 function parseDracoProperties(featureTable, batchTableJson) {
   const featureTableJson = featureTable.json;
   let dracoBuffer;
