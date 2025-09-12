@@ -8,6 +8,7 @@
 // Discards splats outside the view frustum or with negligible screen size.
 //
 
+#define HAS_SPHERICAL_HARMONICS (defined(SH1_ENABLED) || defined(SH2_ENABLED) || defined(SH3_ENABLED))
 
 ivec2 texelCoord(uint texelIndex, ivec2 textureSize) {
     return ivec2(texelIndex % uint(textureSize.x), texelIndex / uint(textureSize.x));
@@ -44,23 +45,18 @@ const float SH_C3[7] = float[7](
         -0.59004358
 );
 
-//Retrieve SH coefficient. Currently RG32UI format
-uvec2 loadSHCoeff(uint splatID, int index) {
-    ivec2 shTexSize = textureSize(u_sphericalHarmonicsTexture, 0);
-    uint dims = coefficientCount[uint(u_sphericalHarmonicsDegree)-1u];
-    uint splatsPerRow = uint(shTexSize.x) / dims;
-    uint shIndex = (splatID%splatsPerRow) * dims + uint(index);
-    ivec2 shPosCoord = ivec2(shIndex, splatID / splatsPerRow);
-    return texelFetch(u_sphericalHarmonicsTexture, shPosCoord, 0).rg;
-}
-
 //Unpack RG32UI half float coefficients to vec3
 vec3 halfToVec3(uvec2 packed) {
     return vec3(unpackHalf2x16(packed.x), unpackHalf2x16(packed.y).x);
 }
 
-vec3 loadAndExpandSHCoeff(uint splatID, int index) {
-    uvec2 coeff = loadSHCoeff(splatID, index);
+vec3 loadAndExpandSHCoeff(uint splatID, int index, highp usampler2D u_sphericalHarmonicsTexture, uint degree) {
+    ivec2 shTexSize = textureSize(u_sphericalHarmonicsTexture, 0);
+    uint dims = coefficientCount[degree - 1u];
+    uint splatsPerRow = uint(shTexSize.x) / dims;
+    uint shIndex = (splatID%splatsPerRow) * dims + uint(index);
+    ivec2 shPosCoord = ivec2(shIndex, splatID / splatsPerRow);
+    uvec2 coeff = texelFetch(u_sphericalHarmonicsTexture, shPosCoord, 0).rg;
     return halfToVec3(coeff);
 }
 
@@ -69,49 +65,50 @@ vec3 evaluateSH(uint splatID, vec3 viewDir) {
     int coeffIndex = 0;
     float x = viewDir.x, y = viewDir.y, z = viewDir.z;
 
-    if (u_sphericalHarmonicsDegree >= 1.) {
-        vec3 sh1 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-        vec3 sh2 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-        vec3 sh3 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-        result += -SH_C1 * y * sh1 + SH_C1 * z * sh2 - SH_C1 * x * sh3;
+#if defined(SH1_ENABLED)
+    vec3 sh1 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh1Texture, 1u);
+    vec3 sh2 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh2Texture, 2u);
+    vec3 sh3 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh3Texture, 3u);
+    result += -SH_C1 * y * sh1 + SH_C1 * z * sh2 - SH_C1 * x * sh3;
+#endif
 
-        if (u_sphericalHarmonicsDegree >= 2.) {
-            float xx = x * x;
-            float yy = y * y;
-            float zz = z * z;
-            float xy = x * y;
-            float yz = y * z;
-            float xz = x * z;
+#if defined(SH2_ENABLED)
+    float xx = x * x;
+    float yy = y * y;
+    float zz = z * z;
+    float xy = x * y;
+    float yz = y * z;
+    float xz = x * z;
 
-            vec3 sh4 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-            vec3 sh5 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-            vec3 sh6 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-            vec3 sh7 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-            vec3 sh8 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-            result += SH_C2[0] * xy * sh4 +
-                    SH_C2[1] * yz * sh5 +
-                    SH_C2[2] * (2.0f * zz - xx - yy) * sh6 +
-                    SH_C2[3] * xz * sh7 +
-                    SH_C2[4] * (xx - yy) * sh8;
+    vec3 sh4 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh2Texture, 4u);
+    vec3 sh5 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh2Texture, 5u);
+    vec3 sh6 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh2Texture, 6u);
+    vec3 sh7 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh2Texture, 7u);
+    vec3 sh8 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh2Texture, 8u);
+    result += SH_C2[0] * xy * sh4 +
+            SH_C2[1] * yz * sh5 +
+            SH_C2[2] * (2.0f * zz - xx - yy) * sh6 +
+            SH_C2[3] * xz * sh7 +
+            SH_C2[4] * (xx - yy) * sh8;
+#endif
 
-            if (u_sphericalHarmonicsDegree >= 3.) {
-                vec3 sh9 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-                vec3 sh10 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-                vec3 sh11 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-                vec3 sh12 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-                vec3 sh13 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-                vec3 sh14 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-                vec3 sh15 = loadAndExpandSHCoeff(splatID, coeffIndex++);
-                result += SH_C3[0] * y * (3.0f * xx - yy) * sh9 +
-                        SH_C3[1] * xy * z * sh10 +
-                        SH_C3[2] * y * (4.0f * zz - xx - yy) * sh11 +
-                        SH_C3[3] * z * (2.0f * zz - 3.0f * xx - 3.0f * yy) * sh12 +
-                        SH_C3[4] * x * (4.0f * zz - xx - yy) * sh13 +
-                        SH_C3[5] * z * (xx - yy) * sh14 +
-                        SH_C3[6] * x * (xx - 3.0f * yy) * sh15;
-            }
-        }
-    }
+#if defined(SH3_ENABLED)
+    vec3 sh9 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh3Texture, 9u);
+    vec3 sh10 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh3Texture, 10u);
+    vec3 sh11 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh3Texture, 11u);
+    vec3 sh12 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh3Texture, 12u);
+    vec3 sh13 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh3Texture, 13u);
+    vec3 sh14 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh3Texture, 14u);
+    vec3 sh15 = loadAndExpandSHCoeff(splatID, coeffIndex++, u_splatSh3Texture, 15u);
+    result += SH_C3[0] * y * (3.0f * xx - yy) * sh9 +
+            SH_C3[1] * xy * z * sh10 +
+            SH_C3[2] * y * (4.0f * zz - xx - yy) * sh11 +
+            SH_C3[3] * z * (2.0f * zz - 3.0f * xx - 3.0f * yy) * sh12 +
+            SH_C3[4] * x * (4.0f * zz - xx - yy) * sh13 +
+            SH_C3[5] * z * (xx - yy) * sh14 +
+            SH_C3[6] * x * (xx - 3.0f * yy) * sh15;
+#endif
+
     return result;
 }
 #endif
@@ -200,12 +197,12 @@ void main() {
     gl_Position.z = clamp(gl_Position.z, -abs(gl_Position.w), abs(gl_Position.w));
 
     v_vertPos = corner;
-    
+
 #if defined(HAS_SPHERICAL_HARMONICS)
     vec4 splatWC = czm_inverseView * splatViewPos;
     vec3 viewDirModel = normalize(u_inverseModelRotation * (splatWC.xyz - u_cameraPositionWC.xyz));
 
-    v_splatColor.rgb += evaluateSH(texIdx, viewDirModel).rgb;
+    v_splatColor.rgb += evaluateSH(splatTextureIndex, viewDirModel).rgb;
 #endif
     v_splitDirection = u_splitDirection;
 }

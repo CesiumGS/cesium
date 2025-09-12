@@ -593,12 +593,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     ShaderDestination.VERTEX,
   );
 
-  shaderBuilder.addUniform(
-    "float",
-    "u_sphericalHarmonicsDegree",
-    ShaderDestination.VERTEX,
-  );
-
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
 
   shaderBuilder.addUniform(
