@@ -9,7 +9,6 @@
 - Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
 - Reverts `createImageBitmap` options update to continue support for older browsers [#12846](https://github.com/CesiumGS/cesium/issues/12846)
 - Fix flickering artifact in Gaussian splat models caused by incorrect sorting results. [#12662](https://github.com/CesiumGS/cesium/issues/12662)
-- Fixes vertical misalignment of glyphs in labels with small fonts [#8474](https://github.com/CesiumGS/cesium/issues/8474)
 
 #### Additions :tada:
 
@@ -118,8 +117,6 @@ vec3 voxelNormal = fsInput.attributes.normalEC;
 
 #### Additions :tada:
 
-- Support Texture3D and add Volume Cloud SandBox Sample. [#12550](https://github.com/CesiumGS/cesium/issues/12550)
-- Fix render issues when updating entities with `requestRenderMode=true`. [#12543](https://github.com/CesiumGS/cesium/issues/12543)
 - Add basic support for draping imagery on 3D Tiles. [#12567](https://github.com/CesiumGS/cesium/pull/12567)
 - Add support for 3D Textures and add Volume Cloud sandcastle example. [#12661](https://github.com/CesiumGS/cesium/pull/12611)
 
