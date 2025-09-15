@@ -9,6 +9,7 @@
 - Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
 - Reverts `createImageBitmap` options update to continue support for older browsers [#12846](https://github.com/CesiumGS/cesium/issues/12846)
 - Fix flickering artifact in Gaussian splat models caused by incorrect sorting results. [#12662](https://github.com/CesiumGS/cesium/issues/12662)
+- Improved performance and reduced memory usage of Event class. [#12896](https://github.com/CesiumGS/cesium/pull/12896)
 
 #### Additions :tada:
 
