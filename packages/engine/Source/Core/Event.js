@@ -22,9 +22,10 @@ import defined from "./defined.js";
  * evt.removeEventListener(MyObject.prototype.myListener);
  */
 function Event() {
-  this._listeners = new Map();
+  this._listeners = new Map(); // listener => Set of scopes
   this._toRemove = [];
   this._insideRaiseEvent = false;
+  this._listenerCount = 0; // Tracks number of listener + scope pairs
 }
 
 Object.defineProperties(Event.prototype, {
@@ -36,7 +37,7 @@ Object.defineProperties(Event.prototype, {
    */
   numberOfListeners: {
     get: function () {
-      return this._listeners.size - this._toRemove.length;
+      return this._listenerCount;
     },
   },
 });
@@ -59,7 +60,14 @@ Event.prototype.addEventListener = function (listener, scope) {
   Check.typeOf.func("listener", listener);
   //>>includeEnd('debug');
 
-  this._listeners.set(listener, scope);
+  if (!this._listeners.has(listener)) {
+    this._listeners.set(listener, new Set());
+  }
+  const scopes = this._listeners.get(listener);
+  if (!scopes.has(scope)) {
+    scopes.add(scope);
+    this._listenerCount++;
+  }
 
   const event = this;
   return function () {
@@ -82,17 +90,21 @@ Event.prototype.removeEventListener = function (listener, scope) {
   Check.typeOf.func("listener", listener);
   //>>includeEnd('debug');
 
-  if (!this._listeners.has(listener)) {
+  const scopes = this._listeners.get(listener);
+  if (!scopes || !scopes.has(scope)) {
     return false;
   }
 
   if (this._insideRaiseEvent) {
-    // Mark for removal after raiseEvent
-    this._toRemove.push(listener);
-    this._listeners.set(listener, undefined);
+    this._toRemove.push({ listener, scope });
   } else {
-    this._listeners.delete(listener);
+    scopes.delete(scope);
+    if (scopes.size === 0) {
+      this._listeners.delete(listener);
+    }
   }
+
+  this._listenerCount--;
   return true;
 };
 
@@ -107,16 +119,22 @@ Event.prototype.removeEventListener = function (listener, scope) {
 Event.prototype.raiseEvent = function () {
   this._insideRaiseEvent = true;
 
-  for (const [listener, scope] of this._listeners.entries()) {
-    if (defined(listener)) {
-      listener.apply(scope, arguments);
+  for (const [listener, scopes] of this._listeners.entries()) {
+    for (const scope of scopes) {
+      if (defined(listener)) {
+        listener.apply(scope, arguments);
+      }
     }
   }
 
   // Actually remove items marked for removal
   if (this._toRemove.length > 0) {
-    for (const listener of this._toRemove) {
-      this._listeners.delete(listener);
+    for (const { listener, scope } of this._toRemove) {
+      const scopes = this._listeners.get(listener);
+      scopes.delete(scope);
+      if (scopes.size === 0) {
+        this._listeners.delete(listener);
+      }
     }
     this._toRemove.length = 0;
   }
