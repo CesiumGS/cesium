@@ -9,10 +9,14 @@
 - Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
 - Reverts `createImageBitmap` options update to continue support for older browsers [#12846](https://github.com/CesiumGS/cesium/issues/12846)
 - Fix flickering artifact in Gaussian splat models caused by incorrect sorting results. [#12662](https://github.com/CesiumGS/cesium/issues/12662)
+- Fixes vertical misalignment of glyphs in labels with small fonts [#8474](https://github.com/CesiumGS/cesium/issues/8474)
+- Fix render issues when updating entities with `requestRenderMode=true`. [#12543](https://github.com/CesiumGS/cesium/issues/12543)
 
 #### Additions :tada:
 
 - Adds an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
+- Adds new `onUpdateComplete` event to `DataSourceDisplay`, which is triggered each time all datasources on the display finish updating.
+- Adds new `rerenderOnUpdateComplete` flag to `DataSourceDisplay`. Enabled by default, it requests a new render when all datasources complete updating. When disabled and with `scene.requestRenderMode=true`, then requesting a new render will only render the current frame, without rerendering on datasource update completion. [#11820]
 
 ## 1.133.1 - 2025-09-08
 
