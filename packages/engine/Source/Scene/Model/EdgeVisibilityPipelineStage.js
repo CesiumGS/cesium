@@ -12,12 +12,31 @@ import ModelUtility from "./ModelUtility.js";
 import ModelReader from "./ModelReader.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
+/**
+ * Builds derived line geometry for model edges using EXT_mesh_primitive_edge_visibility data.
+ * It parses the encoded edge visibility bits, creates a separate edge-domain vertex array with
+ * per-edge attributes (edge type, optional feature ID, silhouette normal, adjacent face normals),
+ * sets up the required shader defines / varyings, and stores the resulting line list geometry on
+ * the render resources for a later edge rendering pass.
+ *
+ * @namespace EdgeVisibilityPipelineStage
+ * @private
+ */
 const EdgeVisibilityPipelineStage = {
   name: "EdgeVisibilityPipelineStage",
 };
 
 /**
- * Processes edge visibility for a primitive by extracting visible edges and creating edge geometry.
+ * Process a primitive to derive edge geometry and shader bindings. This modifies the render resources by:
+ * <ul>
+ *  <li>Adding shader defines (<code>HAS_EDGE_VISIBILITY</code>, <code>HAS_EDGE_VISIBILITY_MRT</code>)</li>
+ *  <li>Injecting the fragment shader logic that outputs edge color / feature information</li>
+ *  <li>Adding per-vertex attributes: edge type, optional feature ID, silhouette normal, and adjacent face normals</li>
+ *  <li>Adding varyings to pass these attributes to the fragment stage</li>
+ *  <li>Creating and storing a derived line list vertex array in <code>renderResources.edgeGeometry</code></li>
+ * </ul>
+ * If the primitive does not contain edge visibility data, the function returns early.
+ *
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @param {FrameState} frameState The frame state
@@ -99,7 +118,7 @@ EdgeVisibilityPipelineStage.process = function (
     "#endif",
   ]);
 
-  // Build triangle adjacency and compute face normals
+  // Build triangle adjacency (mapping edges to adjacent triangles) and compute per-triangle face normals.
   const adjacencyData = buildTriangleAdjacency(primitive);
 
   const edgeResult = extractVisibleEdges(primitive);
@@ -112,13 +131,13 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
-  // Generate face normals for edges
+  // Generate paired face normals for each unique edge (used to classify silhouette edges in the shader).
   const edgeFaceNormals = generateEdgeFaceNormals(
     adjacencyData,
     edgeResult.edgeIndices,
   );
 
-  // Create edge geometry
+  // Create edge-domain line list geometry (2 vertices per edge) with all required attributes.
   const edgeGeometry = createCPULineEdgeGeometry(
     edgeResult.edgeIndices,
     edgeResult.edgeData,
@@ -137,12 +156,12 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
-  // Set default value for u_isEdgePass uniform (false for original geometry pass)
+  // Set default value for u_isEdgePass uniform (false for original geometry pass). A later pass overrides this.
   renderResources.uniformMap.u_isEdgePass = function () {
     return false;
   };
 
-  // Store edge geometry for rendering
+  // Store edge geometry metadata so the renderer can issue a separate edges pass.
   renderResources.edgeGeometry = {
     vertexArray: edgeGeometry.vertexArray,
     indexCount: edgeGeometry.indexCount,
@@ -152,9 +171,12 @@ EdgeVisibilityPipelineStage.process = function (
 };
 
 /**
- * Builds triangle adjacency and face normals for silhouette detection
- * @param {ModelComponents.Primitive} primitive The primitive containing triangle data
- * @returns {{edgeMap:Map, faceNormals:Float32Array, triangleCount:number}}
+ * Build triangle adjacency information and per-triangle face normals in model space.
+ * The adjacency map associates an undirected edge (minIndex,maxIndex) with the indices
+ * of up to two adjacent triangles. Face normals are normalized and stored sequentially.
+ *
+ * @param {ModelComponents.Primitive} primitive The primitive containing triangle index + position data
+ * @returns {{edgeMap:Map<string, number[]>, faceNormals:Float32Array, triangleCount:number}}
  * @private
  */
 function buildTriangleAdjacency(primitive) {
@@ -259,10 +281,13 @@ function buildTriangleAdjacency(primitive) {
 }
 
 /**
- * Generates computed face normals for edges based on triangle adjacency
- * @param {Object} adjacencyData The adjacency data from buildTriangleAdjacency
- * @param {number[]} edgeIndices Array of edge vertex indices
- * @returns {Float32Array} Array of face normal pairs for each edge
+ * For each unique edge produce a pair of face normals (A,B). For boundary edges where only a single
+ * adjacent triangle exists, the second normal is synthesized as the negation of the first to allow
+ * the shader to reason about front/back facing transitions uniformly.
+ *
+ * @param {{edgeMap:Map<string,number[]>, faceNormals:Float32Array}} adjacencyData The adjacency data from buildTriangleAdjacency
+ * @param {number[]} edgeIndices Packed array of 2 vertex indices per edge
+ * @returns {Float32Array} Packed array: 6 floats per edge (normalA.xyz, normalB.xyz)
  * @private
  */
 function generateEdgeFaceNormals(adjacencyData, edgeIndices) {
@@ -317,10 +342,18 @@ function generateEdgeFaceNormals(adjacencyData, edgeIndices) {
 }
 
 /**
- * Extracts visible edges from EXT_mesh_primitive_edge_visibility data.
- * Only includes silhouette (1) and hard (2) edges that need rendering.
- * @param {ModelComponents.Primitive} primitive The primitive with edge visibility data
- * @returns {{edgeIndices:number[], edgeData:Object[], silhouetteEdgeCount:number}}
+ * Parse the EXT_mesh_primitive_edge_visibility 2-bit edge encoding and extract
+ * a unique set of edges that should be considered for rendering. Edge types:
+ * <ul>
+ *  <li>0 HIDDEN - skipped</li>
+ *  <li>1 SILHOUETTE - candidates for conditional display based on facing</li>
+ *  <li>2 HARD - always displayed</li>
+ *  <li>3 REPEATED - secondary encoding for a hard edge (treated same as 2)</li>
+ * </ul>
+ * Deduplicates edges shared by adjacent triangles and records per-edge metadata.
+ *
+ * @param {ModelComponents.Primitive} primitive The primitive with EXT_mesh_primitive_edge_visibility data
+ * @returns {{edgeIndices:number[], edgeData:Object[], silhouetteEdgeCount:number}} Edge extraction result
  * @private
  */
 function extractVisibleEdges(primitive) {
@@ -416,19 +449,22 @@ function extractVisibleEdges(primitive) {
 }
 
 /**
- * Creates CPU-side line edge geometry with separate vertex domain.
- * Each edge generates 2 vertices to avoid attribute conflicts with original mesh.
- * @param {number[]} edgeIndices Array of edge vertex indices from original mesh
- * @param {Object[]} edgeData Array of edge metadata including edge types
- * @param {PrimitiveRenderResources} renderResources The render resources
- * @param {Context} context The rendering context
- * @param {number} edgeTypeLocation The shader location for edge type attribute
- * @param {number} silhouetteNormalLocation The shader location for silhouette normal attribute
- * @param {number} faceNormalALocation The shader location for face normal A attribute
- * @param {number} faceNormalBLocation The shader location for face normal B attribute
- * @param {Object} edgeVisibility The edge visibility data containing silhouette normals
- * @param {Float32Array} edgeFaceNormals The computed face normals for each edge
- * @returns {Object|undefined} Edge geometry with vertex array and index buffer
+ * Create a derived line list geometry representing edges. A new vertex domain is used so we can pack
+ * per-edge attributes (silhouette normal, face normal pair, edge type, optional feature ID) without
+ * modifying or duplicating the original triangle mesh. Two vertices are generated per unique edge.
+ *
+ * @param {number[]} edgeIndices Packed array [a0,b0, a1,b1, ...] of vertex indices into the source mesh
+ * @param {Object[]} edgeData Array of edge metadata including edge type and silhouette normal lookup index
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {Context} context The WebGL rendering context
+ * @param {number} edgeTypeLocation Shader attribute location for the edge type
+ * @param {number} silhouetteNormalLocation Shader attribute location for input silhouette normal
+ * @param {number} faceNormalALocation Shader attribute location for face normal A
+ * @param {number} faceNormalBLocation Shader attribute location for face normal B
+ * @param {number} edgeFeatureIdLocation Shader attribute location for optional edge feature ID
+ * @param {Object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals[])
+ * @param {Float32Array} edgeFaceNormals Packed face normals (6 floats per edge)
+ * @returns {Object|undefined} Object with {vertexArray, indexBuffer, indexCount} or undefined on failure
  * @private
  */
 function createCPULineEdgeGeometry(
