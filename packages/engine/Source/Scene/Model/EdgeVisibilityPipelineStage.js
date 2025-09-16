@@ -51,6 +51,13 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
+  // Fallback auto-enable: If edge visibility is being processed but the scene flag
+  // is still false (e.g., custom model loading path bypassed earlier auto-enable), turn it on.
+  const scene = frameState?.scene || frameState?.context?.scene;
+  if (defined(scene) && scene._enableEdgeVisibility === false) {
+    scene._enableEdgeVisibility = true;
+  }
+
   const shaderBuilder = renderResources.shaderBuilder;
 
   // Add shader defines and fragment code

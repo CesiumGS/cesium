@@ -454,6 +454,15 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @type {PickedMetadataInfo|undefined}
    */
   this.pickedMetadataInfo = undefined;
+
+  /**
+   * The owning Scene for this frame. Set each frame by Scene before updating primitives.
+   * Added so internal pipeline stages can reliably access the scene without depending
+   * on context.scene (which may not exist) or external closures.
+   * @type {Scene|undefined}
+   * @private
+   */
+  this.scene = undefined;
 }
 
 /**

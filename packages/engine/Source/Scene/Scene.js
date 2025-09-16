@@ -3675,6 +3675,8 @@ function updateShadowMaps(scene) {
 
 function updateAndRenderPrimitives(scene) {
   const frameState = scene._frameState;
+  // Ensure the frame state's scene reference is current each frame before primitives update
+  frameState.scene = scene;
 
   scene._groundPrimitives.update(frameState);
   scene._primitives.update(frameState);
