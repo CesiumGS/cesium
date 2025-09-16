@@ -18,6 +18,7 @@ import Cesium3DTilesetVisualizer from "./Cesium3DTilesetVisualizer.js";
 import PathVisualizer from "./PathVisualizer.js";
 import PointVisualizer from "./PointVisualizer.js";
 import PolylineVisualizer from "./PolylineVisualizer.js";
+import Event from "../Core/Event.js";
 
 /**
  * Visualizes a collection of {@link DataSource} instances.
@@ -26,6 +27,7 @@ import PolylineVisualizer from "./PolylineVisualizer.js";
  *
  * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene in which to display the data.
+ * @param {DataSourceCollection} options.rerenderOnUpdateComplete The data sources to display.
  * @param {DataSourceCollection} options.dataSourceCollection The data sources to display.
  * @param {DataSourceDisplay.VisualizersCallback} [options.visualizersCallback=DataSourceDisplay.defaultVisualizersCallback]
  *        A function which creates an array of visualizers used for visualization.
@@ -47,7 +49,22 @@ function DataSourceDisplay(options) {
   const scene = options.scene;
   const dataSourceCollection = options.dataSourceCollection;
 
+  /**
+   * When <code>true</code>, rendering a frame will only occur when needed as determined by changes within the scene.
+   * Enabling improves performance of the application, but requires using {@link Scene#requestRender}
+   * to render a new frame explicitly in this mode. This will be necessary in many cases after making changes
+   * to the scene in other parts of the API.
+   *
+   * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
+   * @see Scene#maximumRenderTimeChange
+   * @see Scene#requestRender
+   *
+   * @type {boolean}
+   * @default true
+   */
+  this.rerenderOnUpdateComplete = options.rerenderOnUpdateComplete ?? true;
   this._eventHelper = new EventHelper();
+  this._onUpdateComplete = new Event();
   this._eventHelper.add(
     dataSourceCollection.dataSourceAdded,
     this._onDataSourceAdded,
@@ -115,7 +132,7 @@ function DataSourceDisplay(options) {
   this._removeDataSourceCollectionListener = removeDataSourceCollectionListener;
 
   this._ready = false;
-  this._prevResult = this._ready;
+  this._prevUpdateResult = this._ready;
 }
 
 const ExtraVisualizers = [];
@@ -225,6 +242,18 @@ Object.defineProperties(DataSourceDisplay.prototype, {
       return this._ready;
     },
   },
+
+  /**
+   * Gets the event that will be raised when all data sources are ready to be displayed - have all finished processing.
+   * @memberof DataSourceDisplay.prototype
+   * @type {Event}
+   * @readonly
+   */
+  onUpdateComplete: {
+    get: function () {
+      return this._onUpdateComplete;
+    },
+  },
 });
 
 /**
@@ -296,7 +325,7 @@ DataSourceDisplay.prototype.update = function (time) {
     return false;
   }
 
-  let result = true;
+  let updateResult = true;
 
   let i;
   let x;
@@ -307,34 +336,39 @@ DataSourceDisplay.prototype.update = function (time) {
   for (i = 0; i < length; i++) {
     const dataSource = dataSources.get(i);
     if (defined(dataSource.update)) {
-      result = dataSource.update(time) && result;
+      updateResult = dataSource.update(time) && updateResult;
     }
 
     visualizers = dataSource._visualizers;
     vLength = visualizers.length;
     for (x = 0; x < vLength; x++) {
-      result = visualizers[x].update(time) && result;
+      updateResult = visualizers[x].update(time) && updateResult;
     }
   }
 
   visualizers = this._defaultDataSource._visualizers;
   vLength = visualizers.length;
   for (x = 0; x < vLength; x++) {
-    result = visualizers[x].update(time) && result;
+    updateResult = visualizers[x].update(time) && updateResult;
   }
 
-  // Request a rendering of the scene when all of the data sources
-  // switch from false to true
-  if (!this._prevResult && result) {
-    this._scene.requestRender();
+  // Trigger an event when all of the data sources finish updating
+  if (!this._prevUpdateResult && updateResult) {
+    this._onUpdateComplete.raiseEvent();
+    // When `requestRenderMode=true`, request a rendering of the scene,
+    // given that `scene.requestRender()` had been triggered previously
+    if (this.rerenderOnUpdateComplete) {
+      console.log("rerenderOnUpdateComplete");
+      this._scene.requestRender();
+    }
   }
-  this._prevResult = result;
+  this._prevUpdateResult = updateResult;
 
   // once the DataSourceDisplay is ready it should stay ready to prevent
   // entities from breaking updates when they become "un-ready"
-  this._ready = this._ready || result;
+  this._ready = this._ready || updateResult;
 
-  return result;
+  return updateResult;
 };
 
 DataSourceDisplay.prototype._postRender = function () {
