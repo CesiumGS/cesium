@@ -27,7 +27,7 @@ import Event from "../Core/Event.js";
  *
  * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene in which to display the data.
- * @param {DataSourceCollection} options.rerenderOnUpdateComplete The data sources to display.
+ * @param {DataSourceCollection} [options.renderOnUpdateComplete=true] When <code>true</code>, this display will automatically run Scene#requestRender when all datasources finish updating. Disabling allows for higher degree of control over rendering after entities finish processing.
  * @param {DataSourceCollection} options.dataSourceCollection The data sources to display.
  * @param {DataSourceDisplay.VisualizersCallback} [options.visualizersCallback=DataSourceDisplay.defaultVisualizersCallback]
  *        A function which creates an array of visualizers used for visualization.
@@ -50,19 +50,16 @@ function DataSourceDisplay(options) {
   const dataSourceCollection = options.dataSourceCollection;
 
   /**
-   * When <code>true</code>, rendering a frame will only occur when needed as determined by changes within the scene.
-   * Enabling improves performance of the application, but requires using {@link Scene#requestRender}
-   * to render a new frame explicitly in this mode. This will be necessary in many cases after making changes
-   * to the scene in other parts of the API.
+   * When <code>true</code>, this display will automatically run Scene#requestRender when all datasources finish updating.
+   * Disabling allows for higher degree of control over rendering after entities finish processing.
    *
-   * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
-   * @see Scene#maximumRenderTimeChange
+   * @see Scene#requestRenderMode
    * @see Scene#requestRender
    *
    * @type {boolean}
    * @default true
    */
-  this.rerenderOnUpdateComplete = options.rerenderOnUpdateComplete ?? true;
+  this.renderOnUpdateComplete = options.renderOnUpdateComplete ?? true;
   this._eventHelper = new EventHelper();
   this._onUpdateComplete = new Event();
   this._eventHelper.add(
@@ -357,8 +354,7 @@ DataSourceDisplay.prototype.update = function (time) {
     this._onUpdateComplete.raiseEvent();
     // When `requestRenderMode=true`, request a rendering of the scene,
     // given that `scene.requestRender()` had been triggered previously
-    if (this.rerenderOnUpdateComplete) {
-      console.log("rerenderOnUpdateComplete");
+    if (this.renderOnUpdateComplete) {
       this._scene.requestRender();
     }
   }
