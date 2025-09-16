@@ -780,7 +780,14 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   primitive._drawCommand = command;
 };
 
-const scratchAttributeRefs = [];
+const scratchPositionRefs = [];
+const scratchColorRefs = [];
+
+const scratchCovarianceRefs = [];
+
+const scratchSh1Refs = [];
+const scratchSh2Refs = [];
+const scratchSh3Refs = [];
 
 /**
  * Updates the Gaussian splat primitive for the current frame.
@@ -873,55 +880,57 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       );
 
       let offset = 0;
-      this._positions = ComponentDatatype.createTypedArray(
-        ComponentDatatype.FLOAT,
-        totalElements * 3,
-      );
+      if (
+        !defined(this._positions) ||
+        totalElements * 3 > this._positions.length
+      ) {
+        this._positions = ComponentDatatype.createTypedArray(
+          ComponentDatatype.FLOAT,
+          totalElements * 3,
+        );
+      }
+
+      scratchPositionRefs.length = 0;
+      scratchCovarianceRefs.length = 0;
+      scratchColorRefs.length = 0;
+      scratchSh1Refs.length = 0;
+      scratchSh2Refs.length = 0;
+      scratchSh3Refs.length = 0;
       for (const tile of tiles) {
         this._positions.set(tile.content._originalPositions, offset);
         offset += tile.content._originalPositions.length;
+
+        scratchPositionRefs.push(tile.content._originalPositions);
+        scratchCovarianceRefs.push(tile.content.covarianceTextureData);
+        scratchColorRefs.push(tile.content.colorTextureData);
+
+        const shDegree = tiles[0].content.shDegree;
+        if (shDegree > 0) {
+          scratchSh1Refs.push(tile.content.sh1TextureData);
+        }
+        if (shDegree > 1) {
+          scratchSh2Refs.push(tile.content.sh2TextureData);
+        }
+        if (shDegree > 2) {
+          scratchSh3Refs.push(tile.content.sh3TextureData);
+        }
       }
 
-      scratchAttributeRefs.length = 0;
-      for (const tile of tiles) {
-        scratchAttributeRefs.push(tile.content._originalPositions);
-      }
-      this.positionMegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
-      scratchAttributeRefs.length = 0;
-      for (const tile of tiles) {
-        scratchAttributeRefs.push(tile.content.covarianceTextureData);
-      }
+      this.positionMegaTexture.insertTextureDataMultiple(scratchPositionRefs);
       this.covarianceMegaTexture.insertTextureDataMultiple(
-        scratchAttributeRefs,
+        scratchCovarianceRefs,
       );
+      this.colorMegaTexture.insertTextureDataMultiple(scratchColorRefs);
+      if (scratchSh1Refs.length > 0) {
+        this.sh1MegaTexture.insertTextureDataMultiple(scratchSh1Refs);
+      }
 
-      scratchAttributeRefs.length = 0;
-      for (const tile of tiles) {
-        scratchAttributeRefs.push(tile.content.colorTextureData);
+      if (scratchSh2Refs.length > 0) {
+        this.sh2MegaTexture.insertTextureDataMultiple(scratchSh2Refs);
       }
-      this.colorMegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
 
-      const shDegree = tiles[0].content.shDegree;
-      if (shDegree > 0) {
-        scratchAttributeRefs.length = 0;
-        for (const tile of tiles) {
-          scratchAttributeRefs.push(tile.content.sh1TextureData);
-        }
-        this.sh1MegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
-      }
-      if (shDegree > 1) {
-        scratchAttributeRefs.length = 0;
-        for (const tile of tiles) {
-          scratchAttributeRefs.push(tile.content.sh2TextureData);
-        }
-        this.sh2MegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
-      }
-      if (shDegree > 2) {
-        scratchAttributeRefs.length = 0;
-        for (const tile of tiles) {
-          scratchAttributeRefs.push(tile.content.sh3TextureData);
-        }
-        this.sh3MegaTexture.insertTextureDataMultiple(scratchAttributeRefs);
+      if (scratchSh3Refs.length > 0) {
+        this.sh3MegaTexture.insertTextureDataMultiple(scratchSh3Refs);
       }
 
       this._sphericalHarmonicsDegree =
