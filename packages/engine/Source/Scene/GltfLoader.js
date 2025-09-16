@@ -1441,13 +1441,18 @@ function loadIndices(
   loader,
   accessorId,
   primitive,
-  draco,
   hasFeatureIds,
   needsPostProcessing,
   frameState,
 ) {
   const accessor = loader.gltfJson.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
+  // Infer compression / extensions directly from the glTF primitive instead of passing in flags
+  const extensions = primitive.extensions ?? Frozen.EMPTY_OBJECT;
+  const draco = extensions.KHR_draco_mesh_compression;
+  const hasEdgeVisibility = defined(
+    extensions.EXT_mesh_primitive_edge_visibility,
+  );
 
   if (!defined(draco) && !defined(bufferViewId)) {
     return undefined;
@@ -1469,12 +1474,11 @@ function loadIndices(
   // after loading and post-processing.
   const outputTypedArrayOnly = loadAttributesAsTypedArray;
   const outputBuffer = !outputTypedArrayOnly;
-  let outputTypedArray =
-    loadAttributesAsTypedArray || loadForCpuOperations || loadForClassification;
-
-  if (loader._forceLoadIndicesTypedArray === true) {
-    outputTypedArray = true;
-  }
+  const outputTypedArray =
+    loadAttributesAsTypedArray ||
+    loadForCpuOperations ||
+    loadForClassification ||
+    hasEdgeVisibility;
 
   // Determine what to load right now:
   //
@@ -2144,15 +2148,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
 
   const indices = gltfPrimitive.indices;
   if (defined(indices)) {
-    // If edge visibility is present, force indices typed array to be loaded.
-    if (hasEdgeVisibility) {
-      loader._forceLoadIndicesTypedArray = true;
-    }
     const indicesPlan = loadIndices(
       loader,
       indices,
       gltfPrimitive,
-      draco,
       hasFeatureIds,
       needsPostProcessing,
       frameState,
@@ -2161,10 +2160,6 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     if (defined(indicesPlan)) {
       primitivePlan.indicesPlan = indicesPlan;
       primitive.indices = indicesPlan.indices;
-    }
-
-    if (hasEdgeVisibility) {
-      loader._forceLoadIndicesTypedArray = undefined;
     }
   }
 
