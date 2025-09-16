@@ -768,7 +768,7 @@ function Scene(options) {
    * @type {boolean}
    * @default false
    */
-  this._enableEdgeVisibility = true;
+  this._enableEdgeVisibility = false;
 
   // Give frameState, camera, and screen space camera controller initial state before rendering
   updateFrameNumber(this, 0.0, JulianDate.now());
