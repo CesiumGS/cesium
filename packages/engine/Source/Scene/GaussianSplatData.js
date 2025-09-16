@@ -95,7 +95,7 @@ function extractSHDegreeAndCoef(attribute) {
 /**
  * Determine Spherical Harmonics degree from attributes
  * @param {} attribute
- * @returns
+ * @returns {object} An object containing the degree (l) and number of coefficients (n).
  */
 /* eslint-disable-next-line no-unused-vars */
 GaussianSplatData.degreeAndCoefFromAttributes = function (attributes) {
