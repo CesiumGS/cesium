@@ -713,6 +713,15 @@ VoxelEllipsoidShape.prototype.update = function (
   return true;
 };
 
+/**
+ * Update any view-dependent transforms.
+ * @private
+ * @param {FrameState} frameState The frame state.
+ */
+VoxelEllipsoidShape.prototype.updateViewTransforms = function (frameState) {
+  // Ellipsoid shape has no view-dependent transforms
+};
+
 const scratchRectangle = new Rectangle();
 
 /**

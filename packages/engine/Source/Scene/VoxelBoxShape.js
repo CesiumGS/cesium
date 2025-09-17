@@ -334,6 +334,15 @@ VoxelBoxShape.prototype.update = function (
 };
 
 /**
+ * Update any view-dependent transforms.
+ * @private
+ * @param {FrameState} frameState The frame state.
+ */
+VoxelBoxShape.prototype.updateViewTransforms = function (frameState) {
+  // Box shape has no view-dependent transforms
+}
+
+/**
  * Convert a UV coordinate to the shape's UV space.
  * @private
  * @param {Cartesian3} positionUV The UV coordinate to convert.

@@ -110,6 +110,13 @@ Object.defineProperties(VoxelShape.prototype, {
 VoxelShape.prototype.update = DeveloperError.throwInstantiationError;
 
 /**
+ * Update any view-dependent transforms.
+ * @private
+ * @param {FrameState} frameState The frame state.
+ */
+VoxelShape.prototype.updateViewTransforms = DeveloperError.throwInstantiationError;
+
+/**
  * Converts a UV coordinate to the shape's UV space.
  * @private
  * @param {Cartesian3} positionUV The UV coordinate to convert.

@@ -2,7 +2,7 @@ uniform vec2 u_cylinderUvToShapeUvRadius; // x = scale, y = offset
 uniform vec2 u_cylinderUvToShapeUvHeight; // x = scale, y = offset
 uniform vec2 u_cylinderUvToShapeUvAngle; // x = scale, y = offset
 uniform float u_cylinderShapeUvAngleRangeOrigin;
-//uniform mat3 u_cylinderEcToRadialTangentUp;
+uniform mat3 u_cylinderEcToRadialTangentUp;
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
 uniform vec3 u_cameraPositionUv;
@@ -55,24 +55,6 @@ vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
     return vec3(radius, angle, height);
 }
 
-// TODO: replace with matrix computed on CPU.
-vec3 convertEcToRtu(in vec3 positionEC) {
-    // Find radial, tangent, and up unit vectors at camera position.
-    vec3 radial = vec3(normalize(u_cameraPositionUv.xy), 0.0);
-    vec3 tangent = vec3(-radial.y, radial.x, 0.0);
-    vec3 up = vec3(0.0, 0.0, 1.0);
-    // Transform them all to eye space.
-    mat3 transformDirectionLocalToView = transpose(u_transformDirectionViewToLocal);
-    vec3 radialEC = transformDirectionLocalToView * radial;
-    vec3 tangentEC = transformDirectionLocalToView * tangent;
-    vec3 upEC = transformDirectionLocalToView * up;
-    // Find components along each unit vector
-    float radialComponent = dot(positionEC, radialEC);
-    float tangentComponent = dot(positionEC, tangentEC);
-    float upComponent = dot(positionEC, upEC);
-    return vec3(radialComponent, tangentComponent, upComponent);
-}
-
 /**
  * Computes the change in polar coordinates given a change in position.
  * TODO: optimize--currently 4 trig calls!
@@ -88,8 +70,7 @@ vec2 computePolarChange(in vec2 dPosition, in float cameraRadialDistance) {
 
 vec3 convertECtoDeltaTile(in vec3 positionEC) {
     // 1. Rotate to radial, tangent, and up coordinates
-    //vec3 rtu = u_cylinderEcToRadialTangentUp * positionEC;
-    vec3 rtu = convertEcToRtu(positionEC);
+    vec3 rtu = u_cylinderEcToRadialTangentUp * positionEC;
     // 2. Compute change in angular and radial coordinates. TODO: compute u_cameraShapePosition on CPU? Or get it from u_cameraTileCoordinates & u_cameraTileUv
     //vec2 dPolar = computePolarChange(rtu.xy, u_cameraShapePosition.x);
     float cameraRadialDistance = length(u_cameraPositionUv.xy) * 2.0;
@@ -109,8 +90,6 @@ TileAndUvCoordinate getTileAndUvCoordinate(in vec3 positionEC) {
     ivec3 tileCoordinate = u_cameraTileCoordinates.xyz + ivec3(floor(tileUvSum));
     int maxTileCoordinate = (1 << u_cameraTileCoordinates.w) - 1;
     tileCoordinate.x = min(max(0, tileCoordinate.x), maxTileCoordinate);
-    //tileCoordinate.y = tileCoordinate.y % (maxTileCoordinate + 1);
-    //tileCoordinate.y = min(max(0, tileCoordinate.y), maxTileCoordinate);
     tileCoordinate.z = min(max(0, tileCoordinate.z), maxTileCoordinate);
     // TODO: wrapping issues! tileCoordinateChange.y could be maxTileCoordinate - 1
     // Computing this before wrapping tileCoordinate.y is a messy hack

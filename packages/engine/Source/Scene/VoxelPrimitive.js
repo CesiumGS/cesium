@@ -1213,6 +1213,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
     return;
   }
 
+  this._shape.updateViewTransforms(frameState);
+
   // Update the traversal and prepare for rendering.
   const keyframeLocation = getKeyframeLocation(
     provider.timeIntervalCollection,

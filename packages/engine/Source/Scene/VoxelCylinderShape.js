@@ -55,6 +55,7 @@ function VoxelCylinderShape() {
   this._renderBoundPlanes = new VoxelBoundCollection({ planes: boundPlanes });
 
   this._shaderUniforms = {
+    cylinderEcToRadialTangentUp: new Matrix3(),
     cylinderRenderRadiusMinMax: new Cartesian2(),
     cylinderRenderAngleMinMax: new Cartesian2(),
     cylinderUvToShapeUvRadius: new Cartesian2(),
@@ -191,6 +192,11 @@ const scratchClipMinBounds = new Cartesian3();
 const scratchClipMaxBounds = new Cartesian3();
 const scratchRenderMinBounds = new Cartesian3();
 const scratchRenderMaxBounds = new Cartesian3();
+const scratchTransformPositionWorldToLocal = new Matrix4();
+const scratchCameraPositionLocal = new Cartesian3();
+const scratchCameraRadialPosition = new Cartesian2();
+const scratchRotateRtuToLocal = new Matrix3();
+const scratchRtuRotation = new Matrix3();
 
 /**
  * Update the shape's state.
@@ -430,6 +436,77 @@ VoxelCylinderShape.prototype.update = function (
 
   return true;
 };
+
+/**
+ * Update any view-dependent transforms.
+ * @private
+ * @param {FrameState} frameState The frame state.
+ */
+VoxelCylinderShape.prototype.updateViewTransforms = function (frameState) {
+  updateRtuTransform(this, frameState);
+};
+
+/**
+ * Update the rotation from eye coordinates to radial-tangent-up coordinates.
+ * @param {VoxelCylinderShape} shape
+ * @param {FrameState} frameState
+ */
+function updateRtuTransform(shape, frameState) {
+  // 1. Find camera position in local coordinates
+  const transformPositionWorldToLocal = Matrix4.inverse(
+    shape._shapeTransform,
+    scratchTransformPositionWorldToLocal,
+  );
+  const cameraPositionLocal = Matrix4.multiplyByPoint(
+    transformPositionWorldToLocal,
+    frameState.camera.positionWC,
+    scratchCameraPositionLocal,
+  );
+  // 2. Find radial, tangent, and up components
+  const cameraRadialPosition = Cartesian2.normalize(
+    Cartesian2.fromCartesian3(cameraPositionLocal, scratchCameraRadialPosition),
+    scratchCameraRadialPosition,
+  );
+  // As row vectors, the radial, tangent, and up vectors would constitute a rotation matrix from local to RTU.
+  // The transpose of that matrix is the inverse, from RTU to local. (transpose == inverse for rotation matrices)
+  // We obtain the transpose by using the components as columns instead of rows.
+  const rotateRtuToLocal = Matrix3.fromColumnMajorArray(
+    [
+      cameraRadialPosition.x,
+      cameraRadialPosition.y,
+      0.0,
+      -cameraRadialPosition.y,
+      cameraRadialPosition.x,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+    ],
+    scratchRotateRtuToLocal,
+  );
+  // 3. Transform to eye coordinates.
+  const rotateLocalToWorld = Matrix4.getRotation(
+    shape._shapeTransform,
+    scratchRtuRotation,
+  );
+  const rotateWorldToView = frameState.context.uniformState.viewRotation;
+  const rotateLocalToView = Matrix3.multiply(
+    rotateWorldToView,
+    rotateLocalToWorld,
+    scratchRtuRotation,
+  );
+  const rotateRtuToView = Matrix3.multiply(
+    rotateLocalToView,
+    rotateRtuToLocal,
+    scratchRtuRotation,
+  );
+  // 4. Transpose to get EC to RTU rotation
+  const shaderUniforms = shape._shaderUniforms;
+  shaderUniforms.cylinderEcToRadialTangentUp = Matrix3.transpose(
+    rotateRtuToView,
+    shaderUniforms.cylinderEcToRadialTangentUp,
+  );
+}
 
 /**
  * Convert a UV coordinate to the shape's UV space.
