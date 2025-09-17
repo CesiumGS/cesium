@@ -21,12 +21,6 @@ describe("Core/CesiumTerrainProvider", function () {
     RequestScheduler.clearForSpecs();
   });
 
-  function createRequest() {
-    return new Request({
-      throttleByServer: true,
-    });
-  }
-
   it("conforms to TerrainProvider interface", function () {
     expect(CesiumTerrainProvider).toConformToInterface(TerrainProvider);
   });
@@ -117,14 +111,14 @@ describe("Core/CesiumTerrainProvider", function () {
 
   it("credit is undefined if credit option is not provided", async function () {
     const provider = await CesiumTerrainProvider.fromUrl(
-      "Data/CesiumTerrainTileJson/StandardHeightmap",
+      "Data/CesiumTerrainTileJson/Heightmap",
     );
     expect(provider.credit).toBeUndefined();
   });
 
   it("credit is defined if credit option is provided", async function () {
     const provider = await CesiumTerrainProvider.fromUrl(
-      "Data/CesiumTerrainTileJson/StandardHeightmap",
+      "Data/CesiumTerrainTileJson/Heightmap",
       {
         credit: "thanks to our awesome made up contributors!",
       },
@@ -134,7 +128,7 @@ describe("Core/CesiumTerrainProvider", function () {
 
   it("has a water mask", async function () {
     const provider = await CesiumTerrainProvider.fromUrl(
-      "Data/CesiumTerrainTileJson/StandardHeightmap",
+      "Data/CesiumTerrainTileJson/Heightmap",
     );
     expect(provider.hasWaterMask).toBe(true);
   });
@@ -620,7 +614,11 @@ describe("Core/CesiumTerrainProvider", function () {
 
       RequestScheduler.update();
 
-      promise = provider.requestTileGeometry(0, 0, 0, createRequest());
+      const request = new Request({
+        throttle: true,
+        throttleByServer: true,
+      });
+      promise = provider.requestTileGeometry(0, 0, 0, request);
       expect(promise).toBeUndefined();
 
       await Promise.all(deferreds);
