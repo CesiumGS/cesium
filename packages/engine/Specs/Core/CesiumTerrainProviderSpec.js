@@ -42,20 +42,22 @@ describe("Core/CesiumTerrainProvider", function () {
   });
 
   it("fromUrl resolves to created CesiumTerrainProvider", async function () {
-    const provider = await CesiumTerrainProvider.fromUrl("made/up/url");
+    const provider = await CesiumTerrainProvider.fromUrl(
+      "Data/CesiumTerrainTileJson/Heightmap",
+    );
     expect(provider).toBeInstanceOf(CesiumTerrainProvider);
   });
 
   it("fromUrl resolves with url promise", async function () {
     const provider = await CesiumTerrainProvider.fromUrl(
-      Promise.resolve("made/up/url"),
+      Promise.resolve("Data/CesiumTerrainTileJson/Heightmap"),
     );
     expect(provider).toBeInstanceOf(CesiumTerrainProvider);
   });
 
   it("fromUrl resolves with Resource", async function () {
     const resource = new Resource({
-      url: "made/up/url",
+      url: "Data/CesiumTerrainTileJson/Heightmap",
     });
 
     const provider = await CesiumTerrainProvider.fromUrl(resource);
@@ -88,7 +90,9 @@ describe("Core/CesiumTerrainProvider", function () {
   });
 
   it("has error event", async function () {
-    const provider = await CesiumTerrainProvider.fromUrl("made/up/url");
+    const provider = await CesiumTerrainProvider.fromUrl(
+      "Data/CesiumTerrainTileJson/Heightmap",
+    );
     expect(provider.errorEvent).toBeDefined();
     expect(provider.errorEvent).toBe(provider.errorEvent);
   });
