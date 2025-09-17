@@ -12,6 +12,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import TexturePacker from "../Core/TexturePacker.js";
 import Framebuffer from "./Framebuffer.js";
 import Texture from "./Texture.js";
+import RequestScheduler from "../Core/RequestScheduler.js";
 
 const defaultInitialDimensions = 16;
 
@@ -632,6 +633,8 @@ async function resolveImage(image, id) {
     // Fetch the resource
     const resource = Resource.createIfNeeded(image);
     image = resource.fetchImage();
+  } else {
+    RequestScheduler.requestCompletedEvent.raiseEvent();
   }
 
   return image;
