@@ -626,7 +626,7 @@ export async function getSandcastleConfig() {
 
 /**
  * Indexes Sandcastle gallery files and writes gallery files to the configured Sandcastle output directory.
- * @param {boolean} [includeDevelopmen=true] true if gallery items flagged as development should be included.
+ * @param {boolean} [includeDevelopment=true] true if gallery items flagged as development should be included.
  * @returns {Promise<void>} A promise that resolves once the gallery files have been indexed and written.
  */
 export async function buildSandcastleGallery(includeDevelopment) {
