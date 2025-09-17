@@ -929,7 +929,7 @@ describe(
 
       const terrainCredit = new Credit("terrain credit");
       scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "Data/CesiumTerrainTileJson/QuantizedMeshWith32BitIndices",
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
         {
           credit: terrainCredit,
         },
