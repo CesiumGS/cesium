@@ -82,6 +82,22 @@ async function generateDevelopmentBuild() {
   return contexts;
 }
 
+// Delay execution of the callback until a short time has elapsed since it was last invoked, preventing
+// calls to the same function in quick succession from triggering multiple builds.
+const throttleDelay = 500;
+const throttle = (callback) => {
+  let timeout;
+  return () =>
+    new Promise((resolve) => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      timeout = setTimeout(() => {
+        resolve(callback());
+      }, throttleDelay);
+    });
+};
+
 (async function () {
   const gzipHeader = Buffer.from("1F8B08", "hex");
   const production = argv.production;
@@ -279,13 +295,20 @@ async function generateDevelopmentBuild() {
         ignoreInitial: true,
       });
 
-      galleryWatcher.on("all", async () => {
-        const startTime = performance.now();
-        await buildSandcastleGallery();
-        console.log(
-          `Gallery built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
-        );
-      });
+      galleryWatcher.on(
+        "all",
+        throttle(async () => {
+          const startTime = performance.now();
+          try {
+            await buildSandcastleGallery();
+            console.log(
+              `Gallery built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
+            );
+          } catch (e) {
+            console.error(e);
+          }
+        }),
+      );
     }
 
     // Rebuild jsHintOptions as needed and serve as-is
