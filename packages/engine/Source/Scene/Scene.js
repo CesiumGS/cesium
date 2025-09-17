@@ -84,9 +84,7 @@ import getMetadataProperty from "./getMetadataProperty.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
-    scene.frameState.afterRender.push(function () {
-      scene.requestRender();
-    });
+    scene.frameState.afterRender.push(() => true);
   };
 };
 
@@ -109,6 +107,7 @@ const requestRenderAfterFrame = function (scene) {
  * @param {boolean} [options.shadows=false] Determines if shadows are cast by light sources.
  * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
  * @param {boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @param {boolean} [options.renderOnUpdateComplete=true] When <code>true</code>, async processing will automatically run `scene.requestRender()` when all processes finish updating. Disabling allows for higher degree of control over rendering after entities finish processing when `requestRenderMode=true`.
  * @param {number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
  * @param {number} [options.msaaSamples=4] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets. Set to 1 to disable MSAA.
@@ -675,6 +674,17 @@ function Scene(options) {
    * @default false
    */
   this.requestRenderMode = options.requestRenderMode ?? false;
+  /**
+   * When <code>true</code>, this display will automatically run `scene.requestRender()` when all datasources finish updating.
+   * Disabling allows for higher degree of control over rendering after entities finish processing when `scene.requestRenderMode=true`
+   *
+   * @see Scene#requestRenderMode
+   * @see Scene#requestRender
+   *
+   * @type {boolean}
+   * @default true
+   */
+  this.renderOnUpdateComplete = options.renderOnUpdateComplete ?? true;
   this._renderRequested = true;
 
   /**

@@ -16,7 +16,7 @@
 
 - Adds an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
 - Adds new `onUpdateComplete` event to `DataSourceDisplay`, which is triggered each time all datasources on the display finish updating.
-- Adds new `rerenderOnUpdateComplete` flag to `DataSourceDisplay`. Enabled by default, it requests a new render when all datasources complete updating. When disabled and with `scene.requestRenderMode=true`, then requesting a new render will only render the current frame, without rerendering on datasource update completion. [#11820]
+- Adds new `rerenderOnUpdateComplete` flag to `Scene`. Enabled by default, it controls whether renders are requested when datasources/primitives complete updating. When disabled and with `scene.requestRenderMode=true`, then requesting a new render will only render the current frame, without rerendering on datasource update completion. [#11820]
 
 ## 1.133.1 - 2025-09-08
 

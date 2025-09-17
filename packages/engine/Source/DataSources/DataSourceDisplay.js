@@ -27,7 +27,6 @@ import Event from "../Core/Event.js";
  *
  * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene in which to display the data.
- * @param {DataSourceCollection} [options.renderOnUpdateComplete=true] When <code>true</code>, this display will automatically run `scene.requestRender()` when all datasources finish updating. Disabling allows for higher degree of control over rendering after entities finish processing when `scene.requestRenderMode=true`.
  * @param {DataSourceCollection} options.dataSourceCollection The data sources to display.
  * @param {DataSourceDisplay.VisualizersCallback} [options.visualizersCallback=DataSourceDisplay.defaultVisualizersCallback]
  *        A function which creates an array of visualizers used for visualization.
@@ -49,17 +48,6 @@ function DataSourceDisplay(options) {
   const scene = options.scene;
   const dataSourceCollection = options.dataSourceCollection;
 
-  /**
-   * When <code>true</code>, this display will automatically run `scene.requestRender()` when all datasources finish updating.
-   * Disabling allows for higher degree of control over rendering after entities finish processing when `scene.requestRenderMode=true`
-   *
-   * @see Scene#requestRenderMode
-   * @see Scene#requestRender
-   *
-   * @type {boolean}
-   * @default true
-   */
-  this.renderOnUpdateComplete = options.renderOnUpdateComplete ?? true;
   this._eventHelper = new EventHelper();
   this._onUpdateComplete = new Event();
   this._eventHelper.add(
@@ -352,7 +340,7 @@ DataSourceDisplay.prototype.update = function (time) {
   // Trigger an event when all of the data sources finish updating
   if (!this._prevUpdateResult && updateResult) {
     this._onUpdateComplete.raiseEvent();
-    if (this._scene.requestRenderMode && this.renderOnUpdateComplete) {
+    if (this._scene.renderOnUpdateComplete) {
       this._scene.requestRender();
     }
   }
