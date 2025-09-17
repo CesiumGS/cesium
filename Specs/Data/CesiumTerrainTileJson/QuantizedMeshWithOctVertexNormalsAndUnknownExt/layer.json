@@ -4,7 +4,7 @@
     "version" : "1.0.0",
     "scheme" : "tms",
     "tiles" : [
-        "{z}/{x}/{y}.terrain?v={version}"
+        "tile.octvertexnormals.unknownext.terrain?v={version}&x={x}&y={y}&z={z}"
     ],
     "extensions" : [
         "octvertexnormals"
