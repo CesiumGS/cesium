@@ -34,6 +34,10 @@ function UniformState() {
    */
   this.edgeColorTexture = undefined;
   /**
+   * @type {Texture}
+   */
+  this.edgeDepthTexture = undefined; // packed depth color attachment from edge pass
+  /**
    * @type {number}
    */
   this.gamma = undefined;

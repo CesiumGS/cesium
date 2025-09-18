@@ -203,6 +203,26 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform containing the packed depth texture produced by the
+   * edge visibility pass. The depth is packed via czm_packDepth and should be
+   * unpacked with czm_unpackDepth.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform sampler2D czm_edgeDepthTexture;
+   *
+   * vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
+   * float d = czm_unpackDepth(texture(czm_edgeDepthTexture, coords));
+   */
+  czm_edgeDepthTexture: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.SAMPLER_2D,
+    getValue: function (uniformState) {
+      return uniformState.edgeDepthTexture;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform representing a 4x4 model transformation matrix that
    * transforms model coordinates to world coordinates.
    *

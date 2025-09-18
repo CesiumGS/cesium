@@ -2,7 +2,8 @@
 // when shaders are processed by different rendering pipelines (e.g., OIT).
 // Only declare MRT outputs when not in a derived shader context.
 #if defined(HAS_EDGE_VISIBILITY_MRT) && !defined(CESIUM_REDIRECTED_COLOR_OUTPUT)
-layout(location = 1) out vec4 out_id;
+layout(location = 1) out vec4 out_id;        // edge id / metadata
+layout(location = 2) out vec4 out_edgeDepth; // packed depth
 #endif
 
 void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
@@ -66,8 +67,12 @@ void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
     color = edgeColor;
     
     #if defined(HAS_EDGE_VISIBILITY_MRT) && !defined(CESIUM_REDIRECTED_COLOR_OUTPUT)
-        out_id.r = edgeTypeInt;                    // Edge type
-        out_id.g = float(featureIds.featureId_0); // Feature ID from current geometry
+        // Write edge metadata
+        out_id = vec4(0.0);
+        out_id.r = edgeTypeInt;                    // Edge type (0-3)
+        out_id.g = float(featureIds.featureId_0); // Feature ID if available
+        // Pack depth into separate MRT attachment
+        out_edgeDepth = czm_packDepth(gl_FragCoord.z);
     #endif
 #endif
 }

@@ -20,10 +20,11 @@ function EdgeFramebuffer(options) {
   options = options || {};
 
   // Create framebuffer manager with multiple render targets (MRT)
-  // Color attachment 0: color
-  // Color attachment 1: R: Edge Type, G: featureID
+  // Color attachment 0: edge color output (visualization / debug)
+  // Color attachment 1: R: edge type, G: featureId (metadata / ids)
+  // Color attachment 2: packed depth (czm_packDepth) for edge fragments
   this._framebufferManager = new FramebufferManager({
-    colorAttachmentsLength: 2, // MRT: Color + ID textures
+    colorAttachmentsLength: 3, // MRT: Color + ID + Depth (packed RGBA)
     createColorAttachments: true,
     depthStencil: true,
     supportsDepthTexture: true,
@@ -33,6 +34,7 @@ function EdgeFramebuffer(options) {
   this._framebuffer = undefined;
   this._colorTexture = undefined;
   this._idTexture = undefined;
+  this._depthTexture = undefined; // packed depth color attachment (location = 2)
   this._depthStencilTexture = undefined;
 
   this._clearCommand = new ClearCommand({
@@ -77,6 +79,18 @@ Object.defineProperties(EdgeFramebuffer.prototype, {
   idTexture: {
     get: function () {
       return this._idTexture;
+    },
+  },
+
+  /**
+   * Gets the packed depth texture written during the edge pass.
+   * @memberof EdgeFramebuffer.prototype
+   * @type {Texture}
+   * @readonly
+   */
+  depthTexture: {
+    get: function () {
+      return this._depthTexture;
     },
   },
 
@@ -138,6 +152,7 @@ EdgeFramebuffer.prototype.update = function (
       ? existingColorTexture
       : this._framebufferManager.getColorTexture(0); // Color attachment 0
     this._idTexture = this._framebufferManager.getColorTexture(1); // Color attachment 1: ID texture
+    this._depthTexture = this._framebufferManager.getColorTexture(2); // Color attachment 2: packed depth
     this._depthStencilTexture = defined(existingDepthTexture)
       ? existingDepthTexture
       : this._framebufferManager.getDepthStencilTexture();

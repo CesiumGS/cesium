@@ -2583,6 +2583,7 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
 
   scene.context.uniformState.edgeColorTexture = scene.context.defaultTexture;
   scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+  scene.context.uniformState.edgeDepthTexture = scene.context.defaultTexture;
 
   // Set edge framebuffer for rendering
   if (
@@ -2784,10 +2785,21 @@ function executeCommands(scene, passState) {
       } else {
         scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
       }
+
+      // Get edge depth texture (attachment 2)
+      const edgeDepthTexture = scene._view.edgeFramebuffer.depthTexture;
+      if (defined(edgeDepthTexture)) {
+        scene.context.uniformState.edgeDepthTexture = edgeDepthTexture;
+      } else {
+        scene.context.uniformState.edgeDepthTexture =
+          scene.context.defaultTexture;
+      }
     } else {
       scene.context.uniformState.edgeColorTexture =
         scene.context.defaultTexture;
       scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+      scene.context.uniformState.edgeDepthTexture =
+        scene.context.defaultTexture;
     }
 
     if (!useInvertClassification || picking || renderTranslucentDepthForPick) {
