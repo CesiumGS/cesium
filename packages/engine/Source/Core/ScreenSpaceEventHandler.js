@@ -32,7 +32,6 @@ function getInputEventKey(type, modifier) {
 }
 
 function getModifier(event, screenSpaceEventHandler) {
-  console.log("getModifier", event, screenSpaceEventHandler._spaceKeyDown);
   if (event.shiftKey) {
     return KeyboardEventModifier.SHIFT;
   } else if (event.ctrlKey) {
