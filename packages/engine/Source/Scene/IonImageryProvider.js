@@ -53,8 +53,8 @@ const ImageryProviderAsyncMapping = {
       ...options,
     });
   },
-  GOOGLE_2D: (url, options) => {
-    return new Google2DImageryProvider({
+  GOOGLE_2D_MAPS: async (url, options) => {
+    return new Google2DImageryProvider.fromSessionToken({
       url: url,
       ...options,
     });

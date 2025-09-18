@@ -3,13 +3,10 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
-import Rectangle from "../Core/Rectangle.js";
+//import Rectangle from "../Core/Rectangle.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 const trailingSlashRegex = /\/$/;
-const defaultCredit = new Credit(
-  '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>',
-);
 
 /**
  * <div class="notice">
@@ -303,8 +300,8 @@ Google2DImageryProvider.fromMapType = async function (options) {
 
 Google2DImageryProvider.fromSessionToken = function (options) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.sessionToken)) {
-    throw new DeveloperError("options.sessionToken is required.");
+  if (!defined(options.session)) {
+    throw new DeveloperError("options.session is required.");
   }
   //>>includeEnd('debug');
 
@@ -321,8 +318,8 @@ Google2DImageryProvider.fromSessionToken = function (options) {
   //>>includeEnd('debug');
 
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.apiKey)) {
-    throw new DeveloperError("options.apiKey is required.");
+  if (!defined(options.key)) {
+    throw new DeveloperError("options.key is required.");
   }
   //>>includeEnd('debug');
 
@@ -334,13 +331,13 @@ Google2DImageryProvider.fromSessionToken = function (options) {
   if (!trailingSlashRegex.test(templateUrl)) {
     templateUrl += "/";
   }
-  templateUrl += `{z}/{x}/{y}`;
+  templateUrl += `v1/2dtiles/{z}/{x}/{y}`;
 
   resource.url = templateUrl;
 
   resource.setQueryParameters({
-    session: options.sessionToken,
-    key: options.apiKey,
+    session: encodeURIComponent(options.session),
+    key: encodeURIComponent(options.key),
   });
 
   let credit;
@@ -349,8 +346,6 @@ Google2DImageryProvider.fromSessionToken = function (options) {
     if (typeof credit === "string") {
       credit = new Credit(credit);
     }
-  } else {
-    credit = defaultCredit;
   }
 
   const provider = new UrlTemplateImageryProvider({
@@ -369,7 +364,7 @@ Google2DImageryProvider.fromSessionToken = function (options) {
   return imageryProvider;
 };
 
-const rectangleScratch = new Rectangle();
+//const rectangleScratch = new Rectangle();
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
@@ -384,33 +379,34 @@ Google2DImageryProvider.prototype.getTileCredits = async function (
   y,
   level,
 ) {
-  const rectangle = this._imageryProvider._tilingScheme.tileXYToRectangle(
-    x,
-    y,
-    level,
-    rectangleScratch,
-  );
-  console.log("rectangle --> ", rectangle);
-  console.log("this --> ", this);
-  //const { mapType, language, region, apiKey } = options;
+  return "doop";
+  // const rectangle = this._imageryProvider._tilingScheme.tileXYToRectangle(
+  //   x,
+  //   y,
+  //   level,
+  //   rectangleScratch,
+  // );
+  // console.log("rectangle --> ", rectangle);
+  // console.log("this --> ", this);
+  // //const { mapType, language, region, apiKey } = options;
 
-  //curl "https://tile.googleapis.com/tile/v1/viewport?session=YOUR_SESSION_TOKEN&key=YOUR_API_KEY&zoom=zoom&north=north&south=south&east=east&west=west"
+  // //curl "https://tile.googleapis.com/tile/v1/viewport?session=YOUR_SESSION_TOKEN&key=YOUR_API_KEY&zoom=zoom&north=north&south=south&east=east&west=west"
 
-  const response = await Resource.post({
-    url: "https://tile.googleapis.com/tile/v1/viewport",
-    queryParameters: {
-      session: this._sessionToken,
-      key: this._apiKey,
-      zoom: level,
-      north: rectangle.north,
-      south: rectangle.south,
-      east: rectangle.east,
-      west: rectangle.west,
-    },
-    data: JSON.stringify({}),
-  });
-  const responseJson = JSON.parse(response);
-  return responseJson.copyright;
+  // const response = await Resource.post({
+  //   url: "https://tile.googleapis.com/tile/v1/viewport",
+  //   queryParameters: {
+  //     session: this._sessionToken,
+  //     key: this._apiKey,
+  //     zoom: level,
+  //     north: rectangle.north,
+  //     south: rectangle.south,
+  //     east: rectangle.east,
+  //     west: rectangle.west,
+  //   },
+  //   data: JSON.stringify({}),
+  // });
+  // const responseJson = JSON.parse(response);
+  // return responseJson.copyright;
   //return undefined;
 };
 
@@ -469,6 +465,4 @@ async function createGoogleImagerySession(options) {
   return responseJson;
 }
 
-// Exposed for tests
-Google2DImageryProvider._defaultCredit = defaultCredit;
 export default Google2DImageryProvider;
