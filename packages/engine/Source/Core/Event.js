@@ -22,7 +22,11 @@ import defined from "./defined.js";
  * evt.removeEventListener(MyObject.prototype.myListener);
  */
 function Event() {
-  this._listeners = new Map(); // listener => Set of scopes
+  /**
+   * @type {Map<Listener,Set<object>>}
+   * @private
+   */
+  this._listeners = new Map();
   this._toRemove = [];
   this._insideRaiseEvent = false;
   this._listenerCount = 0; // Tracks number of listener + scope pairs
@@ -120,10 +124,12 @@ Event.prototype.raiseEvent = function () {
   this._insideRaiseEvent = true;
 
   for (const [listener, scopes] of this._listeners.entries()) {
+    if (!defined(listener)) {
+      continue;
+    }
+
     for (const scope of scopes) {
-      if (defined(listener)) {
-        listener.apply(scope, arguments);
-      }
+      listener.apply(scope, arguments);
     }
   }
 
