@@ -3,9 +3,8 @@
     "format" : "quantized-mesh-1.0",
     "version" : "1.0.0",
     "scheme" : "tms",
-    "attribution" : "This is a child tileset!",
     "tiles" : [
-        "{z}/{x}/{y}.terrain?v={version}"
+        "tile.watermask.terrain?v={version}&x={x}&y={y}&z={z}"
     ],
     "extensions" : [
         "watermask"
@@ -23,11 +22,9 @@
             {
                 "startX" : 0,
                 "startY" : 0,
-                "endX" : 2,
+                "endX" : 3,
                 "endY" : 1
             }
         ]
-    ],
-    "parentUrl": "./"
+    ]
 }
-
