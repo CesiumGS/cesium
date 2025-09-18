@@ -63,7 +63,9 @@ void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
     } else {
         edgeColor = vec4(0.0, 0.0, 0.0, 0.0);
     }
-    
+
+    // Temporary color: white
+    edgeColor = vec4(1.0, 1.0, 1.0, 1.0);
     color = edgeColor;
     
     #if defined(HAS_EDGE_VISIBILITY_MRT) && !defined(CESIUM_REDIRECTED_COLOR_OUTPUT)
