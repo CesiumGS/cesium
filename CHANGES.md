@@ -1,12 +1,16 @@
 # Change Log
 
-## 1.133.1-ion.0 - 2025-09-18
+## 1.133.2-ion.0 - 2025-09-18
 
 ### @cesium/engine
 
 #### Fixes :wrench:
 
 - Fixes a crash when loading point clouds with a legcay draco-encoded metadata. [#12872](https://github.com/CesiumGS/cesium/issues/12872)
+
+## 1.133.1 - 2025-09-08
+
+This is an npm-only release to fix a dependency issue published in 1.133.0
 
 ## 1.133 - 2025-09-02
 
