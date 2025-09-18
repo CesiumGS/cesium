@@ -3,18 +3,12 @@
     "format" : "quantized-mesh-1.0",
     "version" : "1.0.0",
     "scheme" : "tms",
-    "attribution" : "This amazing data is courtesy The Amazing Data Source!",
     "tiles" : [
-        "{z}/{x}/{y}.terrain?v={version}"
+        "tile.vertexnormals.unknownext.terrain?v={version}&x={x}&y={y}&z={z}"
     ],
-    "extensions": [
-        "watermask",
-        "metadata",
-        "octvertexnormals"
+    "extensions" : [
+        "vertexnormals"
     ],
-    "metadataAvailability": 10,
-    "minzoom": 0,
-    "maxzoom": 13,
     "available" : [
         [
             {

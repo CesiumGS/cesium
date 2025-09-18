@@ -11,7 +11,6 @@ import {
   GeographicProjection,
   HeadingPitchRoll,
   Rectangle,
-  Resource,
   WebMercatorProjection,
   ContextLimits,
   RenderState,
@@ -106,8 +105,6 @@ describe(
     afterEach(function () {
       scene.imageryLayers.removeAll();
       scene.primitives.removeAll();
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("conforms to QuadtreeTileProvider interface", function () {
@@ -931,41 +928,8 @@ describe(
       scene.imageryLayers.addImageryProvider(provider);
 
       const terrainCredit = new Credit("terrain credit");
-
-      // Mock terrain tile loading
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        if (defined(url.match(/\/\d+\/\d+\/\d+\.terrain/))) {
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/CesiumTerrainTileJson/tile.32bitIndices.terrain",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred,
-          );
-          return;
-        }
-
-        Resource._DefaultImplementations.loadWithXhr(
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType,
-        );
-      };
       scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
         {
           credit: terrainCredit,
         },
@@ -1660,40 +1624,8 @@ describe(
     });
 
     it("hasWaterMask returns expected value", async function () {
-      // Mock terrain tile loading
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        if (defined(url.match(/\/\d+\/\d+\/\d+\.terrain/))) {
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/CesiumTerrainTileJson/tile.32bitIndices.terrain",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred,
-          );
-          return;
-        }
-
-        Resource._DefaultImplementations.loadWithXhr(
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType,
-        );
-      };
       scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
+        "Data/CesiumTerrainTileJson/QuantizedMeshWithWaterMask",
         {
           requestWaterMask: true,
         },
