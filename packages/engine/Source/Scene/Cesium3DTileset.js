@@ -301,7 +301,7 @@ function Cesium3DTileset(options) {
    * @default true
    */
   this.cullRequestsWhileMoving = options.cullRequestsWhileMoving ?? true;
-  this._cullRequestsWhileMoving = false;
+  //  this._cullRequestsWhileMoving = false;
 
   /**
    * Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
