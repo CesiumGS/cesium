@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.133.1-ion.0 - 2025-09-18
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixes a crash when loading point clouds with a legcay draco-encoded metadata. [#12872](https://github.com/CesiumGS/cesium/issues/12872)
+
 ## 1.133 - 2025-09-02
 
 - Give the [new version of Sandcastle](https://dev-sandcastle.cesium.com/) a try today!
