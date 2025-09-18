@@ -51,11 +51,14 @@ const MouseButton = {
   RIGHT: 2,
 };
 
+
 function handleKeyDown(screenSpaceEventHandler, event) {
   if (event.keyCode === 32) {
     // Space key code
     screenSpaceEventHandler._spaceKeyDown = true;
-    event.preventDefault(); // Prevent page scrolling
+    if (event.target.tagName !== "INPUT" && event.target.tagName !== "TEXTAREA" && event.target.tagName !== "SELECT") {
+      event.preventDefault(); // Prevent page scrolling, but let space work in input fields
+    }
   }
 }
 
