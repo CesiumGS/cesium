@@ -51,8 +51,12 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
-  // Fallback request: mark that edge visibility is needed this frame.
-  frameState.edgeVisibilityRequested = true;
+  // Fallback auto-enable: If edge visibility is being processed but the scene flag
+  // is still false (e.g., custom model loading path bypassed earlier auto-enable), turn it on.
+  const scene = frameState?.scene || frameState?.context?.scene;
+  if (defined(scene) && scene._enableEdgeVisibility === false) {
+    scene._enableEdgeVisibility = true;
+  }
 
   const shaderBuilder = renderResources.shaderBuilder;
 
