@@ -1,0 +1,153 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td
+          colspan="2"
+          data-bind="click: function() { showTranslation = !showTranslation }"
+        >
+          <span data-bind="text: showTranslation ? '-' : '+'">+</span>
+          Translation
+        </td>
+      </tr>
+      <tr data-bind="visible: showTranslation">
+        <td>X</td>
+        <td>
+          <input
+            type="range"
+            min="-3"
+            max="3"
+            step="0.01"
+            data-bind="value: translationX, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: translationX" />
+        </td>
+      </tr>
+      <tr data-bind="visible: showTranslation">
+        <td>Y</td>
+        <td>
+          <input
+            type="range"
+            min="-3"
+            max="3"
+            step="0.01"
+            data-bind="value: translationY, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: translationY" />
+        </td>
+      </tr>
+      <tr data-bind="visible: showTranslation">
+        <td>Z</td>
+        <td>
+          <input
+            type="range"
+            min="-3"
+            max="3"
+            step="0.01"
+            data-bind="value: translationZ, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: translationZ" />
+        </td>
+      </tr>
+      <tr>
+        <td
+          colspan="2"
+          data-bind="click: function() { showRotation = !showRotation }"
+        >
+          <span data-bind="text: showRotation ? '-' : '+'">+</span> Rotation
+        </td>
+      </tr>
+      <tr data-bind="visible: showRotation">
+        <td>H</td>
+        <td>
+          <input
+            type="range"
+            min="-3"
+            max="3"
+            step="0.01"
+            data-bind="value: rotationHeading, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: rotationHeading" />
+        </td>
+      </tr>
+      <tr data-bind="visible: showRotation">
+        <td>P</td>
+        <td>
+          <input
+            type="range"
+            min="-3"
+            max="3"
+            step="0.01"
+            data-bind="value: rotationPitch, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: rotationPitch" />
+        </td>
+      </tr>
+      <tr data-bind="visible: showRotation">
+        <td>R</td>
+        <td>
+          <input
+            type="range"
+            min="-3"
+            max="3"
+            step="0.01"
+            data-bind="value: rotationRoll, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: rotationRoll" />
+        </td>
+      </tr>
+      <tr>
+        <td
+          colspan="2"
+          data-bind="click: function() { showScale = !showScale }"
+        >
+          <span data-bind="text: showScale ? '-' : '+'">+</span> Scale
+        </td>
+      </tr>
+      <tr data-bind="visible: showScale">
+        <td>X</td>
+        <td>
+          <input
+            type="range"
+            min="0.01"
+            max="3"
+            step="0.01"
+            data-bind="value: scaleX, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: scaleX" />
+        </td>
+      </tr>
+      <tr data-bind="visible: showScale">
+        <td>Y</td>
+        <td>
+          <input
+            type="range"
+            min="0.01"
+            max="3"
+            step="0.01"
+            data-bind="value: scaleY, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: scaleY" />
+        </td>
+      </tr>
+      <tr data-bind="visible: showScale">
+        <td>Z</td>
+        <td>
+          <input
+            type="range"
+            min="0.01"
+            max="3"
+            step="0.01"
+            data-bind="value: scaleZ, valueUpdate: 'input'"
+          />
+          <input type="text" size="2" data-bind="value: scaleZ" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -10,69 +10,27 @@ import {
 } from "../../index.js";
 
 describe("Core/sampleTerrain", function () {
-  let worldTerrain;
-  beforeAll(async function () {
-    worldTerrain = await createWorldTerrainAsync();
-  });
+  it("queries heights", async function () {
+    const terrainProvider = await CesiumTerrainProvider.fromUrl(
+      "Data/CesiumTerrainTileJson/CesiumWorldTerrainSample",
+    );
 
-  afterEach(function () {
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
-  });
-
-  it("queries heights", function () {
     const positions = [
-      Cartographic.fromDegrees(86.925145, 27.988257),
-      Cartographic.fromDegrees(87.0, 28.0),
+      Cartographic.fromDegrees(86.93666235421982, 27.97989963555095),
+      Cartographic.fromDegrees(86.9366623542198, 27.9798996355509),
     ];
 
-    return sampleTerrain(worldTerrain, 11, positions).then(
-      function (passedPositions) {
-        expect(passedPositions).toBe(positions);
-        expect(positions[0].height).toBeGreaterThan(5000);
-        expect(positions[0].height).toBeLessThan(10000);
-        expect(positions[1].height).toBeGreaterThan(5000);
-        expect(positions[1].height).toBeLessThan(10000);
-      },
-    );
+    const returnedPosition = await sampleTerrain(terrainProvider, 9, positions);
+    expect(returnedPosition).toBe(positions);
+    expect(positions[0].height).toBeGreaterThan(5000);
+    expect(positions[0].height).toBeLessThan(10000);
+    expect(positions[1].height).toBeGreaterThan(5000);
+    expect(positions[1].height).toBeLessThan(10000);
   });
 
   it("queries heights from terrain without availability", async function () {
-    // Mock terrain tile loading
-    Resource._Implementations.loadWithXhr = function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType,
-    ) {
-      if (defined(url.match(/\/\d+\/\d+\/\d+\.terrain/))) {
-        Resource._DefaultImplementations.loadWithXhr(
-          "Data/CesiumTerrainTileJson/11_3027_1342.terrain",
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-        );
-        return;
-      }
-
-      Resource._DefaultImplementations.loadWithXhr(
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      );
-    };
-
     const terrainProvider = await CesiumTerrainProvider.fromUrl(
-      "Data/CesiumTerrainTileJson/StandardHeightmap.tile.json",
+      "Data/CesiumTerrainTileJson/Heightmap",
     );
 
     const positions = [
@@ -80,7 +38,7 @@ describe("Core/sampleTerrain", function () {
       Cartographic.fromDegrees(87.0, 28.0),
     ];
 
-    const passedPositions = await sampleTerrain(terrainProvider, 11, positions);
+    const passedPositions = await sampleTerrain(terrainProvider, 9, positions);
     expect(passedPositions).toBe(positions);
     expect(positions[0].height).toBeGreaterThan(5000);
     expect(positions[0].height).toBeLessThan(10000);
@@ -88,76 +46,92 @@ describe("Core/sampleTerrain", function () {
     expect(positions[1].height).toBeLessThan(10000);
   });
 
-  it("sets height to undefined if terrain data is not available at the position and specified level", function () {
+  it("sets height to undefined if terrain data is not available at the position and specified level", async function () {
+    const terrainProvider = await CesiumTerrainProvider.fromUrl(
+      "Data/CesiumTerrainTileJson/CesiumWorldTerrainSample",
+    );
     const positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
 
-    return sampleTerrain(worldTerrain, 18, positions).then(function () {
-      expect(positions[0].height).toBeUndefined();
-    });
+    await sampleTerrain(terrainProvider, 9, positions);
+    expect(positions[0].height).toBeUndefined();
   });
 
-  it("rejects if terrain data is not available and rejectOnTileFail is true", function () {
+  it("rejects if terrain data is not available and rejectOnTileFail is true", async function () {
+    const terrainProvider = await CesiumTerrainProvider.fromUrl(
+      "Data/CesiumTerrainTileJson/CesiumWorldTerrainSample",
+    );
     const positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
 
-    return expectAsync(
-      sampleTerrain(worldTerrain, 18, positions, true),
+    await expectAsync(
+      sampleTerrain(terrainProvider, 9, positions, true),
     ).toBeRejected();
   });
 
-  it("rejects if terrain data is not available for the second position and rejectOnTileFail is true", function () {
-    const positionWithData = Cartographic.fromDegrees(86.925145, 27.988257);
+  it("rejects if terrain data is not available for the second position and rejectOnTileFail is true", async function () {
+    const terrainProvider = await CesiumTerrainProvider.fromUrl(
+      "Data/CesiumTerrainTileJson/CesiumWorldTerrainSample",
+    );
+    const positionWithData = Cartographic.fromDegrees(
+      86.936662354213,
+      27.979899635557,
+    );
     const positionWithoutData = Cartographic.fromDegrees(0.0, 0.0, 0.0);
 
     const positions = [positionWithData, positionWithoutData];
-    return expectAsync(
-      sampleTerrain(worldTerrain, 12, positions, true),
+    await expectAsync(
+      sampleTerrain(terrainProvider, 9, positions, true),
     ).toBeRejected();
   });
 
-  it("fills in what it can when given a mix of positions with and without valid tiles", function () {
+  it("fills in what it can when given a mix of positions with and without valid tiles", async function () {
+    const terrainProvider = await CesiumTerrainProvider.fromUrl(
+      "Data/CesiumTerrainTileJson/CesiumWorldTerrainSample",
+    );
+
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(0.0, 89.0, 0.0),
       Cartographic.fromDegrees(87.0, 28.0),
     ];
 
-    return sampleTerrain(worldTerrain, 12, positions).then(function () {
-      expect(positions[0].height).toBeGreaterThan(5000);
-      expect(positions[0].height).toBeLessThan(10000);
-      expect(positions[1].height).toBeUndefined();
-      expect(positions[2].height).toBeGreaterThan(5000);
-      expect(positions[2].height).toBeLessThan(10000);
-    });
+    await sampleTerrain(terrainProvider, 9, positions);
+    expect(positions[0].height).toBeGreaterThan(5000);
+    expect(positions[0].height).toBeLessThan(10000);
+    expect(positions[1].height).toBeUndefined();
+    expect(positions[2].height).toBeGreaterThan(5000);
+    expect(positions[2].height).toBeLessThan(10000);
   });
 
   it("requires terrainProvider, level, and positions", async function () {
+    const terrainProvider = await CesiumTerrainProvider.fromUrl(
+      "Data/CesiumTerrainTileJson/CesiumWorldTerrainSample",
+    );
     const positions = [
-      Cartographic.fromDegrees(86.925145, 27.988257),
-      Cartographic.fromDegrees(0.0, 0.0, 0.0),
-      Cartographic.fromDegrees(87.0, 28.0),
+      Cartographic.fromDegrees(86.93666235421982, 27.97989963555095),
+      Cartographic.fromDegrees(86.9366623542198, 27.9798996355509),
     ];
 
     await expectAsync(
-      sampleTerrain(undefined, 11, positions),
+      sampleTerrain(undefined, 9, positions),
     ).toBeRejectedWithDeveloperError();
 
     await expectAsync(
-      sampleTerrain(worldTerrain, undefined, positions),
+      sampleTerrain(terrainProvider, undefined, positions),
     ).toBeRejectedWithDeveloperError();
 
     await expectAsync(
-      sampleTerrain(worldTerrain, 11, undefined),
+      sampleTerrain(terrainProvider, 9, undefined),
     ).toBeRejectedWithDeveloperError();
   });
 
-  it("works for a dodgy point right near the edge of a tile", function () {
+  it("works for a dodgy point right near the edge of a tile", async function () {
+    const worldTerrain = await createWorldTerrainAsync();
     const positions = [
       new Cartographic(0.33179290856829535, 0.7363107781851078),
     ];
 
-    return sampleTerrain(worldTerrain, 12, positions).then(function () {
-      expect(positions[0].height).toBeDefined();
-    });
+    await sampleTerrain(worldTerrain, 12, positions);
+    expect(positions[0].height).toBeDefined();
   });
 
   describe("with terrain providers", function () {
@@ -260,13 +234,9 @@ describe("Core/sampleTerrain", function () {
     }
 
     it("should work for Cesium World Terrain", async function () {
-      patchXHRLoad({
-        "/layer.json": "Data/CesiumTerrainTileJson/9_759_335/layer.json",
-        "/9/759/335.terrain?v=1.2.0":
-          "Data/CesiumTerrainTileJson/9_759_335/9_759_335.terrain",
-      });
-      const terrainProvider =
-        await CesiumTerrainProvider.fromUrl("made/up/url");
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/CesiumWorldTerrainSample",
+      );
 
       spyOnTerrainDataCreateMesh(terrainProvider);
 
@@ -285,18 +255,18 @@ describe("Core/sampleTerrain", function () {
 
       const level = 9;
 
-      return sampleTerrain(terrainProvider, level, [
+      await sampleTerrain(terrainProvider, level, [
         positionA,
         positionB,
         positionC,
-      ]).then(function () {
-        expect(positionA.height).toBeCloseTo(7780, 0);
-        expect(positionB.height).toBeCloseTo(7780, 0);
-        expect(positionC.height).toBeCloseTo(7780, 0);
-        // 1 tile was requested (all positions were close enough on the same tile)
-        //  and the mesh was not created because we're using CWT - which doesn't need the mesh for interpolation
-        return expectTileAndMeshCounts(terrainProvider, 1, false);
-      });
+      ]);
+
+      expect(positionA.height).toBeCloseTo(7780, 0);
+      expect(positionB.height).toBeCloseTo(7780, 0);
+      expect(positionC.height).toBeCloseTo(7780, 0);
+      // 1 tile was requested (all positions were close enough on the same tile)
+      //  and the mesh was not created because we're using CWT - which doesn't need the mesh for interpolation
+      return expectTileAndMeshCounts(terrainProvider, 1, false);
     });
 
     it("should work for ArcGIS terrain", async function () {

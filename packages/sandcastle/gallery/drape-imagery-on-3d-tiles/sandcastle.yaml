@@ -1,0 +1,9 @@
+legacyId: Drape Imagery on 3D Tiles.html
+title: Overlay Imagery on 3D Tiles
+description: Drape 2D raster imagery, such as roads and labels, over a 3D Tiles reality mesh streamed from the iTwin Platform. Overlaying 2D images on 3D geospatial context can improve user readability and navigation.
+labels:
+  - Imagery
+  - Showcases
+  - 3D Tiles
+  - Photogrammetry
+thumbnail: thumbnail.jpg
