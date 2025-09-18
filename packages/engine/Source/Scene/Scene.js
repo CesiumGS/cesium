@@ -3687,11 +3687,20 @@ function updateShadowMaps(scene) {
 
 function updateAndRenderPrimitives(scene) {
   const frameState = scene._frameState;
-  // Ensure the frame state's scene reference is current each frame before primitives update
-  frameState.scene = scene;
+
+  // Reset per-frame edge visibility request flag before primitives update
+  frameState.edgeVisibilityRequested = false;
 
   scene._groundPrimitives.update(frameState);
   scene._primitives.update(frameState);
+
+  // If any primitive requested edge visibility this frame, flip the scene flag lazily.
+  if (
+    frameState.edgeVisibilityRequested &&
+    scene._enableEdgeVisibility === false
+  ) {
+    scene._enableEdgeVisibility = true;
+  }
 
   updateDebugFrustumPlanes(scene);
   updateShadowMaps(scene);
