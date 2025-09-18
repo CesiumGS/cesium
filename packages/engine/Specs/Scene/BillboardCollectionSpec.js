@@ -2731,7 +2731,7 @@ describe("Scene/BillboardCollection", function () {
           );
 
           const terrainProvider = await CesiumTerrainProvider.fromUrl(
-            "made/up/url",
+            "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",
             {
               requestVertexNormals: true,
             },
