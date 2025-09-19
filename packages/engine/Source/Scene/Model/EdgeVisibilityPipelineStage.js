@@ -748,7 +748,7 @@ function createCPULineEdgeGeometry(
       }
     }
 
-    return null;
+    return undefined;
   };
 
   const edgeFeatureIds = getFeatureIdForEdge();
