@@ -22,7 +22,6 @@
   },
   "include": [
     "vite.config.app.ts",
-    "vite.config.ci.ts",
     "vite.config.dev.ts",
     "vite.config.prod.ts",
   ]

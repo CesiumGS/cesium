@@ -41,9 +41,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @param {string} options.viteBase Base path for files/routes
  * @param {string} options.cesiumBaseUrl Base path for CesiumJS. This should include the CesiumJS assets and workers etc.
  * @param {string} [options.commitSha] Optional commit hash to display in the top right of the application
- * @param {ImportList} options.imports Set of imports to add to the import map for the iframe and standalone html pages. These paths should match where it can access it within the current environment.
- * @param {{src: string, dest: string}[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolodate files for a singular static deployment (ie during production). Source paths should be absolute.
- * @returns
+ * @param {ImportList} options.imports Set of imports to add to the import map for the iframe and standalone html pages. These paths should match the URL where it can be accessed within the current environment.
+ * @param {{src: string, dest: string}[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolidate files for a singular static deployment (ie during production). Source paths should be absolute, dest paths should be relative to the page root
  */
 export function createSandcastleConfig({
   outDir,

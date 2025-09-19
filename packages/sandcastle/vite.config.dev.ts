@@ -1,73 +1,12 @@
-import { defineConfig, UserConfig } from "vite";
-import { viteStaticCopy } from "vite-plugin-static-copy";
-
-import baseConfig from "./vite.config.js";
-import { cesiumPathReplace, insertImportMap } from "./vite-plugins.js";
+import { defineConfig } from "vite";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { createSandcastleConfig } from "./scripts/buildStatic.js";
 
-const config = defineConfig(({ command }) => {
-  if (command === "build") {
-    throw Error("This config should not be used to build!");
-  }
-
-  const config: UserConfig = baseConfig;
-
-  const cesiumSource = "../../Build/CesiumUnminified";
-  const cesiumBaseUrl = "Build/CesiumUnminified";
-
-  config.define = {
-    ...config.define,
-  };
-
-  // When running the local dev server these are just server routes.
-  // When building the project this actually copies files.
-  // This config should NOT be used to build the project to avoid this.
-  const copyPlugin = viteStaticCopy({
-    targets: [
-      { src: `${cesiumSource}/ThirdParty`, dest: cesiumBaseUrl },
-      { src: `${cesiumSource}/Workers`, dest: cesiumBaseUrl },
-      { src: `${cesiumSource}/Assets`, dest: cesiumBaseUrl },
-      { src: `${cesiumSource}/Widgets`, dest: cesiumBaseUrl },
-      { src: `${cesiumSource}/*.(js|cjs)`, dest: cesiumBaseUrl },
-      { src: "../../Apps/SampleData", dest: "Apps" },
-      { src: "../../Apps/SampleData", dest: "" },
-      { src: `../../Source/Cesium.d.ts`, dest: "Source" },
-      { src: `../../Source/Cesium.js`, dest: "Source" },
-      {
-        src: `../engine/Build/Unminified/index.js`,
-        dest: "packages/engine/Build/Unminified",
-      },
-      { src: `../engine/index.d.ts`, dest: "packages/engine" },
-      {
-        src: `../widgets/Build/Unminified/index.js`,
-        dest: "packages/widgets/Build/Unminified",
-      },
-      { src: `../widgets/index.d.ts`, dest: "packages/widgets" },
-      { src: "templates/Sandcastle.d.ts", dest: "templates" },
-    ],
-  });
-
-  const plugins = config.plugins ?? [];
-  config.plugins = [
-    ...plugins,
-    copyPlugin[0],
-    cesiumPathReplace(`/${cesiumBaseUrl}`),
-    insertImportMap({
-      Sandcastle: "./Sandcastle.js",
-      cesium: "/Source/Cesium.js",
-      "@cesium/engine": "/packages/engine/Build/Unminified/index.js",
-      "@cesium/widgets": "/packages/widgets/Build/Unminified/index.js",
-    }),
-  ];
-
-  return config;
-});
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const cesiumSource = "../../Build/CesiumUnminified";
 const cesiumBaseUrl = "Build/CesiumUnminified";
+
 const newConfig = createSandcastleConfig({
   outDir: join(__dirname, "../../Build/Sandcastle2"),
   viteBase: "",
@@ -111,11 +50,6 @@ const newConfig = createSandcastleConfig({
   ],
 });
 
-console.log(config);
-console.log(newConfig);
-
-// export default config;
-// copyFilesForProd();
 export default defineConfig(({ command }) => {
   if (command === "build") {
     throw Error("This config should not be used to build!");
