@@ -1,10 +1,20 @@
 import { fileURLToPath } from "url";
 import react from "@vitejs/plugin-react";
-import { PluginOption, UserConfig } from "vite";
-import rootPackageJson from "../../package.json";
+import { dirname, join } from "path";
+import { readFileSync } from "fs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+function getCesiumVersion() {
+  const data = readFileSync(join(__dirname, "../../package.json"), "utf-8");
+  const { version } = JSON.parse(data);
+  return version;
+}
+
+/** @import {UserConfig} from 'vite' */
 
 // https://vite.dev/config/
-const baseConfig: UserConfig = {
+/** @type {UserConfig} */
+const baseConfig = {
   plugins: [react()],
   server: {
     // Given the nature of loading and constructing a CesiumJS Viewer on startup HMR can get memory intensive
@@ -13,7 +23,8 @@ const baseConfig: UserConfig = {
   },
   define: {
     __COMMIT_SHA__: JSON.stringify(undefined),
-    __CESIUM_VERSION__: JSON.stringify(`Cesium ${rootPackageJson.version}`),
+    __CESIUM_VERSION__: JSON.stringify(`Cesium ${getCesiumVersion()}`),
+    __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(undefined),
   },
   build: {
     // "the outDir may not be inside project root and will not be emptied without this setting
@@ -38,22 +49,3 @@ const baseConfig: UserConfig = {
   },
 };
 export default baseConfig;
-
-/**
- * Replace path values in
- * @param cesiumBaseUrl Path to use for replacement
- */
-export const cesiumPathReplace = (cesiumBaseUrl: string): PluginOption => {
-  return {
-    name: "custom-cesium-path-plugin",
-    config(config) {
-      config.define = {
-        ...config.define,
-        __CESIUM_BASE_URL__: JSON.stringify(cesiumBaseUrl),
-      };
-    },
-    transformIndexHtml(html) {
-      return html.replaceAll("__CESIUM_BASE_URL__", `${cesiumBaseUrl}`);
-    },
-  };
-};
