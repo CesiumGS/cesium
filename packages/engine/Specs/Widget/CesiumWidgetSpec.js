@@ -1662,17 +1662,17 @@ describe(
         })
         .then(function () {
           const preMixinListenerCount =
-            preMixinDataSource.entities.collectionChanged._listeners.length;
+            preMixinDataSource.entities.collectionChanged._listeners.size;
           const postMixinListenerCount =
-            postMixinDataSource.entities.collectionChanged._listeners.length;
+            postMixinDataSource.entities.collectionChanged._listeners.size;
 
           widget = widget.destroy();
 
           expect(
-            preMixinDataSource.entities.collectionChanged._listeners.length,
+            preMixinDataSource.entities.collectionChanged._listeners.size,
           ).not.toEqual(preMixinListenerCount);
           expect(
-            postMixinDataSource.entities.collectionChanged._listeners.length,
+            postMixinDataSource.entities.collectionChanged._listeners.size,
           ).not.toEqual(postMixinListenerCount);
         });
     });
