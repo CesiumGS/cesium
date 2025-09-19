@@ -5,6 +5,7 @@ import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js";
@@ -207,73 +208,59 @@ function buildTriangleAdjacency(primitive) {
   // Calculate face normals for each triangle (model space)
   const faceNormals = new Float32Array(triangleCount * 3);
 
+  // Scratch vectors to avoid heap allocations per triangle
+  const scratchP0 = new Cartesian3();
+  const scratchP1 = new Cartesian3();
+  const scratchP2 = new Cartesian3();
+  const scratchE1 = new Cartesian3();
+  const scratchE2 = new Cartesian3();
+  const scratchCross = new Cartesian3();
+
+  function processEdge(a, b, triIndex) {
+    const edgeKey = `${a < b ? a : b},${a < b ? b : a}`;
+    let list = edgeMap.get(edgeKey);
+    if (!defined(list)) {
+      list = [];
+      edgeMap.set(edgeKey, list);
+    }
+    if (list.length < 2) {
+      list.push(triIndex);
+    }
+  }
+
   for (let t = 0; t < triangleCount; t++) {
-    const i0 = triangleIndexArray[t * 3];
-    const i1 = triangleIndexArray[t * 3 + 1];
-    const i2 = triangleIndexArray[t * 3 + 2];
+    const base = t * 3;
+    const i0 = triangleIndexArray[base];
+    const i1 = triangleIndexArray[base + 1];
+    const i2 = triangleIndexArray[base + 2];
 
-    // Get triangle vertices
-    const p0 = [
-      positions[i0 * 3],
-      positions[i0 * 3 + 1],
-      positions[i0 * 3 + 2],
-    ];
-    const p1 = [
-      positions[i1 * 3],
-      positions[i1 * 3 + 1],
-      positions[i1 * 3 + 2],
-    ];
-    const p2 = [
-      positions[i2 * 3],
-      positions[i2 * 3 + 1],
-      positions[i2 * 3 + 2],
-    ];
+    const i0o = i0 * 3;
+    const i1o = i1 * 3;
+    const i2o = i2 * 3;
 
-    // Calculate face normal: normalize(cross(e1, e2))
-    const e1 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
-    const e2 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+    scratchP0.x = positions[i0o];
+    scratchP0.y = positions[i0o + 1];
+    scratchP0.z = positions[i0o + 2];
+    scratchP1.x = positions[i1o];
+    scratchP1.y = positions[i1o + 1];
+    scratchP1.z = positions[i1o + 2];
+    scratchP2.x = positions[i2o];
+    scratchP2.y = positions[i2o + 1];
+    scratchP2.z = positions[i2o + 2];
 
-    // Cross product: e1 × e2
-    const cross = [
-      e1[1] * e2[2] - e1[2] * e2[1],
-      e1[2] * e2[0] - e1[0] * e2[2],
-      e1[0] * e2[1] - e1[1] * e2[0],
-    ];
+    Cartesian3.subtract(scratchP1, scratchP0, scratchE1);
+    Cartesian3.subtract(scratchP2, scratchP0, scratchE2);
+    Cartesian3.cross(scratchE1, scratchE2, scratchCross);
+    Cartesian3.normalize(scratchCross, scratchCross);
 
-    // Normalize
-    const length = Math.sqrt(
-      cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2],
-    );
-    if (length > 0) {
-      cross[0] /= length;
-      cross[1] /= length;
-      cross[2] /= length;
-    }
+    faceNormals[base] = scratchCross.x;
+    faceNormals[base + 1] = scratchCross.y;
+    faceNormals[base + 2] = scratchCross.z;
 
-    // Store face normal
-    faceNormals[t * 3] = cross[0];
-    faceNormals[t * 3 + 1] = cross[1];
-    faceNormals[t * 3 + 2] = cross[2];
-
-    // Add triangle to edge map for each edge
-    const edges = [
-      [i0, i1],
-      [i1, i2],
-      [i2, i0],
-    ];
-
-    for (const [a, b] of edges) {
-      const edgeKey = `${Math.min(a, b)},${Math.max(a, b)}`;
-
-      if (!edgeMap.has(edgeKey)) {
-        edgeMap.set(edgeKey, []);
-      }
-
-      const triangleList = edgeMap.get(edgeKey);
-      if (triangleList.length < 2) {
-        triangleList.push(t);
-      }
-    }
+    // Edges
+    processEdge(i0, i1, t);
+    processEdge(i1, i2, t);
+    processEdge(i2, i0, t);
   }
 
   return { edgeMap, faceNormals, triangleCount };
@@ -299,42 +286,43 @@ function generateEdgeFaceNormals(adjacencyData, edgeIndices) {
   for (let i = 0; i < numEdges; i++) {
     const a = edgeIndices[i * 2];
     const b = edgeIndices[i * 2 + 1];
-    const edgeKey = `${Math.min(a, b)},${Math.max(a, b)}`;
-
+    const edgeKey = `${a < b ? a : b},${a < b ? b : a}`;
     const triangleList = edgeMap.get(edgeKey);
 
-    let normalA;
-    let normalB;
-
-    if (triangleList && triangleList.length > 0) {
-      const tA = triangleList[0];
-      normalA = [
-        faceNormals[tA * 3],
-        faceNormals[tA * 3 + 1],
-        faceNormals[tA * 3 + 2],
-      ];
-
-      if (triangleList.length > 1) {
-        const tB = triangleList[1];
-        normalB = [
-          faceNormals[tB * 3],
-          faceNormals[tB * 3 + 1],
-          faceNormals[tB * 3 + 2],
-        ];
-      } else {
-        // Boundary edge: use negative of first normal
-        normalB = [-normalA[0], -normalA[1], -normalA[2]];
-      }
+    // Expect at least one triangle; silently skip if not found (defensive)
+    if (!defined(triangleList) || triangleList.length === 0) {
+      continue;
     }
 
-    // Store face normal pair for this edge
+    const tA = triangleList[0];
+    const aBase = tA * 3;
+    const nAx = faceNormals[aBase];
+    const nAy = faceNormals[aBase + 1];
+    const nAz = faceNormals[aBase + 2];
+
+    let nBx;
+    let nBy;
+    let nBz;
+    if (triangleList.length > 1) {
+      const tB = triangleList[1];
+      const bBase = tB * 3;
+      nBx = faceNormals[bBase];
+      nBy = faceNormals[bBase + 1];
+      nBz = faceNormals[bBase + 2];
+    } else {
+      // Boundary edge – synthesize opposite normal
+      nBx = -nAx;
+      nBy = -nAy;
+      nBz = -nAz;
+    }
+
     const baseIdx = i * 6;
-    edgeFaceNormals[baseIdx] = normalA[0];
-    edgeFaceNormals[baseIdx + 1] = normalA[1];
-    edgeFaceNormals[baseIdx + 2] = normalA[2];
-    edgeFaceNormals[baseIdx + 3] = normalB[0];
-    edgeFaceNormals[baseIdx + 4] = normalB[1];
-    edgeFaceNormals[baseIdx + 5] = normalB[2];
+    edgeFaceNormals[baseIdx] = nAx;
+    edgeFaceNormals[baseIdx + 1] = nAy;
+    edgeFaceNormals[baseIdx + 2] = nAz;
+    edgeFaceNormals[baseIdx + 3] = nBx;
+    edgeFaceNormals[baseIdx + 4] = nBy;
+    edgeFaceNormals[baseIdx + 5] = nBz;
   }
 
   return edgeFaceNormals;
@@ -379,14 +367,18 @@ function extractVisibleEdges(primitive) {
     const v0 = triangleIndexArray[i];
     const v1 = triangleIndexArray[i + 1];
     const v2 = triangleIndexArray[i + 2];
-
-    const edgeVertices = [
-      [v0, v1],
-      [v1, v2],
-      [v2, v0],
-    ];
-
     for (let e = 0; e < 3; e++) {
+      let a, b;
+      if (e === 0) {
+        a = v0;
+        b = v1;
+      } else if (e === 1) {
+        a = v1;
+        b = v2;
+      } else if (e === 2) {
+        a = v2;
+        b = v0;
+      }
       const byteIndex = Math.floor(edgeIndex / 4);
       const bitPairOffset = (edgeIndex % 4) * 2;
       edgeIndex++;
@@ -416,8 +408,6 @@ function extractVisibleEdges(primitive) {
       }
 
       if (shouldIncludeEdge) {
-        const a = edgeVertices[e][0];
-        const b = edgeVertices[e][1];
         const small = Math.min(a, b);
         const big = Math.max(a, b);
         const hash = small * vertexCount + big;
