@@ -198,26 +198,9 @@ function buildTriangleAdjacency(primitive) {
     VertexAttributeSemantic.POSITION,
   );
 
-  // Retrieve raw (possibly quantized) position data. If the attribute is quantized
-  // we must dequantize on the CPU here because we compute face normals and silhouette
-  // classification data before the vertex shader's dequantization stage runs.
-  let positions = defined(positionAttribute.typedArray)
+  const positions = defined(positionAttribute.typedArray)
     ? positionAttribute.typedArray
     : ModelReader.readAttributeAsTypedArray(positionAttribute);
-
-  const quantization = positionAttribute.quantization;
-  if (defined(quantization) && !quantization.octEncoded) {
-    const count = positions.length; // length is 3 * vertexCount
-    const dequantized = new Float32Array(count);
-    const offset = quantization.quantizedVolumeOffset;
-    const step = quantization.quantizedVolumeStepSize;
-    for (let i = 0; i < count; i += 3) {
-      dequantized[i] = offset.x + positions[i] * step.x;
-      dequantized[i + 1] = offset.y + positions[i + 1] * step.y;
-      dequantized[i + 2] = offset.z + positions[i + 2] * step.z;
-    }
-    positions = dequantized;
-  }
 
   // Build edge map: key = "min,max", value = [triangleA, triangleB?]
   const edgeMap = new Map();
