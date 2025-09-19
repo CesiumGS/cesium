@@ -51,9 +51,6 @@ self.MonacoEnvironment = {
 // open network access
 loader.config({ monaco });
 
-const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
-const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
-
 export type SandcastleEditorRef = {
   formatCode(): void;
 };
@@ -192,25 +189,97 @@ function SandcastleEditor({
   async function setTypes(monaco: Monaco) {
     // https://microsoft.github.io/monaco-editor/playground.html?source=v0.52.2#example-extending-language-services-configure-javascript-defaults
 
-    const cesiumTypes = await (await fetch(TYPES_URL)).text();
-    // define a "global" variable so types work even with out the import statement
-    const cesiumTypesWithGlobal = `${cesiumTypes}\nvar Cesium: typeof import('cesium');`;
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      cesiumTypesWithGlobal,
-      "ts:cesium.d.ts",
+    const typeImportPaths = __VITE_TYPE_IMPORT_PATHS__ ?? {};
+
+    const typeImports: {
+      url: string;
+      filename: string;
+      transformTypes?: (typesContent: string) => string;
+    }[] = [
+      {
+        url: typeImportPaths["cesium"],
+        filename: "ts:cesium.d.ts",
+        transformTypes(typesContent: string) {
+          // define a "global" variable so types work even with out the import statement
+          return `${typesContent}\nvar Cesium: typeof import('cesium');`;
+        },
+      },
+      {
+        url: typeImportPaths["Sandcastle"],
+        filename: "ts:sandcastle.d.ts",
+        transformTypes(typesContent: string) {
+          return `declare module 'Sandcastle' {
+      ${typesContent}
+    }
+      var Sandcastle: typeof import('Sandcastle').default;`;
+        },
+      },
+      {
+        url: typeImportPaths["@cesium/engine"],
+        filename: "ts:cesium-engine.d.ts",
+      },
+      {
+        url: typeImportPaths["@cesium/widgets"],
+        filename: "ts:cesium-widgets.d.ts",
+        transformTypes(typesContent) {
+          // Monaco expects the import statements to be inside the module so
+          // move the module declaration to the top of the "file"
+          return `declare module "@cesium/widgets" {
+          ${typesContent.replace('declare module "@cesium/widgets" {', "")}`;
+        },
+      },
+    ];
+
+    const extraImportNames = Object.keys(typeImportPaths).filter(
+      (name) =>
+        !["cesium", "Sandcastle", "@cesium/engine", "@cesium/widgets"].includes(
+          name,
+        ),
     );
+    for (const extraName of extraImportNames) {
+      typeImports.push({
+        url: typeImportPaths[extraName],
+        filename: `ts:${extraName.replace(/@\//, "-")}.d.ts`,
+        transformTypes(typesContent) {
+          // TODO: this feels a little messy and still very targeted at our own modules, is there a way to improve?
+          // I was experimenting with setting the transform from Vite but that doesn't work with functions
 
-    const sandcastleTypes = await (await fetch(SANDCASTLE_TYPES_URL)).text();
-    // surround in a module so the import statement works nicely
-    // also define a "global" so types show even if you don't have the import
-    const sandcastleModuleTypes = `declare module 'Sandcastle' {
-        ${sandcastleTypes}
-      }
-        var Sandcastle: typeof import('Sandcastle').default;`;
+          // Monaco expects the import statements to be inside the module so
+          // move the module declaration to the top of the "file"
+          if (typesContent.trim().startsWith("import")) {
+            const declareModuleLine = typesContent.match(
+              /declare module "([\w@\-\/]+)" {/gm,
+            )?.[0];
+            if (declareModuleLine) {
+              return `${declareModuleLine}
+              ${typesContent.replace(declareModuleLine, "")}`;
+            }
+          }
+          return typesContent;
+        },
+      });
+    }
 
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      sandcastleModuleTypes,
-      "ts:sandcastle.d.ts",
+    await Promise.allSettled(
+      typeImports.map(async (typeImport) => {
+        const { url, transformTypes, filename } = typeImport;
+        if (!url) {
+          return;
+        }
+        try {
+          const responseText = await (await fetch(url)).text();
+          const typesContent = transformTypes
+            ? transformTypes(responseText)
+            : responseText;
+          monaco.languages.typescript.javascriptDefaults.addExtraLib(
+            typesContent,
+            filename,
+          );
+        } catch (error) {
+          console.error(`Unable to load types for ${filename} at ${url}`);
+          console.error(error);
+        }
+      }),
     );
   }
 

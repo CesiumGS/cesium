@@ -174,7 +174,11 @@ export async function buildGalleryList(options = {}) {
     if (
       check(!/^[a-zA-Z0-9-.]+$/.test(slug), `"${slug}" is not a valid slug`) ||
       check(!title, `${slug} - Missing title`) ||
-      check(!description, `${slug} - Missing description`)
+      check(!description, `${slug} - Missing description`) ||
+      check(
+        !development && labels.includes("Development"),
+        `${slug} has Development label but not marked as development sandcastle`,
+      )
     ) {
       continue;
     }
