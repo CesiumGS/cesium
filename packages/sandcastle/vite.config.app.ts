@@ -12,6 +12,7 @@ const newConfig = createSandcastleConfig({
   outDir: join(__dirname, "../../Apps/Sandcastle2"),
   viteBase: pathPrefix("/Apps/Sandcastle2"),
   cesiumBaseUrl: pathPrefix("/Build/CesiumUnminified"),
+  commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
   imports: {
     cesium: {
       path: pathPrefix("/Source/Cesium.js"),
