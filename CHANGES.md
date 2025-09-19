@@ -10,6 +10,7 @@
 - Reverts `createImageBitmap` options update to continue support for older browsers [#12846](https://github.com/CesiumGS/cesium/issues/12846)
 - Fix flickering artifact in Gaussian splat models caused by incorrect sorting results. [#12662](https://github.com/CesiumGS/cesium/issues/12662)
 - Fixes vertical misalignment of glyphs in labels with small fonts [#8474](https://github.com/CesiumGS/cesium/issues/8474)
+- Prevent runtime errors for certain forms of invalid PNTS files [#12872](https://github.com/CesiumGS/cesium/issues/12872)
 
 #### Additions :tada:
 
