@@ -1746,6 +1746,7 @@ async function buildSandcastle() {
   return Promise.all(streams.map((s) => finished(s)));
 }
 
+// TODO: clean up
 export async function buildNewSandcastle() {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const newConfig = createSandcastleConfig({
