@@ -53,9 +53,9 @@ const ImageryProviderAsyncMapping = {
       ...options,
     });
   },
-  GOOGLE_2D_MAPS: async (url, options) => {
+  GOOGLE_2D_MAPS: async (ionResource, options) => {
     return new Google2DImageryProvider.fromSessionToken({
-      url: url,
+      url: ionResource,
       ...options,
     });
   },
@@ -315,7 +315,15 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
     const options = { ...endpoint.options };
     const url = options.url;
     delete options.url;
-    imageryProvider = await factory(url, options);
+    const proxy = String(url).includes("ion") && String(url).includes("proxy");
+    if (proxy) {
+      imageryProvider = await factory(
+        new IonResource(endpoint, endpointResource),
+        options,
+      );
+    } else {
+      imageryProvider = await factory(url, options);
+    }
   }
 
   const provider = new IonImageryProvider(options);

@@ -44,8 +44,8 @@ const trailingSlashRegex = /\/$/;
  */
 function Google2DImageryProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  this._sessionToken = options.sessionToken;
-  this._apiKey = options.apiKey;
+  this._session = options.session;
+  this._key = options.key;
   this._tileWidth = options.tileWidth;
   this._tileHeight = options.tileHeight;
 }

@@ -30,12 +30,19 @@ function IonResource(endpoint, endpointResource) {
   //>>includeEnd('debug');
 
   let options;
+  endpoint = processEndpoint(endpoint);
   const externalType = endpoint.externalType;
   const isExternal = defined(externalType);
 
   if (!isExternal) {
     options = {
       url: endpoint.url,
+      retryAttempts: 1,
+      retryCallback: retryCallback,
+    };
+  } else if (externalType === "GOOGLE_2D_MAPS") {
+    options = {
+      url: endpoint.options.url,
       retryAttempts: 1,
       retryCallback: retryCallback,
     };
@@ -268,8 +275,8 @@ function retryCallback(that, error) {
       .fetchJson()
       .then(function (newEndpoint) {
         //Set the token for root resource so new derived resources automatically pick it up
-        ionRoot._ionEndpoint = newEndpoint;
-        return newEndpoint;
+        ionRoot._ionEndpoint = processEndpoint(newEndpoint);
+        return ionRoot._ionEndpoint;
       })
       .finally(function (newEndpoint) {
         // Pass or fail, we're done with this promise, the next failure should use a new one.
@@ -284,4 +291,32 @@ function retryCallback(that, error) {
     return true;
   });
 }
+
+function processEndpoint(endpoint) {
+  const externalType = endpoint.externalType;
+  const endpointOptions = endpoint.options ?? Frozen.EMPTY_OBJECT;
+  if (!defined(externalType) || !endpointOptions.proxy) {
+    // Not an external asset or an external asset that isn't proxied
+    return endpoint;
+  }
+
+  let url = endpointOptions.url;
+  let accessToken = "";
+  if (externalType === "BING") {
+    accessToken = endpointOptions.key;
+  } else if (externalType === "3DTILES" || externalType === "GOOGLE_2D_MAPS") {
+    const parsedUrl = new URL(url);
+    accessToken = parsedUrl.searchParams.get("key");
+    parsedUrl.searchParams.delete("key");
+    url = parsedUrl.href;
+  }
+
+  return {
+    type: endpoint.type,
+    attributions: endpoint.attributions,
+    url,
+    accessToken,
+  };
+}
+
 export default IonResource;
