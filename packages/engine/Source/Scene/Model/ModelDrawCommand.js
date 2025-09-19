@@ -1,6 +1,5 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian2 from "../../Core/Cartesian2.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
 import CesiumMath from "../../Core/Math.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
@@ -792,7 +791,7 @@ function deriveSilhouetteColorCommand(command, model) {
   return silhouetteColorCommand;
 }
 
-function deriveEdgeCommand(command, renderResources, model) {
+function deriveEdgeCommand(command, renderResources) {
   const edgeGeometry = renderResources.edgeGeometry;
   const edgeCommand = DrawCommand.shallowClone(command);
 
@@ -815,15 +814,6 @@ function deriveEdgeCommand(command, renderResources, model) {
     return true; // This is the edge pass
   };
   edgeCommand.uniformMap = uniformMap;
-
-  const renderState = clone(command.renderState, true);
-  edgeCommand.renderState = RenderState.fromCache(renderState);
-
-  // Use a very large bounding volume to avoid culling issues
-  edgeCommand.boundingVolume = new BoundingSphere(
-    Cartesian3.ZERO,
-    Number.MAX_VALUE,
-  );
 
   edgeCommand.castShadows = false;
   edgeCommand.receiveShadows = false;
