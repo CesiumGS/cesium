@@ -660,7 +660,7 @@ function createCPULineEdgeGeometry(
   });
 
   // Create sequential indices for line pairs
-  const useU32 = totalVerts > 65535;
+  const useU32 = totalVerts > 65534;
   const idx = new Array(totalVerts);
   for (let i = 0; i < totalVerts; i++) {
     idx[i] = i;
