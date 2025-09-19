@@ -18,6 +18,8 @@ import {
   glslToJavaScript,
   createIndexJs,
   buildCesium,
+  getSandcastleConfig,
+  buildSandcastleGallery,
 } from "./scripts/build.js";
 
 const argv = yargs(process.argv)
@@ -79,6 +81,22 @@ async function generateDevelopmentBuild() {
 
   return contexts;
 }
+
+// Delay execution of the callback until a short time has elapsed since it was last invoked, preventing
+// calls to the same function in quick succession from triggering multiple builds.
+const throttleDelay = 500;
+const throttle = (callback) => {
+  let timeout;
+  return () =>
+    new Promise((resolve) => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      timeout = setTimeout(() => {
+        resolve(callback());
+      }, throttleDelay);
+    });
+};
 
 (async function () {
   const gzipHeader = Buffer.from("1F8B08", "hex");
@@ -267,21 +285,30 @@ async function generateDevelopmentBuild() {
       specsCache.clear();
     });
 
-    const galleryDirectory = "packages/sandcastle/gallery";
-    const galleryWatcher = chokidar.watch([galleryDirectory], {
-      ignored: (file, stats) =>
-        !!stats?.isFile() && !file.endsWith(".yml") && !file.endsWith(".yaml"),
-      ignoreInitial: true,
-    });
     if (!production) {
-      const { buildGalleryList } = await import(
-        "./packages/sandcastle/scripts/buildGallery.js"
+      const { configPath, root, gallery } = await getSandcastleConfig();
+      const baseDirectory = path.relative(root, path.dirname(configPath));
+      const galleryFiles = gallery.files.map((pattern) =>
+        path.join(baseDirectory, pattern),
       );
-      galleryWatcher.on("all", async (event) => {
-        if (event === "add" || event === "change" || event === "unlink") {
-          await buildGalleryList(galleryDirectory);
-        }
+      const galleryWatcher = chokidar.watch(galleryFiles, {
+        ignoreInitial: true,
       });
+
+      galleryWatcher.on(
+        "all",
+        throttle(async () => {
+          const startTime = performance.now();
+          try {
+            await buildSandcastleGallery();
+            console.log(
+              `Gallery built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
+            );
+          } catch (e) {
+            console.error(e);
+          }
+        }),
+      );
     }
 
     // Rebuild jsHintOptions as needed and serve as-is
