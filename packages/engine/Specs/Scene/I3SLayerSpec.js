@@ -275,8 +275,8 @@ describe("Scene/I3SLayer", function () {
     const testLayer = mockI3SProvider.layers[0];
 
     expect(testLayer.tileset).toBeDefined();
-    expect(testLayer.tileset.tileUnload._listeners.length).toEqual(1);
-    expect(testLayer.tileset.tileVisible._listeners.length).toEqual(1);
+    expect(testLayer.tileset.tileUnload._listeners.size).toEqual(1);
+    expect(testLayer.tileset.tileVisible._listeners.size).toEqual(1);
 
     expect(testLayer._rootNode).toBeDefined();
     expect(testLayer._rootNode._tile).toBe(testLayer.tileset._root);

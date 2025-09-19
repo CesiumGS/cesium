@@ -1,0 +1,16 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "extensionsRequired": ["3DTILES_draco_point_compression"],
+  "extensionsUsed": ["3DTILES_draco_point_compression"],
+  "geometricError": 1.7320508075688772,
+  "root": {
+    "boundingVolume": {
+      "box": [0.5, 0.5, 0.5, 0.5, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5]
+    },
+    "content": { "uri": "pointCloudDracoInvalid.pnts" },
+    "geometricError": 0.0,
+    "refine": "ADD"
+  }
+}
