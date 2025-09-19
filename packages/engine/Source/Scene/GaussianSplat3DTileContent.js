@@ -7,16 +7,16 @@ import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
 import destroyObject from "../Core/destroyObject.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 
 /**
- * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-spz-splat-compression/extensions/2.0/Khronos/KHR_spz_gaussian_splats_compression|KHR_spz_gaussian_splats_compression} extension.
+ * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting | KHR_gaussian_splatting} and {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting_compression_spz_2 | KHR_gaussian_splatting_compression_spz_2} extensions.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
  *
  * @alias GaussianSplat3DTileContent
  * @constructor
- * @private
  */
 function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
   this._tileset = tileset;
@@ -46,7 +46,7 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
    * @type {undefined|Primitive}
    * @private
    */
-  this.splatPrimitive = undefined;
+  this.gltfPrimitive = undefined;
 
   /**
    * Transform matrix to turn model coordinates into world coordinates.
@@ -78,7 +78,65 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
    * @private
    */
   this._transformed = false;
+
+  /**
+   * The degree of the spherical harmonics used for the Gaussian splats.
+   * @type {number}
+   * @private
+   */
+  this._sphericalHarmonicsDegree = 0;
+
+  /**
+   * The number of spherical harmonic coefficients used for the Gaussian splats.
+   * @type {number}
+   * @private
+   */
+  this._sphericalHarmonicsCoefficientCount = 0;
+
+  /**
+   * Spherical Harmonic data that has been packed for use in a texture or shader.
+   * @type {undefined|Uint32Array}
+   * @private
+   */
+  this._packedSphericalHarmonicsData = undefined;
 }
+
+/**
+ * Performs checks to ensure that the provided tileset has the Gaussian Splatting extensions.
+ *
+ * @param {Cesium3DTileset} tileset The tileset to check for the extensions.
+ * @returns {boolean} Returns <code>true</code> if the necessary extensions are included in the tileset.
+ * @static
+ */
+GaussianSplat3DTileContent.tilesetRequiresGaussianSplattingExt = function (
+  tileset,
+) {
+  let hasGaussianSplatExtension = false;
+  let hasLegacyGaussianSplatExtension = false;
+  if (tileset.isGltfExtensionRequired instanceof Function) {
+    hasGaussianSplatExtension =
+      tileset.isGltfExtensionRequired("KHR_gaussian_splatting") &&
+      tileset.isGltfExtensionRequired(
+        "KHR_gaussian_splatting_compression_spz_2",
+      );
+
+    hasLegacyGaussianSplatExtension = tileset.isGltfExtensionRequired(
+      "KHR_spz_gaussian_splats_compression",
+    );
+  }
+
+  if (hasLegacyGaussianSplatExtension) {
+    deprecationWarning(
+      "KHR_spz_gaussian_splats_compression",
+      "Support for the original KHR_spz_gaussian_splats_compression extension has been deprecated in favor " +
+        "of the up to date KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extensions and will be " +
+        "removed in CesiumJS 1.135.\n\nPlease retile your tileset with the KHR_gaussian_splatting and " +
+        "KHR_gaussian_splatting_compression_spz_2 extensions.",
+    );
+  }
+
+  return hasGaussianSplatExtension || hasLegacyGaussianSplatExtension;
+};
 
 Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   /**
@@ -106,7 +164,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    */
   pointsLength: {
     get: function () {
-      return this.splatPrimitive.attributes[0].count;
+      return this.gltfPrimitive.attributes[0].count;
     },
   },
   /**
@@ -131,7 +189,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    */
   geometryByteLength: {
     get: function () {
-      return this.splatPrimitive.attributes.reduce((totalLength, attribute) => {
+      return this.gltfPrimitive.attributes.reduce((totalLength, attribute) => {
         return totalLength + attribute.byteLength;
       }, 0);
     },
@@ -309,7 +367,187 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
       this._group = value;
     },
   },
+
+  /**
+   * The number of spherical harmonic coefficients used for the Gaussian splats.
+   * @type {number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  sphericalHarmonicsCoefficientCount: {
+    get: function () {
+      return this._sphericalHarmonicsCoefficientCount;
+    },
+  },
+  /**
+   * The degree of the spherical harmonics used for the Gaussian splats.
+   * @type {number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  sphericalHarmonicsDegree: {
+    get: function () {
+      return this._sphericalHarmonicsDegree;
+    },
+  },
+
+  /**
+   * The packed spherical harmonic data for the Gaussian splats for use a shader or texture.
+   * @type {number}
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  packedSphericalHarmonicsData: {
+    get: function () {
+      return this._packedSphericalHarmonicsData;
+    },
+  },
 });
+
+function getShAttributePrefix(attribute) {
+  const prefix = attribute.startsWith("KHR_gaussian_splatting:")
+    ? "KHR_gaussian_splatting:"
+    : "_";
+  return `${prefix}SH_DEGREE_`;
+}
+
+/**
+ * Determine Spherical Harmonics degree and coefficient count from attributes
+ * @param {Attribute[]} attributes - The list of glTF attributes.
+ * @returns {object} An object containing the degree (l) and coefficient (n).
+ * @private
+ */
+function degreeAndCoefFromAttributes(attributes) {
+  const shAttributes = attributes.filter((attr) =>
+    attr.name.includes("SH_DEGREE_"),
+  );
+
+  switch (shAttributes.length) {
+    default:
+    case 0:
+      return { l: 0, n: 0 };
+    case 3:
+      return { l: 1, n: 9 };
+    case 8:
+      return { l: 2, n: 24 };
+    case 15:
+      return { l: 3, n: 45 };
+  }
+}
+
+/**
+ * Converts a 32-bit floating point number to a 16-bit floating point number.
+ * @param {number} float32 input
+ * @returns {number} Half precision float
+ * @private
+ */
+const buffer = new ArrayBuffer(4);
+const floatView = new Float32Array(buffer);
+const intView = new Uint32Array(buffer);
+
+function float32ToFloat16(float32) {
+  floatView[0] = float32;
+  const bits = intView[0];
+
+  const sign = (bits >> 31) & 0x1;
+  const exponent = (bits >> 23) & 0xff;
+  const mantissa = bits & 0x7fffff;
+
+  let half;
+
+  if (exponent === 0xff) {
+    half = (sign << 15) | (0x1f << 10) | (mantissa ? 0x200 : 0);
+  } else if (exponent === 0) {
+    half = sign << 15;
+  } else {
+    const newExponent = exponent - 127 + 15;
+    if (newExponent >= 31) {
+      half = (sign << 15) | (0x1f << 10);
+    } else if (newExponent <= 0) {
+      half = sign << 15;
+    } else {
+      half = (sign << 15) | (newExponent << 10) | (mantissa >>> 13);
+    }
+  }
+
+  return half;
+}
+
+/**
+ * Extracts the spherical harmonic degree and coefficient from the attribute name.
+ * @param {string} attribute - The attribute name.
+ * @returns {object} An object containing the degree (l) and coefficient (n).
+ * @private
+ */
+function extractSHDegreeAndCoef(attribute) {
+  const prefix = getShAttributePrefix(attribute);
+  const separator = "_COEF_";
+
+  const lStart = prefix.length;
+  const coefIndex = attribute.indexOf(separator, lStart);
+
+  const l = parseInt(attribute.slice(lStart, coefIndex), 10);
+  const n = parseInt(attribute.slice(coefIndex + separator.length), 10);
+
+  return { l, n };
+}
+
+/**
+ * Packs spherical harmonic data into half-precision floats.
+ * @param {GaussianSplat3DTileContent} tileContent - The tile content containing the spherical harmonic data.
+ * @returns {Uint32Array} - The Float16 packed spherical harmonic data.
+ * @private
+ */
+function packSphericalHarmonicsData(tileContent) {
+  const degree = tileContent.sphericalHarmonicsDegree;
+  const coefs = tileContent.sphericalHarmonicsCoefficientCount;
+  const totalLength = tileContent.pointsLength * (coefs * (2 / 3)); //3 packs into 2
+  const packedData = new Uint32Array(totalLength);
+
+  const shAttributes = tileContent.gltfPrimitive.attributes.filter((attr) =>
+    attr.name.includes("SH_DEGREE_"),
+  );
+  let stride = 0;
+  const base = [0, 9, 24];
+  switch (degree) {
+    case 1:
+      stride = 9;
+      break;
+    case 2:
+      stride = 24;
+      break;
+    case 3:
+      stride = 45;
+      break;
+  }
+  shAttributes.sort((a, b) => {
+    if (a.name < b.name) {
+      return -1;
+    }
+    if (a.name > b.name) {
+      return 1;
+    }
+
+    return 0;
+  });
+  const packedStride = stride * (2 / 3);
+  for (let i = 0; i < shAttributes.length; i++) {
+    const { l, n } = extractSHDegreeAndCoef(shAttributes[i].name);
+    for (let j = 0; j < tileContent.pointsLength; j++) {
+      //interleave the data
+      const packedBase = (base[l - 1] * 2) / 3;
+      const idx = j * packedStride + packedBase + n * 2;
+      const src = j * 3;
+      packedData[idx] =
+        float32ToFloat16(shAttributes[i].typedArray[src]) |
+        (float32ToFloat16(shAttributes[i].typedArray[src + 1]) << 16);
+      packedData[idx + 1] = float32ToFloat16(
+        shAttributes[i].typedArray[src + 2],
+      );
+    }
+  }
+  return packedData;
+}
 
 /**
  * Creates a new instance of {@link GaussianSplat3DTileContent} from a glTF or glb resource.
@@ -387,30 +625,36 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
   }
 
   if (this._resourcesLoaded) {
-    this.splatPrimitive = loader.components.scene.nodes[0].primitives[0];
+    this.gltfPrimitive = loader.components.scene.nodes[0].primitives[0];
     this.worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
 
     this._originalPositions = new Float32Array(
       ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
+        this.gltfPrimitive,
         VertexAttributeSemantic.POSITION,
       ).typedArray,
     );
 
     this._originalRotations = new Float32Array(
       ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
+        this.gltfPrimitive,
         VertexAttributeSemantic.ROTATION,
       ).typedArray,
     );
 
     this._originalScales = new Float32Array(
       ModelUtility.getAttributeBySemantic(
-        this.splatPrimitive,
+        this.gltfPrimitive,
         VertexAttributeSemantic.SCALE,
       ).typedArray,
     );
+
+    const { l, n } = degreeAndCoefFromAttributes(this.gltfPrimitive.attributes);
+    this._sphericalHarmonicsDegree = l;
+    this._sphericalHarmonicsCoefficientCount = n;
+
+    this._packedSphericalHarmonicsData = packSphericalHarmonicsData(this);
 
     return;
   }

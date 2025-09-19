@@ -1,0 +1,96 @@
+<style>
+  @import url(../templates/bucket.css);
+  .demo-container {
+    background-color: #303336;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 5px 3px;
+  }
+  .demo-container input {
+    vertical-align: middle;
+    margin-top: 0;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <div id="zoomButtons"></div>
+  <div class="demo-container">
+    <label
+      ><input
+        type="radio"
+        name="shadingMaterials"
+        value="none"
+        data-bind="checked: selectedShading"
+      />
+      No shading</label
+    >
+    <label
+      ><input
+        type="radio"
+        name="shadingMaterials"
+        value="elevation"
+        data-bind="checked: selectedShading"
+      />
+      Elevation</label
+    >
+    <label
+      ><input
+        type="radio"
+        name="shadingMaterials"
+        value="slope"
+        data-bind="checked: selectedShading"
+      />
+      Slope</label
+    >
+    <label
+      ><input
+        type="radio"
+        name="shadingMaterials"
+        value="aspect"
+        data-bind="checked: selectedShading"
+      />
+      Aspect</label
+    >
+  </div>
+  <div class="demo-container">
+    <div>
+      <label
+        ><input type="checkbox" data-bind="checked: enableContour" />Enable
+        Contour Lines</label
+      >
+    </div>
+    <div>
+      Spacing
+      <input
+        style="width: 136px"
+        type="range"
+        min="1.0"
+        max="500.0"
+        step="1.0"
+        data-bind="value: contourSpacing, valueUpdate: 'input', enable: enableContour"
+      />
+      <span data-bind="text: contourSpacing"></span>m
+    </div>
+    <div>
+      Line Width
+      <input
+        style="width: 125px"
+        type="range"
+        min="1.0"
+        max="10.0"
+        step="1.0"
+        data-bind="value: contourWidth, valueUpdate: 'input', enable: enableContour"
+      />
+      <span data-bind="text: contourWidth"></span>px
+    </div>
+    <div>
+      <button
+        type="button"
+        data-bind="click: changeColor, enable: enableContour"
+      >
+        Change contour color
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,7 @@
+legacyId: VolumeCloud.html
+title: Volumetric Cloud
+description: Render a voumetric cloud with a 3D texture and custom shader code. This example was ported from Three.js's "Volumetric Cloud" example.
+labels:
+  - Voxels
+  - Graphics
+thumbnail: thumbnail.jpg

@@ -1,0 +1,8 @@
+legacyId: Japan Buildings.html
+title: Japan Buildings
+description: City-scale dataset of Japan 3D buildings with rich metadata derived from OpenStreetMap, hosted on Cesium ion. Includes regional terrain and camera fly-tos for landmarks like Tokyo Tower, Kyoto, and Mt. Fuji.
+labels:
+  - Showcases
+  - ion Assets
+  - 3D Tiles
+thumbnail: thumbnail.jpg

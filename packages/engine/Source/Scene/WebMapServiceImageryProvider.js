@@ -88,12 +88,13 @@ const excludesReverseAxis = [
  * @see WebMapTileServiceImageryProvider
  * @see UrlTemplateImageryProvider
  *
- * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+ * @see {@link https://enterprise.arcgis.com/en/server/latest/publish-services/linux/wms-services.htm|ArcGIS Server WMS Services}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  *
  * @example
+ * // WMS servers operated by the US government https://apps.nationalmap.gov/services/
  * const provider = new Cesium.WebMapServiceImageryProvider({
- *     url : 'https://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
+ *     url : 'https://basemap.nationalmap.gov:443/arcgis/services/USGSHydroCached/MapServer/WMSServer',
  *     layers : '0',
  *     proxy: new Cesium.DefaultProxy('/proxy/')
  * });
