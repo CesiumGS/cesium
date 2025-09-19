@@ -27,9 +27,8 @@ void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
         vec3 normalA = normalize(v_faceNormalAView);
         vec3 normalB = normalize(v_faceNormalBView);
         
-        // Calculate view direction from camera to fragment (perspective-correct)
-        // In view space, camera is at origin, so view direction is -normalize(position)
-        vec3 viewDir = -normalize(v_positionView);
+        // Calculate view direction using existing eye-space position varying (v_positionEC)
+        vec3 viewDir = -normalize(v_positionEC);
         
         // Calculate dot products to determine triangle facing
         float dotA = dot(normalA, viewDir);

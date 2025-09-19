@@ -102,7 +102,6 @@ EdgeVisibilityPipelineStage.process = function (
   shaderBuilder.addVarying("vec3", "v_faceNormalBView", "flat");
 
   // Add varying for view space position for perspective-correct silhouette detection
-  shaderBuilder.addVarying("vec3", "v_positionView", "");
 
   // Pass edge type, silhouette normal, and face normals from vertex to fragment shader
   shaderBuilder.addFunctionLines("setDynamicVaryingsVS", [
@@ -114,9 +113,6 @@ EdgeVisibilityPipelineStage.process = function (
     "    v_silhouetteNormalView = czm_normal * a_silhouetteNormal;",
     "    v_faceNormalAView = czm_normal * a_faceNormalA;",
     "    v_faceNormalBView = czm_normal * a_faceNormalB;",
-    "    // Pass view space position for perspective-correct silhouette detection",
-    "    // Use the edge position from attributes (edge domain VAO provides correct positions)",
-    "    v_positionView = (czm_modelView * vec4(attributes.positionMC, 1.0)).xyz;",
     "  }",
     "#endif",
   ]);

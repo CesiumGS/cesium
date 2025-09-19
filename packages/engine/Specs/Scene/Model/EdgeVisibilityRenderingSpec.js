@@ -137,7 +137,6 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     expect(vertexShader).toContain("v_edgeType");
     expect(vertexShader).toContain("v_faceNormalAView");
     expect(vertexShader).toContain("v_faceNormalBView");
-    expect(vertexShader).toContain("v_positionView");
 
     // Verify fragment shader edge type color coding
     expect(fragmentShader).toContain("v_edgeType * 255.0");
@@ -145,7 +144,6 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     // Verify silhouette normal calculation
     expect(fragmentShader).toContain("normalize(v_faceNormalAView)");
     expect(fragmentShader).toContain("normalize(v_faceNormalBView)");
-    expect(fragmentShader).toContain("normalize(v_positionView)");
     expect(fragmentShader).toContain("dot(normalA, viewDir)");
     expect(fragmentShader).toContain("dot(normalB, viewDir)");
 
