@@ -1810,7 +1810,11 @@ BillboardCollection.prototype.update = function (frameState) {
       return;
     }
 
-    return textureAtlas.update(frameState.context);
+    let isUpdated = textureAtlas.update(frameState.context);
+    if (defined(this._scene)) {
+      isUpdated = isUpdated && this._scene.renderOnUpdateComplete;
+    }
+    return isUpdated;
   });
 
   if (!defined(textureAtlas.texture)) {
