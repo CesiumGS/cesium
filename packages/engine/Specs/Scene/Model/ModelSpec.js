@@ -2472,10 +2472,12 @@ describe(
           scene,
         );
         expect(model._heightDirty).toBe(false);
-        const terrainProvider = new CesiumTerrainProvider({
-          url: "made/up/url",
-          requestVertexNormals: true,
-        });
+        const terrainProvider = await CesiumTerrainProvider.fromUrl(
+          "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",
+          {
+            requestVertexNormals: true,
+          },
+        );
         scene.terrainProvider = terrainProvider;
 
         expect(model._heightDirty).toBe(true);

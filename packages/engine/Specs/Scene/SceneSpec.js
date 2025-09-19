@@ -46,7 +46,6 @@ import {
   GroundPrimitive,
   PerInstanceColorAppearance,
   ColorGeometryInstanceAttribute,
-  Resource,
   HeightReference,
   SharedContext,
 } from "../../index.js";
@@ -661,33 +660,6 @@ describe(
           sources: ["void main() { out_FragColor = vec4(1.0); }"],
         }),
       });
-    }
-
-    function returnTileJson(path) {
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        Resource._DefaultImplementations.loadWithXhr(
-          path,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-        );
-      };
-    }
-
-    function returnQuantizedMeshTileJson() {
-      return returnTileJson(
-        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
-      );
     }
 
     function createRectangle(rectangle, height) {
@@ -2122,29 +2094,26 @@ describe(
     });
 
     it("Sets terrainProvider", async function () {
-      returnQuantizedMeshTileJson();
-
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
-      scene.terrainProvider =
-        await CesiumTerrainProvider.fromUrl("//terrain/tiles");
+      scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/Heightmap",
+      );
 
       expect(scene.terrainProvider).toBe(globe.terrainProvider);
       scene.globe = undefined;
-      const newProvider =
-        await CesiumTerrainProvider.fromUrl("//newTerrain/tiles");
+      const newProvider = await CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
+      );
       expect(function () {
         scene.terrainProvider = newProvider;
       }).not.toThrow();
-
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("setTerrain updates terrain provider", async function () {
-      returnQuantizedMeshTileJson();
-
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
-      const promise = CesiumTerrainProvider.fromUrl("//terrain/tiles");
+      const promise = CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
+      );
       scene.setTerrain(new Terrain(promise));
 
       const originalProvider = scene.terrainProvider;
@@ -2159,26 +2128,20 @@ describe(
       await promise;
 
       expect(terrainWasChanged).toBeTrue();
-
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("setTerrain handles destroy", async function () {
       const scene = createScene();
-      returnQuantizedMeshTileJson();
-
       scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
 
-      const promise = CesiumTerrainProvider.fromUrl("//newTerrain/tiles");
+      const promise = CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
+      );
       scene.setTerrain(new Terrain(promise));
       scene.destroyForSpecs();
 
       await expectAsync(promise).toBeResolved();
       expect(scene.isDestroyed()).toBeTrue();
-
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("Gets terrainProviderChanged", function () {

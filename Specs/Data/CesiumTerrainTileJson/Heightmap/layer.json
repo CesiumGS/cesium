@@ -4,6 +4,6 @@
     "version" : "1.0.0",
     "scheme" : "tms",
     "tiles" : [
-        "{z}/{x}/{y}.terrain?v={version}"
+        "11_3027_1342.terrain?v={version}&x={x}&y={y}&z={z}"
     ]
 }
