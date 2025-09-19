@@ -50,6 +50,9 @@ function ModelDrawCommand(options) {
   const runtimePrimitive = renderResources.runtimePrimitive;
   this._runtimePrimitive = runtimePrimitive;
 
+  // Store render resources for edge command creation
+  this._primitiveRenderResources = renderResources;
+
   // If the command is translucent, or if the primitive's material is
   // double-sided, then back-face culling is automatically disabled for
   // the command. The user value for back-face culling will be ignored.
@@ -72,6 +75,8 @@ function ModelDrawCommand(options) {
     renderResources.hasSkipLevelOfDetail && !isTranslucent;
 
   const needsSilhouetteCommands = hasSilhouette;
+
+  const needsEdgeCommands = defined(renderResources.edgeGeometry);
 
   this._command = command;
 
@@ -96,6 +101,7 @@ function ModelDrawCommand(options) {
   this._needsTranslucentCommand = needsTranslucentCommand;
   this._needsSkipLevelOfDetailCommands = needsSkipLevelOfDetailCommands;
   this._needsSilhouetteCommands = needsSilhouetteCommands;
+  this._needsEdgeCommands = needsEdgeCommands;
 
   // Derived commands
   this._originalCommand = undefined;
@@ -104,6 +110,7 @@ function ModelDrawCommand(options) {
   this._skipLodStencilCommand = undefined;
   this._silhouetteModelCommand = undefined;
   this._silhouetteColorCommand = undefined;
+  this._edgeCommand = undefined;
 
   // All derived commands (including 2D commands)
   this._derivedCommands = [];
@@ -214,6 +221,19 @@ function initialize(drawCommand) {
 
     derivedCommands.push(drawCommand._silhouetteModelCommand);
     derivedCommands.push(drawCommand._silhouetteColorCommand);
+  }
+
+  if (drawCommand._needsEdgeCommands) {
+    const renderResources = drawCommand._primitiveRenderResources;
+    drawCommand._edgeCommand = new ModelDerivedCommand({
+      command: deriveEdgeCommand(command, renderResources, model),
+      updateShadows: false,
+      updateBackFaceCulling: false,
+      updateCullFace: false,
+      updateDebugShowBoundingVolume: false,
+    });
+
+    derivedCommands.push(drawCommand._edgeCommand);
   }
 }
 
@@ -586,6 +606,24 @@ ModelDrawCommand.prototype.pushSilhouetteCommands = function (
   return result;
 };
 
+/**
+ * @param {FrameState} frameState The frame state.
+ * @param {DrawCommand[]} result The draw commands to push to.
+ * @returns {DrawCommand[]} The modified command list.
+ *
+ * @private
+ */
+ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
+  if (!defined(this._edgeCommand)) {
+    return result;
+  }
+
+  const use2D = shouldUse2DCommands(this, frameState);
+  pushCommand(result, this._edgeCommand, use2D);
+
+  return result;
+};
+
 function pushCommand(commandList, derivedCommand, use2D) {
   commandList.push(derivedCommand.command);
   if (use2D) {
@@ -644,6 +682,7 @@ function derive2DCommands(drawCommand) {
   derive2DCommand(drawCommand, drawCommand._skipLodStencilCommand);
   derive2DCommand(drawCommand, drawCommand._silhouetteModelCommand);
   derive2DCommand(drawCommand, drawCommand._silhouetteColorCommand);
+  derive2DCommand(drawCommand, drawCommand._edgeCommand);
 }
 
 function deriveTranslucentCommand(command) {
@@ -750,6 +789,36 @@ function deriveSilhouetteColorCommand(command, model) {
   silhouetteColorCommand.receiveShadows = false;
 
   return silhouetteColorCommand;
+}
+
+function deriveEdgeCommand(command, renderResources) {
+  const edgeGeometry = renderResources.edgeGeometry;
+  const edgeCommand = DrawCommand.shallowClone(command);
+
+  // Use the edge geometry instead of the original geometry
+  edgeCommand.vertexArray = edgeGeometry.vertexArray;
+  edgeCommand.primitiveType = edgeGeometry.primitiveType;
+  edgeCommand.count = edgeGeometry.indexCount;
+
+  // Use the edge shader program if available
+  if (defined(edgeGeometry.shaderProgram)) {
+    edgeCommand.shaderProgram = edgeGeometry.shaderProgram;
+  }
+
+  // Set pass for edge rendering (use the pass specified in edgeGeometry)
+  edgeCommand.pass = edgeGeometry.pass;
+
+  // Override uniformMap to set u_isEdgePass to true for the edge pass
+  const uniformMap = clone(command.uniformMap);
+  uniformMap.u_isEdgePass = function () {
+    return true; // This is the edge pass
+  };
+  edgeCommand.uniformMap = uniformMap;
+
+  edgeCommand.castShadows = false;
+  edgeCommand.receiveShadows = false;
+
+  return edgeCommand;
 }
 
 function updateSkipLodStencilCommand(drawCommand, tile, use2D) {
