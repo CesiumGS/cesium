@@ -12,7 +12,6 @@ import RuntimeError from "../Core/RuntimeError.js";
 import TexturePacker from "../Core/TexturePacker.js";
 import Framebuffer from "./Framebuffer.js";
 import Texture from "./Texture.js";
-import RequestScheduler from "../Core/RequestScheduler.js";
 
 const defaultInitialDimensions = 16;
 
@@ -518,6 +517,9 @@ TextureAtlas.prototype._addImage = function (index, image) {
   Check.typeOf.number.greaterThanOrEquals("index", index, 0);
   Check.defined("image", image);
   //>>includeEnd('debug');
+  if (this.isDestroyed() || !defined(image)) {
+    return -1;
+  }
 
   return new Promise((resolve, reject) => {
     this._imagesToAddQueue.push(
@@ -624,7 +626,7 @@ TextureAtlas.prototype.update = function (context) {
   return this._processImageQueue(context);
 };
 
-async function resolveImage(image, id) {
+function resolveImage(image, id) {
   if (typeof image === "function") {
     image = image(id);
   }
@@ -633,8 +635,6 @@ async function resolveImage(image, id) {
     // Fetch the resource
     const resource = Resource.createIfNeeded(image);
     image = resource.fetchImage();
-  } else {
-    RequestScheduler.requestCompletedEvent.raiseEvent();
   }
 
   return image;
@@ -663,21 +663,16 @@ TextureAtlas.prototype.addImage = function (id, image) {
 
   const index = this._nextIndex++;
   this._indexById.set(id, index);
+  image = resolveImage(image, id);
 
-  const resolveAndAddImage = async () => {
-    image = await resolveImage(image, id);
-    //>>includeStart('debug', pragmas.debug);
-    Check.defined("image", image);
-    //>>includeEnd('debug');
+  if (image instanceof Promise) {
+    // Return promise chain, the image will resolve and be processed on a later frame
+    promise = image.then((image) => this._addImage(index, image));
+  } else {
+    // Add the image synchronously if possible, the image will be processed on the current frame
+    promise = this._addImage(index, image);
+  }
 
-    if (this.isDestroyed() || !defined(image)) {
-      return -1;
-    }
-
-    return this._addImage(index, image);
-  };
-
-  promise = resolveAndAddImage();
   this._indexPromiseById.set(id, promise);
   return promise;
 };
