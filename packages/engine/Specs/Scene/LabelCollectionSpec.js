@@ -2446,7 +2446,8 @@ describe("Scene/LabelCollection", function () {
           });
 
           expect(l._clampedPosition).toBeDefined();
-          expect(l._glyphs[0].billboard._clampedPosition).toBeDefined();
+          // Glyphs are not truly clamped (to avoid excessive listeners and globe picks). They simply copy their owning label's clamped position.
+          expect(l._glyphs[0].billboard._clampedPosition).toBeUndefined();
 
           l.heightReference = HeightReference.NONE;
           expect(l._clampedPosition).toBeUndefined();
@@ -2459,13 +2460,14 @@ describe("Scene/LabelCollection", function () {
             text: "t",
             position: Cartesian3.fromDegrees(-72.0, 40.0),
           });
+          l.showBackground = true;
 
           await pollToPromise(() => {
             scene.renderForSpecs();
             return labelsWithHeight.ready;
           });
 
-          const billboard = l._glyphs[0].billboard;
+          const billboard = l._backgroundBillboard;
           expect(billboard._removeCallbackFunc).toBeDefined();
           const spy = spyOn(billboard, "_removeCallbackFunc");
           labelsWithHeight.remove(l);
