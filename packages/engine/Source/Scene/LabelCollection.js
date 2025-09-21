@@ -11,7 +11,7 @@ import bitmapSDF from "bitmap-sdf";
 import BillboardCollection from "./BillboardCollection.js";
 import BillboardTexture from "./BillboardTexture.js";
 import BlendOption from "./BlendOption.js";
-import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
+import { isHeightReferenceClamp } from "./HeightReference.js";
 import HorizontalOrigin from "./HorizontalOrigin.js";
 import Label from "./Label.js";
 import LabelStyle from "./LabelStyle.js";
@@ -307,8 +307,7 @@ function rebindAllGlyphs(labelCollection, label) {
     billboard.pixelOffset = label._pixelOffset;
     billboard.horizontalOrigin = HorizontalOrigin.LEFT;
     billboard.verticalOrigin = label._verticalOrigin;
-    // To avoid excessive height update listeners, glyphs are not clamped. Their height values are updated manually by the owning label.
-    billboard.heightReference = HeightReference.NONE;
+    billboard.heightReference = label._heightReference;
     billboard.scale = label.totalScale;
     billboard.pickPrimitive = label;
     billboard.id = label._id;
