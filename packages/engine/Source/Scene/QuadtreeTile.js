@@ -1,6 +1,7 @@
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Rectangle from "../Core/Rectangle.js";
+import Cartographic from "../Core/Cartographic.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import TileSelectionResult from "./TileSelectionResult.js";
 
@@ -108,7 +109,8 @@ function QuadtreeTile(options) {
   this._loadPriority = 0.0;
 
   this._customData = [];
-  this._frameUpdated = undefined;
+  this._addedCustomData = [];
+  this._removedCustomData = [];
   this._lastSelectionResult = TileSelectionResult.NONE;
   this._lastSelectionResultFrame = undefined;
   this._loadedCallbacks = {};
@@ -311,51 +313,66 @@ QuadtreeTile.prototype.clearPositionCache = function () {
   }
 };
 
-QuadtreeTile.prototype._updateCustomData = function (
-  frameNumber,
-  added,
-  removed,
-) {
-  let customData = this.customData;
-
-  let i;
-  let data;
-  let rectangle;
-
-  if (defined(added) && defined(removed)) {
-    customData = customData.filter(function (value) {
-      return removed.indexOf(value) === -1;
-    });
-    this._customData = customData;
-
-    rectangle = this._rectangle;
-    for (i = 0; i < added.length; ++i) {
-      data = added[i];
-      if (Rectangle.contains(rectangle, data.positionCartographic)) {
-        customData.push(data);
-      }
-    }
-
-    this._frameUpdated = frameNumber;
-  } else {
-    // interior or leaf tile, update from parent
-    const parent = this._parent;
-    if (defined(parent) && this._frameUpdated !== parent._frameUpdated) {
-      customData.length = 0;
-
-      rectangle = this._rectangle;
-      const parentCustomData = parent.customData;
-      for (i = 0; i < parentCustomData.length; ++i) {
-        data = parentCustomData[i];
-        if (Rectangle.contains(rectangle, data.positionCartographic)) {
-          customData.push(data);
-        }
-      }
-
-      this._frameUpdated = parent._frameUpdated;
-    }
+QuadtreeTile.prototype._updateCustomData = function () {
+  const added = this._addedCustomData;
+  const removed = this._removedCustomData;
+  if (added.length === 0 && removed.length === 0) {
+    return;
   }
+
+  const customData = this.customData;
+  for (let i = 0; i < added.length; ++i) {
+    const data = added[i];
+    if (!Rectangle.contains(this._rectangle, data.positionCartographic)) {
+      continue;
+    }
+
+    customData.push(data);
+
+    const child = childTileAtPosition(this, data.positionCartographic);
+    child._addedCustomData.push(data);
+  }
+  this._addedCustomData.length = 0;
+
+  for (let i = 0; i < removed.length; ++i) {
+    const data = removed[i];
+    const index = customData.indexOf(data);
+    if (index !== -1) {
+      customData.splice(index, 1);
+    }
+
+    const child = childTileAtPosition(this, data.positionCartographic);
+    child._removedCustomData.push(data);
+  }
+  this._removedCustomData.length = 0;
 };
+
+const centerScratch = new Cartographic();
+
+/**
+ * Determines which child tile that contains the specified position. Assumes the position is within
+ * the bounds of the parent tile.
+ * @private
+ * @param {QuadtreeTile} tile - The parent tile.
+ * @param {Cartographic} positionCartographic - The cartographic position.
+ * @returns {QuadtreeTile} The child tile that contains the position.
+ */
+function childTileAtPosition(tile, positionCartographic) {
+  const center = Rectangle.center(tile.rectangle, centerScratch);
+  const x = positionCartographic.longitude >= center.longitude ? 1 : 0;
+  const y = positionCartographic.latitude < center.latitude ? 1 : 0;
+
+  switch (y * 2 + x) {
+    case 0:
+      return tile.northwestChild;
+    case 1:
+      return tile.northeastChild;
+    case 2:
+      return tile.southwestChild;
+    default:
+      return tile.southeastChild;
+  }
+}
 
 Object.defineProperties(QuadtreeTile.prototype, {
   /**

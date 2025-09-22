@@ -550,13 +550,14 @@ function selectTilesForRendering(primitive, frameState) {
 
   const customDataAdded = primitive._addHeightCallbacks;
   const customDataRemoved = primitive._removeHeightCallbacks;
-  const frameNumber = frameState.frameNumber;
 
   let len;
   if (customDataAdded.length > 0 || customDataRemoved.length > 0) {
     for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
       tile = levelZeroTiles[i];
-      tile._updateCustomData(frameNumber, customDataAdded, customDataRemoved);
+      tile._addedCustomData = customDataAdded;
+      tile._removedCustomData = customDataRemoved;
+      tile._updateCustomData();
     }
 
     customDataAdded.length = 0;
@@ -596,7 +597,7 @@ function selectTilesForRendering(primitive, frameState) {
     }
   }
 
-  primitive._lastSelectionFrameNumber = frameNumber;
+  primitive._lastSelectionFrameNumber = frameState.frameNumber;
 }
 
 function queueTileLoad(primitive, queue, tile, frameState) {
@@ -716,7 +717,7 @@ function visitTile(
   ++debug.tilesVisited;
 
   primitive._tileReplacementQueue.markTileRendered(tile);
-  tile._updateCustomData(frameState.frameNumber);
+  tile._updateCustomData();
 
   if (tile.level > debug.maxDepthVisited) {
     debug.maxDepthVisited = tile.level;
