@@ -90,7 +90,6 @@ function QuadtreePrimitive(options) {
   this._removeHeightCallbacks = [];
 
   this._tileToUpdateHeights = [];
-  this._lastTileIndex = 0;
   this._updateHeightsTimeSlice = 2.0;
 
   // If a culled tile contains _cameraPositionCartographic or _cameraReferenceFrameOriginCartographic, it will be marked
@@ -217,10 +216,8 @@ function invalidateAllTiles(primitive) {
     for (let i = 0; i < levelZeroTiles.length; ++i) {
       const tile = levelZeroTiles[i];
       const customData = tile.customData;
-      const customDataLength = customData.length;
 
-      for (let j = 0; j < customDataLength; ++j) {
-        const data = customData[j];
+      for (const data of customData) {
         data.level = 0;
         primitive._addHeightCallbacks.push(data);
       }
@@ -1418,15 +1415,18 @@ function updateHeights(primitive, frameState) {
       // Ensure stale position cache is cleared
       tile.clearPositionCache();
       tilesToUpdateHeights.shift();
-      primitive._lastTileIndex = 0;
       continue;
     }
     const customData = tile.customData;
-    const customDataLength = customData.length;
+    if (!defined(tile._customDataIterator)) {
+      tile._customDataIterator = customData.values();
+    }
+    const customDataIterator = tile._customDataIterator;
 
     let timeSliceMax = false;
-    for (i = primitive._lastTileIndex; i < customDataLength; ++i) {
-      const data = customData[i];
+    let nextData;
+    while (!(nextData = customDataIterator.next()).done) {
+      const data = nextData.value;
 
       // No need to run this code when the tile is upsampled, because the height will be the same as its parent.
       const terrainData = tile.data.terrainData;
@@ -1544,10 +1544,10 @@ function updateHeights(primitive, frameState) {
     }
 
     if (timeSliceMax) {
-      primitive._lastTileIndex = i;
+      tile._customDataIterator = customDataIterator;
       break;
     } else {
-      primitive._lastTileIndex = 0;
+      tile._customDataIterator = undefined;
       tilesToUpdateHeights.shift();
     }
   }

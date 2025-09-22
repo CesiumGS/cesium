@@ -108,7 +108,7 @@ function QuadtreeTile(options) {
   this._distance = 0.0;
   this._loadPriority = 0.0;
 
-  this._customData = [];
+  this._customData = new Set();
   this._addedCustomData = [];
   this._removedCustomData = [];
   this._lastSelectionResult = TileSelectionResult.NONE;
@@ -327,7 +327,7 @@ QuadtreeTile.prototype._updateCustomData = function () {
       continue;
     }
 
-    customData.push(data);
+    customData.add(data);
 
     const child = childTileAtPosition(this, data.positionCartographic);
     child._addedCustomData.push(data);
@@ -336,9 +336,8 @@ QuadtreeTile.prototype._updateCustomData = function () {
 
   for (let i = 0; i < removed.length; ++i) {
     const data = removed[i];
-    const index = customData.indexOf(data);
-    if (index !== -1) {
-      customData.splice(index, 1);
+    if (customData.has(data)) {
+      customData.delete(data);
     }
 
     const child = childTileAtPosition(this, data.positionCartographic);
@@ -539,9 +538,9 @@ Object.defineProperties(QuadtreeTile.prototype, {
   },
 
   /**
-   * An array of objects associated with this tile.
+   * A set of objects associated with this tile.
    * @memberof QuadtreeTile.prototype
-   * @type {Array}
+   * @type {Set}
    */
   customData: {
     get: function () {
