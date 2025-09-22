@@ -3,6 +3,7 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
+import IonResource from "../Core/IonResource.js";
 //import Rectangle from "../Core/Rectangle.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
@@ -323,9 +324,13 @@ Google2DImageryProvider.fromSessionToken = function (options) {
   }
   //>>includeEnd('debug');
 
-  const resource = Resource.createIfNeeded(
-    options.url ?? "https://tile.googleapis.com/v1/2dtiles/",
-  );
+  //>>includeStart('debug', pragmas.debug);
+  if (!(options.url instanceof IonResource)) {
+    throw new DeveloperError("options.url must be IonResource.");
+  }
+  //>>includeEnd('debug');
+
+  const resource = options.url;
 
   let templateUrl = resource.getUrlComponent();
   if (!trailingSlashRegex.test(templateUrl)) {

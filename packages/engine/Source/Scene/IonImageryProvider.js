@@ -315,8 +315,7 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
     const options = { ...endpoint.options };
     const url = options.url;
     delete options.url;
-    const proxy = String(url).includes("ion") && String(url).includes("proxy");
-    if (proxy) {
+    if (endpoint.externalType === "GOOGLE_2D_MAPS") {
       imageryProvider = await factory(
         new IonResource(endpoint, endpointResource),
         options,
