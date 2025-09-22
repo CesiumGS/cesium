@@ -274,6 +274,8 @@ function retryCallback(that, error) {
       .fetchJson()
       .then(function (newEndpoint) {
         //Set the token for root resource so new derived resources automatically pick it up
+        ionRoot._ionEndpoint = newEndpoint;
+        // Reset the session token for Google 2D imagery
         if (newEndpoint.externalType === "GOOGLE_2D_MAPS") {
           ionRoot.setQueryParameters({ session: newEndpoint.options.session });
         }
