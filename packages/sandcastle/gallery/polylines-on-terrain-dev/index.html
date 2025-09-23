@@ -1,0 +1,24 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>Width</td>
+        <td>
+          <input
+            type="range"
+            min="1.0"
+            max="32.0"
+            step="1.0"
+            data-bind="value: lineWidth, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: lineWidth" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

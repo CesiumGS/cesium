@@ -100,8 +100,8 @@ const requestRenderAfterFrame = function (scene) {
  * @param {object} options Object with the following properties:
  * @param {HTMLCanvasElement} options.canvas The HTML canvas element to create the scene for.
  * @param {ContextOptions} [options.contextOptions] Context and WebGL creation properties.
- * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
- * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
+ * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed. If not specified, a credit container will be created and added as a sibling of the canvas.
+ * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be added as a sibling of the canvas.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The default ellipsoid. If not specified, the default ellipsoid is used.
  * @param {MapProjection} [options.mapProjection=new GeographicProjection(options.ellipsoid)] The map projection to use in 2D and Columbus View modes.
  * @param {boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.

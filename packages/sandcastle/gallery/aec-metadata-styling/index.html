@@ -1,0 +1,42 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  .slider {
+    width: 100%;
+  }
+
+  .label {
+    display: block;
+    margin-bottom: 5px;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <div class="slider-container">
+    <label for="minSlider" class="label"
+      >Min Value: <span id="minValue">5</span></label
+    >
+    <input
+      type="range"
+      id="minSlider"
+      class="slider"
+      min="0"
+      max="39"
+      value="5"
+    />
+  </div>
+  <div class="slider-container">
+    <label for="maxSlider" class="label"
+      >Max Value: <span id="maxValue">10</span></label
+    >
+    <input
+      type="range"
+      id="maxSlider"
+      class="slider"
+      min="1"
+      max="40"
+      value="10"
+    />
+  </div>
+</div>

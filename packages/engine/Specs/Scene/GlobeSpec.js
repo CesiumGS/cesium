@@ -1,7 +1,6 @@
 import {
   CesiumTerrainProvider,
   Rectangle,
-  Resource,
   Globe,
   SingleTileImageryProvider,
   Color,
@@ -35,49 +34,7 @@ describe(
 
     afterEach(function () {
       scene.globe = undefined;
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
-
-    function returnTileJson(path) {
-      const oldLoad = Resource._Implementations.loadWithXhr;
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        if (url.indexOf("layer.json") >= 0) {
-          Resource._DefaultImplementations.loadWithXhr(
-            path,
-            responseType,
-            method,
-            data,
-            headers,
-            deferred,
-          );
-        } else {
-          return oldLoad(
-            url,
-            responseType,
-            method,
-            data,
-            headers,
-            deferred,
-            overrideMimeType,
-          );
-        }
-      };
-    }
-
-    function returnVertexNormalTileJson() {
-      return returnTileJson(
-        "Data/CesiumTerrainTileJson/VertexNormals.tile.json",
-      );
-    }
 
     /**
      * Repeatedly calls render until the load queue is empty. Returns a promise that resolves
@@ -106,12 +63,11 @@ describe(
         destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
       });
 
-      return updateUntilDone(globe).then(function () {
-        scene.globe.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
-        scene.globe.show = true;
-        expect(scene).notToRender([0, 0, 0, 255]);
-      });
+      await updateUntilDone(globe);
+      scene.globe.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+      scene.globe.show = true;
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("renders with dynamicAtmosphereLighting", async function () {
@@ -129,12 +85,11 @@ describe(
         destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
       });
 
-      return updateUntilDone(globe).then(function () {
-        scene.globe.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
-        scene.globe.show = true;
-        expect(scene).notToRender([0, 0, 0, 255]);
-      });
+      await updateUntilDone(globe);
+      scene.globe.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+      scene.globe.show = true;
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("renders with dynamicAtmosphereLightingFromSun", async function () {
@@ -153,12 +108,11 @@ describe(
         destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
       });
 
-      return updateUntilDone(globe).then(function () {
-        scene.globe.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
-        scene.globe.show = true;
-        expect(scene).notToRender([0, 0, 0, 255]);
-      });
+      await updateUntilDone(globe);
+      scene.globe.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+      scene.globe.show = true;
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("renders with showWaterEffect set to false", async function () {
@@ -176,12 +130,11 @@ describe(
         destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
       });
 
-      return updateUntilDone(globe).then(function () {
-        scene.globe.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
-        scene.globe.show = true;
-        expect(scene).notToRender([0, 0, 0, 255]);
-      });
+      await updateUntilDone(globe);
+      scene.globe.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+      scene.globe.show = true;
+      expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it("ImageryLayersUpdated event fires when layer is added, hidden, shown, moved, or removed", async function () {
@@ -197,39 +150,29 @@ describe(
       );
       const layer = layerCollection.addImageryProvider(provider);
       layerCollection.addImageryProvider(provider);
-      return updateUntilDone(globe)
-        .then(function () {
-          expect(timesEventRaised).toEqual(2);
+      await updateUntilDone(globe);
+      expect(timesEventRaised).toEqual(2);
 
-          layer.show = false;
-          return updateUntilDone(globe);
-        })
-        .then(function () {
-          expect(timesEventRaised).toEqual(3);
+      layer.show = false;
+      await updateUntilDone(globe);
+      expect(timesEventRaised).toEqual(3);
 
-          layer.show = true;
-          return updateUntilDone(globe);
-        })
-        .then(function () {
-          expect(timesEventRaised).toEqual(4);
+      layer.show = true;
+      await updateUntilDone(globe);
+      expect(timesEventRaised).toEqual(4);
 
-          layerCollection.raise(layer);
-          return updateUntilDone(globe);
-        })
-        .then(function () {
-          expect(timesEventRaised).toEqual(5);
+      layerCollection.raise(layer);
+      await updateUntilDone(globe);
+      expect(timesEventRaised).toEqual(5);
 
-          layerCollection.remove(layer);
-          return updateUntilDone(globe);
-        })
-        .then(function () {
-          expect(timesEventRaised).toEqual(6);
-        });
+      layerCollection.remove(layer);
+      await updateUntilDone(globe);
+      expect(timesEventRaised).toEqual(6);
     });
 
     it("terrainProviderChanged event fires", async function () {
       const terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "made/up/url",
+        "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",
         {
           requestVertexNormals: true,
         },
@@ -265,7 +208,7 @@ describe(
       expect(globe.tilesLoaded).toBe(true);
 
       const terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "made/up/url",
+        "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",
         {
           requestVertexNormals: true,
         },
@@ -289,29 +232,8 @@ describe(
         "Data/Images/Red16x16.png",
       );
       layerCollection.addImageryProvider(imageryProvider);
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        Resource._DefaultImplementations.loadWithXhr(
-          "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-        );
-      };
-
-      returnVertexNormalTileJson();
-
       const terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "made/up/url",
+        "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",
         {
           requestVertexNormals: true,
         },
@@ -342,29 +264,8 @@ describe(
         "Data/Images/Red16x16.png",
       );
       layerCollection.addImageryProvider(imageryProvider);
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        Resource._DefaultImplementations.loadWithXhr(
-          "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-        );
-      };
-
-      returnVertexNormalTileJson();
-
       const terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "made/up/url",
+        "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",
         {
           requestVertexNormals: true,
         },
@@ -398,29 +299,8 @@ describe(
         "Data/Images/Red16x16.png",
       );
       layerCollection.addImageryProvider(imageryProvider);
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        Resource._DefaultImplementations.loadWithXhr(
-          "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-        );
-      };
-
-      returnVertexNormalTileJson();
-
       const terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "made/up/url",
+        "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",
         {
           requestVertexNormals: true,
         },
@@ -507,50 +387,48 @@ describe(
       });
     });
 
-    it("applies back face culling", function () {
+    it("applies back face culling", async function () {
       scene.camera.setView({
         destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
       });
 
-      return updateUntilDone(globe).then(function () {
-        globe.backFaceCulling = true;
-        scene.render();
-        let command = scene.frameState.commandList[0];
-        expect(command.renderState.cull.enabled).toBe(true);
-        globe.backFaceCulling = false;
-        scene.render();
-        command = scene.frameState.commandList[0];
-        expect(command.renderState.cull.enabled).toBe(false);
-      });
+      await updateUntilDone(globe);
+      globe.backFaceCulling = true;
+      scene.render();
+      let command = scene.frameState.commandList[0];
+      expect(command.renderState.cull.enabled).toBe(true);
+      globe.backFaceCulling = false;
+      scene.render();
+      command = scene.frameState.commandList[0];
+      expect(command.renderState.cull.enabled).toBe(false);
     });
 
-    it("shows terrain skirts", function () {
+    it("shows terrain skirts", async function () {
       scene.camera.setView({
         destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
       });
 
-      return updateUntilDone(globe).then(function () {
-        globe.showSkirts = true;
-        scene.render();
-        let command = scene.frameState.commandList[0];
-        const indexCount = command.count;
-        expect(indexCount).toBe(command.owner.data.renderedMesh.indices.length);
+      await updateUntilDone(globe);
+      globe.showSkirts = true;
+      scene.render();
+      let command = scene.frameState.commandList[0];
+      const indexCount = command.count;
+      expect(indexCount).toBe(command.owner.data.renderedMesh.indices.length);
 
-        globe.showSkirts = false;
-        scene.render();
-        command = scene.frameState.commandList[0];
-        expect(command.count).toBeLessThan(indexCount);
-        expect(command.count).toBe(
-          command.owner.data.renderedMesh.indexCountWithoutSkirts,
-        );
-      });
+      globe.showSkirts = false;
+      scene.render();
+      command = scene.frameState.commandList[0];
+      expect(command.count).toBeLessThan(indexCount);
+      expect(command.count).toBe(
+        command.owner.data.renderedMesh.indexCountWithoutSkirts,
+      );
     });
 
     it("gets underground color", function () {
       expect(globe.undergroundColor).toEqual(Color.BLACK);
     });
 
-    it("sets underground color", function () {
+    it("sets underground color", async function () {
       globe.undergroundColor = Color.RED;
 
       scene.camera.setView({
@@ -566,16 +444,15 @@ describe(
         ),
       });
 
-      return updateUntilDone(globe).then(function () {
-        expect(scene).toRender([255, 0, 0, 255]);
-      });
+      await updateUntilDone(globe);
+      expect(scene).toRender([255, 0, 0, 255]);
     });
 
     it("gets underground color by distance", function () {
       expect(globe.undergroundColorAlphaByDistance).toBeDefined();
     });
 
-    it("sets underground color by distance", function () {
+    it("sets underground color by distance", async function () {
       globe.baseColor = Color.BLACK;
       globe.undergroundColor = Color.RED;
       const radius = globe.ellipsoid.maximumRadius;
@@ -599,11 +476,10 @@ describe(
         ),
       });
 
-      return updateUntilDone(globe).then(function () {
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(0);
-          expect(rgba[0]).toBeLessThan(255);
-        });
+      await updateUntilDone(globe);
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(0);
+        expect(rgba[0]).toBeLessThan(255);
       });
     });
 

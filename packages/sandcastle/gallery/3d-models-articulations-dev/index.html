@@ -1,0 +1,38 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <div>
+    Articulation:
+    <select
+      class="cesium-button"
+      data-bind="options: articulations,
+                                                 optionsText: 'name',
+                                                 value: selectedArticulation"
+    ></select>
+  </div>
+  <table>
+    <tbody data-bind="foreach: stages">
+      <tr>
+        <td data-bind="text: name"></td>
+        <td>
+          <input
+            type="range"
+            min="-3"
+            max="3"
+            step="0.01"
+            data-bind="value: current,
+                                      valueUpdate: 'input',
+                                      attr: {
+                                          min: minimum,
+                                          max: maximum
+                                      }"
+          />
+          <input type="text" size="2" data-bind="value: currentText" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
