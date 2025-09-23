@@ -4,7 +4,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { EOL } from "node:os";
 import path from "node:path";
 import { finished } from "node:stream/promises";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import esbuild from "esbuild";
 import { globby } from "globby";
@@ -664,7 +664,7 @@ const externalResolvePlugin = {
 export async function getSandcastleConfig() {
   const configPath = "packages/sandcastle/sandcastle.config.js";
   const configImportPath = path.join(projectRoot, configPath);
-  const config = await import(configImportPath);
+  const config = await import(pathToFileURL(configImportPath));
   const options = config.default;
   return {
     ...options,
@@ -698,7 +698,9 @@ export async function buildSandcastleGallery(includeDevelopment) {
     __dirname,
     "../packages/sandcastle/scripts/buildGallery.js",
   );
-  const { buildGalleryList } = await import(buildGalleryScriptPath);
+  const { buildGalleryList } = await import(
+    pathToFileURL(buildGalleryScriptPath)
+  );
 
   await buildGalleryList({
     rootDirectory,
