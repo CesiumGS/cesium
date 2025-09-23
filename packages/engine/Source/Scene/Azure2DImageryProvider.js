@@ -85,11 +85,12 @@ function Azure2DImageryProvider(options) {
     "subscription-key": subscriptionKey,
   });
 
-  const azureImageryProvider = new UrlTemplateImageryProvider({
+  const provider = new UrlTemplateImageryProvider({
     url: resource,
     maximumLevel: 19,
   });
-  this._imageryProvider = azureImageryProvider;
+  provider._resource = resource;
+  this._imageryProvider = provider;
 }
 
 Object.defineProperties(Azure2DImageryProvider.prototype, {

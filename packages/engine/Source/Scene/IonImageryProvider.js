@@ -55,12 +55,12 @@ const ImageryProviderAsyncMapping = {
     });
   },
   GOOGLE_2D_MAPS: async (ionResource, options) => {
-    return new Google2DImageryProvider.fromSessionToken({
+    return Google2DImageryProvider.fromSessionToken({
       url: ionResource,
       ...options,
     });
   },
-  AZURE_MAPS: async (ionResource, options) => {
+  AZURE_MAPS: (ionResource, options) => {
     return new Azure2DImageryProvider({
       url: ionResource,
       ...options,

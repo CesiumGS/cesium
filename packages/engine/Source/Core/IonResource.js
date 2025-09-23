@@ -276,10 +276,13 @@ function retryCallback(that, error) {
         //Set the token for root resource so new derived resources automatically pick it up
         ionRoot._ionEndpoint = newEndpoint;
         // Reset the session token for Google 2D imagery
-        if (
-          ["GOOGLE_2D_MAPS", "AZURE_MAPS"].includes(newEndpoint.externalType)
-        ) {
+        if (newEndpoint.externalType === "GOOGLE_2D_MAPS") {
           ionRoot.setQueryParameters({ session: newEndpoint.options.session });
+        }
+        if (newEndpoint.externalType === "AZURE_MAPS") {
+          ionRoot.setQueryParameters({
+            "subscription-key": newEndpoint.options["subscription-key"],
+          });
         }
         return ionRoot._ionEndpoint;
       })
