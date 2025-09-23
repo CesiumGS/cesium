@@ -220,7 +220,7 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
  * @param {string} [options.imageFormat] The file format to return. Valid values are either jpeg or png. If you don't specify an imageFormat, then the best format for the tile is chosen automatically by the Google tile service.
  * @param {"scaleFactor1x" | "scaleFactor2x" | "scaleFactor4x"} [options.scale="scaleFactor1x"] Scales-up the size of map elements (such as road labels), while retaining the tile size and coverage area of the default tile.
  * @param {Boolean} [options.highDpi=false] Specifies whether to return high-resolution tiles when scaleFactor2x or scaleFactor4x is used.
- * @param {["layerRoadmap" | "layerStreetview" | "layerTraffic"]} options.layerTypes An array of values that specifies the layer types added to the map.
+ * @param {"layerRoadmap" | "layerStreetview" | "layerTraffic"} options.layerTypes An array of values that specifies the layer types added to the map.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @param {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
