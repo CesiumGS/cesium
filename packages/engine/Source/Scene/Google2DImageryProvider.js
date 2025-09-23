@@ -213,11 +213,14 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
 /**
  * Creates an {@link ImageryProvider} which provides 2D global tiled imagery from Google.
  * @param {object} options Object with the following properties:
- * @param {Google2DImageryMapType} options.mapType The map type of the Google map imagery. Valid options are {@link ArcGisBaseMapType.SATELLITE}, {@link ArcGisBaseMapType.OCEANS}, and {@link ArcGisBaseMapType.HILLSHADE}.
  * @param {string} options.apiKey the Google api key
+ * @param {Google2DImageryMapType} options.mapType The map type of the Google map imagery. Valid options are {@link ArcGisBaseMapType.SATELLITE}, {@link ArcGisBaseMapType.OCEANS}, and {@link ArcGisBaseMapType.HILLSHADE}.
  * @param {string} [options.language='en_US'] an IETF language tag that specifies the language used to display information on the tiles
  * @param {string} [options.region='US'] A Common Locale Data Repository region identifier (two uppercase letters) that represents the physical location of the user.
  * @param {string} [options.imageFormat] The file format to return. Valid values are either jpeg or png. If you don't specify an imageFormat, then the best format for the tile is chosen automatically by the Google tile service.
+ * @param {"scaleFactor1x" | "scaleFactor2x" | "scaleFactor4x"} [options.scale="scaleFactor1x"] Scales-up the size of map elements (such as road labels), while retaining the tile size and coverage area of the default tile.
+ * @param {Boolean} [options.highDpi=false] Specifies whether to return high-resolution tiles when scaleFactor2x or scaleFactor4x is used.
+ * @param {["layerRoadmap" | "layerStreetview" | "layerTraffic"]} options.layerTypes An array of values that specifies the layer types added to the map.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @param {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
@@ -262,6 +265,34 @@ Google2DImageryProvider.fromMapType = async function (options) {
   }
   //>>includeEnd('debug');
 
+  //>>includeStart('debug', pragmas.debug);
+  if (defined(options.scale)) {
+    if (
+      !["scaleFactor1x", "scaleFactor2x", "scaleFactor4x"].includes(
+        options.scale,
+      )
+    ) {
+      throw new DeveloperError(
+        "valid values for options.scale are scaleFactor1x, scaleFactor2x or scaleFactor4x",
+      );
+    }
+  }
+  //>>includeEnd('debug');
+
+  //>>includeStart('debug', pragmas.debug);
+  if (defined(options.layerTypes)) {
+    if (
+      !["layerRoadmap", "layerStreetview", "layerTraffic"].includes(
+        options.scale,
+      )
+    ) {
+      throw new DeveloperError(
+        "valid values for options.layerTypes layerRoadmap, layerStreetview, layerTraffic",
+      );
+    }
+  }
+  //>>includeEnd('debug');
+
   const sessionJson = await createGoogleImagerySession(options);
 
   return Google2DImageryProvider.fromSessionToken({
@@ -279,6 +310,7 @@ Google2DImageryProvider.fromMapType = async function (options) {
  * @param {object} options Object with the following properties:
  * @param {string} options.apiKey the Google api key
  * @param {string} options.sessionToken The Google session token that tracks the current state of your map and viewport.
+ * @param {(string|IonResource)} options.url The url for the google API tile service, or IonResource for the ion proxy endpoint.
  * @param {string} options.tileWidth The width of each tile in pixels.
  * @param {string} options.tileHeight The height of each tile in pixels.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
@@ -324,13 +356,12 @@ Google2DImageryProvider.fromSessionToken = function (options) {
   }
   //>>includeEnd('debug');
 
-  //>>includeStart('debug', pragmas.debug);
-  if (!(options.url instanceof IonResource)) {
-    throw new DeveloperError("options.url must be IonResource.");
-  }
-  //>>includeEnd('debug');
-
-  const resource = options.url;
+  const resource =
+    options.url instanceof IonResource
+      ? options.url
+      : Resource.createIfNeeded(
+          options.url ?? "https://{s}.tiles.mapbox.com/v4/",
+        );
 
   let templateUrl = resource.getUrlComponent();
   if (!trailingSlashRegex.test(templateUrl)) {
