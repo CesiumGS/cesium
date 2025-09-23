@@ -8,10 +8,6 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 const trailingSlashRegex = /\/$/;
 
-const defaultCredit = new Credit(
-  '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>',
-);
-
 /**
  * @typedef {object} Azure2DImageryProvider.ConstructorOptions
  *
@@ -85,9 +81,18 @@ function Azure2DImageryProvider(options) {
     "subscription-key": subscriptionKey,
   });
 
+  let credit;
+  if (defined(options.credit)) {
+    credit = options.credit;
+    if (typeof credit === "string") {
+      credit = new Credit(credit);
+    }
+  }
+
   const provider = new UrlTemplateImageryProvider({
     url: resource,
     maximumLevel: 19,
+    credit: credit,
   });
   provider._resource = resource;
   this._imageryProvider = provider;
@@ -305,5 +310,4 @@ Azure2DImageryProvider.prototype.pickFeatures = function (
 };
 
 // Exposed for tests
-Azure2DImageryProvider._defaultCredit = defaultCredit;
 export default Azure2DImageryProvider;

@@ -415,35 +415,7 @@ Google2DImageryProvider.prototype.getTileCredits = async function (
   y,
   level,
 ) {
-  return "doop";
-  // const rectangle = this._imageryProvider._tilingScheme.tileXYToRectangle(
-  //   x,
-  //   y,
-  //   level,
-  //   rectangleScratch,
-  // );
-  // console.log("rectangle --> ", rectangle);
-  // console.log("this --> ", this);
-  // //const { mapType, language, region, apiKey } = options;
-
-  // //curl "https://tile.googleapis.com/tile/v1/viewport?session=YOUR_SESSION_TOKEN&key=YOUR_API_KEY&zoom=zoom&north=north&south=south&east=east&west=west"
-
-  // const response = await Resource.post({
-  //   url: "https://tile.googleapis.com/tile/v1/viewport",
-  //   queryParameters: {
-  //     session: this._sessionToken,
-  //     key: this._apiKey,
-  //     zoom: level,
-  //     north: rectangle.north,
-  //     south: rectangle.south,
-  //     east: rectangle.east,
-  //     west: rectangle.west,
-  //   },
-  //   data: JSON.stringify({}),
-  // });
-  // const responseJson = JSON.parse(response);
-  // return responseJson.copyright;
-  //return undefined;
+  return undefined;
 };
 
 /**
