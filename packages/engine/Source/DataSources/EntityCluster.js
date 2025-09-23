@@ -67,6 +67,11 @@ function EntityCluster(options) {
 
   this._clusterEvent = new Event();
 
+  this._declusteredEvent = new Event();
+  this._allProcessedEntities = [];
+  this._lastClusteredEntities = [];
+  this._lastDeclusteredEntities = [];
+
   /**
    * Determines if entities in this collection will be shown.
    *
@@ -127,6 +132,10 @@ function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
 function addNonClusteredItem(item, entityCluster) {
   item.clusterShow = true;
 
+  if (defined(item.id)) {
+    entityCluster._lastDeclusteredEntities.push(item.id);
+  }
+
   if (
     !defined(item._labelCollection) &&
     defined(item.id) &&
@@ -157,7 +166,16 @@ function addCluster(position, numPoints, ids, entityCluster) {
     cluster.point.position =
       position;
 
+  entityCluster._lastClusteredEntities =
+    entityCluster._lastClusteredEntities.concat(ids);
+
   entityCluster._clusterEvent.raiseEvent(ids, cluster);
+
+  entityCluster._declusteredEvent.raiseEvent({
+    clustered: ids,
+    declustered: entityCluster._lastDeclusteredEntities.slice(),
+    cluster: cluster,
+  });
 }
 
 function hasLabelIndex(entityCluster, entityId) {
@@ -207,6 +225,10 @@ function getScreenSpacePositions(
       continue;
     }
 
+    if (defined(item.id)) {
+      entityCluster._allProcessedEntities.push(item.id);
+    }
+
     points.push({
       index: i,
       collection: collection,
@@ -216,7 +238,7 @@ function getScreenSpacePositions(
   }
 }
 
-const pointBoundinRectangleScratch = new BoundingRectangle();
+const pointBoundingRectangleScratch = new BoundingRectangle();
 const totalBoundingRectangleScratch = new BoundingRectangle();
 const neighborBoundingRectangleScratch = new BoundingRectangle();
 
@@ -225,6 +247,10 @@ function createDeclutterCallback(entityCluster) {
     if ((defined(amount) && amount < 0.05) || !entityCluster.enabled) {
       return;
     }
+
+    entityCluster._allProcessedEntities = [];
+    entityCluster._lastClusteredEntities = [];
+    entityCluster._lastDeclusteredEntities = [];
 
     const scene = entityCluster._scene;
 
@@ -240,6 +266,11 @@ function createDeclutterCallback(entityCluster) {
         !entityCluster._clusterLabels &&
         !entityCluster._clusterPoints)
     ) {
+      entityCluster._declusteredEvent.raiseEvent({
+        clustered: [],
+        declustered: [],
+        cluster: null,
+      });
       return;
     }
 
@@ -414,7 +445,7 @@ function createDeclutterCallback(entityCluster) {
           point.coord,
           pixelRange,
           entityCluster,
-          pointBoundinRectangleScratch,
+          pointBoundingRectangleScratch,
         );
         const totalBBox = BoundingRectangle.clone(
           bbox,
@@ -483,6 +514,18 @@ function createDeclutterCallback(entityCluster) {
           addNonClusteredItem(item, entityCluster);
         }
       }
+    }
+
+    if (
+      entityCluster._lastClusteredEntities.length > 0 ||
+      entityCluster._lastDeclusteredEntities.length > 0
+    ) {
+      entityCluster._declusteredEvent.raiseEvent({
+        clustered: entityCluster._lastClusteredEntities.slice(),
+        declustered: entityCluster._lastDeclusteredEntities.slice(),
+        cluster: null,
+        allProcessed: entityCluster._allProcessedEntities.slice(),
+      });
     }
 
     if (clusteredLabelCollection.length === 0) {
@@ -565,6 +608,16 @@ Object.defineProperties(EntityCluster.prototype, {
   clusterEvent: {
     get: function () {
       return this._clusterEvent;
+    },
+  },
+  /**
+   * Gets the event that will be raised when clustering is processed, including both clustered and declustered entities.
+   * @memberof EntityCluster.prototype
+   * @type {Event}
+   */
+  declusteredEvent: {
+    get: function () {
+      return this._declusteredEvent;
     },
   },
   /**
@@ -852,6 +905,35 @@ function updateEnable(entityCluster) {
     return;
   }
 
+  const allVisibleEntities = [];
+
+  if (defined(entityCluster._labelCollection)) {
+    for (let i = 0; i < entityCluster._labelCollection.length; i++) {
+      const label = entityCluster._labelCollection.get(i);
+      if (defined(label.id) && label.show) {
+        allVisibleEntities.push(label.id);
+      }
+    }
+  }
+
+  if (defined(entityCluster._billboardCollection)) {
+    for (let i = 0; i < entityCluster._billboardCollection.length; i++) {
+      const billboard = entityCluster._billboardCollection.get(i);
+      if (defined(billboard.id) && billboard.show) {
+        allVisibleEntities.push(billboard.id);
+      }
+    }
+  }
+
+  if (defined(entityCluster._pointCollection)) {
+    for (let i = 0; i < entityCluster._pointCollection.length; i++) {
+      const point = entityCluster._pointCollection.get(i);
+      if (defined(point.id) && point.show) {
+        allVisibleEntities.push(point.id);
+      }
+    }
+  }
+
   if (defined(entityCluster._clusterLabelCollection)) {
     entityCluster._clusterLabelCollection.destroy();
   }
@@ -869,6 +951,32 @@ function updateEnable(entityCluster) {
   disableCollectionClustering(entityCluster._labelCollection);
   disableCollectionClustering(entityCluster._billboardCollection);
   disableCollectionClustering(entityCluster._pointCollection);
+
+  if (allVisibleEntities.length > 0) {
+    const uniqueEntities = [...new Set(allVisibleEntities)];
+
+    entityCluster._declusteredEvent.raiseEvent({
+      clustered: [],
+      declustered: uniqueEntities,
+      cluster: null,
+      allProcessed: uniqueEntities,
+    });
+
+    entityCluster._lastClusteredEntities = [];
+    entityCluster._lastDeclusteredEntities = uniqueEntities.slice();
+    entityCluster._allProcessedEntities = uniqueEntities.slice();
+  } else {
+    entityCluster._declusteredEvent.raiseEvent({
+      clustered: [],
+      declustered: [],
+      cluster: null,
+      allProcessed: [],
+    });
+
+    entityCluster._lastClusteredEntities = [];
+    entityCluster._lastDeclusteredEntities = [];
+    entityCluster._allProcessedEntities = [];
+  }
 }
 
 /**
@@ -998,7 +1106,35 @@ EntityCluster.prototype.destroy = function () {
   this._pixelRangeDirty = false;
   this._minimumClusterSizeDirty = false;
 
+  this._allProcessedEntities = [];
+  this._lastClusteredEntities = [];
+  this._lastDeclusteredEntities = [];
+
   return undefined;
+};
+
+/**
+ * Returns the last set of clustered entities from the most recent clustering operation.
+ * @returns {Entity[]} Array of entities that were clustered
+ */
+EntityCluster.prototype.getLastClusteredEntities = function () {
+  return this._lastClusteredEntities.slice();
+};
+
+/**
+ * Returns the last set of declustered entities from the most recent clustering operation.
+ * @returns {Entity[]} Array of entities that were not clustered
+ */
+EntityCluster.prototype.getLastDeclusteredEntities = function () {
+  return this._lastDeclusteredEntities.slice();
+};
+
+/**
+ * Returns all entities that were processed in the most recent clustering operation.
+ * @returns {Entity[]} Array of all processed entities
+ */
+EntityCluster.prototype.getAllProcessedEntities = function () {
+  return this._allProcessedEntities.slice();
 };
 
 /**
@@ -1019,4 +1155,26 @@ EntityCluster.prototype.destroy = function () {
  *     cluster.label.text = entities.length.toLocaleString();
  * });
  */
+
+/**
+ * A event listener function for enhanced clustering information.
+ * @callback EntityCluster.declusteredCallback
+ *
+ * @param {object} clusteringData An object containing clustering information.
+ * @param {Entity[]} clusteringData.clustered An array of entities that were clustered.
+ * @param {Entity[]} clusteringData.declustered An array of entities that were not clustered.
+ * @param {object|null} clusteringData.cluster The cluster object (if this event is for a specific cluster) or null for summary events.
+ * @param {Entity[]} [clusteringData.allProcessed] An array of all entities processed (only in summary events).
+ *
+ * @example
+ * // Using the enhanced declusteredEvent to access both clustered and declustered entities
+ * dataSource.clustering.declusteredEvent.addEventListener(function(data) {
+ *     console.log('Clustered entities:', data.clustered.length);
+ *     console.log('Declustered entities:', data.declustered.length);
+ *     if (data.allProcessed) {
+ *         console.log('Total processed entities:', data.allProcessed.length);
+ *     }
+ * });
+ */
+
 export default EntityCluster;
