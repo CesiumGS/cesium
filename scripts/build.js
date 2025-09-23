@@ -664,7 +664,7 @@ const externalResolvePlugin = {
 export async function getSandcastleConfig() {
   const configPath = "packages/sandcastle/sandcastle.config.js";
   const configImportPath = path.join(projectRoot, configPath);
-  const config = await import(pathToFileURL(configImportPath));
+  const config = await import(pathToFileURL(configImportPath).href);
   const options = config.default;
   return {
     ...options,
@@ -699,7 +699,7 @@ export async function buildSandcastleGallery(includeDevelopment) {
     "../packages/sandcastle/scripts/buildGallery.js",
   );
   const { buildGalleryList } = await import(
-    pathToFileURL(buildGalleryScriptPath)
+    pathToFileURL(buildGalleryScriptPath).href
   );
 
   await buildGalleryList({
