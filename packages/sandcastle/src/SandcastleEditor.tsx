@@ -214,49 +214,15 @@ function SandcastleEditor({
       var Sandcastle: typeof import('Sandcastle').default;`;
         },
       },
-      {
-        url: typeImportPaths["@cesium/engine"],
-        filename: "ts:cesium-engine.d.ts",
-      },
-      {
-        url: typeImportPaths["@cesium/widgets"],
-        filename: "ts:cesium-widgets.d.ts",
-        transformTypes(typesContent) {
-          // Monaco expects the import statements to be inside the module so
-          // move the module declaration to the top of the "file"
-          return `declare module "@cesium/widgets" {
-          ${typesContent.replace('declare module "@cesium/widgets" {', "")}`;
-        },
-      },
     ];
 
     const extraImportNames = Object.keys(typeImportPaths).filter(
-      (name) =>
-        !["cesium", "Sandcastle", "@cesium/engine", "@cesium/widgets"].includes(
-          name,
-        ),
+      (name) => !["cesium", "Sandcastle"].includes(name),
     );
     for (const extraName of extraImportNames) {
       typeImports.push({
         url: typeImportPaths[extraName],
         filename: `ts:${extraName.replace(/@\//, "-")}.d.ts`,
-        transformTypes(typesContent) {
-          // TODO: this feels a little messy and still very targeted at our own modules, is there a way to improve?
-          // I was experimenting with setting the transform from Vite but that doesn't work with functions
-
-          // Monaco expects the import statements to be inside the module so
-          // move the module declaration to the top of the "file"
-          if (typesContent.trim().startsWith("import")) {
-            const declareModuleLine = typesContent.match(
-              /declare module "([\w@\-\/]+)" {/gm,
-            )?.[0];
-            if (declareModuleLine) {
-              return `${declareModuleLine}
-              ${typesContent.replace(declareModuleLine, "")}`;
-            }
-          }
-          return typesContent;
-        },
       });
     }
 

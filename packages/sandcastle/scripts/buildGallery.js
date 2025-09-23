@@ -304,7 +304,7 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
 
   try {
     const config = await import(configPath);
-    const { root, publicDir, gallery, sourceUrl } = config.default;
+    const { root, publicDirectory, gallery, sourceUrl } = config.default;
 
     // Paths are specified relative to the config file
     const configDir = dirname(configPath);
@@ -320,7 +320,7 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
 
     buildGalleryOptions = {
       rootDirectory: configRoot,
-      publicDirectory: publicDir,
+      publicDirectory: publicDirectory,
       galleryFiles: files,
       sourceUrl,
       defaultThumbnail,

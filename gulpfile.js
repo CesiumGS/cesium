@@ -1234,13 +1234,6 @@ function generateTypeScriptDefinitions(
       "raiseEvent(...arguments: Parameters<Listener>): void;",
     );
 
-  // Wrap the source to actually be inside of a declared cesium module
-  // and add any workaround and private utility types.
-  source = `declare module "@${scope}/${workspaceName}" {
-${source}
-}
-`;
-
   if (importModules) {
     let imports = "";
     Object.keys(importModules).forEach((workspace) => {
@@ -1253,6 +1246,13 @@ ${source}
     });
     source = imports + source;
   }
+
+  // Wrap the source to actually be inside of a declared cesium module
+  // and add any workaround and private utility types.
+  source = `declare module "@${scope}/${workspaceName}" {
+${source}
+}
+`;
 
   // Write the final source file back out
   writeFileSync(definitionsPath, source);
