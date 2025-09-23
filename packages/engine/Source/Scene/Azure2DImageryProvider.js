@@ -3,7 +3,10 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
+import IonResource from "../Core/IonResource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
+
+const trailingSlashRegex = /\/$/;
 
 const defaultCredit = new Credit(
   '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>',
@@ -45,7 +48,8 @@ function Azure2DImageryProvider(options) {
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  const subscriptionKey = options.subscriptionKey;
+  const subscriptionKey =
+    options.subscriptionKey ?? options["subscription-key"];
   //>>includeStart('debug', pragmas.debug);
   if (!defined(subscriptionKey)) {
     throw new DeveloperError("options.subscriptionKey is required.");
@@ -57,9 +61,20 @@ function Azure2DImageryProvider(options) {
   this._tileWidth = options.tileWidth;
   this._tileHeight = options.tileHeight;
 
-  const resource = Resource.createIfNeeded(
-    options.url ?? "https://atlas.microsoft.com/map/tile",
-  );
+  const resource =
+    options.url instanceof IonResource
+      ? options.url
+      : Resource.createIfNeeded(
+          options.url ?? "https://atlas.microsoft.com/map/tile",
+        );
+
+  let templateUrl = resource.getUrlComponent();
+  if (!trailingSlashRegex.test(templateUrl)) {
+    templateUrl += "/";
+  }
+  templateUrl += `map/tile`;
+
+  resource.url = templateUrl;
 
   resource.setQueryParameters({
     "api-version": "2024-04-01",

@@ -39,7 +39,7 @@ function IonResource(endpoint, endpointResource) {
       retryAttempts: 1,
       retryCallback: retryCallback,
     };
-  } else if (externalType === "GOOGLE_2D_MAPS") {
+  } else if (["GOOGLE_2D_MAPS", "AZURE_MAPS"].includes(externalType)) {
     options = {
       url: endpoint.options.url,
       retryAttempts: 1,
@@ -276,7 +276,9 @@ function retryCallback(that, error) {
         //Set the token for root resource so new derived resources automatically pick it up
         ionRoot._ionEndpoint = newEndpoint;
         // Reset the session token for Google 2D imagery
-        if (newEndpoint.externalType === "GOOGLE_2D_MAPS") {
+        if (
+          ["GOOGLE_2D_MAPS", "AZURE_MAPS"].includes(newEndpoint.externalType)
+        ) {
           ionRoot.setQueryParameters({ session: newEndpoint.options.session });
         }
         return ionRoot._ionEndpoint;
