@@ -48,8 +48,6 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
   return this._passState;
 };
 
-const colorScratchForPickFramebuffer = new Color();
-
 /**
  * Return the picked object rendered within a given rectangle.
  *
@@ -93,20 +91,14 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
     ) {
       const index = 4 * ((halfHeight - y) * width + x + halfWidth);
 
-      colorScratchForPickFramebuffer.red = Color.byteToFloat(pixels[index]);
-      colorScratchForPickFramebuffer.green = Color.byteToFloat(
+      const pickColor = Color.bytesToRgba(
+        pixels[index],
         pixels[index + 1],
-      );
-      colorScratchForPickFramebuffer.blue = Color.byteToFloat(
         pixels[index + 2],
-      );
-      colorScratchForPickFramebuffer.alpha = Color.byteToFloat(
         pixels[index + 3],
       );
 
-      const object = context.getObjectByPickColor(
-        colorScratchForPickFramebuffer,
-      );
+      const object = context.getObjectByPickColor(pickColor);
       if (defined(object)) {
         return object;
       }

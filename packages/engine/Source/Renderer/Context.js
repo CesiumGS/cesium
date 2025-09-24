@@ -1442,6 +1442,11 @@ Context.prototype.endFrame = function () {
 };
 
 /**
+ * @type {TypedArray}
+ */
+let scratchPixels;
+
+/**
  * @private
  * @param {object} readState An object with the following properties:
  * @param {number} [readState.x=0] The x offset of the rectangle to read from.
@@ -1471,12 +1476,16 @@ Context.prototype.readPixels = function (readState) {
     pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
   }
 
-  const pixels = PixelFormat.createTypedArray(
-    PixelFormat.RGBA,
-    pixelDatatype,
-    width,
-    height,
-  );
+  const length =
+    PixelFormat.componentsLength(PixelFormat.RGBA) * width * height;
+  if (!defined(scratchPixels) || scratchPixels.length !== length) {
+    scratchPixels = PixelFormat.createTypedArray(
+      PixelFormat.RGBA,
+      pixelDatatype,
+      width,
+      height,
+    );
+  }
 
   bindFramebuffer(this, framebuffer);
 
@@ -1487,10 +1496,10 @@ Context.prototype.readPixels = function (readState) {
     height,
     PixelFormat.RGBA,
     PixelDatatype.toWebGLConstant(pixelDatatype, this),
-    pixels,
+    scratchPixels,
   );
 
-  return pixels;
+  return scratchPixels;
 };
 
 const viewportQuadAttributeLocations = {
@@ -1562,7 +1571,7 @@ Context.prototype.createViewportQuadCommand = function (
 /**
  * Gets the object associated with a pick color.
  *
- * @param {Color} pickColor The pick color.
+ * @param {number} pickColor The unsigned 32-bit RGBA pick color
  * @returns {object} The object associated with the pick color, or undefined if no object is associated with that color.
  *
  * @example
@@ -1575,7 +1584,7 @@ Context.prototype.getObjectByPickColor = function (pickColor) {
   Check.defined("pickColor", pickColor);
   //>>includeEnd('debug');
 
-  return this._pickObjects.get(pickColor.toRgba());
+  return this._pickObjects.get(pickColor);
 };
 
 /**
