@@ -125,14 +125,14 @@ Ray getViewRayUv() {
         viewPosUv = u_cameraPositionUv;
         viewDirUv = normalize(u_transformDirectionViewToLocal * eyeCoordinates.xyz);
     }
-    #if defined(SHAPE_ELLIPSOID)
-        // viewDirUv has been scaled to a space where the ellipsoid is a sphere.
-        // Undo this scaling to get the raw direction.
-        vec3 rawDir = viewDirUv * u_ellipsoidRadiiUv;
-        return Ray(viewPosUv, viewDirUv, rawDir);
-    #else
-        return Ray(viewPosUv, viewDirUv, viewDirUv);
-    #endif
+#if defined(SHAPE_ELLIPSOID)
+    // viewDirUv has been scaled to a space where the ellipsoid is a sphere.
+    // Undo this scaling to get the raw direction.
+    vec3 rawDir = viewDirUv * u_ellipsoidRadiiUv;
+    return Ray(viewPosUv, viewDirUv, rawDir);
+#else
+    return Ray(viewPosUv, viewDirUv, viewDirUv);
+#endif
 }
 
 Ray getViewRayEC() {
@@ -161,7 +161,12 @@ void main()
     float currentT = shapeIntersection.entry.w;
     float endT = shapeIntersection.exit.w;
 
+#if defined(SHAPE_ELLIPSOID)
+    // TODO: intersect ellipsoids in meters, so we don't need this arbitrary scaling
+    vec3 positionEC = viewRayEC.pos + currentT * viewRayEC.dir * u_ellipsoidShapeMaxExtent;
+#else
     vec3 positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
+#endif
     TileAndUvCoordinate tileAndUv = getTileAndUvCoordinate(positionEC);
     vec3 positionUv = viewRayUv.pos + 0.5 * currentT * viewRayUv.dir; // 0.5 for EC to UV
     PointJacobianT pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
@@ -238,7 +243,12 @@ void main()
                 }
             #endif
         }
+#if defined(SHAPE_ELLIPSOID)
+        // TODO: intersect ellipsoids in meters, so we don't need this arbitrary scaling
+        positionEC = viewRayEC.pos + currentT * viewRayEC.dir * u_ellipsoidShapeMaxExtent;
+#else
         positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
+#endif
         tileAndUv = getTileAndUvCoordinate(positionEC);
         positionUv = viewRayUv.pos + 0.5 * currentT * viewRayUv.dir; // 0.5 for EC to UV
         pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);

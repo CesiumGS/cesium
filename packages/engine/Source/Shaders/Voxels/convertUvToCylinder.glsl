@@ -57,10 +57,14 @@ vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
 
 /**
  * Computes the change in polar coordinates given a change in position.
+ * @param dPosition The change in position in Cartesian coordinates.
+ * @param cameraRadialDistance The radial distance of the camera from the origin.
+ * @return The change in polar coordinates (radial distance, angle).
  * TODO: optimize--currently 4 trig calls!
  */
 vec2 computePolarChange(in vec2 dPosition, in float cameraRadialDistance) {
     float dAngle = atan(dPosition.y, cameraRadialDistance + dPosition.x);
+    // Find the direction of the radial axis at the output angle, in Cartesian coordinates
     vec2 outputRadialAxis = vec2(cos(dAngle), sin(dAngle));
     float sinHalfAngle = sin(dAngle / 2.0);
     float versine = 2.0 * sinHalfAngle * sinHalfAngle;
@@ -78,7 +82,6 @@ vec3 convertECtoDeltaTile(in vec3 positionEC) {
     // 3. Convert to tileset coordinates in [0, 1]
     float dx = u_cylinderUvToShapeUvRadius.x * dPolar.x;
     float dy = u_cylinderUvToShapeUvAngle.x * dPolar.y / czm_twoPi;
-    // TODO: are we missing a factor of 2 somewhere? cylinderUvToShapeUvHeight is 2.0 / heightRange
     float dz = u_cylinderUvToShapeUvHeight.x * rtu.z;
     // 4. Convert to tile coordinate changes
     return vec3(dx, dy, dz) * float(1 << u_cameraTileCoordinates.w);

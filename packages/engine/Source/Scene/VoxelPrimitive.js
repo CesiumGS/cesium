@@ -1395,6 +1395,11 @@ VoxelPrimitive.prototype.update = function (frameState) {
 function updateRenderBoundPlanes(primitive, frameState) {
   const uniforms = primitive._uniforms;
   const { renderBoundPlanes } = primitive._shape;
+  if (!defined(renderBoundPlanes)) {
+    // TODO: renderBoundPlanes should always be defined, but not always active?
+    // (Ellipsoid voxels only use them if there are longitude limits)
+    return;
+  }
   // TODO: copy renderBoundPlanes from the shape to the primitive?
   renderBoundPlanes.update(frameState, primitive._transformPlaneUvToView);
   uniforms.renderBoundPlanesTexture = renderBoundPlanes.texture;

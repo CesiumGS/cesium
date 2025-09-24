@@ -1,6 +1,7 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import CesiumMath from "../Core/Math.js";
@@ -8,6 +9,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
+import Transforms from "../Core/Transforms.js";
 
 /**
  * An ellipsoid {@link VoxelShape}.
@@ -65,9 +67,13 @@ function VoxelEllipsoidShape() {
   this._rotation = new Matrix3();
 
   this._shaderUniforms = {
+    cameraPositionCartographic: new Cartesian3(),
+    ellipsoidEcToEastNorthUp: new Matrix3(),
     ellipsoidRadiiUv: new Cartesian3(),
     eccentricitySquared: 0.0,
     evoluteScale: new Cartesian2(),
+    ellipsoidShapeMaxExtent: 1.0,
+    ellipsoidCurvatureAtLatitude: new Cartesian2(),
     ellipsoidInverseRadiiSquaredUv: new Cartesian3(),
     ellipsoidRenderLongitudeMinMax: new Cartesian2(),
     ellipsoidShapeUvLongitudeMinMaxMid: new Cartesian3(),
@@ -472,6 +478,7 @@ VoxelEllipsoidShape.prototype.update = function (
       shaderDefines[key] = undefined;
     }
   }
+  shaderUniforms.ellipsoidShapeMaxExtent = shapeMaxExtent;
 
   // The ellipsoid radii scaled to [0,1]. The max ellipsoid radius will be 1.0 and others will be less.
   shaderUniforms.ellipsoidRadiiUv = Cartesian3.divideByScalar(
@@ -713,13 +720,65 @@ VoxelEllipsoidShape.prototype.update = function (
   return true;
 };
 
+const scratchCameraPositionCartographic = new Cartographic();
+const surfacePositionScratch = new Cartesian3();
+const enuTransformScratch = new Matrix4();
+const enuRotationScratch = new Matrix3();
 /**
  * Update any view-dependent transforms.
  * @private
  * @param {FrameState} frameState The frame state.
  */
 VoxelEllipsoidShape.prototype.updateViewTransforms = function (frameState) {
-  // Ellipsoid shape has no view-dependent transforms
+  const shaderUniforms = this._shaderUniforms;
+  const ellipsoid = this._ellipsoid;
+  // TODO: incorporate modelMatrix or shapeTransform here?
+  const cameraWC = frameState.camera.positionWC;
+  const cameraPositionCartographic = ellipsoid.cartesianToCartographic(
+    cameraWC,
+    scratchCameraPositionCartographic,
+  );
+  Cartesian3.fromElements(
+    cameraPositionCartographic.longitude,
+    cameraPositionCartographic.latitude,
+    cameraPositionCartographic.height,
+    shaderUniforms.cameraPositionCartographic,
+  );
+
+  // TODO: incorporate modelMatrix here?
+  const surfacePosition = Cartesian3.fromRadians(
+    cameraPositionCartographic.longitude,
+    cameraPositionCartographic.latitude,
+    0.0,
+    ellipsoid,
+    surfacePositionScratch,
+  );
+
+  shaderUniforms.ellipsoidCurvatureAtLatitude = ellipsoid.getLocalCurvature(
+    surfacePosition,
+    shaderUniforms.ellipsoidCurvatureAtLatitude,
+  );
+
+  const enuToWorld = Transforms.eastNorthUpToFixedFrame(
+    surfacePosition,
+    ellipsoid,
+    enuTransformScratch,
+  );
+  const rotateEnuToWorld = Matrix4.getRotation(
+    enuToWorld,
+    enuRotationScratch,
+  );
+  const rotateWorldToView = frameState.context.uniformState.viewRotation;
+  const rotateEnuToView = Matrix3.multiply(
+    rotateWorldToView,
+    rotateEnuToWorld,
+    enuRotationScratch,
+  );
+  // Inverse is the transpose since it's a pure rotation.
+  shaderUniforms.ellipsoidEcToEastNorthUp = Matrix3.transpose(
+    rotateEnuToView,
+    shaderUniforms.ellipsoidEcToEastNorthUp,
+  );
 };
 
 const scratchRectangle = new Rectangle();
@@ -789,6 +848,82 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForTile = function (
   );
 };
 
+const scratchQuadrantPosition = new Cartesian2();
+const scratchEllipseRadii = new Cartesian2();
+const scratchEllipseTrigs = new Cartesian2();
+const scratchEllipseGuess = new Cartesian2();
+const scratchEvolute = new Cartesian2();
+const scratchQ = new Cartesian2();
+
+/**
+ * Find the nearest point on an ellipse and its radius.
+ * @param {Cartesian2} position 
+ * @param {Cartesian2} radii
+ * @param {Cartesian2} evoluteScale
+ * @param {Cartesian3} result The Cartesian3 to store the result in. .x and .y components contain the nearest point on the ellipse, .z contains the local radius of curvature.
+ * @returns {Cartesian3} The nearest point on the ellipse and its radius.
+ * @private
+ */
+function nearestPointAndRadiusOnEllipse(position, radii, evoluteScale, result) {
+  // Map to the first quadrant
+  const p = Cartesian2.abs(position, scratchQuadrantPosition);
+  const inverseRadii = Cartesian2.fromElements(
+    1.0 / radii.x,
+    1.0 / radii.y,
+    scratchEllipseRadii,
+  );
+  // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
+  // but store the cos and sin of t in a vec2 for efficiency.
+  // Initial guess: t = pi/4
+  let tTrigs = Cartesian2.fromElements(
+    Math.SQRT1_2,
+    Math.SQRT1_2,
+    scratchEllipseTrigs,
+  );
+  // TODO: too much duplication. Move v and evolute declarations inside loop?
+  // Initial guess of point on ellipsoid
+  let v = Cartesian2.multiplyComponents(radii, tTrigs, scratchEllipseGuess);
+  // Center of curvature of the ellipse at v
+  let evolute = Cartesian2.fromElements(
+    evoluteScale.x * tTrigs.x * tTrigs.x * tTrigs.x,
+    evoluteScale.y * tTrigs.y * tTrigs.y * tTrigs.y,
+    scratchEvolute,
+  );
+  for (let i = 0; i < 3; ++i) {
+    // Find the (approximate) intersection of p - evolute with the ellipsoid.
+    const distance = Cartesian2.magnitude(Cartesian2.subtract(v, evolute, scratchQ));
+    const direction = Cartesian2.normalize(Cartesian2.subtract(p, evolute, scratchQ), scratchQ);
+    const q = Cartesian2.multiplyByScalar(direction, distance, scratchQ);
+    // Update the estimate of t
+    tTrigs = Cartesian2.multiplyComponents(
+      Cartesian2.add(q, evolute, scratchEllipseTrigs),
+      inverseRadii,
+      scratchEllipseTrigs,
+    );
+    tTrigs = Cartesian2.normalize(
+      Cartesian2.clamp(tTrigs, Cartesian2.ZERO, Cartesian2.ONE, scratchEllipseTrigs), 
+      scratchEllipseTrigs,
+    );
+    v = Cartesian2.multiplyComponents(radii, tTrigs, scratchEllipseGuess);
+    evolute = Cartesian2.fromElements(
+      evoluteScale.x * tTrigs.x * tTrigs.x * tTrigs.x,
+      evoluteScale.y * tTrigs.y * tTrigs.y * tTrigs.y,
+      scratchEvolute,
+    );
+  }
+
+  // Map back to the original quadrant
+  return Cartesian3.fromElements(
+    Math.sign(position.x) * v.x,
+    Math.sign(position.y) * v.y,
+    Cartesian2.magnitude(Cartesian2.subtract(v, evolute, scratchQ)),
+    result,
+  );
+}
+
+const scratchEllipsePosition = new Cartesian2();
+const scratchSurfacePointAndRadius = new Cartesian3();
+const scratchNormal2d = new Cartesian2();
 /**
  * Convert a UV coordinate to the shape's UV space.
  * @private
@@ -812,15 +947,55 @@ VoxelEllipsoidShape.prototype.convertUvToShapeUvSpace = function (
     positionUV.z * 2.0 - 1.0,
     result,
   );
+  let longitude = Math.atan2(positionLocal.y, positionLocal.x);
 
-  const radius = Math.hypot(positionLocal.x, positionLocal.y);
-  const longitude = Math.atan2(positionLocal.y, positionLocal.x);
+  const {
+    ellipsoidRadiiUv,
+    evoluteScale,
+    ellipsoidInverseRadiiSquaredUv,
+    ellipsoidInverseHeightDifferenceUv,
+  } = this._shaderUniforms;
+  // TODO: undo the scaling from ellipsoid to sphere?
 
-  // TODO: Fix this crude spherical approximation, to be consistent with convertUvToEllipsoid.glsl
-  const latitude = Math.atan2(positionLocal.z, radius);
-  const height = Math.hypot(radius, positionLocal.z) - 1.0;
+  const distanceFromZAxis = Math.hypot(positionLocal.x, positionLocal.y);
+  const posEllipse = Cartesian2.fromElements(
+    distanceFromZAxis,
+    positionLocal.z,
+    scratchEllipsePosition,
+  );
+  const surfacePointAndRadius = nearestPointAndRadiusOnEllipse(
+    posEllipse,
+    Cartesian2.fromElements(ellipsoidRadiiUv.x, ellipsoidRadiiUv.z, scratchEllipseRadii),
+    evoluteScale,
+    scratchSurfacePointAndRadius,
+  );
+
+  const normal2d = Cartesian2.normalize(
+    Cartesian2.fromElements(
+      surfacePointAndRadius.x * ellipsoidInverseRadiiSquaredUv.x,
+      surfacePointAndRadius.y * ellipsoidInverseRadiiSquaredUv.z,
+      scratchNormal2d,
+    ),
+    scratchNormal2d,
+  );
+  let latitude = Math.atan2(normal2d.y, normal2d.x);
+
+  const heightSign =
+    Cartesian2.magnitude(posEllipse) <
+    Cartesian2.magnitude(surfacePointAndRadius)
+      ? -1.0
+      : 1.0;
+  const heightVector = Cartesian2.subtract(
+    posEllipse,
+    surfacePointAndRadius,
+    scratchEllipsePosition,
+  );
+  let height = heightSign * Cartesian2.magnitude(heightVector);
 
   // TODO: Assume we always have shape bounds? Then simplify convertShapeToShapeUvSpace and implement here.
+  longitude = (longitude + Math.PI) / (2.0 * Math.PI);
+  latitude = (latitude + Math.PI / 2.0) / Math.PI;
+  height = 1.0 + height * ellipsoidInverseHeightDifferenceUv;
 
   return Cartesian3.fromElements(longitude, latitude, height, result);
 };
