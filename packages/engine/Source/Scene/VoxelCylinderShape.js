@@ -450,6 +450,7 @@ VoxelCylinderShape.prototype.updateViewTransforms = function (frameState) {
  * Update the rotation from eye coordinates to radial-tangent-up coordinates.
  * @param {VoxelCylinderShape} shape
  * @param {FrameState} frameState
+ * @private
  */
 function updateRtuTransform(shape, frameState) {
   // 1. Find camera position in local coordinates
