@@ -734,7 +734,8 @@ function drillPick(limit, pickCallback) {
   }
 
   let pickedResults = pickCallback();
-  while (defined(pickedResults) && pickedResults.length) {
+  let shouldBreak = false;
+  while (defined(pickedResults) && pickedResults.length > 0 && !shouldBreak) {
     for (const pickedResult of pickedResults) {
       const object = pickedResult.object;
       const position = pickedResult.position;
@@ -742,16 +743,19 @@ function drillPick(limit, pickCallback) {
 
       if (defined(position) && !defined(object)) {
         result.push(pickedResult);
+        shouldBreak = true;
         break;
       }
 
       if (!defined(object) || !defined(object.primitive)) {
+        shouldBreak = true;
         break;
       }
 
       if (!exclude) {
         result.push(pickedResult);
         if (0 >= --limit) {
+          shouldBreak = true;
           break;
         }
       }
@@ -1032,7 +1036,7 @@ function getRayIntersection(
   scene.resolveFramebuffers(passState);
 
   let position;
-  const object = view.pickFramebuffer.end(drawingBufferRectangle);
+  const object = view.pickFramebuffer.end(drawingBufferRectangle, 1)[0];
 
   if (scene.context.depthTexture) {
     const { frustumCommandsList } = view;
