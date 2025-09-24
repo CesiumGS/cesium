@@ -18,7 +18,6 @@ import Cesium3DTilesetVisualizer from "./Cesium3DTilesetVisualizer.js";
 import PathVisualizer from "./PathVisualizer.js";
 import PointVisualizer from "./PointVisualizer.js";
 import PolylineVisualizer from "./PolylineVisualizer.js";
-import Event from "../Core/Event.js";
 
 /**
  * Visualizes a collection of {@link DataSource} instances.
@@ -49,7 +48,6 @@ function DataSourceDisplay(options) {
   const dataSourceCollection = options.dataSourceCollection;
 
   this._eventHelper = new EventHelper();
-  this._onUpdateComplete = new Event();
   this._eventHelper.add(
     dataSourceCollection.dataSourceAdded,
     this._onDataSourceAdded,
@@ -227,18 +225,6 @@ Object.defineProperties(DataSourceDisplay.prototype, {
       return this._ready;
     },
   },
-
-  /**
-   * Gets the event that will be raised when all data sources are ready to be displayed - have all finished processing.
-   * @memberof DataSourceDisplay.prototype
-   * @type {Event}
-   * @readonly
-   */
-  onUpdateComplete: {
-    get: function () {
-      return this._onUpdateComplete;
-    },
-  },
 });
 
 /**
@@ -339,10 +325,7 @@ DataSourceDisplay.prototype.update = function (time) {
 
   // Trigger an event when all of the data sources finish updating
   if (!this._prevUpdateResult && updateResult) {
-    this._onUpdateComplete.raiseEvent();
-    if (this._scene.renderOnUpdateComplete) {
-      this._scene.requestRender();
-    }
+    this._scene.requestRender();
   }
   this._prevUpdateResult = updateResult;
 

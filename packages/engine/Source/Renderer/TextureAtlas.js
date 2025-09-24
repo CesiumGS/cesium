@@ -517,9 +517,6 @@ TextureAtlas.prototype._addImage = function (index, image) {
   Check.typeOf.number.greaterThanOrEquals("index", index, 0);
   Check.defined("image", image);
   //>>includeEnd('debug');
-  if (this.isDestroyed() || !defined(image)) {
-    return -1;
-  }
 
   return new Promise((resolve, reject) => {
     this._imagesToAddQueue.push(
@@ -626,7 +623,13 @@ TextureAtlas.prototype.update = function (context) {
   return this._processImageQueue(context);
 };
 
-function resolveImage(image, id) {
+/**
+ * Gets an image from various possible input types.
+ * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas
+ * @param {string} id An identifier to detect whether the image already exists in the atlas.
+ * @returns {TexturePacker.PackableObject | Promise<TexturePacker.PackableObject>} The image or a Promise that resolves to it.
+ */
+function getImage(image, id) {
   if (typeof image === "function") {
     image = image(id);
   }
@@ -663,15 +666,22 @@ TextureAtlas.prototype.addImage = function (id, image) {
 
   const index = this._nextIndex++;
   this._indexById.set(id, index);
-  image = resolveImage(image, id);
+  image = getImage(image, id);
 
-  if (image instanceof Promise) {
-    // Return promise chain, the image will resolve and be processed on a later frame
-    promise = image.then((image) => this._addImage(index, image));
-  } else {
-    // Add the image synchronously if possible, the image will be processed on the current frame
-    promise = this._addImage(index, image);
-  }
+  const resolveAndAddImage = async (index, image) => {
+    // The initial part of an async function runs synchronously up to the first await
+    // If the image is synchronous, skip the await: add and process the image the current frame.
+    if (image instanceof Promise) {
+      // Effectively return a promise chain. The image promise will resolve and be processed on a later frame
+      image = await image;
+      if (this.isDestroyed() || !defined(image)) {
+        return -1;
+      }
+    }
+
+    return this._addImage(index, image);
+  };
+  promise = resolveAndAddImage(index, image);
 
   this._indexPromiseById.set(id, promise);
   return promise;
