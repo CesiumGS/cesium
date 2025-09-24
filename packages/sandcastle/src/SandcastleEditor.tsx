@@ -54,6 +54,15 @@ loader.config({ monaco });
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
 const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
 
+function fontLigaturesValue(fontLigaturesBool: boolean): boolean | string {
+  // Due to what seems like a bug in Monaco on some systems like Windows + Chrome
+  // the text highlighting and selection is offset from the actual values.
+  // This issue thread shows that setting the ligatures to an empty string resolves
+  // the issue. https://github.com/microsoft/monaco-editor/issues/3217#issuecomment-1511978166
+  // Testing has shown that `true` renders fine however.
+  return fontLigaturesBool ? fontLigaturesBool : "";
+}
+
 export type SandcastleEditorRef = {
   formatCode(): void;
 };
@@ -90,7 +99,7 @@ function SandcastleEditor({
   }, [fontFamily]);
   useEffect(() => {
     internalEditorRef.current?.updateOptions({
-      fontLigatures: fontLigatures,
+      fontLigatures: fontLigaturesValue(fontLigatures),
     });
   }, [fontLigatures]);
   useEffect(() => {
@@ -325,7 +334,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
             fontFamily:
               availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono",
             fontSize: fontSize,
-            fontLigatures: fontLigatures,
+            fontLigatures: fontLigaturesValue(fontLigatures),
           }}
           path={activeTab === "js" ? "script.js" : "index.html"}
           language={activeTab === "js" ? "javascript" : "html"}
