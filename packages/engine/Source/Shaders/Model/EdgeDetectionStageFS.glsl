@@ -32,8 +32,10 @@ void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
 
     // If Edge isn't behind any geometry and the pixel has edge data
     if (d < eps && edgeId.r > 0.0) {
+#ifdef HAS_EDGE_FEATURE_ID
         float edgeFeatureId    = edgeId.g;
         float currentFeatureId = float(featureIds.featureId_0);
+#endif
         float globeDepth       = czm_unpackDepth(texture(czm_globeDepthTexture, screenCoord));
         color = vec4(globeDepth, globeDepth, globeDepth, 1.0);
         return;
@@ -44,9 +46,11 @@ void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
             return;
         }
 
+#ifdef HAS_EDGE_FEATURE_ID
         // Feature-to-feature: only draw when IDs match or one is background
         if (edgeFeatureId > 0.0 && currentFeatureId > 0.0 && edgeFeatureId != currentFeatureId) {
             return;
         }
+#endif
     }
 }

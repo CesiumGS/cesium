@@ -109,7 +109,9 @@ EdgeVisibilityPipelineStage.process = function (
     "#ifdef HAS_EDGE_VISIBILITY",
     "  if (u_isEdgePass) {",
     "    v_edgeType = a_edgeType;",
+    "#ifdef HAS_EDGE_FEATURE_ID",
     "    v_featureId_0 = a_edgeFeatureId;",
+    "#endif",
     "    // Transform normals from model space to view space",
     "    v_silhouetteNormalView = czm_normal * a_silhouetteNormal;",
     "    v_faceNormalAView = czm_normal * a_faceNormalA;",
@@ -154,6 +156,14 @@ EdgeVisibilityPipelineStage.process = function (
 
   if (!defined(edgeGeometry)) {
     return;
+  }
+
+  if (edgeGeometry.hasEdgeFeatureIds) {
+    shaderBuilder.addDefine(
+      "HAS_EDGE_FEATURE_ID",
+      undefined,
+      ShaderDestination.BOTH,
+    );
   }
 
   // Set default value for u_isEdgePass uniform (false for original geometry pass). A later pass overrides this.
@@ -755,8 +765,9 @@ function createCPULineEdgeGeometry(
   };
 
   const edgeFeatureIds = getFeatureIdForEdge();
+  const hasEdgeFeatureIds = defined(edgeFeatureIds);
 
-  if (defined(edgeFeatureIds)) {
+  if (hasEdgeFeatureIds) {
     const edgeFeatureIdBuffer = Buffer.createVertexBuffer({
       context,
       typedArray: edgeFeatureIds,
@@ -778,7 +789,12 @@ function createCPULineEdgeGeometry(
     return undefined;
   }
 
-  return { vertexArray, indexBuffer, indexCount: totalVerts };
+  return {
+    vertexArray,
+    indexBuffer,
+    indexCount: totalVerts,
+    hasEdgeFeatureIds,
+  };
 }
 
 export default EdgeVisibilityPipelineStage;

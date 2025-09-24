@@ -71,7 +71,11 @@ void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
         // Write edge metadata
         out_id = vec4(0.0);
         out_id.r = edgeTypeInt;                    // Edge type (0-3)
+#ifdef HAS_EDGE_FEATURE_ID
         out_id.g = float(featureIds.featureId_0); // Feature ID if available
+#else
+        out_id.g = 0.0;
+#endif
         // Pack depth into separate MRT attachment
         out_edgeDepth = czm_packDepth(gl_FragCoord.z);
     #endif
