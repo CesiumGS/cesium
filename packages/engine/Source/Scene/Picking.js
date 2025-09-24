@@ -262,9 +262,9 @@ function computePickingDrawingBufferRectangle(
 }
 
 /**
- * Returns an object with a <code>primitive</code> property that contains the first (top) primitive in the scene
- * at a particular window coordinate or undefined if nothing is at the location. Other properties may
- * potentially be set depending on the type of primitive and may be used to further identify the picked object.
+ * Returns a list of objects with a <code>primitive</code> property that contains the first (top) primitives
+ * in the scene at a particular window coordinate. Other properties may potentially be set depending on the
+ * type of primitive and may be used to further identify the picked object.
  * <p>
  * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
  * </p>
@@ -272,13 +272,21 @@ function computePickingDrawingBufferRectangle(
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {object | undefined} Object containing the picked primitive.
+ * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
+ * @returns {object[]} Objects containing the picked primitives.
  */
-Picking.prototype.pick = function (scene, windowPosition, width, height) {
+Picking.prototype.pick = function (
+  scene,
+  windowPosition,
+  width,
+  height,
+  limit,
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
 
+  limit = limit ?? 1;
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
 
@@ -328,7 +336,7 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
-  const object = pickFramebuffer.end(drawingBufferRectangle);
+  const object = pickFramebuffer.end(drawingBufferRectangle, limit);
   context.endFrame();
   return object;
 };
@@ -725,59 +733,60 @@ function drillPick(limit, pickCallback) {
     limit = Number.MAX_VALUE;
   }
 
-  let pickedResult = pickCallback();
-  while (defined(pickedResult)) {
-    const object = pickedResult.object;
-    const position = pickedResult.position;
-    const exclude = pickedResult.exclude;
+  let pickedResults = pickCallback();
+  while (defined(pickedResults) && pickedResults.length) {
+    for (const pickedResult of pickedResults) {
+      const object = pickedResult.object;
+      const position = pickedResult.position;
+      const exclude = pickedResult.exclude;
 
-    if (defined(position) && !defined(object)) {
-      result.push(pickedResult);
-      break;
-    }
-
-    if (!defined(object) || !defined(object.primitive)) {
-      break;
-    }
-
-    if (!exclude) {
-      result.push(pickedResult);
-      if (0 >= --limit) {
+      if (defined(position) && !defined(object)) {
+        result.push(pickedResult);
         break;
       }
-    }
 
-    const primitive = object.primitive;
-    let hasShowAttribute = false;
+      if (!defined(object) || !defined(object.primitive)) {
+        break;
+      }
 
-    // If the picked object has a show attribute, use it.
-    if (typeof primitive.getGeometryInstanceAttributes === "function") {
-      if (defined(object.id)) {
-        attributes = primitive.getGeometryInstanceAttributes(object.id);
-        if (defined(attributes) && defined(attributes.show)) {
-          hasShowAttribute = true;
-          attributes.show = ShowGeometryInstanceAttribute.toValue(
-            false,
-            attributes.show,
-          );
-          pickedAttributes.push(attributes);
+      if (!exclude) {
+        result.push(pickedResult);
+        if (0 >= --limit) {
+          break;
         }
       }
-    }
 
-    if (object instanceof Cesium3DTileFeature) {
-      hasShowAttribute = true;
-      object.show = false;
-      pickedFeatures.push(object);
-    }
+      const primitive = object.primitive;
+      let hasShowAttribute = false;
 
-    // Otherwise, hide the entire primitive
-    if (!hasShowAttribute) {
-      primitive.show = false;
-      pickedPrimitives.push(primitive);
-    }
+      // If the picked object has a show attribute, use it.
+      if (typeof primitive.getGeometryInstanceAttributes === "function") {
+        if (defined(object.id)) {
+          attributes = primitive.getGeometryInstanceAttributes(object.id);
+          if (defined(attributes) && defined(attributes.show)) {
+            hasShowAttribute = true;
+            attributes.show = ShowGeometryInstanceAttribute.toValue(
+              false,
+              attributes.show,
+            );
+            pickedAttributes.push(attributes);
+          }
+        }
+      }
 
-    pickedResult = pickCallback();
+      if (object instanceof Cesium3DTileFeature) {
+        hasShowAttribute = true;
+        object.show = false;
+        pickedFeatures.push(object);
+      }
+
+      // Otherwise, hide the entire primitive
+      if (!hasShowAttribute) {
+        primitive.show = false;
+        pickedPrimitives.push(primitive);
+      }
+    }
+    pickedResults = pickCallback();
   }
 
   // Unhide everything we hid while drill picking
@@ -808,15 +817,22 @@ Picking.prototype.drillPick = function (
   height,
 ) {
   const that = this;
+  if (!defined(limit)) {
+    limit = Number.MAX_VALUE;
+  }
   const pickCallback = function () {
-    const object = that.pick(scene, windowPosition, width, height);
-    if (defined(object)) {
-      return {
-        object: object,
-        position: undefined,
-        exclude: false,
-      };
-    }
+    const pickedObjects = that.pick(
+      scene,
+      windowPosition,
+      width,
+      height,
+      limit,
+    );
+    return pickedObjects.map((object) => ({
+      object: object,
+      position: undefined,
+      exclude: false,
+    }));
   };
   const objects = drillPick(limit, pickCallback);
   return objects.map(function (element) {
@@ -1044,13 +1060,15 @@ function getRayIntersection(
   context.endFrame();
 
   if (defined(object) || defined(position)) {
-    return {
-      object: object,
-      position: position,
-      exclude:
-        (!defined(position) && requirePosition) ||
-        isExcluded(object, objectsToExclude),
-    };
+    return [
+      {
+        object: object,
+        position: position,
+        exclude:
+          (!defined(position) && requirePosition) ||
+          isExcluded(object, objectsToExclude),
+      },
+    ];
   }
 }
 
