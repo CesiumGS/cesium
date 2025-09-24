@@ -1442,11 +1442,6 @@ Context.prototype.endFrame = function () {
 };
 
 /**
- * @type {TypedArray}
- */
-let scratchPixels;
-
-/**
  * @private
  * @param {object} readState An object with the following properties:
  * @param {number} [readState.x=0] The x offset of the rectangle to read from.
@@ -1476,16 +1471,12 @@ Context.prototype.readPixels = function (readState) {
     pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
   }
 
-  const length =
-    PixelFormat.componentsLength(PixelFormat.RGBA) * width * height;
-  if (!defined(scratchPixels) || scratchPixels.length !== length) {
-    scratchPixels = PixelFormat.createTypedArray(
-      PixelFormat.RGBA,
-      pixelDatatype,
-      width,
-      height,
-    );
-  }
+  const pixels = PixelFormat.createTypedArray(
+    PixelFormat.RGBA,
+    pixelDatatype,
+    width,
+    height,
+  );
 
   bindFramebuffer(this, framebuffer);
 
@@ -1496,10 +1487,10 @@ Context.prototype.readPixels = function (readState) {
     height,
     PixelFormat.RGBA,
     PixelDatatype.toWebGLConstant(pixelDatatype, this),
-    scratchPixels,
+    pixels,
   );
 
-  return scratchPixels;
+  return pixels;
 };
 
 const viewportQuadAttributeLocations = {
