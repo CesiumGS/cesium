@@ -10,8 +10,34 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 const trailingSlashRegex = /\/$/;
 
 /**
+ * @typedef {Object} Google2DImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the Google2DImageryProvider constructor
+ *
+ * @property {object} options Object with the following properties:
+ * @property {string} options.key the Google api key
+ * @property {string} options.session The Google session token that tracks the current state of your map and viewport.
+ * @property {(string|IonResource)} options.url The url for the google API tile service, or IonResource for the ion proxy endpoint.
+ * @property {string} options.tileWidth The width of each tile in pixels.
+ * @property {string} options.tileHeight The height of each tile in pixels.
+ * @property {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
+ * @property {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+ *                 to result in rendering problems.
+ * @property {number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @example
+ * // Google 2D imagery provider
+ * const googleTilesProvider = Cesium.Google2DImageryProvider({
+ *     key: 'thisIsMyApiKey',
+ *     session: 'thisIsSessionToken'
+ * });
+ *
+ */
+
+/**
  * <div class="notice">
- * This object is normally not instantiated directly, use {@link Google2DImageryProvider.fromMapType} or {@link Google2DImageryProvider.fromSessionToken}.
+ * This object is normally not instantiated directly, use {@link Google2DImageryProvider.fromMapType} or {@link Google2DImageryProvider.fromIon}.
  * </div>
  *
  *
@@ -24,7 +50,7 @@ const trailingSlashRegex = /\/$/;
  *
  * @example
  * // Google 2D imagery provider
- * const googleTilesProvider = Cesium.Google2DImageryProvider.fromSessionToken({
+ * const googleTilesProvider = new Cesium.Google2DImageryProvider({
  *     apiKey: 'thisIsMyApiKey',
  *     sessionToken: 'thisIsSessionToken'
  * });
@@ -43,12 +69,78 @@ const trailingSlashRegex = /\/$/;
  * @see {@link https://en.wikipedia.org/wiki/IETF_language_tag|IETF Language Tags}
  * @see {@link https://cldr.unicode.org/|Common Locale Data Repository region identifiers}
  */
+
 function Google2DImageryProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.session)) {
+    throw new DeveloperError("options.session is required.");
+  }
+  //>>includeEnd('debug');
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.tileWidth)) {
+    throw new DeveloperError("options.tileWidth is required.");
+  }
+  //>>includeEnd('debug');
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.tileHeight)) {
+    throw new DeveloperError("options.tileHeight is required.");
+  }
+  //>>includeEnd('debug');
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.key)) {
+    throw new DeveloperError("options.key is required.");
+  }
+  //>>includeEnd('debug');
+
   this._session = options.session;
   this._key = options.key;
   this._tileWidth = options.tileWidth;
   this._tileHeight = options.tileHeight;
+
+  const resource =
+    options.url instanceof IonResource
+      ? options.url
+      : Resource.createIfNeeded(options.url ?? "https://tile.googleapis.com");
+
+  let templateUrl = resource.getUrlComponent();
+  if (!trailingSlashRegex.test(templateUrl)) {
+    templateUrl += "/";
+  }
+  templateUrl += `v1/2dtiles/{z}/{x}/{y}`;
+
+  resource.url = templateUrl;
+
+  resource.setQueryParameters({
+    session: encodeURIComponent(options.session),
+    key: encodeURIComponent(options.key),
+  });
+
+  let credit;
+  if (defined(options.credit)) {
+    credit = options.credit;
+    if (typeof credit === "string") {
+      credit = new Credit(credit);
+    }
+  }
+
+  const provider = new UrlTemplateImageryProvider({
+    url: resource,
+    credit: credit,
+    tileWidth: options.tileWidth,
+    tileHeight: options.tileHeight,
+    maximumLevel: 22,
+    ellipsoid: options.ellipsoid,
+    rectangle: options.rectangle,
+  });
+  provider._resource = resource;
+
+  //const imageryProvider = new Google2DImageryProvider(options);
+  this._imageryProvider = provider;
+  return;
 }
 
 Object.defineProperties(Google2DImageryProvider.prototype, {
@@ -282,107 +374,13 @@ Google2DImageryProvider.fromMapType = async function (options) {
 
   const sessionJson = await createGoogleImagerySession(options);
 
-  return Google2DImageryProvider.fromSessionToken({
+  return new Google2DImageryProvider({
     session: sessionJson.session,
     key: options.apiKey,
     tileWidth: sessionJson.tileWidth,
     tileHeight: sessionJson.tileHeight,
     ...options,
   });
-};
-
-/**
- * Creates an {@link ImageryProvider} which provides 2D global tiled imagery from Google.
- *
- * @param {object} options Object with the following properties:
- * @param {string} options.key the Google api key
- * @param {string} options.session The Google session token that tracks the current state of your map and viewport.
- * @param {(string|IonResource)} options.url The url for the google API tile service, or IonResource for the ion proxy endpoint.
- * @param {string} options.tileWidth The width of each tile in pixels.
- * @param {string} options.tileHeight The height of each tile in pixels.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
- * @param {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
- *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
- *                 to result in rendering problems.
- * @param {number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
- * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- *
- * @returns {Promise<Google2DImageryProvider>} A promise that resolves to the created Google2DImageryProvider.
- *
- * @example
- * // Google 2D imagery provider
- * const googleTilesProvider = Cesium.Google2DImageryProvider.fromSessionToken({
- *     apiKey: 'thisIsMyApiKey',
- *     sessionToken: 'thisIsSessionToken'
- * });
- *
- */
-
-Google2DImageryProvider.fromSessionToken = function (options) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.session)) {
-    throw new DeveloperError("options.session is required.");
-  }
-  //>>includeEnd('debug');
-
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.tileWidth)) {
-    throw new DeveloperError("options.tileWidth is required.");
-  }
-  //>>includeEnd('debug');
-
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.tileHeight)) {
-    throw new DeveloperError("options.tileHeight is required.");
-  }
-  //>>includeEnd('debug');
-
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.key)) {
-    throw new DeveloperError("options.key is required.");
-  }
-  //>>includeEnd('debug');
-
-  const resource =
-    options.url instanceof IonResource
-      ? options.url
-      : Resource.createIfNeeded(options.url ?? "https://tile.googleapis.com");
-
-  let templateUrl = resource.getUrlComponent();
-  if (!trailingSlashRegex.test(templateUrl)) {
-    templateUrl += "/";
-  }
-  templateUrl += `v1/2dtiles/{z}/{x}/{y}`;
-
-  resource.url = templateUrl;
-
-  resource.setQueryParameters({
-    session: encodeURIComponent(options.session),
-    key: encodeURIComponent(options.key),
-  });
-
-  let credit;
-  if (defined(options.credit)) {
-    credit = options.credit;
-    if (typeof credit === "string") {
-      credit = new Credit(credit);
-    }
-  }
-
-  const provider = new UrlTemplateImageryProvider({
-    url: resource,
-    credit: credit,
-    tileWidth: options.tileWidth,
-    tileHeight: options.tileHeight,
-    maximumLevel: 22,
-    ellipsoid: options.ellipsoid,
-    rectangle: options.rectangle,
-  });
-  provider._resource = resource;
-
-  const imageryProvider = new Google2DImageryProvider(options);
-  imageryProvider._imageryProvider = provider;
-  return imageryProvider;
 };
 
 /**
