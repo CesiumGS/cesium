@@ -141,7 +141,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
@@ -150,8 +150,8 @@ describe(
           "uniform vec4 czm_pickColor;",
         ]);
 
-        const pickObject =
-          context._pickObjects[Object.keys(context._pickObjects)[0]];
+        console.log(context._pickObjects);
+        const pickObject = context._pickObjects.values().next().value;
         expect(pickObject).toBe(customPickObject);
 
         const uniformMap = renderResources.uniformMap;
@@ -182,7 +182,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
@@ -191,8 +191,7 @@ describe(
           "uniform vec4 czm_pickColor;",
         ]);
 
-        const pickObject =
-          context._pickObjects[Object.keys(context._pickObjects)[0]];
+        const pickObject = context._pickObjects.values().next().value;
         verifyPickObject(pickObject, renderResources);
 
         const uniformMap = renderResources.uniformMap;
@@ -216,7 +215,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
@@ -225,8 +224,7 @@ describe(
           "uniform vec4 czm_pickColor;",
         ]);
 
-        const pickObject =
-          context._pickObjects[Object.keys(context._pickObjects)[0]];
+        const pickObject = context._pickObjects.values().next().value;
         verifyPickObject(pickObject, renderResources);
 
         const uniformMap = renderResources.uniformMap;
@@ -251,7 +249,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
@@ -260,8 +258,7 @@ describe(
           "uniform vec4 czm_pickColor;",
         ]);
 
-        const pickObject =
-          context._pickObjects[Object.keys(context._pickObjects)[0]];
+        const pickObject = context._pickObjects.values().next().value;
         verifyPickObject(pickObject, renderResources, undefined);
         expect(pickObject.id).toBe(mockIdObject);
 
@@ -291,7 +288,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
@@ -306,7 +303,7 @@ describe(
         let i = 0;
         for (const key in context._pickObjects) {
           if (context._pickObjects.hasOwnProperty(key)) {
-            const pickObject = context._pickObjects[key];
+            const pickObject = context._pickObjects.get(key);
             verifyPickObject(pickObject, renderResources, i++);
           }
         }
@@ -353,7 +350,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
