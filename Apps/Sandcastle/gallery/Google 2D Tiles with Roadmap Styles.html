@@ -30,14 +30,14 @@
         const apiKey = "";
 
         const base = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.Google2DImageryProvider.fromMapType({
+          Cesium.Google2DImageryProvider.fromUrl({
             key: apiKey,
             mapType: "satellite",
           }),
         );
 
         const overlay = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.Google2DImageryProvider.fromMapType({
+          Cesium.Google2DImageryProvider.fromUrl({
             key: apiKey,
             overlayLayerType: "layerRoadmap",
             styles: [

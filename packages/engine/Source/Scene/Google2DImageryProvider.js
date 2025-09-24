@@ -37,7 +37,7 @@ const trailingSlashRegex = /\/$/;
 
 /**
  * <div class="notice">
- * This object is normally not instantiated directly, use {@link Google2DImageryProvider.fromMapType} or {@link Google2DImageryProvider.fromIon}.
+ * This object is normally not instantiated directly, use {@link Google2DImageryProvider.fromIon} or {@link Google2DImageryProvider.fromUrl}.
  * </div>
  *
  *
@@ -50,19 +50,17 @@ const trailingSlashRegex = /\/$/;
  *
  * @example
  * // Google 2D imagery provider
- * const googleTilesProvider = new Cesium.Google2DImageryProvider({
- *     apiKey: 'thisIsMyApiKey',
- *     sessionToken: 'thisIsSessionToken'
+ * const googleTilesProvider = Cesium.Google2DImageryProvider.fromIon({
+ *     assetId: 1687
+ * });
+  * @example
+ * // Google 2D imagery provider
+ * const googleTilesProvider = Cesium.Google2DImageryProvider.fromUrl({
+ *     key: 'thisIsMyApiKey',
+ *     mapType: "SATELLITE"
  * });
  *
- * @example
- * // Google 2D imagery provider
- * const googleTilesProvider = Cesium.Google2DImageryProvider.fromMapType({
- *     apiKey: 'thisIsMyApiKey',
- *     mapType: "SATELLITE",
- *     language: "en_US",
- *     region: "US"
- * });
+
  *
  * @see {@link https://developers.google.com/maps/documentation/tile/2d-tiles-overview}
  * @see {@link https://developers.google.com/maps/documentation/tile/session_tokens}
@@ -305,7 +303,7 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
 /**
  * Creates an {@link ImageryProvider} which provides 2D global tiled imagery from Google.
  * @param {object} options Object with the following properties:
- * @param {string} options.key the Google api key
+ * @param {string} options.assetId The assetId to call in Cesium ion. This must be an Imagery asset with externalType = "GOOGLE_2D_MAPS".
  * @param {"satellite" | "terrain" | "roadmap"} [options.mapType="satellite"] The map type of the Google map imagery. Valid options are satellite, terrain, and roadmap. If overlayLayerType is set, mapType is ignored and a transparent overlay is returned. If overlayMapType is undefined, then a basemap of mapType is returned. layerRoadmap overlayLayerType is included in terrain and roadmap mapTypes.
  * @param {string} [options.language='en_US'] an IETF language tag that specifies the language used to display information on the tiles
  * @param {string} [options.region='US'] A Common Locale Data Repository region identifier (two uppercase letters) that represents the physical location of the user.
@@ -323,18 +321,88 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
  *
  * @example
  * // Google 2D imagery provider
- * const googleTilesProvider = Cesium.Google2DImageryProvider.fromMapType({
- *     apiKey: 'thisIsMyApiKey',
- *     mapType: "SATELLITE",
- *     language: "en_US",
- *     region: "US"
+ * const googleTilesProvider = Cesium.Google2DImageryProvider.fromIon({
+ *     assetId: 1687
  * });
  */
 
-Google2DImageryProvider.fromMapType = async function (options) {
+Google2DImageryProvider.fromIon = async function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
-
   options.mapType = options.mapType ?? "satellite";
+  options.language = options.language ?? "en_US";
+  options.region = options.region ?? "US";
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!["satellite", "terrain", "roadmap"].includes(options.mapType)) {
+    throw new DeveloperError(
+      "valid values for options.mapType satellite, terrain, or roadmap",
+    );
+  }
+  //>>includeEnd('debug');
+
+  //>>includeStart('debug', pragmas.debug);
+  if (defined(options.overlayLayerType)) {
+    if (
+      !["layerRoadmap", "layerStreetview", "layerTraffic"].includes(
+        options.overlayLayerType,
+      )
+    ) {
+      throw new DeveloperError(
+        "valid values for options.overlayLayerType are layerRoadmap, layerStreetview or layerTraffic",
+      );
+    }
+  }
+  //>>includeEnd('debug');
+
+  const endpointJson = await createIonImagerySession(options);
+
+  const endpointOptions = { ...endpointJson.options };
+  const url = endpointOptions.url;
+  delete endpointOptions.url;
+
+  return new Google2DImageryProvider({
+    session: endpointOptions.session,
+    key: options.apiKey,
+    tileWidth: endpointOptions.tileWidth,
+    tileHeight: endpointOptions.tileHeight,
+    url,
+    ...endpointOptions,
+  });
+};
+
+/**
+ * Creates an {@link ImageryProvider} which provides 2D global tiled imagery from Google.
+ * @param {object} options Object with the following properties:
+ * @param {string} options.assetId The assetId to call in Cesium ion. This must be an Imagery asset with externalType = "GOOGLE_2D_MAPS".
+ * @param {string} options.key The Google api key
+ * @param {"satellite" | "terrain" | "roadmap"} [options.mapType="satellite"] The map type of the Google map imagery. Valid options are satellite, terrain, and roadmap. If overlayLayerType is set, mapType is ignored and a transparent overlay is returned. If overlayMapType is undefined, then a basemap of mapType is returned. layerRoadmap overlayLayerType is included in terrain and roadmap mapTypes.
+ * @param {string} [options.language='en_US'] an IETF language tag that specifies the language used to display information on the tiles
+ * @param {string} [options.region='US'] A Common Locale Data Repository region identifier (two uppercase letters) that represents the physical location of the user.
+ * @param {"layerRoadmap" | "layerStreetview" | "layerTraffic"} [options.overlayLayerType=undefined] Returns a transparent overlay map with the specified layerType. If no value is provided, a basemap of mapType is returned. Use multiple instances of Google2DImageryProvider to add multiple Google Maps overlays to a scene. layerRoadmap is included in terrain and roadmap mapTypes, so adding as overlay to terrain or roadmap has no effect.
+ * @param {Object} [options.styles] An array of JSON style objects that specify the appearance and detail level of map features such as roads, parks, and built-up areas. Styling is used to customize the standard Google base map. The styles parameter is valid only if the mapType is roadmap. For the complete style syntax, see the ({@link https://developers.google.com/maps/documentation/tile/style-reference|Google Style Reference}).
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
+ * @param {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+ *                 to result in rendering problems.
+ * @param {number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
+ *
+ * @returns {Promise<Google2DImageryProvider>} A promise that resolves to the created Google2DImageryProvider.
+ *
+ * @example
+ * // Google 2D imagery provider
+ * const googleTilesProvider = Cesium.Google2DImageryProvider.fromUrl({
+ *     apiKey: 'thisIsMyApiKey',
+ *     mapType: "SATELLITE"
+ * });
+ */
+
+Google2DImageryProvider.fromUrl = async function (options) {
+  options = options ?? Frozen.EMPTY_OBJECT;
+  options.mapType = options.mapType ?? "satellite";
+  options.language = options.language ?? "en_US";
+  options.region = options.region ?? "US";
 
   //>>includeStart('debug', pragmas.debug);
   if (!["satellite", "terrain", "roadmap"].includes(options.mapType)) {
@@ -361,14 +429,6 @@ Google2DImageryProvider.fromMapType = async function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.key)) {
     throw new DeveloperError("options.key is required.");
-  }
-  //>>includeEnd('debug');
-
-  //>>includeStart('debug', pragmas.debug);
-  if (defined(options.session)) {
-    throw new DeveloperError(
-      "use Google2DImageryProvider.fromSessionToken if you have a valid session token",
-    );
   }
   //>>includeEnd('debug');
 
@@ -464,4 +524,41 @@ async function createGoogleImagerySession(options) {
   return responseJson;
 }
 
+async function createIonImagerySession(options) {
+  const { assetId, mapType, overlayLayerType, styles, language, region } =
+    options;
+
+  let overlay = false;
+  let sessionMapType = mapType;
+  if (defined(overlayLayerType)) {
+    sessionMapType = "satellite";
+    overlay = true;
+  }
+
+  const endpointResource = IonResource._createEndpointResource(assetId, {
+    queryParameters: {
+      google2dOptions: {
+        mapType: sessionMapType,
+        overlay,
+        overlayLayerType,
+        styles,
+        language,
+        region,
+      },
+    },
+  });
+
+  const cacheKey = assetId.toString() + options.accessToken + options.server;
+  let promise = Google2DImageryProvider._endpointCache[cacheKey];
+  if (!defined(promise)) {
+    promise = endpointResource.fetchJson();
+    Google2DImageryProvider._endpointCache[cacheKey] = promise;
+  }
+
+  const endpoint = await promise;
+  return endpoint;
+}
+
+// exposed for testing
+Google2DImageryProvider._endpointCache = {};
 export default Google2DImageryProvider;
