@@ -119,7 +119,7 @@ describe(
       expect(tile.content).toBeUndefined();
     });
 
-    it("Load multiple instances of Gaussian splat tileset and validate positions", async function () {
+    it("Load multiple instances of Gaussian splat tileset and validate transformed attributes", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         tilesetUrl,
@@ -170,6 +170,16 @@ describe(
       const positions2 = tile2.content._positions;
 
       expect(positions1.every((p, i) => p === positions2[i])).toBe(true);
+
+      const rotations1 = tile.content._rotations;
+      const rotations2 = tile2.content._rotations;
+
+      expect(rotations1.every((r, i) => r === rotations2[i])).toBe(true);
+
+      const scales1 = tile.content._scales;
+      const scales2 = tile2.content._scales;
+
+      expect(scales1.every((s, i) => s === scales2[i])).toBe(true);
     });
   },
   "WebGL",

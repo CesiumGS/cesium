@@ -381,18 +381,32 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Get the transformed positions of this tile's Gaussian splats.
+   * @type {undefined|Float32Array}
+   * @private
+   */
   positions: {
     get: function () {
       return this._positions;
     },
   },
-
+  /**
+   * Get the transformed rotations of this tile's Gaussian splats.
+   * @type {undefined|Float32Array}
+   * @private
+   */
   rotations: {
     get: function () {
       return this._rotations;
     },
   },
 
+  /**
+   * Get the transformed scales of this tile's Gaussian splats.
+   * @type {undefined|Float32Array}
+   * @private
+   */
   scales: {
     get: function () {
       return this._scales;
