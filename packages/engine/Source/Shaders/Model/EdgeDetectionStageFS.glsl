@@ -1,4 +1,4 @@
-﻿void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
+void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
     if (u_isEdgePass) {
         return;
     }
@@ -44,12 +44,9 @@
 #ifdef HAS_EDGE_FEATURE_ID
         bool hasEdgeFeature = edgeFeatureId > 0.0;
         bool hasCurrentFeature = currentFeatureId > 0.0;
+        bool featuresMatch = edgeFeatureId == currentFeatureId;
 
-        if (hasEdgeFeature && hasCurrentFeature) {
-            drawEdge = drawEdge || (edgeFeatureId == currentFeatureId);
-        } else {
-            drawEdge = true;
-        }
+        drawEdge = drawEdge || !hasEdgeFeature || !hasCurrentFeature || featuresMatch;
 #else
         drawEdge = true;
 #endif
