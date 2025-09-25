@@ -838,10 +838,24 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       return;
     }
 
-    if (
-      tileset._selectedTiles.length !== 0 &&
-      tileset._selectedTiles.length !== this.selectedTileLength
-    ) {
+    const selectionChanged = () => {
+      const currentSelection = tileset._selectedTiles;
+      if (this._previousSelectionLength !== currentSelection.length) {
+        this._previousSelectionLength = currentSelection.length;
+        return true;
+      }
+      for (let i = 0; i < currentSelection.length; i++) {
+        if (!currentSelection[i]._wasSelectedLastFrame) {
+          this._previousSelectionLength = currentSelection.length;
+          return true;
+        }
+      }
+
+      this._previousSelectionLength = currentSelection.length;
+      return false;
+    };
+
+    if (selectionChanged()) {
       this._numSplats = 0;
       this._positions = undefined;
       this._rotations = undefined;
