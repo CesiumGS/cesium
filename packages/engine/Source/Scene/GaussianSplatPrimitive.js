@@ -32,6 +32,7 @@ import Quaternion from "../Core/Quaternion.js";
 import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
+import Transforms from "../Core/Transforms.js";
 
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4B = new Matrix4();
@@ -427,6 +428,13 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const gltfPrimitive = tile.content.gltfPrimitive;
   const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
 
+  if (gaussianSplatPrimitive._rootTransform === undefined) {
+    gaussianSplatPrimitive._rootTransform = Transforms.eastNorthUpToFixedFrame(
+      tile.tileset.boundingSphere.center,
+    );
+  }
+  const rootTransform = gaussianSplatPrimitive._rootTransform;
+
   const computedModelMatrix = Matrix4.multiplyTransformation(
     computedTransform,
     gaussianSplatPrimitive._axisCorrectionMatrix,
@@ -441,7 +449,7 @@ GaussianSplatPrimitive.transformTile = function (tile) {
 
   const toGlobal = Matrix4.multiply(
     tile.tileset.modelMatrix,
-    Matrix4.fromArray(tile.tileset.root.transform),
+    Matrix4.fromArray(rootTransform),
     scratchMatrix4B,
   );
   const toLocal = Matrix4.inverse(toGlobal, scratchMatrix4C);
@@ -765,7 +773,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   const modelMatrix = Matrix4.multiply(
     tileset.modelMatrix,
-    Matrix4.fromArray(tileset.root.transform),
+    Matrix4.fromArray(primitive._rootTransform),
     scratchMatrix4B,
   );
 
