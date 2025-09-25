@@ -11,6 +11,7 @@ import {
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/GaussianSplat3DTileContent",
@@ -96,6 +97,7 @@ describe(
         },
       );
     });
+
     it("Create and destroy GaussianSplat3DTileContent", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
@@ -115,6 +117,69 @@ describe(
       expect(tileset.isDestroyed()).toBe(true);
       expect(tile.isDestroyed()).toBe(true);
       expect(tile.content).toBeUndefined();
+    });
+
+    it("Load multiple instances of Gaussian splat tileset and validate transformed attributes", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrl,
+        options,
+      );
+      scene.camera.lookAt(
+        tileset.boundingSphere.center,
+        new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+      );
+
+      const tileset2 = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrl,
+        options,
+      );
+
+      const tile = await Cesium3DTilesTester.waitForTileContentReady(
+        scene,
+        tileset.root,
+      );
+
+      scene.camera.lookAt(
+        tileset2.boundingSphere.center,
+        new HeadingPitchRange(0.0, -1.57, tileset2.boundingSphere.radius),
+      );
+
+      const tile2 = await Cesium3DTilesTester.waitForTileContentReady(
+        scene,
+        tileset2.root,
+      );
+      const content = tile.content;
+      const content2 = tile2.content;
+
+      expect(content).toBeDefined();
+      expect(content instanceof GaussianSplat3DTileContent).toBe(true);
+      expect(content2).toBeDefined();
+      expect(content2 instanceof GaussianSplat3DTileContent).toBe(true);
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return (
+          tile.content._transformed === true &&
+          tile2.content._transformed === true
+        );
+      });
+
+      const positions1 = tile.content._positions;
+      const positions2 = tile2.content._positions;
+
+      expect(positions1.every((p, i) => p === positions2[i])).toBe(true);
+
+      const rotations1 = tile.content._rotations;
+      const rotations2 = tile2.content._rotations;
+
+      expect(rotations1.every((r, i) => r === rotations2[i])).toBe(true);
+
+      const scales1 = tile.content._scales;
+      const scales2 = tile2.content._scales;
+
+      expect(scales1.every((s, i) => s === scales2[i])).toBe(true);
     });
   },
   "WebGL",
