@@ -4,8 +4,11 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import IonResource from "../Core/IonResource.js";
-//import Rectangle from "../Core/Rectangle.js";
+import Rectangle from "../Core/Rectangle.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
+import TileAvailability from "../Core/TileAvailability.js";
+import CesiumMath from "../Core/Math.js";
+import Cartographic from "../Core/Cartographic.js";
 
 const trailingSlashRegex = /\/$/;
 
@@ -108,9 +111,10 @@ function Google2DImageryProvider(options) {
   if (!trailingSlashRegex.test(templateUrl)) {
     templateUrl += "/";
   }
-  templateUrl += `v1/2dtiles/{z}/{x}/{y}`;
+  const tilesUrl = `${templateUrl}v1/2dtiles/{z}/{x}/{y}`;
+  this._viewportUrl = `${templateUrl}tile/v1/viewport`;
 
-  resource.url = templateUrl;
+  resource.url = tilesUrl;
 
   resource.setQueryParameters({
     session: encodeURIComponent(options.session),
@@ -125,19 +129,34 @@ function Google2DImageryProvider(options) {
     }
   }
 
+  this._maximumLevel = 22;
+
   const provider = new UrlTemplateImageryProvider({
     url: resource,
     credit: credit,
     tileWidth: options.tileWidth,
     tileHeight: options.tileHeight,
-    maximumLevel: 22,
     ellipsoid: options.ellipsoid,
     rectangle: options.rectangle,
+    maximumLevel: this._maximumLevel,
   });
   provider._resource = resource;
-
-  //const imageryProvider = new Google2DImageryProvider(options);
   this._imageryProvider = provider;
+
+  this._tilingScheme = this._imageryProvider._tilingScheme;
+  this._tileAvailability = new TileAvailability(
+    this._imageryProvider._tilingScheme,
+    this._maximumLevel,
+  );
+  this._tileAvailabilityComplete = new TileAvailability(
+    this._imageryProvider._tilingScheme,
+    this._maximumLevel,
+  );
+  console.log(
+    "this._imageryProvider._tilingScheme ",
+    this._imageryProvider._tilingScheme,
+  );
+
   return;
 }
 
@@ -459,6 +478,8 @@ Google2DImageryProvider.prototype.getTileCredits = async function (
   return undefined;
 };
 
+const rectangleScratch = new Rectangle();
+
 /**
  * Requests the image for a given tile.
  *
@@ -469,12 +490,89 @@ Google2DImageryProvider.prototype.getTileCredits = async function (
  * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  */
-Google2DImageryProvider.prototype.requestImage = function (
+Google2DImageryProvider.prototype.requestImage = async function (
   x,
   y,
   level,
   request,
 ) {
+  const isAvailable = this._tileAvailability.isTileAvailable(level, x, y);
+  if (isAvailable) {
+    return this._imageryProvider.requestImage(x, y, level, request);
+  }
+
+  const isAvailabilityComplete = this._tileAvailabilityComplete.isTileAvailable(
+    level,
+    x,
+    y,
+  );
+  if (isAvailabilityComplete) {
+    return undefined;
+  }
+
+  const rectangle = this._tilingScheme.tileXYToRectangle(
+    x,
+    y,
+    level,
+    rectangleScratch,
+  );
+
+  const viewport = await Resource.fetch({
+    url: this._viewportUrl,
+    queryParameters: {
+      key: this._key,
+      session: this._session,
+      zoom: level,
+      north: CesiumMath.toDegrees(rectangle.north),
+      south: CesiumMath.toDegrees(rectangle.south),
+      east: CesiumMath.toDegrees(rectangle.east),
+      west: CesiumMath.toDegrees(rectangle.west),
+    },
+    data: JSON.stringify({}),
+  });
+  const viewportJson = JSON.parse(viewport);
+
+  const maxRectCount = viewportJson.maxZoomRects.length;
+
+  const webMercatorLatLimit = 85; //85.05112878;
+
+  for (
+    let rectangleIndex = 0;
+    rectangleIndex < maxRectCount;
+    rectangleIndex++
+  ) {
+    const maxZoomRect = viewportJson.maxZoomRects[rectangleIndex];
+
+    // ToDo: scratch variable
+    const topLeftCorner = new Cartographic.fromDegrees(
+      maxZoomRect.west,
+      Math.min(maxZoomRect.north, webMercatorLatLimit),
+    );
+    const bottomRightCorner = new Cartographic.fromDegrees(
+      maxZoomRect.east,
+      Math.max(maxZoomRect.south, -webMercatorLatLimit),
+    );
+
+    const minCornerXY = this._tilingScheme.positionToTileXY(
+      topLeftCorner,
+      maxZoomRect.maxZoom,
+    );
+    const maxCornerXY = this._tilingScheme.positionToTileXY(
+      bottomRightCorner,
+      maxZoomRect.maxZoom,
+    );
+
+    this._tileAvailability.addAvailableTileRange(
+      maxZoomRect.maxZoom,
+      minCornerXY.x,
+      minCornerXY.y,
+      maxCornerXY.x,
+      maxCornerXY.y,
+    );
+  }
+  if (maxRectCount < 100) {
+    this._tileAvailabilityComplete.addAvailableTileRange(level, x, y, x, y);
+  }
   return this._imageryProvider.requestImage(x, y, level, request);
 };
 
