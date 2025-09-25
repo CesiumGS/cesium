@@ -37,9 +37,6 @@ void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
         float currentFeatureId = float(featureIds.featureId_0);
 #endif
         float globeDepth       = czm_unpackDepth(texture(czm_globeDepthTexture, screenCoord));
-        color = vec4(globeDepth, globeDepth, globeDepth, 1.0);
-        return;
-
         // Background / sky / globe: always show edge
         if (gl_FragCoord.z > globeDepth) {
             color = edgeColor;
