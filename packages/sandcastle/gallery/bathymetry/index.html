@@ -1,0 +1,44 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #colorRamp {
+    width: 100%;
+    border: 1px solid lightgray;
+  }
+
+  #minHeight {
+    text-align: right;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td><b>Elevation</b></td>
+      </tr>
+      <tr>
+        <td id="minHeight"><span data-bind="text: minHeight"></span>m</td>
+        <td><canvas id="colorRamp"></canvas></td>
+        <td><span data-bind="text: maxHeight"></span>m</td>
+      </tr>
+      <tr>
+        <td><b>Options</b></td>
+      </tr>
+      <tr>
+        <td>Exaggeration</td>
+        <td>
+          <input
+            type="range"
+            min="1"
+            max="5"
+            step="0.1"
+            data-bind="value: exaggeration, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: exaggeration" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

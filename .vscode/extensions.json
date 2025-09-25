@@ -6,6 +6,7 @@
         "cesium.gltf-vscode",
         "bierner.github-markdown-preview",
         "DavidAnson.vscode-markdownlint",
-        "streetsidesoftware.code-spell-checker"
+        "streetsidesoftware.code-spell-checker",
+        "eamodio.gitlens"
     ]
 }

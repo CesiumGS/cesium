@@ -1,0 +1,7 @@
+legacyId: Multi-part CZML.html
+title: Multi-part CZML
+description: A CZML example showing a single entity path split across multiple CZML streams.
+labels:
+  - CZML
+  - Entities
+thumbnail: thumbnail.jpg

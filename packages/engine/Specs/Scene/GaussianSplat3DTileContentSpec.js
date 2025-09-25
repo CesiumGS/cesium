@@ -65,26 +65,26 @@ describe(
             expect(content).toBeDefined();
             expect(content instanceof GaussianSplat3DTileContent).toBe(true);
 
-            const splatPrimitive = content.splatPrimitive;
-            expect(splatPrimitive).toBeDefined();
-            expect(splatPrimitive.attributes.length).toBeGreaterThan(0);
+            const gltfPrimitive = content.gltfPrimitive;
+            expect(gltfPrimitive).toBeDefined();
+            expect(gltfPrimitive.attributes.length).toBeGreaterThan(0);
             const positions = ModelUtility.getAttributeBySemantic(
-              splatPrimitive,
+              gltfPrimitive,
               VertexAttributeSemantic.POSITION,
             ).typedArray;
 
             const rotations = ModelUtility.getAttributeBySemantic(
-              splatPrimitive,
+              gltfPrimitive,
               VertexAttributeSemantic.ROTATION,
             ).typedArray;
 
             const scales = ModelUtility.getAttributeBySemantic(
-              splatPrimitive,
+              gltfPrimitive,
               VertexAttributeSemantic.SCALE,
             ).typedArray;
 
             const colors = ModelUtility.getAttributeBySemantic(
-              splatPrimitive,
+              gltfPrimitive,
               VertexAttributeSemantic.COLOR,
             ).typedArray;
 
@@ -174,26 +174,26 @@ describe(
             expect(content).toBeDefined();
             expect(content instanceof GaussianSplat3DTileContent).toBe(true);
 
-            const splatPrimitive = content.splatPrimitive;
-            expect(splatPrimitive).toBeDefined();
-            expect(splatPrimitive.attributes.length).toBeGreaterThan(0);
+            const gltfPrimitive = content.gltfPrimitive;
+            expect(gltfPrimitive).toBeDefined();
+            expect(gltfPrimitive.attributes.length).toBeGreaterThan(0);
             const positions = ModelUtility.getAttributeBySemantic(
-              splatPrimitive,
+              gltfPrimitive,
               VertexAttributeSemantic.POSITION,
             ).typedArray;
 
             const rotations = ModelUtility.getAttributeBySemantic(
-              splatPrimitive,
+              gltfPrimitive,
               VertexAttributeSemantic.ROTATION,
             ).typedArray;
 
             const scales = ModelUtility.getAttributeBySemantic(
-              splatPrimitive,
+              gltfPrimitive,
               VertexAttributeSemantic.SCALE,
             ).typedArray;
 
             const colors = ModelUtility.getAttributeBySemantic(
-              splatPrimitive,
+              gltfPrimitive,
               VertexAttributeSemantic.COLOR,
             ).typedArray;
 

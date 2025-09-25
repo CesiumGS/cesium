@@ -1,0 +1,505 @@
+import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
+
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  terrain: Cesium.Terrain.fromWorldTerrain({
+    requestWaterMask: true,
+    requestVertexNormals: true,
+  }),
+});
+
+if (!Cesium.GroundPrimitive.supportsMaterials(viewer.scene)) {
+  window.alert("GroundPrimitive materials are not supported on this platform.");
+}
+
+let rectangle;
+let worldRectangle;
+
+function applyAlphaMapMaterial(primitive, scene) {
+  Sandcastle.declare(applyAlphaMapMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = new Cesium.Material({
+    fabric: {
+      materials: {
+        alphaMaterial: {
+          type: "AlphaMap",
+          uniforms: {
+            image: "../images/Cesium_Logo_Color.jpg",
+            channel: "r",
+          },
+        },
+      },
+      components: {
+        diffuse: "vec3(1.0)",
+        alpha: "alphaMaterial.alpha",
+      },
+    },
+  });
+}
+
+function applyBumpMapMaterial(primitive, scene) {
+  Sandcastle.declare(applyBumpMapMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = new Cesium.Material({
+    fabric: {
+      materials: {
+        diffuseMaterial: {
+          type: "DiffuseMap",
+          uniforms: {
+            image: "../images/bumpmap.png",
+          },
+        },
+        bumpMaterial: {
+          type: "BumpMap",
+          uniforms: {
+            image: "../images/bumpmap.png",
+            strength: 0.8,
+          },
+        },
+      },
+      components: {
+        diffuse: "diffuseMaterial.diffuse",
+        specular: 0.01,
+        normal: "bumpMaterial.normal",
+      },
+    },
+  });
+}
+
+function applyCheckerboardMaterial(primitive, scene) {
+  Sandcastle.declare(applyCheckerboardMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = Cesium.Material.fromType("Checkerboard");
+}
+
+function applyColorMaterial(primitive, scene) {
+  Sandcastle.declare(applyColorMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = Cesium.Material.fromType("Color");
+}
+
+function applyCompositeMaterial(primitive, scene) {
+  Sandcastle.declare(applyCompositeMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = new Cesium.Material({
+    fabric: {
+      uniforms: {
+        image: "../images/earthspec1k.jpg",
+        heightField: "../images/earthbump1k.jpg",
+      },
+      materials: {
+        bumpMap: {
+          type: "BumpMap",
+          uniforms: {
+            image: "../images/earthbump1k.jpg",
+          },
+        },
+      },
+      source:
+        "czm_material czm_getMaterial(czm_materialInput materialInput) {" +
+        "czm_material material = czm_getDefaultMaterial(materialInput);" +
+        "float heightValue = texture(heightField, materialInput.st).r;" +
+        "material.diffuse = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue);" +
+        "material.alpha = (1.0 - texture(image, materialInput.st).r) * 0.7;" +
+        "material.normal = bumpMap.normal;" +
+        "material.specular = step(0.1, heightValue);" + // Specular mountain tops
+        "material.shininess = 8.0;" + // Sharpen highlight
+        "return material;" +
+        "}",
+    },
+  });
+}
+
+function applyDotMaterial(primitive, scene) {
+  Sandcastle.declare(applyDotMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = Cesium.Material.fromType("Dot");
+}
+
+function applyDiffuseMaterial(primitive, scene) {
+  Sandcastle.declare(applyDiffuseMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = new Cesium.Material({
+    fabric: {
+      type: "DiffuseMap",
+      uniforms: {
+        image: "../images/Cesium_Logo_Color.jpg",
+      },
+    },
+  });
+}
+
+function applyEmissionMapMaterial(primitive, scene) {
+  Sandcastle.declare(applyEmissionMapMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = new Cesium.Material({
+    fabric: {
+      materials: {
+        diffuseMaterial: {
+          type: "DiffuseMap",
+          uniforms: {
+            image: "../images/Cesium_Logo_Color.jpg",
+          },
+        },
+        emissionMaterial: {
+          type: "EmissionMap",
+          uniforms: {
+            image: "../images/checkerboard.png",
+            repeat: {
+              x: 1,
+              y: 0.5,
+            },
+          },
+        },
+      },
+      components: {
+        diffuse: "diffuseMaterial.diffuse",
+        emission: "emissionMaterial.emission * 0.2",
+      },
+    },
+  });
+}
+
+function applyWaterMaterial(primitive, scene) {
+  Sandcastle.declare(applyWaterMaterial); // For highlighting in Sandcastle.
+
+  primitive.appearance.material = new Cesium.Material({
+    fabric: {
+      type: "Water",
+      uniforms: {
+        specularMap: "../images/earthspec1k.jpg",
+        normalMap: Cesium.buildModuleUrl("Assets/Textures/waterNormals.jpg"),
+        frequency: 10000.0,
+        animationSpeed: 0.01,
+        amplitude: 1.0,
+      },
+    },
+  });
+}
+
+function applyGridMaterial(primitive, scene) {
+  Sandcastle.declare(applyGridMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = Cesium.Material.fromType("Grid");
+}
+
+function applyImageMaterial(primitive, scene) {
+  Sandcastle.declare(applyImageMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = new Cesium.Material({
+    fabric: {
+      type: "Image",
+      uniforms: {
+        image: "../images/Cesium_Logo_Color.jpg",
+      },
+    },
+  });
+}
+
+function applyRepeatedImage(primitive, scene) {
+  Sandcastle.declare(applyRepeatedImage); // For highlighting in Sandcastle.
+  primitive.appearance.material = new Cesium.Material({
+    fabric: {
+      type: "Image",
+      uniforms: {
+        image: "../images/Cesium_Logo_Color.jpg",
+        repeat: {
+          x: 10,
+          y: 2,
+        },
+      },
+    },
+  });
+}
+
+function applyNormalMapMaterial(primitive, scene) {
+  Sandcastle.declare(applyNormalMapMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = new Cesium.Material({
+    fabric: {
+      materials: {
+        diffuseMaterial: {
+          type: "DiffuseMap",
+          uniforms: {
+            image: "../images/bumpmap.png",
+          },
+        },
+        normalMap: {
+          type: "NormalMap",
+          uniforms: {
+            image: "../images/normalmap.png",
+            strength: 0.6,
+          },
+        },
+      },
+      components: {
+        diffuse: "diffuseMaterial.diffuse",
+        specular: 0.01,
+        normal: "normalMap.normal",
+      },
+    },
+  });
+}
+
+function applySpecularMapMaterial(primitive, scene) {
+  Sandcastle.declare(applySpecularMapMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = new Cesium.Material({
+    fabric: {
+      type: "SpecularMap",
+      uniforms: {
+        image: "../images/Cesium_Logo_Color.jpg",
+        channel: "r",
+      },
+    },
+  });
+}
+
+function applyStripeMaterial(primitive, scene) {
+  Sandcastle.declare(applyStripeMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = Cesium.Material.fromType("Stripe");
+}
+
+function applyRimLightingMaterial(primitive, scene) {
+  Sandcastle.declare(applyRimLightingMaterial); // For highlighting in Sandcastle.
+  primitive.appearance.material = Cesium.Material.fromType("RimLighting");
+}
+
+function createButtons(scene) {
+  function toggleRectangleVisibility() {
+    rectangle.show = true;
+    worldRectangle.show = false;
+  }
+
+  function toggleWorldRectangleVisibility() {
+    worldRectangle.show = true;
+    rectangle.show = false;
+  }
+
+  Sandcastle.addToolbarMenu([
+    {
+      text: "Common materials",
+    },
+    {
+      text: "Color",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applyColorMaterial(rectangle, scene);
+        Sandcastle.highlight(applyColorMaterial);
+      },
+    },
+    {
+      text: "Image",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applyImageMaterial(rectangle, scene);
+        Sandcastle.highlight(applyImageMaterial);
+      },
+    },
+    {
+      text: "Repeated/Rotated Image",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applyRepeatedImage(rectangle, scene);
+        Sandcastle.highlight(applyRepeatedImage);
+      },
+    },
+  ]);
+
+  Sandcastle.addToolbarMenu([
+    {
+      text: "Procedural textures",
+    },
+    {
+      text: "Checkerboard",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applyCheckerboardMaterial(rectangle, scene);
+        Sandcastle.highlight(applyCheckerboardMaterial);
+      },
+    },
+    {
+      text: "Dot",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applyDotMaterial(rectangle, scene);
+        Sandcastle.highlight(applyDotMaterial);
+      },
+    },
+    {
+      text: "Grid",
+      onselect: function () {
+        toggleRectangleVisibility(rectangle, worldRectangle);
+        applyGridMaterial(rectangle, scene);
+        Sandcastle.highlight(applyGridMaterial);
+      },
+    },
+    {
+      text: "Stripe",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applyStripeMaterial(rectangle, scene);
+        Sandcastle.highlight(applyStripeMaterial);
+      },
+    },
+  ]);
+
+  Sandcastle.addToolbarMenu([
+    {
+      text: "Base materials",
+    },
+    {
+      text: "Alpha Map",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applyAlphaMapMaterial(rectangle, scene);
+        Sandcastle.highlight(applyAlphaMapMaterial);
+      },
+    },
+    {
+      text: "Bump Map",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applyBumpMapMaterial(rectangle, scene);
+        Sandcastle.highlight(applyBumpMapMaterial);
+      },
+    },
+    {
+      text: "Diffuse",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applyDiffuseMaterial(rectangle, scene);
+        Sandcastle.highlight(applyDiffuseMaterial);
+      },
+    },
+    {
+      text: "Emission Map",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applyEmissionMapMaterial(rectangle, scene);
+        Sandcastle.highlight(applyEmissionMapMaterial);
+      },
+    },
+    {
+      text: "Normal Map",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applyNormalMapMaterial(rectangle, scene);
+        Sandcastle.highlight(applyNormalMapMaterial);
+      },
+    },
+    {
+      text: "Specular Map",
+      onselect: function () {
+        toggleRectangleVisibility();
+        applySpecularMapMaterial(rectangle, scene);
+        Sandcastle.highlight(applySpecularMapMaterial);
+      },
+    },
+  ]);
+
+  Sandcastle.addToolbarMenu([
+    {
+      text: "Misc materials",
+    },
+    {
+      text: "Rim Lighting",
+      onselect: function () {
+        toggleWorldRectangleVisibility();
+        applyRimLightingMaterial(worldRectangle, scene);
+        Sandcastle.highlight(applyRimLightingMaterial);
+      },
+    },
+    {
+      text: "Water",
+      onselect: function () {
+        toggleWorldRectangleVisibility();
+        applyWaterMaterial(worldRectangle, scene);
+        Sandcastle.highlight(applyWaterMaterial);
+      },
+    },
+  ]);
+
+  Sandcastle.addToolbarMenu([
+    {
+      text: "Example composite materials",
+    },
+    {
+      text: "Composite Example",
+      onselect: function () {
+        toggleWorldRectangleVisibility();
+        applyCompositeMaterial(worldRectangle, scene);
+        Sandcastle.highlight(applyCompositeMaterial);
+      },
+    },
+  ]);
+}
+
+function createPrimitives(scene) {
+  rectangle = scene.primitives.add(
+    new Cesium.GroundPrimitive({
+      geometryInstances: new Cesium.GeometryInstance({
+        geometry: new Cesium.RectangleGeometry({
+          rectangle: Cesium.Rectangle.fromCartesianArray([
+            new Cesium.Cartesian3(
+              -2358138.847340281,
+              -3744072.459541374,
+              4581158.5714175375,
+            ),
+            new Cesium.Cartesian3(
+              -2357231.4925370603,
+              -3745103.7886602185,
+              4580702.9757762635,
+            ),
+            new Cesium.Cartesian3(
+              -2355912.902205431,
+              -3744249.029778454,
+              4582402.154378103,
+            ),
+            new Cesium.Cartesian3(
+              -2357208.0209552636,
+              -3743553.4420488174,
+              4581961.863286629,
+            ),
+          ]),
+          vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+        }),
+      }),
+      appearance: new Cesium.EllipsoidSurfaceAppearance({
+        aboveGround: false,
+      }),
+      classificationType: Cesium.ClassificationType.TERRAIN,
+    }),
+  );
+
+  worldRectangle = scene.primitives.add(
+    new Cesium.GroundPrimitive({
+      geometryInstances: new Cesium.GeometryInstance({
+        geometry: new Cesium.RectangleGeometry({
+          rectangle: Cesium.Rectangle.fromDegrees(
+            -179.99,
+            -89.99,
+            179.99,
+            89.99,
+          ),
+          vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+        }),
+      }),
+      appearance: new Cesium.EllipsoidSurfaceAppearance({
+        aboveGround: false,
+      }),
+      show: false,
+      classificationType: Cesium.ClassificationType.TERRAIN,
+    }),
+  );
+
+  const initialPosition = Cesium.Cartesian3.fromRadians(
+    -2.1344873183780484,
+    0.8071380277370774,
+    5743.394497982162,
+  );
+  const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+    112.99596671210358,
+    -21.34390550872461,
+    0.0716951918898415,
+  );
+  viewer.scene.camera.setView({
+    destination: initialPosition,
+    orientation: initialOrientation,
+    endTransform: Cesium.Matrix4.IDENTITY,
+  });
+}
+
+const scene = viewer.scene;
+scene.globe.enableLighting = true;
+
+createPrimitives(scene);
+createButtons(scene);

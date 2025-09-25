@@ -1,0 +1,9 @@
+{
+    "tilejson": "2.1.0",
+    "format" : "heightmap-1.0",
+    "version" : "1.0.0",
+    "scheme" : "tms",
+    "tiles" : [
+        "11_3027_1342.terrain?v={version}&x={x}&y={y}&z={z}"
+    ]
+}
