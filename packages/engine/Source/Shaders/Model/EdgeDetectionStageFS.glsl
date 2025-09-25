@@ -1,4 +1,4 @@
-void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
+﻿void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
     if (u_isEdgePass) {
         return;
     }
@@ -38,16 +38,24 @@ void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
 #endif
         float globeDepth       = czm_unpackDepth(texture(czm_globeDepthTexture, screenCoord));
         // Background / sky / globe: always show edge
-        if (gl_FragCoord.z > globeDepth) {
-            color = edgeColor;
-            return;
-        }
+        bool isBackground = geomDepthLinear > globeDepth;
+        bool drawEdge = isBackground;
 
 #ifdef HAS_EDGE_FEATURE_ID
-        // Feature-to-feature: only draw when IDs match or one is background
-        if (edgeFeatureId > 0.0 && currentFeatureId > 0.0 && edgeFeatureId != currentFeatureId) {
-            return;
+        bool hasEdgeFeature = edgeFeatureId > 0.0;
+        bool hasCurrentFeature = currentFeatureId > 0.0;
+
+        if (hasEdgeFeature && hasCurrentFeature) {
+            drawEdge = drawEdge || (edgeFeatureId == currentFeatureId);
+        } else {
+            drawEdge = true;
         }
+#else
+        drawEdge = true;
 #endif
+
+        if (drawEdge) {
+            color = edgeColor;
+        }
     }
 }
