@@ -54,15 +54,6 @@ loader.config({ monaco });
 const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
 const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
 
-function fontLigaturesValue(fontLigaturesBool: boolean): boolean | string {
-  // Due to what seems like a bug in Monaco on some systems like Windows + Chrome
-  // the text highlighting and selection is offset from the actual values.
-  // This issue thread shows that setting the ligatures to an empty string resolves
-  // the issue. https://github.com/microsoft/monaco-editor/issues/3217#issuecomment-1511978166
-  // Testing has shown that `true` renders fine however.
-  return fontLigaturesBool ? fontLigaturesBool : "";
-}
-
 export type SandcastleEditorRef = {
   formatCode(): void;
 };
@@ -92,14 +83,32 @@ function SandcastleEditor({
   const {
     settings: { fontFamily, fontSize, fontLigatures },
   } = useContext(SettingsContext);
+  const documentRef = useRef(document);
   useEffect(() => {
-    internalEditorRef.current?.updateOptions({
-      fontFamily: availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono",
-    });
+    const cssName = availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono";
+    const fontFace = [...documentRef.current.fonts.values()].find(
+      (font) => font.family === cssName && font.weight === "400",
+    );
+    if (fontFace?.status !== "loaded") {
+      // Monaco needs to check the size of the font for things like cursor position
+      // and variable highlighting. If it does this check before the font has loaded
+      // it will get the wrong size and may be horribly offset especially with ligatures
+      // https://github.com/microsoft/monaco-editor/issues/392
+      documentRef.current.fonts.load(`1rem ${cssName}`).then(() => {
+        internalEditorRef.current?.updateOptions({
+          fontFamily: cssName,
+        });
+        monaco.editor.remeasureFonts();
+      });
+    } else {
+      internalEditorRef.current?.updateOptions({
+        fontFamily: cssName,
+      });
+    }
   }, [fontFamily]);
   useEffect(() => {
     internalEditorRef.current?.updateOptions({
-      fontLigatures: fontLigaturesValue(fontLigatures),
+      fontLigatures: fontLigatures,
     });
   }, [fontLigatures]);
   useEffect(() => {
@@ -337,7 +346,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
             fontFamily:
               availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono",
             fontSize: fontSize,
-            fontLigatures: fontLigaturesValue(fontLigatures),
+            fontLigatures: fontLigatures,
           }}
           path={activeTab === "js" ? "script.js" : "index.html"}
           language={activeTab === "js" ? "javascript" : "html"}
