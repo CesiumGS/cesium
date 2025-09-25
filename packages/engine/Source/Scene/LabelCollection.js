@@ -157,8 +157,12 @@ function rebindAllGlyphs(labelCollection, label) {
     labelCollection._backgroundBillboardCollection;
   if (!showBackground) {
     if (defined(backgroundBillboard)) {
-      backgroundBillboardCollection.remove(backgroundBillboard);
-      label._backgroundBillboard = backgroundBillboard = undefined;
+      if (label.show) {
+        backgroundBillboardCollection.remove(backgroundBillboard);
+        label._backgroundBillboard = backgroundBillboard = undefined;
+      } else {
+        backgroundBillboard.show = false;
+      }
     }
   } else {
     if (!defined(backgroundBillboard)) {
@@ -506,7 +510,7 @@ function repositionAllGlyphs(label) {
       glyphPixelOffset.y = 0;
     }
     glyphPixelOffset.y = glyphPixelOffset.y * scale;
-
+    backgroundBillboard.scale = scale;
     backgroundBillboard.width = totalLineWidth;
     backgroundBillboard.height = totalLineHeight;
     backgroundBillboard._setTranslate(glyphPixelOffset);
