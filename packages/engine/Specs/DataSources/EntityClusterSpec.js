@@ -692,6 +692,187 @@ describe(
       expect(cluster._billboardCollection).toBeDefined();
       expect(cluster._billboardCollection.length).toEqual(2);
     });
+
+    it("has declusteredEvent property", function () {
+      cluster = new EntityCluster();
+      expect(cluster.declusteredEvent).toBeDefined();
+      expect(typeof cluster.declusteredEvent.addEventListener).toEqual(
+        "function",
+      );
+    });
+
+    it("provides access to clustering data via new API methods", function () {
+      cluster = new EntityCluster();
+      cluster._initialize(scene);
+
+      expect(typeof cluster.getLastClusteredEntities).toEqual("function");
+      expect(typeof cluster.getLastDeclusteredEntities).toEqual("function");
+      expect(typeof cluster.getAllProcessedEntities).toEqual("function");
+
+      expect(cluster.getLastClusteredEntities()).toEqual([]);
+      expect(cluster.getLastDeclusteredEntities()).toEqual([]);
+      expect(cluster.getAllProcessedEntities()).toEqual([]);
+    });
+
+    it("fires declusteredEvent with both clustered and declustered entities", function () {
+      cluster = new EntityCluster();
+      cluster._initialize(scene);
+
+      let receivedData = null;
+      cluster.declusteredEvent.addEventListener(function (data) {
+        receivedData = data;
+      });
+
+      const entity1 = new Entity();
+      const point1 = cluster.getPoint(entity1);
+      point1.id = entity1;
+      point1.pixelSize = 1;
+      point1.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(0.0, 0.0),
+        depth,
+      );
+
+      const entity2 = new Entity();
+      const point2 = cluster.getPoint(entity2);
+      point2.id = entity2;
+      point2.pixelSize = 1;
+      point2.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(1.0, 1.0),
+        depth,
+      );
+
+      const entity3 = new Entity();
+      const point3 = cluster.getPoint(entity3);
+      point3.id = entity3;
+      point3.pixelSize = 1;
+      point3.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
+        farDepth,
+      );
+
+      cluster.enabled = true;
+      return updateUntilDone(cluster).then(function () {
+        expect(receivedData).toBeDefined();
+        expect(receivedData.clustered).toBeDefined();
+        expect(receivedData.declustered).toBeDefined();
+        expect(Array.isArray(receivedData.clustered)).toEqual(true);
+        expect(Array.isArray(receivedData.declustered)).toEqual(true);
+      });
+    });
+
+    it("maintains backward compatibility - original clusterEvent still works", function () {
+      cluster = new EntityCluster();
+      cluster._initialize(scene);
+
+      let originalEventFired = false;
+      let newEventFired = false;
+
+      cluster.clusterEvent.addEventListener(function (entities, clusterObj) {
+        originalEventFired = true;
+        expect(Array.isArray(entities)).toEqual(true);
+        expect(clusterObj).toBeDefined();
+      });
+
+      cluster.declusteredEvent.addEventListener(function (data) {
+        newEventFired = true;
+        expect(data.clustered).toBeDefined();
+        expect(data.declustered).toBeDefined();
+      });
+
+      const entity1 = new Entity();
+      const point1 = cluster.getPoint(entity1);
+      point1.id = entity1;
+      point1.pixelSize = 1;
+      point1.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(0.0, 0.0),
+        depth,
+      );
+
+      const entity2 = new Entity();
+      const point2 = cluster.getPoint(entity2);
+      point2.id = entity2;
+      point2.pixelSize = 1;
+      point2.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(1.0, 1.0),
+        depth,
+      );
+
+      cluster.enabled = true;
+      return updateUntilDone(cluster).then(function () {
+        expect(originalEventFired).toEqual(true);
+        expect(newEventFired).toEqual(true);
+      });
+    });
+
+    it("tracks processed entities correctly", function () {
+      cluster = new EntityCluster();
+      cluster._initialize(scene);
+
+      const entity1 = new Entity();
+      const point1 = cluster.getPoint(entity1);
+      point1.id = entity1;
+      point1.pixelSize = 1;
+      point1.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(0.0, 0.0),
+        depth,
+      );
+
+      const entity2 = new Entity();
+      const point2 = cluster.getPoint(entity2);
+      point2.id = entity2;
+      point2.pixelSize = 1;
+      point2.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
+        farDepth,
+      );
+
+      cluster.enabled = true;
+      return updateUntilDone(cluster).then(function () {
+        const clusteredEntities = cluster.getLastClusteredEntities();
+        const declusteredEntities = cluster.getLastDeclusteredEntities();
+        const allProcessed = cluster.getAllProcessedEntities();
+
+        expect(allProcessed.length).toBeGreaterThan(0);
+        expect(
+          clusteredEntities.length + declusteredEntities.length,
+        ).toBeLessThanOrEqual(allProcessed.length);
+      });
+    });
+
+    it("cleans up tracking arrays on destroy", function () {
+      cluster = new EntityCluster();
+      cluster._initialize(scene);
+
+      const entity = new Entity();
+      const point = cluster.getPoint(entity);
+      point.id = entity;
+      point.pixelSize = 1;
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(0.0, 0.0),
+        depth,
+      );
+
+      cluster.enabled = true;
+      return updateUntilDone(cluster).then(function () {
+        expect(cluster._allProcessedEntities).toBeDefined();
+        expect(cluster._lastClusteredEntities).toBeDefined();
+        expect(cluster._lastDeclusteredEntities).toBeDefined();
+
+        cluster.destroy();
+
+        expect(cluster._allProcessedEntities).toEqual([]);
+        expect(cluster._lastClusteredEntities).toEqual([]);
+        expect(cluster._lastDeclusteredEntities).toEqual([]);
+      });
+    });
   },
   "WebGL",
 );
