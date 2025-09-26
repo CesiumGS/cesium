@@ -4402,7 +4402,7 @@ Scene.prototype.clampLineWidth = function (width) {
  * @returns {Object | undefined} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
  */
 Scene.prototype.pick = function (windowPosition, width, height) {
-  return this._picking.pick(this, windowPosition, width, height);
+  return this._picking.pick(this, windowPosition, width, height, 1)[0];
 };
 
 /**
