@@ -299,7 +299,7 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
   let buildGalleryOptions;
 
   try {
-    const config = await import(configPath);
+    const config = await import(pathToFileURL(configPath).href);
     const { root, publicDir, gallery, sourceUrl } = config.default;
 
     // Paths are specified relative to the config file
