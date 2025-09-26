@@ -353,6 +353,9 @@ Google2DImageryProvider.fromIon = async function (options) {
   if (defined(overlayLayerType)) {
     Check.typeOf.string("overlayLayerType", overlayLayerType);
   }
+  if (!defined(options.assetId)) {
+    throw new DeveloperError("options.assetId is required.");
+  }
   //>>includeEnd('debug');
 
   const endpointJson = await createIonImagerySession(options);
