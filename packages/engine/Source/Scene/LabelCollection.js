@@ -155,24 +155,25 @@ function rebindAllGlyphs(labelCollection, label) {
   let backgroundBillboard = label._backgroundBillboard;
   const backgroundBillboardCollection =
     labelCollection._backgroundBillboardCollection;
-  if (!showBackground) {
-    if (defined(backgroundBillboard)) {
-      if (label.show) {
-        backgroundBillboardCollection.remove(backgroundBillboard);
-        label._backgroundBillboard = backgroundBillboard = undefined;
-      } else {
-        backgroundBillboard.show = false;
-      }
-    }
-  } else {
-    if (!defined(backgroundBillboard)) {
-      backgroundBillboard = getWhitePixelBillboard(
-        backgroundBillboardCollection,
-        labelCollection,
-      );
-      label._backgroundBillboard = backgroundBillboard;
-    }
 
+  if (label._showBackground && !defined(backgroundBillboard)) {
+    backgroundBillboard = getWhitePixelBillboard(
+      backgroundBillboardCollection,
+      labelCollection,
+    );
+    label._backgroundBillboard = backgroundBillboard;
+  }
+  if (defined(backgroundBillboard) && !showBackground) {
+    if (label.show) {
+      // Label is shown, remove the background billboard
+      backgroundBillboardCollection.remove(backgroundBillboard);
+      label._backgroundBillboard = backgroundBillboard = undefined;
+    } else {
+      // Label is hidden, hide backgroundBillboard as well
+      backgroundBillboard.show = false;
+    }
+  }
+  if (defined(backgroundBillboard)) {
     backgroundBillboard.color = label._backgroundColor;
     backgroundBillboard.show = label._show;
     backgroundBillboard.position = label._position;
@@ -510,7 +511,6 @@ function repositionAllGlyphs(label) {
       glyphPixelOffset.y = 0;
     }
     glyphPixelOffset.y = glyphPixelOffset.y * scale;
-    backgroundBillboard.scale = scale;
     backgroundBillboard.width = totalLineWidth;
     backgroundBillboard.height = totalLineHeight;
     backgroundBillboard._setTranslate(glyphPixelOffset);
