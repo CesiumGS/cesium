@@ -452,7 +452,7 @@ Google2DImageryProvider.prototype.getTileCredits = async function (
  * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  */
-Google2DImageryProvider.prototype.requestImage = async function (
+Google2DImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
