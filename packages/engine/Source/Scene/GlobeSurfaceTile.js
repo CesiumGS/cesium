@@ -493,10 +493,8 @@ GlobeSurfaceTile.prototype.updateExaggeration = function (
     if (quadtree !== undefined) {
       quadtree._tileToUpdateHeights.push(tile);
       const customData = tile.customData;
-      const customDataLength = customData.length;
-      for (let i = 0; i < customDataLength; i++) {
+      for (const data of customData) {
         // Restart the level so that a height update is triggered
-        const data = customData[i];
         data.level = -1;
       }
     }
