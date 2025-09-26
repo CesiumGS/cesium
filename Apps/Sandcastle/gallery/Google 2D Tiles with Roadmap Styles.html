@@ -27,18 +27,21 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const apiKey = "";
+        Cesium.Ion.defaultServer = "https://api.ion-staging.cesium.com";
+        Cesium.Ion.defaultAccessToken = "";
+
+        const assetId = 1687;
 
         const base = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.Google2DImageryProvider.fromUrl({
-            key: apiKey,
+          Cesium.Google2DImageryProvider.fromIon({
+            assetId,
             mapType: "satellite",
           }),
         );
 
         const overlay = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.Google2DImageryProvider.fromUrl({
-            key: apiKey,
+          Cesium.Google2DImageryProvider.fromIon({
+            assetId,
             overlayLayerType: "layerRoadmap",
             styles: [
               {

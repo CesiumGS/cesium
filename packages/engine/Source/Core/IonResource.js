@@ -232,6 +232,13 @@ IonResource._createEndpointResource = function (assetId, options) {
     resourceOptions.queryParameters = { access_token: accessToken };
   }
 
+  if (defined(options.queryParameters)) {
+    resourceOptions.queryParameters = {
+      ...resourceOptions.queryParameters,
+      ...options.queryParameters,
+    };
+  }
+
   addClientHeaders(resourceOptions);
 
   return server.getDerivedResource(resourceOptions);

@@ -4,11 +4,12 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import IonResource from "../Core/IonResource.js";
-import Rectangle from "../Core/Rectangle.js";
+//import Rectangle from "../Core/Rectangle.js";
+import Check from "../Core/Check.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 import TileAvailability from "../Core/TileAvailability.js";
-import CesiumMath from "../Core/Math.js";
-import Cartographic from "../Core/Cartographic.js";
+//import CesiumMath from "../Core/Math.js";
+//import Cartographic from "../Core/Cartographic.js";
 
 const trailingSlashRegex = /\/$/;
 
@@ -151,10 +152,6 @@ function Google2DImageryProvider(options) {
   this._tileAvailabilityComplete = new TileAvailability(
     this._imageryProvider._tilingScheme,
     this._maximumLevel,
-  );
-  console.log(
-    "this._imageryProvider._tilingScheme ",
-    this._imageryProvider._tilingScheme,
   );
 
   return;
@@ -351,25 +348,10 @@ Google2DImageryProvider.fromIon = async function (options) {
   options.language = options.language ?? "en_US";
   options.region = options.region ?? "US";
 
+  const overlayLayerType = options.overlayLayerType;
   //>>includeStart('debug', pragmas.debug);
-  if (!["satellite", "terrain", "roadmap"].includes(options.mapType)) {
-    throw new DeveloperError(
-      "valid values for options.mapType satellite, terrain, or roadmap",
-    );
-  }
-  //>>includeEnd('debug');
-
-  //>>includeStart('debug', pragmas.debug);
-  if (defined(options.overlayLayerType)) {
-    if (
-      !["layerRoadmap", "layerStreetview", "layerTraffic"].includes(
-        options.overlayLayerType,
-      )
-    ) {
-      throw new DeveloperError(
-        "valid values for options.overlayLayerType are layerRoadmap, layerStreetview or layerTraffic",
-      );
-    }
+  if (defined(overlayLayerType)) {
+    Check.typeOf.string("overlayLayerType", overlayLayerType);
   }
   //>>includeEnd('debug');
 
@@ -381,11 +363,10 @@ Google2DImageryProvider.fromIon = async function (options) {
 
   return new Google2DImageryProvider({
     session: endpointOptions.session,
-    key: options.apiKey,
+    key: endpointOptions.key,
     tileWidth: endpointOptions.tileWidth,
     tileHeight: endpointOptions.tileHeight,
     url,
-    ...endpointOptions,
   });
 };
 
@@ -413,7 +394,7 @@ Google2DImageryProvider.fromIon = async function (options) {
  * // Google 2D imagery provider
  * const googleTilesProvider = Cesium.Google2DImageryProvider.fromUrl({
  *     apiKey: 'thisIsMyApiKey',
- *     mapType: "SATELLITE"
+ *     mapType: "satellite"
  * });
  */
 
@@ -423,29 +404,11 @@ Google2DImageryProvider.fromUrl = async function (options) {
   options.language = options.language ?? "en_US";
   options.region = options.region ?? "US";
 
+  const overlayLayerType = options.overlayLayerType;
   //>>includeStart('debug', pragmas.debug);
-  if (!["satellite", "terrain", "roadmap"].includes(options.mapType)) {
-    throw new DeveloperError(
-      "valid values for options.mapType satellite, terrain, or roadmap",
-    );
+  if (defined(overlayLayerType)) {
+    Check.typeOf.string("overlayLayerType", overlayLayerType);
   }
-  //>>includeEnd('debug');
-
-  //>>includeStart('debug', pragmas.debug);
-  if (defined(options.overlayLayerType)) {
-    if (
-      !["layerRoadmap", "layerStreetview", "layerTraffic"].includes(
-        options.overlayLayerType,
-      )
-    ) {
-      throw new DeveloperError(
-        "valid values for options.overlayLayerType are layerRoadmap, layerStreetview or layerTraffic",
-      );
-    }
-  }
-  //>>includeEnd('debug');
-
-  //>>includeStart('debug', pragmas.debug);
   if (!defined(options.key)) {
     throw new DeveloperError("options.key is required.");
   }
@@ -455,7 +418,6 @@ Google2DImageryProvider.fromUrl = async function (options) {
 
   return new Google2DImageryProvider({
     session: sessionJson.session,
-    key: options.apiKey,
     tileWidth: sessionJson.tileWidth,
     tileHeight: sessionJson.tileHeight,
     ...options,
@@ -478,7 +440,7 @@ Google2DImageryProvider.prototype.getTileCredits = async function (
   return undefined;
 };
 
-const rectangleScratch = new Rectangle();
+//const rectangleScratch = new Rectangle();
 
 /**
  * Requests the image for a given tile.
@@ -496,83 +458,83 @@ Google2DImageryProvider.prototype.requestImage = async function (
   level,
   request,
 ) {
-  const isAvailable = this._tileAvailability.isTileAvailable(level, x, y);
-  if (isAvailable) {
-    return this._imageryProvider.requestImage(x, y, level, request);
-  }
+  // const isAvailable = this._tileAvailability.isTileAvailable(level, x, y);
+  // if (isAvailable) {
+  //   ;
+  // }
 
-  const isAvailabilityComplete = this._tileAvailabilityComplete.isTileAvailable(
-    level,
-    x,
-    y,
-  );
-  if (isAvailabilityComplete) {
-    return undefined;
-  }
+  // const isAvailabilityComplete = this._tileAvailabilityComplete.isTileAvailable(
+  //   level,
+  //   x,
+  //   y,
+  // );
+  // if (isAvailabilityComplete) {
+  //   return undefined;
+  // }
 
-  const rectangle = this._tilingScheme.tileXYToRectangle(
-    x,
-    y,
-    level,
-    rectangleScratch,
-  );
+  // const rectangle = this._tilingScheme.tileXYToRectangle(
+  //   x,
+  //   y,
+  //   level,
+  //   rectangleScratch,
+  // );
 
-  const viewport = await Resource.fetch({
-    url: this._viewportUrl,
-    queryParameters: {
-      key: this._key,
-      session: this._session,
-      zoom: level,
-      north: CesiumMath.toDegrees(rectangle.north),
-      south: CesiumMath.toDegrees(rectangle.south),
-      east: CesiumMath.toDegrees(rectangle.east),
-      west: CesiumMath.toDegrees(rectangle.west),
-    },
-    data: JSON.stringify({}),
-  });
-  const viewportJson = JSON.parse(viewport);
+  // const viewport = await Resource.fetch({
+  //   url: this._viewportUrl,
+  //   queryParameters: {
+  //     key: this._key,
+  //     session: this._session,
+  //     zoom: level,
+  //     north: CesiumMath.toDegrees(rectangle.north),
+  //     south: CesiumMath.toDegrees(rectangle.south),
+  //     east: CesiumMath.toDegrees(rectangle.east),
+  //     west: CesiumMath.toDegrees(rectangle.west),
+  //   },
+  //   data: JSON.stringify({}),
+  // });
+  // const viewportJson = JSON.parse(viewport);
 
-  const maxRectCount = viewportJson.maxZoomRects.length;
+  // const maxRectCount = viewportJson.maxZoomRects.length;
 
-  const webMercatorLatLimit = 85; //85.05112878;
+  // const webMercatorLatLimit = 85; //85.05112878;
 
-  for (
-    let rectangleIndex = 0;
-    rectangleIndex < maxRectCount;
-    rectangleIndex++
-  ) {
-    const maxZoomRect = viewportJson.maxZoomRects[rectangleIndex];
+  // for (
+  //   let rectangleIndex = 0;
+  //   rectangleIndex < maxRectCount;
+  //   rectangleIndex++
+  // ) {
+  //   const maxZoomRect = viewportJson.maxZoomRects[rectangleIndex];
 
-    // ToDo: scratch variable
-    const topLeftCorner = new Cartographic.fromDegrees(
-      maxZoomRect.west,
-      Math.min(maxZoomRect.north, webMercatorLatLimit),
-    );
-    const bottomRightCorner = new Cartographic.fromDegrees(
-      maxZoomRect.east,
-      Math.max(maxZoomRect.south, -webMercatorLatLimit),
-    );
+  //   // ToDo: scratch variable
+  //   const topLeftCorner = new Cartographic.fromDegrees(
+  //     maxZoomRect.west,
+  //     Math.min(maxZoomRect.north, webMercatorLatLimit),
+  //   );
+  //   const bottomRightCorner = new Cartographic.fromDegrees(
+  //     maxZoomRect.east,
+  //     Math.max(maxZoomRect.south, -webMercatorLatLimit),
+  //   );
 
-    const minCornerXY = this._tilingScheme.positionToTileXY(
-      topLeftCorner,
-      maxZoomRect.maxZoom,
-    );
-    const maxCornerXY = this._tilingScheme.positionToTileXY(
-      bottomRightCorner,
-      maxZoomRect.maxZoom,
-    );
+  //   const minCornerXY = this._tilingScheme.positionToTileXY(
+  //     topLeftCorner,
+  //     maxZoomRect.maxZoom,
+  //   );
+  //   const maxCornerXY = this._tilingScheme.positionToTileXY(
+  //     bottomRightCorner,
+  //     maxZoomRect.maxZoom,
+  //   );
 
-    this._tileAvailability.addAvailableTileRange(
-      maxZoomRect.maxZoom,
-      minCornerXY.x,
-      minCornerXY.y,
-      maxCornerXY.x,
-      maxCornerXY.y,
-    );
-  }
-  if (maxRectCount < 100) {
-    this._tileAvailabilityComplete.addAvailableTileRange(level, x, y, x, y);
-  }
+  //   this._tileAvailability.addAvailableTileRange(
+  //     maxZoomRect.maxZoom,
+  //     minCornerXY.x,
+  //     minCornerXY.y,
+  //     maxCornerXY.x,
+  //     maxCornerXY.y,
+  //   );
+  // }
+  // if (maxRectCount < 100) {
+  //   this._tileAvailabilityComplete.addAvailableTileRange(level, x, y, x, y);
+  // }
   return this._imageryProvider.requestImage(x, y, level, request);
 };
 
@@ -597,25 +559,41 @@ Google2DImageryProvider.prototype.pickFeatures = function (
   return undefined;
 };
 
-async function createGoogleImagerySession(options) {
-  const { mapType, overlayLayerType, styles, language, region, key } = options;
+function buildQueryOptions(options) {
+  const { mapType, overlayLayerType, styles } = options;
 
-  let overlay = false;
-  let sessionMapType = mapType;
-  if (defined(overlayLayerType)) {
-    sessionMapType = "satellite";
-    overlay = true;
+  const queryOptions = {
+    mapType,
+    overlay: false,
+  };
+
+  if (mapType === "terrain" && !defined(overlayLayerType)) {
+    queryOptions.layerTypes = ["layerRoadmap"];
   }
+
+  if (defined(overlayLayerType)) {
+    queryOptions.mapType = "satellite";
+    queryOptions.overlay = true;
+    queryOptions.layerTypes = [overlayLayerType];
+  }
+  if (defined(styles)) {
+    queryOptions.styles = styles;
+  }
+  return queryOptions;
+}
+
+async function createGoogleImagerySession(options) {
+  const { language, region, key } = options;
+
+  const queryOptions = buildQueryOptions(options);
+
   const response = await Resource.post({
     url: "https://tile.googleapis.com/v1/createSession",
     queryParameters: { key: key },
     data: JSON.stringify({
-      mapType: sessionMapType,
+      ...queryOptions,
       language,
       region,
-      layerTypes: [overlayLayerType],
-      overlay,
-      styles,
     }),
   });
   const responseJson = JSON.parse(response);
@@ -623,26 +601,13 @@ async function createGoogleImagerySession(options) {
 }
 
 async function createIonImagerySession(options) {
-  const { assetId, mapType, overlayLayerType, styles, language, region } =
-    options;
+  const { assetId } = options;
 
-  let overlay = false;
-  let sessionMapType = mapType;
-  if (defined(overlayLayerType)) {
-    sessionMapType = "satellite";
-    overlay = true;
-  }
+  const queryOptions = buildQueryOptions(options);
 
   const endpointResource = IonResource._createEndpointResource(assetId, {
     queryParameters: {
-      google2dOptions: {
-        mapType: sessionMapType,
-        overlay,
-        overlayLayerType,
-        styles,
-        language,
-        region,
-      },
+      options: JSON.stringify(queryOptions),
     },
   });
 
