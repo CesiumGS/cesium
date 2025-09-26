@@ -14,9 +14,9 @@ import IntersectBox from "../Shaders/Voxels/IntersectBox.js";
 import IntersectCylinder from "../Shaders/Voxels/IntersectCylinder.js";
 import IntersectEllipsoid from "../Shaders/Voxels/IntersectEllipsoid.js";
 import Intersection from "../Shaders/Voxels/Intersection.js";
-import convertUvToBox from "../Shaders/Voxels/convertUvToBox.js";
-import convertUvToCylinder from "../Shaders/Voxels/convertUvToCylinder.js";
-import convertUvToEllipsoid from "../Shaders/Voxels/convertUvToEllipsoid.js";
+import convertLocalToBoxUv from "../Shaders/Voxels/convertLocalToBoxUv.js";
+import convertLocalToCylinderUv from "../Shaders/Voxels/convertLocalToCylinderUv.js";
+import convertLocalToEllipsoidUv from "../Shaders/Voxels/convertLocalToEllipsoidUv.js";
 import Octree from "../Shaders/Voxels/Octree.js";
 import Megatexture from "../Shaders/Voxels/Megatexture.js";
 import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
@@ -159,20 +159,20 @@ function VoxelRenderResources(primitive) {
 
   if (shapeType === "BOX") {
     shaderBuilder.addFragmentLines([
-      convertUvToBox,
+      convertLocalToBoxUv,
       IntersectBox,
       Intersection,
     ]);
   } else if (shapeType === "CYLINDER") {
     shaderBuilder.addFragmentLines([
-      convertUvToCylinder,
+      convertLocalToCylinderUv,
       IntersectLongitude,
       IntersectCylinder,
       Intersection,
     ]);
   } else if (shapeType === "ELLIPSOID") {
     shaderBuilder.addFragmentLines([
-      convertUvToEllipsoid,
+      convertLocalToEllipsoidUv,
       IntersectLongitude,
       IntersectEllipsoid,
       Intersection,
