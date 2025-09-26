@@ -135,6 +135,10 @@ describe("Scene/Model/ModelImagery", function () {
   });
 
   it("removes ModelPrimitiveImagery objects when imagery layers are removed", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
     const tileset = await loadTilesetWithImagery(scene);
 
     const root = tileset.root;
