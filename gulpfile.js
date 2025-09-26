@@ -31,6 +31,11 @@ import {
   createJsHintOptions,
   defaultESBuildOptions,
 } from "./scripts/build.js";
+import { fileURLToPath } from "url";
+import {
+  buildStatic,
+  createSandcastleConfig,
+} from "./packages/sandcastle/scripts/buildStatic.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -1229,13 +1234,6 @@ function generateTypeScriptDefinitions(
       "raiseEvent(...arguments: Parameters<Listener>): void;",
     );
 
-  // Wrap the source to actually be inside of a declared cesium module
-  // and add any workaround and private utility types.
-  source = `declare module "@${scope}/${workspaceName}" {
-${source}
-}
-`;
-
   if (importModules) {
     let imports = "";
     Object.keys(importModules).forEach((workspace) => {
@@ -1248,6 +1246,13 @@ ${source}
     });
     source = imports + source;
   }
+
+  // Wrap the source to actually be inside of a declared cesium module
+  // and add any workaround and private utility types.
+  source = `declare module "@${scope}/${workspaceName}" {
+${source}
+}
+`;
 
   // Write the final source file back out
   writeFileSync(definitionsPath, source);
@@ -1739,6 +1744,31 @@ async function buildSandcastle() {
   streams.push(standaloneStream);
 
   return Promise.all(streams.map((s) => finished(s)));
+}
+
+// TODO: clean up
+export async function buildNewSandcastle() {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const newConfig = createSandcastleConfig({
+    outDir: join(__dirname, "./Apps/Sandcastle2"),
+    viteBase: "/Apps/Sandcastle2",
+    cesiumBaseUrl: "/Build/CesiumUnminified",
+    imports: {
+      cesium: {
+        path: "/Source/Cesium.js",
+        typesPath: "/Source/Cesium.d.ts",
+      },
+      "@cesium/engine": {
+        path: "/packages/engine/Build/Unminified/index.js",
+        typesPath: "/packages/engine/index.d.ts",
+      },
+      "@cesium/widgets": {
+        path: "/packages/widgets/Build/Unminified/index.js",
+        typesPath: "/packages/widgets/index.d.ts",
+      },
+    },
+  });
+  await buildStatic(newConfig);
 }
 
 async function buildCesiumViewer() {

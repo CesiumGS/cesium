@@ -7,7 +7,7 @@ This package is the application for Sandcastle.
 - `npm run dev`: run the development server
 - `npm run build`: alias for `npm run build-app`
 - `npm run build-app`: build to static files in `/Apps/Sandcastle2` for hosting/access from the root cesium dev server
-- `npm run build-ci`: build to static files in `/Apps/Sandcastle2` and configure paths as needed for CI deployment
+  - If the env variable `BASE_URL` is set it will be prefixed on all required paths in the application. This is useful for building to a "nested" url like we do in CI
 
 Linting and style is managed under the project root's scripts.
 

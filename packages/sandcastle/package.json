@@ -10,7 +10,6 @@
     "dev": "npm run build-gallery && vite --config vite.config.dev.ts",
     "build": "npm run build-app",
     "build-app": "tsc -b && npm run build-gallery && vite build --config vite.config.app.ts",
-    "build-ci": "tsc -b && npm run build-gallery && vite build --config vite.config.ci.ts",
     "build-prod": "tsc -b && npm run build-gallery && vite build --config vite.config.prod.ts",
     "build-gallery": "node scripts/buildGallery.js"
   },
