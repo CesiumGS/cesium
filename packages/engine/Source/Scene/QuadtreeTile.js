@@ -323,10 +323,6 @@ QuadtreeTile.prototype._updateCustomData = function () {
   const customData = this.customData;
   for (let i = 0; i < added.length; ++i) {
     const data = added[i];
-    if (!Rectangle.contains(this._rectangle, data.positionCartographic)) {
-      continue;
-    }
-
     customData.add(data);
 
     const child = childTileAtPosition(this, data.positionCartographic);

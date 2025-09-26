@@ -510,7 +510,6 @@ function selectTilesForRendering(primitive, frameState) {
   tilesToRender.length = 0;
 
   // We can't render anything before the level zero tiles exist.
-  let i;
   const tileProvider = primitive._tileProvider;
   if (!defined(primitive._levelZeroTiles)) {
     const tilingScheme = tileProvider.tilingScheme;
@@ -521,7 +520,7 @@ function selectTilesForRendering(primitive, frameState) {
       const numberOfRootTiles = primitive._levelZeroTiles.length;
       if (rootTraversalDetails.length < numberOfRootTiles) {
         rootTraversalDetails = new Array(numberOfRootTiles);
-        for (i = 0; i < numberOfRootTiles; ++i) {
+        for (let i = 0; i < numberOfRootTiles; ++i) {
           if (rootTraversalDetails[i] === undefined) {
             rootTraversalDetails[i] = new TraversalDetails();
           }
@@ -534,7 +533,6 @@ function selectTilesForRendering(primitive, frameState) {
 
   primitive._occluders.ellipsoid.cameraPosition = frameState.camera.positionWC;
 
-  let tile;
   const levelZeroTiles = primitive._levelZeroTiles;
   const occluders =
     levelZeroTiles.length > 1 ? primitive._occluders : undefined;
@@ -548,18 +546,27 @@ function selectTilesForRendering(primitive, frameState) {
   const customDataAdded = primitive._addHeightCallbacks;
   const customDataRemoved = primitive._removeHeightCallbacks;
 
-  let len;
-  if (customDataAdded.length > 0 || customDataRemoved.length > 0) {
-    for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
-      tile = levelZeroTiles[i];
-      tile._addedCustomData = customDataAdded;
-      tile._removedCustomData = customDataRemoved;
-      tile._updateCustomData();
+  customDataAdded.forEach((data) => {
+    const tile = levelZeroTiles.find((tile) =>
+      Rectangle.contains(tile.rectangle, data.positionCartographic),
+    );
+    if (tile) {
+      tile._addedCustomData.push(data);
     }
+  });
 
-    customDataAdded.length = 0;
-    customDataRemoved.length = 0;
-  }
+  customDataRemoved.forEach((data) => {
+    const tile = levelZeroTiles.find((tile) =>
+      Rectangle.contains(tile.rectangle, data.positionCartographic),
+    );
+    if (tile) {
+      tile._removedCustomData.push(data);
+    }
+  });
+
+  levelZeroTiles.forEach((tile) => tile._updateCustomData());
+  customDataAdded.length = 0;
+  customDataRemoved.length = 0;
 
   const camera = frameState.camera;
 
@@ -575,8 +582,8 @@ function selectTilesForRendering(primitive, frameState) {
     );
 
   // Traverse in depth-first, near-to-far order.
-  for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
-    tile = levelZeroTiles[i];
+  for (let i = 0; i < levelZeroTiles.length; ++i) {
+    const tile = levelZeroTiles[i];
     primitive._tileReplacementQueue.markTileRendered(tile);
     if (!tile.renderable) {
       queueTileLoad(primitive, primitive._tileLoadQueueHigh, tile, frameState);
