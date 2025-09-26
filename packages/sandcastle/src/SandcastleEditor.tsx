@@ -205,9 +205,6 @@ function SandcastleEditor({
 
     setupSandcastleSnippets(monaco);
     setTypes(monaco);
-    // TODO: remove this!
-    // @ts-expect-error just testing
-    window.monaco = monaco;
   }
 
   async function setTypes(monaco: Monaco) {
