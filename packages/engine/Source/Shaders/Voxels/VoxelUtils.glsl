@@ -1,7 +1,7 @@
+// TODO: replace with czm_ray?
 struct Ray {
     vec3 pos;
     vec3 dir;
-    vec3 rawDir;
 };
 
 #if defined(JITTER)

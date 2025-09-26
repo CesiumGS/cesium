@@ -8,11 +8,10 @@
 
 uniform vec3 u_cameraPositionCartographic; // (longitude, latitude, height) in radians and meters
 uniform vec2 u_ellipsoidCurvatureAtLatitude;
-uniform float u_ellipsoidShapeMaxExtent;
 uniform mat3 u_ellipsoidEcToEastNorthUp;
-uniform vec3 u_ellipsoidRadiiUv; // [0,1]
-uniform vec2 u_evoluteScale; // (radiiUv.x ^ 2 - radiiUv.z ^ 2) * vec2(1.0, -1.0) / radiiUv;
-uniform vec3 u_ellipsoidInverseRadiiSquaredUv;
+uniform vec3 u_ellipsoidRadii;
+uniform vec2 u_evoluteScale; // (radii.x ^ 2 - radii.z ^ 2) * vec2(1.0, -1.0) / radii;
+uniform vec3 u_ellipsoidInverseRadiiSquared;
 #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY) || defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED)
     uniform vec3 u_ellipsoidShapeUvLongitudeMinMaxMid;
 #endif
@@ -22,7 +21,7 @@ uniform vec3 u_ellipsoidInverseRadiiSquaredUv;
 #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
     uniform vec2 u_ellipsoidUvToShapeUvLatitude; // x = scale, y = offset
 #endif
-uniform float u_ellipsoidInverseHeightDifferenceUv;
+uniform float u_ellipsoidInverseHeightDifference;
 
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
@@ -63,8 +62,6 @@ vec3 nearestPointAndRadiusOnEllipse(vec2 pos, vec2 radii) {
 PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
     // Convert from UV space [0, 1] to local space [-1, 1]
     vec3 position = positionUv * 2.0 - 1.0;
-    // Undo the scaling from ellipsoid to sphere
-    position = position * u_ellipsoidRadiiUv;
 
     float longitude = atan(position.y, position.x);
     vec3 east = normalize(vec3(-position.y, position.x, 0.0));
@@ -73,10 +70,10 @@ PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
     // (assume radii.y == radii.x) and find the nearest point on the ellipse and its normal
     float distanceFromZAxis = length(position.xy);
     vec2 posEllipse = vec2(distanceFromZAxis, position.z);
-    vec3 surfacePointAndRadius = nearestPointAndRadiusOnEllipse(posEllipse, u_ellipsoidRadiiUv.xz);
+    vec3 surfacePointAndRadius = nearestPointAndRadiusOnEllipse(posEllipse, u_ellipsoidRadii.xz);
     vec2 surfacePoint = surfacePointAndRadius.xy;
 
-    vec2 normal2d = normalize(surfacePoint * u_ellipsoidInverseRadiiSquaredUv.xz);
+    vec2 normal2d = normalize(surfacePoint * u_ellipsoidInverseRadiiSquared.xz);
     float latitude = atan(normal2d.y, normal2d.x);
     vec3 north = vec3(-normal2d.y * normalize(position.xy), abs(normal2d.x));
 
@@ -118,7 +115,7 @@ vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
     #endif
 
     // Height: scale to the range [0, 1]
-    float height = 1.0 + positionShape.z * u_ellipsoidInverseHeightDifferenceUv;
+    float height = 1.0 + positionShape.z * u_ellipsoidInverseHeightDifference;
 
     return vec3(longitude, latitude, height);
 }
@@ -141,14 +138,14 @@ vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
     #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
         latitude /= u_ellipsoidUvToShapeUvLatitude.x;
     #endif
-    
-    float height = shapeUv.z / u_ellipsoidInverseHeightDifferenceUv;
+
+    float height = shapeUv.z / u_ellipsoidInverseHeightDifference;
 
     return vec3(longitude, latitude, height);
 }
 
 vec3 convertECtoDeltaTile(in vec3 positionEC) {
-    vec3 enu = u_ellipsoidEcToEastNorthUp * positionEC / u_ellipsoidShapeMaxExtent;
+    vec3 enu = u_ellipsoidEcToEastNorthUp * positionEC;
 
     // 1. Compute the change in longitude from the camera to the ENU point
     // First project the camera and ENU positions to the equatorial XY plane,
@@ -156,7 +153,7 @@ vec3 convertECtoDeltaTile(in vec3 positionEC) {
     float cosLatitude = cos(u_cameraPositionCartographic.y);
     float sinLatitude = sin(u_cameraPositionCartographic.y);
     float primeVerticalRadius = 1.0 / u_ellipsoidCurvatureAtLatitude.x;
-    vec2 cameraXY = vec2((primeVerticalRadius + u_cameraPositionCartographic.z) * cosLatitude / u_ellipsoidShapeMaxExtent, 0.0);
+    vec2 cameraXY = vec2((primeVerticalRadius + u_cameraPositionCartographic.z) * cosLatitude, 0.0);
     // Note precision loss in positionXY.x if length(enu) << length(cameraXY)
     vec2 positionXY = cameraXY + vec2(-enu.y * sinLatitude + enu.z * cosLatitude, enu.x);
     // TODO: is atan stable for y << x?
@@ -182,7 +179,7 @@ vec3 convertECtoDeltaTile(in vec3 positionEC) {
     // First project the camera and ENU positions to the meridional ZX plane,
     // positioning the camera on the +Z axis, so that enu.y maps to the +X axis.
     float meridionalRadius = 1.0 / u_ellipsoidCurvatureAtLatitude.y;
-    vec2 cameraZX = vec2((meridionalRadius + u_cameraPositionCartographic.z) / u_ellipsoidShapeMaxExtent, 0.0);
+    vec2 cameraZX = vec2(meridionalRadius + u_cameraPositionCartographic.z, 0.0);
     vec2 positionZX = cameraZX + vec2(enu.z, enu.y);
     float dLatitude = atan(positionZX.y, positionZX.x);
 
@@ -199,7 +196,7 @@ vec3 convertECtoDeltaTile(in vec3 positionEC) {
     // TODO: incorporate clamping, and scaling for bounded latitude
     float dTilesetY = dLatitude / czm_pi;
     // TODO: clamp to height bounds
-    float dTilesetZ = dHeight * u_ellipsoidInverseHeightDifferenceUv;
+    float dTilesetZ = dHeight * u_ellipsoidInverseHeightDifference;
 
     // 5. Convert to tile coordinate changes
     return vec3(dTilesetX, dTilesetY, dTilesetZ) * float(1 << u_cameraTileCoordinates.w);

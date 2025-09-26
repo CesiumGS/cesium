@@ -69,18 +69,17 @@ function VoxelEllipsoidShape() {
   this._shaderUniforms = {
     cameraPositionCartographic: new Cartesian3(),
     ellipsoidEcToEastNorthUp: new Matrix3(),
-    ellipsoidRadiiUv: new Cartesian3(),
+    ellipsoidRadii: new Cartesian3(),
     eccentricitySquared: 0.0,
     evoluteScale: new Cartesian2(),
-    ellipsoidShapeMaxExtent: 1.0,
     ellipsoidCurvatureAtLatitude: new Cartesian2(),
-    ellipsoidInverseRadiiSquaredUv: new Cartesian3(),
+    ellipsoidInverseRadiiSquared: new Cartesian3(),
     ellipsoidRenderLongitudeMinMax: new Cartesian2(),
     ellipsoidShapeUvLongitudeMinMaxMid: new Cartesian3(),
     ellipsoidUvToShapeUvLongitude: new Cartesian2(),
     ellipsoidUvToShapeUvLatitude: new Cartesian2(),
     ellipsoidRenderLatitudeSinMinMax: new Cartesian2(),
-    ellipsoidInverseHeightDifferenceUv: 0.0,
+    ellipsoidInverseHeightDifference: 0.0,
     clipMinMaxHeight: new Cartesian2(),
   };
 
@@ -213,7 +212,6 @@ const scratchClipMaxBounds = new Cartesian3();
 const scratchRenderMinBounds = new Cartesian3();
 const scratchRenderMaxBounds = new Cartesian3();
 const scratchScale = new Cartesian3();
-const scratchRotationScale = new Matrix3();
 const scratchShapeOuterExtent = new Cartesian3();
 const scratchRenderOuterExtent = new Cartesian3();
 const scratchRenderRectangle = new Rectangle();
@@ -304,7 +302,6 @@ VoxelEllipsoidShape.prototype.update = function (
     ),
     scratchShapeOuterExtent,
   );
-  const shapeMaxExtent = Cartesian3.maximumComponent(shapeOuterExtent);
 
   const renderOuterExtent = Cartesian3.add(
     radii,
@@ -365,7 +362,7 @@ VoxelEllipsoidShape.prototype.update = function (
   );
 
   this._shapeTransform = Matrix4.fromRotationTranslation(
-    Matrix3.setScale(this._rotation, shapeOuterExtent, scratchRotationScale),
+    this._rotation,
     this._translation,
     this._shapeTransform,
   );
@@ -478,32 +475,29 @@ VoxelEllipsoidShape.prototype.update = function (
       shaderDefines[key] = undefined;
     }
   }
-  shaderUniforms.ellipsoidShapeMaxExtent = shapeMaxExtent;
 
-  // The ellipsoid radii scaled to [0,1]. The max ellipsoid radius will be 1.0 and others will be less.
-  shaderUniforms.ellipsoidRadiiUv = Cartesian3.divideByScalar(
+  shaderUniforms.ellipsoidRadii = Cartesian3.clone(
     shapeOuterExtent,
-    shapeMaxExtent,
-    shaderUniforms.ellipsoidRadiiUv,
+    shaderUniforms.ellipsoidRadii,
   );
-  const { x: radiiUvX, z: radiiUvZ } = shaderUniforms.ellipsoidRadiiUv;
-  const axisRatio = radiiUvZ / radiiUvX;
+  const { x: radiiX, z: radiiZ } = shaderUniforms.ellipsoidRadii;
+  const axisRatio = radiiZ / radiiX;
   shaderUniforms.eccentricitySquared = 1.0 - axisRatio * axisRatio;
   shaderUniforms.evoluteScale = Cartesian2.fromElements(
-    (radiiUvX * radiiUvX - radiiUvZ * radiiUvZ) / radiiUvX,
-    (radiiUvZ * radiiUvZ - radiiUvX * radiiUvX) / radiiUvZ,
+    (radiiX * radiiX - radiiZ * radiiZ) / radiiX,
+    (radiiZ * radiiZ - radiiX * radiiX) / radiiZ,
     shaderUniforms.evoluteScale,
   );
 
   // Used to compute geodetic surface normal.
-  shaderUniforms.ellipsoidInverseRadiiSquaredUv = Cartesian3.divideComponents(
+  shaderUniforms.ellipsoidInverseRadiiSquared = Cartesian3.divideComponents(
     Cartesian3.ONE,
     Cartesian3.multiplyComponents(
-      shaderUniforms.ellipsoidRadiiUv,
-      shaderUniforms.ellipsoidRadiiUv,
-      shaderUniforms.ellipsoidInverseRadiiSquaredUv,
+      shaderUniforms.ellipsoidRadii,
+      shaderUniforms.ellipsoidRadii,
+      shaderUniforms.ellipsoidInverseRadiiSquared,
     ),
-    shaderUniforms.ellipsoidInverseRadiiSquaredUv,
+    shaderUniforms.ellipsoidInverseRadiiSquared,
   );
 
   // Keep track of how many intersections there are going to be.
@@ -516,16 +510,16 @@ VoxelEllipsoidShape.prototype.update = function (
   intersectionCount += 1;
 
   shaderUniforms.clipMinMaxHeight = Cartesian2.fromElements(
-    (renderMinBounds.z - shapeMaxBounds.z) / shapeMaxExtent,
-    (renderMaxBounds.z - shapeMaxBounds.z) / shapeMaxExtent,
+    renderMinBounds.z - shapeMaxBounds.z,
+    renderMaxBounds.z - shapeMaxBounds.z,
     shaderUniforms.clipMinMaxHeight,
   );
 
   // The percent of space that is between the inner and outer ellipsoid.
-  const thickness = (shapeMaxBounds.z - shapeMinBounds.z) / shapeMaxExtent;
-  shaderUniforms.ellipsoidInverseHeightDifferenceUv = 1.0 / thickness;
+  const thickness = shapeMaxBounds.z - shapeMinBounds.z;
+  shaderUniforms.ellipsoidInverseHeightDifference = 1.0 / thickness;
   if (shapeMinBounds.z === shapeMaxBounds.z) {
-    shaderUniforms.ellipsoidInverseHeightDifferenceUv = 0.0;
+    shaderUniforms.ellipsoidInverseHeightDifference = 0.0;
   }
 
   // Intersects a wedge for the min and max longitude.
@@ -849,7 +843,7 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForTile = function (
 };
 
 const scratchQuadrantPosition = new Cartesian2();
-const scratchEllipseRadii = new Cartesian2();
+const scratchInverseRadii = new Cartesian2();
 const scratchEllipseTrigs = new Cartesian2();
 const scratchEllipseGuess = new Cartesian2();
 const scratchEvolute = new Cartesian2();
@@ -870,7 +864,7 @@ function nearestPointAndRadiusOnEllipse(position, radii, evoluteScale, result) {
   const inverseRadii = Cartesian2.fromElements(
     1.0 / radii.x,
     1.0 / radii.y,
-    scratchEllipseRadii,
+    scratchInverseRadii,
   );
   // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
   // but store the cos and sin of t in a vec2 for efficiency.
@@ -921,6 +915,7 @@ function nearestPointAndRadiusOnEllipse(position, radii, evoluteScale, result) {
   );
 }
 
+const scratchEllipseRadii = new Cartesian2();
 const scratchEllipsePosition = new Cartesian2();
 const scratchSurfacePointAndRadius = new Cartesian3();
 const scratchNormal2d = new Cartesian2();
@@ -950,12 +945,11 @@ VoxelEllipsoidShape.prototype.convertUvToShapeUvSpace = function (
   let longitude = Math.atan2(positionLocal.y, positionLocal.x);
 
   const {
-    ellipsoidRadiiUv,
+    ellipsoidRadii,
     evoluteScale,
-    ellipsoidInverseRadiiSquaredUv,
-    ellipsoidInverseHeightDifferenceUv,
+    ellipsoidInverseRadiiSquared,
+    ellipsoidInverseHeightDifference,
   } = this._shaderUniforms;
-  // TODO: undo the scaling from ellipsoid to sphere?
 
   const distanceFromZAxis = Math.hypot(positionLocal.x, positionLocal.y);
   const posEllipse = Cartesian2.fromElements(
@@ -965,15 +959,15 @@ VoxelEllipsoidShape.prototype.convertUvToShapeUvSpace = function (
   );
   const surfacePointAndRadius = nearestPointAndRadiusOnEllipse(
     posEllipse,
-    Cartesian2.fromElements(ellipsoidRadiiUv.x, ellipsoidRadiiUv.z, scratchEllipseRadii),
+    Cartesian2.fromElements(ellipsoidRadii.x, ellipsoidRadii.z, scratchEllipseRadii),
     evoluteScale,
     scratchSurfacePointAndRadius,
   );
 
   const normal2d = Cartesian2.normalize(
     Cartesian2.fromElements(
-      surfacePointAndRadius.x * ellipsoidInverseRadiiSquaredUv.x,
-      surfacePointAndRadius.y * ellipsoidInverseRadiiSquaredUv.z,
+      surfacePointAndRadius.x * ellipsoidInverseRadiiSquared.x,
+      surfacePointAndRadius.y * ellipsoidInverseRadiiSquared.z,
       scratchNormal2d,
     ),
     scratchNormal2d,
@@ -995,7 +989,7 @@ VoxelEllipsoidShape.prototype.convertUvToShapeUvSpace = function (
   // TODO: Assume we always have shape bounds? Then simplify convertShapeToShapeUvSpace and implement here.
   longitude = (longitude + Math.PI) / (2.0 * Math.PI);
   latitude = (latitude + Math.PI / 2.0) / Math.PI;
-  height = 1.0 + height * ellipsoidInverseHeightDifferenceUv;
+  height = 1.0 + height * ellipsoidInverseHeightDifference;
 
   return Cartesian3.fromElements(longitude, latitude, height, result);
 };

@@ -61,7 +61,7 @@ RayShapeIntersection getVoxelIntersection(in vec3 tileUv, in vec3 sampleSizeAlon
 }
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in mat3 jacobianT, in float currentT) {
-    vec3 gradient = viewRay.rawDir * jacobianT;
+    vec3 gradient = viewRay.dir * jacobianT;
     vec3 sampleSizeAlongRay = getSampleSize(sampleData.tileCoords.w) / gradient;
 
     RayShapeIntersection voxelIntersection = getVoxelIntersection(sampleData.tileUv, sampleSizeAlongRay);
@@ -125,14 +125,7 @@ Ray getViewRayUv() {
         viewPosUv = u_cameraPositionUv;
         viewDirUv = normalize(u_transformDirectionViewToLocal * eyeCoordinates.xyz);
     }
-#if defined(SHAPE_ELLIPSOID)
-    // viewDirUv has been scaled to a space where the ellipsoid is a sphere.
-    // Undo this scaling to get the raw direction.
-    vec3 rawDir = viewDirUv * u_ellipsoidRadiiUv;
-    return Ray(viewPosUv, viewDirUv, rawDir);
-#else
-    return Ray(viewPosUv, viewDirUv, viewDirUv);
-#endif
+    return Ray(viewPosUv, viewDirUv);
 }
 
 Ray getViewRayEC() {
@@ -141,8 +134,7 @@ Ray getViewRayEC() {
         ? vec3(eyeCoordinates.xy, 0.0)
         : vec3(0.0);
     vec3 viewDirEC = normalize(eyeCoordinates.xyz);
-    // TODO: handle ellipsoid shape scaling?
-    return Ray(viewPosEC, viewDirEC, viewDirEC);
+    return Ray(viewPosEC, viewDirEC);
 }
 
 void main()
@@ -161,12 +153,7 @@ void main()
     float currentT = shapeIntersection.entry.w;
     float endT = shapeIntersection.exit.w;
 
-#if defined(SHAPE_ELLIPSOID)
-    // TODO: intersect ellipsoids in meters, so we don't need this arbitrary scaling
-    vec3 positionEC = viewRayEC.pos + currentT * viewRayEC.dir * u_ellipsoidShapeMaxExtent;
-#else
     vec3 positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
-#endif
     TileAndUvCoordinate tileAndUv = getTileAndUvCoordinate(positionEC);
     vec3 positionUv = viewRayUv.pos + 0.5 * currentT * viewRayUv.dir; // 0.5 for EC to UV
     PointJacobianT pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
@@ -243,12 +230,7 @@ void main()
                 }
             #endif
         }
-#if defined(SHAPE_ELLIPSOID)
-        // TODO: intersect ellipsoids in meters, so we don't need this arbitrary scaling
-        positionEC = viewRayEC.pos + currentT * viewRayEC.dir * u_ellipsoidShapeMaxExtent;
-#else
         positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
-#endif
         tileAndUv = getTileAndUvCoordinate(positionEC);
         positionUv = viewRayUv.pos + 0.5 * currentT * viewRayUv.dir; // 0.5 for EC to UV
         pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);

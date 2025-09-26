@@ -26,7 +26,7 @@
 #endif
 uniform float u_eccentricitySquared;
 uniform vec2 u_ellipsoidRenderLatitudeSinMinMax;
-uniform vec2 u_clipMinMaxHeight;
+uniform vec2 u_clipMinMaxHeight; // Values are negative: clipHeight - maxShapeHeight
 
 RayShapeIntersection intersectZPlane(in Ray ray, in float z) {
     float t = -ray.pos.z / ray.dir.z;
@@ -44,11 +44,11 @@ RayShapeIntersection intersectZPlane(in Ray ray, in float z) {
     }
 }
 
-RayShapeIntersection intersectHeight(in Ray ray, in float relativeHeight, in bool convex)
+RayShapeIntersection intersectHeight(in Ray ray, in float height, in bool convex)
 {
     // Scale the ray by the ellipsoid axes to make it a unit sphere
     // Note: approximating ellipsoid + height as an ellipsoid
-    vec3 radiiCorrection = u_ellipsoidRadiiUv / (u_ellipsoidRadiiUv + relativeHeight);
+    vec3 radiiCorrection = vec3(1.0) / (u_ellipsoidRadii + height);
     vec3 position = ray.pos * radiiCorrection;
     vec3 direction = ray.dir * radiiCorrection;
 
@@ -146,6 +146,7 @@ vec3 getConeNormal(in vec3 p, in bool convex) {
 
 /**
  * Compute the shift between the ellipsoid origin and the apex of a cone of latitude
+ * TODO: fix for non-normalized ellipsoid radii
  */
 float getLatitudeConeShift(in float sinLatitude) {
     // Find prime vertical radius of curvature: 
@@ -158,9 +159,6 @@ float getLatitudeConeShift(in float sinLatitude) {
 }
 
 void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeIntersection intersections[2]) {
-    // Undo the scaling from ellipsoid to sphere
-    ray.pos = ray.pos * u_ellipsoidRadiiUv;
-    ray.dir = ray.dir * u_ellipsoidRadiiUv;
     // Shift the ray to account for the latitude cone not being centered at the Earth center
     ray.pos.z += getLatitudeConeShift(cosHalfAngle);
 
@@ -206,9 +204,6 @@ void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeInterse
 }
 
 RayShapeIntersection intersectRegularCone(in Ray ray, in float cosHalfAngle, in bool convex) {
-    // Undo the scaling from ellipsoid to sphere
-    ray.pos = ray.pos * u_ellipsoidRadiiUv;
-    ray.dir = ray.dir * u_ellipsoidRadiiUv;
     // Shift the ray to account for the latitude cone not being centered at the Earth center
     ray.pos.z += getLatitudeConeShift(cosHalfAngle);
 
