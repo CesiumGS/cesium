@@ -387,6 +387,9 @@ export async function bundleWorkers(options) {
     workerConfig.logOverride = {
       "empty-import-meta": "silent",
     };
+    workerConfig.plugins = options.removePragmas
+      ? [stripPragmaPlugin]
+      : undefined;
   } else {
     workerConfig.format = "esm";
     workerConfig.splitting = true;
