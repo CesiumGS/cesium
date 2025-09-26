@@ -77,8 +77,8 @@ function VoxelBoxShape() {
   this._renderBoundPlanes = new VoxelBoundCollection({ planes: boundPlanes });
 
   this._shaderUniforms = {
-    boxUvToShapeUvScale: new Cartesian3(),
-    boxUvToShapeUvTranslate: new Cartesian3(),
+    boxLocalToShapeUvScale: new Cartesian3(),
+    boxLocalToShapeUvTranslate: new Cartesian3(),
   };
 
   this._shaderDefines = {
@@ -315,17 +315,19 @@ VoxelBoxShape.prototype.update = function (
   const max = maxBounds;
 
   // Compute scale and translation to transform from UV space to bounded UV space
-  shaderUniforms.boxUvToShapeUvScale = Cartesian3.fromElements(
-    2.0 / (min.x === max.x ? 1.0 : max.x - min.x),
-    2.0 / (min.y === max.y ? 1.0 : max.y - min.y),
-    2.0 / (min.z === max.z ? 1.0 : max.z - min.z),
-    shaderUniforms.boxUvToShapeUvScale,
+  const boxLocalToShapeUvScale = Cartesian3.fromElements(
+    1.0 / (min.x === max.x ? 1.0 : max.x - min.x),
+    1.0 / (min.y === max.y ? 1.0 : max.y - min.y),
+    1.0 / (min.z === max.z ? 1.0 : max.z - min.z),
+    shaderUniforms.boxLocalToShapeUvScale,
   );
-  shaderUniforms.boxUvToShapeUvTranslate = Cartesian3.fromElements(
-    -shaderUniforms.boxUvToShapeUvScale.x * (min.x * 0.5 + 0.5),
-    -shaderUniforms.boxUvToShapeUvScale.y * (min.y * 0.5 + 0.5),
-    -shaderUniforms.boxUvToShapeUvScale.z * (min.z * 0.5 + 0.5),
-    shaderUniforms.boxUvToShapeUvTranslate,
+  shaderUniforms.boxLocalToShapeUvTranslate = Cartesian3.negate(
+    Cartesian3.multiplyComponents(
+      boxLocalToShapeUvScale,
+      min,
+      shaderUniforms.boxLocalToShapeUvTranslate,
+    ),
+    shaderUniforms.boxLocalToShapeUvTranslate,
   );
 
   this._shaderMaximumIntersectionsLength = intersectionCount;
@@ -343,26 +345,26 @@ VoxelBoxShape.prototype.updateViewTransforms = function (frameState) {
 }
 
 /**
- * Convert a UV coordinate to the shape's UV space.
+ * Convert a local coordinate to the shape's UV space.
  * @private
- * @param {Cartesian3} positionUV The UV coordinate to convert.
+ * @param {Cartesian3} positionLocal The local coordinate to convert.
  * @param {Cartesian3} result The Cartesian3 to store the result in.
  * @returns {Cartesian3} The converted UV coordinate.
  */
-VoxelBoxShape.prototype.convertUvToShapeUvSpace = function (
-  positionUV,
+VoxelBoxShape.prototype.convertLocalToShapeUvSpace = function (
+  positionLocal,
   result,
 ) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("positionUV", positionUV);
+  Check.typeOf.object("positionLocal", positionLocal);
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  const { boxUvToShapeUvScale, boxUvToShapeUvTranslate } = this._shaderUniforms;
+  const { boxLocalToShapeUvScale, boxLocalToShapeUvTranslate } = this._shaderUniforms;
 
   return Cartesian3.add(
-    Cartesian3.multiplyComponents(positionUV, boxUvToShapeUvScale, result),
-    boxUvToShapeUvTranslate,
+    Cartesian3.multiplyComponents(positionLocal, boxLocalToShapeUvScale, result),
+    boxLocalToShapeUvTranslate,
     result,
   );
 };

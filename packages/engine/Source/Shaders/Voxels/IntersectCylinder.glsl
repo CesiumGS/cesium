@@ -76,6 +76,58 @@ RayShapeIntersection intersectCylinder(in Ray ray, in float radius, in bool conv
     return RayShapeIntersection(intersect1, intersect2);
 }
 
+vec2 intersectCircle(in vec2 circlePos, in vec2 rayDir, in float circleDistance)
+{
+    // Input rayDir is the XY component of a 3D unit vector--not normalized in 2D.
+    float a = dot(rayDir, rayDir);
+    float b = dot(circlePos, rayDir);
+    // float c = dot(circlePos, circlePos) - radius * radius; // UNSTABLE when length(circlePos) ~ radius
+    // Use circleDistance = length(circlePos) - radius, where radius = length(circlePos) - circleDistance
+    float c = circleDistance * (2.0 * length(circlePos) - circleDistance);
+    float ac = a * c;
+    float bb = b * b;
+    if (bb < ac) {
+        return vec2(INF_HIT); // no intersection
+    }
+    float exact1 = (b - sqrt(bb - ac)) / a;
+    float exact2 = (b + sqrt(bb - ac)) / a;
+    // Expand quadratic formula for ac << bb:
+    // (b -/+ sqrt(b*b - a*c)) / a
+    // = b/a * (1 -/+ sqrt(1 - 2 * smallTerm)) // smallTerm = 0.5 * a * c / (b * b)
+    // = b/a * (1 -/+ (1 - smallTerm - 0.5 * smallTerm^2 - 0.5 * smallTerm^3 - ...))
+    float smallTerm = 0.5 * ac / bb;
+    float expansion = smallTerm * (1.0 + 0.5 * smallTerm * (1.0 + smallTerm));
+    return (abs(smallTerm) < 0.025)
+        ? b * vec2(expansion, 2.0 - expansion) / a
+        : vec2(exact1, exact2);
+}
+
+RayShapeIntersection intersectInfiniteCylinderEC(in Ray ray, in vec2 circlePos, in float circleDistance)
+{
+    vec2 rayPos = ray.pos.xy;
+    vec2 rayDir = ray.dir.xy;
+
+    vec2 toCirclePos = circlePos;
+    float circleRayDistance = circleDistance;
+    if (czm_orthographicIn3D == 1.0) {
+        toCirclePos -= rayPos;
+        // TODO: correct circleRayDistance for pixels away from camera center
+    }
+
+    vec2 tValues = intersectCircle(toCirclePos, rayDir, circleRayDistance);
+    if (tValues.x == INF_HIT) {
+        vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+        return RayShapeIntersection(miss, miss);
+    }
+    float t1 = tValues.x;
+    float t2 = tValues.y;
+    vec2 intersect1 = rayPos + t1 * rayDir;
+    vec2 intersect2 = rayPos + t2 * rayDir;
+    vec4 entry = vec4(normalize(intersect1 - circlePos), 0.0, t1);
+    vec4 exit = vec4(normalize(intersect2 - circlePos), 0.0, t2);
+    return RayShapeIntersection(entry, exit);
+}
+
 /**
  * Find the intersection of a ray with a right cylindrical solid of given
  * radius and height bounds. NOTE: The shape is assumed to be convex.
@@ -87,13 +139,8 @@ RayShapeIntersection intersectBoundedCylinder(in Ray ray, in Ray rayEC, in float
     return intersectIntersections(ray, cylinderIntersection, heightBoundsIntersection);
 }
 
-void intersectShape(Ray ray, Ray rayEC, inout Intersections ix)
+void intersectShape(in Ray ray, in Ray rayEC, inout Intersections ix)
 {
-    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-    // Direction is scaled as well to be in sync with position.
-    ray.pos = ray.pos * 2.0 - 1.0;
-    //ray.dir *= 2.0;
-
     RayShapeIntersection outerIntersect = intersectBoundedCylinder(ray, rayEC, u_cylinderRenderRadiusMinMax.y);
 
     setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_RADIUS_MAX, outerIntersect);

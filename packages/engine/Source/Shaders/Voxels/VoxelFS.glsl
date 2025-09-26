@@ -1,7 +1,7 @@
 // See Intersection.glsl for the definition of intersectScene
 // See IntersectionUtils.glsl for the definition of nextIntersection
-// See convertUvToBox.glsl, convertUvToCylinder.glsl, or convertUvToEllipsoid.glsl
-// for the definition of convertUvToShapeUvSpace. The appropriate function is 
+// See convertLocalToBoxUv.glsl, convertLocalToCylinderUv.glsl, or convertLocalToEllipsoidUv.glsl
+// for the definition of convertLocalToShapeUvSpaceDerivative. The appropriate function is
 // selected based on the VoxelPrimitive shape type, and added to the shader in
 // Scene/VoxelRenderResources.js.
 // See Octree.glsl for the definitions of TraversalData, SampleData,
@@ -15,8 +15,8 @@
     #define ALPHA_ACCUM_MAX 0.98 // Must be > 0.0 and <= 1.0
 #endif
 
-uniform mat4 u_transformPositionViewToUv;
-uniform vec3 u_cameraDirectionUv;
+uniform mat4 u_transformPositionViewToLocal;
+uniform vec3 u_cameraDirectionLocal;
 uniform float u_stepSize;
 
 #if defined(PICKING)
@@ -111,21 +111,21 @@ int getSampleIndex(in SampleData sampleData) {
 }
 
 /**
- * Compute the view ray at the current fragment, in the local UV coordinates of the shape.
+ * Compute the view ray at the current fragment, in the local coordinates of the shape.
  */
-Ray getViewRayUv() {
+Ray getViewRayLocal() {
     vec4 eyeCoordinates = czm_windowToEyeCoordinates(gl_FragCoord);
-    vec3 viewDirUv;
-    vec3 viewPosUv;
+    vec3 origin;
+    vec3 direction;
     if (czm_orthographicIn3D == 1.0) {
         eyeCoordinates.z = 0.0;
-        viewPosUv = (u_transformPositionViewToUv * eyeCoordinates).xyz;
-        viewDirUv = normalize(u_cameraDirectionUv);
+        origin = (u_transformPositionViewToLocal * eyeCoordinates).xyz;
+        direction = u_cameraDirectionLocal;
     } else {
-        viewPosUv = u_cameraPositionUv;
-        viewDirUv = normalize(u_transformDirectionViewToLocal * eyeCoordinates.xyz);
+        origin = u_cameraPositionLocal;
+        direction = normalize(u_transformDirectionViewToLocal * eyeCoordinates.xyz);
     }
-    return Ray(viewPosUv, viewDirUv);
+    return Ray(origin, direction);
 }
 
 Ray getViewRayEC() {
@@ -139,12 +139,12 @@ Ray getViewRayEC() {
 
 void main()
 {
-    Ray viewRayUv = getViewRayUv();
+    Ray viewRayLocal = getViewRayLocal();
     Ray viewRayEC = getViewRayEC();
 
     Intersections ix;
     vec2 screenCoord = (gl_FragCoord.xy - czm_viewport.xy) / czm_viewport.zw; // [0,1]
-    RayShapeIntersection shapeIntersection = intersectScene(screenCoord, viewRayUv, viewRayEC, ix);
+    RayShapeIntersection shapeIntersection = intersectScene(screenCoord, viewRayLocal, viewRayEC, ix);
     // Exit early if the scene was completely missed.
     if (shapeIntersection.entry.w == NO_HIT) {
         discard;
@@ -155,14 +155,14 @@ void main()
 
     vec3 positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
     TileAndUvCoordinate tileAndUv = getTileAndUvCoordinate(positionEC);
-    vec3 positionUv = viewRayUv.pos + 0.5 * currentT * viewRayUv.dir; // 0.5 for EC to UV
-    PointJacobianT pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
+    vec3 positionLocal = viewRayLocal.pos + currentT * viewRayLocal.dir;
+    PointJacobianT pointJacobian = convertLocalToShapeUvSpaceDerivative(positionLocal);
 
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(tileAndUv, traversalData, sampleDatas);
-    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
+    vec4 step = getStepSize(sampleDatas[0], viewRayLocal, shapeIntersection, pointJacobian.jacobianT, currentT);
 
     FragmentInput fragmentInput;
     #if defined(STATISTICS)
@@ -182,7 +182,7 @@ void main()
         fragmentInput.attributes.positionEC = positionEC;
         fragmentInput.attributes.normalEC = step.xyz;
 
-        fragmentInput.voxel.viewDirUv = viewRayUv.dir;
+        fragmentInput.voxel.viewDirUv = viewRayLocal.dir;
 
         fragmentInput.voxel.travelDistance = step.w;
         fragmentInput.voxel.stepCount = stepCount;
@@ -232,13 +232,13 @@ void main()
         }
         positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
         tileAndUv = getTileAndUvCoordinate(positionEC);
-        positionUv = viewRayUv.pos + 0.5 * currentT * viewRayUv.dir; // 0.5 for EC to UV
-        pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
+        positionLocal = viewRayLocal.pos + currentT * viewRayLocal.dir;
+        pointJacobian = convertLocalToShapeUvSpaceDerivative(positionLocal);
 
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
         traverseOctreeFromExisting(tileAndUv, traversalData, sampleDatas);
-        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
+        step = getStepSize(sampleDatas[0], viewRayLocal, shapeIntersection, pointJacobian.jacobianT, currentT);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]

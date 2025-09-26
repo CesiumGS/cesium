@@ -240,13 +240,7 @@ RayShapeIntersection intersectRegularCone(in Ray ray, in float cosHalfAngle, in 
     }
 }
 
-void intersectShape(in Ray ray, in Ray rayEC, inout Intersections ix) {
-    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-    // Direction is scaled as well to be in sync with position.
-    ray.pos = ray.pos * 2.0 - 1.0;
-    //ray.dir *= 2.0;
-
-    // Outer ellipsoid
+void intersectShape(in Ray ray, in Ray rayEC, inout Intersections ix) {    // Outer ellipsoid
     RayShapeIntersection outerIntersect = intersectHeight(ray, u_clipMinMaxHeight.y, true);
     setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX, outerIntersect);
 

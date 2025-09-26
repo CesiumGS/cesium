@@ -1,22 +1,19 @@
-uniform vec2 u_cylinderUvToShapeUvRadius; // x = scale, y = offset
-uniform vec2 u_cylinderUvToShapeUvHeight; // x = scale, y = offset
-uniform vec2 u_cylinderUvToShapeUvAngle; // x = scale, y = offset
+uniform vec2 u_cylinderLocalToShapeUvRadius; // x = scale, y = offset
+uniform vec2 u_cylinderLocalToShapeUvHeight; // x = scale, y = offset
+uniform vec2 u_cylinderLocalToShapeUvAngle; // x = scale, y = offset
 uniform float u_cylinderShapeUvAngleRangeOrigin;
 uniform mat3 u_cylinderEcToRadialTangentUp;
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
-uniform vec3 u_cameraPositionUv;
+uniform vec3 u_cameraPositionLocal;
 uniform mat3 u_transformDirectionViewToLocal;
 
-PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
-    // Convert from Cartesian UV space [0, 1] to Cartesian local space [-1, 1]
-    vec3 position = positionUv * 2.0 - 1.0;
-
+PointJacobianT convertLocalToShapeSpaceDerivative(in vec3 position) {
     float radius = length(position.xy); // [0, 1]
     vec3 radial = normalize(vec3(position.xy, 0.0));
 
     // Shape space height is defined within [0, 1]
-    float height = positionUv.z; // [0, 1]
+    float height = position.z; // [0, 1]
     vec3 z = vec3(0.0, 0.0, 1.0);
 
     float angle = atan(position.y, position.x);
@@ -28,29 +25,27 @@ PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
 }
 
 vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
-    float radius = positionShape.x * u_cylinderUvToShapeUvRadius.x + u_cylinderUvToShapeUvRadius.y;
+    float radius = positionShape.x * u_cylinderLocalToShapeUvRadius.x + u_cylinderLocalToShapeUvRadius.y;
 
     float rawAngle = (positionShape.y + czm_pi) / czm_twoPi;
     float angle = fract(rawAngle - u_cylinderShapeUvAngleRangeOrigin);
-    angle = angle * u_cylinderUvToShapeUvAngle.x + u_cylinderUvToShapeUvAngle.y;
+    angle = angle * u_cylinderLocalToShapeUvAngle.x + u_cylinderLocalToShapeUvAngle.y;
 
-    // TODO: 2.0 factor to restore old behavior.
-    float height = positionShape.z * u_cylinderUvToShapeUvHeight.x * 2.0 + u_cylinderUvToShapeUvHeight.y;
+    float height = positionShape.z * u_cylinderLocalToShapeUvHeight.x + u_cylinderLocalToShapeUvHeight.y;
 
     return vec3(radius, angle, height);
 }
 
-PointJacobianT convertUvToShapeUvSpaceDerivative(in vec3 positionUv) {
-    PointJacobianT pointJacobian = convertUvToShapeSpaceDerivative(positionUv);
+PointJacobianT convertLocalToShapeUvSpaceDerivative(in vec3 positionLocal) {
+    PointJacobianT pointJacobian = convertLocalToShapeSpaceDerivative(positionLocal);
     pointJacobian.point = convertShapeToShapeUvSpace(pointJacobian.point);
     return pointJacobian;
 }
 
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
-    float radius = shapeUv.x / u_cylinderUvToShapeUvRadius.x;
-    float angle = shapeUv.y * czm_twoPi / u_cylinderUvToShapeUvAngle.x;
-    // TODO: 2.0 factor to restore old behavior
-    float height = shapeUv.z / u_cylinderUvToShapeUvHeight.x / 2.0;
+    float radius = shapeUv.x / u_cylinderLocalToShapeUvRadius.x;
+    float angle = shapeUv.y * czm_twoPi / u_cylinderLocalToShapeUvAngle.x;
+    float height = shapeUv.z / u_cylinderLocalToShapeUvHeight.x;
 
     return vec3(radius, angle, height);
 }
@@ -77,12 +72,12 @@ vec3 convertECtoDeltaTile(in vec3 positionEC) {
     vec3 rtu = u_cylinderEcToRadialTangentUp * positionEC;
     // 2. Compute change in angular and radial coordinates. TODO: compute u_cameraShapePosition on CPU? Or get it from u_cameraTileCoordinates & u_cameraTileUv
     //vec2 dPolar = computePolarChange(rtu.xy, u_cameraShapePosition.x);
-    float cameraRadialDistance = length(u_cameraPositionUv.xy) * 2.0;
+    float cameraRadialDistance = length(u_cameraPositionLocal.xy);
     vec2 dPolar = computePolarChange(rtu.xy, cameraRadialDistance);
     // 3. Convert to tileset coordinates in [0, 1]
-    float dx = u_cylinderUvToShapeUvRadius.x * dPolar.x;
-    float dy = u_cylinderUvToShapeUvAngle.x * dPolar.y / czm_twoPi;
-    float dz = u_cylinderUvToShapeUvHeight.x * rtu.z;
+    float dx = u_cylinderLocalToShapeUvRadius.x * dPolar.x;
+    float dy = u_cylinderLocalToShapeUvAngle.x * dPolar.y / czm_twoPi;
+    float dz = u_cylinderLocalToShapeUvHeight.x * rtu.z;
     // 4. Convert to tile coordinate changes
     return vec3(dx, dy, dz) * float(1 << u_cameraTileCoordinates.w);
 }
@@ -108,6 +103,5 @@ TileAndUvCoordinate getTileAndUvCoordinate(in vec3 positionEC) {
     // TODO: Don't wrap if shape has a gap in angle
     tileUv.y = (u_cameraTileCoordinates.w == 0) ? fract(tileUv.y) : clamp(tileUv.y, 0.0, 1.0);
     tileUv.z = clamp(tileUv.z, 0.0, 1.0);
-    //tileUv.x = 2.0 * length((u_transformPositionViewToUv * vec4(positionEC, 1.0)).xy) * u_cylinderUvToShapeUvRadius.x;
     return TileAndUvCoordinate(ivec4(tileCoordinate, u_cameraTileCoordinates.w), tileUv);
 }

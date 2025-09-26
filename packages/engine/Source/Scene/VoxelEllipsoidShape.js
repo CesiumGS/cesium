@@ -76,8 +76,8 @@ function VoxelEllipsoidShape() {
     ellipsoidInverseRadiiSquared: new Cartesian3(),
     ellipsoidRenderLongitudeMinMax: new Cartesian2(),
     ellipsoidShapeUvLongitudeMinMaxMid: new Cartesian3(),
-    ellipsoidUvToShapeUvLongitude: new Cartesian2(),
-    ellipsoidUvToShapeUvLatitude: new Cartesian2(),
+    ellipsoidLocalToShapeUvLongitude: new Cartesian2(),
+    ellipsoidLocalToShapeUvLatitude: new Cartesian2(),
     ellipsoidRenderLatitudeSinMinMax: new Cartesian2(),
     ellipsoidInverseHeightDifference: 0.0,
     clipMinMaxHeight: new Cartesian2(),
@@ -558,29 +558,20 @@ VoxelEllipsoidShape.prototype.update = function (
         true;
     }
 
-    // delerp(longitudeUv, minLongitudeUv, maxLongitudeUv)
-    // (longitudeUv - minLongitudeUv) / (maxLongitudeUv - minLongitudeUv)
-    // longitudeUv / (maxLongitudeUv - minLongitudeUv) - minLongitudeUv / (maxLongitudeUv - minLongitudeUv)
-    // scale = 1.0 / (maxLongitudeUv - minLongitudeUv)
-    // scale = 1.0 / (((maxLongitude - pi) / (2.0 * pi)) - ((minLongitude - pi) / (2.0 * pi)))
-    // scale = 2.0 * pi / (maxLongitude - minLongitude)
-    // offset = -minLongitudeUv / (maxLongitudeUv - minLongitudeUv)
-    // offset = -((minLongitude - pi) / (2.0 * pi)) / (((maxLongitude - pi) / (2.0 * pi)) - ((minLongitude - pi) / (2.0 * pi)))
-    // offset = -(minLongitude - pi) / (maxLongitude - minLongitude)
     if (shapeLongitudeRange <= epsilonLongitude) {
-      shaderUniforms.ellipsoidUvToShapeUvLongitude = Cartesian2.fromElements(
+      shaderUniforms.ellipsoidLocalToShapeUvLongitude = Cartesian2.fromElements(
         0.0,
         1.0,
-        shaderUniforms.ellipsoidUvToShapeUvLongitude,
+        shaderUniforms.ellipsoidLocalToShapeUvLongitude,
       );
     } else {
       const scale = defaultLongitudeRange / shapeLongitudeRange;
       const offset =
         -(shapeMinBounds.x - DefaultMinBounds.x) / shapeLongitudeRange;
-      shaderUniforms.ellipsoidUvToShapeUvLongitude = Cartesian2.fromElements(
+      shaderUniforms.ellipsoidLocalToShapeUvLongitude = Cartesian2.fromElements(
         scale,
         offset,
-        shaderUniforms.ellipsoidUvToShapeUvLongitude,
+        shaderUniforms.ellipsoidLocalToShapeUvLongitude,
       );
     }
   }
@@ -680,31 +671,21 @@ VoxelEllipsoidShape.prototype.update = function (
   if (shapeHasLatitude) {
     shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE"] = true;
 
-    // delerp(latitudeUv, minLatitudeUv, maxLatitudeUv)
-    // (latitudeUv - minLatitudeUv) / (maxLatitudeUv - minLatitudeUv)
-    // latitudeUv / (maxLatitudeUv - minLatitudeUv) - minLatitudeUv / (maxLatitudeUv - minLatitudeUv)
-    // scale = 1.0 / (maxLatitudeUv - minLatitudeUv)
-    // scale = 1.0 / (((maxLatitude - pi) / (2.0 * pi)) - ((minLatitude - pi) / (2.0 * pi)))
-    // scale = 2.0 * pi / (maxLatitude - minLatitude)
-    // offset = -minLatitudeUv / (maxLatitudeUv - minLatitudeUv)
-    // offset = -((minLatitude - -pi) / (2.0 * pi)) / (((maxLatitude - pi) / (2.0 * pi)) - ((minLatitude - pi) / (2.0 * pi)))
-    // offset = -(minLatitude - -pi) / (maxLatitude - minLatitude)
-    // offset = (-pi - minLatitude) / (maxLatitude - minLatitude)
     if (shapeLatitudeRange < epsilonLatitude) {
-      shaderUniforms.ellipsoidUvToShapeUvLatitude = Cartesian2.fromElements(
+      shaderUniforms.ellipsoidLocalToShapeUvLatitude = Cartesian2.fromElements(
         0.0,
         1.0,
-        shaderUniforms.ellipsoidUvToShapeUvLatitude,
+        shaderUniforms.ellipsoidLocalToShapeUvLatitude,
       );
     } else {
       const defaultLatitudeRange = DefaultMaxBounds.y - DefaultMinBounds.y;
       const scale = defaultLatitudeRange / shapeLatitudeRange;
       const offset =
         (DefaultMinBounds.y - shapeMinBounds.y) / shapeLatitudeRange;
-      shaderUniforms.ellipsoidUvToShapeUvLatitude = Cartesian2.fromElements(
+      shaderUniforms.ellipsoidLocalToShapeUvLatitude = Cartesian2.fromElements(
         scale,
         offset,
-        shaderUniforms.ellipsoidUvToShapeUvLatitude,
+        shaderUniforms.ellipsoidLocalToShapeUvLatitude,
       );
     }
   }
@@ -922,26 +903,19 @@ const scratchNormal2d = new Cartesian2();
 /**
  * Convert a UV coordinate to the shape's UV space.
  * @private
- * @param {Cartesian3} positionUV The UV coordinate to convert.
+ * @param {Cartesian3} positionLocal The local position to convert.
  * @param {Cartesian3} result The Cartesian3 to store the result in.
  * @returns {Cartesian3} The converted UV coordinate.
  */
-VoxelEllipsoidShape.prototype.convertUvToShapeUvSpace = function (
-  positionUV,
+VoxelEllipsoidShape.prototype.convertLocalToShapeUvSpace = function (
+  positionLocal,
   result,
 ) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("positionUV", positionUV);
+  Check.typeOf.object("positionLocal", positionLocal);
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  // Convert from Cartesian UV space [0, 1] to Cartesian local space [-1, 1]
-  const positionLocal = Cartesian3.fromElements(
-    positionUV.x * 2.0 - 1.0,
-    positionUV.y * 2.0 - 1.0,
-    positionUV.z * 2.0 - 1.0,
-    result,
-  );
   let longitude = Math.atan2(positionLocal.y, positionLocal.x);
 
   const {

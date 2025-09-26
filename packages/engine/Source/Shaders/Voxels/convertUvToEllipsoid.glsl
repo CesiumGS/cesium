@@ -16,16 +16,16 @@ uniform vec3 u_ellipsoidInverseRadiiSquared;
     uniform vec3 u_ellipsoidShapeUvLongitudeMinMaxMid;
 #endif
 #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
-    uniform vec2 u_ellipsoidUvToShapeUvLongitude; // x = scale, y = offset
+    uniform vec2 u_ellipsoidLocalToShapeUvLongitude; // x = scale, y = offset
 #endif
 #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
-    uniform vec2 u_ellipsoidUvToShapeUvLatitude; // x = scale, y = offset
+    uniform vec2 u_ellipsoidLocalToShapeUvLatitude; // x = scale, y = offset
 #endif
 uniform float u_ellipsoidInverseHeightDifference;
 
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
-uniform vec3 u_cameraPositionUv; // TODO: remove - unused
+uniform vec3 u_cameraPositionLocal; // TODO: remove - unused
 uniform mat3 u_transformDirectionViewToLocal; // TODO: move to VoxelFS where it's used (is it?)
 
 // robust iterative solution without trig functions
@@ -59,10 +59,7 @@ vec3 nearestPointAndRadiusOnEllipse(vec2 pos, vec2 radii) {
     return vec3(v * sign(pos), length(v - evolute));
 }
 
-PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
-    // Convert from UV space [0, 1] to local space [-1, 1]
-    vec3 position = positionUv * 2.0 - 1.0;
-
+PointJacobianT convertLocalToShapeSpaceDerivative(in vec3 position) {
     float longitude = atan(position.y, position.x);
     vec3 east = normalize(vec3(-position.y, position.x, 0.0));
 
@@ -105,13 +102,13 @@ vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
     #endif
 
     #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
-        longitude = longitude * u_ellipsoidUvToShapeUvLongitude.x + u_ellipsoidUvToShapeUvLongitude.y;
+        longitude = longitude * u_ellipsoidLocalToShapeUvLongitude.x + u_ellipsoidLocalToShapeUvLongitude.y;
     #endif
 
     // Latitude: shift and scale to [0, 1]
     float latitude = (positionShape.y + czm_piOverTwo) / czm_pi;
     #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
-        latitude = latitude * u_ellipsoidUvToShapeUvLatitude.x + u_ellipsoidUvToShapeUvLatitude.y;
+        latitude = latitude * u_ellipsoidLocalToShapeUvLatitude.x + u_ellipsoidLocalToShapeUvLatitude.y;
     #endif
 
     // Height: scale to the range [0, 1]
@@ -120,8 +117,8 @@ vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
     return vec3(longitude, latitude, height);
 }
 
-PointJacobianT convertUvToShapeUvSpaceDerivative(in vec3 positionUv) {
-    PointJacobianT pointJacobian = convertUvToShapeSpaceDerivative(positionUv);
+PointJacobianT convertLocalToShapeUvSpaceDerivative(in vec3 positionLocal) {
+    PointJacobianT pointJacobian = convertLocalToShapeSpaceDerivative(positionLocal);
     pointJacobian.point = convertShapeToShapeUvSpace(pointJacobian.point);
     return pointJacobian;
 }
@@ -130,13 +127,13 @@ vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
     // Convert from [0, 1] to radians [-pi, pi]
     float longitude = shapeUv.x * czm_twoPi;
     #if defined (ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
-        longitude /= u_ellipsoidUvToShapeUvLongitude.x;
+        longitude /= u_ellipsoidLocalToShapeUvLongitude.x;
     #endif
 
     // Convert from [0, 1] to radians [-pi/2, pi/2]
     float latitude = shapeUv.y * czm_pi;
     #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
-        latitude /= u_ellipsoidUvToShapeUvLatitude.x;
+        latitude /= u_ellipsoidLocalToShapeUvLatitude.x;
     #endif
 
     float height = shapeUv.z / u_ellipsoidInverseHeightDifference;

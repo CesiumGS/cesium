@@ -117,13 +117,13 @@ VoxelShape.prototype.update = DeveloperError.throwInstantiationError;
 VoxelShape.prototype.updateViewTransforms = DeveloperError.throwInstantiationError;
 
 /**
- * Converts a UV coordinate to the shape's UV space.
+ * Converts a local coordinate to the shape's UV space.
  * @private
- * @param {Cartesian3} positionUV The UV coordinate to convert.
+ * @param {Cartesian3} positionLocal The local coordinate to convert.
  * @param {Cartesian3} result The Cartesian3 to store the result in.
  * @returns {Cartesian3} The converted UV coordinate.
  */
-VoxelShape.prototype.convertUvToShapeUvSpace =
+VoxelShape.prototype.convertLocalToShapeUvSpace =
   DeveloperError.throwInstantiationError;
 
 /**

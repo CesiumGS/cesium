@@ -1,36 +1,34 @@
-uniform mat3 u_transformDirectionViewToTile;
-
-uniform vec3 u_boxUvToShapeUvScale;
-uniform vec3 u_boxUvToShapeUvTranslate;
+uniform vec3 u_boxLocalToShapeUvScale;
+uniform vec3 u_boxLocalToShapeUvTranslate;
 
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
-uniform vec3 u_cameraPositionUv;
+uniform vec3 u_cameraPositionLocal;
 uniform mat3 u_transformDirectionViewToLocal;
 
-PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
-    // For BOX, UV space = shape space, so we can use positionUv as-is,
-    // and the Jacobian is the identity matrix, except that a step of 1
-    // only spans half the shape space [-1, 1], so the identity is scaled.
-    return PointJacobianT(positionUv, mat3(0.5));
+PointJacobianT convertLocalToShapeSpaceDerivative(in vec3 positionLocal) {
+    // For BOX, local space = shape space, so we can use positionLocal as-is,
+    // and the Jacobian is the identity matrix.
+    return PointJacobianT(positionLocal, mat3(1.0));
 }
 
 vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
-    return positionShape * u_boxUvToShapeUvScale + u_boxUvToShapeUvTranslate;
+    return positionShape * u_boxLocalToShapeUvScale + u_boxLocalToShapeUvTranslate;
 }
 
-PointJacobianT convertUvToShapeUvSpaceDerivative(in vec3 positionUv) {
-    PointJacobianT pointJacobian = convertUvToShapeSpaceDerivative(positionUv);
+PointJacobianT convertLocalToShapeUvSpaceDerivative(in vec3 positionLocal) {
+    PointJacobianT pointJacobian = convertLocalToShapeSpaceDerivative(positionLocal);
     pointJacobian.point = convertShapeToShapeUvSpace(pointJacobian.point);
     return pointJacobian;
 }
 
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
-    return shapeUv / u_boxUvToShapeUvScale;
+    return shapeUv / u_boxLocalToShapeUvScale;
 }
 
 vec3 convertECtoDeltaTile(in vec3 positionEC) {
-    return u_boxUvToShapeUvScale * (u_transformDirectionViewToTile * positionEC);
+    vec3 dPosition = u_transformDirectionViewToLocal * positionEC;
+    return u_boxLocalToShapeUvScale * dPosition * float(1 << u_cameraTileCoordinates.w);
 }
 
 TileAndUvCoordinate getTileAndUvCoordinate(in vec3 positionEC) {

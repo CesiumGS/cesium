@@ -340,31 +340,24 @@ function VoxelPrimitive(options) {
   this._clock = options.clock;
 
   // Transforms and other values that are computed when the shape changes
+  /**
+   * @type {Matrix4}
+   * @private
+   */
+  this._transformPositionLocalToWorld = new Matrix4();
 
   /**
    * @type {Matrix4}
    * @private
    */
-  this._transformPositionWorldToUv = new Matrix4();
+  this._transformPositionWorldToLocal = new Matrix4();
 
   /**
-   * @type {Matrix3}
-   * @private
-   */
-  this._transformDirectionWorldToUv = new Matrix3();
-
-  /**
+   * Transforms a plane in Hessian normal form from local space to view space.
    * @type {Matrix4}
    * @private
    */
-  this._transformPositionUvToWorld = new Matrix4();
-
-  /**
-   * TODO: explain
-   * @type {Matrix4}
-   * @private
-   */
-  this._transformPlaneUvToView = new Matrix4();
+  this._transformPlaneLocalToView = new Matrix4();
 
   /**
    * @type {Matrix3}
@@ -455,11 +448,10 @@ function VoxelPrimitive(options) {
     inputDimensions: new Cartesian3(),
     paddingBefore: new Cartesian3(),
     paddingAfter: new Cartesian3(),
-    transformPositionViewToUv: new Matrix4(),
-    transformDirectionViewToTile: new Matrix3(),
+    transformPositionViewToLocal: new Matrix4(),
     transformDirectionViewToLocal: new Matrix3(),
-    cameraPositionUv: new Cartesian3(),
-    cameraDirectionUv: new Cartesian3(),
+    cameraPositionLocal: new Cartesian3(),
+    cameraDirectionLocal: new Cartesian3(),
     cameraTileCoordinates: new Cartesian4(),
     cameraTileUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
@@ -1151,23 +1143,10 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
-const scratchTransformPositionWorldToLocal = new Matrix4();
 const scratchTransformPositionLocalToWorld = new Matrix4();
 const scratchTransformPositionLocalToProjection = new Matrix4();
 const scratchCameraPositionShapeUv = new Cartesian3();
 const scratchCameraTileCoordinates = new Cartesian4();
-
-const transformPositionLocalToUv = Matrix4.fromRotationTranslation(
-  Matrix3.fromUniformScale(0.5, new Matrix3()),
-  new Cartesian3(0.5, 0.5, 0.5),
-  new Matrix4(),
-);
-const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
-  Matrix3.fromUniformScale(2.0, new Matrix3()),
-  new Cartesian3(-1.0, -1.0, -1.0),
-  new Matrix4(),
-);
-const scratchTransformPositionViewToLocal = new Matrix4();
 
 /**
  * Updates the voxel primitive.
@@ -1305,35 +1284,18 @@ VoxelPrimitive.prototype.update = function (frameState) {
     uniforms.ndcSpaceAxisAlignedBoundingBox,
   );
   const transformPositionViewToWorld = context.uniformState.inverseView;
-  uniforms.transformPositionViewToUv = Matrix4.multiplyTransformation(
-    this._transformPositionWorldToUv,
-    transformPositionViewToWorld,
-    uniforms.transformPositionViewToUv,
-  );
-  uniforms.transformDirectionViewToTile = Matrix3.multiplyByUniformScale(
-    Matrix4.getMatrix3(
-      uniforms.transformPositionViewToUv,
-      uniforms.transformDirectionViewToTile,
-    ),
-    2 ** (this._availableLevels - 1),
-    uniforms.transformDirectionViewToTile,
-  );
-
-  const transformPositionLocalToWorld = this._shape.shapeTransform;
-  const transformPositionWorldToLocal = Matrix4.inverse(
-    transformPositionLocalToWorld,
-    scratchTransformPositionWorldToLocal,
-  );
   const transformPositionViewToLocal = Matrix4.multiplyTransformation(
-    transformPositionWorldToLocal,
+    this._transformPositionWorldToLocal,
     transformPositionViewToWorld,
-    scratchTransformPositionViewToLocal,
-  );
-  this._transformPlaneUvToView = Matrix4.transpose(
-    transformPositionViewToLocal,
-    this._transformPlaneUvToView,
+    uniforms.transformPositionViewToLocal,
   );
 
+  this._transformPlaneLocalToView = Matrix4.transpose(
+    transformPositionViewToLocal,
+    this._transformPlaneLocalToView,
+  );
+
+  // TODO: is inverseViewRotation unitary?
   const transformDirectionViewToWorld =
     context.uniformState.inverseViewRotation;
   uniforms.transformDirectionViewToLocal = Matrix3.multiply(
@@ -1341,28 +1303,23 @@ VoxelPrimitive.prototype.update = function (frameState) {
     transformDirectionViewToWorld,
     uniforms.transformDirectionViewToLocal,
   );
-  // TODO: not sure if transformDirectionViewToWorld is unitary. Getting rotation just in case.
-  uniforms.transformDirectionViewToLocal = Matrix3.getRotation(
-    uniforms.transformDirectionViewToLocal,
-    uniforms.transformDirectionViewToLocal,
-  );
-  uniforms.cameraPositionUv = Matrix4.multiplyByPoint(
-    this._transformPositionWorldToUv,
+  uniforms.cameraPositionLocal = Matrix4.multiplyByPoint(
+    this._transformPositionWorldToLocal,
     frameState.camera.positionWC,
-    uniforms.cameraPositionUv,
+    uniforms.cameraPositionLocal,
   );
-  uniforms.cameraDirectionUv = Matrix3.multiplyByVector(
-    this._transformDirectionWorldToUv,
+  uniforms.cameraDirectionLocal = Matrix3.multiplyByVector(
+    this._transformDirectionWorldToLocal,
     frameState.camera.directionWC,
-    uniforms.cameraDirectionUv,
+    uniforms.cameraDirectionLocal,
   );
-  uniforms.cameraDirectionUv = Cartesian3.normalize(
-    uniforms.cameraDirectionUv,
-    uniforms.cameraDirectionUv,
+  uniforms.cameraDirectionLocal = Cartesian3.normalize(
+    uniforms.cameraDirectionLocal,
+    uniforms.cameraDirectionLocal,
   );
   const cameraTileCoordinates = getTileCoordinates(
     this,
-    uniforms.cameraPositionUv,
+    uniforms.cameraPositionLocal,
     scratchCameraTileCoordinates,
   );
   uniforms.cameraTileCoordinates = Cartesian4.fromElements(
@@ -1401,7 +1358,7 @@ function updateRenderBoundPlanes(primitive, frameState) {
     return;
   }
   // TODO: copy renderBoundPlanes from the shape to the primitive?
-  renderBoundPlanes.update(frameState, primitive._transformPlaneUvToView);
+  renderBoundPlanes.update(frameState, primitive._transformPlaneLocalToView);
   uniforms.renderBoundPlanesTexture = renderBoundPlanes.texture;
 }
 
@@ -1409,14 +1366,14 @@ function updateRenderBoundPlanes(primitive, frameState) {
  * Converts a position in UV space to tile coordinates.
  *
  * @param {VoxelPrimitive} primitive The primitive to get the tile coordinates for.
- * @param {Cartesian3} positionUv The position in UV space to convert to tile coordinates.
+ * @param {Cartesian3} positionLocal The position in local space to convert to tile coordinates.
  * @param {Cartesian4} result The result object to store the tile coordinates.
  * @returns {Cartesian4} The tile coordinates of the supplied position.
  * @private
  */
-function getTileCoordinates(primitive, positionUv, result) {
-  const shapeUv = primitive._shape.convertUvToShapeUvSpace(
-    positionUv,
+function getTileCoordinates(primitive, positionLocal, result) {
+  const shapeUv = primitive._shape.convertLocalToShapeUvSpace(
+    positionLocal,
     scratchCameraPositionShapeUv,
   );
 
@@ -1704,30 +1661,16 @@ function updateShapeAndTransforms(primitive) {
     return false;
   }
 
-  const transformPositionLocalToWorld = shape.shapeTransform;
-  const transformPositionWorldToLocal = Matrix4.inverse(
-    transformPositionLocalToWorld,
-    scratchTransformPositionWorldToLocal,
+  primitive._transformPositionLocalToWorld = Matrix4.clone(
+    shape.shapeTransform,
+    primitive._transformPositionLocalToWorld,
   );
-
-  // Set member variables when the shape is dirty
-  primitive._transformPositionWorldToUv = Matrix4.multiplyTransformation(
-    transformPositionLocalToUv,
-    transformPositionWorldToLocal,
-    primitive._transformPositionWorldToUv,
+  primitive._transformPositionWorldToLocal = Matrix4.inverse(
+    primitive._transformPositionLocalToWorld,
+    primitive._transformPositionWorldToLocal,
   );
-  primitive._transformDirectionWorldToUv = Matrix4.getMatrix3(
-    primitive._transformPositionWorldToUv,
-    primitive._transformDirectionWorldToUv,
-  );
-  primitive._transformPositionUvToWorld = Matrix4.multiplyTransformation(
-    transformPositionLocalToWorld,
-    transformPositionUvToLocal,
-    primitive._transformPositionUvToWorld,
-  );
-  // TODO: is rotation OK here?
   primitive._transformDirectionWorldToLocal = Matrix4.getRotation(
-    transformPositionWorldToLocal,
+    primitive._transformPositionWorldToLocal,
     primitive._transformDirectionWorldToLocal,
   );
 
@@ -1862,12 +1805,12 @@ function updateClippingPlanes(primitive, frameState) {
     const uniforms = primitive._uniforms;
     uniforms.clippingPlanesTexture = clippingPlanes.texture;
 
-    // Compute the clipping plane's transformation to uv space and then take the inverse
+    // Compute the clipping plane's transformation to local space and then take the inverse
     // transpose to properly transform the hessian normal form of the plane.
 
-    // transpose(inverse(worldToUv * clippingPlaneLocalToWorld))
-    // transpose(inverse(clippingPlaneLocalToWorld) * inverse(worldToUv))
-    // transpose(inverse(clippingPlaneLocalToWorld) * uvToWorld)
+    // transpose(inverse(worldToLocal * clippingPlaneLocalToWorld))
+    // transpose(inverse(clippingPlaneLocalToWorld) * inverse(worldToLocal))
+    // transpose(inverse(clippingPlaneLocalToWorld) * localToWorld)
 
     uniforms.clippingPlanesMatrix = Matrix4.transpose(
       Matrix4.multiplyTransformation(
@@ -1875,7 +1818,7 @@ function updateClippingPlanes(primitive, frameState) {
           clippingPlanes.modelMatrix,
           uniforms.clippingPlanesMatrix,
         ),
-        primitive._transformPositionUvToWorld,
+        primitive._transformPositionLocalToWorld,
         uniforms.clippingPlanesMatrix,
       ),
       uniforms.clippingPlanesMatrix,
