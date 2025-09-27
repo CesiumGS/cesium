@@ -2489,10 +2489,16 @@ Primitive.prototype.destroy = function () {
 function setReady(primitive, frameState, state, error) {
   primitive._error = error;
   primitive._state = state;
+
   frameState.afterRender.push(function () {
     primitive._ready =
       primitive._state === PrimitiveState.COMPLETE ||
       primitive._state === PrimitiveState.FAILED;
+
+    // Returning 'true' here will ensure that another rendering pass is
+    // triggered after the primitive actually became ready, to make sure
+    // that it is in fact rendered even in "request render mode"
+    return true;
   });
 }
 export default Primitive;
