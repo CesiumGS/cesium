@@ -16,6 +16,7 @@
 #### Additions :tada:
 
 - Adds an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
+- Adds new declusteredEvent: Fires with complete clustering information including both clustered and declustered entities [#5760](https://github.com/CesiumGS/cesium/issues/5760)
 
 ## 1.133.1 - 2025-09-08
 
