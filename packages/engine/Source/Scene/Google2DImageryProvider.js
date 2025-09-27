@@ -144,7 +144,7 @@ function Google2DImageryProvider(options) {
   provider._resource = resource;
   this._imageryProvider = provider;
 
-  getViewportCredits({
+  this.getViewportCredits({
     viewportUrl: this._viewportUrl,
     key: this._key,
     session: this._session,
@@ -571,26 +571,9 @@ Google2DImageryProvider.prototype.pickFeatures = function (
   return undefined;
 };
 
-async function fetchViewportAttribution(options) {
-  const { viewportUrl, key, session, level } = options;
-  const viewport = await Resource.fetch({
-    url: viewportUrl,
-    queryParameters: {
-      key,
-      session,
-      zoom: level,
-      north: 90,
-      south: -90,
-      east: 180,
-      west: -180,
-    },
-    data: JSON.stringify({}),
-  });
-  const viewportJson = JSON.parse(viewport);
-  return viewportJson.copyright;
-}
-
-async function getViewportCredits(options) {
+Google2DImageryProvider.prototype.getViewportCredits = async function (
+  options,
+) {
   const attribution = new Set();
   const { maximumLevel } = options;
   const promises = [];
@@ -612,6 +595,25 @@ async function getViewportCredits(options) {
     }),
   );
   return [...attribution].join(", ");
+};
+
+async function fetchViewportAttribution(options) {
+  const { viewportUrl, key, session, level } = options;
+  const viewport = await Resource.fetch({
+    url: viewportUrl,
+    queryParameters: {
+      key,
+      session,
+      zoom: level,
+      north: 90,
+      south: -90,
+      east: 180,
+      west: -180,
+    },
+    data: JSON.stringify({}),
+  });
+  const viewportJson = JSON.parse(viewport);
+  return viewportJson.copyright;
 }
 
 function buildQueryOptions(options) {

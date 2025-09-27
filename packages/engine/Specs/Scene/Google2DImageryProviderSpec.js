@@ -1,25 +1,29 @@
 import {
-  // Math as CesiumMath,
-  // Rectangle,
-  // Request,
+  Math as CesiumMath,
+  Rectangle,
+  Request,
   RequestScheduler,
   Resource,
   // IonResource,
   // RuntimeError,
-  // WebMercatorTilingScheme,
-  // Imagery,
-  // ImageryLayer,
+  WebMercatorTilingScheme,
+  Imagery,
+  ImageryLayer,
   ImageryProvider,
-  // ImageryState,
+  ImageryState,
   // RequestErrorEvent,
   Google2DImageryProvider,
 } from "../../index.js";
 
-//import pollToPromise from "../../../../Specs/pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/Google2DImageryProvider", function () {
   beforeEach(function () {
     RequestScheduler.clearForSpecs();
+    spyOn(
+      Google2DImageryProvider.prototype,
+      "getViewportCredits",
+    ).and.returnValue(Promise.resolve(""));
   });
 
   afterEach(function () {
@@ -66,72 +70,6 @@ describe("Scene/Google2DImageryProvider", function () {
       Google2DImageryProvider.fromIon(),
     ).toBeRejectedWithDeveloperError("options.assetId is required.");
   });
-
-  // xit("raises error event when image cannot be loaded", async function () {
-  //   const url = "http://foo.bar.invalid";
-
-  //   //installFakeRequest({ url, mapStyle });
-
-  //   const provider = await Google2DImageryProvider.fromSessionToken({
-  //     session: "fake-session-token",
-  //     tileWidth: 256,
-  //     tileHeight: 256,
-  //     key: "fake-session-key",
-  //     url: url,
-  //   });
-
-  //   const layer = new ImageryLayer(provider);
-
-  //   let tries = 0;
-  //   provider.errorEvent.addEventListener(function (error) {
-  //     console.log("error event listener ", error.timesRetried);
-  //     expect(error.timesRetried).toEqual(tries);
-  //     ++tries;
-  //     if (tries < 3) {
-  //       error.retry = true;
-  //     }
-  //     setTimeout(function () {
-  //       RequestScheduler.update();
-  //     }, 1);
-  //   });
-
-  //   Resource._Implementations.createImage = function (
-  //     request,
-  //     crossOrigin,
-  //     deferred,
-  //   ) {
-  //     const url = request.url;
-  //     console.log("resource createImage tries ", tries, " url ", url);
-
-  //     if (tries === 2) {
-  //       // Succeed after 2 tries
-  //       Resource._DefaultImplementations.createImage(
-  //         new Request({ url: "Data/Images/Red16x16.png" }),
-  //         crossOrigin,
-  //         deferred,
-  //       );
-  //     } else {
-  //       // fail
-  //       setTimeout(function () {
-  //         deferred.reject();
-  //       }, 1);
-  //     }
-  //   };
-
-  //   const imagery = new Imagery(layer, 0, 0, 0);
-  //   imagery.addReference();
-  //   layer._requestImagery(imagery);
-  //   RequestScheduler.update();
-
-  //   return pollToPromise(function () {
-  //     console.log("poll");
-  //     return imagery.state === ImageryState.RECEIVED;
-  //   }).then(function () {
-  //     expect(imagery.image).toBeImageOrImageBitmap();
-  //     expect(tries).toEqual(2);
-  //     imagery.releaseReference();
-  //   });
-  // });
 
   // xit("IonResource retryCallback fires when image request returns 401", async function () {
   //   const url = "http://foo.bar.ion.proxy.invalid";
@@ -299,146 +237,102 @@ describe("Scene/Google2DImageryProvider", function () {
   //   expect(typeof provider.hasAlphaChannel).toBe("boolean");
   // });
 
-  // xit("supports a slash at the end of the URL", function () {
-  //   const provider = new Google2DImageryProvider({
-  //     accessToken: "test-token",
-  //     url: "made/up/Google2D/server/",
-  //     mapId: "test-id",
-  //   });
+  it("requestImage returns a promise for an image and loads it for cross-origin use", function () {
+    spyOn(
+      Google2DImageryProvider.prototype,
+      "getViewportCredits",
+    ).and.returnValue(Promise.resolve(""));
 
-  //   spyOn(Resource._Implementations, "createImage").and.callFake(
-  //     function (request, crossOrigin, deferred) {
-  //       expect(request.url).not.toContain("//");
+    const provider = new Google2DImageryProvider({
+      session: "test-session-token",
+      key: "test-key",
+      tileWidth: 256,
+      tileHeight: 256,
+    });
 
-  //       // Just return any old image.
-  //       Resource._DefaultImplementations.createImage(
-  //         new Request({ url: "Data/Images/Red16x16.png" }),
-  //         crossOrigin,
-  //         deferred,
-  //       );
-  //     },
-  //   );
+    expect(provider.url).toEqual(
+      "https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session=test-session-token&key=test-key",
+    );
+    expect(provider.tileWidth).toEqual(256);
+    expect(provider.tileHeight).toEqual(256);
+    expect(provider.maximumLevel).toBe(22);
+    expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+    expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-  //   return provider.requestImage(0, 0, 0).then(function (image) {
-  //     expect(Resource._Implementations.createImage).toHaveBeenCalled();
-  //     expect(image).toBeImageOrImageBitmap();
-  //   });
-  // });
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
-  // xit("supports no slash at the endof the URL", function () {
-  //   const provider = new Google2DImageryProvider({
-  //     accessToken: "test-token",
-  //     url: "made/up/Google2D/server",
-  //     mapId: "test-id",
-  //   });
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
+    });
+  });
 
-  //   spyOn(Resource._Implementations, "createImage").and.callFake(
-  //     function (request, crossOrigin, deferred) {
-  //       expect(request.url).toContain("made/up/Google2D/server/");
+  it("rectangle passed to constructor does not affect tile numbering", function () {
+    const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
+    const provider = new Google2DImageryProvider({
+      session: "test-session-token",
+      key: "test-key",
+      tileWidth: 256,
+      tileHeight: 256,
+      rectangle: rectangle,
+    });
 
-  //       // Just return any old image.
-  //       Resource._DefaultImplementations.createImage(
-  //         new Request({ url: "Data/Images/Red16x16.png" }),
-  //         crossOrigin,
-  //         deferred,
-  //       );
-  //     },
-  //   );
+    expect(provider.tileWidth).toEqual(256);
+    expect(provider.tileHeight).toEqual(256);
+    expect(provider.maximumLevel).toBe(22);
+    expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+    expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
+    expect(provider.tileDiscardPolicy).toBeUndefined();
 
-  //   return provider.requestImage(0, 0, 0).then(function (image) {
-  //     expect(Resource._Implementations.createImage).toHaveBeenCalled();
-  //     expect(image).toBeImageOrImageBitmap();
-  //   });
-  // });
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).toContain("/0/0/0");
 
-  // xit("requestImage returns a promise for an image and loads it for cross-origin use", function () {
-  //   const provider = new Google2DImageryProvider({
-  //     session: "test-session-token",
-  //     key: "test-key",
-  //     tileWidth: 256,
-  //     tileHeight: 256,
-  //   });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
-  //   expect(provider.url).toEqual(
-  //     "made/up/Google2D/server/test-id/{z}/{x}/{y}.png?access_token=test-token",
-  //   );
-  //   expect(provider.tileWidth).toEqual(256);
-  //   expect(provider.tileHeight).toEqual(256);
-  //   expect(provider.maximumLevel).toBeUndefined();
-  //   expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-  //   expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
+    });
+  });
 
-  //   spyOn(Resource._Implementations, "createImage").and.callFake(
-  //     function (request, crossOrigin, deferred) {
-  //       // Just return any old image.
-  //       Resource._DefaultImplementations.createImage(
-  //         new Request({ url: "Data/Images/Red16x16.png" }),
-  //         crossOrigin,
-  //         deferred,
-  //       );
-  //     },
-  //   );
+  it("uses maximumLevel passed to constructor", function () {
+    const provider = new Google2DImageryProvider({
+      session: "test-session-token",
+      key: "test-key",
+      tileWidth: 256,
+      tileHeight: 256,
+      maximumLevel: 5,
+    });
+    expect(provider.maximumLevel).toEqual(5);
+  });
 
-  //   return provider.requestImage(0, 0, 0).then(function (image) {
-  //     expect(Resource._Implementations.createImage).toHaveBeenCalled();
-  //     expect(image).toBeImageOrImageBitmap();
-  //   });
-  // });
-
-  // xit("rectangle passed to constructor does not affect tile numbering", function () {
-  //   const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
-  //   const provider = new Google2DImageryProvider({
-  //     accessToken: "test-token",
-  //     url: "made/up/Google2D/server/",
-  //     mapId: "test-id",
-  //     rectangle: rectangle,
-  //   });
-
-  //   expect(provider.tileWidth).toEqual(256);
-  //   expect(provider.tileHeight).toEqual(256);
-  //   expect(provider.maximumLevel).toBeUndefined();
-  //   expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-  //   expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
-  //   expect(provider.tileDiscardPolicy).toBeUndefined();
-
-  //   spyOn(Resource._Implementations, "createImage").and.callFake(
-  //     function (request, crossOrigin, deferred) {
-  //       expect(request.url).toContain("/0/0/0");
-
-  //       // Just return any old image.
-  //       Resource._DefaultImplementations.createImage(
-  //         new Request({ url: "Data/Images/Red16x16.png" }),
-  //         crossOrigin,
-  //         deferred,
-  //       );
-  //     },
-  //   );
-
-  //   return provider.requestImage(0, 0, 0).then(function (image) {
-  //     expect(Resource._Implementations.createImage).toHaveBeenCalled();
-  //     expect(image).toBeImageOrImageBitmap();
-  //   });
-  // });
-
-  // xit("uses maximumLevel passed to constructor", function () {
-  //   const provider = new Google2DImageryProvider({
-  //     accessToken: "test-token",
-  //     url: "made/up/Google2D/server/",
-  //     mapId: "test-id",
-  //     maximumLevel: 5,
-  //   });
-  //   expect(provider.maximumLevel).toEqual(5);
-  // });
-
-  // it("uses minimumLevel passed to constructor", function () {
-  //   const provider = new Google2DImageryProvider({
-  //     accessToken: "test-token",
-  //     url: "made/up/Google2D/server/",
-  //     mapId: "test-id",
-  //     minimumLevel: 1,
-  //   });
-  //   expect(provider.minimumLevel).toEqual(1);
-  // });
+  it("uses minimumLevel passed to constructor", function () {
+    const provider = new Google2DImageryProvider({
+      session: "test-session-token",
+      key: "test-key",
+      tileWidth: 256,
+      tileHeight: 256,
+      minimumLevel: 1,
+    });
+    expect(provider.minimumLevel).toEqual(1);
+  });
 
   // it("when no credit is supplied, the provider adds a default credit", function () {
   //   const provider = new Google2DImageryProvider({
@@ -460,118 +354,59 @@ describe("Scene/Google2DImageryProvider", function () {
   //   expect(providerWithCredit.credit.html).toEqual(creditText);
   // });
 
-  // it("raises error event when image cannot be loaded", function () {
-  //   const provider = new Google2DImageryProvider({
-  //     accessToken: "test-token",
-  //     url: "made/up/Google2D/server/",
-  //     mapId: "test-id",
-  //   });
+  it("raises error event when image cannot be loaded", function () {
+    const provider = new Google2DImageryProvider({
+      session: "test-session-token",
+      key: "test-key",
+      tileWidth: 256,
+      tileHeight: 256,
+    });
 
-  //   const layer = new ImageryLayer(provider);
+    const layer = new ImageryLayer(provider);
 
-  //   let tries = 0;
-  //   provider.errorEvent.addEventListener(function (error) {
-  //     expect(error.timesRetried).toEqual(tries);
-  //     ++tries;
-  //     if (tries < 3) {
-  //       error.retry = true;
-  //     }
-  //     setTimeout(function () {
-  //       RequestScheduler.update();
-  //     }, 1);
-  //   });
+    let tries = 0;
+    provider.errorEvent.addEventListener(function (error) {
+      expect(error.timesRetried).toEqual(tries);
+      ++tries;
+      if (tries < 3) {
+        error.retry = true;
+      }
+      setTimeout(function () {
+        RequestScheduler.update();
+      }, 1);
+    });
 
-  //   Resource._Implementations.createImage = function (
-  //     request,
-  //     crossOrigin,
-  //     deferred,
-  //   ) {
-  //     if (tries === 2) {
-  //       // Succeed after 2 tries
-  //       Resource._DefaultImplementations.createImage(
-  //         new Request({ url: "Data/Images/Red16x16.png" }),
-  //         crossOrigin,
-  //         deferred,
-  //       );
-  //     } else {
-  //       // fail
-  //       setTimeout(function () {
-  //         deferred.reject();
-  //       }, 1);
-  //     }
-  //   };
+    Resource._Implementations.createImage = function (
+      request,
+      crossOrigin,
+      deferred,
+    ) {
+      if (tries === 2) {
+        // Succeed after 2 tries
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      } else {
+        // fail
+        setTimeout(function () {
+          deferred.reject();
+        }, 1);
+      }
+    };
 
-  //   const imagery = new Imagery(layer, 0, 0, 0);
-  //   imagery.addReference();
-  //   layer._requestImagery(imagery);
-  //   RequestScheduler.update();
+    const imagery = new Imagery(layer, 0, 0, 0);
+    imagery.addReference();
+    layer._requestImagery(imagery);
+    RequestScheduler.update();
 
-  //   return pollToPromise(function () {
-  //     return imagery.state === ImageryState.RECEIVED;
-  //   }).then(function () {
-  //     expect(imagery.image).toBeImageOrImageBitmap();
-  //     expect(tries).toEqual(2);
-  //     imagery.releaseReference();
-  //   });
-  // });
-
-  // it("appends specified format", function () {
-  //   const provider = new Google2DImageryProvider({
-  //     accessToken: "test-token",
-  //     url: "made/up/Google2D/server/",
-  //     mapId: "test-id",
-  //     format: "@2x.png",
-  //   });
-
-  //   spyOn(Resource._Implementations, "createImage").and.callFake(
-  //     function (request, crossOrigin, deferred) {
-  //       expect(
-  //         /made\/up\/Google2D\/server\/test-id\/0\/0\/0@2x\.png\?access_token=/.test(
-  //           request.url,
-  //         ),
-  //       ).toBe(true);
-
-  //       // Just return any old image.
-  //       Resource._DefaultImplementations.createImage(
-  //         new Request({ url: "Data/Images/Red16x16.png" }),
-  //         crossOrigin,
-  //         deferred,
-  //       );
-  //     },
-  //   );
-
-  //   return provider.requestImage(0, 0, 0).then(function (image) {
-  //     expect(Resource._Implementations.createImage).toHaveBeenCalled();
-  //   });
-  // });
-
-  // it("adds missing period for format", function () {
-  //   const provider = new Google2DImageryProvider({
-  //     accessToken: "test-token",
-  //     url: "made/up/Google2D/server/",
-  //     mapId: "test-id",
-  //     format: "png",
-  //   });
-
-  //   spyOn(Resource._Implementations, "createImage").and.callFake(
-  //     function (request, crossOrigin, deferred) {
-  //       expect(
-  //         /made\/up\/Google2D\/server\/test-id\/0\/0\/0\.png\?access_token=/.test(
-  //           request.url,
-  //         ),
-  //       ).toBe(true);
-
-  //       // Just return any old image.
-  //       Resource._DefaultImplementations.createImage(
-  //         new Request({ url: "Data/Images/Red16x16.png" }),
-  //         crossOrigin,
-  //         deferred,
-  //       );
-  //     },
-  //   );
-
-  //   return provider.requestImage(0, 0, 0).then(function (image) {
-  //     expect(Resource._Implementations.createImage).toHaveBeenCalled();
-  //   });
-  // });
+    return pollToPromise(function () {
+      return imagery.state === ImageryState.RECEIVED;
+    }).then(function () {
+      expect(imagery.image).toBeImageOrImageBitmap();
+      expect(tries).toEqual(2);
+      imagery.releaseReference();
+    });
+  });
 });
