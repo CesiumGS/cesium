@@ -623,7 +623,13 @@ TextureAtlas.prototype.update = function (context) {
   return this._processImageQueue(context);
 };
 
-async function resolveImage(image, id) {
+/**
+ * Gets an image from various possible input types.
+ * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas
+ * @param {string} id An identifier to detect whether the image already exists in the atlas.
+ * @returns {TexturePacker.PackableObject | Promise<TexturePacker.PackableObject>} The image or a Promise that resolves to it.
+ */
+function getImage(image, id) {
   if (typeof image === "function") {
     image = image(id);
   }
@@ -660,21 +666,23 @@ TextureAtlas.prototype.addImage = function (id, image) {
 
   const index = this._nextIndex++;
   this._indexById.set(id, index);
+  image = getImage(image, id);
 
-  const resolveAndAddImage = async () => {
-    image = await resolveImage(image, id);
-    //>>includeStart('debug', pragmas.debug);
-    Check.defined("image", image);
-    //>>includeEnd('debug');
-
-    if (this.isDestroyed() || !defined(image)) {
-      return -1;
+  const resolveAndAddImage = async (index, image) => {
+    // The initial part of an async function runs synchronously up to the first await
+    // If the image is synchronous, skip the await: add and process the image the current frame.
+    if (image instanceof Promise) {
+      // Effectively return a promise chain. The image promise will resolve and be processed on a later frame
+      image = await image;
+      if (this.isDestroyed() || !defined(image)) {
+        return -1;
+      }
     }
 
     return this._addImage(index, image);
   };
+  promise = resolveAndAddImage(index, image);
 
-  promise = resolveAndAddImage();
   this._indexPromiseById.set(id, promise);
   return promise;
 };
