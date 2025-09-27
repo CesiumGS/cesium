@@ -614,14 +614,7 @@ async function createIonImagerySession(options) {
     },
   });
 
-  const cacheKey = assetId.toString() + options.accessToken + options.server;
-  let promise = Google2DImageryProvider._endpointCache[cacheKey];
-  if (!defined(promise)) {
-    promise = endpointResource.fetchJson();
-    Google2DImageryProvider._endpointCache[cacheKey] = promise;
-  }
-
-  const endpoint = await promise;
+  const endpoint = await endpointResource.fetchJson();
   return endpoint;
 }
 
