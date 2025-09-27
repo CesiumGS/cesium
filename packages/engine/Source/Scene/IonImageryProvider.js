@@ -13,6 +13,8 @@ import SingleTileImageryProvider from "./SingleTileImageryProvider.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 import WebMapServiceImageryProvider from "./WebMapServiceImageryProvider.js";
 import WebMapTileServiceImageryProvider from "./WebMapTileServiceImageryProvider.js";
+import Google2DImageryProvider from "./Google2DImageryProvider.js";
+import Azure2DImageryProvider from "./Azure2DImageryProvider.js";
 
 // These values are the list of supported external imagery
 // assets in the Cesium ion beta. They are subject to change.
@@ -49,6 +51,18 @@ const ImageryProviderAsyncMapping = {
   WMTS: (url, options) => {
     return new WebMapTileServiceImageryProvider({
       url: url,
+      ...options,
+    });
+  },
+  GOOGLE_2D_MAPS: (ionResource, options) => {
+    return new Google2DImageryProvider({
+      url: ionResource,
+      ...options,
+    });
+  },
+  AZURE_MAPS: (ionResource, options) => {
+    return new Azure2DImageryProvider({
+      url: ionResource,
       ...options,
     });
   },
@@ -308,7 +322,14 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
     const options = { ...endpoint.options };
     const url = options.url;
     delete options.url;
-    imageryProvider = await factory(url, options);
+    if (["GOOGLE_2D_MAPS", "AZURE_MAPS"].includes(endpoint.externalType)) {
+      imageryProvider = await factory(
+        new IonResource(endpoint, endpointResource),
+        options,
+      );
+    } else {
+      imageryProvider = await factory(url, options);
+    }
   }
 
   const provider = new IonImageryProvider(options);

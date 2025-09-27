@@ -194,7 +194,7 @@ function appendCss(container) {
 .cesium-credit-lightbox.cesium-credit-lightbox-expanded {
   border: 1px solid #444;
   border-radius: 5px;
-  max-width: 370px;
+  max-width: 470px;
 }
 .cesium-credit-lightbox.cesium-credit-lightbox-mobile {
   height: 100%;
@@ -423,13 +423,18 @@ CreditDisplay.prototype.addCreditToNextFrame = function (credit) {
   Check.defined("credit", credit);
   //>>includeEnd('debug');
 
-  if (credit.isIon()) {
-    // If this is the an ion logo credit from the ion server
-    // Just use the default credit (which is identical) to avoid blinking
-    if (!defined(this._defaultCredit)) {
-      this._defaultCredit = Credit.clone(getDefaultCredit());
+  try {
+    if (credit.isIon()) {
+      // If this is the an ion logo credit from the ion server
+      // Just use the default credit (which is identical) to avoid blinking
+      if (!defined(this._defaultCredit)) {
+        this._defaultCredit = Credit.clone(getDefaultCredit());
+      }
+      this._currentCesiumCredit = this._defaultCredit;
+      return;
     }
-    this._currentCesiumCredit = this._defaultCredit;
+  } catch {
+    //console.log("problem with credit")
     return;
   }
 
