@@ -74,10 +74,15 @@ RayShapeIntersection intersectHeight(in Ray ray, in float height, in bool convex
     float tmax = max(t1, t2);
 
     float directionScale = convex ? 1.0 : -1.0;
-    vec3 d1 = directionScale * normalize(position + tmin * direction);
-    vec3 d2 = directionScale * normalize(position + tmax * direction);
+    vec3 d1 = directionScale * (position + tmin * direction);
+    vec3 d2 = directionScale * (position + tmax * direction);
 
-    return RayShapeIntersection(vec4(d1, tmin), vec4(d2, tmax));
+    // Return normals in eye coordinates
+    // TODO: these are spherical normals. Need to scale back to ellipsoid, and multiply by u_ellipsoidInverseRadiiSquared
+    vec3 normal1 = normalize(czm_normal * d1);
+    vec3 normal2 = normalize(czm_normal * d2);
+
+    return RayShapeIntersection(vec4(normal1, tmin), vec4(normal2, tmax));
 }
 
 /**

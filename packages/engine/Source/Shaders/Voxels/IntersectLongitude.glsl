@@ -14,7 +14,9 @@ vec4 intersectLongitude(in Ray ray, in float angle, in bool positiveNormal) {
         ? NO_HIT
         : distance / approachRate;
 
-    return vec4(planeNormal, 0.0, t);
+    // Return normal in eye coordinates
+    vec3 normalEC = normalize(czm_normal * vec3(planeNormal, 0.0));
+    return vec4(normalEC, t);
 }
 
 RayShapeIntersection intersectHalfSpace(in Ray ray, in float angle, in bool positiveNormal)

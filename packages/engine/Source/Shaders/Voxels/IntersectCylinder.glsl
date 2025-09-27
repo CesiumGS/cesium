@@ -70,8 +70,11 @@ RayShapeIntersection intersectCylinder(in Ray ray, in float radius, in bool conv
     float t1 = (-b - determinant) / a;
     float t2 = (-b + determinant) / a;
     float signFlip = convex ? 1.0 : -1.0;
-    vec4 intersect1 = vec4(normalize(position + t1 * direction) * signFlip, 0.0, t1);
-    vec4 intersect2 = vec4(normalize(position + t2 * direction) * signFlip, 0.0, t2);
+    vec3 normal1 = vec3((position + t1 * direction) * signFlip, 0.0);
+    vec3 normal2 = vec3((position + t2 * direction) * signFlip, 0.0);
+    // Return normals in eye coordinates
+    vec4 intersect1 = vec4(normalize(czm_normal * normal1), t1);
+    vec4 intersect2 = vec4(normalize(czm_normal * normal2), t2);
 
     return RayShapeIntersection(intersect1, intersect2);
 }
