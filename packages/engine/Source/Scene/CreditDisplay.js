@@ -194,7 +194,7 @@ function appendCss(container) {
 .cesium-credit-lightbox.cesium-credit-lightbox-expanded {
   border: 1px solid #444;
   border-radius: 5px;
-  max-width: 370px;
+  max-width: 470px;
 }
 .cesium-credit-lightbox.cesium-credit-lightbox-mobile {
   height: 100%;
