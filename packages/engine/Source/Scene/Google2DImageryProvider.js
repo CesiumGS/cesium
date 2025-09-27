@@ -74,6 +74,8 @@ const trailingSlashRegex = /\/$/;
 
 function Google2DImageryProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
+  this._maximumLevel = options.maximumLevel ?? 22;
+
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.session)) {
     throw new DeveloperError("options.session is required.");
@@ -130,8 +132,6 @@ function Google2DImageryProvider(options) {
     }
   }
 
-  this._maximumLevel = 22;
-
   const provider = new UrlTemplateImageryProvider({
     url: resource,
     credit: credit,
@@ -143,6 +143,15 @@ function Google2DImageryProvider(options) {
   });
   provider._resource = resource;
   this._imageryProvider = provider;
+
+  getViewportCredits({
+    viewportUrl: this._viewportUrl,
+    key: this._key,
+    session: this._session,
+    maximumLevel: this._maximumLevel,
+  }).then((data) => {
+    this._imageryProvider._credit = new Credit(data);
+  });
 
   this._tilingScheme = this._imageryProvider._tilingScheme;
   this._tileAvailability = new TileAvailability(
@@ -329,7 +338,7 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
  * @param {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @param {number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @param {number} [options.maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
  * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
@@ -387,7 +396,7 @@ Google2DImageryProvider.fromIon = async function (options) {
  * @param {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @param {number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @param {number} [options.maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
  * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
@@ -561,6 +570,49 @@ Google2DImageryProvider.prototype.pickFeatures = function (
 ) {
   return undefined;
 };
+
+async function fetchViewportAttribution(options) {
+  const { viewportUrl, key, session, level } = options;
+  const viewport = await Resource.fetch({
+    url: viewportUrl,
+    queryParameters: {
+      key,
+      session,
+      zoom: level,
+      north: 90,
+      south: -90,
+      east: 180,
+      west: -180,
+    },
+    data: JSON.stringify({}),
+  });
+  const viewportJson = JSON.parse(viewport);
+  return viewportJson.copyright;
+}
+
+async function getViewportCredits(options) {
+  const attribution = new Set();
+  const { maximumLevel } = options;
+  const promises = [];
+  for (let level = 0; level < maximumLevel + 1; level++) {
+    promises.push(
+      fetchViewportAttribution({
+        ...options,
+        level,
+      }),
+    );
+  }
+  const results = await Promise.all(promises);
+
+  results.forEach((result) =>
+    result.split(",").forEach((source) => {
+      if (source.trim()) {
+        attribution.add(source.trim());
+      }
+    }),
+  );
+  return [...attribution].join(", ");
+}
 
 function buildQueryOptions(options) {
   const { mapType, overlayLayerType, styles } = options;
