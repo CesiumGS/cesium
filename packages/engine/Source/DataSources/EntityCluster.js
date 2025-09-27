@@ -900,6 +900,58 @@ function disableCollectionClustering(collection) {
   }
 }
 
+function getVisibleEntitiesFromCollection(collection) {
+  if (!defined(collection)) {
+    return [];
+  }
+
+  const visibleEntities = [];
+  for (let i = 0; i < collection.length; i++) {
+    const item = collection.get(i);
+    if (defined(item.id) && item.show) {
+      visibleEntities.push(item.id);
+    }
+  }
+  return visibleEntities;
+}
+
+function handleDeclusteredEvent(entityCluster) {
+  if (entityCluster._declusteredEvent.numberOfListeners === 0) {
+    return;
+  }
+  const allVisibleEntities = [
+    ...getVisibleEntitiesFromCollection(entityCluster._labelCollection),
+    ...getVisibleEntitiesFromCollection(entityCluster._billboardCollection),
+    ...getVisibleEntitiesFromCollection(entityCluster._pointCollection),
+  ];
+
+  if (allVisibleEntities.length > 0) {
+    const uniqueEntities = Array.from(new Set(allVisibleEntities));
+
+    entityCluster._declusteredEvent.raiseEvent({
+      clustered: [],
+      declustered: uniqueEntities,
+      cluster: null,
+      allProcessed: uniqueEntities,
+    });
+
+    entityCluster._lastClusteredEntities = [];
+    entityCluster._lastDeclusteredEntities = uniqueEntities.slice();
+    entityCluster._allProcessedEntities = uniqueEntities.slice();
+  } else {
+    entityCluster._declusteredEvent.raiseEvent({
+      clustered: [],
+      declustered: [],
+      cluster: null,
+      allProcessed: [],
+    });
+
+    entityCluster._lastClusteredEntities = [];
+    entityCluster._lastDeclusteredEntities = [];
+    entityCluster._allProcessedEntities = [];
+  }
+}
+
 function updateEnable(entityCluster) {
   if (entityCluster.enabled) {
     return;
@@ -923,66 +975,7 @@ function updateEnable(entityCluster) {
   disableCollectionClustering(entityCluster._billboardCollection);
   disableCollectionClustering(entityCluster._pointCollection);
 
-  if (entityCluster._declusteredEvent.numberOfListeners !== 0) {
-    const allVisibleEntities = [];
-
-    if (defined(entityCluster._labelCollection)) {
-      for (let i = 0; i < entityCluster._labelCollection.length; i++) {
-        const label = entityCluster._labelCollection.get(i);
-        if (defined(label.id) && label.show) {
-          allVisibleEntities.push(label.id);
-        }
-      }
-    }
-
-    if (defined(entityCluster._billboardCollection)) {
-      for (let i = 0; i < entityCluster._billboardCollection.length; i++) {
-        const billboard = entityCluster._billboardCollection.get(i);
-        if (defined(billboard.id) && billboard.show) {
-          allVisibleEntities.push(billboard.id);
-        }
-      }
-    }
-
-    if (defined(entityCluster._pointCollection)) {
-      for (let i = 0; i < entityCluster._pointCollection.length; i++) {
-        const point = entityCluster._pointCollection.get(i);
-        if (defined(point.id) && point.show) {
-          allVisibleEntities.push(point.id);
-        }
-      }
-    }
-
-    if (allVisibleEntities.length > 0) {
-      const uniqueEntities = Array.from(new Set(allVisibleEntities));
-
-      entityCluster._declusteredEvent.raiseEvent({
-        clustered: [],
-        declustered: uniqueEntities,
-        cluster: null,
-        allProcessed: uniqueEntities,
-      });
-
-      entityCluster._lastClusteredEntities = [];
-      entityCluster._lastDeclusteredEntities = uniqueEntities.slice();
-      entityCluster._allProcessedEntities = uniqueEntities.slice();
-    } else {
-      entityCluster._declusteredEvent.raiseEvent({
-        clustered: [],
-        declustered: [],
-        cluster: null,
-        allProcessed: [],
-      });
-
-      entityCluster._lastClusteredEntities = [];
-      entityCluster._lastDeclusteredEntities = [];
-      entityCluster._allProcessedEntities = [];
-    }
-  } else {
-    entityCluster._lastClusteredEntities = [];
-    entityCluster._lastDeclusteredEntities = [];
-    entityCluster._allProcessedEntities = [];
-  }
+  handleDeclusteredEvent(entityCluster);
 }
 
 /**
