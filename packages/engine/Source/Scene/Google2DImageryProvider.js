@@ -45,7 +45,11 @@ const trailingSlashRegex = /\/$/;
  * </div>
  *
  *
- * Provides 2D image tiles from Google.
+ * Provides 2D image tiles from {@link https://developers.google.com/maps/documentation/tile/2d-tiles-overview|Google 2D Tiles}.
+ * 
+ * Google 2D Tiles can only be used with the Google geocoder.  To
+ * confirm that you are aware of this restriction pass
+ * `usingOnlyWithGoogleGeocoder: true` to the apiOptions. 
  *
  * @alias Google2DImageryProvider
  * @constructor
@@ -326,7 +330,7 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
 });
 
 /**
- * Creates an {@link ImageryProvider} which provides 2D global tiled imagery from Google.
+ * Creates an {@link ImageryProvider} which provides 2D global tiled imagery from {@link https://developers.google.com/maps/documentation/tile/2d-tiles-overview|Google 2D Tiles}, streamed using the Cesium ion REST API.
  * @param {object} options Object with the following properties:
  * @param {string} options.assetId The assetId to call in Cesium ion. This must be an Imagery asset with externalType = "GOOGLE_2D_MAPS".
  * @param {"satellite" | "terrain" | "roadmap"} [options.mapType="satellite"] The map type of the Google map imagery. Valid options are satellite, terrain, and roadmap. If overlayLayerType is set, mapType is ignored and a transparent overlay is returned. If overlayMapType is undefined, then a basemap of mapType is returned. layerRoadmap overlayLayerType is included in terrain and roadmap mapTypes.
@@ -349,6 +353,23 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
  * const googleTilesProvider = Cesium.Google2DImageryProvider.fromIon({
  *     assetId: 1687
  * });
+ * @example
+ * // Google 2D roadmap overlay with custom styles
+ * const googleTileProvider = Cesium.Google2DImageryProvider.fromIon({
+ *     assetId: 1687,
+ *     overlayLayerType: "layerRoadmap",
+ *     styles: [
+ *         {
+ *             stylers: [{ hue: "#00ffe6" }, { saturation: -20 }],
+ *         },
+ *         {
+ *             featureType: "road",
+ *             elementType: "geometry",
+ *             stylers: [{ lightness: 100 }, { visibility: "simplified" }],
+ *         },
+ *     ],
+ * });
+ *
  */
 
 Google2DImageryProvider.fromIon = async function (options) {
@@ -393,7 +414,7 @@ Google2DImageryProvider.fromIon = async function (options) {
 };
 
 /**
- * Creates an {@link ImageryProvider} which provides 2D global tiled imagery from Google.
+ * Creates an {@link ImageryProvider} which provides 2D global tiled imagery from {@link https://developers.google.com/maps/documentation/tile/2d-tiles-overview|Google 2D Tiles}.
  * @param {object} options Object with the following properties:
  * @param {string} options.assetId The assetId to call in Cesium ion. This must be an Imagery asset with externalType = "GOOGLE_2D_MAPS".
  * @param {string} options.key The Google api key
@@ -417,6 +438,22 @@ Google2DImageryProvider.fromIon = async function (options) {
  * const googleTilesProvider = Cesium.Google2DImageryProvider.fromUrl({
  *     apiKey: 'thisIsMyApiKey',
  *     mapType: "satellite"
+ * });
+ * @example
+ * // Google 2D roadmap overlay with custom styles
+ * const googleTileProvider = Cesium.Google2DImageryProvider.fromUrl({
+ *     assetId: 1687,
+ *     overlayLayerType: "layerRoadmap",
+ *     styles: [
+ *         {
+ *             stylers: [{ hue: "#00ffe6" }, { saturation: -20 }],
+ *         },
+ *         {
+ *             featureType: "road",
+ *             elementType: "geometry",
+ *             stylers: [{ lightness: 100 }, { visibility: "simplified" }],
+ *         },
+ *     ],
  * });
  */
 
