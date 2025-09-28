@@ -56,11 +56,50 @@ ITwinPlatform.RealityDataType = Object.freeze({
 /**
  * Gets or sets the default iTwin access token. This token should have the <code>itwin-platform</code> scope.
  *
+ * This value will be ignored if {@link ITwinPlatform.defaultShareKey} is defined.
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @type {string|undefined}
  */
 ITwinPlatform.defaultAccessToken = undefined;
+
+/**
+ * Gets or sets the default iTwin share key. If this value is provided it will override {@link ITwinPlatform.defaultAccessToken} in all requests.
+ *
+ * Share keys can be generated using the iTwin Shares api
+ * https://developer.bentley.com/apis/access-control-v2/operations/create-itwin-share/
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @type {string|undefined}
+ */
+ITwinPlatform.defaultShareKey = undefined;
+
+/**
+ * Create the necessary Authorization header based on which key/token is set.
+ * If the {@link ITwinPlatform.defaultShareKey} is set it takes precedence and
+ * will be used regardless if the {@link ITwinPlatform.defaultAccessToken} is set
+ * @private
+ * @returns {string} full auth header with basic/bearer method
+ */
+ITwinPlatform._getAuthorizationHeader = function () {
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
+  }
+  //>>includeEnd('debug');
+
+  if (defined(ITwinPlatform.defaultShareKey)) {
+    return `Basic ${ITwinPlatform.defaultShareKey}`;
+  }
+  return `Bearer ${ITwinPlatform.defaultAccessToken}`;
+};
 
 /**
  * Gets or sets the default iTwin API endpoint.
@@ -114,22 +153,31 @@ ITwinPlatform.apiEndpoint = new Resource({
  * @private
  *
  * @param {string} iModelId iModel id
+ * @param {string} [changesetId] The id of the changeset to filter results by. If not provided, exports from the latest available changesets will be returned.
  * @returns {Promise<GetExportsResponse>}
  *
  * @throws {RuntimeError} If the iTwin API request is not successful
  */
-ITwinPlatform.getExports = async function (iModelId) {
+ITwinPlatform.getExports = async function (iModelId, changesetId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iModelId", iModelId);
-  if (!defined(ITwinPlatform.defaultAccessToken)) {
-    throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
+  if (defined(changesetId)) {
+    Check.typeOf.string("changesetId", changesetId);
   }
-  //>>includeEnd('debug')
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
+  }
+  //>>includeEnd('debug');
 
   const resource = new Resource({
     url: `${ITwinPlatform.apiEndpoint}mesh-export`,
     headers: {
-      Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
+      Authorization: ITwinPlatform._getAuthorizationHeader(),
       Accept: "application/vnd.bentley.itwin-platform.v1+json",
       Prefer: "return=representation",
     },
@@ -147,6 +195,9 @@ ITwinPlatform.getExports = async function (iModelId) {
   if (typeof CESIUM_VERSION !== "undefined") {
     resource.appendQueryParameters({ clientVersion: CESIUM_VERSION });
   }
+  if (defined(changesetId) && changesetId !== "") {
+    resource.appendQueryParameters({ changesetId: changesetId });
+  }
 
   try {
     const response = await resource.fetchJson();
@@ -154,8 +205,9 @@ ITwinPlatform.getExports = async function (iModelId) {
   } catch (error) {
     const result = JSON.parse(error.response);
     if (error.statusCode === 401) {
+      const code = result.error.details?.[0].code ?? "";
       throw new RuntimeError(
-        `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
+        `Unauthorized, bad token, wrong scopes or headers bad. ${code}`,
       );
     } else if (error.statusCode === 403) {
       console.error(result.error.code, result.error.message);
@@ -213,15 +265,20 @@ ITwinPlatform.getRealityDataMetadata = async function (iTwinId, realityDataId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iTwinId", iTwinId);
   Check.typeOf.string("realityDataId", realityDataId);
-  if (!defined(ITwinPlatform.defaultAccessToken)) {
-    throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const resource = new Resource({
     url: `${ITwinPlatform.apiEndpoint}reality-management/reality-data/${realityDataId}`,
     headers: {
-      Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
+      Authorization: ITwinPlatform._getAuthorizationHeader(),
       Accept: "application/vnd.bentley.itwin-platform.v1+json",
     },
     queryParameters: { iTwinId: iTwinId },
@@ -233,8 +290,9 @@ ITwinPlatform.getRealityDataMetadata = async function (iTwinId, realityDataId) {
   } catch (error) {
     const result = JSON.parse(error.response);
     if (error.statusCode === 401) {
+      const code = result.error.details?.[0].code ?? "";
       throw new RuntimeError(
-        `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
+        `Unauthorized, bad token, wrong scopes or headers bad. ${code}`,
       );
     } else if (error.statusCode === 403) {
       console.error(result.error.code, result.error.message);
@@ -275,15 +333,20 @@ ITwinPlatform.getRealityDataURL = async function (
   Check.typeOf.string("iTwinId", iTwinId);
   Check.typeOf.string("realityDataId", realityDataId);
   Check.typeOf.string("rootDocument", rootDocument);
-  if (!defined(ITwinPlatform.defaultAccessToken)) {
-    throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
   }
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const resource = new Resource({
     url: `${ITwinPlatform.apiEndpoint}reality-management/reality-data/${realityDataId}/readaccess`,
     headers: {
-      Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
+      Authorization: ITwinPlatform._getAuthorizationHeader(),
       Accept: "application/vnd.bentley.itwin-platform.v1+json",
     },
     queryParameters: { iTwinId: iTwinId },
@@ -300,8 +363,9 @@ ITwinPlatform.getRealityDataURL = async function (
   } catch (error) {
     const result = JSON.parse(error.response);
     if (error.statusCode === 401) {
+      const code = result.error.details?.[0].code ?? "";
       throw new RuntimeError(
-        `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
+        `Unauthorized, bad token, wrong scopes or headers bad. ${code}`,
       );
     } else if (error.statusCode === 403) {
       console.error(result.error.code, result.error.message);

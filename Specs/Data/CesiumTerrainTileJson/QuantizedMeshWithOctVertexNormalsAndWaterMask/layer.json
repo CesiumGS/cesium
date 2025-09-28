@@ -1,0 +1,31 @@
+{
+    "tilejson": "2.1.0",
+    "format" : "quantized-mesh-1.0",
+    "version" : "1.0.0",
+    "scheme" : "tms",
+    "tiles" : [
+        "tile.octvertexnormals.watermask.terrain?v={version}&x={x}&y={y}&z={z}"
+    ],
+    "extensions" : [
+        "octvertexnormals",
+        "watermask"
+    ],
+    "available" : [
+        [
+            {
+                "startX" : 0,
+                "startY" : 0,
+                "endX" : 1,
+                "endY" : 0
+            }
+        ],
+        [
+            {
+                "startX" : 0,
+                "startY" : 0,
+                "endX" : 3,
+                "endY" : 1
+            }
+        ]
+    ]
+}

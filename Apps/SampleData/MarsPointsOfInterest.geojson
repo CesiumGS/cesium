@@ -1,0 +1,276 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Acidalia Planitia",
+        "destination": [2482963.8874656125, -1390493.34713116, 2003606.997020314],
+        "orientation": [2.9706346891645325, -0.39288074608352463, 0.00013399155612248137],
+        "description": "Acidalia Planitia is a plain on Mars, between the Tharsis volcanic province and Arabia Terra to the north of Valles Marineris, centered at 49.8°N 339.3°E. Most of this region is found in the Mare Acidalium quadrangle, but a small part is in the Ismenius Lacus quadrangle. The plain contains the famous Cydonia region at the contact with the heavily cratered highland terrain.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Acidalia_Planitia",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/3/36/Acidalia_planitia_topo.jpg"
+        },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-28.039999999999999, 31.210000000000001]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Alba Mons",
+        "destination": [-468768.84888828284, -2636983.410363647, 3193355.1570078987],
+        "orientation": [3.8060647475551765, -0.9801861222357124, 6.281240302469402],
+        "description": "Alba Mons is a volcano located in the northern Tharsis region of the planet Mars. It is the biggest volcano on Mars in terms of surface area, with volcanic flow fields that extend for at least 1,350 km (840 mi) from its summit. Although the volcano has a span comparable to that of the United States, it reaches an elevation of only 6.8 km (22,000 ft) at its highest point.[6] This is about one-third the height of Olympus Mons, the tallest volcano on the planet.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Alba_Mons",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Alba_Mons_Viking_DIM.jpg"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [250.4, 40.5]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Arabia Terra",
+        "destination": [3173625.979675759, -925087.3184430292, 1281260.6050768741],
+        "orientation": [2.210739895697892, -0.4557150936475227, 0.0003490992512000801],
+        "description": "Arabia Terra is a large upland region in the north of Mars that lies mostly in the Arabia quadrangle, but a small part is in the Mare Acidalium quadrangle. It is densely cratered and heavily eroded. This battered topography indicates great age, and Arabia Terra is presumed to be one of the oldest terrains on the planet. It covers as much as 4,500 km (2,800 mi) at its longest extent, centered roughly at 21°N 6°E with its eastern and southern regions rising 4 km (13,000 ft) above the north-west. Alongside its many craters, canyons wind through the Arabia Terra, many emptying into the large northern lowlands of the planet, which borders Arabia Terra to the north.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Arabia_Terra",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Eden_Patera_THEMIS_day_IR.jpg/2560px-Eden_Patera_THEMIS_day_IR.jpg"
+        },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-11.870000000000001, 18.02]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Elysium Volcanic Region",
+        "destination": [-3390705.18743154, 1723996.087561009, 1009387.4502178654],
+        "orientation": [5.95184286595793, -0.8844046974415081, 0.005041989289460425],
+        "description": "Elysium, located in the Elysium and Cebrenia quadrangles, is the second largest volcanic region on Mars, after Tharsis. The region includes the volcanoes (from north to south) Hecates Tholus, Elysium Mons and Albor Tholus. The province is centered roughly on Elysium Mons at 24.7°N 150°E. Elysium Planitia is a broad plain to the south of Elysium, centered at 3.0°N 154.7°E. Another large volcano, Apollinaris Mons, lies south of Elysium Planitia and is not part of the province. Besides having large volcanoes, Elysium has several areas with long trenches, called fossa or fossae (plural) on Mars.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Elysium_(volcanic_province)",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Elysium_MOLA_zoom_64.jpg/2560px-Elysium_MOLA_zoom_64.jpg"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [150, 24.7]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Gale Crater (Curiosity)",
+        "destination": [-2791535.3207, 2189446.3646, -616541.9385],
+        "orientation": [5.5684, -0.636, 0.0],
+        "description": "Curiosity is a car-sized Mars rover that is exploring Gale crater and Mount Sharp on Mars as part of NASA's Mars Science Laboratory (MSL) mission. Launched in 2011 and landed the following year, the rover continues to operate more than a decade after its original two-year mission. Mission goals include an investigation of the Martian climate and geology, an assessment of whether the selected field site inside Gale has ever offered environmental conditions favorable for microbial life (including investigation of the role of water), and planetary habitability studies in preparation for human exploration.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Curiosity_(rover)",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg/1280px-Curiosity_Self-Portrait_at_%27Big_Sky%27_Drilling_Site.jpg"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [137.8, -5.4]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "text": "Jezero Crater (Perseverance)",
+        "destination": [596565.83388002, 3353778.00627982, 923026.06801835],
+        "orientation": [5.59008567, -0.59978189, 0.00060998],
+        "description": "Perseverance is a car-sized Mars rover designed to explore the Jezero crater on Mars as part of NASA's Mars 2020 mission. Perseverance has a similar design to its predecessor rover, Curiosity, although it was moderately upgraded. It carries seven primary payload instruments, nineteen cameras, and two microphones. The rover also carried the mini-helicopter Ingenuity to Mars, an experimental technology testbed that made the first powered aircraft flight on another planet on April 19, 2021.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Perseverance_(rover)",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Perseverance-Selfie-at-Rochette-Horizontal-V2.gif"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [77.58, 18.38]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Marth Crater",
+        "destination": [3327216.4788566492, -218466.2408178681, 946551.8768631018],
+        "orientation": [3.331697871424215, -0.29366873064196347, 6.281659377334691],
+        "description": "In the best-selling novel \"The Martian\" and the movie based on it, stranded astronaut Mark Watney's adventures take him to the rim of Mawrth Crater. The crater rim is not very distinct, and from the Martian surface it would be quite difficult to tell that you are even on the rim of a crater. The terrain is hummocky and rolling, punctuated by smaller impact craters and wind-blown drifts of sand or dust.",
+        "sourceURL": "https://science.nasa.gov/resource/western-edge-of-mars-marth-crater-a-movie-location/",
+        "source": "NASA",
+        "imageURL": "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/mars/resources/detail_files/7/7500_mars-the-martian-marth-crater-PIA19915-full2.jpg?w=1163&h=720&fit=clip&crop=faces%2Cfocalpoint"
+        },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-4.2680995373239057, 12.660926420007353]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Mawrth Vallis",
+        "destination": [2880337.0763509087, -1422487.4666314998, 1778960.0256092676],
+        "orientation": [2.059623110400561, -0.6237026798827308, 0.0017318644099715286],
+        "description": "Mawrth Vallis (Mawrth means \"Mars\" in Welsh) is a valley on Mars, located in the Oxia Palus quadrangle at 22.3°N, 343.5°E with an elevation approximately two kilometers below datum. Situated between the southern highlands and northern lowlands, the valley is a channel formed by massive flooding which occurred in Mars' ancient past. It is an ancient water outflow channel with light-colored clay-rich rocks.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Mawrth_Vallis",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Mawrth_Vallis_martian_mosaic.jpg/1280px-Mawrth_Vallis_martian_mosaic.jpg"
+        },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-20.5, 26.350000000000001]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Olympus Mons",
+        "destination": [-2549089.8672, -2720744.9822, 604987.2427],
+        "orientation": [6.2232, -0.7135, 0.0],
+        "description": "Olympus Mons is a large shield volcano on Mars. It is over 21.9 km high as measured by the Mars Orbiter Laser Altimeter (MOLA), about 2.5 times the elevation of Mount Everest above sea level. It is Mars's tallest volcano, its tallest planetary mountain, and is approximately tied with Rheasilvia on Vesta as the tallest mountain currently discovered in the Solar System. It is associated with the volcanic region of Tharsis Montes. It last erupted 25 million years ago.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Olympus_Mons",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Olympus_Mons_-_ESA_Mars_Express_-_Flickr_-_Andrea_Luck.png/2880px-Olympus_Mons_-_ESA_Mars_Express_-_Flickr_-_Andrea_Luck.png"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [226.2, 18.65]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Meridiani Planum (Opportunity)",
+        "destination": [3528252.21590355, -6454.59498861, -190095.70073928],
+        "orientation": [4.91589709, -0.43114195, 5.97503936],
+        "description": "Opportunity, also known as MER-B (Mars Exploration Rover - B) or MER-1, and nicknamed Oppy, is a robotic rover that was active on Mars from 2004 until 2018. Opportunity was operational on Mars for 5111 sols (14 years, 138 days on Earth). Launched on July 7, 2003, as part of NASA's Mars Exploration Rover program, it landed in Meridiani Planum on January 25, 2004, three weeks after its twin, Spirit (MER-A), touched down on the other side of the planet. With a planned 90-sol duration of activity (slightly less than 92.5 Earth days), Spirit functioned until it got stuck in 2009 and ceased communications in 2010, while Opportunity was able to stay operational for 5111 sols after landing, maintaining its power and key systems through continual recharging of its batteries using solar power, and hibernating during events such as dust storms to save power. This careful operation allowed Opportunity to operate for 57 times its designed lifespan, exceeding the initial plan by 14 years, 47 days (in Earth time). By June 10, 2018, when it last contacted NASA, the rover had traveled a distance of 45.16 kilometers (28.06 miles).",
+        "sourceURL": "https://en.wikipedia.org/wiki/Opportunity_(rover)",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/NASA_Mars_Rover.jpg/2560px-NASA_Mars_Rover.jpg"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [354.4734, -1.9462]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Schiaparelli Crater",
+        "destination": [3513269.5521, 664880.5211, -498902.5607],
+        "orientation": [0.8318, -0.5309, 0.0],
+        "description": "Schiaparelli is an impact crater on Mars, located near the planet's equator at latitude 3° south and longitude 344° in the Sinus Sabaeus quadrangle. It measures approximately 459 kilometers (285-miles) in diameter and was named after Italian astronomer Giovanni Schiaparelli. A crater within Schiaparelli shows many layers that may have formed by the wind, volcanoes, or deposition under water.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Schiaparelli_(Martian_crater)",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/6e/SchiaparelliMOLA.jpeg"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [16.7, -2.7]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Ares Vallis (Sojourner)",
+        "destination": [3002746.35818072, -1674150.97664144, 1015018.06707550],
+        "orientation": [5.27982625, -0.63635512, 0.00167013],
+        "description": "The robotic Sojourner rover reached Mars on July 4, 1997 as part of the Mars Pathfinder mission. Sojourner was operational on Mars for 92 sols (95 Earth days), and was the first wheeled vehicle to operate on an astronomical object other than the Earth or Moon. The landing site was in the Ares Vallis channel in the Chryse Planitia region of the Oxia Palus quadrangle.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Sojourner_(rover)",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Sojourner_on_Mars_PIA01122.jpg"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-33.22, 19.13]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Gusev Crater (Spirit)",
+        "destination": [-3318104.44189717, 143085.57854143, -986175.00294181],
+        "orientation": [5.53211415, -0.38597730, 0.00036546],
+        "description": "Spirit, also known as MER-A (Mars Exploration Rover - A) or MER-2, is a Mars robotic rover, active from 2004 to 2010. Spirit was operational on Mars for 2208 sols or 3.3 Martian years (2269 days; 6 years, 77 days). It was one of two rovers of NASA's Mars Exploration Rover Mission managed by the Jet Propulsion Laboratory (JPL). Spirit landed successfully within the impact crater Gusev on Mars at 04:35 Ground UTC on January 4, 2004, three weeks before its twin, Opportunity (MER-B), which landed on the other side of the planet. Its name was chosen through a NASA-sponsored student essay competition. The rover got stuck in a \"sand trap\" in late 2009 at an angle that hampered recharging of its batteries; its last communication with Earth was on March 22, 2010.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Spirit_(rover)",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/KSC-03PD-0786.jpg/2880px-KSC-03PD-0786.jpg"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [175.472636, -14.5684]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Terra Meridiani",
+        "destination": [3527603.695520859, -689644.450481964, 483920.0646853684],
+        "orientation": [2.04380225538318, -0.5700974895821371, 6.2830672295985615],
+        "description": "Terra Meridiani is a large plain straddling the equator of Mars. The plain sits on top of an enormous body of sediments that contains bound water. The iron oxide in the spherules is crystalline (grey) hematite (Fe2O3). The Meridiani Planum is one of the most thoroughly investigated regions of Mars. Many studies were carried out by the scientists involved with NASA's Mars Exploration Rover (MER) Opportunity.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Terra_Meridiani",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Sol322B.Smooth.Sheet.bedforms.close.to.heat.shield.crp.jpg"
+        },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-4.8900000000000006, 4.6100000000000003]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "\"The Hab\"",
+        "destination": [2482963.8874656125, -1390493.34713116, 2003606.997020314],
+        "orientation": [2.9706346891645325, -0.39288074608352463, 0.00013399155612248137],
+        "description": "(Spoilers!) In the novel and movie The Martian, \"The Hab\" is a habitat on Mars, in Acidalia Planitia, where astronaut Mark Watney lives and works after being stranded there alone following a dust storm on Sol 18 of the Ares III mission.",
+        "sourceURL": "https://en.wikipedia.org/wiki/The_Martian_(film)",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/a/a7/PIA19913-MarsLandingSite-Ares3Mission-TheMartian-2015Film-20150517.jpg"
+        },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-28.57, 31.27]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "Valles Marineris",
+        "destination": [1962773.9022, -2712650.0794, -1111175.4271],
+        "orientation": [5.4566, -0.4563, 0.0],
+        "description": "Valles Marineris (Latin for Mariner Valleys, named after the Mariner 9 Mars orbiter of 1971-72 which discovered it) is a system of canyons that runs along the Martian surface east of the Tharsis region. At more than 4,000 km (2,500 mi) long, 200 km (120 mi) wide and up to 7 km (23,000 ft) deep, Valles Marineris is the largest canyon in the Solar System.",
+        "sourceURL": "https://en.wikipedia.org/wiki/Valles_Marineris",
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Mars_Valles_Marineris.jpeg/1200px-Mars_Valles_Marineris.jpeg"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-59.2, -13.9]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { 
+        "text": "\"Watney Triangle\"",
+        "destination": [3286701.2244228586, -654675.1932169931, 1071261.3465401786],
+        "orientation": [2.215118283105494, -0.4393789184089627, 6.283005739536628],
+        "description": "(Spoilers!) In the novel and movie The Martian, the \"Watney Triangle\" is a region of treacherous craters (Trouvelot, Becquerel, and Marth) that astronaut Mark Watney must traverse on his way to the Ares 4 landing site at Schiaparelli Crater.",
+        "sourceURL": "https://en.wikipedia.org/wiki/The_Martian_(film)", 
+        "source": "Wikipedia",
+        "imageURL": "https://upload.wikimedia.org/wikipedia/commons/9/99/TrouvelotMartianCrater.jpg"
+        },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-7.6717428056727446, 15.243062604535314]
+      }
+    }
+  ]
+}

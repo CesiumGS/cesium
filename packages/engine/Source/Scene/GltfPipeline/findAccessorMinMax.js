@@ -52,7 +52,7 @@ function findAccessorMinMax(gltf, accessor) {
       byteOffset,
       numberOfComponents,
       componentTypeByteLength,
-      components
+      components,
     );
     for (let j = 0; j < numberOfComponents; j++) {
       const value = components[j];

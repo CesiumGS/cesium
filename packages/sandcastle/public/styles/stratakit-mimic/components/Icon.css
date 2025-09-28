@@ -1,0 +1,42 @@
+@layer itwinui.components {
+  /*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+  .stratakit-mimic-icon {
+    @layer base {
+      width: var(--🥝icon-size, 1rem);
+      height: var(--🥝icon-size, 1rem);
+      flex-shrink: 0;
+      color: var(--🥝icon-color);
+      transition: color 150ms ease-out;
+    }
+
+    @layer modifiers {
+      &:where([data-kiwi-size="regular"]) {
+        --🥝icon-size: 1rem;
+      }
+
+      &:where([data-kiwi-size="large"]) {
+        --🥝icon-size: 1.5rem;
+      }
+    }
+  }
+
+  .stratakit-mimic-disclosure-arrow {
+    @layer base {
+      margin-inline-end: calc(var(--stratakit-space-x2) * -1);
+      rotate: var(--🥝disclosure-arrow-rotate);
+
+      @media (prefers-reduced-motion: no-preference) {
+        transition: rotate 150ms ease-in-out;
+      }
+    }
+  }
+
+  @media (forced-colors: active) {
+    .stratakit-mimic-icon {
+      --🥝icon-color: currentColor;
+    }
+  }
+}

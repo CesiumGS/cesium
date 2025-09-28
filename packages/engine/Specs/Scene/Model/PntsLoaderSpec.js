@@ -48,6 +48,8 @@ describe(
       "./Data/Cesium3DTiles/PointCloud/PointCloudDracoPartial/pointCloudDracoPartial.pnts";
     const pointCloudDracoBatchedUrl =
       "./Data/Cesium3DTiles/PointCloud/PointCloudDracoBatched/pointCloudDracoBatched.pnts";
+    const pointCloudDracoInvalidUrl =
+      "./Data/Cesium3DTiles/PointCloud/PointCloudDracoInvalid/pointCloudDracoInvalid.pnts";
     const pointCloudWGS84Url =
       "./Data/Cesium3DTiles/PointCloud/PointCloudWGS84/pointCloudWGS84.pnts";
     const pointCloudBatchedUrl =
@@ -536,6 +538,18 @@ describe(
         expectColorRGB(attributes[2]);
         expectBatchId(attributes[3], ComponentDatatype.UNSIGNED_BYTE);
       });
+    });
+
+    it("loads PointCloudDracoInvalid without crashing", async function () {
+      // Test for https://github.com/CesiumGS/cesium/issues/12872:
+      // PNTS files that are invalid due to a missing batch table
+      // binary and draco compression extension object should
+      // load. (The metadata is expected to be empty here)
+      const loader = await loadPnts(pointCloudDracoInvalidUrl);
+      const components = loader.components;
+      expect(components).toBeDefined();
+      const isBatched = false;
+      expectMetadata(components.structuralMetadata, {}, isBatched);
     });
 
     it("loads PointCloudWGS84", function () {

@@ -222,7 +222,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
    * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
-   * @type {TileAvailability}
+   * @type {TileAvailability|undefined}
    * @readonly
    */
   availability: {

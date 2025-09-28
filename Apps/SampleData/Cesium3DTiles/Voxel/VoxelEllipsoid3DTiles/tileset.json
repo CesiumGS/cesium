@@ -2,7 +2,19 @@
   "asset": {
     "version": "1.1"
   },
-  "schemaUri": "schema.json",
+  "schema": {
+    "id": "voxel",
+    "classes": {
+      "voxel": {
+        "properties": {
+          "a": {
+            "type": "VEC4",
+            "componentType": "FLOAT32"
+          }
+        }
+      }
+    }
+  },
   "statistics": {
     "classes": {
       "voxel": {
@@ -28,7 +40,7 @@
         500000.0
       ]
     },
-    "geometricError": 0.0,
+    "geometricError": 16.0,
     "refine": "REPLACE",
     "content": {
       "uri": "tiles/{level}/{x}/{y}/{z}.gltf",
@@ -45,7 +57,7 @@
     },
     "implicitTiling": {
       "subdivisionScheme": "OCTREE",
-      "subtreeLevels": 3,
+      "subtreeLevels": 1,
       "availableLevels": 1,
       "subtrees": {
         "uri": "subtrees/{level}/{x}/{y}/{z}.json"

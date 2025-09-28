@@ -1,0 +1,58 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>Loading Descendant Limit</td>
+        <td>
+          <input
+            type="text"
+            size="5"
+            data-bind="value: loadingDescendantLimit"
+            title="The number of loading descendant tiles that is considered 'too many'. If a tile has too many loading descendants, that tile will be loaded and rendered before any of its descendants are loaded and rendered. This means more feedback for the user that something is happening at the cost of a longer overall load time. Setting this to 0 will cause each tile level to be loaded successively, significantly increasing load time. Setting it to a large number (e.g. 100000) will minimize the number of tiles that are loaded but tend to make detail appear all at once after a long wait."
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Preload Ancestors</td>
+        <td>
+          <input
+            type="checkbox"
+            data-bind="checked: preloadAncestors"
+            title="Indicating whether the ancestors of rendered tiles should be preloaded. Setting this to true optimizes the zoom-out experience and provides more detail in newly-exposed areas when panning. The down side is that it requires loading more tiles."
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Preload Siblings</td>
+        <td>
+          <input
+            type="checkbox"
+            data-bind="checked: preloadSiblings"
+            title="Gets or sets a value indicating whether the siblings of rendered tiles should be preloaded. Setting this to true causes tiles with the same parent as a rendered tile to be loaded, even if they are culled. Setting this to true may provide a better panning experience at the cost of loading more tiles."
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Fill Tile Highlight</td>
+        <td>
+          <input
+            type="checkbox"
+            data-bind="checked: fillHighlightEnabled"
+            title="Highlights generated fill tiles."
+          />
+          <input
+            type="text"
+            size="25"
+            data-bind="value: fillHighlightColor"
+            title="The color to use to highlight fill tiles. If undefined, fill tiles are not highlighted at all. The alpha value is used to alpha blend with the tile's actual color."
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

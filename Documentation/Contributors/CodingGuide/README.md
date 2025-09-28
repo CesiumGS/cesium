@@ -42,9 +42,9 @@ To some extent, this guide can be summarized as _make new code similar to existi
   - [Widgets](#widgets)
     - [Knockout subscriptions](#knockout-subscriptions)
   - [GLSL](#glsl)
-    - [Naming](#naming-1)
-    - [Formatting](#formatting-1)
-    - [Performance](#performance)
+    - [GLSL Naming](#glsl-naming)
+    - [GLSL Formatting](#glsl-formatting)
+    - [GLSL Performance](#glsl-performance)
   - [Resources](#resources)
 
 ## Naming
@@ -128,7 +128,7 @@ A few more naming conventions are introduced below along with their design patte
 
 ## Linting
 
-For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For an up to date list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/index.js), [browser.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/browser.js), and [node.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/node.js). Below are listed some specific rules to keep in mind
+For syntax and style guidelines, we use the ESLint recommended settings as a base and extend it with additional rules (see the [list of all rules](http://eslint.org/docs/rules/)) via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For an up to date list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/index.js), [browser.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/browser.js), and [node.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/node.js). Below are listed some specific rules to keep in mind
 
 **General rules:**
 
@@ -978,62 +978,69 @@ fullscreenSubscription.dispose();
 
 ## GLSL
 
-### Naming
+### GLSL Naming
 
-- GLSL files end with `.glsl` and are in the [Shaders](https://github.com/CesiumGS/cesium/tree/main/Source/Shaders) directory.
+- GLSL files end with `.glsl` and are in the [Shaders](https://github.com/CesiumGS/cesium/tree/main/packages/engine/Source/Shaders) directory.
 - Files for vertex shaders have a `VS` suffix; fragment shaders have an `FS` suffix. For example: `BillboardCollectionVS.glsl` and `BillboardCollectionFS.glsl`.
 - Generally, identifiers, such as functions and variables, use `camelCase`.
-- Cesium built-in identifiers start with `czm_`, for example, [`czm_material`](https://github.com/CesiumGS/cesium/blob/main/Source/Shaders/Builtin/Structs/material.glsl). Files have the same name without the `czm_` prefix, e.g., `material.glsl`.
+- Cesium built-in identifiers start with `czm_`, for example, [`czm_material`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/Shaders/Builtin/Structs/material.glsl). Files have the same name without the `czm_` prefix, e.g., `material.glsl`.
 - Use `czm_textureCube` when sampling a cube map instead of `texture`. This is to preserve backwards compatibility with WebGL 1.
 - Varyings start with `v_`, e.g.,
-
-```javascript
-in vec2 v_textureCoordinates;
-```
-
+  ```javascript
+  in vec2 v_textureCoordinates;
+  ```
 - Uniforms start with `u_`, e.g.,
-
-```javascript
-uniform sampler2D u_atlas;
-```
-
+  ```javascript
+  uniform sampler2D u_atlas;
+  ```
 - An `EC` suffix indicates the point or vector is in eye coordinates, e.g.,
-
-```glsl
-varying vec3 v_positionEC;
-// ...
-v_positionEC = (czm_modelViewRelativeToEye * p).xyz;
-```
-
+  ```glsl
+  varying vec3 v_positionEC;
+  // ...
+  v_positionEC = (czm_modelViewRelativeToEye * p).xyz;
+  ```
 - When [GPU RTE](https://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm) is used, `High` and `Low` suffixes define the high and low bits, respectively, e.g.,
-
-```glsl
-attribute vec3 position3DHigh;
-attribute vec3 position3DLow;
-```
-
+  ```glsl
+  attribute vec3 position3DHigh;
+  attribute vec3 position3DLow;
+  ```
 - 2D texture coordinates are `s` and `t`, not `u` and `v`, e.g.,
+  ```glsl
+  attribute vec2 st;
+  ```
 
-```glsl
-attribute vec2 st;
-```
-
-### Formatting
+### GLSL Formatting
 
 - Use the same formatting as JavaScript, except put `{` on a new line, e.g.,
+  ```glsl
+  struct czm_ray
+  {
+      vec3 origin;
+      vec3 direction;
+  };
+  ```
 
-```glsl
-struct czm_ray
-{
-    vec3 origin;
-    vec3 direction;
-};
-```
-
-### Performance
+### GLSL Performance
 
 - :speedboat: Compute expensive values as infrequently as possible, e.g., prefer computing a value in JavaScript and passing it in a uniform instead of redundantly computing the same value per-vertex. Likewise, prefer to compute a value per-vertex and pass a varying, instead of computing per-fragment when possible.
 - :speedboat: Use `discard` sparingly since it disables early-z GPU optimizations.
+
+#### Branching in shaders
+
+Conditional logic may have a performance impact when executing shader code. GPUs rely on many parallel calculations being executable at once, and branching code can disrupt that parallelism— executing expensive instructions for one vertex or fragment in one thread may block the execution of the others.
+
+- Avoid executing non-trivial code in `if-else` statements.
+- Branching based on the value of uniform, e.g. `if (czm_orthographicIn3D == 1.0)`, or variables consistent across all vertices or fragments shouldn't cause a bottleneck.
+- :speedboat: Use `czm_branchFreeTernary` to avoid branching. For example:
+  ```glsl
+  if (sphericalLatLong.y >= czm_pi) {
+    sphericalLatLong.y = sphericalLatLong.y - czm_twoPi;
+  }
+  ```
+  could be better written as
+  ```glsl
+  sphericalLatLong.y = czm_branchFreeTernary(sphericalLatLong.y < czm_pi, sphericalLatLong.y, sphericalLatLong.y - czm_twoPi);
+  ```
 
 ## Resources
 

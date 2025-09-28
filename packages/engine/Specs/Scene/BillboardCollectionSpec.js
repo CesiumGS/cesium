@@ -2490,6 +2490,50 @@ describe("Scene/BillboardCollection", function () {
         expect(scene).toPickPrimitive(b);
       });
 
+      it("renders translucency correctly independently of image width", async function () {
+        // This test effectively probes at writeCompressedAttrib1, which packs together imageWidth and translucencyByDistance.
+        // In a previous regression, imageWidth was not being rounded, and was being packed incorrectly as a result of being treated as an incorrect type (float vs int).
+        const narrowBillboard = billboards.add({
+          position: Cartesian3.ZERO,
+          image: whiteImage,
+          width: 230.23,
+          translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+        });
+
+        const wideBillboard = billboards.add({
+          position: Cartesian3.ZERO,
+          image: whiteImage,
+          width: 300.355,
+          translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+        });
+
+        // Position the camera in the middle of the translucency range
+        camera.position = new Cartesian3(3.0, 0.0, 0.0);
+
+        await pollToPromise(() => {
+          scene.renderForSpecs();
+          return narrowBillboard.ready && wideBillboard.ready;
+        });
+
+        wideBillboard.show = false;
+        narrowBillboard.show = true;
+        let narrowBillboardColor;
+        expect(scene).toRenderAndCall(([r, g, b, a]) => {
+          expect([r, g, b]).not.toEqual([0, 0, 0]);
+          narrowBillboardColor = [r, g, b, a];
+        });
+
+        wideBillboard.show = true;
+        narrowBillboard.show = false;
+        let wideBillboardColor;
+        expect(scene).toRenderAndCall(([r, g, b, a]) => {
+          expect([r, g, b]).not.toEqual([0, 0, 0]);
+          wideBillboardColor = [r, g, b, a];
+        });
+
+        expect(narrowBillboardColor).toEqual(wideBillboardColor);
+      });
+
       describe("height referenced billboards", function () {
         let billboardsWithHeight;
         beforeEach(function () {
@@ -2687,7 +2731,7 @@ describe("Scene/BillboardCollection", function () {
           );
 
           const terrainProvider = await CesiumTerrainProvider.fromUrl(
-            "made/up/url",
+            "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",
             {
               requestVertexNormals: true,
             },

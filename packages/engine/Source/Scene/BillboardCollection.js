@@ -1020,13 +1020,20 @@ function writeCompressedAttrib0(
     Math.floor(
       CesiumMath.clamp(pixelOffsetY, -UPPER_BOUND, UPPER_BOUND) + UPPER_BOUND,
     ) * LEFT_SHIFT8;
+
+  // We scale `translate` by LEFT_SHIFT2 before encoding it (and unscale after decoding in the shader)
+  // to preserve some subpixel precision (1 / 4 = 0.25 pixels). This mitigates rounding errors in aligning glyphs.
+  // The cost of increasing this scaling factor is that it decreases the range of representable `translate` values
+  // by the same scaling factor. Value must be kept in sync with the shader.
   let compressed2 =
     Math.floor(
-      CesiumMath.clamp(translateX, -UPPER_BOUND, UPPER_BOUND) + UPPER_BOUND,
+      CesiumMath.clamp(translateX * LEFT_SHIFT2, -UPPER_BOUND, UPPER_BOUND) +
+        UPPER_BOUND,
     ) * LEFT_SHIFT8;
 
   const tempTanslateY =
-    (CesiumMath.clamp(translateY, -UPPER_BOUND, UPPER_BOUND) + UPPER_BOUND) *
+    (CesiumMath.clamp(translateY * LEFT_SHIFT2, -UPPER_BOUND, UPPER_BOUND) +
+      UPPER_BOUND) *
     RIGHT_SHIFT8;
   const upperTranslateY = Math.floor(tempTanslateY);
   const lowerTranslateY = Math.floor(
@@ -1118,7 +1125,7 @@ function writeCompressedAttrib1(
     }
   }
 
-  const imageWidth = billboard.width ?? 0;
+  const imageWidth = Math.round(billboard.width ?? 0);
   billboardCollection._maxSize = Math.max(
     billboardCollection._maxSize,
     imageWidth,

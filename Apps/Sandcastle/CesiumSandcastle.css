@@ -49,11 +49,20 @@ body {
   float: right;
 }
 
+#banner {
+  text-align: center;
+  background: #daf6ff;
+
+  a {
+    color: blue;
+  }
+}
+
 #codeContainer {
   width: 40%;
 }
 
-#bottomPanel {
+#bottomSection {
   height: 225px;
 }
 

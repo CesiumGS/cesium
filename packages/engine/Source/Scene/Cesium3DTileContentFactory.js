@@ -4,6 +4,7 @@ import Implicit3DTileContent from "./Implicit3DTileContent.js";
 import Model3DTileContent from "./Model/Model3DTileContent.js";
 import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
+import GaussianSplat3DTileContent from "./GaussianSplat3DTileContent.js";
 import RuntimeError from "../Core/RuntimeError.js";
 
 /**
@@ -92,9 +93,22 @@ const Cesium3DTileContentFactory = {
     const dataView = new DataView(arrayBuffer, byteOffset);
     const byteLength = dataView.getUint32(8, true);
     const glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
+
+    if (
+      GaussianSplat3DTileContent.tilesetRequiresGaussianSplattingExt(tileset)
+    ) {
+      return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, glb);
+    }
+
     return Model3DTileContent.fromGltf(tileset, tile, resource, glb);
   },
   gltf: function (tileset, tile, resource, json) {
+    if (
+      GaussianSplat3DTileContent.tilesetRequiresGaussianSplattingExt(tileset)
+    ) {
+      return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, json);
+    }
+
     return Model3DTileContent.fromGltf(tileset, tile, resource, json);
   },
   geoJson: function (tileset, tile, resource, json) {

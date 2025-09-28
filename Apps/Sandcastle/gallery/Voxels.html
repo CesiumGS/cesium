@@ -42,10 +42,20 @@
           geocoder: false,
           animation: false,
           timeline: false,
+          projectionPicker: true,
+          sceneModePicker: false,
         });
 
         viewer.extend(Cesium.viewerVoxelInspectorMixin);
         viewer.scene.debugShowFramesPerSecond = true;
+
+        const globalTransform = Cesium.Matrix4.fromScale(
+          Cesium.Cartesian3.fromElements(
+            Cesium.Ellipsoid.WGS84.maximumRadius,
+            Cesium.Ellipsoid.WGS84.maximumRadius,
+            Cesium.Ellipsoid.WGS84.maximumRadius,
+          ),
+        );
 
         function ProceduralSingleTileVoxelProvider(shape) {
           this.shape = shape;
@@ -55,6 +65,7 @@
           this.names = ["color"];
           this.types = [Cesium.MetadataType.VEC4];
           this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
+          this.globalTransform = globalTransform;
         }
 
         const scratchColor = new Cesium.Color();
@@ -110,6 +121,7 @@
           this.names = ["color"];
           this.types = [Cesium.MetadataType.VEC4];
           this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
+          this.globalTransform = globalTransform;
 
           this._levelCount = 2;
           this._allVoxelData = new Array(this._levelCount);
@@ -214,14 +226,13 @@
           return Promise.resolve(content);
         };
 
-        function createPrimitive(provider, customShader, modelMatrix) {
+        function createPrimitive(provider, customShader) {
           viewer.scene.primitives.removeAll();
 
           const voxelPrimitive = viewer.scene.primitives.add(
             new Cesium.VoxelPrimitive({
               provider: provider,
               customShader: customShader,
-              modelMatrix: modelMatrix,
             }),
           );
 
@@ -245,14 +256,6 @@
   }`,
         });
 
-        const modelMatrix = Cesium.Matrix4.fromScale(
-          Cesium.Cartesian3.fromElements(
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-            Cesium.Ellipsoid.WGS84.maximumRadius,
-          ),
-        );
-
         Sandcastle.addToolbarMenu([
           {
             text: "Ellipsoid - Procedural Tile",
@@ -262,7 +265,7 @@
               );
               provider.minBounds.z = 0.0;
               provider.maxBounds.z = 1000000.0;
-              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -271,7 +274,7 @@
               const provider = new ProceduralSingleTileVoxelProvider(
                 Cesium.VoxelShapeType.CYLINDER,
               );
-              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -280,7 +283,7 @@
               const provider = new ProceduralSingleTileVoxelProvider(
                 Cesium.VoxelShapeType.BOX,
               );
-              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -289,7 +292,7 @@
               const provider = new ProceduralMultiTileVoxelProvider(
                 Cesium.VoxelShapeType.BOX,
               );
-              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -300,7 +303,7 @@
               );
               provider.minBounds.z = 0.0;
               provider.maxBounds.z = 1000000.0;
-              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -309,7 +312,7 @@
               const provider = new ProceduralMultiTileVoxelProvider(
                 Cesium.VoxelShapeType.CYLINDER,
               );
-              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
         ]);

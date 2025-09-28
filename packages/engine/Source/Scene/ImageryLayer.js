@@ -85,7 +85,7 @@ import TileImagery from "./TileImagery.js";
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates
  *                          of the imagery tile for which the hue is required, and it is expected to return
- *                          the contrast value to use for the tile.  The function is executed for every
+ *                          the hue value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
  * @property {number|Function} [saturation=1.0] The saturation of this layer.  1.0 uses the unmodified imagery color.
  *                          Less than 1.0 reduces the saturation while greater than 1.0 increases it.
@@ -93,7 +93,7 @@ import TileImagery from "./TileImagery.js";
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates
  *                          of the imagery tile for which the saturation is required, and it is expected to return
- *                          the contrast value to use for the tile.  The function is executed for every
+ *                          the saturation value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
  * @property {number|Function} [gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
  *                          This can either be a simple number or a function with the signature
@@ -127,7 +127,7 @@ import TileImagery from "./TileImagery.js";
 
 /**
  * An imagery layer that displays tiled image data from a single imagery provider
- * on a {@link Globe}.
+ * on a {@link Globe} or {@link Cesium3DTileset}.
  *
  * @alias ImageryLayer
  * @constructor
@@ -135,8 +135,10 @@ import TileImagery from "./TileImagery.js";
  * @param {ImageryProvider} [imageryProvider] The imagery provider to use.
  * @param {ImageryLayer.ConstructorOptions} [options] An object describing initialization options
  *
- * @see ImageryLayer.fromProviderAsync
- * @see ImageryLayer.fromWorldImagery
+ * @see {@link ImageryLayer.fromProviderAsync} for creating an imagery layer from an asynchronous imagery provider.
+ * @see {@link ImageryLayer.fromWorldImagery} for creating an imagery layer for Cesium ion's default global base imagery layer.
+ * @see {@link Scene#imageryLayers} for adding an imagery layer to the globe.
+ * @see {@link Cesium3DTileset#imageryLayers} for adding an imagery layer to a 3D tileset.
  *
  * @example
  * // Add an OpenStreetMaps layer
@@ -155,6 +157,19 @@ import TileImagery from "./TileImagery.js";
  * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
  * imageryLayer.alpha = 0.5;
  * scene.imageryLayers.add(imageryLayer);
+ *
+ * @example
+ * // Drape Bing Maps Aerial imagery over a 3D tileset
+ * const tileset = await Cesium.Cesium3DTileset.fromUrl(
+ *   "http://localhost:8002/tilesets/Seattle/tileset.json"
+ * );
+ * scene.primitives.add(tileset);
+ *
+ * const imageryProvider = await Cesium.createWorldImageryAsync({
+ *   style: Cesium.IonWorldImageryStyle.AERIAL,
+ * });
+ * const imageryLayer = new ImageryLayer(imageryProvider);
+ * tileset.imageryLayers.add(imageryLayer);
  */
 function ImageryLayer(imageryProvider, options) {
   this._imageryProvider = imageryProvider;
@@ -373,8 +388,8 @@ Object.defineProperties(ImageryLayer.prototype, {
    * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of the thrown error.
-   * @memberof Imagery.prototype
-   * @type {Event<Imagery.ErrorEventCallback>}
+   * @memberof ImageryLayer.prototype
+   * @type {Event<ImageryLayer.ErrorEventCallback>}
    * @readonly
    */
   errorEvent: {
@@ -503,7 +518,7 @@ ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
  * viewer.imageryLayers.add(imageryLayer);
  *
  * imageryLayer.readyEvent.addEventListener(provider => {
- *   imageryLayer.provider.errorEvent.addEventListener(error => {
+ *   imageryLayer.imageryProvider.errorEvent.addEventListener(error => {
  *     alert(`Encountered an error while loading imagery tiles! ${error}`);
  *   });
  * });
@@ -512,9 +527,9 @@ ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
  *   alert(`Encountered an error while creating an imagery layer! ${error}`);
  * });
  *
- * @see ImageryLayer.errorEvent
- * @see ImageryLayer.readyEvent
- * @see ImageryLayer.provider
+ * @see ImageryLayer#errorEvent
+ * @see ImageryLayer#readyEvent
+ * @see ImageryLayer#imageryProvider
  * @see ImageryLayer.fromWorldImagery
  */
 ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
@@ -561,7 +576,7 @@ ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
  * viewer.imageryLayers.add(imageryLayer);
  *
  * imageryLayer.readyEvent.addEventListener(provider => {
- *   imageryLayer.provider.errorEvent.addEventListener(error => {
+ *   imageryLayer.imageryProvider.errorEvent.addEventListener(error => {
  *     alert(`Encountered an error while loading imagery tiles! ${error}`);
  *   });
  * });
@@ -570,9 +585,9 @@ ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
  *   alert(`Encountered an error while creating an imagery layer! ${error}`);
  * });
  *
- * @see ImageryLayer.errorEvent
- * @see ImageryLayer.readyEvent
- * @see ImageryLayer.provider
+ * @see ImageryLayer#errorEvent
+ * @see ImageryLayer#readyEvent
+ * @see ImageryLayer#imageryProvider
  */
 ImageryLayer.fromWorldImagery = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -663,7 +678,7 @@ ImageryLayer.prototype.getImageryRectangle = function () {
  *
  * @private
  *
- * @param {Tile} tile The terrain tile.
+ * @param {QuadtreeTile} tile The terrain tile.
  * @param {TerrainProvider|undefined} terrainProvider The terrain provider associated with the terrain tile.
  * @param {number} insertionPoint The position to insert new skeletons before in the tile's imagery list.
  * @returns {boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.

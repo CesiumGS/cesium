@@ -254,6 +254,15 @@ Ellipsoid.MOON = Object.freeze(
   ),
 );
 
+/**
+ * An Ellipsoid instance initialized to a sphere with the mean radii of Mars.
+ * Source: https://epsg.io/104905
+ *
+ * @type {Ellipsoid}
+ * @constant
+ */
+Ellipsoid.MARS = Object.freeze(new Ellipsoid(3396190.0, 3396190.0, 3376200.0));
+
 Ellipsoid._default = Ellipsoid.WGS84;
 Object.defineProperties(Ellipsoid, {
   /**
@@ -469,7 +478,7 @@ Ellipsoid.prototype.cartographicArrayToCartesianArray = function (
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartographics", cartographics);
-  //>>includeEnd('debug')
+  //>>includeEnd('debug');
 
   const length = cartographics.length;
   if (!defined(result)) {

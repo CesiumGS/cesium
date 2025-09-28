@@ -77,6 +77,15 @@
       data-dojo-props="design: 'headline', gutters: true, liveSplitters: true"
     >
       <div
+        id="banner"
+        data-dojo-type="dijit.layout.ContentPane"
+        data-dojo-props="region: 'top'"
+      >
+        <a href="https://dev-sandcastle.cesium.com"
+          >Try the new version of Sandcastle today!</a
+        >
+      </div>
+      <div
         id="toolbar"
         data-dojo-type="dijit.Toolbar"
         data-dojo-props="region: 'top'"
@@ -303,40 +312,46 @@
         </div>
       </div>
       <div
-        id="bottomPanel"
+        id="bottomSection"
         class="bottomPanel"
-        data-dojo-type="dijit.layout.TabContainer"
+        data-dojo-type="dijit.layout.BorderContainer"
         data-dojo-props="region: 'bottom', splitter: true"
       >
         <div
-          id="innerPanel"
+          id="bottomPanel"
           class="bottomPanel"
           data-dojo-type="dijit.layout.TabContainer"
-          data-dojo-props="title: 'Gallery', nested: true"
+          data-dojo-props="region: 'center', splitter: false"
         >
           <div
-            id="searchContainer"
-            class="galleryContainer"
-            data-dojo-type="dijit.layout.ContentPane"
-            data-dojo-props="title: 'Search Results'"
+            id="innerPanel"
+            class="bottomPanel"
+            data-dojo-type="dijit.layout.TabContainer"
+            data-dojo-props="title: 'Gallery', nested: true"
           >
-            <div id="searchResults" class="demosContainer">
-              <div id="searchDemos" class="demos"></div>
+            <div
+              id="searchContainer"
+              class="galleryContainer"
+              data-dojo-type="dijit.layout.ContentPane"
+              data-dojo-props="title: 'Search Results'"
+            >
+              <div id="searchResults" class="demosContainer">
+                <div id="searchDemos" class="demos"></div>
+              </div>
             </div>
           </div>
-        </div>
-        <div
-          id="logContainer"
-          data-dojo-type="dijit.layout.ContentPane"
-          data-dojo-props="title: 'Console'"
-        >
-          <div class="logContainer">
-            <div id="logOutput"></div>
+          <div
+            id="logContainer"
+            data-dojo-type="dijit.layout.ContentPane"
+            data-dojo-props="title: 'Console'"
+          >
+            <div class="logContainer">
+              <div id="logOutput"></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
     <div class="dijitTooltip dijitTooltipBelow" id="docPopup">
       <div
         class="dijitTooltipContainer dijitTooltipContents"
