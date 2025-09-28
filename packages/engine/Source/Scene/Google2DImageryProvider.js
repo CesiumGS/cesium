@@ -79,6 +79,7 @@ const trailingSlashRegex = /\/$/;
 function Google2DImageryProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   this._maximumLevel = options.maximumLevel ?? 22;
+  this._minimumLevel = options.minimumLevel ?? 0;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.session)) {
@@ -144,6 +145,7 @@ function Google2DImageryProvider(options) {
     ellipsoid: options.ellipsoid,
     rectangle: options.rectangle,
     maximumLevel: this._maximumLevel,
+    minimumLevel: this._minimumLevel,
   });
   provider._resource = resource;
   this._imageryProvider = provider;

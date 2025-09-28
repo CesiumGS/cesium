@@ -238,11 +238,6 @@ describe("Scene/Google2DImageryProvider", function () {
   // });
 
   it("requestImage returns a promise for an image and loads it for cross-origin use", function () {
-    spyOn(
-      Google2DImageryProvider.prototype,
-      "getViewportCredits",
-    ).and.returnValue(Promise.resolve(""));
-
     const provider = new Google2DImageryProvider({
       session: "test-session-token",
       key: "test-key",
