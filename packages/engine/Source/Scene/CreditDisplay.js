@@ -423,18 +423,13 @@ CreditDisplay.prototype.addCreditToNextFrame = function (credit) {
   Check.defined("credit", credit);
   //>>includeEnd('debug');
 
-  try {
-    if (credit.isIon()) {
-      // If this is the an ion logo credit from the ion server
-      // Just use the default credit (which is identical) to avoid blinking
-      if (!defined(this._defaultCredit)) {
-        this._defaultCredit = Credit.clone(getDefaultCredit());
-      }
-      this._currentCesiumCredit = this._defaultCredit;
-      return;
+  if (credit.isIon()) {
+    // If this is the an ion logo credit from the ion server
+    // Just use the default credit (which is identical) to avoid blinking
+    if (!defined(this._defaultCredit)) {
+      this._defaultCredit = Credit.clone(getDefaultCredit());
     }
-  } catch {
-    //console.log("problem with credit")
+    this._currentCesiumCredit = this._defaultCredit;
     return;
   }
 
