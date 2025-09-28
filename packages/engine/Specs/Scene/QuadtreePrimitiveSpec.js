@@ -899,7 +899,7 @@ describe("Scene/QuadtreePrimitive", function () {
 
         let addedCallback = false;
         quadtree.forEachLoadedTile(function (tile) {
-          addedCallback = addedCallback || tile.customData.length > 0;
+          addedCallback = addedCallback || tile.customData.size > 0;
         });
 
         expect(addedCallback).toEqual(true);
@@ -915,7 +915,7 @@ describe("Scene/QuadtreePrimitive", function () {
 
         let removedCallback = true;
         quadtree.forEachLoadedTile(function (tile) {
-          removedCallback = removedCallback && tile.customData.length === 0;
+          removedCallback = removedCallback && tile.customData.size === 0;
         });
 
         expect(removedCallback).toEqual(true);
