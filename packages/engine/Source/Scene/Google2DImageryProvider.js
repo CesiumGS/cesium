@@ -367,10 +367,19 @@ Google2DImageryProvider.fromIon = async function (options) {
   }
   //>>includeEnd('debug');
 
-  const endpointJson = await createIonImagerySession(options);
+  const queryOptions = buildQueryOptions(options);
 
-  const endpointOptions = { ...endpointJson.options };
-  const url = endpointOptions.url;
+  const endpointResource = IonResource._createEndpointResource(
+    options.assetId,
+    {
+      queryParameters: {
+        options: JSON.stringify(queryOptions),
+      },
+    },
+  );
+
+  const endpoint = await endpointResource.fetchJson();
+  const endpointOptions = { ...endpoint.options };
   delete endpointOptions.url;
 
   return new Google2DImageryProvider({
@@ -378,7 +387,8 @@ Google2DImageryProvider.fromIon = async function (options) {
     key: endpointOptions.key,
     tileWidth: endpointOptions.tileWidth,
     tileHeight: endpointOptions.tileHeight,
-    url,
+    url: new IonResource(endpoint, endpointResource),
+    endpointOptions,
   });
 };
 
@@ -655,21 +665,6 @@ async function createGoogleImagerySession(options) {
   });
   const responseJson = JSON.parse(response);
   return responseJson;
-}
-
-async function createIonImagerySession(options) {
-  const { assetId } = options;
-
-  const queryOptions = buildQueryOptions(options);
-
-  const endpointResource = IonResource._createEndpointResource(assetId, {
-    queryParameters: {
-      options: JSON.stringify(queryOptions),
-    },
-  });
-
-  const endpoint = await endpointResource.fetchJson();
-  return endpoint;
 }
 
 // exposed for testing
