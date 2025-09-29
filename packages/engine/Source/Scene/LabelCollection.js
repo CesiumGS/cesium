@@ -150,12 +150,11 @@ function rebindAllGlyphs(labelCollection, label) {
   // presize glyphs to match the new text length
   glyphs.length = textLength;
 
-  const showBackground =
-    label.show && label._showBackground && text.split("\n").join("").length > 0;
   let backgroundBillboard = label._backgroundBillboard;
   const backgroundBillboardCollection =
     labelCollection._backgroundBillboardCollection;
 
+  // Create backgroundBillboard if needed
   if (label._showBackground && !defined(backgroundBillboard)) {
     backgroundBillboard = getWhitePixelBillboard(
       backgroundBillboardCollection,
@@ -163,37 +162,12 @@ function rebindAllGlyphs(labelCollection, label) {
     );
     label._backgroundBillboard = backgroundBillboard;
   }
-  if (defined(backgroundBillboard) && !showBackground) {
-    if (label.show) {
-      // Label is shown, remove the background billboard
-      backgroundBillboardCollection.remove(backgroundBillboard);
-      label._backgroundBillboard = backgroundBillboard = undefined;
-    } else {
-      // Label is hidden, hide backgroundBillboard as well
-      backgroundBillboard.show = false;
-    }
-  }
   if (defined(backgroundBillboard)) {
-    backgroundBillboard.color = label._backgroundColor;
-    backgroundBillboard.show = label._show;
-    backgroundBillboard.position = label._position;
-    backgroundBillboard.eyeOffset = label._eyeOffset;
-    backgroundBillboard.pixelOffset = label._pixelOffset;
-    backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
-    backgroundBillboard.verticalOrigin = label._verticalOrigin;
-    backgroundBillboard.heightReference = label._heightReference;
-    backgroundBillboard.scale = label.totalScale;
-    backgroundBillboard.pickPrimitive = label;
-    backgroundBillboard.id = label._id;
-    backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
-    backgroundBillboard.pixelOffsetScaleByDistance =
-      label._pixelOffsetScaleByDistance;
-    backgroundBillboard.scaleByDistance = label._scaleByDistance;
-    backgroundBillboard.distanceDisplayCondition =
-      label._distanceDisplayCondition;
-    backgroundBillboard.disableDepthTestDistance =
-      label._disableDepthTestDistance;
-    backgroundBillboard.clusterShow = label.clusterShow;
+    updateBackgroundBillboard(
+      backgroundBillboardCollection,
+      label,
+      backgroundBillboard,
+    );
   }
 
   const glyphBillboardCollection = labelCollection._glyphBillboardCollection;
@@ -337,6 +311,44 @@ function rebindAllGlyphs(labelCollection, label) {
   // changing glyphs will cause the position of the
   // glyphs to change, since different characters have different widths
   label._repositionAllGlyphs = true;
+}
+
+function updateBackgroundBillboard(
+  backgroundBillboardCollection,
+  label,
+  backgroundBillboard,
+) {
+  const showBackground =
+    label.show &&
+    label._showBackground &&
+    label._renderedText.split("\n").join("").length > 0;
+  // Label is shown and background is hidden - remove the background billboard
+  if (label.show && !showBackground) {
+    backgroundBillboardCollection.remove(backgroundBillboard);
+    label._backgroundBillboard = backgroundBillboard = undefined;
+    return;
+  }
+
+  backgroundBillboard.color = label._backgroundColor;
+  backgroundBillboard.show = label._show;
+  backgroundBillboard.position = label._position;
+  backgroundBillboard.eyeOffset = label._eyeOffset;
+  backgroundBillboard.pixelOffset = label._pixelOffset;
+  backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
+  backgroundBillboard.verticalOrigin = label._verticalOrigin;
+  backgroundBillboard.heightReference = label._heightReference;
+  backgroundBillboard.scale = label.totalScale;
+  backgroundBillboard.pickPrimitive = label;
+  backgroundBillboard.id = label._id;
+  backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
+  backgroundBillboard.pixelOffsetScaleByDistance =
+    label._pixelOffsetScaleByDistance;
+  backgroundBillboard.scaleByDistance = label._scaleByDistance;
+  backgroundBillboard.distanceDisplayCondition =
+    label._distanceDisplayCondition;
+  backgroundBillboard.disableDepthTestDistance =
+    label._disableDepthTestDistance;
+  backgroundBillboard.clusterShow = label.clusterShow;
 }
 
 function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding) {
