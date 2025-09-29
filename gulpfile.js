@@ -123,7 +123,7 @@ function handleBuildWarnings(result) {
 export async function build() {
   // Configure build options from command line arguments.
   const minify = argv.minify ?? false;
-  const removePragmas = argv.pragmas ?? false;
+  const removePragmas = argv.removePragmas ?? false;
   const sourcemap = argv.sourcemap ?? true;
   const node = argv.node ?? true;
 
