@@ -273,20 +273,19 @@ function computePickingDrawingBufferRectangle(
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
  * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
- * @returns {object[]} Objects containing the picked primitives.
+ * @returns {object[]} List of objects containing the picked primitives.
  */
 Picking.prototype.pick = function (
   scene,
   windowPosition,
   width,
   height,
-  limit,
+  limit = 1,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
 
-  limit = limit ?? 1;
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
 
@@ -336,9 +335,9 @@ Picking.prototype.pick = function (
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
-  const object = pickFramebuffer.end(drawingBufferRectangle, limit);
+  const pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit);
   context.endFrame();
-  return object;
+  return pickedObjects;
 };
 
 /**
@@ -719,13 +718,87 @@ Picking.prototype.pickPosition = function (scene, windowPosition, result) {
   return result;
 };
 
+/**
+ * @param {object[]} pickedResults the results from the pickCallback
+ * @param {number} limit If supplied, stop drilling after collecting this many picks.
+ * @param {object[]} results
+ * @param {object[]} pickedPrimitives
+ * @param {object[]} pickedAttributes
+ * @param {object[]} pickedFeatures
+ * @returns {boolean} whether picking should end
+ */
+function addDrillPickedResults(
+  pickedResults,
+  limit,
+  results,
+  pickedPrimitives,
+  pickedAttributes,
+  pickedFeatures,
+) {
+  for (const pickedResult of pickedResults) {
+    const object = pickedResult.object;
+    const position = pickedResult.position;
+    const exclude = pickedResult.exclude;
+
+    if (defined(position) && !defined(object)) {
+      results.push(pickedResult);
+      return true;
+    }
+
+    if (!defined(object) || !defined(object.primitive)) {
+      return true;
+    }
+
+    if (!exclude) {
+      results.push(pickedResult);
+      if (results.length >= limit) {
+        return true;
+      }
+    }
+
+    const primitive = object.primitive;
+    let hasShowAttribute = false;
+
+    // If the picked object has a show attribute, use it.
+    if (typeof primitive.getGeometryInstanceAttributes === "function") {
+      if (defined(object.id)) {
+        const attributes = primitive.getGeometryInstanceAttributes(object.id);
+        if (defined(attributes) && defined(attributes.show)) {
+          hasShowAttribute = true;
+          attributes.show = ShowGeometryInstanceAttribute.toValue(
+            false,
+            attributes.show,
+          );
+          pickedAttributes.push(attributes);
+        }
+      }
+    }
+
+    if (object instanceof Cesium3DTileFeature) {
+      hasShowAttribute = true;
+      object.show = false;
+      pickedFeatures.push(object);
+    }
+
+    // Otherwise, hide the entire primitive
+    if (!hasShowAttribute) {
+      primitive.show = false;
+      pickedPrimitives.push(primitive);
+    }
+  }
+}
+
+/**
+ * Drill pick by repeatedly calling a given `pickCallback`, each time stripping away the previously picked objects.
+ * @param {number} [limit=Number.MAX_VALUE] If supplied, stop drilling after collecting this many picks
+ * @param {(limit: number) => object[]} pickCallback Pick callback to execute each iteration
+ * @returns {object[]} List of picked results
+ */
 function drillPick(limit, pickCallback) {
   // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
   // we could update the primitive once, and then just execute their commands for each pass,
   // and cull commands for picked primitives.  e.g., base on the command's owner.
-  let i;
-  let attributes;
-  const result = [];
+  const results = [];
   const pickedPrimitives = [];
   const pickedAttributes = [];
   const pickedFeatures = [];
@@ -733,84 +806,40 @@ function drillPick(limit, pickCallback) {
     limit = Number.MAX_VALUE;
   }
 
-  let pickedResults = pickCallback();
-  let shouldBreak = false;
-  while (defined(pickedResults) && pickedResults.length > 0 && !shouldBreak) {
-    for (const pickedResult of pickedResults) {
-      const object = pickedResult.object;
-      const position = pickedResult.position;
-      const exclude = pickedResult.exclude;
-
-      if (defined(position) && !defined(object)) {
-        result.push(pickedResult);
-        shouldBreak = true;
-        break;
-      }
-
-      if (!defined(object) || !defined(object.primitive)) {
-        shouldBreak = true;
-        break;
-      }
-
-      if (!exclude) {
-        result.push(pickedResult);
-        if (0 >= --limit) {
-          shouldBreak = true;
-          break;
-        }
-      }
-
-      const primitive = object.primitive;
-      let hasShowAttribute = false;
-
-      // If the picked object has a show attribute, use it.
-      if (typeof primitive.getGeometryInstanceAttributes === "function") {
-        if (defined(object.id)) {
-          attributes = primitive.getGeometryInstanceAttributes(object.id);
-          if (defined(attributes) && defined(attributes.show)) {
-            hasShowAttribute = true;
-            attributes.show = ShowGeometryInstanceAttribute.toValue(
-              false,
-              attributes.show,
-            );
-            pickedAttributes.push(attributes);
-          }
-        }
-      }
-
-      if (object instanceof Cesium3DTileFeature) {
-        hasShowAttribute = true;
-        object.show = false;
-        pickedFeatures.push(object);
-      }
-
-      // Otherwise, hide the entire primitive
-      if (!hasShowAttribute) {
-        primitive.show = false;
-        pickedPrimitives.push(primitive);
-      }
+  let pickedResults = pickCallback(limit);
+  while (defined(pickedResults) && pickedResults.length > 0) {
+    const complete = addDrillPickedResults(
+      pickedResults,
+      limit,
+      results,
+      pickedPrimitives,
+      pickedAttributes,
+      pickedFeatures,
+    );
+    if (complete) {
+      break;
     }
-    pickedResults = pickCallback();
+    pickedResults = pickCallback(limit - results.length);
   }
 
   // Unhide everything we hid while drill picking
-  for (i = 0; i < pickedPrimitives.length; ++i) {
+  for (let i = 0; i < pickedPrimitives.length; ++i) {
     pickedPrimitives[i].show = true;
   }
 
-  for (i = 0; i < pickedAttributes.length; ++i) {
-    attributes = pickedAttributes[i];
+  for (let i = 0; i < pickedAttributes.length; ++i) {
+    const attributes = pickedAttributes[i];
     attributes.show = ShowGeometryInstanceAttribute.toValue(
       true,
       attributes.show,
     );
   }
 
-  for (i = 0; i < pickedFeatures.length; ++i) {
+  for (let i = 0; i < pickedFeatures.length; ++i) {
     pickedFeatures[i].show = true;
   }
 
-  return result;
+  return results;
 }
 
 Picking.prototype.drillPick = function (
@@ -820,12 +849,8 @@ Picking.prototype.drillPick = function (
   width,
   height,
 ) {
-  const that = this;
-  if (!defined(limit)) {
-    limit = Number.MAX_VALUE;
-  }
-  const pickCallback = function () {
-    const pickedObjects = that.pick(
+  const pickCallback = (limit) => {
+    const pickedObjects = this.pick(
       scene,
       windowPosition,
       width,
@@ -839,9 +864,7 @@ Picking.prototype.drillPick = function (
     }));
   };
   const objects = drillPick(limit, pickCallback);
-  return objects.map(function (element) {
-    return element.object;
-  });
+  return objects.map((element) => element.object);
 };
 
 const scratchRight = new Cartesian3();
@@ -1036,6 +1059,7 @@ function getRayIntersection(
   scene.resolveFramebuffers(passState);
 
   let position;
+  // Picking one object, result is either [object] or []
   const object = view.pickFramebuffer.end(drawingBufferRectangle, 1)[0];
 
   if (scene.context.depthTexture) {
@@ -1064,63 +1088,13 @@ function getRayIntersection(
   context.endFrame();
 
   if (defined(object) || defined(position)) {
-    return [
-      {
-        object: object,
-        position: position,
-        exclude:
-          (!defined(position) && requirePosition) ||
-          isExcluded(object, objectsToExclude),
-      },
-    ];
-  }
-}
-
-function getRayIntersections(
-  picking,
-  scene,
-  ray,
-  limit,
-  objectsToExclude,
-  width,
-  requirePosition,
-  mostDetailed,
-) {
-  const pickCallback = function () {
-    return getRayIntersection(
-      picking,
-      scene,
-      ray,
-      objectsToExclude,
-      width,
-      requirePosition,
-      mostDetailed,
-    );
-  };
-  return drillPick(limit, pickCallback);
-}
-
-function pickFromRay(
-  picking,
-  scene,
-  ray,
-  objectsToExclude,
-  width,
-  requirePosition,
-  mostDetailed,
-) {
-  const results = getRayIntersections(
-    picking,
-    scene,
-    ray,
-    1,
-    objectsToExclude,
-    width,
-    requirePosition,
-    mostDetailed,
-  );
-  if (results.length > 0) {
-    return results[0];
+    return {
+      object: object,
+      position: position,
+      exclude:
+        (!defined(position) && requirePosition) ||
+        isExcluded(object, objectsToExclude),
+    };
   }
 }
 
@@ -1134,16 +1108,44 @@ function drillPickFromRay(
   requirePosition,
   mostDetailed,
 ) {
-  return getRayIntersections(
+  const pickCallback = function () {
+    const pickResult = getRayIntersection(
+      picking,
+      scene,
+      ray,
+      objectsToExclude,
+      width,
+      requirePosition,
+      mostDetailed,
+    );
+    return pickResult ? [pickResult] : undefined;
+  };
+  return drillPick(limit, pickCallback);
+}
+
+function pickFromRay(
+  picking,
+  scene,
+  ray,
+  objectsToExclude,
+  width,
+  requirePosition,
+  mostDetailed,
+) {
+  // Use drillPickFromRay rather than getRayIntersection directly to select the first non-excluded object
+  const results = drillPickFromRay(
     picking,
     scene,
     ray,
-    limit,
+    1,
     objectsToExclude,
     width,
     requirePosition,
     mostDetailed,
   );
+  if (results.length > 0) {
+    return results[0];
+  }
 }
 
 function deferPromiseUntilPostRender(scene, promise) {

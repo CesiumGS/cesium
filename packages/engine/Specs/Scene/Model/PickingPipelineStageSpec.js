@@ -150,7 +150,6 @@ describe(
           "uniform vec4 czm_pickColor;",
         ]);
 
-        console.log(context._pickObjects);
         const pickObject = context._pickObjects.values().next().value;
         expect(pickObject).toBe(customPickObject);
 

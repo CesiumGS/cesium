@@ -55,7 +55,7 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
  * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
  * @returns {object[]} A list of rendered objects, ordered by distance to the middle of the rectangle.
  */
-PickFramebuffer.prototype.end = function (screenSpaceRectangle, limit) {
+PickFramebuffer.prototype.end = function (screenSpaceRectangle, limit = 1) {
   const width = screenSpaceRectangle.width ?? 1.0;
   const height = screenSpaceRectangle.height ?? 1.0;
 
@@ -77,8 +77,6 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle, limit) {
   let y = 0;
   let dx = 0;
   let dy = -1;
-
-  limit = limit ?? 1;
 
   // Spiral around the center pixel, this is a workaround until
   // we can access the depth buffer on all browsers.
@@ -105,7 +103,7 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle, limit) {
       const object = context.getObjectByPickColor(pickColor);
       if (defined(object)) {
         objects.add(object);
-        if (0 >= --limit) {
+        if (objects.size >= limit) {
           break;
         }
       }
