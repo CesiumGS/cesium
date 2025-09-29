@@ -162,13 +162,12 @@ function rebindAllGlyphs(labelCollection, label) {
     );
     label._backgroundBillboard = backgroundBillboard;
   }
-  if (defined(backgroundBillboard)) {
-    updateBackgroundBillboard(
-      backgroundBillboardCollection,
-      label,
-      backgroundBillboard,
-    );
-  }
+
+  updateBackgroundBillboard(
+    backgroundBillboardCollection,
+    label,
+    backgroundBillboard,
+  );
 
   const glyphBillboardCollection = labelCollection._glyphBillboardCollection;
   const glyphTextureCache = glyphBillboardCollection.billboardTextureCache;
@@ -318,6 +317,9 @@ function updateBackgroundBillboard(
   label,
   backgroundBillboard,
 ) {
+  if (!defined(backgroundBillboard)) {
+    return;
+  }
   const showBackground =
     label.show &&
     label._showBackground &&
