@@ -3,14 +3,10 @@
   "private": true,
   "version": "0.0.2",
   "type": "module",
-  "files": [
-    "scripts/buildGallery.js"
-  ],
+  "main": "index.js",
   "scripts": {
     "dev": "npm run build-gallery && vite --config vite.config.dev.ts",
-    "build": "npm run build-app",
-    "build-app": "tsc -b && npm run build-gallery && vite build --config vite.config.app.ts",
-    "build-prod": "tsc -b && npm run build-gallery && vite build --config vite.config.prod.ts",
+    "build": "echo 'Sandcastle cannot be built directly. Use the exported buildStatic() function instead'",
     "build-gallery": "node scripts/buildGallery.js"
   },
   "dependencies": {

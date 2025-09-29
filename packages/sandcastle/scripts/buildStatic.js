@@ -6,7 +6,7 @@ import { dirname, join } from "path";
 import { cesiumPathReplace, insertImportMap } from "../vite-plugins.js";
 import typescriptCompile from "./typescriptCompile.js";
 
-/** @import { UserConfig } from 'vite' */
+/** @import { UserConfig, LogLevel } from 'vite' */
 
 /**
  * @typedef {Object} ImportObject
@@ -43,6 +43,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @param {string} options.outDir Path to build files into
  * @param {string} options.viteBase Base path for files/routes
  * @param {string} options.cesiumBaseUrl Base path for CesiumJS. This should include the CesiumJS assets and workers etc.
+ * @param {string} options.cesiumVersion CesiumJS version to display in the top right
  * @param {string} [options.commitSha] Optional commit hash to display in the top right of the application
  * @param {ImportList} options.imports Set of imports to add to the import map for the iframe and standalone html pages. These paths should match the URL where it can be accessed within the current environment.
  * @param {{src: string, dest: string}[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolidate files for a singular static deployment (ie during production). Source paths should be absolute, dest paths should be relative to the page root. It is up to you to ensure these files exist BEFORE building sandcastle.
@@ -51,10 +52,15 @@ export function createSandcastleConfig({
   outDir,
   viteBase,
   cesiumBaseUrl,
+  cesiumVersion,
   commitSha,
   imports,
   copyExtraFiles = [],
 }) {
+  if (!cesiumVersion || cesiumVersion === "") {
+    throw new Error("Must provide a CesiumJS version");
+  }
+
   /** @type {UserConfig} */
   const config = { ...baseConfig };
 
@@ -97,6 +103,7 @@ export function createSandcastleConfig({
   config.define = {
     ...config.define,
     __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(typePaths),
+    __CESIUM_VERSION__: JSON.stringify(`Cesium ${cesiumVersion}`),
     __COMMIT_SHA__: JSON.stringify(commitSha ?? undefined),
   };
 
@@ -119,12 +126,13 @@ export function createSandcastleConfig({
  * If you are copying files to the built directory ensure the source files exist BEFORE attempting to build Sandcastle
  *
  * @param {UserConfig} config
+ * @param {LogLevel} logLevel
  */
-export async function buildStatic(config) {
+export async function buildStatic(config, logLevel = "warn") {
   // We have to do the compile for the Sandcastle API outside of the vite build
   // because we need to reference the js file and types directly from the app
   // and we don't want them bundled with the rest of the code
-  const exitCode = typescriptCompile(
+  const exitCode = await typescriptCompile(
     join(__dirname, "../templates/tsconfig.lib.json"),
   );
 
@@ -134,8 +142,10 @@ export async function buildStatic(config) {
     throw new Error("Sandcastle typescript build failed");
   }
 
+  console.log("Building Sandcastle with Vite");
   await build({
     ...config,
     root: join(__dirname, "../"),
+    logLevel,
   });
 }

@@ -5,11 +5,23 @@ This package is the application for Sandcastle.
 ## Running/Building
 
 - `npm run dev`: run the development server
-- `npm run build`: alias for `npm run build-app`
 - `npm run build-app`: build to static files in `/Apps/Sandcastle2` for hosting/access from the root cesium dev server
   - If the env variable `BASE_URL` is set it will be used as the app's base path and prefixed on all required paths in the application. This is useful for building to a "nested" url like we do in CI where the base is `[hostname]/cesium/branch/` instead of just `[hostname]/`
 
 Linting and style is managed under the project root's scripts.
+
+## Building Sandcastle
+
+There are 2 main conceptual ways that Sandcastle gets built which mostly revolve around how to access CesiumJS resources:
+
+1. Sandcastle points to "external" paths for CesiumJS resources
+2. Sandcastle is built to 1 static location that is co-located with all CesiumJS files. ie they're all copied into the built location
+
+The first method is useful and desired when developing the project locally and you want to refer to the actively built and updated CesiumJS files as you do other work. This is how the Sandcastle development server (`npm run dev`) and the local static version at `/Apps/Sandcastle2` are built.
+
+The second method is used when building Sandcastle to be deployed to the website or other static location. You can think of this as "bundling" all the necessary files needed for Sandcastle into 1 single directory.
+
+Regardless the method you want to use Sandcastle is always built using the exported `buildStatic`, `createSandcastleConfig` and `buildGalleryList` functions.
 
 ## Gallery structure
 
@@ -47,6 +59,10 @@ thumbnail: thumbnail.jpg
 # Identify this as a development only Sandcastle. Will not be included in production builds if true
 development: false
 ```
+
+### Thumbnails
+
+Thumbnails should be any image that represents what the sandcastle does. Often this will just be the Viewer with or without any Sandcastle interaction buttons. Thumbnail files should be limited in size to help save on bandwidth. Currently most are around 225px in width.
 
 ## Expanding the ESLint configuration
 

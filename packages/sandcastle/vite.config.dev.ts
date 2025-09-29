@@ -2,8 +2,14 @@ import { defineConfig } from "vite";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { createSandcastleConfig } from "./scripts/buildStatic.js";
+import { readFileSync } from "fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+function getCesiumVersion() {
+  const data = readFileSync(join(__dirname, "../../package.json"), "utf-8");
+  const { version } = JSON.parse(data);
+  return version;
+}
 const cesiumSource = "../../Build/CesiumUnminified";
 const cesiumBaseUrl = "Build/CesiumUnminified";
 
@@ -11,6 +17,7 @@ const newConfig = createSandcastleConfig({
   outDir: join(__dirname, "../../Build/Sandcastle2"),
   viteBase: "",
   cesiumBaseUrl: "/Build/CesiumUnminified",
+  cesiumVersion: getCesiumVersion(),
   imports: {
     cesium: {
       path: "/Source/Cesium.js",

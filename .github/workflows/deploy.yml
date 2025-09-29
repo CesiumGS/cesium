@@ -42,8 +42,6 @@ jobs:
         run: npm pack --workspaces &> /dev/null
       - name: build apps
         run: npm run build-apps
-      - name: build sandcastle v2
-        run: npm run build-app -w packages/sandcastle -- -l warn
       - uses: ./.github/actions/verify-package
       - name: deploy to s3
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}

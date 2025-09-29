@@ -1,14 +1,5 @@
 import { fileURLToPath } from "url";
 import react from "@vitejs/plugin-react";
-import { dirname, join } from "path";
-import { readFileSync } from "fs";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-function getCesiumVersion() {
-  const data = readFileSync(join(__dirname, "../../package.json"), "utf-8");
-  const { version } = JSON.parse(data);
-  return version;
-}
 
 /** @import {UserConfig} from 'vite' */
 
@@ -23,7 +14,7 @@ const baseConfig = {
   },
   define: {
     __COMMIT_SHA__: JSON.stringify(undefined),
-    __CESIUM_VERSION__: JSON.stringify(`Cesium ${getCesiumVersion()}`),
+    __CESIUM_VERSION__: JSON.stringify(undefined),
     __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(undefined),
   },
   build: {

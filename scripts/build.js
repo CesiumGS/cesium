@@ -694,13 +694,7 @@ export async function buildSandcastleGallery(includeDevelopment) {
   } = gallery ?? {};
 
   // Import asynchronously, for now, because this following script is not included in the release zip; However, this script will not be run from the release zip
-  const buildGalleryScriptPath = path.join(
-    __dirname,
-    "../packages/sandcastle/scripts/buildGallery.js",
-  );
-  const { buildGalleryList } = await import(
-    pathToFileURL(buildGalleryScriptPath).href
-  );
+  const { buildGalleryList } = await import("@cesium/sandcastle");
 
   await buildGalleryList({
     rootDirectory,
