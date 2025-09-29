@@ -1,7 +1,10 @@
 import { fileURLToPath } from "url";
 import react from "@vitejs/plugin-react";
+import { dirname, resolve } from "path";
 
 /** @import {UserConfig} from 'vite' */
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // https://vite.dev/config/
 /** @type {UserConfig} */
@@ -22,13 +25,9 @@ const baseConfig = {
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        index: fileURLToPath(new URL("./index.html", import.meta.url)),
-        bucket: fileURLToPath(
-          new URL("./templates/bucket.html", import.meta.url),
-        ),
-        standalone: fileURLToPath(
-          new URL("./standalone.html", import.meta.url),
-        ),
+        index: resolve(__dirname, "./index.html"),
+        bucket: resolve(__dirname, "./templates/bucket.html"),
+        standalone: resolve(__dirname, "./standalone.html"),
       },
     },
     assetsInlineLimit: (filePath) => {

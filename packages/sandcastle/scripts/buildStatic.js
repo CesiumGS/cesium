@@ -41,7 +41,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  *
  * @param {object} options
  * @param {string} options.outDir Path to build files into
- * @param {string} options.viteBase Base path for files/routes
+ * @param {string} options.basePath Base path for files/routes
  * @param {string} options.cesiumBaseUrl Base path for CesiumJS. This should include the CesiumJS assets and workers etc.
  * @param {string} options.cesiumVersion CesiumJS version to display in the top right
  * @param {string} [options.commitSha] Optional commit hash to display in the top right of the application
@@ -50,7 +50,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  */
 export function createSandcastleConfig({
   outDir,
-  viteBase,
+  basePath,
   cesiumBaseUrl,
   cesiumVersion,
   commitSha,
@@ -64,7 +64,7 @@ export function createSandcastleConfig({
   /** @type {UserConfig} */
   const config = { ...baseConfig };
 
-  config.base = viteBase;
+  config.base = basePath;
 
   config.build = {
     ...config.build,
@@ -89,7 +89,7 @@ export function createSandcastleConfig({
 
   /** @type {Object<string, string>} */
   const importMap = {
-    Sandcastle: `${viteBase}/templates/Sandcastle.js`,
+    Sandcastle: join(basePath, "/templates/Sandcastle.js"),
   };
   /** @type {Object<string, string>} */
   const typePaths = {

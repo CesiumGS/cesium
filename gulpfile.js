@@ -300,7 +300,7 @@ export const buildNewSandcastle = gulp.series(
 
       config = createSandcastleConfig({
         outDir: join(__dirname, "Build/Sandcastle2"),
-        viteBase: "",
+        basePath: "",
         cesiumBaseUrl: "/Build/CesiumUnminified",
         cesiumVersion: version,
         imports: {
@@ -365,7 +365,7 @@ export const buildNewSandcastle = gulp.series(
 
       config = createSandcastleConfig({
         outDir: join(__dirname, "Apps/Sandcastle2"),
-        viteBase: pathPrefix("Apps/Sandcastle2"),
+        basePath: pathPrefix("Apps/Sandcastle2"),
         cesiumBaseUrl: pathPrefix("Build/CesiumUnminified"),
         cesiumVersion: version,
         commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),

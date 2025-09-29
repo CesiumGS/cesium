@@ -15,7 +15,7 @@ const cesiumBaseUrl = "Build/CesiumUnminified";
 
 const newConfig = createSandcastleConfig({
   outDir: join(__dirname, "../../Build/Sandcastle2"),
-  viteBase: "",
+  basePath: "",
   cesiumBaseUrl: "/Build/CesiumUnminified",
   cesiumVersion: getCesiumVersion(),
   imports: {
