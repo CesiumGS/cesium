@@ -19,9 +19,9 @@ const trailingSlashRegex = /\/$/;
  * Initialization options for the Google2DImageryProvider constructor
  *
  * @property {object} options Object with the following properties:
- * @property {string} options.key the Google api key
+ * @property {string} options.key The key to send with tile requests. If using Cesium ion this must be the key issued by ion. If using Google this must be the Google api key.
  * @property {string} options.session The Google session token that tracks the current state of your map and viewport.
- * @property {(string|IonResource)} options.url The url for the google API tile service, or IonResource for the ion proxy endpoint.
+ * @property {(string|IonResource)} options.url The IonResource for the ion proxy endpoint is using Cesium ion, or the url for the google API tile service
  * @property {string} options.tileWidth The width of each tile in pixels.
  * @property {string} options.tileHeight The height of each tile in pixels.
  * @property {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
@@ -36,7 +36,6 @@ const trailingSlashRegex = /\/$/;
  *     key: 'thisIsMyApiKey',
  *     session: 'thisIsSessionToken'
  * });
- *
  */
 
 /**
