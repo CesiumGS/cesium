@@ -431,4 +431,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Easy Mahaffey](https://github.com/easymaahffey)
 - [Pamela Augustine](https://github.com/pamelaAugustine)
 - [宋时旺](https://github.com/BlockCnFuture)
+- [Marco Zhan](https://github.com/marcoYxz)
 - [Alexander Remer](https://github.com/Oko-Tester)
