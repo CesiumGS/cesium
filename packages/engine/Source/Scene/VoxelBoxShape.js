@@ -342,7 +342,7 @@ VoxelBoxShape.prototype.update = function (
  */
 VoxelBoxShape.prototype.updateViewTransforms = function (frameState) {
   // Box shape has no view-dependent transforms
-}
+};
 
 /**
  * Convert a local coordinate to the shape's UV space.
@@ -360,10 +360,15 @@ VoxelBoxShape.prototype.convertLocalToShapeUvSpace = function (
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  const { boxLocalToShapeUvScale, boxLocalToShapeUvTranslate } = this._shaderUniforms;
+  const { boxLocalToShapeUvScale, boxLocalToShapeUvTranslate } =
+    this._shaderUniforms;
 
   return Cartesian3.add(
-    Cartesian3.multiplyComponents(positionLocal, boxLocalToShapeUvScale, result),
+    Cartesian3.multiplyComponents(
+      positionLocal,
+      boxLocalToShapeUvScale,
+      result,
+    ),
     boxLocalToShapeUvTranslate,
     result,
   );

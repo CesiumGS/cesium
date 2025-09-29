@@ -38,7 +38,7 @@ function getClippingFunction(clippingPlaneCollection, context) {
 }
 
 function clippingFunctionUnion(clippingPlanesLength) {
-  return  `float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)
+  return `float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)
 {
     vec4 position = czm_windowToEyeCoordinates(fragCoord);
     vec3 clipNormal = vec3(0.0);

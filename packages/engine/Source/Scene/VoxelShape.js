@@ -114,7 +114,8 @@ VoxelShape.prototype.update = DeveloperError.throwInstantiationError;
  * @private
  * @param {FrameState} frameState The frame state.
  */
-VoxelShape.prototype.updateViewTransforms = DeveloperError.throwInstantiationError;
+VoxelShape.prototype.updateViewTransforms =
+  DeveloperError.throwInstantiationError;
 
 /**
  * Converts a local coordinate to the shape's UV space.

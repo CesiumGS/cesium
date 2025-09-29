@@ -739,10 +739,7 @@ VoxelEllipsoidShape.prototype.updateViewTransforms = function (frameState) {
     ellipsoid,
     enuTransformScratch,
   );
-  const rotateEnuToWorld = Matrix4.getRotation(
-    enuToWorld,
-    enuRotationScratch,
-  );
+  const rotateEnuToWorld = Matrix4.getRotation(enuToWorld, enuRotationScratch);
   const rotateWorldToView = frameState.context.uniformState.viewRotation;
   const rotateEnuToView = Matrix3.multiply(
     rotateWorldToView,
@@ -832,7 +829,7 @@ const scratchQ = new Cartesian2();
 
 /**
  * Find the nearest point on an ellipse and its radius.
- * @param {Cartesian2} position 
+ * @param {Cartesian2} position
  * @param {Cartesian2} radii
  * @param {Cartesian2} evoluteScale
  * @param {Cartesian3} result The Cartesian3 to store the result in. .x and .y components contain the nearest point on the ellipse, .z contains the local radius of curvature.
@@ -866,8 +863,13 @@ function nearestPointAndRadiusOnEllipse(position, radii, evoluteScale, result) {
   );
   for (let i = 0; i < 3; ++i) {
     // Find the (approximate) intersection of p - evolute with the ellipsoid.
-    const distance = Cartesian2.magnitude(Cartesian2.subtract(v, evolute, scratchQ));
-    const direction = Cartesian2.normalize(Cartesian2.subtract(p, evolute, scratchQ), scratchQ);
+    const distance = Cartesian2.magnitude(
+      Cartesian2.subtract(v, evolute, scratchQ),
+    );
+    const direction = Cartesian2.normalize(
+      Cartesian2.subtract(p, evolute, scratchQ),
+      scratchQ,
+    );
     const q = Cartesian2.multiplyByScalar(direction, distance, scratchQ);
     // Update the estimate of t
     tTrigs = Cartesian2.multiplyComponents(
@@ -876,7 +878,12 @@ function nearestPointAndRadiusOnEllipse(position, radii, evoluteScale, result) {
       scratchEllipseTrigs,
     );
     tTrigs = Cartesian2.normalize(
-      Cartesian2.clamp(tTrigs, Cartesian2.ZERO, Cartesian2.ONE, scratchEllipseTrigs), 
+      Cartesian2.clamp(
+        tTrigs,
+        Cartesian2.ZERO,
+        Cartesian2.ONE,
+        scratchEllipseTrigs,
+      ),
       scratchEllipseTrigs,
     );
     v = Cartesian2.multiplyComponents(radii, tTrigs, scratchEllipseGuess);
@@ -933,7 +940,11 @@ VoxelEllipsoidShape.prototype.convertLocalToShapeUvSpace = function (
   );
   const surfacePointAndRadius = nearestPointAndRadiusOnEllipse(
     posEllipse,
-    Cartesian2.fromElements(ellipsoidRadii.x, ellipsoidRadii.z, scratchEllipseRadii),
+    Cartesian2.fromElements(
+      ellipsoidRadii.x,
+      ellipsoidRadii.z,
+      scratchEllipseRadii,
+    ),
     evoluteScale,
     scratchSurfacePointAndRadius,
   );
