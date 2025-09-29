@@ -375,7 +375,7 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
  */
 
 Google2DImageryProvider.fromIon = async function (options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+  options = options ?? {};
   options.mapType = options.mapType ?? "satellite";
   options.language = options.language ?? "en_US";
   options.region = options.region ?? "US";
@@ -460,7 +460,7 @@ Google2DImageryProvider.fromIon = async function (options) {
  */
 
 Google2DImageryProvider.fromUrl = async function (options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+  options = options ?? {};
   options.mapType = options.mapType ?? "satellite";
   options.language = options.language ?? "en_US";
   options.region = options.region ?? "US";
