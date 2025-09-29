@@ -493,11 +493,7 @@ Google2DImageryProvider.fromUrl = async function (options) {
  * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  */
-Google2DImageryProvider.prototype.getTileCredits = async function (
-  x,
-  y,
-  level,
-) {
+Google2DImageryProvider.prototype.getTileCredits = function (x, y, level) {
   return undefined;
 };
 

@@ -65,7 +65,7 @@ describe("Scene/Google2DImageryProvider", function () {
     }).toThrowDeveloperError();
   });
 
-  it("fromIon throws if assetID is not provided", async function () {
+  it("fromIon throws if assetId is not provided", async function () {
     await expectAsync(
       Google2DImageryProvider.fromIon(),
     ).toBeRejectedWithDeveloperError("options.assetId is required.");
