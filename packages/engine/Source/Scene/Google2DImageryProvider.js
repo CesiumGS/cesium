@@ -47,9 +47,7 @@ const trailingSlashRegex = /\/$/;
  *
  * Provides 2D image tiles from {@link https://developers.google.com/maps/documentation/tile/2d-tiles-overview|Google 2D Tiles}.
  * 
- * Google 2D Tiles can only be used with the Google geocoder.  To
- * confirm that you are aware of this restriction pass
- * `usingOnlyWithGoogleGeocoder: true` to the apiOptions. 
+ * Google 2D Tiles can only be used with the Google geocoder.
  *
  * @alias Google2DImageryProvider
  * @constructor
