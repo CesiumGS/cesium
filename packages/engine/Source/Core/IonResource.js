@@ -85,7 +85,6 @@ if (defined(Object.create)) {
  * @param {object} [options] An object with the following properties:
  * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
  * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
- * @param {string|Resource} [options.server] The function invoked when a new session is created.
  * @returns {Promise<IonResource>} A Promise to an instance representing the Cesium ion Asset.
  *
  * @example
@@ -274,7 +273,7 @@ IonResource.createEndpointResourceFromAssetId = function (assetId, options) {
  * @param {object} options An object with the following properties:
  * @param {string} options.url The url of the Cesium ion endpoint, relative to the base server url.
  * @param {string[]} [options.attributions] The attributions returned from the Cesium ion asset endpoint service.
- * @param {IonResource.CreateSessionCallback} [options.createSessionCallback]
+ * @param {IonResource.CreateSessionCallback} [options.createSessionCallback] A function handling any service-specific logic when a new session is created after the session times out.
  * @param {object} [options.endpointOptions] An object with the following properties:
  * @param {string} [options.endpointOptions.accessToken=Ion.defaultAccessToken] The access token to use.
  * @param {string|Resource} [options.endpointOptions.server=Ion.defaultServer] The resource to the Cesium ion API server.
