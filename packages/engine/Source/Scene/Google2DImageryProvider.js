@@ -7,6 +7,7 @@ import IonResource from "../Core/IonResource.js";
 import Check from "../Core/Check.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 import TileAvailability from "../Core/TileAvailability.js";
+import GoogleMaps from "../Core/GoogleMaps.js";
 
 const trailingSlashRegex = /\/$/;
 
@@ -85,7 +86,7 @@ function Google2DImageryProvider(options) {
   const resource =
     options.url instanceof IonResource
       ? options.url
-      : Resource.createIfNeeded(options.url ?? "https://tile.googleapis.com");
+      : Resource.createIfNeeded(options.url ?? GoogleMaps.mapTilesApiEndpoint);
 
   let templateUrl = resource.getUrlComponent();
   if (!trailingSlashRegex.test(templateUrl)) {
@@ -404,15 +405,17 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
  * @returns {Promise<Google2DImageryProvider>} A promise that resolves to the created Google2DImageryProvider.
  *
  * @example
- * // Google 2D imagery provider
+ * // Use your own Google api key
+ * Cesium.GoogleMaps.defaultApiKey = "your-api-key";
+ *
  * const googleTilesProvider = Cesium.Google2DImageryProvider.fromUrl({
- *     apiKey: "thisIsMyApiKey",
  *     mapType: "satellite"
  * });
  * @example
  * // Google 2D roadmap overlay with custom styles
+ * Cesium.GoogleMaps.defaultApiKey = "your-api-key";
+ *
  * const googleTileProvider = Cesium.Google2DImageryProvider.fromUrl({
- *     apiKey: "thisIsMyApiKey",
  *     overlayLayerType: "layerRoadmap",
  *     styles: [
  *         {
@@ -432,14 +435,18 @@ Google2DImageryProvider.fromUrl = async function (options) {
   options.mapType = options.mapType ?? "satellite";
   options.language = options.language ?? "en_US";
   options.region = options.region ?? "US";
+  options.url = options.url ?? GoogleMaps.mapTilesApiEndpoint;
+  options.key = options.key ?? GoogleMaps.defaultApiKey;
 
   const overlayLayerType = options.overlayLayerType;
   //>>includeStart("debug", pragmas.debug);
   if (defined(overlayLayerType)) {
     Check.typeOf.string("overlayLayerType", overlayLayerType);
   }
-  if (!defined(options.key)) {
-    throw new DeveloperError("options.key is required.");
+  if (!defined(options.key) && !defined(GoogleMaps.defaultApiKey)) {
+    throw new DeveloperError(
+      "Setting options.key or GoogleMaps.defaultApiKey is required.",
+    );
   }
   //>>includeEnd("debug");
 
@@ -574,12 +581,12 @@ function buildQueryOptions(options) {
 }
 
 async function createGoogleImagerySession(options) {
-  const { language, region, key } = options;
+  const { language, region, key, url } = options;
 
   const queryOptions = buildQueryOptions(options);
 
   const response = await Resource.post({
-    url: "https://tile.googleapis.com/v1/createSession",
+    url: `${url}v1/createSession`,
     queryParameters: { key: key },
     data: JSON.stringify({
       ...queryOptions,

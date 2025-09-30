@@ -28,7 +28,7 @@ GoogleMaps.defaultApiKey = undefined;
  * @default https://tile.googleapis.com/v1/
  */
 GoogleMaps.mapTilesApiEndpoint = new Resource({
-  url: "https://tile.googleapis.com/v1/",
+  url: "https://tile.googleapis.com/",
 });
 
 GoogleMaps.getDefaultCredit = function () {
