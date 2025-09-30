@@ -16,6 +16,7 @@
 #endif
 
 uniform mat4 u_transformPositionViewToLocal;
+uniform mat3 u_transformDirectionViewToLocal;
 uniform vec3 u_cameraPositionLocal;
 uniform vec3 u_cameraDirectionLocal;
 uniform float u_stepSize;

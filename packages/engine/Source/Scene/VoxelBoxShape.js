@@ -77,6 +77,8 @@ function VoxelBoxShape() {
   this._renderBoundPlanes = new VoxelBoundCollection({ planes: boundPlanes });
 
   this._shaderUniforms = {
+    boxEcToXyz: new Matrix3(),
+    boxWorldToLocalScale: new Cartesian3(),
     boxLocalToShapeUvScale: new Cartesian3(),
     boxLocalToShapeUvTranslate: new Cartesian3(),
   };
@@ -311,10 +313,16 @@ VoxelBoxShape.prototype.update = function (
   shaderDefines["BOX_INTERSECTION_INDEX"] = intersectionCount;
   intersectionCount += 1;
 
-  const min = minBounds;
-  const max = maxBounds;
+  // Compute scale from world coordinates to local coordinates
+  shaderUniforms.boxWorldToLocalScale = Cartesian3.divideComponents(
+    Cartesian3.ONE,
+    scale,
+    shaderUniforms.boxWorldToLocalScale,
+  );
 
   // Compute scale and translation to transform from UV space to bounded UV space
+  const min = minBounds;
+  const max = maxBounds;
   const boxLocalToShapeUvScale = Cartesian3.fromElements(
     1.0 / (min.x === max.x ? 1.0 : max.x - min.x),
     1.0 / (min.y === max.y ? 1.0 : max.y - min.y),
@@ -341,7 +349,21 @@ VoxelBoxShape.prototype.update = function (
  * @param {FrameState} frameState The frame state.
  */
 VoxelBoxShape.prototype.updateViewTransforms = function (frameState) {
-  // Box shape has no view-dependent transforms
+  const shaderUniforms = this._shaderUniforms;
+  const rotateLocalToWorld = Matrix4.getRotation(
+    this._shapeTransform,
+    shaderUniforms.boxEcToXyz,
+  );
+  const rotateWorldToLocal = Matrix3.transpose(
+    rotateLocalToWorld,
+    shaderUniforms.boxEcToXyz,
+  );
+  const rotateViewToWorld = frameState.context.uniformState.inverseViewRotation;
+  Matrix3.multiply(
+    rotateWorldToLocal,
+    rotateViewToWorld,
+    shaderUniforms.boxEcToXyz,
+  );
 };
 
 /**
@@ -525,6 +547,7 @@ VoxelBoxShape.DefaultMaxBounds = Object.freeze(
   new Cartesian3(+1.0, +1.0, +1.0),
 );
 
+const scratchBoxScale = new Cartesian3();
 /**
  * Computes an {@link OrientedBoundingBox} for a subregion of the shape.
  *
@@ -550,7 +573,7 @@ function getBoxChunkObb(minimumBounds, maximumBounds, matrix, result) {
     result.center = Matrix4.getTranslation(matrix, result.center);
     result.halfAxes = Matrix4.getMatrix3(matrix, result.halfAxes);
   } else {
-    let scale = Matrix4.getScale(matrix, scratchScale);
+    let scale = Matrix4.getScale(matrix, scratchBoxScale);
     const localCenter = Cartesian3.midpoint(
       minimumBounds,
       maximumBounds,
@@ -561,7 +584,7 @@ function getBoxChunkObb(minimumBounds, maximumBounds, matrix, result) {
       scale.x * 0.5 * (maximumBounds.x - minimumBounds.x),
       scale.y * 0.5 * (maximumBounds.y - minimumBounds.y),
       scale.z * 0.5 * (maximumBounds.z - minimumBounds.z),
-      scratchScale,
+      scratchBoxScale,
     );
     const rotation = Matrix4.getRotation(matrix, scratchRotation);
     result.halfAxes = Matrix3.setScale(rotation, scale, result.halfAxes);

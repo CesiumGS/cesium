@@ -3,7 +3,8 @@ uniform vec3 u_boxLocalToShapeUvTranslate;
 
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
-uniform mat3 u_transformDirectionViewToLocal;
+uniform mat3 u_boxEcToXyz;
+uniform vec3 u_boxWorldToLocalScale;
 
 PointJacobianT convertLocalToShapeSpaceDerivative(in vec3 positionLocal) {
     // For BOX, local space = shape space, so we can use positionLocal as-is,
@@ -22,16 +23,17 @@ PointJacobianT convertLocalToShapeUvSpaceDerivative(in vec3 positionLocal) {
 }
 
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
-    return shapeUv / u_boxLocalToShapeUvScale;
+    return shapeUv / u_boxLocalToShapeUvScale / u_boxWorldToLocalScale;
 }
 
-vec3 convertECtoDeltaTile(in vec3 positionEC) {
-    vec3 dPosition = u_transformDirectionViewToLocal * positionEC;
+vec3 convertEcToDeltaTile(in vec3 positionEC) {
+    vec3 dPosition = u_boxEcToXyz * positionEC;
+    dPosition *= u_boxWorldToLocalScale;
     return u_boxLocalToShapeUvScale * dPosition * float(1 << u_cameraTileCoordinates.w);
 }
 
 TileAndUvCoordinate getTileAndUvCoordinate(in vec3 positionEC) {
-    vec3 deltaTileCoordinate = convertECtoDeltaTile(positionEC);
+    vec3 deltaTileCoordinate = convertEcToDeltaTile(positionEC);
     vec3 tileUvSum = u_cameraTileUv + deltaTileCoordinate;
     ivec3 tileCoordinate = u_cameraTileCoordinates.xyz + ivec3(floor(tileUvSum));
     tileCoordinate = min(max(ivec3(0), tileCoordinate), ivec3((1 << u_cameraTileCoordinates.w) - 1));

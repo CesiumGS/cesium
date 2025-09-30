@@ -129,6 +129,7 @@ function createPrimitive(provider) {
     customShader: customShader,
   });
   voxelPrimitive.nearestSampling = true;
+  voxelPrimitive.stepSize = 0.7;
 
   viewer.scene.primitives.add(voxelPrimitive);
   camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {

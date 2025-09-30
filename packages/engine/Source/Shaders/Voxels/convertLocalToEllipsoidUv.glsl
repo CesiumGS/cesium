@@ -26,7 +26,6 @@ uniform float u_ellipsoidInverseHeightDifference;
 
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
-uniform mat3 u_transformDirectionViewToLocal; // TODO: move to VoxelFS where it's used (is it?)
 
 // robust iterative solution without trig functions
 // https://github.com/0xfaded/ellipse_demo/issues/1

@@ -59,6 +59,7 @@ function VoxelCylinderShape() {
     cylinderEcToRadialTangentUp: new Matrix3(),
     cylinderRenderRadiusMinMax: new Cartesian2(),
     cylinderRenderAngleMinMax: new Cartesian2(),
+    cylinderWorldToLocalScale: new Cartesian3(),
     cylinderLocalToShapeUvRadius: new Cartesian2(),
     cylinderLocalToShapeUvAngle: new Cartesian2(),
     cylinderLocalToShapeUvHeight: new Cartesian2(),
@@ -334,6 +335,13 @@ VoxelCylinderShape.prototype.update = function (
       shaderDefines[key] = undefined;
     }
   }
+
+  // Compute scale from world coordinates to local coordinates
+  shaderUniforms.cylinderWorldToLocalScale = Cartesian3.divideComponents(
+    Cartesian3.ONE,
+    scale,
+    shaderUniforms.cylinderWorldToLocalScale,
+  );
 
   // Keep track of how many intersections there are going to be.
   let intersectionCount = 0;
@@ -752,6 +760,7 @@ function computeLooseOrientedBoundingBox(matrix, result) {
   return OrientedBoundingBox.fromPoints(corners, result);
 }
 
+const scratchBoxScale = new Cartesian3();
 /**
  * Computes an {@link OrientedBoundingBox} for a subregion of the shape.
  *
@@ -833,7 +842,7 @@ function getCylinderChunkObb(chunkMinBounds, chunkMaxBounds, matrix, result) {
     extentX,
     extentY,
     extentZ,
-    scratchScale,
+    scratchBoxScale,
   );
 
   const scaleMatrix = Matrix4.fromScale(scale, scratchScaleMatrix);
