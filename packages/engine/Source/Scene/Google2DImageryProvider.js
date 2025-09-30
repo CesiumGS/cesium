@@ -249,7 +249,7 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
   },
 
   /**
-   * Gets an event that is raised when the imagery provider encounters an asynchronous error..  By subscribing
+   * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of {@link TileProviderError}.
    * @memberof Google2DImageryProvider.prototype
@@ -511,6 +511,20 @@ Google2DImageryProvider.prototype.pickFeatures = function (
 ) {
   return undefined;
 };
+
+/**
+ * Get attribution for imagery from Google Maps to display in the credits
+ *
+ * @param {object} options Object with the following properties:
+ * @param {number} options.maximumLevel The maximum level-of-detail imagery used by the imagery provider.
+ * @param {string|Resource|IonResour} options.viewportUrl The Google 2D maps viewport endpoint.
+ * @property {string} options.key The Google api key to send with viewport requests.
+ * @property {string} options.session The Google session token that tracks the current state of your map and viewport.
+ *
+ * @return {string} The list of attribution sources to display in the credits.
+ *
+ * @private
+ */
 
 Google2DImageryProvider.prototype.getViewportCredits = async function (
   options,
