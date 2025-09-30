@@ -1,5 +1,4 @@
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
@@ -13,9 +12,16 @@ const trailingSlashRegex = /\/$/;
  *
  * Initialization options for the Azure2DImageryProvider constructor
  *
- * @property {string} [url='https://atlas.microsoft.com/map/tile'] The Azure server url.
- * @property {string} tilesetId The Azure tileset ID. Valid options are {@link microsoft.imagery}, {@link microsoft.base.road}, and {@link microsoft.base.labels.road}
- * @property {string} subscriptionKey The public subscription key for the imagery.
+ * @property {object} options Object with the following properties:
+ * @property {string} [options.url="https://atlas.microsoft.com/"] The Azure server url.
+ * @property {string} [options.tilesetId="microsoft.imagery"] The Azure tileset ID. Valid options are {@link microsoft.imagery}, {@link microsoft.base.road}, and {@link microsoft.base.labels.road}
+ * @property {string} options.subscriptionKey The public subscription key for the imagery.
+ * @property {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
+ * @property {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+ *                 to result in rendering problems.
+ * @property {number} [options.maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
+ * @property {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  */
 
 /**
@@ -29,40 +35,33 @@ const trailingSlashRegex = /\/$/;
  * @example
  * // Azure 2D imagery provider
  * const azureImageryProvider = new Cesium.Azure2DImageryProvider({
- *     subscriptionKey: 'subscription-key',
+ *     subscriptionKey: "subscription-key",
  *     tilesetId: "microsoft.base.road"
  * });
  *
  *
  */
 function Azure2DImageryProvider(options) {
-  //>>includeStart('debug', pragmas.debug);
+  //>>includeStart("debug", pragmas.debug);
   if (!defined(options.tilesetId)) {
     throw new DeveloperError("options.tilesetId is required.");
   }
-  //>>includeEnd('debug');
+  //>>includeEnd("debug");
 
-  options = options ?? Frozen.EMPTY_OBJECT;
+  options = options ?? {};
 
   const subscriptionKey =
     options.subscriptionKey ?? options["subscription-key"];
-  //>>includeStart('debug', pragmas.debug);
+  //>>includeStart("debug", pragmas.debug);
   if (!defined(subscriptionKey)) {
     throw new DeveloperError("options.subscriptionKey is required.");
   }
-  //>>includeEnd('debug');
-
-  options = options ?? Frozen.EMPTY_OBJECT;
-  this._sessionToken = options.sessionToken;
-  this._tileWidth = options.tileWidth;
-  this._tileHeight = options.tileHeight;
+  //>>includeEnd("debug");
 
   const resource =
     options.url instanceof IonResource
       ? options.url
-      : Resource.createIfNeeded(
-          options.url ?? "https://atlas.microsoft.com/map/tile",
-        );
+      : Resource.createIfNeeded(options.url ?? "https://atlas.microsoft.com/");
 
   let templateUrl = resource.getUrlComponent();
   if (!trailingSlashRegex.test(templateUrl)) {
@@ -90,6 +89,7 @@ function Azure2DImageryProvider(options) {
   }
 
   const provider = new UrlTemplateImageryProvider({
+    ...options,
     url: resource,
     maximumLevel: 19,
     credit: credit,
