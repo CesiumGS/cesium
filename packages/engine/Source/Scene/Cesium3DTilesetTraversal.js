@@ -68,8 +68,6 @@ Cesium3DTilesetTraversal.canTraverse = function (tile) {
   return tile._screenSpaceError > tile.tileset.memoryAdjustedScreenSpaceError;
 };
 
-const startTime = JulianDate.fromIso8601("2024-11-01");
-
 function timestampInRange(tile, frameState) {
   const contentMetadata = tile.getContentMetadata();
 
@@ -84,17 +82,17 @@ function timestampInRange(tile, frameState) {
     return true;
   }
 
-  const timestampStart = contentMetadata.getPropertyBySemantic(
-    "CONTENT_TIMESTAMP_START",
+  const timestampStart = JulianDate.fromIso8601(
+    contentMetadata.getPropertyBySemantic("CONTENT_TIMESTAMP_START"),
   );
-  const timestampStop = contentMetadata.getPropertyBySemantic(
-    "CONTENT_TIMESTAMP_STOP",
+  const timestampStop = JulianDate.fromIso8601(
+    contentMetadata.getPropertyBySemantic("CONTENT_TIMESTAMP_STOP"),
   );
 
-  const time = Math.floor(
-    JulianDate.daysDifference(frameState.time, startTime),
-  );
-  if (time < timestampStart || time >= timestampStop) {
+  if (
+    JulianDate.lessThan(frameState.time, timestampStart) ||
+    JulianDate.greaterThanOrEquals(frameState.time, timestampStop)
+  ) {
     return false;
   }
 
