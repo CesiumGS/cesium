@@ -6,14 +6,14 @@ Cesium.Ion.defaultAccessToken = "";
 const assetId = 1687;
 
 const base = Cesium.ImageryLayer.fromProviderAsync(
-  Cesium.Google2DImageryProvider.fromIon({
+  Cesium.Google2DImageryProvider.fromIonAssetId({
     assetId,
     mapType: "satellite",
   }),
 );
 
 const overlay = Cesium.ImageryLayer.fromProviderAsync(
-  Cesium.Google2DImageryProvider.fromIon({
+  Cesium.Google2DImageryProvider.fromIonAssetId({
     assetId,
     overlayLayerType: "layerRoadmap",
     styles: [
