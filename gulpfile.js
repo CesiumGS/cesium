@@ -447,6 +447,13 @@ export const websiteRelease = gulp.series(
       node: false,
     });
   },
+  function () {
+    return buildCesium({
+      minify: true,
+      removePragmas: true,
+      node: false,
+    });
+  },
   combineForSandcastle,
   buildDocs,
 );
