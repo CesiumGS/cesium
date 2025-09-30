@@ -17,6 +17,7 @@
 
 #### Additions :tada:
 
+- Added support for the [EXT_mesh_primitive_edge_visibility](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension. [#12765](https://github.com/CesiumGS/cesium/issues/12765)
 - Adds an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
 
 ## 1.133.1 - 2025-09-08
