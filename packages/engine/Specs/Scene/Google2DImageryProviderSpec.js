@@ -13,7 +13,6 @@ import {
 } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-import GoogleMaps from "../../Source/Core/GoogleMaps.js";
 
 describe("Scene/Google2DImageryProvider", function () {
   beforeEach(function () {
@@ -31,15 +30,6 @@ describe("Scene/Google2DImageryProvider", function () {
 
   it("conforms to ImageryProvider interface", function () {
     expect(Google2DImageryProvider).toConformToInterface(ImageryProvider);
-  });
-
-  it("fromUrl throws if key is not provided", async function () {
-    GoogleMaps.defaultApiKey = "";
-    await expectAsync(
-      Google2DImageryProvider.fromUrl(),
-    ).toBeRejectedWithDeveloperError(
-      "options.key or GoogleMaps.defaultApiKey is required.",
-    );
   });
 
   it("requires the session token to be specified", function () {

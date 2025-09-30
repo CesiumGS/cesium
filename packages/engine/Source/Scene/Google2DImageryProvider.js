@@ -6,7 +6,6 @@ import Resource from "../Core/Resource.js";
 import IonResource from "../Core/IonResource.js";
 import Check from "../Core/Check.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
-import TileAvailability from "../Core/TileAvailability.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
 
 const trailingSlashRegex = /\/$/;
@@ -131,16 +130,6 @@ function Google2DImageryProvider(options) {
   }).then((data) => {
     this._imageryProvider._credit = new Credit(data);
   });
-
-  this._tilingScheme = this._imageryProvider._tilingScheme;
-  this._tileAvailability = new TileAvailability(
-    this._imageryProvider._tilingScheme,
-    this._maximumLevel,
-  );
-  this._tileAvailabilityComplete = new TileAvailability(
-    this._imageryProvider._tilingScheme,
-    this._maximumLevel,
-  );
 
   return;
 }
