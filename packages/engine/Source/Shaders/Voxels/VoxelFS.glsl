@@ -158,13 +158,13 @@ void main()
     vec3 positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
     TileAndUvCoordinate tileAndUv = getTileAndUvCoordinate(positionEC);
     vec3 positionLocal = viewRayLocal.pos + currentT * viewRayLocal.dir;
-    PointJacobianT pointJacobian = convertLocalToShapeUvSpaceDerivative(positionLocal);
+    mat3 jacobianT = convertLocalToShapeSpaceDerivative(positionLocal);
 
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(tileAndUv, traversalData, sampleDatas);
-    vec4 step = getStepSize(sampleDatas[0], viewRayLocal, shapeIntersection, pointJacobian.jacobianT, currentT);
+    vec4 step = getStepSize(sampleDatas[0], viewRayLocal, shapeIntersection, jacobianT, currentT);
 
     FragmentInput fragmentInput;
     #if defined(STATISTICS)
@@ -236,12 +236,12 @@ void main()
         positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
         tileAndUv = getTileAndUvCoordinate(positionEC);
         positionLocal = viewRayLocal.pos + currentT * viewRayLocal.dir;
-        pointJacobian = convertLocalToShapeUvSpaceDerivative(positionLocal);
+        jacobianT = convertLocalToShapeSpaceDerivative(positionLocal);
 
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
         traverseOctreeFromExisting(tileAndUv, traversalData, sampleDatas);
-        step = getStepSize(sampleDatas[0], viewRayLocal, shapeIntersection, pointJacobian.jacobianT, currentT);
+        step = getStepSize(sampleDatas[0], viewRayLocal, shapeIntersection, jacobianT, currentT);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]

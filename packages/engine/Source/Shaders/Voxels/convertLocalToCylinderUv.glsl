@@ -8,38 +8,11 @@ uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
 uniform vec3 u_cameraShapePosition; // (radial distance, angle, height) of camera in shape space
 
-PointJacobianT convertLocalToShapeSpaceDerivative(in vec3 position) {
-    float radius = length(position.xy); // [0, 1]
+mat3 convertLocalToShapeSpaceDerivative(in vec3 position) {
     vec3 radial = normalize(vec3(position.xy, 0.0));
-
-    // Shape space height is defined within [0, 1]
-    float height = position.z; // [0, 1]
     vec3 z = vec3(0.0, 0.0, 1.0);
-
-    float angle = atan(position.y, position.x);
     vec3 east = normalize(vec3(-position.y, position.x, 0.0));
-
-    vec3 point = vec3(radius, angle, height);
-    mat3 jacobianT = mat3(radial, east / length(position.xy), z);
-    return PointJacobianT(point, jacobianT);
-}
-
-vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
-    float radius = positionShape.x * u_cylinderLocalToShapeUvRadius.x + u_cylinderLocalToShapeUvRadius.y;
-
-    float rawAngle = (positionShape.y + czm_pi) / czm_twoPi;
-    float angle = fract(rawAngle - u_cylinderShapeUvAngleRangeOrigin);
-    angle = angle * u_cylinderLocalToShapeUvAngle.x + u_cylinderLocalToShapeUvAngle.y;
-
-    float height = positionShape.z * u_cylinderLocalToShapeUvHeight.x + u_cylinderLocalToShapeUvHeight.y;
-
-    return vec3(radius, angle, height);
-}
-
-PointJacobianT convertLocalToShapeUvSpaceDerivative(in vec3 positionLocal) {
-    PointJacobianT pointJacobian = convertLocalToShapeSpaceDerivative(positionLocal);
-    pointJacobian.point = convertShapeToShapeUvSpace(pointJacobian.point);
-    return pointJacobian;
+    return mat3(radial, east / length(position.xy), z);
 }
 
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {

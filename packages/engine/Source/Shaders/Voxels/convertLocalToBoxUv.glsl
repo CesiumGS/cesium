@@ -6,20 +6,9 @@ uniform vec3 u_cameraTileUv;
 uniform mat3 u_boxEcToXyz;
 uniform vec3 u_boxWorldToLocalScale;
 
-PointJacobianT convertLocalToShapeSpaceDerivative(in vec3 positionLocal) {
-    // For BOX, local space = shape space, so we can use positionLocal as-is,
-    // and the Jacobian is the identity matrix.
-    return PointJacobianT(positionLocal, mat3(1.0));
-}
-
-vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
-    return positionShape * u_boxLocalToShapeUvScale + u_boxLocalToShapeUvTranslate;
-}
-
-PointJacobianT convertLocalToShapeUvSpaceDerivative(in vec3 positionLocal) {
-    PointJacobianT pointJacobian = convertLocalToShapeSpaceDerivative(positionLocal);
-    pointJacobian.point = convertShapeToShapeUvSpace(pointJacobian.point);
-    return pointJacobian;
+mat3 convertLocalToShapeSpaceDerivative(in vec3 positionLocal) {
+    // For BOX, local space = shape space, so the Jacobian is the identity matrix.
+    return mat3(1.0);
 }
 
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {

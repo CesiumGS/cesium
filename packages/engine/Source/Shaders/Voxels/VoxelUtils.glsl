@@ -24,8 +24,3 @@ float minComponent(in vec3 v) {
 float maxComponent(in vec3 v) {
     return max(max(v.x, v.y), v.z);
 }
-
-struct PointJacobianT {
-    vec3 point;
-    mat3 jacobianT;
-};
