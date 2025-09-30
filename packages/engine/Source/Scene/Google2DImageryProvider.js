@@ -445,7 +445,7 @@ Google2DImageryProvider.fromUrl = async function (options) {
   }
   if (!defined(options.key) && !defined(GoogleMaps.defaultApiKey)) {
     throw new DeveloperError(
-      "Setting options.key or GoogleMaps.defaultApiKey is required.",
+      "options.key or GoogleMaps.defaultApiKey is required.",
     );
   }
   //>>includeEnd("debug");

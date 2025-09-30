@@ -13,6 +13,7 @@ import {
 } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import GoogleMaps from "../../Source/Core/GoogleMaps.js";
 
 describe("Scene/Google2DImageryProvider", function () {
   beforeEach(function () {
@@ -33,9 +34,12 @@ describe("Scene/Google2DImageryProvider", function () {
   });
 
   it("fromUrl throws if key is not provided", async function () {
+    GoogleMaps.defaultApiKey = "";
     await expectAsync(
       Google2DImageryProvider.fromUrl(),
-    ).toBeRejectedWithDeveloperError("options.key is required.");
+    ).toBeRejectedWithDeveloperError(
+      "options.key or GoogleMaps.defaultApiKey is required.",
+    );
   });
 
   it("requires the session token to be specified", function () {
@@ -65,7 +69,9 @@ describe("Scene/Google2DImageryProvider", function () {
   it("fromIonAssetId throws if assetId is not provided", async function () {
     await expectAsync(
       Google2DImageryProvider.fromIonAssetId(),
-    ).toBeRejectedWithDeveloperError("options.assetId is required.");
+    ).toBeRejectedWithDeveloperError(
+      "options.assetId is required, actual value was undefined",
+    );
   });
 
   it("requestImage returns a promise for an image and loads it for cross-origin use", function () {
