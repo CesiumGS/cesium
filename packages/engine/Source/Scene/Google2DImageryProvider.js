@@ -131,6 +131,8 @@ function Google2DImageryProvider(options) {
     this._imageryProvider._credit = new Credit(data);
   });
 
+  this._tilingScheme = this._imageryProvider._tilingScheme;
+
   return;
 }
 
@@ -364,13 +366,20 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
   const endpointOptions = { ...endpoint.options };
   delete endpointOptions.url;
 
+  const providerOptions = {
+    language: options.language,
+    region: options.region,
+    ellipsoid: options.ellipsoid,
+    minimumLevel: options.minimumLevel,
+    maximumLevel: options.maximumLevel,
+    rectangle: options.rectangle,
+    credit: options.credit,
+  };
+
   return new Google2DImageryProvider({
-    session: endpointOptions.session,
-    key: endpointOptions.key,
-    tileWidth: endpointOptions.tileWidth,
-    tileHeight: endpointOptions.tileHeight,
     url: new IonResource(endpoint, endpointResource),
-    endpointOptions,
+    ...endpointOptions,
+    ...providerOptions,
   });
 };
 
@@ -442,9 +451,7 @@ Google2DImageryProvider.fromUrl = async function (options) {
   const sessionJson = await createGoogleImagerySession(options);
 
   return new Google2DImageryProvider({
-    session: sessionJson.session,
-    tileWidth: sessionJson.tileWidth,
-    tileHeight: sessionJson.tileHeight,
+    ...sessionJson,
     ...options,
   });
 };
