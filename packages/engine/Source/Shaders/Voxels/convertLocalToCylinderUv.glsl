@@ -67,18 +67,30 @@ vec2 computePolarChange(in vec2 dPosition, in float cameraRadialDistance) {
     return vec2(dRadial, dAngle);
 }
 
-vec3 convertECtoDeltaTile(in vec3 positionEC) {
+vec3 convertEcToDeltaShape(in vec3 positionEC) {
     // 1. Rotate to radial, tangent, and up coordinates
     vec3 rtu = u_cylinderEcToRadialTangentUp * positionEC;
     // 2. Compute change in angular and radial coordinates. TODO: compute u_cameraShapePosition on CPU? Or get it from u_cameraTileCoordinates & u_cameraTileUv
     //vec2 dPolar = computePolarChange(rtu.xy, u_cameraShapePosition.x);
     float cameraRadialDistance = length(u_cameraPositionLocal.xy);
     vec2 dPolar = computePolarChange(rtu.xy, cameraRadialDistance);
-    // 3. Convert to tileset coordinates in [0, 1]
-    float dx = u_cylinderLocalToShapeUvRadius.x * dPolar.x;
-    float dy = u_cylinderLocalToShapeUvAngle.x * dPolar.y / czm_twoPi;
-    float dz = u_cylinderLocalToShapeUvHeight.x * rtu.z;
-    // 4. Convert to tile coordinate changes
+    return vec3(dPolar.x, dPolar.y, rtu.z);
+}
+
+vec3 convertECtoDeltaTile(in vec3 positionEC) {
+    vec3 deltaShape = convertEcToDeltaShape(positionEC);
+    // Convert to tileset coordinates in [0, 1]
+    float dx = u_cylinderLocalToShapeUvRadius.x * deltaShape.x;
+    float dy = deltaShape.y / czm_twoPi;
+    int maxTileCoordinate = (1 << u_cameraTileCoordinates.w) - 1;
+    if (u_cameraTileCoordinates.y < 0 && dy < 0.0) {
+        dy += 1.0;
+    } else if (u_cameraTileCoordinates.y > maxTileCoordinate && dy > 0.0) {
+        dy -= 1.0;
+    }
+    dy *= u_cylinderLocalToShapeUvAngle.x;
+    float dz = u_cylinderLocalToShapeUvHeight.x * deltaShape.z;
+    // Convert to tile coordinate changes
     return vec3(dx, dy, dz) * float(1 << u_cameraTileCoordinates.w);
 }
 
@@ -89,19 +101,26 @@ TileAndUvCoordinate getTileAndUvCoordinate(in vec3 positionEC) {
     int maxTileCoordinate = (1 << u_cameraTileCoordinates.w) - 1;
     tileCoordinate.x = min(max(0, tileCoordinate.x), maxTileCoordinate);
     tileCoordinate.z = min(max(0, tileCoordinate.z), maxTileCoordinate);
-    // TODO: wrapping issues! tileCoordinateChange.y could be maxTileCoordinate - 1
-    // Computing this before wrapping tileCoordinate.y is a messy hack
+#if (!defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE))
     ivec3 tileCoordinateChange = tileCoordinate - u_cameraTileCoordinates.xyz;
-    // TODO: Don't wrap if shape has a gap in angle
     if (tileCoordinate.y < 0) {
         tileCoordinate.y += (maxTileCoordinate + 1);
     } else if (tileCoordinate.y > maxTileCoordinate) {
         tileCoordinate.y -= (maxTileCoordinate + 1);
     }
+#else
+    tileCoordinate.y = min(max(0, tileCoordinate.y), maxTileCoordinate);
+    ivec3 tileCoordinateChange = tileCoordinate - u_cameraTileCoordinates.xyz;
+#endif
     vec3 tileUv = tileUvSum - vec3(tileCoordinateChange);
     tileUv.x = clamp(tileUv.x, 0.0, 1.0);
-    // TODO: Don't wrap if shape has a gap in angle
+#if (!defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE))
+    // If there is only one tile spanning 2*PI angle, the coordinate wraps around
     tileUv.y = (u_cameraTileCoordinates.w == 0) ? fract(tileUv.y) : clamp(tileUv.y, 0.0, 1.0);
+#else
+    tileUv.y = clamp(tileUv.y, 0.0, 1.0);
+#endif
     tileUv.z = clamp(tileUv.z, 0.0, 1.0);
     return TileAndUvCoordinate(ivec4(tileCoordinate, u_cameraTileCoordinates.w), tileUv);
+    //return TileAndUvCoordinate(ivec4(tileCoordinate, u_cameraTileCoordinates.w), deltaTileCoordinate);
 }

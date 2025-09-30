@@ -65,6 +65,7 @@ function VoxelCylinderShape() {
   };
 
   this._shaderDefines = {
+    CYLINDER_HAS_SHAPE_BOUNDS_ANGLE: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE: undefined,
@@ -308,7 +309,6 @@ VoxelCylinderShape.prototype.update = function (
   const shapeAngleRange =
     maxBounds.y - minBounds.y + shapeIsAngleReversed * defaultAngleRange;
 
-  const renderIsDefaultMinRadius = renderMinBounds.x === DefaultMinBounds.x;
   const renderIsAngleReversed = renderMaxBounds.y < renderMinBounds.y;
   const renderAngleRange =
     renderMaxBounds.y -
@@ -340,7 +340,11 @@ VoxelCylinderShape.prototype.update = function (
   shaderDefines["CYLINDER_INTERSECTION_INDEX_RADIUS_MAX"] = intersectionCount;
   intersectionCount += 1;
 
-  if (!renderIsDefaultMinRadius) {
+  if (shapeAngleRange < defaultAngleRange - epsilonAngle) {
+    shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_ANGLE"] = true;
+  }
+
+  if (renderMinBounds.x !== DefaultMinBounds.x) {
     shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN"] = true;
     shaderDefines["CYLINDER_INTERSECTION_INDEX_RADIUS_MIN"] = intersectionCount;
     intersectionCount += 1;
