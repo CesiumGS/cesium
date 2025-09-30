@@ -19,7 +19,8 @@ describe("Core/IonResource", function () {
   it("constructs with expected values", function () {
     spyOn(Resource, "call").and.callThrough();
 
-    const endpointResource = IonResource._createEndpointResource(assetId);
+    const endpointResource =
+      IonResource.createEndpointResourceFromAssetId(assetId);
     const resource = new IonResource(endpoint, endpointResource);
     expect(resource).toBeInstanceOf(Resource);
     expect(resource._ionEndpoint).toEqual(endpoint);
@@ -31,7 +32,8 @@ describe("Core/IonResource", function () {
   });
 
   it("clone works", function () {
-    const endpointResource = IonResource._createEndpointResource(assetId);
+    const endpointResource =
+      IonResource.createEndpointResourceFromAssetId(assetId);
     const resource = new IonResource(endpoint, endpointResource);
     const cloned = resource.clone();
     expect(cloned).not.toBe(resource);
@@ -43,7 +45,8 @@ describe("Core/IonResource", function () {
   });
 
   it("create creates the expected resource", function () {
-    const endpointResource = IonResource._createEndpointResource(assetId);
+    const endpointResource =
+      IonResource.createEndpointResourceFromAssetId(assetId);
     const resource = new IonResource(endpoint, endpointResource);
     expect(resource.getUrlComponent()).toEqual(endpoint.url);
     expect(resource._ionEndpoint).toBe(endpoint);
@@ -62,11 +65,11 @@ describe("Core/IonResource", function () {
     };
 
     const options = {};
-    const resourceEndpoint = IonResource._createEndpointResource(
+    const resourceEndpoint = IonResource.createEndpointResourceFromAssetId(
       tilesAssetId,
       options,
     );
-    spyOn(IonResource, "_createEndpointResource").and.returnValue(
+    spyOn(IonResource, "createEndpointResourceFromAssetId").and.returnValue(
       resourceEndpoint,
     );
     spyOn(resourceEndpoint, "fetchJson").and.returnValue(
@@ -75,10 +78,9 @@ describe("Core/IonResource", function () {
 
     return IonResource.fromAssetId(tilesAssetId, options).then(
       function (resource) {
-        expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
-          tilesAssetId,
-          options,
-        );
+        expect(
+          IonResource.createEndpointResourceFromAssetId,
+        ).toHaveBeenCalledWith(tilesAssetId, options);
         expect(resourceEndpoint.fetchJson).toHaveBeenCalled();
         expect(resource._ionEndpointResource).toEqual(resourceEndpoint);
         expect(resource._ionEndpoint).toEqual(tilesEndpoint);
@@ -87,8 +89,9 @@ describe("Core/IonResource", function () {
   });
 
   function testNonImageryExternalResource(externalEndpoint) {
-    const resourceEndpoint = IonResource._createEndpointResource(123890213);
-    spyOn(IonResource, "_createEndpointResource").and.returnValue(
+    const resourceEndpoint =
+      IonResource.createEndpointResourceFromAssetId(123890213);
+    spyOn(IonResource, "createEndpointResourceFromAssetId").and.returnValue(
       resourceEndpoint,
     );
     spyOn(resourceEndpoint, "fetchJson").and.returnValue(
@@ -135,7 +138,7 @@ describe("Core/IonResource", function () {
 
   it("createEndpointResource creates expected values with default parameters", function () {
     const assetId = 2348234;
-    const resource = IonResource._createEndpointResource(assetId);
+    const resource = IonResource.createEndpointResourceFromAssetId(assetId);
     expect(resource.url).toBe(
       `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`,
     );
@@ -146,7 +149,7 @@ describe("Core/IonResource", function () {
     const accessToken = "not_a_token";
 
     const assetId = 2348234;
-    const resource = IonResource._createEndpointResource(assetId, {
+    const resource = IonResource.createEndpointResourceFromAssetId(assetId, {
       server: serverUrl,
       accessToken: accessToken,
     });
@@ -163,7 +166,7 @@ describe("Core/IonResource", function () {
     Ion.defaultAccessToken = "not_a_token";
 
     const assetId = 2348234;
-    const resource = IonResource._createEndpointResource(assetId);
+    const resource = IonResource.createEndpointResourceFromAssetId(assetId);
     expect(resource.url).toBe(
       `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`,
     );
@@ -181,7 +184,8 @@ describe("Core/IonResource", function () {
     };
 
     const _makeRequest = spyOn(Resource.prototype, "_makeRequest");
-    const endpointResource = IonResource._createEndpointResource(assetId);
+    const endpointResource =
+      IonResource.createEndpointResourceFromAssetId(assetId);
     const resource = new IonResource(endpoint, endpointResource);
     resource._makeRequest(originalOptions);
     expect(_makeRequest).toHaveBeenCalledWith(expectedOptions);
@@ -196,7 +200,8 @@ describe("Core/IonResource", function () {
     };
 
     const _makeRequest = spyOn(Resource.prototype, "_makeRequest");
-    const endpointResource = IonResource._createEndpointResource(assetId);
+    const endpointResource =
+      IonResource.createEndpointResourceFromAssetId(assetId);
     const resource = new IonResource(endpoint, endpointResource);
     resource.headers.Authorization = "Not valid";
     resource._makeRequest(originalOptions);
@@ -213,7 +218,8 @@ describe("Core/IonResource", function () {
     };
 
     const _makeRequest = spyOn(Resource.prototype, "_makeRequest");
-    const endpointResource = IonResource._createEndpointResource(assetId);
+    const endpointResource =
+      IonResource.createEndpointResourceFromAssetId(assetId);
     const resource = new IonResource(endpoint, endpointResource);
     resource._makeRequest(originalOptions);
     expect(_makeRequest).toHaveBeenCalledWith(expectedOptions);
@@ -229,7 +235,8 @@ describe("Core/IonResource", function () {
     const options = {};
 
     const _makeRequest = spyOn(Resource.prototype, "_makeRequest");
-    const endpointResource = IonResource._createEndpointResource(assetId);
+    const endpointResource =
+      IonResource.createEndpointResourceFromAssetId(assetId);
     const resource = new IonResource(externalEndpoint, endpointResource);
     resource._makeRequest(options);
     expect(_makeRequest.calls.argsFor(0)[0]).toBe(options);
@@ -240,7 +247,8 @@ describe("Core/IonResource", function () {
     const expectedOptions = {};
 
     const _makeRequest = spyOn(Resource.prototype, "_makeRequest");
-    const endpointResource = IonResource._createEndpointResource(assetId);
+    const endpointResource =
+      IonResource.createEndpointResourceFromAssetId(assetId);
     const resource = new IonResource(endpoint, endpointResource);
     resource.url = "http://test.invalid";
     resource._makeRequest(originalOptions);
@@ -249,7 +257,8 @@ describe("Core/IonResource", function () {
 
   it("Calls base fetchImage with preferBlob for ion assets", function () {
     const fetchImage = spyOn(Resource.prototype, "fetchImage");
-    const endpointResource = IonResource._createEndpointResource(assetId);
+    const endpointResource =
+      IonResource.createEndpointResourceFromAssetId(assetId);
     const resource = new IonResource(endpoint, endpointResource);
     resource.fetchImage();
     expect(fetchImage).toHaveBeenCalledWith({
@@ -266,7 +275,8 @@ describe("Core/IonResource", function () {
     };
 
     const fetchImage = spyOn(Resource.prototype, "fetchImage");
-    const endpointResource = IonResource._createEndpointResource(assetId);
+    const endpointResource =
+      IonResource.createEndpointResourceFromAssetId(assetId);
     const resource = new IonResource(externalEndpoint, endpointResource);
     resource.fetchImage({
       preferBlob: false,

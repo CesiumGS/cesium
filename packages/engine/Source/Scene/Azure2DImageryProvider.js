@@ -1,6 +1,6 @@
+import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import IonResource from "../Core/IonResource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
@@ -29,7 +29,7 @@ const trailingSlashRegex = /\/$/;
  *
  * @alias Azure2DImageryProvider
  * @constructor
- *
+ * @private
  * @param {Azure2DImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @example
@@ -38,27 +38,18 @@ const trailingSlashRegex = /\/$/;
  *     subscriptionKey: "subscription-key",
  *     tilesetId: "microsoft.base.road"
  * });
- *
- *
  */
 function Azure2DImageryProvider(options) {
-  //>>includeStart("debug", pragmas.debug);
-  if (!defined(options.tilesetId)) {
-    throw new DeveloperError("options.tilesetId is required.");
-  }
-  //>>includeEnd("debug");
-
   options = options ?? {};
   options.maximumLevel = options.maximumLevel ?? 22;
   options.minimumLevel = options.minimumLevel ?? 0;
 
   const subscriptionKey =
     options.subscriptionKey ?? options["subscription-key"];
-  //>>includeStart("debug", pragmas.debug);
-  if (!defined(subscriptionKey)) {
-    throw new DeveloperError("options.subscriptionKey is required.");
-  }
-  //>>includeEnd("debug");
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.tilesetId", options.tilesetId);
+  Check.defined("options.subscriptionKey", subscriptionKey);
+  //>>includeEnd('debug');
 
   const resource =
     options.url instanceof IonResource
@@ -97,6 +88,9 @@ function Azure2DImageryProvider(options) {
   });
   provider._resource = resource;
   this._imageryProvider = provider;
+
+  // This will be defined for ion resources
+  this._tileCredits = resource.credits;
 }
 
 Object.defineProperties(Azure2DImageryProvider.prototype, {
@@ -264,10 +258,10 @@ Object.defineProperties(Azure2DImageryProvider.prototype, {
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
- * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+ * @returns {Credit[]|undefined} The credits to be displayed when the tile is displayed.
  */
 Azure2DImageryProvider.prototype.getTileCredits = function (x, y, level) {
-  return undefined;
+  return this._imageryProvider.getTileCredits(x, y, level);
 };
 
 /**

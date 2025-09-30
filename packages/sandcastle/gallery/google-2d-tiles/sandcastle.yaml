@@ -2,5 +2,6 @@ legacyId: Google 2D Tiles.html
 title: Google 2D Tiles
 description: Use Viewer to start building new applications or easily embed Cesium into existing applications.
 labels:
+  - Imagery
   - Showcases
 thumbnail: thumbnail.jpg

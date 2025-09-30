@@ -27,11 +27,11 @@ describe("Scene/IonImageryProvider", function () {
 
     const assetId = 12335;
     const options = {};
-    const endpointResource = IonResource._createEndpointResource(
+    const endpointResource = IonResource.createEndpointResourceFromAssetId(
       assetId,
       options,
     );
-    spyOn(IonResource, "_createEndpointResource").and.returnValue(
+    spyOn(IonResource, "createEndpointResourceFromAssetId").and.returnValue(
       endpointResource,
     );
 
@@ -41,7 +41,7 @@ describe("Scene/IonImageryProvider", function () {
 
     const provider = await IonImageryProvider.fromAssetId(assetId, options);
 
-    expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
+    expect(IonResource.createEndpointResourceFromAssetId).toHaveBeenCalledWith(
       assetId,
       options,
     );
@@ -113,11 +113,11 @@ describe("Scene/IonImageryProvider", function () {
       accessToken: "token",
       server: "http://test.invalid",
     };
-    const endpointResource = IonResource._createEndpointResource(
+    const endpointResource = IonResource.createEndpointResourceFromAssetId(
       assetId,
       options,
     );
-    spyOn(IonResource, "_createEndpointResource").and.returnValue(
+    spyOn(IonResource, "createEndpointResourceFromAssetId").and.returnValue(
       endpointResource,
     );
     spyOn(endpointResource, "fetchJson").and.returnValue(

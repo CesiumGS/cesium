@@ -29,7 +29,9 @@ describe("Scene/Azure2DImageryProvider", function () {
       return new Azure2DImageryProvider({
         tilesetId: "a-tileset-id",
       });
-    }).toThrowDeveloperError("options.subscriptionKey is required.");
+    }).toThrowDeveloperError(
+      "options.subscriptionKey is required, actual value was undefined",
+    );
   });
 
   it("requires tilesetId to be specified", function () {
@@ -37,7 +39,9 @@ describe("Scene/Azure2DImageryProvider", function () {
       return new Azure2DImageryProvider({
         subscriptionKey: "a-subscription-key",
       });
-    }).toThrowDeveloperError("options.tilesetId is required.");
+    }).toThrowDeveloperError(
+      "options.tilesetId is required, actual value was undefined",
+    );
   });
 
   it("requestImage returns a promise for an image and loads it for cross-origin use", function () {
