@@ -11,8 +11,6 @@ import { fileURLToPath } from "node:url";
 export default async function typescriptCompile(configPath) {
   const tsPath = import.meta.resolve("typescript");
   const binPath = fileURLToPath(join(tsPath, "../../bin/tsc"));
-  console.log(tsPath);
-  console.log(binPath);
   return new Promise((resolve, reject) => {
     const ls = spawn(binPath, ["-p", configPath]);
 
