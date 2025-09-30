@@ -131,7 +131,7 @@ function VoxelPrimitive(options) {
   this._paddingAfter = new Cartesian3();
 
   /**
-   * This member is not created until the provider is ready.
+   * This member is not known until the provider is ready.
    *
    * @type {number}
    * @private
@@ -1278,7 +1278,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
 
   // Prepare to render: update uniforms that can change every frame
   // Using a uniform instead of going through RenderState's scissor because the viewport is not accessible here, and the scissor command needs pixel coordinates.
-  // TODO: only update if changed! This is a lot of matrix multiplication every frame.
   uniforms.ndcSpaceAxisAlignedBoundingBox = Cartesian4.clone(
     ndcAabb,
     uniforms.ndcSpaceAxisAlignedBoundingBox,
@@ -1295,7 +1294,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
     this._transformPlaneLocalToView,
   );
 
-  // TODO: is inverseViewRotation unitary?
   const transformDirectionViewToWorld =
     context.uniformState.inverseViewRotation;
   uniforms.transformDirectionViewToLocal = Matrix3.multiply(
@@ -1353,17 +1351,14 @@ function updateRenderBoundPlanes(primitive, frameState) {
   const uniforms = primitive._uniforms;
   const { renderBoundPlanes } = primitive._shape;
   if (!defined(renderBoundPlanes)) {
-    // TODO: renderBoundPlanes should always be defined, but not always active?
-    // (Ellipsoid voxels only use them if there are longitude limits)
     return;
   }
-  // TODO: copy renderBoundPlanes from the shape to the primitive?
   renderBoundPlanes.update(frameState, primitive._transformPlaneLocalToView);
   uniforms.renderBoundPlanesTexture = renderBoundPlanes.texture;
 }
 
 /**
- * Converts a position in UV space to tile coordinates.
+ * Converts a position in local space to tile coordinates.
  *
  * @param {VoxelPrimitive} primitive The primitive to get the tile coordinates for.
  * @param {Cartesian3} positionLocal The position in local space to convert to tile coordinates.

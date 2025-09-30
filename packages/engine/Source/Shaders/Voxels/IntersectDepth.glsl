@@ -11,7 +11,6 @@ void intersectDepth(in vec2 screenCoord, in Ray ray, inout Intersections ix) {
     float exit;
     if (logDepthOrDepth != 0.0) {
         // Calculate how far the ray must travel before it hits the depth buffer.
-        // TODO: why do we need a vec4?
         vec4 eyeCoordinateDepth = czm_screenToEyeCoordinates(screenCoord, logDepthOrDepth);
         eyeCoordinateDepth /= eyeCoordinateDepth.w;
         entry = dot(eyeCoordinateDepth.xyz - ray.pos, ray.dir);
@@ -23,7 +22,6 @@ void intersectDepth(in vec2 screenCoord, in Ray ray, inout Intersections ix) {
     }
     ix.distanceToDepthBuffer = entry;
 #if defined(DEPTH_TEST)
-    // TODO: Use setShapeIntersection? or return a RayShapeIntersection?
     setIntersectionPair(ix, DEPTH_INTERSECTION_INDEX, vec2(entry, exit));
 #endif
 }

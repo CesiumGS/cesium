@@ -32,10 +32,8 @@ RayShapeIntersection intersectBoundPlanes(in Ray ray) {
         vec4 boundPlane = getBoundPlane(u_renderBoundPlanesTexture, i);
         vec4 intersection = intersectPlane(ray, boundPlane);
         if (dot(ray.dir, boundPlane.xyz) < 0.0) {
-            // TODO: use intersectionMax?
             lastEntry = intersection.w > lastEntry.w ? intersection : lastEntry;
         } else {
-            // TODO: use intersectionMin?
             firstExit = intersection.w < firstExit.w ? intersection: firstExit;
         }
     }
@@ -77,58 +75,6 @@ RayShapeIntersection intersectCylinder(in Ray ray, in float radius, in bool conv
     vec4 intersect2 = vec4(normalize(czm_normal * normal2), t2);
 
     return RayShapeIntersection(intersect1, intersect2);
-}
-
-vec2 intersectCircle(in vec2 circlePos, in vec2 rayDir, in float circleDistance)
-{
-    // Input rayDir is the XY component of a 3D unit vector--not normalized in 2D.
-    float a = dot(rayDir, rayDir);
-    float b = dot(circlePos, rayDir);
-    // float c = dot(circlePos, circlePos) - radius * radius; // UNSTABLE when length(circlePos) ~ radius
-    // Use circleDistance = length(circlePos) - radius, where radius = length(circlePos) - circleDistance
-    float c = circleDistance * (2.0 * length(circlePos) - circleDistance);
-    float ac = a * c;
-    float bb = b * b;
-    if (bb < ac) {
-        return vec2(INF_HIT); // no intersection
-    }
-    float exact1 = (b - sqrt(bb - ac)) / a;
-    float exact2 = (b + sqrt(bb - ac)) / a;
-    // Expand quadratic formula for ac << bb:
-    // (b -/+ sqrt(b*b - a*c)) / a
-    // = b/a * (1 -/+ sqrt(1 - 2 * smallTerm)) // smallTerm = 0.5 * a * c / (b * b)
-    // = b/a * (1 -/+ (1 - smallTerm - 0.5 * smallTerm^2 - 0.5 * smallTerm^3 - ...))
-    float smallTerm = 0.5 * ac / bb;
-    float expansion = smallTerm * (1.0 + 0.5 * smallTerm * (1.0 + smallTerm));
-    return (abs(smallTerm) < 0.025)
-        ? b * vec2(expansion, 2.0 - expansion) / a
-        : vec2(exact1, exact2);
-}
-
-RayShapeIntersection intersectInfiniteCylinderEC(in Ray ray, in vec2 circlePos, in float circleDistance)
-{
-    vec2 rayPos = ray.pos.xy;
-    vec2 rayDir = ray.dir.xy;
-
-    vec2 toCirclePos = circlePos;
-    float circleRayDistance = circleDistance;
-    if (czm_orthographicIn3D == 1.0) {
-        toCirclePos -= rayPos;
-        // TODO: correct circleRayDistance for pixels away from camera center
-    }
-
-    vec2 tValues = intersectCircle(toCirclePos, rayDir, circleRayDistance);
-    if (tValues.x == INF_HIT) {
-        vec4 miss = vec4(normalize(ray.dir), NO_HIT);
-        return RayShapeIntersection(miss, miss);
-    }
-    float t1 = tValues.x;
-    float t2 = tValues.y;
-    vec2 intersect1 = rayPos + t1 * rayDir;
-    vec2 intersect2 = rayPos + t2 * rayDir;
-    vec4 entry = vec4(normalize(intersect1 - circlePos), 0.0, t1);
-    vec4 exit = vec4(normalize(intersect2 - circlePos), 0.0, t2);
-    return RayShapeIntersection(entry, exit);
 }
 
 /**

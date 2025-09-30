@@ -14,10 +14,8 @@ RayShapeIntersection intersectBoundPlanes(in Ray ray) {
         vec4 boundPlane = getBoundPlane(u_renderBoundPlanesTexture, i);
         vec4 intersection = intersectPlane(ray, boundPlane);
         if (dot(ray.dir, boundPlane.xyz) < 0.0) {
-            // TODO: use intersectionMax?
             lastEntry = intersection.w > lastEntry.w ? intersection : lastEntry;
         } else {
-            // TODO: use intersectionMin?
             firstExit = intersection.w < firstExit.w ? intersection: firstExit;
         }
     }
@@ -29,7 +27,6 @@ RayShapeIntersection intersectBoundPlanes(in Ray ray) {
     }
 }
 
-// TODO: drop rayUV param once other shapes are updated
 void intersectShape(in Ray rayUV, in  Ray rayEC, inout Intersections ix)
 {
     RayShapeIntersection intersection = intersectBoundPlanes(rayEC);

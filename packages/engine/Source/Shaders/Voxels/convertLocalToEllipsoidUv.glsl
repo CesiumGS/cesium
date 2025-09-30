@@ -108,26 +108,17 @@ vec3 convertEcToDeltaShape(in vec3 positionEC) {
     vec2 cameraXY = vec2((primeVerticalRadius + u_cameraPositionCartographic.z) * cosLatitude, 0.0);
     // Note precision loss in positionXY.x if length(enu) << length(cameraXY)
     vec2 positionXY = cameraXY + vec2(-enu.y * sinLatitude + enu.z * cosLatitude, enu.x);
-    // TODO: is atan stable for y << x?
     float dLongitude = atan(positionXY.y, positionXY.x);
 
     // 2. Find the longitude component of positionXY, by rotating about Z until the y component is zero.
-    // We need to find the effect of the rotation, (dx, dy) where dy = -positionXY.y.
-    /* float dxExact = length(positionXY) - positionXY.x;
-    // For small dLongitude, we can use the Taylor expansion of sqrt(1 + x) = 1 + x/2 - x^2/8 + ...
-    float tanLongitude = positionXY.y / positionXY.x;
-    float halfTanLongitude2 = tanLongitude * tanLongitude / 2.0;
-    float dxApprox = distanceFromZAxis * halfTanLongitude2 * (1.0 - 0.5 * halfTanLongitude2);
-    float dx = (abs(tanLongitude) < 0.15) ? dxApprox : dxExact;*/
     // Use the versine  to compute the change in x directly from the change in angle:
     //   versine(angle) = 2 * sin^2(angle/2)
     float sinHalfLongitude = sin(dLongitude / 2.0);
     float dx = length(positionXY) * 2.0 * sinHalfLongitude * sinHalfLongitude;
-
-    // 3. Rotate longitude component back to ENU North and Up, and remove from enu
+    // Rotate longitude component back to ENU North and Up, and remove from enu
     enu += vec3(-enu.x, -dx * sinLatitude, dx * cosLatitude);
 
-    // 4. Compute the change in latitude from the camera to the ENU point.
+    // 3. Compute the change in latitude from the camera to the ENU point.
     // First project the camera and ENU positions to the meridional ZX plane,
     // positioning the camera on the +Z axis, so that enu.y maps to the +X axis.
     float meridionalRadius = 1.0 / u_ellipsoidCurvatureAtLatitude.y;
@@ -135,7 +126,7 @@ vec3 convertEcToDeltaShape(in vec3 positionEC) {
     vec2 positionZX = cameraZX + vec2(enu.z, enu.y);
     float dLatitude = atan(positionZX.y, positionZX.x);
 
-    // 5. Compute the change in height above the ellipsoid
+    // 4. Compute the change in height above the ellipsoid
     // Find the change in enu.z associated with rotating the point to the latitude of the camera
     float sinHalfLatitude = sin(dLatitude / 2.0);
     float dz = length(positionZX) * 2.0 * sinHalfLatitude * sinHalfLatitude;

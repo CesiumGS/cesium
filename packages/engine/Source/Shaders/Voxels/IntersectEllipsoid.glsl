@@ -77,8 +77,7 @@ RayShapeIntersection intersectHeight(in Ray ray, in float height, in bool convex
     vec3 d1 = directionScale * (position + tmin * direction);
     vec3 d2 = directionScale * (position + tmax * direction);
 
-    // Return normals in eye coordinates
-    // TODO: these are spherical normals. Need to scale back to ellipsoid, and multiply by u_ellipsoidInverseRadiiSquared
+    // Return normals in eye coordinates. Use spherical approximation for the normal.
     vec3 normal1 = normalize(czm_normal * d1);
     vec3 normal2 = normalize(czm_normal * d2);
 
@@ -151,7 +150,6 @@ vec3 getConeNormal(in vec3 p, in bool convex) {
 
 /**
  * Compute the shift between the ellipsoid origin and the apex of a cone of latitude
- * TODO: fix for non-normalized ellipsoid radii
  */
 float getLatitudeConeShift(in float sinLatitude) {
     // Find prime vertical radius of curvature: 

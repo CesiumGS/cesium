@@ -1,9 +1,9 @@
 // See Intersection.glsl for the definition of intersectScene
 // See IntersectionUtils.glsl for the definition of nextIntersection
 // See convertLocalToBoxUv.glsl, convertLocalToCylinderUv.glsl, or convertLocalToEllipsoidUv.glsl
-// for the definition of convertLocalToShapeUvSpaceDerivative. The appropriate function is
-// selected based on the VoxelPrimitive shape type, and added to the shader in
-// Scene/VoxelRenderResources.js.
+// for the definitions of convertLocalToShapeSpaceDerivative and getTileAndUvCoordinate. 
+// The appropriate functions are selected based on the VoxelPrimitive shape type, 
+// and added to the shader in Scene/VoxelRenderResources.js.
 // See Octree.glsl for the definitions of TraversalData, SampleData,
 // traverseOctreeFromBeginning, and traverseOctreeFromExisting
 // See Megatexture.glsl for the definition of accumulatePropertiesFromMegatexture

@@ -1,4 +1,4 @@
-import { defined } from "@cesium/engine";
+import defined from "../Core/defined.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";

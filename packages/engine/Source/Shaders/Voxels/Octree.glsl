@@ -36,7 +36,6 @@ struct TileAndUvCoordinate {
 
 struct SampleData {
     int megatextureIndex;
-    // TODO: use TileAndUvCoordinate
     ivec4 tileCoords;
     vec3 tileUv;
     vec3 inputCoordinate;
@@ -46,7 +45,6 @@ struct SampleData {
 };
 
 // Integer mod: For WebGL1 only
-// TODO: use native WebGL2 method
 int intMod(in int a, in int b) {
     return a - (b * (a / b));
 }
@@ -174,7 +172,6 @@ OctreeNodeData traverseOctreeDownwards(in ivec4 tileCoordinate, inout TraversalD
         // Find the corresponding coordinate at the level traversalData.octreeCoords.w
         int level = traversalData.octreeCoords.w + 1;
         int levelDifference = tileCoordinate.w - level;
-        // TODO: what if levelDifference < 0?
         ivec3 coordinateAtLevel = tileCoordinate.xyz >> levelDifference;
         traversalData.octreeCoords = ivec4(coordinateAtLevel, level);
 
@@ -215,8 +212,6 @@ void traverseOctreeFromBeginning(in TileAndUvCoordinate tileAndUv, out Traversal
     #endif
 }
 
-// TODO: rename? We are checking if tileCoordinate is inside the tile defined by octreeCoords.
-// The argument names sound backwards.
 bool insideTile(in ivec4 tileCoordinate, in ivec4 octreeCoords) {
     int levelDifference = tileCoordinate.w - octreeCoords.w;
     if (levelDifference < 0) {
@@ -235,8 +230,8 @@ void traverseOctreeFromExisting(in TileAndUvCoordinate tileAndUv, inout Traversa
         return;
     }
 
-    // Go up tree until we find a parent tile containing tileCoords
-    // TODO: assumes all parents are available all they way up to the root!
+    // Go up tree until we find a parent tile containing tileCoords.
+    // Assumes all parents are available all they way up to the root.
     for (int i = 0; i < OCTREE_MAX_LEVELS; ++i) {
         traversalData.octreeCoords.xyz /= 2;
         traversalData.octreeCoords.w -= 1;
