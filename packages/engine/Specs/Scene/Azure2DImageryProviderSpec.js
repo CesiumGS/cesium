@@ -51,7 +51,7 @@ describe("Scene/Azure2DImageryProvider", function () {
     );
     expect(provider.tileWidth).toEqual(256);
     expect(provider.tileHeight).toEqual(256);
-    expect(provider.maximumLevel).toBe(19);
+    expect(provider.maximumLevel).toBe(22);
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
@@ -82,7 +82,7 @@ describe("Scene/Azure2DImageryProvider", function () {
 
     expect(provider.tileWidth).toEqual(256);
     expect(provider.tileHeight).toEqual(256);
-    expect(provider.maximumLevel).toBe(19);
+    expect(provider.maximumLevel).toBe(22);
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
     expect(provider.tileDiscardPolicy).toBeUndefined();

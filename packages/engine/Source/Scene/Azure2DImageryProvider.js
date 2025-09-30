@@ -20,7 +20,7 @@ const trailingSlashRegex = /\/$/;
  * @property {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @property {number} [options.maximumLevel=19] The maximum level-of-detail supported by the imagery provider.
+ * @property {number} [options.maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
  * @property {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  */
 
@@ -49,7 +49,7 @@ function Azure2DImageryProvider(options) {
   //>>includeEnd("debug");
 
   options = options ?? {};
-  options.maximumLevel = options.maximumLevel ?? 19;
+  options.maximumLevel = options.maximumLevel ?? 22;
   options.minimumLevel = options.minimumLevel ?? 0;
 
   const subscriptionKey =
