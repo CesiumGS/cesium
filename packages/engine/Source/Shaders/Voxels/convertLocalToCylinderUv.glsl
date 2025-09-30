@@ -52,10 +52,9 @@ vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
 
 /**
  * Computes the change in polar coordinates given a change in position.
- * @param dPosition The change in position in Cartesian coordinates.
- * @param cameraRadialDistance The radial distance of the camera from the origin.
- * @return The change in polar coordinates (radial distance, angle).
- * TODO: optimize--currently 4 trig calls!
+ * @param {vec2} dPosition The change in position in Cartesian coordinates.
+ * @param {float} cameraRadialDistance The radial distance of the camera from the origin.
+ * @return {vec2} The change in polar coordinates (radial distance, angle).
  */
 vec2 computePolarChange(in vec2 dPosition, in float cameraRadialDistance) {
     float dAngle = atan(dPosition.y, cameraRadialDistance + dPosition.x);
@@ -70,7 +69,7 @@ vec2 computePolarChange(in vec2 dPosition, in float cameraRadialDistance) {
 vec3 convertEcToDeltaShape(in vec3 positionEC) {
     // 1. Rotate to radial, tangent, and up coordinates
     vec3 rtu = u_cylinderEcToRadialTangentUp * positionEC;
-    // 2. Compute change in angular and radial coordinates. TODO: compute u_cameraShapePosition on CPU? Or get it from u_cameraTileCoordinates & u_cameraTileUv
+    // 2. Compute change in angular and radial coordinates.
     vec2 dPolar = computePolarChange(rtu.xy, u_cameraShapePosition.x);
     return vec3(dPolar.x, dPolar.y, rtu.z);
 }
@@ -80,12 +79,15 @@ vec3 convertECtoDeltaTile(in vec3 positionEC) {
     // Convert to tileset coordinates in [0, 1]
     float dx = u_cylinderLocalToShapeUvRadius.x * deltaShape.x;
     float dy = deltaShape.y / czm_twoPi;
-    int maxTileCoordinate = (1 << u_cameraTileCoordinates.w) - 1;
-    if (u_cameraTileCoordinates.y < 0 && dy < 0.0) {
-        dy += 1.0;
-    } else if (u_cameraTileCoordinates.y > maxTileCoordinate && dy > 0.0) {
-        dy -= 1.0;
-    }
+#if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
+    // Wrap to ensure dy is not crossing through the unoccupied angle range, where
+    // angle to tile coordinate conversions would be more complicated
+    float cameraUvAngle = (u_cameraShapePosition.y + czm_pi) / czm_twoPi;
+    float cameraUvAngleShift = fract(cameraUvAngle - u_cylinderShapeUvAngleRangeOrigin);
+    float rawOutputUvAngle = cameraUvAngleShift + dy;
+    float rotation = floor(rawOutputUvAngle);
+    dy -= rotation;
+#endif
     dy *= u_cylinderLocalToShapeUvAngle.x;
     float dz = u_cylinderLocalToShapeUvHeight.x * deltaShape.z;
     // Convert to tile coordinate changes
