@@ -1,3 +1,4 @@
+import { defined } from "@cesium/engine";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -75,6 +76,7 @@ function VoxelEllipsoidShape() {
     ellipsoidCurvatureAtLatitude: new Cartesian2(),
     ellipsoidInverseRadiiSquared: new Cartesian3(),
     ellipsoidRenderLongitudeMinMax: new Cartesian2(),
+    ellipsoidShapeUvLongitudeRangeOrigin: 0.0,
     ellipsoidShapeUvLongitudeMinMaxMid: new Cartesian3(),
     ellipsoidLocalToShapeUvLongitude: new Cartesian2(),
     ellipsoidLocalToShapeUvLatitude: new Cartesian2(),
@@ -551,8 +553,19 @@ VoxelEllipsoidShape.prototype.update = function (
   if (shapeHasLongitude) {
     shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE"] = true;
 
-    const shapeIsLongitudeReversed = shapeMaxBounds.x < shapeMinBounds.x;
+    const uvShapeMinLongitude =
+      (shapeMinBounds.x - DefaultMinBounds.x) / defaultLongitudeRange;
+    const uvShapeMaxLongitude =
+      (shapeMaxBounds.x - DefaultMinBounds.x) / defaultLongitudeRange;
+    const uvLongitudeRangeZero =
+      1.0 - shapeLongitudeRange / defaultLongitudeRange;
+    // Translate the origin of UV angles (in [0,1]) to the center of the unoccupied space
+    const uvLongitudeRangeOrigin =
+      (uvShapeMaxLongitude + 0.5 * uvLongitudeRangeZero) % 1.0;
+    shaderUniforms.ellipsoidShapeUvLongitudeRangeOrigin =
+      uvLongitudeRangeOrigin;
 
+    const shapeIsLongitudeReversed = shapeMaxBounds.x < shapeMinBounds.x;
     if (shapeIsLongitudeReversed) {
       shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED"] =
         true;
@@ -566,8 +579,9 @@ VoxelEllipsoidShape.prototype.update = function (
       );
     } else {
       const scale = defaultLongitudeRange / shapeLongitudeRange;
+      const shiftedMinLongitude = uvShapeMinLongitude - uvLongitudeRangeOrigin;
       const offset =
-        -(shapeMinBounds.x - DefaultMinBounds.x) / shapeLongitudeRange;
+        -scale * (shiftedMinLongitude - Math.floor(shiftedMinLongitude));
       shaderUniforms.ellipsoidLocalToShapeUvLongitude = Cartesian2.fromElements(
         scale,
         offset,
@@ -930,6 +944,9 @@ VoxelEllipsoidShape.prototype.convertLocalToShapeUvSpace = function (
     evoluteScale,
     ellipsoidInverseRadiiSquared,
     ellipsoidInverseHeightDifference,
+    ellipsoidShapeUvLongitudeRangeOrigin,
+    ellipsoidLocalToShapeUvLongitude,
+    ellipsoidLocalToShapeUvLatitude,
   } = this._shaderUniforms;
 
   const distanceFromZAxis = Math.hypot(positionLocal.x, positionLocal.y);
@@ -971,9 +988,29 @@ VoxelEllipsoidShape.prototype.convertLocalToShapeUvSpace = function (
   );
   let height = heightSign * Cartesian2.magnitude(heightVector);
 
-  // TODO: Assume we always have shape bounds? Then simplify convertShapeToShapeUvSpace and implement here.
+  const {
+    ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE,
+    ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE,
+  } = this._shaderDefines;
+
   longitude = (longitude + Math.PI) / (2.0 * Math.PI);
+  if (defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)) {
+    longitude -= ellipsoidShapeUvLongitudeRangeOrigin;
+    longitude = longitude - Math.floor(longitude);
+    // Scale and shift so [0, 1] covers the occupied space.
+    longitude =
+      longitude * ellipsoidLocalToShapeUvLongitude.x +
+      ellipsoidLocalToShapeUvLongitude.y;
+  }
+  
   latitude = (latitude + Math.PI / 2.0) / Math.PI;
+  if (defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)) {
+    // Scale and shift so [0, 1] covers the occupied space.
+    latitude =
+      latitude * ellipsoidLocalToShapeUvLatitude.x +
+      ellipsoidLocalToShapeUvLatitude.y;
+  }
+
   height = 1.0 + height * ellipsoidInverseHeightDifference;
 
   return Cartesian3.fromElements(longitude, latitude, height, result);

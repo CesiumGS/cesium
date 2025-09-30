@@ -74,7 +74,7 @@ vec3 convertEcToDeltaShape(in vec3 positionEC) {
     return vec3(dPolar.x, dPolar.y, rtu.z);
 }
 
-vec3 convertECtoDeltaTile(in vec3 positionEC) {
+vec3 convertEcToDeltaTile(in vec3 positionEC) {
     vec3 deltaShape = convertEcToDeltaShape(positionEC);
     // Convert to tileset coordinates in [0, 1]
     float dx = u_cylinderLocalToShapeUvRadius.x * deltaShape.x;
@@ -95,7 +95,7 @@ vec3 convertECtoDeltaTile(in vec3 positionEC) {
 }
 
 TileAndUvCoordinate getTileAndUvCoordinate(in vec3 positionEC) {
-    vec3 deltaTileCoordinate = convertECtoDeltaTile(positionEC);
+    vec3 deltaTileCoordinate = convertEcToDeltaTile(positionEC);
     vec3 tileUvSum = u_cameraTileUv + deltaTileCoordinate;
     ivec3 tileCoordinate = u_cameraTileCoordinates.xyz + ivec3(floor(tileUvSum));
     int maxTileCoordinate = (1 << u_cameraTileCoordinates.w) - 1;

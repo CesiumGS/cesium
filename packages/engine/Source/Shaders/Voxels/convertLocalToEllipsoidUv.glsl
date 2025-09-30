@@ -17,6 +17,7 @@ uniform vec3 u_ellipsoidInverseRadiiSquared;
 #endif
 #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
     uniform vec2 u_ellipsoidLocalToShapeUvLongitude; // x = scale, y = offset
+    uniform float u_ellipsoidShapeUvLongitudeRangeOrigin;
 #endif
 #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
     uniform vec2 u_ellipsoidLocalToShapeUvLatitude; // x = scale, y = offset
@@ -140,7 +141,7 @@ vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
     return vec3(longitude, latitude, height);
 }
 
-vec3 convertECtoDeltaTile(in vec3 positionEC) {
+vec3 convertEcToDeltaShape(in vec3 positionEC) {
     vec3 enu = u_ellipsoidEcToEastNorthUp * positionEC;
 
     // 1. Compute the change in longitude from the camera to the ENU point
@@ -186,37 +187,60 @@ vec3 convertECtoDeltaTile(in vec3 positionEC) {
     // The remaining change in enu.z is the change in height above the ellipsoid
     float dHeight = enu.z + dz;
 
-    // 4. Convert to tileset coordinates in [0, 1]
-    // TODO: incorporate wrapping, and scaling/clamping for bounded longitude
-    float dTilesetX = dLongitude / czm_twoPi;
-    // TODO: incorporate clamping, and scaling for bounded latitude
-    float dTilesetY = dLatitude / czm_pi;
-    // TODO: clamp to height bounds
-    float dTilesetZ = dHeight * u_ellipsoidInverseHeightDifference;
+    return vec3(dLongitude, dLatitude, dHeight);
+}
 
-    // 5. Convert to tile coordinate changes
-    return vec3(dTilesetX, dTilesetY, dTilesetZ) * float(1 << u_cameraTileCoordinates.w);
+vec3 convertEcToDeltaTile(in vec3 positionEC) {
+    vec3 deltaShape = convertEcToDeltaShape(positionEC);
+    // Convert to tileset coordinates in [0, 1]
+    float dx = deltaShape.x / czm_twoPi;
+
+#if (defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE))
+    // Wrap to ensure dx is not crossing through the unoccupied angle range, where
+    // angle to tile coordinate conversions would be more complicated
+    float cameraUvLongitude = (u_cameraPositionCartographic.x + czm_pi) / czm_twoPi;
+    float cameraUvLongitudeShift = fract(cameraUvLongitude - u_ellipsoidShapeUvLongitudeRangeOrigin);
+    float rawOutputUvLongitude = cameraUvLongitudeShift + dx;
+    float rotation = floor(rawOutputUvLongitude);
+    dx -= rotation;
+    dx *= u_ellipsoidLocalToShapeUvLongitude.x;
+#endif
+
+    float dy = deltaShape.y / czm_pi;
+#if (defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE))
+    dy *= u_ellipsoidLocalToShapeUvLatitude.x;
+#endif
+
+    float dz = u_ellipsoidInverseHeightDifference * deltaShape.z;
+    // Convert to tile coordinate changes
+    return vec3(dx, dy, dz) * float(1 << u_cameraTileCoordinates.w);
 }
 
 TileAndUvCoordinate getTileAndUvCoordinate(in vec3 positionEC) {
-    vec3 deltaTileCoordinate = convertECtoDeltaTile(positionEC);
+    vec3 deltaTileCoordinate = convertEcToDeltaTile(positionEC);
     vec3 tileUvSum = u_cameraTileUv + deltaTileCoordinate;
     ivec3 tileCoordinate = u_cameraTileCoordinates.xyz + ivec3(floor(tileUvSum));
     int maxTileCoordinate = (1 << u_cameraTileCoordinates.w) - 1;
     tileCoordinate.y = min(max(0, tileCoordinate.y), maxTileCoordinate);
     tileCoordinate.z = min(max(0, tileCoordinate.z), maxTileCoordinate);
-    // TODO: wrapping issues! tileCoordinateChange.x could be maxTileCoordinate - 1
-    // Computing this before wrapping tileCoordinate.x is a messy hack
+#if (!defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE))
     ivec3 tileCoordinateChange = tileCoordinate - u_cameraTileCoordinates.xyz;
-    // TODO: Don't wrap if shape has a gap in longitude
     if (tileCoordinate.x < 0) {
         tileCoordinate.x += (maxTileCoordinate + 1);
     } else if (tileCoordinate.x > maxTileCoordinate) {
         tileCoordinate.x -= (maxTileCoordinate + 1);
     }
+#else
+    tileCoordinate.x = min(max(0, tileCoordinate.x), maxTileCoordinate);
+    ivec3 tileCoordinateChange = tileCoordinate - u_cameraTileCoordinates.xyz;
+#endif
     vec3 tileUv = tileUvSum - vec3(tileCoordinateChange);
-    // TODO: Don't wrap if shape has a gap in longitude
+#if (!defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE))
+    // If there is only one tile spanning 2*PI angle, the coordinate wraps around
     tileUv.x = (u_cameraTileCoordinates.w == 0) ? fract(tileUv.x) : clamp(tileUv.x, 0.0, 1.0);
+#else
+    tileUv.x = clamp(tileUv.x, 0.0, 1.0);
+#endif
     tileUv.y = clamp(tileUv.y, 0.0, 1.0);
     tileUv.z = clamp(tileUv.z, 0.0, 1.0);
     return TileAndUvCoordinate(ivec4(tileCoordinate, u_cameraTileCoordinates.w), tileUv);
