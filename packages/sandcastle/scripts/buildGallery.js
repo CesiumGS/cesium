@@ -15,7 +15,7 @@ import createGalleryRecord from "./createGalleryRecord.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const defaultRootDirectory = join(__dirname, "..");
 const defaultPublicDirectory = "./public";
-const defaultGalleryFiles = ["gallery/**/*"];
+const defaultGalleryFiles = ["gallery"];
 const defaultThumbnailPath = "images/placeholder-thumbnail.jpg";
 const requiredMetadataKeys = ["title", "description"];
 const galleryItemConfig = /sandcastle\.(yml|yaml)/;
@@ -118,7 +118,7 @@ export async function buildGalleryList(options = {}) {
   };
 
   const galleryFiles = await globby(
-    galleryFilesPattern.map((pattern) => join(rootDirectory, pattern)),
+    galleryFilesPattern.map((pattern) => join(rootDirectory, pattern, "**/*")),
   );
   const yamlFiles = galleryFiles.filter((path) =>
     basename(path).match(galleryItemConfig),
@@ -261,7 +261,7 @@ export async function buildGalleryList(options = {}) {
   // regardless of if titles match the directory names
   output.entries.sort((a, b) => a.title.localeCompare(b.title));
 
-  const outputDirectory = join(publicDirectory, "gallery");
+  const outputDirectory = join(rootDirectory, publicDirectory, "gallery");
   await rimraf(outputDirectory);
   await mkdir(outputDirectory, { recursive: true });
 
@@ -299,7 +299,7 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
   let buildGalleryOptions;
 
   try {
-    const config = await import(configPath);
+    const config = await import(pathToFileURL(configPath).href);
     const { root, publicDir, gallery, sourceUrl } = config.default;
 
     // Paths are specified relative to the config file
