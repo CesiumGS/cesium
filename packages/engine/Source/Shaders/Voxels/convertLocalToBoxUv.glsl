@@ -3,7 +3,6 @@ uniform vec3 u_boxLocalToShapeUvTranslate;
 
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
-uniform vec3 u_cameraPositionLocal;
 uniform mat3 u_transformDirectionViewToLocal;
 
 PointJacobianT convertLocalToShapeSpaceDerivative(in vec3 positionLocal) {

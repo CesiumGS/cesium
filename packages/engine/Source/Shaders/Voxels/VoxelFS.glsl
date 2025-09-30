@@ -16,6 +16,7 @@
 #endif
 
 uniform mat4 u_transformPositionViewToLocal;
+uniform vec3 u_cameraPositionLocal;
 uniform vec3 u_cameraDirectionLocal;
 uniform float u_stepSize;
 
@@ -180,7 +181,8 @@ void main()
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
 
         fragmentInput.attributes.positionEC = positionEC;
-        fragmentInput.attributes.normalEC = step.xyz;
+        // Re-normalize normals: some shape intersections may have been scaled to encode positive/negative shapes
+        fragmentInput.attributes.normalEC = normalize(step.xyz);
 
         fragmentInput.voxel.viewDirUv = viewRayLocal.dir;
 

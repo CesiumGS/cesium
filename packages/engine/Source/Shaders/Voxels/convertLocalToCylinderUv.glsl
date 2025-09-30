@@ -5,7 +5,7 @@ uniform float u_cylinderShapeUvAngleRangeOrigin;
 uniform mat3 u_cylinderEcToRadialTangentUp;
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
-uniform vec3 u_cameraPositionLocal;
+uniform vec3 u_cameraShapePosition; // (radial distance, angle, height) of camera in shape space
 uniform mat3 u_transformDirectionViewToLocal;
 
 PointJacobianT convertLocalToShapeSpaceDerivative(in vec3 position) {
@@ -71,9 +71,7 @@ vec3 convertEcToDeltaShape(in vec3 positionEC) {
     // 1. Rotate to radial, tangent, and up coordinates
     vec3 rtu = u_cylinderEcToRadialTangentUp * positionEC;
     // 2. Compute change in angular and radial coordinates. TODO: compute u_cameraShapePosition on CPU? Or get it from u_cameraTileCoordinates & u_cameraTileUv
-    //vec2 dPolar = computePolarChange(rtu.xy, u_cameraShapePosition.x);
-    float cameraRadialDistance = length(u_cameraPositionLocal.xy);
-    vec2 dPolar = computePolarChange(rtu.xy, cameraRadialDistance);
+    vec2 dPolar = computePolarChange(rtu.xy, u_cameraShapePosition.x);
     return vec3(dPolar.x, dPolar.y, rtu.z);
 }
 

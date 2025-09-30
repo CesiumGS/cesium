@@ -55,6 +55,7 @@ function VoxelCylinderShape() {
   this._renderBoundPlanes = new VoxelBoundCollection({ planes: boundPlanes });
 
   this._shaderUniforms = {
+    cameraShapePosition: new Cartesian3(),
     cylinderEcToRadialTangentUp: new Matrix3(),
     cylinderRenderRadiusMinMax: new Cartesian2(),
     cylinderRenderAngleMinMax: new Cartesian2(),
@@ -443,19 +444,10 @@ VoxelCylinderShape.prototype.update = function (
  * @param {FrameState} frameState The frame state.
  */
 VoxelCylinderShape.prototype.updateViewTransforms = function (frameState) {
-  updateRtuTransform(this, frameState);
-};
-
-/**
- * Update the rotation from eye coordinates to radial-tangent-up coordinates.
- * @param {VoxelCylinderShape} shape
- * @param {FrameState} frameState
- * @private
- */
-function updateRtuTransform(shape, frameState) {
-  // 1. Find camera position in local coordinates
+  const shaderUniforms = this._shaderUniforms;
+  // 1. Update camera position in cylindrical coordinates
   const transformPositionWorldToLocal = Matrix4.inverse(
-    shape._shapeTransform,
+    this._shapeTransform,
     scratchTransformPositionWorldToLocal,
   );
   const cameraPositionLocal = Matrix4.multiplyByPoint(
@@ -463,7 +455,13 @@ function updateRtuTransform(shape, frameState) {
     frameState.camera.positionWC,
     scratchCameraPositionLocal,
   );
-  // 2. Find radial, tangent, and up components
+  shaderUniforms.cameraShapePosition = Cartesian3.fromElements(
+    Cartesian2.magnitude(cameraPositionLocal),
+    Math.atan2(cameraPositionLocal.y, cameraPositionLocal.x),
+    cameraPositionLocal.z,
+    shaderUniforms.cameraShapePosition,
+  );
+  // 2. Find radial, tangent, and up components at camera position
   const cameraRadialPosition = Cartesian2.normalize(
     Cartesian2.fromCartesian3(cameraPositionLocal, scratchCameraRadialPosition),
     scratchCameraRadialPosition,
@@ -487,7 +485,7 @@ function updateRtuTransform(shape, frameState) {
   );
   // 3. Transform to eye coordinates.
   const rotateLocalToWorld = Matrix4.getRotation(
-    shape._shapeTransform,
+    this._shapeTransform,
     scratchRtuRotation,
   );
   const rotateWorldToView = frameState.context.uniformState.viewRotation;
@@ -502,7 +500,6 @@ function updateRtuTransform(shape, frameState) {
     scratchRtuRotation,
   );
   // 4. Transpose to get EC to RTU rotation
-  const shaderUniforms = shape._shaderUniforms;
   shaderUniforms.cylinderEcToRadialTangentUp = Matrix3.transpose(
     rotateRtuToView,
     shaderUniforms.cylinderEcToRadialTangentUp,
