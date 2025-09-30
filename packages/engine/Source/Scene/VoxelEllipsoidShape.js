@@ -1002,7 +1002,7 @@ VoxelEllipsoidShape.prototype.convertLocalToShapeUvSpace = function (
       longitude * ellipsoidLocalToShapeUvLongitude.x +
       ellipsoidLocalToShapeUvLongitude.y;
   }
-  
+
   latitude = (latitude + Math.PI / 2.0) / Math.PI;
   if (defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)) {
     // Scale and shift so [0, 1] covers the occupied space.

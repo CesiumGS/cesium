@@ -504,7 +504,7 @@ VoxelCylinderShape.prototype.updateViewTransforms = function (frameState) {
     rotateRtuToView,
     shaderUniforms.cylinderEcToRadialTangentUp,
   );
-}
+};
 
 /**
  * Convert a UV coordinate to the shape's UV space.
