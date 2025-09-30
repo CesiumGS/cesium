@@ -663,6 +663,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "!**/*.gitignore",
           "!Specs/e2e/*-snapshots/**",
           "!Apps/Sandcastle/gallery/development/**",
+          "!Apps/Sandcastle2/**",
         ],
         {
           encoding: false,
