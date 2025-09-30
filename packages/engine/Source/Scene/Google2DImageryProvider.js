@@ -355,7 +355,7 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
   );
 
   const { attributions, options: endpointOptions } =
-  await endpointResource.fetchJson();
+    await endpointResource.fetchJson();
   const url = endpointOptions.url;
   delete endpointOptions.url;
 
