@@ -11,6 +11,7 @@
 
 #### Additions :tada:
 
+- Adds Google2DImageryProvider to load imagery from [Google Maps](https://developers.google.com/maps/documentation/tile/2d-tiles-overview) [#12913](https://github.com/CesiumGS/cesium/pull/12913)
 - Adds an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
 
 ## 1.133 - 2025-09-02
