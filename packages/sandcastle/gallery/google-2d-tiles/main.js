@@ -1,9 +1,6 @@
 import * as Cesium from "cesium";
 
-Cesium.Ion.defaultServer = "https://api.ion-staging.cesium.com";
-Cesium.Ion.defaultAccessToken = "";
-
-const assetId = 1687;
+const assetId = 3830184;
 
 const google = Cesium.ImageryLayer.fromProviderAsync(
   Cesium.IonImageryProvider.fromAssetId(assetId),
