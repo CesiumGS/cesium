@@ -308,10 +308,10 @@ of the world.\nhttp://www.openstreetmap.org",
       iconUrl: buildModuleUrl(
         "Widgets/Images/ImageryProviders/googleSatellite.png",
       ),
-      tooltip: "Imagery",
+      tooltip: "Imagery from Google Maps",
       category: "Cesium ion",
       creationFunction: function () {
-        return IonImageryProvider.fromAssetId(1685);
+        return IonImageryProvider.fromAssetId(3830182);
       },
     }),
   );
@@ -322,10 +322,10 @@ of the world.\nhttp://www.openstreetmap.org",
       iconUrl: buildModuleUrl(
         "Widgets/Images/ImageryProviders/googleSatelliteLabels.png",
       ),
-      tooltip: "Imagery with place labels",
+      tooltip: "Imagery with place labels from Google Maps",
       category: "Cesium ion",
       creationFunction: function () {
-        return IonImageryProvider.fromAssetId(1686);
+        return IonImageryProvider.fromAssetId(3830183);
       },
     }),
   );
@@ -336,10 +336,11 @@ of the world.\nhttp://www.openstreetmap.org",
       iconUrl: buildModuleUrl(
         "Widgets/Images/ImageryProviders/googleRoadmap.png",
       ),
-      tooltip: "Labeled roads and other features on a base landscape",
+      tooltip:
+        "Labeled roads and other features on a base landscape from Google Maps",
       category: "Cesium ion",
       creationFunction: function () {
-        return IonImageryProvider.fromAssetId(1687);
+        return IonImageryProvider.fromAssetId(3830184);
       },
     }),
   );
@@ -350,10 +351,11 @@ of the world.\nhttp://www.openstreetmap.org",
       iconUrl: buildModuleUrl(
         "Widgets/Images/ImageryProviders/googleLabels.png",
       ),
-      tooltip: "Place labels to combine with other imagery such as Sentinel-2",
+      tooltip:
+        "Place labels from Google Maps to combine with other imagery such as Sentinel-2",
       category: "Cesium ion",
       creationFunction: function () {
-        return IonImageryProvider.fromAssetId(1688);
+        return IonImageryProvider.fromAssetId(3830185);
       },
     }),
   );
@@ -365,10 +367,10 @@ of the world.\nhttp://www.openstreetmap.org",
         "Widgets/Images/ImageryProviders/googleContour.png",
       ),
       tooltip:
-        "Hillshade mapping, contour lines, natural features (roadmap features hidden)",
+        "Hillshade mapping, contour lines, natural features (roadmap features hidden) from Google Maps",
       category: "Cesium ion",
       creationFunction: function () {
-        return IonImageryProvider.fromAssetId(1689);
+        return IonImageryProvider.fromAssetId(3830186);
       },
     }),
   );

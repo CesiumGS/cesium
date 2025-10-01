@@ -47,7 +47,7 @@ const trailingSlashRegex = /\/$/;
  * @example
  * // Google 2D imagery provider
  * const googleTilesProvider = Cesium.Google2DImageryProvider.fromIonAssetId({
- *     assetId: 1687
+ *     assetId: 3830184
  * });
   * @example
  * // Use your own Google api key
@@ -310,12 +310,12 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
  * @example
  * // Google 2D imagery provider
  * const googleTilesProvider = Cesium.Google2DImageryProvider.fromIonAssetId({
- *     assetId: 1687
+ *     assetId: 3830184
  * });
  * @example
  * // Google 2D roadmap overlay with custom styles
  * const googleTileProvider = Cesium.Google2DImageryProvider.fromIonAssetId({
- *     assetId: 1687,
+ *     assetId: 3830184,
  *     overlayLayerType: "layerRoadmap",
  *     styles: [
  *         {
