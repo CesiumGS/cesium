@@ -2,6 +2,8 @@
 
 ## 1.134 - 2025-10-01
 
+- [Sandcastle](https://sandcastle.cesium.com/) has been updated at `https://sandcastle.cesium.com`! The [legacy Sandcastle app](https://cesium.com/downloads/cesiumjs/releases/1.134/Apps/Sandcastle/index.html) will remain available through November 3, 2025.
+
 ### @cesium/engine
 
 #### Fixes :wrench:
