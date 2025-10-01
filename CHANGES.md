@@ -6,6 +6,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- Voxel rendering now requires a WebGL2 context, which is [enabled by default since 1.101](https://github.com/CesiumGS/cesium/pull/10894). For voxel rendering, make sure the `requestWebGl1` flag in `contextOptions` is NOT set to true.
+
 #### Fixes :wrench:
 
 - Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
@@ -17,6 +21,7 @@
 - Prevent runtime errors for certain forms of invalid PNTS files [#12872](https://github.com/CesiumGS/cesium/issues/12872)
 - Improved performance of clamped labels. [#12905](https://github.com/CesiumGS/cesium/pull/12905)
 - Fixes issue where multiple instances of a Gaussian splat tileset would transform tile positions incorrectly and render out of position. [#12795](https://github.com/CesiumGS/cesium/issues/12795)
+- Converted voxel raymarching to eye coordinates to fix precision issues in large datasets. [#12061](https://github.com/CesiumGS/cesium/issues/12061)
 
 #### Additions :tada:
 

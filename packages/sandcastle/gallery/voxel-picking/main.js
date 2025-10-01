@@ -35,16 +35,16 @@ function ProceduralMultiTileVoxelProvider(shape) {
   this.names = ["color"];
   this.types = [Cesium.MetadataType.VEC4];
   this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
-  this._levelCount = 3;
+  this.availableLevels = 3;
   this.globalTransform = globalTransform;
 }
 
 ProceduralMultiTileVoxelProvider.prototype.requestData = function (options) {
   const { tileLevel, tileX, tileY, tileZ } = options;
 
-  if (tileLevel >= this._levelCount) {
+  if (tileLevel >= this.availableLevels) {
     return Promise.reject(
-      `No tiles available beyond level ${this._levelCount}`,
+      `No tiles available beyond level ${this.availableLevels - 1}`,
     );
   }
 
@@ -129,6 +129,7 @@ function createPrimitive(provider) {
     customShader: customShader,
   });
   voxelPrimitive.nearestSampling = true;
+  voxelPrimitive.stepSize = 0.7;
 
   viewer.scene.primitives.add(voxelPrimitive);
   camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {
