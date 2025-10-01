@@ -39,6 +39,12 @@ function IonResource(endpoint, endpointResource) {
       retryAttempts: 1,
       retryCallback: retryCallback,
     };
+  } else if (["GOOGLE_2D_MAPS", "AZURE_MAPS"].includes(externalType)) {
+    options = {
+      url: endpoint.options.url,
+      retryAttempts: 1,
+      retryCallback: retryCallback,
+    };
   } else if (
     externalType === "3DTILES" ||
     externalType === "STK_TERRAIN_SERVER"
@@ -105,7 +111,7 @@ if (defined(Object.create)) {
  *   });
  */
 IonResource.fromAssetId = function (assetId, options) {
-  const endpointResource = IonResource.createEndpointResourceFromAssetId(
+  const endpointResource = IonResource._createEndpointResource(
     assetId,
     options,
   );
@@ -207,22 +213,20 @@ IonResource.prototype._makeRequest = function (options) {
 };
 
 /**
- * Creates a Resource instance for a Cesium ion endpoint.
  * @private
- * @param {string} url The url of the Cesium ion endpoint, relative to the base server url.
- * @param {object} [options] An object with the following properties:
- * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
- * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
- * @returns {Resource} An instance representing the Cesium ion endpoint.
- */
-IonResource.createEndpointResource = function (url, options) {
+ **/
+IonResource._createEndpointResource = function (assetId, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("assetId", assetId);
+  //>>includeEnd('debug');
+
   options = options ?? Frozen.EMPTY_OBJECT;
   let server = options.server ?? Ion.defaultServer;
   const accessToken = options.accessToken ?? Ion.defaultAccessToken;
   server = Resource.createIfNeeded(server);
 
   const resourceOptions = {
-    url,
+    url: `v1/assets/${assetId}/endpoint`,
   };
 
   if (defined(accessToken)) {
@@ -239,66 +243,6 @@ IonResource.createEndpointResource = function (url, options) {
   addClientHeaders(resourceOptions);
 
   return server.getDerivedResource(resourceOptions);
-};
-
-/**
- * Creates a Resource instance for a Cesium ion endpoint corresponding to an asset ID.
- * @private
- * @param {number} assetId The Cesium ion asset id.
- * @param {object} [options] An object with the following properties:
- * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
- * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
- * @returns {Resource} An instance representing the Cesium ion endpoint.
- */
-IonResource.createEndpointResourceFromAssetId = function (assetId, options) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("assetId", assetId);
-  //>>includeEnd('debug');
-
-  const url = `v1/assets/${assetId}/endpoint`;
-  return IonResource.createEndpointResource(url, options);
-};
-
-/**
- * A function handling any service-specific logic when a new session is created after the session times out.
- * @callback IonResource.CreateSessionCallback
- * @private
- * @param {IonResource} ionResource The root ion resource.
- * @param {object} newEndpoint The result of the Cesium ion asset endpoint service.
- */
-
-/**
- * Creates a Resource instance for a Cesium ion endpoint to a proxied external service.
- * @private
- * @param {object} options An object with the following properties:
- * @param {string} options.url The url of the Cesium ion endpoint, relative to the base server url.
- * @param {string[]} [options.attributions] The attributions returned from the Cesium ion asset endpoint service.
- * @param {IonResource.CreateSessionCallback} [options.createSessionCallback] A function handling any service-specific logic when a new session is created after the session times out.
- * @param {object} [options.endpointOptions] An object with the following properties:
- * @param {string} [options.endpointOptions.accessToken=Ion.defaultAccessToken] The access token to use.
- * @param {string|Resource} [options.endpointOptions.server=Ion.defaultServer] The resource to the Cesium ion API server.
- * @returns {Resource} An instance representing the Cesium ion endpoint.
- */
-IonResource.fromExternalEndpoint = function ({
-  url,
-  attributions = [],
-  endpointOptions,
-  createSessionCallback,
-}) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("url", url);
-  //>>includeEnd('debug');
-
-  const endpointResource = IonResource.createEndpointResource(
-    url,
-    endpointOptions,
-  );
-  const endpoint = { url, attributions, options: endpointOptions };
-  const resource = new IonResource(endpoint, endpointResource);
-
-  resource._createSessionCallback = createSessionCallback;
-
-  return resource;
 };
 
 function addClientHeaders(options) {
@@ -339,8 +283,17 @@ function retryCallback(that, error) {
       .then(function (newEndpoint) {
         // Set the token for root resource so new derived resources automatically pick it up
         ionRoot._ionEndpoint = newEndpoint;
-        if (defined(ionRoot._createSessionCallback)) {
-          ionRoot._createSessionCallback(ionRoot, newEndpoint);
+        // Reset the session token for Google 2D imagery
+        if (newEndpoint.externalType === "GOOGLE_2D_MAPS") {
+          ionRoot.setQueryParameters({
+            session: newEndpoint.options.session,
+            key: newEndpoint.options.key,
+          });
+        }
+        if (newEndpoint.externalType === "AZURE_MAPS") {
+          ionRoot.setQueryParameters({
+            "subscription-key": newEndpoint.options["subscription-key"],
+          });
         }
         return ionRoot._ionEndpoint;
       })
