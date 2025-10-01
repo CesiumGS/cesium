@@ -2,6 +2,8 @@
 
 ## 1.134 - 2025-10-01
 
+- [Sandcastle](https://sandcastle.cesium.com/) has been updated at `https://sandcastle.cesium.com`! The [legacy Sandcastle app](https://cesium.com/downloads/cesiumjs/releases/1.134/Apps/Sandcastle/index.html) will remain available through November 3, 2025.
+
 ### @cesium/engine
 
 #### Breaking Changes :mega:
@@ -23,6 +25,7 @@
 
 #### Additions :tada:
 
+- Adds Google2DImageryProvider to load imagery from [Google Maps](https://developers.google.com/maps/documentation/tile/2d-tiles-overview) [#12913](https://github.com/CesiumGS/cesium/pull/12913)
 - Adds an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
 
 ## 1.133.1 - 2025-09-08

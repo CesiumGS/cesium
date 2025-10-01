@@ -483,7 +483,10 @@ function App() {
       synchronizeColorScheme
     >
       <div className="banner">
-        <Anchor href="https://sandcastle.cesium.com" tone="accent">
+        <Anchor
+          href="https://cesium.com/downloads/cesiumjs/releases/1.134/Apps/Sandcastle/index.html"
+          tone="accent"
+        >
           Looking for the old Sandcastle? It's still here (for a little while) →
         </Anchor>
       </div>
