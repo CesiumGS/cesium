@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- Voxel rendering now requires a WebGL2 context, which is [enabled by default since 1.101](https://github.com/CesiumGS/cesium/pull/10894). For voxel rendering, make sure the `requestWebGl1` flag in `contextOptions` is NOT set to true.
+
 #### Fixes :wrench:
 
 - Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
