@@ -76,7 +76,6 @@ function IonResource(endpoint, endpointResource) {
   this._pendingPromise = undefined;
   this._credits = undefined;
   this._isExternal = isExternal;
-  this._createSessionCallback = undefined;
 }
 
 if (defined(Object.create)) {

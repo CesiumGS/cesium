@@ -62,7 +62,10 @@ describe("Core/IonResource", function () {
     };
 
     const options = {};
-    const resourceEndpoint = IonResource._createEndpointResource(assetId);
+    const resourceEndpoint = IonResource._createEndpointResource(
+      tilesAssetId,
+      options,
+    );
     spyOn(IonResource, "_createEndpointResource").and.returnValue(
       resourceEndpoint,
     );
