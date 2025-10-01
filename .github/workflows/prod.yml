@@ -1,8 +1,8 @@
 name: prod
-on: 
+on:
   push:
-    branches: 
-      - 'cesium.com'
+    branches:
+      - "cesium.com"
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -11,7 +11,7 @@ jobs:
       - name: install node 22
         uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: "22"
       - name: npm install
         run: npm install
       - name: lint *.js
@@ -36,13 +36,17 @@ jobs:
       - name: install node 22
         uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: "22"
       - name: npm install
         run: npm install
       - name: build website release
         run: npm run website-release
       - name: build apps
         run: npm run build-apps
+      - name: build types
+        run: npm run build-ts
+      - name: build prod sandcastle
+        run: npm run build-prod -w packages/sandcastle -- -l warn
       - name: deploy to cesium.com
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: |
@@ -51,4 +55,4 @@ jobs:
           aws s3 sync Build/release/ s3://cesium-website/cesiumjs/releases/$(cat package.json | jq -r '.version' | sed 's/\.0$//')/ --cache-control "public, max-age=1800" --delete
           aws s3 sync Build/Documentation/ s3://cesium-website/cesiumjs/ref-doc/ --cache-control "public, max-age=1800" --delete
           aws s3 sync Build/CesiumViewer/ s3://cesium-website/cesiumjs/cesium-viewer/ --cache-control "public, max-age=1800" --delete
-          aws s3 sync Build/Sandcastle/ s3://cesium-sandcastle-website/ --cache-control "public, max-age=1800" --delete
+          aws s3 sync Build/Sandcastle2/ s3://cesium-sandcastle-website/ --cache-control "public, max-age=1800" --delete

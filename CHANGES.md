@@ -2,21 +2,30 @@
 
 ## 1.134 - 2025-10-01
 
+- [Sandcastle](https://sandcastle.cesium.com/) has been updated at `https://sandcastle.cesium.com`! The [legacy Sandcastle app](https://cesium.com/downloads/cesiumjs/releases/1.134/Apps/Sandcastle/index.html) will remain available through November 3, 2025.
+
 ### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- Voxel rendering now requires a WebGL2 context, which is [enabled by default since 1.101](https://github.com/CesiumGS/cesium/pull/10894). For voxel rendering, make sure the `requestWebGl1` flag in `contextOptions` is NOT set to true.
 
 #### Fixes :wrench:
 
 - Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
 - Reverts `createImageBitmap` options update to continue support for older browsers [#12846](https://github.com/CesiumGS/cesium/issues/12846)
 - Fix flickering artifact in Gaussian splat models caused by incorrect sorting results. [#12662](https://github.com/CesiumGS/cesium/issues/12662)
+- Fix rendering for geometry entities when `requestRenderMode` is enabled. [#12841](https://github.com/CesiumGS/cesium/pull/12841)
 - Improved performance and reduced memory usage of `Event` class. [#12896](https://github.com/CesiumGS/cesium/pull/12896)
 - Fixes vertical misalignment of glyphs in labels with small fonts [#8474](https://github.com/CesiumGS/cesium/issues/8474)
 - Prevent runtime errors for certain forms of invalid PNTS files [#12872](https://github.com/CesiumGS/cesium/issues/12872)
 - Improved performance of clamped labels. [#12905](https://github.com/CesiumGS/cesium/pull/12905)
 - Fixes issue where multiple instances of a Gaussian splat tileset would transform tile positions incorrectly and render out of position. [#12795](https://github.com/CesiumGS/cesium/issues/12795)
+- Converted voxel raymarching to eye coordinates to fix precision issues in large datasets. [#12061](https://github.com/CesiumGS/cesium/issues/12061)
 
 #### Additions :tada:
 
+- Adds Google2DImageryProvider to load imagery from [Google Maps](https://developers.google.com/maps/documentation/tile/2d-tiles-overview) [#12913](https://github.com/CesiumGS/cesium/pull/12913)
 - Adds an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
 - Adds new declusteredEvent: Fires with complete clustering information including both clustered and declustered entities [#5760](https://github.com/CesiumGS/cesium/issues/5760)
 
