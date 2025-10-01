@@ -9,7 +9,7 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import processVoxelProperties from "./processVoxelProperties.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
-import VoxelBoundCollection from "./VoxelBoundCollection.js";
+import VoxelBoundsCollection from "./VoxelBoundsCollection.js";
 import VoxelRenderResources from "./VoxelRenderResources.js";
 
 const textureResolutionScratch = new Cartesian2();
@@ -55,7 +55,7 @@ function buildVoxelDrawCommands(primitive, context) {
   if (renderBoundPlanesLength > 0) {
     const functionId = "getBoundPlane";
     const functionSignature = `vec4 ${functionId}(highp sampler2D packedPlanes, int planeNumber)`;
-    const textureResolution = VoxelBoundCollection.getTextureResolution(
+    const textureResolution = VoxelBoundsCollection.getTextureResolution(
       renderBoundPlanes,
       context,
       textureResolutionScratch,

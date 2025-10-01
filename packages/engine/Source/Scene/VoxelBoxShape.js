@@ -5,7 +5,7 @@ import Check from "../Core/Check.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import VoxelBoundCollection from "./VoxelBoundCollection.js";
+import VoxelBoundsCollection from "./VoxelBoundsCollection.js";
 import ClippingPlane from "./ClippingPlane.js";
 
 /**
@@ -74,7 +74,7 @@ function VoxelBoxShape() {
     new ClippingPlane(Cartesian3.UNIT_Z, -DefaultMaxBounds.z),
   ];
 
-  this._renderBoundPlanes = new VoxelBoundCollection({ planes: boundPlanes });
+  this._renderBoundPlanes = new VoxelBoundsCollection({ planes: boundPlanes });
 
   this._shaderUniforms = {
     boxEcToXyz: new Matrix3(),
@@ -108,7 +108,7 @@ Object.defineProperties(VoxelBoxShape.prototype, {
   /**
    * A collection of planes used for the render bounds
    * @memberof VoxelBoxShape.prototype
-   * @type {VoxelBoundCollection}
+   * @type {VoxelBoundsCollection}
    * @readonly
    * @private
    */
@@ -324,9 +324,9 @@ VoxelBoxShape.prototype.update = function (
   const min = minBounds;
   const max = maxBounds;
   const boxLocalToShapeUvScale = Cartesian3.fromElements(
-    1.0 / (min.x === max.x ? 1.0 : max.x - min.x),
-    1.0 / (min.y === max.y ? 1.0 : max.y - min.y),
-    1.0 / (min.z === max.z ? 1.0 : max.z - min.z),
+    boundScale(min.x, max.x),
+    boundScale(min.y, max.y),
+    boundScale(min.z, max.z),
     shaderUniforms.boxLocalToShapeUvScale,
   );
   shaderUniforms.boxLocalToShapeUvTranslate = Cartesian3.negate(
@@ -342,6 +342,12 @@ VoxelBoxShape.prototype.update = function (
 
   return true;
 };
+
+function boundScale(minBound, maxBound) {
+  return CesiumMath.equalsEpsilon(minBound, maxBound, CesiumMath.EPSILON7)
+    ? 1.0
+    : 1.0 / (maxBound - minBound);
+}
 
 /**
  * Update any view-dependent transforms.

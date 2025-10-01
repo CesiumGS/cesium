@@ -106,7 +106,7 @@ function ClippingPlaneCollection(options) {
    * An event triggered when a new clipping plane is added to the collection.  Event handlers
    * are passed the new plane and the index at which it was added.
    * @type {Event}
-   * @default Event()
+   * @readonly
    */
   this.planeAdded = new Event();
 
@@ -114,7 +114,7 @@ function ClippingPlaneCollection(options) {
    * An event triggered when a new clipping plane is removed from the collection.  Event handlers
    * are passed the new plane and the index from which it was removed.
    * @type {Event}
-   * @default Event()
+   * @readonly
    */
   this.planeRemoved = new Event();
 

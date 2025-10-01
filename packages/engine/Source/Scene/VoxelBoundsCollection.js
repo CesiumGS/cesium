@@ -17,9 +17,9 @@ import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 
 /**
- * Specifies a set of defining rendering bounds for a {@link VoxelPrimitive}.
+ * Specifies a set of clipping planes defining rendering bounds for a {@link VoxelPrimitive}.
  *
- * @alias VoxelBoundCollection
+ * @alias VoxelBoundsCollection
  * @constructor
  *
  * @param {object} [options] Object with the following properties:
@@ -29,7 +29,7 @@ import Texture from "../Renderer/Texture.js";
  *
  * @private
  */
-function VoxelBoundCollection(options) {
+function VoxelBoundsCollection(options) {
   const {
     planes,
     modelMatrix = Matrix4.IDENTITY,
@@ -51,7 +51,7 @@ function VoxelBoundCollection(options) {
    * An event triggered when a new clipping plane is added to the collection.  Event handlers
    * are passed the new plane and the index at which it was added.
    * @type {Event}
-   * @default Event()
+   * @readonly
    */
   this.planeAdded = new Event();
 
@@ -59,7 +59,7 @@ function VoxelBoundCollection(options) {
    * An event triggered when a new clipping plane is removed from the collection.  Event handlers
    * are passed the new plane and the index from which it was removed.
    * @type {Event}
-   * @default Event()
+   * @readonly
    */
   this.planeRemoved = new Event();
 
@@ -88,13 +88,13 @@ function defaultIntersectFunction(value) {
   return value === Intersect.INSIDE;
 }
 
-Object.defineProperties(VoxelBoundCollection.prototype, {
+Object.defineProperties(VoxelBoundsCollection.prototype, {
   /**
    * Returns the number of planes in this collection.  This is commonly used with
-   * {@link VoxelBoundCollection#get} to iterate over all the planes
+   * {@link VoxelBoundsCollection#get} to iterate over all the planes
    * in the collection.
    *
-   * @memberof VoxelBoundCollection.prototype
+   * @memberof VoxelBoundsCollection.prototype
    * @type {number}
    * @readonly
    */
@@ -109,7 +109,7 @@ Object.defineProperties(VoxelBoundCollection.prototype, {
    * collection. Otherwise, a region will only be clipped if it is on the
    * outside of every plane.
    *
-   * @memberof VoxelBoundCollection.prototype
+   * @memberof VoxelBoundsCollection.prototype
    * @type {boolean}
    * @default false
    */
@@ -134,7 +134,7 @@ Object.defineProperties(VoxelBoundCollection.prototype, {
   /**
    * Returns a texture containing packed, untransformed clipping planes.
    *
-   * @memberof VoxelBoundCollection.prototype
+   * @memberof VoxelBoundsCollection.prototype
    * @type {Texture}
    * @readonly
    * @private
@@ -146,13 +146,13 @@ Object.defineProperties(VoxelBoundCollection.prototype, {
   },
 
   /**
-   * Returns a Number encapsulating the state for this VoxelBoundCollection.
+   * Returns a Number encapsulating the state for this VoxelBoundsCollection.
    *
    * Clipping mode is encoded in the sign of the number, which is just the plane count.
    * If this value changes, then shader regeneration is necessary.
    *
-   * @memberof VoxelBoundCollection.prototype
-   * @returns {number} A Number that describes the VoxelBoundCollection's state.
+   * @memberof VoxelBoundsCollection.prototype
+   * @returns {number} A Number that describes the VoxelBoundsCollection's state.
    * @readonly
    * @private
    */
@@ -167,16 +167,16 @@ Object.defineProperties(VoxelBoundCollection.prototype, {
 
 /**
  * Adds the specified {@link ClippingPlane} to the collection to be used to selectively disable rendering
- * on the outside of each plane. Use {@link VoxelBoundCollection#unionClippingRegions} to modify
+ * on the outside of each plane. Use {@link VoxelBoundsCollection#unionClippingRegions} to modify
  * how modify the clipping behavior of multiple planes.
  *
  * @param {ClippingPlane} plane The ClippingPlane to add to the collection.
  *
- * @see VoxelBoundCollection#unionClippingRegions
- * @see VoxelBoundCollection#remove
- * @see VoxelBoundCollection#removeAll
+ * @see VoxelBoundsCollection#unionClippingRegions
+ * @see VoxelBoundsCollection#remove
+ * @see VoxelBoundsCollection#removeAll
  */
-VoxelBoundCollection.prototype.add = function (plane) {
+VoxelBoundsCollection.prototype.add = function (plane) {
   const newPlaneIndex = this._planes.length;
   plane.index = newPlaneIndex;
   this._planes.push(plane);
@@ -187,15 +187,15 @@ VoxelBoundCollection.prototype.add = function (plane) {
  * Returns the plane in the collection at the specified index.  Indices are zero-based
  * and increase as planes are added.  Removing a plane shifts all planes after
  * it to the left, changing their indices.  This function is commonly used with
- * {@link VoxelBoundCollection#length} to iterate over all the planes
+ * {@link VoxelBoundsCollection#length} to iterate over all the planes
  * in the collection.
  *
  * @param {number} index The zero-based index of the plane.
  * @returns {ClippingPlane} The ClippingPlane at the specified index.
  *
- * @see VoxelBoundCollection#length
+ * @see VoxelBoundsCollection#length
  */
-VoxelBoundCollection.prototype.get = function (index) {
+VoxelBoundsCollection.prototype.get = function (index) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("index", index);
   //>>includeEnd('debug');
@@ -218,9 +218,9 @@ function indexOf(planes, plane) {
  * @param {ClippingPlane} [clippingPlane] The ClippingPlane to check for.
  * @returns {boolean} true if this collection contains the ClippingPlane, false otherwise.
  *
- * @see VoxelBoundCollection#get
+ * @see VoxelBoundsCollection#get
  */
-VoxelBoundCollection.prototype.contains = function (clippingPlane) {
+VoxelBoundsCollection.prototype.contains = function (clippingPlane) {
   return indexOf(this._planes, clippingPlane) !== -1;
 };
 
@@ -230,11 +230,11 @@ VoxelBoundCollection.prototype.contains = function (clippingPlane) {
  * @param {ClippingPlane} clippingPlane
  * @returns {boolean} <code>true</code> if the plane was removed; <code>false</code> if the plane was not found in the collection.
  *
- * @see VoxelBoundCollection#add
- * @see VoxelBoundCollection#contains
- * @see VoxelBoundCollection#removeAll
+ * @see VoxelBoundsCollection#add
+ * @see VoxelBoundsCollection#contains
+ * @see VoxelBoundsCollection#removeAll
  */
-VoxelBoundCollection.prototype.remove = function (clippingPlane) {
+VoxelBoundsCollection.prototype.remove = function (clippingPlane) {
   const planes = this._planes;
   const index = indexOf(planes, clippingPlane);
 
@@ -242,7 +242,7 @@ VoxelBoundCollection.prototype.remove = function (clippingPlane) {
     return false;
   }
 
-  // Unlink this VoxelBoundCollection from the ClippingPlane
+  // Unlink this VoxelBoundsCollection from the ClippingPlane
   if (clippingPlane instanceof ClippingPlane) {
     clippingPlane.onChangeCallback = undefined;
     clippingPlane.index = -1;
@@ -268,11 +268,11 @@ VoxelBoundCollection.prototype.remove = function (clippingPlane) {
 /**
  * Removes all planes from the collection.
  *
- * @see VoxelBoundCollection#add
- * @see VoxelBoundCollection#remove
+ * @see VoxelBoundsCollection#add
+ * @see VoxelBoundsCollection#remove
  */
-VoxelBoundCollection.prototype.removeAll = function () {
-  // Dereference this VoxelBoundCollection from all ClippingPlanes
+VoxelBoundsCollection.prototype.removeAll = function () {
+  // Dereference this VoxelBoundsCollection from all ClippingPlanes
   const planes = this._planes;
   for (let i = 0; i < planes.length; ++i) {
     const plane = planes[i];
@@ -360,7 +360,7 @@ const textureResolutionScratch = new Cartesian2();
  * Do not call this function directly.
  * </p>
  */
-VoxelBoundCollection.prototype.update = function (frameState, transform) {
+VoxelBoundsCollection.prototype.update = function (frameState, transform) {
   let clippingPlanesTexture = this._clippingPlanesTexture;
 
   // Compute texture requirements for current planes
@@ -428,16 +428,16 @@ VoxelBoundCollection.prototype.update = function (frameState, transform) {
 
 /**
  * Function for getting the clipping plane collection's texture resolution.
- * If the VoxelBoundCollection hasn't been updated, returns the resolution that will be
+ * If the VoxelBoundsCollection hasn't been updated, returns the resolution that will be
  * allocated based on the current plane count.
  *
- * @param {VoxelBoundCollection} clippingPlaneCollection The clipping plane collection
+ * @param {VoxelBoundsCollection} clippingPlaneCollection The clipping plane collection
  * @param {Context} context The rendering context
  * @param {Cartesian2} result A Cartesian2 for the result.
  * @returns {Cartesian2} The required resolution.
  * @private
  */
-VoxelBoundCollection.getTextureResolution = function (
+VoxelBoundsCollection.getTextureResolution = function (
   clippingPlaneCollection,
   context,
   result,
@@ -465,9 +465,9 @@ VoxelBoundCollection.getTextureResolution = function (
  *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
- * @see VoxelBoundCollection#destroy
+ * @see VoxelBoundsCollection#destroy
  */
-VoxelBoundCollection.prototype.isDestroyed = function () {
+VoxelBoundsCollection.prototype.isDestroyed = function () {
   return false;
 };
 
@@ -484,11 +484,11 @@ VoxelBoundCollection.prototype.isDestroyed = function () {
  * @example
  * voxelBounds = voxelBounds && voxelBounds.destroy();
  *
- * @see VoxelBoundCollection#isDestroyed
+ * @see VoxelBoundsCollection#isDestroyed
  */
-VoxelBoundCollection.prototype.destroy = function () {
+VoxelBoundsCollection.prototype.destroy = function () {
   this._clippingPlanesTexture =
     this._clippingPlanesTexture && this._clippingPlanesTexture.destroy();
   return destroyObject(this);
 };
-export default VoxelBoundCollection;
+export default VoxelBoundsCollection;

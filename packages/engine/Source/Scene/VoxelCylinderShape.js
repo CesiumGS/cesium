@@ -8,7 +8,7 @@ import ClippingPlane from "./ClippingPlane.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import VoxelBoundCollection from "./VoxelBoundCollection.js";
+import VoxelBoundsCollection from "./VoxelBoundsCollection.js";
 
 /**
  * A cylinder {@link VoxelShape}.
@@ -52,7 +52,7 @@ function VoxelCylinderShape() {
     new ClippingPlane(Cartesian3.UNIT_Z, -DefaultMaxBounds.z),
   ];
 
-  this._renderBoundPlanes = new VoxelBoundCollection({ planes: boundPlanes });
+  this._renderBoundPlanes = new VoxelBoundsCollection({ planes: boundPlanes });
 
   this._shaderUniforms = {
     cameraShapePosition: new Cartesian3(),
@@ -100,7 +100,7 @@ Object.defineProperties(VoxelCylinderShape.prototype, {
   /**
    * A collection of planes used for the render bounds
    * @memberof VoxelCylinderShape.prototype
-   * @type {VoxelBoundCollection}
+   * @type {VoxelBoundsCollection}
    * @readonly
    * @private
    */
