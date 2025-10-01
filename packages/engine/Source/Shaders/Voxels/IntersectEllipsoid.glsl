@@ -155,7 +155,7 @@ float getLatitudeConeShift(in float sinLatitude) {
     // Find prime vertical radius of curvature: 
     // the distance along the ellipsoid normal to the intersection with the z-axis
     float x2 = u_eccentricitySquared * sinLatitude * sinLatitude;
-    float primeVerticalRadius = inversesqrt(1.0 - x2);
+    float primeVerticalRadius = u_ellipsoidRadii.x * inversesqrt(1.0 - x2);
 
     // Compute a shift from the origin to the intersection of the cone with the z-axis
     return primeVerticalRadius * u_eccentricitySquared * sinLatitude;
