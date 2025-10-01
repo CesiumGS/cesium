@@ -125,7 +125,7 @@ Ray getViewRayLocal() {
         direction = u_cameraDirectionLocal;
     } else {
         origin = u_cameraPositionLocal;
-        direction = normalize(u_transformDirectionViewToLocal * eyeCoordinates.xyz);
+        direction = u_transformDirectionViewToLocal * normalize(eyeCoordinates.xyz);
     }
     return Ray(origin, direction);
 }

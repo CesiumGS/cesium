@@ -59,7 +59,6 @@ function VoxelCylinderShape() {
     cylinderEcToRadialTangentUp: new Matrix3(),
     cylinderRenderRadiusMinMax: new Cartesian2(),
     cylinderRenderAngleMinMax: new Cartesian2(),
-    cylinderWorldToLocalScale: new Cartesian3(),
     cylinderLocalToShapeUvRadius: new Cartesian2(),
     cylinderLocalToShapeUvAngle: new Cartesian2(),
     cylinderLocalToShapeUvHeight: new Cartesian2(),
@@ -198,8 +197,6 @@ const scratchRenderMaxBounds = new Cartesian3();
 const scratchTransformPositionWorldToLocal = new Matrix4();
 const scratchCameraPositionLocal = new Cartesian3();
 const scratchCameraRadialPosition = new Cartesian2();
-const scratchRotateRtuToLocal = new Matrix3();
-const scratchRtuRotation = new Matrix3();
 
 /**
  * Update the shape's state.
@@ -336,13 +333,6 @@ VoxelCylinderShape.prototype.update = function (
     }
   }
 
-  // Compute scale from world coordinates to local coordinates
-  shaderUniforms.cylinderWorldToLocalScale = Cartesian3.divideComponents(
-    Cartesian3.ONE,
-    scale,
-    shaderUniforms.cylinderWorldToLocalScale,
-  );
-
   // Keep track of how many intersections there are going to be.
   let intersectionCount = 0;
 
@@ -446,6 +436,10 @@ VoxelCylinderShape.prototype.update = function (
   return true;
 };
 
+const scratchRotateRtuToLocal = new Matrix3();
+const scratchRtuRotation = new Matrix3();
+const scratchTransformPositionViewToLocal = new Matrix4();
+
 /**
  * Update any view-dependent transforms.
  * @private
@@ -470,20 +464,18 @@ VoxelCylinderShape.prototype.updateViewTransforms = function (frameState) {
     shaderUniforms.cameraShapePosition,
   );
   // 2. Find radial, tangent, and up components at camera position
-  const cameraRadialPosition = Cartesian2.normalize(
+  const cameraRadialDirection = Cartesian2.normalize(
     Cartesian2.fromCartesian3(cameraPositionLocal, scratchCameraRadialPosition),
     scratchCameraRadialPosition,
   );
-  // As row vectors, the radial, tangent, and up vectors would constitute a rotation matrix from local to RTU.
-  // The transpose of that matrix is the inverse, from RTU to local. (transpose == inverse for rotation matrices)
-  // We obtain the transpose by using the components as columns instead of rows.
-  const rotateRtuToLocal = Matrix3.fromColumnMajorArray(
+  // As row vectors, the radial, tangent, and up vectors constitute a rotation matrix from local to RTU.
+  const rotateLocalToRtu = Matrix3.fromRowMajorArray(
     [
-      cameraRadialPosition.x,
-      cameraRadialPosition.y,
+      cameraRadialDirection.x,
+      cameraRadialDirection.y,
       0.0,
-      -cameraRadialPosition.y,
-      cameraRadialPosition.x,
+      -cameraRadialDirection.y,
+      cameraRadialDirection.x,
       0.0,
       0.0,
       0.0,
@@ -491,25 +483,22 @@ VoxelCylinderShape.prototype.updateViewTransforms = function (frameState) {
     ],
     scratchRotateRtuToLocal,
   );
-  // 3. Transform to eye coordinates.
-  const rotateLocalToWorld = Matrix4.getRotation(
-    this._shapeTransform,
+  // 3. Get rotation from eye to local coordinates
+  const transformPositionViewToWorld =
+    frameState.context.uniformState.inverseView;
+  const transformPositionViewToLocal = Matrix4.multiplyTransformation(
+    transformPositionWorldToLocal,
+    transformPositionViewToWorld,
+    scratchTransformPositionViewToLocal
+  );
+  const transformDirectionViewToLocal = Matrix4.getMatrix3(
+    transformPositionViewToLocal,
     scratchRtuRotation,
   );
-  const rotateWorldToView = frameState.context.uniformState.viewRotation;
-  const rotateLocalToView = Matrix3.multiply(
-    rotateWorldToView,
-    rotateLocalToWorld,
-    scratchRtuRotation,
-  );
-  const rotateRtuToView = Matrix3.multiply(
-    rotateLocalToView,
-    rotateRtuToLocal,
-    scratchRtuRotation,
-  );
-  // 4. Transpose to get EC to RTU rotation
-  shaderUniforms.cylinderEcToRadialTangentUp = Matrix3.transpose(
-    rotateRtuToView,
+  // 4. Multiply to get rotation from eye to RTU coordinates
+  shaderUniforms.cylinderEcToRadialTangentUp = Matrix3.multiply(
+    rotateLocalToRtu,
+    transformDirectionViewToLocal,
     shaderUniforms.cylinderEcToRadialTangentUp,
   );
 };

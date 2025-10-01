@@ -1,4 +1,3 @@
-uniform vec3 u_cylinderWorldToLocalScale;
 uniform vec2 u_cylinderLocalToShapeUvRadius; // x = scale, y = offset
 uniform vec2 u_cylinderLocalToShapeUvHeight; // x = scale, y = offset
 uniform vec2 u_cylinderLocalToShapeUvAngle; // x = scale, y = offset
@@ -16,10 +15,9 @@ mat3 convertLocalToShapeSpaceDerivative(in vec3 position) {
 }
 
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
-    // TODO: scaling is wrong!
-    float radius = shapeUv.x / u_cylinderLocalToShapeUvRadius.x / u_cylinderWorldToLocalScale.x;
+    float radius = shapeUv.x / u_cylinderLocalToShapeUvRadius.x;
     float angle = shapeUv.y * czm_twoPi / u_cylinderLocalToShapeUvAngle.x;
-    float height = shapeUv.z / u_cylinderLocalToShapeUvHeight.x / u_cylinderWorldToLocalScale.z;
+    float height = shapeUv.z / u_cylinderLocalToShapeUvHeight.x;
 
     return vec3(radius, angle, height);
 }
@@ -43,13 +41,9 @@ vec2 computePolarChange(in vec2 dPosition, in float cameraRadialDistance) {
 vec3 convertEcToDeltaShape(in vec3 positionEC) {
     // 1. Rotate to radial, tangent, and up coordinates
     vec3 rtu = u_cylinderEcToRadialTangentUp * positionEC;
-    // 2. Compute change in angular and radial coordinates. TODO: scaling camera is wrong!
-    vec2 dPolar = computePolarChange(rtu.xy, u_cameraShapePosition.x * u_cylinderWorldToLocalScale.x);
-    // TODO: this is wrong! Scaling needs to be applied in local XYZ coordinates
-    float radial = dPolar.x * u_cylinderWorldToLocalScale.x;
-    float angle = dPolar.y;
-    float height = rtu.z * u_cylinderWorldToLocalScale.z;
-    return vec3(radial, angle, height);
+    // 2. Compute change in angular and radial coordinates.
+    vec2 dPolar = computePolarChange(rtu.xy, u_cameraShapePosition.x);
+    return vec3(dPolar.xy, rtu.z);
 }
 
 vec3 convertEcToDeltaTile(in vec3 positionEC) {

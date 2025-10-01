@@ -1311,10 +1311,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
     frameState.camera.directionWC,
     uniforms.cameraDirectionLocal,
   );
-  uniforms.cameraDirectionLocal = Cartesian3.normalize(
-    uniforms.cameraDirectionLocal,
-    uniforms.cameraDirectionLocal,
-  );
   const cameraTileCoordinates = getTileCoordinates(
     this,
     uniforms.cameraPositionLocal,
@@ -1664,7 +1660,7 @@ function updateShapeAndTransforms(primitive) {
     primitive._transformPositionLocalToWorld,
     primitive._transformPositionWorldToLocal,
   );
-  primitive._transformDirectionWorldToLocal = Matrix4.getRotation(
+  primitive._transformDirectionWorldToLocal = Matrix4.getMatrix3(
     primitive._transformPositionWorldToLocal,
     primitive._transformDirectionWorldToLocal,
   );
