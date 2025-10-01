@@ -78,7 +78,6 @@ function VoxelBoxShape() {
 
   this._shaderUniforms = {
     boxEcToXyz: new Matrix3(),
-    boxWorldToLocalScale: new Cartesian3(),
     boxLocalToShapeUvScale: new Cartesian3(),
     boxLocalToShapeUvTranslate: new Cartesian3(),
   };
@@ -313,13 +312,6 @@ VoxelBoxShape.prototype.update = function (
   shaderDefines["BOX_INTERSECTION_INDEX"] = intersectionCount;
   intersectionCount += 1;
 
-  // Compute scale from world coordinates to local coordinates
-  shaderUniforms.boxWorldToLocalScale = Cartesian3.divideComponents(
-    Cartesian3.ONE,
-    scale,
-    shaderUniforms.boxWorldToLocalScale,
-  );
-
   // Compute scale and translation to transform from UV space to bounded UV space
   const min = minBounds;
   const max = maxBounds;
@@ -349,6 +341,7 @@ function boundScale(minBound, maxBound) {
     : 1.0 / (maxBound - minBound);
 }
 
+const scratchTransformPositionWorldToLocal = new Matrix4();
 /**
  * Update any view-dependent transforms.
  * @private
@@ -356,17 +349,17 @@ function boundScale(minBound, maxBound) {
  */
 VoxelBoxShape.prototype.updateViewTransforms = function (frameState) {
   const shaderUniforms = this._shaderUniforms;
-  const rotateLocalToWorld = Matrix4.getRotation(
+  const transformPositionWorldToLocal = Matrix4.inverse(
     this._shapeTransform,
-    shaderUniforms.boxEcToXyz,
+    scratchTransformPositionWorldToLocal,
   );
-  const rotateWorldToLocal = Matrix3.transpose(
-    rotateLocalToWorld,
+  const transformDirectionWorldToLocal = Matrix4.getMatrix3(
+    transformPositionWorldToLocal,
     shaderUniforms.boxEcToXyz,
   );
   const rotateViewToWorld = frameState.context.uniformState.inverseViewRotation;
   Matrix3.multiply(
-    rotateWorldToLocal,
+    transformDirectionWorldToLocal,
     rotateViewToWorld,
     shaderUniforms.boxEcToXyz,
   );

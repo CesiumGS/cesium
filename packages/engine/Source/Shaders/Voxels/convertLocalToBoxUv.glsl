@@ -4,7 +4,6 @@ uniform vec3 u_boxLocalToShapeUvTranslate;
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
 uniform mat3 u_boxEcToXyz;
-uniform vec3 u_boxWorldToLocalScale;
 
 mat3 convertLocalToShapeSpaceDerivative(in vec3 positionLocal) {
     // For BOX, local space = shape space, so the Jacobian is the identity matrix.
@@ -12,12 +11,11 @@ mat3 convertLocalToShapeSpaceDerivative(in vec3 positionLocal) {
 }
 
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
-    return shapeUv / u_boxLocalToShapeUvScale / u_boxWorldToLocalScale;
+    return shapeUv / u_boxLocalToShapeUvScale;
 }
 
 vec3 convertEcToDeltaTile(in vec3 positionEC) {
     vec3 dPosition = u_boxEcToXyz * positionEC;
-    dPosition *= u_boxWorldToLocalScale;
     return u_boxLocalToShapeUvScale * dPosition * float(1 << u_cameraTileCoordinates.w);
 }
 
