@@ -6,6 +6,11 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- The `defaultValue` function has been removed. Instead, use the logical OR (`||`) the [nullish coalescing (`??`)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing) operator. See the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide#default-parameter-values) for usage information and examples.
+- `defaultValue.EMPTY_OBJECT` has been removed. Instead, use `Frozen.EMPTY_OBJECT`. See the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide#default-parameter-values) for usage information and examples.
+
 #### Fixes :wrench:
 
 - Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
