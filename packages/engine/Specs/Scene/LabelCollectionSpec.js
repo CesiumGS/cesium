@@ -1148,6 +1148,26 @@ describe("Scene/LabelCollection", function () {
       });
 
       describe("Label", function () {
+        it("should update background billboard when updating label properties while label is hidden", async function () {
+          const label = labels.add({
+            text: "abc",
+            showBackground: true,
+          });
+
+          await allLabelsReady();
+          expect(labels._backgroundBillboardCollection.length).toEqual(1);
+
+          const backgroundBillboard = label._backgroundBillboard;
+          const { width } = backgroundBillboard;
+
+          label.show = false;
+          label.text = "abcde";
+          expect(labels._backgroundBillboardCollection.length).toEqual(1);
+
+          label.show = true;
+          scene.renderForSpecs();
+          expect(backgroundBillboard.width).toBeGreaterThan(width);
+        });
         it("can compute screen space position", function () {
           labels.clampToPixel = false;
           const label = labels.add({
