@@ -489,7 +489,7 @@ VoxelCylinderShape.prototype.updateViewTransforms = function (frameState) {
   const transformPositionViewToLocal = Matrix4.multiplyTransformation(
     transformPositionWorldToLocal,
     transformPositionViewToWorld,
-    scratchTransformPositionViewToLocal
+    scratchTransformPositionViewToLocal,
   );
   const transformDirectionViewToLocal = Matrix4.getMatrix3(
     transformPositionViewToLocal,
