@@ -510,8 +510,6 @@ function createButtons(scene) {
       },
     },
   ]);
-
-  document.getElementById("toolbar").style.width = "10%";
 }
 
 function createPrimitives(scene) {

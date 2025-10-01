@@ -1,7 +1,7 @@
 {
   "name": "@cesium/sandcastle",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.3",
   "type": "module",
   "files": [
     "scripts/buildGallery.js"
@@ -29,7 +29,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-stay-scrolled": "^9.0.0",
-    "react-use": "^17.6.0",    
+    "react-use": "^17.6.0",
     "yargs": "^18.0.0"
   },
   "devDependencies": {

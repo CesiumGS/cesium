@@ -102,6 +102,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Paul Connelly](https://github.com/pmconne)
   - [Jason Crow](https://github.com/jason-crow)
   - [Erin Ingram](https://github.com/eringram)
+  - [Mark Schlosser](https://github.com/markschlosseratbentley)
 - [Flightradar24 AB](https://www.flightradar24.com)
   - [Aleksei Kalmykov](https://github.com/kalmykov)
 - [BIT Systems](http://www.caci.com/bit-systems)
@@ -429,3 +430,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Matt Schwartz](https://github.com/mzschwartz5)
 - [Easy Mahaffey](https://github.com/easymaahffey)
 - [Pamela Augustine](https://github.com/pamelaAugustine)
+- [宋时旺](https://github.com/BlockCnFuture)
+- [Marco Zhan](https://github.com/marcoYxz)

@@ -123,7 +123,7 @@ function handleBuildWarnings(result) {
 export async function build() {
   // Configure build options from command line arguments.
   const minify = argv.minify ?? false;
-  const removePragmas = argv.pragmas ?? false;
+  const removePragmas = argv.removePragmas ?? false;
   const sourcemap = argv.sourcemap ?? true;
   const node = argv.node ?? true;
 
@@ -363,18 +363,14 @@ export async function prepare() {
     "node_modules/@cesium/wasm-splats/wasm_splats_bg.wasm",
     "packages/engine/Source/ThirdParty/wasm_splats_bg.wasm",
   );
-  // Copy pako and zip.js worker files to Source/ThirdParty
+  // Copy zip.js worker and wasm files to Source/ThirdParty
   copyFileSync(
-    "node_modules/pako/dist/pako_inflate.min.js",
-    "packages/engine/Source/ThirdParty/Workers/pako_inflate.min.js",
+    "node_modules/@zip.js/zip.js/dist/zip-web-worker.js",
+    "packages/engine/Source/ThirdParty/Workers/zip-web-worker.js",
   );
   copyFileSync(
-    "node_modules/pako/dist/pako_deflate.min.js",
-    "packages/engine/Source/ThirdParty/Workers/pako_deflate.min.js",
-  );
-  copyFileSync(
-    "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
-    "packages/engine/Source/ThirdParty/Workers/z-worker-pako.js",
+    "node_modules/@zip.js/zip.js/dist/zip-module.wasm",
+    "packages/engine/Source/ThirdParty/zip-module.wasm",
   );
 
   // Copy prism.js and prism.css files into Tools
@@ -674,6 +670,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "!**/*.gitignore",
           "!Specs/e2e/*-snapshots/**",
           "!Apps/Sandcastle/gallery/development/**",
+          "!Apps/Sandcastle2/**",
         ],
         {
           encoding: false,
