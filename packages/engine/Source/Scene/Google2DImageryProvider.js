@@ -15,18 +15,18 @@ const trailingSlashRegex = /\/$/;
  *
  * Initialization options for the Google2DImageryProvider constructor
  *
- * @property {object} options Object with the following properties:
- * @property {string} options.key The Google api key to send with tile requests.
- * @property {string} options.session The Google session token that tracks the current state of your map and viewport.
- * @property {string|Resource|IonResource} options.url The Google 2D maps endpoint.
- * @property {string} options.tileWidth The width of each tile in pixels.
- * @property {string} options.tileHeight The height of each tile in pixels.
- * @property {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
- * @property {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ * Object with the following properties:
+ * @property {string} key The Google api key to send with tile requests.
+ * @property {string} session The Google session token that tracks the current state of your map and viewport.
+ * @property {string|Resource|IonResource} url The Google 2D maps endpoint.
+ * @property {string} tileWidth The width of each tile in pixels.
+ * @property {string} tileHeight The height of each tile in pixels.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @property {number} [options.maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
- * @property {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @property {number} [maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  */
 
 /**
@@ -36,7 +36,7 @@ const trailingSlashRegex = /\/$/;
  *
  *
  * Provides 2D image tiles from {@link https://developers.google.com/maps/documentation/tile/2d-tiles-overview|Google 2D Tiles}.
- * 
+ *
  * Google 2D Tiles can only be used with the Google geocoder.
  *
  * @alias Google2DImageryProvider
@@ -52,7 +52,7 @@ const trailingSlashRegex = /\/$/;
   * @example
  * // Use your own Google api key
  * Cesium.GoogleMaps.defaultApiKey = "your-api-key";
- * 
+ *
  * const googleTilesProvider = Cesium.Google2DImageryProvider.fromUrl({
  *     mapType: "SATELLITE"
  * });
