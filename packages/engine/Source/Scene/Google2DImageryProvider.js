@@ -15,7 +15,6 @@ const trailingSlashRegex = /\/$/;
  *
  * Initialization options for the Google2DImageryProvider constructor
  *
- * Object with the following properties:
  * @property {string} key The Google api key to send with tile requests.
  * @property {string} session The Google session token that tracks the current state of your map and viewport.
  * @property {string|Resource|IonResource} url The Google 2D maps endpoint.
