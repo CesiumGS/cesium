@@ -294,6 +294,7 @@ function rebindAllGlyphs(labelCollection, label) {
         });
         billboard._labelDimensions = new Cartesian2();
         billboard._labelTranslate = new Cartesian2();
+        billboard._positionFromParent = true;
       }
       glyph.billboard = billboard;
     }

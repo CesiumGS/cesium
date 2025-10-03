@@ -43,6 +43,20 @@ export function loadFromUrl(
 ) {
   const searchParams = new URLSearchParams(window.location.search);
 
+  const codeParam = searchParams.get("code");
+  if (codeParam) {
+    // This is a legacy support type url that was used by ion.
+    // Ideally we use the #c= param as that results in shorter urls
+    // The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
+    const json = JSON.parse(window.atob(codeParam.replaceAll(" ", "+")));
+
+    return {
+      title: "New Sandcastle",
+      code: json.code,
+      html: json.html,
+    };
+  }
+
   if (window.location.hash.indexOf("#c=") === 0) {
     const base64String = window.location.hash.substr(3);
     const { code, html } = decodeBase64Data(base64String);

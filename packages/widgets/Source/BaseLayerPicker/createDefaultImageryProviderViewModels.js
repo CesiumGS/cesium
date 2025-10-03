@@ -302,6 +302,79 @@ of the world.\nhttp://www.openstreetmap.org",
     }),
   );
 
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Google Maps Satellite",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/googleSatellite.png",
+      ),
+      tooltip: "Imagery from Google Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3830182);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Google Maps Satellite with Labels",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/googleSatelliteLabels.png",
+      ),
+      tooltip: "Imagery with place labels from Google Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3830183);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Google Maps Roadmap",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/googleRoadmap.png",
+      ),
+      tooltip:
+        "Labeled roads and other features on a base landscape from Google Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3830184);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Google Maps Labels Only",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/googleLabels.png",
+      ),
+      tooltip:
+        "Place labels from Google Maps to combine with other imagery such as Sentinel-2",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3830185);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Google Maps Contour",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/googleContour.png",
+      ),
+      tooltip:
+        "Hillshade mapping, contour lines, natural features (roadmap features hidden) from Google Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3830186);
+      },
+    }),
+  );
+
   return providerViewModels;
 }
 export default createDefaultImageryProviderViewModels;

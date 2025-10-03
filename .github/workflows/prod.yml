@@ -2,7 +2,7 @@ name: prod
 on:
   push:
     branches:
-      - 'cesium.com'
+      - "cesium.com"
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -11,7 +11,7 @@ jobs:
       - name: install node 22
         uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: "22"
       - name: npm install
         run: npm install
       - name: lint *.js
@@ -36,13 +36,18 @@ jobs:
       - name: install node 22
         uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: "22"
       - name: npm install
         run: npm install
       - name: build website release
         run: npm run website-release
       - name: build apps
         run: npm run build-apps
+      # TODO: review these steps
+      - name: build types
+        run: npm run build-ts
+      - name: build prod sandcastle
+        run: npm run build-prod -w packages/sandcastle -- -l warn
       - name: deploy to cesium.com
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         # Download zip from the Github release and unzip to Build/release/
