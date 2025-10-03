@@ -33,6 +33,7 @@ import SceneMode from "./SceneMode.js";
 import SDFSettings from "./SDFSettings.js";
 import TextureAtlas from "../Renderer/TextureAtlas.js";
 import VerticalOrigin from "./VerticalOrigin.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
 
 const SHOW_INDEX = Billboard.SHOW_INDEX;
 const POSITION_INDEX = Billboard.POSITION_INDEX;
@@ -314,8 +315,8 @@ function BillboardCollection(options) {
   ];
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
-  this._coarseDepthTestDistance = 50000.0;
-  this._threePointDepthTestDistance = 5000.0;
+  this._coarseDepthTestDistance = Ellipsoid.default.minimumRadius / 100;
+  this._threePointDepthTestDistance = Ellipsoid.default.minimumRadius / 1000;
 
   this._uniforms = {
     u_atlas: () => {

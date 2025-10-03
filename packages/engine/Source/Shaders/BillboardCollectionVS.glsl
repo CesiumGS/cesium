@@ -10,7 +10,7 @@ in vec4 compressedAttribute2;                       // label horizontal origin, 
 in vec4 eyeOffset;                                  // eye offset in meters, 4 bytes free (texture range)
 in vec4 scaleByDistance;                            // near, nearScale, far, farScale
 in vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
-in vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistance, dimensions
+in vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistanceSq, dimensions
 in vec2 sdf;                                        // sdf outline color (rgb) and width (w)
 in float splitDirection;                            // splitDirection
 #if defined(VS_THREE_POINT_DEPTH_CHECK) || defined(FS_THREE_POINT_DEPTH_CHECK)
@@ -310,13 +310,13 @@ void main()
 
     float enableDepthCheck = 1.0;
 #ifdef DISABLE_DEPTH_DISTANCE
-    float disableDepthTestDistance = compressedAttribute3.z;
-    if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
+    float disableDepthTestDistanceSq = compressedAttribute3.z;
+    if (disableDepthTestDistanceSq == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
     {
-        disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
+        disableDepthTestDistanceSq = czm_minimumDisableDepthTestDistance;
     }
 
-    if (lengthSq < disableDepthTestDistance || disableDepthTestDistance < 0.0)
+    if (lengthSq < disableDepthTestDistanceSq || disableDepthTestDistanceSq < 0.0)
     {
         enableDepthCheck = 0.0;
     }
@@ -342,12 +342,15 @@ if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &
             float globeDepth3 = getGlobeDepth(pEC3);
             if (globeDepth3 != 0.0 && pEC3.z + depthsilon < globeDepth3)
             {
+                // "Discard" this vertex, as three key points fail depth test.
                 positionEC.xyz = vec3(0.0);
             }
         }
     }
 }
 #endif
+    // Write out the eyespace depth before applying the screen space offset, but after potentially "discarding" the vertex
+    // by setting its eyespace position to zero, via the three-point depth test above.
     v_compressed.x = positionEC.z;
 
     positionEC = addScreenSpaceOffset(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
@@ -360,12 +363,13 @@ if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &
 
 #ifdef DISABLE_DEPTH_DISTANCE
 
-    if (disableDepthTestDistance != 0.0)
+    if (disableDepthTestDistanceSq != 0.0)
     {
         // Don't try to "multiply both sides" by w.  Greater/less-than comparisons won't work for negative values of w.
         float zclip = gl_Position.z / gl_Position.w;
         bool clipped = (zclip < -1.0 || zclip > 1.0);
-        if (!clipped && (disableDepthTestDistance < 0.0 || (lengthSq > 0.0 && lengthSq < disableDepthTestDistance)))
+        // disableDepthTestDistanceSq can be less than zero if it's explicitly set to -1 in JS (as a sentinel value equivalent to infinity)
+        if (!clipped && (disableDepthTestDistanceSq < 0.0 || (lengthSq > 0.0 && lengthSq < disableDepthTestDistanceSq)))
         {
             // Position z on the near plane.
             gl_Position.z = -gl_Position.w;
