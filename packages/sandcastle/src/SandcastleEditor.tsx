@@ -86,7 +86,7 @@ function SandcastleEditor({
   const documentRef = useRef(document);
   useEffect(() => {
     const cssName = availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono";
-    const fontFace = [...documentRef.current.fonts.values()].find(
+    const fontFace = [...documentRef.current.fonts].find(
       (font) => font.family === cssName && font.weight === "400",
     );
     if (fontFace?.status !== "loaded") {
