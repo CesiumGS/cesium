@@ -31,9 +31,8 @@ import {
   createJsHintOptions,
   defaultESBuildOptions,
   buildSandcastleGallery,
+  buildNewSandcastleApp,
 } from "./scripts/build.js";
-import { fileURLToPath } from "url";
-import { buildStatic, createSandcastleConfig } from "@cesium/sandcastle";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -291,103 +290,8 @@ export async function buildTs() {
 }
 
 export const buildNewSandcastle = gulp.series(
-  async function buildNewSandcastleApp() {
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    let config;
-    if (isProduction) {
-      const cesiumSource = "Build/CesiumUnminified";
-      const cesiumBaseUrl = "Build/CesiumUnminified";
-
-      config = createSandcastleConfig({
-        outDir: join(__dirname, "Build/Sandcastle2"),
-        basePath: "",
-        cesiumBaseUrl: "/Build/CesiumUnminified",
-        cesiumVersion: version,
-        imports: {
-          cesium: {
-            path: "/js/Cesium.js",
-            typesPath: "/js/Cesium.d.ts",
-          },
-          "@cesium/engine": {
-            path: "/js/engine/index.js",
-            typesPath: "/js/engine/index.d.ts",
-          },
-          "@cesium/widgets": {
-            path: "/js/widgets/index.js",
-            typesPath: "/js/widgets/index.d.ts",
-          },
-        },
-        copyExtraFiles: [
-          {
-            src: join(__dirname, `${cesiumSource}/ThirdParty`),
-            dest: cesiumBaseUrl,
-          },
-          {
-            src: join(__dirname, `${cesiumSource}/Workers`),
-            dest: cesiumBaseUrl,
-          },
-          {
-            src: join(__dirname, `${cesiumSource}/Assets`),
-            dest: cesiumBaseUrl,
-          },
-          {
-            src: join(__dirname, `${cesiumSource}/Widgets`),
-            dest: cesiumBaseUrl,
-          },
-          {
-            src: join(__dirname, `${cesiumSource}/*.(js|cjs)`),
-            dest: cesiumBaseUrl,
-          },
-          { src: join(__dirname, "Apps/SampleData"), dest: "Apps" },
-          { src: join(__dirname, "Apps/SampleData"), dest: "" },
-          { src: join(__dirname, `Source/Cesium.(d.ts|js)`), dest: "js" },
-          {
-            src: join(__dirname, `packages/engine/index.d.ts`),
-            dest: "js/engine",
-          },
-          {
-            src: join(__dirname, `packages/engine/Build/Unminified/index.js`),
-            dest: "js/engine",
-          },
-          {
-            src: join(__dirname, `packages/widgets/index.d.ts`),
-            dest: "js/widgets",
-          },
-          {
-            src: join(__dirname, `packages/widgets/Build/Unminified/index.js`),
-            dest: "js/widgets",
-          },
-        ],
-      });
-    } else {
-      // Use this when the static files are hosted at a "nested" URL like in CI
-      const pathPrefix = (path) =>
-        join(process.env.BASE_URL ?? "../../../", path);
-
-      config = createSandcastleConfig({
-        outDir: join(__dirname, "Apps/Sandcastle2"),
-        basePath: "./",
-        cesiumBaseUrl: pathPrefix("Build/CesiumUnminified"),
-        cesiumVersion: version,
-        commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
-        imports: {
-          cesium: {
-            path: pathPrefix("Source/Cesium.js"),
-            typesPath: pathPrefix("Source/Cesium.d.ts"),
-          },
-          "@cesium/engine": {
-            path: pathPrefix("packages/engine/Build/Unminified/index.js"),
-            typesPath: pathPrefix("packages/engine/index.d.ts"),
-          },
-          "@cesium/widgets": {
-            path: pathPrefix("packages/widgets/Build/Unminified/index.js"),
-            typesPath: pathPrefix("packages/widgets/index.d.ts"),
-          },
-        },
-      });
-    }
-
-    return buildStatic(config);
+  async function buildSandcastleApp() {
+    return buildNewSandcastleApp(isProduction);
   },
   async function buildGallery() {
     return buildSandcastleGallery(!isProduction);
@@ -780,7 +684,6 @@ export const makeZip = gulp.series(
             "!**/*.gitignore",
             "!Specs/e2e/*-snapshots/**",
             "!Apps/Sandcastle/gallery/development/**",
-            "!Apps/Sandcastle2/**",
           ],
           {
             encoding: false,
@@ -827,13 +730,18 @@ export async function deployStatus() {
   const deployUrl = `${devDeployUrl}`;
   const zipUrl = `${deployUrl}Cesium-${version}.zip`;
   const npmUrl = `${deployUrl}cesium-${version}.tgz`;
-  const coverageUrl = `${devDeployUrl}Build/Coverage/index.html`;
+  const coverageUrl = `${deployUrl}Build/Coverage/index.html`;
 
   return Promise.all([
-    setStatus(status, deployUrl, message, "deployment"),
-    setStatus(status, zipUrl, message, "zip file"),
-    setStatus(status, npmUrl, message, "npm package"),
-    setStatus(status, coverageUrl, message, "coverage results"),
+    setStatus(status, deployUrl, message, "deploy / artifact: deployment"),
+    setStatus(status, zipUrl, message, "deploy / artifact: zip file"),
+    setStatus(status, npmUrl, message, "deploy / artifact: npm package"),
+    setStatus(
+      status,
+      coverageUrl,
+      message,
+      "deploy / artifact: coverage results",
+    ),
   ]);
 }
 

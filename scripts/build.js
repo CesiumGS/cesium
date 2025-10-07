@@ -675,6 +675,99 @@ export async function getSandcastleConfig() {
   };
 }
 
+async function importSandcastleBuildFunctions() {
+  // Import asynchronously, for now, because this script is not included or run in the release zip;
+  const buildGalleryScriptPath = path.join(
+    __dirname,
+    "../packages/sandcastle/index.js",
+  );
+  return await import(pathToFileURL(buildGalleryScriptPath).href);
+}
+
+export async function buildNewSandcastleApp(isProduction) {
+  const { join, dirname } = path;
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const { createSandcastleConfig, buildStatic } =
+    await importSandcastleBuildFunctions();
+  const version = await getVersion();
+  let config;
+  if (isProduction) {
+    const cesiumSource = join(__dirname, "../Build/CesiumUnminified");
+    const cesiumBaseUrl = "Build/CesiumUnminified";
+
+    config = createSandcastleConfig({
+      outDir: join(__dirname, "../Build/Sandcastle2"),
+      basePath: "./",
+      cesiumBaseUrl: "/Build/CesiumUnminified",
+      cesiumVersion: version,
+      imports: {
+        cesium: {
+          path: "/js/Cesium.js",
+          typesPath: "/js/Cesium.d.ts",
+        },
+        "@cesium/engine": {
+          path: "/js/engine/index.js",
+          typesPath: "/js/engine/index.d.ts",
+        },
+        "@cesium/widgets": {
+          path: "/js/widgets/index.js",
+          typesPath: "/js/widgets/index.d.ts",
+        },
+      },
+      copyExtraFiles: [
+        { src: `${cesiumSource}/ThirdParty`, dest: cesiumBaseUrl },
+        { src: `${cesiumSource}/Workers`, dest: cesiumBaseUrl },
+        { src: `${cesiumSource}/Assets`, dest: cesiumBaseUrl },
+        { src: `${cesiumSource}/Widgets`, dest: cesiumBaseUrl },
+        { src: `${cesiumSource}/*.(js|cjs)`, dest: cesiumBaseUrl },
+        { src: join(__dirname, "../Apps/SampleData"), dest: "Apps" },
+        { src: join(__dirname, "../Apps/SampleData"), dest: "" },
+        { src: join(__dirname, "../Source/Cesium.(d.ts|js)"), dest: "js" },
+        {
+          src: join(__dirname, "../packages/engine/index.d.ts"),
+          dest: "js/engine",
+        },
+        {
+          src: join(__dirname, "../packages/engine/Build/Unminified/index.js"),
+          dest: "js/engine",
+        },
+        {
+          src: join(__dirname, "../packages/widgets/index.d.ts"),
+          dest: "js/widgets",
+        },
+        {
+          src: join(__dirname, "../packages/widgets/Build/Unminified/index.js"),
+          dest: "js/widgets",
+        },
+      ],
+    });
+  } else {
+    config = createSandcastleConfig({
+      outDir: join(__dirname, "../Apps/Sandcastle2"),
+      basePath: "./",
+      cesiumBaseUrl: "../../../Build/CesiumUnminified",
+      cesiumVersion: version,
+      commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
+      imports: {
+        cesium: {
+          path: "../../../Source/Cesium.js",
+          typesPath: "../../../Source/Cesium.d.ts",
+        },
+        "@cesium/engine": {
+          path: "../../../packages/engine/Build/Unminified/index.js",
+          typesPath: "../../../packages/engine/index.d.ts",
+        },
+        "@cesium/widgets": {
+          path: "../../../packages/widgets/Build/Unminified/index.js",
+          typesPath: "../../../packages/widgets/index.d.ts",
+        },
+      },
+    });
+  }
+
+  return buildStatic(config);
+}
+
 /**
  * Indexes Sandcastle gallery files and writes gallery files to the configured Sandcastle output directory.
  * @param {boolean} [includeDevelopment=true] true if gallery items flagged as development should be included.
@@ -696,8 +789,7 @@ export async function buildSandcastleGallery(includeDevelopment) {
     metadata,
   } = gallery ?? {};
 
-  // Import asynchronously, for now, because this following script is not included in the release zip; However, this script will not be run from the release zip
-  const { buildGalleryList } = await import("@cesium/sandcastle");
+  const { buildGalleryList } = await importSandcastleBuildFunctions();
 
   await buildGalleryList({
     rootDirectory,
