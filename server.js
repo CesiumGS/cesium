@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { performance } from "perf_hooks";
-import { URL } from "url";
+import { fileURLToPath, URL } from "url";
 
 import chokidar from "chokidar";
 import compression from "compression";
@@ -20,6 +20,7 @@ import {
   buildCesium,
   getSandcastleConfig,
   buildSandcastleGallery,
+  buildNewSandcastleApp,
 } from "./scripts/build.js";
 
 const argv = yargs(process.argv)
@@ -105,6 +106,14 @@ const throttle = (callback) => {
   let contexts;
   if (!production) {
     contexts = await generateDevelopmentBuild();
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    if (!fs.existsSync(path.join(__dirname, "/Apps/Sandcastle2/index.html"))) {
+      // Sandcastle takes a bit of time to build and is unlikely to change often
+      // Only build it when we detect it doesn't exist to save on dev time
+      console.log("Building Sandcastle...");
+      await buildNewSandcastleApp(false);
+      await buildSandcastleGallery();
+    }
   }
 
   const app = express();
