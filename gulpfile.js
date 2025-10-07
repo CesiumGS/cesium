@@ -597,7 +597,12 @@ async function pruneScriptsForZip(packageJsonPath) {
 
 export const makeZip = gulp.series(
   release,
-  buildNewSandcastle,
+  async function buildSandcastleApp() {
+    return buildNewSandcastleApp(false);
+  },
+  async function buildGallery() {
+    return buildSandcastleGallery(false);
+  },
   async function createZipFile() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
     //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
