@@ -194,6 +194,21 @@ export function useGalleryItemStore() {
     return isGalleryLoaded ? () => loadFromUrl(items, legacyIds) : null;
   }, [items, legacyIds]);
 
+  const [isFirstSearch, setFirstSearch] = useState(true);
+  const setSearchTermWrapper = useCallback(
+    (newSearchTerm: string | null) => {
+      // the default label filter for Showcases can be confusing when it doesn't
+      // search everything after page load. Remove the filter on the first search only
+      // to ensure we search everything
+      if (isFirstSearch) {
+        setSearchFilter(null);
+        setFirstSearch(false);
+      }
+      setSearchTerm(newSearchTerm);
+    },
+    [setSearchTerm, isFirstSearch, setSearchFilter],
+  );
+
   return {
     items,
     galleryLoaded,
@@ -203,7 +218,7 @@ export function useGalleryItemStore() {
     searchFilter,
     searchTerm,
     isSearchPending,
-    setSearchTerm,
+    setSearchTerm: setSearchTermWrapper,
     setSearchFilter,
     searchResults: memoizedSearchResults,
 

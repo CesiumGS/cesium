@@ -227,6 +227,9 @@ function Billboard(options, billboardCollection) {
   this._updateClamping();
 
   this._splitDirection = options.splitDirection ?? SplitDirection.NONE;
+  // Primarily used by labels to indicate that the position is derived from the parent.
+  // and expensive operations like clamping can be skipped.
+  this._positionFromParent = false;
 }
 
 const SHOW_INDEX = (Billboard.SHOW_INDEX = 0);
@@ -1147,6 +1150,7 @@ Billboard._updateClamping = function (collection, owner) {
 
   if (
     owner._heightReference === HeightReference.NONE ||
+    owner._positionFromParent ||
     !defined(owner._position)
   ) {
     return;
