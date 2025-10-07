@@ -1,9 +1,9 @@
 // See Intersection.glsl for the definition of intersectScene
 // See IntersectionUtils.glsl for the definition of nextIntersection
-// See convertUvToBox.glsl, convertUvToCylinder.glsl, or convertUvToEllipsoid.glsl
-// for the definition of convertUvToShapeUvSpace. The appropriate function is 
-// selected based on the VoxelPrimitive shape type, and added to the shader in
-// Scene/VoxelRenderResources.js.
+// See convertLocalToBoxUv.glsl, convertLocalToCylinderUv.glsl, or convertLocalToEllipsoidUv.glsl
+// for the definitions of convertLocalToShapeSpaceDerivative and getTileAndUvCoordinate. 
+// The appropriate functions are selected based on the VoxelPrimitive shape type, 
+// and added to the shader in Scene/VoxelRenderResources.js.
 // See Octree.glsl for the definitions of TraversalData, SampleData,
 // traverseOctreeFromBeginning, and traverseOctreeFromExisting
 // See Megatexture.glsl for the definition of accumulatePropertiesFromMegatexture
@@ -15,10 +15,10 @@
     #define ALPHA_ACCUM_MAX 0.98 // Must be > 0.0 and <= 1.0
 #endif
 
-uniform mat4 u_transformPositionUvToView;
+uniform mat4 u_transformPositionViewToLocal;
 uniform mat3 u_transformDirectionViewToLocal;
-uniform vec3 u_cameraPositionUv;
-uniform vec3 u_cameraDirectionUv;
+uniform vec3 u_cameraPositionLocal;
+uniform vec3 u_cameraDirectionLocal;
 uniform float u_stepSize;
 
 #if defined(PICKING)
@@ -63,16 +63,15 @@ RayShapeIntersection getVoxelIntersection(in vec3 tileUv, in vec3 sampleSizeAlon
 }
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in mat3 jacobianT, in float currentT) {
-    // The Jacobian is computed in a space where the shape spans [-1, 1].
-    // But the ray is marched in a space where the shape fills [0, 1].
-    // So we need to scale the Jacobian by 2.
-    vec3 gradient = 2.0 * viewRay.rawDir * jacobianT;
+    vec3 gradient = viewRay.dir * jacobianT;
     vec3 sampleSizeAlongRay = getSampleSize(sampleData.tileCoords.w) / gradient;
 
     RayShapeIntersection voxelIntersection = getVoxelIntersection(sampleData.tileUv, sampleSizeAlongRay);
 
-    // Transform normal from shape space to Cartesian space
-    vec3 voxelNormal = normalize(jacobianT * voxelIntersection.entry.xyz);
+    // Transform normal from shape space to Cartesian space to eye space
+    vec3 voxelNormal = jacobianT * voxelIntersection.entry.xyz;
+    voxelNormal = normalize(czm_normal * voxelNormal);
+
     // Compare with the shape intersection, to choose the appropriate normal
     vec4 voxelEntry = vec4(voxelNormal, currentT + voxelIntersection.entry.w);
     vec4 entry = intersectionMax(shapeIntersection.entry, voxelEntry);
@@ -114,37 +113,40 @@ int getSampleIndex(in SampleData sampleData) {
 }
 
 /**
- * Compute the view ray at the current fragment, in the local UV coordinates of the shape.
+ * Compute the view ray at the current fragment, in the local coordinates of the shape.
  */
-Ray getViewRayUv() {
+Ray getViewRayLocal() {
     vec4 eyeCoordinates = czm_windowToEyeCoordinates(gl_FragCoord);
-    vec3 viewDirUv;
-    vec3 viewPosUv;
+    vec3 origin;
+    vec3 direction;
     if (czm_orthographicIn3D == 1.0) {
         eyeCoordinates.z = 0.0;
-        viewPosUv = (u_transformPositionViewToUv * eyeCoordinates).xyz;
-        viewDirUv = normalize(u_cameraDirectionUv);
+        origin = (u_transformPositionViewToLocal * eyeCoordinates).xyz;
+        direction = u_cameraDirectionLocal;
     } else {
-        viewPosUv = u_cameraPositionUv;
-        viewDirUv = normalize(u_transformDirectionViewToLocal * eyeCoordinates.xyz);
+        origin = u_cameraPositionLocal;
+        direction = u_transformDirectionViewToLocal * normalize(eyeCoordinates.xyz);
     }
-    #if defined(SHAPE_ELLIPSOID)
-        // viewDirUv has been scaled to a space where the ellipsoid is a sphere.
-        // Undo this scaling to get the raw direction.
-        vec3 rawDir = viewDirUv * u_ellipsoidRadiiUv;
-        return Ray(viewPosUv, viewDirUv, rawDir);
-    #else
-        return Ray(viewPosUv, viewDirUv, viewDirUv);
-    #endif
+    return Ray(origin, direction);
+}
+
+Ray getViewRayEC() {
+    vec4 eyeCoordinates = czm_windowToEyeCoordinates(gl_FragCoord);
+    vec3 viewPosEC = (czm_orthographicIn3D == 1.0)
+        ? vec3(eyeCoordinates.xy, 0.0)
+        : vec3(0.0);
+    vec3 viewDirEC = normalize(eyeCoordinates.xyz);
+    return Ray(viewPosEC, viewDirEC);
 }
 
 void main()
 {
-    Ray viewRayUv = getViewRayUv();
+    Ray viewRayLocal = getViewRayLocal();
+    Ray viewRayEC = getViewRayEC();
 
     Intersections ix;
     vec2 screenCoord = (gl_FragCoord.xy - czm_viewport.xy) / czm_viewport.zw; // [0,1]
-    RayShapeIntersection shapeIntersection = intersectScene(screenCoord, viewRayUv, ix);
+    RayShapeIntersection shapeIntersection = intersectScene(screenCoord, viewRayLocal, viewRayEC, ix);
     // Exit early if the scene was completely missed.
     if (shapeIntersection.entry.w == NO_HIT) {
         discard;
@@ -152,20 +154,17 @@ void main()
 
     float currentT = shapeIntersection.entry.w;
     float endT = shapeIntersection.exit.w;
-    vec3 positionUv = viewRayUv.pos + currentT * viewRayUv.dir;
-    PointJacobianT pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
+
+    vec3 positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
+    TileAndUvCoordinate tileAndUv = getTileAndUvCoordinate(positionEC);
+    vec3 positionLocal = viewRayLocal.pos + currentT * viewRayLocal.dir;
+    mat3 jacobianT = convertLocalToShapeSpaceDerivative(positionLocal);
 
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
-    traverseOctreeFromBeginning(pointJacobian.point, traversalData, sampleDatas);
-    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
-
-    #if defined(JITTER)
-        float noise = hash(screenCoord); // [0,1]
-        currentT += noise * step.w;
-        positionUv += noise * step.w * viewRayUv.dir;
-    #endif
+    traverseOctreeFromBeginning(tileAndUv, traversalData, sampleDatas);
+    vec4 step = getStepSize(sampleDatas[0], viewRayLocal, shapeIntersection, jacobianT, currentT);
 
     FragmentInput fragmentInput;
     #if defined(STATISTICS)
@@ -182,10 +181,11 @@ void main()
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
 
-        fragmentInput.attributes.positionEC = vec3(u_transformPositionUvToView * vec4(positionUv, 1.0));
-        fragmentInput.attributes.normalEC = normalize(czm_normal * step.xyz);
+        fragmentInput.attributes.positionEC = positionEC;
+        // Re-normalize normals: some shape intersections may have been scaled to encode positive/negative shapes
+        fragmentInput.attributes.normalEC = normalize(step.xyz);
 
-        fragmentInput.voxel.viewDirUv = viewRayUv.dir;
+        fragmentInput.voxel.viewDirUv = viewRayLocal.dir;
 
         fragmentInput.voxel.travelDistance = step.w;
         fragmentInput.voxel.stepCount = stepCount;
@@ -233,13 +233,15 @@ void main()
                 }
             #endif
         }
-        positionUv = viewRayUv.pos + currentT * viewRayUv.dir;
+        positionEC = viewRayEC.pos + currentT * viewRayEC.dir;
+        tileAndUv = getTileAndUvCoordinate(positionEC);
+        positionLocal = viewRayLocal.pos + currentT * viewRayLocal.dir;
+        jacobianT = convertLocalToShapeSpaceDerivative(positionLocal);
 
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
-        pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
-        traverseOctreeFromExisting(pointJacobian.point, traversalData, sampleDatas);
-        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
+        traverseOctreeFromExisting(tileAndUv, traversalData, sampleDatas);
+        step = getStepSize(sampleDatas[0], viewRayLocal, shapeIntersection, jacobianT, currentT);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]

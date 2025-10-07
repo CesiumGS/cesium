@@ -2466,7 +2466,6 @@ describe("Scene/LabelCollection", function () {
           });
 
           expect(l._clampedPosition).toBeDefined();
-          expect(l._glyphs[0].billboard._clampedPosition).toBeDefined();
 
           l.heightReference = HeightReference.NONE;
           expect(l._clampedPosition).toBeUndefined();
@@ -2478,6 +2477,7 @@ describe("Scene/LabelCollection", function () {
             heightReference: HeightReference.CLAMP_TO_GROUND,
             text: "t",
             position: Cartesian3.fromDegrees(-72.0, 40.0),
+            showBackground: true,
           });
 
           await pollToPromise(() => {
@@ -2485,7 +2485,7 @@ describe("Scene/LabelCollection", function () {
             return labelsWithHeight.ready;
           });
 
-          const billboard = l._glyphs[0].billboard;
+          const billboard = l._backgroundBillboard;
           expect(billboard._removeCallbackFunc).toBeDefined();
           const spy = spyOn(billboard, "_removeCallbackFunc");
           labelsWithHeight.remove(l);
