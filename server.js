@@ -111,8 +111,12 @@ const throttle = (callback) => {
       // Sandcastle takes a bit of time to build and is unlikely to change often
       // Only build it when we detect it doesn't exist to save on dev time
       console.log("Building Sandcastle...");
+      const startTime = performance.now();
       await buildNewSandcastleApp(false);
       await buildSandcastleGallery();
+      console.log(
+        `Sandcastle built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
+      );
     }
   }
 

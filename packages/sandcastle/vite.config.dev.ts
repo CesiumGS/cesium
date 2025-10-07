@@ -13,7 +13,7 @@ function getCesiumVersion() {
 const cesiumSource = "../../Build/CesiumUnminified";
 const cesiumBaseUrl = "Build/CesiumUnminified";
 
-const newConfig = createSandcastleConfig({
+const config = createSandcastleConfig({
   outDir: join(__dirname, "../../Build/Sandcastle2"),
   basePath: "",
   cesiumBaseUrl: "/Build/CesiumUnminified",
@@ -61,5 +61,5 @@ export default defineConfig(({ command }) => {
   if (command === "build") {
     throw Error("This config should not be used to build!");
   }
-  return newConfig;
+  return config;
 });
