@@ -166,7 +166,8 @@ Credit.getIonCredit = function (attribution) {
  */
 Credit.clone = function (credit) {
   if (defined(credit)) {
-    return new Credit(credit.html, credit.showOnScreen);
+    return credit;
+    // return new Credit(credit.html, credit.showOnScreen);
   }
 };
 export default Credit;
