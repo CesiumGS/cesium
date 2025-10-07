@@ -22,6 +22,7 @@ vec4 intersectPlane(in Ray ray, in vec4 plane) {
     return vec4(n, t);
 }
 
+#ifdef CLIPPING_PLANES
 void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
     vec4 backSide = vec4(-ray.dir, -INF_HIT);
     vec4 farSide = vec4(ray.dir, +INF_HIT);
@@ -30,7 +31,7 @@ void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
     #if (CLIPPING_PLANES_COUNT == 1)
         // Union and intersection are the same when there's one clipping plane, and the code
         // is more simplified.
-        vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, 0, u_clippingPlanesMatrix);
+        vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, 0);
         vec4 intersection = intersectPlane(ray, planeUv);
         bool reflects = dot(ray.dir, intersection.xyz) < 0.0;
         clippingVolume.entry = reflects ? backSide : intersection;
@@ -40,7 +41,7 @@ void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
         vec4 firstTransmission = vec4(ray.dir, +INF_HIT);
         vec4 lastReflection = vec4(-ray.dir, -INF_HIT);
         for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
-            vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, i, u_clippingPlanesMatrix);
+            vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, i);
             vec4 intersection = intersectPlane(ray, planeUv);
             if (dot(ray.dir, planeUv.xyz) > 0.0) {
                 firstTransmission = intersection.w <= firstTransmission.w ? intersection : firstTransmission;
@@ -58,7 +59,7 @@ void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
         vec4 lastTransmission = vec4(ray.dir, -INF_HIT);
         vec4 firstReflection = vec4(-ray.dir, +INF_HIT);
         for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
-            vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, i, u_clippingPlanesMatrix);
+            vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, i);
             vec4 intersection = intersectPlane(ray, planeUv);
             if (dot(ray.dir, planeUv.xyz) > 0.0) {
                 lastTransmission = intersection.w > lastTransmission.w ? intersection : lastTransmission;
@@ -76,3 +77,4 @@ void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
         setShapeIntersection(ix, CLIPPING_PLANES_INTERSECTION_INDEX, clippingVolume);
     #endif
 }
+#endif
