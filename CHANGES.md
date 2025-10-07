@@ -38,7 +38,6 @@
 - Prevent runtime errors for certain forms of invalid PNTS files [#12872](https://github.com/CesiumGS/cesium/issues/12872)
 - Revert `createImageBitmap` options update to continue support for older browsers [#12846](https://github.com/CesiumGS/cesium/issues/12846)
 
-
 ## 1.133.1 - 2025-09-08
 
 This is an npm-only release to fix a dependency issue published in 1.133.0
