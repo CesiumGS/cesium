@@ -89,11 +89,11 @@ export function createSandcastleConfig({
 
   /** @type {Object<string, string>} */
   const importMap = {
-    Sandcastle: join(basePath, "/templates/Sandcastle.js"),
+    Sandcastle: "../templates/Sandcastle.js",
   };
   /** @type {Object<string, string>} */
   const typePaths = {
-    Sandcastle: "templates/Sandcastle.d.ts",
+    Sandcastle: "../templates/Sandcastle.d.ts",
   };
   for (const [key, value] of Object.entries(imports)) {
     importMap[key] = value.path;

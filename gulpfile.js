@@ -361,11 +361,12 @@ export const buildNewSandcastle = gulp.series(
       });
     } else {
       // Use this when the static files are hosted at a "nested" URL like in CI
-      const pathPrefix = (path) => `${process.env.BASE_URL ?? "/"}${path}`;
+      const pathPrefix = (path) =>
+        join(process.env.BASE_URL ?? "../../../", path);
 
       config = createSandcastleConfig({
         outDir: join(__dirname, "Apps/Sandcastle2"),
-        basePath: pathPrefix("Apps/Sandcastle2"),
+        basePath: "./",
         cesiumBaseUrl: pathPrefix("Build/CesiumUnminified"),
         cesiumVersion: version,
         commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
@@ -544,7 +545,7 @@ export const websiteRelease = gulp.series(
       node: false,
     });
   },
-  function () {
+  function websiteReleaseBuildMinified() {
     return buildCesium({
       minify: true,
       removePragmas: true,

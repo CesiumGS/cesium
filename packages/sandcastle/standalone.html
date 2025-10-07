@@ -8,6 +8,9 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <title>Cesium Demo</title>
+    <!-- This is very important and makes this file ACT as if it's next to the
+     bucket.html file. Routes should be relative to there -->
+    <base href="./templates/" />
     <script>
       window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
     </script>
@@ -96,7 +99,11 @@
 
       unstable_loadStyles(document);
     </script>
-    <link rel="stylesheet" href="/styles/stratakit-mimic/styles.css" />
+    <link
+      rel="stylesheet"
+      href="../styles/stratakit-mimic/styles.css"
+      vite-ignore
+    />
   </head>
   <body
     class="sandcastle-loading"
@@ -156,7 +163,7 @@
     </script>
     <script
       type="text/javascript"
-      src="Sandcastle-client.js"
+      src="../Sandcastle-client.js"
       vite-ignore
     ></script>
   </body>
