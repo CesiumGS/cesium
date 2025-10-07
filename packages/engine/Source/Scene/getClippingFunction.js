@@ -38,66 +38,61 @@ function getClippingFunction(clippingPlaneCollection, context) {
 }
 
 function clippingFunctionUnion(clippingPlanesLength) {
-  const functionString =
-    `${
-      "float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)\n" +
-      "{\n" +
-      "    vec4 position = czm_windowToEyeCoordinates(fragCoord);\n" +
-      "    vec3 clipNormal = vec3(0.0);\n" +
-      "    vec3 clipPosition = vec3(0.0);\n" +
-      "    float clipAmount;\n" + // For union planes, we want to get the min distance. So we set the initial value to the first plane distance in the loop below.
-      "    float pixelWidth = czm_metersPerPixel(position);\n" +
-      "    bool breakAndDiscard = false;\n" +
-      "    for (int i = 0; i < "
-    }${clippingPlanesLength}; ++i)\n` +
-    `    {\n` +
-    `        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix);\n` +
-    `        clipNormal = clippingPlane.xyz;\n` +
-    `        clipPosition = -clippingPlane.w * clipNormal;\n` +
-    `        float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;\n` +
-    `        clipAmount = czm_branchFreeTernary(i == 0, amount, min(amount, clipAmount));\n` +
-    `        if (amount <= 0.0)\n` +
-    `        {\n` +
-    `           breakAndDiscard = true;\n` +
-    `           break;\n` + // HLSL compiler bug if we discard here: https://bugs.chromium.org/p/angleproject/issues/detail?id=1945#c6
-    `        }\n` +
-    `    }\n` +
-    `    if (breakAndDiscard) {\n` +
-    `        discard;\n` +
-    `    }\n` +
-    `    return clipAmount;\n` +
-    `}\n`;
-  return functionString;
+  return `float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)
+{
+    vec4 position = czm_windowToEyeCoordinates(fragCoord);
+    vec3 clipNormal = vec3(0.0);
+    vec3 clipPosition = vec3(0.0);
+    float clipAmount;
+    float pixelWidth = czm_metersPerPixel(position);
+    bool breakAndDiscard = false;
+    for (int i = 0; i < ${clippingPlanesLength}; ++i)
+    {
+        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix);
+        clipNormal = clippingPlane.xyz;
+        clipPosition = -clippingPlane.w * clipNormal;
+        float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;
+        clipAmount = czm_branchFreeTernary(i == 0, amount, min(amount, clipAmount));
+        if (amount <= 0.0)
+        {
+            breakAndDiscard = true;
+            // HLSL compiler bug if we discard here: https://bugs.chromium.org/p/angleproject/issues/detail?id=1945#c6
+            break;
+         }
+    }
+    if (breakAndDiscard) {
+        discard;
+    }
+    return clipAmount;
+}
+`;
 }
 
 function clippingFunctionIntersect(clippingPlanesLength) {
-  const functionString =
-    `${
-      "float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)\n" +
-      "{\n" +
-      "    bool clipped = true;\n" +
-      "    vec4 position = czm_windowToEyeCoordinates(fragCoord);\n" +
-      "    vec3 clipNormal = vec3(0.0);\n" +
-      "    vec3 clipPosition = vec3(0.0);\n" +
-      "    float clipAmount = 0.0;\n" +
-      "    float pixelWidth = czm_metersPerPixel(position);\n" +
-      "    for (int i = 0; i < "
-    }${clippingPlanesLength}; ++i)\n` +
-    `    {\n` +
-    `        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix);\n` +
-    `        clipNormal = clippingPlane.xyz;\n` +
-    `        clipPosition = -clippingPlane.w * clipNormal;\n` +
-    `        float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;\n` +
-    `        clipAmount = max(amount, clipAmount);\n` +
-    `        clipped = clipped && (amount <= 0.0);\n` +
-    `    }\n` +
-    `    if (clipped)\n` +
-    `    {\n` +
-    `        discard;\n` +
-    `    }\n` +
-    `    return clipAmount;\n` +
-    `}\n`;
-  return functionString;
+  return `float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)
+{
+    bool clipped = true;
+    vec4 position = czm_windowToEyeCoordinates(fragCoord);
+    vec3 clipNormal = vec3(0.0);
+    vec3 clipPosition = vec3(0.0);
+    float clipAmount = 0.0;
+    float pixelWidth = czm_metersPerPixel(position);
+    for (int i = 0; i < ${clippingPlanesLength}; ++i)
+    {
+        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix);
+        clipNormal = clippingPlane.xyz;
+        clipPosition = -clippingPlane.w * clipNormal;
+        float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;
+        clipAmount = max(amount, clipAmount);
+        clipped = clipped && (amount <= 0.0);
+    }
+    if (clipped)
+    {
+        discard;
+    }
+    return clipAmount;
+ }
+`;
 }
 
 function getClippingPlaneFloat(width, height) {
@@ -113,19 +108,17 @@ function getClippingPlaneFloat(width, height) {
     pixelHeightString += ".0";
   }
 
-  const functionString =
-    `${
-      "vec4 getClippingPlane(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)\n" +
-      "{\n" +
-      "    int pixY = clippingPlaneNumber / "
-    }${width};\n` +
-    `    int pixX = clippingPlaneNumber - (pixY * ${width});\n` +
-    `    float u = (float(pixX) + 0.5) * ${pixelWidthString};\n` + // sample from center of pixel
-    `    float v = (float(pixY) + 0.5) * ${pixelHeightString};\n` +
-    `    vec4 plane = texture(packedClippingPlanes, vec2(u, v));\n` +
-    `    return czm_transformPlane(plane, transform);\n` +
-    `}\n`;
-  return functionString;
+  return `vec4 getClippingPlane(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)
+{
+    int pixY = clippingPlaneNumber / ${width};
+    int pixX = clippingPlaneNumber - (pixY * ${width});
+    // Sample from center of pixel
+    float u = (float(pixX) + 0.5) * ${pixelWidthString};
+    float v = (float(pixY) + 0.5) * ${pixelHeightString};
+    vec4 plane = texture(packedClippingPlanes, vec2(u, v));
+    return czm_transformPlane(plane, transform);
+}
+`;
 }
 
 function getClippingPlaneUint8(width, height) {
@@ -141,23 +134,21 @@ function getClippingPlaneUint8(width, height) {
     pixelHeightString += ".0";
   }
 
-  const functionString =
-    `${
-      "vec4 getClippingPlane(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)\n" +
-      "{\n" +
-      "    int clippingPlaneStartIndex = clippingPlaneNumber * 2;\n" + // clipping planes are two pixels each
-      "    int pixY = clippingPlaneStartIndex / "
-    }${width};\n` +
-    `    int pixX = clippingPlaneStartIndex - (pixY * ${width});\n` +
-    `    float u = (float(pixX) + 0.5) * ${pixelWidthString};\n` + // sample from center of pixel
-    `    float v = (float(pixY) + 0.5) * ${pixelHeightString};\n` +
-    `    vec4 oct32 = texture(packedClippingPlanes, vec2(u, v)) * 255.0;\n` +
-    `    vec2 oct = vec2(oct32.x * 256.0 + oct32.y, oct32.z * 256.0 + oct32.w);\n` +
-    `    vec4 plane;\n` +
-    `    plane.xyz = czm_octDecode(oct, 65535.0);\n` +
-    `    plane.w = czm_unpackFloat(texture(packedClippingPlanes, vec2(u + ${pixelWidthString}, v)));\n` +
-    `    return czm_transformPlane(plane, transform);\n` +
-    `}\n`;
-  return functionString;
+  return `vec4 getClippingPlane(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)
+{
+    int clippingPlaneStartIndex = clippingPlaneNumber * 2;
+    int pixY = clippingPlaneStartIndex / ${width};
+    int pixX = clippingPlaneStartIndex - (pixY * ${width});
+    // Sample from center of pixel
+    float u = (float(pixX) + 0.5) * ${pixelWidthString};
+    float v = (float(pixY) + 0.5) * ${pixelHeightString};
+    vec4 oct32 = texture(packedClippingPlanes, vec2(u, v)) * 255.0;
+    vec2 oct = vec2(oct32.x * 256.0 + oct32.y, oct32.z * 256.0 + oct32.w);
+    vec4 plane;
+    plane.xyz = czm_octDecode(oct, 65535.0);
+    plane.w = czm_unpackFloat(texture(packedClippingPlanes, vec2(u + ${pixelWidthString}, v)));
+    return czm_transformPlane(plane, transform);
+}
+`;
 }
 export default getClippingFunction;

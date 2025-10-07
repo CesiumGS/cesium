@@ -123,7 +123,7 @@ function handleBuildWarnings(result) {
 export async function build() {
   // Configure build options from command line arguments.
   const minify = argv.minify ?? false;
-  const removePragmas = argv.pragmas ?? false;
+  const removePragmas = argv.removePragmas ?? false;
   const sourcemap = argv.sourcemap ?? true;
   const node = argv.node ?? true;
 
@@ -447,6 +447,13 @@ export const websiteRelease = gulp.series(
       node: false,
     });
   },
+  function () {
+    return buildCesium({
+      minify: true,
+      removePragmas: true,
+      node: false,
+    });
+  },
   combineForSandcastle,
   buildDocs,
 );
@@ -663,6 +670,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "!**/*.gitignore",
           "!Specs/e2e/*-snapshots/**",
           "!Apps/Sandcastle/gallery/development/**",
+          "!Apps/Sandcastle2/**",
         ],
         {
           encoding: false,

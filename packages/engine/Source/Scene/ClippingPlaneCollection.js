@@ -106,7 +106,7 @@ function ClippingPlaneCollection(options) {
    * An event triggered when a new clipping plane is added to the collection.  Event handlers
    * are passed the new plane and the index at which it was added.
    * @type {Event}
-   * @default Event()
+   * @readonly
    */
   this.planeAdded = new Event();
 
@@ -114,7 +114,7 @@ function ClippingPlaneCollection(options) {
    * An event triggered when a new clipping plane is removed from the collection.  Event handlers
    * are passed the new plane and the index from which it was removed.
    * @type {Event}
-   * @default Event()
+   * @readonly
    */
   this.planeRemoved = new Event();
 
@@ -472,7 +472,7 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
   // Compute texture requirements for current planes
   // In RGBA FLOAT, A plane is 4 floats packed to a RGBA.
   // In RGBA UNSIGNED_BYTE, A plane is a float in [0, 1) packed to RGBA and an Oct32 quantized normal,
-  // so 8 bits or 2 pixels in RGBA.
+  // so 8 bytes or 2 pixels in RGBA.
   const pixelsNeeded = useFloatTexture ? this.length : this.length * 2;
 
   if (defined(clippingPlanesTexture)) {

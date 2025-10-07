@@ -133,6 +133,14 @@ function VoxelPrimitive(options) {
   /**
    * This member is not known until the provider is ready.
    *
+   * @type {number}
+   * @private
+   */
+  this._availableLevels = 1;
+
+  /**
+   * This member is not known until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
@@ -332,24 +340,24 @@ function VoxelPrimitive(options) {
   this._clock = options.clock;
 
   // Transforms and other values that are computed when the shape changes
+  /**
+   * @type {Matrix4}
+   * @private
+   */
+  this._transformPositionLocalToWorld = new Matrix4();
 
   /**
    * @type {Matrix4}
    * @private
    */
-  this._transformPositionWorldToUv = new Matrix4();
+  this._transformPositionWorldToLocal = new Matrix4();
 
   /**
-   * @type {Matrix3}
-   * @private
-   */
-  this._transformDirectionWorldToUv = new Matrix3();
-
-  /**
+   * Transforms a plane in Hessian normal form from local space to view space.
    * @type {Matrix4}
    * @private
    */
-  this._transformPositionUvToWorld = new Matrix4();
+  this._transformPlaneLocalToView = new Matrix4();
 
   /**
    * @type {Matrix3}
@@ -440,14 +448,16 @@ function VoxelPrimitive(options) {
     inputDimensions: new Cartesian3(),
     paddingBefore: new Cartesian3(),
     paddingAfter: new Cartesian3(),
-    transformPositionViewToUv: new Matrix4(),
-    transformPositionUvToView: new Matrix4(),
+    transformPositionViewToLocal: new Matrix4(),
     transformDirectionViewToLocal: new Matrix3(),
-    cameraPositionUv: new Cartesian3(),
-    cameraDirectionUv: new Cartesian3(),
+    cameraPositionLocal: new Cartesian3(),
+    cameraDirectionLocal: new Cartesian3(),
+    cameraTileCoordinates: new Cartesian4(),
+    cameraTileUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     clippingPlanesTexture: undefined,
     clippingPlanesMatrix: new Matrix4(),
+    renderBoundPlanesTexture: undefined,
     stepSize: 0,
     pickColor: new Color(),
   };
@@ -631,11 +641,7 @@ function initialize(primitive, provider) {
   // Create the shape object, and update it so it is valid for VoxelTraversal
   const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
   primitive._shape = new ShapeConstructor();
-  primitive._shapeVisible = updateShapeAndTransforms(
-    primitive,
-    primitive._shape,
-    provider,
-  );
+  primitive._shapeVisible = updateShapeAndTransforms(primitive);
 }
 
 Object.defineProperties(VoxelPrimitive.prototype, {
@@ -1137,20 +1143,10 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
-const scratchTransformPositionWorldToLocal = new Matrix4();
 const scratchTransformPositionLocalToWorld = new Matrix4();
 const scratchTransformPositionLocalToProjection = new Matrix4();
-
-const transformPositionLocalToUv = Matrix4.fromRotationTranslation(
-  Matrix3.fromUniformScale(0.5, new Matrix3()),
-  new Cartesian3(0.5, 0.5, 0.5),
-  new Matrix4(),
-);
-const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
-  Matrix3.fromUniformScale(2.0, new Matrix3()),
-  new Cartesian3(-1.0, -1.0, -1.0),
-  new Matrix4(),
-);
+const scratchCameraPositionShapeUv = new Cartesian3();
+const scratchCameraTileCoordinates = new Cartesian4();
 
 /**
  * Updates the voxel primitive.
@@ -1160,6 +1156,7 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
  */
 VoxelPrimitive.prototype.update = function (frameState) {
   const provider = this._provider;
+  const uniforms = this._uniforms;
 
   // Update the custom shader in case it has texture uniforms.
   this._customShader.update(frameState);
@@ -1185,16 +1182,17 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // frame because the member variables can be modified externally via the
   // getters.
   const shapeDirty = checkTransformAndBounds(this, provider);
-  const shape = this._shape;
   if (shapeDirty) {
-    this._shapeVisible = updateShapeAndTransforms(this, shape, provider);
-    if (checkShapeDefines(this, shape)) {
+    this._shapeVisible = updateShapeAndTransforms(this);
+    if (checkShapeDefines(this)) {
       this._shaderDirty = true;
     }
   }
   if (!this._shapeVisible) {
     return;
   }
+
+  this._shape.updateViewTransforms(frameState);
 
   // Update the traversal and prepare for rendering.
   const keyframeLocation = getKeyframeLocation(
@@ -1243,7 +1241,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
   }
 
   const leafNodeTexture = traversal.leafNodeTexture;
-  const uniforms = this._uniforms;
   if (defined(leafNodeTexture)) {
     uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
     uniforms.octreeLeafNodeTexelSizeUv = Cartesian2.clone(
@@ -1262,7 +1259,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Calculate the NDC-space AABB to "scissor" the fullscreen quad
   const transformPositionWorldToProjection =
     context.uniformState.viewProjection;
-  const orientedBoundingBox = shape.orientedBoundingBox;
+  const { orientedBoundingBox } = this._shape;
   const ndcAabb = orientedBoundingBoxToNdcAabb(
     orientedBoundingBox,
     transformPositionWorldToProjection,
@@ -1286,17 +1283,17 @@ VoxelPrimitive.prototype.update = function (frameState) {
     uniforms.ndcSpaceAxisAlignedBoundingBox,
   );
   const transformPositionViewToWorld = context.uniformState.inverseView;
-  uniforms.transformPositionViewToUv = Matrix4.multiplyTransformation(
-    this._transformPositionWorldToUv,
+  const transformPositionViewToLocal = Matrix4.multiplyTransformation(
+    this._transformPositionWorldToLocal,
     transformPositionViewToWorld,
-    uniforms.transformPositionViewToUv,
+    uniforms.transformPositionViewToLocal,
   );
-  const transformPositionWorldToView = context.uniformState.view;
-  uniforms.transformPositionUvToView = Matrix4.multiplyTransformation(
-    transformPositionWorldToView,
-    this._transformPositionUvToWorld,
-    uniforms.transformPositionUvToView,
+
+  this._transformPlaneLocalToView = Matrix4.transpose(
+    transformPositionViewToLocal,
+    this._transformPlaneLocalToView,
   );
+
   const transformDirectionViewToWorld =
     context.uniformState.inverseViewRotation;
   uniforms.transformDirectionViewToLocal = Matrix3.multiply(
@@ -1304,21 +1301,37 @@ VoxelPrimitive.prototype.update = function (frameState) {
     transformDirectionViewToWorld,
     uniforms.transformDirectionViewToLocal,
   );
-  uniforms.cameraPositionUv = Matrix4.multiplyByPoint(
-    this._transformPositionWorldToUv,
+  uniforms.cameraPositionLocal = Matrix4.multiplyByPoint(
+    this._transformPositionWorldToLocal,
     frameState.camera.positionWC,
-    uniforms.cameraPositionUv,
+    uniforms.cameraPositionLocal,
   );
-  uniforms.cameraDirectionUv = Matrix3.multiplyByVector(
-    this._transformDirectionWorldToUv,
+  uniforms.cameraDirectionLocal = Matrix3.multiplyByVector(
+    this._transformDirectionWorldToLocal,
     frameState.camera.directionWC,
-    uniforms.cameraDirectionUv,
+    uniforms.cameraDirectionLocal,
   );
-  uniforms.cameraDirectionUv = Cartesian3.normalize(
-    uniforms.cameraDirectionUv,
-    uniforms.cameraDirectionUv,
+  const cameraTileCoordinates = getTileCoordinates(
+    this,
+    uniforms.cameraPositionLocal,
+    scratchCameraTileCoordinates,
+  );
+  uniforms.cameraTileCoordinates = Cartesian4.fromElements(
+    Math.floor(cameraTileCoordinates.x),
+    Math.floor(cameraTileCoordinates.y),
+    Math.floor(cameraTileCoordinates.z),
+    cameraTileCoordinates.w,
+    uniforms.cameraTileCoordinates,
+  );
+  uniforms.cameraTileUv = Cartesian3.fromElements(
+    cameraTileCoordinates.x - Math.floor(cameraTileCoordinates.x),
+    cameraTileCoordinates.y - Math.floor(cameraTileCoordinates.y),
+    cameraTileCoordinates.z - Math.floor(cameraTileCoordinates.z),
+    uniforms.cameraTileUv,
   );
   uniforms.stepSize = this._stepSizeMultiplier;
+
+  updateRenderBoundPlanes(this, frameState);
 
   // Render the primitive
   const command = frameState.passes.pick
@@ -1326,9 +1339,46 @@ VoxelPrimitive.prototype.update = function (frameState) {
     : frameState.passes.pickVoxel
       ? this._drawCommandPickVoxel
       : this._drawCommand;
-  command.boundingVolume = shape.boundingSphere;
+  command.boundingVolume = this._shape.boundingSphere;
   frameState.commandList.push(command);
 };
+
+function updateRenderBoundPlanes(primitive, frameState) {
+  const uniforms = primitive._uniforms;
+  const { renderBoundPlanes } = primitive._shape;
+  if (!defined(renderBoundPlanes)) {
+    return;
+  }
+  renderBoundPlanes.update(frameState, primitive._transformPlaneLocalToView);
+  uniforms.renderBoundPlanesTexture = renderBoundPlanes.texture;
+}
+
+/**
+ * Converts a position in local space to tile coordinates.
+ *
+ * @param {VoxelPrimitive} primitive The primitive to get the tile coordinates for.
+ * @param {Cartesian3} positionLocal The position in local space to convert to tile coordinates.
+ * @param {Cartesian4} result The result object to store the tile coordinates.
+ * @returns {Cartesian4} The tile coordinates of the supplied position.
+ * @private
+ */
+function getTileCoordinates(primitive, positionLocal, result) {
+  const shapeUv = primitive._shape.convertLocalToShapeUvSpace(
+    positionLocal,
+    scratchCameraPositionShapeUv,
+  );
+
+  const availableLevels = primitive._availableLevels;
+  const numTiles = 2 ** (availableLevels - 1);
+
+  return Cartesian4.fromElements(
+    shapeUv.x * numTiles,
+    shapeUv.y * numTiles,
+    shapeUv.z * numTiles,
+    availableLevels - 1,
+    result,
+  );
+}
 
 const scratchExaggerationScale = new Cartesian3();
 const scratchExaggerationCenter = new Cartesian3();
@@ -1337,7 +1387,6 @@ const scratchExaggerationTranslation = new Cartesian3();
 
 /**
  * Update the exaggerated bounds of a primitive to account for vertical exaggeration
- * Currently only applies to Ellipsoid shape type
  * @param {VoxelPrimitive} primitive
  * @param {FrameState} frameState
  * @private
@@ -1513,6 +1562,7 @@ function initFromProvider(primitive, provider, context) {
     primitive._inputDimensions,
     uniforms.inputDimensions,
   );
+  primitive._availableLevels = provider.availableLevels ?? 1;
 
   // Create the VoxelTraversal, and set related uniforms
   const keyframeCount = provider.keyframeCount ?? 1;
@@ -1586,12 +1636,11 @@ function updateBound(primitive, newBoundKey, oldBoundKey) {
 /**
  * Update the shape and related transforms
  * @param {VoxelPrimitive} primitive
- * @param {VoxelShape} shape
- * @param {VoxelProvider} provider
  * @returns {boolean} True if the shape is visible
  * @private
  */
-function updateShapeAndTransforms(primitive, shape, provider) {
+function updateShapeAndTransforms(primitive) {
+  const shape = primitive._shape;
   const visible = shape.update(
     primitive._compoundModelMatrix,
     primitive._exaggeratedMinBounds,
@@ -1603,29 +1652,16 @@ function updateShapeAndTransforms(primitive, shape, provider) {
     return false;
   }
 
-  const transformPositionLocalToWorld = shape.shapeTransform;
-  const transformPositionWorldToLocal = Matrix4.inverse(
-    transformPositionLocalToWorld,
-    scratchTransformPositionWorldToLocal,
+  primitive._transformPositionLocalToWorld = Matrix4.clone(
+    shape.shapeTransform,
+    primitive._transformPositionLocalToWorld,
   );
-
-  // Set member variables when the shape is dirty
-  primitive._transformPositionWorldToUv = Matrix4.multiplyTransformation(
-    transformPositionLocalToUv,
-    transformPositionWorldToLocal,
-    primitive._transformPositionWorldToUv,
-  );
-  primitive._transformDirectionWorldToUv = Matrix4.getMatrix3(
-    primitive._transformPositionWorldToUv,
-    primitive._transformDirectionWorldToUv,
-  );
-  primitive._transformPositionUvToWorld = Matrix4.multiplyTransformation(
-    transformPositionLocalToWorld,
-    transformPositionUvToLocal,
-    primitive._transformPositionUvToWorld,
+  primitive._transformPositionWorldToLocal = Matrix4.inverse(
+    primitive._transformPositionLocalToWorld,
+    primitive._transformPositionWorldToLocal,
   );
   primitive._transformDirectionWorldToLocal = Matrix4.getMatrix3(
-    transformPositionWorldToLocal,
+    primitive._transformPositionWorldToLocal,
     primitive._transformDirectionWorldToLocal,
   );
 
@@ -1679,17 +1715,16 @@ function setTraversalUniforms(traversal, uniforms) {
 /**
  * Track changes in shape-related shader defines
  * @param {VoxelPrimitive} primitive
- * @param {VoxelShape} shape
  * @returns {boolean} True if any of the shape defines changed, requiring a shader rebuild
  * @private
  */
-function checkShapeDefines(primitive, shape) {
-  const shapeDefines = shape.shaderDefines;
-  const shapeDefinesChanged = Object.keys(shapeDefines).some(
-    (key) => shapeDefines[key] !== primitive._shapeDefinesOld[key],
+function checkShapeDefines(primitive) {
+  const { shaderDefines } = primitive._shape;
+  const shapeDefinesChanged = Object.keys(shaderDefines).some(
+    (key) => shaderDefines[key] !== primitive._shapeDefinesOld[key],
   );
   if (shapeDefinesChanged) {
-    primitive._shapeDefinesOld = clone(shapeDefines, true);
+    primitive._shapeDefinesOld = clone(shaderDefines, true);
   }
   return shapeDefinesChanged;
 }
@@ -1761,12 +1796,12 @@ function updateClippingPlanes(primitive, frameState) {
     const uniforms = primitive._uniforms;
     uniforms.clippingPlanesTexture = clippingPlanes.texture;
 
-    // Compute the clipping plane's transformation to uv space and then take the inverse
+    // Compute the clipping plane's transformation to local space and then take the inverse
     // transpose to properly transform the hessian normal form of the plane.
 
-    // transpose(inverse(worldToUv * clippingPlaneLocalToWorld))
-    // transpose(inverse(clippingPlaneLocalToWorld) * inverse(worldToUv))
-    // transpose(inverse(clippingPlaneLocalToWorld) * uvToWorld)
+    // transpose(inverse(worldToLocal * clippingPlaneLocalToWorld))
+    // transpose(inverse(clippingPlaneLocalToWorld) * inverse(worldToLocal))
+    // transpose(inverse(clippingPlaneLocalToWorld) * localToWorld)
 
     uniforms.clippingPlanesMatrix = Matrix4.transpose(
       Matrix4.multiplyTransformation(
@@ -1774,7 +1809,7 @@ function updateClippingPlanes(primitive, frameState) {
           clippingPlanes.modelMatrix,
           uniforms.clippingPlanesMatrix,
         ),
-        primitive._transformPositionUvToWorld,
+        primitive._transformPositionLocalToWorld,
         uniforms.clippingPlanesMatrix,
       ),
       uniforms.clippingPlanesMatrix,

@@ -92,14 +92,14 @@ function ProceduralMultiTileVoxelProvider(shape) {
   this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
   this.globalTransform = globalTransform;
 
-  this._levelCount = 2;
-  this._allVoxelData = new Array(this._levelCount);
+  this.availableLevels = 2;
+  this._allVoxelData = new Array(this.availableLevels);
 
   const allVoxelData = this._allVoxelData;
   const channelCount = Cesium.MetadataType.getComponentCount(this.types[0]);
   const { dimensions } = this;
 
-  for (let level = 0; level < this._levelCount; level++) {
+  for (let level = 0; level < this.availableLevels; level++) {
     const dimAtLevel = Math.pow(2, level);
     const voxelCountX = dimensions.x * dimAtLevel;
     const voxelCountY = dimensions.y * dimAtLevel;
@@ -127,9 +127,9 @@ function ProceduralMultiTileVoxelProvider(shape) {
 ProceduralMultiTileVoxelProvider.prototype.requestData = function (options) {
   const { tileLevel, tileX, tileY, tileZ } = options;
 
-  if (tileLevel >= this._levelCount) {
+  if (tileLevel >= this.availableLevels) {
     return Promise.reject(
-      `No tiles available beyond level ${this._levelCount - 1}`,
+      `No tiles available beyond level ${this.availableLevels - 1}`,
     );
   }
 
