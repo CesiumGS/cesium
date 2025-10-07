@@ -188,6 +188,11 @@ function isOnScreenLongEnough(tile, frameState) {
  * @param {FrameState} frameState
  */
 Cesium3DTilesetTraversal.updateTile = function (tile, frameState) {
+  if (tile._visitedFrame === frameState.frameNumber) {
+    // Prevents another pass from visiting the frame again
+    return;
+  }
+  Cesium3DTilesetTraversal.visitTile(tile, frameState);
   updateTileVisibility(tile, frameState);
   tile.updateExpiration();
 
@@ -279,6 +284,9 @@ function anyChildrenVisible(tile, frameState) {
     const child = children[i];
     child.updateVisibility(frameState);
     anyVisible = anyVisible || child.isVisible;
+    if (anyVisible) {
+      break;
+    }
   }
   return anyVisible;
 }
