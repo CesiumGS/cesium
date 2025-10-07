@@ -41,13 +41,10 @@ jobs:
         run: npm install
       - name: build website release
         run: npm run website-release
-      - name: build apps
-        run: npm run build-apps
-      # TODO: review these steps
       - name: build types
         run: npm run build-ts
-      - name: build prod sandcastle
-        run: npm run build-prod -w packages/sandcastle -- -l warn
+      - name: build apps
+        run: npm run build-apps
       - name: deploy to cesium.com
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         # Download zip from the Github release and unzip to Build/release/
