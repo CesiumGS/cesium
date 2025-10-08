@@ -239,6 +239,40 @@ function VoxelPrimitive(options) {
   this._maxClippingBoundsOld = new Cartesian3();
 
   /**
+   * Minimum clipping bounds with vertical exaggeration applied
+   *
+   * @type {Cartesian3}
+   * @private
+   */
+  this._exaggeratedMinClippingBounds = new Cartesian3();
+
+  /**
+   * Used to detect if the clipping is dirty.
+   * This member is not known until the provider is ready.
+   *
+   * @type {Cartesian3}
+   * @private
+   */
+  this._exaggeratedMinClippingBoundsOld = new Cartesian3();
+
+  /**
+   * Maximum clipping bounds with vertical exaggeration applied
+   *
+   * @type {Cartesian3}
+   * @private
+   */
+  this._exaggeratedMaxClippingBounds = new Cartesian3();
+
+  /**
+   * Used to detect if the clipping is dirty.
+   * This member is not known until the provider is ready.
+   *
+   * @type {Cartesian3}
+   * @private
+   */
+  this._exaggeratedMaxClippingBoundsOld = new Cartesian3();
+
+  /**
    * Clipping planes on the primitive
    *
    * @type {ClippingPlaneCollection}
@@ -630,6 +664,14 @@ function initialize(primitive, provider) {
   primitive._exaggeratedMaxBounds = Cartesian3.clone(
     primitive._maxBounds,
     primitive._exaggeratedMaxBounds,
+  );
+  primitive._exaggeratedMinClippingBounds = Cartesian3.clone(
+    primitive._minClippingBounds,
+    primitive._exaggeratedMinClippingBounds,
+  );
+  primitive._exaggeratedMaxClippingBounds = Cartesian3.clone(
+    primitive._maxClippingBounds,
+    primitive._exaggeratedMaxClippingBounds,
   );
   primitive._exaggeratedModelMatrix = Matrix4.clone(
     primitive._modelMatrix,
@@ -1400,6 +1442,14 @@ function updateVerticalExaggeration(primitive, frameState) {
     primitive._maxBounds,
     primitive._exaggeratedMaxBounds,
   );
+  primitive._exaggeratedMinClippingBounds = Cartesian3.clone(
+    primitive._minClippingBounds,
+    primitive._exaggeratedMinClippingBounds,
+  );
+  primitive._exaggeratedMaxClippingBounds = Cartesian3.clone(
+    primitive._maxClippingBounds,
+    primitive._exaggeratedMaxClippingBounds,
+  );
 
   if (primitive.shape === VoxelShapeType.ELLIPSOID) {
     // Apply the exaggeration by stretching the height bounds
@@ -1409,6 +1459,12 @@ function updateVerticalExaggeration(primitive, frameState) {
       (primitive._minBounds.z - relativeHeight) * exaggeration + relativeHeight;
     primitive._exaggeratedMaxBounds.z =
       (primitive._maxBounds.z - relativeHeight) * exaggeration + relativeHeight;
+    primitive._exaggeratedMinClippingBounds.z =
+      (primitive._minClippingBounds.z - relativeHeight) * exaggeration +
+      relativeHeight;
+    primitive._exaggeratedMaxClippingBounds.z =
+      (primitive._maxClippingBounds.z - relativeHeight) * exaggeration +
+      relativeHeight;
   } else {
     // Apply the exaggeration via the model matrix
     const exaggerationScale = Cartesian3.fromElements(
@@ -1609,7 +1665,17 @@ function checkTransformAndBounds(primitive, provider) {
       "_exaggeratedMaxBoundsOld",
     ) +
     updateBound(primitive, "_minClippingBounds", "_minClippingBoundsOld") +
-    updateBound(primitive, "_maxClippingBounds", "_maxClippingBoundsOld");
+    updateBound(primitive, "_maxClippingBounds", "_maxClippingBoundsOld") +
+    updateBound(
+      primitive,
+      "_exaggeratedMinClippingBounds",
+      "_exaggeratedMinClippingBoundsOld",
+    ) +
+    updateBound(
+      primitive,
+      "_exaggeratedMaxClippingBounds",
+      "_exaggeratedMaxClippingBoundsOld",
+    );
   return numChanges > 0;
 }
 
@@ -1645,8 +1711,8 @@ function updateShapeAndTransforms(primitive) {
     primitive._compoundModelMatrix,
     primitive._exaggeratedMinBounds,
     primitive._exaggeratedMaxBounds,
-    primitive.minClippingBounds,
-    primitive.maxClippingBounds,
+    primitive._exaggeratedMinClippingBounds,
+    primitive._exaggeratedMaxClippingBounds,
   );
   if (!visible) {
     return false;

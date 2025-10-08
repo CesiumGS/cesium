@@ -6,7 +6,8 @@
 
 #### Fixes :wrench:
 
-- Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
+- Fixed an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
+- Fixed vertical exaggeration of ellipsoid-shaped voxels. [#12811](https://github.com/CesiumGS/cesium/issues/12811)
 
 ## 1.134 - 2025-10-01
 
