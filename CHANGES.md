@@ -7,7 +7,7 @@
 #### Additions :tada:
 
 - Added support for the [EXT_mesh_primitive_edge_visibility](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension. [#12765](https://github.com/CesiumGS/cesium/issues/12765)
-- 
+
 ## 1.135 - 2025-11-01
 
 ### @cesium/engine
@@ -15,7 +15,6 @@
 #### Fixes :wrench:
 
 - Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
-
 
 ## 1.134 - 2025-10-01
 
