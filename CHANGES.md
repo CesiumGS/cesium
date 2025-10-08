@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.135
+## 1.135 - 2025-11-01
 
 ### @cesium/engine
 
@@ -9,10 +9,9 @@
 - `scene.drillPick` now uses a breadth-first search strategy instead of depth-first. This may change which entities are picked when
   using large values of `width` and `height` when providing a `limit`, prioritizing visible entities over obscured ones.
 
-#### Additions :tada:
-
 #### Fixes :wrench:
 
+- Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
 - Improved performance of `scene.drillPick`. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
 - Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
 
