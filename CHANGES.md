@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.135 - 2025-11-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
+
 ## 1.134 - 2025-10-01
 
 - [Sandcastle](https://sandcastle.cesium.com/) has been updated at `https://sandcastle.cesium.com`! The [legacy Sandcastle app](https://cesium.com/downloads/cesiumjs/releases/1.134/Apps/Sandcastle/index.html) will remain available through November 3, 2025.
