@@ -1,8 +1,10 @@
 # Prereleases
 
-Occasionally, we need to release incremental versions of CesiumJS to npm prior to our typical [monthly train releases](../README.md). When this is necessary, we publish a **prerelease** version.
+Occasionally, we need to release incremental, opt-in versions of CesiumJS to npm prior to our typical [monthly train releases](../README.md) for early testing or internal use. When this is necessary, we publish a tagged **prerelease**[^1]. Prereleases are not guaranteed as stable and may not be compatable with official numbered releases.
 
-## Installing a prerelease version
+[^1]: See ["Adding dist-tags to packages" on docs.npmjs.com](https://docs.npmjs.com/adding-dist-tags-to-packages)
+
+## Installing a prerelease
 
 Use a prerelease tag—e.g. `ion`—to install a published prerelease.
 
@@ -20,9 +22,9 @@ npm install cesium@ion
 
 ## Do we need a prelease?
 
-A prerelease version of CesiumJS typically _will not have the level of validation_ that the official monthly release receives. Additionally, [cherry picking commits](https://www.atlassian.com/git/tutorials/cherry-pick) for hot fixes can _complicate commit history and introduce bugs_. Consider if a prerelease is the ideal solution or if [continuous deployment artifacts](../../ContinuousIntegration/README.md#continuous-deployment) will suffice.
+A prerelease of CesiumJS typically _will not have the level of validation_ that the official monthly numbered release receives. Additionally, [cherry picking commits](https://www.atlassian.com/git/tutorials/cherry-pick) for hot fixes can _complicate commit history and introduce bugs_. Consider if a prerelease is the ideal solution or if [continuous deployment artifacts](../../ContinuousIntegration/README.md#continuous-deployment) will suffice.
 
-## Publishing a prelease version
+## Publishing a prelease
 
 This process is based on an abbreviated version of the [monthly release guide](../README.md). Familiarity with our typical release process is recommended, but not required.
 
@@ -40,7 +42,7 @@ git checkout -b <branch-name>
 
 ### 2. Cherry pick relevant commits
 
-- Use [`git-cherry-pick`](https://git-scm.com/docs/git-cherry-pick) one or more times to apply select commits to the current branch
+- Use [`git-cherry-pick`](https://git-scm.com/docs/git-cherry-pick) one or more times to apply select commits to the current branch.
 - As necessary, resolve any merge conflicts, add, and continue.
 
 #### Commands
@@ -92,10 +94,10 @@ While the full extent of typical release testing is not required, at minimum, cr
 
 ### 6. Push and tag the release commit
 
-- Push your commits to the _current_ branch
-- Create and push a [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), e.g., if the version string from previous steps is `1.123.1-ion.0`, run
+- Push your commits to the _current_ branch.
+- Create and push a [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), e.g., if the version string from previous steps is `1.123.1-ion.0`, run:
   - `git tag -a 1.123.1-ion.0 -m "1.123.1 ion prerelease"`
-  - `git push origin 1.123.1-ion.0` (this assumes origin is the primary cesium repository; do not use `git push --tags` as it pushes all tags from all remotes you have on your system.)
+  - `git push origin 1.123.1-ion.0` (this assumes origin is the primary cesium repository; do not use `git push --tags` as it pushes all tags from all remotes you have on your system)
 
 #### Commands
 

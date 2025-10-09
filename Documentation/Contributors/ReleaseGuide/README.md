@@ -3,7 +3,12 @@
 We release CesiumJS on the first work day of every month.
 
 - [**Release Schedule**](./ReleaseSchedule.md): The upcoming monthly release schedule and the developer responsible for managing each release
-- [**Perelease Guide**](./Prereleases/README.md): If and how to publish a prerelease version ahead of the typical monthly release
+- [**Patch Release Guide**](./PatchReleases/README.md): If and how to publish a patch release[^1] ahead of the typical monthly release, typically used in the case of a significant regression or an issue with published dependency versions.
+- [**Perelease Guide**](./Prereleases/README.md): If and how to publish a tagged prerelease[^2] ahead of the typical monthly release, typically used for internal testing.
+
+[^1]: See ["About semantic versioning" on docs.npmjs.com](https://docs.npmjs.com/about-semantic-versioning)
+
+[^2]: See ["Adding dist-tags to packages" on docs.npmjs.com](https://docs.npmjs.com/adding-dist-tags-to-packages)
 
 ## Motivation
 
