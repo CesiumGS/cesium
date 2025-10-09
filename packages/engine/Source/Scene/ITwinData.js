@@ -25,23 +25,31 @@ const ITwinData = {};
  * We recommend waiting 10-20 seconds and trying to load the tileset again.
  * If all exports are Invalid this will throw an error.
  *
+ * See the {@link https://developer.bentley.com/apis/mesh-export/overview/|iTwin Platform Mesh Export API documentation} for more information on request parameters
+ *
  * @example
- * const tileset = await Cesium.ITwinData.createTilesetFromIModelId(iModelId);
+ * const tileset = await Cesium.ITwinData.createTilesetFromIModelId({ iModelId });
  * if (Cesium.defined(tileset)) {
  *   viewer.scene.primitives.add(tileset);
  * }
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @param {string} iModelId The id of the iModel to load
- * @param {Cesium3DTileset.ConstructorOptions} [options] Object containing options to pass to the internally created {@link Cesium3DTileset}.
+ * @param {Object} options
+ * @param {string} options.iModelId The id of the iModel to load
+ * @param {Cesium3DTileset.ConstructorOptions} [options.tilesetOptions] Object containing options to pass to the internally created {@link Cesium3DTileset}.
+ * @param {string} [options.changesetId] The id of the changeset to load, if not provided the latest changesets will be used
  * @returns {Promise<Cesium3DTileset | undefined>} A promise that will resolve to the created 3D tileset or <code>undefined</code> if there is no completed export for the given iModel id
  *
  * @throws {RuntimeError} If all exports for the given iModel are Invalid
  * @throws {RuntimeError} If the iTwin API request is not successful
  */
-ITwinData.createTilesetFromIModelId = async function (iModelId, options) {
-  const { exports } = await ITwinPlatform.getExports(iModelId);
+ITwinData.createTilesetFromIModelId = async function ({
+  iModelId,
+  changesetId,
+  tilesetOptions,
+}) {
+  const { exports } = await ITwinPlatform.getExports(iModelId, changesetId);
 
   if (
     exports.length > 0 &&
@@ -72,7 +80,7 @@ ITwinData.createTilesetFromIModelId = async function (iModelId, options) {
     url: tilesetUrl,
   });
 
-  return Cesium3DTileset.fromUrl(resource, options);
+  return Cesium3DTileset.fromUrl(resource, tilesetOptions);
 };
 
 /**
@@ -82,22 +90,29 @@ ITwinData.createTilesetFromIModelId = async function (iModelId, options) {
  * If the <code>type</code> or <code>rootDocument</code> are not provided this function
  * will first request the full metadata for the specified reality data to fill these values.
  *
+ * The <code>maximumScreenSpaceError</code> of the resulting tileset will default to 4,
+ * unless it is explicitly overridden with the given tileset options.
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @param {string} iTwinId The id of the iTwin to load data from
- * @param {string} realityDataId The id of the reality data to load
- * @param {ITwinPlatform.RealityDataType} [type] The type of this reality data
- * @param {string} [rootDocument] The path of the root document for this reality data
+ * @param {Object} options
+ * @param {string} options.iTwinId The id of the iTwin to load data from
+ * @param {string} options.realityDataId The id of the reality data to load
+ * @param {ITwinPlatform.RealityDataType} [options.type] The type of this reality data
+ * @param {string} [options.rootDocument] The path of the root document for this reality data
+ * @param {Cesium3DTileset.ConstructorOptions} [options.tilesetOptions] Object containing
+ * options to pass to the internally created {@link Cesium3DTileset}.
  * @returns {Promise<Cesium3DTileset>}
  *
  * @throws {RuntimeError} if the type of reality data is not supported by this function
  */
-ITwinData.createTilesetForRealityDataId = async function (
+ITwinData.createTilesetForRealityDataId = async function ({
   iTwinId,
   realityDataId,
   type,
   rootDocument,
-) {
+  tilesetOptions,
+}) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iTwinId", iTwinId);
   Check.typeOf.string("realityDataId", realityDataId);
@@ -135,9 +150,16 @@ ITwinData.createTilesetForRealityDataId = async function (
     rootDocument,
   );
 
-  return Cesium3DTileset.fromUrl(tilesetAccessUrl, {
+  // The maximum screen space error was defined to default to 4 for
+  // reality data tilesets, because they did not show the expected
+  // amount of detail with the default value of 16. Values that are
+  // given in the tilesetOptions should still override that default.
+  const internalTilesetOptions = {
     maximumScreenSpaceError: 4,
-  });
+    ...tilesetOptions,
+  };
+
+  return Cesium3DTileset.fromUrl(tilesetAccessUrl, internalTilesetOptions);
 };
 
 /**
@@ -147,20 +169,21 @@ ITwinData.createTilesetForRealityDataId = async function (
  * If the <code>type</code> or <code>rootDocument</code> are not provided this function
  * will first request the full metadata for the specified reality data to fill these values.
  *
- * @param {string} iTwinId The id of the iTwin to load data from
- * @param {string} realityDataId The id of the reality data to load
- * @param {ITwinPlatform.RealityDataType} [type] The type of this reality data
- * @param {string} [rootDocument] The path of the root document for this reality data
+ * @param {Object} options
+ * @param {string} options.iTwinId The id of the iTwin to load data from
+ * @param {string} options.realityDataId The id of the reality data to load
+ * @param {ITwinPlatform.RealityDataType} [options.type] The type of this reality data
+ * @param {string} [options.rootDocument] The path of the root document for this reality data
  * @returns {Promise<GeoJsonDataSource | KmlDataSource>}
  *
  * @throws {RuntimeError} if the type of reality data is not supported by this function
  */
-ITwinData.createDataSourceForRealityDataId = async function (
+ITwinData.createDataSourceForRealityDataId = async function ({
   iTwinId,
   realityDataId,
   type,
   rootDocument,
-) {
+}) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iTwinId", iTwinId);
   Check.typeOf.string("realityDataId", realityDataId);
@@ -209,16 +232,17 @@ ITwinData.createDataSourceForRealityDataId = async function (
 /**
  * Load data from the Geospatial Features API as GeoJSON.
  *
- * @param {string} iTwinId The id of the iTwin to load data from
- * @param {string} collectionId The id of the data collection to load
- * @param {number} [limit=10000] number of items per page, must be between 1 and 10,000 inclusive
+ * @param {Object} options
+ * @param {string} options.iTwinId The id of the iTwin to load data from
+ * @param {string} options.collectionId The id of the data collection to load
+ * @param {number} [options.limit=10000] number of items per page, must be between 1 and 10,000 inclusive
  * @returns {Promise<GeoJsonDataSource>}
  */
-ITwinData.loadGeospatialFeatures = async function (
+ITwinData.loadGeospatialFeatures = async function ({
   iTwinId,
   collectionId,
   limit,
-) {
+}) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iTwinId", iTwinId);
   Check.typeOf.string("collectionId", collectionId);

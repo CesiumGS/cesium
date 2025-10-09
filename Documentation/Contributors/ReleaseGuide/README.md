@@ -1,8 +1,13 @@
 # Release Guide
 
-We release Cesium on the first work day of every month. The [Release Schedule](./ReleaseSchedule.md) outlines the release schedule and the developer responsible for each month's release.
+We release CesiumJS on the first work day of every month.
 
-There is no release manager; instead, our community shares the responsibility. Any committer can create the release for a given month, and at any point, they can pass the responsibility to someone else, or someone else can ask for it. This spreads knowledge, avoids stratification, avoids a single point of failure, and is beautifully unstructured ([more info](https://community.cesium.com/t/cesium-releases/45)).
+- [**Release Schedule**](./ReleaseSchedule.md): The upcoming monthly release schedule and the developer responsible for managing each release
+- [**Perelease Guide**](./Prereleases/README.md): If and how to publish a prerelease version ahead of the typical monthly release
+
+## Motivation
+
+There is no one release manager; instead, [our community shares the responsibility](https://community.cesium.com/t/cesium-releases/45). Any committer can create the release for a given month, and at any point, they can pass the responsibility to someone else, or someone else can ask for it. This spreads knowledge, avoids stratification, avoids a single point of failure, and is beautifully unstructured.
 
 ## One week before release
 
@@ -68,7 +73,7 @@ There is no release manager; instead, our community shares the responsibility. A
     - `npm publish -w @cesium/engine`
     - `npm publish -w @cesium/widgets`
 29. Publish the top-level `cesium` package to npm by running `npm publish` in the repository root (not the unzipped file directory) (the first time you do this, you will need to authorize the machine using `npm adduser`).
-30. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch `git merge origin <tag-name>`. CI will deploy the hosted release, Sandcastle, and the updated doc when you push the branch up.
+30. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch `git merge origin <tag-name> --ff-only`. CI will deploy the hosted release, Sandcastle, and the updated doc when you push the branch up.
 31. After the `cesium.com` branch is live on cesium.com, comment in the `Communications` channel in Teams to notify comms that the release is done so they can add these highlights and publish the monthly blog post
     - Note, it may take a little while for the new version of CesiumJS to be live on cesium.com (~30 minutes after the branch builds). You can check the version of Cesium in [sandcastle](https://sandcastle.cesium.com/) by looking at the tab above the cesium pane.
 32. Continue to the [Cesium Analytics release](https://github.com/CesiumGS/cesium-analytics/tree/main/Documentation/ReleaseGuide)

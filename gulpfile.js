@@ -43,8 +43,18 @@ if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
 const karmaConfigFile = resolve("./Specs/karma.conf.cjs");
+function getWorkspaces(onlyDependencies = false) {
+  const dependencies = Object.keys(packageJson.dependencies);
+  return onlyDependencies
+    ? packageJson.workspaces.filter((workspace) => {
+        return dependencies.includes(
+          workspace.replace("packages", `@${scope}`),
+        );
+      })
+    : packageJson.workspaces;
+}
 
-const devDeployUrl = "https://ci-builds.cesium.com/cesium/";
+const devDeployUrl = process.env.DEPLOYED_URL;
 const isProduction = process.env.PROD;
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
@@ -113,7 +123,7 @@ function handleBuildWarnings(result) {
 export async function build() {
   // Configure build options from command line arguments.
   const minify = argv.minify ?? false;
-  const removePragmas = argv.pragmas ?? false;
+  const removePragmas = argv.removePragmas ?? false;
   const sourcemap = argv.sourcemap ?? true;
   const node = argv.node ?? true;
 
@@ -247,7 +257,7 @@ export async function buildTs() {
   } else if (argv.workspace) {
     workspaces = argv.workspace;
   } else {
-    workspaces = packageJson.workspaces;
+    workspaces = getWorkspaces(true);
   }
 
   // Generate types for passed packages in order.
@@ -353,18 +363,14 @@ export async function prepare() {
     "node_modules/@cesium/wasm-splats/wasm_splats_bg.wasm",
     "packages/engine/Source/ThirdParty/wasm_splats_bg.wasm",
   );
-  // Copy pako and zip.js worker files to Source/ThirdParty
+  // Copy zip.js worker and wasm files to Source/ThirdParty
   copyFileSync(
-    "node_modules/pako/dist/pako_inflate.min.js",
-    "packages/engine/Source/ThirdParty/Workers/pako_inflate.min.js",
+    "node_modules/@zip.js/zip.js/dist/zip-web-worker.js",
+    "packages/engine/Source/ThirdParty/Workers/zip-web-worker.js",
   );
   copyFileSync(
-    "node_modules/pako/dist/pako_deflate.min.js",
-    "packages/engine/Source/ThirdParty/Workers/pako_deflate.min.js",
-  );
-  copyFileSync(
-    "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
-    "packages/engine/Source/ThirdParty/Workers/z-worker-pako.js",
+    "node_modules/@zip.js/zip.js/dist/zip-module.wasm",
+    "packages/engine/Source/ThirdParty/zip-module.wasm",
   );
 
   // Copy prism.js and prism.css files into Tools
@@ -400,7 +406,7 @@ export async function buildDocs() {
       stdio: "inherit",
       env: Object.assign({}, process.env, {
         CESIUM_VERSION: version,
-        CESIUM_PACKAGES: packageJson.workspaces,
+        CESIUM_PACKAGES: getWorkspaces(true),
       }),
     },
   );
@@ -438,6 +444,13 @@ export const websiteRelease = gulp.series(
       development: false,
       minify: false,
       removePragmas: false,
+      node: false,
+    });
+  },
+  function () {
+    return buildCesium({
+      minify: true,
+      removePragmas: true,
       node: false,
     });
   },
@@ -533,6 +546,7 @@ async function pruneScriptsForZip(packageJsonPath) {
   delete scripts["build-ts"];
   delete scripts["build-third-party"];
   delete scripts["build-apps"];
+  delete scripts["build-sandcastle"];
   delete scripts.clean;
   delete scripts.cloc;
   delete scripts["build-docs"];
@@ -656,6 +670,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "!**/*.gitignore",
           "!Specs/e2e/*-snapshots/**",
           "!Apps/Sandcastle/gallery/development/**",
+          "!Apps/Sandcastle2/**",
         ],
         {
           encoding: false,
@@ -698,12 +713,10 @@ export async function deployStatus() {
   const status = argv.status;
   const message = argv.message;
 
-  const deployUrl = `${devDeployUrl + process.env.BRANCH}/`;
+  const deployUrl = `${devDeployUrl}`;
   const zipUrl = `${deployUrl}Cesium-${version}.zip`;
   const npmUrl = `${deployUrl}cesium-${version}.tgz`;
-  const coverageUrl = `${
-    devDeployUrl + process.env.BRANCH
-  }/Build/Coverage/index.html`;
+  const coverageUrl = `${devDeployUrl}Build/Coverage/index.html`;
 
   return Promise.all([
     setStatus(status, deployUrl, message, "deployment"),
@@ -999,11 +1012,13 @@ export async function test() {
   const release = argv.release ? argv.release : false;
   const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
-  const debug = argv.debug ? false : true;
+  const debug = argv.debug ? true : false;
   const debugCanvasWidth = argv.debugCanvasWidth;
   const debugCanvasHeight = argv.debugCanvasHeight;
-  const includeName = argv.includeName ? argv.includeName : "";
   const isProduction = argv.production;
+  const includeName = argv.includeName
+    ? argv.includeName.replace(/Spec$/, "")
+    : "";
 
   let workspace = argv.workspace;
   if (workspace) {
@@ -1017,7 +1032,7 @@ export async function test() {
     });
   }
 
-  let browsers = ["Chrome"];
+  let browsers = debug ? ["ChromeDebugging"] : ["Chrome"];
   if (argv.browsers) {
     browsers = argv.browsers.split(",");
   }
@@ -1087,7 +1102,7 @@ export async function test() {
     karmaConfigFile,
     {
       port: 9876,
-      singleRun: debug,
+      singleRun: !debug,
       browsers: browsers,
       specReporter: {
         suppressErrorSummary: false,
@@ -1488,8 +1503,8 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
           return result;
         }
 
-        // Resursively check the workspaces
-        for (const workspace of packageJson.workspaces) {
+        // Recursively check the workspaces
+        for (const workspace of getWorkspaces(true)) {
           const workspacePackageJson = require(`./${workspace}/package.json`);
           result = await getLicenseDataFromPackage(
             workspacePackageJson,

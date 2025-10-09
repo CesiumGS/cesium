@@ -23,34 +23,24 @@ function Batch(
   usingSphericalTextureCoordinates,
   zIndex,
 ) {
-  this.primitives = primitives; // scene level primitive collection
+  this.primitives = primitives; // scene level primitive collection (each Batch manages its own Primitive from this collection)
   this.classificationType = classificationType;
   this.appearanceType = appearanceType;
   this.materialProperty = materialProperty;
-  this.updaters = new AssociativeArray();
+  this.updaters = new AssociativeArray(); // GeometryUpdaters that manage the visual representation of the primitive.
   this.createPrimitive = true;
   this.primitive = undefined; // a GroundPrimitive encapsulating all the entities
-  this.oldPrimitive = undefined;
+  this.oldPrimitive = undefined; // a GroundPrimitive that is being replaced by the current primitive, but will still be shown until the current primitive is ready.
   this.geometry = new AssociativeArray();
   this.material = undefined;
   this.updatersWithAttributes = new AssociativeArray();
   this.attributes = new AssociativeArray();
-  this.invalidated = false;
-  this.removeMaterialSubscription =
-    materialProperty.definitionChanged.addEventListener(
-      Batch.prototype.onMaterialChanged,
-      this,
-    );
   this.subscriptions = new AssociativeArray();
   this.showsUpdated = new AssociativeArray();
   this.usingSphericalTextureCoordinates = usingSphericalTextureCoordinates;
   this.zIndex = zIndex;
   this.rectangleCollisionCheck = new RectangleCollisionChecker();
 }
-
-Batch.prototype.onMaterialChanged = function () {
-  this.invalidated = true;
-};
 
 Batch.prototype.overlapping = function (rectangle) {
   return this.rectangleCollisionCheck.collides(rectangle);
@@ -71,6 +61,13 @@ Batch.prototype.isMaterial = function (updater) {
   return defined(material) && material.equals(updaterMaterial);
 };
 
+/**
+ * Adds an updater to the Batch, and signals for a new Primitive to be created on the next update.
+ * @param {JulianDate} time
+ * @param {GeometryUpdater} updater
+ * @param {GeometryInstance} geometryInstance
+ * @private
+ */
 Batch.prototype.add = function (time, updater, geometryInstance) {
   const id = updater.id;
   this.updaters.set(id, updater);
@@ -100,6 +97,13 @@ Batch.prototype.add = function (time, updater, geometryInstance) {
   this.createPrimitive = true;
 };
 
+/**
+ * Remove an updater from the Batch, and potentially signals for a new Primitive to be created
+ * on the next update.
+ * @param {GeometryUpdater} updater
+ * @returns true if the updater was removed, false if it was not found.
+ * @private
+ */
 Batch.prototype.remove = function (updater) {
   const id = updater.id;
   const geometryInstance = this.geometry.get(id);
@@ -120,6 +124,13 @@ Batch.prototype.remove = function (updater) {
   return false;
 };
 
+/**
+ * Update a Batch, creating a new primitive, if necessary, or swapping out an old primitive for a new one that's ready.
+ * A new primitive is created whenever an updater is added to or removed from a Batch.
+ * @param {JulianDate} time
+ * @returns a boolean indicating whether the Batch was updated.
+ * @private
+ */
 Batch.prototype.update = function (time) {
   let isUpdated = true;
   let primitive = this.primitive;
@@ -295,6 +306,10 @@ Batch.prototype.getBoundingSphere = function (updater, result) {
   return BoundingSphereState.DONE;
 };
 
+/**
+ * Removes a Batch's primitive (and oldPrimitive, if it exists).
+ * @private
+ */
 Batch.prototype.destroy = function () {
   const primitive = this.primitive;
   const primitives = this.primitives;
@@ -305,10 +320,11 @@ Batch.prototype.destroy = function () {
   if (defined(oldPrimitive)) {
     primitives.remove(oldPrimitive);
   }
-  this.removeMaterialSubscription();
 };
 
 /**
+ * A container of Batch objects of ground geometry primitives, where a Batch is grouped by material,
+ * texture coordinate type, and spatial overlap.
  * @private
  */
 function StaticGroundGeometryPerMaterialBatch(
@@ -316,12 +332,20 @@ function StaticGroundGeometryPerMaterialBatch(
   classificationType,
   appearanceType,
 ) {
-  this._items = [];
-  this._primitives = primitives;
+  this._items = []; // array of Batch objects, each containing representing a primitive and a set of updaters that manage the visual representation of the primitive.
+  this._primitives = primitives; // scene level primitive collection
   this._classificationType = classificationType;
   this._appearanceType = appearanceType;
 }
 
+/**
+ * Adds an geometry updater to a Batch. Tries to find a preexisting compatible Batch, or else creates a new Batch.
+ * Used by Visualizer classes to add and update (remove->add) a primitive's Updater set.
+ *
+ * @param {JulianDate} time
+ * @param {GeometryUpdater} updater A GeometryUpdater that manages the visual representation of a primitive.
+ * @private
+ */
 StaticGroundGeometryPerMaterialBatch.prototype.add = function (time, updater) {
   const items = this._items;
   const length = items.length;
@@ -361,21 +385,30 @@ StaticGroundGeometryPerMaterialBatch.prototype.add = function (time, updater) {
   items.push(batch);
 };
 
+/**
+ * Removes an updater from a Batch. Defers potential deletion until the next update.
+ * @param {GeometryUpdater} updater A GeometryUpdater that manages the visual representation of a primitive.
+ * @private
+ */
 StaticGroundGeometryPerMaterialBatch.prototype.remove = function (updater) {
   const items = this._items;
   const length = items.length;
   for (let i = length - 1; i >= 0; i--) {
     const item = items[i];
     if (item.remove(updater)) {
-      if (item.updaters.length === 0) {
-        items.splice(i, 1);
-        item.destroy();
-      }
+      // If the item is now empty, delete it (deferred until the next update,
+      // in case a new updater is added to the same item first).
       break;
     }
   }
 };
 
+/**
+ * Updates all the items (Batches) in the collection, and deletes any that are empty.
+ * @param {JulianDate} time
+ * @returns a boolean indicating whether any of the items (Batches) were updated.
+ * @private
+ */
 StaticGroundGeometryPerMaterialBatch.prototype.update = function (time) {
   let i;
   const items = this._items;
@@ -383,13 +416,8 @@ StaticGroundGeometryPerMaterialBatch.prototype.update = function (time) {
 
   for (i = length - 1; i >= 0; i--) {
     const item = items[i];
-    if (item.invalidated) {
+    if (item.updaters.length === 0) {
       items.splice(i, 1);
-      const updaters = item.updaters.values;
-      const updatersLength = updaters.length;
-      for (let h = 0; h < updatersLength; h++) {
-        this.add(time, updaters[h]);
-      }
       item.destroy();
     }
   }

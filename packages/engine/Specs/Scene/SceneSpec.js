@@ -46,8 +46,8 @@ import {
   GroundPrimitive,
   PerInstanceColorAppearance,
   ColorGeometryInstanceAttribute,
-  Resource,
   HeightReference,
+  SharedContext,
 } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";
@@ -662,33 +662,6 @@ describe(
       });
     }
 
-    function returnTileJson(path) {
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        Resource._DefaultImplementations.loadWithXhr(
-          path,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-        );
-      };
-    }
-
-    function returnQuantizedMeshTileJson() {
-      return returnTileJson(
-        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
-      );
-    }
-
     function createRectangle(rectangle, height) {
       return new Primitive({
         geometryInstances: new GeometryInstance({
@@ -797,6 +770,63 @@ describe(
 
         scene.backgroundColor = Color.BLUE;
         expect(scene).toRender([0, 0, 255, 255]);
+      });
+
+      describe("with shared context", () => {
+        // All of these tests require a real WebGL context. Skip them if WebGL is being stubbed.
+        const webglStub = !!window.webglStub;
+
+        it("accepts a SharedContext in place of ContextOptions", function () {
+          if (webglStub) {
+            return;
+          }
+
+          const sharedContext = new SharedContext();
+          const s = new Scene({
+            canvas: createCanvas(5, 5),
+            contextOptions: sharedContext,
+          });
+
+          expect(s._context._gl).toBe(sharedContext._context._gl);
+          s.destroy();
+        });
+
+        it("draws background color with SharedContext", function () {
+          if (webglStub) {
+            return;
+          }
+
+          const sharedContext = new SharedContext();
+          const s1 = new Scene({
+            canvas: createCanvas(1, 1),
+            contextOptions: sharedContext,
+          });
+          const s2 = new Scene({
+            canvas: createCanvas(1, 1),
+            contextOptions: sharedContext,
+          });
+
+          expect(s1).toRender([0, 0, 0, 255]);
+          expect(s2).toRender([0, 0, 0, 255]);
+
+          s1.backgroundColor = Color.BLUE;
+          s2.backgroundColor = Color.RED;
+          expect(s1).toRender([0, 0, 255, 255]);
+          expect(s2).toRender([255, 0, 0, 255]);
+        });
+
+        it("reference-counts primitives IFF using a SharedContext", function () {
+          if (webglStub) {
+            return;
+          }
+
+          expect(scene.primitives._countReferences).toBe(false);
+          const s = new Scene({
+            canvas: createCanvas(5, 5),
+            contextOptions: new SharedContext(),
+          });
+          expect(s.primitives._countReferences).toBe(true);
+        });
       });
     });
 
@@ -2064,29 +2094,26 @@ describe(
     });
 
     it("Sets terrainProvider", async function () {
-      returnQuantizedMeshTileJson();
-
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
-      scene.terrainProvider =
-        await CesiumTerrainProvider.fromUrl("//terrain/tiles");
+      scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/Heightmap",
+      );
 
       expect(scene.terrainProvider).toBe(globe.terrainProvider);
       scene.globe = undefined;
-      const newProvider =
-        await CesiumTerrainProvider.fromUrl("//newTerrain/tiles");
+      const newProvider = await CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
+      );
       expect(function () {
         scene.terrainProvider = newProvider;
       }).not.toThrow();
-
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("setTerrain updates terrain provider", async function () {
-      returnQuantizedMeshTileJson();
-
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
-      const promise = CesiumTerrainProvider.fromUrl("//terrain/tiles");
+      const promise = CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
+      );
       scene.setTerrain(new Terrain(promise));
 
       const originalProvider = scene.terrainProvider;
@@ -2101,26 +2128,20 @@ describe(
       await promise;
 
       expect(terrainWasChanged).toBeTrue();
-
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("setTerrain handles destroy", async function () {
       const scene = createScene();
-      returnQuantizedMeshTileJson();
-
       scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
 
-      const promise = CesiumTerrainProvider.fromUrl("//newTerrain/tiles");
+      const promise = CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
+      );
       scene.setTerrain(new Terrain(promise));
       scene.destroyForSpecs();
 
       await expectAsync(promise).toBeResolved();
       expect(scene.isDestroyed()).toBeTrue();
-
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("Gets terrainProviderChanged", function () {

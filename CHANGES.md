@@ -1,10 +1,109 @@
 # Change Log
 
+## 1.135 - 2025-11-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
+- Fix issues with label background when updating properties while `label.show` is `false`. [#12138](https://github.com/CesiumGS/cesium/issues/12138)
+
+## 1.134 - 2025-10-01
+
+- [Sandcastle](https://sandcastle.cesium.com/) has been updated at `https://sandcastle.cesium.com`! The [legacy Sandcastle app](https://cesium.com/downloads/cesiumjs/releases/1.134/Apps/Sandcastle/index.html) will remain available through November 3, 2025.
+
+### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- Voxel rendering now requires a WebGL2 context, which is [enabled by default since 1.101](https://github.com/CesiumGS/cesium/pull/10894). Make sure the `requestWebGl1` flag in `contextOptions` is NOT set to true.
+- The `defaultValue` function has been removed. Instead, use the [nullish coalescing (`??`)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing) operator. See the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide#default-parameter-values) for usage information and examples.
+- `defaultValue.EMPTY_OBJECT` has been removed. Instead, use `Frozen.EMPTY_OBJECT`. See the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide#default-parameter-values) for usage information and examples.
+
+#### Additions :tada:
+
+- Added Google2DImageryProvider to load imagery from [Google Maps](https://developers.google.com/maps/documentation/tile/2d-tiles-overview) [#12913](https://github.com/CesiumGS/cesium/pull/12913)
+- Added an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
+
+#### Fixes :wrench:
+
+- Fixed vertical misalignment of glyphs in labels with small fonts [#8474](https://github.com/CesiumGS/cesium/issues/8474)
+- Converted voxel raymarching to eye coordinates to fix precision issues in large datasets. [#12061](https://github.com/CesiumGS/cesium/issues/12061)
+- Fixed flickering artifact in Gaussian splat models caused by incorrect sorting results. [#12662](https://github.com/CesiumGS/cesium/issues/12662)
+- Fixed issue where multiple instances of a Gaussian splat tileset would transform tile positions incorrectly and render out of position. [#12795](https://github.com/CesiumGS/cesium/issues/12795)
+- Fixed rendering for geometry entities when `requestRenderMode` is enabled. [#12841](https://github.com/CesiumGS/cesium/pull/12841)
+- Improved performance and reduced memory usage of `Event` class. [#12896](https://github.com/CesiumGS/cesium/pull/12896)
+- Improved performance of clamped labels. [#12905](https://github.com/CesiumGS/cesium/pull/12905)
+- Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
+- Prevent runtime errors for certain forms of invalid PNTS files [#12872](https://github.com/CesiumGS/cesium/issues/12872)
+- Revert `createImageBitmap` options update to continue support for older browsers [#12846](https://github.com/CesiumGS/cesium/issues/12846)
+
+## 1.133.1 - 2025-09-08
+
+This is an npm-only release to fix a dependency issue published in 1.133.0
+
+## 1.133 - 2025-09-02
+
+- Give the [new version of Sandcastle](https://dev-sandcastle.cesium.com/) a try today!
+
+### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- Removed the argument fallback in `ITwinData.*` functions. Instead, use the new options argument signature. [#12778](https://github.com/CesiumGS/cesium/issues/12778)
+
+#### Additions :tada:
+
+- Added support for the [EXT_mesh_primitive_restart](https://github.com/KhronosGroup/glTF/pull/2478) glTF extension. [#12764](https://github.com/CesiumGS/cesium/issues/12764)
+- Added spherical harmonics support for Gaussian splats, supported with the SPZ compression format. [#12790](https://github.com/CesiumGS/cesium/pull/12790)
+- Added `Ellipsoid.MARS` for use with Mars terrain and imagery. [#12828](https://github.com/CesiumGS/cesium/pull/12828)
+- Allow passing `Cesium3DTileset` constructor options to the tileset that is created with `ITwinData.createTilesetForRealityDataId`. [#12709](https://github.com/CesiumGS/cesium/issues/12709)
+
+#### Fixes :wrench:
+
+- Fixed issue where a Gaussian splat tileset would be rendered even if out of current camera view. [#12840](https://github.com/CesiumGS/cesium/pull/12840)
+- Removes the minimum tile threshold of four for WMTS. [#4372](https://github.com/CesiumGS/cesium/issues/4372)
+- Fixed a crash when loading PNTS (point cloud) data that contained a batch table without a binary part. [#11166](https://github.com/CesiumGS/cesium/issues/11166)
+- Fixed an error picking an area hidden by a `ClippingPolygon`. [#12725](https://github.com/CesiumGS/cesium/issues/12725)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- Deprecated support for the `KHR_spz_gaussian_splats_compression` extension in favor of the latest 3D Gaussian splatting extensions for glTF, `KHR_gaussian_splatting` and `KHR_gaussian_splatting_compression_spz_2`. The deprecated extension will be removed in version 1.135. To ensure support in CesiumJS 1.135 and beyond, Please re-tile existing Gaussian splatting 3D Tiles before November 1, 2025. [#12837](https://github.com/CesiumGS/cesium/issues/12837)
+
+## 1.132 - 2025-08-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixes incorrect polygon culling in 2D scene mode. [#1552](https://github.com/CesiumGS/cesium/issues/1552)
+- Fixes material flashing when changing properties. [#1640](https://github.com/CesiumGS/cesium/issues/1640), [#12716](https://github.com/CesiumGS/cesium/issues/12716)
+- Fixed an issue where draped imagery on tilesets was not updated based on the visibility of the imagery layer. [#12742](https://github.com/CesiumGS/cesium/issues/12742)
+- Fixes an exception when removing a Gaussian splat tileset from the scene primitives when it has more than one tile. [#12726](https://github.com/CesiumGS/cesium/pull/12726)
+- Fixes rendering of Gaussian splats when they are scaled by the glTF transform, tileset transform, or model matrix. [#12721](https://github.com/CesiumGS/cesium/issues/12721), [#12718](https://github.com/CesiumGS/cesium/issues/12718)
+- Fixes label background translucency issue. [#12673](https://github.com/CesiumGS/cesium/issues/12673)
+- Updated the type of many properties and functions of `Scene` to clarify that they may be `undefined`. For the full list check PR: [#12736](https://github.com/CesiumGS/cesium/pull/12736)
+- Fixes Gaussian splats incorrectly rendering when `Cesium3DTileset.show` is `false`. [#12748](https://github.com/CesiumGS/cesium/pull/12748)
+- Fixed the PointCloudShading.normalShading parameter, to disable normal shading when set to false, even if the point cloud contains normals. [#11196](https://github.com/CesiumGS/cesium/issues/11196)
+- Updated GPU vertex transformations to reduce precision errors. [#4250](https://github.com/CesiumGS/cesium/issues/4250)
+- Fixes Gaussian splats orientation with respect to glTF up-axis by updating `spz-loader` to version `0.3.0`. [#12737](https://github.com/CesiumGS/cesium/issues/12737), [#12749](https://github.com/CesiumGS/cesium/issues/12749)
+
+#### Additions :tada:
+
+- Expand the CustomShader Sample to support real-time modification of CustomShader. [#12702](https://github.com/CesiumGS/cesium/pull/12702)
+- Add wrapR property to Sampler and Texture3D, to support the newly added third dimension wrap.[#12701](https://github.com/CesiumGS/cesium/pull/12701)
+- Added the ability to load a specific changeset for iTwin Mesh Exports using `ITwinData.createTilesetFromIModelId` [#12778](https://github.com/CesiumGS/cesium/issues/12778)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- Updated all of the `ITwinData.*` functions to accept an `options` parameter instead of individual arguments to avoid confusion with multiple optional arguments. There is a fallback to the old signature that will be removed in 1.133 [#12778](https://github.com/CesiumGS/cesium/issues/12778)
+
 ## 1.131 - 2025-07-01
 
 ### @cesium/engine
 
-### Fixes :wrench:
+#### Fixes :wrench:
 
 - Updates use of deprecated options on createImageBitmap. [#12664](https://github.com/CesiumGS/cesium/pull/12664)
 - Fixed raymarching step size for cylindrical voxels. [#12681](https://github.com/CesiumGS/cesium/pull/12681)
@@ -2420,11 +2519,13 @@ _This is an npm-only release to fix a publishing issue_.
 
 - Clipping planes on tilesets now use the root tile's transform, or the root tile's bounding sphere if a transform is not defined. [#7034](https://github.com/CesiumGS/cesium/pull/7034)
   - This is to make clipping planes' coordinates always relative to the object they're attached to. So if you were positioning the clipping planes as in the example below, this is no longer necessary:
+
   ```javascript
   clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
     tileset.boundingSphere.center,
   );
   ```
+
   - This also fixes several issues with clipping planes not using the correct transform for tilesets with children.
 
 ### Additions :tada:
@@ -4270,6 +4371,7 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
+
     - `TimeInterval.fromIso8601` now takes a single options parameter. Code that looked like:
 
             TimeInterval.fromIso8601(intervalString, true, true, data);
@@ -4282,6 +4384,7 @@ _This is an npm-only release to fix a publishing issue_.
                 isStopIncluded : true,
                 data : data
             });
+
     - `interval.intersect(otherInterval)` -> `TimeInterval.intersect(interval, otherInterval)`
     - `interval.contains(date)` -> `TimeInterval.contains(interval, date)`
 

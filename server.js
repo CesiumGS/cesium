@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import { performance } from "perf_hooks";
-import request from "request";
 import { URL } from "url";
 
 import chokidar from "chokidar";
@@ -19,6 +18,8 @@ import {
   glslToJavaScript,
   createIndexJs,
   buildCesium,
+  getSandcastleConfig,
+  buildSandcastleGallery,
 } from "./scripts/build.js";
 
 const argv = yargs(process.argv)
@@ -30,14 +31,6 @@ const argv = yargs(process.argv)
     public: {
       type: "boolean",
       description: "Run a public server that listens on all interfaces.",
-    },
-    "upstream-proxy": {
-      description:
-        'A standard proxy server that will be used to retrieve data.  Specify a URL including port, e.g. "http://proxy:8000".',
-    },
-    "bypass-upstream-proxy-hosts": {
-      description:
-        'A comma separated list of hosts that will bypass the specified upstream_proxy, e.g. "lanhost1,lanhost2"',
     },
     production: {
       type: "boolean",
@@ -88,6 +81,22 @@ async function generateDevelopmentBuild() {
 
   return contexts;
 }
+
+// Delay execution of the callback until a short time has elapsed since it was last invoked, preventing
+// calls to the same function in quick succession from triggering multiple builds.
+const throttleDelay = 500;
+const throttle = (callback) => {
+  let timeout;
+  return () =>
+    new Promise((resolve) => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      timeout = setTimeout(() => {
+        resolve(callback());
+      }, throttleDelay);
+    });
+};
 
 (async function () {
   const gzipHeader = Buffer.from("1F8B08", "hex");
@@ -277,6 +286,32 @@ async function generateDevelopmentBuild() {
       specsCache.clear();
     });
 
+    if (!production) {
+      const { configPath, root, gallery } = await getSandcastleConfig();
+      const baseDirectory = path.relative(root, path.dirname(configPath));
+      const galleryFiles = gallery.files.map((pattern) =>
+        path.join(baseDirectory, pattern),
+      );
+      const galleryWatcher = chokidar.watch(galleryFiles, {
+        ignoreInitial: true,
+      });
+
+      galleryWatcher.on(
+        "all",
+        throttle(async () => {
+          const startTime = performance.now();
+          try {
+            await buildSandcastleGallery();
+            console.log(
+              `Gallery built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
+            );
+          } catch (e) {
+            console.error(e);
+          }
+        }),
+      );
+    }
+
     // Rebuild jsHintOptions as needed and serve as-is
     app.get(
       "/Apps/Sandcastle/jsHintOptions.js",
@@ -304,96 +339,6 @@ async function generateDevelopmentBuild() {
   }
 
   app.use(express.static(path.resolve(".")));
-
-  const dontProxyHeaderRegex =
-    /^(?:Host|Proxy-Connection|Connection|Keep-Alive|Transfer-Encoding|TE|Trailer|Proxy-Authorization|Proxy-Authenticate|Upgrade)$/i;
-
-  //eslint-disable-next-line no-unused-vars
-  function filterHeaders(req, headers) {
-    const result = {};
-    // filter out headers that are listed in the regex above
-    Object.keys(headers).forEach(function (name) {
-      if (!dontProxyHeaderRegex.test(name)) {
-        result[name] = headers[name];
-      }
-    });
-    return result;
-  }
-
-  const upstreamProxy = argv["upstream-proxy"];
-  const bypassUpstreamProxyHosts = {};
-  if (argv["bypass-upstream-proxy-hosts"]) {
-    argv["bypass-upstream-proxy-hosts"].split(",").forEach(function (host) {
-      bypassUpstreamProxyHosts[host.toLowerCase()] = true;
-    });
-  }
-
-  //eslint-disable-next-line no-unused-vars
-  app.param("remote", function (req, res, next, remote) {
-    if (remote) {
-      // Handles request like http://localhost:8080/proxy/http://example.com/file?query=1
-      let remoteUrl = remote.join("/");
-      // add http:// to the URL if no protocol is present
-      if (!/^https?:\/\//.test(remoteUrl)) {
-        remoteUrl = `http://${remoteUrl}`;
-      }
-      remoteUrl = new URL(remoteUrl);
-      // copy query string
-      const baseURL = `${req.protocol}://${req.headers.host}/`;
-      remoteUrl.search = new URL(req.url, baseURL).search;
-
-      req.remote = remoteUrl;
-    }
-    next();
-  });
-
-  //eslint-disable-next-line no-unused-vars
-  app.get("/proxy{/*remote}", function (req, res, next) {
-    let remoteUrl = req.remote;
-    if (!remoteUrl) {
-      // look for request like http://localhost:8080/proxy/?http%3A%2F%2Fexample.com%2Ffile%3Fquery%3D1
-      remoteUrl = Object.keys(req.query)[0];
-      if (remoteUrl) {
-        const baseURL = `${req.protocol}://${req.headers.host}/`;
-        remoteUrl = new URL(remoteUrl, baseURL);
-      }
-    }
-
-    if (!remoteUrl) {
-      return res.status(400).send("No url specified.");
-    }
-
-    if (!remoteUrl.protocol) {
-      remoteUrl.protocol = "http:";
-    }
-
-    let proxy;
-    if (upstreamProxy && !(remoteUrl.host in bypassUpstreamProxyHosts)) {
-      proxy = upstreamProxy;
-    }
-
-    // encoding : null means "body" passed to the callback will be raw bytes
-
-    request.get(
-      {
-        url: remoteUrl.toString(),
-        headers: filterHeaders(req, req.headers),
-        encoding: null,
-        proxy: proxy,
-      },
-      //eslint-disable-next-line no-unused-vars
-      function (error, response, body) {
-        let code = 500;
-
-        if (response) {
-          code = response.statusCode;
-          res.header(filterHeaders(req, response.headers));
-        }
-
-        res.status(code).send(body);
-      },
-    );
-  });
 
   const server = app.listen(
     argv.port,

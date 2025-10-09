@@ -1,0 +1,6 @@
+# Format all code with prettier
+2fd0e8f7e4212bd1e7084299187f70597a6bbfd8
+# var -> const/let
+8143df4436b79260e9861f63c6ac134d7910a818
+# run prettier v3
+09a719b8fb4616ecbcd7370e81dcdc998b64b6e2
