@@ -790,11 +790,11 @@ function addDrillPickedResults(
 
 /**
  * Drill pick by repeatedly calling a given `pickCallback`, each time stripping away the previously picked objects.
- * @param {number} [limit=Number.MAX_VALUE] If supplied, stop drilling after collecting this many picks
  * @param {function(number): object[]} pickCallback Pick callback to execute each iteration
+ * @param {number} [limit=Number.MAX_VALUE] If supplied, stop drilling after collecting this many picks
  * @returns {object[]} List of picked results
  */
-function drillPick(limit, pickCallback) {
+function drillPick(pickCallback, limit) {
   // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
   // we could update the primitive once, and then just execute their commands for each pass,
   // and cull commands for picked primitives.  e.g., base on the command's owner.
@@ -863,7 +863,7 @@ Picking.prototype.drillPick = function (
       exclude: false,
     }));
   };
-  const objects = drillPick(limit, pickCallback);
+  const objects = drillPick(pickCallback, limit);
   return objects.map((element) => element.object);
 };
 
@@ -1120,7 +1120,7 @@ function drillPickFromRay(
     );
     return pickResult ? [pickResult] : undefined;
   };
-  return drillPick(limit, pickCallback);
+  return drillPick(pickCallback, limit);
 }
 
 function pickFromRay(

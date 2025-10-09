@@ -1580,7 +1580,7 @@ Context.prototype.getObjectByPickColor = function (pickColor) {
 
 /**
  *
- * @param {Map} pickObjects
+ * @param {Map<number, object>} pickObjects
  * @param {number} key
  * @param {Color} color
  */
