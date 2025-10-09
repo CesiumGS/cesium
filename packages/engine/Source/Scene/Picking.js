@@ -791,7 +791,7 @@ function addDrillPickedResults(
 /**
  * Drill pick by repeatedly calling a given `pickCallback`, each time stripping away the previously picked objects.
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop drilling after collecting this many picks
- * @param {(limit: number) => object[]} pickCallback Pick callback to execute each iteration
+ * @param {function(number): object[]} pickCallback Pick callback to execute each iteration
  * @returns {object[]} List of picked results
  */
 function drillPick(limit, pickCallback) {
