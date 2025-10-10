@@ -126,9 +126,7 @@ describe("Core/TerrainEncoding", function () {
     expect(encoding.stride).toEqual(6);
     expect(buffer.length).toEqual(encoding.stride);
 
-    expect(encoding.decodePosition(buffer, 0, new Cartesian3())).toEqual(
-      position,
-    );
+    expect(encoding.decodePosition(buffer, 0)).toEqual(position);
   });
 
   it("encodes without quantization and with normals", function () {
@@ -157,9 +155,7 @@ describe("Core/TerrainEncoding", function () {
     expect(encoding.stride).toEqual(7);
     expect(buffer.length).toEqual(encoding.stride);
 
-    expect(encoding.decodePosition(buffer, 0, new Cartesian3())).toEqual(
-      position,
-    );
+    expect(encoding.decodePosition(buffer, 0)).toEqual(position);
   });
 
   it("encodes position with quantization and without normals", function () {
@@ -182,10 +178,7 @@ describe("Core/TerrainEncoding", function () {
     expect(encoding.stride).toEqual(3);
     expect(buffer.length).toEqual(encoding.stride);
 
-    expect(encoding.decodePosition(buffer, 0, new Cartesian3())).toEqualEpsilon(
-      position,
-      1.0,
-    );
+    expect(encoding.decodePosition(buffer, 0)).toEqualEpsilon(position, 1.0);
   });
 
   it("encodes position with quantization and normals", function () {
@@ -209,10 +202,7 @@ describe("Core/TerrainEncoding", function () {
     expect(encoding.stride).toEqual(4);
     expect(buffer.length).toEqual(encoding.stride);
 
-    expect(encoding.decodePosition(buffer, 0, new Cartesian3())).toEqualEpsilon(
-      position,
-      1.0,
-    );
+    expect(encoding.decodePosition(buffer, 0)).toEqualEpsilon(position, 1.0);
   });
 
   it("encodes position without quantization and with exaggeration", function () {
@@ -266,9 +256,10 @@ describe("Core/TerrainEncoding", function () {
 
     expect(encoding.stride).toEqual(9);
     expect(buffer.length).toEqual(encoding.stride);
-    expect(
-      encoding.getExaggeratedPosition(buffer, 0, new Cartesian3()),
-    ).toEqualEpsilon(exaggeratedPosition, CesiumMath.EPSILON5);
+    expect(encoding.getExaggeratedPosition(buffer, 0)).toEqualEpsilon(
+      exaggeratedPosition,
+      CesiumMath.EPSILON5,
+    );
     expect(
       encoding.decodeGeodeticSurfaceNormal(buffer, 0, new Cartesian3()),
     ).toEqualEpsilon(geodeticSurfaceNormal, CesiumMath.EPSILON5);
@@ -293,9 +284,10 @@ describe("Core/TerrainEncoding", function () {
     expect(encoding.stride).toEqual(3);
     expect(buffer.length).toEqual(encoding.stride);
 
-    expect(
-      encoding.decodeTextureCoordinates(buffer, 0, new Cartesian2()),
-    ).toEqualEpsilon(texCoords, 1.0 / 4095.0);
+    expect(encoding.decodeTextureCoordinates(buffer, 0)).toEqualEpsilon(
+      texCoords,
+      1.0 / 4095.0,
+    );
   });
 
   it("encodes textureCoordinates with quantization and normals", function () {
@@ -324,9 +316,10 @@ describe("Core/TerrainEncoding", function () {
     expect(encoding.stride).toEqual(4);
     expect(buffer.length).toEqual(encoding.stride);
 
-    expect(
-      encoding.decodeTextureCoordinates(buffer, 0, new Cartesian2()),
-    ).toEqualEpsilon(texCoords, 1.0 / 4095.0);
+    expect(encoding.decodeTextureCoordinates(buffer, 0)).toEqualEpsilon(
+      texCoords,
+      1.0 / 4095.0,
+    );
   });
 
   it("encodes height with quantization and without normals", function () {
@@ -416,9 +409,7 @@ describe("Core/TerrainEncoding", function () {
     expect(encoding.stride).toEqual(4);
     expect(buffer.length).toEqual(encoding.stride);
 
-    expect(encoding.getOctEncodedNormal(buffer, 0, new Cartesian2())).toEqual(
-      octNormal,
-    );
+    expect(encoding.getOctEncodedNormal(buffer, 0)).toEqual(octNormal);
   });
 
   it("adds geodetic surface normals", function () {
