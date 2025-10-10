@@ -106,7 +106,12 @@ function RightSideAllotment({
       ]);
     }
     setConsoleExpanded(!consoleExpanded);
-  }, [consoleExpanded, previousConsoleHeight]);
+  }, [
+    consoleExpanded,
+    previousConsoleHeight,
+    consoleCollapsedHeight,
+    setConsoleExpanded,
+  ]);
 
   useImperativeHandle(ref, () => {
     return {
