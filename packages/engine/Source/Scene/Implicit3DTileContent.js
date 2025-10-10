@@ -545,11 +545,18 @@ function deriveChildTile(
         }
       }
 
+      let contentBounds;
+
       if (hasImplicitContentMetadata) {
         const contentMetadata = subtree.getContentMetadataView(
           implicitCoordinates,
           i,
           j,
+        );
+
+        contentBounds = BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(
+          "CONTENT",
+          contentMetadata,
         );
 
         const propertyIds = contentMetadata.getPropertyIds();
@@ -565,20 +572,6 @@ function deriveChildTile(
       const contentJson = {
         uri: childContentUri,
       };
-
-      let contentBounds;
-
-      if (subtree.contentPropertyTableJsons.length > 0) {
-        const contentMetadata = subtree.getContentMetadataView(
-          implicitCoordinates,
-          i,
-        );
-
-        contentBounds = BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(
-          "CONTENT",
-          contentMetadata,
-        );
-      }
 
       const contentBoundingVolume = getContentBoundingVolume(
         boundingVolume,
