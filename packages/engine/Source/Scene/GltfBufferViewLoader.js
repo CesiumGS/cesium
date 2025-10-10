@@ -202,9 +202,21 @@ function getBufferLoader(bufferViewLoader) {
       resource: resource,
     });
   }
-  return resourceCache.getEmbeddedBufferLoader({
+
+  const result = resourceCache.getEmbeddedBufferLoader({
     parentResource: bufferViewLoader._gltfResource,
     bufferId: bufferViewLoader._bufferId,
+  });
+
+  if (defined(result)) {
+    return result;
+  }
+
+  const source = buffer.extras._pipeline.source;
+  return resourceCache.addBufferLoader({
+    parentResource: bufferViewLoader._gltfResource,
+    bufferId: bufferViewLoader._bufferId,
+    typedArray: source,
   });
 }
 
