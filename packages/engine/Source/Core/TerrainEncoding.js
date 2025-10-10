@@ -1,6 +1,7 @@
 import AttributeCompression from "./AttributeCompression.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
+import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import defined from "./defined.js";
 import CesiumMath from "./Math.js";
@@ -24,10 +25,10 @@ const SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
  * @constructor
  *
  * @param {Cartesian3} center The center point of the vertices.
- * @param {AxisAlignedBoundingBox} axisAlignedBoundingBox The bounds of the tile in the east-north-up coordinates at the tiles center.
- * @param {number} minimumHeight The minimum height.
- * @param {number} maximumHeight The maximum height.
- * @param {Matrix4} fromENU The east-north-up to fixed frame matrix at the center of the terrain mesh.
+ * @param {AxisAlignedBoundingBox} [axisAlignedBoundingBox] The bounds of the tile in the east-north-up coordinates at the tiles center.
+ * @param {number} [minimumHeight] The minimum height.
+ * @param {number} [maximumHeight] The maximum height.
+ * @param {Matrix4} [fromENU] The east-north-up to fixed frame matrix at the center of the terrain mesh.
  * @param {boolean} hasVertexNormals If the mesh has vertex normals.
  * @param {boolean} [hasWebMercatorT=false] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
  * @param {boolean} [hasGeodeticSurfaceNormals=false] true if the terrain data includes geodetic surface normals; otherwise, false.
@@ -188,6 +189,16 @@ function TerrainEncoding(
   this._calculateStrideAndOffsets();
 }
 
+/**
+ * @param {Float32Array} vertexBuffer The buffer to write to.
+ * @param {Number} bufferIndex The index into the buffer to start writing at.
+ * @param {Cartesian3} position The position of the vertex.
+ * @param {Cartesian2} uv The texture coordinates of the vertex.
+ * @param {Number} height The height of the vertex.
+ * @param {Cartesian2} [normalToPack] The normal vector of the vertex.
+ * @param {Number} [webMercatorT] The Web Mercator texture coordinate of the vertex.
+ * @param {Cartesian3} [geodeticSurfaceNormal] The geodetic surface normal of the vertex.
+ */
 TerrainEncoding.prototype.encode = function (
   vertexBuffer,
   bufferIndex,
@@ -198,6 +209,14 @@ TerrainEncoding.prototype.encode = function (
   webMercatorT,
   geodeticSurfaceNormal,
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("vertexBuffer", vertexBuffer);
+  Check.typeOf.number("bufferIndex", bufferIndex);
+  Check.typeOf.object("position", position);
+  Check.typeOf.object("uv", uv);
+  Check.typeOf.number("height", height);
+  //>>includeEnd('debug');
+
   const u = uv.x;
   const v = uv.y;
 
@@ -238,11 +257,9 @@ TerrainEncoding.prototype.encode = function (
       vertexBuffer[bufferIndex++] = compressed3;
     }
   } else {
-    Cartesian3.subtract(position, this.center, cartesian3Scratch);
-
-    vertexBuffer[bufferIndex++] = cartesian3Scratch.x;
-    vertexBuffer[bufferIndex++] = cartesian3Scratch.y;
-    vertexBuffer[bufferIndex++] = cartesian3Scratch.z;
+    vertexBuffer[bufferIndex++] = position.x - this.center.x;
+    vertexBuffer[bufferIndex++] = position.y - this.center.y;
+    vertexBuffer[bufferIndex++] = position.z - this.center.z;
     vertexBuffer[bufferIndex++] = height;
     vertexBuffer[bufferIndex++] = u;
     vertexBuffer[bufferIndex++] = v;
@@ -269,11 +286,22 @@ TerrainEncoding.prototype.encode = function (
 const scratchPosition = new Cartesian3();
 const scratchGeodeticSurfaceNormal = new Cartesian3();
 
+/**
+ * @param {Float32Array} oldBuffer The buffer without geodetic surface normals.
+ * @param {Float32Array} newBuffer The buffer with geodetic surface normals.
+ * @param {Ellipsoid} ellipsoid The ellipsoid to use to compute the geodetic surface normals.
+ */
 TerrainEncoding.prototype.addGeodeticSurfaceNormals = function (
   oldBuffer,
   newBuffer,
   ellipsoid,
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("oldBuffer", oldBuffer);
+  Check.typeOf.object("newBuffer", newBuffer);
+  Check.typeOf.object("ellipsoid", ellipsoid);
+  //>>includeEnd('debug');
+
   if (this.hasGeodeticSurfaceNormals) {
     return;
   }
@@ -303,10 +331,19 @@ TerrainEncoding.prototype.addGeodeticSurfaceNormals = function (
   }
 };
 
+/**
+ * @param {Float32Array} oldBuffer The buffer with geodetic surface normals.
+ * @param {Float32Array} newBuffer The buffer without geodetic surface normals.
+ */
 TerrainEncoding.prototype.removeGeodeticSurfaceNormals = function (
   oldBuffer,
   newBuffer,
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("oldBuffer", oldBuffer);
+  Check.typeOf.object("newBuffer", newBuffer);
+  //>>includeEnd('debug');
+
   if (!this.hasGeodeticSurfaceNormals) {
     return;
   }
@@ -326,7 +363,18 @@ TerrainEncoding.prototype.removeGeodeticSurfaceNormals = function (
   }
 };
 
+/**
+ * @param {Float32Array} buffer The buffer to decode from.
+ * @param {Number} index The index of the vertex to decode.
+ * @param {Cartesian3} [result] The object to store the result in.
+ * @returns {Cartesian3} The decoded position.
+ */
 TerrainEncoding.prototype.decodePosition = function (buffer, index, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
+
   if (!defined(result)) {
     result = new Cartesian3();
   }
@@ -389,11 +437,22 @@ TerrainEncoding.prototype.getExaggeratedPosition = function (
   return result;
 };
 
+/**
+ * @param {Float32Array} buffer The buffer to decode from.
+ * @param {Number} index The index of the vertex to decode.
+ * @param {Cartesian2} [result] The object to store the result in.
+ * @returns {Cartesian2} The decoded texture coordinates.
+ */
 TerrainEncoding.prototype.decodeTextureCoordinates = function (
   buffer,
   index,
   result,
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
+
   if (!defined(result)) {
     result = new Cartesian2();
   }
@@ -410,7 +469,17 @@ TerrainEncoding.prototype.decodeTextureCoordinates = function (
   return Cartesian2.fromElements(buffer[index + 4], buffer[index + 5], result);
 };
 
+/**
+ * @param {Float32Array} buffer The buffer to decode from.
+ * @param {Number} index The index of the vertex to decode.
+ * @returns {Number} The decoded height.
+ */
 TerrainEncoding.prototype.decodeHeight = function (buffer, index) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
+
   index *= this.stride;
 
   if (this.quantization === TerrainQuantization.BITS12) {
@@ -426,7 +495,17 @@ TerrainEncoding.prototype.decodeHeight = function (buffer, index) {
   return buffer[index + 3];
 };
 
+/**
+ * @param {Float32Array} buffer The buffer to decode from.
+ * @param {Number} index The index of the vertex to decode.
+ * @returns {Number} The decoded web mercator T coordinate.
+ */
 TerrainEncoding.prototype.decodeWebMercatorT = function (buffer, index) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
+
   index *= this.stride;
 
   if (this.quantization === TerrainQuantization.BITS12) {
@@ -439,11 +518,22 @@ TerrainEncoding.prototype.decodeWebMercatorT = function (buffer, index) {
   return buffer[index + 6];
 };
 
+/**
+ * @param {Float32Array} buffer The buffer to decode from.
+ * @param {Number} index The index of the vertex to decode.
+ * @param {Cartesian2} [result] The object to store the result in.
+ * @returns {Cartesian2} The decoded oct-encoded normal.
+ */
 TerrainEncoding.prototype.getOctEncodedNormal = function (
   buffer,
   index,
   result,
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
+
   index = index * this.stride + this._offsetVertexNormal;
 
   const temp = buffer[index] / 256.0;
@@ -453,11 +543,23 @@ TerrainEncoding.prototype.getOctEncodedNormal = function (
   return Cartesian2.fromElements(x, y, result);
 };
 
+/**
+ * @param {Float32Array} buffer The buffer to decode from.
+ * @param {Number} index The index of the vertex to decode.
+ * @param {Cartesian3} result The object to store the result in.
+ * @returns {Cartesian3} The decoded geodetic surface normal.
+ */
 TerrainEncoding.prototype.decodeGeodeticSurfaceNormal = function (
   buffer,
   index,
   result,
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
   index = index * this.stride + this._offsetGeodeticSurfaceNormal;
 
   result.x = buffer[index];
@@ -502,7 +604,15 @@ const attributesIndicesBits12 = {
   geodeticSurfaceNormal: 2,
 };
 
+/**
+ * @param {Float32Array} buffer The vertex buffer.
+ * @returns {object[]} The attributes.
+ */
 TerrainEncoding.prototype.getAttributes = function (buffer) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  //>>includeEnd('debug');
+
   const datatype = ComponentDatatype.FLOAT;
   const sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
   const strideInBytes = this.stride * sizeInBytes;
@@ -567,6 +677,12 @@ TerrainEncoding.prototype.getAttributeLocations = function () {
   return attributesIndicesBits12;
 };
 
+/**
+ * Clones a TerrainEncoding object.
+ * @param {TerrainEncoding} [encoding] The encoding to clone.
+ * @param {TerrainEncoding} [result] The object to store the cloned encoding.
+ * @returns {TerrainEncoding|undefined} The cloned encoding.
+ */
 TerrainEncoding.clone = function (encoding, result) {
   if (!defined(encoding)) {
     return undefined;
