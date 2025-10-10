@@ -114,13 +114,14 @@ describe("Scene/TextureAtlas", function () {
     }).toThrowDeveloperError();
   });
 
-  it("add image throws if a promise returns undefined", async function () {
+  it("add image returns -1 if a promise returns undefined", async function () {
     atlas = new TextureAtlas();
 
     const promise = atlas.addImage(greenGuid, Promise.resolve());
 
     expect(atlas.numberOfImages).toEqual(1);
-    await expectAsync(promise).toBeRejectedWithDeveloperError();
+    const index = await promise;
+    expect(index).toEqual(-1);
   });
 
   it("add image rejects if a promised image rejects", async function () {
@@ -1297,10 +1298,22 @@ describe("Scene/TextureAtlas", function () {
         expect(guid1).not.toEqual(guid2);
       });
 
-      it("destroys successfully while image is queued", async function () {
+      it("Syncronous texture resolves immediately", async function () {
         atlas = new TextureAtlas();
 
         const promise = atlas.addImage(greenGuid, greenImage);
+
+        atlas.update(scene.frameState.context);
+        const index = await promise;
+
+        expect(index).toEqual(0);
+        atlas = undefined;
+      });
+
+      it("destroys successfully while image promise is queued", async function () {
+        atlas = new TextureAtlas();
+
+        const promise = atlas.addImage(greenGuid, Promise.resolve(greenImage));
 
         atlas.update(scene.frameState.context);
         const texture = atlas.texture;

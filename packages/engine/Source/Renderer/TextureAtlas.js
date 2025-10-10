@@ -675,9 +675,9 @@ TextureAtlas.prototype.addImage = function (id, image) {
     if (image instanceof Promise) {
       // Effectively return a promise chain. The image promise will resolve and be processed on a later frame
       image = await image;
-      if (this.isDestroyed() || !defined(image)) {
-        return -1;
-      }
+    }
+    if (this.isDestroyed() || !defined(image)) {
+      return -1;
     }
 
     return this._addImage(index, image);
