@@ -928,7 +928,7 @@ function getTilesets(primitives, objectsToExclude, tilesets) {
  * @param {Picking} picking
  * @param {Scene} scene
  * @param {Ray} ray
- * @param {Object[] | undefined} objectsToExclude
+ * @param {object[] | undefined} objectsToExclude
  * @param {number | undefined} width
  * @param {Function} callback
  * @returns {Promise<Cartesian3 | undefined>}
@@ -1365,7 +1365,7 @@ function sampleHeightMostDetailed(
  * @param {Picking} picking
  * @param {Scene} scene
  * @param {Cartesian3} cartesian
- * @param {Object[]} [objectsToExclude]
+ * @param {object[]} [objectsToExclude]
  * @param {number} [width]
  * @param {Cartesian3} [result]
  * @returns {Promise<Cartesian3 | undefined>}
@@ -1519,7 +1519,7 @@ Picking.prototype.sampleHeightMostDetailed = function (
  * @private
  * @param {Scene} scene
  * @param {Cartesian3[]} cartesians
- * @param {Object[]} [objectsToExclude]
+ * @param {object[]} [objectsToExclude]
  * @param {number} [width]
  * @returns {Promise<Array<Cartesian3 | undefined>>}
  */

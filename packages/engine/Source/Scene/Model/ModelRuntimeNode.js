@@ -92,7 +92,7 @@ function ModelRuntimeNode(options) {
    * This is an array of classes, each with a static method called
    * <code>process()</code>.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private
@@ -112,7 +112,7 @@ function ModelRuntimeNode(options) {
   /**
    * Update stages to apply to this node.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private

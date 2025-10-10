@@ -3,27 +3,27 @@ import DeveloperError from "../Core/DeveloperError.js";
 /**
  * Constants used to indicated what part of the sensor volume to display.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const SensorVolumePortionToDisplay = {
   /**
    * 0x0000.  Display the complete sensor volume.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   COMPLETE: 0x0000,
   /**
    * 0x0001.  Display the portion of the sensor volume that lies below the true horizon of the ellipsoid.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   BELOW_ELLIPSOID_HORIZON: 0x0001,
   /**
    * 0x0002.  Display the portion of the sensor volume that lies above the true horizon of the ellipsoid.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   ABOVE_ELLIPSOID_HORIZON: 0x0002,
@@ -49,7 +49,7 @@ SensorVolumePortionToDisplay.validate = function (portionToDisplay) {
  *
  * @param {SensorVolumePortionToDisplay} portionToDisplay The value to be converted to its corresponding enumeration string.
  *
- * @returns {String} The enumeration string corresponding to the value.
+ * @returns {string} The enumeration string corresponding to the value.
  */
 SensorVolumePortionToDisplay.toString = function (portionToDisplay) {
   switch (portionToDisplay) {

@@ -191,12 +191,12 @@ function TerrainEncoding(
 
 /**
  * @param {Float32Array} vertexBuffer The buffer to write to.
- * @param {Number} bufferIndex The index into the buffer to start writing at.
+ * @param {number} bufferIndex The index into the buffer to start writing at.
  * @param {Cartesian3} position The position of the vertex.
  * @param {Cartesian2} uv The texture coordinates of the vertex.
- * @param {Number} height The height of the vertex.
+ * @param {number} height The height of the vertex.
  * @param {Cartesian2} [normalToPack] The normal vector of the vertex.
- * @param {Number} [webMercatorT] The Web Mercator texture coordinate of the vertex.
+ * @param {number} [webMercatorT] The Web Mercator texture coordinate of the vertex.
  * @param {Cartesian3} [geodeticSurfaceNormal] The geodetic surface normal of the vertex.
  */
 TerrainEncoding.prototype.encode = function (
@@ -365,7 +365,7 @@ TerrainEncoding.prototype.removeGeodeticSurfaceNormals = function (
 
 /**
  * @param {Float32Array} buffer The buffer to decode from.
- * @param {Number} index The index of the vertex to decode.
+ * @param {number} index The index of the vertex to decode.
  * @param {Cartesian3} [result] The object to store the result in.
  * @returns {Cartesian3} The decoded position.
  */
@@ -439,7 +439,7 @@ TerrainEncoding.prototype.getExaggeratedPosition = function (
 
 /**
  * @param {Float32Array} buffer The buffer to decode from.
- * @param {Number} index The index of the vertex to decode.
+ * @param {number} index The index of the vertex to decode.
  * @param {Cartesian2} [result] The object to store the result in.
  * @returns {Cartesian2} The decoded texture coordinates.
  */
@@ -471,8 +471,8 @@ TerrainEncoding.prototype.decodeTextureCoordinates = function (
 
 /**
  * @param {Float32Array} buffer The buffer to decode from.
- * @param {Number} index The index of the vertex to decode.
- * @returns {Number} The decoded height.
+ * @param {number} index The index of the vertex to decode.
+ * @returns {number} The decoded height.
  */
 TerrainEncoding.prototype.decodeHeight = function (buffer, index) {
   //>>includeStart('debug', pragmas.debug);
@@ -497,8 +497,8 @@ TerrainEncoding.prototype.decodeHeight = function (buffer, index) {
 
 /**
  * @param {Float32Array} buffer The buffer to decode from.
- * @param {Number} index The index of the vertex to decode.
- * @returns {Number} The decoded web mercator T coordinate.
+ * @param {number} index The index of the vertex to decode.
+ * @returns {number} The decoded web mercator T coordinate.
  */
 TerrainEncoding.prototype.decodeWebMercatorT = function (buffer, index) {
   //>>includeStart('debug', pragmas.debug);
@@ -520,7 +520,7 @@ TerrainEncoding.prototype.decodeWebMercatorT = function (buffer, index) {
 
 /**
  * @param {Float32Array} buffer The buffer to decode from.
- * @param {Number} index The index of the vertex to decode.
+ * @param {number} index The index of the vertex to decode.
  * @param {Cartesian2} [result] The object to store the result in.
  * @returns {Cartesian2} The decoded oct-encoded normal.
  */
@@ -545,7 +545,7 @@ TerrainEncoding.prototype.getOctEncodedNormal = function (
 
 /**
  * @param {Float32Array} buffer The buffer to decode from.
- * @param {Number} index The index of the vertex to decode.
+ * @param {number} index The index of the vertex to decode.
  * @param {Cartesian3} result The object to store the result in.
  * @returns {Cartesian3} The decoded geodetic surface normal.
  */
