@@ -1,7 +1,9 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-const { GITHUB_TOKEN, GITHUB_REPO, GITHUB_SHA } = process.env;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_REPO = process.env.GITHUB_REPO;
+const GITHUB_SHA = process.env.GITHUB_SHA;
 
 export async function setDeployStatus({ status, url, context, message }) {
   if (!GITHUB_TOKEN) {
@@ -20,7 +22,7 @@ export async function setDeployStatus({ status, url, context, message }) {
     state: status,
     context: context ? `deploy / artifact: ${context}` : undefined,
     target_url: url,
-    description: message ?? status,
+    description: message,
   };
 
   const response = await fetch(
@@ -59,7 +61,6 @@ await yargs()
           type: "string",
           describe: "The linked URL to associate with this status.",
         })
-
         .positional("message", {
           type: "string",
           describe: "A short description of the status.",
