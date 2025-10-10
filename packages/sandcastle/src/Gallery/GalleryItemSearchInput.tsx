@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { IconButton, TextBox } from "@stratakit/bricks";
 import { close, search as searchIcon } from "../icons.ts";
 
@@ -7,14 +7,14 @@ import { useGalleryItemContext } from "./GalleryItemStore.ts";
 export function GalleryItemSearchInput() {
   const store = useGalleryItemContext();
   const inputRef = useRef<HTMLInputElement>(null);
-  const value = inputRef.current?.value;
   const { setSearchTerm, items } = store ?? {};
-  const hasValue = !!value && value !== "";
+  const [hasValue, setHasValue] = useState(false);
 
   const clearSearch = useCallback(() => {
     const input = inputRef.current;
     if (input) {
       input.value = "";
+      setHasValue(false);
       input.focus();
     }
 
@@ -26,6 +26,7 @@ export function GalleryItemSearchInput() {
   const updateSearch = useCallback(
     (e: { target: { value: string | null } }) => {
       let term = e.target.value;
+      setHasValue(!!term && term !== "");
       if (setSearchTerm) {
         if (term) {
           term = term.trim();

@@ -434,3 +434,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [宋时旺](https://github.com/BlockCnFuture)
 - [Marco Zhan](https://github.com/marcoYxz)
 - [Mikhail Porotkin](https://github.com/porotkin)
+- [Adam Beili](https://github.com/Beilinson)
