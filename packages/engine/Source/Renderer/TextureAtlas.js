@@ -625,7 +625,8 @@ TextureAtlas.prototype.update = function (context) {
 
 /**
  * Gets an image from various possible input types.
- * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas
+ * @private
+ * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise<TexturePacker.PackableObject>|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @returns {TexturePacker.PackableObject | Promise<TexturePacker.PackableObject>} The image or a Promise that resolves to it.
  */
