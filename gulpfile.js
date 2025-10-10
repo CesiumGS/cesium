@@ -425,17 +425,6 @@ export async function buildDocsWatch() {
   return gulp.watch(sourceFiles, buildDocs);
 }
 
-function combineForSandcastle() {
-  const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
-  return buildCesium({
-    development: false,
-    minify: false,
-    removePragmas: false,
-    node: false,
-    outputDirectory: outputDirectory,
-  });
-}
-
 export const websiteRelease = gulp.series(
   buildEngine,
   buildWidgets,
@@ -447,14 +436,23 @@ export const websiteRelease = gulp.series(
       node: false,
     });
   },
-  function () {
+  function websiteReleaseBuildMinified() {
     return buildCesium({
       minify: true,
       removePragmas: true,
       node: false,
     });
   },
-  combineForSandcastle,
+  function combineForSandcastle() {
+    const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
+    return buildCesium({
+      development: false,
+      minify: false,
+      removePragmas: false,
+      node: false,
+      outputDirectory: outputDirectory,
+    });
+  },
   buildDocs,
 );
 
@@ -712,17 +710,21 @@ export async function deploySetVersion() {
 export async function deployStatus() {
   const status = argv.status;
   const message = argv.message;
-
   const deployUrl = `${devDeployUrl}`;
   const zipUrl = `${deployUrl}Cesium-${version}.zip`;
   const npmUrl = `${deployUrl}cesium-${version}.tgz`;
-  const coverageUrl = `${devDeployUrl}Build/Coverage/index.html`;
+  const coverageUrl = `${deployUrl}Build/Coverage/index.html`;
 
   return Promise.all([
-    setStatus(status, deployUrl, message, "deployment"),
-    setStatus(status, zipUrl, message, "zip file"),
-    setStatus(status, npmUrl, message, "npm package"),
-    setStatus(status, coverageUrl, message, "coverage results"),
+    setStatus(status, deployUrl, message, "deploy / artifact: deployment"),
+    setStatus(status, zipUrl, message, "deploy / artifact: zip file"),
+    setStatus(status, npmUrl, message, "deploy / artifact: npm package"),
+    setStatus(
+      status,
+      coverageUrl,
+      message,
+      "deploy / artifact: coverage results",
+    ),
   ]);
 }
 
