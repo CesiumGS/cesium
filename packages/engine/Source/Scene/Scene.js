@@ -3831,12 +3831,23 @@ function callAfterRenderFunctions(scene) {
   functions.length = 0;
 }
 
+/**
+ * @param {Scene} scene
+ * @returns {Number|undefined} The height of the globe at the camera position, or undefined if the height cannot be determined.
+ */
 function getGlobeHeight(scene) {
-  if (scene.mode === SceneMode.MORPHING) {
+  if (
+    scene.mode === SceneMode.MORPHING ||
+    scene._screenSpaceCameraController.collisionHeightReference ===
+      HeightReference.NONE
+  ) {
     return;
   }
   const cartographic = scene.camera.positionCartographic;
-  return scene.getHeight(cartographic);
+  return scene.getHeight(
+    cartographic,
+    scene._screenSpaceCameraController.collisionHeightReference,
+  );
 }
 
 function getMaxPrimitiveHeight(primitive, cartographic, scene) {

@@ -35,28 +35,30 @@ import CesiumMath from "./Math.js";
  * @see Matrix2
  * @see Matrix4
  */
-function Matrix3(
-  column0Row0,
-  column1Row0,
-  column2Row0,
-  column0Row1,
-  column1Row1,
-  column2Row1,
-  column0Row2,
-  column1Row2,
-  column2Row2,
-) {
-  this[0] = column0Row0 ?? 0.0;
-  this[1] = column0Row1 ?? 0.0;
-  this[2] = column0Row2 ?? 0.0;
-  this[3] = column1Row0 ?? 0.0;
-  this[4] = column1Row1 ?? 0.0;
-  this[5] = column1Row2 ?? 0.0;
-  this[6] = column2Row0 ?? 0.0;
-  this[7] = column2Row1 ?? 0.0;
-  this[8] = column2Row2 ?? 0.0;
+class Matrix3 extends Float64Array {
+  constructor(
+    column0Row0,
+    column1Row0,
+    column2Row0,
+    column0Row1,
+    column1Row1,
+    column2Row1,
+    column0Row2,
+    column1Row2,
+    column2Row2,
+  ) {
+    super(9);
+    this[0] = column0Row0 ?? 0.0;
+    this[1] = column0Row1 ?? 0.0;
+    this[2] = column0Row2 ?? 0.0;
+    this[3] = column1Row0 ?? 0.0;
+    this[4] = column1Row1 ?? 0.0;
+    this[5] = column1Row2 ?? 0.0;
+    this[6] = column2Row0 ?? 0.0;
+    this[7] = column2Row1 ?? 0.0;
+    this[8] = column2Row2 ?? 0.0;
+  }
 }
-
 /**
  * The number of elements used to pack the object into an array.
  * @type {number}
@@ -1671,9 +1673,7 @@ Matrix3.equalsEpsilon = function (left, right, epsilon) {
  * @type {Matrix3}
  * @constant
  */
-Matrix3.IDENTITY = Object.freeze(
-  new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0),
-);
+Matrix3.IDENTITY = new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 
 /**
  * An immutable Matrix3 instance initialized to the zero matrix.
@@ -1681,9 +1681,7 @@ Matrix3.IDENTITY = Object.freeze(
  * @type {Matrix3}
  * @constant
  */
-Matrix3.ZERO = Object.freeze(
-  new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-);
+Matrix3.ZERO = new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
 /**
  * The index into Matrix3 for column 0, row 0.

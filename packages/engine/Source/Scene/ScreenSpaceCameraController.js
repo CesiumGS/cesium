@@ -24,6 +24,7 @@ import MapMode2D from "./MapMode2D.js";
 import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
 import TweenCollection from "./TweenCollection.js";
+import HeightReference from "./HeightReference.js";
 
 /**
  * Modifies the camera position and orientation based on mouse input to a canvas.
@@ -265,13 +266,13 @@ function ScreenSpaceCameraController(scene) {
     : ellipsoid.minimumRadius * 1.175;
   this._minimumTrackBallHeight = this.minimumTrackBallHeight;
   /**
-   * When disabled, the values of <code>maximumZoomDistance</code> and <code>minimumZoomDistance</code> are ignored.
-   * Also used in conjunction with {@link Cesium3DTileset#enableCollision} to prevent the camera from moving through or below a 3D Tileset surface.
-   * This may also affect clamping behavior when using {@link HeightReference.CLAMP_TO_GROUND} on 3D Tiles.
-   * @type {boolean}
-   * @default true
+   * This value controls the height reference for the {@link ScreenSpaceCameraController} collision, which is used to limit the camera minimum and maximum zoom.
+   * When set to {@link HeightReference.NONE}, the camera can go underground, and the values of <code>maximumZoomDistance</code> and <code>minimumZoomDistance</code> are ignored.
+   * For all other values, the camera is constrained to be above the terrain and/or 3D Tiles (depending on {@link Cesium3DTileset#enableCollision}).
+   * @type {HeightReference}
+   * @default HeightReference.CLAMP_TO_GROUND
    */
-  this.enableCollisionDetection = true;
+  this.collisionHeightReference = HeightReference.CLAMP_TO_GROUND;
   /**
    * The angle, relative to the ellipsoid normal, restricting the maximum amount that the user can tilt the camera. If <code>undefined</code>, the angle of the camera tilt is unrestricted.
    * @type {number|undefined}
@@ -352,6 +353,27 @@ function ScreenSpaceCameraController(scene) {
   this._minimumUndergroundPickDistance = 2000.0;
   this._maximumUndergroundPickDistance = 10000.0;
 }
+
+Object.defineProperties(ScreenSpaceCameraController.prototype, {
+  /**
+   * When disabled, the values of <code>maximumZoomDistance</code> and <code>minimumZoomDistance</code> are ignored.
+   * Also used in conjunction with {@link Cesium3DTileset#enableCollision} to prevent the camera from moving through or below a 3D Tileset surface.
+   * This may also affect clamping behavior when using {@link HeightReference.CLAMP_TO_GROUND} on 3D Tiles.
+   * @type {boolean}
+   * @default true
+   * @deprecated Use {@link ScreenSpaceCameraController#collisionHeightReference} instead.
+   */
+  enableCollisionDetection: {
+    get: function () {
+      return this.collisionHeightReference !== HeightReference.NONE;
+    },
+    set: function (value) {
+      this.collisionHeightReference = value
+        ? HeightReference.CLAMP_TO_GROUND
+        : HeightReference.NONE;
+    },
+  },
+});
 
 function decay(time, coefficient) {
   if (time < 0) {
@@ -556,6 +578,16 @@ const scratchZoomViewOptions = {
   orientation: new HeadingPitchRoll(),
 };
 
+/**
+ *
+ * @param {ScreenSpaceCameraController} object
+ * @param {*} startPosition
+ * @param {*} movement
+ * @param {*} zoomFactor
+ * @param {*} distanceMeasure
+ * @param {*} unitPositionDotDirection
+ * @returns
+ */
 function handleZoom(
   object,
   startPosition,
