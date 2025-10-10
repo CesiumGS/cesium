@@ -114,7 +114,7 @@ ITwinPlatform.apiEndpoint = new Resource({
 });
 
 /**
- * @typedef {Object} ExportRequest
+ * @typedef {object} ExportRequest
  * @private
  * @property {string} iModelId
  * @property {string} changesetId
@@ -122,13 +122,13 @@ ITwinPlatform.apiEndpoint = new Resource({
  */
 
 /**
- * @typedef {Object} Link
+ * @typedef {object} Link
  * @private
  * @property {string} href
  */
 
 /**
- * @typedef {Object} ExportRepresentation
+ * @typedef {object} ExportRepresentation
  * The export objects from get-exports when using return=representation
  * @private
  * @property {string} id Export id
@@ -140,7 +140,7 @@ ITwinPlatform.apiEndpoint = new Resource({
  */
 
 /**
- * @typedef {Object} GetExportsResponse
+ * @typedef {object} GetExportsResponse
  * @private
  * @property {ExportRepresentation[]} exports The list of exports for the current page
  * @property {{self: Link, next: Link | undefined, prev: Link | undefined}} _links Pagination links
@@ -224,14 +224,14 @@ ITwinPlatform.getExports = async function (iModelId, changesetId) {
 };
 
 /**
- * @typedef {Object} RealityDataExtent
+ * @typedef {object} RealityDataExtent
  * @private
  * @property {{latitude: number, longitude: number}} southWest
  * @property {{latitude: number, longitude: number}} northEast
  */
 
 /**
- * @typedef {Object} RealityDataRepresentation
+ * @typedef {object} RealityDataRepresentation
  * @private
  * @property {string} id "95d8dccd-d89e-4287-bb5f-3219acbc71ae",
  * @property {string} displayName "Name of reality data",

@@ -88,7 +88,7 @@ function ModelRuntimePrimitive(options) {
    * is an array of classes, each with a static method called
    * <code>process()</code>
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private
@@ -170,7 +170,7 @@ function ModelRuntimePrimitive(options) {
   /**
    * Update stages to apply to this primitive.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private

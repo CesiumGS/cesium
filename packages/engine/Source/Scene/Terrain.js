@@ -112,9 +112,9 @@ Object.defineProperties(Terrain.prototype, {
  *
  * @function
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
- * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server if available.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
+ * @param {boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server if available.
  * @returns {Terrain} An asynchronous helper object for a CesiumTerrainProvider
  *
  * @see Ion
@@ -162,8 +162,8 @@ Terrain.fromWorldTerrain = function (options) {
  *
  * @function
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
  * @returns {Terrain} An asynchronous helper object for a CesiumTerrainProvider
  *
  * @see Ion

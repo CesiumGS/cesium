@@ -72,7 +72,7 @@ function ModelSceneGraph(options) {
   /**
    * Pipeline stages to apply across the model.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private
@@ -82,7 +82,7 @@ function ModelSceneGraph(options) {
   /**
    * Update stages to apply across the model.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private
@@ -136,7 +136,7 @@ function ModelSceneGraph(options) {
    * is an array of classes, each with a static method called
    * <code>process()</code>
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private

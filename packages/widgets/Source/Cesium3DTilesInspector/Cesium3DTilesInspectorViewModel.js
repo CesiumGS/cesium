@@ -1189,7 +1189,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
   /**
    * Gets the available blend modes
    * @memberof Cesium3DTilesInspectorViewModel.prototype
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    */
   colorBlendModes: {

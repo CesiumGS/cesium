@@ -681,7 +681,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
  * Creates an {@link ImageryProvider} which provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
  *
- * @param {Resource|String} url The URL of the ArcGIS MapServer service.
+ * @param {Resource|string} url The URL of the ArcGIS MapServer service.
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<ArcGisMapServerImageryProvider>} A promise that resolves to the created ArcGisMapServerImageryProvider.
  *

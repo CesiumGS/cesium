@@ -11,7 +11,7 @@ import GoogleMaps from "../Core/GoogleMaps.js";
 const trailingSlashRegex = /\/$/;
 
 /**
- * @typedef {Object} Google2DImageryProvider.ConstructorOptions
+ * @typedef {object} Google2DImageryProvider.ConstructorOptions
  *
  * Initialization options for the Google2DImageryProvider constructor
  *
@@ -295,7 +295,7 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
  * @param {string} [options.language="en_US"] an IETF language tag that specifies the language used to display information on the tiles
  * @param {string} [options.region="US"] A Common Locale Data Repository region identifier (two uppercase letters) that represents the physical location of the user.
  * @param {"layerRoadmap" | "layerStreetview" | "layerTraffic"} [options.overlayLayerType] Returns a transparent overlay map with the specified layerType. If no value is provided, a basemap of mapType is returned. Use multiple instances of Google2DImageryProvider to add multiple Google Maps overlays to a scene. layerRoadmap is included in terrain and roadmap mapTypes, so adding as overlay to terrain or roadmap has no effect.
- * @param {Object} [options.styles] An array of JSON style objects that specify the appearance and detail level of map features such as roads, parks, and built-up areas. Styling is used to customize the standard Google base map. The styles parameter is valid only if the mapType is roadmap. For the complete style syntax, see the ({@link https://developers.google.com/maps/documentation/tile/style-reference|Google Style Reference}).
+ * @param {object} [options.styles] An array of JSON style objects that specify the appearance and detail level of map features such as roads, parks, and built-up areas. Styling is used to customize the standard Google base map. The styles parameter is valid only if the mapType is roadmap. For the complete style syntax, see the ({@link https://developers.google.com/maps/documentation/tile/style-reference|Google Style Reference}).
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @param {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
@@ -382,7 +382,7 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
  * @param {string} [options.language="en_US"] an IETF language tag that specifies the language used to display information on the tiles
  * @param {string} [options.region="US"] A Common Locale Data Repository region identifier (two uppercase letters) that represents the physical location of the user.
  * @param {"layerRoadmap" | "layerStreetview" | "layerTraffic"} [options.overlayLayerType] Returns a transparent overlay map with the specified layerType. If no value is provided, a basemap of mapType is returned. Use multiple instances of Google2DImageryProvider to add multiple Google Maps overlays to a scene. layerRoadmap is included in terrain and roadmap mapTypes, so adding as overlay to terrain or roadmap has no effect.
- * @param {Object} [options.styles] An array of JSON style objects that specify the appearance and detail level of map features such as roads, parks, and built-up areas. Styling is used to customize the standard Google base map. The styles parameter is valid only if the mapType is roadmap. For the complete style syntax, see the ({@link https://developers.google.com/maps/documentation/tile/style-reference|Google Style Reference}).
+ * @param {object} [options.styles] An array of JSON style objects that specify the appearance and detail level of map features such as roads, parks, and built-up areas. Styling is used to customize the standard Google base map. The styles parameter is valid only if the mapType is roadmap. For the complete style syntax, see the ({@link https://developers.google.com/maps/documentation/tile/style-reference|Google Style Reference}).
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @param {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely

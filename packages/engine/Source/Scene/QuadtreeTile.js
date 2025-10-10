@@ -265,7 +265,7 @@ QuadtreeTile.prototype._getCacheKey = function (
  * @param {number} maximumScreenSpaceError The maximum screen-space error, in pixels, that is allowed.
  *        A higher maximum error will render fewer tiles and improve performance, while a lower
  *        value will improve visual quality.
- * @returns {Object|undefined} The cached position data or undefined if not found.
+ * @returns {object|undefined} The cached position data or undefined if not found.
  */
 QuadtreeTile.prototype.getPositionCacheEntry = function (
   cartographic,
@@ -285,7 +285,7 @@ QuadtreeTile.prototype.getPositionCacheEntry = function (
  * @param {number} maximumScreenSpaceError The maximum screen-space error, in pixels, that is allowed.
  *        A higher maximum error will render fewer tiles and improve performance, while a lower
  *        value will improve visual quality.
- * @param {Object} value - The object to be cached.
+ * @param {object} value - The object to be cached.
  */
 QuadtreeTile.prototype.setPositionCacheEntry = function (
   cartographic,

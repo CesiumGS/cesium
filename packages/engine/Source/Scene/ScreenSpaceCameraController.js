@@ -139,7 +139,7 @@ function ScreenSpaceCameraController(scene) {
 
   /**
    * A multiplier for the speed at which the camera will zoom.
-   * @type {Number}
+   * @type {number}
    * @default 5.0
    */
   this.zoomFactor = 5.0;
