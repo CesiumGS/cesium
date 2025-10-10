@@ -24,8 +24,8 @@ jobs:
       GITHUB_SHA: ${{ github.sha }}
       BASE_URL: /cesium/${{ github.ref_name }}/
       DEPLOYED_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
-      ZIP_URL: ${{ DEPLOYED_URL }}Cesium-${{ BUILD_VERSION }}.zip
-      NPM_URL: ${{ DEPLOYED_URL }}cesium-${{ BUILD_VERSION }}.tgz
+      ZIP_URL: ${{ env.DEPLOYED_URL }}Cesium-${{ env.BUILD_VERSION }}.zip
+      NPM_URL: ${{ env.DEPLOYED_URL }}cesium-${{ env.BUILD_VERSION }}.tgz
     steps:
       - uses: actions/checkout@v5
       - name: install node 22
