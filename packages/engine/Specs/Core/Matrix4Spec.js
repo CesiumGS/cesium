@@ -727,7 +727,7 @@ describe("Core/Matrix4", function () {
       direction: Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
       up: Cartesian3.UNIT_Y,
     });
-    expect(expected).toEqual(returnedResult);
+    expect(Matrix4.equals(expected, returnedResult)).toBe(true);
   });
 
   it("fromCamera works with a result parameter", function () {
@@ -742,7 +742,7 @@ describe("Core/Matrix4", function () {
       result,
     );
     expect(returnedResult).toBe(result);
-    expect(returnedResult).toEqual(expected);
+    expect(Matrix4.equals(expected, returnedResult)).toBe(true);
   });
 
   it("computeOrthographicOffCenter works", function () {
@@ -1392,7 +1392,7 @@ describe("Core/Matrix4", function () {
 
   it("setRotation works", function () {
     const scaleVec = new Cartesian3(2.0, 3.0, 4.0);
-    const scale = Matrix4.fromScale(scaleVec, new Matrix3());
+    const scale = Matrix4.fromScale(scaleVec, new Matrix4());
     const rotation = Matrix3.fromRotationX(0.5, new Matrix3());
     const scaleRotation = Matrix4.setRotation(scale, rotation, new Matrix4());
 
