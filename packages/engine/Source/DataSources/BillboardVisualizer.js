@@ -232,8 +232,12 @@ BillboardVisualizer.prototype.update = function (time) {
       time,
       boundingRectangleScratch,
     );
-    if (defined(subRegion)) {
+    if (
+      defined(subRegion) &&
+      !BoundingRectangle.equals(subRegion, item.subRegion)
+    ) {
       billboard.setImageSubRegion(billboard.image, subRegion);
+      item.subRegion = BoundingRectangle.clone(subRegion, item.subRegion);
     }
   }
   return true;
