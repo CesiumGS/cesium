@@ -79,7 +79,7 @@ npm version prerelease --preid <tag> --no-git-tag-version
 - Move any relevant items in the list to the new header in `CHANGES.md`.
 - Delete any empty headers.
 - Ensure each change is nested in the section for the relevant workspace.
-- Commit any staged changed and push to your branch.
+- Commit any staged changes and push to your branch.
 
 ### 5. Release build and sanity test
 
