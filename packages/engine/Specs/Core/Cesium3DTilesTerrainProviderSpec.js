@@ -1,6 +1,5 @@
 import {
   Cesium3DTilesTerrainProvider,
-  DeveloperError,
   Resource,
   TerrainProvider,
 } from "../../index.js";
@@ -13,7 +12,9 @@ describe("Core/Cesium3DTilesTerrainProvider", function () {
   it("fromUrl throws if url is not provided", async function () {
     await expectAsync(
       Cesium3DTilesTerrainProvider.fromUrl(),
-    ).toBeRejectedWithError(DeveloperError);
+    ).toBeRejectedWithDeveloperError(
+      "url is required, actual value was undefined",
+    );
   });
 
   it("fromUrl rejects when url rejects", async function () {
