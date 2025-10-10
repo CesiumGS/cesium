@@ -36,10 +36,10 @@ jobs:
         run: npm install
       - name: set status pending
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        run: 
-          - node ./scripts/setDeployStatus.js pending "Cesium-1.XXX.zip" $ZIP_URL
-          - node ./scripts/setDeployStatus.js pending "npm package" $NPM_URL
-          - node ./scripts/setDeployStatus.js pending "index.html" $DEPLOYED_URL
+        run: |
+          node ./scripts/setDeployStatus.js pending "Cesium-1.XXX.zip" $ZIP_URL
+          node ./scripts/setDeployStatus.js pending "npm package" $NPM_URL
+          node ./scripts/setDeployStatus.js pending "index.html" $DEPLOYED_URL
       - name: set the version in package.json
         run: npm run deploy-set-version -- --buildVersion $BUILD_VERSION
       - name: create release zip
@@ -72,7 +72,7 @@ jobs:
           --delete
       - name: set status success
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        run: 
-          - node ./scripts/setDeployStatus.js success "Cesium-1.XXX.zip" $ZIP_URL
-          - node ./scripts/setDeployStatus.js success "npm package" $NPM_URL
-          - node ./scripts/setDeployStatus.js success "index.html" $DEPLOYED_URL
+        run: |
+          node ./scripts/setDeployStatus.js success "Cesium-1.XXX.zip" $ZIP_URL
+          node ./scripts/setDeployStatus.js success "npm package" $NPM_URL
+          node ./scripts/setDeployStatus.js success "index.html" $DEPLOYED_URL
