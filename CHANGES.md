@@ -15,6 +15,7 @@
 - Fix issues with label background when updating properties while `label.show` is `false`. [#12138](https://github.com/CesiumGS/cesium/issues/12138)
 - Improved performance of `scene.drillPick`. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
 - Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
+- Improved rendering performance when a 3D tileset is loaded [#12974](https://github.com/CesiumGS/cesium/pull/12974)
 
 ## 1.134 - 2025-10-01
 
