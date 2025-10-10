@@ -188,6 +188,10 @@ function isOnScreenLongEnough(tile, frameState) {
  * @param {FrameState} frameState
  */
 Cesium3DTilesetTraversal.updateTile = function (tile, frameState) {
+  if (tile._visitedFrame === frameState.frameNumber) {
+    return;
+  }
+  Cesium3DTilesetTraversal.visitTile(tile, frameState);
   updateTileVisibility(tile, frameState);
   tile.updateExpiration();
 
