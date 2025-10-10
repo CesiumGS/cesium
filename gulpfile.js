@@ -2,7 +2,6 @@ import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { join, basename, resolve, dirname } from "path";
 import { exec, execSync } from "child_process";
-import fetch from "node-fetch";
 import { createRequire } from "module";
 import { finished } from "stream/promises";
 
@@ -54,7 +53,6 @@ function getWorkspaces(onlyDependencies = false) {
     : packageJson.workspaces;
 }
 
-const devDeployUrl = process.env.DEPLOYED_URL;
 const isProduction = process.env.PROD;
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
@@ -554,7 +552,6 @@ async function pruneScriptsForZip(packageJsonPath) {
   delete scripts.prettier;
 
   // Remove deploy tasks
-  delete scripts["deploy-status"];
   delete scripts["deploy-set-version"];
   delete scripts["website-release"];
 
@@ -705,57 +702,6 @@ export async function deploySetVersion() {
     packageJson.version += `-${buildVersion.replace(/[^[0-9A-Za-z-]/g, "")}`;
     return writeFile("package.json", JSON.stringify(packageJson, undefined, 2));
   }
-}
-
-export async function deployStatus() {
-  const status = argv.status;
-  const message = argv.message;
-  const deployUrl = `${devDeployUrl}`;
-  const zipUrl = `${deployUrl}Cesium-${version}.zip`;
-  const npmUrl = `${deployUrl}cesium-${version}.tgz`;
-  const coverageUrl = `${deployUrl}Build/Coverage/index.html`;
-
-  return Promise.all([
-    setStatus(status, deployUrl, message, "deploy / artifact: deployment"),
-    setStatus(status, zipUrl, message, "deploy / artifact: zip file"),
-    setStatus(status, npmUrl, message, "deploy / artifact: npm package"),
-    setStatus(
-      status,
-      coverageUrl,
-      message,
-      "deploy / artifact: coverage results",
-    ),
-  ]);
-}
-
-async function setStatus(state, targetUrl, description, context) {
-  // skip if the environment does not have the token
-  if (!process.env.GITHUB_TOKEN) {
-    return;
-  }
-
-  const body = {
-    state: state,
-    target_url: targetUrl,
-    description: description,
-    context: context,
-  };
-
-  const response = await fetch(
-    `https://api.github.com/repos/${process.env.GITHUB_REPO}/statuses/${process.env.GITHUB_SHA}`,
-    {
-      method: "post",
-      body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `token ${process.env.GITHUB_TOKEN}`,
-        "User-Agent": "Cesium",
-      },
-    },
-  );
-
-  const result = await response.json();
-  return result;
 }
 
 /**
