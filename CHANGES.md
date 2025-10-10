@@ -1,22 +1,51 @@
 # Change Log
 
-## 1.134 - 2025-10-01
+## 1.135 - 2025-11-01
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- `scene.drillPick` now uses a breadth-first search strategy instead of depth-first. This may change which entities are picked when
+  using large values of `width` and `height` when providing a `limit`, prioritizing entities closer to the camera.
+
 #### Fixes :wrench:
 
-- Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
-- Reverts `createImageBitmap` options update to continue support for older browsers [#12846](https://github.com/CesiumGS/cesium/issues/12846)
-- Fix flickering artifact in Gaussian splat models caused by incorrect sorting results. [#12662](https://github.com/CesiumGS/cesium/issues/12662)
-- Improved performance and reduced memory usage of `Event` class. [#12896](https://github.com/CesiumGS/cesium/pull/12896)
-- Fixes vertical misalignment of glyphs in labels with small fonts [#8474](https://github.com/CesiumGS/cesium/issues/8474)
-- Prevent runtime errors for certain forms of invalid PNTS files [#12872](https://github.com/CesiumGS/cesium/issues/12872)
-- Fix render issues when updating entities with `requestRenderMode=true`. [#12543](https://github.com/CesiumGS/cesium/issues/12543)
+- Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
+- Fix issues with label background when updating properties while `label.show` is `false`. [#12138](https://github.com/CesiumGS/cesium/issues/12138)
+- Improved performance of `scene.drillPick`. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
+- Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
+- Fix render issues when updating Billboards with syncronous textures with `requestRenderMode=true`. [#12543](https://github.com/CesiumGS/cesium/issues/12543)
+
+## 1.134 - 2025-10-01
+
+- [Sandcastle](https://sandcastle.cesium.com/) has been updated at `https://sandcastle.cesium.com`! The [legacy Sandcastle app](https://cesium.com/downloads/cesiumjs/releases/1.134/Apps/Sandcastle/index.html) will remain available through November 3, 2025.
+
+### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- Voxel rendering now requires a WebGL2 context, which is [enabled by default since 1.101](https://github.com/CesiumGS/cesium/pull/10894). Make sure the `requestWebGl1` flag in `contextOptions` is NOT set to true.
+- The `defaultValue` function has been removed. Instead, use the [nullish coalescing (`??`)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing) operator. See the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide#default-parameter-values) for usage information and examples.
+- `defaultValue.EMPTY_OBJECT` has been removed. Instead, use `Frozen.EMPTY_OBJECT`. See the [Coding Guide](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/CodingGuide#default-parameter-values) for usage information and examples.
 
 #### Additions :tada:
 
-- Adds an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
+- Added Google2DImageryProvider to load imagery from [Google Maps](https://developers.google.com/maps/documentation/tile/2d-tiles-overview) [#12913](https://github.com/CesiumGS/cesium/pull/12913)
+- Added an async factory method for the Material class that allows callers to wait on resource loading. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
+
+#### Fixes :wrench:
+
+- Fixed vertical misalignment of glyphs in labels with small fonts [#8474](https://github.com/CesiumGS/cesium/issues/8474)
+- Converted voxel raymarching to eye coordinates to fix precision issues in large datasets. [#12061](https://github.com/CesiumGS/cesium/issues/12061)
+- Fixed flickering artifact in Gaussian splat models caused by incorrect sorting results. [#12662](https://github.com/CesiumGS/cesium/issues/12662)
+- Fixed issue where multiple instances of a Gaussian splat tileset would transform tile positions incorrectly and render out of position. [#12795](https://github.com/CesiumGS/cesium/issues/12795)
+- Fixed rendering for geometry entities when `requestRenderMode` is enabled. [#12841](https://github.com/CesiumGS/cesium/pull/12841)
+- Improved performance and reduced memory usage of `Event` class. [#12896](https://github.com/CesiumGS/cesium/pull/12896)
+- Improved performance of clamped labels. [#12905](https://github.com/CesiumGS/cesium/pull/12905)
+- Materials loaded from type now respect submaterials present in the referenced material type. [#10566](https://github.com/CesiumGS/cesium/issues/10566)
+- Prevent runtime errors for certain forms of invalid PNTS files [#12872](https://github.com/CesiumGS/cesium/issues/12872)
+- Revert `createImageBitmap` options update to continue support for older browsers [#12846](https://github.com/CesiumGS/cesium/issues/12846)
 
 ## 1.133.1 - 2025-09-08
 

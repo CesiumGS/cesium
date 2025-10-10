@@ -31,15 +31,28 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
   }
 
   /**
-   * Original position, scale and rotation values for splats. Used to maintain
-   * consistency when multiple transforms may occur. Downstream consumers otherwise may not know
-   * the underlying data was modified.
+   * Local copy of the position attribute buffer that has been transformed into root tile space. Originals are kept in the gltf loader.
+   * Used for rendering
    * @type {undefined|Float32Array}
    * @private
    */
-  this._originalPositions = undefined;
-  this._originalRotations = undefined;
-  this._originalScales = undefined;
+  this._positions = undefined;
+
+  /**
+   * Local copy of the rotation attribute buffer that has been transformed into root tile space. Originals are kept in the gltf loader.
+   * Used for rendering
+   * @type {undefined|Float32Array}
+   * @private
+   */
+  this._rotations = undefined;
+
+  /**
+   * Local copy of the scale attribute buffer that has been transformed into root tile space. Originals are kept in the gltf loader.
+   * Used for rendering
+   * @type {undefined|Float32Array}
+   * @private
+   */
+  this._scales = undefined;
 
   /**
    * glTF primitive data that contains the Gaussian splat data needed for rendering.
@@ -369,6 +382,38 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   },
 
   /**
+   * Get the transformed positions of this tile's Gaussian splats.
+   * @type {undefined|Float32Array}
+   * @private
+   */
+  positions: {
+    get: function () {
+      return this._positions;
+    },
+  },
+  /**
+   * Get the transformed rotations of this tile's Gaussian splats.
+   * @type {undefined|Float32Array}
+   * @private
+   */
+  rotations: {
+    get: function () {
+      return this._rotations;
+    },
+  },
+
+  /**
+   * Get the transformed scales of this tile's Gaussian splats.
+   * @type {undefined|Float32Array}
+   * @private
+   */
+  scales: {
+    get: function () {
+      return this._scales;
+    },
+  },
+
+  /**
    * The number of spherical harmonic coefficients used for the Gaussian splats.
    * @type {number}
    * @private
@@ -629,21 +674,21 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
     this.worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
 
-    this._originalPositions = new Float32Array(
+    this._positions = new Float32Array(
       ModelUtility.getAttributeBySemantic(
         this.gltfPrimitive,
         VertexAttributeSemantic.POSITION,
       ).typedArray,
     );
 
-    this._originalRotations = new Float32Array(
+    this._rotations = new Float32Array(
       ModelUtility.getAttributeBySemantic(
         this.gltfPrimitive,
         VertexAttributeSemantic.ROTATION,
       ).typedArray,
     );
 
-    this._originalScales = new Float32Array(
+    this._scales = new Float32Array(
       ModelUtility.getAttributeBySemantic(
         this.gltfPrimitive,
         VertexAttributeSemantic.SCALE,

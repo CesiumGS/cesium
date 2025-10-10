@@ -91,6 +91,37 @@ describe("Core/Event", function () {
     expect(event.numberOfListeners).toEqual(5);
   });
 
+  it("can add a listener from within a callback", function () {
+    const doNothing = function (evt) {};
+
+    const addEventCb = function (evt) {
+      event.addEventListener(doNothing);
+    };
+
+    event.addEventListener(addEventCb);
+    event.raiseEvent();
+    expect(event.numberOfListeners).toEqual(2);
+
+    event.removeEventListener(doNothing);
+    event.removeEventListener(addEventCb);
+    expect(event.numberOfListeners).toEqual(0);
+  });
+
+  it("can add multiple listeners within a callback", function () {
+    const addEvent0 = function () {
+      event.addEventListener(function () {});
+    };
+    const addEvent1 = function () {
+      event.addEventListener(function () {});
+    };
+
+    event.addEventListener(addEvent0);
+    event.addEventListener(addEvent1);
+    expect(event.numberOfListeners).toEqual(2);
+    event.raiseEvent();
+    expect(event.numberOfListeners).toEqual(4);
+  });
+
   it("addEventListener and removeEventListener works with same function of different scopes", function () {
     const Scope = function () {
       this.timesCalled = 0;
