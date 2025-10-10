@@ -490,14 +490,13 @@ function deriveChildTile(
   // as the bounding volumes are needed below.
   let tileMetadata;
   let tileBounds;
-  let contentBounds;
   if (defined(subtree.tilePropertyTableJson)) {
     tileMetadata = subtree.getTileMetadataView(implicitCoordinates);
 
-    const boundingVolumeSemantics =
-      BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(tileMetadata);
-    tileBounds = boundingVolumeSemantics.tile;
-    contentBounds = boundingVolumeSemantics.content;
+    tileBounds = BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(
+      "TILE",
+      tileMetadata,
+    );
   }
 
   // Content is not loaded at this point, so this flag is set for future reference.
@@ -546,11 +545,18 @@ function deriveChildTile(
         }
       }
 
+      let contentBounds;
+
       if (hasImplicitContentMetadata) {
         const contentMetadata = subtree.getContentMetadataView(
           implicitCoordinates,
           i,
           j,
+        );
+
+        contentBounds = BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(
+          "CONTENT",
+          contentMetadata,
         );
 
         const propertyIds = contentMetadata.getPropertyIds();
