@@ -23,7 +23,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/CesiumGS/cesium.git"
+    "url": "git+https://github.com/CesiumGS/cesium.git"
   },
   "bugs": {
     "url": "https://github.com/CesiumGS/cesium/issues"
@@ -52,7 +52,8 @@
   ],
   "dependencies": {
     "@cesium/engine": "^21.0.0",
-    "@cesium/widgets": "^13.2.0"
+    "@cesium/widgets": "^13.2.0",
+    "@dotenvx/dotenvx": "^1.51.0"
   },
   "devDependencies": {
     "@cesium/eslint-config": "^12.0.0",
@@ -139,7 +140,6 @@
     "test-e2e-release-all": "release=true playwright test -c Specs/e2e/playwright.config.js",
     "test-e2e-report": "playwright show-report Build/Specs/e2e/report",
     "test-e2e-update": "playwright test -c Specs/e2e/playwright.config.js --project=chromium -u",
-    "deploy-status": "gulp deployStatus",
     "deploy-set-version": "gulp deploySetVersion",
     "prettier": "prettier --write \"**/*\"",
     "prettier-check": "prettier --check \"**/*\"",

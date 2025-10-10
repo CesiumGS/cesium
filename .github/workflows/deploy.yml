@@ -23,7 +23,6 @@ jobs:
       GITHUB_REPO: ${{ github.repository }}
       GITHUB_SHA: ${{ github.sha }}
       BASE_URL: /cesium/${{ github.ref_name }}/
-      DEPLOYED_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
     steps:
       - uses: actions/checkout@v5
       - name: install node 22
@@ -34,6 +33,12 @@ jobs:
         run: npm install
       - name: set the version in package.json
         run: npm run deploy-set-version -- --buildVersion $BUILD_VERSION
+      - name: set status pending
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: |
+          node ./scripts/setDeployStatus.js zip pending
+          node ./scripts/setDeployStatus.js npm pending
+          node ./scripts/setDeployStatus.js index pending
       - name: create release zip
         run: npm run make-zip
       - name: package cesium module
@@ -62,6 +67,9 @@ jobs:
           --exclude "scripts/*" \
           --exclude "Tools/*" \
           --delete
-      - name: set status
+      - name: set status success
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        run: npm run deploy-status -- --status success --message Deployed
+        run: |
+          node ./scripts/setDeployStatus.js zip success
+          node ./scripts/setDeployStatus.js npm success
+          node ./scripts/setDeployStatus.js index success

@@ -154,5 +154,4 @@ Here's the full set of scripts and what they do.
   - `test-webgl-validation` - Runs all tests with Karma and enables low-level WebGL validation
   - `test-release` - Runs all tests on the minified release version of built Cesium
 - **Deployment scripts**
-  - `deploy-status` - Sets the deployment statuses in GitHub, for use in CI
   - `deploy-set-version` - Sets the version of `package.json`, for use in CI

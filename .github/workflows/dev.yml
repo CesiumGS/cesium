@@ -31,6 +31,9 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: us-east-1
       BRANCH: ${{ github.ref_name }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPO: ${{ github.repository }}
+      GITHUB_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v5
       - name: install node 22
@@ -39,6 +42,9 @@ jobs:
           node-version: '22'
       - name: npm install
         run: npm install
+      - name: set status pending
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: node ./scripts/setDeployStatus.js coverage pending
       - name: build
         run: npm run build
       - name: coverage (firefox)
@@ -46,6 +52,9 @@ jobs:
       - name: upload coverage artifacts
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Coverage --delete --color on
+      - name: set status success
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: node ./scripts/setDeployStatus.js coverage success
   release-tests:
     runs-on: ubuntu-latest
     steps:
