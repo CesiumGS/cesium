@@ -39,7 +39,7 @@ import ResourceCache from "./ResourceCache.js";
 function ImplicitSubtree(resource, implicitTileset, implicitCoordinates) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("resource", resource);
-  //Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("implicitTileset", implicitTileset);
   Check.typeOf.object("implicitCoordinates", implicitCoordinates);
   //>>includeEnd('debug');
 
