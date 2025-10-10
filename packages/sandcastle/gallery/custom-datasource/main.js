@@ -65,7 +65,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
   /**
    * Gets a value indicating if the data source is currently loading data.
    * @memberof WebGLGlobeDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   isLoading: {
     get: function () {
@@ -162,7 +162,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
   /**
    * Gets whether or not this data source should be displayed.
    * @memberof WebGLGlobeDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {

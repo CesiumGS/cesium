@@ -34,7 +34,7 @@ const SensorVolumePortionToDisplay = {
  *
  * @param {SensorVolumePortionToDisplay} portionToDisplay The value to validate.
  *
- * @returns {Boolean} <code>true</code> if the provided value is a valid enumeration value; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the provided value is a valid enumeration value; otherwise, <code>false</code>.
  */
 SensorVolumePortionToDisplay.validate = function (portionToDisplay) {
   return (
