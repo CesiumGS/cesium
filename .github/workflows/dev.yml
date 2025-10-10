@@ -34,7 +34,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_REPO: ${{ github.repository }}
       GITHUB_SHA: ${{ github.sha }}
-      COVERAGE_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
     steps:
       - uses: actions/checkout@v5
       - name: install node 22
@@ -45,7 +44,7 @@ jobs:
         run: npm install
       - name: set status pending
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        run: node ./scripts/setDeployStatus.js pending "coverage results" $COVERAGE_URL
+        run: node ./scripts/setDeployStatus.js coverage pending
       - name: build
         run: npm run build
       - name: coverage (firefox)
@@ -55,7 +54,7 @@ jobs:
         run: aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Coverage --delete --color on
       - name: set status success
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        run: node ./scripts/setDeployStatus.js success "coverage results" $COVERAGE_URL
+        run: node ./scripts/setDeployStatus.js coverage success
   release-tests:
     runs-on: ubuntu-latest
     steps:

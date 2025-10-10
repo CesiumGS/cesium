@@ -18,11 +18,13 @@ CesiumJS uses [GitHub Actions](https://docs.github.com/en/actions) for continuou
 
 Reusable actions are defined in `/.github/actions/` and workflows in `.github/workflows/`.
 
-A workflow is triggered whenever someone pushes code to the CesiumJS repository, or an external contributor opens a pull request. After the build has completed, at the bottom of the pull request page the status of the build is shown. In the dropdown menu, individual checks are displayed. Logs and deployed artifacts can be accessed by clicking the "Details" link.
+A workflow is triggered when a commit is pushed to the CesiumJS repository and when a contributor opens a pull request. After the build has completed, the overall status of the build is shown at the bottom of the pull request page.
+
+In the dropdown menu, individual status checks are displayed. Logs and deployed build artifacts can be accessed by clicking the link associated with the individual check.
 
 ![GitHub Action Checks](github_action_checks.png)
 
-The workflow checks for any CesiumJS branch are accessible under the [Branches](https://github.com/CesiumGS/cesium/branches/all) page by clicking the icon next to the branch name.
+The status checks for any branch are also accessible under the [Branches](https://github.com/CesiumGS/cesium/branches/all) page by clicking the icon next to the branch name.
 
 ![GitHub Branches](github_branches.png)
 
@@ -46,7 +48,7 @@ Additional set up is required for deployment if you do not have commit access to
 
 It is possible to configure your development branch of CesiumJS to deploy build artifacts to a different [AWS S3 Bucket](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html). If you are using the cesium-public-builds bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
 
-- In `.gtihub/workflows/dev.yml`, in the following lines, replace "cesium-public-builds" with the name of your S3 bucket.
+- In `.github/workflows/dev.yml` and `.github/workflows/deploy.yml` for the following lines, replace "cesium-public-builds" with the name of your S3 bucket.
 
 ```sh
 aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Coverage --delete --color on
@@ -56,13 +58,7 @@ aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Cove
 aws s3 sync Build/unzipped/ s3://cesium-public-builds/cesium/$BRANCH/Build/ --cache-control "no-cache" --delete
 ```
 
-- In `gulpfile.js`, edit the following line:
-
-```javascript
-const devDeployUrl = "https://ci-builds.cesium.com/cesium/";
-```
-
-- Edit the URL to match the URL hosting the S3 bucket specified in the previous step.
+- In `.env` edit the value of `BUILD_ARTIFACT_URL` to match the hosted URL of the S3 bucket specified in the previous step.
 
 ### Configure S3 credentials
 
