@@ -31,6 +31,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: us-east-1
       BRANCH: ${{ github.ref_name }}
+      DEPLOYED_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
     steps:
       - uses: actions/checkout@v5
       - name: install node 22
