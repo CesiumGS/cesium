@@ -4,20 +4,20 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 /**
  * @private
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Ellipsoid} options.ellipsoid
  * @param {Rectangle} options.rectangle
- * @param {Boolean} options.hasVertexNormals
- * @param {Boolean} options.hasWebMercatorT
+ * @param {boolean} options.hasVertexNormals
+ * @param {boolean} options.hasWebMercatorT
  * @param {Object.<string,*>} options.gltf
- * @param {Number} options.minimumHeight
- * @param {Number} options.maximumHeight
+ * @param {number} options.minimumHeight
+ * @param {number} options.maximumHeight
  * @param {BoundingSphere} options.boundingSphere
  * @param {OrientedBoundingBox} options.orientedBoundingBox
  * @param {Cartesian3} options.horizonOcclusionPoint
- * @param {Number} options.skirtHeight
- * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
- * @param {Number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+ * @param {number} options.skirtHeight
+ * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
  * @param {ArrayBuffer[]} transferableObjects
  */
 function createVerticesFromCesium3DTilesTerrain(options, transferableObjects) {

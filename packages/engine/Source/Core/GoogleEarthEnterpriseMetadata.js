@@ -140,7 +140,7 @@ Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
  * Creates a metadata object using the Google Earth Enterprise REST API. This is used by the GoogleEarthEnterpriseImageryProvider
  * and GoogleEarthEnterpriseTerrainProvider to share metadata requests.
  *
- * @param {Resource|String} resourceOrUrl The url of the Google Earth Enterprise server hosting the imagery.
+ * @param {Resource|string} resourceOrUrl The url of the Google Earth Enterprise server hosting the imagery.
  *
  * @returns {Promise<GoogleEarthEnterpriseMetadata>} A promise which resolves to the created GoogleEarthEnterpriseMetadata instance/
  */

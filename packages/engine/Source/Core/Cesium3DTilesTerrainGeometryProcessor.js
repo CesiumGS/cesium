@@ -283,7 +283,7 @@ function decodeIndices(gltf) {
 /**
  * @private
  * @param {Object.<string,*>} gltf
- * @param {String} name
+ * @param {string} name
  * @returns {Uint16Array|Uint32Array}
  */
 function decodeEdgeIndices(gltf, name) {
@@ -365,7 +365,7 @@ const scratchGltfInfo = {
 /**
  * @private
  * @param {Object.<string,*>} gltf
- * @param {Boolean} hasNormals
+ * @param {boolean} hasNormals
  * @param {GltfInfo} result
  * @returns {GltfInfo}
  */
@@ -382,9 +382,9 @@ function decodeGltf(gltf, hasNormals, result) {
 
 /**
  * @private
- * @param {Number} a
- * @param {Number} b
- * @returns {Number}
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
  */
 const sortedEdgeCompare = function (a, b) {
   return a - b;
@@ -405,20 +405,20 @@ const Cesium3DTilesTerrainGeometryProcessor = {};
  *
  * @private
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Ellipsoid} options.ellipsoid
  * @param {Rectangle} options.rectangle
- * @param {Boolean} options.hasVertexNormals
- * @param {Boolean} options.hasWebMercatorT
+ * @param {boolean} options.hasVertexNormals
+ * @param {boolean} options.hasWebMercatorT
  * @param {Object.<string,*>} options.gltf
- * @param {Number} options.minimumHeight
- * @param {Number} options.maximumHeight
+ * @param {number} options.minimumHeight
+ * @param {number} options.maximumHeight
  * @param {BoundingSphere} options.boundingSphere
  * @param {OrientedBoundingBox} options.orientedBoundingBox
  * @param {Cartesian3} options.horizonOcclusionPoint
- * @param {Number} options.skirtHeight
- * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
- * @param {Number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+ * @param {number} options.skirtHeight
+ * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
  * @returns {Promise.<TerrainMesh>} A promise to a terrain mesh.
  */
 Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
@@ -767,18 +767,18 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
 
 /**
  * @private
- * @param {Object} options
- * @param {Boolean} options.isEastChild
- * @param {Boolean} options.isNorthChild
+ * @param {object} options
+ * @param {boolean} options.isEastChild
+ * @param {boolean} options.isNorthChild
  * @param {Rectangle} options.rectangle
  * @param {Ellipsoid} options.ellipsoid
- * @param {Number} options.skirtHeight
+ * @param {number} options.skirtHeight
  * @param {Float32Array} options.parentVertices
  * @param {Uint8Array|Uint16Array|Uint32Array} options.parentIndices
- * @param {Number} options.parentVertexCountWithoutSkirts
- * @param {Number} options.parentIndexCountWithoutSkirts
- * @param {Number} options.parentMinimumHeight
- * @param {Number} options.parentMaximumHeight
+ * @param {number} options.parentVertexCountWithoutSkirts
+ * @param {number} options.parentIndexCountWithoutSkirts
+ * @param {number} options.parentMinimumHeight
+ * @param {number} options.parentMaximumHeight
  * @param {TerrainEncoding} options.parentEncoding
  * @returns {TerrainMesh}
  */
@@ -833,21 +833,21 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   const upsampleRectangle = Rectangle.clone(options.rectangle, new Rectangle());
   const ellipsoid = Ellipsoid.clone(options.ellipsoid);
 
-  /** @type Number[] */
+  /** @type number[] */
   const upsampledTriIDs = [];
-  /** @type Number[] */
+  /** @type number[] */
   const upsampledUVs = [];
-  /** @type Number[] */
+  /** @type number[] */
   const upsampledBarys = [];
-  /** @type Number[] */
+  /** @type number[] */
   const upsampledIndices = [];
-  /** @type Number[] */
+  /** @type number[] */
   const upsampledWestIndices = [];
-  /** @type Number[] */
+  /** @type number[] */
   const upsampledSouthIndices = [];
-  /** @type Number[] */
+  /** @type number[] */
   const upsampledEastIndices = [];
-  /** @type Number[] */
+  /** @type number[] */
   const upsampledNorthIndices = [];
 
   clipTileFromQuadrant(
@@ -1156,7 +1156,7 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
  * @param {Cartesian3} enuMaximum
  * @param {Matrix4} enuToEcef
  * @param {Matrix4} ecefToEnu
- * @param {Number} skirtHeight
+ * @param {number} skirtHeight
  */
 function addSkirtsToMesh(
   mesh,
@@ -1422,9 +1422,9 @@ const scratchOutPoints = [
  * @private
  * @param {Cartesian2} boxMinimum
  * @param {Cartesian2} boxMaximum
- * @param {Number} edgeId
+ * @param {number} edgeId
  * @param {Cartesian2} p
- * @returns {Number}
+ * @returns {number}
  */
 function inside(boxMinimum, boxMaximum, edgeId, p) {
   switch (edgeId) {
@@ -1444,7 +1444,7 @@ function inside(boxMinimum, boxMaximum, edgeId, p) {
  * @private
  * @param {Cartesian2} boxMinimum
  * @param {Cartesian2} boxMaximum
- * @param {Number} edgeId
+ * @param {number} edgeId
  * @param {Cartesian2} a
  * @param {Cartesian2} b
  * @param {Cartesian3} result
@@ -1482,7 +1482,7 @@ function intersect(boxMinimum, boxMaximum, edgeId, a, b, result) {
  * @private
  * @typedef PolygonResult
  *
- * @property {Number} length
+ * @property {number} length
  * @property {Cartesian2[]} coordinates A pre-allocated array of six 2D coordinates.
  * @property {Cartesian3[]} barycentricCoordinates A pre-allocated array of six barycentric coordinates.
  */
@@ -1516,8 +1516,8 @@ const scratchPolygon = {
  * clipping algorithm. The resulting polygon will have between 0 and 6 vertices.
  *
  * @private
- * @param {Number} edgeStart The first edge to clip against.
- * @param {Number} edgeCount The number of edges to clip against, starting from edgeStart.
+ * @param {number} edgeStart The first edge to clip against.
+ * @param {number} edgeCount The number of edges to clip against, starting from edgeStart.
  * @param {Cartesian2} boxMinimum The bottom-left corner of the axis-aligned box.
  * @param {Cartesian2} boxMaximum The top-right corner of the axis-aligned box.
  * @param {Cartesian2} p0 The coordinates of the first vertex in the triangle, in counter-clockwise order.
@@ -1633,8 +1633,8 @@ function clipTriangleAgainstBoxEdgeRange(
 
 /**
  * @private
- * @param {Boolean} isEastChild
- * @param {Boolean} isNorthChild
+ * @param {boolean} isEastChild
+ * @param {boolean} isNorthChild
  * @param {Cartesian2} boxMinimum
  * @param {Cartesian2} boxMaximum
  * @param {Cartesian2} p0
@@ -1686,21 +1686,21 @@ const lookUpTableBaryToPrim = [
 /**
  * Returns triangles that are clipped against a quadrant of a tile.
  * @private
- * @param {Boolean} isEastChild
- * @param {Boolean} isNorthChild
- * @param {Number} indexCount
+ * @param {boolean} isEastChild
+ * @param {boolean} isNorthChild
+ * @param {number} indexCount
  * @param {Uint8Array|Uint16Array|Uint32Array} indices
- * @param {Number} vertexCount
+ * @param {number} vertexCount
  * @param {Float32Array} vertices
  * @param {TerrainEncoding} vertexEncoding
- * @param {Number[]} resultIndices Indices of the clipped triangles
- * @param {Number[]} resultWestIndices Indices on the west edge
- * @param {Number[]} resultSouthIndices Indices on the south edge
- * @param {Number[]} resultEastIndices Indices on the east edge
- * @param {Number[]} resultNorthIndices Indices on the north edge
- * @param {Number[]} resultTriIds Per-vertex index to the originating triangle in indices
- * @param {Number[]} resultBary Per-vertex barycentric coordinate corresponding to the originating triangle
- * @param {Number[]} resultUVs Per-vertex UV within the quadrant
+ * @param {number[]} resultIndices Indices of the clipped triangles
+ * @param {number[]} resultWestIndices Indices on the west edge
+ * @param {number[]} resultSouthIndices Indices on the south edge
+ * @param {number[]} resultEastIndices Indices on the east edge
+ * @param {number[]} resultNorthIndices Indices on the north edge
+ * @param {number[]} resultTriIds Per-vertex index to the originating triangle in indices
+ * @param {number[]} resultBary Per-vertex barycentric coordinate corresponding to the originating triangle
+ * @param {number[]} resultUVs Per-vertex UV within the quadrant
  */
 function clipTileFromQuadrant(
   isEastChild,

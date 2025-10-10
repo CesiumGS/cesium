@@ -293,7 +293,7 @@ Object.defineProperties(GeocoderViewModel.prototype, {
    * Gets the list of geocoder search suggestions
    * @memberof GeocoderViewModel.prototype
    *
-   * @type {Object[]}
+   * @type {object[]}
    */
   suggestions: {
     get: function () {

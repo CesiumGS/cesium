@@ -28,9 +28,9 @@ import TerrainProvider from "./TerrainProvider.js";
 
 /**
  * @private
- * @param {Number} level The level of the tile
- * @param {Number} x The x coordinate of the tile
- * @returns {Number}
+ * @param {number} level The level of the tile
+ * @param {number} x The x coordinate of the tile
+ * @returns {number}
  */
 function getRootIdFromGeographic(level, x) {
   //>>includeStart('debug', pragmas.debug);
@@ -46,9 +46,9 @@ function getRootIdFromGeographic(level, x) {
 /**
  * @private
  * @param {ImplicitTileset} implicitTileset
- * @param {Number} level The level of the tile
- * @param {Number} x The x coordinate of the tile
- * @param {Number} y The y coordinate of the tile
+ * @param {number} level The level of the tile
+ * @param {number} x The x coordinate of the tile
+ * @param {number} y The y coordinate of the tile
  * @returns {ImplicitTileCoordinates}
  */
 function getImplicitTileCoordinatesFromGeographicCoordinates(
@@ -85,9 +85,9 @@ function getImplicitTileCoordinatesFromGeographicCoordinates(
 /**
  * @private
  * @param {ImplicitTileset} implicitTileset
- * @param {Number} level The level of the tile
- * @param {Number} x The x coordinate of the tile
- * @param {Number} y The y coordinate of the tile
+ * @param {number} level The level of the tile
+ * @param {number} x The x coordinate of the tile
+ * @param {number} y The y coordinate of the tile
  * @returns {ImplicitTileCoordinates}
  */
 function getImplicitTileCoordinates(implicitTileset, level, x, y) {
@@ -116,9 +116,9 @@ function getImplicitTileCoordinates(implicitTileset, level, x, y) {
  * @private
  * @param {ImplicitTileset} implicitTileset
  * @param {ImplicitTileCoordinates} subtreeCoord
- * @param {Number} u
- * @param {Number} v
- * @param {Number} levelOffset
+ * @param {number} u
+ * @param {number} v
+ * @param {number} levelOffset
  * @returns {ImplicitTileCoordinates} The parent subtree coordinate
  */
 
@@ -155,9 +155,9 @@ function computeDescendantCoordinatesAtUv(
  * @param {ImplicitTileset} implicitTileset
  * @param {ImplicitSubtree} subtree
  * @param {ImplicitTileCoordinates} coord
- * @param {Number} x
- * @param {Number} y
- * @returns {Boolean}
+ * @param {number} x
+ * @param {number} y
+ * @returns {boolean}
  */
 function isChildAvailable(implicitTileset, subtree, coord, x, y) {
   //>>includeStart('debug', pragmas.debug);
@@ -187,7 +187,7 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
 }
 
 /**
- * @typedef {Object} Cesium3DTilesTerrainProvider.ConstructorOptions
+ * @typedef {object} Cesium3DTilesTerrainProvider.ConstructorOptions
  *
  * Initialization options for the Cesium3DTilesTerrainProvider constructor
  *
@@ -280,7 +280,7 @@ function Cesium3DTilesTerrainProvider(options) {
 /**
  * Creates a {@link TerrainProvider} that accesses terrain data in a Cesium 3D Tiles format.
  *
- * @param {Resource|String|Promise<Resource>|Promise<String>} url The URL of the Cesium terrain server.
+ * @param {Resource|string|Promise<Resource>|Promise<string>} url The URL of the Cesium terrain server.
  * @param {Cesium3DTilesTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<Cesium3DTilesTerrainProvider>}
  *
@@ -459,9 +459,9 @@ const scratchPromises = new Array(3);
  * {@link Cesium3DTilesTerrainProvider#ready} returns true. The result must include terrain data and
  * may optionally include a water mask and an indication of which child tiles are available.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
  * @returns {Promise.<Cesium3DTilesTerrainData>|undefined} A promise for the requested geometry. If this method
@@ -659,10 +659,10 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
 /**
  * Determines whether data for a tile is available to be loaded.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean|undefined} Undefined if not supported or availability is unknown, otherwise true or false.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {boolean|undefined} Undefined if not supported or availability is unknown, otherwise true or false.
  */
 Cesium3DTilesTerrainProvider.prototype.getTileDataAvailable = function (
   x,
@@ -731,9 +731,9 @@ Cesium3DTilesTerrainProvider.prototype.getTileDataAvailable = function (
 /**
  * Makes sure we load availability data for a tile
  *
- * @param {Number} _x The X coordinate of the tile for which to request geometry.
- * @param {Number} _y The Y coordinate of the tile for which to request geometry.
- * @param {Number} _level The level of the tile for which to request geometry.
+ * @param {number} _x The X coordinate of the tile for which to request geometry.
+ * @param {number} _y The Y coordinate of the tile for which to request geometry.
+ * @param {number} _level The level of the tile for which to request geometry.
  * @returns {Promise<void>|undefined} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 Cesium3DTilesTerrainProvider.prototype.loadTileDataAvailability = function (
@@ -747,8 +747,8 @@ Cesium3DTilesTerrainProvider.prototype.loadTileDataAvailability = function (
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error.
  */
 Cesium3DTilesTerrainProvider.prototype.getLevelMaximumGeometricError =
   function (level) {
@@ -810,7 +810,7 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
    * indicates which areas of the globe are water rather than land, so they can be rendered
    * as a reflective surface with animated waves.
    * @memberof Cesium3DTilesTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   // @ts-ignore
   hasWaterMask: {
@@ -822,7 +822,7 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the requested tiles include vertex normals.
    * @memberof Cesium3DTilesTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   // @ts-ignore
   hasVertexNormals: {
@@ -849,9 +849,9 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
 /**
  * @private
  * @constructor
- * @param {Number} rootId
+ * @param {number} rootId
  * @param {ImplicitSubtree} subtree
- * @param {Number} stamp
+ * @param {number} stamp
  */
 function ImplicitSubtreeCacheNode(rootId, subtree, stamp) {
   this.rootId = rootId;
@@ -862,9 +862,9 @@ function ImplicitSubtreeCacheNode(rootId, subtree, stamp) {
 /**
  * @private
  * @constructor
- * @param {Object} options Object with the following properties
+ * @param {object} options Object with the following properties
  * @param {Cesium3DTilesTerrainProvider} options.provider
- * @param {Number} [options.maximumSubtreeCount=0] The total number of subtrees this cache can store. If adding a new subtree would exceed this limit, the lowest priority subtrees will be removed until there is room, unless the subtree that is going to be removed is the parent of the new subtree, in which case it will not be removed and the new subtree will still be added, exceeding the memory limit.
+ * @param {number} [options.maximumSubtreeCount=0] The total number of subtrees this cache can store. If adding a new subtree would exceed this limit, the lowest priority subtrees will be removed until there is room, unless the subtree that is going to be removed is the parent of the new subtree, in which case it will not be removed and the new subtree will still be added, exceeding the memory limit.
  */
 function ImplicitSubtreeCache(options) {
   this._maximumSubtreeCount = options.maximumSubtreeCount ?? 0;
@@ -880,7 +880,7 @@ function ImplicitSubtreeCache(options) {
 /**
  * @param {ImplicitSubtreeCacheNode} a
  * @param {ImplicitSubtreeCacheNode} b
- * @returns {Number}
+ * @returns {number}
  */
 ImplicitSubtreeCache.comparator = function (a, b) {
   // @ts-ignore
@@ -900,7 +900,7 @@ ImplicitSubtreeCache.comparator = function (a, b) {
 };
 
 /**
- * @param {Number} rootId
+ * @param {number} rootId
  * @param {ImplicitSubtree} subtree
  */
 ImplicitSubtreeCache.prototype.addSubtree = function (rootId, subtree) {
@@ -946,7 +946,7 @@ ImplicitSubtreeCache.prototype.addSubtree = function (rootId, subtree) {
 };
 
 /**
- * @param {Number} rootId
+ * @param {number} rootId
  * @param {ImplicitTileCoordinates} subtreeCoord
  * @returns {ImplicitSubtree|undefined}
  */
@@ -1115,7 +1115,7 @@ ImplicitSubtreeCache.prototype._computeMaximumImplicitTileCoordinatesAtPosition 
  * Determines the level of the most detailed tile covering the position.
  *
  * @param {Cartographic} position The position for which to determine the maximum available level. The height component is ignored.
- * @returns {Number} The level of the most detailed tile covering the position.
+ * @returns {number} The level of the most detailed tile covering the position.
  * @throws {DeveloperError} If position is outside any tile according to the tiling scheme.
  */
 ImplicitSubtreeCache.prototype.computeMaximumLevelAtPosition = function (

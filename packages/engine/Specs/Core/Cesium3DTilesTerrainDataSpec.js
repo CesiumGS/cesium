@@ -27,11 +27,11 @@ function getPadding(buffer) {
 }
 
 /**
- * @param {Object} options
+ * @param {object} options
  * @param {TilingScheme} options.tilingScheme,
- * @param {Number} options.tileLevel,
- * @param {Number} options.tileX,
- * @param {Number} options.tileY,
+ * @param {number} options.tileLevel,
+ * @param {number} options.tileX,
+ * @param {number} options.tileY,
  * @param {Cartographic[]} options.positionsCartographic
  * @param {Cartesian3[]} options.normals
  * @param {Uint16Array|Uint32Array} options.indices
@@ -39,7 +39,7 @@ function getPadding(buffer) {
  * @param {Uint16Array|Uint32Array} options.edgeIndicesSouth
  * @param {Uint16Array|Uint32Array} options.edgeIndicesEast
  * @param {Uint16Array|Uint32Array} options.edgeIndicesNorth
- * @param {Number} [options.childTileMask]
+ * @param {number} [options.childTileMask]
  * @returns {Cesium3DTilesTerrainData}
  */
 function createTerrainDataFromScratch(options) {
@@ -395,7 +395,7 @@ function createTerrainDataFromScratch(options) {
 /**
  * @param {Cartesian3} positionA
  * @param {Cartesian3} positionB
- * @returns {Boolean}
+ * @returns {boolean}
  */
 function positionEqual(positionA, positionB) {
   return Cartesian3.equalsEpsilon(positionA, positionB, undefined, 1.0);
@@ -404,7 +404,7 @@ function positionEqual(positionA, positionB) {
 /**
  * @param {Cartesian3} normalA
  * @param {Cartesian3} normalB
- * @returns {Boolean}
+ * @returns {boolean}
  */
 function normalEqual(normalA, normalB) {
   return Cartesian3.equalsEpsilon(
@@ -417,7 +417,7 @@ function normalEqual(normalA, normalB) {
 
 /**
  * @private
- * @param {Object} options
+ * @param {object} options
  * @param {TerrainMesh} options.mesh
  * @param {Cartographic[]} options.positionsCartographic
  * @param {Cartesian3[]} options.normals
@@ -579,11 +579,11 @@ function checkMeshGeometry(options) {
 }
 
 /**
- * @param {Object} options
+ * @param {object} options
  * @param {TilingScheme} options.tilingScheme,
- * @param {Number} options.tileLevel,
- * @param {Number} options.tileX,
- * @param {Number} options.tileY,
+ * @param {number} options.tileLevel,
+ * @param {number} options.tileX,
+ * @param {number} options.tileY,
  * @param {Cartographic[]} options.positionsCartographic,
  * @param {Cartesian3[]} options.normals,
  * @param {Uint16Array|Uint32Array} options.indices,
@@ -767,7 +767,7 @@ function checkUpsampledTerrainData(options) {
 /**
  * @param {Cartographic} cartographicA
  * @param {Cartographic} cartographicB
- * @param {Number} t
+ * @param {number} t
  * @returns {Cartographic}
  */
 function lerpCartographic(cartographicA, cartographicB, t) {
@@ -1566,7 +1566,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
     const y = 6;
 
     /**
-     * @param {Number} [childTileMask]
+     * @param {number} [childTileMask]
      */
     function createSampleTerrainData(childTileMask) {
       const tilingScheme = new GeographicTilingScheme();

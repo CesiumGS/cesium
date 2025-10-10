@@ -3,18 +3,18 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 /**
  * @private
- * @param {Object} options
- * @param {Boolean} options.isEastChild
- * @param {Boolean} options.isNorthChild
+ * @param {object} options
+ * @param {boolean} options.isEastChild
+ * @param {boolean} options.isNorthChild
  * @param {Rectangle} options.rectangle
  * @param {Ellipsoid} options.ellipsoid
- * @param {Number} options.skirtHeight
+ * @param {number} options.skirtHeight
  * @param {Float32Array} options.parentVertices
  * @param {Uint16Array|Uint32Array} options.parentIndices
- * @param {Number} options.parentVertexCountWithoutSkirts
- * @param {Number} options.parentIndexCountWithoutSkirts
- * @param {Number} options.parentMinimumHeight
- * @param {Number} options.parentMaximumHeight
+ * @param {number} options.parentVertexCountWithoutSkirts
+ * @param {number} options.parentIndexCountWithoutSkirts
+ * @param {number} options.parentMinimumHeight
+ * @param {number} options.parentMaximumHeight
  * @param {TerrainEncoding} options.parentEncoding
  * @param {ArrayBuffer[]} transferableObjects
  * @returns {TerrainMeshProxy}

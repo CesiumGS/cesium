@@ -237,11 +237,11 @@ TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function (
 
 /**
  * @private
- * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth
- * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest
- * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth
- * @param {Number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast
- * @returns {Number}
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast
+ * @returns {number}
  */
 TerrainProvider.getSkirtVertexCount = function (
   westIndicesSouthToNorth,
@@ -268,8 +268,8 @@ TerrainProvider.getSkirtVertexCount = function (
  *   |\|\|
  *
  * @private
- * @param {Number} skirtVertexCount
- * @returns {Number}
+ * @param {number} skirtVertexCount
+ * @returns {number}
  */
 TerrainProvider.getSkirtIndexCount = function (skirtVertexCount) {
   return (skirtVertexCount - 4) * 2 * 3;
@@ -287,8 +287,8 @@ TerrainProvider.getSkirtIndexCount = function (skirtVertexCount) {
  *  \|\|\|/
  *
  * @private
- * @param {Number} skirtVertexCount
- * @returns {Number}
+ * @param {number} skirtVertexCount
+ * @returns {number}
  */
 TerrainProvider.getSkirtIndexCountWithFilledCorners = function (
   skirtVertexCount,
