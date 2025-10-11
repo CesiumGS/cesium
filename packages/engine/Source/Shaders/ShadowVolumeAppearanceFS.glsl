@@ -71,7 +71,9 @@ void main(void)
     // indicates a region that should not be classified, possibly due to there
     // being opaque pixels there in another buffer.
     // Check for logDepthOrDepth != 0.0 to make sure this should be classified.
-    if (0.0 <= uv.x && uv.x <= 1.0 && 0.0 <= uv.y && uv.y <= 1.0 || logDepthOrDepth != 0.0) {
+    if (uv.x <= 0.0 || 1.0 <= uv.x || uv.y <= 0.0 || 1.0 <= uv.y || logDepthOrDepth == 0.0) {
+        out_FragColor.a = 0.0;
+    } else if (0.0 <= uv.x && uv.x <= 1.0 && 0.0 <= uv.y && uv.y <= 1.0 || logDepthOrDepth != 0.0) {
         out_FragColor.a = 1.0; // 0.0 alpha leads to discard from ShaderSource.createPickFragmentShaderSource
         czm_writeDepthClamp();
     }
