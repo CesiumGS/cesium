@@ -1,4 +1,4 @@
-import DeveloperError from "./DeveloperError";
+import DeveloperError from "./DeveloperError.js";
 
 // Deep copies all property descriptors of the provided object.
 function getPropertyDescriptorMap(object) {
