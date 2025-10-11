@@ -9,6 +9,10 @@
 - `scene.drillPick` now uses a breadth-first search strategy instead of depth-first. This may change which entities are picked when
   using large values of `width` and `height` when providing a `limit`, prioritizing entities closer to the camera.
 
+#### Additions :tada:
+
+- Matrices are now backed by `Float64Array`'s, making operations up to 2x faster, resulting in performance improvements across the board. [#12973](https://github.com/CesiumGS/cesium/pull/12973)
+
 #### Fixes :wrench:
 
 - Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)

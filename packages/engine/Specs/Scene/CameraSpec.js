@@ -130,7 +130,7 @@ describe("Scene/Camera", function () {
       1.0,
     );
     const expected = Matrix4.multiply(rotation, translation, new Matrix4());
-    expect(viewMatrix).toEqual(expected);
+    expect(Matrix4.equals(viewMatrix, expected)).toBe(true);
   });
 
   it("get inverse view matrix", function () {
