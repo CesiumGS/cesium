@@ -1129,6 +1129,8 @@ Cesium3DTile.prototype.requestContent = function () {
     return;
   }
 
+  // XXX_DYNAMIC : Dynamic content handling will be added here
+
   if (this.hasMultipleContents) {
     return requestMultipleContents(this);
   }
