@@ -2,6 +2,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
+import freezeMatrix from "./freezeMatrix.js";
 import CesiumMath from "./Math.js";
 
 /**
@@ -1668,22 +1669,6 @@ Matrix3.equalsEpsilon = function (left, right, epsilon) {
 };
 
 /**
- * An immutable Matrix3 instance initialized to the identity matrix.
- *
- * @type {Matrix3}
- * @constant
- */
-Matrix3.IDENTITY = new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
-
-/**
- * An immutable Matrix3 instance initialized to the zero matrix.
- *
- * @type {Matrix3}
- * @constant
- */
-Matrix3.ZERO = new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-
-/**
  * The index into Matrix3 for column 0, row 0.
  *
  * @type {number}
@@ -1833,4 +1818,25 @@ Matrix3.prototype.toString = function () {
     `(${this[2]}, ${this[5]}, ${this[8]})`
   );
 };
+
+/**
+ * An immutable Matrix3 instance initialized to the identity matrix.
+ *
+ * @type {Readonly<Matrix3>}
+ * @constant
+ */
+Matrix3.IDENTITY = freezeMatrix(
+  new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0),
+);
+
+/**
+ * An immutable Matrix3 instance initialized to the zero matrix.
+ *
+ * @type {Readonly<Matrix3>}
+ * @constant
+ */
+Matrix3.ZERO = freezeMatrix(
+  new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+);
+
 export default Matrix3;
