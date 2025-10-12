@@ -624,6 +624,9 @@ Entity.prototype.merge = function (source) {
     ? source._propertyNames
     : Object.keys(source);
   const propertyNamesLength = sourcePropertyNames.length;
+  console.log("--this", this)
+  console.log("--自身属性:", Object.getOwnPropertyNames(this));
+  console.log("--原型属性:", Object.getPrototypeOf(this));
   for (let i = 0; i < propertyNamesLength; i++) {
     const name = sourcePropertyNames[i];
 

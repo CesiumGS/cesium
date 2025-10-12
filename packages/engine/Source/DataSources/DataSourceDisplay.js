@@ -154,27 +154,27 @@ DataSourceDisplay.defaultVisualizersCallback = function (
 ) {
   const entities = dataSource.entities;
   return [
-    new BillboardVisualizer(entityCluster, entities),
+    // new BillboardVisualizer(entityCluster, entities),
     new GeometryVisualizer(
       scene,
       entities,
       dataSource._primitives,
       dataSource._groundPrimitives,
     ),
-    new LabelVisualizer(entityCluster, entities),
-    new ModelVisualizer(scene, entities),
-    new Cesium3DTilesetVisualizer(scene, entities),
-    new PointVisualizer(entityCluster, entities),
-    new PathVisualizer(scene, entities),
-    new PolylineVisualizer(
-      scene,
-      entities,
-      dataSource._primitives,
-      dataSource._groundPrimitives,
-    ),
-    ...ExtraVisualizers.map(
-      (VisualizerClass) => new VisualizerClass(scene, entities),
-    ),
+    // new LabelVisualizer(entityCluster, entities),
+    // new ModelVisualizer(scene, entities),
+    // new Cesium3DTilesetVisualizer(scene, entities),
+    // new PointVisualizer(entityCluster, entities),
+    // new PathVisualizer(scene, entities),
+    // new PolylineVisualizer(
+    //   scene,
+    //   entities,
+    //   dataSource._primitives,
+    //   dataSource._groundPrimitives,
+    // ),
+    // ...ExtraVisualizers.map(
+    //   (VisualizerClass) => new VisualizerClass(scene, entities),
+    // ),
   ];
 };
 

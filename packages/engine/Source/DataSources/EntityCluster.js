@@ -870,13 +870,13 @@ function updateEnable(entityCluster) {
   disableCollectionClustering(entityCluster._billboardCollection);
   disableCollectionClustering(entityCluster._pointCollection);
 }
-
+EntityCluster.prototype.update = function(frameState) { }
 /**
  * Gets the draw commands for the clustered billboards/points/labels if enabled, otherwise,
  * queues the draw commands for billboards/points/labels created for entities.
  * @private
  */
-EntityCluster.prototype.update = function (frameState) {
+EntityCluster.prototype.update111222 = function (frameState) {
   if (!this.show) {
     return;
   }

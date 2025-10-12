@@ -3595,11 +3595,11 @@ function updateShadowMaps(scene) {
 function updateAndRenderPrimitives(scene) {
   const frameState = scene._frameState;
 
-  scene._groundPrimitives.update(frameState);
+  // scene._groundPrimitives.update(frameState);
   scene._primitives.update(frameState);
 
-  updateDebugFrustumPlanes(scene);
-  updateShadowMaps(scene);
+  // updateDebugFrustumPlanes(scene);
+  // updateShadowMaps(scene);
 
   if (scene._globe) {
     scene._globe.render(frameState);
@@ -3823,9 +3823,9 @@ function callAfterRenderFunctions(scene) {
   const functions = scene._frameState.afterRender;
   for (let i = 0; i < functions.length; ++i) {
     const shouldRequestRender = functions[i]();
-    if (shouldRequestRender) {
-      scene.requestRender();
-    }
+    // if (shouldRequestRender) {
+    //   scene.requestRender();
+    // }
   }
 
   functions.length = 0;
@@ -4275,76 +4275,76 @@ Scene.prototype.render = function (time) {
   }
 
   // Determine if should render a new frame in request render mode
-  let shouldRender =
+  const shouldRender =
     !this.requestRenderMode ||
     this._renderRequested ||
     cameraChanged ||
     this._logDepthBufferDirty ||
     this._hdrDirty ||
     this.mode === SceneMode.MORPHING;
-  if (
-    !shouldRender &&
-    defined(this.maximumRenderTimeChange) &&
-    defined(this._lastRenderTime)
-  ) {
-    const difference = Math.abs(
-      JulianDate.secondsDifference(this._lastRenderTime, time),
-    );
-    shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
-  }
+  // if (
+  //   !shouldRender &&
+  //   defined(this.maximumRenderTimeChange) &&
+  //   defined(this._lastRenderTime)
+  // ) {
+  //   const difference = Math.abs(
+  //     JulianDate.secondsDifference(this._lastRenderTime, time),
+  //   );
+  //   shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
+  // }
 
-  if (shouldRender) {
-    this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
-    this._renderRequested = false;
-    this._logDepthBufferDirty = false;
-    this._hdrDirty = false;
+  // if (shouldRender) {
+  //   this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
+  //   this._renderRequested = false;
+  //   this._logDepthBufferDirty = false;
+  //   this._hdrDirty = false;
 
-    const frameNumber = CesiumMath.incrementWrap(
-      frameState.frameNumber,
-      15000000.0,
-      1.0,
-    );
-    updateFrameNumber(this, frameNumber, time);
-    frameState.newFrame = true;
-  }
+  //   const frameNumber = CesiumMath.incrementWrap(
+  //     frameState.frameNumber,
+  //     15000000.0,
+  //     1.0,
+  //   );
+  //   updateFrameNumber(this, frameNumber, time);
+  //   frameState.newFrame = true;
+  // }
 
-  tryAndCatchError(this, prePassesUpdate);
+  // tryAndCatchError(this, prePassesUpdate);
 
   /**
    * Passes update. Add any passes here
    */
-  if (this.primitives.show) {
-    tryAndCatchError(this, updateMostDetailedRayPicks);
-    tryAndCatchError(this, updatePreloadPass);
-    tryAndCatchError(this, updatePreloadFlightPass);
-    if (!shouldRender) {
-      tryAndCatchError(this, updateRequestRenderModeDeferCheckPass);
-    }
-  }
+  // if (this.primitives.show) {
+  //   tryAndCatchError(this, updateMostDetailedRayPicks);
+  //   tryAndCatchError(this, updatePreloadPass);
+  //   tryAndCatchError(this, updatePreloadFlightPass);
+  //   if (!shouldRender) {
+  //     tryAndCatchError(this, updateRequestRenderModeDeferCheckPass);
+  //   }
+  // }
 
-  this._postUpdate.raiseEvent(this, time);
+  // this._postUpdate.raiseEvent(this, time);
 
   if (shouldRender) {
-    this._preRender.raiseEvent(this, time);
-    frameState.creditDisplay.beginFrame();
+    // this._preRender.raiseEvent(this, time);
+    // frameState.creditDisplay.beginFrame();
     tryAndCatchError(this, render);
   }
 
   /**
    * Post passes update. Execute any pass invariant code that should run after the passes here.
    */
-  updateDebugShowFramesPerSecond(this, shouldRender);
-  tryAndCatchError(this, postPassesUpdate);
+  // updateDebugShowFramesPerSecond(this, shouldRender);
+  // tryAndCatchError(this, postPassesUpdate);
 
   // Often used to trigger events (so don't want in trycatch) that the user
   // might be subscribed to. Things like the tile load events, promises, etc.
   // We don't want those events to resolve during the render loop because the events might add new primitives
   callAfterRenderFunctions(this);
 
-  if (shouldRender) {
-    this._postRender.raiseEvent(this, time);
-    frameState.creditDisplay.endFrame();
-  }
+  // if (shouldRender) {
+  //   this._postRender.raiseEvent(this, time);
+  //   frameState.creditDisplay.endFrame();
+  // }
 };
 
 /**

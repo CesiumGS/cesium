@@ -611,7 +611,7 @@ const externalResolvePlugin = {
  * @returns {Promise<any>}
  */
 export async function createGalleryList(noDevelopmentGallery) {
-  const configPath = path.join(
+  const configPath = path.posix.join(
     import.meta.url,
     "../../packages/sandcastle/sandcastle.config.js",
   );

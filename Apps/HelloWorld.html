@@ -1,34 +1,63 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <!-- Use correct character set. -->
-    <meta charset="utf-8" />
-    <!-- Tell IE to use the latest, best version. -->
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
-    />
-    <title>Hello World!</title>
-    <script src="../Build/CesiumUnminified/Cesium.js"></script>
-    <style>
-      @import url(../Build/CesiumUnminified/Widgets/widgets.css);
-      html,
-      body,
-      #cesiumContainer {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
+
+<head>
+  <!-- Use correct character set. -->
+  <meta charset="utf-8" />
+  <!-- Tell IE to use the latest, best version. -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+  <title>Hello World!</title>
+  <script src="../Build/CesiumUnminified/Cesium.js"></script>
+  <style>
+    @import url(../Build/CesiumUnminified/Widgets/widgets.css);
+
+    html,
+    body,
+    #cesiumContainer {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="cesiumContainer"></div>
+  <script>
+    const viewer = new Cesium.Viewer("cesiumContainer");
+
+    // 合肥的经纬度坐标-97.619538, 纬度:39.685815,
+    const hefeiPosition = Cesium.Cartesian3.fromDegrees(-97.619538, 39.685815);
+
+    // 添加一个圆形实体
+    viewer.entities.add({
+      name: "合肥圆形标记",
+      position: hefeiPosition,
+      ellipse: {
+        semiMinorAxis: 5000000.0, // 半短轴 50公里
+        semiMajorAxis: 5000000.0, // 半长轴 50公里
+        height: 0.0,
+        material: Cesium.Color.BLUE.withAlpha(0.5),
+        outline: true,
+        outlineColor: Cesium.Color.RED
       }
-    </style>
-  </head>
-  <body>
-    <div id="cesiumContainer"></div>
-    <script>
-      const viewer = new Cesium.Viewer("cesiumContainer");
-    </script>
-  </body>
+    });
+
+    // 将视角定位到合肥
+    // viewer.camera.setView({
+    //   destination: Cesium.Cartesian3.fromDegrees(117.2461, 31.8206, 100000), // 高度100公里
+    //   orientation: {
+    //     heading: Cesium.Math.toRadians(0.0),
+    //     pitch: Cesium.Math.toRadians(-45.0),
+    //     roll: 0.0
+    //   }
+    // });
+  </script>
+</body>
+
 </html>

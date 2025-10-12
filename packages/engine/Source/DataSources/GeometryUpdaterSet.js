@@ -14,16 +14,16 @@ import WallGeometryUpdater from "./WallGeometryUpdater.js";
 
 /** @type {GeometryUpdater[]} */
 const geometryUpdaters = [
-  BoxGeometryUpdater,
-  CylinderGeometryUpdater,
-  CorridorGeometryUpdater,
+  // BoxGeometryUpdater,
+  // CylinderGeometryUpdater,
+  // CorridorGeometryUpdater,
   EllipseGeometryUpdater,
-  EllipsoidGeometryUpdater,
-  PlaneGeometryUpdater,
-  PolygonGeometryUpdater,
-  PolylineVolumeGeometryUpdater,
-  RectangleGeometryUpdater,
-  WallGeometryUpdater,
+  // EllipsoidGeometryUpdater,
+  // PlaneGeometryUpdater,
+  // PolygonGeometryUpdater,
+  // PolylineVolumeGeometryUpdater,
+  // RectangleGeometryUpdater,
+  // WallGeometryUpdater,
 ];
 
 /**
@@ -35,7 +35,7 @@ const geometryUpdaters = [
  */
 function GeometryUpdaterSet(entity, scene) {
   this.entity = entity;
-  this.scene = scene;
+  this.scene = scene; 
   const updaters = new Array(geometryUpdaters.length);
   const geometryChanged = new Event();
   const eventHelper = new EventHelper();

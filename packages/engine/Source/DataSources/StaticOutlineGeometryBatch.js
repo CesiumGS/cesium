@@ -40,28 +40,27 @@ Batch.prototype.add = function (updater, instance) {
   this.createPrimitive = true;
   this.geometry.set(id, instance);
   this.updaters.set(id, updater);
-  if (
-    !updater.hasConstantOutline ||
-    !updater.outlineColorProperty.isConstant ||
-    !Property.isConstant(updater.distanceDisplayConditionProperty) ||
-    !Property.isConstant(updater.terrainOffsetProperty)
-  ) {
-    this.updatersWithAttributes.set(id, updater);
-  } else {
-    const that = this;
-    this.subscriptions.set(
-      id,
-      updater.entity.definitionChanged.addEventListener(
-        function (entity, propertyName, newValue, oldValue) {
-          if (propertyName === "isShowing") {
-            that.showsUpdated.set(updater.id, updater);
-          }
-        },
-      ),
-    );
-  }
+  // if (
+  //   !updater.hasConstantOutline ||
+  //   !updater.outlineColorProperty.isConstant ||
+  //   !Property.isConstant(updater.distanceDisplayConditionProperty) ||
+  //   !Property.isConstant(updater.terrainOffsetProperty)
+  // ) {
+  //   this.updatersWithAttributes.set(id, updater);
+  // } else {
+  //   const that = this;
+  //   this.subscriptions.set(
+  //     id,
+  //     updater.entity.definitionChanged.addEventListener(
+  //       function (entity, propertyName, newValue, oldValue) {
+  //         if (propertyName === "isShowing") {
+  //           that.showsUpdated.set(updater.id, updater);
+  //         }
+  //       },
+  //     ),
+  //   );
+  // }
 };
-
 Batch.prototype.remove = function (updater) {
   const id = updater.id;
   this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
@@ -77,14 +76,12 @@ Batch.prototype.remove = function (updater) {
   }
   return false;
 };
-
 Batch.prototype.update = function (time) {
   let isUpdated = true;
-  let removedCount = 0;
+  const removedCount = 0;
   let primitive = this.primitive;
   const primitives = this.primitives;
   let i;
-
   if (this.createPrimitive) {
     const geometries = this.geometry.values;
     const geometriesLength = geometries.length;
@@ -114,15 +111,15 @@ Batch.prototype.update = function (time) {
       primitives.add(primitive);
       isUpdated = false;
     } else {
-      if (defined(primitive)) {
-        primitives.remove(primitive);
-        primitive = undefined;
-      }
-      const oldPrimitive = this.oldPrimitive;
-      if (defined(oldPrimitive)) {
-        primitives.remove(oldPrimitive);
-        this.oldPrimitive = undefined;
-      }
+      // if (defined(primitive)) {
+      //   primitives.remove(primitive);
+      //   primitive = undefined;
+      // }
+      // const oldPrimitive = this.oldPrimitive;
+      // if (defined(oldPrimitive)) {
+      //   primitives.remove(oldPrimitive);
+      //   this.oldPrimitive = undefined;
+      // }
     }
 
     this.attributes.removeAll();
@@ -131,116 +128,115 @@ Batch.prototype.update = function (time) {
     this.waitingOnCreate = true;
   } else if (defined(primitive) && primitive.ready) {
     primitive.show = true;
-    if (defined(this.oldPrimitive)) {
-      primitives.remove(this.oldPrimitive);
-      this.oldPrimitive = undefined;
-    }
+    // if (defined(this.oldPrimitive)) {
+    //   primitives.remove(this.oldPrimitive);
+    //   this.oldPrimitive = undefined;
+    // }
 
-    const updatersWithAttributes = this.updatersWithAttributes.values;
-    const length = updatersWithAttributes.length;
-    const waitingOnCreate = this.waitingOnCreate;
-    for (i = 0; i < length; i++) {
-      const updater = updatersWithAttributes[i];
-      const instance = this.geometry.get(updater.id);
+    // const updatersWithAttributes = this.updatersWithAttributes.values;
+    // const length = updatersWithAttributes.length;
+    // const waitingOnCreate = this.waitingOnCreate;
+    // for (i = 0; i < length; i++) {
+    //   const updater = updatersWithAttributes[i];
+    //   const instance = this.geometry.get(updater.id);
 
-      let attributes = this.attributes.get(instance.id.id);
-      if (!defined(attributes)) {
-        attributes = primitive.getGeometryInstanceAttributes(instance.id);
-        this.attributes.set(instance.id.id, attributes);
-      }
+    //   let attributes = this.attributes.get(instance.id.id);
+    //   if (!defined(attributes)) {
+    //     attributes = primitive.getGeometryInstanceAttributes(instance.id);
+    //     this.attributes.set(instance.id.id, attributes);
+    //   }
 
-      if (!updater.outlineColorProperty.isConstant || waitingOnCreate) {
-        const outlineColorProperty = updater.outlineColorProperty;
-        const outlineColor = Property.getValueOrDefault(
-          outlineColorProperty,
-          time,
-          Color.WHITE,
-          colorScratch,
-        );
-        if (!Color.equals(attributes._lastColor, outlineColor)) {
-          attributes._lastColor = Color.clone(
-            outlineColor,
-            attributes._lastColor,
-          );
-          attributes.color = ColorGeometryInstanceAttribute.toValue(
-            outlineColor,
-            attributes.color,
-          );
-          if (
-            (this.translucent && attributes.color[3] === 255) ||
-            (!this.translucent && attributes.color[3] !== 255)
-          ) {
-            this.itemsToRemove[removedCount++] = updater;
-          }
-        }
-      }
+    //   if (!updater.outlineColorProperty.isConstant || waitingOnCreate) {
+    //     const outlineColorProperty = updater.outlineColorProperty;
+    //     const outlineColor = Property.getValueOrDefault(
+    //       outlineColorProperty,
+    //       time,
+    //       Color.WHITE,
+    //       colorScratch,
+    //     );
+    //     if (!Color.equals(attributes._lastColor, outlineColor)) {
+    //       attributes._lastColor = Color.clone(
+    //         outlineColor,
+    //         attributes._lastColor,
+    //       );
+    //       attributes.color = ColorGeometryInstanceAttribute.toValue(
+    //         outlineColor,
+    //         attributes.color,
+    //       );
+    //       if (
+    //         (this.translucent && attributes.color[3] === 255) ||
+    //         (!this.translucent && attributes.color[3] !== 255)
+    //       ) {
+    //         this.itemsToRemove[removedCount++] = updater;
+    //       }
+    //     }
+    //   }
 
-      const show =
-        updater.entity.isShowing &&
-        (updater.hasConstantOutline || updater.isOutlineVisible(time));
-      const currentShow = attributes.show[0] === 1;
-      if (show !== currentShow) {
-        attributes.show = ShowGeometryInstanceAttribute.toValue(
-          show,
-          attributes.show,
-        );
-      }
+    //   const show =
+    //     updater.entity.isShowing &&
+    //     (updater.hasConstantOutline || updater.isOutlineVisible(time));
+    //   const currentShow = attributes.show[0] === 1;
+    //   if (show !== currentShow) {
+    //     attributes.show = ShowGeometryInstanceAttribute.toValue(
+    //       show,
+    //       attributes.show,
+    //     );
+    //   }
 
-      const distanceDisplayConditionProperty =
-        updater.distanceDisplayConditionProperty;
-      if (!Property.isConstant(distanceDisplayConditionProperty)) {
-        const distanceDisplayCondition = Property.getValueOrDefault(
-          distanceDisplayConditionProperty,
-          time,
-          defaultDistanceDisplayCondition,
-          distanceDisplayConditionScratch,
-        );
-        if (
-          !DistanceDisplayCondition.equals(
-            distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition,
-          )
-        ) {
-          attributes._lastDistanceDisplayCondition =
-            DistanceDisplayCondition.clone(
-              distanceDisplayCondition,
-              attributes._lastDistanceDisplayCondition,
-            );
-          attributes.distanceDisplayCondition =
-            DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-              distanceDisplayCondition,
-              attributes.distanceDisplayCondition,
-            );
-        }
-      }
+    //   const distanceDisplayConditionProperty =
+    //     updater.distanceDisplayConditionProperty;
+    //   if (!Property.isConstant(distanceDisplayConditionProperty)) {
+    //     const distanceDisplayCondition = Property.getValueOrDefault(
+    //       distanceDisplayConditionProperty,
+    //       time,
+    //       defaultDistanceDisplayCondition,
+    //       distanceDisplayConditionScratch,
+    //     );
+    //     if (
+    //       !DistanceDisplayCondition.equals(
+    //         distanceDisplayCondition,
+    //         attributes._lastDistanceDisplayCondition,
+    //       )
+    //     ) {
+    //       attributes._lastDistanceDisplayCondition =
+    //         DistanceDisplayCondition.clone(
+    //           distanceDisplayCondition,
+    //           attributes._lastDistanceDisplayCondition,
+    //         );
+    //       attributes.distanceDisplayCondition =
+    //         DistanceDisplayConditionGeometryInstanceAttribute.toValue(
+    //           distanceDisplayCondition,
+    //           attributes.distanceDisplayCondition,
+    //         );
+    //     }
+    //   }
 
-      const offsetProperty = updater.terrainOffsetProperty;
-      if (!Property.isConstant(offsetProperty)) {
-        const offset = Property.getValueOrDefault(
-          offsetProperty,
-          time,
-          defaultOffset,
-          offsetScratch,
-        );
-        if (!Cartesian3.equals(offset, attributes._lastOffset)) {
-          attributes._lastOffset = Cartesian3.clone(
-            offset,
-            attributes._lastOffset,
-          );
-          attributes.offset = OffsetGeometryInstanceAttribute.toValue(
-            offset,
-            attributes.offset,
-          );
-        }
-      }
-    }
+    //   const offsetProperty = updater.terrainOffsetProperty;
+    //   if (!Property.isConstant(offsetProperty)) {
+    //     const offset = Property.getValueOrDefault(
+    //       offsetProperty,
+    //       time,
+    //       defaultOffset,
+    //       offsetScratch,
+    //     );
+    //     if (!Cartesian3.equals(offset, attributes._lastOffset)) {
+    //       attributes._lastOffset = Cartesian3.clone(
+    //         offset,
+    //         attributes._lastOffset,
+    //       );
+    //       attributes.offset = OffsetGeometryInstanceAttribute.toValue(
+    //         offset,
+    //         attributes.offset,
+    //       );
+    //     }
+    //   }
+    // }
 
-    this.updateShows(primitive);
-    this.waitingOnCreate = false;
+    // this.updateShows(primitive);
+    // this.waitingOnCreate = false;
   } else if (defined(primitive) && !primitive.ready) {
     isUpdated = false;
   }
-
   this.itemsToRemove.length = removedCount;
   return isUpdated;
 };
@@ -334,13 +330,13 @@ StaticOutlineGeometryBatch.prototype.add = function (time, updater) {
     }
     batch.add(updater, instance);
   } else {
-    batches = this._translucentBatches;
-    batch = batches.get(width);
-    if (!defined(batch)) {
-      batch = new Batch(this._primitives, true, width, this._shadows);
-      batches.set(width, batch);
-    }
-    batch.add(updater, instance);
+    // batches = this._translucentBatches;
+    // batch = batches.get(width);
+    // if (!defined(batch)) {
+    //   batch = new Batch(this._primitives, true, width, this._shadows);
+    //   batches.set(width, batch);
+    // }
+    // batch.add(updater, instance);
   }
 };
 
@@ -386,35 +382,35 @@ StaticOutlineGeometryBatch.prototype.update = function (time) {
 
       //If any items swapped between solid/translucent, we need to
       //move them between batches
-      itemsToRemove = batch.itemsToRemove;
-      const solidsToMoveLength = itemsToRemove.length;
-      if (solidsToMoveLength > 0) {
-        needUpdate = true;
-        for (i = 0; i < solidsToMoveLength; i++) {
-          updater = itemsToRemove[i];
-          batch.remove(updater);
-          this.add(time, updater);
-        }
-      }
+      // itemsToRemove = batch.itemsToRemove;
+      // const solidsToMoveLength = itemsToRemove.length;
+      // if (solidsToMoveLength > 0) {
+      //   needUpdate = true;
+      //   for (i = 0; i < solidsToMoveLength; i++) {
+      //     updater = itemsToRemove[i];
+      //     batch.remove(updater);
+      //     this.add(time, updater);
+      //   }
+      // }
     }
-    for (x = 0; x < translucentBatchesLength; x++) {
-      batch = translucentBatches[x];
-      //Perform initial update
-      isUpdated = batch.update(time);
+    // for (x = 0; x < translucentBatchesLength; x++) {
+    //   batch = translucentBatches[x];
+    //   //Perform initial update
+    //   isUpdated = batch.update(time);
 
-      //If any items swapped between solid/translucent, we need to
-      //move them between batches
-      itemsToRemove = batch.itemsToRemove;
-      const translucentToMoveLength = itemsToRemove.length;
-      if (translucentToMoveLength > 0) {
-        needUpdate = true;
-        for (i = 0; i < translucentToMoveLength; i++) {
-          updater = itemsToRemove[i];
-          batch.remove(updater);
-          this.add(time, updater);
-        }
-      }
-    }
+    //   //If any items swapped between solid/translucent, we need to
+    //   //move them between batches
+    //   itemsToRemove = batch.itemsToRemove;
+    //   const translucentToMoveLength = itemsToRemove.length;
+    //   if (translucentToMoveLength > 0) {
+    //     needUpdate = true;
+    //     for (i = 0; i < translucentToMoveLength; i++) {
+    //       updater = itemsToRemove[i];
+    //       batch.remove(updater);
+    //       this.add(time, updater);
+    //     }
+    //   }
+    // }
   } while (needUpdate);
 
   return isUpdated;

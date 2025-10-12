@@ -180,15 +180,16 @@ function GeometryVisualizer(
 
   this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
-  this._batches = this._outlineBatches.concat(
-    this._closedColorBatches,
-    this._closedMaterialBatches,
-    this._openColorBatches,
-    this._openMaterialBatches,
-    this._groundColorBatches,
-    this._groundMaterialBatches,
-    this._dynamicBatch,
-  );
+  this._batches = this._outlineBatches;
+  // this._batches = this._outlineBatches.concat(
+    // this._closedColorBatches,
+    // this._closedMaterialBatches,
+    // this._openColorBatches,
+    // this._openMaterialBatches,
+    // this._groundColorBatches,
+    // this._groundMaterialBatches,
+    // this._dynamicBatch,
+  // );
 
   this._subscriptions = new AssociativeArray();
   this._updaterSets = new AssociativeArray();
@@ -249,37 +250,37 @@ GeometryVisualizer.prototype.update = function (time) {
   let updaterSet;
   const that = this;
 
-  for (i = changed.length - 1; i > -1; i--) {
-    entity = changed[i];
-    id = entity.id;
-    updaterSet = this._updaterSets.get(id);
+  // for (i = changed.length - 1; i > -1; i--) {
+  //   entity = changed[i];
+  //   id = entity.id;
+  //   updaterSet = this._updaterSets.get(id);
 
-    //If in a single update, an entity gets removed and a new instance
-    //re-added with the same id, the updater no longer tracks the
-    //correct entity, we need to both remove the old one and
-    //add the new one, which is done by pushing the entity
-    //onto the removed/added lists.
-    if (updaterSet.entity === entity) {
-      updaterSet.forEach(function (updater) {
-        that._removeUpdater(updater);
-        that._insertUpdaterIntoBatch(time, updater);
-      });
-    } else {
-      removed.push(entity);
-      added.push(entity);
-    }
-  }
+  //   //If in a single update, an entity gets removed and a new instance
+  //   //re-added with the same id, the updater no longer tracks the
+  //   //correct entity, we need to both remove the old one and
+  //   //add the new one, which is done by pushing the entity
+  //   //onto the removed/added lists.
+  //   if (updaterSet.entity === entity) {
+  //     updaterSet.forEach(function (updater) {
+  //       that._removeUpdater(updater);
+  //       that._insertUpdaterIntoBatch(time, updater);
+  //     });
+  //   } else {
+  //     removed.push(entity);
+  //     added.push(entity);
+  //   }
+  // }
 
-  for (i = removed.length - 1; i > -1; i--) {
-    entity = removed[i];
-    id = entity.id;
-    updaterSet = this._updaterSets.get(id);
-    updaterSet.forEach(this._removeUpdater.bind(this));
-    updaterSet.destroy();
-    this._updaterSets.remove(id);
-    this._subscriptions.get(id)();
-    this._subscriptions.remove(id);
-  }
+  // for (i = removed.length - 1; i > -1; i--) {
+  //   entity = removed[i];
+  //   id = entity.id;
+  //   updaterSet = this._updaterSets.get(id);
+  //   updaterSet.forEach(this._removeUpdater.bind(this));
+  //   updaterSet.destroy();
+  //   this._updaterSets.remove(id);
+  //   this._subscriptions.get(id)();
+  //   this._subscriptions.remove(id);
+  // }
 
   for (i = added.length - 1; i > -1; i--) {
     entity = added[i];
@@ -289,18 +290,17 @@ GeometryVisualizer.prototype.update = function (time) {
     updaterSet.forEach(function (updater) {
       that._insertUpdaterIntoBatch(time, updater);
     });
-    this._subscriptions.set(
-      id,
-      updaterSet.geometryChanged.addEventListener(
-        GeometryVisualizer._onGeometryChanged,
-        this,
-      ),
-    );
+    // this._subscriptions.set(
+    //   id,
+    //   updaterSet.geometryChanged.addEventListener(
+    //     GeometryVisualizer._onGeometryChanged,
+    //     this,
+    //   ),
+    // );
   }
-
   addedObjects.removeAll();
-  removedObjects.removeAll();
-  changedObjects.removeAll();
+  // removedObjects.removeAll();
+  // changedObjects.removeAll();
 
   let isUpdated = true;
   const batches = this._batches;
@@ -308,7 +308,6 @@ GeometryVisualizer.prototype.update = function (time) {
   for (i = 0; i < length; i++) {
     isUpdated = batches[i].update(time) && isUpdated;
   }
-
   return isUpdated;
 };
 
@@ -449,52 +448,52 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
     }
   }
 
-  if (updater.fillEnabled) {
-    if (updater.onTerrain) {
-      const classificationType =
-        updater.classificationTypeProperty.getValue(time);
-      if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-        this._groundColorBatches[classificationType].add(time, updater);
-      } else {
-        // If unsupported, updater will not be on terrain.
-        this._groundMaterialBatches[classificationType].add(time, updater);
-      }
-    } else if (updater.isClosed) {
-      if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-        if (defined(updater.terrainOffsetProperty)) {
-          this._closedColorBatches[numberOfShadowModes + shadows].add(
-            time,
-            updater,
-          );
-        } else {
-          this._closedColorBatches[shadows].add(time, updater);
-        }
-      } else if (defined(updater.terrainOffsetProperty)) {
-        this._closedMaterialBatches[numberOfShadowModes + shadows].add(
-          time,
-          updater,
-        );
-      } else {
-        this._closedMaterialBatches[shadows].add(time, updater);
-      }
-    } else if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-      if (defined(updater.terrainOffsetProperty)) {
-        this._openColorBatches[numberOfShadowModes + shadows].add(
-          time,
-          updater,
-        );
-      } else {
-        this._openColorBatches[shadows].add(time, updater);
-      }
-    } else if (defined(updater.terrainOffsetProperty)) {
-      this._openMaterialBatches[numberOfShadowModes + shadows].add(
-        time,
-        updater,
-      );
-    } else {
-      this._openMaterialBatches[shadows].add(time, updater);
-    }
-  }
+  // if (updater.fillEnabled) {
+  //   if (updater.onTerrain) {
+  //     const classificationType =
+  //       updater.classificationTypeProperty.getValue(time);
+  //     if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+  //       this._groundColorBatches[classificationType].add(time, updater);
+  //     } else {
+  //       // If unsupported, updater will not be on terrain.
+  //       this._groundMaterialBatches[classificationType].add(time, updater);
+  //     }
+  //   } else if (updater.isClosed) {
+  //     if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+  //       if (defined(updater.terrainOffsetProperty)) {
+  //         this._closedColorBatches[numberOfShadowModes + shadows].add(
+  //           time,
+  //           updater,
+  //         );
+  //       } else {
+  //         this._closedColorBatches[shadows].add(time, updater);
+  //       }
+  //     } else if (defined(updater.terrainOffsetProperty)) {
+  //       this._closedMaterialBatches[numberOfShadowModes + shadows].add(
+  //         time,
+  //         updater,
+  //       );
+  //     } else {
+  //       this._closedMaterialBatches[shadows].add(time, updater);
+  //     }
+  //   } else if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+  //     if (defined(updater.terrainOffsetProperty)) {
+  //       this._openColorBatches[numberOfShadowModes + shadows].add(
+  //         time,
+  //         updater,
+  //       );
+  //     } else {
+  //       this._openColorBatches[shadows].add(time, updater);
+  //     }
+  //   } else if (defined(updater.terrainOffsetProperty)) {
+  //     this._openMaterialBatches[numberOfShadowModes + shadows].add(
+  //       time,
+  //       updater,
+  //     );
+  //   } else {
+  //     this._openMaterialBatches[shadows].add(time, updater);
+  //   }
+  // }
 };
 
 /**
