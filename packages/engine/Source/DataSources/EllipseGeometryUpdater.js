@@ -52,7 +52,6 @@ function EllipseGeometryOptions(entity) {
  * @param {Scene} scene The scene where visualization is taking place.
  */
 function EllipseGeometryUpdater(entity, scene) {
-  console.log("----this", this)
   GroundGeometryUpdater.call(this, {
     entity: entity,
     scene: scene,

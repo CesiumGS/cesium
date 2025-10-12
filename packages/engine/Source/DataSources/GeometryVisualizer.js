@@ -180,7 +180,7 @@ function GeometryVisualizer(
 
   this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
-  this._batches = this._outlineBatches;
+  this._batches = this._closedColorBatches;
   // this._batches = this._outlineBatches.concat(
     // this._closedColorBatches,
     // this._closedMaterialBatches,
@@ -439,61 +439,65 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
     shadows = updater.shadowsProperty.getValue(time);
   }
 
-  const numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
-  if (updater.outlineEnabled) {
-    if (defined(updater.terrainOffsetProperty)) {
-      this._outlineBatches[numberOfShadowModes + shadows].add(time, updater);
-    } else {
-      this._outlineBatches[shadows].add(time, updater);
-    }
-  }
-
-  // if (updater.fillEnabled) {
-  //   if (updater.onTerrain) {
-  //     const classificationType =
-  //       updater.classificationTypeProperty.getValue(time);
-  //     if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-  //       this._groundColorBatches[classificationType].add(time, updater);
-  //     } else {
-  //       // If unsupported, updater will not be on terrain.
-  //       this._groundMaterialBatches[classificationType].add(time, updater);
-  //     }
-  //   } else if (updater.isClosed) {
-  //     if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-  //       if (defined(updater.terrainOffsetProperty)) {
-  //         this._closedColorBatches[numberOfShadowModes + shadows].add(
-  //           time,
-  //           updater,
-  //         );
-  //       } else {
-  //         this._closedColorBatches[shadows].add(time, updater);
-  //       }
-  //     } else if (defined(updater.terrainOffsetProperty)) {
-  //       this._closedMaterialBatches[numberOfShadowModes + shadows].add(
-  //         time,
-  //         updater,
-  //       );
-  //     } else {
-  //       this._closedMaterialBatches[shadows].add(time, updater);
-  //     }
-  //   } else if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-  //     if (defined(updater.terrainOffsetProperty)) {
-  //       this._openColorBatches[numberOfShadowModes + shadows].add(
-  //         time,
-  //         updater,
-  //       );
-  //     } else {
-  //       this._openColorBatches[shadows].add(time, updater);
-  //     }
-  //   } else if (defined(updater.terrainOffsetProperty)) {
-  //     this._openMaterialBatches[numberOfShadowModes + shadows].add(
-  //       time,
-  //       updater,
-  //     );
+  // const numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
+  // 圆的边框
+  // if (updater.outlineEnabled) {
+  //   if (defined(updater.terrainOffsetProperty)) {
+  //     this._outlineBatches[numberOfShadowModes + shadows].add(time, updater);
   //   } else {
-  //     this._openMaterialBatches[shadows].add(time, updater);
+  //     this._outlineBatches[shadows].add(time, updater);
   //   }
   // }
+
+  // 圆的填充
+  if (updater.fillEnabled) {
+    if (updater.onTerrain) {
+      // const classificationType =
+      //   updater.classificationTypeProperty.getValue(time);
+      // if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+      //   this._groundColorBatches[classificationType].add(time, updater);
+      // } else {
+      //   // If unsupported, updater will not be on terrain.
+      //   this._groundMaterialBatches[classificationType].add(time, updater);
+      // }
+    } else if (updater.isClosed) {
+      if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+        if (defined(updater.terrainOffsetProperty)) {
+          // this._closedColorBatches[numberOfShadowModes + shadows].add(
+          //   time,
+          //   updater,
+          // );
+        } else {
+          this._closedColorBatches[shadows].add(time, updater);
+        }
+      }
+      // else if (defined(updater.terrainOffsetProperty)) {
+      //   this._closedMaterialBatches[numberOfShadowModes + shadows].add(
+      //     time,
+      //     updater,
+      //   );
+      // } else {
+      //   this._closedMaterialBatches[shadows].add(time, updater);
+      // }
+    }
+    // else if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+    //   if (defined(updater.terrainOffsetProperty)) {
+    //     this._openColorBatches[numberOfShadowModes + shadows].add(
+    //       time,
+    //       updater,
+    //     );
+    //   } else {
+    //     this._openColorBatches[shadows].add(time, updater);
+    //   }
+    // } else if (defined(updater.terrainOffsetProperty)) {
+    //   this._openMaterialBatches[numberOfShadowModes + shadows].add(
+    //     time,
+    //     updater,
+    //   );
+    // } else {
+    //   this._openMaterialBatches[shadows].add(time, updater);
+    // }
+  }
 };
 
 /**

@@ -121,7 +121,7 @@ Batch.prototype.remove = function (updater) {
 
 Batch.prototype.update = function (time) {
   let isUpdated = true;
-  let removedCount = 0;
+  const removedCount = 0;
   let primitive = this.primitive;
   const primitives = this.primitives;
   let i;
@@ -168,15 +168,15 @@ Batch.prototype.update = function (time) {
       primitives.add(primitive);
       isUpdated = false;
     } else {
-      if (defined(primitive)) {
-        primitives.remove(primitive);
-        primitive = undefined;
-      }
-      const oldPrimitive = this.oldPrimitive;
-      if (defined(oldPrimitive)) {
-        primitives.remove(oldPrimitive);
-        this.oldPrimitive = undefined;
-      }
+      // if (defined(primitive)) {
+      //   primitives.remove(primitive);
+      //   primitive = undefined;
+      // }
+      // const oldPrimitive = this.oldPrimitive;
+      // if (defined(oldPrimitive)) {
+      //   primitives.remove(oldPrimitive);
+      //   this.oldPrimitive = undefined;
+      // }
     }
 
     this.attributes.removeAll();
@@ -185,148 +185,148 @@ Batch.prototype.update = function (time) {
     this.waitingOnCreate = true;
   } else if (defined(primitive) && primitive.ready) {
     primitive.show = true;
-    if (defined(this.oldPrimitive)) {
-      primitives.remove(this.oldPrimitive);
-      this.oldPrimitive = undefined;
-    }
+    // if (defined(this.oldPrimitive)) {
+    //   primitives.remove(this.oldPrimitive);
+    //   this.oldPrimitive = undefined;
+    // }
 
-    if (
-      defined(this.depthFailAppearanceType) &&
-      !(this.depthFailMaterialProperty instanceof ColorMaterialProperty)
-    ) {
-      this.depthFailMaterial = MaterialProperty.getValue(
-        time,
-        this.depthFailMaterialProperty,
-        this.depthFailMaterial,
-      );
-      this.primitive.depthFailAppearance.material = this.depthFailMaterial;
-    }
+    // if (
+    //   defined(this.depthFailAppearanceType) &&
+    //   !(this.depthFailMaterialProperty instanceof ColorMaterialProperty)
+    // ) {
+    //   this.depthFailMaterial = MaterialProperty.getValue(
+    //     time,
+    //     this.depthFailMaterialProperty,
+    //     this.depthFailMaterial,
+    //   );
+    //   this.primitive.depthFailAppearance.material = this.depthFailMaterial;
+    // }
 
-    const updatersWithAttributes = this.updatersWithAttributes.values;
-    const length = updatersWithAttributes.length;
-    const waitingOnCreate = this.waitingOnCreate;
-    for (i = 0; i < length; i++) {
-      const updater = updatersWithAttributes[i];
-      const instance = this.geometry.get(updater.id);
+    // const updatersWithAttributes = this.updatersWithAttributes.values;
+    // const length = updatersWithAttributes.length;
+    // const waitingOnCreate = this.waitingOnCreate;
+    // for (i = 0; i < length; i++) {
+    //   const updater = updatersWithAttributes[i];
+    //   const instance = this.geometry.get(updater.id);
 
-      let attributes = this.attributes.get(instance.id.id);
-      if (!defined(attributes)) {
-        attributes = primitive.getGeometryInstanceAttributes(instance.id);
-        this.attributes.set(instance.id.id, attributes);
-      }
+    //   let attributes = this.attributes.get(instance.id.id);
+    //   if (!defined(attributes)) {
+    //     attributes = primitive.getGeometryInstanceAttributes(instance.id);
+    //     this.attributes.set(instance.id.id, attributes);
+    //   }
 
-      if (!updater.fillMaterialProperty.isConstant || waitingOnCreate) {
-        const colorProperty = updater.fillMaterialProperty.color;
-        const resultColor = Property.getValueOrDefault(
-          colorProperty,
-          time,
-          Color.WHITE,
-          colorScratch,
-        );
-        if (!Color.equals(attributes._lastColor, resultColor)) {
-          attributes._lastColor = Color.clone(
-            resultColor,
-            attributes._lastColor,
-          );
-          attributes.color = ColorGeometryInstanceAttribute.toValue(
-            resultColor,
-            attributes.color,
-          );
-          if (
-            (this.translucent && attributes.color[3] === 255) ||
-            (!this.translucent && attributes.color[3] !== 255)
-          ) {
-            this.itemsToRemove[removedCount++] = updater;
-          }
-        }
-      }
+    //   if (!updater.fillMaterialProperty.isConstant || waitingOnCreate) {
+    //     const colorProperty = updater.fillMaterialProperty.color;
+    //     const resultColor = Property.getValueOrDefault(
+    //       colorProperty,
+    //       time,
+    //       Color.WHITE,
+    //       colorScratch,
+    //     );
+    //     if (!Color.equals(attributes._lastColor, resultColor)) {
+    //       attributes._lastColor = Color.clone(
+    //         resultColor,
+    //         attributes._lastColor,
+    //       );
+    //       attributes.color = ColorGeometryInstanceAttribute.toValue(
+    //         resultColor,
+    //         attributes.color,
+    //       );
+    //       if (
+    //         (this.translucent && attributes.color[3] === 255) ||
+    //         (!this.translucent && attributes.color[3] !== 255)
+    //       ) {
+    //         this.itemsToRemove[removedCount++] = updater;
+    //       }
+    //     }
+    //   }
 
-      if (
-        defined(this.depthFailAppearanceType) &&
-        updater.depthFailMaterialProperty instanceof ColorMaterialProperty &&
-        (!updater.depthFailMaterialProperty.isConstant || waitingOnCreate)
-      ) {
-        const depthFailColorProperty = updater.depthFailMaterialProperty.color;
-        const depthColor = Property.getValueOrDefault(
-          depthFailColorProperty,
-          time,
-          Color.WHITE,
-          colorScratch,
-        );
-        if (!Color.equals(attributes._lastDepthFailColor, depthColor)) {
-          attributes._lastDepthFailColor = Color.clone(
-            depthColor,
-            attributes._lastDepthFailColor,
-          );
-          attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(
-            depthColor,
-            attributes.depthFailColor,
-          );
-        }
-      }
+    //   if (
+    //     defined(this.depthFailAppearanceType) &&
+    //     updater.depthFailMaterialProperty instanceof ColorMaterialProperty &&
+    //     (!updater.depthFailMaterialProperty.isConstant || waitingOnCreate)
+    //   ) {
+    //     const depthFailColorProperty = updater.depthFailMaterialProperty.color;
+    //     const depthColor = Property.getValueOrDefault(
+    //       depthFailColorProperty,
+    //       time,
+    //       Color.WHITE,
+    //       colorScratch,
+    //     );
+    //     if (!Color.equals(attributes._lastDepthFailColor, depthColor)) {
+    //       attributes._lastDepthFailColor = Color.clone(
+    //         depthColor,
+    //         attributes._lastDepthFailColor,
+    //       );
+    //       attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(
+    //         depthColor,
+    //         attributes.depthFailColor,
+    //       );
+    //     }
+    //   }
 
-      const show =
-        updater.entity.isShowing &&
-        (updater.hasConstantFill || updater.isFilled(time));
-      const currentShow = attributes.show[0] === 1;
-      if (show !== currentShow) {
-        attributes.show = ShowGeometryInstanceAttribute.toValue(
-          show,
-          attributes.show,
-        );
-      }
+    //   const show =
+    //     updater.entity.isShowing &&
+    //     (updater.hasConstantFill || updater.isFilled(time));
+    //   const currentShow = attributes.show[0] === 1;
+    //   if (show !== currentShow) {
+    //     attributes.show = ShowGeometryInstanceAttribute.toValue(
+    //       show,
+    //       attributes.show,
+    //     );
+    //   }
 
-      const distanceDisplayConditionProperty =
-        updater.distanceDisplayConditionProperty;
-      if (!Property.isConstant(distanceDisplayConditionProperty)) {
-        const distanceDisplayCondition = Property.getValueOrDefault(
-          distanceDisplayConditionProperty,
-          time,
-          defaultDistanceDisplayCondition,
-          distanceDisplayConditionScratch,
-        );
-        if (
-          !DistanceDisplayCondition.equals(
-            distanceDisplayCondition,
-            attributes._lastDistanceDisplayCondition,
-          )
-        ) {
-          attributes._lastDistanceDisplayCondition =
-            DistanceDisplayCondition.clone(
-              distanceDisplayCondition,
-              attributes._lastDistanceDisplayCondition,
-            );
-          attributes.distanceDisplayCondition =
-            DistanceDisplayConditionGeometryInstanceAttribute.toValue(
-              distanceDisplayCondition,
-              attributes.distanceDisplayCondition,
-            );
-        }
-      }
+    //   const distanceDisplayConditionProperty =
+    //     updater.distanceDisplayConditionProperty;
+    //   if (!Property.isConstant(distanceDisplayConditionProperty)) {
+    //     const distanceDisplayCondition = Property.getValueOrDefault(
+    //       distanceDisplayConditionProperty,
+    //       time,
+    //       defaultDistanceDisplayCondition,
+    //       distanceDisplayConditionScratch,
+    //     );
+    //     if (
+    //       !DistanceDisplayCondition.equals(
+    //         distanceDisplayCondition,
+    //         attributes._lastDistanceDisplayCondition,
+    //       )
+    //     ) {
+    //       attributes._lastDistanceDisplayCondition =
+    //         DistanceDisplayCondition.clone(
+    //           distanceDisplayCondition,
+    //           attributes._lastDistanceDisplayCondition,
+    //         );
+    //       attributes.distanceDisplayCondition =
+    //         DistanceDisplayConditionGeometryInstanceAttribute.toValue(
+    //           distanceDisplayCondition,
+    //           attributes.distanceDisplayCondition,
+    //         );
+    //     }
+    //   }
 
-      const offsetProperty = updater.terrainOffsetProperty;
-      if (!Property.isConstant(offsetProperty)) {
-        const offset = Property.getValueOrDefault(
-          offsetProperty,
-          time,
-          defaultOffset,
-          offsetScratch,
-        );
-        if (!Cartesian3.equals(offset, attributes._lastOffset)) {
-          attributes._lastOffset = Cartesian3.clone(
-            offset,
-            attributes._lastOffset,
-          );
-          attributes.offset = OffsetGeometryInstanceAttribute.toValue(
-            offset,
-            attributes.offset,
-          );
-        }
-      }
-    }
+    //   const offsetProperty = updater.terrainOffsetProperty;
+    //   if (!Property.isConstant(offsetProperty)) {
+    //     const offset = Property.getValueOrDefault(
+    //       offsetProperty,
+    //       time,
+    //       defaultOffset,
+    //       offsetScratch,
+    //     );
+    //     if (!Cartesian3.equals(offset, attributes._lastOffset)) {
+    //       attributes._lastOffset = Cartesian3.clone(
+    //         offset,
+    //         attributes._lastOffset,
+    //       );
+    //       attributes.offset = OffsetGeometryInstanceAttribute.toValue(
+    //         offset,
+    //         attributes.offset,
+    //       );
+    //     }
+    //   }
+    // }
 
-    this.updateShows(primitive);
-    this.waitingOnCreate = false;
+    // this.updateShows(primitive);
+    // this.waitingOnCreate = false;
   } else if (defined(primitive) && !primitive.ready) {
     isUpdated = false;
   }
