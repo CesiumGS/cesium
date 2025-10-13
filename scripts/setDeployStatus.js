@@ -4,6 +4,7 @@ import "@dotenvx/dotenvx/config";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPOSITORY;
+const GITHUB_WORKFLOW = process.env.GITHUB_WORKFLOW;
 const COMMIT_SHA = process.env.COMMIT_SHA;
 const CESIUM_VERSION = process.env.CESIUM_VERSION;
 
@@ -51,6 +52,14 @@ export async function setDeployStatus({ status, url, context, message }) {
   return result;
 }
 
+const getArtifactContext = (artifact) => {
+  if (!GITHUB_WORKFLOW || GITHUB_WORKFLOW === "") {
+    return `artifact: ${artifact}`;
+  }
+
+  return `${GITHUB_WORKFLOW} / artifact: ${artifact}`;
+};
+
 await yargs()
   .command(
     "* <status> [context] [url] [message]",
@@ -84,7 +93,7 @@ await yargs()
       setDeployStatus({
         status,
         url: process.env.COVERAGE_URL,
-        context: "deploy / artifact: coverage report",
+        context: getArtifactContext("coverage report"),
       }),
   )
   .command(
@@ -95,7 +104,7 @@ await yargs()
       setDeployStatus({
         status,
         url: process.env.ZIP_URL,
-        context: `deploy / artifact: Cesium-${CESIUM_VERSION}.zip`,
+        context: getArtifactContext(`Cesium-${CESIUM_VERSION}.zip`),
       }),
   )
   .command(
@@ -106,7 +115,7 @@ await yargs()
       setDeployStatus({
         status,
         url: process.env.NPM_URL,
-        context: `deploy / artifact: cesium-${CESIUM_VERSION}.tgz`,
+        context: getArtifactContext(`cesium-${CESIUM_VERSION}.tgz`),
       }),
   )
   .command(
@@ -117,7 +126,7 @@ await yargs()
       setDeployStatus({
         status,
         url: process.env.INDEX_URL,
-        context: "deploy / artifact: index.html",
+        context: getArtifactContext("index.html"),
       }),
   )
   .parse(hideBin(process.argv));
