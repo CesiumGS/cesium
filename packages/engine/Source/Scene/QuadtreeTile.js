@@ -109,6 +109,7 @@ function QuadtreeTile(options) {
   this._loadPriority = 0.0;
 
   this._customData = new Set();
+  this._customDataIterator = undefined;
   this._addedCustomData = [];
   this._removedCustomData = [];
   this._lastSelectionResult = TileSelectionResult.NONE;
