@@ -83,10 +83,28 @@ function SandcastleEditor({
   const {
     settings: { fontFamily, fontSize, fontLigatures },
   } = useContext(SettingsContext);
+  const documentRef = useRef(document);
   useEffect(() => {
-    internalEditorRef.current?.updateOptions({
-      fontFamily: availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono",
-    });
+    const cssName = availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono";
+    const fontFace = [...documentRef.current.fonts].find(
+      (font) => font.family === cssName && font.weight === "400",
+    );
+    if (fontFace?.status !== "loaded") {
+      // Monaco needs to check the size of the font for things like cursor position
+      // and variable highlighting. If it does this check before the font has loaded
+      // it will get the wrong size and may be horribly offset especially with ligatures
+      // https://github.com/microsoft/monaco-editor/issues/392
+      documentRef.current.fonts.load(`1rem ${cssName}`).then(() => {
+        internalEditorRef.current?.updateOptions({
+          fontFamily: cssName,
+        });
+        monaco.editor.remeasureFonts();
+      });
+    } else {
+      internalEditorRef.current?.updateOptions({
+        fontFamily: cssName,
+      });
+    }
   }, [fontFamily]);
   useEffect(() => {
     internalEditorRef.current?.updateOptions({
@@ -99,6 +117,10 @@ function SandcastleEditor({
     });
   }, [fontSize]);
 
+  function formatEditor() {
+    internalEditorRef.current?.getAction("editor.action.formatDocument")?.run();
+  }
+
   useImperativeHandle(ref, () => {
     return {
       formatCode() {
@@ -106,10 +128,6 @@ function SandcastleEditor({
       },
     };
   }, []);
-
-  function formatEditor() {
-    internalEditorRef.current?.getAction("editor.action.formatDocument")?.run();
-  }
 
   function handleEditorDidMount(
     editor: monaco.editor.IStandaloneCodeEditor,
