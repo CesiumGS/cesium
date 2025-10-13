@@ -564,7 +564,7 @@ function selectTilesForRendering(primitive, frameState) {
     }
   });
 
-  levelZeroTiles.forEach((tile) => tile._updateCustomData());
+  levelZeroTiles.forEach((tile) => tile.updateCustomData());
   customDataAdded.length = 0;
   customDataRemoved.length = 0;
 
@@ -721,7 +721,7 @@ function visitTile(
   ++debug.tilesVisited;
 
   primitive._tileReplacementQueue.markTileRendered(tile);
-  tile._updateCustomData();
+  tile.updateCustomData();
 
   if (tile.level > debug.maxDepthVisited) {
     debug.maxDepthVisited = tile.level;

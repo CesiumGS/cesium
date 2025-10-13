@@ -313,7 +313,7 @@ QuadtreeTile.prototype.clearPositionCache = function () {
   }
 };
 
-QuadtreeTile.prototype._updateCustomData = function () {
+QuadtreeTile.prototype.updateCustomData = function () {
   const added = this._addedCustomData;
   const removed = this._removedCustomData;
   if (added.length === 0 && removed.length === 0) {
@@ -342,7 +342,7 @@ QuadtreeTile.prototype._updateCustomData = function () {
   this._removedCustomData.length = 0;
 };
 
-const centerScratch = new Cartographic();
+const splitPointScratch = new Cartographic();
 
 /**
  * Determines which child tile that contains the specified position. Assumes the position is within
@@ -353,9 +353,16 @@ const centerScratch = new Cartographic();
  * @returns {QuadtreeTile} The child tile that contains the position.
  */
 function childTileAtPosition(tile, positionCartographic) {
-  const center = Rectangle.center(tile.rectangle, centerScratch);
-  const x = positionCartographic.longitude >= center.longitude ? 1 : 0;
-  const y = positionCartographic.latitude < center.latitude ? 1 : 0;
+  // Can't assume that a given tiling scheme divides a parent into four tiles at its rectangle's center.
+  // But we can safely take any child tile's rectangle and take its center-facing corner as the parent's split point.
+  const nwChildRectangle = tile.northwestChild.rectangle;
+  const tileSplitPoint = Rectangle.southeast(
+    nwChildRectangle,
+    splitPointScratch,
+  );
+
+  const x = positionCartographic.longitude >= tileSplitPoint.longitude ? 1 : 0;
+  const y = positionCartographic.latitude < tileSplitPoint.latitude ? 1 : 0;
 
   switch (y * 2 + x) {
     case 0:
