@@ -8,7 +8,7 @@ const GITHUB_WORKFLOW = process.env.GITHUB_WORKFLOW;
 const COMMIT_SHA = process.env.COMMIT_SHA;
 const CESIUM_VERSION = process.env.CESIUM_VERSION;
 
-export async function setDeployStatus({ status, url, context, message }) {
+export async function setCommitStatus({ status, url, context, message }) {
   if (!GITHUB_TOKEN || GITHUB_TOKEN === "") {
     throw new Error(`Environment variable is not defined: "GITHUB_TOKEN"`);
   }
@@ -63,7 +63,7 @@ const getArtifactContext = (artifact) => {
 await yargs()
   .command(
     "* <status> [context] [url] [message]",
-    "set deploy status of a build artifact",
+    "set commit status, for example, to link to a build artifact",
     (yargs) =>
       yargs
         .positional("status", {
@@ -81,16 +81,16 @@ await yargs()
         })
         .positional("message", {
           type: "string",
-          describe: "A short description of the status.",
+          describe: "A short description of this status.",
         }),
-    setDeployStatus,
+    setCommitStatus,
   )
   .command(
     "coverage <status>",
-    "set deploy status of a build artifact",
+    "set deployment status of coverage results",
     () => {},
     async ({ status }) =>
-      setDeployStatus({
+      setCommitStatus({
         status,
         url: process.env.COVERAGE_URL,
         context: getArtifactContext("coverage report"),
@@ -98,10 +98,10 @@ await yargs()
   )
   .command(
     "zip <status>",
-    "set deploy status of the zip file",
+    "set deployment status of the release zip file",
     () => {},
     async ({ status }) =>
-      setDeployStatus({
+      setCommitStatus({
         status,
         url: process.env.ZIP_URL,
         context: getArtifactContext(`Cesium-${CESIUM_VERSION}.zip`),
@@ -109,10 +109,10 @@ await yargs()
   )
   .command(
     "npm <status>",
-    "set deploy status of the npm package",
+    "set deployment status of the npm package",
     () => {},
     async ({ status }) =>
-      setDeployStatus({
+      setCommitStatus({
         status,
         url: process.env.NPM_URL,
         context: getArtifactContext(`cesium-${CESIUM_VERSION}.tgz`),
@@ -120,10 +120,10 @@ await yargs()
   )
   .command(
     "index <status>",
-    "set deploy status of the static build",
+    "set deployment status of the static build",
     () => {},
     async ({ status }) =>
-      setDeployStatus({
+      setCommitStatus({
         status,
         url: process.env.INDEX_URL,
         context: getArtifactContext("index.html"),

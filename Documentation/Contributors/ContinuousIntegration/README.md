@@ -2,8 +2,9 @@
 
 - [Background](#background)
 - [Actions and workflows](#actions-and-workflows)
+  - [Environment variables](#environment-variables)
 - [Continuous deployment](#continuous-deployment)
-- [Configuration](#configuration)
+- [Configuration guide](#configuration-guide)
   - [Configure a different S3 bucket](#configure-a-different-s3-bucket)
   - [Configure S3 credentials](#configure-s3-credentials)
 
@@ -28,6 +29,16 @@ The status checks for any branch are also accessible under the [Branches](https:
 
 ![GitHub Branches](github_branches.png)
 
+### Environment variables
+
+Any non-secret environment variables for CI and CD are managed using `.env` files and [dotenvx](https://github.com/dotenvx/dotenvx).
+
+- **Local dev**: `.env` is checked in at the repository root and provides defaults constant values and local fallbacks.
+  - To run a script or command with these variables configured locally, use `npx @dotenvx/dotenvx run -- <COMMAND>`, e.g., `npx @dotenvx/dotenvx run -- node ./scripts/setCommitStatus.js`.
+  - To expand a variable directly in a command, use a subshell command, e.g., `npx @dotenvx/dotenvx run -- sh -c 'echo "${BRANCH}"'`.
+- **GitHub Actions workflow - `push` trigger**: `.github/workflows/.env.push`
+- **GitHub Actions workflow - `pull_request` trigger**: `.github/workflows/.env.pull_request`
+
 ## Continuous deployment
 
 Automated deployments make recent code changes available for convenient testing and review—No need to fetch or build locally. In the `cesium` repository, all continuous deployment artifacts are uploaded for commits authored by users with commit access.
@@ -42,7 +53,7 @@ Each of the following are deployed on a per-branch basis.
 | Release zip      | `https://ci-builds.cesium.com/cesium/<BRANCH>/Cesium-<VERSION>-<BRANCH>.0.zip` (i.e., [`https://ci-builds.cesium.com/cesium/main/Cesium-1.X.X-main.0.zip`](https://ci-builds.cesium.com/cesium/main/Cesium-1.X.X-main.0.zip))              |
 | npm package      | `https://ci-builds.cesium.com/cesium/<BRANCH>/cesium-<VERSION>-<BRANCH>.0.tgz` (i.e., [`https://ci-builds.cesium.com/cesium/main/cesium-1.X.X-main.0.tgz`](https://ci-builds.cesium.com/cesium/main/cesium-1.X.X-main.0.tgz))              |
 
-## Configuration
+## Configuration guide
 
 Additional set up is required for deployment _only_ if you do not have commit access to CesiumJS.
 
