@@ -72,6 +72,24 @@ function Buffer(options) {
   this.vertexArrayDestroyable = true;
 }
 
+Buffer.createPixelBuffer = function (options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  //>>includeEnd('debug');
+
+  if (!options.context._webgl2) {
+    throw new DeveloperError("A WebGL 2 context is required.");
+  }
+
+  return new Buffer({
+    context: options.context,
+    bufferTarget: WebGLConstants.PIXEL_PACK_BUFFER,
+    typedArray: options.typedArray,
+    sizeInBytes: options.sizeInBytes,
+    usage: options.usage,
+  });
+};
+
 /**
  * Creates a vertex buffer, which contains untyped vertex data in GPU-controlled memory.
  * <br /><br />
@@ -240,6 +258,18 @@ Object.defineProperties(Buffer.prototype, {
 
 Buffer.prototype._getBuffer = function () {
   return this._buffer;
+};
+
+Buffer.prototype._bind = function () {
+  const gl = this._gl;
+  const target = this._bufferTarget;
+  gl.bindBuffer(target, this._buffer);
+};
+
+Buffer.prototype._unBind = function () {
+  const gl = this._gl;
+  const target = this._bufferTarget;
+  gl.bindBuffer(target, null);
 };
 
 Buffer.prototype.copyFromArrayView = function (arrayView, offsetInBytes) {

@@ -37,6 +37,7 @@
           terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
+        const async = true;
         viewer.scene.globe.depthTestAgainstTerrain = true;
 
         // Set the initial camera view to look at Manhattan
@@ -157,12 +158,19 @@
           );
 
           // Silhouette a feature blue on hover.
-          viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
+          viewer.screenSpaceEventHandler.setInputAction(async function onMouseMove(
+            movement,
+          ) {
+            // Pick a new feature
+            let pickedFeature;
+            if (async) {
+              pickedFeature = await viewer.scene.pickAsync(movement.endPosition);
+            } else {
+              pickedFeature = viewer.scene.pick(movement.endPosition);
+            }
+
             // If a feature was previously highlighted, undo the highlight
             silhouetteBlue.selected = [];
-
-            // Pick a new feature
-            const pickedFeature = viewer.scene.pick(movement.endPosition);
 
             updateNameOverlay(pickedFeature, movement.endPosition);
 
@@ -177,12 +185,20 @@
           }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
           // Silhouette a feature on selection and show metadata in the InfoBox.
-          viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
+          viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
+            movement,
+          ) {
+            // Pick a new feature
+            let pickedFeature;
+            if (async) {
+              pickedFeature = await viewer.scene.pickAsync(movement.position);
+            } else {
+              pickedFeature = viewer.scene.pick(movement.position);
+            }
+
             // If a feature was previously selected, undo the highlight
             silhouetteGreen.selected = [];
 
-            // Pick a new feature
-            const pickedFeature = viewer.scene.pick(movement.position);
             if (!Cesium.defined(pickedFeature)) {
               clickHandler(movement);
               return;
@@ -216,14 +232,23 @@
           };
 
           // Color a feature yellow on hover.
-          viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
+          viewer.screenSpaceEventHandler.setInputAction(async function onMouseMove(
+            movement,
+          ) {
+            // Pick a new feature
+            let pickedFeature;
+            if (async) {
+              pickedFeature = await viewer.scene.pickAsync(movement.endPosition);
+            } else {
+              pickedFeature = viewer.scene.pick(movement.endPosition);
+            }
+
             // If a feature was previously highlighted, undo the highlight
             if (Cesium.defined(highlighted.feature)) {
               highlighted.feature.color = highlighted.originalColor;
               highlighted.feature = undefined;
             }
-            // Pick a new feature
-            const pickedFeature = viewer.scene.pick(movement.endPosition);
+
             updateNameOverlay(pickedFeature, movement.endPosition);
 
             if (!Cesium.defined(pickedFeature)) {
@@ -239,14 +264,23 @@
           }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
           // Color a feature on selection and show metadata in the InfoBox.
-          viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
+          viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
+            movement,
+          ) {
+            // Pick a new feature
+            let pickedFeature;
+            if (async) {
+              pickedFeature = await viewer.scene.pickAsync(movement.position);
+            } else {
+              pickedFeature = viewer.scene.pick(movement.position);
+            }
+
             // If a feature was previously selected, undo the highlight
             if (Cesium.defined(selected.feature)) {
               selected.feature.color = selected.originalColor;
               selected.feature = undefined;
             }
-            // Pick a new feature
-            const pickedFeature = viewer.scene.pick(movement.position);
+
             if (!Cesium.defined(pickedFeature)) {
               clickHandler(movement);
               return;

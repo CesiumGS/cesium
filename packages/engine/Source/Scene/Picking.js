@@ -272,15 +272,23 @@ function computePickingDrawingBufferRectangle(
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {object | undefined} Object containing the picked primitive.
+ * @param {boolean} [async=false] Use async non GPU blocking picking.
+ * @returns {object | Promise<object | undefined> | undefined} Object containing the picked primitive.
  */
-Picking.prototype.pick = function (scene, windowPosition, width, height) {
+Picking.prototype.pick = function (
+  scene,
+  windowPosition,
+  width,
+  height,
+  async,
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
 
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
+  async = async ?? false;
 
   scene.view = defaultView;
 
@@ -328,7 +336,12 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
-  const object = pickFramebuffer.end(drawingBufferRectangle);
+  let object;
+  if (async) {
+    object = pickFramebuffer.endAsync(drawingBufferRectangle, frameState); // Promise
+  } else {
+    object = pickFramebuffer.end(drawingBufferRectangle, frameState); // Object
+  }
   context.endFrame();
   return object;
 };
@@ -1016,7 +1029,7 @@ function getRayIntersection(
   scene.resolveFramebuffers(passState);
 
   let position;
-  const object = view.pickFramebuffer.end(drawingBufferRectangle);
+  const object = view.pickFramebuffer.end(drawingBufferRectangle, frameState);
 
   if (scene.context.depthTexture) {
     const { frustumCommandsList } = view;

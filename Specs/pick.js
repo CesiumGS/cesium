@@ -66,7 +66,7 @@ function pick(frameState, primitives, x, y) {
 
   frameState.passes = oldPasses;
 
-  const p = pickFramebuffer.end(rectangle);
+  const p = pickFramebuffer.end(rectangle, frameState);
   pickFramebuffer.destroy();
 
   return p;

@@ -3821,14 +3821,15 @@ function callAfterRenderFunctions(scene) {
   // Functions are queued up during primitive update and executed here in case
   // the function modifies scene state that should remain constant over the frame.
   const functions = scene._frameState.afterRender;
-  for (let i = 0; i < functions.length; ++i) {
-    const shouldRequestRender = functions[i]();
+  const functionsCpy = functions.slice(); // Snapshot before iterate allows callbacks to add functions for next frame
+  functions.length = 0;
+
+  for (let i = 0; i < functionsCpy.length; ++i) {
+    const shouldRequestRender = functionsCpy[i]();
     if (shouldRequestRender) {
       scene.requestRender();
     }
   }
-
-  functions.length = 0;
 }
 
 function getGlobeHeight(scene) {
@@ -4403,6 +4404,10 @@ Scene.prototype.clampLineWidth = function (width) {
  */
 Scene.prototype.pick = function (windowPosition, width, height) {
   return this._picking.pick(this, windowPosition, width, height);
+};
+
+Scene.prototype.pickAsync = async function (windowPosition, width, height) {
+  return this._picking.pick(this, windowPosition, width, height, true); // TODO: merge apis?
 };
 
 /**

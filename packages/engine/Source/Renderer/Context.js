@@ -1,3 +1,4 @@
+import Buffer from "./Buffer.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
@@ -1449,6 +1450,7 @@ Context.prototype.endFrame = function () {
  * @param {number} [readState.width=this.drawingBufferWidth] The width of the rectangle to read from.
  * @param {number} [readState.height=this.drawingBufferHeight] The height of the rectangle to read from.
  * @param {Framebuffer} [readState.framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
+ * @param {Framebuffer} [readState.pbo] If true pixel data is read to PBO instead of TypedArray.
  * @returns {Uint8Array|Uint16Array|Float32Array|Uint32Array} The pixels in the specified rectangle.
  */
 Context.prototype.readPixels = function (readState) {
@@ -1460,6 +1462,11 @@ Context.prototype.readPixels = function (readState) {
   const width = readState.width ?? this.drawingBufferWidth;
   const height = readState.height ?? this.drawingBufferHeight;
   const framebuffer = readState.framebuffer;
+  const pbo = readState.pbo ?? false;
+
+  if (pbo && !this._webgl2) {
+    throw new DeveloperError("A WebGL 2 context is required.");
+  }
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThan("readState.width", width, 0);
@@ -1467,28 +1474,58 @@ Context.prototype.readPixels = function (readState) {
   //>>includeEnd('debug');
 
   let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+  let pixelFormat = PixelFormat.RGBA;
   if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
     pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+    pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
   }
 
-  const pixels = PixelFormat.createTypedArray(
-    PixelFormat.RGBA,
-    pixelDatatype,
-    width,
-    height,
-  );
+  let pixels;
+  if (pbo) {
+    pixels = Buffer.createPixelBuffer({
+      context: this,
+      sizeInBytes: PixelFormat.textureSizeInBytes(
+        pixelFormat,
+        pixelDatatype,
+        width,
+        height,
+      ),
+      usage: BufferUsage.DYNAMIC_READ,
+    });
+  } else {
+    pixels = PixelFormat.createTypedArray(
+      pixelFormat,
+      pixelDatatype,
+      width,
+      height,
+    );
+  }
 
   bindFramebuffer(this, framebuffer);
 
-  gl.readPixels(
-    x,
-    y,
-    width,
-    height,
-    PixelFormat.RGBA,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
-    pixels,
-  );
+  if (pbo) {
+    pixels._bind();
+    gl.readPixels(
+      x,
+      y,
+      width,
+      height,
+      pixelFormat,
+      PixelDatatype.toWebGLConstant(pixelDatatype, this),
+      0,
+    );
+    pixels._unBind();
+  } else {
+    gl.readPixels(
+      x,
+      y,
+      width,
+      height,
+      PixelFormat.RGBA,
+      PixelDatatype.toWebGLConstant(pixelDatatype, this),
+      pixels,
+    );
+  }
 
   return pixels;
 };

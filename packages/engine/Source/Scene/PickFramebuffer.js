@@ -4,6 +4,10 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
+import PixelFormat from "../Core/PixelFormat.js";
+import WebGLConstants from "../Core/WebGLConstants.js";
+import Sync from "../Renderer/Sync.js";
 
 /**
  * @private
@@ -50,25 +54,7 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
 
 const colorScratchForPickFramebuffer = new Color();
 
-/**
- * Return the picked object rendered within a given rectangle.
- *
- * @param {BoundingRectangle} screenSpaceRectangle
- * @returns {object|undefined} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
- */
-PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
-  const width = screenSpaceRectangle.width ?? 1.0;
-  const height = screenSpaceRectangle.height ?? 1.0;
-
-  const context = this._context;
-  const pixels = context.readPixels({
-    x: screenSpaceRectangle.x,
-    y: screenSpaceRectangle.y,
-    width: width,
-    height: height,
-    framebuffer: this._fb.framebuffer,
-  });
-
+function colorScratchForObject(context, pixels, width, height) {
   const max = Math.max(width, height);
   const length = max * max;
   const halfWidth = Math.floor(width * 0.5);
@@ -125,6 +111,129 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
   }
 
   return undefined;
+}
+
+let i = 0;
+PickFramebuffer.prototype.endAsync = async function (
+  screenSpaceRectangle,
+  frameState,
+) {
+  const width = screenSpaceRectangle.width ?? 1.0;
+  const height = screenSpaceRectangle.height ?? 1.0;
+
+  const context = this._context;
+  const framebuffer = this._fb.framebuffer;
+
+  let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+  let pixelFormat = PixelFormat.RGBA;
+
+  if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
+    pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+    pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
+  }
+
+  const pbo = context.readPixels({
+    x: screenSpaceRectangle.x,
+    y: screenSpaceRectangle.y,
+    width: width,
+    height: height,
+    framebuffer: framebuffer,
+    pbo: true,
+  });
+
+  const sync = Sync.create({
+    context: context,
+  });
+
+  i++;
+
+  const pickState = {
+    id: i, // TODO: remove
+    context: context,
+    frameState: frameState,
+    frameNumber: frameState.frameNumber,
+    sync: sync,
+    pbo: pbo,
+    pixelFormat: pixelFormat,
+    pixelDatatype: pixelDatatype,
+    width: width,
+    height: width,
+  };
+
+  return new Promise((resolve, reject) => {
+    //console.log("[async] Pick", `#${pickState.id}`, pickState.frameNumber, screenSpaceRectangle.x, screenSpaceRectangle.y);
+    frameState.afterRender.push(
+      createAsyncPick(pickState, (context, signaled) => {
+        const pbo = pickState.pbo;
+        //const frameDelta = frameState.frameNumber - pickState.frameNumber; // how many frames passed since inital request
+        const pixels = PixelFormat.createTypedArray(
+          pickState.pixelFormat,
+          pickState.pixelDatatype,
+          pickState.width,
+          pickState.height,
+        );
+        pbo.getBufferData(pixels);
+        pbo.destroy();
+        const obj = colorScratchForObject(
+          context,
+          pixels,
+          pickState.width,
+          pickState.height,
+        );
+        //console.log("[async] Return", `#${pickState.id}`, frameDelta, signaled, obj);
+        if (signaled) {
+          resolve(obj);
+        } else {
+          reject("Picking Request Timeout");
+        }
+      }),
+    );
+  });
+};
+
+// TODO: comment
+function createAsyncPick(pickState, onSignalCallback) {
+  return () => {
+    const context = pickState.context;
+    const sync = pickState.sync;
+    const frameState = pickState.frameState;
+    const ttl = pickState.ttl ?? 10;
+    const syncStatus = sync.getStatus();
+    const signaled = syncStatus === WebGLConstants.SIGNALED;
+    const frameDelta = frameState.frameNumber - pickState.frameNumber; // how many frames passed since inital request
+    if (signaled || frameDelta > ttl) {
+      //console.log("signal", `#${pickState.id}`, pickState.frameNumber, frameState.frameNumber, frameDelta);
+      sync.destroy();
+      onSignalCallback(context, signaled);
+    } else {
+      //console.log("no-signal", `#${pickState.id}`, pickState.frameNumber, frameState.frameNumber, frameDelta);
+      frameState.afterRender.push(createAsyncPick(pickState, onSignalCallback));
+    }
+  };
+}
+
+/**
+ * Return the picked object rendered within a given rectangle.
+ *
+ * @param {BoundingRectangle} screenSpaceRectangle
+ * @returns {object|undefined} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
+ */
+PickFramebuffer.prototype.end = function (screenSpaceRectangle, frameState) {
+  const width = screenSpaceRectangle.width ?? 1.0;
+  const height = screenSpaceRectangle.height ?? 1.0;
+
+  //console.log("[sync] Pick# ", i, frameState.frameNumber);
+
+  const context = this._context;
+  const pixels = context.readPixels({
+    x: screenSpaceRectangle.x,
+    y: screenSpaceRectangle.y,
+    width: width,
+    height: height,
+    framebuffer: this._fb.framebuffer,
+  });
+
+  return colorScratchForObject(context, pixels, width, height);
 };
 
 /**
