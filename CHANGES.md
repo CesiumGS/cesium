@@ -11,9 +11,12 @@
 
 #### Fixes :wrench:
 
+- Fixed parsing content bounding volumes contained in 3D Tiles 1.1 subtree files. [#12972](https://github.com/CesiumGS/cesium/pull/12972)
+- Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
 - Fix issues with label background when updating properties while `label.show` is `false`. [#12138](https://github.com/CesiumGS/cesium/issues/12138)
 - Improved performance of `scene.drillPick`. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
 - Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
+- Improved performance of terrain Quadtree handling of custom data [#12907](https://github.com/CesiumGS/cesium/pull/12907)
 - Improved rendering performance when a 3D tileset is loaded [#12974](https://github.com/CesiumGS/cesium/pull/12974)
 
 ## 1.134.1 - 2025-10-10
