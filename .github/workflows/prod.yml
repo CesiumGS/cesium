@@ -49,8 +49,8 @@ jobs:
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         # Download zip from the Github release and unzip to Build/release/
         # Publish that unzipped code to the bucket for https://cesium.com/downloads/cesiumjs/releases/[version]/... urls
-        # Publish the documentation files to the bucket for https://cesium.com/learn/cesiumjs/ref-doc/... urls
-        # Publish the simple viewer app
+        # Publish the documentation files to the bucket for https://cesium.com/learn/cesiumjs/ref-doc/
+        # Publish the simple viewer app to the bucket for https://cesium.com/cesiumjs/cesium-viewer/
         # Publish sandcastle to the bucket for https://sandcastle.cesium.com/
         run: |
           curl -LO $(curl https://api.github.com/repos/CesiumGS/cesium/releases/latest -H "Authorization: ${GITHUB_TOKEN}" | jq -r '.assets[0].browser_download_url')
