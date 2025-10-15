@@ -93,13 +93,14 @@ describe(
         scene.mode = SceneMode.SCENE3D;
         scene.morphTime = SceneMode.getMorphTime(scene.mode);
 
-        camera.setView({
-          destination: largeRectangle,
-        });
-
+        // Note: Important the camera.frustum is set before camera.setView
         camera.frustum = new PerspectiveFrustum();
         camera.frustum.fov = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
+
+        camera.setView({
+          destination: largeRectangle,
+        });
       });
 
       afterEach(function () {
@@ -234,6 +235,31 @@ describe(
           const rectangle = createLargeRectangle(0.0);
           scene.renderForSpecs();
           expect(scene).toPickPrimitive(rectangle);
+        });
+      });
+
+      describe("pickAsync", function () {
+        it("picks a primitive async", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const rectangle = createLargeRectangle(0.0);
+          const windowPosition = new Cartesian2(0, 0);
+
+          let actual;
+          let ready = false;
+          scene.pickAsync(windowPosition).then((result) => {
+            actual = result;
+            ready = true;
+          });
+
+          await pollToPromise(function () {
+            scene.renderForSpecs();
+            return ready;
+          });
+
+          expect(actual).toBeDefined();
+          expect(actual.primitive).toEqual(rectangle);
         });
       });
 
