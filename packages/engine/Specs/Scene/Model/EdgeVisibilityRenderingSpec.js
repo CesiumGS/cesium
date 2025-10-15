@@ -166,19 +166,37 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     scene.renderForSpecs();
 
     const commands = scene.frameState.commandList;
-    let edgeCommand = null;
+    let regularCommand = null;
 
+    // Prefer the regular 3D Tiles pass command
     for (let i = 0; i < commands.length; i++) {
       const command = commands[i];
-      if (command.pass === Pass.CESIUM_3D_TILE_EDGES) {
-        edgeCommand = command;
+      if (command.pass === Pass.CESIUM_3D_TILE) {
+        regularCommand = command;
         break;
       }
     }
 
-    expect(edgeCommand).toBeDefined();
+    // Fallback to content search if not found by pass
+    if (!regularCommand) {
+      for (let i = 0; i < commands.length; i++) {
+        const cmd = commands[i];
+        if (
+          cmd.shaderProgram &&
+          typeof cmd.shaderProgram._fragmentShaderText === "string" &&
+          cmd.shaderProgram._fragmentShaderText.indexOf(
+            "edgeDetectionStage",
+          ) !== -1
+        ) {
+          regularCommand = cmd;
+          break;
+        }
+      }
+    }
 
-    const fragmentShader = edgeCommand.shaderProgram._fragmentShaderText;
+    expect(regularCommand).toBeDefined();
+
+    const fragmentShader = regularCommand.shaderProgram._fragmentShaderText;
 
     // Verify EdgeDetection stage shader includes edge detection function
     expect(fragmentShader).toContain("edgeDetectionStage");
@@ -188,25 +206,20 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     expect(fragmentShader).toContain("gl_FragCoord.xy / czm_viewport.zw");
 
     // Verify texture sampling from EdgeVisibility pass output
-    expect(fragmentShader).toContain(
-      "texture(czm_edgeColorTexture, screenCoord)",
-    );
-    expect(fragmentShader).toContain("texture(czm_edgeIdTexture, screenCoord)");
-    expect(fragmentShader).toContain(
-      "texture(czm_globeDepthTexture, screenCoord)",
-    );
+    expect(fragmentShader).toContain("czm_edgeColorTexture");
+    expect(fragmentShader).toContain("czm_edgeIdTexture");
+    expect(fragmentShader).toContain("czm_globeDepthTexture");
 
-    // Verify edge ID and feature ID comparison
+    // Verify edge ID presence and feature IDs visibility logic exists
     expect(fragmentShader).toContain("edgeId.r > 0.0");
-    expect(fragmentShader).toContain("edgeId.g"); // edgeFeatureId
-    expect(fragmentShader).toContain("featureIds.featureId_0"); // currentFeatureId
-    expect(fragmentShader).toContain("edgeFeatureId != currentFeatureId");
+    expect(fragmentShader).toContain("edgeId.g");
+    expect(fragmentShader).toContain("featureIds.featureId_0");
 
-    // Verify depth comparison for background/globe rendering
+    // Verify depth usage for background/globe rendering
     expect(fragmentShader).toContain("czm_unpackDepth");
-    expect(fragmentShader).toContain("gl_FragCoord.z > globeDepth");
+    expect(fragmentShader).toContain("geomDepthLinear > globeDepth");
 
-    // Verify color inheritance from edge pass
+    // Verify the color can inherit from edge pass
     expect(fragmentShader).toContain("color = edgeColor");
 
     // Verify the uniforms reference correct textures

@@ -6,7 +6,7 @@ void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
     vec2 screenCoord = gl_FragCoord.xy / czm_viewport.zw;
 
     vec4 edgeColor = texture(czm_edgeColorTexture, screenCoord);
-    vec4 edgeId    = texture(czm_edgeIdTexture,    screenCoord);
+    vec4 edgeId = texture(czm_edgeIdTexture, screenCoord);
 
     // Packed window-space depth from edge pass (0..1)
     float edgeDepthWin = czm_unpackDepth(texture(czm_edgeDepthTexture, screenCoord));
@@ -36,7 +36,7 @@ void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
         float edgeFeatureId    = edgeId.g;
         float currentFeatureId = float(featureIds.featureId_0);
 #endif
-        float globeDepth       = czm_unpackDepth(texture(czm_globeDepthTexture, screenCoord));
+        float globeDepth = czm_unpackDepth(texture(czm_globeDepthTexture, screenCoord));
         // Background / sky / globe: always show edge
         bool isBackground = geomDepthLinear > globeDepth;
         bool drawEdge = isBackground;
