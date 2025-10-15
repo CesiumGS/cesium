@@ -216,10 +216,82 @@ function Cesium3DTileset(options) {
   this._modelUpAxis = undefined;
   this._modelForwardAxis = undefined;
   this._cache = new Cesium3DTilesetCache();
-  this._processingQueue = [];
-  this._selectedTiles = [];
+
   this._emptyTiles = [];
+
+  /**
+   * The tiles that are 'selected' by the traversal.
+   *
+   * During the 'Cesium3DTileset.update' call, the tile traversal is
+   * executed. This includes the execution of the 'selectTiles'
+   * function of the traversal (which exists in different forms,
+   * depending on the traversal - but it's not really an interface,
+   * just different functions).
+   *
+   * The 'selectTiles' function will first clear this list of
+   * selected tiles, and then fill it with the tiles that are
+   * 'selected'.
+   *
+   * (This usually/roughly  means that they are in the view frustum
+   * and have the right level of detail, but the details may vary)
+   *
+   * Some of these tiles may also be moved into the '_requestedTiles'
+   * as part of the traversal.
+   */
+  this._selectedTiles = [];
+
+  /**
+   * Tiles that are 'requested' according to the traversal.
+   *
+   * This is usually a subset of the '_selectedTiles': The list
+   * of requested tiles is cleared at the beginning of the traversal,
+   * and then some tiles that are 'selected' will also be added to
+   * these 'requested' tiles.
+   *
+   * There is no clear definition of what a 'requested' tile is.
+   * It roughly means that ~"their content has to be loaded".
+   * The tiles are added to this list, usually in a function
+   * called 'loadTile', which is literally saying that the tile
+   * is added to this list "if appropriate".
+   *
+   * The important point is that AFTER the traversal, the
+   * contents of these tiles will be loaded, meaning that
+   * 'Cesium3DTile.requestContent' will be called for them,
+   * and they will be added to the '_requestedTilesInFlight'.
+   *
+   * (Once the content is loaded, the tiles will be added to
+   * the '_processingQueue');
+   */
   this._requestedTiles = [];
+
+  /**
+   * The tiles for which a content request is currently "in flight".
+   *
+   * This list is filled with tiles from the '_requestedTiles'
+   * in each frame. Tiles are removed from this list after each
+   * frame (when 'cancelOutOfViewRequests' is called), if their
+   * '_contentState' is no longer 'LOADING'.
+   *
+   * So a tile being in this list roughly means that its content
+   * is currently being loaded.
+   */
+  this._requestedTilesInFlight = [];
+
+  /**
+   * The tiles that are currently being processed.
+   *
+   * These are the tiles that have been 'selected' and 'requested'
+   * and whose content was eventually obtained. Before the next
+   * rendering pass, these tiles will be "processed", meaning that
+   * their 'Cesium3DTile.process' method will be called.
+   *
+   * This mainly means that the 'Cesium3DTileContent.update' function
+   * of their content is called, loading data and creating WebGL
+   * resources and doing other random stuff, which eventually leads
+   * to the tile moving from the 'PROCESSING' state into the 'READY' state.
+   */
+  this._processingQueue = [];
+
   this._selectedTilesToStyle = [];
   this._loadTimestamp = undefined;
   this._timeSinceLoad = 0.0;
@@ -275,8 +347,6 @@ function Cesium3DTileset(options) {
   for (let i = 0; i < Cesium3DTilePass.NUMBER_OF_PASSES; ++i) {
     this._statisticsPerPass[i] = new Cesium3DTilesetStatistics();
   }
-
-  this._requestedTilesInFlight = [];
 
   this._maximumPriority = {
     foveatedFactor: -Number.MAX_VALUE,
@@ -2360,6 +2430,13 @@ Cesium3DTileset.prototype.loadTileset = function (
   }
 
   return rootTile;
+};
+
+// XXX_DYNAMIC EXPERIMENT!!!
+Cesium3DTileset.prototype.setDynamicContentPropertyProvider = function (
+  dynamicContentPropertyProvider,
+) {
+  this.dynamicContentPropertyProvider = dynamicContentPropertyProvider;
 };
 
 /**
