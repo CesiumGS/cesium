@@ -52,9 +52,8 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
   return this._passState;
 };
 
-const colorScratchForPickFramebuffer = new Color();
-
-function colorScratchForObject(context, pixels, width, height) {
+// TODO: comment
+function colorScratchForObject(context, pixels, width, height, limit = 1) {
   const max = Math.max(width, height);
   const length = max * max;
   const halfWidth = Math.floor(width * 0.5);
@@ -70,6 +69,7 @@ function colorScratchForObject(context, pixels, width, height) {
 
   // The region does not have to square and the dimensions do not have to be odd, but
   // loop iterations would be wasted. Prefer square regions where the size is odd.
+  const objects = new Set();
   for (let i = 0; i < length; ++i) {
     if (
       -halfWidth <= x &&
@@ -79,22 +79,19 @@ function colorScratchForObject(context, pixels, width, height) {
     ) {
       const index = 4 * ((halfHeight - y) * width + x + halfWidth);
 
-      colorScratchForPickFramebuffer.red = Color.byteToFloat(pixels[index]);
-      colorScratchForPickFramebuffer.green = Color.byteToFloat(
+      const pickColor = Color.bytesToRgba(
+        pixels[index],
         pixels[index + 1],
-      );
-      colorScratchForPickFramebuffer.blue = Color.byteToFloat(
         pixels[index + 2],
-      );
-      colorScratchForPickFramebuffer.alpha = Color.byteToFloat(
         pixels[index + 3],
       );
 
-      const object = context.getObjectByPickColor(
-        colorScratchForPickFramebuffer,
-      );
+      const object = context.getObjectByPickColor(pickColor);
       if (defined(object)) {
-        return object;
+        objects.add(object);
+        if (objects.size >= limit) {
+          break;
+        }
       }
     }
 
@@ -109,14 +106,14 @@ function colorScratchForObject(context, pixels, width, height) {
     x += dx;
     y += dy;
   }
-
-  return undefined;
+  return [...objects];
 }
 
 let i = 0;
 PickFramebuffer.prototype.endAsync = async function (
   screenSpaceRectangle,
   frameState,
+  limit = 1,
 ) {
   const width = screenSpaceRectangle.width ?? 1.0;
   const height = screenSpaceRectangle.height ?? 1.0;
@@ -174,15 +171,16 @@ PickFramebuffer.prototype.endAsync = async function (
         );
         pbo.getBufferData(pixels);
         pbo.destroy();
-        const obj = colorScratchForObject(
+        const pickedObjects = colorScratchForObject(
           context,
           pixels,
           pickState.width,
           pickState.height,
+          limit,
         );
         //console.log("[async] Return", `#${pickState.id}`, frameDelta, signaled, obj);
         if (signaled) {
-          resolve(obj);
+          resolve(pickedObjects);
         } else {
           reject("Picking Request Timeout");
         }
@@ -213,16 +211,19 @@ function createAsyncPick(pickState, onSignalCallback) {
 }
 
 /**
- * Return the picked object rendered within a given rectangle.
+ * Return the picked objects rendered within a given rectangle.
  *
  * @param {BoundingRectangle} screenSpaceRectangle
- * @returns {object|undefined} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
+ * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
+ * @returns {object[]} A list of rendered objects, ordered by distance to the middle of the rectangle.
  */
-PickFramebuffer.prototype.end = function (screenSpaceRectangle, frameState) {
+PickFramebuffer.prototype.end = function (
+  screenSpaceRectangle,
+  _frameState,
+  limit = 1,
+) {
   const width = screenSpaceRectangle.width ?? 1.0;
   const height = screenSpaceRectangle.height ?? 1.0;
-
-  //console.log("[sync] Pick# ", i, frameState.frameNumber);
 
   const context = this._context;
   const pixels = context.readPixels({
@@ -233,7 +234,7 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle, frameState) {
     framebuffer: this._fb.framebuffer,
   });
 
-  return colorScratchForObject(context, pixels, width, height);
+  return colorScratchForObject(context, pixels, width, height, limit);
 };
 
 /**
