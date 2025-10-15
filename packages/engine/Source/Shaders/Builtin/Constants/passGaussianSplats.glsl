@@ -6,4 +6,4 @@
  *
  * @see czm_pass
  */
-const float czm_passGaussianSplats = 10.0;
+const float czm_passGaussianSplats = 11.0;

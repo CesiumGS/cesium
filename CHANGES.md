@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.135 - 2025-11-03
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added support for the [EXT_mesh_primitive_edge_visibility](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension. [#12765](https://github.com/CesiumGS/cesium/issues/12765)
+
 ## 1.135 - 2025-11-01
 
 ### @cesium/engine
