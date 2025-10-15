@@ -37,7 +37,7 @@
           terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
-        const async = true;
+        let async = false;
         viewer.scene.globe.depthTestAgainstTerrain = true;
 
         // Set the initial camera view to look at Manhattan
@@ -133,6 +133,10 @@
             `</tbody></table>`;
           return description;
         }
+
+        Sandcastle.addToggleButton("Async Picking", async, function (checked) {
+          async = checked;
+        });
 
         // If silhouettes are supported, silhouette features in blue on mouse over and silhouette green on mouse click.
         // If silhouettes are not supported, change the feature color to yellow on mouse over and green on mouse click.
