@@ -4408,7 +4408,14 @@ Scene.prototype.pick = function (windowPosition, width, height) {
 };
 
 Scene.prototype.pickAsync = async function (windowPosition, width, height) {
-  return this._picking.pick(this, windowPosition, width, height, true); // TODO: merge apis?
+  return new Promise((resolve, reject) => {
+    this._picking
+      .pick(this, windowPosition, width, height, 1, true)
+      .then((result) => {
+        resolve(result[0]);
+      })
+      .catch(reject);
+  });
 };
 
 /**
