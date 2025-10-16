@@ -17,6 +17,7 @@
 - Improved performance of `scene.drillPick`. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
 - Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
 - Improved performance of terrain Quadtree handling of custom data [#12907](https://github.com/CesiumGS/cesium/pull/12907)
+- Improved rendering performance when a 3D tileset is loaded [#12974](https://github.com/CesiumGS/cesium/pull/12974)
 
 ## 1.134.1 - 2025-10-10
 

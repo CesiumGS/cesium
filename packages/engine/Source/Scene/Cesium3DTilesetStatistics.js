@@ -4,7 +4,7 @@ import Model3DTileContent from "./Model/Model3DTileContent.js";
 /**
  * @private
  */
-function Cesium3DTilesetStatistics() {
+function Cesium3DTilesetStatisticsSnapshot() {
   // Rendering statistics
   this.selected = 0;
   this.visited = 0;
@@ -30,8 +30,15 @@ function Cesium3DTilesetStatistics() {
   // Memory statistics
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
-  this.texturesReferenceCounterById = {};
   this.batchTableByteLength = 0; // batch textures and any binary metadata properties not otherwise accounted for
+}
+
+/**
+ * @private
+ */
+function Cesium3DTilesetStatistics() {
+  Cesium3DTilesetStatisticsSnapshot.call(this);
+  this.texturesReferenceCounterById = new Map();
 }
 
 Cesium3DTilesetStatistics.prototype.clear = function () {
@@ -100,12 +107,12 @@ Cesium3DTilesetStatistics.prototype.incrementLoadCounts = function (content) {
     const textureIds = content.getTextureIds();
     for (const textureId of textureIds) {
       const referenceCounter =
-        this.texturesReferenceCounterById[textureId] ?? 0;
+        this.texturesReferenceCounterById.get(textureId) ?? 0;
       if (referenceCounter === 0) {
         const textureByteLength = content.getTextureByteLengthById(textureId);
         this.texturesByteLength += textureByteLength;
       }
-      this.texturesReferenceCounterById[textureId] = referenceCounter + 1;
+      this.texturesReferenceCounterById.set(textureId, referenceCounter + 1);
     }
   }
 
@@ -146,13 +153,13 @@ Cesium3DTilesetStatistics.prototype.decrementLoadCounts = function (content) {
     // total textures byte length
     const textureIds = content.getTextureIds();
     for (const textureId of textureIds) {
-      const referenceCounter = this.texturesReferenceCounterById[textureId];
+      const referenceCounter = this.texturesReferenceCounterById.get(textureId);
       if (referenceCounter === 1) {
-        delete this.texturesReferenceCounterById[textureId];
+        this.texturesReferenceCounterById.delete(textureId);
         const textureByteLength = content.getTextureByteLengthById(textureId);
         this.texturesByteLength -= textureByteLength;
       } else {
-        this.texturesReferenceCounterById[textureId] = referenceCounter - 1;
+        this.texturesReferenceCounterById.set(textureId, referenceCounter - 1);
       }
     }
   }
@@ -166,7 +173,15 @@ Cesium3DTilesetStatistics.prototype.decrementLoadCounts = function (content) {
   }
 };
 
-Cesium3DTilesetStatistics.clone = function (statistics, result) {
+/**
+ * @param {Cesium3DTilesetStatistics} statistics
+ * @param {Cesium3DTilesetStatisticsSnapshot} result
+ * @returns {Cesium3DTilesetStatisticsSnapshot}
+ */
+Cesium3DTilesetStatistics.snapshot = function (
+  statistics,
+  result = new Cesium3DTilesetStatisticsSnapshot(),
+) {
   result.selected = statistics.selected;
   result.visited = statistics.visited;
   result.numberOfCommands = statistics.numberOfCommands;
@@ -187,9 +202,18 @@ Cesium3DTilesetStatistics.clone = function (statistics, result) {
     statistics.numberOfTilesCulledWithChildrenUnion;
   result.geometryByteLength = statistics.geometryByteLength;
   result.texturesByteLength = statistics.texturesByteLength;
-  result.texturesReferenceCounterById = {
-    ...statistics.texturesReferenceCounterById,
-  };
   result.batchTableByteLength = statistics.batchTableByteLength;
+
+  return result;
+};
+
+Cesium3DTilesetStatistics.clone = function (
+  statistics,
+  result = new Cesium3DTilesetStatistics(),
+) {
+  Cesium3DTilesetStatistics.snapshot(statistics, result);
+  result.texturesReferenceCounterById = new Map(
+    statistics.texturesReferenceCounterById,
+  );
 };
 export default Cesium3DTilesetStatistics;
