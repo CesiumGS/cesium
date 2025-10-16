@@ -25,15 +25,15 @@ const SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
  * @constructor
  *
  * @param {Cartesian3} center The center point of the vertices.
- * @param {AxisAlignedBoundingBox|undefined} [axisAlignedBoundingBox] The bounds of the tile in the east-north-up coordinates at the tiles center.
- * @param {number|undefined} [minimumHeight] The minimum height.
- * @param {number|undefined} [maximumHeight] The maximum height.
- * @param {Matrix4|undefined} [fromENU] The east-north-up to fixed frame matrix at the center of the terrain mesh.
- * @param {boolean} hasVertexNormals If the mesh has vertex normals.
- * @param {boolean|undefined} [hasWebMercatorT=false] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
- * @param {boolean|undefined} [hasGeodeticSurfaceNormals=false] true if the terrain data includes geodetic surface normals; otherwise, false.
- * @param {number|undefined} [exaggeration=1.0] A scalar used to exaggerate terrain.
- * @param {number|undefined} [exaggerationRelativeHeight=0.0] The relative height from which terrain is exaggerated.
+ * @param {AxisAlignedBoundingBox} [axisAlignedBoundingBox] The bounds of the tile in the east-north-up coordinates at the tiles center.
+ * @param {number} [minimumHeight] The minimum height.
+ * @param {number} [maximumHeight] The maximum height.
+ * @param {Matrix4} [fromENU] The east-north-up to fixed frame matrix at the center of the terrain mesh.
+ * @param {boolean} [hasVertexNormals=false] If the mesh has vertex normals.
+ * @param {boolean} [hasWebMercatorT=false] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
+ * @param {boolean} [hasGeodeticSurfaceNormals=false] true if the terrain data includes geodetic surface normals; otherwise, false.
+ * @param {number} [exaggeration=1.0] A scalar used to exaggerate terrain.
+ * @param {number} [exaggerationRelativeHeight=0.0] The relative height from which terrain is exaggerated.
  *
  * @private
  */
@@ -116,13 +116,13 @@ function TerrainEncoding(
 
   /**
    * The minimum height of the tile including the skirts.
-   * @type {number}
+   * @type {number|undefined}
    */
   this.minimumHeight = minimumHeight;
 
   /**
    * The maximum height of the tile.
-   * @type {number}
+   * @type {number|undefined}
    */
   this.maximumHeight = maximumHeight;
 
@@ -135,19 +135,19 @@ function TerrainEncoding(
   /**
    * A matrix that takes a vertex from the tile, transforms it to east-north-up at the center and scales
    * it so each component is in the [0, 1] range.
-   * @type {Matrix4}
+   * @type {Matrix4|undefined}
    */
   this.toScaledENU = toENU;
 
   /**
    * A matrix that restores a vertex transformed with toScaledENU back to the earth fixed reference frame
-   * @type {Matrix4}
+   * @type {Matrix4|undefined}
    */
   this.fromScaledENU = fromENU;
 
   /**
    * The matrix used to decompress the terrain vertices in the shader for RTE rendering.
-   * @type {Matrix4}
+   * @type {Matrix4|undefined}
    */
   this.matrix = matrix;
 
@@ -155,7 +155,7 @@ function TerrainEncoding(
    * The terrain mesh contains normals.
    * @type {boolean}
    */
-  this.hasVertexNormals = hasVertexNormals;
+  this.hasVertexNormals = hasVertexNormals ?? false;
 
   /**
    * The terrain mesh contains a vertical texture coordinate following the Web Mercator projection.
@@ -203,9 +203,9 @@ function TerrainEncoding(
  * @param {Cartesian3} position The position of the vertex.
  * @param {Cartesian2} uv The texture coordinates of the vertex.
  * @param {number} height The height of the vertex.
- * @param {Cartesian2|undefined} [normalToPack] The normal vector of the vertex.
- * @param {number|undefined} [webMercatorT] The Web Mercator texture coordinate of the vertex.
- * @param {Cartesian3|undefined} [geodeticSurfaceNormal] The geodetic surface normal of the vertex.
+ * @param {Cartesian2} [normalToPack] The normal vector of the vertex.
+ * @param {number} [webMercatorT] The Web Mercator texture coordinate of the vertex.
+ * @param {Cartesian3} [geodeticSurfaceNormal] The geodetic surface normal of the vertex.
  */
 TerrainEncoding.prototype.encode = function (
   vertexBuffer,
@@ -381,7 +381,7 @@ TerrainEncoding.prototype.removeGeodeticSurfaceNormals = function (
  *
  * @param {Float32Array} buffer The buffer to decode from.
  * @param {number} index The index of the vertex to decode.
- * @param {Cartesian3|undefined} [result] The object to store the result in.
+ * @param {Cartesian3} [result] The object to store the result in.
  * @returns {Cartesian3} The decoded position.
  */
 TerrainEncoding.prototype.decodePosition = function (buffer, index, result) {
@@ -424,7 +424,7 @@ TerrainEncoding.prototype.decodePosition = function (buffer, index, result) {
  *
  * @param {Float32Array} buffer
  * @param {number} index
- * @param {Cartesian3|undefined} [result]
+ * @param {Cartesian3} [result]
  * @returns {Cartesian3} The exaggerated position.
  */
 TerrainEncoding.prototype.getExaggeratedPosition = function (
@@ -465,7 +465,7 @@ TerrainEncoding.prototype.getExaggeratedPosition = function (
  *
  * @param {Float32Array} buffer The buffer to decode from.
  * @param {number} index The index of the vertex to decode.
- * @param {Cartesian2|undefined} [result] The object to store the result in.
+ * @param {Cartesian2} [result] The object to store the result in.
  * @returns {Cartesian2} The decoded texture coordinates.
  */
 TerrainEncoding.prototype.decodeTextureCoordinates = function (
@@ -552,7 +552,7 @@ TerrainEncoding.prototype.decodeWebMercatorT = function (buffer, index) {
  *
  * @param {Float32Array} buffer The buffer to decode from.
  * @param {number} index The index of the vertex to decode.
- * @param {Cartesian2|undefined} [result] The object to store the result in.
+ * @param {Cartesian2} [result] The object to store the result in.
  * @returns {Cartesian2} The decoded oct-encoded normal.
  */
 TerrainEncoding.prototype.getOctEncodedNormal = function (
@@ -596,7 +596,7 @@ TerrainEncoding.prototype.decodeNormal = function (buffer, index, result) {
  *
  * @param {Float32Array} buffer The buffer to decode from.
  * @param {number} index The index of the vertex to decode.
- * @param {Cartesian3|undefined} [result] The object to store the result in.
+ * @param {Cartesian3} result The object to store the result in.
  * @returns {Cartesian3} The decoded geodetic surface normal.
  */
 TerrainEncoding.prototype.decodeGeodeticSurfaceNormal = function (
@@ -740,15 +740,11 @@ TerrainEncoding.prototype.getAttributeLocations = function () {
 /**
  * Clones a TerrainEncoding object.
  *
- * @param {TerrainEncoding|undefined} [encoding] The encoding to clone.
- * @param {TerrainEncoding|undefined} [result] The object to store the cloned encoding.
+ * @param {TerrainEncoding} [encoding] The encoding to clone.
+ * @param {TerrainEncoding} [result] The object to store the cloned encoding.
  * @returns {TerrainEncoding|undefined} The cloned encoding.
  */
 TerrainEncoding.clone = function (encoding, result) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("encoding", encoding);
-  //>>includeEnd('debug');
-
   if (!defined(encoding)) {
     return undefined;
   }
