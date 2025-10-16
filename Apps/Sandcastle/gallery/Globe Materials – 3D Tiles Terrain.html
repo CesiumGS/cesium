@@ -31,11 +31,8 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        Cesium.Ion.defaultAccessToken =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkNjM1MGY2MS1kM2FiLTRiMTYtOWJiZS04MTQ0MTE0Y2FmNGUiLCJpZCI6NDQsImlhdCI6MTY3NzY1NjMzOH0.JJo27pEISY-weTVJNaOJNnM9WIdZckds9dpVtVzGNXE";
-
         const terrainProvider = await Cesium.Cesium3DTilesTerrainProvider.fromIonAssetId(
-          2735384,
+          3923568,
           {
             requestVertexNormals: true, // Needed for hillshade lighting
             requestWaterMask: true, // Needed to distinguish land from water
