@@ -138,6 +138,30 @@
           async = checked;
         });
 
+        let picking = false;
+        let debounceTime = 0;
+        const DEBOUNCE_TIMEOUT_MS = 34; // One pick per frame (30FPS)
+
+        async function doPick(scene, position, debounce, async, result) {
+          const now = performance.now();
+          if (debounce && picking && now - debounceTime < DEBOUNCE_TIMEOUT_MS) {
+            return true;
+          }
+          if (debounce) {
+            picking = true;
+            debounceTime = now;
+          }
+          if (async) {
+            result[0] = await scene.pickAsync(position);
+          } else {
+            result[0] = scene.pick(position);
+          }
+          if (debounce) {
+            picking = false;
+          }
+          return false;
+        }
+
         // If silhouettes are supported, silhouette features in blue on mouse over and silhouette green on mouse click.
         // If silhouettes are not supported, change the feature color to yellow on mouse over and green on mouse click.
         if (Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)) {
@@ -166,12 +190,18 @@
             movement,
           ) {
             // Pick a new feature
-            let pickedFeature;
-            if (async) {
-              pickedFeature = await viewer.scene.pickAsync(movement.endPosition);
-            } else {
-              pickedFeature = viewer.scene.pick(movement.endPosition);
+            let pickedFeature = [];
+            const debounced = await doPick(
+              viewer.scene,
+              movement.endPosition,
+              true,
+              async,
+              pickedFeature,
+            );
+            if (debounced) {
+              return;
             }
+            pickedFeature = pickedFeature[0];
 
             // If a feature was previously highlighted, undo the highlight
             silhouetteBlue.selected = [];
@@ -193,12 +223,18 @@
             movement,
           ) {
             // Pick a new feature
-            let pickedFeature;
-            if (async) {
-              pickedFeature = await viewer.scene.pickAsync(movement.position);
-            } else {
-              pickedFeature = viewer.scene.pick(movement.position);
+            let pickedFeature = [];
+            const debounced = await doPick(
+              viewer.scene,
+              movement.position,
+              false,
+              async,
+              pickedFeature,
+            );
+            if (debounced) {
+              return;
             }
+            pickedFeature = pickedFeature[0];
 
             // If a feature was previously selected, undo the highlight
             silhouetteGreen.selected = [];
@@ -240,12 +276,18 @@
             movement,
           ) {
             // Pick a new feature
-            let pickedFeature;
-            if (async) {
-              pickedFeature = await viewer.scene.pickAsync(movement.endPosition);
-            } else {
-              pickedFeature = viewer.scene.pick(movement.endPosition);
+            let pickedFeature = [];
+            const debounced = await doPick(
+              viewer.scene,
+              movement.endPosition,
+              true,
+              async,
+              pickedFeature,
+            );
+            if (debounced) {
+              return;
             }
+            pickedFeature = pickedFeature[0];
 
             // If a feature was previously highlighted, undo the highlight
             if (Cesium.defined(highlighted.feature)) {
@@ -272,12 +314,18 @@
             movement,
           ) {
             // Pick a new feature
-            let pickedFeature;
-            if (async) {
-              pickedFeature = await viewer.scene.pickAsync(movement.position);
-            } else {
-              pickedFeature = viewer.scene.pick(movement.position);
+            let pickedFeature = [];
+            const debounced = await doPick(
+              viewer.scene,
+              movement.position,
+              false,
+              async,
+              pickedFeature,
+            );
+            if (debounced) {
+              return;
             }
+            pickedFeature = pickedFeature[0];
 
             // If a feature was previously selected, undo the highlight
             if (Cesium.defined(selected.feature)) {
