@@ -6,7 +6,7 @@ import classNames from "classnames";
 import "./Gallery.css";
 
 /**
- * @typedef {Object} GalleryProps
+ * @typedef {object} GalleryProps
  * @prop {boolean} [hidden] Whether the gallery is hidden.
  * @prop {function} [onRunCode] A callback that gets called when a gallery item is opened.
  * @prop {function} [onOpenCode] A callback that gets called when the code editor is opened.

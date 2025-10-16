@@ -380,7 +380,7 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
 
 /**
  * Determines if a given child tile is available, based on the
- * {@link HeightmapTerrainData.childTileMask}.  The given child tile coordinates are assumed
+ * {@link GoogleEarthEnterpriseTerrainData.childTileMask}.  The given child tile coordinates are assumed
  * to be one of the four children of this tile.  If non-child tile coordinates are
  * given, the availability of the southeast child tile is returned.
  *
