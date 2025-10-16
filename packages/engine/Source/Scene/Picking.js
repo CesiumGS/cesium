@@ -346,11 +346,7 @@ Picking.prototype.pick = function (
       limit,
     ); // Promise<Object[]>
   } else {
-    pickedObjects = pickFramebuffer.end(
-      drawingBufferRectangle,
-      frameState,
-      limit,
-    ); // Object[]
+    pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit); // Object[]
   }
   context.endFrame();
   return pickedObjects;
@@ -1076,11 +1072,7 @@ function getRayIntersection(
 
   let position;
   // Picking one object, result is either [object] or []
-  const object = view.pickFramebuffer.end(
-    drawingBufferRectangle,
-    frameState,
-    1,
-  )[0];
+  const object = view.pickFramebuffer.end(drawingBufferRectangle, 1)[0];
 
   if (scene.context.depthTexture) {
     const { frustumCommandsList } = view;

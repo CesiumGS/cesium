@@ -31,28 +31,17 @@ function PickFramebuffer(context) {
   this._height = 0;
 }
 
-PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
-  const context = this._context;
-  const { width, height } = viewport;
-
-  BoundingRectangle.clone(
-    screenSpaceRectangle,
-    this._passState.scissorTest.rectangle,
-  );
-
-  // Create or recreate renderbuffers and framebuffer used for picking
-  this._width = width;
-  this._height = height;
-  this._fb.update(context, width, height);
-  this._passState.framebuffer = this._fb.framebuffer;
-
-  this._passState.viewport.width = width;
-  this._passState.viewport.height = height;
-
-  return this._passState;
-};
-
-// TODO: comment
+/**
+ * Return the picked objects rendered within a given rectangle.
+ *
+ * @private
+ * @param {object} context The active context.
+ * @param {Uint8Array|Uint16Array|Float32Array|Uint32Array} pixels The pixels in the specified scratch rectangle.
+ * @param {number} width The scratch rectangle width.
+ * @param {number} height The scratch rectangle height.
+ * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
+ * @returns {object[]} A list of rendered objects, ordered by distance to the middle of the rectangle.
+ */
 function colorScratchForObject(context, pixels, width, height, limit = 1) {
   const max = Math.max(width, height);
   const length = max * max;
@@ -109,7 +98,63 @@ function colorScratchForObject(context, pixels, width, height, limit = 1) {
   return [...objects];
 }
 
-let i = 0;
+/**
+ * Creates a callback function that will once per frame poll the Sync state until signaled.
+ *
+ * @private
+ * @param {object} pickState An object with the following properties:
+ * @param {number} [readState.frameState] The active framestate.
+ * @param {number} [readState.frameNumber] The current frame number.
+ * @param {number} [readState.sync] The Sync object to poll.
+ * @param {number} [readState.ttl=10] Max number of frames to poll until reject.
+ * @param {function} onSignalCallback Callback to execute on Sync Signal.
+ */
+function createAsyncPick(pickState, onSignalCallback) {
+  return () => {
+    const sync = pickState.sync;
+    const frameState = pickState.frameState;
+    const ttl = pickState.ttl ?? 10;
+    const syncStatus = sync.getStatus();
+    const signaled = syncStatus === WebGLConstants.SIGNALED;
+    const frameDelta = frameState.frameNumber - pickState.frameNumber; // how many frames passed since inital request
+    if (signaled || frameDelta > ttl) {
+      sync.destroy();
+      onSignalCallback(signaled);
+    } else {
+      frameState.afterRender.push(createAsyncPick(pickState, onSignalCallback));
+    }
+  };
+}
+
+PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
+  const context = this._context;
+  const { width, height } = viewport;
+
+  BoundingRectangle.clone(
+    screenSpaceRectangle,
+    this._passState.scissorTest.rectangle,
+  );
+
+  // Create or recreate renderbuffers and framebuffer used for picking
+  this._width = width;
+  this._height = height;
+  this._fb.update(context, width, height);
+  this._passState.framebuffer = this._fb.framebuffer;
+
+  this._passState.viewport.width = width;
+  this._passState.viewport.height = height;
+
+  return this._passState;
+};
+
+/**
+ * Return the picked objects rendered within a given rectangle using asynchronously without staling the GPU.
+ *
+ * @param {BoundingRectangle} screenSpaceRectangle
+ * @param {FrameState} frameState
+ * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
+ * @returns {object[]} A list of rendered objects, ordered by distance to the middle of the rectangle.
+ */
 PickFramebuffer.prototype.endAsync = async function (
   screenSpaceRectangle,
   frameState,
@@ -142,43 +187,30 @@ PickFramebuffer.prototype.endAsync = async function (
     context: context,
   });
 
-  i++;
-
   const pickState = {
-    id: i, // TODO: remove
-    context: context,
     frameState: frameState,
     frameNumber: frameState.frameNumber,
     sync: sync,
-    pbo: pbo,
-    pixelFormat: pixelFormat,
-    pixelDatatype: pixelDatatype,
-    width: width,
-    height: width,
   };
 
   return new Promise((resolve, reject) => {
-    //console.log("[async] Pick", `#${pickState.id}`, pickState.frameNumber, screenSpaceRectangle.x, screenSpaceRectangle.y);
     frameState.afterRender.push(
-      createAsyncPick(pickState, (context, signaled) => {
-        const pbo = pickState.pbo;
-        //const frameDelta = frameState.frameNumber - pickState.frameNumber; // how many frames passed since inital request
+      createAsyncPick(pickState, (signaled) => {
         const pixels = PixelFormat.createTypedArray(
-          pickState.pixelFormat,
-          pickState.pixelDatatype,
-          pickState.width,
-          pickState.height,
+          pixelFormat,
+          pixelDatatype,
+          width,
+          height,
         );
         pbo.getBufferData(pixels);
         pbo.destroy();
         const pickedObjects = colorScratchForObject(
           context,
           pixels,
-          pickState.width,
-          pickState.height,
+          width,
+          height,
           limit,
         );
-        //console.log("[async] Return", `#${pickState.id}`, frameDelta, signaled, obj);
         if (signaled) {
           resolve(pickedObjects);
         } else {
@@ -189,27 +221,6 @@ PickFramebuffer.prototype.endAsync = async function (
   });
 };
 
-// TODO: comment
-function createAsyncPick(pickState, onSignalCallback) {
-  return () => {
-    const context = pickState.context;
-    const sync = pickState.sync;
-    const frameState = pickState.frameState;
-    const ttl = pickState.ttl ?? 10;
-    const syncStatus = sync.getStatus();
-    const signaled = syncStatus === WebGLConstants.SIGNALED;
-    const frameDelta = frameState.frameNumber - pickState.frameNumber; // how many frames passed since inital request
-    if (signaled || frameDelta > ttl) {
-      //console.log("signal", `#${pickState.id}`, pickState.frameNumber, frameState.frameNumber, frameDelta);
-      sync.destroy();
-      onSignalCallback(context, signaled);
-    } else {
-      //console.log("no-signal", `#${pickState.id}`, pickState.frameNumber, frameState.frameNumber, frameDelta);
-      frameState.afterRender.push(createAsyncPick(pickState, onSignalCallback));
-    }
-  };
-}
-
 /**
  * Return the picked objects rendered within a given rectangle.
  *
@@ -217,11 +228,7 @@ function createAsyncPick(pickState, onSignalCallback) {
  * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
  * @returns {object[]} A list of rendered objects, ordered by distance to the middle of the rectangle.
  */
-PickFramebuffer.prototype.end = function (
-  screenSpaceRectangle,
-  _frameState,
-  limit = 1,
-) {
+PickFramebuffer.prototype.end = function (screenSpaceRectangle, limit = 1) {
   const width = screenSpaceRectangle.width ?? 1.0;
   const height = screenSpaceRectangle.height ?? 1.0;
 
