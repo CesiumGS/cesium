@@ -3287,7 +3287,7 @@ function raiseLoadProgressEvent(tileset, frameState) {
   const lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
   const lastNumberOfTilesProcessing = statisticsLast.numberOfTilesProcessing;
 
-  Cesium3DTilesetStatistics.snapshot(statistics, this._statisticsLast);
+  Cesium3DTilesetStatistics.snapshot(statistics, statisticsLast);
 
   const progressChanged =
     numberOfPendingRequests !== lastNumberOfPendingRequest ||
