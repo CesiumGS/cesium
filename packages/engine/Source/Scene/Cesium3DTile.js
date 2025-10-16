@@ -1189,77 +1189,11 @@ Cesium3DTile.prototype.requestContent = function () {
   if (this.hasEmptyContent) {
     return;
   }
-
-  // XXX_DYNAMIC : Dynamic content handling will be added here
-
   if (this.hasMultipleContents) {
     return requestMultipleContents(this);
   }
-
-  // XXX_DYNAMIC
-  const contentHeader = this._contentHeader;
-  const hasDynamicContent = hasExtension(contentHeader, "3DTILES_dynamic");
-  //console.log("hasDynamicContent", hasDynamicContent);
-  if (hasDynamicContent) {
-    return requestDynamicContent(this);
-  }
-
   return requestSingleContent(this);
 };
-
-/*
-async function processContentReadyPromise(tile, contentReadyPromise) {
-  tile._contentState = Cesium3DTileContentState.LOADING;
-  try {
-    const contentReady = await contentReadyPromise;
-    if (tile.isDestroyed()) {
-      // Tile is unloaded before the content can process
-      return;
-    }
-    // Tile was canceled, try again later
-    if (contentReady !== true) {
-      return;
-    }
-    tile._contentState = Cesium3DTileContentState.PROCESSING;
-  } catch (error) {
-    if (tile.isDestroyed()) {
-      // Tile is unloaded before the content can process
-      return;
-    }
-    tile._contentState = Cesium3DTileContentState.FAILED;
-    throw error;
-  }
-}
-  */
-
-/**
-  // XXX_DYNAMIC
-
- * @private
- * @param {Cesium3DTile} tile
- * @returns {Promise<Cesium3DTileContent>} A promise that resolves to the tile content
- */
-async function requestDynamicContent(tile) {
-  console.log("XXX_DYNAMIC Requesting dynamic content");
-
-  let dynamicContent = tile._content;
-  const tileset = tile._tileset;
-
-  if (!defined(dynamicContent)) {
-    // Create the content object immediately, it will handle scheduling
-    // requests for inner contents.
-    const extensionObject = tile._contentHeader.extensions["3DTILES_dynamic"];
-    dynamicContent = new Dynamic3DTileContent(
-      tileset,
-      tile,
-      tile._contentResource.clone(),
-      extensionObject,
-    );
-    tile._content = dynamicContent;
-  }
-  tile._contentState = Cesium3DTileContentState.READY;
-  return Promise.resolve(dynamicContent);
-}
 
 /**
  * Multiple {@link Cesium3DTileContent}s are allowed within a single tile either through

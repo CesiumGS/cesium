@@ -2331,6 +2331,16 @@ Cesium3DTileset.fromUrl = async function (url, options) {
     tileset._initialClippingPlanesOriginMatrix,
   );
 
+  // Extract the information about the "dimensions" of the dynamic contents,
+  // if present
+  const hasDynamicContents = hasExtension(tilesetJson, "3DTILES_dynamic");
+  if (hasDynamicContents) {
+    const dynamicContentsExtension = tilesetJson.extensions["3DTILES_dynamic"];
+    tileset._dynamicContentsDimensions = dynamicContentsExtension.dimensions;
+  } else {
+    tileset._dynamicContentsDimensions = undefined;
+  }
+
   return tileset;
 };
 
@@ -2432,10 +2442,27 @@ Cesium3DTileset.prototype.loadTileset = function (
   return rootTile;
 };
 
-// XXX_DYNAMIC EXPERIMENT!!!
+/**
+ * Set the function that determines which dynamic content is currently active.
+ *
+ * This is a function that returns a JSON plain object. This object corresponds
+ * to one 'key' of a dynamic content definition. It will caused the content
+ * with this key to be the currently active content.
+ *
+ * @param {Function|undefined} dynamicContentPropertyProvider The function
+ */
 Cesium3DTileset.prototype.setDynamicContentPropertyProvider = function (
   dynamicContentPropertyProvider,
 ) {
+  if (
+    defined(dynamicContentPropertyProvider) &&
+    !defined(this._dynamicContentsDimensions)
+  ) {
+    console.log(
+      "This tileset does not contain the 3DTILES_dynamic extension. The given function will not have an effect.",
+    );
+    return;
+  }
   this.dynamicContentPropertyProvider = dynamicContentPropertyProvider;
 };
 

@@ -84,6 +84,15 @@ function preprocess3DTileContent(arrayBuffer) {
     };
   }
 
+  if (defined(json.dynamicContents)) {
+    // If this is not dynamic content, someone must have
+    // added that 'dynamicContents' property maliciously.
+    return {
+      contentType: Cesium3DTileContentType.DYNAMIC_CONTENTS,
+      jsonPayload: json,
+    };
+  }
+
   throw new RuntimeError("Invalid tile content.");
 }
 

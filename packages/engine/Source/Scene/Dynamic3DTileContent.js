@@ -178,6 +178,34 @@ class NDMap {
   values() {
     return this._lookup.values();
   }
+
+  /**
+   * Returns the entries of this map
+   *
+   * @returns {Iterable} The entries
+   */
+  entries() {
+    return this._lookup.entries().map(([k, v]) => [this._parseLookupKey(k), v]);
+  }
+
+  /**
+   * Call the given function on each key/value pair
+   *
+   * @param {Function} callback The callback
+   * @param {any} thisArg A value to use as this when executing the callback
+   */
+  forEach(callback, thisArg) {
+    this._entries().forEach(callback, thisArg);
+  }
+
+  /**
+   * Returns an iterator over the entries of this map
+   *
+   * @returns {Iterator} The iterator
+   */
+  [Symbol.iterator]() {
+    return this.entries();
+  }
 }
 
 /**
@@ -192,10 +220,7 @@ class NDMap {
  * size. In this case, the 'trimToSize' method can be used
  * to manually trim the cache to a certain size.
  *
- * The implementation resembles that of a Map, and offers
- * most of the Map functions.
- *
- * TODO Maybe it should offer all of them...
+ * The implementation resembles that of a Map
  */
 class LRUCache {
   /**
@@ -356,6 +381,25 @@ class LRUCache {
    */
   entries() {
     return this._map.entries();
+  }
+
+  /**
+   * Call the given function on each key/value pair
+   *
+   * @param {Function} callback The callback
+   * @param {any} thisArg A value to use as this when executing the callback
+   */
+  forEach(callback, thisArg) {
+    this._map.forEach(callback, thisArg);
+  }
+
+  /**
+   * Returns an iterator over the elements of this cache.
+   *
+   * @returns {Iterator} The iterator
+   */
+  [Symbol.iterator]() {
+    return this._map[Symbol.iterator];
   }
 }
 
@@ -830,29 +874,53 @@ const DYNAMIC_CONTENT_SHOW_STYLE = new Cesium3DTileStyle({
  */
 class Dynamic3DTileContent {
   /**
-   * Creates a new instance
+   * Creates an instance of Dynamic3DTileContent from a parsed JSON object
+   * @param {Cesium3DTileset} tileset The tileset that the content belongs to
+   * @param {Cesium3DTile} tile The tile that contained the content
+   * @param {Resource} tilesetResource The tileset Resource
+   * @param {object} contentJson The content JSON that contains the 'dynamicContents' array
+   * @returns {Dynamic3DTileContent}
+   */
+  static fromJson(tileset, tile, resource, contentJson) {
+    const content = new Dynamic3DTileContent(
+      tileset,
+      tile,
+      resource,
+      contentJson,
+    );
+    return content;
+  }
+
+  /**
+   * Creates a new instance.
+   *
+   * This should only be called from 'fromJson'.
    *
    * @constructor
    *
    * @param {Cesium3DTileset} tileset The tileset this content belongs to
    * @param {Cesium3DTile} tile The content this content belongs to
    * @param {Resource} tilesetResource The resource that points to the tileset. This will be used to derive each inner content's resource.
-   * @param {object} extensionObject The content-level extension object
+   * @param {object} contentJson The content JSON that contains the 'dynamicContents' array
+   *
+   * @private
    */
-  constructor(tileset, tile, tilesetResource, extensionObject) {
+  constructor(tileset, tile, tilesetResource, contentJson) {
     this._tileset = tileset;
     this._tile = tile;
     this._baseResource = tilesetResource;
 
-    const dynamicContents = extensionObject.dynamicContents;
-
     /**
-     * XXX_DYNAMIC This assumes the presence and structure
-     * of the extension object. Add error handling here.
+     * The array of content objects.
      *
-     * @type {object} The dynamic contents
+     * Each of these objects is a 3D Tiles 'content', with an
+     * additional 'keys' property that contains the keys that
+     * are used for selecting the "active" content at any
+     * point in time.
+     *
+     * @type {object[]} The dynamic contents array
      */
-    this._dynamicContents = dynamicContents;
+    this._dynamicContents = contentJson.dynamicContents;
 
     /**
      * A mapping from URL strings to ContentHandle objects.
@@ -862,7 +930,7 @@ class Dynamic3DTileContent {
      * one ContentHandle for each content. This map will never
      * be modified after it was created.
      *
-     * @type {Map}
+     * @type {Map<string, ContentHandle>}
      * @readonly
      */
     this._contentHandles = this._createContentHandles();
@@ -1231,9 +1299,13 @@ class Dynamic3DTileContent {
     return undefined;
   }
   set metadata(value) {
-    //>>includeStart('debug', pragmas.debug);
-    throw new DeveloperError("This content cannot have metadata");
-    //>>includeEnd('debug');
+    ////>>includeStart('debug', pragmas.debug);
+    //throw new DeveloperError("This content cannot have metadata");
+    ////>>includeEnd('debug');
+    console.log(
+      "Assigning metadata to dynamic content - what should that even mean?",
+      value,
+    );
   }
 
   /**
