@@ -4,7 +4,7 @@ import Model3DTileContent from "./Model/Model3DTileContent.js";
 /**
  * @private
  */
-function Cesium3DTilesetStatistics() {
+function Cesium3DTilesetStatisticsSnapshot() {
   // Rendering statistics
   this.selected = 0;
   this.visited = 0;
@@ -30,8 +30,15 @@ function Cesium3DTilesetStatistics() {
   // Memory statistics
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
-  this.texturesReferenceCounterById = new Map();
   this.batchTableByteLength = 0; // batch textures and any binary metadata properties not otherwise accounted for
+}
+
+/**
+ * @private
+ */
+function Cesium3DTilesetStatistics() {
+  Cesium3DTilesetStatisticsSnapshot.call(this);
+  this.texturesReferenceCounterById = new Map();
 }
 
 Cesium3DTilesetStatistics.prototype.clear = function () {
@@ -166,7 +173,15 @@ Cesium3DTilesetStatistics.prototype.decrementLoadCounts = function (content) {
   }
 };
 
-Cesium3DTilesetStatistics.clone = function (statistics, result) {
+/**
+ * @param {Cesium3DTilesetStatistics} statistics
+ * @param {Cesium3DTilesetStatisticsSnapshot} result
+ * @returns {Cesium3DTilesetStatisticsSnapshot}
+ */
+Cesium3DTilesetStatistics.snapshot = function (
+  statistics,
+  result = new Cesium3DTilesetStatisticsSnapshot(),
+) {
   result.selected = statistics.selected;
   result.visited = statistics.visited;
   result.numberOfCommands = statistics.numberOfCommands;
@@ -187,7 +202,18 @@ Cesium3DTilesetStatistics.clone = function (statistics, result) {
     statistics.numberOfTilesCulledWithChildrenUnion;
   result.geometryByteLength = statistics.geometryByteLength;
   result.texturesByteLength = statistics.texturesByteLength;
-  result.texturesReferenceCounterById = statistics.texturesReferenceCounterById;
   result.batchTableByteLength = statistics.batchTableByteLength;
+
+  return result;
+};
+
+Cesium3DTilesetStatistics.clone = function (
+  statistics,
+  result = new Cesium3DTilesetStatistics(),
+) {
+  Cesium3DTilesetStatistics.snapshot(statistics, result);
+  result.texturesReferenceCounterById = new Map(
+    statistics.texturesReferenceCounterById,
+  );
 };
 export default Cesium3DTilesetStatistics;

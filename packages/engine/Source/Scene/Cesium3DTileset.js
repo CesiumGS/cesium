@@ -269,11 +269,13 @@ function Cesium3DTileset(options) {
   this._addHeightCallbacks = [];
 
   this._statistics = new Cesium3DTilesetStatistics();
-  this._statisticsLast = new Cesium3DTilesetStatistics();
+  this._statisticsLast = Cesium3DTilesetStatistics.snapshot(this._statistics);
   this._statisticsPerPass = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
 
   for (let i = 0; i < Cesium3DTilePass.NUMBER_OF_PASSES; ++i) {
-    this._statisticsPerPass[i] = new Cesium3DTilesetStatistics();
+    this._statisticsPerPass[i] = Cesium3DTilesetStatistics.snapshot(
+      this._statistics,
+    );
   }
 
   this._requestedTilesInFlight = [];
@@ -3285,7 +3287,7 @@ function raiseLoadProgressEvent(tileset, frameState) {
   const lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
   const lastNumberOfTilesProcessing = statisticsLast.numberOfTilesProcessing;
 
-  Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
+  Cesium3DTilesetStatistics.snapshot(statistics, this._statisticsLast);
 
   const progressChanged =
     numberOfPendingRequests !== lastNumberOfPendingRequest ||
@@ -3371,7 +3373,7 @@ function detectModelMatrixChanged(tileset, frameState) {
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
- * @param {Cesium3DTilesetStatistics} passStatistics
+ * @param {Cesium3DTilesetStatisticsSnapshot} passStatistics
  * @param {object} passOptions
  * @returns {boolean}
  */
@@ -3408,7 +3410,7 @@ function update(tileset, frameState, passStatistics, passOptions) {
   updateTiles(tileset, frameState, passOptions);
 
   // Update pass statistics
-  Cesium3DTilesetStatistics.clone(statistics, passStatistics);
+  Cesium3DTilesetStatistics.snapshot(statistics, passStatistics);
 
   if (passOptions.isRender) {
     const credits = tileset._credits;
