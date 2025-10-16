@@ -766,7 +766,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const modelMatrix = Matrix4.multiply(
     tileset.modelMatrix,
     Matrix4.fromArray(tileset.root.transform),
-    scratchMatrix4B,
+    new Matrix4(),
   );
 
   const vertexArrayCache = primitive._vertexArray;
@@ -780,7 +780,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     cull: renderStateOptions.cull.enabled,
     pass: Pass.GAUSSIAN_SPLATS,
     count: renderResources.count,
-    owner: this,
+    owner: primitive,
     instanceCount: renderResources.instanceCount,
     primitiveType: PrimitiveType.TRIANGLE_STRIP,
     debugShowBoundingVolume: tileset.debugShowBoundingVolume,
