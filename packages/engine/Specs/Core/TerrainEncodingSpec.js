@@ -40,7 +40,12 @@ describe("Core/TerrainEncoding", function () {
     expect(encoding.toScaledENU).not.toBeDefined();
     expect(encoding.fromScaledENU).not.toBeDefined();
     expect(encoding.matrix).not.toBeDefined();
-    expect(encoding.hasVertexNormals).not.toBeDefined();
+    expect(encoding.hasVertexNormals).toBe(false);
+    expect(encoding.hasWebMercatorT).toBe(false);
+    expect(encoding.hasGeodeticSurfaceNormals).toBe(false);
+    expect(encoding.exaggeration).toBe(1.0);
+    expect(encoding.exaggerationRelativeHeight).toBe(0.0);
+    expect(encoding.stride).toBe(6);
   });
 
   it("constructs without quantization", function () {
