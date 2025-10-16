@@ -240,6 +240,9 @@ describe(
 
       describe("pickAsync", function () {
         it("picks a primitive async", async function () {
+          if (webglStub) {
+            return;
+          }
           if (!scene.context.webgl2) {
             return;
           }
