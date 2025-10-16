@@ -1,8 +1,8 @@
-import Check from "../Core/Check";
-import destroyObject from "../Core/destroyObject";
-import DeveloperError from "../Core/DeveloperError";
-import Frozen from "../Core/Frozen";
-import WebGLConstants from "../Core/WebGLConstants";
+import Check from "../Core/Check.js";
+import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
+import Frozen from "../Core/Frozen.js";
+import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
  * @private
