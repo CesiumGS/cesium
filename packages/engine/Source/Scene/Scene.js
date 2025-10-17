@@ -1350,7 +1350,7 @@ Object.defineProperties(Scene.prototype, {
    *
    * @memberof Scene.prototype
    *
-   * @type {Object | undefined}
+   * @type {object | undefined}
    * @readonly
    *
    * @default undefined
@@ -4400,7 +4400,7 @@ Scene.prototype.clampLineWidth = function (width) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {Object | undefined} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
+ * @returns {object | undefined} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
  */
 Scene.prototype.pick = function (windowPosition, width, height) {
   // Picking one object, result is either [object] or []
@@ -4697,7 +4697,7 @@ function updateRequestRenderModeDeferCheckPass(scene) {
  * @private
  *
  * @param {Ray} ray The ray.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {object | undefined} An object containing the object and position of the first intersection or <code>undefined</code> if there are no intersections.
  *
@@ -4722,9 +4722,9 @@ Scene.prototype.pickFromRay = function (ray, objectsToExclude, width) {
  *
  * @param {Ray} ray The ray.
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Object[]} List of objects containing the object and position of each intersection.
+ * @returns {object[]} List of objects containing the object and position of each intersection.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */
@@ -4750,7 +4750,7 @@ Scene.prototype.drillPickFromRay = function (
  * @private
  *
  * @param {Ray} ray The ray.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<object>} A promise that resolves to an object containing the object and position of the first intersection.
  *
@@ -4777,7 +4777,7 @@ Scene.prototype.pickFromRayMostDetailed = function (
  *
  * @param {Ray} ray The ray.
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
  *
@@ -4808,7 +4808,7 @@ Scene.prototype.drillPickFromRayMostDetailed = function (
  * </p>
  *
  * @param {Cartographic} position The cartographic position to sample height from.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {number | undefined} The height. This may be <code>undefined</code> if there was no scene geometry to sample height from.
  *
@@ -4838,7 +4838,7 @@ Scene.prototype.sampleHeight = function (position, objectsToExclude, width) {
  * </p>
  *
  * @param {Cartesian3} cartesian The cartesian position.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @param {Cartesian3} [result] An optional object to return the clamped position.
  * @returns {Cartesian3 | undefined} The modified result parameter or a new Cartesian3 instance if one was not provided. This may be <code>undefined</code> if there was no scene geometry to clamp to.
@@ -4878,7 +4878,7 @@ Scene.prototype.clampToHeight = function (
  * the height is set to <code>undefined</code>.
  *
  * @param {Cartographic[]} positions The cartographic positions to update with sampled heights.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<Array<Cartographic | undefined>>} A promise that resolves to the provided list of positions when the query has completed. Positions may become <code>undefined</code> if the height cannot be determined.
  *
@@ -4918,7 +4918,7 @@ Scene.prototype.sampleHeightMostDetailed = function (
  * can be sampled at that location, or another error occurs, the element in the array is set to undefined.
  *
  * @param {Cartesian3[]} cartesians The cartesian positions to update with clamped positions.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<Array<Cartesian3 | undefined>>} A promise that resolves to the provided list of positions when the query has completed. Positions may become <code>undefined</code> if they cannot be clamped.
  *
