@@ -30,6 +30,8 @@ import {
   createCombinedSpecList,
   createJsHintOptions,
   defaultESBuildOptions,
+  buildSandcastleGallery,
+  buildNewSandcastleApp,
 } from "./scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -287,9 +289,20 @@ export async function buildTs() {
   await createTypeScriptDefinitions();
 }
 
-export function buildApps() {
-  return Promise.all([buildCesiumViewer(), buildSandcastle()]);
-}
+export const buildNewSandcastle = gulp.series(
+  async function buildSandcastleApp() {
+    return buildNewSandcastleApp(isProduction);
+  },
+  async function buildGallery() {
+    return buildSandcastleGallery(!isProduction);
+  },
+);
+
+export const buildApps = gulp.parallel(
+  buildCesiumViewer,
+  buildSandcastle,
+  buildNewSandcastle,
+);
 
 const filesToClean = [
   "Source/Cesium.js",
@@ -582,121 +595,129 @@ async function pruneScriptsForZip(packageJsonPath) {
   });
 }
 
-export const makeZip = gulp.series(release, async function createZipFile() {
-  //For now we regenerate the JS glsl to force it to be unminified in the release zip
-  //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
-  await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
+export const makeZip = gulp.series(
+  release,
+  async function buildSandcastleApp() {
+    return buildNewSandcastleApp(false);
+  },
+  async function buildGallery() {
+    return buildSandcastleGallery(false);
+  },
+  async function createZipFile() {
+    //For now we regenerate the JS glsl to force it to be unminified in the release zip
+    //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
+    await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
 
-  const packageJsonSrc = await pruneScriptsForZip("package.json");
-  const enginePackageJsonSrc = await pruneScriptsForZip(
-    "packages/engine/package.json",
-  );
-  const widgetsPackageJsonSrc = await pruneScriptsForZip(
-    "packages/widgets/package.json",
-  );
+    const packageJsonSrc = await pruneScriptsForZip("package.json");
+    const enginePackageJsonSrc = await pruneScriptsForZip(
+      "packages/engine/package.json",
+    );
+    const widgetsPackageJsonSrc = await pruneScriptsForZip(
+      "packages/widgets/package.json",
+    );
 
-  const src = gulp
-    .src("index.release.html")
-    .pipe(
-      gulpRename((file) => {
-        if (file.basename === "index.release") {
-          file.basename = "index";
-        }
-      }),
-    )
-    .pipe(enginePackageJsonSrc)
-    .pipe(widgetsPackageJsonSrc)
-    .pipe(packageJsonSrc)
-    .pipe(
-      gulpRename((file) => {
-        if (file.basename === "package.noprepare") {
-          file.basename = "package";
-        }
-      }),
-    )
-    .pipe(
-      gulp.src(
-        [
-          "Build/Cesium/**",
-          "Build/CesiumUnminified/**",
-          "Build/Documentation/**",
-          "Build/Specs/**",
-          "Build/package.json",
-          "packages/engine/Build/**",
-          "packages/widgets/Build/**",
-          "!Build/Specs/e2e/**",
-          "!Build/InlineWorkers.js",
-          "!packages/engine/Build/Specs/**",
-          "!packages/widgets/Build/Specs/**",
-          "!packages/engine/Build/minifyShaders.state",
-        ],
-        {
-          encoding: false,
-          base: ".",
-        },
-      ),
-    )
-    .pipe(
-      gulp.src(
-        [
-          "Apps/**",
-          "Apps/Sandcastle/.jshintrc",
-          "packages/engine/index.js",
-          "packages/engine/index.d.ts",
-          "packages/engine/LICENSE.md",
-          "packages/engine/README.md",
-          "packages/engine/Source/**",
-          "packages/widgets/index.js",
-          "packages/widgets/index.d.ts",
-          "packages/widgets/LICENSE.md",
-          "packages/widgets/README.md",
-          "packages/widgets/Source/**",
-          "Source/**",
-          "Specs/**",
-          "ThirdParty/**",
-          "scripts/**",
-          "favicon.ico",
-          ".prettierignore",
-          "eslint.config.js",
-          "gulpfile.js",
-          "server.js",
-          "index.cjs",
-          "LICENSE.md",
-          "CHANGES.md",
-          "README.md",
-          "web.config",
-          "!**/*.gitignore",
-          "!Specs/e2e/*-snapshots/**",
-          "!Apps/Sandcastle/gallery/development/**",
-          "!Apps/Sandcastle2/**",
-        ],
-        {
-          encoding: false,
-          base: ".",
-        },
-      ),
-    )
-    .pipe(
-      gulpTap(function (file) {
-        // Work around an issue with gulp-zip where archives generated on Windows do
-        // not properly have their directory executable mode set.
-        // see https://github.com/sindresorhus/gulp-zip/issues/64#issuecomment-205324031
-        if (file.isDirectory()) {
-          file.stat.mode = parseInt("40777", 8);
-        }
-      }),
-    )
-    .pipe(gulpZip(`Cesium-${version}.zip`))
-    .pipe(gulp.dest("."));
+    const src = gulp
+      .src("index.release.html")
+      .pipe(
+        gulpRename((file) => {
+          if (file.basename === "index.release") {
+            file.basename = "index";
+          }
+        }),
+      )
+      .pipe(enginePackageJsonSrc)
+      .pipe(widgetsPackageJsonSrc)
+      .pipe(packageJsonSrc)
+      .pipe(
+        gulpRename((file) => {
+          if (file.basename === "package.noprepare") {
+            file.basename = "package";
+          }
+        }),
+      )
+      .pipe(
+        gulp.src(
+          [
+            "Build/Cesium/**",
+            "Build/CesiumUnminified/**",
+            "Build/Documentation/**",
+            "Build/Specs/**",
+            "Build/package.json",
+            "packages/engine/Build/**",
+            "packages/widgets/Build/**",
+            "!Build/Specs/e2e/**",
+            "!Build/InlineWorkers.js",
+            "!packages/engine/Build/Specs/**",
+            "!packages/widgets/Build/Specs/**",
+            "!packages/engine/Build/minifyShaders.state",
+          ],
+          {
+            encoding: false,
+            base: ".",
+          },
+        ),
+      )
+      .pipe(
+        gulp.src(
+          [
+            "Apps/**",
+            "Apps/Sandcastle/.jshintrc",
+            "packages/engine/index.js",
+            "packages/engine/index.d.ts",
+            "packages/engine/LICENSE.md",
+            "packages/engine/README.md",
+            "packages/engine/Source/**",
+            "packages/widgets/index.js",
+            "packages/widgets/index.d.ts",
+            "packages/widgets/LICENSE.md",
+            "packages/widgets/README.md",
+            "packages/widgets/Source/**",
+            "Source/**",
+            "Specs/**",
+            "ThirdParty/**",
+            "scripts/**",
+            "favicon.ico",
+            ".prettierignore",
+            "eslint.config.js",
+            "gulpfile.js",
+            "server.js",
+            "index.cjs",
+            "LICENSE.md",
+            "CHANGES.md",
+            "README.md",
+            "web.config",
+            "!**/*.gitignore",
+            "!Specs/e2e/*-snapshots/**",
+            "!Apps/Sandcastle/gallery/development/**",
+          ],
+          {
+            encoding: false,
+            base: ".",
+          },
+        ),
+      )
+      .pipe(
+        gulpTap(function (file) {
+          // Work around an issue with gulp-zip where archives generated on Windows do
+          // not properly have their directory executable mode set.
+          // see https://github.com/sindresorhus/gulp-zip/issues/64#issuecomment-205324031
+          if (file.isDirectory()) {
+            file.stat.mode = parseInt("40777", 8);
+          }
+        }),
+      )
+      .pipe(gulpZip(`Cesium-${version}.zip`))
+      .pipe(gulp.dest("."));
 
-  await finished(src);
+    await finished(src);
 
-  rimraf.sync("./package.noprepare.json");
-  rimraf.sync("./packages/engine/package.noprepare.json");
-  rimraf.sync("./packages/widgets/package.noprepare.json");
+    rimraf.sync("./package.noprepare.json");
+    rimraf.sync("./packages/engine/package.noprepare.json");
+    rimraf.sync("./packages/widgets/package.noprepare.json");
 
-  return src;
-});
+    return src;
+  },
+);
 
 export async function deploySetVersion() {
   const buildVersion = argv.buildVersion;
@@ -1239,13 +1260,6 @@ function generateTypeScriptDefinitions(
       "raiseEvent(...arguments: Parameters<Listener>): void;",
     );
 
-  // Wrap the source to actually be inside of a declared cesium module
-  // and add any workaround and private utility types.
-  source = `declare module "@${scope}/${workspaceName}" {
-${source}
-}
-`;
-
   if (importModules) {
     let imports = "";
     Object.keys(importModules).forEach((workspace) => {
@@ -1258,6 +1272,13 @@ ${source}
     });
     source = imports + source;
   }
+
+  // Wrap the source to actually be inside of a declared cesium module
+  // and add any workaround and private utility types.
+  source = `declare module "@${scope}/${workspaceName}" {
+${source}
+}
+`;
 
   // Write the final source file back out
   writeFileSync(definitionsPath, source);
