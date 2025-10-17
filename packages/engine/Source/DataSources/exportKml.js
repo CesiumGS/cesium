@@ -4,7 +4,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -20,7 +20,13 @@ import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
 import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
-import * as zip from "@zip.js/zip.js/lib/zip-no-worker.js";
+import {
+  configure,
+  BlobReader,
+  BlobWriter,
+  TextReader,
+  ZipWriter,
+} from "@zip.js/zip.js/lib/zip-core.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import ModelGraphics from "./ModelGraphics.js";
@@ -97,7 +103,7 @@ ExternalFileHandler.prototype.model = function (model, time) {
   const modelCallback = this._modelCallback;
   if (!defined(modelCallback)) {
     throw new RuntimeError(
-      "Encountered a model entity while exporting to KML, but no model callback was supplied."
+      "Encountered a model entity while exporting to KML, but no model callback was supplied.",
     );
   }
 
@@ -145,7 +151,7 @@ ValueGetter.prototype.get = function (property, defaultVal, result) {
       : property;
   }
 
-  return defaultValue(value, defaultVal);
+  return value ?? defaultVal;
 };
 
 ValueGetter.prototype.getColor = function (property, defaultVal) {
@@ -274,9 +280,9 @@ IdManager.prototype.get = function (id) {
  *
  */
 function exportKml(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const entities = options.entities;
-  const kmz = defaultValue(options.kmz, false);
+  const kmz = options.kmz ?? false;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(entities)) {
@@ -322,43 +328,34 @@ function exportKml(options) {
   });
 }
 
-function createKmz(kmlString, externalFiles) {
-  const zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
-  zip.configure({
-    workerScripts: {
-      deflate: [zWorkerUrl, "./pako_deflate.min.js"],
-      inflate: [zWorkerUrl, "./pako_inflate.min.js"],
-    },
+async function createKmz(kmlString, externalFiles) {
+  const zWorkerUri = buildModuleUrl("ThirdParty/Workers/zip-web-worker.js");
+  const zWasmUri = buildModuleUrl("ThirdParty/zip-module.wasm");
+  configure({
+    workerURI: zWorkerUri,
+    wasmURI: zWasmUri,
   });
-  const blobWriter = new zip.BlobWriter();
-  const writer = new zip.ZipWriter(blobWriter);
+  const blobWriter = new BlobWriter("application/vnd.google-earth.kmz");
+  const writer = new ZipWriter(blobWriter);
+
   // We need to only write one file at a time so the zip doesn't get corrupted
-  return writer
-    .add("doc.kml", new zip.TextReader(kmlString))
-    .then(function () {
-      const keys = Object.keys(externalFiles);
-      return addExternalFilesToZip(writer, keys, externalFiles, 0);
-    })
-    .then(function () {
-      return writer.close();
-    })
-    .then(function (blob) {
-      return {
-        kmz: blob,
-      };
-    });
+  await writer.add("doc.kml", new TextReader(kmlString));
+  const keys = Object.keys(externalFiles);
+  await addExternalFilesToZip(writer, keys, externalFiles, 0);
+  await writer.close();
+  const blob = await blobWriter.getData();
+  return {
+    kmz: blob,
+  };
 }
 
-function addExternalFilesToZip(writer, keys, externalFiles, index) {
+async function addExternalFilesToZip(writer, keys, externalFiles, index) {
   if (keys.length === index) {
     return;
   }
   const filename = keys[index];
-  return writer
-    .add(filename, new zip.BlobReader(externalFiles[filename]))
-    .then(function () {
-      return addExternalFilesToZip(writer, keys, externalFiles, index + 1);
-    });
+  await writer.add(filename, new BlobReader(externalFiles[filename]));
+  return addExternalFilesToZip(writer, keys, externalFiles, index + 1);
 }
 
 exportKml._createState = function (options) {
@@ -372,11 +369,8 @@ exportKml._createState = function (options) {
   const time = defined(options.time) ? options.time : entityAvailability.start;
 
   // Figure out how we will sample dynamic position properties
-  let defaultAvailability = defaultValue(
-    options.defaultAvailability,
-    entityAvailability
-  );
-  const sampleDuration = defaultValue(options.sampleDuration, 60);
+  let defaultAvailability = options.defaultAvailability ?? entityAvailability;
+  const sampleDuration = options.sampleDuration ?? 60;
 
   // Make sure we don't have infinite availability if we need to sample
   if (defaultAvailability.start === Iso8601.MINIMUM_VALUE) {
@@ -388,7 +382,7 @@ exportKml._createState = function (options) {
       JulianDate.addSeconds(
         defaultAvailability.stop,
         -10 * sampleDuration,
-        defaultAvailability.start
+        defaultAvailability.start,
       );
     }
   } else if (defaultAvailability.stop === Iso8601.MAXIMUM_VALUE) {
@@ -396,7 +390,7 @@ exportKml._createState = function (options) {
     JulianDate.addSeconds(
       defaultAvailability.start,
       10 * sampleDuration,
-      defaultAvailability.stop
+      defaultAvailability.stop,
     );
   }
 
@@ -405,7 +399,7 @@ exportKml._createState = function (options) {
   const kmlDoc = document.implementation.createDocument(kmlNamespace, "kml");
   return {
     kmlDoc: kmlDoc,
-    ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.default),
+    ellipsoid: options.ellipsoid ?? Ellipsoid.default,
     idManager: new IdManager(),
     styleCache: styleCache,
     externalFileHandler: externalFileHandler,
@@ -449,8 +443,8 @@ function recurseEntities(state, parentNode, entities) {
           createBasicElementWithText(
             kmlDoc,
             "begin",
-            JulianDate.toIso8601(availability.start)
-          )
+            JulianDate.toIso8601(availability.start),
+          ),
         );
       }
 
@@ -459,8 +453,8 @@ function recurseEntities(state, parentNode, entities) {
           createBasicElementWithText(
             kmlDoc,
             "end",
-            JulianDate.toIso8601(availability.stop)
-          )
+            JulianDate.toIso8601(availability.stop),
+          ),
         );
       }
     }
@@ -470,13 +464,13 @@ function recurseEntities(state, parentNode, entities) {
 
       overlay.setAttribute("id", idManager.get(entity.id));
       overlay.appendChild(
-        createBasicElementWithText(kmlDoc, "name", entity.name)
+        createBasicElementWithText(kmlDoc, "name", entity.name),
       );
       overlay.appendChild(
-        createBasicElementWithText(kmlDoc, "visibility", entity.show)
+        createBasicElementWithText(kmlDoc, "visibility", entity.show),
       );
       overlay.appendChild(
-        createBasicElementWithText(kmlDoc, "description", entity.description)
+        createBasicElementWithText(kmlDoc, "description", entity.description),
       );
 
       if (defined(timeSpan)) {
@@ -503,17 +497,17 @@ function recurseEntities(state, parentNode, entities) {
         const color = valueGetter.getColor(labelGraphics.fillColor);
         if (defined(color)) {
           labelStyle.appendChild(
-            createBasicElementWithText(kmlDoc, "color", color)
+            createBasicElementWithText(kmlDoc, "color", color),
           );
           labelStyle.appendChild(
-            createBasicElementWithText(kmlDoc, "colorMode", "normal")
+            createBasicElementWithText(kmlDoc, "colorMode", "normal"),
           );
         }
 
         const scale = valueGetter.get(labelGraphics.scale);
         if (defined(scale)) {
           labelStyle.appendChild(
-            createBasicElementWithText(kmlDoc, "scale", scale)
+            createBasicElementWithText(kmlDoc, "scale", scale),
           );
         }
 
@@ -522,10 +516,10 @@ function recurseEntities(state, parentNode, entities) {
 
       placemark.appendChild(createBasicElementWithText(kmlDoc, "name", name));
       placemark.appendChild(
-        createBasicElementWithText(kmlDoc, "visibility", entity.show)
+        createBasicElementWithText(kmlDoc, "visibility", entity.show),
       );
       placemark.appendChild(
-        createBasicElementWithText(kmlDoc, "description", entity.description)
+        createBasicElementWithText(kmlDoc, "description", entity.description),
       );
 
       if (defined(timeSpan)) {
@@ -542,7 +536,7 @@ function recurseEntities(state, parentNode, entities) {
         }
 
         placemark.appendChild(
-          createBasicElementWithText(kmlDoc, "styleUrl", styleCache.get(style))
+          createBasicElementWithText(kmlDoc, "styleUrl", styleCache.get(style)),
         );
       }
 
@@ -566,13 +560,13 @@ function recurseEntities(state, parentNode, entities) {
       const folderNode = kmlDoc.createElement("Folder");
       folderNode.setAttribute("id", idManager.get(entity.id));
       folderNode.appendChild(
-        createBasicElementWithText(kmlDoc, "name", entity.name)
+        createBasicElementWithText(kmlDoc, "name", entity.name),
       );
       folderNode.appendChild(
-        createBasicElementWithText(kmlDoc, "visibility", entity.show)
+        createBasicElementWithText(kmlDoc, "visibility", entity.show),
       );
       folderNode.appendChild(
-        createBasicElementWithText(kmlDoc, "description", entity.description)
+        createBasicElementWithText(kmlDoc, "description", entity.description),
       );
 
       parentNode.appendChild(folderNode);
@@ -591,7 +585,7 @@ function createPoint(state, entity, geometries, styles) {
   const ellipsoid = state.ellipsoid;
   const valueGetter = state.valueGetter;
 
-  const pointGraphics = defaultValue(entity.billboard, entity.point);
+  const pointGraphics = entity.billboard ?? entity.point;
   if (!defined(pointGraphics) && !defined(entity.path)) {
     return;
   }
@@ -607,7 +601,7 @@ function createPoint(state, entity, geometries, styles) {
   const coordinates = createBasicElementWithText(
     kmlDoc,
     "coordinates",
-    getCoordinates(scratchCartesian3, ellipsoid)
+    getCoordinates(scratchCartesian3, ellipsoid),
   );
 
   const pointGeometry = kmlDoc.createElement("Point");
@@ -615,7 +609,7 @@ function createPoint(state, entity, geometries, styles) {
   // Set altitude mode
   const altitudeMode = kmlDoc.createElement("altitudeMode");
   altitudeMode.appendChild(
-    getAltitudeMode(state, pointGraphics.heightReference)
+    getAltitudeMode(state, pointGraphics.heightReference),
   );
   pointGeometry.appendChild(altitudeMode);
 
@@ -642,7 +636,7 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
     intervals = entityPositionProperty.intervals;
     useEntityPositionProperty = false;
   } else {
-    intervals = defaultValue(entity.availability, state.defaultAvailability);
+    intervals = entity.availability ?? state.defaultAvailability;
   }
 
   const isModel = pointGraphics instanceof ModelGraphics;
@@ -661,16 +655,16 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
     if (positionProperty instanceof ScaledPositionProperty) {
       positionProperty = positionProperty._value;
       trackAltitudeMode.appendChild(
-        getAltitudeMode(state, HeightReference.CLAMP_TO_GROUND)
+        getAltitudeMode(state, HeightReference.CLAMP_TO_GROUND),
       );
     } else if (defined(pointGraphics)) {
       trackAltitudeMode.appendChild(
-        getAltitudeMode(state, pointGraphics.heightReference)
+        getAltitudeMode(state, pointGraphics.heightReference),
       );
     } else {
       // Path graphics only, which has no height reference
       trackAltitudeMode.appendChild(
-        getAltitudeMode(state, HeightReference.NONE)
+        getAltitudeMode(state, HeightReference.NONE),
       );
     }
 
@@ -682,7 +676,7 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
       const constCoordinates = createBasicElementWithText(
         kmlDoc,
         "coordinates",
-        getCoordinates(scratchCartesian3, ellipsoid)
+        getCoordinates(scratchCartesian3, ellipsoid),
       );
 
       // This interval is constant so add a track with the same position
@@ -698,7 +692,7 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
         positionProperty.getValueInReferenceFrame(
           times[j],
           ReferenceFrame.FIXED,
-          scratchCartesian3
+          scratchCartesian3,
         );
         positionValues.push(getCoordinates(scratchCartesian3, ellipsoid));
       }
@@ -748,7 +742,7 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
         kmlDoc,
         "coord",
         positionValues[k],
-        gxNamespace
+        gxNamespace,
       );
 
       trackGeometry.appendChild(when);
@@ -768,7 +762,7 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
   } else if (tracks.length > 1) {
     const multiTrackGeometry = kmlDoc.createElementNS(
       gxNamespace,
-      "MultiTrack"
+      "MultiTrack",
     );
 
     for (i = 0; i < tracks.length; ++i) {
@@ -796,7 +790,7 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
       const lineStyle = kmlDoc.createElement("LineStyle");
       if (defined(width)) {
         lineStyle.appendChild(
-          createBasicElementWithText(kmlDoc, "width", width)
+          createBasicElementWithText(kmlDoc, "width", width),
         );
       }
 
@@ -816,14 +810,14 @@ function createIconStyleFromPoint(state, pointGraphics) {
   if (defined(color)) {
     iconStyle.appendChild(createBasicElementWithText(kmlDoc, "color", color));
     iconStyle.appendChild(
-      createBasicElementWithText(kmlDoc, "colorMode", "normal")
+      createBasicElementWithText(kmlDoc, "colorMode", "normal"),
     );
   }
 
   const pixelSize = valueGetter.get(pointGraphics.pixelSize);
   if (defined(pixelSize)) {
     iconStyle.appendChild(
-      createBasicElementWithText(kmlDoc, "scale", pixelSize / BILLBOARD_SIZE)
+      createBasicElementWithText(kmlDoc, "scale", pixelSize / BILLBOARD_SIZE),
     );
   }
 
@@ -847,26 +841,26 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
     const imageSubRegion = valueGetter.get(billboardGraphics.imageSubRegion);
     if (defined(imageSubRegion)) {
       icon.appendChild(
-        createBasicElementWithText(kmlDoc, "x", imageSubRegion.x, gxNamespace)
+        createBasicElementWithText(kmlDoc, "x", imageSubRegion.x, gxNamespace),
       );
       icon.appendChild(
-        createBasicElementWithText(kmlDoc, "y", imageSubRegion.y, gxNamespace)
+        createBasicElementWithText(kmlDoc, "y", imageSubRegion.y, gxNamespace),
       );
       icon.appendChild(
         createBasicElementWithText(
           kmlDoc,
           "w",
           imageSubRegion.width,
-          gxNamespace
-        )
+          gxNamespace,
+        ),
       );
       icon.appendChild(
         createBasicElementWithText(
           kmlDoc,
           "h",
           imageSubRegion.height,
-          gxNamespace
-        )
+          gxNamespace,
+        ),
       );
     }
 
@@ -877,7 +871,7 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
   if (defined(color)) {
     iconStyle.appendChild(createBasicElementWithText(kmlDoc, "color", color));
     iconStyle.appendChild(
-      createBasicElementWithText(kmlDoc, "colorMode", "normal")
+      createBasicElementWithText(kmlDoc, "colorMode", "normal"),
     );
   }
 
@@ -888,7 +882,7 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
 
   const pixelOffset = valueGetter.get(billboardGraphics.pixelOffset);
   if (defined(pixelOffset)) {
-    scale = defaultValue(scale, 1.0);
+    scale = scale ?? 1.0;
 
     Cartesian2.divideByScalar(pixelOffset, scale, pixelOffset);
 
@@ -900,7 +894,7 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
     // Move to left
     const horizontalOrigin = valueGetter.get(
       billboardGraphics.horizontalOrigin,
-      HorizontalOrigin.CENTER
+      HorizontalOrigin.CENTER,
     );
     if (horizontalOrigin === HorizontalOrigin.CENTER) {
       pixelOffset.x -= width * 0.5;
@@ -911,7 +905,7 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
     // Move to bottom
     const verticalOrigin = valueGetter.get(
       billboardGraphics.verticalOrigin,
-      VerticalOrigin.CENTER
+      VerticalOrigin.CENTER,
     );
     if (verticalOrigin === VerticalOrigin.TOP) {
       pixelOffset.y += height;
@@ -939,7 +933,7 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
     }
 
     iconStyle.appendChild(
-      createBasicElementWithText(kmlDoc, "heading", rotation)
+      createBasicElementWithText(kmlDoc, "heading", rotation),
     );
   }
 
@@ -963,7 +957,7 @@ function createLineString(state, polylineGraphics, geometries, styles) {
   let altitudeModeText;
   if (clampToGround) {
     lineStringGeometry.appendChild(
-      createBasicElementWithText(kmlDoc, "tessellate", true)
+      createBasicElementWithText(kmlDoc, "tessellate", true),
     );
     altitudeModeText = kmlDoc.createTextNode("clampToGround");
   } else {
@@ -978,7 +972,7 @@ function createLineString(state, polylineGraphics, geometries, styles) {
   const coordinates = createBasicElementWithText(
     kmlDoc,
     "coordinates",
-    getCoordinates(cartesians, ellipsoid)
+    getCoordinates(cartesians, ellipsoid),
   );
   lineStringGeometry.appendChild(coordinates);
 
@@ -986,7 +980,7 @@ function createLineString(state, polylineGraphics, geometries, styles) {
   const zIndex = valueGetter.get(polylineGraphics.zIndex);
   if (clampToGround && defined(zIndex)) {
     lineStringGeometry.appendChild(
-      createBasicElementWithText(kmlDoc, "drawOrder", zIndex, gxNamespace)
+      createBasicElementWithText(kmlDoc, "drawOrder", zIndex, gxNamespace),
     );
   }
 
@@ -1032,15 +1026,15 @@ function getRectangleBoundaries(state, rectangleGraphics, extrudedHeight) {
     cornerFunction[i](rectangle, scratchCartographic);
     coordinateStrings.push(
       `${CesiumMath.toDegrees(
-        scratchCartographic.longitude
-      )},${CesiumMath.toDegrees(scratchCartographic.latitude)},${height}`
+        scratchCartographic.longitude,
+      )},${CesiumMath.toDegrees(scratchCartographic.latitude)},${height}`,
     );
   }
 
   const coordinates = createBasicElementWithText(
     kmlDoc,
     "coordinates",
-    coordinateStrings.join(" ")
+    coordinateStrings.join(" "),
   );
 
   const outerBoundaryIs = kmlDoc.createElement("outerBoundaryIs");
@@ -1061,17 +1055,17 @@ function getLinearRing(state, positions, height, perPositionHeight) {
     Cartographic.fromCartesian(positions[i], ellipsoid, scratchCartographic);
     coordinateStrings.push(
       `${CesiumMath.toDegrees(
-        scratchCartographic.longitude
+        scratchCartographic.longitude,
       )},${CesiumMath.toDegrees(scratchCartographic.latitude)},${
         perPositionHeight ? scratchCartographic.height : height
-      }`
+      }`,
     );
   }
 
   const coordinates = createBasicElementWithText(
     kmlDoc,
     "coordinates",
-    coordinateStrings.join(" ")
+    coordinateStrings.join(" "),
   );
   const linearRing = kmlDoc.createElement("LinearRing");
   linearRing.appendChild(coordinates);
@@ -1086,7 +1080,7 @@ function getPolygonBoundaries(state, polygonGraphics, extrudedHeight) {
   let height = valueGetter.get(polygonGraphics.height, 0.0);
   const perPositionHeight = valueGetter.get(
     polygonGraphics.perPositionHeight,
-    false
+    false,
   );
 
   if (!perPositionHeight && extrudedHeight > 0) {
@@ -1105,7 +1099,7 @@ function getPolygonBoundaries(state, polygonGraphics, extrudedHeight) {
   // Polygon boundaries
   const outerBoundaryIs = kmlDoc.createElement("outerBoundaryIs");
   outerBoundaryIs.appendChild(
-    getLinearRing(state, positions, height, perPositionHeight)
+    getLinearRing(state, positions, height, perPositionHeight),
   );
   boundaries.push(outerBoundaryIs);
 
@@ -1116,7 +1110,7 @@ function getPolygonBoundaries(state, polygonGraphics, extrudedHeight) {
     for (let i = 0; i < holeCount; ++i) {
       const innerBoundaryIs = kmlDoc.createElement("innerBoundaryIs");
       innerBoundaryIs.appendChild(
-        getLinearRing(state, holes[i].positions, height, perPositionHeight)
+        getLinearRing(state, holes[i].positions, height, perPositionHeight),
       );
       boundaries.push(innerBoundaryIs);
     }
@@ -1148,7 +1142,7 @@ function createPolygon(state, geometry, geometries, styles, overlays) {
   const extrudedHeight = valueGetter.get(geometry.extrudedHeight, 0.0);
   if (extrudedHeight > 0) {
     polygonGeometry.appendChild(
-      createBasicElementWithText(kmlDoc, "extrude", true)
+      createBasicElementWithText(kmlDoc, "extrude", true),
     );
   }
 
@@ -1182,7 +1176,7 @@ function createPolygon(state, geometry, geometries, styles, overlays) {
   const outline = valueGetter.get(geometry.outline, false);
   if (outline) {
     polyStyle.appendChild(
-      createBasicElementWithText(kmlDoc, "outline", outline)
+      createBasicElementWithText(kmlDoc, "outline", outline),
     );
 
     // Outline uses LineStyle
@@ -1190,18 +1184,18 @@ function createPolygon(state, geometry, geometries, styles, overlays) {
 
     const outlineWidth = valueGetter.get(geometry.outlineWidth, 1.0);
     lineStyle.appendChild(
-      createBasicElementWithText(kmlDoc, "width", outlineWidth)
+      createBasicElementWithText(kmlDoc, "width", outlineWidth),
     );
 
     const outlineColor = valueGetter.getColor(
       geometry.outlineColor,
-      Color.BLACK
+      Color.BLACK,
     );
     lineStyle.appendChild(
-      createBasicElementWithText(kmlDoc, "color", outlineColor)
+      createBasicElementWithText(kmlDoc, "color", outlineColor),
     );
     lineStyle.appendChild(
-      createBasicElementWithText(kmlDoc, "colorMode", "normal")
+      createBasicElementWithText(kmlDoc, "colorMode", "normal"),
     );
 
     styles.push(lineStyle);
@@ -1220,14 +1214,14 @@ function createGroundOverlay(state, rectangleGraphics, overlays) {
   // Set altitude mode
   const altitudeMode = kmlDoc.createElement("altitudeMode");
   altitudeMode.appendChild(
-    getAltitudeMode(state, rectangleGraphics.heightReference)
+    getAltitudeMode(state, rectangleGraphics.heightReference),
   );
   groundOverlay.appendChild(altitudeMode);
 
   const height = valueGetter.get(rectangleGraphics.height);
   if (defined(height)) {
     groundOverlay.appendChild(
-      createBasicElementWithText(kmlDoc, "altitude", height)
+      createBasicElementWithText(kmlDoc, "altitude", height),
     );
   }
 
@@ -1237,29 +1231,29 @@ function createGroundOverlay(state, rectangleGraphics, overlays) {
     createBasicElementWithText(
       kmlDoc,
       "north",
-      CesiumMath.toDegrees(rectangle.north)
-    )
+      CesiumMath.toDegrees(rectangle.north),
+    ),
   );
   latLonBox.appendChild(
     createBasicElementWithText(
       kmlDoc,
       "south",
-      CesiumMath.toDegrees(rectangle.south)
-    )
+      CesiumMath.toDegrees(rectangle.south),
+    ),
   );
   latLonBox.appendChild(
     createBasicElementWithText(
       kmlDoc,
       "east",
-      CesiumMath.toDegrees(rectangle.east)
-    )
+      CesiumMath.toDegrees(rectangle.east),
+    ),
   );
   latLonBox.appendChild(
     createBasicElementWithText(
       kmlDoc,
       "west",
-      CesiumMath.toDegrees(rectangle.west)
-    )
+      CesiumMath.toDegrees(rectangle.west),
+    ),
   );
   groundOverlay.appendChild(latLonBox);
 
@@ -1273,7 +1267,11 @@ function createGroundOverlay(state, rectangleGraphics, overlays) {
   const color = material.color;
   if (defined(color)) {
     groundOverlay.appendChild(
-      createBasicElementWithText(kmlDoc, "color", colorToString(material.color))
+      createBasicElementWithText(
+        kmlDoc,
+        "color",
+        colorToString(material.color),
+      ),
     );
   }
 
@@ -1326,7 +1324,7 @@ function createModel(state, entity, modelGraphics, geometries, styles) {
   // Set altitude mode
   const altitudeMode = kmlDoc.createElement("altitudeMode");
   altitudeMode.appendChild(
-    getAltitudeMode(state, modelGraphics.heightReference)
+    getAltitudeMode(state, modelGraphics.heightReference),
   );
   modelGeometry.appendChild(altitudeMode);
 
@@ -1337,18 +1335,18 @@ function createModel(state, entity, modelGraphics, geometries, styles) {
     createBasicElementWithText(
       kmlDoc,
       "longitude",
-      CesiumMath.toDegrees(scratchCartographic.longitude)
-    )
+      CesiumMath.toDegrees(scratchCartographic.longitude),
+    ),
   );
   location.appendChild(
     createBasicElementWithText(
       kmlDoc,
       "latitude",
-      CesiumMath.toDegrees(scratchCartographic.latitude)
-    )
+      CesiumMath.toDegrees(scratchCartographic.latitude),
+    ),
   );
   location.appendChild(
-    createBasicElementWithText(kmlDoc, "altitude", scratchCartographic.height)
+    createBasicElementWithText(kmlDoc, "altitude", scratchCartographic.height),
   );
   modelGeometry.appendChild(location);
 
@@ -1395,16 +1393,16 @@ function processMaterial(state, materialProperty, style) {
           kmlDoc,
           "outerColor",
           outlineColor,
-          gxNamespace
-        )
+          gxNamespace,
+        ),
       );
       style.appendChild(
         createBasicElementWithText(
           kmlDoc,
           "outerWidth",
           outlineWidth,
-          gxNamespace
-        )
+          gxNamespace,
+        ),
       );
       break;
     case "Stripe":
@@ -1415,7 +1413,7 @@ function processMaterial(state, materialProperty, style) {
   if (defined(color)) {
     style.appendChild(createBasicElementWithText(kmlDoc, "color", color));
     style.appendChild(
-      createBasicElementWithText(kmlDoc, "colorMode", "normal")
+      createBasicElementWithText(kmlDoc, "colorMode", "normal"),
     );
   }
 }
@@ -1426,7 +1424,7 @@ function getAltitudeMode(state, heightReferenceProperty) {
 
   const heightReference = valueGetter.get(
     heightReferenceProperty,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   let altitudeModeText;
   switch (heightReference) {
@@ -1455,10 +1453,10 @@ function getCoordinates(coordinates, ellipsoid) {
     Cartographic.fromCartesian(coordinates[i], ellipsoid, scratchCartographic);
     coordinateStrings.push(
       `${CesiumMath.toDegrees(
-        scratchCartographic.longitude
+        scratchCartographic.longitude,
       )},${CesiumMath.toDegrees(scratchCartographic.latitude)},${
         scratchCartographic.height
-      }`
+      }`,
     );
   }
 
@@ -1469,9 +1467,9 @@ function createBasicElementWithText(
   kmlDoc,
   elementName,
   elementValue,
-  namespace
+  namespace,
 ) {
-  elementValue = defaultValue(elementValue, "");
+  elementValue = elementValue ?? "";
 
   if (typeof elementValue === "boolean") {
     elementValue = elementValue ? "1" : "0";

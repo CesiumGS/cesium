@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -23,21 +22,21 @@ function Cartesian3(x, y, z) {
    * @type {number}
    * @default 0.0
    */
-  this.x = defaultValue(x, 0.0);
+  this.x = x ?? 0.0;
 
   /**
    * The Y component.
    * @type {number}
    * @default 0.0
    */
-  this.y = defaultValue(y, 0.0);
+  this.y = y ?? 0.0;
 
   /**
    * The Z component.
    * @type {number}
    * @default 0.0
    */
-  this.z = defaultValue(z, 0.0);
+  this.z = z ?? 0.0;
 }
 
 /**
@@ -58,7 +57,7 @@ Cartesian3.fromSpherical = function (spherical, result) {
 
   const clock = spherical.clock;
   const cone = spherical.cone;
-  const magnitude = defaultValue(spherical.magnitude, 1.0);
+  const magnitude = spherical.magnitude ?? 1.0;
   const radial = magnitude * Math.sin(cone);
   result.x = radial * Math.cos(clock);
   result.y = radial * Math.sin(clock);
@@ -139,7 +138,7 @@ Cartesian3.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.x;
   array[startingIndex++] = value.y;
@@ -161,7 +160,7 @@ Cartesian3.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -191,7 +190,7 @@ Cartesian3.packArray = function (array, result) {
   } else if (!Array.isArray(result) && result.length !== resultLength) {
     //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
-      "If result is a typed array, it must have exactly array.length * 3 elements"
+      "If result is a typed array, it must have exactly array.length * 3 elements",
     );
     //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
@@ -679,8 +678,8 @@ Cartesian3.angleBetween = function (left, right) {
     Cartesian3.cross(
       angleBetweenScratch,
       angleBetweenScratch2,
-      angleBetweenScratch
-    )
+      angleBetweenScratch,
+    ),
   );
   return Math.atan2(sine, cosine);
 };
@@ -780,7 +779,7 @@ Cartesian3.equalsEpsilon = function (
   left,
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return (
     left === right ||
@@ -790,19 +789,19 @@ Cartesian3.equalsEpsilon = function (
         left.x,
         right.x,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         left.y,
         right.y,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         left.z,
         right.z,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ))
   );
 };
@@ -878,7 +877,7 @@ Cartesian3.fromDegrees = function (
   latitude,
   height,
   ellipsoid,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("longitude", longitude);
@@ -897,7 +896,7 @@ let scratchK = new Cartesian3();
 Cartesian3._ellipsoidRadiiSquared = new Cartesian3(
   6378137.0 * 6378137.0,
   6378137.0 * 6378137.0,
-  6356752.3142451793 * 6356752.3142451793
+  6356752.3142451793 * 6356752.3142451793,
 );
 
 /**
@@ -918,14 +917,14 @@ Cartesian3.fromRadians = function (
   latitude,
   height,
   ellipsoid,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("longitude", longitude);
   Check.typeOf.number("latitude", latitude);
   //>>includeEnd('debug');
 
-  height = defaultValue(height, 0.0);
+  height = height ?? 0.0;
 
   const radiiSquared = !defined(ellipsoid)
     ? Cartesian3._ellipsoidRadiiSquared
@@ -964,7 +963,7 @@ Cartesian3.fromDegreesArray = function (coordinates, ellipsoid, result) {
   Check.defined("coordinates", coordinates);
   if (coordinates.length < 2 || coordinates.length % 2 !== 0) {
     throw new DeveloperError(
-      "the number of coordinates must be a multiple of 2 and at least 2"
+      "the number of coordinates must be a multiple of 2 and at least 2",
     );
   }
   //>>includeEnd('debug');
@@ -985,7 +984,7 @@ Cartesian3.fromDegreesArray = function (coordinates, ellipsoid, result) {
       latitude,
       0,
       ellipsoid,
-      result[index]
+      result[index],
     );
   }
 
@@ -1008,7 +1007,7 @@ Cartesian3.fromRadiansArray = function (coordinates, ellipsoid, result) {
   Check.defined("coordinates", coordinates);
   if (coordinates.length < 2 || coordinates.length % 2 !== 0) {
     throw new DeveloperError(
-      "the number of coordinates must be a multiple of 2 and at least 2"
+      "the number of coordinates must be a multiple of 2 and at least 2",
     );
   }
   //>>includeEnd('debug');
@@ -1029,7 +1028,7 @@ Cartesian3.fromRadiansArray = function (coordinates, ellipsoid, result) {
       latitude,
       0,
       ellipsoid,
-      result[index]
+      result[index],
     );
   }
 
@@ -1052,7 +1051,7 @@ Cartesian3.fromDegreesArrayHeights = function (coordinates, ellipsoid, result) {
   Check.defined("coordinates", coordinates);
   if (coordinates.length < 3 || coordinates.length % 3 !== 0) {
     throw new DeveloperError(
-      "the number of coordinates must be a multiple of 3 and at least 3"
+      "the number of coordinates must be a multiple of 3 and at least 3",
     );
   }
   //>>includeEnd('debug');
@@ -1074,7 +1073,7 @@ Cartesian3.fromDegreesArrayHeights = function (coordinates, ellipsoid, result) {
       latitude,
       height,
       ellipsoid,
-      result[index]
+      result[index],
     );
   }
 
@@ -1097,7 +1096,7 @@ Cartesian3.fromRadiansArrayHeights = function (coordinates, ellipsoid, result) {
   Check.defined("coordinates", coordinates);
   if (coordinates.length < 3 || coordinates.length % 3 !== 0) {
     throw new DeveloperError(
-      "the number of coordinates must be a multiple of 3 and at least 3"
+      "the number of coordinates must be a multiple of 3 and at least 3",
     );
   }
   //>>includeEnd('debug');
@@ -1119,7 +1118,7 @@ Cartesian3.fromRadiansArrayHeights = function (coordinates, ellipsoid, result) {
       latitude,
       height,
       ellipsoid,
-      result[index]
+      result[index],
     );
   }
 
@@ -1200,13 +1199,13 @@ Cartesian3.prototype.equals = function (right) {
 Cartesian3.prototype.equalsEpsilon = function (
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return Cartesian3.equalsEpsilon(
     this,
     right,
     relativeEpsilon,
-    absoluteEpsilon
+    absoluteEpsilon,
   );
 };
 

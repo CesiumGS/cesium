@@ -121,7 +121,7 @@ describe(
       expect(detailPickObject.model).toEqual(model);
       expect(detailPickObject.node).toEqual(renderResources.runtimeNode);
       expect(detailPickObject.primitive).toEqual(
-        renderResources.runtimePrimitive
+        renderResources.runtimePrimitive,
       );
     }
 
@@ -141,7 +141,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
@@ -150,8 +150,7 @@ describe(
           "uniform vec4 czm_pickColor;",
         ]);
 
-        const pickObject =
-          context._pickObjects[Object.keys(context._pickObjects)[0]];
+        const pickObject = context._pickObjects.values().next().value;
         expect(pickObject).toBe(customPickObject);
 
         const uniformMap = renderResources.uniformMap;
@@ -182,7 +181,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
@@ -191,8 +190,7 @@ describe(
           "uniform vec4 czm_pickColor;",
         ]);
 
-        const pickObject =
-          context._pickObjects[Object.keys(context._pickObjects)[0]];
+        const pickObject = context._pickObjects.values().next().value;
         verifyPickObject(pickObject, renderResources);
 
         const uniformMap = renderResources.uniformMap;
@@ -216,7 +214,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
@@ -225,8 +223,7 @@ describe(
           "uniform vec4 czm_pickColor;",
         ]);
 
-        const pickObject =
-          context._pickObjects[Object.keys(context._pickObjects)[0]];
+        const pickObject = context._pickObjects.values().next().value;
         verifyPickObject(pickObject, renderResources);
 
         const uniformMap = renderResources.uniformMap;
@@ -251,7 +248,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
@@ -260,8 +257,7 @@ describe(
           "uniform vec4 czm_pickColor;",
         ]);
 
-        const pickObject =
-          context._pickObjects[Object.keys(context._pickObjects)[0]];
+        const pickObject = context._pickObjects.values().next().value;
         verifyPickObject(pickObject, renderResources, undefined);
         expect(pickObject.id).toBe(mockIdObject);
 
@@ -291,7 +287,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
@@ -306,7 +302,7 @@ describe(
         let i = 0;
         for (const key in context._pickObjects) {
           if (context._pickObjects.hasOwnProperty(key)) {
-            const pickObject = context._pickObjects[key];
+            const pickObject = context._pickObjects.get(key);
             verifyPickObject(pickObject, renderResources, i++);
           }
         }
@@ -318,7 +314,7 @@ describe(
         expect(renderResources.attributeIndex).toEqual(2);
         expect(pickIdAttribute.vertexBuffer).toBeDefined();
         expect(pickIdAttribute.vertexBuffer.sizeInBytes).toEqual(
-          renderResources.instanceCount * 4
+          renderResources.instanceCount * 4,
         );
         expect(pickIdAttribute.instanceDivisor).toEqual(1);
 
@@ -327,7 +323,7 @@ describe(
 
         const statistics = renderResources.model.statistics;
         expect(statistics.geometryByteLength).toBe(
-          renderResources.instanceCount * 4
+          renderResources.instanceCount * 4,
         );
 
         expect(renderResources.pickId).toEqual("v_pickColor");
@@ -353,7 +349,7 @@ describe(
         const frameState = scene.frameState;
         const context = frameState.context;
         // Reset pick objects.
-        context._pickObjects = [];
+        context._pickObjects = new Map();
 
         PickingPipelineStage.process(renderResources, primitive, frameState);
 
@@ -368,10 +364,10 @@ describe(
         ]);
 
         expect(renderResources.pickId).toEqual(
-          "((selectedFeature.id < int(model_featuresLength)) ? texture(model_pickTexture, selectedFeature.st) : vec4(0.0))"
+          "((selectedFeature.id < int(model_featuresLength)) ? texture(model_pickTexture, selectedFeature.st) : vec4(0.0))",
         );
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

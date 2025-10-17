@@ -22,7 +22,7 @@ describe("Scene/Megatexture", function () {
         dimensions,
         channelCount,
         componentType,
-        textureMemoryByteLength / 2
+        textureMemoryByteLength / 2,
       );
     }).toThrowError(RuntimeError);
 
@@ -31,7 +31,7 @@ describe("Scene/Megatexture", function () {
       dimensions,
       channelCount,
       componentType,
-      textureMemoryByteLength
+      textureMemoryByteLength,
     );
     expect(megatexture.channelCount).toBe(channelCount);
     expect(megatexture.componentType).toBe(componentType);
@@ -52,7 +52,7 @@ describe("Scene/Megatexture", function () {
       scene.context,
       dimensions,
       channelCount,
-      componentType
+      componentType,
     );
 
     const data = new Uint16Array(tileSize);
@@ -78,7 +78,7 @@ describe("Scene/Megatexture", function () {
       dimensions,
       channelCount,
       componentType,
-      textureMemoryByteLength
+      textureMemoryByteLength,
     );
 
     const data = new Float32Array(tileSize);
@@ -108,7 +108,7 @@ describe("Scene/Megatexture", function () {
       dimensions,
       channelCount,
       componentType,
-      textureMemoryByteLength
+      textureMemoryByteLength,
     );
 
     expect(megatexture.occupiedCount).toBe(0);
@@ -160,8 +160,8 @@ describe("Scene/Megatexture", function () {
         tileCount,
         dimensions,
         channelCount,
-        componentType
-      )
+        componentType,
+      ),
     ).toBe(textureMemoryByteLength);
   });
 
@@ -182,7 +182,7 @@ describe("Scene/Megatexture", function () {
       dimensions,
       channelCount,
       componentType,
-      textureMemoryByteLength
+      textureMemoryByteLength,
     );
 
     expect(megatexture.maximumTileCount).toBe(4);

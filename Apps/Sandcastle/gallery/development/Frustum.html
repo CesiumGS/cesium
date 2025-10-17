@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -36,20 +33,14 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;
 
-        const positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(
-          -105.0,
-          45.0,
-          20.0
-        );
+        const positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-105.0, 45.0, 20.0);
 
-        const enu = Cesium.Transforms.eastNorthUpToFixedFrame(
-          positionOnEllipsoid
-        );
+        const enu = Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid);
         const rotation = Cesium.Matrix4.getMatrix3(enu, new Cesium.Matrix3());
         Cesium.Matrix3.multiply(
           rotation,
           Cesium.Matrix3.fromRotationX(-Cesium.Math.PI_OVER_TWO),
-          rotation
+          rotation,
         );
         const orientation = Cesium.Quaternion.fromRotationMatrix(rotation);
 
@@ -71,7 +62,7 @@
           geometry: frustumGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+              new Cesium.Color(1.0, 0.0, 0.0, 0.5),
             ),
           },
           id: "frustum",
@@ -84,7 +75,7 @@
               closed: true,
               flat: true,
             }),
-          })
+          }),
         );
         scene.primitives.add(
           new Cesium.Primitive({
@@ -96,14 +87,14 @@
               }),
               attributes: {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  new Cesium.Color(0.0, 0.0, 0.0, 1.0)
+                  new Cesium.Color(0.0, 0.0, 0.0, 1.0),
                 ),
               },
             }),
             appearance: new Cesium.PerInstanceColorAppearance({
               flat: true,
             }),
-          })
+          }),
         );
 
         const removeListener = scene.postRender.addEventListener(() => {
@@ -111,8 +102,8 @@
             return;
           }
 
-          const bs = frustumPrimitive.getGeometryInstanceAttributes("frustum")
-            .boundingSphere;
+          const bs =
+            frustumPrimitive.getGeometryInstanceAttributes("frustum").boundingSphere;
           scene.camera.viewBoundingSphere(bs);
           scene.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 

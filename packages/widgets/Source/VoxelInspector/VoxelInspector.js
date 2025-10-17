@@ -1,11 +1,8 @@
 import {
-  Cartesian3,
   Math as CesiumMath,
   Check,
   destroyObject,
-  Ellipsoid,
   getElement,
-  VoxelShapeType,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import InspectorShared from "../InspectorShared.js";
@@ -42,7 +39,7 @@ function VoxelInspector(container, scene) {
   element.className = "cesium-cesiumInspector cesium-VoxelInspector";
   element.setAttribute(
     "data-bind",
-    'css: { "cesium-cesiumInspector-visible" : inspectorVisible, "cesium-cesiumInspector-hidden" : !inspectorVisible}'
+    'css: { "cesium-cesiumInspector-visible" : inspectorVisible, "cesium-cesiumInspector-hidden" : !inspectorVisible}',
   );
   container.appendChild(element);
 
@@ -50,64 +47,55 @@ function VoxelInspector(container, scene) {
   panel.className = "cesium-cesiumInspector-dropDown";
   element.appendChild(panel);
 
-  const createSection = InspectorShared.createSection;
-  const createCheckbox = InspectorShared.createCheckbox;
-  const createRangeInput = InspectorShared.createRangeInput;
-  const createButton = InspectorShared.createButton;
+  const { createSection, createCheckbox, createRangeInput, createButton } =
+    InspectorShared;
 
   const displayPanelContents = createSection(
     panel,
     "Display",
     "displayVisible",
-    "toggleDisplay"
+    "toggleDisplay",
   );
 
   const transformPanelContents = createSection(
     panel,
     "Transform",
     "transformVisible",
-    "toggleTransform"
-  );
-
-  const boundsPanelContents = createSection(
-    panel,
-    "Bounds",
-    "boundsVisible",
-    "toggleBounds"
+    "toggleTransform",
   );
 
   const clippingPanelContents = createSection(
     panel,
     "Clipping",
     "clippingVisible",
-    "toggleClipping"
+    "toggleClipping",
   );
 
   const shaderPanelContents = createSection(
     panel,
     "Shader",
     "shaderVisible",
-    "toggleShader"
+    "toggleShader",
   );
 
   // Display
   displayPanelContents.appendChild(createCheckbox("Depth Test", "depthTest"));
   displayPanelContents.appendChild(createCheckbox("Show", "show"));
   displayPanelContents.appendChild(
-    createCheckbox("Disable Update", "disableUpdate")
+    createCheckbox("Disable Update", "disableUpdate"),
   );
   displayPanelContents.appendChild(createCheckbox("Debug Draw", "debugDraw"));
   displayPanelContents.appendChild(createCheckbox("Jitter", "jitter"));
   displayPanelContents.appendChild(
-    createCheckbox("Nearest Sampling", "nearestSampling")
+    createCheckbox("Nearest Sampling", "nearestSampling"),
   );
 
   displayPanelContents.appendChild(
-    createRangeInput("Screen Space Error", "screenSpaceError", 0, 128)
+    createRangeInput("Screen Space Error", "screenSpaceError", 0, 128),
   );
 
   displayPanelContents.appendChild(
-    createRangeInput("Step Size", "stepSize", 0.0, 2.0)
+    createRangeInput("Step Size", "stepSize", 0.0, 2.0),
   );
 
   // Transform
@@ -116,116 +104,35 @@ function VoxelInspector(container, scene) {
   const maxAngle = CesiumMath.PI;
 
   transformPanelContents.appendChild(
-    createRangeInput("Translation X", "translationX", -maxTrans, +maxTrans)
+    createRangeInput("Translation X", "translationX", -maxTrans, +maxTrans),
   );
   transformPanelContents.appendChild(
-    createRangeInput("Translation Y", "translationY", -maxTrans, +maxTrans)
+    createRangeInput("Translation Y", "translationY", -maxTrans, +maxTrans),
   );
   transformPanelContents.appendChild(
-    createRangeInput("Translation Z", "translationZ", -maxTrans, +maxTrans)
+    createRangeInput("Translation Z", "translationZ", -maxTrans, +maxTrans),
   );
   transformPanelContents.appendChild(
-    createRangeInput("Scale X", "scaleX", 0, +maxScale)
+    createRangeInput("Scale X", "scaleX", 0, +maxScale),
   );
   transformPanelContents.appendChild(
-    createRangeInput("Scale Y", "scaleY", 0, +maxScale)
+    createRangeInput("Scale Y", "scaleY", 0, +maxScale),
   );
   transformPanelContents.appendChild(
-    createRangeInput("Scale Z", "scaleZ", 0, +maxScale)
+    createRangeInput("Scale Z", "scaleZ", 0, +maxScale),
   );
   transformPanelContents.appendChild(
-    createRangeInput("Heading", "angleX", -maxAngle, +maxAngle)
+    createRangeInput("Heading", "angleX", -maxAngle, +maxAngle),
   );
   transformPanelContents.appendChild(
-    createRangeInput("Pitch", "angleY", -maxAngle, +maxAngle)
+    createRangeInput("Pitch", "angleY", -maxAngle, +maxAngle),
   );
   transformPanelContents.appendChild(
-    createRangeInput("Roll", "angleZ", -maxAngle, +maxAngle)
-  );
-
-  // Bounds
-  const boxMinBounds = VoxelShapeType.getMinBounds(VoxelShapeType.BOX);
-  const boxMaxBounds = VoxelShapeType.getMaxBounds(VoxelShapeType.BOX);
-
-  const ellipsoidMinBounds = Cartesian3.fromElements(
-    VoxelShapeType.getMinBounds(VoxelShapeType.ELLIPSOID).x,
-    VoxelShapeType.getMinBounds(VoxelShapeType.ELLIPSOID).y,
-    -Ellipsoid.WGS84.maximumRadius,
-    new Cartesian3()
-  );
-  const ellipsoidMaxBounds = Cartesian3.fromElements(
-    VoxelShapeType.getMaxBounds(VoxelShapeType.ELLIPSOID).x,
-    VoxelShapeType.getMaxBounds(VoxelShapeType.ELLIPSOID).y,
-    +10000000.0,
-    new Cartesian3()
-  );
-
-  const cylinderMinBounds = VoxelShapeType.getMinBounds(
-    VoxelShapeType.CYLINDER
-  );
-  const cylinderMaxBounds = VoxelShapeType.getMaxBounds(
-    VoxelShapeType.CYLINDER
-  );
-
-  makeCoordinateRange(
-    "Max X",
-    "Min X",
-    "Max Y",
-    "Min Y",
-    "Max Z",
-    "Min Z",
-    "boundsBoxMaxX",
-    "boundsBoxMinX",
-    "boundsBoxMaxY",
-    "boundsBoxMinY",
-    "boundsBoxMaxZ",
-    "boundsBoxMinZ",
-    boxMinBounds,
-    boxMaxBounds,
-    "shapeIsBox",
-    boundsPanelContents
-  );
-
-  makeCoordinateRange(
-    "Max Longitude",
-    "Min Longitude",
-    "Max Latitude",
-    "Min Latitude",
-    "Max Height",
-    "Min Height",
-    "boundsEllipsoidMaxLongitude",
-    "boundsEllipsoidMinLongitude",
-    "boundsEllipsoidMaxLatitude",
-    "boundsEllipsoidMinLatitude",
-    "boundsEllipsoidMaxHeight",
-    "boundsEllipsoidMinHeight",
-    ellipsoidMinBounds,
-    ellipsoidMaxBounds,
-    "shapeIsEllipsoid",
-    boundsPanelContents
-  );
-
-  makeCoordinateRange(
-    "Max Radius",
-    "Min Radius",
-    "Max Height",
-    "Min Height",
-    "Max Angle",
-    "Min Angle",
-    "boundsCylinderMaxRadius",
-    "boundsCylinderMinRadius",
-    "boundsCylinderMaxHeight",
-    "boundsCylinderMinHeight",
-    "boundsCylinderMaxAngle",
-    "boundsCylinderMinAngle",
-    cylinderMinBounds,
-    cylinderMaxBounds,
-    "shapeIsCylinder",
-    boundsPanelContents
+    createRangeInput("Roll", "angleZ", -maxAngle, +maxAngle),
   );
 
   // Clipping
-  makeCoordinateRange(
+  makeCoordinateRangeWithDynamicMinMax(
     "Max X",
     "Min X",
     "Max Y",
@@ -238,13 +145,11 @@ function VoxelInspector(container, scene) {
     "clippingBoxMinY",
     "clippingBoxMaxZ",
     "clippingBoxMinZ",
-    boxMinBounds,
-    boxMaxBounds,
     "shapeIsBox",
-    clippingPanelContents
+    clippingPanelContents,
   );
 
-  makeCoordinateRange(
+  makeCoordinateRangeWithDynamicMinMax(
     "Max Longitude",
     "Min Longitude",
     "Max Latitude",
@@ -257,29 +162,25 @@ function VoxelInspector(container, scene) {
     "clippingEllipsoidMinLatitude",
     "clippingEllipsoidMaxHeight",
     "clippingEllipsoidMinHeight",
-    ellipsoidMinBounds,
-    ellipsoidMaxBounds,
     "shapeIsEllipsoid",
-    clippingPanelContents
+    clippingPanelContents,
   );
 
-  makeCoordinateRange(
+  makeCoordinateRangeWithDynamicMinMax(
     "Max Radius",
     "Min Radius",
-    "Max Height",
-    "Min Height",
     "Max Angle",
     "Min Angle",
+    "Max Height",
+    "Min Height",
     "clippingCylinderMaxRadius",
     "clippingCylinderMinRadius",
-    "clippingCylinderMaxHeight",
-    "clippingCylinderMinHeight",
     "clippingCylinderMaxAngle",
     "clippingCylinderMinAngle",
-    cylinderMinBounds,
-    cylinderMaxBounds,
+    "clippingCylinderMaxHeight",
+    "clippingCylinderMinHeight",
     "shapeIsCylinder",
-    clippingPanelContents
+    clippingPanelContents,
   );
 
   // Shader
@@ -289,13 +190,13 @@ function VoxelInspector(container, scene) {
   const shaderEditor = document.createElement("textarea");
   shaderEditor.setAttribute(
     "data-bind",
-    "textInput: shaderString, event: { keydown: shaderEditorKeyPress }"
+    "textInput: shaderString, event: { keydown: shaderEditorKeyPress }",
   );
   shaderPanelEditor.className = "cesium-cesiumInspector-styleEditor";
   shaderPanelEditor.appendChild(shaderEditor);
   const compileShaderButton = createButton(
     "Compile (Ctrl+Enter)",
-    "compileShader"
+    "compileShader",
   );
   shaderPanelEditor.appendChild(compileShaderButton);
 
@@ -303,7 +204,7 @@ function VoxelInspector(container, scene) {
   compilationText.style.display = "block";
   compilationText.setAttribute(
     "data-bind",
-    "text: shaderCompilationMessage, style: {color: shaderCompilationSuccess ? 'green' : 'red'}"
+    "text: shaderCompilationMessage, style: {color: shaderCompilationSuccess ? 'green' : 'red'}",
   );
   shaderPanelEditor.appendChild(compilationText);
 
@@ -355,7 +256,7 @@ VoxelInspector.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-function makeCoordinateRange(
+function makeCoordinateRangeWithDynamicMinMax(
   maxXTitle,
   minXTitle,
   maxYTitle,
@@ -368,25 +269,21 @@ function makeCoordinateRange(
   minYVar,
   maxZVar,
   minZVar,
-  defaultMinBounds,
-  defaultMaxBounds,
   allowedShape,
-  parentContainer
+  parentContainer,
 ) {
-  const createRangeInput = InspectorShared.createRangeInput;
+  const createRangeInput = InspectorShared.createRangeInputWithDynamicMinMax;
 
-  const min = defaultMinBounds;
-  const max = defaultMaxBounds;
   const boundsElement = parentContainer.appendChild(
-    document.createElement("div")
+    document.createElement("div"),
   );
   boundsElement.setAttribute("data-bind", `if: ${allowedShape}`);
-  boundsElement.appendChild(createRangeInput(maxXTitle, maxXVar, min.x, max.x));
-  boundsElement.appendChild(createRangeInput(minXTitle, minXVar, min.x, max.x));
-  boundsElement.appendChild(createRangeInput(maxYTitle, maxYVar, min.y, max.y));
-  boundsElement.appendChild(createRangeInput(minYTitle, minYVar, min.y, max.y));
-  boundsElement.appendChild(createRangeInput(maxZTitle, maxZVar, min.z, max.z));
-  boundsElement.appendChild(createRangeInput(minZTitle, minZVar, min.z, max.z));
+  boundsElement.appendChild(createRangeInput(maxXTitle, maxXVar));
+  boundsElement.appendChild(createRangeInput(minXTitle, minXVar));
+  boundsElement.appendChild(createRangeInput(maxYTitle, maxYVar));
+  boundsElement.appendChild(createRangeInput(minYTitle, minYVar));
+  boundsElement.appendChild(createRangeInput(maxZTitle, maxZVar));
+  boundsElement.appendChild(createRangeInput(minZTitle, minZVar));
 }
 
 export default VoxelInspector;

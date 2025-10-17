@@ -2,7 +2,8 @@ import { createGuid } from "../../index.js";
 
 describe("Core/createGuid", function () {
   it("creates GUIDs", function () {
-    const isGuidRegex = /^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}$/;
+    const isGuidRegex =
+      /^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}$/;
 
     //Create three GUIDs
     const guid1 = createGuid();

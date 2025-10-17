@@ -38,7 +38,7 @@ describe(
     it("becomes ready", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetOfTilesetsUrl
+        tilesetOfTilesetsUrl,
       );
       expect(tileset.root.contentReady).toBeTrue();
       expect(tileset.root.content).toBeDefined();
@@ -66,7 +66,7 @@ describe(
           expect(content.batchTable).toBeUndefined();
           expect(content.hasProperty(0, "name")).toBe(false);
           expect(content.getFeature(0)).toBeUndefined();
-        }
+        },
       );
     });
 
@@ -132,7 +132,7 @@ describe(
       it("assigns group metadata", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetOfTilesetsUrl
+          tilesetOfTilesetsUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
           content.group = new Cesium3DContentGroup({ metadata: groupMetadata });
@@ -143,7 +143,7 @@ describe(
       it("assigns metadata", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetOfTilesetsUrl
+          tilesetOfTilesetsUrl,
         ).then(function (tileset) {
           const content = tileset.root.content;
           content.metadata = contentMetadata;
@@ -152,5 +152,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

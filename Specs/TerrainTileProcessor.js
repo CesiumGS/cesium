@@ -9,7 +9,7 @@ import {
 function TerrainTileProcessor(
   frameState,
   terrainProvider,
-  imageryLayerCollection
+  imageryLayerCollection,
 ) {
   this.frameState = frameState;
   this.terrainProvider = terrainProvider;
@@ -70,7 +70,7 @@ TerrainTileProcessor.prototype.process = function (tiles, maxIterations) {
           tile,
           that.frameState,
           that.terrainProvider,
-          that.imageryLayerCollection
+          that.imageryLayerCollection,
         );
         const afterState = getState(tile);
         changed =
@@ -99,18 +99,17 @@ TerrainTileProcessor.prototype.mockWebGL = function () {
         "isDestroyed",
       ]);
       return vertexArray;
-    }
+    },
   );
 
-  spyOn(ImageryLayer.prototype, "_createTextureWebGL").and.callFake(function (
-    context,
-    imagery
-  ) {
-    const texture = jasmine.createSpyObj("Texture", ["destroy"]);
-    texture.width = imagery.image.width;
-    texture.height = imagery.image.height;
-    return texture;
-  });
+  spyOn(ImageryLayer.prototype, "_createTextureWebGL").and.callFake(
+    function (context, imagery) {
+      const texture = jasmine.createSpyObj("Texture", ["destroy"]);
+      texture.width = imagery.image.width;
+      texture.height = imagery.image.height;
+      return texture;
+    },
+  );
 
   spyOn(ImageryLayer.prototype, "_finalizeReprojectTexture");
 

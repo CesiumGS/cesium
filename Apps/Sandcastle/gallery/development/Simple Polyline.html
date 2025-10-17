@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Draw a line on the globe with varying colors."
-    />
+    <meta name="description" content="Draw a line on the globe with varying colors." />
     <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -45,9 +39,7 @@
             positions: Cesium.Cartesian3.fromDegreesArray([-127, 70, -80, 20]),
           }),
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.YELLOW
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.YELLOW),
           },
         });
 
@@ -56,7 +48,7 @@
         const colors = [];
         for (let j = 0; j <= 50; j += 5) {
           positions.push(
-            Cesium.Cartesian3.fromDegrees(-124.0 + j, 40, 50000.0 * (j % 10))
+            Cesium.Cartesian3.fromDegrees(-124.0 + j, 40, 50000.0 * (j % 10)),
           );
           colors.push(Cesium.Color.fromRandom({ alpha: 1.0 }));
         }
@@ -95,7 +87,7 @@
                 lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
               },
             }),
-          })
+          }),
         );
 
         // Add perSegment and perVertex polyline instances to primitives.
@@ -108,7 +100,7 @@
                 lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
               },
             }),
-          })
+          }),
         );
 
         //Sandcastle_End

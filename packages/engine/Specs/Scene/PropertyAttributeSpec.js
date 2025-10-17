@@ -87,10 +87,10 @@ describe("Scene/PropertyAttribute", function () {
   it("getProperty returns property attribute property", function () {
     expect(propertyAttribute.getProperty("color").attribute).toBe("_COLOR");
     expect(propertyAttribute.getProperty("intensity").attribute).toBe(
-      "_INTENSITY"
+      "_INTENSITY",
     );
     expect(propertyAttribute.getProperty("pointSize").attribute).toBe(
-      "_POINT_SIZE"
+      "_POINT_SIZE",
     );
   });
 

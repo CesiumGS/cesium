@@ -37,7 +37,7 @@ const DequantizationPipelineStage = {
 DequantizationPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
@@ -46,13 +46,13 @@ DequantizationPipelineStage.process = function (
   shaderBuilder.addDefine(
     "USE_DEQUANTIZATION",
     undefined,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   shaderBuilder.addFunction(
     DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
     DequantizationPipelineStage.FUNCTION_SIGNATURE_DEQUANTIZATION_STAGE_VS,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   const attributes = primitive.attributes;
@@ -90,7 +90,7 @@ function addDequantizationUniforms(renderResources, attributeInfo) {
     shaderBuilder.addUniform(
       "float",
       normalizationRange,
-      ShaderDestination.VERTEX
+      ShaderDestination.VERTEX,
     );
     uniformMap[normalizationRange] = function () {
       return quantization.normalizationRange;
@@ -145,7 +145,7 @@ function updateDequantizationFunction(shaderBuilder, attributeInfo) {
 
   shaderBuilder.addFunctionLines(
     DequantizationPipelineStage.FUNCTION_ID_DEQUANTIZATION_STAGE_VS,
-    [line]
+    [line],
   );
 }
 

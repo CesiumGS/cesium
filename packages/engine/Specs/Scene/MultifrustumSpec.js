@@ -4,7 +4,6 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
-  defaultValue,
   defined,
   destroyObject,
   GeometryPipeline,
@@ -30,7 +29,6 @@ describe(
   "Scene/Multifrustum",
   function () {
     let scene;
-    let context;
     let primitives;
     let atlas;
 
@@ -60,7 +58,6 @@ describe(
 
     beforeEach(function () {
       scene = createScene();
-      context = scene.context;
       primitives = scene.primitives;
 
       scene.logarithmicDepthBuffer = false;
@@ -88,16 +85,14 @@ describe(
 
     function createBillboards() {
       atlas = new TextureAtlas({
-        context: context,
         borderWidthInPixels: 1,
         initialSize: new Cartesian2(3, 3),
+        // ANGLE workaround
+        sampler: Sampler.NEAREST,
       });
-
-      // ANGLE Workaround
-      atlas.texture.sampler = Sampler.NEAREST;
-
-      let billboards = new BillboardCollection();
-      billboards.textureAtlas = atlas;
+      let billboards = new BillboardCollection({
+        textureAtlas: atlas,
+      });
       billboards.destroyTextureAtlas = false;
       billboard0 = billboards.add({
         position: new Cartesian3(0.0, 0.0, -50.0),
@@ -207,8 +202,8 @@ describe(
     });
 
     function createPrimitive(bounded, closestFrustum) {
-      bounded = defaultValue(bounded, true);
-      closestFrustum = defaultValue(closestFrustum, false);
+      bounded = bounded ?? true;
+      closestFrustum = closestFrustum ?? false;
 
       function Primitive() {
         this._va = undefined;
@@ -216,7 +211,7 @@ describe(
         this._rs = undefined;
         this._modelMatrix = Matrix4.fromTranslation(
           new Cartesian3(0.0, 0.0, -50000.0),
-          new Matrix4()
+          new Matrix4(),
         );
 
         this.color = new Color(1.0, 1.0, 0.0, 1.0);
@@ -233,38 +228,39 @@ describe(
       }
       Primitive.prototype.update = function (frameState) {
         if (!defined(this._sp)) {
-          let vs = "";
-          vs += "in vec4 position;";
-          vs += "void main()";
-          vs += "{";
-          vs += "    gl_Position = czm_modelViewProjection * position;";
-          vs += closestFrustum
-            ? "    gl_Position.z = clamp(gl_Position.z, gl_DepthRange.near, gl_DepthRange.far);"
-            : "";
-          vs += "}";
-          let fs = "";
-          fs += "uniform vec4 u_color;";
-          fs += "void main()";
-          fs += "{";
-          fs += "    out_FragColor = u_color;";
-          fs += "}";
+          const zUpdate = closestFrustum
+            ? `gl_Position.z = clamp(gl_Position.z, gl_DepthRange.near, gl_DepthRange.far);`
+            : ``;
+          const vs = `
+          in vec4 position;
+          void main()
+          {
+              vec4 positionEC = czm_modelView * position;
+              gl_Position = czm_projection * positionEC;
+              ${zUpdate}
+          }`;
+          const fs = `
+          uniform vec4 u_color;
+          void main()
+          {
+              out_FragColor = u_color;
+          }`;
 
           const dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
           const maximum = Cartesian3.multiplyByScalar(
             dimensions,
             0.5,
-            new Cartesian3()
+            new Cartesian3(),
           );
           const minimum = Cartesian3.negate(maximum, new Cartesian3());
           const geometry = BoxGeometry.createGeometry(
             new BoxGeometry({
               minimum: minimum,
               maximum: maximum,
-            })
+            }),
           );
-          const attributeLocations = GeometryPipeline.createAttributeLocations(
-            geometry
-          );
+          const attributeLocations =
+            GeometryPipeline.createAttributeLocations(geometry);
           this._va = VertexArray.fromGeometry({
             context: frameState.context,
             geometry: geometry,
@@ -296,7 +292,7 @@ describe(
               ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0)
               : undefined,
             pass: Pass.OPAQUE,
-          })
+          }),
         );
       };
 
@@ -375,5 +371,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

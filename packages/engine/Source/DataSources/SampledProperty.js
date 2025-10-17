@@ -1,6 +1,5 @@
 import binarySearch from "../Core/binarySearch.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -11,11 +10,11 @@ import LinearApproximation from "../Core/LinearApproximation.js";
 const PackableNumber = {
   packedLength: 1,
   pack: function (value, array, startingIndex) {
-    startingIndex = defaultValue(startingIndex, 0);
+    startingIndex = startingIndex ?? 0;
     array[startingIndex] = value;
   },
   unpack: function (array, startingIndex, result) {
-    startingIndex = defaultValue(startingIndex, 0);
+    startingIndex = startingIndex ?? 0;
     return array[startingIndex];
   },
 };
@@ -166,10 +165,8 @@ function SampledProperty(type, derivativeTypes) {
     innerType = PackableNumber;
   }
   let packedLength = innerType.packedLength;
-  let packedInterpolationLength = defaultValue(
-    innerType.packedInterpolationLength,
-    packedLength
-  );
+  let packedInterpolationLength =
+    innerType.packedInterpolationLength ?? packedLength;
 
   let inputOrder = 0;
   let innerDerivativeTypes;
@@ -183,10 +180,8 @@ function SampledProperty(type, derivativeTypes) {
       }
       const derivativePackedLength = derivativeType.packedLength;
       packedLength += derivativePackedLength;
-      packedInterpolationLength += defaultValue(
-        derivativeType.packedInterpolationLength,
-        derivativePackedLength
-      );
+      packedInterpolationLength +=
+        derivativeType.packedInterpolationLength ?? derivativePackedLength;
       innerDerivativeTypes[i] = derivativeType;
     }
     inputOrder = length;
@@ -359,17 +354,19 @@ Object.defineProperties(SampledProperty.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 SampledProperty.prototype.getValue = function (time, result) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("time", time);
-  //>>includeEnd('debug');
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
 
   const times = this._times;
   const timesLength = times.length;
@@ -427,9 +424,9 @@ SampledProperty.prototype.getValue = function (time, result) {
       const numberOfPoints = Math.min(
         interpolationAlgorithm.getRequiredDataPoints(
           this._interpolationDegree,
-          inputOrder
+          inputOrder,
         ),
-        timesLength
+        timesLength,
       );
       if (numberOfPoints !== this._numberOfPoints) {
         this._numberOfPoints = numberOfPoints;
@@ -470,7 +467,7 @@ SampledProperty.prototype.getValue = function (time, result) {
     for (let i = 0; i < length; ++i) {
       xTable[i] = JulianDate.secondsDifference(
         times[firstIndex + i],
-        times[lastIndex]
+        times[lastIndex],
       );
     }
 
@@ -490,7 +487,7 @@ SampledProperty.prototype.getValue = function (time, result) {
         values,
         firstIndex,
         lastIndex,
-        yTable
+        yTable,
       );
     }
 
@@ -503,7 +500,7 @@ SampledProperty.prototype.getValue = function (time, result) {
         xTable,
         yTable,
         packedInterpolationLength,
-        this._interpolationResult
+        this._interpolationResult,
       );
     } else {
       const yStride = Math.floor(packedInterpolationLength / (inputOrder + 1));
@@ -514,7 +511,7 @@ SampledProperty.prototype.getValue = function (time, result) {
         yStride,
         inputOrder,
         inputOrder,
-        this._interpolationResult
+        this._interpolationResult,
       );
     }
 
@@ -526,7 +523,7 @@ SampledProperty.prototype.getValue = function (time, result) {
       values,
       firstIndex,
       lastIndex,
-      result
+      result,
     );
   }
   return innerType.unpack(values, index * this._packedLength, result);
@@ -606,7 +603,7 @@ SampledProperty.prototype.addSample = function (time, value, derivatives) {
     this._times,
     this._values,
     data,
-    this._packedLength
+    this._packedLength,
   );
   this._updateTableLength = true;
   this._definitionChanged.raiseEvent(this);
@@ -625,7 +622,7 @@ SampledProperty.prototype.addSample = function (time, value, derivatives) {
 SampledProperty.prototype.addSamples = function (
   times,
   values,
-  derivativeValues
+  derivativeValues,
 ) {
   const innerDerivativeTypes = this._innerDerivativeTypes;
   const hasDerivatives = defined(innerDerivativeTypes);
@@ -641,7 +638,7 @@ SampledProperty.prototype.addSamples = function (
     (!defined(derivativeValues) || derivativeValues.length !== times.length)
   ) {
     throw new DeveloperError(
-      "times and derivativeValues must be the same length."
+      "times and derivativeValues must be the same length.",
     );
   }
   //>>includeEnd('debug');
@@ -666,10 +663,34 @@ SampledProperty.prototype.addSamples = function (
     this._times,
     this._values,
     data,
-    this._packedLength
+    this._packedLength,
   );
   this._updateTableLength = true;
   this._definitionChanged.raiseEvent(this);
+};
+
+/**
+ * Retrieves the time of the provided sample associated with the index. A negative index accesses the list of samples in reverse order.
+ *
+ * @param {number} index The index of samples list.
+ * @returns {JulianDate | undefined} The JulianDate time of the sample, or undefined if failed.
+ */
+SampledProperty.prototype.getSample = function (index) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
+
+  const times = this._times;
+  const len = times.length;
+  if (!defined(len)) {
+    return undefined;
+  }
+
+  if (index < 0) {
+    index += len;
+  }
+
+  return times[index];
 };
 
 /**
@@ -681,7 +702,7 @@ SampledProperty.prototype.addSamples = function (
  */
 SampledProperty.prototype.addSamplesPackedArray = function (
   packedSamples,
-  epoch
+  epoch,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("packedSamples", packedSamples);
@@ -692,7 +713,7 @@ SampledProperty.prototype.addSamplesPackedArray = function (
     this._times,
     this._values,
     packedSamples,
-    this._packedLength
+    this._packedLength,
   );
   this._updateTableLength = true;
   this._definitionChanged.raiseEvent(this);
@@ -722,7 +743,7 @@ function removeSamples(property, startIndex, numberToRemove) {
   property._times.splice(startIndex, numberToRemove);
   property._values.splice(
     startIndex * packedLength,
-    numberToRemove * packedLength
+    numberToRemove * packedLength,
   );
   property._updateTableLength = true;
   property._definitionChanged.raiseEvent(property);

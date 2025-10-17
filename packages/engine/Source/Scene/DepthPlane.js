@@ -17,7 +17,6 @@ import VertexArray from "../Renderer/VertexArray.js";
 import DepthPlaneFS from "../Shaders/DepthPlaneFS.js";
 import DepthPlaneVS from "../Shaders/DepthPlaneVS.js";
 import SceneMode from "./SceneMode.js";
-import defaultValue from "../Core/defaultValue.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 
 /**
@@ -30,7 +29,7 @@ function DepthPlane(depthPlaneEllipsoidOffset) {
   this._command = undefined;
   this._mode = undefined;
   this._useLogDepth = false;
-  this._ellipsoidOffset = defaultValue(depthPlaneEllipsoidOffset, 0);
+  this._ellipsoidOffset = depthPlaneEllipsoidOffset ?? 0;
 }
 
 const depthQuadScratch = FeatureDetection.supportsTypedArrays()
@@ -58,7 +57,7 @@ function computeDepthQuad(ellipsoid, frameState) {
     const q = Cartesian3.multiplyComponents(
       ellipsoid.oneOverRadii,
       p,
-      scratchCartesian1
+      scratchCartesian1,
     );
 
     const qUnit = Cartesian3.normalize(q, scratchCartesian2);
@@ -66,11 +65,11 @@ function computeDepthQuad(ellipsoid, frameState) {
     // Determine the east and north directions at q.
     const eUnit = Cartesian3.normalize(
       Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3),
-      scratchCartesian3
+      scratchCartesian3,
     );
     const nUnit = Cartesian3.normalize(
       Cartesian3.cross(qUnit, eUnit, scratchCartesian4),
-      scratchCartesian4
+      scratchCartesian4,
     );
 
     const qMagnitude = Cartesian3.magnitude(q);
@@ -82,7 +81,7 @@ function computeDepthQuad(ellipsoid, frameState) {
     center = Cartesian3.multiplyByScalar(
       qUnit,
       1.0 / qMagnitude,
-      scratchCartesian1
+      scratchCartesian1,
     );
     const scalar = wMagnitude / qMagnitude;
     eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian2);
@@ -108,7 +107,7 @@ function computeDepthQuad(ellipsoid, frameState) {
   const lowerRight = Cartesian3.subtract(
     center,
     northOffset,
-    scratchCartesian5
+    scratchCartesian5,
   );
   Cartesian3.add(lowerRight, eastOffset, lowerRight);
   Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
@@ -130,7 +129,7 @@ DepthPlane.prototype.update = function (frameState) {
   const ellipsoid = new Ellipsoid(
     radii.x + this._ellipsoidOffset,
     radii.y + this._ellipsoidOffset,
-    radii.z + this._ellipsoidOffset
+    radii.z + this._ellipsoidOffset,
   );
 
   const useLogDepth = frameState.useLogDepth;
@@ -156,7 +155,7 @@ DepthPlane.prototype.update = function (frameState) {
       renderState: this._rs,
       boundingVolume: new BoundingSphere(
         Cartesian3.ZERO,
-        ellipsoid.maximumRadius
+        ellipsoid.maximumRadius,
       ),
       pass: Pass.OPAQUE,
       owner: this,

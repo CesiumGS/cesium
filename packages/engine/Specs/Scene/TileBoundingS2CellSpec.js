@@ -82,30 +82,30 @@ describe("Scene/TileBoundingS2Cell", function () {
     // Test against the top plane.
     const topPlane = Plane.clone(
       tileS2Cell._boundingPlanes[0],
-      topPlaneScratch
+      topPlaneScratch,
     );
     topPlane.distance -= testDistance;
     camera.position = Plane.projectPointOntoPlane(topPlane, tileS2Cell.center);
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
       testDistance,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     // Test against the first side plane.
     const sidePlane0 = Plane.clone(
       tileS2Cell._boundingPlanes[2],
-      sidePlane0Scratch
+      sidePlane0Scratch,
     );
     const edgeOne = Cartesian3.midpoint(
       tileS2Cell._vertices[0],
       tileS2Cell._vertices[1],
-      edgeOneScratch
+      edgeOneScratch,
     );
 
     const edgeTwo = Cartesian3.midpoint(
       tileS2Cell._vertices[4],
       tileS2Cell._vertices[5],
-      edgeTwoScratch
+      edgeTwoScratch,
     );
 
     const faceCenter = Cartesian3.midpoint(edgeOne, edgeTwo, faceCenterScratch);
@@ -114,7 +114,7 @@ describe("Scene/TileBoundingS2Cell", function () {
     camera.position = Plane.projectPointOntoPlane(sidePlane0, faceCenter);
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
       testDistance,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -127,38 +127,38 @@ describe("Scene/TileBoundingS2Cell", function () {
     camera.position = Cartesian3.midpoint(
       tileS2Cell._vertices[0],
       tileS2Cell._vertices[1],
-      edgeMidpointScratch
+      edgeMidpointScratch,
     );
     camera.position.z -= testDistance;
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
       testDistance,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     // Test with first and second side planes.
     camera.position = Cartesian3.midpoint(
       tileS2Cell._vertices[0],
       tileS2Cell._vertices[4],
-      edgeMidpointScratch
+      edgeMidpointScratch,
     );
     camera.position.x -= 1;
     camera.position.z -= 1;
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
       Math.SQRT2,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     // Test with bottom plane and second side plane. Handles the obtuse dihedral angle case.
     camera.position = Cartesian3.midpoint(
       tileS2Cell._vertices[5],
       tileS2Cell._vertices[6],
-      edgeMidpointScratch
+      edgeMidpointScratch,
     );
     camera.position.x -= 10000;
     camera.position.y -= 1;
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
       10000,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -171,7 +171,7 @@ describe("Scene/TileBoundingS2Cell", function () {
     camera.position.z += 1;
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
       Math.sqrt(3),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -180,7 +180,7 @@ describe("Scene/TileBoundingS2Cell", function () {
     camera.position = new Cartesian3(-Ellipsoid.WGS84.maximumRadius, 0, 0);
     expect(tileS2Cell.distanceToCamera(frameState)).toEqualEpsilon(
       Ellipsoid.WGS84.maximumRadius + tileS2Cell._boundingPlanes[1].distance,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -203,7 +203,7 @@ describe("Scene/TileBoundingS2Cell", function () {
 
   it("intersects plane", function () {
     expect(tileS2Cell.intersectPlane(Plane.ORIGIN_ZX_PLANE)).toEqual(
-      Intersect.INTERSECTING
+      Intersect.INTERSECTING,
     );
 
     const outsidePlane = Plane.clone(Plane.ORIGIN_YZ_PLANE);
@@ -211,7 +211,7 @@ describe("Scene/TileBoundingS2Cell", function () {
     expect(tileS2Cell.intersectPlane(outsidePlane)).toEqual(Intersect.OUTSIDE);
 
     expect(tileS2Cell.intersectPlane(Plane.ORIGIN_YZ_PLANE)).toEqual(
-      Intersect.INSIDE
+      Intersect.INSIDE,
     );
   });
 });

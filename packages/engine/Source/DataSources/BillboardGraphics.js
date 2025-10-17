@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -29,6 +29,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | BoundingRectangle} [imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
  * @property {Property | number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ * @property {Property | SplitDirection} [splitDirection] A Property specifying the {@link SplitDirection} of the billboard.
  */
 
 /**
@@ -89,8 +90,10 @@ function BillboardGraphics(options) {
   this._distanceDisplayConditionSubscription = undefined;
   this._disableDepthTestDistance = undefined;
   this._disableDepthTestDistanceSubscription = undefined;
+  this._splitDirection = undefined;
+  this._splitDirectionSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
 
 Object.defineProperties(BillboardGraphics.prototype, {
@@ -300,7 +303,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   pixelOffsetScaleByDistance: createPropertyDescriptor(
-    "pixelOffsetScaleByDistance"
+    "pixelOffsetScaleByDistance",
   ),
 
   /**
@@ -318,7 +321,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -328,8 +331,16 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
-    "disableDepthTestDistance"
+    "disableDepthTestDistance",
   ),
+
+  /**
+   * Gets or sets the Property specifying the {@link SplitDirection} of this billboard.
+   * @memberof BillboardGraphics.prototype
+   * @type {Property|undefined}
+   * @default SplitDirection.NONE
+   */
+  splitDirection: createPropertyDescriptor("splitDirection"),
 });
 
 /**
@@ -362,6 +373,7 @@ BillboardGraphics.prototype.clone = function (result) {
   result.imageSubRegion = this._imageSubRegion;
   result.distanceDisplayCondition = this._distanceDisplayCondition;
   result.disableDepthTestDistance = this._disableDepthTestDistance;
+  result.splitDirection = this._splitDirection;
   return result;
 };
 
@@ -378,52 +390,30 @@ BillboardGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this._show, source.show);
-  this.image = defaultValue(this._image, source.image);
-  this.scale = defaultValue(this._scale, source.scale);
-  this.pixelOffset = defaultValue(this._pixelOffset, source.pixelOffset);
-  this.eyeOffset = defaultValue(this._eyeOffset, source.eyeOffset);
-  this.horizontalOrigin = defaultValue(
-    this._horizontalOrigin,
-    source.horizontalOrigin
-  );
-  this.verticalOrigin = defaultValue(
-    this._verticalOrigin,
-    source.verticalOrigin
-  );
-  this.heightReference = defaultValue(
-    this._heightReference,
-    source.heightReference
-  );
-  this.color = defaultValue(this._color, source.color);
-  this.rotation = defaultValue(this._rotation, source.rotation);
-  this.alignedAxis = defaultValue(this._alignedAxis, source.alignedAxis);
-  this.sizeInMeters = defaultValue(this._sizeInMeters, source.sizeInMeters);
-  this.width = defaultValue(this._width, source.width);
-  this.height = defaultValue(this._height, source.height);
-  this.scaleByDistance = defaultValue(
-    this._scaleByDistance,
-    source.scaleByDistance
-  );
-  this.translucencyByDistance = defaultValue(
-    this._translucencyByDistance,
-    source.translucencyByDistance
-  );
-  this.pixelOffsetScaleByDistance = defaultValue(
-    this._pixelOffsetScaleByDistance,
-    source.pixelOffsetScaleByDistance
-  );
-  this.imageSubRegion = defaultValue(
-    this._imageSubRegion,
-    source.imageSubRegion
-  );
-  this.distanceDisplayCondition = defaultValue(
-    this._distanceDisplayCondition,
-    source.distanceDisplayCondition
-  );
-  this.disableDepthTestDistance = defaultValue(
-    this._disableDepthTestDistance,
-    source.disableDepthTestDistance
-  );
+  this.show = this._show ?? source.show;
+  this.image = this._image ?? source.image;
+  this.scale = this._scale ?? source.scale;
+  this.pixelOffset = this._pixelOffset ?? source.pixelOffset;
+  this.eyeOffset = this._eyeOffset ?? source.eyeOffset;
+  this.horizontalOrigin = this._horizontalOrigin ?? source.horizontalOrigin;
+  this.verticalOrigin = this._verticalOrigin ?? source.verticalOrigin;
+  this.heightReference = this._heightReference ?? source.heightReference;
+  this.color = this._color ?? source.color;
+  this.rotation = this._rotation ?? source.rotation;
+  this.alignedAxis = this._alignedAxis ?? source.alignedAxis;
+  this.sizeInMeters = this._sizeInMeters ?? source.sizeInMeters;
+  this.width = this._width ?? source.width;
+  this.height = this._height ?? source.height;
+  this.scaleByDistance = this._scaleByDistance ?? source.scaleByDistance;
+  this.translucencyByDistance =
+    this._translucencyByDistance ?? source.translucencyByDistance;
+  this.pixelOffsetScaleByDistance =
+    this._pixelOffsetScaleByDistance ?? source.pixelOffsetScaleByDistance;
+  this.imageSubRegion = this._imageSubRegion ?? source.imageSubRegion;
+  this.distanceDisplayCondition =
+    this._distanceDisplayCondition ?? source.distanceDisplayCondition;
+  this.disableDepthTestDistance =
+    this._disableDepthTestDistance ?? source.disableDepthTestDistance;
+  this.splitDirection = this.splitDirection ?? source.splitDirection;
 };
 export default BillboardGraphics;

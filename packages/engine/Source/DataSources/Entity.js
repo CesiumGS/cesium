@@ -2,7 +2,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -10,6 +10,7 @@ import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
+import TrackingReferenceFrame from "../Core/TrackingReferenceFrame.js";
 import Transforms from "../Core/Transforms.js";
 import GroundPolylinePrimitive from "../Scene/GroundPolylinePrimitive.js";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
@@ -51,7 +52,7 @@ function createPositionPropertyDescriptor(name) {
   return createPropertyDescriptor(
     name,
     undefined,
-    createConstantPositionProperty
+    createConstantPositionProperty,
   );
 }
 
@@ -73,8 +74,9 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {string} [name] A human readable name to display to users. It does not have to be unique.
  * @property {TimeIntervalCollection} [availability] The availability, if any, associated with this object.
  * @property {boolean} [show] A boolean value indicating if the entity and its children are displayed.
+ * @property {TrackingReferenceFrame} [trackingReferenceFrame=TrackingReferenceFrame.AUTODETECT] The reference frame used when this entity is being tracked. <br/> If <code>undefined</code>, reference frame is determined based on entity velocity: near-surface slow moving entities are tracked using the local east-north-up reference frame, whereas fast moving entities such as satellites are tracked using VVLH (Vehicle Velocity, Local Horizontal).
  * @property {Property | string} [description] A string Property specifying an HTML description for this entity.
- * @property {PositionProperty | Cartesian3} [position] A Property specifying the entity position.
+ * @property {PositionProperty | Cartesian3 | CallbackPositionProperty} [position] A Property specifying the entity position.
  * @property {Property | Quaternion} [orientation=Transforms.eastNorthUpToFixedFrame(position)] A Property specifying the entity orientation in respect to Earth-fixed-Earth-centered (ECEF). If undefined, east-north-up at entity position is used.
  * @property {Property | Cartesian3} [viewFrom] A suggested initial offset for viewing this object.
  * @property {Entity} [parent] A parent entity to associate with this entity.
@@ -110,7 +112,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @see {@link https://cesium.com/learn/cesiumjs-learn/cesiumjs-creating-entities/|Creating Entities}
  */
 function Entity(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   let id = options.id;
   if (!defined(id)) {
@@ -121,7 +123,9 @@ function Entity(options) {
   this._id = id;
   this._definitionChanged = new Event();
   this._name = options.name;
-  this._show = defaultValue(options.show, true);
+  this._show = options.show ?? true;
+  this._trackingReferenceFrame =
+    options.trackingReferenceFrame ?? TrackingReferenceFrame.AUTODETECT;
   this._parent = undefined;
   this._propertyNames = [
     "billboard",
@@ -220,7 +224,7 @@ function updateShow(entity, children, isShowing) {
     entity,
     "isShowing",
     isShowing,
-    !isShowing
+    !isShowing,
   );
 }
 
@@ -296,6 +300,14 @@ Object.defineProperties(Entity.prototype, {
       this._definitionChanged.raiseEvent(this, "show", value, !value);
     },
   },
+  /**
+   * Gets or sets the entity's tracking reference frame.
+   * @demo {@link https://sandcastle.cesium.com/index.html?src=Entity tracking.html|Cesium Sandcastle Entity tracking Demo}
+   *
+   * @memberof Entity.prototype
+   * @type {TrackingReferenceFrame}
+   */
+  trackingReferenceFrame: createRawPropertyDescriptor("trackingReferenceFrame"),
   /**
    * Gets whether this entity is being displayed, taking into account
    * the visibility of any ancestor entities.
@@ -461,7 +473,7 @@ Object.defineProperties(Entity.prototype, {
    */
   polylineVolume: createPropertyTypeDescriptor(
     "polylineVolume",
-    PolylineVolumeGraphics
+    PolylineVolumeGraphics,
   ),
   /**
    * Gets or sets the bag of arbitrary properties associated with this entity.
@@ -548,7 +560,7 @@ Entity.prototype.addProperty = function (propertyName) {
   }
   if (propertyNames.indexOf(propertyName) !== -1) {
     throw new DeveloperError(
-      `${propertyName} is already a registered property.`
+      `${propertyName} is already a registered property.`,
     );
   }
   if (propertyName in this) {
@@ -560,7 +572,7 @@ Entity.prototype.addProperty = function (propertyName) {
   Object.defineProperty(
     this,
     propertyName,
-    createRawPropertyDescriptor(propertyName, true)
+    createRawPropertyDescriptor(propertyName, true),
   );
 };
 
@@ -604,8 +616,8 @@ Entity.prototype.merge = function (source) {
 
   //Name, show, and availability are not Property objects and are currently handled differently.
   //source.show is intentionally ignored because this.show always has a value.
-  this.name = defaultValue(this.name, source.name);
-  this.availability = defaultValue(this.availability, source.availability);
+  this.name = this.name ?? source.name;
+  this.availability = this.availability ?? source.availability;
 
   const propertyNames = this._propertyNames;
   const sourcePropertyNames = defined(source._propertyNames)
@@ -672,7 +684,7 @@ Entity.prototype.computeModelMatrix = function (time, result) {
   const position = Property.getValueOrUndefined(
     this._position,
     time,
-    positionScratch
+    positionScratch,
   );
   if (!defined(position)) {
     return undefined;
@@ -681,7 +693,7 @@ Entity.prototype.computeModelMatrix = function (time, result) {
   const orientation = Property.getValueOrUndefined(
     this._orientation,
     time,
-    orientationScratch
+    orientationScratch,
   );
   if (!defined(orientation)) {
     result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
@@ -689,7 +701,7 @@ Entity.prototype.computeModelMatrix = function (time, result) {
     result = Matrix4.fromRotationTranslation(
       Matrix3.fromQuaternion(orientation, matrix3Scratch),
       position,
-      result
+      result,
     );
   }
   return result;
@@ -703,7 +715,7 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   heightReferenceProperty,
   heightOffset,
   ellipsoid,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("time", time);
@@ -711,12 +723,12 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   const heightReference = Property.getValueOrDefault(
     heightReferenceProperty,
     time,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   let position = Property.getValueOrUndefined(
     this._position,
     time,
-    positionScratch
+    positionScratch,
   );
   if (
     heightReference === HeightReference.NONE ||
@@ -737,7 +749,7 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   const orientation = Property.getValueOrUndefined(
     this._orientation,
     time,
-    orientationScratch
+    orientationScratch,
   );
   if (!defined(orientation)) {
     result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
@@ -745,7 +757,7 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
     result = Matrix4.fromRotationTranslation(
       Matrix3.fromQuaternion(orientation, matrix3Scratch),
       position,
-      result
+      result,
     );
   }
   return result;

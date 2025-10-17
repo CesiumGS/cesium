@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
@@ -38,7 +38,7 @@ import ModelUtility from "./Model/ModelUtility.js";
  * @private
  */
 function GltfJsonLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
@@ -187,7 +187,7 @@ async function upgradeVersion(gltfJsonLoader, gltf) {
           }
 
           buffer.extras._pipeline.source = bufferLoader.typedArray;
-        })
+        }),
       );
     }
   });
@@ -209,7 +209,7 @@ function decodeDataUris(gltf) {
       promises.push(
         Resource.fetchArrayBuffer(bufferUri).then(function (arrayBuffer) {
           buffer.extras._pipeline.source = new Uint8Array(arrayBuffer);
-        })
+        }),
       );
     }
   });

@@ -157,6 +157,15 @@ function PrimitiveLoadPlan(primitive) {
    * @private
    */
   this.outlineIndices = undefined;
+
+  /**
+   * Set this true to indicate that the primitive has the
+   * KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extension and needs to be post-processed
+   *
+   * @type {boolean}
+   * @private
+   */
+  this.needsGaussianSplats = false;
 }
 
 /**
@@ -173,6 +182,10 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
   if (this.needsOutlines) {
     generateOutlines(this);
     generateBuffers(this, context);
+  }
+
+  if (this.needsGaussianSplats) {
+    setupGaussianSplatBuffers(this, context);
   }
 };
 
@@ -196,7 +209,7 @@ function generateOutlines(loadPlan) {
   // The outline generator creates a new attribute for the outline coordinates
   // that are used with a lookup texture.
   const outlineCoordinates = makeOutlineCoordinatesAttribute(
-    generator.outlineCoordinates
+    generator.outlineCoordinates,
   );
   const outlineCoordinatesPlan = new AttributeLoadPlan(outlineCoordinates);
   outlineCoordinatesPlan.loadBuffer = true;
@@ -224,6 +237,16 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   attribute.count = outlineCoordinatesTypedArray.length / 3;
 
   return attribute;
+}
+
+function setupGaussianSplatBuffers(loadPlan, context) {
+  const attributePlans = loadPlan.attributePlans;
+  const attrLen = attributePlans.length;
+  for (let i = 0; i < attrLen; i++) {
+    const attributePlan = attributePlans[i];
+    attributePlan.loadBuffer = false;
+    attributePlan.loadTypedArray = true;
+  }
 }
 
 function generateBuffers(loadPlan, context) {

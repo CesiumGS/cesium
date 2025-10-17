@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import FeatureDetection from "./FeatureDetection.js";
 import CesiumMath from "./Math.js";
@@ -24,28 +23,28 @@ function Quaternion(x, y, z, w) {
    * @type {number}
    * @default 0.0
    */
-  this.x = defaultValue(x, 0.0);
+  this.x = x ?? 0.0;
 
   /**
    * The Y component.
    * @type {number}
    * @default 0.0
    */
-  this.y = defaultValue(y, 0.0);
+  this.y = y ?? 0.0;
 
   /**
    * The Z component.
    * @type {number}
    * @default 0.0
    */
-  this.z = defaultValue(z, 0.0);
+  this.z = z ?? 0.0;
 
   /**
    * The W component.
    * @type {number}
    * @default 0.0
    */
-  this.w = defaultValue(w, 0.0);
+  this.w = w ?? 0.0;
 }
 
 let fromAxisAngleScratch = new Cartesian3();
@@ -136,7 +135,7 @@ Quaternion.fromRotationMatrix = function (matrix, result) {
       matrix[Matrix3.getElementIndex(i, i)] -
         matrix[Matrix3.getElementIndex(j, j)] -
         matrix[Matrix3.getElementIndex(k, k)] +
-        1.0
+        1.0,
     );
 
     const quat = fromRotationMatrixQuat;
@@ -192,22 +191,22 @@ Quaternion.fromHeadingPitchRoll = function (headingPitchRoll, result) {
   scratchRollQuaternion = Quaternion.fromAxisAngle(
     Cartesian3.UNIT_X,
     headingPitchRoll.roll,
-    scratchHPRQuaternion
+    scratchHPRQuaternion,
   );
   scratchPitchQuaternion = Quaternion.fromAxisAngle(
     Cartesian3.UNIT_Y,
     -headingPitchRoll.pitch,
-    result
+    result,
   );
   result = Quaternion.multiply(
     scratchPitchQuaternion,
     scratchRollQuaternion,
-    scratchPitchQuaternion
+    scratchPitchQuaternion,
   );
   scratchHeadingQuaternion = Quaternion.fromAxisAngle(
     Cartesian3.UNIT_Z,
     -headingPitchRoll.heading,
-    scratchHPRQuaternion
+    scratchHPRQuaternion,
   );
   return Quaternion.multiply(scratchHeadingQuaternion, result, result);
 };
@@ -239,7 +238,7 @@ Quaternion.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.x;
   array[startingIndex++] = value.y;
@@ -262,7 +261,7 @@ Quaternion.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new Quaternion();
@@ -292,16 +291,16 @@ Quaternion.convertPackedArrayForInterpolation = function (
   packedArray,
   startingIndex,
   lastIndex,
-  result
+  result,
 ) {
   Quaternion.unpack(
     packedArray,
     lastIndex * 4,
-    sampledQuaternionQuaternion0Conjugate
+    sampledQuaternionQuaternion0Conjugate,
   );
   Quaternion.conjugate(
     sampledQuaternionQuaternion0Conjugate,
-    sampledQuaternionQuaternion0Conjugate
+    sampledQuaternionQuaternion0Conjugate,
   );
 
   for (let i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
@@ -309,25 +308,25 @@ Quaternion.convertPackedArrayForInterpolation = function (
     Quaternion.unpack(
       packedArray,
       (startingIndex + i) * 4,
-      sampledQuaternionTempQuaternion
+      sampledQuaternionTempQuaternion,
     );
 
     Quaternion.multiply(
       sampledQuaternionTempQuaternion,
       sampledQuaternionQuaternion0Conjugate,
-      sampledQuaternionTempQuaternion
+      sampledQuaternionTempQuaternion,
     );
 
     if (sampledQuaternionTempQuaternion.w < 0) {
       Quaternion.negate(
         sampledQuaternionTempQuaternion,
-        sampledQuaternionTempQuaternion
+        sampledQuaternionTempQuaternion,
       );
     }
 
     Quaternion.computeAxis(
       sampledQuaternionTempQuaternion,
-      sampledQuaternionAxis
+      sampledQuaternionAxis,
     );
     const angle = Quaternion.computeAngle(sampledQuaternionTempQuaternion);
     if (!defined(result)) {
@@ -354,7 +353,7 @@ Quaternion.unpackInterpolationResult = function (
   sourceArray,
   firstIndex,
   lastIndex,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = new Quaternion();
@@ -370,14 +369,14 @@ Quaternion.unpackInterpolationResult = function (
     Quaternion.fromAxisAngle(
       sampledQuaternionRotation,
       magnitude,
-      sampledQuaternionTempQuaternion
+      sampledQuaternionTempQuaternion,
     );
   }
 
   return Quaternion.multiply(
     sampledQuaternionTempQuaternion,
     sampledQuaternionQuaternion0,
-    result
+    result,
   );
 };
 
@@ -398,7 +397,7 @@ Quaternion.clone = function (quaternion, result) {
       quaternion.x,
       quaternion.y,
       quaternion.z,
-      quaternion.w
+      quaternion.w,
     );
   }
 
@@ -776,12 +775,12 @@ Quaternion.slerp = function (start, end, t, result) {
   slerpScaledP = Quaternion.multiplyByScalar(
     start,
     Math.sin((1 - t) * theta),
-    slerpScaledP
+    slerpScaledP,
   );
   slerpScaledR = Quaternion.multiplyByScalar(
     r,
     Math.sin(t * theta),
-    slerpScaledR
+    slerpScaledR,
   );
   result = Quaternion.add(slerpScaledP, slerpScaledR, result);
   return Quaternion.multiplyByScalar(result, 1.0 / Math.sin(theta), result);
@@ -1006,7 +1005,7 @@ Quaternion.fastSlerp = function (start, end, t, result) {
   const temp = Quaternion.multiplyByScalar(
     start,
     cD,
-    fastSlerpScratchQuaternion
+    fastSlerpScratchQuaternion,
   );
   Quaternion.multiplyByScalar(end, cT, result);
   return Quaternion.add(temp, result, result);
@@ -1072,7 +1071,7 @@ Quaternion.equals = function (left, right) {
  * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Quaternion.equalsEpsilon = function (left, right, epsilon) {
-  epsilon = defaultValue(epsilon, 0);
+  epsilon = epsilon ?? 0;
 
   return (
     left === right ||

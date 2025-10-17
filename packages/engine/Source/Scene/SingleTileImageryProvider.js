@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
@@ -43,7 +43,7 @@ import ImageryProvider from "./ImageryProvider.js";
  * @see UrlTemplateImageryProvider
  */
 function SingleTileImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -56,7 +56,7 @@ function SingleTileImageryProvider(options) {
   this._defaultMinificationFilter = undefined;
   this._defaultMagnificationFilter = undefined;
 
-  const rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
+  const rectangle = options.rectangle ?? Rectangle.MAX_VALUE;
   const tilingScheme = new GeographicTilingScheme({
     rectangle: rectangle,
     numberOfLevelZeroTilesX: 1,
@@ -261,7 +261,7 @@ function failure(resource, error, provider, previousError) {
     0,
     0,
     0,
-    error
+    error,
   );
   if (reportedError.retry) {
     return doRequest(resource, provider, reportedError);
@@ -283,18 +283,18 @@ async function doRequest(resource, provider, previousError) {
 }
 
 /**
- * @typedef {Object} SingleTileImageryProvider.fromUrlOptions
+ * @typedef {object} SingleTileImageryProvider.fromUrlOptions
  *
  * Initialization options for the SingleTileImageryProvider constructor when using SingleTileImageryProvider.fromUrl
  *
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  */
 
 /**
  * Creates a provider for a single, top-level imagery tile.  The single image is assumed to use a
- * @param {Resource|String} url The url for the tile
+ * @param {Resource|string} url The url for the tile
  * @param {SingleTileImageryProvider.fromUrlOptions} [options] Object describing initialization options.
  * @returns {Promise.<SingleTileImageryProvider>} The resolved SingleTileImageryProvider.
  *
@@ -309,7 +309,7 @@ SingleTileImageryProvider.fromUrl = async function (url, options) {
   const resource = Resource.createIfNeeded(url);
   const image = await doRequest(resource);
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const provider = new SingleTileImageryProvider({
     ...options,
     url: url,
@@ -345,7 +345,7 @@ SingleTileImageryProvider.prototype.requestImage = async function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   if (!this._hasError && !defined(this._image)) {
     const image = await doRequest(this._resource, this);
@@ -373,7 +373,7 @@ SingleTileImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return undefined;
 };

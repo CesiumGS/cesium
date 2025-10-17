@@ -1,7 +1,8 @@
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
@@ -20,7 +21,7 @@ const defaultOutlineWidth = 1.0;
  * @param {Property|number} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
  */
 function PolylineOutlineMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._color = undefined;
@@ -102,14 +103,19 @@ PolylineOutlineMaterialProperty.prototype.getType = function (time) {
   return "PolylineOutline";
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 PolylineOutlineMaterialProperty.prototype.getValue = function (time, result) {
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
   if (!defined(result)) {
     result = {};
   }
@@ -117,18 +123,18 @@ PolylineOutlineMaterialProperty.prototype.getValue = function (time, result) {
     this._color,
     time,
     defaultColor,
-    result.color
+    result.color,
   );
   result.outlineColor = Property.getValueOrClonedDefault(
     this._outlineColor,
     time,
     defaultOutlineColor,
-    result.outlineColor
+    result.outlineColor,
   );
   result.outlineWidth = Property.getValueOrDefault(
     this._outlineWidth,
     time,
-    defaultOutlineWidth
+    defaultOutlineWidth,
   );
   return result;
 };

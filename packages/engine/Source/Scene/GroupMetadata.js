@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 
@@ -20,7 +20,7 @@ import MetadataEntity from "./MetadataEntity.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function GroupMetadata(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
   const group = options.group;
   const metadataClass = options.class;
@@ -119,7 +119,7 @@ GroupMetadata.prototype.hasPropertyBySemantic = function (semantic) {
   return MetadataEntity.hasPropertyBySemantic(
     semantic,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -164,7 +164,7 @@ GroupMetadata.prototype.setProperty = function (propertyId, value) {
     propertyId,
     value,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -179,7 +179,7 @@ GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(
     semantic,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -196,7 +196,7 @@ GroupMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
     semantic,
     value,
     this._properties,
-    this._class
+    this._class,
   );
 };
 

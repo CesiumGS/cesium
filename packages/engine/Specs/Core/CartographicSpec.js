@@ -9,12 +9,12 @@ describe("Core/Cartographic", function () {
   const surfaceCartesian = new Cartesian3(
     4094327.7921465295,
     1909216.4044747739,
-    4487348.4088659193
+    4487348.4088659193,
   );
   const surfaceCartographic = new Cartographic(
     CesiumMath.toRadians(25.0),
     CesiumMath.toRadians(45.0),
-    0.0
+    0.0,
   );
 
   afterEach(function () {
@@ -42,7 +42,7 @@ describe("Core/Cartographic", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const actual = Cartographic.toCartesian(new Cartographic(lon, lat, height));
     const expected = ellipsoid.cartographicToCartesian(
-      new Cartographic(lon, lat, height)
+      new Cartographic(lon, lat, height),
     );
     expect(actual).toEqual(expected);
   });
@@ -53,7 +53,7 @@ describe("Core/Cartographic", function () {
     const expectedPosition = new Cartesian3(
       1593514.338295244,
       691991.9979835141,
-      20442.318221152018
+      20442.318221152018,
     );
     const cartographic = Cartographic.fromDegrees(23.47315, 0.67416);
     const position = Cartographic.toCartesian(cartographic);
@@ -144,14 +144,14 @@ describe("Core/Cartographic", function () {
     const position = new Cartesian3(
       1593514.338295244,
       691991.9979835141,
-      20442.318221152018
+      20442.318221152018,
     );
     const cartographic = new Cartographic.fromCartesian(position);
 
     const expectedCartographic = Cartographic.fromDegrees(23.47315, 0.67416);
     expect(cartographic).toEqualEpsilon(
       expectedCartographic,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
   });
 
@@ -166,7 +166,7 @@ describe("Core/Cartographic", function () {
     const cartesian1 = Cartesian3.fromRadians(
       cartographic1.longitude,
       cartographic1.latitude,
-      cartographic1.height
+      cartographic1.height,
     );
     const cartographic2 = Cartographic.fromCartesian(cartesian1);
 
@@ -178,7 +178,7 @@ describe("Core/Cartographic", function () {
     const cartesian1 = Cartesian3.fromRadians(
       cartographic1.longitude,
       cartographic1.latitude,
-      cartographic1.height
+      cartographic1.height,
     );
     const cartographic2 = Cartographic.fromCartesian(cartesian1);
 
@@ -219,28 +219,28 @@ describe("Core/Cartographic", function () {
   it("equalsEpsilon", function () {
     const cartographic = new Cartographic(1.0, 2.0, 3.0);
     expect(
-      cartographic.equalsEpsilon(new Cartographic(1.0, 2.0, 3.0), 0.0)
+      cartographic.equalsEpsilon(new Cartographic(1.0, 2.0, 3.0), 0.0),
     ).toEqual(true);
     expect(
-      cartographic.equalsEpsilon(new Cartographic(1.0, 2.0, 3.0), 1.0)
+      cartographic.equalsEpsilon(new Cartographic(1.0, 2.0, 3.0), 1.0),
     ).toEqual(true);
     expect(
-      cartographic.equalsEpsilon(new Cartographic(2.0, 2.0, 3.0), 1.0)
+      cartographic.equalsEpsilon(new Cartographic(2.0, 2.0, 3.0), 1.0),
     ).toEqual(true);
     expect(
-      cartographic.equalsEpsilon(new Cartographic(1.0, 3.0, 3.0), 1.0)
+      cartographic.equalsEpsilon(new Cartographic(1.0, 3.0, 3.0), 1.0),
     ).toEqual(true);
     expect(
-      cartographic.equalsEpsilon(new Cartographic(1.0, 2.0, 4.0), 1.0)
+      cartographic.equalsEpsilon(new Cartographic(1.0, 2.0, 4.0), 1.0),
     ).toEqual(true);
     expect(
-      cartographic.equalsEpsilon(new Cartographic(2.0, 2.0, 3.0), 0.99999)
+      cartographic.equalsEpsilon(new Cartographic(2.0, 2.0, 3.0), 0.99999),
     ).toEqual(false);
     expect(
-      cartographic.equalsEpsilon(new Cartographic(1.0, 3.0, 3.0), 0.99999)
+      cartographic.equalsEpsilon(new Cartographic(1.0, 3.0, 3.0), 0.99999),
     ).toEqual(false);
     expect(
-      cartographic.equalsEpsilon(new Cartographic(1.0, 2.0, 4.0), 0.99999)
+      cartographic.equalsEpsilon(new Cartographic(1.0, 2.0, 4.0), 0.99999),
     ).toEqual(false);
     expect(cartographic.equalsEpsilon(undefined, 1)).toEqual(false);
   });

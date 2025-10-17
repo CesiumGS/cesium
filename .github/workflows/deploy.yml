@@ -1,7 +1,7 @@
 name: deploy
-on: 
+on:
   push:
-    branches-ignore: 
+    branches-ignore:
       - 'cesium.com'
       - production
 concurrency:
@@ -22,12 +22,14 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_REPO: ${{ github.repository }}
       GITHUB_SHA: ${{ github.sha }}
+      BASE_URL: /cesium/${{ github.ref_name }}/
+      DEPLOYED_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
     steps:
-      - uses: actions/checkout@v4
-      - name: install node 20
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - name: install node 22
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
       - name: npm install
         run: npm install
       - name: set the version in package.json
@@ -40,6 +42,8 @@ jobs:
         run: npm pack --workspaces &> /dev/null
       - name: build apps
         run: npm run build-apps
+      - name: build sandcastle v2
+        run: npm run build-ci -w packages/sandcastle -- -l warn
       - uses: ./.github/actions/verify-package
       - name: deploy to s3
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
@@ -47,7 +51,6 @@ jobs:
           aws s3 sync . s3://cesium-public-builds/cesium/$BRANCH/ \
           --cache-control "no-cache" \
           --exclude ".git/*" \
-          --exclude ".concierge/*" \
           --exclude ".github/*" \
           --exclude ".husky/*" \
           --exclude ".vscode/*" \
@@ -58,7 +61,7 @@ jobs:
           --exclude "node_modules/*" \
           --exclude "scripts/*" \
           --exclude "Tools/*" \
-          --delete 
+          --delete
       - name: set status
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: npm run deploy-status -- --status success --message Deployed

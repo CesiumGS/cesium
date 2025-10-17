@@ -12,7 +12,9 @@
   border-radius: 10px;
   transform: scale(0.01);
   transform-origin: 234px -10px;
-  transition: visibility 0s 0.25s, transform 0.25s ease-in;
+  transition:
+    visibility 0s 0.25s,
+    transform 0.25s ease-in;
 }
 
 .cesium-navigation-help-visible {

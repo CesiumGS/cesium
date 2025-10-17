@@ -58,7 +58,7 @@ SceneTransitioner.prototype.morphTo2D = function (duration, ellipsoid) {
     this,
     this._previousMode,
     SceneMode.SCENE2D,
-    true
+    true,
   );
 
   scene._mode = SceneMode.MORPHING;
@@ -98,7 +98,7 @@ const scratchToCVCamera = {
 
 SceneTransitioner.prototype.morphToColumbusView = function (
   duration,
-  ellipsoid
+  ellipsoid,
 ) {
   if (defined(this._completeMorph)) {
     this._completeMorph();
@@ -117,7 +117,7 @@ SceneTransitioner.prototype.morphToColumbusView = function (
     this,
     this._previousMode,
     SceneMode.COLUMBUS_VIEW,
-    true
+    true,
   );
 
   scene.camera._setTransform(Matrix4.IDENTITY);
@@ -133,7 +133,7 @@ SceneTransitioner.prototype.morphToColumbusView = function (
     position = Cartesian3.multiplyByScalar(
       Cartesian3.normalize(position, position),
       5.0 * ellipsoid.maximumRadius,
-      position
+      position,
     );
 
     Cartesian3.negate(Cartesian3.normalize(position, direction), direction);
@@ -152,18 +152,18 @@ SceneTransitioner.prototype.morphToColumbusView = function (
 
       const surfacePoint = ellipsoid.scaleToGeodeticSurface(
         position,
-        scratchToCVSurfacePosition
+        scratchToCVSurfacePosition,
       );
       const toENU = Transforms.eastNorthUpToFixedFrame(
         surfacePoint,
         ellipsoid,
-        scratchToCVToENU
+        scratchToCVToENU,
       );
       Matrix4.inverseTransformation(toENU, toENU);
 
       scene.mapProjection.project(
         ellipsoid.cartesianToCartographic(position, scratchToCVCartographic),
-        position
+        position,
       );
       Matrix4.multiplyByPointAsVector(toENU, direction, direction);
       Matrix4.multiplyByPointAsVector(toENU, up, up);
@@ -196,17 +196,17 @@ SceneTransitioner.prototype.morphToColumbusView = function (
     cameraCV.position2D = Matrix4.multiplyByPoint(
       Camera.TRANSFORM_2D,
       position,
-      scratchToCVPosition2D
+      scratchToCVPosition2D,
     );
     cameraCV.direction2D = Matrix4.multiplyByPointAsVector(
       Camera.TRANSFORM_2D,
       direction,
-      scratchToCVDirection2D
+      scratchToCVDirection2D,
     );
     cameraCV.up2D = Matrix4.multiplyByPointAsVector(
       Camera.TRANSFORM_2D,
       up,
-      scratchToCVUp2D
+      scratchToCVUp2D,
     );
 
     scene._mode = SceneMode.MORPHING;
@@ -244,7 +244,7 @@ SceneTransitioner.prototype.morphTo3D = function (duration, ellipsoid) {
     this,
     this._previousMode,
     SceneMode.SCENE3D,
-    true
+    true,
   );
 
   scene._mode = SceneMode.MORPHING;
@@ -261,7 +261,7 @@ SceneTransitioner.prototype.morphTo3D = function (duration, ellipsoid) {
         0.0,
         5.0 * ellipsoid.maximumRadius,
         ellipsoid,
-        camera3D.position
+        camera3D.position,
       );
       Cartesian3.negate(camera3D.position, camera3D.direction);
       Cartesian3.normalize(camera3D.direction, camera3D.direction);
@@ -323,7 +323,7 @@ SceneTransitioner.prototype.destroy = function () {
 function createMorphHandler(transitioner, completeMorphFunction) {
   if (transitioner._scene.completeMorphOnUserInput) {
     transitioner._morphHandler = new ScreenSpaceEventHandler(
-      transitioner._scene.canvas
+      transitioner._scene.canvas,
     );
 
     const completeMorph = function () {
@@ -334,19 +334,19 @@ function createMorphHandler(transitioner, completeMorphFunction) {
     transitioner._completeMorph = completeMorph;
     transitioner._morphHandler.setInputAction(
       completeMorph,
-      ScreenSpaceEventType.LEFT_DOWN
+      ScreenSpaceEventType.LEFT_DOWN,
     );
     transitioner._morphHandler.setInputAction(
       completeMorph,
-      ScreenSpaceEventType.MIDDLE_DOWN
+      ScreenSpaceEventType.MIDDLE_DOWN,
     );
     transitioner._morphHandler.setInputAction(
       completeMorph,
-      ScreenSpaceEventType.RIGHT_DOWN
+      ScreenSpaceEventType.RIGHT_DOWN,
     );
     transitioner._morphHandler.setInputAction(
       completeMorph,
-      ScreenSpaceEventType.WHEEL
+      ScreenSpaceEventType.WHEEL,
     );
   }
 }
@@ -376,18 +376,18 @@ function getColumbusViewTo3DCamera(transitioner, ellipsoid) {
 
   const positionCarto = scene.mapProjection.unproject(
     camera.position,
-    scratchCVTo3DCartographic
+    scratchCVTo3DCartographic,
   );
   ellipsoid.cartographicToCartesian(positionCarto, position);
   const surfacePoint = ellipsoid.scaleToGeodeticSurface(
     position,
-    scratchCVTo3DSurfacePoint
+    scratchCVTo3DSurfacePoint,
   );
 
   const fromENU = Transforms.eastNorthUpToFixedFrame(
     surfacePoint,
     ellipsoid,
-    scratchCVTo3DFromENU
+    scratchCVTo3DFromENU,
   );
 
   Matrix4.multiplyByPointAsVector(fromENU, camera.direction, direction);
@@ -407,7 +407,7 @@ function morphFromColumbusViewTo3D(
   transitioner,
   duration,
   endCamera,
-  complete
+  complete,
 ) {
   duration *= 0.5;
 
@@ -421,17 +421,17 @@ function morphFromColumbusViewTo3D(
   const endPos = Matrix4.multiplyByPoint(
     Camera.TRANSFORM_2D_INVERSE,
     endCamera.position,
-    scratchCVTo3DEndPos
+    scratchCVTo3DEndPos,
   );
   const endDir = Matrix4.multiplyByPointAsVector(
     Camera.TRANSFORM_2D_INVERSE,
     endCamera.direction,
-    scratchCVTo3DEndDir
+    scratchCVTo3DEndDir,
   );
   const endUp = Matrix4.multiplyByPointAsVector(
     Camera.TRANSFORM_2D_INVERSE,
     endCamera.up,
-    scratchCVTo3DEndUp
+    scratchCVTo3DEndUp,
   );
 
   function update(value) {
@@ -481,7 +481,7 @@ function morphFrom2DTo3D(transitioner, duration, ellipsoid) {
       0.0,
       5.0 * ellipsoid.maximumRadius,
       ellipsoid,
-      camera3D.position
+      camera3D.position,
     );
     Cartesian3.negate(camera3D.position, camera3D.direction);
     Cartesian3.normalize(camera3D.direction, camera3D.direction);
@@ -521,7 +521,7 @@ function morphFrom2DTo3D(transitioner, duration, ellipsoid) {
         camera3D,
         function () {
           morphFromColumbusViewTo3D(transitioner, duration, camera3D, complete);
-        }
+        },
       );
     };
   }
@@ -535,7 +535,7 @@ function morphFrom2DTo3D(transitioner, duration, ellipsoid) {
         0.0,
         5.0 * ellipsoid.maximumRadius,
         ellipsoid,
-        scratch3DToCVEndPos
+        scratch3DToCVEndPos,
       ),
       complete: function () {
         scene._mode = SceneMode.MORPHING;
@@ -557,7 +557,7 @@ function morphPerspectiveToOrthographic(
   duration,
   endCamera,
   updateHeight,
-  complete
+  complete,
 ) {
   const scene = transitioner._scene;
   const camera = scene.camera;
@@ -636,7 +636,7 @@ function morphFromColumbusViewTo2D(transitioner, duration) {
     Matrix4.multiplyByPointAsVector(
       Camera.TRANSFORM_2D,
       startDir,
-      ray.direction
+      ray.direction,
     );
 
     const globe = scene.globe;
@@ -645,7 +645,7 @@ function morphFromColumbusViewTo2D(transitioner, duration) {
         ray,
         scene,
         true,
-        scratchCVTo2DPickPos
+        scratchCVTo2DPickPos,
       );
       if (defined(pickPos)) {
         Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, pickPos, endPos);
@@ -699,7 +699,7 @@ function morphFromColumbusViewTo2D(transitioner, duration) {
         duration,
         camera2D,
         updateHeight,
-        complete
+        complete,
       );
     },
   });
@@ -742,7 +742,7 @@ function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
   } else {
     ellipsoid.cartesianToCartographic(
       camera.positionWC,
-      scratch3DTo2DCartographic
+      scratch3DTo2DCartographic,
     );
     scene.mapProjection.project(scratch3DTo2DCartographic, camera2D.position);
 
@@ -754,19 +754,19 @@ function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
     const rayDirection = Cartesian3.clone(camera.directionWC, ray.direction);
     const surfacePoint = ellipsoid.scaleToGeodeticSurface(
       camera.positionWC,
-      scratch3DTo2DSurfacePoint
+      scratch3DTo2DSurfacePoint,
     );
     const toENU = Transforms.eastNorthUpToFixedFrame(
       surfacePoint,
       ellipsoid,
-      scratch3DTo2DToENU
+      scratch3DTo2DToENU,
     );
     Matrix4.inverseTransformation(toENU, toENU);
     Matrix4.multiplyByPointAsVector(toENU, rayDirection, rayDirection);
     Matrix4.multiplyByPointAsVector(
       Camera.TRANSFORM_2D,
       rayDirection,
-      rayDirection
+      rayDirection,
     );
 
     const globe = scene.globe;
@@ -775,7 +775,7 @@ function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
         ray,
         scene,
         true,
-        scratch3DTo2DPickPosition
+        scratch3DTo2DPickPosition,
       );
       if (defined(pickedPos)) {
         const height = Cartesian3.distance(camera2D.position2D, pickedPos);
@@ -792,17 +792,17 @@ function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
   Matrix4.multiplyByPoint(
     Camera.TRANSFORM_2D,
     camera2D.position,
-    camera2D.position2D
+    camera2D.position2D,
   );
   Matrix4.multiplyByPointAsVector(
     Camera.TRANSFORM_2D,
     camera2D.direction,
-    camera2D.direction2D
+    camera2D.direction2D,
   );
   Matrix4.multiplyByPointAsVector(
     Camera.TRANSFORM_2D,
     camera2D.up,
-    camera2D.up2D
+    camera2D.up2D,
   );
 
   const frustum = camera2D.frustum;
@@ -816,7 +816,7 @@ function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
   Matrix4.multiplyByPoint(
     Camera.TRANSFORM_2D_INVERSE,
     camera2D.position2D,
-    endCamera.position
+    endCamera.position,
   );
   Cartesian3.clone(camera2D.direction, endCamera.direction);
   Cartesian3.clone(camera2D.up, endCamera.up);
@@ -831,7 +831,7 @@ function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
       duration,
       camera2D,
       updateHeight,
-      complete
+      complete,
     );
   }
   morphFrom3DToColumbusView(transitioner, duration, camera2D, completeCallback);
@@ -841,7 +841,7 @@ function morphOrthographicToPerspective(
   transitioner,
   duration,
   cameraCV,
-  complete
+  complete,
 ) {
   const scene = transitioner._scene;
   const camera = scene.camera;
@@ -931,7 +931,7 @@ function morphFrom3DToColumbusView(
   transitioner,
   duration,
   endCamera,
-  complete
+  complete,
 ) {
   const scene = transitioner._scene;
   const camera = scene.camera;
@@ -975,7 +975,7 @@ function addMorphTimeAnimations(
   start,
   stop,
   duration,
-  complete
+  complete,
 ) {
   // Later, this will be linear and each object will adjust, if desired, in its vertex shader.
   const options = {
@@ -1034,7 +1034,7 @@ function complete3DCallback(camera3D) {
       transitioner,
       transitioner._previousMode,
       SceneMode.SCENE3D,
-      wasMorphing
+      wasMorphing,
     );
   };
 }
@@ -1064,7 +1064,7 @@ function complete2DCallback(camera2D) {
       transitioner,
       transitioner._previousMode,
       SceneMode.SCENE2D,
-      wasMorphing
+      wasMorphing,
     );
   };
 }
@@ -1104,7 +1104,7 @@ function completeColumbusViewCallback(cameraCV) {
       transitioner,
       transitioner._previousMode,
       SceneMode.COLUMBUS_VIEW,
-      wasMorphing
+      wasMorphing,
     );
   };
 }

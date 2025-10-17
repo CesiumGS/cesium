@@ -16,7 +16,7 @@ describe("Core/CartographicGeocoderService", function () {
     return service.geocode(query).then(function (results) {
       expect(results.length).toEqual(1);
       expect(results[0].destination).toEqual(
-        Cartesian3.fromDegrees(-75.0, 35.0, 300.0)
+        Cartesian3.fromDegrees(-75.0, 35.0, 300.0),
       );
     });
   });
@@ -26,7 +26,7 @@ describe("Core/CartographicGeocoderService", function () {
     return service.geocode(query).then(function (results) {
       expect(results.length).toEqual(1);
       expect(results[0].destination).toEqual(
-        Cartesian3.fromDegrees(-75.0, 35.0, 300.0)
+        Cartesian3.fromDegrees(-75.0, 35.0, 300.0),
       );
     });
   });
@@ -36,7 +36,7 @@ describe("Core/CartographicGeocoderService", function () {
     return service.geocode(query).then(function (results) {
       expect(results.length).toEqual(1);
       expect(results[0].destination).toEqual(
-        Cartesian3.fromDegrees(1.0, 2.0, 3.0)
+        Cartesian3.fromDegrees(1.0, 2.0, 3.0),
       );
     });
   });
@@ -47,7 +47,7 @@ describe("Core/CartographicGeocoderService", function () {
     return service.geocode(query).then(function (results) {
       expect(results.length).toEqual(1);
       expect(results[0].destination).toEqual(
-        Cartesian3.fromDegrees(1.0, 2.0, defaultHeight)
+        Cartesian3.fromDegrees(1.0, 2.0, defaultHeight),
       );
     });
   });

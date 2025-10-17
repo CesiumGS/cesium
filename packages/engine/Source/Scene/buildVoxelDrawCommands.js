@@ -1,14 +1,18 @@
-import defined from "../Core/defined.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
 import BlendingState from "./BlendingState.js";
+import Cartesian2 from "../Core/Cartesian2.js";
+import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import CullFace from "./CullFace.js";
-import getClippingFunction from "./getClippingFunction.js";
+import defined from "../Core/defined.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
+import PrimitiveType from "../Core/PrimitiveType.js";
+import processVoxelProperties from "./processVoxelProperties.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
+import VoxelBoundsCollection from "./VoxelBoundsCollection.js";
 import VoxelRenderResources from "./VoxelRenderResources.js";
-import processVoxelProperties from "./processVoxelProperties.js";
+
+const textureResolutionScratch = new Cartesian2();
 
 /**
  * @function
@@ -27,30 +31,40 @@ function buildVoxelDrawCommands(primitive, context) {
     shaderBuilder,
     clippingPlanes,
     clippingPlanesLength,
+    renderBoundPlanes,
+    renderBoundPlanesLength,
   } = renderResources;
 
   if (clippingPlanesLength > 0) {
-    // Extract the getClippingPlane function from the getClippingFunction string.
-    // This is a bit of a hack.
     const functionId = "getClippingPlane";
-    const entireFunction = getClippingFunction(clippingPlanes, context);
-    const functionSignatureBegin = 0;
-    const functionSignatureEnd = entireFunction.indexOf(")") + 1;
-    const functionBodyBegin =
-      entireFunction.indexOf("{", functionSignatureEnd) + 1;
-    const functionBodyEnd = entireFunction.indexOf("}", functionBodyBegin);
-    const functionSignature = entireFunction.slice(
-      functionSignatureBegin,
-      functionSignatureEnd
+    const functionSignature = `vec4 ${functionId}(highp sampler2D packedPlanes, int planeNumber)`;
+    const textureResolution = ClippingPlaneCollection.getTextureResolution(
+      clippingPlanes,
+      context,
+      textureResolutionScratch,
     );
-    const functionBody = entireFunction.slice(
-      functionBodyBegin,
-      functionBodyEnd
-    );
+    const functionBody = getPlaneFunctionBody(textureResolution);
     shaderBuilder.addFunction(
       functionId,
       functionSignature,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
+    );
+    shaderBuilder.addFunctionLines(functionId, [functionBody]);
+  }
+
+  if (renderBoundPlanesLength > 0) {
+    const functionId = "getBoundPlane";
+    const functionSignature = `vec4 ${functionId}(highp sampler2D packedPlanes, int planeNumber)`;
+    const textureResolution = VoxelBoundsCollection.getTextureResolution(
+      renderBoundPlanes,
+      context,
+      textureResolutionScratch,
+    );
+    const functionBody = getPlaneFunctionBody(textureResolution);
+    shaderBuilder.addFunction(
+      functionId,
+      functionSignature,
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addFunctionLines(functionId, [functionBody]);
   }
@@ -62,13 +76,12 @@ function buildVoxelDrawCommands(primitive, context) {
   shaderBuilderPickVoxel.addDefine(
     "PICKING_VOXEL",
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   const shaderProgram = shaderBuilder.buildShaderProgram(context);
   const shaderProgramPick = shaderBuilderPick.buildShaderProgram(context);
-  const shaderProgramPickVoxel = shaderBuilderPickVoxel.buildShaderProgram(
-    context
-  );
+  const shaderProgramPickVoxel =
+    shaderBuilderPickVoxel.buildShaderProgram(context);
   const renderState = RenderState.fromCache({
     cull: {
       enabled: true,
@@ -102,7 +115,7 @@ function buildVoxelDrawCommands(primitive, context) {
   // Create the pick draw command
   const drawCommandPick = DrawCommand.shallowClone(
     drawCommand,
-    new DrawCommand()
+    new DrawCommand(),
   );
   drawCommandPick.shaderProgram = shaderProgramPick;
   drawCommandPick.pickOnly = true;
@@ -110,7 +123,7 @@ function buildVoxelDrawCommands(primitive, context) {
   // Create the pick voxels draw command
   const drawCommandPickVoxel = DrawCommand.shallowClone(
     drawCommand,
-    new DrawCommand()
+    new DrawCommand(),
   );
   drawCommandPickVoxel.shaderProgram = shaderProgramPickVoxel;
   drawCommandPickVoxel.pickOnly = true;
@@ -135,6 +148,30 @@ function buildVoxelDrawCommands(primitive, context) {
   primitive._drawCommand = drawCommand;
   primitive._drawCommandPick = drawCommandPick;
   primitive._drawCommandPickVoxel = drawCommandPickVoxel;
+}
+
+function getPlaneFunctionBody(textureResolution) {
+  const width = textureResolution.x;
+  const height = textureResolution.y;
+
+  const pixelWidth = 1.0 / width;
+  const pixelHeight = 1.0 / height;
+
+  let pixelWidthString = `${pixelWidth}`;
+  if (pixelWidthString.indexOf(".") === -1) {
+    pixelWidthString += ".0";
+  }
+  let pixelHeightString = `${pixelHeight}`;
+  if (pixelHeightString.indexOf(".") === -1) {
+    pixelHeightString += ".0";
+  }
+
+  return `int pixY = planeNumber / ${width};
+    int pixX = planeNumber - (pixY * ${width});
+    // Sample from center of pixel
+    float u = (float(pixX) + 0.5) * ${pixelWidthString};
+    float v = (float(pixY) + 0.5) * ${pixelHeightString};
+    return texture(packedPlanes, vec2(u, v));`;
 }
 
 export default buildVoxelDrawCommands;

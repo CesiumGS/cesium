@@ -13,7 +13,9 @@ span.cesium-sceneModePicker-wrapper {
 .cesium-sceneModePicker-hidden {
   visibility: hidden;
   opacity: 0;
-  transition: visibility 0s 0.25s, opacity 0.25s linear;
+  transition:
+    visibility 0s 0.25s,
+    opacity 0.25s linear;
 }
 
 .cesium-sceneModePicker-wrapper .cesium-sceneModePicker-none {
@@ -76,5 +78,7 @@ span.cesium-sceneModePicker-wrapper {
 
 .cesium-sceneModePicker-wrapper .cesium-sceneModePicker-selected {
   border-color: #2e2;
-  box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+  box-shadow:
+    0 0 8px #fff,
+    0 0 8px #fff;
 }

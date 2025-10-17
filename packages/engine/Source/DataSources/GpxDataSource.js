@@ -4,7 +4,7 @@ import ClockRange from "../Core/ClockRange.js";
 import ClockStep from "../Core/ClockStep.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -168,13 +168,13 @@ function createDefaultBillboard(image) {
     BILLBOARD_NEAR_DISTANCE,
     BILLBOARD_NEAR_RATIO,
     BILLBOARD_FAR_DISTANCE,
-    BILLBOARD_FAR_RATIO
+    BILLBOARD_FAR_RATIO,
   );
   billboard.pixelOffsetScaleByDistance = new NearFarScalar(
     BILLBOARD_NEAR_DISTANCE,
     BILLBOARD_NEAR_RATIO,
     BILLBOARD_FAR_DISTANCE,
-    BILLBOARD_FAR_RATIO
+    BILLBOARD_FAR_RATIO,
   );
   billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
   billboard.image = image;
@@ -246,10 +246,7 @@ function processDescription(node, entity) {
   for (i = 0; i < length; i++) {
     const infoTypeName = infoTypeNames[i];
     const infoType = descriptiveInfoTypes[infoTypeName];
-    infoType.value = defaultValue(
-      queryStringValue(node, infoType.tag, namespaces.gpx),
-      ""
-    );
+    infoType.value = queryStringValue(node, infoType.tag, namespaces.gpx) ?? "";
     if (defined(infoType.value) && infoType.value !== "") {
       text = `${text}<p>${infoType.text}: ${infoType.value}</p>`;
     }
@@ -299,7 +296,7 @@ function processWpt(dataSource, geometryNode, entityCollection, options) {
     : dataSource._pinBuilder.fromMakiIconId(
         "marker",
         Color.RED,
-        BILLBOARD_SIZE
+        BILLBOARD_SIZE,
       );
   entity.billboard = createDefaultBillboard(image);
 
@@ -364,7 +361,7 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
       : dataSource._pinBuilder.fromMakiIconId(
           "marker",
           Color.RED,
-          BILLBOARD_SIZE
+          BILLBOARD_SIZE,
         );
     entity.billboard = createDefaultBillboard(image);
     entity.position = property;
@@ -376,7 +373,7 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
       new TimeInterval({
         start: times[0],
         stop: times[times.length - 1],
-      })
+      }),
     );
   }
   entity.polyline = createDefaultPolyline(options.trackColor);
@@ -608,8 +605,8 @@ function loadGpx(dataSource, gpx, options) {
     clock.multiplier = Math.round(
       Math.min(
         Math.max(JulianDate.secondsDifference(stop, start) / 60, 1),
-        3.15569e7
-      )
+        3.15569e7,
+      ),
     );
   }
   let changed = false;
@@ -668,7 +665,7 @@ function metadataChanged(old, current) {
 }
 
 function load(dataSource, entityCollection, data, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   let promise = data;
   if (typeof data === "string" || data instanceof Resource) {
     data = Resource.createIfNeeded(data);
@@ -947,7 +944,7 @@ GpxDataSource.prototype.load = function (data, options) {
     throw new DeveloperError("data is required.");
   }
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   DataSource.setLoading(this, true);
   const oldName = this._name;
   const that = this;
@@ -987,8 +984,8 @@ GpxDataSource.prototype.load = function (data, options) {
         clock.multiplier = Math.round(
           Math.min(
             Math.max(JulianDate.secondsDifference(stop, start) / 60, 1),
-            3.15569e7
-          )
+            3.15569e7,
+          ),
         );
       }
 

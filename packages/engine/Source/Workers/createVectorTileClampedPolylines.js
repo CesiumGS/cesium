@@ -21,7 +21,7 @@ function decodePositions(
   rectangle,
   minimumHeight,
   maximumHeight,
-  ellipsoid
+  ellipsoid,
 ) {
   const positionsLength = uBuffer.length;
   const decodedPositions = new Float64Array(positionsLength * 3);
@@ -34,7 +34,7 @@ function decodePositions(
     const lat = CesiumMath.lerp(
       rectangle.south,
       rectangle.north,
-      v / MAX_SHORT
+      v / MAX_SHORT,
     );
     const alt = CesiumMath.lerp(minimumHeight, maximumHeight, h / MAX_SHORT);
 
@@ -42,11 +42,11 @@ function decodePositions(
       lon,
       lat,
       alt,
-      scratchBVCartographic
+      scratchBVCartographic,
     );
     const decodedPosition = ellipsoid.cartographicToCartesian(
       cartographic,
-      scratchEncodedPosition
+      scratchEncodedPosition,
     );
     Cartesian3.pack(decodedPosition, decodedPositions, i * 3);
   }
@@ -134,17 +134,17 @@ function computeMiteredNormal(
   position,
   nextPosition,
   ellipsoidSurfaceNormal,
-  result
+  result,
 ) {
   const towardNext = Cartesian3.subtract(
     nextPosition,
     position,
-    towardNextScratch
+    towardNextScratch,
   );
   let towardCurr = Cartesian3.subtract(
     position,
     previousPosition,
-    towardCurrScratch
+    towardCurrScratch,
   );
   Cartesian3.normalize(towardNext, towardNext);
   Cartesian3.normalize(towardCurr, towardCurr);
@@ -153,7 +153,7 @@ function computeMiteredNormal(
     towardCurr = Cartesian3.multiplyByScalar(
       towardCurr,
       -1.0,
-      towardCurrScratch
+      towardCurrScratch,
     );
   }
 
@@ -233,17 +233,17 @@ VertexAttributesAndIndices.prototype.addVolume = function (
   halfWidth,
   batchId,
   center,
-  ellipsoid
+  ellipsoid,
 ) {
   let position = Cartesian3.add(startRTC, center, positionScratch);
   const startEllipsoidNormal = ellipsoid.geodeticSurfaceNormal(
     position,
-    scratchStartEllipsoidNormal
+    scratchStartEllipsoidNormal,
   );
   position = Cartesian3.add(endRTC, center, positionScratch);
   const endEllipsoidNormal = ellipsoid.geodeticSurfaceNormal(
     position,
-    scratchEndEllipsoidNormal
+    scratchEndEllipsoidNormal,
   );
 
   const startFaceNormal = computeMiteredNormal(
@@ -251,21 +251,21 @@ VertexAttributesAndIndices.prototype.addVolume = function (
     startRTC,
     endRTC,
     startEllipsoidNormal,
-    scratchStartFaceNormal
+    scratchStartFaceNormal,
   );
   const endFaceNormal = computeMiteredNormal(
     postEndRTC,
     endRTC,
     startRTC,
     endEllipsoidNormal,
-    scratchEndFaceNormal
+    scratchEndFaceNormal,
   );
 
   const startEllipsoidNormals = this.startEllipsoidNormals;
   const endEllipsoidNormals = this.endEllipsoidNormals;
   const startPositionAndHeights = this.startPositionAndHeights;
-  const startFaceNormalAndVertexCornerIds = this
-    .startFaceNormalAndVertexCornerIds;
+  const startFaceNormalAndVertexCornerIds =
+    this.startFaceNormalAndVertexCornerIds;
   const endPositionAndHeights = this.endPositionAndHeights;
   const endFaceNormalAndHalfWidths = this.endFaceNormalAndHalfWidths;
   const vertexBatchIds = this.vertexBatchIds;
@@ -288,7 +288,7 @@ VertexAttributesAndIndices.prototype.addVolume = function (
     Cartesian3.pack(
       startFaceNormal,
       startFaceNormalAndVertexCornerIds,
-      vec4Offset
+      vec4Offset,
     );
     startFaceNormalAndVertexCornerIds[vec4Offset + 3] = i;
 
@@ -355,11 +355,11 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
   const uBuffer = encodedPositions.subarray(0, positionsLength);
   const vBuffer = encodedPositions.subarray(
     positionsLength,
-    2 * positionsLength
+    2 * positionsLength,
   );
   const heightBuffer = encodedPositions.subarray(
     2 * positionsLength,
-    3 * positionsLength
+    3 * positionsLength,
   );
   AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
 
@@ -383,7 +383,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
     minimumHeight,
     maximumHeight,
     ellipsoid,
-    center
+    center,
   );
 
   positionsLength = uBuffer.length;
@@ -405,12 +405,12 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
       const volumeStart = Cartesian3.unpack(
         positionsRTC,
         currentPositionIndex,
-        scratchP0
+        scratchP0,
       );
       const volumeEnd = Cartesian3.unpack(
         positionsRTC,
         currentPositionIndex + 3,
-        scratchP1
+        scratchP1,
       );
 
       let startHeight = heightBuffer[currentHeightIndex];
@@ -418,12 +418,12 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
       startHeight = CesiumMath.lerp(
         minimumHeight,
         maximumHeight,
-        startHeight / MAX_SHORT
+        startHeight / MAX_SHORT,
       );
       endHeight = CesiumMath.lerp(
         minimumHeight,
         maximumHeight,
-        endHeight / MAX_SHORT
+        endHeight / MAX_SHORT,
       );
 
       currentHeightIndex++;
@@ -437,7 +437,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
         const finalPosition = Cartesian3.unpack(
           positionsRTC,
           finalPositionIndex,
-          scratchPrev
+          scratchPrev,
         );
         if (Cartesian3.equals(finalPosition, volumeStart)) {
           Cartesian3.unpack(positionsRTC, finalPositionIndex - 3, preStart);
@@ -445,7 +445,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
           const offsetPastStart = Cartesian3.subtract(
             volumeStart,
             volumeEnd,
-            scratchPrev
+            scratchPrev,
           );
           preStart = Cartesian3.add(offsetPastStart, volumeStart, scratchPrev);
         }
@@ -458,19 +458,19 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
         const firstPosition = Cartesian3.unpack(
           positionsRTC,
           volumeFirstPositionIndex,
-          scratchNext
+          scratchNext,
         );
         if (Cartesian3.equals(firstPosition, volumeEnd)) {
           Cartesian3.unpack(
             positionsRTC,
             volumeFirstPositionIndex + 3,
-            postEnd
+            postEnd,
           );
         } else {
           const offsetPastEnd = Cartesian3.subtract(
             volumeEnd,
             volumeStart,
-            scratchNext
+            scratchNext,
           );
           postEnd = Cartesian3.add(offsetPastEnd, volumeEnd, scratchNext);
         }
@@ -488,7 +488,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
         halfWidth,
         batchId,
         center,
-        ellipsoid
+        ellipsoid,
       );
 
       currentPositionIndex += 3;
@@ -503,7 +503,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
   transferableObjects.push(attribsAndIndices.endEllipsoidNormals.buffer);
   transferableObjects.push(attribsAndIndices.startPositionAndHeights.buffer);
   transferableObjects.push(
-    attribsAndIndices.startFaceNormalAndVertexCornerIds.buffer
+    attribsAndIndices.startFaceNormalAndVertexCornerIds.buffer,
   );
   transferableObjects.push(attribsAndIndices.endPositionAndHeights.buffer);
   transferableObjects.push(attribsAndIndices.endFaceNormalAndHalfWidths.buffer);

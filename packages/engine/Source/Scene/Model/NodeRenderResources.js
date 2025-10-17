@@ -76,7 +76,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    */
   this.renderStateOptions = clone(
     modelRenderResources.renderStateOptions,
-    true
+    true,
   );
 
   /**
@@ -118,7 +118,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * be used to create a {@link VertexArray} for the draw command. Attributes
    * at the node level may be needed for extensions such as EXT_mesh_gpu_instancing.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private
@@ -155,6 +155,16 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.instanceCount = 0;
+
+  /**
+   * The PrimitiveRenderResources for the primitives of the node.
+   *
+   * @type {PrimitiveRenderResources[]}
+   * @default []
+   *
+   * @private
+   */
+  this.primitiveRenderResources = [];
 }
 
 export default NodeRenderResources;

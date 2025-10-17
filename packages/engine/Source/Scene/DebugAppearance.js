@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Appearance from "./Appearance.js";
@@ -33,7 +33,7 @@ import Appearance from "./Appearance.js";
  * });
  */
 function DebugAppearance(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const attributeName = options.attributeName;
   let perInstanceAttribute = options.perInstanceAttribute;
 
@@ -47,7 +47,7 @@ function DebugAppearance(options) {
     perInstanceAttribute = false;
   }
 
-  let glslDatatype = defaultValue(options.glslDatatype, "vec3");
+  let glslDatatype = options.glslDatatype ?? "vec3";
   const varyingName = `v_${attributeName}`;
   let getColor;
 
@@ -80,7 +80,7 @@ function DebugAppearance(options) {
       //>>includeStart('debug', pragmas.debug);
       default:
         throw new DeveloperError(
-          "options.glslDatatype must be float, vec2, vec3, or vec4."
+          "options.glslDatatype must be float, vec2, vec3, or vec4.",
         );
       //>>includeEnd('debug');
     }
@@ -126,16 +126,16 @@ function DebugAppearance(options) {
    *
    * @default false
    */
-  this.translucent = defaultValue(options.translucent, false);
+  this.translucent = options.translucent ?? false;
 
-  this._vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
-  this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
+  this._vertexShaderSource = options.vertexShaderSource ?? vs;
+  this._fragmentShaderSource = options.fragmentShaderSource ?? fs;
   this._renderState = Appearance.getDefaultRenderState(
     false,
     false,
-    options.renderState
+    options.renderState,
   );
-  this._closed = defaultValue(options.closed, false);
+  this._closed = options.closed ?? false;
 
   // Non-derived members
 

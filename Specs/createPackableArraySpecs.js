@@ -1,13 +1,11 @@
-import { defaultValue } from "@cesium/engine";
-
 function createPackableArraySpecs(
   packable,
   unpackedArray,
   packedArray,
   stride,
-  namePrefix
+  namePrefix,
 ) {
-  namePrefix = defaultValue(namePrefix, "");
+  namePrefix = namePrefix ?? "";
 
   it(`${namePrefix} can pack`, function () {
     const actualPackedArray = packable.packArray(unpackedArray);

@@ -65,17 +65,17 @@ describe("Scene/ClippingPlane", function () {
     const clippingPlane = new ClippingPlane(Cartesian3.UNIT_X, 1.0);
     let cloneClippingPlane = ClippingPlane.clone(clippingPlane);
     expect(
-      Cartesian3.equals(clippingPlane.normal, cloneClippingPlane.normal)
+      Cartesian3.equals(clippingPlane.normal, cloneClippingPlane.normal),
     ).toBe(true);
     expect(clippingPlane.distance).toEqual(cloneClippingPlane.distance);
 
     const scratchClippingPlane = new ClippingPlane(Cartesian3.UNIT_Y, 0.0);
     cloneClippingPlane = ClippingPlane.clone(
       clippingPlane,
-      scratchClippingPlane
+      scratchClippingPlane,
     );
     expect(
-      Cartesian3.equals(clippingPlane.normal, cloneClippingPlane.normal)
+      Cartesian3.equals(clippingPlane.normal, cloneClippingPlane.normal),
     ).toBe(true);
     expect(clippingPlane.distance).toEqual(cloneClippingPlane.distance);
     expect(cloneClippingPlane).toBe(scratchClippingPlane);
@@ -90,14 +90,14 @@ describe("Scene/ClippingPlane", function () {
     transform = Matrix4.multiplyByMatrix3(
       transform,
       Matrix3.fromRotationY(Math.PI),
-      transform
+      transform,
     );
 
     const transformedPlane = Plane.transform(clippingPlane, transform);
     expect(transformedPlane.distance).toEqual(clippingPlane.distance * 2.0);
     expect(transformedPlane.normal.x).toEqualEpsilon(
       -clippingPlane.normal.x,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(transformedPlane.normal.y).toEqual(clippingPlane.normal.y);
     expect(transformedPlane.normal.z).toEqual(-clippingPlane.normal.z);

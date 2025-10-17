@@ -3,7 +3,6 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -31,13 +30,13 @@ function EllipsoidTangentPlane(origin, ellipsoid) {
   Check.defined("origin", origin);
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
   origin = ellipsoid.scaleToGeodeticSurface(origin);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(origin)) {
     throw new DeveloperError(
-      "origin must not be at the center of the ellipsoid."
+      "origin must not be at the center of the ellipsoid.",
     );
   }
   //>>includeEnd('debug');
@@ -46,14 +45,14 @@ function EllipsoidTangentPlane(origin, ellipsoid) {
   this._ellipsoid = ellipsoid;
   this._origin = origin;
   this._xAxis = Cartesian3.fromCartesian4(
-    Matrix4.getColumn(eastNorthUp, 0, scratchCart4)
+    Matrix4.getColumn(eastNorthUp, 0, scratchCart4),
   );
   this._yAxis = Cartesian3.fromCartesian4(
-    Matrix4.getColumn(eastNorthUp, 1, scratchCart4)
+    Matrix4.getColumn(eastNorthUp, 1, scratchCart4),
   );
 
   const normal = Cartesian3.fromCartesian4(
-    Matrix4.getColumn(eastNorthUp, 2, scratchCart4)
+    Matrix4.getColumn(eastNorthUp, 2, scratchCart4),
   );
   this._plane = Plane.fromPointNormal(origin, normal);
 }
@@ -160,7 +159,7 @@ const scratchProjectPointOntoPlaneCartesian3 = new Cartesian3();
  */
 EllipsoidTangentPlane.prototype.projectPointOntoPlane = function (
   cartesian,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesian", cartesian);
@@ -173,14 +172,14 @@ EllipsoidTangentPlane.prototype.projectPointOntoPlane = function (
   let intersectionPoint = IntersectionTests.rayPlane(
     ray,
     this._plane,
-    scratchProjectPointOntoPlaneCartesian3
+    scratchProjectPointOntoPlaneCartesian3,
   );
   if (!defined(intersectionPoint)) {
     Cartesian3.negate(ray.direction, ray.direction);
     intersectionPoint = IntersectionTests.rayPlane(
       ray,
       this._plane,
-      scratchProjectPointOntoPlaneCartesian3
+      scratchProjectPointOntoPlaneCartesian3,
     );
   }
 
@@ -188,7 +187,7 @@ EllipsoidTangentPlane.prototype.projectPointOntoPlane = function (
     const v = Cartesian3.subtract(
       intersectionPoint,
       this._origin,
-      intersectionPoint
+      intersectionPoint,
     );
     const x = Cartesian3.dot(this._xAxis, v);
     const y = Cartesian3.dot(this._yAxis, v);
@@ -215,7 +214,7 @@ EllipsoidTangentPlane.prototype.projectPointOntoPlane = function (
  */
 EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function (
   cartesians,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesians", cartesians);
@@ -247,7 +246,7 @@ EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function (
  */
 EllipsoidTangentPlane.prototype.projectPointToNearestOnPlane = function (
   cartesian,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesian", cartesian);
@@ -264,21 +263,21 @@ EllipsoidTangentPlane.prototype.projectPointToNearestOnPlane = function (
   let intersectionPoint = IntersectionTests.rayPlane(
     ray,
     this._plane,
-    scratchProjectPointOntoPlaneCartesian3
+    scratchProjectPointOntoPlaneCartesian3,
   );
   if (!defined(intersectionPoint)) {
     Cartesian3.negate(ray.direction, ray.direction);
     intersectionPoint = IntersectionTests.rayPlane(
       ray,
       this._plane,
-      scratchProjectPointOntoPlaneCartesian3
+      scratchProjectPointOntoPlaneCartesian3,
     );
   }
 
   const v = Cartesian3.subtract(
     intersectionPoint,
     this._origin,
-    intersectionPoint
+    intersectionPoint,
   );
   const x = Cartesian3.dot(this._xAxis, v);
   const y = Cartesian3.dot(this._yAxis, v);
@@ -299,7 +298,7 @@ EllipsoidTangentPlane.prototype.projectPointToNearestOnPlane = function (
  */
 EllipsoidTangentPlane.prototype.projectPointsToNearestOnPlane = function (
   cartesians,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesians", cartesians);
@@ -327,7 +326,7 @@ const projectPointsOntoEllipsoidScratch = new Cartesian3();
  */
 EllipsoidTangentPlane.prototype.projectPointOntoEllipsoid = function (
   cartesian,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesian", cartesian);
@@ -361,7 +360,7 @@ EllipsoidTangentPlane.prototype.projectPointOntoEllipsoid = function (
  */
 EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function (
   cartesians,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesians", cartesians);

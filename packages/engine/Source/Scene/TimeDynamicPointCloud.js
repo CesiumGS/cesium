@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
@@ -39,7 +39,7 @@ import ShadowMode from "./ShadowMode.js";
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
  */
 function TimeDynamicPointCloud(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.clock", options.clock);
@@ -52,7 +52,7 @@ function TimeDynamicPointCloud(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * A 4x4 transformation matrix that transforms the point cloud.
@@ -60,9 +60,7 @@ function TimeDynamicPointCloud(options) {
    * @type {Matrix4}
    * @default Matrix4.IDENTITY
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * Determines whether the point cloud casts or receives shadows from light sources.
@@ -76,7 +74,7 @@ function TimeDynamicPointCloud(options) {
    * @type {ShadowMode}
    * @default ShadowMode.ENABLED
    */
-  this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
+  this.shadows = options.shadows ?? ShadowMode.ENABLED;
 
   /**
    * The maximum amount of GPU memory (in MB) that may be used to cache point cloud frames.
@@ -92,7 +90,7 @@ function TimeDynamicPointCloud(options) {
    *
    * @see TimeDynamicPointCloud#totalMemoryUsageInBytes
    */
-  this.maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 256);
+  this.maximumMemoryUsage = options.maximumMemoryUsage ?? 256;
 
   /**
    * Options for controlling point size based on geometric error and eye dome lighting.
@@ -306,7 +304,7 @@ function getNextInterval(that, currentInterval) {
   const time = JulianDate.addSeconds(
     clock.currentTime,
     averageLoadTime * multiplier,
-    scratchDate
+    scratchDate,
   );
   let index = intervals.indexOf(time);
 
@@ -404,7 +402,7 @@ function updateAverageLoadTime(that, loadTime) {
   that._runningSamples[that._runningIndex] = loadTime;
   that._runningLength = Math.min(
     that._runningLength + 1,
-    that._runningSamples.length
+    that._runningSamples.length,
   );
   that._runningIndex = (that._runningIndex + 1) % that._runningSamples.length;
   that._runningAverage = that._runningSum / that._runningLength;
@@ -449,7 +447,7 @@ function getGeometricError(that, pointCloud) {
     return shading.baseResolution;
   } else if (defined(pointCloud.boundingSphere)) {
     return CesiumMath.cbrt(
-      pointCloud.boundingSphere.volume() / pointCloud.pointsLength
+      pointCloud.boundingSphere.volume() / pointCloud.pointsLength,
     );
   }
   return 0.0;
@@ -468,13 +466,13 @@ function getMaximumAttenuation(that) {
 const defaultShading = new PointCloudShading();
 
 function renderFrame(that, frame, updateState, frameState) {
-  const shading = defaultValue(that.shading, defaultShading);
+  const shading = that.shading ?? defaultShading;
   const pointCloud = frame.pointCloud;
-  const transform = defaultValue(frame.transform, Matrix4.IDENTITY);
+  const transform = frame.transform ?? Matrix4.IDENTITY;
   pointCloud.modelMatrix = Matrix4.multiplyTransformation(
     that.modelMatrix,
     transform,
-    scratchModelMatrix
+    scratchModelMatrix,
   );
   pointCloud.style = that.style;
   pointCloud.time = updateState.timeSinceLoad;
@@ -556,7 +554,7 @@ function getNearestReadyInterval(
   previousInterval,
   currentInterval,
   updateState,
-  frameState
+  frameState,
 ) {
   let i;
   let interval;
@@ -633,7 +631,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
   // For styling
   const timeSinceLoad = Math.max(
     JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000,
-    0.0
+    0.0,
   );
 
   // Update clipping planes
@@ -701,7 +699,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
     previousInterval,
     currentInterval,
     updateState,
-    frameState
+    frameState,
   );
   let frame = getFrame(this, previousInterval);
 
@@ -761,7 +759,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
       frameState,
       lengthBeforeUpdate,
       shading,
-      this.boundingSphere
+      this.boundingSphere,
     );
   }
 };

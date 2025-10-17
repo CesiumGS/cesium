@@ -3,9 +3,9 @@ import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import AttributeType from "./AttributeType.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
@@ -31,7 +31,7 @@ const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
  * @returns {object} An object containing a parsed representation of the point cloud
  */
 PntsParser.parse = function (arrayBuffer, byteOffset) {
-  byteOffset = defaultValue(byteOffset, 0);
+  byteOffset = byteOffset ?? 0;
   //>>includeStart('debug', pragmas.debug);
   Check.defined("arrayBuffer", arrayBuffer);
   //>>includeEnd('debug');
@@ -43,7 +43,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      `Only Point Cloud tile version 1 is supported.  Version ${version} is not.`
+      `Only Point Cloud tile version 1 is supported.  Version ${version} is not.`,
     );
   }
   byteOffset += sizeOfUint32;
@@ -54,7 +54,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   const featureTableJsonByteLength = view.getUint32(byteOffset, true);
   if (featureTableJsonByteLength === 0) {
     throw new RuntimeError(
-      "Feature table must have a byte length greater than zero"
+      "Feature table must have a byte length greater than zero",
     );
   }
   byteOffset += sizeOfUint32;
@@ -70,14 +70,14 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   const featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
-    featureTableJsonByteLength
+    featureTableJsonByteLength,
   );
   byteOffset += featureTableJsonByteLength;
 
   const featureTableBinary = new Uint8Array(
     arrayBuffer,
     byteOffset,
-    featureTableBinaryByteLength
+    featureTableBinaryByteLength,
   );
   byteOffset += featureTableBinaryByteLength;
 
@@ -89,8 +89,11 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
-      batchTableJsonByteLength
+      batchTableJsonByteLength,
     );
+    if (Object.keys(batchTableJson).length === 0) {
+      batchTableJson = undefined;
+    }
     byteOffset += batchTableJsonByteLength;
 
     if (batchTableBinaryByteLength > 0) {
@@ -98,15 +101,17 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
       batchTableBinary = new Uint8Array(
         arrayBuffer,
         byteOffset,
-        batchTableBinaryByteLength
+        batchTableBinaryByteLength,
       );
+      // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+      batchTableBinary = new Uint8Array(batchTableBinary);
       byteOffset += batchTableBinaryByteLength;
     }
   }
 
   const featureTable = new Cesium3DTileFeatureTable(
     featureTableJson,
-    featureTableBinary
+    featureTableBinary,
   );
 
   const pointsLength = featureTable.getGlobalProperty("POINTS_LENGTH");
@@ -114,14 +119,14 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
 
   if (!defined(pointsLength)) {
     throw new RuntimeError(
-      "Feature table global property: POINTS_LENGTH must be defined"
+      "Feature table global property: POINTS_LENGTH must be defined",
     );
   }
 
   let rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
-    3
+    3,
   );
   if (defined(rtcCenter)) {
     rtcCenter = Cartesian3.unpack(rtcCenter);
@@ -142,7 +147,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
 
   if (!parsedContent.hasPositions) {
     throw new RuntimeError(
-      "Either POSITION or POSITION_QUANTIZED must be defined."
+      "Either POSITION or POSITION_QUANTIZED must be defined.",
     );
   }
 
@@ -170,21 +175,83 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     const batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
     if (!defined(batchLength)) {
       throw new RuntimeError(
-        "Global property: BATCH_LENGTH must be defined when BATCH_ID is defined."
+        "Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.",
       );
     }
     parsedContent.batchLength = batchLength;
   }
 
-  if (defined(batchTableBinary)) {
-    // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
-    batchTableBinary = new Uint8Array(batchTableBinary);
+  if (defined(batchTableJson) || defined(batchTableBinary)) {
     parsedContent.batchTableJson = batchTableJson;
     parsedContent.batchTableBinary = batchTableBinary;
   }
 
+  // Handle the case that binary body references are contained in the
+  // batch table without a batch table binary being present
+  removeInvalidBinaryBodyReferences(parsedContent);
+
   return parsedContent;
 };
+
+/**
+ * Remove all invalid binary body references from the batch table
+ * JSON of the given parsed content.
+ *
+ * This is a workaround for gracefully handling the invalid PNTS
+ * files that may have been created by the point cloud tiler.
+ * See https://github.com/CesiumGS/cesium/issues/12872
+ *
+ * When the batch table JSON is undefined, nothing will be done.
+ * When the batch table binary is defined, nothing will be done
+ * (assuming that any binary body references are valid - this is
+ * not checked here).
+ *
+ * Otherwise, this will remove all binary body references from the
+ * batch table JSON that are not resolved from draco via the
+ * `parsedContent.draco.batchTableProperties`.
+ *
+ * If any (invalid) binary body reference is found (and removed),
+ * a one-time warning will be printed.
+ *
+ * @param {object} parsedContent The parsed content
+ */
+function removeInvalidBinaryBodyReferences(parsedContent) {
+  const batchTableJson = parsedContent.batchTableJson;
+  if (!defined(batchTableJson)) {
+    return;
+  }
+  const batchTableBinary = parsedContent.batchTableBinary;
+  if (defined(batchTableBinary)) {
+    return;
+  }
+  const dracoBatchTablePropertyNames = Object.keys(
+    parsedContent.draco?.batchTableProperties ?? {},
+  );
+
+  // Collect the names of all binary body references (identified
+  // by the property having a `byteOffset`) that have not been
+  // resolved via the parsedContent.draco.batchTableProperties
+  const invalidBinaryBodyReferenceNames = [];
+  for (const name of Object.keys(batchTableJson)) {
+    const property = batchTableJson[name];
+    const byteOffset = property.byteOffset;
+    if (defined(byteOffset)) {
+      if (!dracoBatchTablePropertyNames.includes(name)) {
+        invalidBinaryBodyReferenceNames.push(name);
+      }
+    }
+  }
+
+  // If there have been invalid binary body references, print
+  // a one-time warning for each of them, and delete them.
+  for (const name of invalidBinaryBodyReferenceNames) {
+    oneTimeWarning(
+      `PntsParser-invalidBinaryBodyReference`,
+      `The point cloud data contained a binary property ${name} that could not be resolved - skipping`,
+    );
+    delete batchTableJson[name];
+  }
+}
 
 function parseDracoProperties(featureTable, batchTableJson) {
   const featureTableJson = featureTable.json;
@@ -219,12 +286,12 @@ function parseDracoProperties(featureTable, batchTableJson) {
       !defined(dracoByteLength)
     ) {
       throw new RuntimeError(
-        "Draco properties, byteOffset, and byteLength must be defined"
+        "Draco properties, byteOffset, and byteLength must be defined",
       );
     }
     dracoBuffer = featureTable.buffer.slice(
       dracoByteOffset,
-      dracoByteOffset + dracoByteLength
+      dracoByteOffset + dracoByteLength,
     );
     hasPositions = defined(dracoFeatureTableProperties.POSITION);
     hasColors =
@@ -243,7 +310,7 @@ function parseDracoProperties(featureTable, batchTableJson) {
       batchTableProperties: dracoBatchTableProperties,
       properties: combine(
         dracoFeatureTableProperties,
-        dracoBatchTableProperties
+        dracoBatchTableProperties,
       ),
       dequantizeInShader: true,
     };
@@ -267,7 +334,7 @@ function parsePositions(featureTable) {
     positions = featureTable.getPropertyArray(
       "POSITION",
       ComponentDatatype.FLOAT,
-      3
+      3,
     );
 
     return {
@@ -282,17 +349,17 @@ function parsePositions(featureTable) {
     positions = featureTable.getPropertyArray(
       "POSITION_QUANTIZED",
       ComponentDatatype.UNSIGNED_SHORT,
-      3
+      3,
     );
 
     const quantizedVolumeScale = featureTable.getGlobalProperty(
       "QUANTIZED_VOLUME_SCALE",
       ComponentDatatype.FLOAT,
-      3
+      3,
     );
     if (!defined(quantizedVolumeScale)) {
       throw new RuntimeError(
-        "Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions."
+        "Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.",
       );
     }
     const quantizedRange = (1 << 16) - 1;
@@ -300,11 +367,11 @@ function parsePositions(featureTable) {
     const quantizedVolumeOffset = featureTable.getGlobalProperty(
       "QUANTIZED_VOLUME_OFFSET",
       ComponentDatatype.FLOAT,
-      3
+      3,
     );
     if (!defined(quantizedVolumeOffset)) {
       throw new RuntimeError(
-        "Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions."
+        "Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.",
       );
     }
 
@@ -332,7 +399,7 @@ function parseColors(featureTable) {
     colors = featureTable.getPropertyArray(
       "RGBA",
       ComponentDatatype.UNSIGNED_BYTE,
-      4
+      4,
     );
     return {
       name: VertexAttributeSemantic.COLOR,
@@ -349,7 +416,7 @@ function parseColors(featureTable) {
     colors = featureTable.getPropertyArray(
       "RGB",
       ComponentDatatype.UNSIGNED_BYTE,
-      3
+      3,
     );
     return {
       name: "COLOR",
@@ -366,7 +433,7 @@ function parseColors(featureTable) {
     colors = featureTable.getPropertyArray(
       "RGB565",
       ComponentDatatype.UNSIGNED_SHORT,
-      1
+      1,
     );
     return {
       name: "COLOR",
@@ -387,7 +454,7 @@ function parseColors(featureTable) {
     const constantRGBA = featureTable.getGlobalProperty(
       "CONSTANT_RGBA",
       ComponentDatatype.UNSIGNED_BYTE,
-      4
+      4,
     );
 
     const alpha = constantRGBA[3];
@@ -395,7 +462,7 @@ function parseColors(featureTable) {
       constantRGBA[0],
       constantRGBA[1],
       constantRGBA[2],
-      alpha
+      alpha,
     );
 
     const isTranslucent = alpha < 255;
@@ -421,7 +488,7 @@ function parseNormals(featureTable) {
     normals = featureTable.getPropertyArray(
       "NORMAL",
       ComponentDatatype.FLOAT,
-      3
+      3,
     );
     return {
       name: VertexAttributeSemantic.NORMAL,
@@ -436,7 +503,7 @@ function parseNormals(featureTable) {
     normals = featureTable.getPropertyArray(
       "NORMAL_OCT16P",
       ComponentDatatype.UNSIGNED_BYTE,
-      2
+      2,
     );
     const quantizationBits = 8;
     return {
@@ -462,7 +529,7 @@ function parseBatchIds(featureTable) {
     const batchIds = featureTable.getPropertyArray(
       "BATCH_ID",
       ComponentDatatype.UNSIGNED_SHORT,
-      1
+      1,
     );
     return {
       name: VertexAttributeSemantic.FEATURE_ID,

@@ -1,5 +1,5 @@
 import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
+import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
@@ -120,7 +120,7 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  * });
  */
 function CustomShader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
    * A value determining how the custom shader interacts with the overall
@@ -129,7 +129,7 @@ function CustomShader(options) {
    * @type {CustomShaderMode}
    * @readonly
    */
-  this.mode = defaultValue(options.mode, CustomShaderMode.MODIFY_MATERIAL);
+  this.mode = options.mode ?? CustomShaderMode.MODIFY_MATERIAL;
   /**
    * The lighting model to use when using the custom shader.
    * This is used by {@link CustomShaderPipelineStage}
@@ -144,7 +144,7 @@ function CustomShader(options) {
    * @type {Object<string, UniformSpecifier>}
    * @readonly
    */
-  this.uniforms = defaultValue(options.uniforms, defaultValue.EMPTY_OBJECT);
+  this.uniforms = options.uniforms ?? Frozen.EMPTY_OBJECT;
   /**
    * Additional varyings as declared by the user.
    * This is used by {@link CustomShaderPipelineStage}
@@ -152,7 +152,7 @@ function CustomShader(options) {
    * @type {Object<string, VaryingType>}
    * @readonly
    */
-  this.varyings = defaultValue(options.varyings, defaultValue.EMPTY_OBJECT);
+  this.varyings = options.varyings ?? Frozen.EMPTY_OBJECT;
   /**
    * The user-defined GLSL code for the vertex shader
    *
@@ -178,10 +178,8 @@ function CustomShader(options) {
    * @default CustomShaderTranslucencyMode.INHERIT
    * @readonly
    */
-  this.translucencyMode = defaultValue(
-    options.translucencyMode,
-    CustomShaderTranslucencyMode.INHERIT
-  );
+  this.translucencyMode =
+    options.translucencyMode ?? CustomShaderTranslucencyMode.INHERIT;
 
   /**
    * texture uniforms require some asynchronous processing. This is delegated
@@ -249,7 +247,7 @@ function buildUniformMap(customShader) {
       //>>includeStart('debug', pragmas.debug);
       if (type === UniformType.SAMPLER_CUBE) {
         throw new DeveloperError(
-          "CustomShader does not support samplerCube uniforms"
+          "CustomShader does not support samplerCube uniforms",
         );
       }
       //>>includeEnd('debug');
@@ -258,12 +256,12 @@ function buildUniformMap(customShader) {
         customShader._textureManager.loadTexture2D(uniformName, uniform.value);
         uniformMap[uniformName] = createUniformTexture2DFunction(
           customShader,
-          uniformName
+          uniformName,
         );
       } else {
         uniformMap[uniformName] = createUniformFunction(
           customShader,
-          uniformName
+          uniformName,
         );
       }
     }
@@ -273,8 +271,8 @@ function buildUniformMap(customShader) {
 
 function createUniformTexture2DFunction(customShader, uniformName) {
   return function () {
-    return defaultValue(
-      customShader._textureManager.getTexture(uniformName),
+    return (
+      customShader._textureManager.getTexture(uniformName) ??
       customShader._defaultTexture
     );
   };
@@ -357,13 +355,13 @@ function validateVariableUsage(
   variableSet,
   incorrectVariable,
   correctVariable,
-  vertexOrFragment
+  vertexOrFragment,
 ) {
   if (variableSet.hasOwnProperty(incorrectVariable)) {
     const message = `${expandCoordinateAbbreviations(
-      incorrectVariable
+      incorrectVariable,
     )} is not available in the ${vertexOrFragment} shader. Did you mean ${expandCoordinateAbbreviations(
-      correctVariable
+      correctVariable,
     )} instead?`;
     throw new DeveloperError(message);
   }
@@ -413,7 +411,7 @@ CustomShader.prototype.setUniform = function (uniformName, value) {
   Check.defined("value", value);
   if (!defined(this.uniforms[uniformName])) {
     throw new DeveloperError(
-      `Uniform ${uniformName} must be declared in the CustomShader constructor.`
+      `Uniform ${uniformName} must be declared in the CustomShader constructor.`,
     );
   }
   //>>includeEnd('debug');
@@ -443,7 +441,6 @@ CustomShader.prototype.update = function (frameState) {
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see CustomShader#destroy
- * @private
  */
 CustomShader.prototype.isDestroyed = function () {
   return false;
@@ -463,7 +460,6 @@ CustomShader.prototype.isDestroyed = function () {
  * customShader = customShader && customShader.destroy();
  *
  * @see CustomShader#isDestroyed
- * @private
  */
 CustomShader.prototype.destroy = function () {
   this._textureManager = this._textureManager && this._textureManager.destroy();

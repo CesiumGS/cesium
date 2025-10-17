@@ -68,7 +68,7 @@ function JobScheduler(budgets) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(budgets) && budgets.length !== JobType.NUMBER_OF_JOB_TYPES) {
     throw new DeveloperError(
-      "A budget must be specified for each job type; budgets.length should equal JobType.NUMBER_OF_JOB_TYPES."
+      "A budget must be specified for each job type; budgets.length should equal JobType.NUMBER_OF_JOB_TYPES.",
     );
   }
   //>>includeEnd('debug');
@@ -76,14 +76,14 @@ function JobScheduler(budgets) {
   // Total for defaults is half of of one frame at 10 fps
   const jobBudgets = new Array(JobType.NUMBER_OF_JOB_TYPES);
   jobBudgets[JobType.TEXTURE] = new JobTypeBudget(
-    defined(budgets) ? budgets[JobType.TEXTURE] : 10.0
+    defined(budgets) ? budgets[JobType.TEXTURE] : 10.0,
   );
   // On cache miss, this most likely only allows one shader compile per frame
   jobBudgets[JobType.PROGRAM] = new JobTypeBudget(
-    defined(budgets) ? budgets[JobType.PROGRAM] : 10.0
+    defined(budgets) ? budgets[JobType.PROGRAM] : 10.0,
   );
   jobBudgets[JobType.BUFFER] = new JobTypeBudget(
-    defined(budgets) ? budgets[JobType.BUFFER] : 30.0
+    defined(budgets) ? budgets[JobType.BUFFER] : 30.0,
   );
 
   const length = jobBudgets.length;

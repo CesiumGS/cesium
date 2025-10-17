@@ -1,7 +1,6 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import ClassificationType from "../Scene/ClassificationType.js";
@@ -35,15 +34,15 @@ function GeometryVisualizer(
   scene,
   entityCollection,
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("scene", scene);
   Check.defined("entityCollection", entityCollection);
   //>>includeEnd('debug');
 
-  primitives = defaultValue(primitives, scene.primitives);
-  groundPrimitives = defaultValue(groundPrimitives, scene.groundPrimitives);
+  primitives = primitives ?? scene.primitives;
+  groundPrimitives = groundPrimitives ?? scene.groundPrimitives;
 
   this._scene = scene;
   this._primitives = primitives;
@@ -60,10 +59,10 @@ function GeometryVisualizer(
   this._openColorBatches = new Array(numberOfShadowModes * 2);
   this._openMaterialBatches = new Array(numberOfShadowModes * 2);
 
-  const supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(
-    scene
-  );
-  this._supportsMaterialsforEntitiesOnTerrain = supportsMaterialsforEntitiesOnTerrain;
+  const supportsMaterialsforEntitiesOnTerrain =
+    Entity.supportsMaterialsforEntitiesOnTerrain(scene);
+  this._supportsMaterialsforEntitiesOnTerrain =
+    supportsMaterialsforEntitiesOnTerrain;
 
   let i;
   for (i = 0; i < numberOfShadowModes; ++i) {
@@ -71,11 +70,10 @@ function GeometryVisualizer(
       primitives,
       scene,
       i,
-      false
+      false,
     );
-    this._outlineBatches[
-      numberOfShadowModes + i
-    ] = new StaticOutlineGeometryBatch(primitives, scene, i, true);
+    this._outlineBatches[numberOfShadowModes + i] =
+      new StaticOutlineGeometryBatch(primitives, scene, i, true);
 
     this._closedColorBatches[i] = new StaticGeometryColorBatch(
       primitives,
@@ -83,18 +81,17 @@ function GeometryVisualizer(
       undefined,
       true,
       i,
-      true
-    );
-    this._closedColorBatches[
-      numberOfShadowModes + i
-    ] = new StaticGeometryColorBatch(
-      primitives,
-      PerInstanceColorAppearance,
-      undefined,
       true,
-      i,
-      false
     );
+    this._closedColorBatches[numberOfShadowModes + i] =
+      new StaticGeometryColorBatch(
+        primitives,
+        PerInstanceColorAppearance,
+        undefined,
+        true,
+        i,
+        false,
+      );
 
     this._closedMaterialBatches[i] = new StaticGeometryPerMaterialBatch(
       primitives,
@@ -102,18 +99,17 @@ function GeometryVisualizer(
       undefined,
       true,
       i,
-      true
-    );
-    this._closedMaterialBatches[
-      numberOfShadowModes + i
-    ] = new StaticGeometryPerMaterialBatch(
-      primitives,
-      MaterialAppearance,
-      undefined,
       true,
-      i,
-      false
     );
+    this._closedMaterialBatches[numberOfShadowModes + i] =
+      new StaticGeometryPerMaterialBatch(
+        primitives,
+        MaterialAppearance,
+        undefined,
+        true,
+        i,
+        false,
+      );
 
     this._openColorBatches[i] = new StaticGeometryColorBatch(
       primitives,
@@ -121,18 +117,17 @@ function GeometryVisualizer(
       undefined,
       false,
       i,
-      true
+      true,
     );
-    this._openColorBatches[
-      numberOfShadowModes + i
-    ] = new StaticGeometryColorBatch(
-      primitives,
-      PerInstanceColorAppearance,
-      undefined,
-      false,
-      i,
-      false
-    );
+    this._openColorBatches[numberOfShadowModes + i] =
+      new StaticGeometryColorBatch(
+        primitives,
+        PerInstanceColorAppearance,
+        undefined,
+        false,
+        i,
+        false,
+      );
 
     this._openMaterialBatches[i] = new StaticGeometryPerMaterialBatch(
       primitives,
@@ -140,18 +135,17 @@ function GeometryVisualizer(
       undefined,
       false,
       i,
-      true
+      true,
     );
-    this._openMaterialBatches[
-      numberOfShadowModes + i
-    ] = new StaticGeometryPerMaterialBatch(
-      primitives,
-      MaterialAppearance,
-      undefined,
-      false,
-      i,
-      false
-    );
+    this._openMaterialBatches[numberOfShadowModes + i] =
+      new StaticGeometryPerMaterialBatch(
+        primitives,
+        MaterialAppearance,
+        undefined,
+        false,
+        i,
+        false,
+      );
   }
 
   const numberOfClassificationTypes =
@@ -164,19 +158,19 @@ function GeometryVisualizer(
         new StaticGroundGeometryPerMaterialBatch(
           groundPrimitives,
           i,
-          MaterialAppearance
-        )
+          MaterialAppearance,
+        ),
       );
       groundColorBatches[i] = new StaticGroundGeometryColorBatch(
         groundPrimitives,
-        i
+        i,
       );
     }
   } else {
     for (i = 0; i < numberOfClassificationTypes; ++i) {
       groundColorBatches[i] = new StaticGroundGeometryColorBatch(
         groundPrimitives,
-        i
+        i,
       );
     }
   }
@@ -193,7 +187,7 @@ function GeometryVisualizer(
     this._openMaterialBatches,
     this._groundColorBatches,
     this._groundMaterialBatches,
-    this._dynamicBatch
+    this._dynamicBatch,
   );
 
   this._subscriptions = new AssociativeArray();
@@ -202,12 +196,12 @@ function GeometryVisualizer(
   this._entityCollection = entityCollection;
   entityCollection.collectionChanged.addEventListener(
     GeometryVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
   this._onCollectionChanged(
     entityCollection,
     entityCollection.values,
-    emptyArray
+    emptyArray,
   );
 }
 
@@ -299,8 +293,8 @@ GeometryVisualizer.prototype.update = function (time) {
       id,
       updaterSet.geometryChanged.addEventListener(
         GeometryVisualizer._onGeometryChanged,
-        this
-      )
+        this,
+      ),
     );
   }
 
@@ -358,7 +352,7 @@ GeometryVisualizer.prototype.getBoundingSphere = function (entity, result) {
       } else if (state === BoundingSphereState.DONE) {
         boundingSpheres[count] = BoundingSphere.clone(
           tmp,
-          boundingSpheres[count]
+          boundingSpheres[count],
         );
         count++;
       }
@@ -389,7 +383,7 @@ GeometryVisualizer.prototype.isDestroyed = function () {
 GeometryVisualizer.prototype.destroy = function () {
   this._entityCollection.collectionChanged.removeEventListener(
     GeometryVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
   this._addedObjects.removeAll();
   this._removedObjects.removeAll();
@@ -434,7 +428,7 @@ GeometryVisualizer.prototype._removeUpdater = function (updater) {
  */
 GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
   time,
-  updater
+  updater,
 ) {
   if (updater.isDynamic) {
     this._dynamicBatch.add(time, updater);
@@ -457,9 +451,8 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
 
   if (updater.fillEnabled) {
     if (updater.onTerrain) {
-      const classificationType = updater.classificationTypeProperty.getValue(
-        time
-      );
+      const classificationType =
+        updater.classificationTypeProperty.getValue(time);
       if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
         this._groundColorBatches[classificationType].add(time, updater);
       } else {
@@ -471,7 +464,7 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
         if (defined(updater.terrainOffsetProperty)) {
           this._closedColorBatches[numberOfShadowModes + shadows].add(
             time,
-            updater
+            updater,
           );
         } else {
           this._closedColorBatches[shadows].add(time, updater);
@@ -479,7 +472,7 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
       } else if (defined(updater.terrainOffsetProperty)) {
         this._closedMaterialBatches[numberOfShadowModes + shadows].add(
           time,
-          updater
+          updater,
         );
       } else {
         this._closedMaterialBatches[shadows].add(time, updater);
@@ -488,7 +481,7 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
       if (defined(updater.terrainOffsetProperty)) {
         this._openColorBatches[numberOfShadowModes + shadows].add(
           time,
-          updater
+          updater,
         );
       } else {
         this._openColorBatches[shadows].add(time, updater);
@@ -496,7 +489,7 @@ GeometryVisualizer.prototype._insertUpdaterIntoBatch = function (
     } else if (defined(updater.terrainOffsetProperty)) {
       this._openMaterialBatches[numberOfShadowModes + shadows].add(
         time,
-        updater
+        updater,
       );
     } else {
       this._openMaterialBatches[shadows].add(time, updater);
@@ -525,7 +518,7 @@ GeometryVisualizer._onGeometryChanged = function (updater) {
 GeometryVisualizer.prototype._onCollectionChanged = function (
   entityCollection,
   added,
-  removed
+  removed,
 ) {
   const addedObjects = this._addedObjects;
   const removedObjects = this._removedObjects;

@@ -40,7 +40,7 @@ describe("Core/Matrix2", function () {
     const matrix = Matrix2.fromArray(
       [0.0, 0.0, 0.0, 1.0, 3.0, 2.0, 4.0],
       3,
-      result
+      result,
     );
     expect(matrix).toBe(result);
     expect(matrix).toEqual(expected);
@@ -136,7 +136,7 @@ describe("Core/Matrix2", function () {
   it("toArray works without a result parameter", function () {
     const expected = [1.0, 2.0, 3.0, 4.0];
     const returnedResult = Matrix2.toArray(
-      Matrix2.fromColumnMajorArray(expected)
+      Matrix2.fromColumnMajorArray(expected),
     );
     expect(returnedResult).not.toBe(expected);
     expect(returnedResult).toEqual(expected);
@@ -147,7 +147,7 @@ describe("Core/Matrix2", function () {
     const result = [];
     const returnedResult = Matrix2.toArray(
       Matrix2.fromColumnMajorArray(expected),
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).not.toBe(expected);
@@ -190,7 +190,7 @@ describe("Core/Matrix2", function () {
       matrix,
       0,
       new Cartesian2(5.0, 6.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -200,7 +200,7 @@ describe("Core/Matrix2", function () {
       matrix,
       1,
       new Cartesian2(7.0, 8.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -231,7 +231,7 @@ describe("Core/Matrix2", function () {
       matrix,
       0,
       new Cartesian2(5.0, 6.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -241,7 +241,7 @@ describe("Core/Matrix2", function () {
       matrix,
       1,
       new Cartesian2(7.0, 8.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -259,7 +259,7 @@ describe("Core/Matrix2", function () {
     const returnedResult = Matrix2.setScale(matrix, newScale, result);
 
     expect(Matrix2.getScale(returnedResult, new Cartesian2())).toEqual(
-      newScale
+      newScale,
     );
     expect(result).toBe(returnedResult);
   });
@@ -276,7 +276,7 @@ describe("Core/Matrix2", function () {
     const returnedResult = Matrix2.setUniformScale(matrix, newScale, result);
 
     expect(Matrix2.getScale(returnedResult, new Cartesian2())).toEqual(
-      new Cartesian2(newScale, newScale)
+      new Cartesian2(newScale, newScale),
     );
     expect(result).toBe(returnedResult);
   });
@@ -294,7 +294,7 @@ describe("Core/Matrix2", function () {
     const m = Matrix2.fromScale(new Cartesian2(2.0, 3.0));
     expect(Matrix2.getMaximumScale(m)).toEqualEpsilon(
       3.0,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -401,7 +401,7 @@ describe("Core/Matrix2", function () {
     const expected = Matrix2.multiply(
       m,
       Matrix2.fromScale(scale),
-      new Matrix2()
+      new Matrix2(),
     );
     const result = new Matrix2();
     const returnedResult = Matrix2.multiplyByScale(m, scale, result);
@@ -415,7 +415,7 @@ describe("Core/Matrix2", function () {
     const expected = Matrix2.multiply(
       m,
       Matrix2.fromScale(scale),
-      new Matrix2()
+      new Matrix2(),
     );
     const returnedResult = Matrix2.multiplyByScale(m, scale, m);
     expect(returnedResult).toBe(m);
@@ -428,7 +428,7 @@ describe("Core/Matrix2", function () {
     const expected = Matrix2.multiply(
       m,
       Matrix2.fromUniformScale(scale),
-      new Matrix2()
+      new Matrix2(),
     );
     const result = new Matrix2();
     const returnedResult = Matrix2.multiplyByUniformScale(m, scale, result);
@@ -442,7 +442,7 @@ describe("Core/Matrix2", function () {
     const expected = Matrix2.multiply(
       m,
       Matrix2.fromUniformScale(scale),
-      new Matrix2()
+      new Matrix2(),
     );
     const returnedResult = Matrix2.multiplyByUniformScale(m, scale, m);
     expect(returnedResult).toBe(m);
@@ -984,6 +984,6 @@ describe("Core/Matrix2", function () {
       new Matrix2(0, 1, -1, 0),
     ],
     [1, 0, 0, 1, 1, 3, 2, 4, 0, -1, 1, 0],
-    4
+    4,
   );
 });

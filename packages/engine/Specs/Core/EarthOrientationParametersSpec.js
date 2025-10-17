@@ -88,7 +88,7 @@ describe("Core/EarthOrientationParameters", function () {
 
       if (defined(previousDate)) {
         expect(
-          JulianDate.compare(previousDate, leapSecond.julianDate)
+          JulianDate.compare(previousDate, leapSecond.julianDate),
         ).toBeLessThan(0);
       }
 
@@ -229,7 +229,7 @@ describe("Core/EarthOrientationParameters", function () {
       const dt =
         JulianDate.secondsDifference(
           date,
-          JulianDate.fromIso8601(eopDescription.data.samples[nColumns])
+          JulianDate.fromIso8601(eopDescription.data.samples[nColumns]),
         ) / 86400.0;
       let expected = linearInterp(dt, x0, x1);
       expect(result.xPoleWander).toEqualEpsilon(expected, 1e-22);
@@ -320,12 +320,12 @@ describe("Core/EarthOrientationParameters", function () {
       const dateSlightlyBefore = JulianDate.addSeconds(
         dateAtLeapSecond,
         -1.0,
-        new JulianDate()
+        new JulianDate(),
       );
       const dateSlightlyAfter = JulianDate.addSeconds(
         dateAtLeapSecond,
         1.0,
-        new JulianDate()
+        new JulianDate(),
       );
       const nColumns = eopDescription.data.columnNames.length;
       const x0 = eopDescription.data.samples[1 * nColumns + 6];
@@ -333,7 +333,7 @@ describe("Core/EarthOrientationParameters", function () {
       const x2 = eopDescription.data.samples[3 * nColumns + 6];
       const t0 = JulianDate.fromIso8601(eopDescription.data.samples[nColumns]);
       const t1 = JulianDate.fromIso8601(
-        eopDescription.data.samples[2 * nColumns]
+        eopDescription.data.samples[2 * nColumns],
       );
       let dt =
         JulianDate.secondsDifference(dateSlightlyBefore, t0) / (86400.0 + 1);
@@ -350,14 +350,14 @@ describe("Core/EarthOrientationParameters", function () {
       expect(resultAfter.ut1MinusUtc).toEqualEpsilon(expectedAfter, 1.0e-15);
       // Check to make sure the values are (correctly) discontinuous
       expect(
-        Math.abs(resultBefore.ut1MinusUtc - resultAfter.ut1MinusUtc) > 0.5
+        Math.abs(resultBefore.ut1MinusUtc - resultAfter.ut1MinusUtc) > 0.5,
       ).toEqual(true);
     });
   });
 
   it("fromUrl loads EOP data", async function () {
     const eop = await EarthOrientationParameters.fromUrl(
-      "Data/EarthOrientationParameters/EOP-2011-July.json"
+      "Data/EarthOrientationParameters/EOP-2011-July.json",
     );
     expect(eop).toBeInstanceOf(EarthOrientationParameters);
 
@@ -374,22 +374,22 @@ describe("Core/EarthOrientationParameters", function () {
   it("fromUrl throws a RuntimeError when loading invalid EOP data", async function () {
     await expectAsync(
       EarthOrientationParameters.fromUrl(
-        "Data/EarthOrientationParameters/EOP-Invalid.json"
-      )
+        "Data/EarthOrientationParameters/EOP-Invalid.json",
+      ),
     ).toBeRejectedWithError(
       RuntimeError,
-      "Error in loaded EOP data: The columnNames property is required."
+      "Error in loaded EOP data: The columnNames property is required.",
     );
   });
 
   it("fromUrl throws a RuntimeError when using a missing EOP data file", async function () {
     await expectAsync(
       EarthOrientationParameters.fromUrl(
-        "Data/EarthOrientationParameters/EOP-DoesNotExist.json"
-      )
+        "Data/EarthOrientationParameters/EOP-DoesNotExist.json",
+      ),
     ).toBeRejectedWithError(
       RuntimeError,
-      "An error occurred while retrieving the EOP data from the URL Data/EarthOrientationParameters/EOP-DoesNotExist.json."
+      "An error occurred while retrieving the EOP data from the URL Data/EarthOrientationParameters/EOP-DoesNotExist.json.",
     );
   });
 });

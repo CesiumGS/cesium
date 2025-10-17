@@ -46,27 +46,25 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
       const missingImageUrl = "http://some.host.invalid/missingImage.png";
 
       spyOn(Resource, "createImageBitmapFromBlob").and.callThrough();
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
-        crossOrigin,
-        deferred
-      ) {
-        const url = request.url;
-        if (/^blob:/.test(url)) {
-          Resource._DefaultImplementations.createImage(
-            request,
-            crossOrigin,
-            deferred
-          );
-        } else {
-          expect(url).toEqual(missingImageUrl);
-          Resource._DefaultImplementations.createImage(
-            new Request({ url: "Data/Images/Red16x16.png" }),
-            crossOrigin,
-            deferred
-          );
-        }
-      });
+      spyOn(Resource._Implementations, "createImage").and.callFake(
+        function (request, crossOrigin, deferred) {
+          const url = request.url;
+          if (/^blob:/.test(url)) {
+            Resource._DefaultImplementations.createImage(
+              request,
+              crossOrigin,
+              deferred,
+            );
+          } else {
+            expect(url).toEqual(missingImageUrl);
+            Resource._DefaultImplementations.createImage(
+              new Request({ url: "Data/Images/Red16x16.png" }),
+              crossOrigin,
+              deferred,
+            );
+          }
+        },
+      );
 
       Resource._Implementations.loadWithXhr = function (
         url,
@@ -75,7 +73,7 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         expect(url).toEqual(missingImageUrl);
         return Resource._DefaultImplementations.loadWithXhr(
@@ -84,7 +82,7 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
           method,
           data,
           headers,
-          deferred
+          deferred,
         );
       };
 
@@ -121,7 +119,7 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
       promises.push(
         pollToPromise(function () {
           return policy.isReady();
-        })
+        }),
       );
 
       return Promise.all(promises, function (results) {
@@ -147,7 +145,7 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
       promises.push(
         pollToPromise(function () {
           return policy.isReady();
-        })
+        }),
       );
 
       return Promise.all(promises, function (results) {
@@ -171,7 +169,7 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
       promises.push(
         pollToPromise(function () {
           return policy.isReady();
-        })
+        }),
       );
 
       return Promise.all(promises, function (results) {

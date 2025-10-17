@@ -11,14 +11,27 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.JOINTS,
       VertexAttributeSemantic.WEIGHTS,
       VertexAttributeSemantic.FEATURE_ID,
+      VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.ROTATION,
     ];
 
-    const hasSetIndex = [false, false, false, true, true, true, true, true];
+    const hasSetIndex = [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ];
 
     const semanticsLength = semantics.length;
     for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.hasSetIndex(semantics[i])).toBe(
-        hasSetIndex[i]
+        hasSetIndex[i],
       );
     }
   });
@@ -51,6 +64,10 @@ describe("Scene/VertexAttributeSemantic", function () {
       "_FEATURE_ID_0",
       "_FEATURE_ID_1",
       "_OTHER",
+      "_SCALE",
+      "KHR_gaussian_splatting:SCALE",
+      "_ROTATION",
+      "KHR_gaussian_splatting:ROTATION",
     ];
 
     const expectedSemantics = [
@@ -68,12 +85,16 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.FEATURE_ID,
       VertexAttributeSemantic.FEATURE_ID,
       undefined,
+      VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.ROTATION,
+      VertexAttributeSemantic.ROTATION,
     ];
 
     const semanticsLength = gltfSemantics.length;
     for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.fromGltfSemantic(gltfSemantics[i])).toBe(
-        expectedSemantics[i]
+        expectedSemantics[i],
       );
     }
   });
@@ -110,7 +131,7 @@ describe("Scene/VertexAttributeSemantic", function () {
     const semanticsLength = pntsSemantics.length;
     for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.fromPntsSemantic(pntsSemantics[i])).toBe(
-        expectedSemantics[i]
+        expectedSemantics[i],
       );
     }
   });
@@ -137,6 +158,8 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.JOINTS,
       VertexAttributeSemantic.WEIGHTS,
       VertexAttributeSemantic.FEATURE_ID,
+      VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.ROTATION,
     ];
 
     const expectedShaderTypes = [
@@ -148,12 +171,14 @@ describe("Scene/VertexAttributeSemantic", function () {
       "ivec4",
       "vec4",
       "int",
+      "vec3",
+      "vec4",
     ];
 
     const semanticsLength = semantics.length;
     for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.getGlslType(semantics[i])).toBe(
-        expectedShaderTypes[i]
+        expectedShaderTypes[i],
       );
     }
   });
@@ -180,6 +205,8 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.JOINTS,
       VertexAttributeSemantic.WEIGHTS,
       VertexAttributeSemantic.FEATURE_ID,
+      VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.ROTATION,
     ];
 
     const expectedVariableName = [
@@ -191,12 +218,14 @@ describe("Scene/VertexAttributeSemantic", function () {
       "joints",
       "weights",
       "featureId",
+      "scale",
+      "rotation",
     ];
 
     const semanticsLength = semantics.length;
     for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.getVariableName(semantics[i])).toBe(
-        expectedVariableName[i]
+        expectedVariableName[i],
       );
     }
   });
@@ -205,8 +234,8 @@ describe("Scene/VertexAttributeSemantic", function () {
     expect(
       VertexAttributeSemantic.getVariableName(
         VertexAttributeSemantic.FEATURE_ID,
-        0
-      )
+        0,
+      ),
     ).toBe("featureId_0");
   });
 

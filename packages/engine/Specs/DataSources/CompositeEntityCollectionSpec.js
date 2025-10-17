@@ -21,7 +21,7 @@ describe("DataSources/CompositeEntityCollection", function () {
   CollectionListener.prototype.onCollectionChanged = function (
     collection,
     added,
-    removed
+    removed,
   ) {
     this.timesCalled++;
     this.added = added.slice(0);
@@ -207,7 +207,7 @@ describe("DataSources/CompositeEntityCollection", function () {
     const listener = new CollectionListener();
     composite.collectionChanged.addEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
 
     entityCollection.add(entity);
@@ -236,7 +236,7 @@ describe("DataSources/CompositeEntityCollection", function () {
 
     composite.collectionChanged.removeEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
   });
 
@@ -251,7 +251,7 @@ describe("DataSources/CompositeEntityCollection", function () {
     const listener = new CollectionListener();
     composite.collectionChanged.addEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
 
     composite.suspendEvents();
@@ -284,7 +284,7 @@ describe("DataSources/CompositeEntityCollection", function () {
 
     composite.collectionChanged.removeEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
   });
 
@@ -314,7 +314,7 @@ describe("DataSources/CompositeEntityCollection", function () {
 
     composite.collectionChanged.addEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
     composite.removeAllCollections();
 
@@ -329,7 +329,7 @@ describe("DataSources/CompositeEntityCollection", function () {
 
     composite.collectionChanged.removeEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
   });
 
@@ -346,7 +346,7 @@ describe("DataSources/CompositeEntityCollection", function () {
 
     composite.collectionChanged.addEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
 
     composite.suspendEvents();
@@ -367,7 +367,7 @@ describe("DataSources/CompositeEntityCollection", function () {
 
     composite.collectionChanged.removeEventListener(
       listener.onCollectionChanged,
-      listener
+      listener,
     );
   });
 
@@ -410,13 +410,13 @@ describe("DataSources/CompositeEntityCollection", function () {
     entity.availability.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2012-08-01/2012-08-02",
-      })
+      }),
     );
     entity2.availability = new TimeIntervalCollection();
     entity2.availability.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2012-08-05/2012-08-06",
-      })
+      }),
     );
     entity3.availability = undefined;
 
@@ -438,13 +438,13 @@ describe("DataSources/CompositeEntityCollection", function () {
     entity.availability.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2012-08-01/9999-12-31T24:00:00Z",
-      })
+      }),
     );
     entity2.availability = new TimeIntervalCollection();
     entity2.availability.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "0000-01-01T00:00:00Z/2012-08-06",
-      })
+      }),
     );
     entity3.availability = undefined;
 
@@ -568,7 +568,7 @@ describe("DataSources/CompositeEntityCollection", function () {
     availability1.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2019-01-01/2019-01-04",
-      })
+      }),
     );
     const entity1 = new Entity({
       id: id,
@@ -581,7 +581,7 @@ describe("DataSources/CompositeEntityCollection", function () {
     availability2.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2019-01-02/2019-01-05",
-      })
+      }),
     );
     const entity2 = new Entity({
       id: id,
@@ -594,7 +594,7 @@ describe("DataSources/CompositeEntityCollection", function () {
     availability3.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2019-01-03/2019-01-06",
-      })
+      }),
     );
     const entity3 = new Entity({
       id: id,
@@ -610,17 +610,17 @@ describe("DataSources/CompositeEntityCollection", function () {
 
     const compositeObject = composite.getById(id);
     expect(compositeObject.availability.start).toEqual(
-      JulianDate.fromIso8601("2019-01-01")
+      JulianDate.fromIso8601("2019-01-01"),
     );
 
     composite.removeCollection(collection1);
     expect(compositeObject.availability.start).toEqual(
-      JulianDate.fromIso8601("2019-01-02")
+      JulianDate.fromIso8601("2019-01-02"),
     );
 
     composite.removeCollection(collection2);
     expect(compositeObject.availability.start).toEqual(
-      JulianDate.fromIso8601("2019-01-03")
+      JulianDate.fromIso8601("2019-01-03"),
     );
   });
 
@@ -663,7 +663,7 @@ describe("DataSources/CompositeEntityCollection", function () {
       e1Composite,
       propertyName,
       newValue,
-      oldValue
+      oldValue,
     );
   });
 
@@ -691,7 +691,7 @@ describe("DataSources/CompositeEntityCollection", function () {
       e1Composite,
       propertyName,
       newValue,
-      oldValue
+      oldValue,
     );
   });
 
@@ -727,17 +727,17 @@ describe("DataSources/CompositeEntityCollection", function () {
     composite2.addCollection(collection2);
 
     expect(
-      composite1.getById(id).billboard.show.getValue(JulianDate.now())
+      composite1.getById(id).billboard.show.getValue(JulianDate.now()),
     ).toEqual(true);
     expect(
-      composite2.getById(id).billboard.show.getValue(JulianDate.now())
+      composite2.getById(id).billboard.show.getValue(JulianDate.now()),
     ).toEqual(false);
 
     // switch the billboard show for the entity in collection2 to true, this should affect
     // composite2 but not composite1
     entity2.billboard.show = new ConstantProperty(true);
     expect(
-      composite2.getById(id).billboard.show.getValue(JulianDate.now())
+      composite2.getById(id).billboard.show.getValue(JulianDate.now()),
     ).toEqual(true);
     expect(composite1.getById(id).billboard.show).toBe(entity1.billboard.show);
     expect(composite2.getById(id).billboard.show).toBe(entity2.billboard.show);

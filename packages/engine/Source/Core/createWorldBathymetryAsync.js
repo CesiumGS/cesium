@@ -1,13 +1,13 @@
 import CesiumTerrainProvider from "./CesiumTerrainProvider.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 
 /**
  * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/#cesium-world-bathymetry|Cesium World Bathymetry}.
  *
  * @function
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
  * @returns {Promise<CesiumTerrainProvider>} A promise that resolves to the created CesiumTerrainProvider
  *
  * @see Ion
@@ -36,10 +36,10 @@ import defaultValue from "./defaultValue.js";
  *
  */
 function createWorldBathymetryAsync(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   return CesiumTerrainProvider.fromIonAssetId(2426648, {
-    requestVertexNormals: defaultValue(options.requestVertexNormals, false),
+    requestVertexNormals: options.requestVertexNormals ?? false,
   });
 }
 export default createWorldBathymetryAsync;

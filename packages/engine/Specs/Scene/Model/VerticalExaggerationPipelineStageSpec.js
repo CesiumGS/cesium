@@ -31,7 +31,7 @@ describe(
       VerticalExaggerationPipelineStage.process(
         renderResources,
         mockPrimitive,
-        mockFrameState
+        mockFrameState,
       );
 
       const shaderBuilder = renderResources.shaderBuilder;
@@ -46,12 +46,12 @@ describe(
       ]);
       const expectedUniform = Cartesian2.fromElements(
         mockFrameState.verticalExaggeration,
-        mockFrameState.verticalExaggerationRelativeHeight
+        mockFrameState.verticalExaggerationRelativeHeight,
       );
       expect(
-        renderResources.uniformMap.u_verticalExaggerationAndRelativeHeight()
+        renderResources.uniformMap.u_verticalExaggerationAndRelativeHeight(),
       ).toEqual(expectedUniform);
     });
   },
-  "WebGL"
+  "WebGL",
 );

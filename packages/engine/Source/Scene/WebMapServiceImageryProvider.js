@@ -1,4 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
@@ -88,12 +88,13 @@ const excludesReverseAxis = [
  * @see WebMapTileServiceImageryProvider
  * @see UrlTemplateImageryProvider
  *
- * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+ * @see {@link https://enterprise.arcgis.com/en/server/latest/publish-services/linux/wms-services.htm|ArcGIS Server WMS Services}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  *
  * @example
+ * // WMS servers operated by the US government https://apps.nationalmap.gov/services/
  * const provider = new Cesium.WebMapServiceImageryProvider({
- *     url : 'https://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
+ *     url : 'https://basemap.nationalmap.gov:443/arcgis/services/USGSHydroCached/MapServer/WMSServer',
  *     layers : '0',
  *     proxy: new Cesium.DefaultProxy('/proxy/')
  * });
@@ -101,7 +102,7 @@ const excludesReverseAxis = [
  * viewer.imageryLayers.add(imageryLayer);
  */
 function WebMapServiceImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.url)) {
@@ -114,7 +115,7 @@ function WebMapServiceImageryProvider(options) {
 
   if (defined(options.times) && !defined(options.clock)) {
     throw new DeveloperError(
-      "options.times was specified, so options.clock is required."
+      "options.times was specified, so options.clock is required.",
     );
   }
 
@@ -129,21 +130,18 @@ function WebMapServiceImageryProvider(options) {
   this._defaultMinificationFilter = undefined;
   this._defaultMagnificationFilter = undefined;
 
-  this._getFeatureInfoUrl = defaultValue(
-    options.getFeatureInfoUrl,
-    options.url
-  );
+  this._getFeatureInfoUrl = options.getFeatureInfoUrl ?? options.url;
 
   const resource = Resource.createIfNeeded(options.url);
   const pickFeatureResource = Resource.createIfNeeded(this._getFeatureInfoUrl);
 
   resource.setQueryParameters(
     WebMapServiceImageryProvider.DefaultParameters,
-    true
+    true,
   );
   pickFeatureResource.setQueryParameters(
     WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters,
-    true
+    true,
   );
 
   if (defined(options.parameters)) {
@@ -152,7 +150,7 @@ function WebMapServiceImageryProvider(options) {
 
   if (defined(options.getFeatureInfoParameters)) {
     pickFeatureResource.setQueryParameters(
-      objectToLowercase(options.getFeatureInfoParameters)
+      objectToLowercase(options.getFeatureInfoParameters),
     );
   }
 
@@ -185,13 +183,12 @@ function WebMapServiceImageryProvider(options) {
     // Use CRS with 1.3.0 and going forward.
     // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
     // bbox requests.
-    parameters.crs = defaultValue(
-      options.crs,
-      options.tilingScheme &&
-        options.tilingScheme.projection instanceof WebMercatorProjection
+    parameters.crs =
+      options.crs ??
+      (options.tilingScheme &&
+      options.tilingScheme.projection instanceof WebMercatorProjection
         ? "EPSG:3857"
-        : "CRS:84"
-    );
+        : "CRS:84");
 
     // The axis order in previous versions of the WMS specifications was to always use easting (x or lon ) and northing (y or
     // lat). WMS 1.3.0 specifies that, depending on the particular CRS, the x axis may or may not be oriented West-to-East,
@@ -213,13 +210,12 @@ function WebMapServiceImageryProvider(options) {
     }
   } else {
     // SRS for WMS 1.1.0 or 1.1.1.
-    parameters.srs = defaultValue(
-      options.srs,
-      options.tilingScheme &&
-        options.tilingScheme.projection instanceof WebMercatorProjection
+    parameters.srs =
+      options.srs ??
+      (options.tilingScheme &&
+      options.tilingScheme.projection instanceof WebMercatorProjection
         ? "EPSG:3857"
-        : "EPSG:4326"
-    );
+        : "EPSG:4326");
   }
 
   resource.setQueryParameters(parameters, true);
@@ -247,10 +243,9 @@ function WebMapServiceImageryProvider(options) {
   this._tileProvider = new UrlTemplateImageryProvider({
     url: resource,
     pickFeaturesUrl: pickFeatureResource,
-    tilingScheme: defaultValue(
-      options.tilingScheme,
-      new GeographicTilingScheme({ ellipsoid: options.ellipsoid })
-    ),
+    tilingScheme:
+      options.tilingScheme ??
+      new GeographicTilingScheme({ ellipsoid: options.ellipsoid }),
     rectangle: options.rectangle,
     tileWidth: options.tileWidth,
     tileHeight: options.tileHeight,
@@ -259,10 +254,9 @@ function WebMapServiceImageryProvider(options) {
     subdomains: options.subdomains,
     tileDiscardPolicy: options.tileDiscardPolicy,
     credit: options.credit,
-    getFeatureInfoFormats: defaultValue(
-      options.getFeatureInfoFormats,
-      WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats
-    ),
+    getFeatureInfoFormats:
+      options.getFeatureInfoFormats ??
+      WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats,
     enablePickFeatures: options.enablePickFeatures,
   });
 }
@@ -285,7 +279,7 @@ function pickFeatures(
   level,
   longitude,
   latitude,
-  interval
+  interval,
 ) {
   const dynamicIntervalData = defined(interval) ? interval.data : undefined;
   const tileProvider = imageryProvider._tileProvider;
@@ -550,7 +544,7 @@ WebMapServiceImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   let result;
   const timeDynamicImagery = this._timeDynamicImagery;
@@ -593,7 +587,7 @@ WebMapServiceImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   const timeDynamicImagery = this._timeDynamicImagery;
   const currentInterval = defined(timeDynamicImagery)

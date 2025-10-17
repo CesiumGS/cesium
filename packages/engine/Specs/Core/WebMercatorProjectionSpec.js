@@ -24,7 +24,7 @@ describe("Core/WebMercatorProjection", function () {
     const cartographic = new Cartographic(0.0, 0.0, height);
     const projection = new WebMercatorProjection();
     expect(projection.project(cartographic)).toEqual(
-      new Cartesian3(0.0, 0.0, height)
+      new Cartesian3(0.0, 0.0, height),
     );
   });
 
@@ -33,7 +33,7 @@ describe("Core/WebMercatorProjection", function () {
     const cartographic = new Cartographic(
       Math.PI,
       CesiumMath.PI_OVER_FOUR,
-      0.0
+      0.0,
     );
 
     // expected equations from Wolfram MathWorld:
@@ -42,13 +42,13 @@ describe("Core/WebMercatorProjection", function () {
       ellipsoid.maximumRadius * cartographic.longitude,
       ellipsoid.maximumRadius *
         Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
-      0.0
+      0.0,
     );
 
     const projection = new WebMercatorProjection(ellipsoid);
     expect(projection.project(cartographic)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
   });
 
@@ -57,7 +57,7 @@ describe("Core/WebMercatorProjection", function () {
     const cartographic = new Cartographic(
       -Math.PI,
       CesiumMath.PI_OVER_FOUR,
-      0.0
+      0.0,
     );
 
     // expected equations from Wolfram MathWorld:
@@ -66,13 +66,13 @@ describe("Core/WebMercatorProjection", function () {
       ellipsoid.maximumRadius * cartographic.longitude,
       ellipsoid.maximumRadius *
         Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
-      0.0
+      0.0,
     );
 
     const projection = new WebMercatorProjection(ellipsoid);
     expect(projection.project(cartographic)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -81,7 +81,7 @@ describe("Core/WebMercatorProjection", function () {
     const cartographic = new Cartographic(
       Math.PI,
       CesiumMath.PI_OVER_FOUR,
-      0.0
+      0.0,
     );
 
     // expected equations from Wolfram MathWorld:
@@ -90,7 +90,7 @@ describe("Core/WebMercatorProjection", function () {
       ellipsoid.maximumRadius * cartographic.longitude,
       ellipsoid.maximumRadius *
         Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
-      0.0
+      0.0,
     );
 
     const projection = new WebMercatorProjection(ellipsoid);
@@ -104,13 +104,13 @@ describe("Core/WebMercatorProjection", function () {
     const cartographic = new Cartographic(
       CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_FOUR,
-      12.0
+      12.0,
     );
     const projection = new WebMercatorProjection();
     const projected = projection.project(cartographic);
     expect(projection.unproject(projected)).toEqualEpsilon(
       cartographic,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -118,7 +118,7 @@ describe("Core/WebMercatorProjection", function () {
     const cartographic = new Cartographic(
       CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_FOUR,
-      12.0
+      12.0,
     );
     const projection = new WebMercatorProjection();
     const projected = projection.project(cartographic);
@@ -131,39 +131,39 @@ describe("Core/WebMercatorProjection", function () {
   it("unproject is correct at corners", function () {
     const projection = new WebMercatorProjection();
     const southwest = projection.unproject(
-      new Cartesian2(-20037508.342787, -20037508.342787)
+      new Cartesian2(-20037508.342787, -20037508.342787),
     );
     expect(southwest.longitude).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON12);
     expect(southwest.latitude).toEqualEpsilon(
       CesiumMath.toRadians(-85.05112878),
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
 
     const southeast = projection.unproject(
-      new Cartesian2(20037508.342787, -20037508.342787)
+      new Cartesian2(20037508.342787, -20037508.342787),
     );
     expect(southeast.longitude).toEqualEpsilon(Math.PI, CesiumMath.EPSILON12);
     expect(southeast.latitude).toEqualEpsilon(
       CesiumMath.toRadians(-85.05112878),
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
 
     const northeast = projection.unproject(
-      new Cartesian2(20037508.342787, 20037508.342787)
+      new Cartesian2(20037508.342787, 20037508.342787),
     );
     expect(northeast.longitude).toEqualEpsilon(Math.PI, CesiumMath.EPSILON12);
     expect(northeast.latitude).toEqualEpsilon(
       CesiumMath.toRadians(85.05112878),
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
 
     const northwest = projection.unproject(
-      new Cartesian2(-20037508.342787, 20037508.342787)
+      new Cartesian2(-20037508.342787, 20037508.342787),
     );
     expect(northwest.longitude).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON12);
     expect(northwest.latitude).toEqualEpsilon(
       CesiumMath.toRadians(85.05112878),
-      CesiumMath.EPSILON11
+      CesiumMath.EPSILON11,
     );
   });
 
@@ -173,25 +173,25 @@ describe("Core/WebMercatorProjection", function () {
     const projection = new WebMercatorProjection();
 
     const southwest = projection.project(
-      new Cartographic(-Math.PI, -maxLatitude)
+      new Cartographic(-Math.PI, -maxLatitude),
     );
     expect(southwest.x).toEqualEpsilon(-20037508.342787, CesiumMath.EPSILON3);
     expect(southwest.y).toEqualEpsilon(-20037508.342787, CesiumMath.EPSILON3);
 
     const southeast = projection.project(
-      new Cartographic(Math.PI, -maxLatitude)
+      new Cartographic(Math.PI, -maxLatitude),
     );
     expect(southeast.x).toEqualEpsilon(20037508.342787, CesiumMath.EPSILON3);
     expect(southeast.y).toEqualEpsilon(-20037508.342787, CesiumMath.EPSILON3);
 
     const northeast = projection.project(
-      new Cartographic(Math.PI, maxLatitude)
+      new Cartographic(Math.PI, maxLatitude),
     );
     expect(northeast.x).toEqualEpsilon(20037508.342787, CesiumMath.EPSILON3);
     expect(northeast.y).toEqualEpsilon(20037508.342787, CesiumMath.EPSILON3);
 
     const northwest = projection.project(
-      new Cartographic(-Math.PI, maxLatitude)
+      new Cartographic(-Math.PI, maxLatitude),
     );
     expect(northwest.x).toEqualEpsilon(-20037508.342787, CesiumMath.EPSILON3);
     expect(northwest.y).toEqualEpsilon(20037508.342787, CesiumMath.EPSILON3);
@@ -200,18 +200,18 @@ describe("Core/WebMercatorProjection", function () {
   it("projected y is clamped to valid latitude range.", function () {
     const projection = new WebMercatorProjection();
     const southPole = projection.project(
-      new Cartographic(0.0, -CesiumMath.PI_OVER_TWO)
+      new Cartographic(0.0, -CesiumMath.PI_OVER_TWO),
     );
     const southLimit = projection.project(
-      new Cartographic(0.0, -WebMercatorProjection.MaximumLatitude)
+      new Cartographic(0.0, -WebMercatorProjection.MaximumLatitude),
     );
     expect(southPole.y).toEqual(southLimit.y);
 
     const northPole = projection.project(
-      new Cartographic(0.0, CesiumMath.PI_OVER_TWO)
+      new Cartographic(0.0, CesiumMath.PI_OVER_TWO),
     );
     const northLimit = projection.project(
-      new Cartographic(0.0, WebMercatorProjection.MaximumLatitude)
+      new Cartographic(0.0, WebMercatorProjection.MaximumLatitude),
     );
     expect(northPole.y).toEqual(northLimit.y);
   });

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -44,6 +41,7 @@
           timeline: false,
           animation: false,
           baseLayerPicker: false,
+          geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
         });
         const scene = viewer.scene;
         scene.globe.depthTestAgainstTerrain = true;
@@ -59,7 +57,10 @@
 
         let worldTileset;
         try {
-          worldTileset = await Cesium.createGooglePhotorealistic3DTileset();
+          worldTileset = await Cesium.createGooglePhotorealistic3DTileset({
+            // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
+            onlyUsingWithGoogleGeocoder: true,
+          });
           viewer.scene.primitives.add(worldTileset);
         } catch (error) {
           console.log(`Error loading Photorealistic 3D Tiles tileset.
@@ -145,12 +146,7 @@
               const e = viewer.entities.add({
                 corridor: {
                   positions: Cesium.Cartesian3.fromDegreesArray([
-                    -122.19,
-                    46.1914,
-                    -122.21,
-                    46.21,
-                    -122.23,
-                    46.21,
+                    -122.19, 46.1914, -122.21, 46.21, -122.23, 46.21,
                   ]),
                   width: 2000.0,
                   material: Cesium.Color.GREEN.withAlpha(0.5),
@@ -171,22 +167,22 @@
                       new Cesium.Cartesian3(
                         -2358138.847340281,
                         -3744072.459541374,
-                        4581158.5714175375
+                        4581158.5714175375,
                       ),
                       new Cesium.Cartesian3(
                         -2357231.4925370603,
                         -3745103.7886602185,
-                        4580702.9757762635
+                        4580702.9757762635,
                       ),
                       new Cesium.Cartesian3(
                         -2355912.902205431,
                         -3744249.029778454,
-                        4582402.154378103
+                        4582402.154378103,
                       ),
                       new Cesium.Cartesian3(
                         -2357208.0209552636,
                         -3743553.4420488174,
-                        4581961.863286629
+                        4581961.863286629,
                       ),
                     ],
                   },
@@ -200,13 +196,9 @@
           {
             text: "Draw Textured Polygon",
             onselect: function () {
-              if (
-                !Cesium.Entity.supportsMaterialsforEntitiesOnTerrain(
-                  viewer.scene
-                )
-              ) {
+              if (!Cesium.Entity.supportsMaterialsforEntitiesOnTerrain(viewer.scene)) {
                 window.alert(
-                  "Terrain Entity materials are not supported on this platform"
+                  "Terrain Entity materials are not supported on this platform",
                 );
                 return;
               }
@@ -219,27 +211,27 @@
                       new Cesium.Cartesian3(
                         -2358138.847340281,
                         -3744072.459541374,
-                        4581158.5714175375
+                        4581158.5714175375,
                       ),
                       new Cesium.Cartesian3(
                         -2357231.4925370603,
                         -3745103.7886602185,
-                        4580702.9757762635
+                        4580702.9757762635,
                       ),
                       new Cesium.Cartesian3(
                         -2355912.902205431,
                         -3744249.029778454,
-                        4582402.154378103
+                        4582402.154378103,
                       ),
                       new Cesium.Cartesian3(
                         -2357208.0209552636,
                         -3743553.4420488174,
-                        4581961.863286629
+                        4581961.863286629,
                       ),
                     ],
                   },
                   material: "../images/Cesium_Logo_Color.jpg",
-                  classificationType: Cesium.ClassificationType.TERRAIN,
+                  classificationType: Cesium.ClassificationType.BOTH,
                   stRotation: Cesium.Math.toRadians(45),
                 },
               });
@@ -253,12 +245,7 @@
               viewer.entities.removeAll();
               const e = viewer.entities.add({
                 rectangle: {
-                  coordinates: Cesium.Rectangle.fromDegrees(
-                    -122.3,
-                    46.0,
-                    -122.0,
-                    46.3
-                  ),
+                  coordinates: Cesium.Rectangle.fromDegrees(-122.3, 46.0, -122.0, 46.3),
                   material: Cesium.Color.RED.withAlpha(0.5),
                 },
               });
@@ -287,21 +274,14 @@
             text: "Draw polyline",
             onselect: function () {
               if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
-                window.alert(
-                  "Polylines on terrain are not supported on this platform"
-                );
+                window.alert("Polylines on terrain are not supported on this platform");
               }
 
               viewer.entities.removeAll();
               viewer.entities.add({
                 polyline: {
                   positions: Cesium.Cartesian3.fromDegreesArray([
-                    86.953793,
-                    27.928257,
-                    86.953793,
-                    27.988257,
-                    86.896497,
-                    27.988257,
+                    86.953793, 27.928257, 86.953793, 27.988257, 86.896497, 27.988257,
                   ]),
                   clampToGround: true,
                   width: 5,
@@ -316,12 +296,12 @@
               const target = new Cesium.Cartesian3(
                 300770.50872389384,
                 5634912.131394585,
-                2978152.2865545116
+                2978152.2865545116,
               );
               const offset = new Cesium.Cartesian3(
                 6344.974098678562,
                 -793.3419798081741,
-                2499.9508860763162
+                2499.9508860763162,
               );
               viewer.camera.lookAt(target, offset);
               viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);

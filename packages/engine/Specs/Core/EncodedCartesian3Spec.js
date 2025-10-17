@@ -98,7 +98,7 @@ describe("Core/EncodedCartesian3", function () {
       EncodedCartesian3.writeElements(
         new Cartesian3(),
         new Float32Array(6),
-        -1
+        -1,
       );
     }).toThrowDeveloperError();
   });

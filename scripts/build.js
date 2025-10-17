@@ -1,10 +1,10 @@
-import child_process from "child_process";
-import { existsSync, readFileSync, statSync } from "fs";
-import { readFile, writeFile } from "fs/promises";
-import { EOL } from "os";
-import path from "path";
-import { createRequire } from "module";
-import { finished } from 'stream/promises';
+import child_process from "node:child_process";
+import { existsSync, statSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
+import { EOL } from "node:os";
+import path from "node:path";
+import { finished } from "node:stream/promises";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import esbuild from "esbuild";
 import { globby } from "globby";
@@ -18,21 +18,23 @@ import { mkdirp } from "mkdirp";
 // This should match the scope of the dependencies of the root level package.json.
 const scope = "cesium";
 
-const require = createRequire(import.meta.url);
-const packageJson = require("../package.json");
-let version = packageJson.version;
-if (/\.0$/.test(version)) {
-  version = version.substring(0, version.length - 2);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const projectRoot = path.join(__dirname, "..");
+const packageJsonPath = path.join(projectRoot, "package.json");
+
+async function getVersion() {
+  const data = await readFile(packageJsonPath, "utf8");
+  const { version } = JSON.parse(data);
+  return version;
 }
 
-const copyrightHeaderTemplate = readFileSync(
-  path.join("Source", "copyrightHeader.js"),
-  "utf8"
-);
-const combinedCopyrightHeader = copyrightHeaderTemplate.replace(
-  "${version}",
-  version
-);
+async function getCopyrightHeader() {
+  const copyrightHeaderTemplate = await readFile(
+    path.join("Source", "copyrightHeader.js"),
+    "utf8",
+  );
+  return copyrightHeaderTemplate.replace("${version}", await getVersion());
+}
 
 function escapeCharacters(token) {
   return token.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
@@ -164,7 +166,7 @@ export async function bundleCesiumJs(options) {
   buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
   buildConfig.write = options.write;
   buildConfig.banner = {
-    js: combinedCopyrightHeader,
+    js: await getCopyrightHeader(),
   };
   // print errors immediately, and collect warnings so we can filter out known ones
   buildConfig.logLevel = "info";
@@ -288,13 +290,14 @@ function generateDeclaration(workspace, file) {
  * @returns {Buffer} contents
  */
 export async function createCesiumJs() {
+  const version = await getVersion();
   let contents = `export const VERSION = '${version}';\n`;
 
   // Iterate over each workspace and generate declarations for each file.
   for (const workspace of Object.keys(workspaceSourceFiles)) {
     const files = await globby(workspaceSourceFiles[workspace]);
     const declarations = files.map((file) =>
-      generateDeclaration(workspace, file)
+      generateDeclaration(workspace, file),
     );
     contents += declarations.join(`${EOL}`);
     contents += "\n";
@@ -314,6 +317,7 @@ const workspaceSpecFiles = {
  * @returns {Buffer} contents
  */
 export async function createCombinedSpecList() {
+  const version = await getVersion();
   let contents = `export const VERSION = '${version}';\n`;
 
   for (const workspace of Object.keys(workspaceSpecFiles)) {
@@ -383,11 +387,14 @@ export async function bundleWorkers(options) {
     workerConfig.logOverride = {
       "empty-import-meta": "silent",
     };
+    workerConfig.plugins = options.removePragmas
+      ? [stripPragmaPlugin]
+      : undefined;
   } else {
     workerConfig.format = "esm";
     workerConfig.splitting = true;
     workerConfig.banner = {
-      js: combinedCopyrightHeader,
+      js: await getCopyrightHeader(),
     };
     workerConfig.entryPoints = workers;
     workerConfig.outdir = path.join(options.path, "Workers");
@@ -468,7 +475,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
         `packages/${workspace}/`,
         "Source",
         "Shaders",
-        "Builtin"
+        "Builtin",
       );
       if (
         glslFile.indexOf(path.normalize(path.join(baseDir, "Functions"))) === 0
@@ -505,7 +512,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
 
       let copyrightComments = "";
       const extractedCopyrightComments = contents.match(
-        /\/\*\*(?:[^*\/]|\*(?!\/)|\n)*?@license(?:.|\n)*?\*\//gm
+        /\/\*\*(?:[^*\/]|\*(?!\/)|\n)*?@license(?:.|\n)*?\*\//gm,
       );
       if (extractedCopyrightComments) {
         copyrightComments = `${extractedCopyrightComments.join("\n")}\n`;
@@ -526,7 +533,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
 export default "${contents}";\n`;
 
       return writeFile(jsFile, contents);
-    })
+    }),
   );
 
   // delete any left over JS files from old shaders
@@ -538,7 +545,7 @@ export default "${contents}";\n`;
     for (let i = 0; i < builtins.length; i++) {
       const builtin = builtins[i];
       contents.imports.push(
-        `import czm_${builtin} from './${path}/${builtin}.js'`
+        `import czm_${builtin} from './${path}/${builtin}.js'`,
       );
       contents.builtinLookup.push(`czm_${builtin} : ` + `czm_${builtin}`);
     }
@@ -554,7 +561,7 @@ export default "${contents}";\n`;
   generateBuiltinContents(contents, builtinFunctions, "Functions");
 
   const fileContents = `//This file is automatically rebuilt by the Cesium build process.\n${contents.imports.join(
-    "\n"
+    "\n",
   )}\n\nexport default {\n    ${contents.builtinLookup.join(",\n    ")}\n};\n`;
 
   return writeFile(
@@ -563,9 +570,9 @@ export default "${contents}";\n`;
       "Source",
       "Shaders",
       "Builtin",
-      "CzmBuiltins.js"
+      "CzmBuiltins.js",
     ),
-    fileContents
+    fileContents,
   );
 }
 
@@ -600,10 +607,68 @@ const externalResolvePlugin = {
         return {
           contents,
         };
-      }
+      },
     );
   },
 };
+
+/**
+ * Parses Sandcastle config file and returns its values.
+ * @returns {Promise<Record<string,any>>} A promise that resolves to the config values.
+ */
+export async function getSandcastleConfig() {
+  const configPath = "packages/sandcastle/sandcastle.config.js";
+  const configImportPath = path.join(projectRoot, configPath);
+  const config = await import(pathToFileURL(configImportPath).href);
+  const options = config.default;
+  return {
+    ...options,
+    configPath,
+  };
+}
+
+/**
+ * Indexes Sandcastle gallery files and writes gallery files to the configured Sandcastle output directory.
+ * @param {boolean} [includeDevelopment=true] true if gallery items flagged as development should be included.
+ * @returns {Promise<void>} A promise that resolves once the gallery files have been indexed and written.
+ */
+export async function buildSandcastleGallery(includeDevelopment) {
+  const { configPath, root, gallery, sourceUrl } = await getSandcastleConfig();
+
+  // Use an absolute path to avoid any descrepency between working directories
+  // All other directories will be relative to the specified root directory
+  const rootDirectory = path.join(path.dirname(configPath), root);
+
+  // Paths are specified relative to the config file
+  const {
+    files: galleryFiles,
+    defaultThumbnail,
+    searchOptions,
+    defaultFilters,
+    metadata,
+  } = gallery ?? {};
+
+  // Import asynchronously, for now, because this following script is not included in the release zip; However, this script will not be run from the release zip
+  const buildGalleryScriptPath = path.join(
+    __dirname,
+    "../packages/sandcastle/scripts/buildGallery.js",
+  );
+  const { buildGalleryList } = await import(
+    pathToFileURL(buildGalleryScriptPath).href
+  );
+
+  await buildGalleryList({
+    rootDirectory,
+    publicDirectory: "../../Apps/Sandcastle2",
+    galleryFiles,
+    sourceUrl,
+    defaultThumbnail,
+    searchOptions,
+    defaultFilters,
+    metadata,
+    includeDevelopment,
+  });
+}
 
 /**
  * Creates a template html file in the Sandcastle app listing the gallery of demos
@@ -611,6 +676,8 @@ const externalResolvePlugin = {
  * @returns {Promise<any>}
  */
 export async function createGalleryList(noDevelopmentGallery) {
+  await buildSandcastleGallery(!noDevelopmentGallery);
+
   const demoObjects = [];
   const demoJSONs = [];
   const output = path.join("Apps", "Sandcastle", "gallery", "gallery-index.js");
@@ -622,7 +689,8 @@ export async function createGalleryList(noDevelopmentGallery) {
 
   // In CI, the version is set to something like '1.43.0-branch-name-buildNumber'
   // We need to extract just the Major.Minor version
-  const majorMinor = packageJson.version.match(/^(.*)\.(.*)\./);
+  const version = await getVersion();
+  const majorMinor = version.match(/^(.*)\.(.*)\./);
   const major = majorMinor[1];
   const minor = Number(majorMinor[2]) - 1; // We want the last release, not current release
   const tagVersion = `${major}.${minor}`;
@@ -634,7 +702,7 @@ export async function createGalleryList(noDevelopmentGallery) {
     newDemos = child_process
       .execSync(
         `git diff --name-only --diff-filter=A ${tagVersion} Apps/Sandcastle/gallery/*.html`,
-        { stdio: ["pipe", "pipe", "ignore"] }
+        { stdio: ["pipe", "pipe", "ignore"] },
       )
       .toString()
       .trim()
@@ -647,7 +715,7 @@ export async function createGalleryList(noDevelopmentGallery) {
   const files = await globby(fileList);
   files.forEach(function (file) {
     const demo = filePathToModuleId(
-      path.relative("Apps/Sandcastle/gallery", file)
+      path.relative("Apps/Sandcastle/gallery", file),
     );
 
     const demoObject = {
@@ -697,8 +765,7 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
     ],
     minify: true,
     banner: {
-      css:
-        "/* This file is automatically rebuilt by the Cesium build process. */\n",
+      css: "/* This file is automatically rebuilt by the Cesium build process. */\n",
     },
     outfile: path.join("Apps", "Sandcastle", "templates", "bucket.css"),
   });
@@ -745,7 +812,7 @@ export async function copyEngineAssets(destination) {
   await copyFiles(
     ["packages/engine/Source/Widget/**", "!packages/engine/Source/Widget/*.js"],
     path.join(destination, "Widgets/CesiumWidget"),
-    "packages/engine/Source/Widget"
+    "packages/engine/Source/Widget",
   );
 }
 
@@ -776,7 +843,7 @@ export async function createJsHintOptions() {
   const jshintrc = JSON.parse(
     await readFile(path.join("Apps", "Sandcastle", ".jshintrc"), {
       encoding: "utf8",
-    })
+    }),
   );
 
   const contents = `\
@@ -785,7 +852,7 @@ export async function createJsHintOptions() {
 
   await writeFile(
     path.join("Apps", "Sandcastle", "jsHintOptions.js"),
-    contents
+    contents,
   );
 
   return contents;
@@ -855,6 +922,7 @@ export async function bundleTestWorkers(options) {
  * @returns
  */
 export async function createIndexJs(workspace) {
+  const version = await getVersion();
   let contents = `globalThis.CESIUM_VERSION = "${version}";\n`;
 
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
@@ -898,7 +966,7 @@ async function createSpecListForWorkspace(files, workspace, outputPath) {
   files.forEach(function (file) {
     contents += `import './${filePathToModuleId(file).replace(
       `packages/${workspace}/Specs/`,
-      ""
+      "",
     )}.js';\n`;
   });
 
@@ -1005,7 +1073,7 @@ export const buildEngine = async (options) => {
   await glslToJavaScript(
     minify,
     "packages/engine/Build/minifyShaders.state",
-    "engine"
+    "engine",
   );
 
   // Create index.js
@@ -1101,7 +1169,7 @@ export async function buildCesium(options) {
     JSON.stringify({
       type: "commonjs",
     }),
-    "utf8"
+    "utf8",
   );
 
   // Create Cesium.js
@@ -1179,14 +1247,14 @@ export async function buildCesium(options) {
   await copyFiles(
     ["packages/engine/Source/ThirdParty/**/*.js"],
     "Source/ThirdParty",
-    "packages/engine/Source/ThirdParty"
+    "packages/engine/Source/ThirdParty",
   );
 
   await copyWidgetsAssets("Source/Widgets");
   await copyFiles(
     ["packages/widgets/Source/**/*.css"],
     "Source/Widgets",
-    "packages/widgets/Source"
+    "packages/widgets/Source",
   );
 
   // WORKAROUND:

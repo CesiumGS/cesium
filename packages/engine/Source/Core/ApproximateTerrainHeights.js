@@ -4,7 +4,6 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -44,7 +43,7 @@ ApproximateTerrainHeights.initialize = function () {
     return initPromise;
   }
   initPromise = Resource.fetchJson(
-    buildModuleUrl("Assets/approximateTerrainHeights.json")
+    buildModuleUrl("Assets/approximateTerrainHeights.json"),
   ).then(function (json) {
     ApproximateTerrainHeights._terrainHeights = json;
   });
@@ -61,17 +60,17 @@ ApproximateTerrainHeights.initialize = function () {
  */
 ApproximateTerrainHeights.getMinimumMaximumHeights = function (
   rectangle,
-  ellipsoid
+  ellipsoid,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("rectangle", rectangle);
   if (!defined(ApproximateTerrainHeights._terrainHeights)) {
     throw new DeveloperError(
-      "You must call ApproximateTerrainHeights.initialize and wait for the promise to resolve before using this function"
+      "You must call ApproximateTerrainHeights.initialize and wait for the promise to resolve before using this function",
     );
   }
   //>>includeEnd('debug');
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   const xyLevel = getTileXYLevel(rectangle);
 
@@ -89,26 +88,26 @@ ApproximateTerrainHeights.getMinimumMaximumHeights = function (
     // Compute min by taking the center of the NE->SW diagonal and finding distance to the surface
     ellipsoid.cartographicToCartesian(
       Rectangle.northeast(rectangle, scratchDiagonalCartographic),
-      scratchDiagonalCartesianNE
+      scratchDiagonalCartesianNE,
     );
     ellipsoid.cartographicToCartesian(
       Rectangle.southwest(rectangle, scratchDiagonalCartographic),
-      scratchDiagonalCartesianSW
+      scratchDiagonalCartesianSW,
     );
 
     Cartesian3.midpoint(
       scratchDiagonalCartesianSW,
       scratchDiagonalCartesianNE,
-      scratchCenterCartesian
+      scratchCenterCartesian,
     );
     const surfacePosition = ellipsoid.scaleToGeodeticSurface(
       scratchCenterCartesian,
-      scratchSurfaceCartesian
+      scratchSurfaceCartesian,
     );
     if (defined(surfacePosition)) {
       const distance = Cartesian3.distance(
         scratchCenterCartesian,
-        surfacePosition
+        surfacePosition,
       );
       minTerrainHeight = Math.min(minTerrainHeight, -distance);
     } else {
@@ -118,7 +117,7 @@ ApproximateTerrainHeights.getMinimumMaximumHeights = function (
 
   minTerrainHeight = Math.max(
     ApproximateTerrainHeights._defaultMinTerrainHeight,
-    minTerrainHeight
+    minTerrainHeight,
   );
 
   return {
@@ -138,11 +137,11 @@ ApproximateTerrainHeights.getBoundingSphere = function (rectangle, ellipsoid) {
   Check.defined("rectangle", rectangle);
   if (!defined(ApproximateTerrainHeights._terrainHeights)) {
     throw new DeveloperError(
-      "You must call ApproximateTerrainHeights.initialize and wait for the promise to resolve before using this function"
+      "You must call ApproximateTerrainHeights.initialize and wait for the promise to resolve before using this function",
     );
   }
   //>>includeEnd('debug');
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   const xyLevel = getTileXYLevel(rectangle);
 
@@ -161,7 +160,7 @@ ApproximateTerrainHeights.getBoundingSphere = function (rectangle, ellipsoid) {
     rectangle,
     ellipsoid,
     maxTerrainHeight,
-    scratchBoundingSphere
+    scratchBoundingSphere,
   );
 
   return BoundingSphere.union(result, scratchBoundingSphere, result);
@@ -172,25 +171,25 @@ function getTileXYLevel(rectangle) {
     rectangle.east,
     rectangle.north,
     0.0,
-    scratchCorners[0]
+    scratchCorners[0],
   );
   Cartographic.fromRadians(
     rectangle.west,
     rectangle.north,
     0.0,
-    scratchCorners[1]
+    scratchCorners[1],
   );
   Cartographic.fromRadians(
     rectangle.east,
     rectangle.south,
     0.0,
-    scratchCorners[2]
+    scratchCorners[2],
   );
   Cartographic.fromRadians(
     rectangle.west,
     rectangle.south,
     0.0,
-    scratchCorners[3]
+    scratchCorners[3],
   );
 
   // Determine which tile the bounding rectangle is in

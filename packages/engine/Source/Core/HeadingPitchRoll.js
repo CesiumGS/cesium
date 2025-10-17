@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -20,19 +19,19 @@ function HeadingPitchRoll(heading, pitch, roll) {
    * @type {number}
    * @default 0.0
    */
-  this.heading = defaultValue(heading, 0.0);
+  this.heading = heading ?? 0.0;
   /**
    * Gets or sets the pitch.
    * @type {number}
    * @default 0.0
    */
-  this.pitch = defaultValue(pitch, 0.0);
+  this.pitch = pitch ?? 0.0;
   /**
    * Gets or sets the roll.
    * @type {number}
    * @default 0.0
    */
-  this.roll = defaultValue(roll, 0.0);
+  this.roll = roll ?? 0.0;
 }
 
 /**
@@ -111,7 +110,7 @@ HeadingPitchRoll.clone = function (headingPitchRoll, result) {
     return new HeadingPitchRoll(
       headingPitchRoll.heading,
       headingPitchRoll.pitch,
-      headingPitchRoll.roll
+      headingPitchRoll.roll,
     );
   }
   result.heading = headingPitchRoll.heading;
@@ -154,7 +153,7 @@ HeadingPitchRoll.equalsEpsilon = function (
   left,
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return (
     left === right ||
@@ -164,19 +163,19 @@ HeadingPitchRoll.equalsEpsilon = function (
         left.heading,
         right.heading,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         left.pitch,
         right.pitch,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         left.roll,
         right.roll,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ))
   );
 };
@@ -215,13 +214,13 @@ HeadingPitchRoll.prototype.equals = function (right) {
 HeadingPitchRoll.prototype.equalsEpsilon = function (
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return HeadingPitchRoll.equalsEpsilon(
     this,
     right,
     relativeEpsilon,
-    absoluteEpsilon
+    absoluteEpsilon,
   );
 };
 

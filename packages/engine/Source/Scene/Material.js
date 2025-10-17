@@ -3,7 +3,7 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import createGuid from "../Core/createGuid.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -34,6 +34,7 @@ import SlopeRampMaterial from "../Shaders/Materials/SlopeRampMaterial.js";
 import StripeMaterial from "../Shaders/Materials/StripeMaterial.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
+import WaterMaskMaterial from "../Shaders/Materials/WaterMaskMaterial.js";
 import WaterMaterial from "../Shaders/Materials/Water.js";
 
 /**
@@ -219,6 +220,11 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  *      <li><code>heights</code>: image of heights sorted from lowest to highest.</li>
  *      <li><code>colors</code>: image of colors at the corresponding heights.</li>
  * </ul>
+ * <li>WaterMask</li>
+ * <ul>
+ *      <li><code>waterColor</code>: diffuse color and alpha for the areas covered by water.</li>
+ *      <li><code>landColor</code>: diffuse color and alpha for the areas covered by land.</li>
+ * </ul>
  * </ul>
  * </ul>
  * </div>
@@ -233,7 +239,6 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
  * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
  * @param {object} options.fabric The fabric JSON used to generate the material.
- *ructor
  *
  * @exception {DeveloperError} fabric: uniform has invalid type.
  * @exception {DeveloperError} fabric: uniforms and materials cannot share the same property.
@@ -245,7 +250,6 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  * @exception {DeveloperError} strict: shader source does not use material.
  *
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
  *
  * @example
@@ -304,14 +308,10 @@ function Material(options) {
    */
   this.translucent = undefined;
 
-  this._minificationFilter = defaultValue(
-    options.minificationFilter,
-    TextureMinificationFilter.LINEAR
-  );
-  this._magnificationFilter = defaultValue(
-    options.magnificationFilter,
-    TextureMagnificationFilter.LINEAR
-  );
+  this._minificationFilter =
+    options.minificationFilter ?? TextureMinificationFilter.LINEAR;
+  this._magnificationFilter =
+    options.magnificationFilter ?? TextureMagnificationFilter.LINEAR;
 
   this._strict = undefined;
   this._template = undefined;
@@ -327,11 +327,57 @@ function Material(options) {
 
   this._defaultTexture = undefined;
 
+  /**
+   * Any and all promises that are created when initializing the material.
+   * Examples: loading images and cubemaps.
+   *
+   * @type {Promise[]}
+   * @private
+   */
+  this._initializationPromises = [];
+
+  /**
+   * An error that occurred in async operations during material initialization.
+   * Only one error is stored.
+   *
+   * @type {Error|undefined}
+   * @private
+   */
+  this._initializationError = undefined;
+
   initializeMaterial(options, this);
   Object.defineProperties(this, {
     type: {
       value: this.type,
       writable: false,
+    },
+
+    /**
+     * The {@link TextureMinificationFilter} to apply to this material's textures.
+     * @type {TextureMinificationFilter}
+     * @default TextureMinificationFilter.LINEAR
+     */
+    minificationFilter: {
+      get: function () {
+        return this._minificationFilter;
+      },
+      set: function (value) {
+        this._minificationFilter = value;
+      },
+    },
+
+    /**
+     * The {@link TextureMagnificationFilter} to apply to this material's textures.
+     * @type {TextureMagnificationFilter}
+     * @default TextureMagnificationFilter.LINEAR
+     */
+    magnificationFilter: {
+      get: function () {
+        return this._magnificationFilter;
+      },
+      set: function (value) {
+        this._magnificationFilter = value;
+      },
     },
   });
 
@@ -383,6 +429,68 @@ Material.fromType = function (type, uniforms) {
 
   return material;
 };
+
+/**
+ * Creates a new material using an existing material type and returns a promise that resolves when
+ * all of the material's resources have been loaded.
+ *
+ * @param {string} type The base material type.
+ * @param {object} [uniforms] Overrides for the default uniforms.
+ * @returns {Promise<Material>} A promise that resolves to a new material object when all resources are loaded.
+ *
+ * @exception {DeveloperError} material with that type does not exist.
+ *
+ * @example
+ * const material = await Cesium.Material.fromTypeAsync('Image', {
+ *    image: '../Images/Cesium_Logo_overlay.png'
+ * });
+ */
+Material.fromTypeAsync = async function (type, uniforms) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(Material._materialCache.getMaterial(type))) {
+    throw new DeveloperError(`material with type '${type}' does not exist.`);
+  }
+  //>>includeEnd('debug');
+
+  const initializationPromises = [];
+  // Unlike Material.fromType, we need to specify the uniforms in the Material constructor up front,
+  // or else anything that needs to be async loaded won't be kicked off until the next Update call.
+  const material = new Material({
+    fabric: {
+      type: type,
+      uniforms: uniforms,
+    },
+  });
+
+  // Recursively collect initialization promises for this material and its submaterials.
+  getInitializationPromises(material, initializationPromises);
+  await Promise.all(initializationPromises);
+  initializationPromises.length = 0;
+
+  if (defined(material._initializationError)) {
+    throw material._initializationError;
+  }
+
+  return material;
+};
+
+/**
+ * Recursively traverses the material and its submaterials to collect all initialization promises.
+ * @param {Material} material The material to traverse.
+ * @param {Promise[]} initializationPromises The array to collect promises into.
+ *
+ * @private
+ */
+function getInitializationPromises(material, initializationPromises) {
+  initializationPromises.push(...material._initializationPromises);
+  const submaterials = material.materials;
+  for (const name in submaterials) {
+    if (submaterials.hasOwnProperty(name)) {
+      const submaterial = submaterials[name];
+      getInitializationPromises(submaterial, initializationPromises);
+    }
+  }
+}
 
 /**
  * Gets whether or not this material is translucent.
@@ -582,17 +690,16 @@ Material.prototype.destroy = function () {
 };
 
 function initializeMaterial(options, result) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  result._strict = defaultValue(options.strict, false);
-  result._count = defaultValue(options.count, 0);
-  result._template = clone(
-    defaultValue(options.fabric, defaultValue.EMPTY_OBJECT)
-  );
+  options = options ?? Frozen.EMPTY_OBJECT;
+  result._strict = options.strict ?? false;
+  result._count = options.count ?? 0;
+  result._template = clone(options.fabric ?? Frozen.EMPTY_OBJECT);
+  result.fabric = clone(options.fabric ?? Frozen.EMPTY_OBJECT);
   result._template.uniforms = clone(
-    defaultValue(result._template.uniforms, defaultValue.EMPTY_OBJECT)
+    result._template.uniforms ?? Frozen.EMPTY_OBJECT,
   );
   result._template.materials = clone(
-    defaultValue(result._template.materials, defaultValue.EMPTY_OBJECT)
+    result._template.materials ?? Frozen.EMPTY_OBJECT,
   );
 
   result.type = defined(result._template.type)
@@ -618,19 +725,19 @@ function initializeMaterial(options, result) {
   // Make sure the template has no obvious errors. More error checking happens later.
   checkForTemplateErrors(result);
 
+  createMethodDefinition(result);
+  createUniforms(result);
+  createSubMaterials(result);
+
   // If the material has a new type, add it to the cache.
   if (!defined(cachedMaterial)) {
     Material._materialCache.addMaterial(result.type, result);
   }
 
-  createMethodDefinition(result);
-  createUniforms(result);
-  createSubMaterials(result);
-
   const defaultTranslucent =
     result._translucentFunctions.length === 0 ? true : undefined;
-  translucent = defaultValue(translucent, defaultTranslucent);
-  translucent = defaultValue(options.translucent, translucent);
+  translucent = translucent ?? defaultTranslucent;
+  translucent = options.translucent ?? translucent;
 
   if (defined(translucent)) {
     if (typeof translucent === "function") {
@@ -705,7 +812,7 @@ function checkForTemplateErrors(material) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(components) && defined(template.source)) {
     throw new DeveloperError(
-      "fabric: cannot have source and components in the same template."
+      "fabric: cannot have source and components in the same template.",
     );
   }
   //>>includeEnd('debug');
@@ -716,7 +823,7 @@ function checkForTemplateErrors(material) {
     components,
     componentProperties,
     invalidNameError,
-    true
+    true,
   );
 
   // Make sure uniforms and materials do not share any of the same names.
@@ -860,10 +967,10 @@ function createTexture2DUpdateFunction(uniformId) {
         texture.destroy();
       }
       texture = undefined;
+      material._texturePaths[uniformId] = undefined;
     }
 
     if (!defined(texture)) {
-      material._texturePaths[uniformId] = undefined;
       texture = material._textures[uniformId] = material._defaultTexture;
 
       uniformDimensionsName = `${uniformId}Dimensions`;
@@ -878,55 +985,88 @@ function createTexture2DUpdateFunction(uniformId) {
       return;
     }
 
-    // When using the entity layer, the Resource objects get recreated on getValue because
-    //  they are clonable. That's why we check the url property for Resources
-    //  because the instances aren't the same and we keep trying to load the same
-    //  image if it fails to load.
-    const isResource = uniformValue instanceof Resource;
     if (
-      !defined(material._texturePaths[uniformId]) ||
-      (isResource &&
-        uniformValue.url !== material._texturePaths[uniformId].url) ||
-      (!isResource && uniformValue !== material._texturePaths[uniformId])
+      (uniformValue instanceof HTMLCanvasElement ||
+        uniformValue instanceof HTMLImageElement ||
+        uniformValue instanceof ImageBitmap ||
+        uniformValue instanceof OffscreenCanvas) &&
+      uniformValue !== material._texturePaths[uniformId]
     ) {
-      if (typeof uniformValue === "string" || isResource) {
-        const resource = isResource
-          ? uniformValue
-          : Resource.createIfNeeded(uniformValue);
-
-        let promise;
-        if (ktx2Regex.test(resource.url)) {
-          promise = loadKTX2(resource.url);
-        } else {
-          promise = resource.fetchImage();
-        }
-
-        Promise.resolve(promise)
-          .then(function (image) {
-            material._loadedImages.push({
-              id: uniformId,
-              image: image,
-            });
-          })
-          .catch(function () {
-            if (defined(texture) && texture !== material._defaultTexture) {
-              texture.destroy();
-            }
-            material._textures[uniformId] = material._defaultTexture;
-          });
-      } else if (
-        uniformValue instanceof HTMLCanvasElement ||
-        uniformValue instanceof HTMLImageElement
-      ) {
-        material._loadedImages.push({
-          id: uniformId,
-          image: uniformValue,
-        });
-      }
-
+      material._loadedImages.push({
+        id: uniformId,
+        image: uniformValue,
+      });
       material._texturePaths[uniformId] = uniformValue;
+      return;
     }
+
+    // If we get to this point, the image should be a string URL or Resource.
+    // Don't wait on the promise to resolve, just start loading the image and poll status from the update loop.
+    loadTexture2DImageForUniform(material, uniformId);
   };
+}
+
+/**
+ * For a given uniform ID, potentially loads a texture image for the material, if the uniform value is a Resource or string URL,
+ * and has changed since the last time this was called (either on construction or update).
+ *
+ * @param {Material} material The material to load the texture for.
+ * @param {string} uniformId The ID of the uniform of the image.
+ * @returns A promise that resolves when the image is loaded, or a resolved promise if image loading is not necessary.
+ *
+ * @private
+ */
+function loadTexture2DImageForUniform(material, uniformId) {
+  const uniforms = material.uniforms;
+  const uniformValue = uniforms[uniformId];
+  if (uniformValue === Material.DefaultImageId) {
+    return Promise.resolve();
+  }
+
+  // Attempt to make a resource from the uniform value. If it's not already a resource or string, this returns the original object.
+  const resource = Resource.createIfNeeded(uniformValue);
+  if (!(resource instanceof Resource)) {
+    return Promise.resolve();
+  }
+
+  // When using the entity layer, the Resource objects get recreated on getValue because
+  // they are clonable. That's why we check the url property for Resources
+  // because the instances aren't the same and we keep trying to load the same
+  // image if it fails to load.
+  const oldResource = Resource.createIfNeeded(
+    material._texturePaths[uniformId],
+  );
+  const uniformHasChanged =
+    !defined(oldResource) || oldResource.url !== resource.url;
+  if (!uniformHasChanged) {
+    return Promise.resolve();
+  }
+
+  let promise;
+  if (ktx2Regex.test(resource.url)) {
+    promise = loadKTX2(resource.url);
+  } else {
+    promise = resource.fetchImage();
+  }
+
+  Promise.resolve(promise)
+    .then(function (image) {
+      material._loadedImages.push({
+        id: uniformId,
+        image: image,
+      });
+    })
+    .catch(function (error) {
+      material._initializationError = error;
+      const texture = material._textures[uniformId];
+      if (defined(texture) && texture !== material._defaultTexture) {
+        texture.destroy();
+      }
+      material._textures[uniformId] = material._defaultTexture;
+    });
+
+  material._texturePaths[uniformId] = uniformValue;
+  return promise;
 }
 
 function createCubeMapUpdateFunction(uniformId) {
@@ -944,42 +1084,64 @@ function createCubeMapUpdateFunction(uniformId) {
     }
 
     if (!defined(material._textures[uniformId])) {
-      material._texturePaths[uniformId] = undefined;
       material._textures[uniformId] = context.defaultCubeMap;
     }
 
-    if (uniformValue === Material.DefaultCubeMapId) {
-      return;
-    }
-
-    const path =
-      uniformValue.positiveX +
-      uniformValue.negativeX +
-      uniformValue.positiveY +
-      uniformValue.negativeY +
-      uniformValue.positiveZ +
-      uniformValue.negativeZ;
-
-    if (path !== material._texturePaths[uniformId]) {
-      const promises = [
-        Resource.createIfNeeded(uniformValue.positiveX).fetchImage(),
-        Resource.createIfNeeded(uniformValue.negativeX).fetchImage(),
-        Resource.createIfNeeded(uniformValue.positiveY).fetchImage(),
-        Resource.createIfNeeded(uniformValue.negativeY).fetchImage(),
-        Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(),
-        Resource.createIfNeeded(uniformValue.negativeZ).fetchImage(),
-      ];
-
-      Promise.all(promises).then(function (images) {
-        material._loadedCubeMaps.push({
-          id: uniformId,
-          images: images,
-        });
-      });
-
-      material._texturePaths[uniformId] = path;
-    }
+    loadCubeMapImagesForUniform(material, uniformId);
   };
+}
+
+/**
+ * Loads the images for a cubemap uniform, if it has changed since the last time this was called.
+ *
+ * @param {Material} material The material to load the cubemap images for.
+ * @param {string} uniformId The ID of the uniform that corresponds to the cubemap images.
+ * @returns A promise that resolves when the images are loaded, or a resolved promise if image loading is not necessary.
+ */
+function loadCubeMapImagesForUniform(material, uniformId) {
+  const uniforms = material.uniforms;
+  const uniformValue = uniforms[uniformId];
+  if (uniformValue === Material.DefaultCubeMapId) {
+    return Promise.resolve();
+  }
+
+  const path =
+    uniformValue.positiveX +
+    uniformValue.negativeX +
+    uniformValue.positiveY +
+    uniformValue.negativeY +
+    uniformValue.positiveZ +
+    uniformValue.negativeZ;
+
+  // The uniform value is unchanged, no update / image load necessary.
+  if (path === material._texturePaths[uniformId]) {
+    return Promise.resolve();
+  }
+
+  const promises = [
+    Resource.createIfNeeded(uniformValue.positiveX).fetchImage(),
+    Resource.createIfNeeded(uniformValue.negativeX).fetchImage(),
+    Resource.createIfNeeded(uniformValue.positiveY).fetchImage(),
+    Resource.createIfNeeded(uniformValue.negativeY).fetchImage(),
+    Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(),
+    Resource.createIfNeeded(uniformValue.negativeZ).fetchImage(),
+  ];
+
+  const allPromise = Promise.all(promises);
+  allPromise
+    .then(function (images) {
+      material._loadedCubeMaps.push({
+        id: uniformId,
+        images: images,
+      });
+    })
+    .catch(function (error) {
+      material._initializationError = error;
+    });
+
+  material._texturePaths[uniformId] = path;
+
+  return allPromise;
 }
 
 function createUniforms(material) {
@@ -1002,7 +1164,7 @@ function createUniform(material, uniformId) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(uniformType)) {
     throw new DeveloperError(
-      `fabric: uniform '${uniformId}' has invalid type.`
+      `fabric: uniform '${uniformId}' has invalid type.`,
     );
   }
   //>>includeEnd('debug');
@@ -1013,7 +1175,7 @@ function createUniform(material, uniformId) {
     //>>includeStart('debug', pragmas.debug);
     if (replacedTokenCount === 0 && strict) {
       throw new DeveloperError(
-        `strict: shader source does not use channels '${uniformId}'.`
+        `strict: shader source does not use channels '${uniformId}'.`,
       );
     }
     //>>includeEnd('debug');
@@ -1034,7 +1196,7 @@ function createUniform(material, uniformId) {
 
     // Add uniform declaration to source code.
     const uniformDeclarationRegex = new RegExp(
-      `uniform\\s+${uniformType}\\s+${uniformId}\\s*;`
+      `uniform\\s+${uniformType}\\s+${uniformId}\\s*;`,
     );
     if (!uniformDeclarationRegex.test(material.shaderSource)) {
       const uniformDeclaration = `uniform ${uniformType} ${uniformId};`;
@@ -1046,7 +1208,7 @@ function createUniform(material, uniformId) {
     //>>includeStart('debug', pragmas.debug);
     if (replacedTokenCount === 1 && strict) {
       throw new DeveloperError(
-        `strict: shader source does not use uniform '${uniformId}'.`
+        `strict: shader source does not use uniform '${uniformId}'.`,
       );
     }
     //>>includeEnd('debug');
@@ -1059,17 +1221,23 @@ function createUniform(material, uniformId) {
         return material._textures[uniformId];
       };
       material._updateFunctions.push(createTexture2DUpdateFunction(uniformId));
+      material._initializationPromises.push(
+        loadTexture2DImageForUniform(material, uniformId),
+      );
     } else if (uniformType === "samplerCube") {
       material._uniforms[newUniformId] = function () {
         return material._textures[uniformId];
       };
       material._updateFunctions.push(createCubeMapUpdateFunction(uniformId));
+      material._initializationPromises.push(
+        loadCubeMapImagesForUniform(material, uniformId),
+      );
     } else if (uniformType.indexOf("mat") !== -1) {
       const scratchMatrix = new matrixMap[uniformType]();
       material._uniforms[newUniformId] = function () {
         return matrixMap[uniformType].fromColumnMajorArray(
           material.uniforms[uniformId],
-          scratchMatrix
+          scratchMatrix,
         );
       };
     } else {
@@ -1093,7 +1261,9 @@ function getUniformType(uniformValue) {
       type === "string" ||
       uniformValue instanceof Resource ||
       uniformValue instanceof HTMLCanvasElement ||
-      uniformValue instanceof HTMLImageElement
+      uniformValue instanceof HTMLImageElement ||
+      uniformValue instanceof ImageBitmap ||
+      uniformValue instanceof OffscreenCanvas
     ) {
       if (/^([rgba]){1,4}$/i.test(uniformValue)) {
         uniformType = "channels";
@@ -1146,11 +1316,11 @@ function createSubMaterials(material) {
       material._uniforms = combine(
         material._uniforms,
         subMaterial._uniforms,
-        true
+        true,
       );
       material.materials[subMaterialId] = subMaterial;
       material._translucentFunctions = material._translucentFunctions.concat(
-        subMaterial._translucentFunctions
+        subMaterial._translucentFunctions,
       );
 
       // Make the material's czm_getMaterial unique by appending the sub-material type.
@@ -1164,12 +1334,12 @@ function createSubMaterials(material) {
       const tokensReplacedCount = replaceToken(
         material,
         subMaterialId,
-        materialMethodCall
+        materialMethodCall,
       );
       //>>includeStart('debug', pragmas.debug);
       if (tokensReplacedCount === 0 && strict) {
         throw new DeveloperError(
-          `strict: shader source does not use material '${subMaterialId}'.`
+          `strict: shader source does not use material '${subMaterialId}'.`,
         );
       }
       //>>includeEnd('debug');
@@ -1181,22 +1351,21 @@ function createSubMaterials(material) {
 // If excludePeriod is true, do not accept tokens that are preceded by periods.
 // http://stackoverflow.com/questions/641407/javascript-negative-lookbehind-equivalent
 function replaceToken(material, token, newToken, excludePeriod) {
-  excludePeriod = defaultValue(excludePeriod, true);
+  excludePeriod = excludePeriod ?? true;
   let count = 0;
   const suffixChars = "([\\w])?";
   const prefixChars = `([\\w${excludePeriod ? "." : ""}])?`;
   const regExp = new RegExp(prefixChars + token + suffixChars, "g");
-  material.shaderSource = material.shaderSource.replace(regExp, function (
-    $0,
-    $1,
-    $2
-  ) {
-    if ($1 || $2) {
-      return $0;
-    }
-    count += 1;
-    return newToken;
-  });
+  material.shaderSource = material.shaderSource.replace(
+    regExp,
+    function ($0, $1, $2) {
+      if ($1 || $2) {
+        return $0;
+      }
+      count += 1;
+      return newToken;
+    },
+  );
   return count;
 }
 
@@ -1737,6 +1906,24 @@ Material._materialCache.addMaterial(Material.ElevationBandType, {
     source: ElevationBandMaterial,
   },
   translucent: true,
+});
+
+/**
+ * Gets the name of the water mask material.
+ * @type {string}
+ * @readonly
+ */
+Material.WaterMaskType = "WaterMask";
+Material._materialCache.addMaterial(Material.WaterMaskType, {
+  fabric: {
+    type: Material.WaterMaskType,
+    source: WaterMaskMaterial,
+    uniforms: {
+      waterColor: new Color(1.0, 1.0, 1.0, 1.0),
+      landColor: new Color(0.0, 0.0, 0.0, 0.0),
+    },
+  },
+  translucent: false,
 });
 
 export default Material;

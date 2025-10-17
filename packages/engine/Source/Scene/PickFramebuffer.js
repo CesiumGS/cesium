@@ -1,6 +1,5 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
@@ -34,7 +33,7 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
 
   BoundingRectangle.clone(
     screenSpaceRectangle,
-    this._passState.scissorTest.rectangle
+    this._passState.scissorTest.rectangle,
   );
 
   // Create or recreate renderbuffers and framebuffer used for picking
@@ -49,17 +48,16 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
   return this._passState;
 };
 
-const colorScratch = new Color();
-
 /**
- * Return the picked object rendered within a given rectangle.
+ * Return the picked objects rendered within a given rectangle.
  *
  * @param {BoundingRectangle} screenSpaceRectangle
- * @returns {object|undefined} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
+ * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
+ * @returns {object[]} A list of rendered objects, ordered by distance to the middle of the rectangle.
  */
-PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
-  const width = defaultValue(screenSpaceRectangle.width, 1.0);
-  const height = defaultValue(screenSpaceRectangle.height, 1.0);
+PickFramebuffer.prototype.end = function (screenSpaceRectangle, limit = 1) {
+  const width = screenSpaceRectangle.width ?? 1.0;
+  const height = screenSpaceRectangle.height ?? 1.0;
 
   const context = this._context;
   const pixels = context.readPixels({
@@ -85,6 +83,7 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
 
   // The region does not have to square and the dimensions do not have to be odd, but
   // loop iterations would be wasted. Prefer square regions where the size is odd.
+  const objects = new Set();
   for (let i = 0; i < length; ++i) {
     if (
       -halfWidth <= x &&
@@ -94,14 +93,19 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
     ) {
       const index = 4 * ((halfHeight - y) * width + x + halfWidth);
 
-      colorScratch.red = Color.byteToFloat(pixels[index]);
-      colorScratch.green = Color.byteToFloat(pixels[index + 1]);
-      colorScratch.blue = Color.byteToFloat(pixels[index + 2]);
-      colorScratch.alpha = Color.byteToFloat(pixels[index + 3]);
+      const pickColor = Color.bytesToRgba(
+        pixels[index],
+        pixels[index + 1],
+        pixels[index + 2],
+        pixels[index + 3],
+      );
 
-      const object = context.getObjectByPickColor(colorScratch);
+      const object = context.getObjectByPickColor(pickColor);
       if (defined(object)) {
-        return object;
+        objects.add(object);
+        if (objects.size >= limit) {
+          break;
+        }
       }
     }
 
@@ -116,20 +120,23 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
     x += dx;
     y += dy;
   }
-
-  return undefined;
+  return [...objects];
 };
 
 /**
- * Return voxel tile and sample information as rendered by a pickVoxel pass,
- * within a given rectangle.
+ * Return a typed array containing the RGBA (byte) components of the
+ * pixel that is at the center of the given rectangle.
+ *
+ * This may, for example, be voxel tile and sample information as rendered
+ * by a pickVoxel pass, within a given rectangle. Or it may be the result
+ * of a metadata picking rendering pass.
  *
  * @param {BoundingRectangle} screenSpaceRectangle
- * @returns {TypedArray}
+ * @returns {Uint8Array} The RGBA components
  */
-PickFramebuffer.prototype.readVoxelInfo = function (screenSpaceRectangle) {
-  const width = defaultValue(screenSpaceRectangle.width, 1.0);
-  const height = defaultValue(screenSpaceRectangle.height, 1.0);
+PickFramebuffer.prototype.readCenterPixel = function (screenSpaceRectangle) {
+  const width = screenSpaceRectangle.width ?? 1.0;
+  const height = screenSpaceRectangle.height ?? 1.0;
 
   const context = this._context;
   const pixels = context.readPixels({

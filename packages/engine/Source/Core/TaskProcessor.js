@@ -1,6 +1,5 @@
 import Uri from "urijs";
 import buildModuleUrl from "./buildModuleUrl.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import destroyObject from "./destroyObject.js";
 import DeveloperError from "./DeveloperError.js";
@@ -13,10 +12,7 @@ import RuntimeError from "./RuntimeError.js";
 function canTransferArrayBuffer() {
   if (!defined(TaskProcessor._canTransferArrayBuffer)) {
     const worker = createWorker("transferTypedArrayTest");
-    worker.postMessage = defaultValue(
-      worker.webkitPostMessage,
-      worker.postMessage
-    );
+    worker.postMessage = worker.webkitPostMessage ?? worker.postMessage;
 
     const value = 99;
     const array = new Int8Array([value]);
@@ -28,7 +24,7 @@ function canTransferArrayBuffer() {
         {
           array: array,
         },
-        [array.buffer]
+        [array.buffer],
       );
     } catch (e) {
       TaskProcessor._canTransferArrayBuffer = false;
@@ -93,7 +89,7 @@ function createWorker(url) {
     crossOriginUrl = url;
   } else if (!isUri) {
     const moduleAbsoluteUrl = buildModuleUrl(
-      `${TaskProcessor._workerModulePrefix}/${moduleID}.js`
+      `${TaskProcessor._workerModulePrefix}/${moduleID}.js`,
     );
 
     if (isCrossOriginUrl(moduleAbsoluteUrl)) {
@@ -124,13 +120,13 @@ function createWorker(url) {
 
   if (!isUri) {
     workerPath = buildModuleUrl(
-      `${TaskProcessor._workerModulePrefix + moduleID}.js`
+      `${TaskProcessor._workerModulePrefix + moduleID}.js`,
     );
   }
 
   if (!FeatureDetection.supportsEsmWebWorkers()) {
     throw new RuntimeError(
-      "This browser is not supported. Please update your browser to continue."
+      "This browser is not supported. Please update your browser to continue.",
     );
   }
 
@@ -150,7 +146,7 @@ async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
   if (!FeatureDetection.supportsWebAssembly()) {
     if (!defined(wasmOptions.fallbackModulePath)) {
       throw new RuntimeError(
-        `This browser does not support Web Assembly, and no backup module was provided for ${processor._workerPath}`
+        `This browser does not support Web Assembly, and no backup module was provided for ${processor._workerPath}`,
       );
     }
 
@@ -184,10 +180,7 @@ async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  */
 function TaskProcessor(workerPath, maximumActiveTasks) {
   this._workerPath = workerPath;
-  this._maximumActiveTasks = defaultValue(
-    maximumActiveTasks,
-    Number.POSITIVE_INFINITY
-  );
+  this._maximumActiveTasks = maximumActiveTasks ?? Number.POSITIVE_INFINITY;
   this._activeTasks = 0;
   this._nextID = 0;
   this._webAssemblyPromise = undefined;
@@ -237,7 +230,7 @@ async function runTask(processor, parameters, transferableObjects) {
   const promise = new Promise((resolve, reject) => {
     processor._worker.addEventListener(
       "message",
-      createOnmessageHandler(processor._worker, id, resolve, reject)
+      createOnmessageHandler(processor._worker, id, resolve, reject),
     );
   });
 
@@ -248,7 +241,7 @@ async function runTask(processor, parameters, transferableObjects) {
       parameters: parameters,
       canTransferArrayBuffer: canTransfer,
     },
-    transferableObjects
+    transferableObjects,
   );
 
   return promise;
@@ -274,7 +267,7 @@ async function scheduleTask(processor, parameters, transferableObjects) {
  * finished.
  *
  * @param {object} parameters Any input data that will be posted to the worker.
- * @param {Object[]} [transferableObjects] An array of objects contained in parameters that should be
+ * @param {object[]} [transferableObjects] An array of objects contained in parameters that should be
  *                                      transferred to the worker instead of copied.
  * @returns {Promise<object>|undefined} Either a promise that will resolve to the result when available, or undefined
  *                    if there are too many active tasks,
@@ -295,7 +288,7 @@ async function scheduleTask(processor, parameters, transferableObjects) {
  */
 TaskProcessor.prototype.scheduleTask = function (
   parameters,
-  transferableObjects
+  transferableObjects,
 ) {
   if (!defined(this._worker)) {
     this._worker = createWorker(this._workerPath);
@@ -322,7 +315,7 @@ TaskProcessor.prototype.scheduleTask = function (
  * @exception {RuntimeError} This browser does not support Web Assembly, and no backup module was provided
  */
 TaskProcessor.prototype.initWebAssemblyModule = async function (
-  webAssemblyOptions
+  webAssemblyOptions,
 ) {
   if (defined(this._webAssemblyPromise)) {
     return this._webAssemblyPromise;
@@ -332,7 +325,7 @@ TaskProcessor.prototype.initWebAssemblyModule = async function (
     const worker = (this._worker = createWorker(this._workerPath));
     const wasmConfig = await getWebAssemblyLoaderConfig(
       this,
-      webAssemblyOptions
+      webAssemblyOptions,
     );
     const canTransfer = await Promise.resolve(canTransferArrayBuffer());
     let transferableObjects;
@@ -356,7 +349,7 @@ TaskProcessor.prototype.initWebAssemblyModule = async function (
         canTransferArrayBuffer: canTransfer,
         parameters: { webAssemblyConfig: wasmConfig },
       },
-      transferableObjects
+      transferableObjects,
     );
 
     return promise;

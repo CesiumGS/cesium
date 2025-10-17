@@ -6,11 +6,11 @@ function createPolylineVolumeGeometry(polylineVolumeGeometry, offset) {
   if (defined(offset)) {
     polylineVolumeGeometry = PolylineVolumeGeometry.unpack(
       polylineVolumeGeometry,
-      offset
+      offset,
     );
   }
   polylineVolumeGeometry._ellipsoid = Ellipsoid.clone(
-    polylineVolumeGeometry._ellipsoid
+    polylineVolumeGeometry._ellipsoid,
   );
   return PolylineVolumeGeometry.createGeometry(polylineVolumeGeometry);
 }

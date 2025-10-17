@@ -1,8 +1,9 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
@@ -21,7 +22,7 @@ const defaultRepeat = new Cartesian2(2.0, 2.0);
  * @param {Property|Cartesian2} [options.repeat=new Cartesian2(2.0, 2.0)] A {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
  */
 function CheckerboardMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._evenColor = undefined;
@@ -105,14 +106,19 @@ CheckerboardMaterialProperty.prototype.getType = function (time) {
   return "Checkerboard";
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 CheckerboardMaterialProperty.prototype.getValue = function (time, result) {
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
   if (!defined(result)) {
     result = {};
   }
@@ -120,13 +126,13 @@ CheckerboardMaterialProperty.prototype.getValue = function (time, result) {
     this._evenColor,
     time,
     defaultEvenColor,
-    result.lightColor
+    result.lightColor,
   );
   result.darkColor = Property.getValueOrClonedDefault(
     this._oddColor,
     time,
     defaultOddColor,
-    result.darkColor
+    result.darkColor,
   );
   result.repeat = Property.getValueOrDefault(this._repeat, time, defaultRepeat);
   return result;

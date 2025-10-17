@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -44,21 +41,16 @@
             geometryInstances: new Cesium.GeometryInstance({
               geometry: new Cesium.PolylineGeometry({
                 positions: Cesium.Cartesian3.fromDegreesArray([
-                  -120.0,
-                  40.0,
-                  -80.0,
-                  40.0,
+                  -120.0, 40.0, -80.0, 40.0,
                 ]),
                 width: 10.0,
                 vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
               }),
             }),
             appearance: new Cesium.PolylineMaterialAppearance({
-              material: Cesium.Material.fromType(
-                Cesium.Material.PolylineGlowType
-              ),
+              material: Cesium.Material.fromType(Cesium.Material.PolylineGlowType),
             }),
-          })
+          }),
         );
 
         // Polyline Arrow
@@ -67,21 +59,16 @@
             geometryInstances: new Cesium.GeometryInstance({
               geometry: new Cesium.PolylineGeometry({
                 positions: Cesium.Cartesian3.fromDegreesArray([
-                  -120.0,
-                  35.0,
-                  -80.0,
-                  35.0,
+                  -120.0, 35.0, -80.0, 35.0,
                 ]),
                 width: 10.0,
                 vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
               }),
             }),
             appearance: new Cesium.PolylineMaterialAppearance({
-              material: Cesium.Material.fromType(
-                Cesium.Material.PolylineArrowType
-              ),
+              material: Cesium.Material.fromType(Cesium.Material.PolylineArrowType),
             }),
-          })
+          }),
         );
 
         // Polyline Outline
@@ -90,21 +77,16 @@
             geometryInstances: new Cesium.GeometryInstance({
               geometry: new Cesium.PolylineGeometry({
                 positions: Cesium.Cartesian3.fromDegreesArray([
-                  -120.0,
-                  30.0,
-                  -80.0,
-                  30.0,
+                  -120.0, 30.0, -80.0, 30.0,
                 ]),
                 width: 10.0,
                 vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
               }),
             }),
             appearance: new Cesium.PolylineMaterialAppearance({
-              material: Cesium.Material.fromType(
-                Cesium.Material.PolylineOutlineType
-              ),
+              material: Cesium.Material.fromType(Cesium.Material.PolylineOutlineType),
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

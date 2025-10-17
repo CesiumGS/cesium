@@ -1,5 +1,4 @@
 import DeveloperError from "../Core/DeveloperError.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PrimitivePipeline from "../Scene/PrimitivePipeline.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
@@ -8,7 +7,7 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 const moduleCache = {};
 
 async function getModule(moduleName, modulePath) {
-  let module = defaultValue(moduleCache[modulePath], moduleCache[moduleName]);
+  let module = moduleCache[modulePath] ?? moduleCache[moduleName];
 
   if (defined(module)) {
     return module;
@@ -60,10 +59,9 @@ async function createGeometry(parameters, transferableObjects) {
     }
 
     if (defined(moduleName) || defined(modulePath)) {
-      resultsOrPromises[i] = getModule(
-        moduleName,
-        modulePath
-      ).then((createFunction) => createFunction(geometry, task.offset));
+      resultsOrPromises[i] = getModule(moduleName, modulePath).then(
+        (createFunction) => createFunction(geometry, task.offset),
+      );
     } else {
       // Already created geometry
       resultsOrPromises[i] = geometry;
@@ -73,7 +71,7 @@ async function createGeometry(parameters, transferableObjects) {
   return Promise.all(resultsOrPromises).then(function (results) {
     return PrimitivePipeline.packCreateGeometryResults(
       results,
-      transferableObjects
+      transferableObjects,
     );
   });
 }

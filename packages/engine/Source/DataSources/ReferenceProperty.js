@@ -1,6 +1,7 @@
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import Property from "./Property.js";
 
 function resolve(that) {
@@ -21,7 +22,7 @@ function resolve(that) {
       // target entity was found. listen for changes to entity definition
       targetEntity.definitionChanged.addEventListener(
         ReferenceProperty.prototype._onTargetEntityDefinitionChanged,
-        that
+        that,
       );
       that._targetEntity = targetEntity;
     }
@@ -114,7 +115,7 @@ function ReferenceProperty(targetCollection, targetId, targetPropertyNames) {
 
   targetCollection.collectionChanged.addEventListener(
     ReferenceProperty.prototype._onCollectionChanged,
-    this
+    this,
   );
 }
 
@@ -254,15 +255,20 @@ ReferenceProperty.fromString = function (targetCollection, referenceString) {
   return new ReferenceProperty(targetCollection, identifier, values);
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 ReferenceProperty.prototype.getValue = function (time, result) {
   const target = resolve(this);
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
   return defined(target) ? target.getValue(time, result) : undefined;
 };
 
@@ -278,7 +284,7 @@ ReferenceProperty.prototype.getValue = function (time, result) {
 ReferenceProperty.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   const target = resolve(this);
   return defined(target)
@@ -335,7 +341,7 @@ ReferenceProperty.prototype._onTargetEntityDefinitionChanged = function (
   targetEntity,
   name,
   value,
-  oldValue
+  oldValue,
 ) {
   if (defined(this._targetProperty) && this._targetPropertyNames[0] === name) {
     this._targetProperty = undefined;
@@ -346,13 +352,13 @@ ReferenceProperty.prototype._onTargetEntityDefinitionChanged = function (
 ReferenceProperty.prototype._onCollectionChanged = function (
   collection,
   added,
-  removed
+  removed,
 ) {
   let targetEntity = this._targetEntity;
   if (defined(targetEntity) && removed.indexOf(targetEntity) !== -1) {
     targetEntity.definitionChanged.removeEventListener(
       ReferenceProperty.prototype._onTargetEntityDefinitionChanged,
-      this
+      this,
     );
     this._targetEntity = this._targetProperty = undefined;
   } else if (!defined(targetEntity)) {

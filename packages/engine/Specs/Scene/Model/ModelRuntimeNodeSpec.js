@@ -1,7 +1,6 @@
 import {
   Axis,
   Cartesian3,
-  defaultValue,
   InstancingPipelineStage,
   Matrix3,
   Matrix4,
@@ -40,9 +39,9 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     transform,
     transformToRoot,
     runtimeNode,
-    originalTransform
+    originalTransform,
   ) {
-    originalTransform = defaultValue(originalTransform, transform);
+    originalTransform = originalTransform ?? transform;
 
     expect(runtimeNode.transform).toEqual(transform);
     expect(runtimeNode.originalTransform).toEqual(originalTransform);
@@ -51,7 +50,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     const computedTransform = Matrix4.multiplyTransformation(
       transformToRoot,
       transform,
-      scratchMatrix
+      scratchMatrix,
     );
 
     expect(runtimeNode.computedTransform).toEqual(computedTransform);
@@ -275,7 +274,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
 
     const translationMatrix = Matrix4.fromTranslation(
       translation,
-      scratchTransform
+      scratchTransform,
     );
 
     expect(node.translation).toEqual(translation);
@@ -305,7 +304,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     const rotationMatrix3 = Matrix3.fromQuaternion(rotation, new Matrix3());
     const rotationMatrix = Matrix4.fromRotation(
       rotationMatrix3,
-      scratchTransform
+      scratchTransform,
     );
 
     expect(node.rotation).toEqual(rotation);
@@ -461,7 +460,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     const newTransform = Matrix4.multiplyByTranslation(
       Matrix4.IDENTITY,
       new Cartesian3(10, 0, 0),
-      new Matrix4()
+      new Matrix4(),
     );
 
     node.transform = newTransform;
@@ -485,7 +484,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
     const newTransform = Matrix4.multiplyByTranslation(
       Matrix4.IDENTITY,
       new Cartesian3(10, 0, 0),
-      new Matrix4()
+      new Matrix4(),
     );
 
     node.transform = newTransform;

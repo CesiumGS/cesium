@@ -43,8 +43,6 @@ describe(
     });
 
     afterEach(function () {
-      Resource._Implementations.loadAndExecuteScript =
-        Resource._DefaultImplementations.loadAndExecuteScript;
       Resource._Implementations.createImage =
         Resource._DefaultImplementations.createImage;
       Resource._Implementations.loadWithXhr =
@@ -78,13 +76,13 @@ describe(
 
     it("fromProviderAsync throws without provider promise", function () {
       expect(() => ImageryLayer.fromProviderAsync()).toThrowDeveloperError(
-        "expected"
+        /Expected imageryProviderPromise to be typeof object/,
       );
     });
 
     it("readyEvent is raised when asynchronous provider become ready", async function () {
       const providerPromise = SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
       const layer = ImageryLayer.fromProviderAsync(providerPromise);
       expect(layer.ready).toBe(false);
@@ -118,12 +116,12 @@ describe(
       Resource._Implementations.createImage = function (
         request,
         crossOrigin,
-        deferred
+        deferred,
       ) {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       };
 
@@ -134,7 +132,7 @@ describe(
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         Resource._DefaultImplementations.loadWithXhr(
           "Data/Images/Red16x16.png",
@@ -142,7 +140,7 @@ describe(
           method,
           data,
           headers,
-          deferred
+          deferred,
         );
       };
 
@@ -172,53 +170,15 @@ describe(
     });
 
     async function createWebMercatorProvider() {
-      Resource._Implementations.loadAndExecuteScript = function (
-        url,
-        functionName
-      ) {
-        window[functionName]({
-          authenticationResultCode: "ValidCredentials",
-          brandLogoUri:
-            "http://dev.virtualearth.net/Branding/logo_powered_by.png",
-          copyright:
-            "Copyright © 2012 Microsoft and its suppliers. All rights reserved. This API cannot be accessed and the content and any results may not be used, reproduced or transmitted in any manner without express written permission from Microsoft Corporation.",
-          resourceSets: [
-            {
-              estimatedTotal: 1,
-              resources: [
-                {
-                  __type:
-                    "ImageryMetadata:http://schemas.microsoft.com/search/local/ws/rest/v1",
-                  imageHeight: 256,
-                  imageUrl:
-                    "http://invalid.{subdomain}.invalid/tiles/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
-                  imageUrlSubdomains: ["t0"],
-                  imageWidth: 256,
-                  imageryProviders: null,
-                  vintageEnd: null,
-                  vintageStart: null,
-                  zoomMax: 21,
-                  zoomMin: 1,
-                },
-              ],
-            },
-          ],
-          statusCode: 200,
-          statusDescription: "OK",
-          traceId:
-            "c9cf8c74a8b24644974288c92e448972|EWRM003311|02.00.171.2600|",
-        });
-      };
-
       Resource._Implementations.createImage = function (
         request,
         crossOrigin,
-        deferred
+        deferred,
       ) {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       };
 
@@ -229,15 +189,51 @@ describe(
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
+        if (url.includes("REST/v1/Imagery/Metadata")) {
+          deferred.resolve(
+            JSON.stringify({
+              authenticationResultCode: "ValidCredentials",
+              brandLogoUri:
+                "http://dev.virtualearth.net/Branding/logo_powered_by.png",
+              copyright:
+                "Copyright © 2012 Microsoft and its suppliers. All rights reserved. This API cannot be accessed and the content and any results may not be used, reproduced or transmitted in any manner without express written permission from Microsoft Corporation.",
+              resourceSets: [
+                {
+                  estimatedTotal: 1,
+                  resources: [
+                    {
+                      __type:
+                        "ImageryMetadata:http://schemas.microsoft.com/search/local/ws/rest/v1",
+                      imageHeight: 256,
+                      imageUrl:
+                        "http://invalid.{subdomain}.invalid/tiles/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
+                      imageUrlSubdomains: ["t0"],
+                      imageWidth: 256,
+                      imageryProviders: null,
+                      vintageEnd: null,
+                      vintageStart: null,
+                      zoomMax: 21,
+                      zoomMin: 1,
+                    },
+                  ],
+                },
+              ],
+              statusCode: 200,
+              statusDescription: "OK",
+              traceId:
+                "c9cf8c74a8b24644974288c92e448972|EWRM003311|02.00.171.2600|",
+            }),
+          );
+        }
         Resource._DefaultImplementations.loadWithXhr(
           "Data/Images/Red16x16.png",
           responseType,
           method,
           data,
           headers,
-          deferred
+          deferred,
         );
       };
 
@@ -275,10 +271,10 @@ describe(
             expect(imagery.texture).toBeDefined();
             expect(imagery.texture.sampler).toBeDefined();
             expect(imagery.texture.sampler.minificationFilter).toEqual(
-              TextureMinificationFilter.LINEAR_MIPMAP_LINEAR
+              TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
             );
             expect(imagery.texture.sampler.magnificationFilter).toEqual(
-              TextureMinificationFilter.LINEAR
+              TextureMinificationFilter.LINEAR,
             );
             expect(textureBeforeReprojection).not.toEqual(imagery.texture);
             imagery.releaseReference();
@@ -356,10 +352,10 @@ describe(
               expect(imagery.texture).toBeDefined();
               expect(imagery.texture.sampler).toBeDefined();
               expect(imagery.texture.sampler.minificationFilter).toEqual(
-                TextureMinificationFilter.LINEAR_MIPMAP_LINEAR
+                TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
               );
               expect(imagery.texture.sampler.magnificationFilter).toEqual(
-                TextureMinificationFilter.LINEAR
+                TextureMinificationFilter.LINEAR,
               );
               expect(textureBeforeReprojection).not.toEqual(imagery.texture);
               imagery.releaseReference();
@@ -373,12 +369,12 @@ describe(
       Resource._Implementations.createImage = function (
         request,
         crossOrigin,
-        deferred
+        deferred,
       ) {
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red256x256.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       };
 
@@ -390,7 +386,7 @@ describe(
           13.39657249732205,
           52.49127999816725,
           13.42722986993895,
-          52.50998943590507
+          52.50998943590507,
         ),
       });
       const layer = new ImageryLayer(provider);
@@ -418,10 +414,10 @@ describe(
             expect(imagery.texture).toBeDefined();
             expect(imagery.texture.sampler).toBeDefined();
             expect(imagery.texture.sampler.minificationFilter).toEqual(
-              TextureMinificationFilter.LINEAR_MIPMAP_LINEAR
+              TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
             );
             expect(imagery.texture.sampler.magnificationFilter).toEqual(
-              TextureMinificationFilter.LINEAR
+              TextureMinificationFilter.LINEAR,
             );
             expect(imagery.texture).toBe(imagery.textureWebMercator);
             imagery.releaseReference();
@@ -457,7 +453,7 @@ describe(
 
     it("basic properties work as expected", async function () {
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
 
       const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
@@ -472,16 +468,16 @@ describe(
 
     it("allows setting texture filter properties", async function () {
       const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
+        "Data/Images/Red16x16.png",
       );
 
       // expect default LINEAR
       let layer = new ImageryLayer(provider);
       expect(layer.minificationFilter).toEqual(
-        TextureMinificationFilter.LINEAR
+        TextureMinificationFilter.LINEAR,
       );
       expect(layer.magnificationFilter).toEqual(
-        TextureMagnificationFilter.LINEAR
+        TextureMagnificationFilter.LINEAR,
       );
       layer.destroy();
 
@@ -491,10 +487,10 @@ describe(
         magnificationFilter: TextureMagnificationFilter.NEAREST,
       });
       expect(layer.minificationFilter).toEqual(
-        TextureMinificationFilter.NEAREST
+        TextureMinificationFilter.NEAREST,
       );
       expect(layer.magnificationFilter).toEqual(
-        TextureMagnificationFilter.NEAREST
+        TextureMagnificationFilter.NEAREST,
       );
 
       const imagery = new Imagery(layer, 0, 0, 0);
@@ -508,10 +504,10 @@ describe(
         layer._createTexture(scene.context, imagery);
         const sampler = imagery.texture.sampler;
         expect(sampler.minificationFilter).toEqual(
-          TextureMinificationFilter.NEAREST
+          TextureMinificationFilter.NEAREST,
         );
         expect(sampler.magnificationFilter).toEqual(
-          TextureMinificationFilter.NEAREST
+          TextureMinificationFilter.NEAREST,
         );
         imagery.releaseReference();
         layer.destroy();
@@ -529,7 +525,7 @@ describe(
         {
           usePreCachedTilesIfAvailable: false,
           tileDiscardPolicy: new NeverTileDiscardPolicy(),
-        }
+        },
       );
 
       let errorRaised = false;
@@ -555,7 +551,7 @@ describe(
         "Data/Images/Green4x4.png",
         {
           rectangle: providerRectangle,
-        }
+        },
       );
 
       const layerRectangle = Rectangle.fromDegrees(7.2, 60.9, 9.0, 61.7);
@@ -564,22 +560,21 @@ describe(
       });
 
       expect(layer.getImageryRectangle()).toEqual(
-        Rectangle.intersection(providerRectangle, layerRectangle)
+        Rectangle.intersection(providerRectangle, layerRectangle),
       );
     });
 
     describe("createTileImagerySkeletons", function () {
       it("handles a base layer that does not cover the entire globe", async function () {
-        const provider = await TileMapServiceImageryProvider.fromUrl(
-          "Data/TMS/SmallArea"
-        );
+        const provider =
+          await TileMapServiceImageryProvider.fromUrl("Data/TMS/SmallArea");
 
         const layers = new ImageryLayerCollection();
         const layer = layers.addImageryProvider(provider);
         const terrainProvider = new EllipsoidTerrainProvider();
 
         const tiles = QuadtreeTile.createLevelZeroTiles(
-          terrainProvider.tilingScheme
+          terrainProvider.tilingScheme,
         );
         tiles[0].data = new GlobeSurfaceTile();
         tiles[1].data = new GlobeSurfaceTile();
@@ -614,18 +609,17 @@ describe(
         // triggers an exception (use of an undefined reference).
 
         const wholeWorldProvider = await SingleTileImageryProvider.fromUrl(
-          "Data/Images/Blue.png"
+          "Data/Images/Blue.png",
         );
-        const provider = await TileMapServiceImageryProvider.fromUrl(
-          "Data/TMS/SmallArea"
-        );
+        const provider =
+          await TileMapServiceImageryProvider.fromUrl("Data/TMS/SmallArea");
 
         const layers = new ImageryLayerCollection();
         const wholeWorldLayer = layers.addImageryProvider(wholeWorldProvider);
         const terrainProvider = new EllipsoidTerrainProvider();
 
         let tiles = QuadtreeTile.createLevelZeroTiles(
-          terrainProvider.tilingScheme
+          terrainProvider.tilingScheme,
         );
         tiles[0].data = new GlobeSurfaceTile();
         tiles[1].data = new GlobeSurfaceTile();
@@ -657,11 +651,10 @@ describe(
 
       it("handles a non-base layer that does not cover the entire globe", async function () {
         const baseProvider = await SingleTileImageryProvider.fromUrl(
-          "Data/Images/Green4x4.png"
+          "Data/Images/Green4x4.png",
         );
-        const provider = await TileMapServiceImageryProvider.fromUrl(
-          "Data/TMS/SmallArea"
-        );
+        const provider =
+          await TileMapServiceImageryProvider.fromUrl("Data/TMS/SmallArea");
 
         const layers = new ImageryLayerCollection();
         layers.addImageryProvider(baseProvider);
@@ -669,7 +662,7 @@ describe(
         const terrainProvider = new EllipsoidTerrainProvider();
 
         const tiles = QuadtreeTile.createLevelZeroTiles(
-          terrainProvider.tilingScheme
+          terrainProvider.tilingScheme,
         );
         tiles[0].data = new GlobeSurfaceTile();
         tiles[1].data = new GlobeSurfaceTile();
@@ -681,52 +674,52 @@ describe(
         // And the imagery should not cover it completely.
         expect(tiles[0].data.imagery.length).toBe(4);
         expect(tiles[0].data.imagery[0].textureCoordinateRectangle.x).not.toBe(
-          0.0
+          0.0,
         );
         expect(tiles[0].data.imagery[0].textureCoordinateRectangle.y).not.toBe(
-          0.0
+          0.0,
         );
         expect(tiles[0].data.imagery[0].textureCoordinateRectangle.z).not.toBe(
-          1.0
+          1.0,
         );
         expect(tiles[0].data.imagery[0].textureCoordinateRectangle.w).not.toBe(
-          1.0
+          1.0,
         );
         expect(tiles[0].data.imagery[1].textureCoordinateRectangle.x).not.toBe(
-          0.0
+          0.0,
         );
         expect(tiles[0].data.imagery[1].textureCoordinateRectangle.y).not.toBe(
-          0.0
+          0.0,
         );
         expect(tiles[0].data.imagery[1].textureCoordinateRectangle.z).not.toBe(
-          1.0
+          1.0,
         );
         expect(tiles[0].data.imagery[1].textureCoordinateRectangle.w).not.toBe(
-          1.0
+          1.0,
         );
         expect(tiles[0].data.imagery[2].textureCoordinateRectangle.x).not.toBe(
-          0.0
+          0.0,
         );
         expect(tiles[0].data.imagery[2].textureCoordinateRectangle.y).not.toBe(
-          0.0
+          0.0,
         );
         expect(tiles[0].data.imagery[2].textureCoordinateRectangle.z).not.toBe(
-          1.0
+          1.0,
         );
         expect(tiles[0].data.imagery[2].textureCoordinateRectangle.w).not.toBe(
-          1.0
+          1.0,
         );
         expect(tiles[0].data.imagery[3].textureCoordinateRectangle.x).not.toBe(
-          0.0
+          0.0,
         );
         expect(tiles[0].data.imagery[3].textureCoordinateRectangle.y).not.toBe(
-          0.0
+          0.0,
         );
         expect(tiles[0].data.imagery[3].textureCoordinateRectangle.z).not.toBe(
-          1.0
+          1.0,
         );
         expect(tiles[0].data.imagery[3].textureCoordinateRectangle.w).not.toBe(
-          1.0
+          1.0,
         );
 
         expect(tiles[1].data.imagery.length).toBe(0);
@@ -734,7 +727,7 @@ describe(
 
       it("honors the minimumTerrainLevel and maximumTerrainLevel properties", async function () {
         const provider = await SingleTileImageryProvider.fromUrl(
-          "Data/Images/Green4x4.png"
+          "Data/Images/Green4x4.png",
         );
 
         const layer = new ImageryLayer(provider, {
@@ -748,7 +741,7 @@ describe(
         const terrainProvider = new EllipsoidTerrainProvider();
 
         const level0 = QuadtreeTile.createLevelZeroTiles(
-          terrainProvider.tilingScheme
+          terrainProvider.tilingScheme,
         );
         const level1 = level0[0].children;
         const level2 = level1[0].children;
@@ -784,7 +777,7 @@ describe(
 
       it("honors limited extent of non-base ImageryLayer", async function () {
         const provider = await SingleTileImageryProvider.fromUrl(
-          "Data/Images/Green4x4.png"
+          "Data/Images/Green4x4.png",
         );
 
         const layer = new ImageryLayer(provider, {
@@ -793,7 +786,7 @@ describe(
 
         const layers = new ImageryLayerCollection();
         const provider2 = await SingleTileImageryProvider.fromUrl(
-          "Data/Images/Red16x16.png"
+          "Data/Images/Red16x16.png",
         );
         layers.addImageryProvider(provider2);
         layers.add(layer);
@@ -801,7 +794,7 @@ describe(
         const terrainProvider = new EllipsoidTerrainProvider();
 
         const tiles = QuadtreeTile.createLevelZeroTiles(
-          terrainProvider.tilingScheme
+          terrainProvider.tilingScheme,
         );
         tiles[0].data = new GlobeSurfaceTile();
         tiles[1].data = new GlobeSurfaceTile();
@@ -824,5 +817,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

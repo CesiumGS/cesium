@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import CesiumMath from "../Core/Math.js";
 
 /**
@@ -13,13 +12,13 @@ import CesiumMath from "../Core/Math.js";
  * @param {number} [radius=1.0] The radius of the sphere in meters.
  */
 function SphereEmitter(radius) {
-  radius = defaultValue(radius, 1.0);
+  radius = radius ?? 1.0;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThan("radius", radius, 0.0);
   //>>includeEnd('debug');
 
-  this._radius = defaultValue(radius, 1.0);
+  this._radius = radius ?? 1.0;
 }
 
 Object.defineProperties(SphereEmitter.prototype, {
@@ -60,7 +59,7 @@ SphereEmitter.prototype.emit = function (particle) {
   particle.position = Cartesian3.fromElements(x, y, z, particle.position);
   particle.velocity = Cartesian3.normalize(
     particle.position,
-    particle.velocity
+    particle.velocity,
   );
 };
 export default SphereEmitter;

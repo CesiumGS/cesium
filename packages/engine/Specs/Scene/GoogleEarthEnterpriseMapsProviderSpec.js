@@ -28,19 +28,19 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
 
   it("conforms to ImageryProvider interface", function () {
     expect(GoogleEarthEnterpriseMapsProvider).toConformToInterface(
-      ImageryProvider
+      ImageryProvider,
     );
   });
 
   it("fromUrl throws without url", async function () {
     await expectAsync(
-      GoogleEarthEnterpriseMapsProvider.fromUrl(undefined, 1234)
+      GoogleEarthEnterpriseMapsProvider.fromUrl(undefined, 1234),
     ).toBeRejectedWithDeveloperError();
   });
 
   it("fromUrl throws without channel", async function () {
     await expectAsync(
-      GoogleEarthEnterpriseMapsProvider.fromUrl("url", undefined)
+      GoogleEarthEnterpriseMapsProvider.fromUrl("url", undefined),
     ).toBeRejectedWithDeveloperError();
   });
 
@@ -56,7 +56,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
@@ -64,7 +64,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
 
@@ -73,7 +73,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       channel,
       {
         path: path,
-      }
+      },
     );
 
     expect(provider).toBeInstanceOf(GoogleEarthEnterpriseMapsProvider);
@@ -91,7 +91,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
@@ -99,7 +99,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
 
@@ -110,7 +110,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
     const provider = await GoogleEarthEnterpriseMapsProvider.fromUrl(
       resource,
       channel,
-      { path: path }
+      { path: path },
     );
 
     expect(provider).toBeInstanceOf(GoogleEarthEnterpriseMapsProvider);
@@ -119,10 +119,10 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   it("fromUrl throws with invalid url", async function () {
     const url = "http://invalid.localhost";
     await expectAsync(
-      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1234)
+      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1234),
     ).toBeRejectedWithError(
       RuntimeError,
-      new RegExp("An error occurred while accessing")
+      new RegExp("An error occurred while accessing"),
     );
   });
 
@@ -134,7 +134,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/bad_channel.json",
@@ -142,16 +142,16 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
 
     const url = "http://invalid.localhost";
     await expectAsync(
-      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1235)
+      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1235),
     ).toBeRejectedWithError(
       RuntimeError,
-      new RegExp("Could not find layer with channel \\(id\\) of 1235")
+      new RegExp("Could not find layer with channel \\(id\\) of 1235"),
     );
   });
 
@@ -163,7 +163,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/bad_version.json",
@@ -171,16 +171,16 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
 
     const url = "http://invalid.localhost";
     await expectAsync(
-      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1234)
+      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1234),
     ).toBeRejectedWithError(
       RuntimeError,
-      new RegExp("Could not find a version in channel \\(id\\) 1234")
+      new RegExp("Could not find a version in channel \\(id\\) 1234"),
     );
   });
 
@@ -192,7 +192,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/bad_projection.json",
@@ -200,16 +200,16 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
 
     const url = "http://invalid.localhost";
     await expectAsync(
-      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1234)
+      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1234),
     ).toBeRejectedWithError(
       RuntimeError,
-      new RegExp("Unsupported projection asdf")
+      new RegExp("Unsupported projection asdf"),
     );
   });
 
@@ -225,7 +225,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
@@ -233,7 +233,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
 
@@ -242,7 +242,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       channel,
       {
         path: path,
-      }
+      },
     );
 
     expect(typeof provider.hasAlphaChannel).toBe("boolean");
@@ -261,7 +261,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
@@ -269,7 +269,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
 
@@ -278,7 +278,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       channel,
       {
         path: path,
-      }
+      },
     );
 
     expect(provider.url).toEqual(url);
@@ -297,7 +297,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
@@ -308,18 +308,18 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
           deferred,
           true,
           false,
-          true
+          true,
         );
       } else {
         expect(url).toEqual(
-          "http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1"
+          "http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1",
         );
 
         // Just return any old image.
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       }
     };
@@ -331,10 +331,10 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       expect(url).toEqual(
-        "http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1"
+        "http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1",
       );
 
       // Just return any old image.
@@ -344,7 +344,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
         method,
         data,
         headers,
-        deferred
+        deferred,
       );
     };
 
@@ -366,7 +366,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       return deferred.resolve(
         "{\n" +
@@ -392,13 +392,13 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
           "],\n" +
           'serverUrl: "https://example.invalid",\n' +
           "useGoogleLayers: false\n" +
-          "}"
+          "}",
       );
     };
 
     const provider = await GoogleEarthEnterpriseMapsProvider.fromUrl(
       url,
-      channel
+      channel,
     );
 
     expect(provider.url).toEqual(url);
@@ -415,7 +415,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       return deferred.resolve(
         JSON.stringify({
@@ -432,13 +432,13 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
           ],
           serverUrl: "https://example.invalid",
           useGoogleLayers: false,
-        })
+        }),
       );
     };
 
     const provider = await GoogleEarthEnterpriseMapsProvider.fromUrl(
       "http://example.invalid",
-      1234
+      1234,
     );
 
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
@@ -453,7 +453,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       return deferred.resolve(
         JSON.stringify({
@@ -471,13 +471,13 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
           projection: "mercator",
           serverUrl: "https://example.invalid",
           useGoogleLayers: false,
-        })
+        }),
       );
     };
 
     const provider = await GoogleEarthEnterpriseMapsProvider.fromUrl(
       "http://example.invalid",
-      1234
+      1234,
     );
 
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
@@ -492,7 +492,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       return deferred.resolve(
         JSON.stringify({
@@ -510,18 +510,18 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
           projection: "flat",
           serverUrl: "https://example.invalid",
           useGoogleLayers: false,
-        })
+        }),
       );
     };
 
     const provider = await GoogleEarthEnterpriseMapsProvider.fromUrl(
       "http://example.invalid",
-      1234
+      1234,
     );
 
     expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
     expect(provider.rectangle).toEqual(
-      new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI)
+      new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI),
     );
   });
 });

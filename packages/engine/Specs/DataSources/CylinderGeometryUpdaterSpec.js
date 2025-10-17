@@ -44,7 +44,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(0, 0, 0)
+        Cartesian3.fromDegrees(0, 0, 0),
       );
       entity.cylinder = cylinder;
       return entity;
@@ -142,7 +142,7 @@ describe(
       const cylinder = new CylinderGraphics();
       cylinder.outline = true;
       cylinder.numberOfVerticalLines = new ConstantProperty(
-        options.numberOfVerticalLines
+        options.numberOfVerticalLines,
       );
       cylinder.length = new ConstantProperty(options.length);
       cylinder.topRadius = new ConstantProperty(options.topRadius);
@@ -166,7 +166,7 @@ describe(
       expect(geometry._bottomRadius).toEqual(options.bottomRadius);
       expect(geometry._length).toEqual(options.length);
       expect(geometry._numberOfVerticalLines).toEqual(
-        options.numberOfVerticalLines
+        options.numberOfVerticalLines,
       );
       expect(geometry._offsetAttribute).toBeUndefined();
     });
@@ -196,29 +196,29 @@ describe(
       expect(instance.geometry._offsetAttribute).toBeUndefined();
 
       graphics.heightReference = new ConstantProperty(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
       updater._onEntityPropertyChanged(entity, "cylinder");
       instance = updater.createFillGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
       instance = updater.createOutlineGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
 
       graphics.heightReference = new ConstantProperty(
-        HeightReference.RELATIVE_TO_GROUND
+        HeightReference.RELATIVE_TO_GROUND,
       );
       updater._onEntityPropertyChanged(entity, "cylinder");
       instance = updater.createFillGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
       instance = updater.createOutlineGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
     });
 
@@ -236,7 +236,7 @@ describe(
       const updater = new CylinderGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(JulianDate.now());
       const options = dynamicUpdater._options;
@@ -288,7 +288,7 @@ describe(
       const updater = new CylinderGeometryUpdater(entity, scene);
 
       expect(updater._computeCenter(time)).toEqual(
-        entity.position.getValue(time)
+        entity.position.getValue(time),
       );
     });
 
@@ -300,15 +300,15 @@ describe(
       CylinderGeometryUpdater,
       "cylinder",
       createBasicCylinder,
-      getScene
+      getScene,
     );
 
     createDynamicGeometryUpdaterSpecs(
       CylinderGeometryUpdater,
       "cylinder",
       createDynamicCylinder,
-      getScene
+      getScene,
     );
   },
-  "WebGL"
+  "WebGL",
 );

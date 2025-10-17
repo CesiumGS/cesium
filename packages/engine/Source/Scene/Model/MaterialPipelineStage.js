@@ -1,5 +1,4 @@
 import defined from "../../Core/defined.js";
-import defaultValue from "../../Core/defaultValue.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import Matrix3 from "../../Core/Matrix3.js";
@@ -12,13 +11,8 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import LightingModel from "./LightingModel.js";
 import ModelUtility from "./ModelUtility.js";
 
-const {
-  Material,
-  MetallicRoughness,
-  SpecularGlossiness,
-  Specular,
-  Clearcoat,
-} = ModelComponents;
+const { Material, MetallicRoughness, SpecularGlossiness, Specular, Clearcoat } =
+  ModelComponents;
 
 /**
  * The material pipeline stage processes textures and other uniforms needed
@@ -59,7 +53,7 @@ const MaterialPipelineStage = {
 MaterialPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   // gltf-pipeline automatically creates a default material so this will always
   // be defined.
@@ -72,11 +66,8 @@ MaterialPipelineStage.process = function (
   const disableTextures = hasClassification;
 
   // When textures are loaded incrementally, fall back to a default 1x1 texture
-  const {
-    defaultTexture,
-    defaultNormalTexture,
-    defaultEmissiveTexture,
-  } = frameState.context;
+  const { defaultTexture, defaultNormalTexture, defaultEmissiveTexture } =
+    frameState.context;
 
   processMaterialUniforms(
     material,
@@ -85,7 +76,7 @@ MaterialPipelineStage.process = function (
     defaultTexture,
     defaultNormalTexture,
     defaultEmissiveTexture,
-    disableTextures
+    disableTextures,
   );
 
   if (defined(material.specularGlossiness)) {
@@ -94,7 +85,7 @@ MaterialPipelineStage.process = function (
       uniformMap,
       shaderBuilder,
       defaultTexture,
-      disableTextures
+      disableTextures,
     );
   } else {
     if (
@@ -106,7 +97,7 @@ MaterialPipelineStage.process = function (
         uniformMap,
         shaderBuilder,
         defaultTexture,
-        disableTextures
+        disableTextures,
       );
     }
     if (
@@ -118,7 +109,7 @@ MaterialPipelineStage.process = function (
         uniformMap,
         shaderBuilder,
         defaultTexture,
-        disableTextures
+        disableTextures,
       );
     }
     if (
@@ -130,7 +121,7 @@ MaterialPipelineStage.process = function (
         uniformMap,
         shaderBuilder,
         defaultTexture,
-        disableTextures
+        disableTextures,
       );
     }
     processMetallicRoughnessUniforms(
@@ -138,19 +129,28 @@ MaterialPipelineStage.process = function (
       uniformMap,
       shaderBuilder,
       defaultTexture,
-      disableTextures
+      disableTextures,
     );
   }
 
   // If the primitive does not have normals, fall back to unlit lighting.
   const hasNormals = ModelUtility.getAttributeBySemantic(
     primitive,
-    VertexAttributeSemantic.NORMAL
+    VertexAttributeSemantic.NORMAL,
   );
+
+  // Disable PointCloud normals if the user explicitly turned them off.
+  const disablePointCloudNormals =
+    defined(model.pointCloudShading) && !model.pointCloudShading.normalShading;
 
   // Classification models will be rendered as unlit.
   const lightingOptions = renderResources.lightingOptions;
-  if (material.unlit || !hasNormals || hasClassification) {
+  if (
+    material.unlit ||
+    !hasNormals ||
+    hasClassification ||
+    disablePointCloudNormals
+  ) {
     lightingOptions.lightingModel = LightingModel.UNLIT;
   } else {
     lightingOptions.lightingModel = LightingModel.PBR;
@@ -173,7 +173,7 @@ MaterialPipelineStage.process = function (
     shaderBuilder.addDefine(
       "HAS_DOUBLE_SIDED_MATERIAL",
       undefined,
-      ShaderDestination.BOTH
+      ShaderDestination.BOTH,
     );
   }
 };
@@ -194,14 +194,14 @@ function processTextureTransform(
   uniformMap,
   textureReader,
   uniformName,
-  defineName
+  defineName,
 ) {
   // Add a define to enable the texture transformation code in the shader.
   const transformDefine = `HAS_${defineName}_TEXTURE_TRANSFORM`;
   shaderBuilder.addDefine(
     transformDefine,
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   // Add a uniform for the transformation matrix
@@ -209,7 +209,7 @@ function processTextureTransform(
   shaderBuilder.addUniform(
     "mat3",
     transformUniformName,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   uniformMap[transformUniformName] = function () {
     return textureReader.transform;
@@ -232,14 +232,14 @@ function processTextureScale(
   uniformMap,
   textureReader,
   uniformName,
-  defineName
+  defineName,
 ) {
   // Add a define to enable the texture transformation code in the shader.
   const transformDefine = `HAS_${defineName}_TEXTURE_SCALE`;
   shaderBuilder.addDefine(
     transformDefine,
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   // Add a uniform for the transformation matrix
@@ -247,7 +247,7 @@ function processTextureScale(
   shaderBuilder.addUniform(
     "float",
     scaleUniformName,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   uniformMap[scaleUniformName] = function () {
     return textureReader.scale;
@@ -271,16 +271,16 @@ function processTexture(
   textureReader,
   uniformName,
   defineName,
-  defaultTexture
+  defaultTexture,
 ) {
   // Add a uniform for the texture itself
   shaderBuilder.addUniform(
     "sampler2D",
     uniformName,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   uniformMap[uniformName] = function () {
-    return defaultValue(textureReader.texture, defaultTexture);
+    return textureReader.texture ?? defaultTexture;
   };
 
   // Add a #define directive to enable using the texture in the shader
@@ -294,7 +294,7 @@ function processTexture(
   shaderBuilder.addDefine(
     texCoordDefine,
     texCoordVarying,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   // Some textures have matrix transforms (e.g. for texture atlases). Add those
@@ -309,7 +309,7 @@ function processTexture(
       uniformMap,
       textureReader,
       uniformName,
-      defineName
+      defineName,
     );
   }
 
@@ -320,7 +320,7 @@ function processTexture(
       uniformMap,
       textureReader,
       uniformName,
-      defineName
+      defineName,
     );
   }
 }
@@ -332,14 +332,10 @@ function processMaterialUniforms(
   defaultTexture,
   defaultNormalTexture,
   defaultEmissiveTexture,
-  disableTextures
+  disableTextures,
 ) {
-  const {
-    emissiveFactor,
-    emissiveTexture,
-    normalTexture,
-    occlusionTexture,
-  } = material;
+  const { emissiveFactor, emissiveTexture, normalTexture, occlusionTexture } =
+    material;
 
   if (
     defined(emissiveFactor) &&
@@ -348,7 +344,7 @@ function processMaterialUniforms(
     shaderBuilder.addUniform(
       "vec3",
       "u_emissiveFactor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_emissiveFactor = function () {
       return material.emissiveFactor;
@@ -356,7 +352,7 @@ function processMaterialUniforms(
     shaderBuilder.addDefine(
       "HAS_EMISSIVE_FACTOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
 
     if (defined(emissiveTexture) && !disableTextures) {
@@ -366,7 +362,7 @@ function processMaterialUniforms(
         emissiveTexture,
         "u_emissiveTexture",
         "EMISSIVE",
-        defaultEmissiveTexture
+        defaultEmissiveTexture,
       );
     }
   }
@@ -378,7 +374,7 @@ function processMaterialUniforms(
       normalTexture,
       "u_normalTexture",
       "NORMAL",
-      defaultNormalTexture
+      defaultNormalTexture,
     );
   }
 
@@ -389,7 +385,7 @@ function processMaterialUniforms(
       occlusionTexture,
       "u_occlusionTexture",
       "OCCLUSION",
-      defaultTexture
+      defaultTexture,
     );
   }
 }
@@ -409,7 +405,7 @@ function processSpecularGlossinessUniforms(
   uniformMap,
   shaderBuilder,
   defaultTexture,
-  disableTextures
+  disableTextures,
 ) {
   const {
     diffuseTexture,
@@ -422,7 +418,7 @@ function processSpecularGlossinessUniforms(
   shaderBuilder.addDefine(
     "USE_SPECULAR_GLOSSINESS",
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   if (defined(diffuseTexture) && !disableTextures) {
@@ -432,7 +428,7 @@ function processSpecularGlossinessUniforms(
       diffuseTexture,
       "u_diffuseTexture",
       "DIFFUSE",
-      defaultTexture
+      defaultTexture,
     );
   }
 
@@ -443,7 +439,7 @@ function processSpecularGlossinessUniforms(
     shaderBuilder.addUniform(
       "vec4",
       "u_diffuseFactor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_diffuseFactor = function () {
       return specularGlossiness.diffuseFactor;
@@ -451,7 +447,7 @@ function processSpecularGlossinessUniforms(
     shaderBuilder.addDefine(
       "HAS_DIFFUSE_FACTOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
@@ -462,7 +458,7 @@ function processSpecularGlossinessUniforms(
       specularGlossinessTexture,
       "u_specularGlossinessTexture",
       "SPECULAR_GLOSSINESS",
-      defaultTexture
+      defaultTexture,
     );
   }
 
@@ -470,13 +466,13 @@ function processSpecularGlossinessUniforms(
     defined(specularFactor) &&
     !Cartesian3.equals(
       specularFactor,
-      SpecularGlossiness.DEFAULT_SPECULAR_FACTOR
+      SpecularGlossiness.DEFAULT_SPECULAR_FACTOR,
     )
   ) {
     shaderBuilder.addUniform(
       "vec3",
       "u_legacySpecularFactor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_legacySpecularFactor = function () {
       return specularGlossiness.specularFactor;
@@ -484,7 +480,7 @@ function processSpecularGlossinessUniforms(
     shaderBuilder.addDefine(
       "HAS_LEGACY_SPECULAR_FACTOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
@@ -495,7 +491,7 @@ function processSpecularGlossinessUniforms(
     shaderBuilder.addUniform(
       "float",
       "u_glossinessFactor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_glossinessFactor = function () {
       return specularGlossiness.glossinessFactor;
@@ -503,7 +499,7 @@ function processSpecularGlossinessUniforms(
     shaderBuilder.addDefine(
       "HAS_GLOSSINESS_FACTOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 }
@@ -523,7 +519,7 @@ function processSpecularUniforms(
   uniformMap,
   shaderBuilder,
   defaultTexture,
-  disableTextures
+  disableTextures,
 ) {
   const {
     specularTexture,
@@ -535,7 +531,7 @@ function processSpecularUniforms(
   shaderBuilder.addDefine(
     "USE_SPECULAR",
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   if (defined(specularTexture) && !disableTextures) {
@@ -545,7 +541,7 @@ function processSpecularUniforms(
       specularTexture,
       "u_specularTexture",
       "SPECULAR",
-      defaultTexture
+      defaultTexture,
     );
   }
 
@@ -556,7 +552,7 @@ function processSpecularUniforms(
     shaderBuilder.addUniform(
       "float",
       "u_specularFactor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_specularFactor = function () {
       return specular.specularFactor;
@@ -564,7 +560,7 @@ function processSpecularUniforms(
     shaderBuilder.addDefine(
       "HAS_SPECULAR_FACTOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
@@ -575,7 +571,7 @@ function processSpecularUniforms(
       specularColorTexture,
       "u_specularColorTexture",
       "SPECULAR_COLOR",
-      defaultTexture
+      defaultTexture,
     );
   }
 
@@ -583,13 +579,13 @@ function processSpecularUniforms(
     defined(specularColorFactor) &&
     !Cartesian3.equals(
       specularColorFactor,
-      Specular.DEFAULT_SPECULAR_COLOR_FACTOR
+      Specular.DEFAULT_SPECULAR_COLOR_FACTOR,
     )
   ) {
     shaderBuilder.addUniform(
       "vec3",
       "u_specularColorFactor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_specularColorFactor = function () {
       return specular.specularColorFactor;
@@ -597,7 +593,7 @@ function processSpecularUniforms(
     shaderBuilder.addDefine(
       "HAS_SPECULAR_COLOR_FACTOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 }
@@ -619,18 +615,15 @@ function processAnisotropyUniforms(
   uniformMap,
   shaderBuilder,
   defaultTexture,
-  disableTextures
+  disableTextures,
 ) {
-  const {
-    anisotropyStrength,
-    anisotropyRotation,
-    anisotropyTexture,
-  } = anisotropy;
+  const { anisotropyStrength, anisotropyRotation, anisotropyTexture } =
+    anisotropy;
 
   shaderBuilder.addDefine(
     "USE_ANISOTROPY",
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   if (defined(anisotropyTexture) && !disableTextures) {
@@ -640,7 +633,7 @@ function processAnisotropyUniforms(
       anisotropyTexture,
       "u_anisotropyTexture",
       "ANISOTROPY",
-      defaultTexture
+      defaultTexture,
     );
   }
 
@@ -654,7 +647,7 @@ function processAnisotropyUniforms(
       cosRotation,
       sinRotation,
       anisotropyStrength,
-      scratchAnisotropy
+      scratchAnisotropy,
     );
   };
 }
@@ -674,7 +667,7 @@ function processClearcoatUniforms(
   uniformMap,
   shaderBuilder,
   defaultTexture,
-  disableTextures
+  disableTextures,
 ) {
   const {
     clearcoatFactor,
@@ -687,7 +680,7 @@ function processClearcoatUniforms(
   shaderBuilder.addDefine(
     "USE_CLEARCOAT",
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   if (
@@ -697,7 +690,7 @@ function processClearcoatUniforms(
     shaderBuilder.addUniform(
       "float",
       "u_clearcoatFactor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_clearcoatFactor = function () {
       return clearcoat.clearcoatFactor;
@@ -705,7 +698,7 @@ function processClearcoatUniforms(
     shaderBuilder.addDefine(
       "HAS_CLEARCOAT_FACTOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
@@ -716,7 +709,7 @@ function processClearcoatUniforms(
       clearcoatTexture,
       "u_clearcoatTexture",
       "CLEARCOAT",
-      defaultTexture
+      defaultTexture,
     );
   }
 
@@ -727,7 +720,7 @@ function processClearcoatUniforms(
     shaderBuilder.addUniform(
       "float",
       "u_clearcoatRoughnessFactor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_clearcoatRoughnessFactor = function () {
       return clearcoat.clearcoatRoughnessFactor;
@@ -735,7 +728,7 @@ function processClearcoatUniforms(
     shaderBuilder.addDefine(
       "HAS_CLEARCOAT_ROUGHNESS_FACTOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
@@ -746,7 +739,7 @@ function processClearcoatUniforms(
       clearcoatRoughnessTexture,
       "u_clearcoatRoughnessTexture",
       "CLEARCOAT_ROUGHNESS",
-      defaultTexture
+      defaultTexture,
     );
   }
 
@@ -757,7 +750,7 @@ function processClearcoatUniforms(
       clearcoatNormalTexture,
       "u_clearcoatNormalTexture",
       "CLEARCOAT_NORMAL",
-      defaultTexture
+      defaultTexture,
     );
   }
 }
@@ -777,12 +770,12 @@ function processMetallicRoughnessUniforms(
   uniformMap,
   shaderBuilder,
   defaultTexture,
-  disableTextures
+  disableTextures,
 ) {
   shaderBuilder.addDefine(
     "USE_METALLIC_ROUGHNESS",
     undefined,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   const baseColorTexture = metallicRoughness.baseColorTexture;
@@ -793,7 +786,7 @@ function processMetallicRoughnessUniforms(
       baseColorTexture,
       "u_baseColorTexture",
       "BASE_COLOR",
-      defaultTexture
+      defaultTexture,
     );
   }
 
@@ -802,13 +795,13 @@ function processMetallicRoughnessUniforms(
     defined(baseColorFactor) &&
     !Cartesian4.equals(
       baseColorFactor,
-      MetallicRoughness.DEFAULT_BASE_COLOR_FACTOR
+      MetallicRoughness.DEFAULT_BASE_COLOR_FACTOR,
     )
   ) {
     shaderBuilder.addUniform(
       "vec4",
       "u_baseColorFactor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_baseColorFactor = function () {
       return metallicRoughness.baseColorFactor;
@@ -816,7 +809,7 @@ function processMetallicRoughnessUniforms(
     shaderBuilder.addDefine(
       "HAS_BASE_COLOR_FACTOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
@@ -828,7 +821,7 @@ function processMetallicRoughnessUniforms(
       metallicRoughnessTexture,
       "u_metallicRoughnessTexture",
       "METALLIC_ROUGHNESS",
-      defaultTexture
+      defaultTexture,
     );
   }
 
@@ -840,7 +833,7 @@ function processMetallicRoughnessUniforms(
     shaderBuilder.addUniform(
       "float",
       "u_metallicFactor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_metallicFactor = function () {
       return metallicRoughness.metallicFactor;
@@ -848,7 +841,7 @@ function processMetallicRoughnessUniforms(
     shaderBuilder.addDefine(
       "HAS_METALLIC_FACTOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
@@ -860,7 +853,7 @@ function processMetallicRoughnessUniforms(
     shaderBuilder.addUniform(
       "float",
       "u_roughnessFactor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_roughnessFactor = function () {
       return metallicRoughness.roughnessFactor;
@@ -868,7 +861,7 @@ function processMetallicRoughnessUniforms(
     shaderBuilder.addDefine(
       "HAS_ROUGHNESS_FACTOR",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 }

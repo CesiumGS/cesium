@@ -44,7 +44,7 @@ Object.defineProperties(ContextLimits, {
   },
 
   /**
-   * The approximate maximum cube mape width and height supported by this WebGL implementation.
+   * The approximate maximum cube map width and height supported by this WebGL implementation.
    * The minimum is 16, but most desktop and laptop implementations will support much larger sizes like 8,192.
    * @memberof ContextLimits
    * @type {number}

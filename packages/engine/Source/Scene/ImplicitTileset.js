@@ -73,7 +73,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
     !hasExtension(boundingVolume, "3DTILES_bounding_volume_cylinder")
   ) {
     throw new RuntimeError(
-      "Only box, region, 3DTILES_bounding_volume_S2, and 3DTILES_bounding_volume_cylinder are supported for implicit tiling"
+      "Only box, region, 3DTILES_bounding_volume_S2, and 3DTILES_bounding_volume_cylinder are supported for implicit tiling",
     );
   }
 
@@ -128,7 +128,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * This is an array to support multiple contents.
    * </p>
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    * @private
    */
@@ -190,7 +190,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * @private
    */
   this.branchingFactor = ImplicitSubdivisionScheme.getBranchingFactor(
-    this.subdivisionScheme
+    this.subdivisionScheme,
   );
 
   /**
@@ -223,7 +223,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
  * in the contents array (3D Tiles 1.1) or the `3DTILES_multiple_contents` extension
  *
  * @param {object} tileJson The JSON header of the tile with either implicit tiling (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
- * @return {Object[]} An array of JSON headers for the contents of each tile
+ * @return {object[]} An array of JSON headers for the contents of each tile
  * @private
  */
 function gatherContentHeaders(tileJson) {

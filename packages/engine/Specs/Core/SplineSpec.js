@@ -93,7 +93,7 @@ describe("Core/Spline", function () {
 
     // jump far forward
     expect(spline.findTimeInterval(times[times.length - 2], 0)).toEqual(
-      times.length - 2
+      times.length - 2,
     );
 
     // jump far back

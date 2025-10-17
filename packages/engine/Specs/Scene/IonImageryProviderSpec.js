@@ -1,6 +1,5 @@
 import {
   Credit,
-  defaultValue,
   IonResource,
   RequestScheduler,
   Resource,
@@ -19,32 +18,32 @@ import {
 
 describe("Scene/IonImageryProvider", function () {
   async function createTestProviderAsync(endpointData) {
-    endpointData = defaultValue(endpointData, {
+    endpointData = endpointData ?? {
       type: "IMAGERY",
       url: "http://test.invalid/layer",
       accessToken: "not_really_a_refresh_token",
       attributions: [],
-    });
+    };
 
     const assetId = 12335;
     const options = {};
     const endpointResource = IonResource._createEndpointResource(
       assetId,
-      options
+      options,
     );
     spyOn(IonResource, "_createEndpointResource").and.returnValue(
-      endpointResource
+      endpointResource,
     );
 
     spyOn(endpointResource, "fetchJson").and.returnValue(
-      Promise.resolve(endpointData)
+      Promise.resolve(endpointData),
     );
 
     const provider = await IonImageryProvider.fromAssetId(assetId, options);
 
     expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
       assetId,
-      options
+      options,
     );
     return provider;
   }
@@ -60,7 +59,7 @@ describe("Scene/IonImageryProvider", function () {
 
   it("fromAssetId throws without assetId", async function () {
     await expectAsync(
-      IonImageryProvider.fromAssetId()
+      IonImageryProvider.fromAssetId(),
     ).toBeRejectedWithDeveloperError();
   });
 
@@ -71,10 +70,10 @@ describe("Scene/IonImageryProvider", function () {
         url: "http://test.invalid/layer",
         accessToken: "not_really_a_refresh_token",
         attributions: [],
-      })
+      }),
     ).toBeRejectedWithError(
       RuntimeError,
-      "Cesium ion asset 12335 is not an imagery asset."
+      "Cesium ion asset 12335 is not an imagery asset.",
     );
   });
 
@@ -85,10 +84,10 @@ describe("Scene/IonImageryProvider", function () {
         externalType: "TUBELCANE",
         options: { url: "http://test.invalid/layer" },
         attributions: [],
-      })
+      }),
     ).toBeRejectedWithError(
       RuntimeError,
-      "Unrecognized Cesium ion imagery type: TUBELCANE"
+      "Unrecognized Cesium ion imagery type: TUBELCANE",
     );
   });
 
@@ -97,7 +96,7 @@ describe("Scene/IonImageryProvider", function () {
     expect(provider).toBeInstanceOf(IonImageryProvider);
     expect(provider.errorEvent).toBeDefined();
     expect(provider._imageryProvider).toBeInstanceOf(
-      UrlTemplateImageryProvider
+      UrlTemplateImageryProvider,
     );
   });
 
@@ -116,13 +115,13 @@ describe("Scene/IonImageryProvider", function () {
     };
     const endpointResource = IonResource._createEndpointResource(
       assetId,
-      options
+      options,
     );
     spyOn(IonResource, "_createEndpointResource").and.returnValue(
-      endpointResource
+      endpointResource,
     );
     spyOn(endpointResource, "fetchJson").and.returnValue(
-      Promise.resolve(endpointData)
+      Promise.resolve(endpointData),
     );
 
     expect(endpointResource.fetchJson.calls.count()).toBe(0);
@@ -155,19 +154,19 @@ describe("Scene/IonImageryProvider", function () {
     const image = new Image();
     const request = {};
     spyOn(internalProvider, "requestImage").and.returnValue(
-      Promise.resolve(image)
+      Promise.resolve(image),
     );
     let result = await provider.requestImage(1, 2, 3, request);
     expect(internalProvider.requestImage).toHaveBeenCalledWith(
       1,
       2,
       3,
-      request
+      request,
     );
     expect(result).toBe(image);
     const info = {};
     spyOn(internalProvider, "pickFeatures").and.returnValue(
-      Promise.resolve(info)
+      Promise.resolve(info),
     );
     result = await provider.pickFeatures(1, 2, 3, 4, 5);
     expect(internalProvider.pickFeatures).toHaveBeenCalledWith(1, 2, 3, 4, 5);
@@ -209,62 +208,78 @@ describe("Scene/IonImageryProvider", function () {
   }
 
   it("createImageryProvider works with ARCGIS_MAPSERVER", function () {
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      deferred.resolve(
-        JSON.stringify({ imageUrl: "", imageUrlSubdomains: [], zoomMax: 0 })
-      );
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        deferred.resolve(
+          JSON.stringify({ imageUrl: "", imageUrlSubdomains: [], zoomMax: 0 }),
+        );
+      },
+    );
     return testExternalImagery(
       "ARCGIS_MAPSERVER",
       { url: "http://test.invalid" },
-      ArcGisMapServerImageryProvider
+      ArcGisMapServerImageryProvider,
     );
   });
 
   it("createImageryProvider works with BING", function () {
-    spyOn(Resource._Implementations, "loadAndExecuteScript").and.callFake(
-      function (url, name, deffered) {
-        deffered.resolve({
-          resourceSets: [
-            {
-              resources: [{ imageUrl: "", imageUrlSubdomains: [], zoomMax: 0 }],
-            },
-          ],
-        });
-      }
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        deferred.resolve(
+          JSON.stringify({
+            resourceSets: [
+              {
+                resources: [
+                  { imageUrl: "", imageUrlSubdomains: [], zoomMax: 0 },
+                ],
+              },
+            ],
+          }),
+        );
+      },
     );
     return testExternalImagery(
       "BING",
       { url: "http://test.invalid", key: "" },
-      BingMapsImageryProvider
+      BingMapsImageryProvider,
     );
   });
 
   it("createImageryProvider works with GOOGLE_EARTH", function () {
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      deferred.resolve(JSON.stringify({ layers: [{ id: 0, version: "" }] }));
-    });
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        deferred.resolve(JSON.stringify({ layers: [{ id: 0, version: "" }] }));
+      },
+    );
 
     return testExternalImagery(
       "GOOGLE_EARTH",
       { url: "http://test.invalid", channel: 0 },
-      GoogleEarthEnterpriseMapsProvider
+      GoogleEarthEnterpriseMapsProvider,
     );
   });
 
@@ -272,26 +287,24 @@ describe("Scene/IonImageryProvider", function () {
     return testExternalImagery(
       "MAPBOX",
       { accessToken: "test-token", url: "http://test.invalid", mapId: 1 },
-      MapboxImageryProvider
+      MapboxImageryProvider,
     );
   });
 
   it("createImageryProvider works with SINGLE_TILE", function () {
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      deferred.resolve({
-        height: 16,
-        width: 16,
-      });
-    });
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        deferred.resolve({
+          height: 16,
+          width: 16,
+        });
+      },
+    );
 
     return testExternalImagery(
       "SINGLE_TILE",
       { url: "http://test.invalid" },
-      SingleTileImageryProvider
+      SingleTileImageryProvider,
     );
   });
 
@@ -299,7 +312,7 @@ describe("Scene/IonImageryProvider", function () {
     return testExternalImagery(
       "TMS",
       { url: "http://test.invalid" },
-      UrlTemplateImageryProvider
+      UrlTemplateImageryProvider,
     );
   });
 
@@ -307,7 +320,7 @@ describe("Scene/IonImageryProvider", function () {
     return testExternalImagery(
       "URL_TEMPLATE",
       { url: "http://test.invalid" },
-      UrlTemplateImageryProvider
+      UrlTemplateImageryProvider,
     );
   });
 
@@ -315,7 +328,7 @@ describe("Scene/IonImageryProvider", function () {
     return testExternalImagery(
       "WMS",
       { url: "http://test.invalid", layers: [] },
-      WebMapServiceImageryProvider
+      WebMapServiceImageryProvider,
     );
   });
 
@@ -323,7 +336,7 @@ describe("Scene/IonImageryProvider", function () {
     return testExternalImagery(
       "WMTS",
       { url: "http://test.invalid", layer: "", style: "", tileMatrixSetID: 1 },
-      WebMapTileServiceImageryProvider
+      WebMapTileServiceImageryProvider,
     );
   });
 });

@@ -1,7 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -51,7 +50,7 @@ function Vector3DTilePolylines(options) {
   this._counts = options.counts;
   this._batchIds = options.batchIds;
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
   this._minimumHeight = options.minimumHeight;
   this._maximumHeight = options.maximumHeight;
   this._center = options.center;
@@ -167,7 +166,7 @@ function packBuffer(polylines) {
 
 const createVerticesTaskProcessor = new TaskProcessor(
   "createVectorTilePolylines",
-  5
+  5,
 );
 const attributeLocations = {
   previousPosition: 0,
@@ -218,7 +217,7 @@ function createVertexArray(polylines, context) {
 
   const verticesPromise = createVerticesTaskProcessor.scheduleTask(
     parameters,
-    transferrableObjects
+    transferrableObjects,
   );
   if (!defined(verticesPromise)) {
     // Postponed
@@ -234,7 +233,7 @@ function createVertexArray(polylines, context) {
       if (polylines._keepDecodedPositions) {
         polylines._decodedPositions = new Float64Array(result.decodedPositions);
         polylines._decodedPositionOffsets = new Uint32Array(
-          result.decodedPositionOffsets
+          result.decodedPositionOffsets,
         );
       }
 
@@ -395,12 +394,12 @@ function createUniformMap(primitive, context) {
       Matrix4.multiplyByPoint(
         modifiedModelViewScratch,
         primitive._center,
-        rtcScratch
+        rtcScratch,
       );
       Matrix4.setTranslation(
         modifiedModelViewScratch,
         rtcScratch,
-        modifiedModelViewScratch
+        modifiedModelViewScratch,
       );
       return modifiedModelViewScratch;
     },
@@ -448,12 +447,12 @@ function createShaders(primitive, context) {
   const vsSource = batchTable.getVertexShaderCallback(
     false,
     "a_batchId",
-    undefined
+    undefined,
   )(Vector3DTilePolylinesVS);
   const fsSource = batchTable.getFragmentShaderCallback(
     false,
     undefined,
-    false
+    false,
   )(PolylineFS);
 
   const vs = new ShaderSource({
@@ -479,7 +478,7 @@ function createShaders(primitive, context) {
 function queueCommands(primitive, frameState) {
   if (!defined(primitive._command)) {
     const uniformMap = primitive._batchTable.getUniformMapCallback()(
-      primitive._uniformMap
+      primitive._uniformMap,
     );
     primitive._command = new DrawCommand({
       owner: primitive,

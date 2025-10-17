@@ -20,14 +20,7 @@ describe(
   "Scene/GltfVertexBufferLoader",
   function () {
     const dracoBufferTypedArray = new Uint8Array([
-      1,
-      3,
-      7,
-      15,
-      31,
-      63,
-      127,
-      255,
+      1, 3, 7, 15, 31, 63, 127, 255,
     ]);
     const dracoArrayBuffer = dracoBufferTypedArray.buffer;
 
@@ -147,8 +140,8 @@ describe(
       ],
     };
 
-    const dracoExtension =
-      gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+    const primitive = gltfDraco.meshes[0].primitives[0];
+    const dracoExtension = primitive.extensions.KHR_draco_mesh_compression;
 
     const gltfUncompressed = {
       buffers: [
@@ -288,6 +281,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           bufferViewId: 0,
+          primitive: primitive,
           draco: dracoExtension,
           attributeSemantic: "POSITION",
           accessorId: 0,
@@ -315,6 +309,7 @@ describe(
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          primitive: primitive,
           draco: dracoExtension,
           attributeSemantic: undefined,
           accessorId: 0,
@@ -330,9 +325,26 @@ describe(
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          primitive: primitive,
           draco: dracoExtension,
           attributeSemantic: "POSITION",
           accessorId: undefined,
+          loadBuffer: true,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if draco is defined and primitive is not defined", function () {
+      expect(function () {
+        return new GltfVertexBufferLoader({
+          resourceCache: ResourceCache,
+          gltf: gltfDraco,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          primitive: undefined,
+          draco: dracoExtension,
+          attributeSemantic: "POSITION",
+          accessorId: 0,
           loadBuffer: true,
         });
       }).toThrowDeveloperError();
@@ -354,7 +366,7 @@ describe(
 
     it("load throws if buffer view fails to load", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
-        Promise.reject(new Error("404 Not Found"))
+        Promise.reject(new Error("404 Not Found")),
       );
 
       const vertexBufferLoader = new GltfVertexBufferLoader({
@@ -368,13 +380,13 @@ describe(
 
       await expectAsync(vertexBufferLoader.load()).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load vertex buffer\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+        "Failed to load vertex buffer\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found",
       );
     });
 
     it("process throws if draco fails to load", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(dracoArrayBuffer)
+        Promise.resolve(dracoArrayBuffer),
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.callFake(function () {
@@ -387,6 +399,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
@@ -395,16 +408,16 @@ describe(
 
       await vertexBufferLoader.load();
       await expectAsync(
-        waitForLoaderProcess(vertexBufferLoader, scene)
+        waitForLoaderProcess(vertexBufferLoader, scene),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load vertex buffer\nFailed to load Draco\nDraco decode failed"
+        "Failed to load vertex buffer\nFailed to load Draco\nDraco decode failed",
       );
     });
 
     it("loads as buffer", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer),
       );
 
       // Simulate JobScheduler not being ready for a few frames
@@ -412,15 +425,14 @@ describe(
       let processCallsCount = 0;
       const jobScheduler = scene.frameState.jobScheduler;
       const originalJobSchedulerExecute = jobScheduler.execute;
-      spyOn(JobScheduler.prototype, "execute").and.callFake(function (
-        job,
-        jobType
-      ) {
-        if (processCallsCount++ >= processCallsTotal) {
-          return originalJobSchedulerExecute.call(jobScheduler, job, jobType);
-        }
-        return false;
-      });
+      spyOn(JobScheduler.prototype, "execute").and.callFake(
+        function (job, jobType) {
+          if (processCallsCount++ >= processCallsTotal) {
+            return originalJobSchedulerExecute.call(jobScheduler, job, jobType);
+          }
+          return false;
+        },
+      );
 
       const vertexBufferLoader = new GltfVertexBufferLoader({
         resourceCache: ResourceCache,
@@ -439,13 +451,13 @@ describe(
       expect(vertexBufferLoader.buffer.sizeInBytes).toBe(positions.byteLength);
       expect(vertexBufferLoader.typedArray).toBeUndefined();
       expect(ResourceCache.statistics.geometryByteLength).toBe(
-        vertexBufferLoader.buffer.sizeInBytes
+        vertexBufferLoader.buffer.sizeInBytes,
       );
     });
 
     it("loads as typed array", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer),
       );
 
       spyOn(Buffer, "createVertexBuffer").and.callThrough();
@@ -465,19 +477,19 @@ describe(
 
       expect(() => loaderProcess(vertexBufferLoader, scene)).not.toThrowError();
       expect(vertexBufferLoader.typedArray.byteLength).toBe(
-        positions.byteLength
+        positions.byteLength,
       );
       expect(vertexBufferLoader.buffer).toBeUndefined();
       expect(Buffer.createVertexBuffer.calls.count()).toBe(0);
 
       expect(ResourceCache.statistics.geometryByteLength).toBe(
-        vertexBufferLoader.typedArray.byteLength
+        vertexBufferLoader.typedArray.byteLength,
       );
     });
 
     it("loads as both buffer and typed array", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer),
       );
 
       // Simulate JobScheduler not being ready for a few frames
@@ -485,15 +497,14 @@ describe(
       let processCallsCount = 0;
       const jobScheduler = scene.frameState.jobScheduler;
       const originalJobSchedulerExecute = jobScheduler.execute;
-      spyOn(JobScheduler.prototype, "execute").and.callFake(function (
-        job,
-        jobType
-      ) {
-        if (processCallsCount++ >= processCallsTotal) {
-          return originalJobSchedulerExecute.call(jobScheduler, job, jobType);
-        }
-        return false;
-      });
+      spyOn(JobScheduler.prototype, "execute").and.callFake(
+        function (job, jobType) {
+          if (processCallsCount++ >= processCallsTotal) {
+            return originalJobSchedulerExecute.call(jobScheduler, job, jobType);
+          }
+          return false;
+        },
+      );
 
       const vertexBufferLoader = new GltfVertexBufferLoader({
         resourceCache: ResourceCache,
@@ -512,7 +523,7 @@ describe(
       expect(() => loaderProcess(vertexBufferLoader, scene)).not.toThrowError();
       expect(vertexBufferLoader.buffer.sizeInBytes).toBe(positions.byteLength);
       expect(vertexBufferLoader.typedArray.byteLength).toBe(
-        positions.byteLength
+        positions.byteLength,
       );
       const totalSize =
         vertexBufferLoader.typedArray.byteLength +
@@ -522,7 +533,7 @@ describe(
 
     it("creates vertex buffer synchronously", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer),
       );
 
       const vertexBufferLoader = new GltfVertexBufferLoader({
@@ -544,7 +555,7 @@ describe(
 
     it("loads positions from draco", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer),
       );
 
       // Simulate decodeBufferView not being ready for a few frames
@@ -562,6 +573,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
@@ -573,31 +585,31 @@ describe(
 
       expect(() => loaderProcess(vertexBufferLoader, scene)).not.toThrowError();
       expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
-        decodedPositions.byteLength
+        decodedPositions.byteLength,
       );
       expect(vertexBufferLoader.typedArray).toBeUndefined();
       const quantization = vertexBufferLoader.quantization;
       expect(quantization.octEncoded).toBe(false);
       expect(quantization.quantizedVolumeOffset).toEqual(
-        new Cartesian3(-1.0, -1.0, -1.0)
+        new Cartesian3(-1.0, -1.0, -1.0),
       );
       expect(quantization.quantizedVolumeDimensions).toEqual(
-        new Cartesian3(2.0, 2.0, 2.0)
+        new Cartesian3(2.0, 2.0, 2.0),
       );
       expect(quantization.normalizationRange).toEqual(
-        new Cartesian3(16383, 16383, 16383)
+        new Cartesian3(16383, 16383, 16383),
       );
       expect(quantization.componentDatatype).toBe(
-        ComponentDatatype.UNSIGNED_SHORT
+        ComponentDatatype.UNSIGNED_SHORT,
       );
       expect(ResourceCache.statistics.geometryByteLength).toBe(
-        vertexBufferLoader.buffer.sizeInBytes
+        vertexBufferLoader.buffer.sizeInBytes,
       );
     });
 
     it("loads normals from draco", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer),
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.callFake(function () {
@@ -609,6 +621,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "NORMAL",
         accessorId: 1,
@@ -619,7 +632,7 @@ describe(
       await waitForLoaderProcess(vertexBufferLoader, scene);
 
       expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
-        decodedNormals.byteLength
+        decodedNormals.byteLength,
       );
 
       const quantization = vertexBufferLoader.quantization;
@@ -629,23 +642,23 @@ describe(
       expect(quantization.quantizedVolumeDimensions).toBeUndefined();
       expect(quantization.normalizationRange).toBe(1023);
       expect(quantization.componentDatatype).toBe(
-        ComponentDatatype.UNSIGNED_BYTE
+        ComponentDatatype.UNSIGNED_BYTE,
       );
     });
 
     it("destroys vertex buffer loaded from buffer view", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer),
       );
 
       const unloadBufferView = spyOn(
         GltfBufferViewLoader.prototype,
-        "unload"
+        "unload",
       ).and.callThrough();
 
       const destroyVertexBuffer = spyOn(
         Buffer.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const vertexBufferLoader = new GltfVertexBufferLoader({
@@ -673,21 +686,21 @@ describe(
 
     it("destroys vertex buffer loaded from draco", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer),
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        Promise.resolve(decodeDracoResults)
+        Promise.resolve(decodeDracoResults),
       );
 
       const unloadDraco = spyOn(
         GltfDracoLoader.prototype,
-        "unload"
+        "unload",
       ).and.callThrough();
 
       const destroyVertexBuffer = spyOn(
         Buffer.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const vertexBufferLoader = new GltfVertexBufferLoader({
@@ -695,6 +708,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
@@ -719,7 +733,7 @@ describe(
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
         rejectPromise
           ? Promise.reject(new Error())
-          : Promise.resolve(arrayBuffer)
+          : Promise.resolve(arrayBuffer),
       );
 
       const vertexBufferLoader = new GltfVertexBufferLoader({
@@ -756,6 +770,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        primitive: primitive,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
@@ -773,7 +788,7 @@ describe(
 
       const decodeBufferView = spyOn(
         DracoLoader,
-        "decodeBufferView"
+        "decodeBufferView",
       ).and.callFake(function () {
         return new Promise(function (resolve, reject) {
           setTimeout(function () {
@@ -790,7 +805,7 @@ describe(
 
       await vertexBufferLoader.load(); // Destroy happens in mock function above
       await expectAsync(
-        waitForLoaderProcess(vertexBufferLoader, scene)
+        waitForLoaderProcess(vertexBufferLoader, scene),
       ).toBeResolved();
 
       expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
@@ -806,5 +821,5 @@ describe(
       return resolveDracoAfterDestroy(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -1,5 +1,5 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import IonResource from "../Core/IonResource.js";
@@ -13,6 +13,8 @@ import SingleTileImageryProvider from "./SingleTileImageryProvider.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 import WebMapServiceImageryProvider from "./WebMapServiceImageryProvider.js";
 import WebMapTileServiceImageryProvider from "./WebMapTileServiceImageryProvider.js";
+import Google2DImageryProvider from "./Google2DImageryProvider.js";
+import Azure2DImageryProvider from "./Azure2DImageryProvider.js";
 
 // These values are the list of supported external imagery
 // assets in the Cesium ion beta. They are subject to change.
@@ -52,6 +54,18 @@ const ImageryProviderAsyncMapping = {
       ...options,
     });
   },
+  GOOGLE_2D_MAPS: (ionResource, options) => {
+    return new Google2DImageryProvider({
+      ...options,
+      url: ionResource,
+    });
+  },
+  AZURE_MAPS: (ionResource, options) => {
+    return new Azure2DImageryProvider({
+      ...options,
+      url: ionResource,
+    });
+  },
 };
 
 /**
@@ -82,7 +96,7 @@ const ImageryProviderAsyncMapping = {
  * @see IonImageryProvider.fromAssetId
  */
 function IonImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -250,7 +264,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
 /**
  * Creates a provider for tiled imagery using the Cesium ion REST API.
  *
- * @param {Number} assetId  An ion imagery asset ID.
+ * @param {number} assetId  An ion imagery asset ID.
  * @param {IonImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<IonImageryProvider>} A promise which resolves to the created IonImageryProvider.
  *
@@ -266,10 +280,10 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
   Check.typeOf.number("assetId", assetId);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   const endpointResource = IonResource._createEndpointResource(
     assetId,
-    options
+    options,
   );
 
   // A simple cache to avoid making repeated requests to ion for endpoints we've
@@ -286,7 +300,7 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
   const endpoint = await promise;
   if (endpoint.type !== "IMAGERY") {
     throw new RuntimeError(
-      `Cesium ion asset ${assetId} is not an imagery asset.`
+      `Cesium ion asset ${assetId} is not an imagery asset.`,
     );
   }
 
@@ -294,21 +308,28 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
   const externalType = endpoint.externalType;
   if (!defined(externalType)) {
     imageryProvider = await TileMapServiceImageryProvider.fromUrl(
-      new IonResource(endpoint, endpointResource)
+      new IonResource(endpoint, endpointResource),
     );
   } else {
     const factory = ImageryProviderAsyncMapping[externalType];
 
     if (!defined(factory)) {
       throw new RuntimeError(
-        `Unrecognized Cesium ion imagery type: ${externalType}`
+        `Unrecognized Cesium ion imagery type: ${externalType}`,
       );
     }
     // Make a copy before editing since this object reference is cached;
     const options = { ...endpoint.options };
     const url = options.url;
     delete options.url;
-    imageryProvider = await factory(url, options);
+    if (["GOOGLE_2D_MAPS", "AZURE_MAPS"].includes(endpoint.externalType)) {
+      imageryProvider = await factory(
+        new IonResource(endpoint, endpointResource),
+        options,
+      );
+    } else {
+      imageryProvider = await factory(url, options);
+    }
   }
 
   const provider = new IonImageryProvider(options);
@@ -322,7 +343,7 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
 
   provider._tileCredits = IonResource.getCreditsFromEndpoint(
     endpoint,
-    endpointResource
+    endpointResource,
   );
 
   provider._imageryProvider = imageryProvider;
@@ -384,7 +405,7 @@ IonImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
 };

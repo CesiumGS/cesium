@@ -137,8 +137,13 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
 
   it("adds varying declarations from the custom shader", function () {
     const varyings = {
-      v_distanceFromCenter: VaryingType.FLOAT,
-      v_computedMatrix: VaryingType.MAT3,
+      v_float: VaryingType.FLOAT,
+      v_vec2: VaryingType.VEC2,
+      v_vec3: VaryingType.VEC3,
+      v_vec4: VaryingType.VEC4,
+      v_mat2x2: VaryingType.MAT2,
+      v_mat3x3: VaryingType.MAT3,
+      v_mat4x4: VaryingType.MAT4,
     };
     const customShader = new CustomShader({
       vertexShaderText: emptyVertexShader,
@@ -152,8 +157,13 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
     CustomShaderPipelineStage.process(renderResources, primitive);
 
     ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-      "float v_distanceFromCenter;",
-      "mat2 v_computedMatrix;",
+      "float v_float;",
+      "vec2 v_vec2;",
+      "vec3 v_vec3;",
+      "vec4 v_vec4;",
+      "mat2 v_mat2x2;",
+      "mat3 v_mat3x3;",
+      "mat4 v_mat4x4;",
     ]);
   });
 
@@ -168,7 +178,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
     CustomShaderPipelineStage.process(renderResources, primitive);
 
     expect(renderResources.lightingOptions.lightingModel).toBe(
-      LightingModel.PBR
+      LightingModel.PBR,
     );
   });
 
@@ -237,7 +247,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
 
     expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
     expect(renderResources.lightingOptions.lightingModel).toBe(
-      LightingModel.PBR
+      LightingModel.PBR,
     );
 
     // the shader code proper gets optimized out
@@ -273,13 +283,13 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec3 positionMC;", "    vec3 normalMC;", "    vec2 texCoord_0;"]
+      ["    vec3 positionMC;", "    vec3 normalMC;", "    vec2 texCoord_0;"],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec3 positionMC;", "    vec3 normalEC;", "    vec2 texCoord_0;"]
+      ["    vec3 positionMC;", "    vec3 normalEC;", "    vec2 texCoord_0;"],
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
@@ -292,7 +302,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
@@ -304,7 +314,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
 
     ShaderBuilderTester.expectHasVertexFunctionUnordered(
@@ -315,7 +325,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    vsInput.attributes.positionMC = attributes.positionMC;",
         "    vsInput.attributes.normalMC = attributes.normalMC;",
         "    vsInput.attributes.texCoord_0 = attributes.texCoord_0;",
-      ]
+      ],
     );
     ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
@@ -325,7 +335,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    fsInput.attributes.positionMC = attributes.positionMC;",
         "    fsInput.attributes.normalEC = attributes.normalEC;",
         "    fsInput.attributes.texCoord_0 = attributes.texCoord_0;",
-      ]
+      ],
     );
   });
 
@@ -351,20 +361,20 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
 
     CustomShaderPipelineStage.process(
       renderResources,
-      primitiveWithCustomAttributes
+      primitiveWithCustomAttributes,
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec3 positionMC;", "    float temperature;"]
+      ["    vec3 positionMC;", "    float temperature;"],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec3 positionMC;", "    float temperature;"]
+      ["    vec3 positionMC;", "    float temperature;"],
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
@@ -377,7 +387,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
@@ -389,7 +399,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
 
     ShaderBuilderTester.expectHasVertexFunctionUnordered(
@@ -399,7 +409,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
       [
         "    vsInput.attributes.positionMC = attributes.positionMC;",
         "    vsInput.attributes.temperature = attributes.temperature;",
-      ]
+      ],
     );
     ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
@@ -408,7 +418,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
       [
         "    fsInput.attributes.positionMC = attributes.positionMC;",
         "    fsInput.attributes.temperature = attributes.temperature;",
-      ]
+      ],
     );
   });
 
@@ -437,20 +447,20 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
 
     CustomShaderPipelineStage.process(
       renderResources,
-      primitiveWithColorAttributes
+      primitiveWithColorAttributes,
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec4 color_0;", "    vec4 color_1;"]
+      ["    vec4 color_0;", "    vec4 color_1;"],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec4 color_0;", "    vec4 color_1;"]
+      ["    vec4 color_0;", "    vec4 color_1;"],
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
@@ -463,7 +473,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
@@ -475,7 +485,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
 
     ShaderBuilderTester.expectHasVertexFunctionUnordered(
@@ -485,7 +495,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
       [
         "    vsInput.attributes.color_0 = attributes.color_0;",
         "    vsInput.attributes.color_1 = attributes.color_1;",
-      ]
+      ],
     );
     ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
@@ -494,7 +504,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
       [
         "    fsInput.attributes.color_0 = attributes.color_0;",
         "    fsInput.attributes.color_1 = attributes.color_1;",
-      ]
+      ],
     );
   });
 
@@ -520,20 +530,20 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
 
     CustomShaderPipelineStage.process(
       renderResources,
-      primitiveWithCustomAttributes
+      primitiveWithCustomAttributes,
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec3 positionMC;"]
+      ["    vec3 positionMC;"],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    float temperature;"]
+      ["    float temperature;"],
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
@@ -546,7 +556,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
@@ -558,20 +568,20 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
 
     ShaderBuilderTester.expectHasVertexFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
-      ["    vsInput.attributes.positionMC = attributes.positionMC;"]
+      ["    vsInput.attributes.positionMC = attributes.positionMC;"],
     );
     ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
-      ["    fsInput.attributes.temperature = attributes.temperature;"]
+      ["    fsInput.attributes.temperature = attributes.temperature;"],
     );
   });
 
@@ -619,7 +629,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
   });
 
@@ -654,13 +664,13 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      []
+      [],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec3 positionMC;", "    vec3 positionWC;", "    vec3 positionEC;"]
+      ["    vec3 positionMC;", "    vec3 positionWC;", "    vec3 positionEC;"],
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
@@ -673,7 +683,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
@@ -685,14 +695,14 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
 
     ShaderBuilderTester.expectHasVertexFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
-      []
+      [],
     );
     ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
@@ -702,7 +712,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    fsInput.attributes.positionMC = attributes.positionMC;",
         "    fsInput.attributes.positionWC = attributes.positionWC;",
         "    fsInput.attributes.positionEC = attributes.positionEC;",
-      ]
+      ],
     );
   });
 
@@ -730,13 +740,13 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec2 texCoord_1;"]
+      ["    vec2 texCoord_1;"],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec3 tangentEC;"]
+      ["    vec3 tangentEC;"],
     );
 
     ShaderBuilderTester.expectHasVertexStruct(
@@ -749,7 +759,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
@@ -761,20 +771,20 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
 
     ShaderBuilderTester.expectHasVertexFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
-      ["    vsInput.attributes.texCoord_1 = vec2(0.0);"]
+      ["    vsInput.attributes.texCoord_1 = vec2(0.0);"],
     );
     ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
-      ["    fsInput.attributes.tangentEC = vec3(1.0, 0.0, 0.0);"]
+      ["    fsInput.attributes.tangentEC = vec3(1.0, 0.0, 0.0);"],
     );
   });
 
@@ -825,7 +835,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
     ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
     ShaderBuilderTester.expectFragmentLinesContains(
       shaderBuilder,
-      emptyFragmentShader
+      emptyFragmentShader,
     );
   });
 
@@ -845,7 +855,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
 
     ShaderBuilderTester.expectVertexLinesContains(
       shaderBuilder,
-      emptyVertexShader
+      emptyVertexShader,
     );
     ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, []);
   });
@@ -890,7 +900,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS,
       CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-      ["    vec3 positionWC;"]
+      ["    vec3 positionWC;"],
     );
 
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -903,7 +913,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
         "    Metadata metadata;",
         "    MetadataClass metadataClass;",
         "    MetadataStatistics metadataStatistics;",
-      ]
+      ],
     );
 
     expect(shaderBuilder._vertexShaderParts.functionIds).toEqual([]);
@@ -911,7 +921,7 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
-      ["    fsInput.attributes.positionWC = attributes.positionWC;"]
+      ["    fsInput.attributes.positionWC = attributes.positionWC;"],
     );
   });
 });

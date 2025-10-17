@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -45,17 +44,17 @@ function Matrix3(
   column2Row1,
   column0Row2,
   column1Row2,
-  column2Row2
+  column2Row2,
 ) {
-  this[0] = defaultValue(column0Row0, 0.0);
-  this[1] = defaultValue(column0Row1, 0.0);
-  this[2] = defaultValue(column0Row2, 0.0);
-  this[3] = defaultValue(column1Row0, 0.0);
-  this[4] = defaultValue(column1Row1, 0.0);
-  this[5] = defaultValue(column1Row2, 0.0);
-  this[6] = defaultValue(column2Row0, 0.0);
-  this[7] = defaultValue(column2Row1, 0.0);
-  this[8] = defaultValue(column2Row2, 0.0);
+  this[0] = column0Row0 ?? 0.0;
+  this[1] = column0Row1 ?? 0.0;
+  this[2] = column0Row2 ?? 0.0;
+  this[3] = column1Row0 ?? 0.0;
+  this[4] = column1Row1 ?? 0.0;
+  this[5] = column1Row2 ?? 0.0;
+  this[6] = column2Row0 ?? 0.0;
+  this[7] = column2Row1 ?? 0.0;
+  this[8] = column2Row2 ?? 0.0;
 }
 
 /**
@@ -79,7 +78,7 @@ Matrix3.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value[0];
   array[startingIndex++] = value[1];
@@ -107,7 +106,7 @@ Matrix3.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new Matrix3();
@@ -145,7 +144,7 @@ Matrix3.packArray = function (array, result) {
   } else if (!Array.isArray(result) && result.length !== resultLength) {
     //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
-      "If result is a typed array, it must have exactly array.length * 9 elements"
+      "If result is a typed array, it must have exactly array.length * 9 elements",
     );
     //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
@@ -209,7 +208,7 @@ Matrix3.clone = function (matrix, result) {
       matrix[7],
       matrix[2],
       matrix[5],
-      matrix[8]
+      matrix[8],
     );
   }
   result[0] = matrix[0];
@@ -286,7 +285,7 @@ Matrix3.fromRowMajorArray = function (values, result) {
       values[5],
       values[6],
       values[7],
-      values[8]
+      values[8],
     );
   }
   result[0] = values[0];
@@ -496,7 +495,7 @@ Matrix3.fromCrossProduct = function (vector, result) {
       -vector.x,
       -vector.y,
       vector.x,
-      0.0
+      0.0,
     );
   }
 
@@ -543,7 +542,7 @@ Matrix3.fromRotationX = function (angle, result) {
       -sinAngle,
       0.0,
       sinAngle,
-      cosAngle
+      cosAngle,
     );
   }
 
@@ -591,7 +590,7 @@ Matrix3.fromRotationY = function (angle, result) {
       0.0,
       -sinAngle,
       0.0,
-      cosAngle
+      cosAngle,
     );
   }
 
@@ -639,7 +638,7 @@ Matrix3.fromRotationZ = function (angle, result) {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
   }
 
@@ -942,13 +941,13 @@ Matrix3.getScale = function (matrix, result) {
   //>>includeEnd('debug');
 
   result.x = Cartesian3.magnitude(
-    Cartesian3.fromElements(matrix[0], matrix[1], matrix[2], scratchColumn)
+    Cartesian3.fromElements(matrix[0], matrix[1], matrix[2], scratchColumn),
   );
   result.y = Cartesian3.magnitude(
-    Cartesian3.fromElements(matrix[3], matrix[4], matrix[5], scratchColumn)
+    Cartesian3.fromElements(matrix[3], matrix[4], matrix[5], scratchColumn),
   );
   result.z = Cartesian3.magnitude(
-    Cartesian3.fromElements(matrix[6], matrix[7], matrix[8], scratchColumn)
+    Cartesian3.fromElements(matrix[6], matrix[7], matrix[8], scratchColumn),
   );
   return result;
 };
@@ -1371,7 +1370,7 @@ function shurDecomposition(matrix, result) {
   // find pivot (rotAxis) based on max diagonal of matrix
   for (let i = 0; i < 3; ++i) {
     const temp = Math.abs(
-      matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])]
+      matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])],
     );
     if (temp > maxDiagonal) {
       rotAxis = i;
@@ -1468,7 +1467,7 @@ Matrix3.computeEigenDecomposition = function (matrix, result) {
 
   const unitaryMatrix = (result.unitary = Matrix3.clone(
     Matrix3.IDENTITY,
-    result.unitary
+    result.unitary,
   ));
   const diagMatrix = (result.diagonal = Matrix3.clone(matrix, result.diagonal));
 
@@ -1608,7 +1607,7 @@ Matrix3.inverseTranspose = function (matrix, result) {
 
   return Matrix3.inverse(
     Matrix3.transpose(matrix, scratchTransposeMatrix),
-    result
+    result,
   );
 };
 
@@ -1648,7 +1647,7 @@ Matrix3.equals = function (left, right) {
  * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Matrix3.equalsEpsilon = function (left, right, epsilon) {
-  epsilon = defaultValue(epsilon, 0);
+  epsilon = epsilon ?? 0;
 
   return (
     left === right ||
@@ -1673,7 +1672,7 @@ Matrix3.equalsEpsilon = function (left, right, epsilon) {
  * @constant
  */
 Matrix3.IDENTITY = Object.freeze(
-  new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
+  new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0),
 );
 
 /**
@@ -1683,7 +1682,7 @@ Matrix3.IDENTITY = Object.freeze(
  * @constant
  */
 Matrix3.ZERO = Object.freeze(
-  new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+  new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
 );
 
 /**

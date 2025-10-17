@@ -2,7 +2,6 @@ import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import Color from "../../Core/Color.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelType from "./ModelType.js";
@@ -33,7 +32,7 @@ const PickingPipelineStage = {
 PickingPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const context = frameState.context;
   const runtimeNode = renderResources.runtimeNode;
@@ -57,7 +56,7 @@ PickingPipelineStage.process = function (
     shaderBuilder.addUniform(
       "vec4",
       "czm_pickColor",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
 
     const uniformMap = renderResources.uniformMap;
@@ -129,14 +128,14 @@ function processPickTexture(renderResources, primitive, instances) {
     // Extract the Feature Table ID from the instanced Feature ID attributes.
     featureIdAttribute = ModelUtility.getFeatureIdsByLabel(
       instances.featureIds,
-      instanceFeatureIdLabel
+      instanceFeatureIdLabel,
     );
     featureTableId = featureIdAttribute.propertyTableId;
   } else {
     // Extract the Feature Table ID from the primitive Feature ID attributes.
     featureIdAttribute = ModelUtility.getFeatureIdsByLabel(
       primitive.featureIds,
-      featureIdLabel
+      featureIdLabel,
     );
     featureTableId = featureIdAttribute.propertyTableId;
   }
@@ -147,12 +146,12 @@ function processPickTexture(renderResources, primitive, instances) {
   shaderBuilder.addUniform(
     "sampler2D",
     "model_pickTexture",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   const batchTexture = featureTable.batchTexture;
   renderResources.uniformMap.model_pickTexture = function () {
-    return defaultValue(batchTexture.pickTexture, batchTexture.defaultTexture);
+    return batchTexture.pickTexture ?? batchTexture.defaultTexture;
   };
 
   // The feature ID is ignored if it is greater than the number of features.

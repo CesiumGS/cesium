@@ -1,7 +1,7 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -69,24 +69,24 @@ function Matrix4(
   column0Row3,
   column1Row3,
   column2Row3,
-  column3Row3
+  column3Row3,
 ) {
-  this[0] = defaultValue(column0Row0, 0.0);
-  this[1] = defaultValue(column0Row1, 0.0);
-  this[2] = defaultValue(column0Row2, 0.0);
-  this[3] = defaultValue(column0Row3, 0.0);
-  this[4] = defaultValue(column1Row0, 0.0);
-  this[5] = defaultValue(column1Row1, 0.0);
-  this[6] = defaultValue(column1Row2, 0.0);
-  this[7] = defaultValue(column1Row3, 0.0);
-  this[8] = defaultValue(column2Row0, 0.0);
-  this[9] = defaultValue(column2Row1, 0.0);
-  this[10] = defaultValue(column2Row2, 0.0);
-  this[11] = defaultValue(column2Row3, 0.0);
-  this[12] = defaultValue(column3Row0, 0.0);
-  this[13] = defaultValue(column3Row1, 0.0);
-  this[14] = defaultValue(column3Row2, 0.0);
-  this[15] = defaultValue(column3Row3, 0.0);
+  this[0] = column0Row0 ?? 0.0;
+  this[1] = column0Row1 ?? 0.0;
+  this[2] = column0Row2 ?? 0.0;
+  this[3] = column0Row3 ?? 0.0;
+  this[4] = column1Row0 ?? 0.0;
+  this[5] = column1Row1 ?? 0.0;
+  this[6] = column1Row2 ?? 0.0;
+  this[7] = column1Row3 ?? 0.0;
+  this[8] = column2Row0 ?? 0.0;
+  this[9] = column2Row1 ?? 0.0;
+  this[10] = column2Row2 ?? 0.0;
+  this[11] = column2Row3 ?? 0.0;
+  this[12] = column3Row0 ?? 0.0;
+  this[13] = column3Row1 ?? 0.0;
+  this[14] = column3Row2 ?? 0.0;
+  this[15] = column3Row3 ?? 0.0;
 }
 
 /**
@@ -110,7 +110,7 @@ Matrix4.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value[0];
   array[startingIndex++] = value[1];
@@ -145,7 +145,7 @@ Matrix4.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new Matrix4();
@@ -190,7 +190,7 @@ Matrix4.packArray = function (array, result) {
   } else if (!Array.isArray(result) && result.length !== resultLength) {
     //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
-      "If result is a typed array, it must have exactly array.length * 16 elements"
+      "If result is a typed array, it must have exactly array.length * 16 elements",
     );
     //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
@@ -261,7 +261,7 @@ Matrix4.clone = function (matrix, result) {
       matrix[3],
       matrix[7],
       matrix[11],
-      matrix[15]
+      matrix[15],
     );
   }
   result[0] = matrix[0];
@@ -353,7 +353,7 @@ Matrix4.fromRowMajorArray = function (values, result) {
       values[12],
       values[13],
       values[14],
-      values[15]
+      values[15],
     );
   }
   result[0] = values[0];
@@ -389,7 +389,7 @@ Matrix4.fromRotationTranslation = function (rotation, translation, result) {
   Check.typeOf.object("rotation", rotation);
   //>>includeEnd('debug');
 
-  translation = defaultValue(translation, Cartesian3.ZERO);
+  translation = translation ?? Cartesian3.ZERO;
 
   if (!defined(result)) {
     return new Matrix4(
@@ -408,7 +408,7 @@ Matrix4.fromRotationTranslation = function (rotation, translation, result) {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
   }
 
@@ -452,7 +452,7 @@ Matrix4.fromTranslationQuaternionRotationScale = function (
   translation,
   rotation,
   scale,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("translation", translation);
@@ -520,7 +520,7 @@ Matrix4.fromTranslationQuaternionRotationScale = function (
  */
 Matrix4.fromTranslationRotationScale = function (
   translationRotationScale,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("translationRotationScale", translationRotationScale);
@@ -530,7 +530,7 @@ Matrix4.fromTranslationRotationScale = function (
     translationRotationScale.translation,
     translationRotationScale.rotation,
     translationRotationScale.scale,
-    result
+    result,
   );
 };
 
@@ -588,7 +588,7 @@ Matrix4.fromScale = function (scale, result) {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
   }
 
@@ -648,7 +648,7 @@ Matrix4.fromUniformScale = function (scale, result) {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
   }
 
@@ -738,11 +738,11 @@ Matrix4.fromCamera = function (camera, result) {
   Cartesian3.normalize(direction, fromCameraF);
   Cartesian3.normalize(
     Cartesian3.cross(fromCameraF, up, fromCameraR),
-    fromCameraR
+    fromCameraR,
   );
   Cartesian3.normalize(
     Cartesian3.cross(fromCameraR, fromCameraF, fromCameraU),
-    fromCameraU
+    fromCameraU,
   );
 
   const sX = fromCameraR.x;
@@ -793,7 +793,7 @@ Matrix4.fromCamera = function (camera, result) {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
   }
   result[0] = sX;
@@ -835,7 +835,7 @@ Matrix4.computePerspectiveFieldOfView = function (
   aspectRatio,
   near,
   far,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThan("fovY", fovY, 0.0);
@@ -890,7 +890,7 @@ Matrix4.computeOrthographicOffCenter = function (
   top,
   near,
   far,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("left", left);
@@ -937,8 +937,8 @@ Matrix4.computeOrthographicOffCenter = function (
  *
  * @param {number} left The number of meters to the left of the camera that will be in view.
  * @param {number} right The number of meters to the right of the camera that will be in view.
- * @param {number} bottom The number of meters below of the camera that will be in view.
- * @param {number} top The number of meters above of the camera that will be in view.
+ * @param {number} bottom The number of meters below the camera that will be in view.
+ * @param {number} top The number of meters above the camera that will be in view.
  * @param {number} near The distance to the near plane in meters.
  * @param {number} far The distance to the far plane in meters.
  * @param {Matrix4} result The object in which the result will be stored.
@@ -951,7 +951,7 @@ Matrix4.computePerspectiveOffCenter = function (
   top,
   near,
   far,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("left", left);
@@ -1007,7 +1007,7 @@ Matrix4.computeInfinitePerspectiveOffCenter = function (
   bottom,
   top,
   near,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("left", left);
@@ -1067,19 +1067,19 @@ Matrix4.computeViewportTransformation = function (
   viewport,
   nearDepthRange,
   farDepthRange,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = new Matrix4();
   }
 
-  viewport = defaultValue(viewport, defaultValue.EMPTY_OBJECT);
-  const x = defaultValue(viewport.x, 0.0);
-  const y = defaultValue(viewport.y, 0.0);
-  const width = defaultValue(viewport.width, 0.0);
-  const height = defaultValue(viewport.height, 0.0);
-  nearDepthRange = defaultValue(nearDepthRange, 0.0);
-  farDepthRange = defaultValue(farDepthRange, 1.0);
+  viewport = viewport ?? Frozen.EMPTY_OBJECT;
+  const x = viewport.x ?? 0.0;
+  const y = viewport.y ?? 0.0;
+  const width = viewport.width ?? 0.0;
+  const height = viewport.height ?? 0.0;
+  nearDepthRange = nearDepthRange ?? 0.0;
+  farDepthRange = farDepthRange ?? 1.0;
 
   const halfWidth = width * 0.5;
   const halfHeight = height * 0.5;
@@ -1600,13 +1600,13 @@ Matrix4.getScale = function (matrix, result) {
   //>>includeEnd('debug');
 
   result.x = Cartesian3.magnitude(
-    Cartesian3.fromElements(matrix[0], matrix[1], matrix[2], scratchColumn)
+    Cartesian3.fromElements(matrix[0], matrix[1], matrix[2], scratchColumn),
   );
   result.y = Cartesian3.magnitude(
-    Cartesian3.fromElements(matrix[4], matrix[5], matrix[6], scratchColumn)
+    Cartesian3.fromElements(matrix[4], matrix[5], matrix[6], scratchColumn),
   );
   result.z = Cartesian3.magnitude(
-    Cartesian3.fromElements(matrix[8], matrix[9], matrix[10], scratchColumn)
+    Cartesian3.fromElements(matrix[8], matrix[9], matrix[10], scratchColumn),
   );
   return result;
 };
@@ -2577,7 +2577,7 @@ Matrix4.equals = function (left, right) {
  * //Prints "Difference between both the matrices is not less than 0.1" on the console
  */
 Matrix4.equalsEpsilon = function (left, right, epsilon) {
-  epsilon = defaultValue(epsilon, 0);
+  epsilon = epsilon ?? 0;
 
   return (
     left === right ||
@@ -2826,11 +2826,11 @@ Matrix4.inverse = function (matrix, result) {
       Matrix3.equalsEpsilon(
         Matrix4.getMatrix3(matrix, scratchInverseRotation),
         scratchMatrix3Zero,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       ) &&
       Cartesian4.equals(
         Matrix4.getRow(matrix, 3, scratchBottomRow),
-        scratchExpectedBottomRow
+        scratchExpectedBottomRow,
       )
     ) {
       result[0] = 0.0;
@@ -2853,7 +2853,7 @@ Matrix4.inverse = function (matrix, result) {
     }
 
     throw new RuntimeError(
-      "matrix is not invertible because its determinate is zero."
+      "matrix is not invertible because its determinate is zero.",
     );
   }
 
@@ -2958,7 +2958,7 @@ Matrix4.inverseTranspose = function (matrix, result) {
 
   return Matrix4.inverse(
     Matrix4.transpose(matrix, scratchTransposeMatrix),
-    result
+    result,
   );
 };
 
@@ -2985,8 +2985,8 @@ Matrix4.IDENTITY = Object.freeze(
     0.0,
     0.0,
     0.0,
-    1.0
-  )
+    1.0,
+  ),
 );
 
 /**
@@ -3012,8 +3012,8 @@ Matrix4.ZERO = Object.freeze(
     0.0,
     0.0,
     0.0,
-    0.0
-  )
+    0.0,
+  ),
 );
 
 /**

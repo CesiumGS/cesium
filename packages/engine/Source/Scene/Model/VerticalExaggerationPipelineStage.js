@@ -28,7 +28,7 @@ const scratchExaggerationUniform = new Cartesian2();
 VerticalExaggerationPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const { shaderBuilder, uniformMap } = renderResources;
 
@@ -37,20 +37,20 @@ VerticalExaggerationPipelineStage.process = function (
   shaderBuilder.addDefine(
     "HAS_VERTICAL_EXAGGERATION",
     undefined,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   shaderBuilder.addUniform(
     "vec2",
     "u_verticalExaggerationAndRelativeHeight",
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   uniformMap.u_verticalExaggerationAndRelativeHeight = function () {
     return Cartesian2.fromElements(
       frameState.verticalExaggeration,
       frameState.verticalExaggerationRelativeHeight,
-      scratchExaggerationUniform
+      scratchExaggerationUniform,
     );
   };
 };

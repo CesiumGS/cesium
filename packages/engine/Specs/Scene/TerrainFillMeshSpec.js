@@ -70,7 +70,7 @@ describe("Scene/TerrainFillMesh", function () {
     };
 
     frameState.cullingVolume.computeVisibility.and.returnValue(
-      Intersect.INTERSECTING
+      Intersect.INTERSECTING,
     );
 
     imageryLayerCollection = new ImageryLayerCollection();
@@ -90,7 +90,7 @@ describe("Scene/TerrainFillMesh", function () {
     processor = new TerrainTileProcessor(
       frameState,
       mockTerrain,
-      imageryLayerCollection
+      imageryLayerCollection,
     );
     processor.mockWebGL();
 
@@ -115,18 +115,10 @@ describe("Scene/TerrainFillMesh", function () {
           height: 3,
           createdByUpsampling: false,
           buffer: new Float32Array([
-            15.0,
-            16.0,
-            17.0,
-            22.0,
-            23.0,
-            24.0,
-            29.0,
-            30.0,
-            31.0,
+            15.0, 16.0, 17.0, 22.0, 23.0, 24.0, 29.0, 30.0, 31.0,
           ]),
         }),
-        west
+        west,
       )
       .createMeshWillSucceed(west);
 
@@ -137,18 +129,10 @@ describe("Scene/TerrainFillMesh", function () {
           height: 3,
           createdByUpsampling: false,
           buffer: new Float32Array([
-            31.0,
-            32.0,
-            33.0,
-            38.0,
-            39.0,
-            40.0,
-            45.0,
-            46.0,
-            47.0,
+            31.0, 32.0, 33.0, 38.0, 39.0, 40.0, 45.0, 46.0, 47.0,
           ]),
         }),
-        south
+        south,
       )
       .createMeshWillSucceed(south);
 
@@ -159,18 +143,10 @@ describe("Scene/TerrainFillMesh", function () {
           height: 3,
           createdByUpsampling: false,
           buffer: new Float32Array([
-            19.0,
-            20.0,
-            21.0,
-            26.0,
-            27.0,
-            28.0,
-            33.0,
-            34.0,
-            35.0,
+            19.0, 20.0, 21.0, 26.0, 27.0, 28.0, 33.0, 34.0, 35.0,
           ]),
         }),
-        east
+        east,
       )
       .createMeshWillSucceed(east);
 
@@ -181,18 +157,10 @@ describe("Scene/TerrainFillMesh", function () {
           height: 3,
           createdByUpsampling: false,
           buffer: new Float32Array([
-            3.0,
-            4.0,
-            5.0,
-            10.0,
-            11.0,
-            12.0,
-            17.0,
-            18.0,
-            19.0,
+            3.0, 4.0, 5.0, 10.0, 11.0, 12.0, 17.0, 18.0, 19.0,
           ]),
         }),
-        north
+        north,
       )
       .createMeshWillSucceed(north);
 
@@ -203,18 +171,10 @@ describe("Scene/TerrainFillMesh", function () {
           height: 3,
           createdByUpsampling: false,
           buffer: new Float32Array([
-            29.0,
-            30.0,
-            31.0,
-            36.0,
-            37.0,
-            38.0,
-            43.0,
-            44.0,
-            45.0,
+            29.0, 30.0, 31.0, 36.0, 37.0, 38.0, 43.0, 44.0, 45.0,
           ]),
         }),
-        southwest
+        southwest,
       )
       .createMeshWillSucceed(southwest);
 
@@ -225,18 +185,10 @@ describe("Scene/TerrainFillMesh", function () {
           height: 3,
           createdByUpsampling: false,
           buffer: new Float32Array([
-            33.0,
-            34.0,
-            35.0,
-            40.0,
-            41.0,
-            42.0,
-            47.0,
-            48.0,
-            49.0,
+            33.0, 34.0, 35.0, 40.0, 41.0, 42.0, 47.0, 48.0, 49.0,
           ]),
         }),
-        southeast
+        southeast,
       )
       .createMeshWillSucceed(southeast);
 
@@ -247,18 +199,10 @@ describe("Scene/TerrainFillMesh", function () {
           height: 3,
           createdByUpsampling: false,
           buffer: new Float32Array([
-            1.0,
-            2.0,
-            3.0,
-            8.0,
-            9.0,
-            10.0,
-            15.0,
-            16.0,
-            17.0,
+            1.0, 2.0, 3.0, 8.0, 9.0, 10.0, 15.0, 16.0, 17.0,
           ]),
         }),
-        northwest
+        northwest,
       )
       .createMeshWillSucceed(northwest);
 
@@ -269,18 +213,10 @@ describe("Scene/TerrainFillMesh", function () {
           height: 3,
           createdByUpsampling: false,
           buffer: new Float32Array([
-            5.0,
-            6.0,
-            7.0,
-            12.0,
-            13.0,
-            14.0,
-            19.0,
-            20.0,
-            21.0,
+            5.0, 6.0, 7.0, 12.0, 13.0, 14.0, 19.0, 20.0, 21.0,
           ]),
         }),
-        northeast
+        northeast,
       )
       .createMeshWillSucceed(northeast);
   });
@@ -415,24 +351,24 @@ describe("Scene/TerrainFillMesh", function () {
         expect(ne.northwestMesh).toBeUndefined();
 
         expect(
-          sw.eastTiles[0] === centerSE || se.westTiles[0] === centerSW
+          sw.eastTiles[0] === centerSE || se.westTiles[0] === centerSW,
         ).toBe(true);
         expect(
-          nw.eastTiles[0] === centerNE || ne.westTiles[0] === centerNW
-        ).toBe(true);
-
-        expect(
-          sw.northTiles[0] === centerNW || nw.southTiles[0] === centerSW
-        ).toBe(true);
-        expect(
-          se.northTiles[0] === centerNE || ne.southTiles[0] === centerSE
+          nw.eastTiles[0] === centerNE || ne.westTiles[0] === centerNW,
         ).toBe(true);
 
         expect(
-          sw.northeastTile === centerNE || ne.southwestTile === centerSW
+          sw.northTiles[0] === centerNW || nw.southTiles[0] === centerSW,
         ).toBe(true);
         expect(
-          nw.southeastTile === centerSE || se.northwestTile === centerNW
+          se.northTiles[0] === centerNE || ne.southTiles[0] === centerSE,
+        ).toBe(true);
+
+        expect(
+          sw.northeastTile === centerNE || ne.southwestTile === centerSW,
+        ).toBe(true);
+        expect(
+          nw.southeastTile === centerSE || se.northwestTile === centerNW,
         ).toBe(true);
       });
     });
@@ -556,7 +492,7 @@ describe("Scene/TerrainFillMesh", function () {
     it("adjusts existing fill tiles when an adjacent fill tile changes", function () {
       const dontLoad = [east, south, southeast];
       dontLoad.forEach(
-        mockTerrain.requestTileGeometryWillDefer.bind(mockTerrain)
+        mockTerrain.requestTileGeometryWillDefer.bind(mockTerrain),
       );
 
       const tiles = [
@@ -602,22 +538,22 @@ describe("Scene/TerrainFillMesh", function () {
           expectVertexCount(southeast.data.fill, 5);
 
           expect(getHeight(center.data.fill, 1.0, 0.0)).toBe(
-            getHeight(southeast.data.fill, 0.0, 1.0)
+            getHeight(southeast.data.fill, 0.0, 1.0),
           );
           expect(getHeight(center.data.fill, 1.0, 0.0)).toBe(
-            getHeight(south.data.fill, 1.0, 1.0)
+            getHeight(south.data.fill, 1.0, 1.0),
           );
           expect(getHeight(center.data.fill, 1.0, 0.0)).toBe(
-            getHeight(east.data.fill, 0.0, 0.0)
+            getHeight(east.data.fill, 0.0, 0.0),
           );
           expect(getHeight(center.data.fill, 1.0, 1.0)).toBe(
-            getHeight(east.data.fill, 0.0, 1.0)
+            getHeight(east.data.fill, 0.0, 1.0),
           );
           expect(getHeight(east.data.fill, 1.0, 0.0)).toBe(
-            getHeight(southeast.data.fill, 1.0, 1.0)
+            getHeight(southeast.data.fill, 1.0, 1.0),
           );
           expect(getHeight(south.data.fill, 1.0, 0.0)).toBe(
-            getHeight(southeast.data.fill, 0.0, 0.0)
+            getHeight(southeast.data.fill, 0.0, 0.0),
           );
 
           // Now load the south tile.
@@ -628,18 +564,10 @@ describe("Scene/TerrainFillMesh", function () {
                 height: 3,
                 createdByUpsampling: false,
                 buffer: new Float32Array([
-                  31.0,
-                  32.0,
-                  33.0,
-                  38.0,
-                  39.0,
-                  40.0,
-                  45.0,
-                  46.0,
-                  47.0,
+                  31.0, 32.0, 33.0, 38.0, 39.0, 40.0, 45.0, 46.0, 47.0,
                 ]),
               }),
-              south
+              south,
             )
             .createMeshWillSucceed(south);
 
@@ -675,7 +603,7 @@ describe("Scene/TerrainFillMesh", function () {
           expectVertex(southeast.data.fill, 0.0, 1.0, 33.0);
 
           expect(getHeight(east.data.fill, 1.0, 0.0)).toBe(
-            getHeight(southeast.data.fill, 1.0, 1.0)
+            getHeight(southeast.data.fill, 1.0, 1.0),
           );
         });
     });
@@ -905,13 +833,13 @@ describe("Scene/TerrainFillMesh", function () {
             fillSW,
             1.0,
             1.0,
-            ((31.0 + 32.0) / 2 + (31.0 + 24.0) / 2) / 2
+            ((31.0 + 32.0) / 2 + (31.0 + 24.0) / 2) / 2,
           );
           expectVertex(
             fillSW,
             0.5,
             0.5,
-            ((31.0 + 32.0) / 2 + (31.0 + 24.0) / 2) / 2
+            ((31.0 + 32.0) / 2 + (31.0 + 24.0) / 2) / 2,
           );
 
           expectVertexCount(fillSE, 5);
@@ -921,7 +849,7 @@ describe("Scene/TerrainFillMesh", function () {
             fillSE,
             0.0,
             1.0,
-            ((32.0 + 33.0) / 2 + (33.0 + 26.0) / 2) / 2
+            ((32.0 + 33.0) / 2 + (33.0 + 26.0) / 2) / 2,
           );
           expectVertex(fillSE, 1.0, 1.0, (33.0 + 26.0) / 2);
           expectVertex(fillSE, 0.5, 0.5, (33.0 + (33.0 + 26.0) / 2) / 2);
@@ -932,7 +860,7 @@ describe("Scene/TerrainFillMesh", function () {
             fillNW,
             1.0,
             0.0,
-            ((17.0 + 18.0) / 2 + (17.0 + 24.0) / 2) / 2
+            ((17.0 + 18.0) / 2 + (17.0 + 24.0) / 2) / 2,
           );
           expectVertex(fillNW, 0.0, 1.0, 17.0);
           expectVertex(fillNW, 1.0, 1.0, (17.0 + 18.0) / 2);
@@ -943,7 +871,7 @@ describe("Scene/TerrainFillMesh", function () {
             fillNE,
             0.0,
             0.0,
-            ((19.0 + 26.0) / 2 + (18.0 + 19.0) / 2) / 2
+            ((19.0 + 26.0) / 2 + (18.0 + 19.0) / 2) / 2,
           );
           expectVertex(fillNE, 1.0, 0.0, (19.0 + 26.0) / 2);
           expectVertex(fillNE, 0.0, 1.0, (18.0 + 19.0) / 2);
@@ -952,7 +880,7 @@ describe("Scene/TerrainFillMesh", function () {
             fillNE,
             0.5,
             0.5,
-            ((18.0 + 19.0) / 2 + (19.0 + 26.0) / 2) / 2
+            ((18.0 + 19.0) / 2 + (19.0 + 26.0) / 2) / 2,
           );
         });
     });
@@ -975,7 +903,7 @@ describe("Scene/TerrainFillMesh", function () {
             createdByUpsampling: false,
             buffer: new Float32Array([1.0, 1.0, 1.5, 1.5]),
           }),
-          westN
+          westN,
         )
         .createMeshWillSucceed(westN);
 
@@ -987,7 +915,7 @@ describe("Scene/TerrainFillMesh", function () {
             createdByUpsampling: false,
             buffer: new Float32Array([1.5, 1.5, 2.0, 2.0]),
           }),
-          westS
+          westS,
         )
         .createMeshWillSucceed(westS);
 
@@ -999,7 +927,7 @@ describe("Scene/TerrainFillMesh", function () {
             createdByUpsampling: false,
             buffer: new Float32Array([3.0, 3.0, 3.5, 3.5]),
           }),
-          eastN
+          eastN,
         )
         .createMeshWillSucceed(eastN);
 
@@ -1011,7 +939,7 @@ describe("Scene/TerrainFillMesh", function () {
             createdByUpsampling: false,
             buffer: new Float32Array([3.5, 3.5, 4.0, 4.0]),
           }),
-          eastS
+          eastS,
         )
         .createMeshWillSucceed(eastS);
 
@@ -1023,7 +951,7 @@ describe("Scene/TerrainFillMesh", function () {
             createdByUpsampling: false,
             buffer: new Float32Array([5.0, 5.5, 5.0, 5.5]),
           }),
-          northW
+          northW,
         )
         .createMeshWillSucceed(northW);
 
@@ -1035,7 +963,7 @@ describe("Scene/TerrainFillMesh", function () {
             createdByUpsampling: false,
             buffer: new Float32Array([5.5, 6.0, 6.5, 6.0]),
           }),
-          northE
+          northE,
         )
         .createMeshWillSucceed(northE);
 
@@ -1047,7 +975,7 @@ describe("Scene/TerrainFillMesh", function () {
             createdByUpsampling: false,
             buffer: new Float32Array([7.0, 7.5, 7.0, 7.5]),
           }),
-          southW
+          southW,
         )
         .createMeshWillSucceed(southW);
 
@@ -1059,7 +987,7 @@ describe("Scene/TerrainFillMesh", function () {
             createdByUpsampling: false,
             buffer: new Float32Array([7.5, 8.0, 7.5, 8.0]),
           }),
-          southE
+          southE,
         )
         .createMeshWillSucceed(southE);
 
@@ -1131,18 +1059,10 @@ describe("Scene/TerrainFillMesh", function () {
               height: 3,
               createdByUpsampling: false,
               buffer: new Float32Array([
-                1.0,
-                2.0,
-                3.0,
-                4.0,
-                5.0,
-                6.0,
-                7.0,
-                8.0,
-                9.0,
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
               ]),
             }),
-            westernHemisphere
+            westernHemisphere,
           )
           .createMeshWillSucceed(westernHemisphere);
 
@@ -1150,7 +1070,7 @@ describe("Scene/TerrainFillMesh", function () {
           .process([westernHemisphere, easternHemisphere])
           .then(function () {
             const fill = (easternHemisphere.data.fill = new TerrainFillMesh(
-              easternHemisphere
+              easternHemisphere,
             ));
 
             fill.eastTiles.push(westernHemisphere);
@@ -1173,18 +1093,10 @@ describe("Scene/TerrainFillMesh", function () {
               height: 3,
               createdByUpsampling: false,
               buffer: new Float32Array([
-                10.0,
-                11.0,
-                12.0,
-                13.0,
-                14.0,
-                15.0,
-                16.0,
-                17.0,
-                18.0,
+                10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0,
               ]),
             }),
-            easternHemisphere
+            easternHemisphere,
           )
           .createMeshWillSucceed(easternHemisphere);
         mockTerrain.requestTileGeometryWillDefer(westernHemisphere);
@@ -1193,7 +1105,7 @@ describe("Scene/TerrainFillMesh", function () {
           .process([westernHemisphere, easternHemisphere])
           .then(function () {
             const fill = (westernHemisphere.data.fill = new TerrainFillMesh(
-              westernHemisphere
+              westernHemisphere,
             ));
 
             fill.westTiles.push(easternHemisphere);
@@ -1226,13 +1138,13 @@ describe("Scene/TerrainFillMesh", function () {
       const tc = encoding.decodeTextureCoordinates(
         vertices,
         i,
-        textureCoordinateScratch
+        textureCoordinateScratch,
       );
       const vertexHeight = encoding.decodeHeight(vertices, i);
       const vertexPosition = encoding.decodePosition(
         vertices,
         i,
-        positionScratch
+        positionScratch,
       );
       if (
         Math.abs(u - tc.x) < 1e-5 &&
@@ -1245,7 +1157,7 @@ describe("Scene/TerrainFillMesh", function () {
           latitude,
           vertexHeight,
           undefined,
-          expectedPositionScratch
+          expectedPositionScratch,
         );
         expect(vertexPosition).toEqualEpsilon(expectedPosition, 1);
         return vertexHeight;

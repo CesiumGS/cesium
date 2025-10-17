@@ -44,7 +44,7 @@ describe(
 
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(0, 0, 0)
+        Cartesian3.fromDegrees(0, 0, 0),
       );
       entity.ellipsoid = ellipsoid;
       return entity;
@@ -254,29 +254,29 @@ describe(
       expect(instance.geometry._offsetAttribute).toBeUndefined();
 
       graphics.heightReference = new ConstantProperty(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
       updater._onEntityPropertyChanged(entity, "ellipsoid");
       instance = updater.createFillGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
       instance = updater.createOutlineGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
 
       graphics.heightReference = new ConstantProperty(
-        HeightReference.RELATIVE_TO_GROUND
+        HeightReference.RELATIVE_TO_GROUND,
       );
       updater._onEntityPropertyChanged(entity, "ellipsoid");
       instance = updater.createFillGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
       instance = updater.createOutlineGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
     });
 
@@ -285,7 +285,7 @@ describe(
       const updater = new EllipsoidGeometryUpdater(entity, scene);
 
       expect(updater._computeCenter(time)).toEqual(
-        entity.position.getValue(time)
+        entity.position.getValue(time),
       );
     });
 
@@ -306,7 +306,7 @@ describe(
 
       const dynamicUpdater = updater.createDynamicUpdater(
         primitives,
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       expect(dynamicUpdater.isDestroyed()).toBe(false);
       expect(primitives.length).toBe(0);
@@ -344,7 +344,7 @@ describe(
 
       const dynamicUpdater = updater.createDynamicUpdater(
         primitives,
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(time);
       expect(primitives.length).toBe(2); //Ellipsoid always has both fill and outline primitives regardless of setting
@@ -389,7 +389,7 @@ describe(
       ellipsoid.innerRadii = createDynamicProperty(new Cartesian3(0.5, 1, 1.5));
       // Turns 3d mode path off
       ellipsoid.heightReference = new ConstantProperty(
-        HeightReference.RELATIVE_TO_GROUND
+        HeightReference.RELATIVE_TO_GROUND,
       );
       ellipsoid.material = new ColorMaterialProperty(Color.RED);
 
@@ -403,7 +403,7 @@ describe(
 
       const dynamicUpdater = updater.createDynamicUpdater(
         primitives,
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(time);
 
@@ -411,7 +411,7 @@ describe(
       scene.render();
 
       expect(dynamicUpdater._options.innerRadii).toEqual(
-        ellipsoid.innerRadii.getValue()
+        ellipsoid.innerRadii.getValue(),
       );
     });
 
@@ -430,7 +430,7 @@ describe(
 
       const dynamicUpdater = updater.createDynamicUpdater(
         primitives,
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(time);
 
@@ -461,7 +461,7 @@ describe(
 
       const dynamicUpdater = updater.createDynamicUpdater(
         primitives,
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(time);
       expect(primitives.length).toBe(2); //Ellipsoid always has both fill and outline primitives regardless of setting
@@ -479,15 +479,15 @@ describe(
       let attributes = primitives.get(0).getGeometryInstanceAttributes(entity);
       expect(attributes.show[0]).toEqual(0);
       expect(primitives.get(0).appearance.material.uniforms.color).toEqual(
-        ellipsoid.material.color.getValue()
+        ellipsoid.material.color.getValue(),
       );
 
       attributes = primitives.get(1).getGeometryInstanceAttributes(entity);
       expect(attributes.show[0]).toEqual(0);
       expect(attributes.color).toEqual(
         ColorGeometryInstanceAttribute.toValue(
-          ellipsoid.outlineColor.getValue()
-        )
+          ellipsoid.outlineColor.getValue(),
+        ),
       );
     });
 
@@ -532,15 +532,15 @@ describe(
       EllipsoidGeometryUpdater,
       "ellipsoid",
       createBasicEllipsoid,
-      getScene
+      getScene,
     );
 
     createDynamicGeometryUpdaterSpecs(
       EllipsoidGeometryUpdater,
       "ellipsoid",
       createDynamicEllipsoid,
-      getScene
+      getScene,
     );
   },
-  "WebGL"
+  "WebGL",
 );

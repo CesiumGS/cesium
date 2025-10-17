@@ -55,7 +55,7 @@ describe("Core/GroundPolylineGeometry", function () {
     });
 
     const geometry = GroundPolylineGeometry.createGeometry(
-      groundPolylineGeometry
+      groundPolylineGeometry,
     );
 
     expect(geometry.indices.length).toEqual(36);
@@ -140,8 +140,8 @@ describe("Core/GroundPolylineGeometry", function () {
       Cartographic.equalsEpsilon(
         reconstructedCarto,
         startCartographic,
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
 
     const endPosition3D = new Cartesian3();
@@ -155,41 +155,41 @@ describe("Core/GroundPolylineGeometry", function () {
       Cartographic.equalsEpsilon(
         reconstructedCarto,
         endCartographic,
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
 
     const startNormal3D = Cartesian3.unpack(
-      startNormalAndForwardOffsetZ.values
+      startNormalAndForwardOffsetZ.values,
     );
     expect(
       Cartesian3.equalsEpsilon(
         startNormal3D,
         new Cartesian3(0.0, 1.0, 0.0),
-        CesiumMath.EPSILON2
-      )
+        CesiumMath.EPSILON2,
+      ),
     ).toBe(true);
 
     const endNormal3D = Cartesian3.unpack(
-      endNormalAndTextureCoordinateNormalizationX.values
+      endNormalAndTextureCoordinateNormalizationX.values,
     );
     expect(
       Cartesian3.equalsEpsilon(
         endNormal3D,
         new Cartesian3(0.0, -1.0, 0.0),
-        CesiumMath.EPSILON2
-      )
+        CesiumMath.EPSILON2,
+      ),
     ).toBe(true);
 
     const rightNormal3D = Cartesian3.unpack(
-      rightNormalAndTextureCoordinateNormalizationY.values
+      rightNormalAndTextureCoordinateNormalizationY.values,
     );
     expect(
       Cartesian3.equalsEpsilon(
         rightNormal3D,
         new Cartesian3(0.0, 0.0, -1.0),
-        CesiumMath.EPSILON2
-      )
+        CesiumMath.EPSILON2,
+      ),
     ).toBe(true);
 
     let texcoordNormalizationX =
@@ -208,8 +208,8 @@ describe("Core/GroundPolylineGeometry", function () {
       Cartographic.equalsEpsilon(
         reconstructedCarto,
         startCartographic,
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
 
     const endPosition2D = new Cartesian3();
@@ -221,8 +221,8 @@ describe("Core/GroundPolylineGeometry", function () {
       Cartographic.equalsEpsilon(
         reconstructedCarto,
         endCartographic,
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
 
     const startNormal2D = new Cartesian3();
@@ -232,8 +232,8 @@ describe("Core/GroundPolylineGeometry", function () {
       Cartesian3.equalsEpsilon(
         startNormal2D,
         new Cartesian3(1.0, 0.0, 0.0),
-        CesiumMath.EPSILON2
-      )
+        CesiumMath.EPSILON2,
+      ),
     ).toBe(true);
 
     const endNormal2D = new Cartesian3();
@@ -243,8 +243,8 @@ describe("Core/GroundPolylineGeometry", function () {
       Cartesian3.equalsEpsilon(
         endNormal2D,
         new Cartesian3(-1.0, 0.0, 0.0),
-        CesiumMath.EPSILON2
-      )
+        CesiumMath.EPSILON2,
+      ),
     ).toBe(true);
 
     const rightNormal2D = new Cartesian3();
@@ -254,8 +254,8 @@ describe("Core/GroundPolylineGeometry", function () {
       Cartesian3.equalsEpsilon(
         rightNormal2D,
         new Cartesian3(0.0, -1.0, 0.0),
-        CesiumMath.EPSILON2
-      )
+        CesiumMath.EPSILON2,
+      ),
     ).toBe(true);
 
     texcoordNormalizationX = texcoordNormalization2D.values[0];
@@ -278,17 +278,17 @@ describe("Core/GroundPolylineGeometry", function () {
     groundPolylineGeometry._scene3DOnly = true;
 
     const geometry = GroundPolylineGeometry.createGeometry(
-      groundPolylineGeometry
+      groundPolylineGeometry,
     );
 
     expect(geometry.attributes.startHiAndForwardOffsetX).toBeDefined();
     expect(geometry.attributes.startLoAndForwardOffsetY).toBeDefined();
     expect(geometry.attributes.startNormalAndForwardOffsetZ).toBeDefined();
     expect(
-      geometry.attributes.endNormalAndTextureCoordinateNormalizationX
+      geometry.attributes.endNormalAndTextureCoordinateNormalizationX,
     ).toBeDefined();
     expect(
-      geometry.attributes.rightNormalAndTextureCoordinateNormalizationY
+      geometry.attributes.rightNormalAndTextureCoordinateNormalizationY,
     ).toBeDefined();
 
     expect(geometry.attributes.startHiLo2D).not.toBeDefined();
@@ -319,7 +319,7 @@ describe("Core/GroundPolylineGeometry", function () {
     });
 
     const geometry = GroundPolylineGeometry.createGeometry(
-      groundPolylineGeometry
+      groundPolylineGeometry,
     );
 
     expect(geometry.indices.length).toEqual(36);
@@ -341,7 +341,7 @@ describe("Core/GroundPolylineGeometry", function () {
     });
 
     const geometry = GroundPolylineGeometry.createGeometry(
-      groundPolylineGeometry
+      groundPolylineGeometry,
     );
 
     expect(geometry).toBeUndefined();
@@ -350,18 +350,13 @@ describe("Core/GroundPolylineGeometry", function () {
   it("miters turns", function () {
     const groundPolylineGeometry = new GroundPolylineGeometry({
       positions: Cartesian3.fromDegreesArray([
-        0.01,
-        0.0,
-        0.02,
-        0.0,
-        0.02,
-        0.01,
+        0.01, 0.0, 0.02, 0.0, 0.02, 0.01,
       ]),
       granularity: 0.0,
     });
 
     const geometry = GroundPolylineGeometry.createGeometry(
-      groundPolylineGeometry
+      groundPolylineGeometry,
     );
     expect(geometry.indices.length).toEqual(72);
     expect(geometry.attributes.position.values.length).toEqual(48);
@@ -373,37 +368,37 @@ describe("Core/GroundPolylineGeometry", function () {
 
     const miteredStartNormal = Cartesian3.unpack(
       startNormalAndForwardOffsetZvalues,
-      32
+      32,
     );
     const miteredEndNormal = Cartesian3.unpack(
       endNormalAndTextureCoordinateNormalizationXvalues,
-      0
+      0,
     );
     const reverseMiteredEndNormal = Cartesian3.multiplyByScalar(
       miteredEndNormal,
       -1.0,
-      new Cartesian3()
+      new Cartesian3(),
     );
 
     expect(
       Cartesian3.equalsEpsilon(
         miteredStartNormal,
         reverseMiteredEndNormal,
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
 
     const approximateExpectedMiterNormal = new Cartesian3(0.0, 1.0, 1.0);
     Cartesian3.normalize(
       approximateExpectedMiterNormal,
-      approximateExpectedMiterNormal
+      approximateExpectedMiterNormal,
     );
     expect(
       Cartesian3.equalsEpsilon(
         approximateExpectedMiterNormal,
         miteredStartNormal,
-        CesiumMath.EPSILON2
-      )
+        CesiumMath.EPSILON2,
+      ),
     ).toBe(true);
   });
 
@@ -421,7 +416,7 @@ describe("Core/GroundPolylineGeometry", function () {
     });
 
     let geometry = GroundPolylineGeometry.createGeometry(
-      groundPolylineGeometry
+      groundPolylineGeometry,
     );
 
     let startNormalAndForwardOffsetZvalues =
@@ -431,33 +426,33 @@ describe("Core/GroundPolylineGeometry", function () {
 
     let miteredStartNormal = Cartesian3.unpack(
       startNormalAndForwardOffsetZvalues,
-      32
+      32,
     );
     let miteredEndNormal = Cartesian3.unpack(
       endNormalAndTextureCoordinateNormalizationXvalues,
-      0
+      0,
     );
 
     expect(
       Cartesian3.equalsEpsilon(
         miteredStartNormal,
         miteredEndNormal,
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
 
     let approximateExpectedMiterNormal = new Cartesian3(0.0, -1.0, 0.0);
 
     Cartesian3.normalize(
       approximateExpectedMiterNormal,
-      approximateExpectedMiterNormal
+      approximateExpectedMiterNormal,
     );
     expect(
       Cartesian3.equalsEpsilon(
         approximateExpectedMiterNormal,
         miteredStartNormal,
-        CesiumMath.EPSILON2
-      )
+        CesiumMath.EPSILON2,
+      ),
     ).toBe(true);
 
     // Break miter on loop end
@@ -484,33 +479,33 @@ describe("Core/GroundPolylineGeometry", function () {
     // Check normals at loop end
     miteredStartNormal = Cartesian3.unpack(
       startNormalAndForwardOffsetZvalues,
-      0
+      0,
     );
     miteredEndNormal = Cartesian3.unpack(
       endNormalAndTextureCoordinateNormalizationXvalues,
-      32 * 2
+      32 * 2,
     );
 
     expect(
       Cartesian3.equalsEpsilon(
         miteredStartNormal,
         miteredEndNormal,
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
 
     approximateExpectedMiterNormal = new Cartesian3(0.0, 1.0, 0.0);
 
     Cartesian3.normalize(
       approximateExpectedMiterNormal,
-      approximateExpectedMiterNormal
+      approximateExpectedMiterNormal,
     );
     expect(
       Cartesian3.equalsEpsilon(
         approximateExpectedMiterNormal,
         miteredStartNormal,
-        CesiumMath.EPSILON2
-      )
+        CesiumMath.EPSILON2,
+      ),
     ).toBe(true);
   });
 
@@ -521,7 +516,7 @@ describe("Core/GroundPolylineGeometry", function () {
     });
 
     let geometry = GroundPolylineGeometry.createGeometry(
-      groundPolylineGeometry
+      groundPolylineGeometry,
     );
 
     expect(geometry.indices.length).toEqual(72);
@@ -530,12 +525,7 @@ describe("Core/GroundPolylineGeometry", function () {
     // Interpolate one segment but not the other
     groundPolylineGeometry = new GroundPolylineGeometry({
       positions: Cartesian3.fromDegreesArray([
-        0.01,
-        0.0,
-        0.02,
-        0.0,
-        0.0201,
-        0.0,
+        0.01, 0.0, 0.02, 0.0, 0.0201, 0.0,
       ]),
       granularity: 600.0,
     });
@@ -562,10 +552,10 @@ describe("Core/GroundPolylineGeometry", function () {
     });
 
     let rhumbGeometry = GroundPolylineGeometry.createGeometry(
-      rhumbGroundPolylineGeometry
+      rhumbGroundPolylineGeometry,
     );
     let geodesicGeometry = GroundPolylineGeometry.createGeometry(
-      geodesicGroundPolylineGeometry
+      geodesicGroundPolylineGeometry,
     );
 
     expect(rhumbGeometry.indices.length).toEqual(3636);
@@ -587,16 +577,16 @@ describe("Core/GroundPolylineGeometry", function () {
     });
 
     rhumbGeometry = GroundPolylineGeometry.createGeometry(
-      rhumbGroundPolylineGeometry
+      rhumbGroundPolylineGeometry,
     );
     geodesicGeometry = GroundPolylineGeometry.createGeometry(
-      geodesicGroundPolylineGeometry
+      geodesicGroundPolylineGeometry,
     );
 
     expect(rhumbGeometry.indices.length).toEqual(3636 + 36);
     expect(geodesicGeometry.indices.length).toEqual(3600 + 36);
     expect(geodesicGeometry.attributes.position.values.length).toEqual(
-      2400 + 24
+      2400 + 24,
     );
     expect(rhumbGeometry.attributes.position.values.length).toEqual(2424 + 24);
   });
@@ -610,18 +600,13 @@ describe("Core/GroundPolylineGeometry", function () {
 
     // Not enough positions to loop, should still be a single segment
     let geometry = GroundPolylineGeometry.createGeometry(
-      groundPolylineGeometry
+      groundPolylineGeometry,
     );
     expect(geometry.indices.length).toEqual(36);
 
     groundPolylineGeometry = new GroundPolylineGeometry({
       positions: Cartesian3.fromDegreesArray([
-        0.01,
-        0.0,
-        0.02,
-        0.0,
-        0.02,
-        0.02,
+        0.01, 0.0, 0.02, 0.0, 0.02, 0.02,
       ]),
       granularity: 0.0,
       loop: true,
@@ -640,7 +625,7 @@ describe("Core/GroundPolylineGeometry", function () {
     });
 
     let geometry = GroundPolylineGeometry.createGeometry(
-      groundPolylineGeometry
+      groundPolylineGeometry,
     );
 
     expect(geometry.indices.length).toEqual(72);
@@ -660,14 +645,7 @@ describe("Core/GroundPolylineGeometry", function () {
     // Cross IDL going opposite direction and loop
     groundPolylineGeometry = new GroundPolylineGeometry({
       positions: Cartesian3.fromDegreesArray([
-        179.0,
-        0.0,
-        179.0,
-        1.0,
-        -179.0,
-        1.0,
-        -179.0,
-        0.0,
+        179.0, 0.0, 179.0, 1.0, -179.0, 1.0, -179.0, 0.0,
       ]),
       granularity: 0.0, // no interpolative subdivision
       loop: true,
@@ -709,7 +687,7 @@ describe("Core/GroundPolylineGeometry", function () {
     groundPolylineGeometry._scene3DOnly = true;
     GroundPolylineGeometry.setProjectionAndEllipsoid(
       groundPolylineGeometry,
-      new WebMercatorProjection(Ellipsoid.UNIT_SPHERE)
+      new WebMercatorProjection(Ellipsoid.UNIT_SPHERE),
     );
 
     const packedArray = [0];
@@ -724,14 +702,14 @@ describe("Core/GroundPolylineGeometry", function () {
     expect(
       Cartesian3.equals(
         scratchPositions[0],
-        groundPolylineGeometry._positions[0]
-      )
+        groundPolylineGeometry._positions[0],
+      ),
     ).toBe(true);
     expect(
       Cartesian3.equals(
         scratchPositions[1],
-        groundPolylineGeometry._positions[1]
-      )
+        groundPolylineGeometry._positions[1],
+      ),
     ).toBe(true);
     expect(scratch.loop).toBe(true);
     expect(scratch.granularity).toEqual(10.0);
@@ -749,7 +727,7 @@ describe("Core/GroundPolylineGeometry", function () {
     groundPolylineGeometry._scene3DOnly = true;
     GroundPolylineGeometry.setProjectionAndEllipsoid(
       groundPolylineGeometry,
-      new WebMercatorProjection(Ellipsoid.UNIT_SPHERE)
+      new WebMercatorProjection(Ellipsoid.UNIT_SPHERE),
     );
 
     const packedArray = [0];
@@ -761,14 +739,14 @@ describe("Core/GroundPolylineGeometry", function () {
     expect(
       Cartesian3.equals(
         scratchPositions[0],
-        groundPolylineGeometry._positions[0]
-      )
+        groundPolylineGeometry._positions[0],
+      ),
     ).toBe(true);
     expect(
       Cartesian3.equals(
         scratchPositions[1],
-        groundPolylineGeometry._positions[1]
-      )
+        groundPolylineGeometry._positions[1],
+      ),
     ).toBe(true);
     expect(result.loop).toBe(true);
     expect(result.granularity).toEqual(10.0);
@@ -786,22 +764,17 @@ describe("Core/GroundPolylineGeometry", function () {
 
     GroundPolylineGeometry.setProjectionAndEllipsoid(
       groundPolylineGeometry,
-      new WebMercatorProjection(Ellipsoid.UNIT_SPHERE)
+      new WebMercatorProjection(Ellipsoid.UNIT_SPHERE),
     );
 
     expect(groundPolylineGeometry._projectionIndex).toEqual(1);
     expect(
-      groundPolylineGeometry._ellipsoid.equals(Ellipsoid.UNIT_SPHERE)
+      groundPolylineGeometry._ellipsoid.equals(Ellipsoid.UNIT_SPHERE),
     ).toBe(true);
   });
 
   const positions = Cartesian3.fromDegreesArray([
-    0.01,
-    0.0,
-    0.02,
-    0.0,
-    0.02,
-    0.1,
+    0.01, 0.0, 0.02, 0.0, 0.02, 0.1,
   ]);
   const polyline = new GroundPolylineGeometry({
     positions: positions,
@@ -813,12 +786,12 @@ describe("Core/GroundPolylineGeometry", function () {
     const projection = new GeographicProjection();
     const cartographic = new Cartographic(
       CesiumMath.PI - CesiumMath.EPSILON11,
-      0.0
+      0.0,
     );
     const normal = new Cartesian3(0.0, -1.0, 0.0);
     const projectedPosition = projection.project(
       cartographic,
-      new Cartesian3()
+      new Cartesian3(),
     );
     const result = new Cartesian3();
 
@@ -827,22 +800,20 @@ describe("Core/GroundPolylineGeometry", function () {
       cartographic,
       normal,
       projectedPosition,
-      result
+      result,
     );
     expect(
       Cartesian3.equalsEpsilon(
         result,
         new Cartesian3(1.0, 0.0, 0.0),
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toBe(true);
   });
 
   it("creates bounding spheres that cover the entire polyline volume height", function () {
     const positions = Cartesian3.fromDegreesArray([
-      -122.17580380403314,
-      46.19984918190237,
-      -122.17581380403314,
+      -122.17580380403314, 46.19984918190237, -122.17581380403314,
       46.19984918190237,
     ]);
 
@@ -853,7 +824,7 @@ describe("Core/GroundPolylineGeometry", function () {
     });
 
     const geometry = GroundPolylineGeometry.createGeometry(
-      groundPolylineGeometry
+      groundPolylineGeometry,
     );
 
     const boundingSphere = geometry.boundingSphere;
@@ -865,10 +836,7 @@ describe("Core/GroundPolylineGeometry", function () {
 
   it("creates bounding spheres that cover the entire polyline volume height in negative elevation regions", function () {
     const positions = Cartesian3.fromDegreesArray([
-      35.549174,
-      31.377954,
-      35.549174,
-      31.377953,
+      35.549174, 31.377954, 35.549174, 31.377953,
     ]);
 
     // Dead Sea - provided coordinates from below sea level to above sea level
@@ -879,7 +847,7 @@ describe("Core/GroundPolylineGeometry", function () {
     });
 
     const geometry = GroundPolylineGeometry.createGeometry(
-      groundPolylineGeometry
+      groundPolylineGeometry,
     );
 
     const boundingSphere = geometry.boundingSphere;

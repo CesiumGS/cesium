@@ -49,6 +49,15 @@ body {
   float: right;
 }
 
+#banner {
+  text-align: center;
+  background: #daf6ff;
+
+  a {
+    color: blue;
+  }
+}
+
 #codeContainer {
   width: 30%;
 }
@@ -58,7 +67,7 @@ body {
   min-width: 300px;
 }
 
-#bottomPanel {
+#bottomSection {
   height: 225px;
 }
 

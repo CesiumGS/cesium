@@ -21,15 +21,24 @@ describe(
 
     it("has expected default values", function () {
       const sampler = new Sampler();
+      expect(sampler.wrapR).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.minificationFilter).toEqual(
-        TextureMinificationFilter.LINEAR
+        TextureMinificationFilter.LINEAR,
       );
       expect(sampler.magnificationFilter).toEqual(
-        TextureMinificationFilter.LINEAR
+        TextureMinificationFilter.LINEAR,
       );
       expect(sampler.maximumAnisotropy).toEqual(1.0);
+    });
+
+    it("throws when creating a sampler with invalid wrapR", function () {
+      expect(function () {
+        return new Sampler({
+          wrapR: "invalid wrap",
+        });
+      }).toThrowDeveloperError();
     });
 
     it("throws when creating a sampler with invalid wrapS", function () {
@@ -72,5 +81,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

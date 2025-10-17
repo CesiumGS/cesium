@@ -129,7 +129,7 @@ describe("Core/Occluder", function () {
       Occluder.computeOccludeePoint(
         occluderBS,
         new Cartesian3(0, 0, -3),
-        positions
+        positions,
       );
     }).toThrowDeveloperError();
   });
@@ -149,7 +149,7 @@ describe("Core/Occluder", function () {
       Occluder.computeOccludeePoint(
         occluderBS,
         new Cartesian3(0, 0, -5),
-        new Cartesian3(0, 0, -3)
+        new Cartesian3(0, 0, -3),
       );
     }).toThrowDeveloperError();
   });
@@ -165,11 +165,11 @@ describe("Core/Occluder", function () {
     const result = Occluder.computeOccludeePoint(
       occluderBS,
       occludeePosition,
-      positions
+      positions,
     );
     expect(result).toEqualEpsilon(
       new Cartesian3(0, 0, -5),
-      CesiumMath.EPSILON1
+      CesiumMath.EPSILON1,
     );
   });
 
@@ -184,16 +184,16 @@ describe("Core/Occluder", function () {
     const occludeePosition = occludee.position;
     const occluderPlaneNormal = Cartesian3.normalize(
       Cartesian3.subtract(occludeePosition, occluderPosition, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const occluderPlaneD = -Cartesian3.dot(
       occluderPlaneNormal,
-      occluderPosition
+      occluderPosition,
     );
 
     const tempVec0 = Cartesian3.abs(
       Cartesian3.clone(occluderPlaneNormal),
-      new Cartesian3()
+      new Cartesian3(),
     );
     let majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
     if (
@@ -206,7 +206,7 @@ describe("Core/Occluder", function () {
     const aRotationVector = Occluder._anyRotationVector(
       occluderPosition,
       occluderPlaneNormal,
-      occluderPlaneD
+      occluderPlaneD,
     );
     expect(aRotationVector).toBeTruthy();
   });
@@ -222,16 +222,16 @@ describe("Core/Occluder", function () {
     const occludeePosition = occludee.position;
     const occluderPlaneNormal = Cartesian3.normalize(
       Cartesian3.subtract(occludeePosition, occluderPosition, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const occluderPlaneD = -Cartesian3.dot(
       occluderPlaneNormal,
-      occluderPosition
+      occluderPosition,
     );
 
     const tempVec0 = Cartesian3.abs(
       Cartesian3.clone(occluderPlaneNormal),
-      new Cartesian3()
+      new Cartesian3(),
     );
     let majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
     if (
@@ -244,7 +244,7 @@ describe("Core/Occluder", function () {
     const aRotationVector = Occluder._anyRotationVector(
       occluderPosition,
       occluderPlaneNormal,
-      occluderPlaneD
+      occluderPlaneD,
     );
     expect(aRotationVector).toBeTruthy();
   });
@@ -260,16 +260,16 @@ describe("Core/Occluder", function () {
     const occludeePosition = occludee.position;
     const occluderPlaneNormal = Cartesian3.normalize(
       Cartesian3.subtract(occludeePosition, occluderPosition, new Cartesian3()),
-      new Cartesian3()
+      new Cartesian3(),
     );
     const occluderPlaneD = -Cartesian3.dot(
       occluderPlaneNormal,
-      occluderPosition
+      occluderPosition,
     );
 
     const tempVec0 = Cartesian3.abs(
       Cartesian3.clone(occluderPlaneNormal),
-      new Cartesian3()
+      new Cartesian3(),
     );
     let majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
     if (
@@ -282,7 +282,7 @@ describe("Core/Occluder", function () {
     const aRotationVector = Occluder._anyRotationVector(
       occluderPosition,
       occluderPlaneNormal,
-      occluderPlaneD
+      occluderPlaneD,
     );
     expect(aRotationVector).toBeTruthy();
   });
@@ -300,7 +300,7 @@ describe("Core/Occluder", function () {
     const result = Occluder.computeOccludeePoint(
       occluderBS,
       occludeePosition,
-      positions
+      positions,
     );
 
     const bs = new BoundingSphere(result, 0.0);
@@ -322,10 +322,10 @@ describe("Core/Occluder", function () {
     const result = Occluder.computeOccludeePoint(
       occluderBS,
       occludeePosition,
-      positions
+      positions,
     );
     expect(
-      occluder.isBoundingSphereVisible(new BoundingSphere(result, 0.0))
+      occluder.isBoundingSphereVisible(new BoundingSphere(result, 0.0)),
     ).toEqual(true);
   });
 
@@ -338,7 +338,7 @@ describe("Core/Occluder", function () {
   it("compute invalid occludee point from rectangle", function () {
     const rectangle = Rectangle.MAX_VALUE;
     expect(Occluder.computeOccludeePointFromRectangle(rectangle)).toEqual(
-      undefined
+      undefined,
     );
   });
 
@@ -351,7 +351,7 @@ describe("Core/Occluder", function () {
     const point = Occluder.computeOccludeePoint(
       new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius),
       bs.center,
-      positions
+      positions,
     );
     const actual = Occluder.computeOccludeePointFromRectangle(rectangle);
     expect(actual).toEqual(point);
@@ -387,7 +387,7 @@ describe("Core/Occluder", function () {
     const occluder1 = Occluder.fromBoundingSphere(
       occluderBS,
       cameraPosition,
-      result
+      result,
     );
 
     expect(occluder1).toBe(result);

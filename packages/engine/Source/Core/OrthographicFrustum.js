@@ -1,5 +1,5 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -28,13 +28,13 @@ import OrthographicOffCenterFrustum from "./OrthographicOffCenterFrustum.js";
  * frustum.far = 50.0 * maxRadii;
  */
 function OrthographicFrustum(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._offCenterFrustum = new OrthographicOffCenterFrustum();
 
   /**
    * The horizontal width of the frustum in meters.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.width = options.width;
@@ -42,7 +42,7 @@ function OrthographicFrustum(options) {
 
   /**
    * The aspect ratio of the frustum's width to it's height.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.aspectRatio = options.aspectRatio;
@@ -53,7 +53,7 @@ function OrthographicFrustum(options) {
    * @type {number}
    * @default 1.0
    */
-  this.near = defaultValue(options.near, 1.0);
+  this.near = options.near ?? 1.0;
   this._near = this.near;
 
   /**
@@ -61,7 +61,7 @@ function OrthographicFrustum(options) {
    * @type {number}
    * @default 500000000.0;
    */
-  this.far = defaultValue(options.far, 500000000.0);
+  this.far = options.far ?? 500000000.0;
   this._far = this.far;
 }
 
@@ -86,7 +86,7 @@ OrthographicFrustum.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.width;
   array[startingIndex++] = value.aspectRatio;
@@ -109,7 +109,7 @@ OrthographicFrustum.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new OrthographicFrustum();
@@ -132,7 +132,7 @@ function update(frustum) {
     !defined(frustum.far)
   ) {
     throw new DeveloperError(
-      "width, aspectRatio, near, or far parameters are not set."
+      "width, aspectRatio, near, or far parameters are not set.",
     );
   }
   //>>includeEnd('debug');
@@ -151,7 +151,7 @@ function update(frustum) {
     }
     if (frustum.near < 0 || frustum.near > frustum.far) {
       throw new DeveloperError(
-        "near must be greater than zero and less than far."
+        "near must be greater than zero and less than far.",
       );
     }
     //>>includeEnd('debug');
@@ -215,7 +215,7 @@ Object.defineProperties(OrthographicFrustum.prototype, {
 OrthographicFrustum.prototype.computeCullingVolume = function (
   position,
   direction,
-  up
+  up,
 ) {
   update(this);
   return this._offCenterFrustum.computeCullingVolume(position, direction, up);
@@ -245,7 +245,7 @@ OrthographicFrustum.prototype.getPixelDimensions = function (
   drawingBufferHeight,
   distance,
   pixelRatio,
-  result
+  result,
 ) {
   update(this);
   return this._offCenterFrustum.getPixelDimensions(
@@ -253,7 +253,7 @@ OrthographicFrustum.prototype.getPixelDimensions = function (
     drawingBufferHeight,
     distance,
     pixelRatio,
-    result
+    result,
   );
 };
 
@@ -319,7 +319,7 @@ OrthographicFrustum.prototype.equals = function (other) {
 OrthographicFrustum.prototype.equalsEpsilon = function (
   other,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   if (!defined(other) || !(other instanceof OrthographicFrustum)) {
     return false;
@@ -333,18 +333,18 @@ OrthographicFrustum.prototype.equalsEpsilon = function (
       this.width,
       other.width,
       relativeEpsilon,
-      absoluteEpsilon
+      absoluteEpsilon,
     ) &&
     CesiumMath.equalsEpsilon(
       this.aspectRatio,
       other.aspectRatio,
       relativeEpsilon,
-      absoluteEpsilon
+      absoluteEpsilon,
     ) &&
     this._offCenterFrustum.equalsEpsilon(
       other._offCenterFrustum,
       relativeEpsilon,
-      absoluteEpsilon
+      absoluteEpsilon,
     )
   );
 };

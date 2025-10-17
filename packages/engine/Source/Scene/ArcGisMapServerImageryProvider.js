@@ -3,7 +3,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import defaultValue from "../Core/defaultValue.js";
+import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
@@ -70,14 +70,13 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} options An object describing initialization options
  */
 function ImageryProviderBuilder(options) {
-  this.useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
+  this.useTiles = options.usePreCachedTilesIfAvailable ?? true;
 
   const ellipsoid = options.ellipsoid;
-  this.tilingScheme = defaultValue(
-    options.tilingScheme,
-    new GeographicTilingScheme({ ellipsoid: ellipsoid })
-  );
-  this.rectangle = defaultValue(options.rectangle, this.tilingScheme.rectangle);
+  this.tilingScheme =
+    options.tilingScheme ??
+    new GeographicTilingScheme({ ellipsoid: ellipsoid });
+  this.rectangle = options.rectangle ?? this.tilingScheme.rectangle;
   this.ellipsoid = ellipsoid;
 
   let credit = options.credit;
@@ -88,8 +87,8 @@ function ImageryProviderBuilder(options) {
   this.tileCredits = undefined;
   this.tileDiscardPolicy = options.tileDiscardPolicy;
 
-  this.tileWidth = defaultValue(options.tileWidth, 256);
-  this.tileHeight = defaultValue(options.tileHeight, 256);
+  this.tileWidth = options.tileWidth ?? 256;
+  this.tileHeight = options.tileHeight ?? 256;
   this.maximumLevel = options.maximumLevel;
 }
 
@@ -169,43 +168,43 @@ function metadataSuccess(data, imageryProviderBuilder) {
               Math.max(
                 extent.xmin,
                 -imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
+                  Math.PI,
               ),
               Math.max(
                 extent.ymin,
                 -imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
+                  Math.PI,
               ),
-              0.0
-            )
+              0.0,
+            ),
           );
           const ne = projection.unproject(
             new Cartesian3(
               Math.min(
                 extent.xmax,
                 imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
+                  Math.PI,
               ),
               Math.min(
                 extent.ymax,
                 imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
+                  Math.PI,
               ),
-              0.0
-            )
+              0.0,
+            ),
           );
           imageryProviderBuilder.rectangle = new Rectangle(
             sw.longitude,
             sw.latitude,
             ne.longitude,
-            ne.latitude
+            ne.latitude,
           );
         } else if (data.fullExtent.spatialReference.wkid === 4326) {
           imageryProviderBuilder.rectangle = Rectangle.fromDegrees(
             data.fullExtent.xmin,
             data.fullExtent.ymin,
             data.fullExtent.xmax,
-            data.fullExtent.ymax
+            data.fullExtent.ymax,
           );
         } else {
           const extentMessage = `fullExtent.spatialReference WKID ${data.fullExtent.spatialReference.wkid} is not supported.`;
@@ -260,9 +259,9 @@ async function requestMetadata(resource, imageryProviderBuilder) {
  *
  * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
- * 
+ *
  * <br/>
- * 
+ *
  * An {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security| ArcGIS Access Token } is required to authenticate requests to an ArcGIS Image Tile service.
  * To access secure ArcGIS resources, it's required to create an ArcGIS developer
  * account or an ArcGIS online account, then implement an authentication method to obtain an access token.
@@ -278,7 +277,7 @@ async function requestMetadata(resource, imageryProviderBuilder) {
  * @example
  * // Set the default access token for accessing ArcGIS Image Tile service
  * Cesium.ArcGisMapService.defaultAccessToken = "<ArcGIS Access Token>";
- * 
+ *
  * // Add a base layer from a default ArcGIS basemap
  * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   baseLayer: Cesium.ImageryLayer.fromProviderAsync(
@@ -300,7 +299,7 @@ async function requestMetadata(resource, imageryProviderBuilder) {
 
  */
 function ArcGisMapServerImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -314,18 +313,14 @@ function ArcGisMapServerImageryProvider(options) {
   this._defaultMagnificationFilter = undefined;
 
   this._tileDiscardPolicy = options.tileDiscardPolicy;
-  this._tileWidth = defaultValue(options.tileWidth, 256);
-  this._tileHeight = defaultValue(options.tileHeight, 256);
+  this._tileWidth = options.tileWidth ?? 256;
+  this._tileHeight = options.tileHeight ?? 256;
   this._maximumLevel = options.maximumLevel;
-  this._tilingScheme = defaultValue(
-    options.tilingScheme,
-    new GeographicTilingScheme({ ellipsoid: options.ellipsoid })
-  );
-  this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
-  this._rectangle = defaultValue(
-    options.rectangle,
-    this._tilingScheme.rectangle
-  );
+  this._tilingScheme =
+    options.tilingScheme ??
+    new GeographicTilingScheme({ ellipsoid: options.ellipsoid });
+  this._useTiles = options.usePreCachedTilesIfAvailable ?? true;
+  this._rectangle = options.rectangle ?? this._tilingScheme.rectangle;
   this._layers = options.layers;
   this._credit = options.credit;
   this._tileCredits = undefined;
@@ -343,7 +338,7 @@ function ArcGisMapServerImageryProvider(options) {
    * @type {boolean}
    * @default true
    */
-  this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
+  this.enablePickFeatures = options.enablePickFeatures ?? true;
 
   this._errorEvent = new Event();
 }
@@ -377,30 +372,26 @@ function ArcGisMapServerImageryProvider(options) {
 
 ArcGisMapServerImageryProvider.fromBasemapType = async function (
   style,
-  options
+  options,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("style", style);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
   let accessToken;
   let server;
   let warningCredit;
   switch (style) {
     case ArcGisBaseMapType.SATELLITE:
       {
-        accessToken = defaultValue(
-          options.token,
-          ArcGisMapService.defaultAccessToken
-        );
+        accessToken = options.token ?? ArcGisMapService.defaultAccessToken;
         server = Resource.createIfNeeded(
-          ArcGisMapService.defaultWorldImageryServer
+          ArcGisMapService.defaultWorldImageryServer,
         );
         server.appendForwardSlash();
-        const defaultTokenCredit = ArcGisMapService.getDefaultTokenCredit(
-          accessToken
-        );
+        const defaultTokenCredit =
+          ArcGisMapService.getDefaultTokenCredit(accessToken);
         if (defined(defaultTokenCredit)) {
           warningCredit = Credit.clone(defaultTokenCredit);
         }
@@ -408,17 +399,13 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
       break;
     case ArcGisBaseMapType.OCEANS:
       {
-        accessToken = defaultValue(
-          options.token,
-          ArcGisMapService.defaultAccessToken
-        );
+        accessToken = options.token ?? ArcGisMapService.defaultAccessToken;
         server = Resource.createIfNeeded(
-          ArcGisMapService.defaultWorldOceanServer
+          ArcGisMapService.defaultWorldOceanServer,
         );
         server.appendForwardSlash();
-        const defaultTokenCredit = ArcGisMapService.getDefaultTokenCredit(
-          accessToken
-        );
+        const defaultTokenCredit =
+          ArcGisMapService.getDefaultTokenCredit(accessToken);
         if (defined(defaultTokenCredit)) {
           warningCredit = Credit.clone(defaultTokenCredit);
         }
@@ -426,17 +413,13 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
       break;
     case ArcGisBaseMapType.HILLSHADE:
       {
-        accessToken = defaultValue(
-          options.token,
-          ArcGisMapService.defaultAccessToken
-        );
+        accessToken = options.token ?? ArcGisMapService.defaultAccessToken;
         server = Resource.createIfNeeded(
-          ArcGisMapService.defaultWorldHillshadeServer
+          ArcGisMapService.defaultWorldHillshadeServer,
         );
         server.appendForwardSlash();
-        const defaultTokenCredit = ArcGisMapService.getDefaultTokenCredit(
-          accessToken
-        );
+        const defaultTokenCredit =
+          ArcGisMapService.getDefaultTokenCredit(accessToken);
         if (defined(defaultTokenCredit)) {
           warningCredit = Credit.clone(defaultTokenCredit);
         }
@@ -464,11 +447,8 @@ function buildImageResource(imageryProvider, x, y, level, request) {
       request: request,
     });
   } else {
-    const nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(
-      x,
-      y,
-      level
-    );
+    const nativeRectangle =
+      imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
     const bbox = `${nativeRectangle.west},${nativeRectangle.south},${nativeRectangle.east},${nativeRectangle.north}`;
 
     const query = {
@@ -701,7 +681,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
  * Creates an {@link ImageryProvider} which provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
  *
- * @param {Resource|String} url The URL of the ArcGIS MapServer service.
+ * @param {Resource|string} url The URL of the ArcGIS MapServer service.
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<ArcGisMapServerImageryProvider>} A promise that resolves to the created ArcGisMapServerImageryProvider.
  *
@@ -718,7 +698,7 @@ ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? Frozen.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(url);
   resource.appendForwardSlash();
@@ -732,7 +712,7 @@ ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
   const provider = new ArcGisMapServerImageryProvider(options);
   provider._resource = resource;
   const imageryProviderBuilder = new ImageryProviderBuilder(options);
-  const useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
+  const useTiles = options.usePreCachedTilesIfAvailable ?? true;
   if (useTiles) {
     await requestMetadata(resource, imageryProviderBuilder);
   }
@@ -752,7 +732,7 @@ ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
 ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
   x,
   y,
-  level
+  level,
 ) {
   return this._tileCredits;
 };
@@ -771,11 +751,11 @@ ArcGisMapServerImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   return ImageryProvider.loadImage(
     this,
-    buildImageResource(this, x, y, level, request)
+    buildImageResource(this, x, y, level, request),
   );
 };
 
@@ -798,7 +778,7 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   if (!this.enablePickFeatures) {
     return undefined;
@@ -815,7 +795,7 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
     sr = "4326";
   } else {
     const projected = this._tilingScheme.projection.project(
-      new Cartographic(longitude, latitude, 0.0)
+      new Cartographic(longitude, latitude, 0.0),
     );
     horizontal = projected.x;
     vertical = projected.y;
@@ -871,7 +851,7 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
           featureInfo.position = Cartographic.fromDegrees(
             feature.geometry.x,
             feature.geometry.y,
-            feature.geometry.z
+            feature.geometry.z,
           );
         } else if (wkid === 102100 || wkid === 900913 || wkid === 3857) {
           const projection = new WebMercatorProjection();
@@ -879,8 +859,8 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
             new Cartesian3(
               feature.geometry.x,
               feature.geometry.y,
-              feature.geometry.z
-            )
+              feature.geometry.z,
+            ),
           );
         }
       }

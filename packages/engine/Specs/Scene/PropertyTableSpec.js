@@ -202,7 +202,7 @@ describe("Scene/PropertyTable", function () {
   it("getPropertyBySemantic returns the property value", function () {
     const propertyTable = createPropertyTable();
     expect(propertyTable.getPropertyBySemantic(0, "NAME")).toEqual(
-      "Building A"
+      "Building A",
     );
   });
 
@@ -216,10 +216,10 @@ describe("Scene/PropertyTable", function () {
   it("setPropertyBySemantic sets property value", function () {
     const propertyTable = createPropertyTable();
     expect(propertyTable.getPropertyBySemantic(0, "NAME")).toEqual(
-      "Building A"
+      "Building A",
     );
     expect(propertyTable.setPropertyBySemantic(0, "NAME", "Building New")).toBe(
-      true
+      true,
     );
   });
 
@@ -240,7 +240,7 @@ describe("Scene/PropertyTable", function () {
     const expectedTypedArray = new Float32Array([10.0, 20.0, 30.0]);
 
     expect(propertyTable.getPropertyTypedArray("height")).toEqual(
-      expectedTypedArray
+      expectedTypedArray,
     );
   });
 
@@ -263,7 +263,7 @@ describe("Scene/PropertyTable", function () {
     const expectedTypedArray = new Float32Array([10.0, 20.0, 30.0]);
 
     expect(propertyTable.getPropertyTypedArrayBySemantic("HEIGHT")).toEqual(
-      expectedTypedArray
+      expectedTypedArray,
     );
   });
 
@@ -545,19 +545,19 @@ describe("Scene/PropertyTable", function () {
       expect(batchTable.getPropertyTypedArray("itemId")).toBeDefined();
       expect(batchTable.getPropertyTypedArray("priority")).not.toBeDefined();
       expect(
-        batchTable.getPropertyTypedArray("tireLocation")
+        batchTable.getPropertyTypedArray("tireLocation"),
       ).not.toBeDefined();
     });
 
     it("getPropertyTypedArray returns undefined when there is no metadata table", function () {
       expect(
-        batchTableJsonOnly.getPropertyTypedArray("priority")
+        batchTableJsonOnly.getPropertyTypedArray("priority"),
       ).not.toBeDefined();
     });
 
     it("getPropertyTypedArrayBySemantic returns undefined when there is no metadata table", function () {
       expect(
-        batchTableJsonOnly.getPropertyTypedArrayBySemantic("PRIORITY")
+        batchTableJsonOnly.getPropertyTypedArrayBySemantic("PRIORITY"),
       ).not.toBeDefined();
     });
 

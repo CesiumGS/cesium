@@ -1,6 +1,6 @@
 /node_modules
+packages/sandcastle/node_modules
 /ThirdParty
 /Tools/**
 
-CHANGES.md 
 LICENSE.md
