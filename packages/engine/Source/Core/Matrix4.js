@@ -7,6 +7,7 @@ import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import Matrix3 from "./Matrix3.js";
 import RuntimeError from "./RuntimeError.js";
+import freezeMatrix from "./freezeMatrix.js";
 
 /**
  * A 4x4 matrix, indexable as a column-major order array.
@@ -53,40 +54,43 @@ import RuntimeError from "./RuntimeError.js";
  * @see Matrix3
  * @see Packable
  */
-function Matrix4(
-  column0Row0,
-  column1Row0,
-  column2Row0,
-  column3Row0,
-  column0Row1,
-  column1Row1,
-  column2Row1,
-  column3Row1,
-  column0Row2,
-  column1Row2,
-  column2Row2,
-  column3Row2,
-  column0Row3,
-  column1Row3,
-  column2Row3,
-  column3Row3,
-) {
-  this[0] = column0Row0 ?? 0.0;
-  this[1] = column0Row1 ?? 0.0;
-  this[2] = column0Row2 ?? 0.0;
-  this[3] = column0Row3 ?? 0.0;
-  this[4] = column1Row0 ?? 0.0;
-  this[5] = column1Row1 ?? 0.0;
-  this[6] = column1Row2 ?? 0.0;
-  this[7] = column1Row3 ?? 0.0;
-  this[8] = column2Row0 ?? 0.0;
-  this[9] = column2Row1 ?? 0.0;
-  this[10] = column2Row2 ?? 0.0;
-  this[11] = column2Row3 ?? 0.0;
-  this[12] = column3Row0 ?? 0.0;
-  this[13] = column3Row1 ?? 0.0;
-  this[14] = column3Row2 ?? 0.0;
-  this[15] = column3Row3 ?? 0.0;
+class Matrix4 extends Float64Array {
+  constructor(
+    column0Row0,
+    column1Row0,
+    column2Row0,
+    column3Row0,
+    column0Row1,
+    column1Row1,
+    column2Row1,
+    column3Row1,
+    column0Row2,
+    column1Row2,
+    column2Row2,
+    column3Row2,
+    column0Row3,
+    column1Row3,
+    column2Row3,
+    column3Row3,
+  ) {
+    super(16);
+    this[0] = column0Row0 ?? 0.0;
+    this[1] = column0Row1 ?? 0.0;
+    this[2] = column0Row2 ?? 0.0;
+    this[3] = column0Row3 ?? 0.0;
+    this[4] = column1Row0 ?? 0.0;
+    this[5] = column1Row1 ?? 0.0;
+    this[6] = column1Row2 ?? 0.0;
+    this[7] = column1Row3 ?? 0.0;
+    this[8] = column2Row0 ?? 0.0;
+    this[9] = column2Row1 ?? 0.0;
+    this[10] = column2Row2 ?? 0.0;
+    this[11] = column2Row3 ?? 0.0;
+    this[12] = column3Row0 ?? 0.0;
+    this[13] = column3Row1 ?? 0.0;
+    this[14] = column3Row2 ?? 0.0;
+    this[15] = column3Row3 ?? 0.0;
+  }
 }
 
 /**
@@ -1929,41 +1933,23 @@ Matrix4.multiplyTransformation = function (left, right, result) {
   const right13 = right[13];
   const right14 = right[14];
 
-  const column0Row0 = left0 * right0 + left4 * right1 + left8 * right2;
-  const column0Row1 = left1 * right0 + left5 * right1 + left9 * right2;
-  const column0Row2 = left2 * right0 + left6 * right1 + left10 * right2;
-
-  const column1Row0 = left0 * right4 + left4 * right5 + left8 * right6;
-  const column1Row1 = left1 * right4 + left5 * right5 + left9 * right6;
-  const column1Row2 = left2 * right4 + left6 * right5 + left10 * right6;
-
-  const column2Row0 = left0 * right8 + left4 * right9 + left8 * right10;
-  const column2Row1 = left1 * right8 + left5 * right9 + left9 * right10;
-  const column2Row2 = left2 * right8 + left6 * right9 + left10 * right10;
-
-  const column3Row0 =
-    left0 * right12 + left4 * right13 + left8 * right14 + left12;
-  const column3Row1 =
-    left1 * right12 + left5 * right13 + left9 * right14 + left13;
-  const column3Row2 =
-    left2 * right12 + left6 * right13 + left10 * right14 + left14;
-
-  result[0] = column0Row0;
-  result[1] = column0Row1;
-  result[2] = column0Row2;
+  result[0] = left0 * right0 + left4 * right1 + left8 * right2;
+  result[1] = left1 * right0 + left5 * right1 + left9 * right2;
+  result[2] = left2 * right0 + left6 * right1 + left10 * right2;
   result[3] = 0.0;
-  result[4] = column1Row0;
-  result[5] = column1Row1;
-  result[6] = column1Row2;
+  result[4] = left0 * right4 + left4 * right5 + left8 * right6;
+  result[5] = left1 * right4 + left5 * right5 + left9 * right6;
+  result[6] = left2 * right4 + left6 * right5 + left10 * right6;
   result[7] = 0.0;
-  result[8] = column2Row0;
-  result[9] = column2Row1;
-  result[10] = column2Row2;
+  result[8] = left0 * right8 + left4 * right9 + left8 * right10;
+  result[9] = left1 * right8 + left5 * right9 + left9 * right10;
+  result[10] = left2 * right8 + left6 * right9 + left10 * right10;
   result[11] = 0.0;
-  result[12] = column3Row0;
-  result[13] = column3Row1;
-  result[14] = column3Row2;
+  result[12] = left0 * right12 + left4 * right13 + left8 * right14 + left12;
+  result[13] = left1 * right12 + left5 * right13 + left9 * right14 + left13;
+  result[14] = left2 * right12 + left6 * right13 + left10 * right14 + left14;
   result[15] = 1.0;
+
   return result;
 };
 
@@ -2963,60 +2949,6 @@ Matrix4.inverseTranspose = function (matrix, result) {
 };
 
 /**
- * An immutable Matrix4 instance initialized to the identity matrix.
- *
- * @type {Matrix4}
- * @constant
- */
-Matrix4.IDENTITY = Object.freeze(
-  new Matrix4(
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-  ),
-);
-
-/**
- * An immutable Matrix4 instance initialized to the zero matrix.
- *
- * @type {Matrix4}
- * @constant
- */
-Matrix4.ZERO = Object.freeze(
-  new Matrix4(
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-  ),
-);
-
-/**
  * The index into Matrix4 for column 0, row 0.
  *
  * @type {number}
@@ -3230,4 +3162,111 @@ Matrix4.prototype.toString = function () {
     `(${this[3]}, ${this[7]}, ${this[11]}, ${this[15]})`
   );
 };
+
+// Frozen Matrix option 1: Only implement the interface as generated by Cesium.d.ts (meaning, without exposing any Float64Array methods)
+/**
+ * @returns {Readonly<Matrix4>} a frozen matrix
+ */
+// eslint-disable-next-line no-unused-vars
+function makeFrozenMatrix4(
+  column0Row0,
+  column1Row0,
+  column2Row0,
+  column3Row0,
+  column0Row1,
+  column1Row1,
+  column2Row1,
+  column3Row1,
+  column0Row2,
+  column1Row2,
+  column2Row2,
+  column3Row2,
+  column0Row3,
+  column1Row3,
+  column2Row3,
+  column3Row3,
+) {
+  /** @type {Matrix4} */
+  const matrix = {
+    [0]: column0Row0 ?? 0.0,
+    [1]: column0Row1 ?? 0.0,
+    [2]: column0Row2 ?? 0.0,
+    [3]: column0Row3 ?? 0.0,
+    [4]: column1Row0 ?? 0.0,
+    [5]: column1Row1 ?? 0.0,
+    [6]: column1Row2 ?? 0.0,
+    [7]: column1Row3 ?? 0.0,
+    [8]: column2Row0 ?? 0.0,
+    [9]: column2Row1 ?? 0.0,
+    [10]: column2Row2 ?? 0.0,
+    [11]: column2Row3 ?? 0.0,
+    [12]: column3Row0 ?? 0.0,
+    [13]: column3Row1 ?? 0.0,
+    [14]: column3Row2 ?? 0.0,
+    [15]: column3Row3 ?? 0.0,
+    length: Matrix4.packedLength,
+  };
+
+  matrix.clone = Matrix4.prototype.clone.bind(matrix);
+  matrix.equals = Matrix4.prototype.equals.bind(matrix);
+  matrix.equalsEpsilon = Matrix4.prototype.equalsEpsilon.bind(matrix);
+  matrix.toString = Matrix4.prototype.toString.bind(matrix);
+
+  return Object.freeze(matrix);
+}
+
+/**
+ * An immutable Matrix4 instance initialized to the identity matrix.
+ *
+ * @type {Readonly<Matrix4>}
+ * @constant
+ */
+Matrix4.IDENTITY = freezeMatrix(
+  new Matrix4(
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+  ),
+);
+
+/**
+ * An immutable Matrix4 instance initialized to the zero matrix.
+ *
+ * @type {Readonly<Matrix4>}
+ * @constant
+ */
+Matrix4.ZERO = freezeMatrix(
+  new Matrix4(
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+  ),
+);
+
 export default Matrix4;
