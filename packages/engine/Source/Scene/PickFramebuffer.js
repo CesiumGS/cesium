@@ -4,6 +4,10 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
+import PixelFormat from "../Core/PixelFormat.js";
+import WebGLConstants from "../Core/WebGLConstants.js";
+import Sync from "../Renderer/Sync.js";
 
 /**
  * @private
@@ -27,47 +31,18 @@ function PickFramebuffer(context) {
   this._height = 0;
 }
 
-PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
-  const context = this._context;
-  const { width, height } = viewport;
-
-  BoundingRectangle.clone(
-    screenSpaceRectangle,
-    this._passState.scissorTest.rectangle,
-  );
-
-  // Create or recreate renderbuffers and framebuffer used for picking
-  this._width = width;
-  this._height = height;
-  this._fb.update(context, width, height);
-  this._passState.framebuffer = this._fb.framebuffer;
-
-  this._passState.viewport.width = width;
-  this._passState.viewport.height = height;
-
-  return this._passState;
-};
-
 /**
  * Return the picked objects rendered within a given rectangle.
  *
- * @param {BoundingRectangle} screenSpaceRectangle
+ * @private
+ * @param {object} context The active context.
+ * @param {Uint8Array|Uint16Array|Float32Array|Uint32Array} pixels The pixels in the specified scratch rectangle.
+ * @param {number} width The scratch rectangle width.
+ * @param {number} height The scratch rectangle height.
  * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
  * @returns {object[]} A list of rendered objects, ordered by distance to the middle of the rectangle.
  */
-PickFramebuffer.prototype.end = function (screenSpaceRectangle, limit = 1) {
-  const width = screenSpaceRectangle.width ?? 1.0;
-  const height = screenSpaceRectangle.height ?? 1.0;
-
-  const context = this._context;
-  const pixels = context.readPixels({
-    x: screenSpaceRectangle.x,
-    y: screenSpaceRectangle.y,
-    width: width,
-    height: height,
-    framebuffer: this._fb.framebuffer,
-  });
-
+function colorScratchForObject(context, pixels, width, height, limit = 1) {
   const max = Math.max(width, height);
   const length = max * max;
   const halfWidth = Math.floor(width * 0.5);
@@ -121,6 +96,152 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle, limit = 1) {
     y += dy;
   }
   return [...objects];
+}
+
+/**
+ * Creates a callback function that will once per frame poll the Sync state until signaled.
+ *
+ * @private
+ * @param {object} pickState An object with the following properties:
+ * @param {number} [readState.frameState] The active framestate.
+ * @param {number} [readState.frameNumber] The current frame number.
+ * @param {number} [readState.sync] The Sync object to poll.
+ * @param {number} [readState.ttl=10] Max number of frames to poll until reject.
+ * @param {function} onSignalCallback Callback to execute on Sync Signal.
+ */
+function createAsyncPick(pickState, onSignalCallback) {
+  return () => {
+    const sync = pickState.sync;
+    const frameState = pickState.frameState;
+    const ttl = pickState.ttl ?? 10;
+    const syncStatus = sync.getStatus();
+    const signaled = syncStatus === WebGLConstants.SIGNALED;
+    const frameDelta = frameState.frameNumber - pickState.frameNumber; // how many frames passed since inital request
+    if (signaled || frameDelta > ttl) {
+      sync.destroy();
+      onSignalCallback(signaled);
+    } else {
+      frameState.afterRender.push(createAsyncPick(pickState, onSignalCallback));
+    }
+  };
+}
+
+PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
+  const context = this._context;
+  const { width, height } = viewport;
+
+  BoundingRectangle.clone(
+    screenSpaceRectangle,
+    this._passState.scissorTest.rectangle,
+  );
+
+  // Create or recreate renderbuffers and framebuffer used for picking
+  this._width = width;
+  this._height = height;
+  this._fb.update(context, width, height);
+  this._passState.framebuffer = this._fb.framebuffer;
+
+  this._passState.viewport.width = width;
+  this._passState.viewport.height = height;
+
+  return this._passState;
+};
+
+/**
+ * Return the picked objects rendered within a given rectangle using asynchronously without staling the GPU.
+ *
+ * @param {BoundingRectangle} screenSpaceRectangle
+ * @param {FrameState} frameState
+ * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
+ * @returns {object[]} A list of rendered objects, ordered by distance to the middle of the rectangle.
+ */
+PickFramebuffer.prototype.endAsync = async function (
+  screenSpaceRectangle,
+  frameState,
+  limit = 1,
+) {
+  const width = screenSpaceRectangle.width ?? 1.0;
+  const height = screenSpaceRectangle.height ?? 1.0;
+
+  const context = this._context;
+  const framebuffer = this._fb.framebuffer;
+
+  let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+  let pixelFormat = PixelFormat.RGBA;
+
+  if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
+    pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+    pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
+  }
+
+  const pbo = context.readPixels({
+    x: screenSpaceRectangle.x,
+    y: screenSpaceRectangle.y,
+    width: width,
+    height: height,
+    framebuffer: framebuffer,
+    pbo: true,
+  });
+
+  const sync = Sync.create({
+    context: context,
+  });
+
+  const pickState = {
+    frameState: frameState,
+    frameNumber: frameState.frameNumber,
+    sync: sync,
+  };
+
+  return new Promise((resolve, reject) => {
+    frameState.afterRender.push(
+      createAsyncPick(pickState, (signaled) => {
+        const pixels = PixelFormat.createTypedArray(
+          pixelFormat,
+          pixelDatatype,
+          width,
+          height,
+        );
+        pbo.getBufferData(pixels);
+        pbo.destroy();
+        const pickedObjects = colorScratchForObject(
+          context,
+          pixels,
+          width,
+          height,
+          limit,
+        );
+        if (signaled) {
+          resolve(pickedObjects);
+        } else {
+          reject("Picking Request Timeout");
+        }
+      }),
+    );
+  });
+};
+
+/**
+ * Return the picked objects rendered within a given rectangle.
+ *
+ * @param {BoundingRectangle} screenSpaceRectangle
+ * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
+ * @returns {object[]} A list of rendered objects, ordered by distance to the middle of the rectangle.
+ */
+PickFramebuffer.prototype.end = function (screenSpaceRectangle, limit = 1) {
+  const width = screenSpaceRectangle.width ?? 1.0;
+  const height = screenSpaceRectangle.height ?? 1.0;
+
+  const context = this._context;
+  const pixels = context.readPixels({
+    x: screenSpaceRectangle.x,
+    y: screenSpaceRectangle.y,
+    width: width,
+    height: height,
+    framebuffer: this._fb.framebuffer,
+  });
+
+  return colorScratchForObject(context, pixels, width, height, limit);
 };
 
 /**

@@ -3821,14 +3821,15 @@ function callAfterRenderFunctions(scene) {
   // Functions are queued up during primitive update and executed here in case
   // the function modifies scene state that should remain constant over the frame.
   const functions = scene._frameState.afterRender;
-  for (let i = 0; i < functions.length; ++i) {
-    const shouldRequestRender = functions[i]();
+  const functionsCpy = functions.slice(); // Snapshot before iterate allows callbacks to add functions for next frame
+  functions.length = 0;
+
+  for (let i = 0; i < functionsCpy.length; ++i) {
+    const shouldRequestRender = functionsCpy[i]();
     if (shouldRequestRender) {
       scene.requestRender();
     }
   }
-
-  functions.length = 0;
 }
 
 function getGlobeHeight(scene) {
@@ -4404,6 +4405,27 @@ Scene.prototype.clampLineWidth = function (width) {
 Scene.prototype.pick = function (windowPosition, width, height) {
   // Picking one object, result is either [object] or []
   return this._picking.pick(this, windowPosition, width, height, 1)[0];
+};
+
+/**
+ * Performs the same operation as Scene.pick but asynchonosly without blocking the main render thread.
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @returns {Promise<Object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
+ *
+ * @see Scene#pick
+ */
+Scene.prototype.pickAsync = async function (windowPosition, width, height) {
+  return new Promise((resolve, reject) => {
+    this._picking
+      .pick(this, windowPosition, width, height, 1, true)
+      .then((result) => {
+        resolve(result[0]);
+      })
+      .catch(reject);
+  });
 };
 
 /**

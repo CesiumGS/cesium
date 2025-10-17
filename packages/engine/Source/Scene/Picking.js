@@ -273,7 +273,8 @@ function computePickingDrawingBufferRectangle(
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
  * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
- * @returns {object[]} List of objects containing the picked primitives.
+ * @param {boolean} [async=false] Use async non GPU blocking picking.
+ * @returns {object[] | Promise<object[]>} List of objects containing the picked primitives.
  */
 Picking.prototype.pick = function (
   scene,
@@ -281,6 +282,7 @@ Picking.prototype.pick = function (
   width,
   height,
   limit = 1,
+  async,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("windowPosition", windowPosition);
@@ -288,6 +290,7 @@ Picking.prototype.pick = function (
 
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
+  async = async ?? false;
 
   scene.view = defaultView;
 
@@ -335,7 +338,16 @@ Picking.prototype.pick = function (
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
-  const pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit);
+  let pickedObjects;
+  if (async) {
+    pickedObjects = pickFramebuffer.endAsync(
+      drawingBufferRectangle,
+      frameState,
+      limit,
+    ); // Promise<Object[]>
+  } else {
+    pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit); // Object[]
+  }
   context.endFrame();
   return pickedObjects;
 };
