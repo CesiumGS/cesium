@@ -125,6 +125,12 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
   },
 });
 
+/**
+ * Load the resources associated with the loader.
+ * @private
+ * @param {GltfBufferViewLoader} loader
+ * @returns {Promise<GltfBufferViewLoader>}
+ */
 async function loadResources(loader) {
   try {
     const bufferLoader = getBufferLoader(loader);
@@ -190,6 +196,14 @@ GltfBufferViewLoader.prototype.load = async function () {
   return this._promise;
 };
 
+/**
+ * Get the buffer loader for the specified buffer view loader.
+ * Attempts to retrieve from the resource cache first. If a buffer loader is
+ * not found, creates a new buffer loader and adds it to the resource cache.
+ * @private
+ * @param {GltfBufferViewLoader} bufferViewLoader The loader.
+ * @returns {BufferLoader} The buffer loader.
+ */
 function getBufferLoader(bufferViewLoader) {
   const resourceCache = bufferViewLoader._resourceCache;
   const buffer = bufferViewLoader._buffer;
@@ -202,9 +216,21 @@ function getBufferLoader(bufferViewLoader) {
       resource: resource,
     });
   }
-  return resourceCache.getEmbeddedBufferLoader({
+
+  const result = resourceCache.getEmbeddedBufferLoader({
     parentResource: bufferViewLoader._gltfResource,
     bufferId: bufferViewLoader._bufferId,
+  });
+
+  if (defined(result)) {
+    return result;
+  }
+
+  const source = buffer.extras._pipeline.source;
+  return resourceCache.addBufferLoader({
+    parentResource: bufferViewLoader._gltfResource,
+    bufferId: bufferViewLoader._bufferId,
+    typedArray: source,
   });
 }
 
