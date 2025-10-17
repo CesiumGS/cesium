@@ -236,12 +236,13 @@ TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function (
 };
 
 /**
+ * Calculates the number of skirt vertices given the edge indices.
  * @private
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast
- * @returns {number}
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth Edge indices along the west side of the tile.
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest Edge indices along the south side of the tile.
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth Edge indices along the east side of the tile.
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast Edge indices along the north side of the tile.
+ * @returns {number} The number of skirt vertices.
  */
 TerrainProvider.getSkirtVertexCount = function (
   westIndicesSouthToNorth,
@@ -258,7 +259,8 @@ TerrainProvider.getSkirtVertexCount = function (
 };
 
 /**
- * 3x3 grid
+ * Compute the number of skirt indices given the number of skirt vertices.
+ * Consider a 3x3 grid of vertices. There will be 8 skirt vertices around the edge:
  * - 16 edge triangles
  * - 48 indices
  *
@@ -276,7 +278,8 @@ TerrainProvider.getSkirtIndexCount = function (skirtVertexCount) {
 };
 
 /**
- * 3x3 grid
+ * Compute the number of skirt indices given the number of skirt vertices with filled corners.
+ * Consider a 3x3 grid of vertices. There will be 8 skirt vertices around the edge:
  * - 16 edge triangles
  * - 4 cap triangles
  * - 60 indices
@@ -297,7 +300,15 @@ TerrainProvider.getSkirtIndexCountWithFilledCorners = function (
 };
 
 /**
+ * Adds skirt indices.
  * @private
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North.
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West.
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South.
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East.
+ * @param {number} vertexCount The number of vertices in the tile before adding skirt vertices.
+ * @param {Uint16Array|Uint32Array} indices The array of indices to which skirt indices are added.
+ * @param {number} offset The offset into the indices array at which to start adding skirt indices.
  */
 TerrainProvider.addSkirtIndices = function (
   westIndicesSouthToNorth,
@@ -333,6 +344,17 @@ TerrainProvider.addSkirtIndices = function (
   addSkirtIndices(northIndicesWestToEast, vertexIndex, indices, offset);
 };
 
+/**
+ * Adds skirt indices with filled corners.
+ * @private
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North.
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West.
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South.
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East.
+ * @param {number} vertexCount The number of vertices in the tile before adding skirt vertices.
+ * @param {Uint16Array|Uint32Array} indices The array of indices to which skirt indices are added.
+ * @param {number} offset The offset into the indices array at which to start adding skirt indices.
+ */
 TerrainProvider.addSkirtIndicesWithFilledCorners = function (
   westIndicesSouthToNorth,
   southIndicesEastToWest,

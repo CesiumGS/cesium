@@ -4,21 +4,9 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 /**
  * @private
  *
- * @param {object} options Object with the following properties:
- * @param {Ellipsoid} options.ellipsoid
- * @param {Rectangle} options.rectangle
- * @param {boolean} options.hasVertexNormals
- * @param {boolean} options.hasWebMercatorT
- * @param {Object.<string,*>} options.gltf
- * @param {number} options.minimumHeight
- * @param {number} options.maximumHeight
- * @param {BoundingSphere} options.boundingSphere
- * @param {OrientedBoundingBox} options.orientedBoundingBox
- * @param {Cartesian3} options.horizonOcclusionPoint
- * @param {number} options.skirtHeight
- * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
- * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
- * @param {ArrayBuffer[]} transferableObjects
+ * @param {Cesium3DTilesTerrainGeometryProcessor.CreateMeshOptions} options An object describing options for mesh creation.
+ * @param {ArrayBuffer[]} transferableObjects An array of buffers that can be transferred back to the main thread.
+ * @returns {Promise<object>} A promise that resolves to an object containing selected info from the created TerrainMesh.
  */
 function createVerticesFromCesium3DTilesTerrain(options, transferableObjects) {
   const meshPromise = Cesium3DTilesTerrainGeometryProcessor.createMesh(options);
@@ -29,7 +17,6 @@ function createVerticesFromCesium3DTilesTerrain(options, transferableObjects) {
     const southIndicesBuffer = mesh.southIndicesEastToWest.buffer;
     const eastIndicesBuffer = mesh.eastIndicesNorthToSouth.buffer;
     const northIndicesBuffer = mesh.northIndicesWestToEast.buffer;
-    const encoding = mesh.encoding;
 
     transferableObjects.push(
       verticesBuffer,
@@ -45,7 +32,7 @@ function createVerticesFromCesium3DTilesTerrain(options, transferableObjects) {
       indicesBuffer: indicesBuffer,
       vertexCountWithoutSkirts: mesh.vertexCountWithoutSkirts,
       indexCountWithoutSkirts: mesh.indexCountWithoutSkirts,
-      encoding: encoding,
+      encoding: mesh.encoding,
       westIndicesBuffer: westIndicesBuffer,
       southIndicesBuffer: southIndicesBuffer,
       eastIndicesBuffer: eastIndicesBuffer,
@@ -55,6 +42,5 @@ function createVerticesFromCesium3DTilesTerrain(options, transferableObjects) {
 }
 
 export default createTaskProcessorWorker(
-  // @ts-ignore
   createVerticesFromCesium3DTilesTerrain,
 );

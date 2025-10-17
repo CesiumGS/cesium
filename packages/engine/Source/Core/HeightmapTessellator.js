@@ -110,7 +110,7 @@ const maximumScratch = new Cartesian3();
  * });
  *
  * const encoding = statistics.encoding;
- * const position = encoding.decodePosition(statistics.vertices, index, new Cesium.Cartesian3());
+ * const position = encoding.decodePosition(statistics.vertices, index);
  */
 HeightmapTessellator.computeVertices = function (options) {
   //>>includeStart('debug', pragmas.debug);

@@ -400,25 +400,29 @@ const sortedEdgeCompare = function (a, b) {
 const Cesium3DTilesTerrainGeometryProcessor = {};
 
 /**
+ * @typedef {object} Cesium3DTilesTerrainGeometryProcessor.CreateMeshOptions
+ * @property {Ellipsoid} ellipsoid The ellipsoid.
+ * @property {Rectangle} rectangle The rectangle covered by the tile.
+ * @property {boolean} hasVertexNormals <code>true</code> if the tile has vertex normals.
+ * @property {boolean} hasWebMercatorT <code>true</code> if the tile has Web Mercator T coordinates.
+ * @property {Object.<string,*>} gltf The glTF JSON of the tile.
+ * @property {number} minimumHeight The minimum height of the tile.
+ * @property {number} maximumHeight The maximum height of the tile.
+ * @property {BoundingSphere} boundingSphere The bounding sphere of the tile.
+ * @property {OrientedBoundingBox} orientedBoundingBox The oriented bounding box of the tile.
+ * @property {Cartesian3} horizonOcclusionPoint The horizon occlusion point of the tile.
+ * @property {number} skirtHeight The height of the skirts.
+ * @property {number} [exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @property {number} [exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+ */
+
+/**
  * Creates a {@link TerrainMesh} from this terrain data.
  * @function
  *
  * @private
  *
- * @param {object} options Object with the following properties:
- * @param {Ellipsoid} options.ellipsoid
- * @param {Rectangle} options.rectangle
- * @param {boolean} options.hasVertexNormals
- * @param {boolean} options.hasWebMercatorT
- * @param {Object.<string,*>} options.gltf
- * @param {number} options.minimumHeight
- * @param {number} options.maximumHeight
- * @param {BoundingSphere} options.boundingSphere
- * @param {OrientedBoundingBox} options.orientedBoundingBox
- * @param {Cartesian3} options.horizonOcclusionPoint
- * @param {number} options.skirtHeight
- * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
- * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+ * @param {Cesium3DTilesTerrainGeometryProcessor.CreateMeshOptions} options An object describing options for mesh creation.
  * @returns {Promise.<TerrainMesh>} A promise to a terrain mesh.
  */
 Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
@@ -766,20 +770,24 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
 };
 
 /**
+ * @typedef {object} Cesium3DTilesTerrainGeometryProcessor.UpsampleMeshOptions
+ * @property {boolean} isEastChild <code>true</code> if the tile is the east child of its parent.
+ * @property {boolean} isNorthChild <code>true</code> if the tile is the north child of its parent.
+ * @property {Rectangle} rectangle The rectangle covered by the tile.
+ * @property {Ellipsoid} ellipsoid The ellipsoid.
+ * @property {number} skirtHeight The height of the skirts.
+ * @property {Float32Array} parentVertices The parent tile's vertex buffer.
+ * @property {Uint8Array|Uint16Array|Uint32Array} parentIndices The parent tile's index buffer.
+ * @property {number} parentVertexCountWithoutSkirts The number of vertices in the parent tile excluding skirts.
+ * @property {number} parentIndexCountWithoutSkirts The number of indices in the parent tile excluding skirts.
+ * @property {number} parentMinimumHeight The minimum height of the parent tile.
+ * @property {number} parentMaximumHeight The maximum height of the parent tile.
+ * @property {TerrainEncoding} parentEncoding The parent tile's terrain encoding.
+ */
+
+/**
  * @private
- * @param {object} options
- * @param {boolean} options.isEastChild
- * @param {boolean} options.isNorthChild
- * @param {Rectangle} options.rectangle
- * @param {Ellipsoid} options.ellipsoid
- * @param {number} options.skirtHeight
- * @param {Float32Array} options.parentVertices
- * @param {Uint8Array|Uint16Array|Uint32Array} options.parentIndices
- * @param {number} options.parentVertexCountWithoutSkirts
- * @param {number} options.parentIndexCountWithoutSkirts
- * @param {number} options.parentMinimumHeight
- * @param {number} options.parentMaximumHeight
- * @param {TerrainEncoding} options.parentEncoding
+ * @param {Cesium3DTilesTerrainGeometryProcessor.UpsampleMeshOptions} options An object describing options for mesh upsampling.
  * @returns {TerrainMesh}
  */
 Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {

@@ -184,7 +184,7 @@ ResourceCache.getSchemaLoader = function (options) {
  * @param {number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
  * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents.
  *
- * @returns {BufferLoader | undefined} The cached buffer loader.
+ * @returns {BufferLoader|undefined} The cached buffer loader.
  * @private
  */
 ResourceCache.getEmbeddedBufferLoader = function (options) {
@@ -212,7 +212,7 @@ ResourceCache.getEmbeddedBufferLoader = function (options) {
  * @param {number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
  * @param {Uint8Array} options.typedArray The typed array containing the embedded buffer contents.
  *
- * @returns {BufferLoader } The created buffer loader.
+ * @returns {BufferLoader} The created buffer loader.
  * @private
  */
 ResourceCache.addBufferLoader = function (options) {
