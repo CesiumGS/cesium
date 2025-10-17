@@ -3831,12 +3831,26 @@ function callAfterRenderFunctions(scene) {
   functions.length = 0;
 }
 
+/**
+ * Calculate the height of the globe at the camera position based on the value of {@link ScreenSpaceCameraController.collisionHeightReference},
+ * or undefined if the height cannot be determined.
+ *
+ * @param {Scene} scene
+ * @returns {number|undefined}
+ */
 function getGlobeHeight(scene) {
-  if (scene.mode === SceneMode.MORPHING) {
+  if (
+    scene.mode === SceneMode.MORPHING ||
+    scene._screenSpaceCameraController.collisionHeightReference ===
+      HeightReference.NONE
+  ) {
     return;
   }
   const cartographic = scene.camera.positionCartographic;
-  return scene.getHeight(cartographic);
+  return scene.getHeight(
+    cartographic,
+    scene._screenSpaceCameraController.collisionHeightReference,
+  );
 }
 
 function getMaxPrimitiveHeight(primitive, cartographic, scene) {
