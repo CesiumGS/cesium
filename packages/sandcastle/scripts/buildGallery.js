@@ -117,9 +117,31 @@ export async function buildGalleryList(options = {}) {
     return condition;
   };
 
-  const galleryFiles = await globby(
-    galleryFilesPattern.map((pattern) => join(rootDirectory, pattern, "**/*")),
-  );
+  const galleryFilesGlobbyPatterns = galleryFilesPattern.map((pattern) => {
+    // The join function will return the pah in a form that is normalized
+    // for the OS, meaning that it contains backslashes "\" on Windows
+    const baseGlobbyPattern = join(rootDirectory, pattern, "**/*");
+
+    // From the globby documentation:
+    // > Note that glob patterns can only contain forward-slashes, not
+    // > backward-slashes, so if you want to construct a glob pattern
+    // > from path components, you need to use path.posix.join()
+    // > instead of path.join().
+    // However, just do the usual "replace '\' with '/'" here:
+    const globbyPattern = baseGlobbyPattern.replace(/\\/g, "/");
+    console.log("Create globby pattern");
+    console.log("rootDirectory ", rootDirectory);
+    console.log("pattern ", pattern);
+    console.log("baseGlobbyPattern ", baseGlobbyPattern);
+    console.log("globbyPattern ", globbyPattern);
+    return globbyPattern;
+  });
+  const galleryFiles = await globby(galleryFilesGlobbyPatterns);
+  if (galleryFiles.length === 0) {
+    // TODO Warn about this and handle it somehow...
+    console.warn("Did not find any gallery files");
+  }
+
   const yamlFiles = galleryFiles.filter((path) =>
     basename(path).match(galleryItemConfig),
   );
