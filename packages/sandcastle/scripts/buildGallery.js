@@ -118,7 +118,7 @@ export async function buildGalleryList(options = {}) {
   };
 
   const galleryFilesGlobbyPatterns = galleryFilesPattern.map((pattern) => {
-    // The join function will return the pah in a form that is normalized
+    // The join function will return the path in a form that is normalized
     // for the OS, meaning that it contains backslashes "\" on Windows
     const baseGlobbyPattern = join(rootDirectory, pattern, "**/*");
 
