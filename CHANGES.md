@@ -4,18 +4,14 @@
 
 ### @cesium/engine
 
-#### Additions :tada:
-
-- Added support for the [EXT_mesh_primitive_edge_visibility](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension. [#12765](https://github.com/CesiumGS/cesium/issues/12765)
-
-## 1.135 - 2025-11-01
-
-### @cesium/engine
-
 #### Breaking Changes :mega:
 
 - `scene.drillPick` now uses a breadth-first search strategy instead of depth-first. This may change which entities are picked when
   using large values of `width` and `height` when providing a `limit`, prioritizing entities closer to the camera.
+
+#### Additions :tada:
+
+- Added support for [EXT_mesh_primitive_edge_visibility](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension. [#12765](https://github.com/CesiumGS/cesium/issues/12765)
 
 #### Fixes :wrench:
 
