@@ -31,7 +31,7 @@ import {
   createJsHintOptions,
   defaultESBuildOptions,
   buildSandcastleGallery,
-  buildNewSandcastleApp,
+  buildSandcastleApp,
 } from "./scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -289,19 +289,19 @@ export async function buildTs() {
   await createTypeScriptDefinitions();
 }
 
-export const buildNewSandcastle = gulp.series(
-  async function buildSandcastleApp() {
-    return buildNewSandcastleApp(isProduction);
+export const buildSandcastle = gulp.series(
+  async function buildSandcastleAppStep() {
+    return buildSandcastleApp(isProduction);
   },
-  async function buildGallery() {
+  async function buildGalleryStep() {
     return buildSandcastleGallery(!isProduction);
   },
 );
 
 export const buildApps = gulp.parallel(
   buildCesiumViewer,
+  buildLegacySandcastle,
   buildSandcastle,
-  buildNewSandcastle,
 );
 
 const filesToClean = [
@@ -597,10 +597,10 @@ async function pruneScriptsForZip(packageJsonPath) {
 
 export const makeZip = gulp.series(
   release,
-  async function buildSandcastleApp() {
-    return buildNewSandcastleApp(false);
+  async function buildSandcastleAppStep() {
+    return buildSandcastleApp(false);
   },
-  async function buildGallery() {
+  async function buildGalleryStep() {
     return buildSandcastleGallery(false);
   },
   async function createZipFile() {
@@ -1652,7 +1652,7 @@ export async function buildThirdParty() {
   return writeFile("ThirdParty.json", JSON.stringify(licenseJson, null, 2));
 }
 
-async function buildSandcastle() {
+async function buildLegacySandcastle() {
   const streams = [];
   let appStream = gulp.src(
     [

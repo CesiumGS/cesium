@@ -684,7 +684,7 @@ async function importSandcastleBuildFunctions() {
   return await import(pathToFileURL(buildGalleryScriptPath).href);
 }
 
-export async function buildNewSandcastleApp(isProduction) {
+export async function buildSandcastleApp(isProduction) {
   const { join, dirname } = path;
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const { createSandcastleConfig, buildStatic } =

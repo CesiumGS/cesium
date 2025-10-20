@@ -115,7 +115,7 @@
     "build-ts": "gulp buildTs",
     "build-third-party": "gulp buildThirdParty",
     "build-apps": "gulp buildApps",
-    "build-sandcastle": "gulp buildNewSandcastle",
+    "build-sandcastle": "gulp buildSandcastle",
     "clean": "gulp clean",
     "cloc": "gulp cloc",
     "coverage": "gulp coverage",

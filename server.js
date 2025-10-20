@@ -20,7 +20,7 @@ import {
   buildCesium,
   getSandcastleConfig,
   buildSandcastleGallery,
-  buildNewSandcastleApp,
+  buildSandcastleApp,
 } from "./scripts/build.js";
 
 const argv = yargs(process.argv)
@@ -112,7 +112,7 @@ const throttle = (callback) => {
       // Only build it when we detect it doesn't exist to save on dev time
       console.log("Building Sandcastle...");
       const startTime = performance.now();
-      await buildNewSandcastleApp(false);
+      await buildSandcastleApp(false);
       await buildSandcastleGallery();
       console.log(
         `Sandcastle built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
