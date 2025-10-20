@@ -436,7 +436,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
 /**
  * Creates a tiled imagery provider using the Google Earth Imagery API.
  *
- * @param {Resource|String} url The url of the Google Earth server hosting the imagery.
+ * @param {Resource|string} url The url of the Google Earth server hosting the imagery.
  * @param {GoogleEarthEnterpriseMapsProvider.ConstructorOptions} [options] Object describing initialization options
  * @returns {Promise<GoogleEarthEnterpriseMapsProvider>} The created GoogleEarthEnterpriseMapsProvider.
  *

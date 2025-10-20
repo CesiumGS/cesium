@@ -107,7 +107,7 @@ TileMapServiceImageryProvider._requestMetadata = async function (
 /**
  * Creates a TileMapServiceImageryProvider from the specified url.
  *
- * @param {Resource|String} url Path to image tiles on server.
+ * @param {Resource|string} url Path to image tiles on server.
  * @param {TileMapServiceImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<TileMapServiceImageryProvider>} A promise that resolves to the created TileMapServiceImageryProvider.
  *
@@ -205,7 +205,7 @@ function calculateSafeMinimumDetailLevel(
  * Parses the results of a successful xml request
  * @private
  *
- * @param {Object} xml
+ * @param {object} xml
  * @param {TileMapServiceImageryProvider.ConstructorOptions} options
  * @param {Resource} tmsResource
  * @param {Resource} xmlResource
