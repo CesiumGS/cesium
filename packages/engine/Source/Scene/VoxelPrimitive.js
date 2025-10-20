@@ -40,7 +40,7 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix used to transform the primitive.
  * @param {CustomShader} [options.customShader] The custom shader used to style the primitive.
  * @param {Clock} [options.clock] The clock used to control time dynamic behavior.
- * @param {Boolean} [options.calculateStatistics] Generate statistics for performance profile.
+ * @param {boolean} [options.calculateStatistics] Generate statistics for performance profile.
  *
  * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider

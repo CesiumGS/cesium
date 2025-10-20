@@ -39,7 +39,7 @@ function LayerInformation(layer) {
 }
 
 /**
- * @typedef {Object} CesiumTerrainProvider.ConstructorOptions
+ * @typedef {object} CesiumTerrainProvider.ConstructorOptions
  *
  * Initialization options for the CesiumTerrainProvider constructor
  *
@@ -1198,7 +1198,7 @@ CesiumTerrainProvider.fromIonAssetId = async function (assetId, options) {
  * <li> {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/heightmap-1.0 Height Map} </li>
  * </ul>
  *
- * @param {Resource|String|Promise<Resource>|Promise<String>} url The URL of the Cesium terrain server.
+ * @param {Resource|string|Promise<Resource>|Promise<string>} url The URL of the Cesium terrain server.
  * @param {CesiumTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<CesiumTerrainProvider>}
  *
