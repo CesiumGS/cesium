@@ -636,6 +636,10 @@ function pickMetadataAt(scene, schemaId, className, propertyName, x, y) {
 describe(
   "Scene/Scene",
   function () {
+    // It's not easily possible to mock the most detailed pick functions
+    // so don't run those tests when using the WebGL stub
+    const webglStub = !!window.webglStub;
+
     let scene;
 
     beforeAll(function () {
@@ -844,6 +848,31 @@ describe(
 
       scene.renderForSpecs();
       expect(spyListener).toHaveBeenCalled();
+    });
+
+    it("afterRender functions can schedule callbacks for next frame", function () {
+      const spyListener = jasmine.createSpy("listener");
+      const spyListener2 = jasmine.createSpy("listener");
+
+      const primitive = {
+        update: function (frameState) {
+          frameState.afterRender.push(spyListener);
+          frameState.afterRender.push(() => {
+            frameState.afterRender.push(spyListener2);
+          });
+        },
+        destroy: function () {},
+        isDestroyed: () => false,
+      };
+      scene.primitives.add(primitive);
+
+      scene.renderForSpecs();
+      expect(spyListener).toHaveBeenCalled();
+      expect(spyListener2).not.toHaveBeenCalled();
+
+      scene.renderForSpecs();
+      expect(spyListener).toHaveBeenCalled();
+      expect(spyListener2).toHaveBeenCalled();
     });
 
     function CommandMockPrimitive(command) {
@@ -1473,6 +1502,56 @@ describe(
       expect(scene).toRenderAndCall(function (rgba) {
         expect(uniformState.globeDepthTexture).toBeDefined();
       });
+    });
+
+    it("pick", async function () {
+      if (webglStub) {
+        return;
+      }
+      const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+      const rectanglePrimitive = createRectangle(rectangle);
+      const primitives = scene.primitives;
+      primitives.add(rectanglePrimitive);
+
+      scene.camera.setView({ destination: rectangle });
+
+      const windowPosition = new Cartesian2(0, 0);
+      const result = scene.pick(windowPosition);
+
+      expect(result).toBeDefined();
+      expect(result.primitive).toEqual(rectanglePrimitive);
+    });
+
+    it("pickAsync", async function () {
+      if (webglStub) {
+        return;
+      }
+      if (!scene.context.webgl2) {
+        return;
+      }
+      const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+      const rectanglePrimitive = createRectangle(rectangle);
+      const primitives = scene.primitives;
+      primitives.add(rectanglePrimitive);
+
+      scene.camera.setView({ destination: rectangle });
+
+      const windowPosition = new Cartesian2(0, 0);
+
+      let result;
+      let ready = false;
+      scene.pickAsync(windowPosition).then((result0) => {
+        result = result0;
+        ready = true;
+      });
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return ready;
+      });
+
+      expect(result).toBeDefined();
+      expect(result.primitive).toEqual(rectanglePrimitive);
     });
 
     it("pickPosition", function () {

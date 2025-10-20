@@ -236,9 +236,7 @@ describe(
           scene.renderForSpecs();
           expect(scene).toPickPrimitive(rectangle);
         });
-      });
 
-      describe("pickAsync", function () {
         it("picks a primitive async", async function () {
           if (webglStub) {
             return;
@@ -251,10 +249,12 @@ describe(
 
           let actual;
           let ready = false;
-          scene.pickAsync(windowPosition).then((result) => {
-            actual = result;
-            ready = true;
-          });
+          scene._picking
+            .pick(scene, windowPosition, undefined, undefined, 1, true)
+            .then((result) => {
+              actual = result[0];
+              ready = true;
+            });
 
           await pollToPromise(function () {
             scene.renderForSpecs();
