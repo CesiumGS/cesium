@@ -34,7 +34,7 @@ describe("Core/Check", function () {
       }
 
       expect(function () {
-        Check.typeOf.bigint("bigint", BigInt()); // eslint-disable-line
+        Check.typeOf.bigint("bigint", BigInt());
       }).not.toThrowDeveloperError();
     });
 
