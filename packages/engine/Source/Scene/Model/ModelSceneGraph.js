@@ -985,6 +985,7 @@ function updatePrimitiveShowBoundingVolume(runtimePrimitive, options) {
 }
 
 const scratchSilhouetteCommands = [];
+const scratchEdgeCommands = [];
 const scratchPushDrawCommandOptions = {
   frameState: undefined,
   hasSilhouette: undefined,
@@ -1006,6 +1007,10 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   const silhouetteCommands = scratchSilhouetteCommands;
   silhouetteCommands.length = 0;
 
+  // Gather edge commands for the edge pass
+  const edgeCommands = scratchEdgeCommands;
+  edgeCommands.length = 0;
+
   // Since this function is called each frame, the options object is
   // preallocated in a scratch variable
   const pushDrawCommandOptions = scratchPushDrawCommandOptions;
@@ -1020,6 +1025,7 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   );
 
   addAllToArray(frameState.commandList, silhouetteCommands);
+  addAllToArray(frameState.commandList, edgeCommands);
 };
 
 // Callback is defined here to avoid allocating a closure in the render loop
@@ -1029,6 +1035,7 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
 
   const passes = frameState.passes;
   const silhouetteCommands = scratchSilhouetteCommands;
+  const edgeCommands = scratchEdgeCommands;
   const primitiveDrawCommand = runtimePrimitive.drawCommand;
   primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
 
@@ -1038,6 +1045,11 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
   // gathering the original commands and the silhouette commands separately.
   if (hasSilhouette && !passes.pick) {
     primitiveDrawCommand.pushSilhouetteCommands(frameState, silhouetteCommands);
+  }
+
+  // Add edge commands to the edge pass
+  if (defined(primitiveDrawCommand.pushEdgeCommands)) {
+    primitiveDrawCommand.pushEdgeCommands(frameState, edgeCommands);
   }
 }
 

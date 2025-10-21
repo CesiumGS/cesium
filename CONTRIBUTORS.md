@@ -102,6 +102,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Paul Connelly](https://github.com/pmconne)
   - [Jason Crow](https://github.com/jason-crow)
   - [Erin Ingram](https://github.com/eringram)
+  - [Daniel Zhong](https://github.com/danielzhong)
   - [Mark Schlosser](https://github.com/markschlosseratbentley)
   - [Adam Larkeryd](https://github.com/alarkbentley)
 - [Flightradar24 AB](https://www.flightradar24.com)
