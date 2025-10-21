@@ -1574,7 +1574,7 @@ function clipTriangleAgainstBoxEdgeRange(
           currPoint,
           scratchIntersection,
         );
-        const { x, y, t } = intersection;
+        const { x, y, z: t } = intersection;
         const tInv = 1.0 - t;
 
         // Interpolate the barycentric coordinates
