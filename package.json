@@ -121,7 +121,7 @@
     "coverage": "gulp coverage",
     "build-docs": "gulp buildDocs",
     "build-docs-watch": "gulp buildDocsWatch",
-    "eslint": "eslint \"./**/*.*js\" \"./**/*.*ts*\" \"./**/*.html\" --cache --quiet",
+    "eslint": "eslint \"./**/*.*js\" \"./**/*.*ts*\" \"./**/*.html\" --cache --quiet --report-unused-disable-directives",
     "make-zip": "gulp makeZip",
     "markdownlint": "markdownlint \"**/*.md\"",
     "release": "gulp release",
