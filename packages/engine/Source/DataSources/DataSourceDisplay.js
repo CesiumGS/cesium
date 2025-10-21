@@ -97,9 +97,9 @@ function DataSourceDisplay(options) {
     const that = this;
     const addPrimitives = function () {
       scene.primitives.add(primitives);
-      scene.groundPrimitives.add(groundPrimitives);
-      removeDefaultDataSourceListener();
-      removeDataSourceCollectionListener();
+      // scene.groundPrimitives.add(groundPrimitives);
+      // removeDefaultDataSourceListener();
+      // removeDataSourceCollectionListener();
       that._removeDefaultDataSourceListener = undefined;
       that._removeDataSourceCollectionListener = undefined;
     };
