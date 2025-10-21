@@ -74,13 +74,12 @@ const scratchGeodeticSurfaceNormalSkirt = new Cartesian3();
 const scratchGeodeticSurfaceNormalUpsample = new Cartesian3();
 
 /**
+ * Decode the position attributes from a glTF object.
  * @private
- * @param {Object.<string,*>} gltf
- * @returns {Float32Array}
+ * @param {Object.<string,*>} gltf The glTF JSON.
+ * @returns {Float32Array} The decoded positions, as a flattened array of x, y, z values.
  */
 function decodePositions(gltf) {
-  let positions;
-
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.attributes["POSITION"]];
   const bufferView = gltf.bufferViews[accessor.bufferView];
@@ -89,47 +88,11 @@ function decodePositions(gltf) {
   const bufferViewMeshOpt = bufferView.extensions
     ? bufferView.extensions["EXT_meshopt_compression"]
     : undefined;
-  let buffer;
 
-  if (bufferViewMeshOpt !== undefined) {
-    buffer = gltf.buffers[bufferViewMeshOpt.buffer].extras._pipeline.source;
+  if (bufferViewMeshOpt === undefined) {
+    const buffer = gltf.buffers[bufferView.buffer].extras._pipeline.source;
 
-    const compressedBuffer = new Uint8Array(
-      buffer.buffer,
-      buffer.byteOffset + // offset from the start of the glb
-        (bufferViewMeshOpt.byteOffset ?? 0) +
-        (accessor.byteOffset ?? 0),
-      bufferViewMeshOpt.byteLength,
-    );
-
-    const positionByteLength = bufferViewMeshOpt.byteStride;
-    const PositionType = positionByteLength === 4 ? Uint8Array : Uint16Array;
-    const positionsResult = new PositionType(positionCount * 4);
-    // @ts-ignore
-    MeshoptDecoder.decodeVertexBuffer(
-      new Uint8Array(positionsResult.buffer),
-      positionCount,
-      positionByteLength,
-      compressedBuffer,
-    );
-
-    const positionStorageValueMax =
-      (1 << (positionsResult.BYTES_PER_ELEMENT * 8)) - 1;
-    positions = new Float32Array(positionCount * 3);
-    for (let p = 0; p < positionCount; p++) {
-      // only the first 3 components are used
-      positions[p * 3 + 0] =
-        positionsResult[p * 4 + 0] / positionStorageValueMax;
-      positions[p * 3 + 1] =
-        positionsResult[p * 4 + 1] / positionStorageValueMax;
-      positions[p * 3 + 2] =
-        positionsResult[p * 4 + 2] / positionStorageValueMax;
-      // fourth component is not used
-    }
-  } else {
-    buffer = gltf.buffers[bufferView.buffer].extras._pipeline.source;
-
-    positions = new Float32Array(
+    return new Float32Array(
       buffer.buffer,
       buffer.byteOffset + // offset from the start of the glb
         (bufferView.byteOffset ?? 0) +
@@ -138,17 +101,46 @@ function decodePositions(gltf) {
     );
   }
 
+  const buffer = gltf.buffers[bufferViewMeshOpt.buffer].extras._pipeline.source;
+
+  const compressedBuffer = new Uint8Array(
+    buffer.buffer,
+    buffer.byteOffset + // offset from the start of the glb
+      (bufferViewMeshOpt.byteOffset ?? 0) +
+      (accessor.byteOffset ?? 0),
+    bufferViewMeshOpt.byteLength,
+  );
+
+  const positionByteLength = bufferViewMeshOpt.byteStride;
+  const PositionType = positionByteLength === 4 ? Uint8Array : Uint16Array;
+  const positionsResult = new PositionType(positionCount * 4);
+  MeshoptDecoder.decodeVertexBuffer(
+    new Uint8Array(positionsResult.buffer),
+    positionCount,
+    positionByteLength,
+    compressedBuffer,
+  );
+
+  const positionStorageValueMax =
+    (1 << (positionsResult.BYTES_PER_ELEMENT * 8)) - 1;
+  const positions = new Float32Array(positionCount * 3);
+  for (let p = 0; p < positionCount; p++) {
+    // only the first 3 components are used
+    positions[p * 3 + 0] = positionsResult[p * 4 + 0] / positionStorageValueMax;
+    positions[p * 3 + 1] = positionsResult[p * 4 + 1] / positionStorageValueMax;
+    positions[p * 3 + 2] = positionsResult[p * 4 + 2] / positionStorageValueMax;
+    // fourth component is not used
+  }
   return positions;
 }
 
 /**
+ * Decode the normal attributes from a glTF object.
  * @private
- * @param {Object.<string,*>} gltf
- * @returns {Float32Array}
+ * @param {Object.<string,*>} gltf The glTF JSON.
+ * @returns {Float32Array} The decoded normals, as a flattened array of x, y, z values.
  */
 function decodeNormals(gltf) {
-  let normals;
-
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.attributes["NORMAL"]];
   const bufferView = gltf.bufferViews[accessor.bufferView];
@@ -157,61 +149,11 @@ function decodeNormals(gltf) {
   const bufferViewMeshOpt = bufferView.extensions
     ? bufferView.extensions["EXT_meshopt_compression"]
     : undefined;
-  let buffer;
 
-  if (bufferViewMeshOpt !== undefined) {
-    buffer = gltf.buffers[bufferViewMeshOpt.buffer].extras._pipeline.source;
+  if (bufferViewMeshOpt === undefined) {
+    const buffer = gltf.buffers[bufferView.buffer].extras._pipeline.source;
 
-    const compressedBuffer = new Uint8Array(
-      buffer.buffer,
-      buffer.byteOffset + // offset from the start of the glb
-        (bufferViewMeshOpt.byteOffset ?? 0) +
-        (accessor.byteOffset ?? 0),
-      bufferViewMeshOpt.byteLength,
-    );
-
-    const normalByteLength = bufferViewMeshOpt.byteStride;
-    const normalsResult = new Int8Array(normalCount * normalByteLength);
-
-    // @ts-ignore
-    MeshoptDecoder.decodeVertexBuffer(
-      new Uint8Array(normalsResult.buffer),
-      normalCount,
-      normalByteLength,
-      compressedBuffer,
-    );
-
-    normals = new Float32Array(normalCount * 3);
-    for (let i = 0; i < normalCount; i++) {
-      // AttributeCompression.octDecodeInRange is not compatible with KHR_mesh_quantization, so do the oct decode manually
-      // The quantization puts values between -127 and +127, but clamp in case it has -128
-      // The third component is unused until normals support non-8-bit quantization
-      // The fourth component is always unused
-      let octX = Math.max(normalsResult[i * 4 + 0] / 127.0, -1.0);
-      let octY = Math.max(normalsResult[i * 4 + 1] / 127.0, -1.0);
-      const octZ = 1.0 - (Math.abs(octX) + Math.abs(octY));
-
-      if (octZ < 0.0) {
-        const oldX = octX;
-        const oldY = octY;
-        octX = (1.0 - Math.abs(oldY)) * CesiumMath.signNotZero(oldX);
-        octY = (1.0 - Math.abs(oldX)) * CesiumMath.signNotZero(oldY);
-      }
-
-      let normal = scratchNormal;
-      normal.x = octX;
-      normal.y = octY;
-      normal.z = octZ;
-      normal = Cartesian3.normalize(normal, scratchNormal);
-
-      normals[i * 3 + 0] = normal.x;
-      normals[i * 3 + 1] = normal.y;
-      normals[i * 3 + 2] = normal.z;
-    }
-  } else {
-    buffer = gltf.buffers[bufferView.buffer].extras._pipeline.source;
-
-    normals = new Float32Array(
+    return new Float32Array(
       buffer.buffer,
       buffer.byteOffset + // offset from the start of the glb
         (bufferView.byteOffset ?? 0) +
@@ -220,21 +162,66 @@ function decodeNormals(gltf) {
     );
   }
 
+  const buffer = gltf.buffers[bufferViewMeshOpt.buffer].extras._pipeline.source;
+
+  const compressedBuffer = new Uint8Array(
+    buffer.buffer,
+    buffer.byteOffset + // offset from the start of the glb
+      (bufferViewMeshOpt.byteOffset ?? 0) +
+      (accessor.byteOffset ?? 0),
+    bufferViewMeshOpt.byteLength,
+  );
+
+  const normalByteLength = bufferViewMeshOpt.byteStride;
+  const normalsResult = new Int8Array(normalCount * normalByteLength);
+
+  MeshoptDecoder.decodeVertexBuffer(
+    new Uint8Array(normalsResult.buffer),
+    normalCount,
+    normalByteLength,
+    compressedBuffer,
+  );
+
+  const normals = new Float32Array(normalCount * 3);
+  for (let i = 0; i < normalCount; i++) {
+    // AttributeCompression.octDecodeInRange is not compatible with KHR_mesh_quantization, so do the oct decode manually
+    // The quantization puts values between -127 and +127, but clamp in case it has -128
+    // The third component is unused until normals support non-8-bit quantization
+    // The fourth component is always unused
+    let octX = Math.max(normalsResult[i * 4 + 0] / 127.0, -1.0);
+    let octY = Math.max(normalsResult[i * 4 + 1] / 127.0, -1.0);
+    const octZ = 1.0 - (Math.abs(octX) + Math.abs(octY));
+
+    if (octZ < 0.0) {
+      const oldX = octX;
+      const oldY = octY;
+      octX = (1.0 - Math.abs(oldY)) * CesiumMath.signNotZero(oldX);
+      octY = (1.0 - Math.abs(oldX)) * CesiumMath.signNotZero(oldY);
+    }
+
+    let normal = scratchNormal;
+    normal.x = octX;
+    normal.y = octY;
+    normal.z = octZ;
+    normal = Cartesian3.normalize(normal, scratchNormal);
+
+    normals[i * 3 + 0] = normal.x;
+    normals[i * 3 + 1] = normal.y;
+    normals[i * 3 + 2] = normal.z;
+  }
   return normals;
 }
 
 /**
+ * Decode the index attributes from a glTF object.
  * @private
- * @param {Object.<string,*>} gltf
- * @returns {Uint16Array|Uint32Array}
+ * @param {Object.<string,*>} gltf The glTF JSON.
+ * @returns {Uint16Array|Uint32Array} An array of indices.
  */
 function decodeIndices(gltf) {
-  let indices;
-
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.indices];
   const bufferView = gltf.bufferViews[accessor.bufferView];
-
   const indexCount = accessor.count;
 
   const SizedIndexType =
@@ -245,30 +232,10 @@ function decodeIndices(gltf) {
   const bufferViewMeshOpt = bufferView.extensions
     ? bufferView.extensions["EXT_meshopt_compression"]
     : undefined;
-  let buffer;
 
-  if (bufferViewMeshOpt !== undefined) {
-    buffer = gltf.buffers[bufferViewMeshOpt.buffer].extras._pipeline.source;
-    const compressedBuffer = new Uint8Array(
-      buffer.buffer,
-      buffer.byteOffset + // offset from the start of the glb
-        (bufferViewMeshOpt.byteOffset ?? 0) +
-        (accessor.byteOffset ?? 0),
-      bufferViewMeshOpt.byteLength,
-    );
-    indices = new SizedIndexType(indexCount);
-
-    const indexByteLength = bufferViewMeshOpt.byteStride;
-    // @ts-ignore
-    MeshoptDecoder.decodeIndexBuffer(
-      new Uint8Array(indices.buffer),
-      indexCount,
-      indexByteLength,
-      compressedBuffer,
-    );
-  } else {
-    buffer = gltf.buffers[bufferView.buffer].extras._pipeline.source;
-    indices = new SizedIndexType(
+  if (bufferViewMeshOpt === undefined) {
+    const buffer = gltf.buffers[bufferView.buffer].extras._pipeline.source;
+    return new SizedIndexType(
       buffer.buffer,
       buffer.byteOffset + // offset from the glb
         (bufferView.byteOffset ?? 0) +
@@ -277,18 +244,33 @@ function decodeIndices(gltf) {
     );
   }
 
+  const buffer = gltf.buffers[bufferViewMeshOpt.buffer].extras._pipeline.source;
+  const compressedBuffer = new Uint8Array(
+    buffer.buffer,
+    buffer.byteOffset + // offset from the start of the glb
+      (bufferViewMeshOpt.byteOffset ?? 0) +
+      (accessor.byteOffset ?? 0),
+    bufferViewMeshOpt.byteLength,
+  );
+
+  const indices = new SizedIndexType(indexCount);
+  MeshoptDecoder.decodeIndexBuffer(
+    new Uint8Array(indices.buffer),
+    indexCount,
+    bufferViewMeshOpt.byteStride,
+    compressedBuffer,
+  );
   return indices;
 }
 
 /**
+ * Decode the edge index attributes from a glTF object.
  * @private
- * @param {Object.<string,*>} gltf
- * @param {string} name
- * @returns {Uint16Array|Uint32Array}
+ * @param {Object.<string,*>} gltf The glTF JSON.
+ * @param {string} name The name of the edge indices to decode.
+ * @returns {Uint16Array|Uint32Array} An array of edge indices.
  */
 function decodeEdgeIndices(gltf, name) {
-  let indices;
-
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.extensions.CESIUM_tile_edges[name]];
   const bufferView = gltf.bufferViews[accessor.bufferView];
@@ -302,32 +284,11 @@ function decodeEdgeIndices(gltf, name) {
   const bufferViewMeshOpt = bufferView.extensions
     ? bufferView.extensions["EXT_meshopt_compression"]
     : undefined;
-  let buffer;
 
-  if (bufferViewMeshOpt !== undefined) {
-    buffer = gltf.buffers[bufferViewMeshOpt.buffer].extras._pipeline.source;
+  if (bufferViewMeshOpt === undefined) {
+    const buffer = gltf.buffers[bufferView.buffer].extras._pipeline.source;
 
-    const compressedBuffer = new Uint8Array(
-      buffer.buffer,
-      buffer.byteOffset + // offset from the start of the glb
-        (bufferViewMeshOpt.byteOffset ?? 0) +
-        (accessor.byteOffset ?? 0),
-      bufferViewMeshOpt.byteLength,
-    );
-    indices = new SizedIndexType(indexCount);
-
-    const indexByteLength = bufferViewMeshOpt.byteStride;
-    // @ts-ignore
-    MeshoptDecoder.decodeIndexSequence(
-      new Uint8Array(indices.buffer),
-      indexCount,
-      indexByteLength,
-      compressedBuffer,
-    );
-  } else {
-    buffer = gltf.buffers[bufferView.buffer].extras._pipeline.source;
-
-    indices = new SizedIndexType(
+    return new SizedIndexType(
       buffer.buffer,
       buffer.byteOffset + // offset from the glb
         (bufferView.byteOffset ?? 0) +
@@ -336,20 +297,38 @@ function decodeEdgeIndices(gltf, name) {
     );
   }
 
+  const buffer = gltf.buffers[bufferViewMeshOpt.buffer].extras._pipeline.source;
+  const compressedBuffer = new Uint8Array(
+    buffer.buffer,
+    buffer.byteOffset + // offset from the start of the glb
+      (bufferViewMeshOpt.byteOffset ?? 0) +
+      (accessor.byteOffset ?? 0),
+    bufferViewMeshOpt.byteLength,
+  );
+
+  const indices = new SizedIndexType(indexCount);
+  const indexByteLength = bufferViewMeshOpt.byteStride;
+  MeshoptDecoder.decodeIndexSequence(
+    new Uint8Array(indices.buffer),
+    indexCount,
+    indexByteLength,
+    compressedBuffer,
+  );
   return indices;
 }
 
 /**
+ * Contains information about geometry-related vertex arrays in a glTF asset.
  * @private
  * @typedef GltfInfo
  *
- * @property {Float32Array} positions
- * @property {Float32Array|undefined} normals
- * @property {Uint16Array|Uint32Array} indices
- * @property {Uint16Array|Uint32Array} edgeIndicesWest
- * @property {Uint16Array|Uint32Array} edgeIndicesSouth
- * @property {Uint16Array|Uint32Array} edgeIndicesEast
- * @property {Uint16Array|Uint32Array} edgeIndicesNorth
+ * @property {Float32Array} positions The decoded position attributes.
+ * @property {Float32Array|undefined} normals The decoded normal attributes, or <code>undefined</code> if the glTF has no normals.
+ * @property {Uint16Array|Uint32Array} indices The decoded indices.
+ * @property {Uint16Array|Uint32Array} edgeIndicesWest The edge indices along the West side of the tile.
+ * @property {Uint16Array|Uint32Array} edgeIndicesSouth The edge indices along the South side of the tile.
+ * @property {Uint16Array|Uint32Array} edgeIndicesEast The edge indices along the East side of the tile.
+ * @property {Uint16Array|Uint32Array} edgeIndicesNorth The edge indices along the North side of the tile.
  */
 
 const scratchGltfInfo = {
@@ -363,11 +342,12 @@ const scratchGltfInfo = {
 };
 
 /**
+ * Decodes geometry-related vertex arrays from a glTF asset.
  * @private
- * @param {Object.<string,*>} gltf
- * @param {boolean} hasNormals
- * @param {GltfInfo} result
- * @returns {GltfInfo}
+ * @param {Object.<string,*>} gltf The glTF JSON.
+ * @param {boolean} hasNormals <code>true</code> if the glTF has normal attributes.
+ * @param {GltfInfo} result The object to store the decoded arrays.
+ * @returns {GltfInfo} The decoded geometry info.
  */
 function decodeGltf(gltf, hasNormals, result) {
   result.positions = decodePositions(gltf);
@@ -381,10 +361,11 @@ function decodeGltf(gltf, hasNormals, result) {
 }
 
 /**
+ * Compares two edge indices for sorting.
  * @private
- * @param {number} a
- * @param {number} b
- * @returns {number}
+ * @param {number} a The first edge index.
+ * @param {number} b The second edge index.
+ * @returns {number} A negative number if <code>a</code> is less than <code>b</code>, a positive number if <code>a</code> is greater than <code>b</code>, or zero if they are equal.
  */
 const sortedEdgeCompare = function (a, b) {
   return a - b;
@@ -485,15 +466,10 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
     : Promise.resolve(undefined);
 
   return decoderPromise.then(function () {
-    // @ts-ignore
     const tileMinLongitude = rectangle.west;
-    // @ts-ignore
     const tileMinLatitude = rectangle.south;
-    // @ts-ignore
     const tileMaxLatitude = rectangle.north;
-    // @ts-ignore
     const tileLengthLongitude = rectangle.width;
-    // @ts-ignore
     const tileLengthLatitude = rectangle.height;
 
     const approximateCenterCartographic = Rectangle.center(
@@ -531,10 +507,8 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
       tilesetTransform,
     );
 
-    // @ts-ignore
     const gltfInfo = decodeGltf(gltf, hasVertexNormals, scratchGltfInfo);
 
-    // @ts-ignore
     const skirtVertexCount = TerrainProvider.getSkirtVertexCount(
       gltfInfo.edgeIndicesWest,
       gltfInfo.edgeIndicesSouth,
@@ -548,7 +522,6 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
     const vertexCountWithoutSkirts = positionsLocalWithoutSkirts.length / 3;
     const vertexCountWithSkirts = vertexCountWithoutSkirts + skirtVertexCount;
     const indexCountWithoutSkirts = indicesWithoutSkirts.length;
-    // @ts-ignore
     const skirtIndexCount =
       TerrainProvider.getSkirtIndexCountWithFilledCorners(skirtVertexCount);
     const indexCountWithSkirts = indexCountWithoutSkirts + skirtIndexCount;
@@ -606,17 +579,18 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
 
     // Use a terrain encoding without quantization.
     // This is just an easier way to save intermediate state
-
-    let minPosEnu = scratchMinimumPositionENU;
-    minPosEnu.x = Number.POSITIVE_INFINITY;
-    minPosEnu.y = Number.POSITIVE_INFINITY;
-    minPosEnu.z = Number.POSITIVE_INFINITY;
-
-    let maxPosEnu = scratchMaximumPositionENU;
-    maxPosEnu.x = Number.NEGATIVE_INFINITY;
-    maxPosEnu.y = Number.NEGATIVE_INFINITY;
-    maxPosEnu.z = Number.NEGATIVE_INFINITY;
-
+    let minPosEnu = Cartesian3.fromElements(
+      Number.POSITIVE_INFINITY,
+      Number.POSITIVE_INFINITY,
+      Number.POSITIVE_INFINITY,
+      scratchMinimumPositionENU,
+    );
+    let maxPosEnu = Cartesian3.fromElements(
+      Number.NEGATIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+      scratchMaximumPositionENU,
+    );
     const tempTerrainEncoding = new TerrainEncoding(
       boundingSphere.center,
       undefined,
@@ -655,9 +629,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
         scratchCartographic,
       );
 
-      const longitude = cartographic.longitude;
-      const latitude = cartographic.latitude;
-      const height = cartographic.height;
+      const { longitude, latitude, height } = cartographic;
 
       // If a vertex is an edge vertex we already know its exact UV and don't need to derive it from the position (which can have accuracy issues).
 
@@ -685,14 +657,11 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
 
       let normalOct;
       if (hasVertexNormals) {
-        let normal = scratchNormal;
-        // @ts-ignore
-        normal.x = normalsWithoutSkirts[i * 3 + 0];
-        // @ts-ignore
-        normal.y = normalsWithoutSkirts[i * 3 + 1];
-        // @ts-ignore
-        normal.z = normalsWithoutSkirts[i * 3 + 2];
-
+        let normal = Cartesian3.unpack(
+          normalsWithoutSkirts,
+          i * 3,
+          scratchNormal,
+        );
         normal = Matrix4.multiplyByPointAsVector(
           tilesetTransform,
           normal,
@@ -786,9 +755,20 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
  */
 
 /**
+ * Upsamples a parent tile's mesh to create a higher-detail child tile's mesh.
+ *
+ * Overview: Only include triangles that are inside the UV clipping region.
+ * If a triangle is partly outside, it will be clipped at the border.
+ * The clipping function returns a polygon where each point is a barycentric coordinate of the input triangle.
+ * Most of the time the triangle will not be clipped, so the polygon will be the three barycentric coordinates of the input triangle.
+ * If the triangle is completely outside the clipping region, the polygon will have no points and will be ignored.
+ * If the triangle is clipped, the polygon will have between four and six points and needs to be triangulated.
+ *  Vertex data for points that fall inside the triangle will be interpolated using the barycentric coordinates.
+ * Each vertex in the polygon is added to the new vertex list, with some special handling to avoid duplicate points between triangles.
+ *
  * @private
  * @param {Cesium3DTilesTerrainGeometryProcessor.UpsampleMeshOptions} options An object describing options for mesh upsampling.
- * @returns {TerrainMesh}
+ * @returns {TerrainMesh} The upsampled terrain mesh.
  */
 Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -822,8 +802,6 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   Check.typeOf.object("options.ellipsoid", options.ellipsoid);
   //>>includeEnd('debug');
 
-  // Overview: Only include triangles that are inside the UV clipping region. If a triangle is partly outside, it will be clipped at the border. The clipping function returns a polygon where each point is a barcentric coordinate of the input triangle. Most of the time the triangle will not be clipped, so the polygon will be the three barycentric coordinates of the input triangle. If the triangle is completely outside the clipping region, the polygon will have no points and will be ignored. If the triangle is clipped, the polygon will have between four and six points and needs to be trianglulated. Vertex data for points that fall inside the triangle will be interpolated using the barycentric coordinates. Each vertex in the polygon is added to the new vertex list, with some special handling to avoid duplicate points between triangles.
-
   const indexCount = options.parentIndexCountWithoutSkirts;
   const indices = options.parentIndices;
   const vertexCount = options.parentVertexCountWithoutSkirts;
@@ -841,21 +819,13 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   const upsampleRectangle = Rectangle.clone(options.rectangle, new Rectangle());
   const ellipsoid = Ellipsoid.clone(options.ellipsoid);
 
-  /** @type number[] */
   const upsampledTriIDs = [];
-  /** @type number[] */
   const upsampledUVs = [];
-  /** @type number[] */
   const upsampledBarys = [];
-  /** @type number[] */
   const upsampledIndices = [];
-  /** @type number[] */
   const upsampledWestIndices = [];
-  /** @type number[] */
   const upsampledSouthIndices = [];
-  /** @type number[] */
   const upsampledEastIndices = [];
-  /** @type number[] */
   const upsampledNorthIndices = [];
 
   clipTileFromQuadrant(
@@ -876,7 +846,8 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
     upsampledUVs,
   );
 
-  // Don't know the min and max height of the upsampled positions yet, so calculate a center point from the parent's min and max height
+  // Don't know the min and max height of the upsampled positions yet,
+  // so calculate a center point from the parent's min and max height
   const approximateCenterCartographic = Rectangle.center(
     upsampleRectangle,
     scratchCenterCartographicUpsample,
@@ -904,7 +875,6 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   );
   const upsampledVertexBufferStride = upsampledTerrainEncoding.stride;
 
-  // @ts-ignore
   const upsampledSkirtVertexCount = TerrainProvider.getSkirtVertexCount(
     upsampledWestIndices,
     upsampledSouthIndices,
@@ -914,7 +884,6 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   const upsampledVertexCountWithSkirts =
     upsampledVertexCountWithoutSkirts + upsampledSkirtVertexCount;
   const upsampledIndexCountWithoutSkirts = upsampledIndices.length;
-  // @ts-ignore
   const upsampledSkirtIndexCount =
     TerrainProvider.getSkirtIndexCountWithFilledCorners(
       upsampledSkirtVertexCount,
@@ -978,15 +947,18 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   let minimumHeight = Number.POSITIVE_INFINITY;
   let maximumHeight = Number.NEGATIVE_INFINITY;
 
-  let minPosEnu = scratchMinimumPositionENUUpsample;
-  minPosEnu.x = Number.POSITIVE_INFINITY;
-  minPosEnu.y = Number.POSITIVE_INFINITY;
-  minPosEnu.z = Number.POSITIVE_INFINITY;
-
-  let maxPosEnu = scratchMaximumPositionENUUpsample;
-  maxPosEnu.x = Number.NEGATIVE_INFINITY;
-  maxPosEnu.y = Number.NEGATIVE_INFINITY;
-  maxPosEnu.z = Number.NEGATIVE_INFINITY;
+  let minPosEnu = Cartesian3.fromElements(
+    Number.POSITIVE_INFINITY,
+    Number.POSITIVE_INFINITY,
+    Number.POSITIVE_INFINITY,
+    scratchMinimumPositionENUUpsample,
+  );
+  let maxPosEnu = Cartesian3.fromElements(
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    scratchMaximumPositionENUUpsample,
+  );
 
   for (let i = 0; i < upsampledVertexCountWithoutSkirts; i++) {
     const triId = upsampledTriIDs[i];
@@ -1176,13 +1148,15 @@ function addSkirtsToMesh(
   ecefToEnu,
   skirtHeight,
 ) {
-  const encoding = mesh.encoding;
+  const { encoding } = mesh;
   const vertexStride = encoding.stride;
   const vertexBuffer = mesh.vertices;
-  const hasVertexNormals = encoding.hasVertexNormals;
-  const hasWebMercatorT = encoding.hasWebMercatorT;
-  const exaggeration = encoding.exaggeration;
-  const exaggerationRelativeHeight = encoding.exaggerationRelativeHeight;
+  const {
+    hasVertexNormals,
+    hasWebMercatorT,
+    exaggeration,
+    exaggerationRelativeHeight,
+  } = encoding;
   const hasExaggeration = exaggeration !== 1.0;
   const hasGeodeticSurfaceNormals = hasExaggeration;
 
@@ -1198,7 +1172,6 @@ function addSkirtsToMesh(
   const eastIndices = mesh.eastIndicesNorthToSouth;
   const northIndices = mesh.northIndicesWestToEast;
 
-  // @ts-ignore
   TerrainProvider.addSkirtIndicesWithFilledCorners(
     westIndices,
     southIndices,
@@ -1427,12 +1400,13 @@ const scratchOutPoints = [
 ];
 
 /**
+ * Check if a given point is inside the limits of a box.
  * @private
- * @param {Cartesian2} boxMinimum
- * @param {Cartesian2} boxMaximum
- * @param {number} edgeId
- * @param {Cartesian2} p
- * @returns {number}
+ * @param {Cartesian2} boxMinimum The lower left corner of the box.
+ * @param {Cartesian2} boxMaximum The upper right corner of the box.
+ * @param {number} edgeId The ID of the edge to test against.
+ * @param {Cartesian2} p The point to test.
+ * @returns {number} Positive if inside, negative if outside, zero if on the edge.
  */
 function inside(boxMinimum, boxMaximum, edgeId, p) {
   switch (edgeId) {
@@ -1449,14 +1423,15 @@ function inside(boxMinimum, boxMaximum, edgeId, p) {
 }
 
 /**
+ * Compute the intersection of a line segment against one edge of a box.
  * @private
- * @param {Cartesian2} boxMinimum
- * @param {Cartesian2} boxMaximum
- * @param {number} edgeId
- * @param {Cartesian2} a
- * @param {Cartesian2} b
- * @param {Cartesian3} result
- * @returns {Cartesian3}
+ * @param {Cartesian2} boxMinimum The lower left corner of the box.
+ * @param {Cartesian2} boxMaximum The upper right corner of the box.
+ * @param {number} edgeId The ID of the edge to intersect against.
+ * @param {Cartesian2} a The beginning of the line segment.
+ * @param {Cartesian2} b The end of the line segment.
+ * @param {Cartesian3} result The object into which to copy the result.
+ * @returns {Cartesian3} The intersection point in 2D coordinates and the interpolation factor t as the third component.
  */
 function intersect(boxMinimum, boxMaximum, edgeId, a, b, result) {
   let t, intersectX, intersectY;
@@ -1487,6 +1462,7 @@ function intersect(boxMinimum, boxMaximum, edgeId, a, b, result) {
 }
 
 /**
+ * Coordinates of a quadrilateral resulting from clipping a triangle against a box.
  * @private
  * @typedef PolygonResult
  *
@@ -1496,6 +1472,7 @@ function intersect(boxMinimum, boxMaximum, edgeId, a, b, result) {
  */
 
 /**
+ * A scratch polygon result for use in clipping.
  * @private
  * @type {PolygonResult}
  */
@@ -1597,9 +1574,7 @@ function clipTriangleAgainstBoxEdgeRange(
           currPoint,
           scratchIntersection,
         );
-        const x = intersection.x;
-        const y = intersection.y;
-        const t = intersection.z;
+        const { x, y, t } = intersection;
         const tInv = 1.0 - t;
 
         // Interpolate the barycentric coordinates
@@ -1640,15 +1615,17 @@ function clipTriangleAgainstBoxEdgeRange(
 }
 
 /**
+ * Clips a 2D triangle against one quadrant of a box.
  * @private
- * @param {boolean} isEastChild
- * @param {boolean} isNorthChild
- * @param {Cartesian2} boxMinimum
- * @param {Cartesian2} boxMaximum
- * @param {Cartesian2} p0
- * @param {Cartesian2} p1
- * @param {Cartesian2} p2
- * @param {PolygonResult} result
+ * @param {boolean} isEastChild <code>true</code> if the quadrant is on the east side of the box.
+ * @param {boolean} isNorthChild <code>true</code> if the quadrant is on the north side of the box.
+ * @param {Cartesian2} boxMinimum The lower left corner of the box.
+ * @param {Cartesian2} boxMaximum The upper right corner of the box.
+ * @param {Cartesian2} p0 The first vertex of the triangle.
+ * @param {Cartesian2} p1 The second vertex of the triangle.
+ * @param {Cartesian2} p2 The third vertex of the triangle.
+ * @param {PolygonResult} result The object into which to copy the result.
+ * @returns {PolygonResult} The polygon that results after the clip, specified as a list of coordinates in counter-clockwise order.
  */
 function clipTriangleFromQuadrant(
   isEastChild,
@@ -1694,21 +1671,21 @@ const lookUpTableBaryToPrim = [
 /**
  * Returns triangles that are clipped against a quadrant of a tile.
  * @private
- * @param {boolean} isEastChild
- * @param {boolean} isNorthChild
- * @param {number} indexCount
- * @param {Uint8Array|Uint16Array|Uint32Array} indices
- * @param {number} vertexCount
- * @param {Float32Array} vertices
- * @param {TerrainEncoding} vertexEncoding
- * @param {number[]} resultIndices Indices of the clipped triangles
- * @param {number[]} resultWestIndices Indices on the west edge
- * @param {number[]} resultSouthIndices Indices on the south edge
- * @param {number[]} resultEastIndices Indices on the east edge
- * @param {number[]} resultNorthIndices Indices on the north edge
- * @param {number[]} resultTriIds Per-vertex index to the originating triangle in indices
- * @param {number[]} resultBary Per-vertex barycentric coordinate corresponding to the originating triangle
- * @param {number[]} resultUVs Per-vertex UV within the quadrant
+ * @param {boolean} isEastChild <code>true</code> if the quadrant is on the east side of the tile.
+ * @param {boolean} isNorthChild <code>true</code> if the quadrant is on the north side of the tile.
+ * @param {number} indexCount Number of indices in the original triangle list.
+ * @param {Uint8Array|Uint16Array|Uint32Array} indices Original triangle index list.
+ * @param {number} vertexCount Number of vertices in the original vertex list.
+ * @param {Float32Array} vertices Original vertex list.
+ * @param {TerrainEncoding} vertexEncoding Encoding of the original vertices.
+ * @param {number[]} resultIndices Indices of the clipped triangles.
+ * @param {number[]} resultWestIndices Indices on the west edge.
+ * @param {number[]} resultSouthIndices Indices on the south edge.
+ * @param {number[]} resultEastIndices Indices on the east edge.
+ * @param {number[]} resultNorthIndices Indices on the north edge.
+ * @param {number[]} resultTriIds Per-vertex index to the originating triangle in indices.
+ * @param {number[]} resultBary Per-vertex barycentric coordinate corresponding to the originating triangle.
+ * @param {number[]} resultUVs Per-vertex UV within the quadrant.
  */
 function clipTileFromQuadrant(
   isEastChild,
@@ -1727,7 +1704,6 @@ function clipTileFromQuadrant(
   resultBary,
   resultUVs,
 ) {
-  /** @type Object.<number, number> */
   const upsampledVertexMap = {};
 
   const minU = isEastChild ? 0.5 : 0.0;

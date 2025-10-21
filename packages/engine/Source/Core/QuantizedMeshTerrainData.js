@@ -92,52 +92,23 @@ import TerrainMesh from "./TerrainMesh.js";
  * @see GoogleEarthEnterpriseTerrainData
  */
 function QuantizedMeshTerrainData(options) {
+  options = options ?? Frozen.EMPTY_OBJECT;
+
   //>>includeStart('debug', pragmas.debug)
-  if (!defined(options) || !defined(options.quantizedVertices)) {
-    throw new DeveloperError("options.quantizedVertices is required.");
-  }
-  if (!defined(options.indices)) {
-    throw new DeveloperError("options.indices is required.");
-  }
-  if (!defined(options.minimumHeight)) {
-    throw new DeveloperError("options.minimumHeight is required.");
-  }
-  if (!defined(options.maximumHeight)) {
-    throw new DeveloperError("options.maximumHeight is required.");
-  }
-  if (!defined(options.maximumHeight)) {
-    throw new DeveloperError("options.maximumHeight is required.");
-  }
-  if (!defined(options.boundingSphere)) {
-    throw new DeveloperError("options.boundingSphere is required.");
-  }
-  if (!defined(options.horizonOcclusionPoint)) {
-    throw new DeveloperError("options.horizonOcclusionPoint is required.");
-  }
-  if (!defined(options.westIndices)) {
-    throw new DeveloperError("options.westIndices is required.");
-  }
-  if (!defined(options.southIndices)) {
-    throw new DeveloperError("options.southIndices is required.");
-  }
-  if (!defined(options.eastIndices)) {
-    throw new DeveloperError("options.eastIndices is required.");
-  }
-  if (!defined(options.northIndices)) {
-    throw new DeveloperError("options.northIndices is required.");
-  }
-  if (!defined(options.westSkirtHeight)) {
-    throw new DeveloperError("options.westSkirtHeight is required.");
-  }
-  if (!defined(options.southSkirtHeight)) {
-    throw new DeveloperError("options.southSkirtHeight is required.");
-  }
-  if (!defined(options.eastSkirtHeight)) {
-    throw new DeveloperError("options.eastSkirtHeight is required.");
-  }
-  if (!defined(options.northSkirtHeight)) {
-    throw new DeveloperError("options.northSkirtHeight is required.");
-  }
+  Check.defined("options.quantizedVertices", options.quantizedVertices);
+  Check.defined("options.indices", options.indices);
+  Check.defined("options.minimumHeight", options.minimumHeight);
+  Check.defined("options.maximumHeight", options.maximumHeight);
+  Check.defined("options.boundingSphere", options.boundingSphere);
+  Check.defined("options.horizonOcclusionPoint", options.horizonOcclusionPoint);
+  Check.defined("options.westIndices", options.westIndices);
+  Check.defined("options.southIndices", options.southIndices);
+  Check.defined("options.eastIndices", options.eastIndices);
+  Check.defined("options.northIndices", options.northIndices);
+  Check.defined("options.westSkirtHeight", options.westSkirtHeight);
+  Check.defined("options.southSkirtHeight", options.southSkirtHeight);
+  Check.defined("options.eastSkirtHeight", options.eastSkirtHeight);
+  Check.defined("options.northSkirtHeight", options.northSkirtHeight);
   //>>includeEnd('debug');
 
   this._quantizedVertices = options.quantizedVertices;
@@ -729,18 +700,10 @@ QuantizedMeshTerrainData.prototype.isChildAvailable = function (
   childY,
 ) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(thisX)) {
-    throw new DeveloperError("thisX is required.");
-  }
-  if (!defined(thisY)) {
-    throw new DeveloperError("thisY is required.");
-  }
-  if (!defined(childX)) {
-    throw new DeveloperError("childX is required.");
-  }
-  if (!defined(childY)) {
-    throw new DeveloperError("childY is required.");
-  }
+  Check.typeOf.number("thisX", thisX);
+  Check.typeOf.number("thisY", thisY);
+  Check.typeOf.number("childX", childX);
+  Check.typeOf.number("childY", childY);
   //>>includeEnd('debug');
 
   let bitNumber = 2; // northwest child

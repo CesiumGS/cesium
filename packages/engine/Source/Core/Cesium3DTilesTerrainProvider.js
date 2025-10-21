@@ -27,10 +27,12 @@ import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 
 /**
+ * Gets the root ID from geographic tile coordinates.
+ * There are 2 root tiles in a geographic tiling scheme: one for each hemisphere.
  * @private
  * @param {number} level The level of the tile
  * @param {number} x The x coordinate of the tile
- * @returns {number}
+ * @returns {number} The root tile ID (0 or 1)
  */
 function getRootIdFromGeographic(level, x) {
   //>>includeStart('debug', pragmas.debug);
@@ -38,18 +40,19 @@ function getRootIdFromGeographic(level, x) {
   Check.typeOf.number("x", x);
   //>>includeEnd('debug');
 
-  const nuberOfYTilesAtLevel = 1 << level;
-  const rootId = (x / nuberOfYTilesAtLevel) | 0;
+  const numberOfYTilesAtLevel = 1 << level;
+  const rootId = (x / numberOfYTilesAtLevel) | 0;
   return rootId;
 }
 
 /**
+ * Gets the implicit tile coordinates from geographic tile coordinates.
  * @private
  * @param {ImplicitTileset} implicitTileset
  * @param {number} level The level of the tile
  * @param {number} x The x coordinate of the tile
  * @param {number} y The y coordinate of the tile
- * @returns {ImplicitTileCoordinates}
+ * @returns {ImplicitTileCoordinates} The implicit tile coordinates
  */
 function getImplicitTileCoordinatesFromGeographicCoordinates(
   implicitTileset,
@@ -68,10 +71,7 @@ function getImplicitTileCoordinatesFromGeographicCoordinates(
   const implicitLevel = level;
   const implicitX = x % nuberOfYTilesAtLevel;
   const implicitY = nuberOfYTilesAtLevel - y - 1;
-  // @ts-ignore
-  const subdivisionScheme = implicitTileset.subdivisionScheme;
-  // @ts-ignore
-  const subtreeLevels = implicitTileset.subtreeLevels;
+  const { subdivisionScheme, subtreeLevels } = implicitTileset;
 
   return new ImplicitTileCoordinates({
     subdivisionScheme: subdivisionScheme,
@@ -83,6 +83,7 @@ function getImplicitTileCoordinatesFromGeographicCoordinates(
 }
 
 /**
+ * Gets the implicit tile coordinates from geographic tile coordinates.
  * @private
  * @param {ImplicitTileset} implicitTileset
  * @param {number} level The level of the tile
@@ -98,10 +99,7 @@ function getImplicitTileCoordinates(implicitTileset, level, x, y) {
   Check.typeOf.number("y", y);
   //>>includeEnd('debug');
 
-  // @ts-ignore
-  const subdivisionScheme = implicitTileset.subdivisionScheme;
-  // @ts-ignore
-  const subtreeLevels = implicitTileset.subtreeLevels;
+  const { subdivisionScheme, subtreeLevels } = implicitTileset;
 
   return new ImplicitTileCoordinates({
     subdivisionScheme: subdivisionScheme,
@@ -113,6 +111,7 @@ function getImplicitTileCoordinates(implicitTileset, level, x, y) {
 }
 
 /**
+ * Computes the descendant tile coordinates at a given (u,v) location within a subtree.
  * @private
  * @param {ImplicitTileset} implicitTileset
  * @param {ImplicitTileCoordinates} subtreeCoord
@@ -121,7 +120,6 @@ function getImplicitTileCoordinates(implicitTileset, level, x, y) {
  * @param {number} levelOffset
  * @returns {ImplicitTileCoordinates} The parent subtree coordinate
  */
-
 function computeDescendantCoordinatesAtUv(
   implicitTileset,
   subtreeCoord,
@@ -146,18 +144,18 @@ function computeDescendantCoordinatesAtUv(
     localX,
     localY,
   );
-  // @ts-ignore
   return subtreeCoord.getDescendantCoordinates(offset);
 }
 
 /**
+ * Checks whether a child tile at a given tile coordinate is available in the given subtree.
  * @private
- * @param {ImplicitTileset} implicitTileset
- * @param {ImplicitSubtree} subtree
- * @param {ImplicitTileCoordinates} coord
- * @param {number} x
- * @param {number} y
- * @returns {boolean}
+ * @param {ImplicitTileset} implicitTileset The implicit tileset
+ * @param {ImplicitSubtree} subtree The subtree
+ * @param {ImplicitTileCoordinates} coord The tile coordinates of the parent tile
+ * @param {number} x The x coordinate of the child tile
+ * @param {number} y The y coordinate of the child tile
+ * @returns {boolean} <code>true</code> if the child tile is available. <code>false</code> otherwise.
  */
 function isChildAvailable(implicitTileset, subtree, coord, x, y) {
   //>>includeStart('debug', pragmas.debug);
@@ -168,20 +166,17 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
   Check.typeOf.number("y", y);
   //>>includeEnd('debug');
 
-  // For terrain it's required that the root tile of any available subtree is also available, so when the child tile belongs to a child subtree, we only need to check if the child subtree itself is available.
-  // @ts-ignore
+  // For terrain it's required that the root tile of any available subtree is also available, so
+  // when the child tile belongs to a child subtree, we only need to check if the child subtree itself is available.
   const isBottomOfSubtree = coord.isBottomOfSubtree();
 
   const localLevel = 1;
   const offset = getImplicitTileCoordinates(implicitTileset, localLevel, x, y);
-  // @ts-ignore
   const childCoord = coord.getDescendantCoordinates(offset);
 
   const isAvailable = isBottomOfSubtree
-    ? // @ts-ignore
-      subtree.childSubtreeIsAvailableAtCoordinates(childCoord)
-    : // @ts-ignore
-      subtree.tileIsAvailableAtCoordinates(childCoord);
+    ? subtree.childSubtreeIsAvailableAtCoordinates(childCoord)
+    : subtree.tileIsAvailableAtCoordinates(childCoord);
 
   return isAvailable;
 }
@@ -198,6 +193,10 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
  */
 
 /**
+ * <div class="notice">
+ * To construct a Cesium3DTilesTerrainProvider, call {@link Cesium3DTilesTerrainProvider.fromIonAssetId} or {@link Cesium3DTilesTerrainProvider.fromUrl}. Do not call the constructor directly.
+ * </div>
+ *
  * A {@link TerrainProvider} that accesses terrain data in a 3D Tiles format.
  *
  * @alias Cesium3DTilesTerrainProvider
@@ -229,8 +228,6 @@ function Cesium3DTilesTerrainProvider(options) {
     credit = new Credit(credit);
   }
   this._credit = credit;
-  /** @type {Credit[]} */
-  // @ts-ignore
   this._tileCredits = undefined;
 
   this._errorEvent = new Event();
@@ -256,8 +253,6 @@ function Cesium3DTilesTerrainProvider(options) {
    */
   this._tileset1 = undefined;
 
-  /** @type {Resource} */
-  // @ts-ignore
   this._resource = undefined;
 
   /**
@@ -282,7 +277,7 @@ function Cesium3DTilesTerrainProvider(options) {
  *
  * @param {Resource|string|Promise<Resource>|Promise<string>} url The URL of the Cesium terrain server.
  * @param {Cesium3DTilesTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
- * @returns {Promise<Cesium3DTilesTerrainProvider>}
+ * @returns {Promise<Cesium3DTilesTerrainProvider>} A promise that resolves to the terrain provider.
  *
  * @example
  * // Create terrain with normals.
@@ -316,7 +311,6 @@ Cesium3DTilesTerrainProvider.fromUrl = async function (url, options) {
 
   const provider = new Cesium3DTilesTerrainProvider(options);
   // ion resources have a credits property we can use for additional attribution.
-  // @ts-ignore
   provider._tileCredits = resource.credits;
   provider._resource = resource;
 
@@ -341,17 +335,16 @@ Cesium3DTilesTerrainProvider.fromUrl = async function (url, options) {
   return provider;
 };
 
+/**
+ * Loads the water mask image texture from the glTF.
+ * @private
+ * @param {Object.<string,*>} gltf The glTF JSON.
+ * @param {Resource} gltfResource The resource pointing to the glTF.
+ * @returns {Promise<HTMLImageElement|HTMLCanvasElement|ImageBitmap>|undefined} A promise that resolves to the loaded image. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ */
 async function loadWaterMask(gltf, gltfResource) {
-  if (!defined(gltf.extensions)) {
-    return;
-  }
-
-  const extension = gltf.extensions["EXT_structural_metadata"];
-  if (!defined(extension)) {
-    return;
-  }
-
-  if (!defined(extension.propertyTextures)) {
+  const extension = gltf.extensions?.["EXT_structural_metadata"];
+  if (!defined(extension) || !defined(extension.propertyTextures)) {
     return;
   }
 
@@ -411,12 +404,7 @@ async function loadWaterMask(gltf, gltfResource) {
 }
 
 /**
- * Creates a {@link TerrainProvider} from a Cesium ion asset ID that accesses terrain data in a Cesium terrain format
- * Terrain formats can be one of the following:
- * <ul>
- * <li> {@link https://github.com/AnalyticalGraphicsInc/quantized-mesh Quantized Mesh} </li>
- * <li> {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/heightmap-1.0 Height Map} </li>
- * </ul>
+ * Creates a {@link TerrainProvider} from a Cesium ion asset ID that accesses terrain data in a Cesium 3D Tiles format
  *
  * @param {number} assetId The Cesium ion asset id.
  * @param {CesiumTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
@@ -484,7 +472,6 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
     y,
   );
 
-  // @ts-ignore
   const subtreeCoord = tileCoord.getSubtreeCoordinates();
 
   const cache = this._subtreeCache;
@@ -493,21 +480,15 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
   const requestWaterMask = this._requestWaterMask;
   const that = this;
 
-  /** @type {Promise<ImplicitSubtree>} */
   let subtreePromise;
   if (subtree === undefined) {
-    // @ts-ignore
     const subtreeRelative =
       implicitTileset.subtreeUriTemplate.getDerivedResource({
-        // @ts-ignore
         templateValues: subtreeCoord.getTemplateValues(),
       });
-    // @ts-ignore
     const subtreeResource = implicitTileset.baseResource.getDerivedResource({
-      // @ts-ignore
       url: subtreeRelative.url,
     });
-    // @ts-ignore
     subtreePromise = subtreeResource
       .fetchArrayBuffer()
       .then(async function (arrayBuffer) {
@@ -532,22 +513,16 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
   }
 
   // Note: only one content for terrain
-  // @ts-ignore
   const glbRelative = implicitTileset.contentUriTemplates[0].getDerivedResource(
     {
-      // @ts-ignore
       templateValues: tileCoord.getTemplateValues(),
     },
   );
-  // @ts-ignore
   const glbResource = implicitTileset.baseResource.getDerivedResource({
-    // @ts-ignore
     url: glbRelative.url,
   });
 
   // Start fetching the glb right away -- possibly even before the subtree is loaded in some cases
-  /** @type {Promise.<ArrayBuffer>} */
-  // @ts-ignore
   const glbPromise = glbResource.fetchArrayBuffer();
   if (glbPromise === undefined) {
     return undefined;
@@ -564,27 +539,22 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
     ? gltfPromise.then((gltf) => loadWaterMask(gltf, glbResource))
     : undefined;
 
-  // @ts-ignore
   return Promise.all(promises)
     .then(function (results) {
       const subtree = results[0];
       const gltf = results[1];
       const waterMask = results[2];
 
-      /** @type {ImplicitMetadataView} */
       const metadataView = subtree.getTileMetadataView(tileCoord);
 
-      // @ts-ignore
       const minimumHeight = metadataView.getPropertyBySemantic(
         MetadataSemantic.TILE_MINIMUM_HEIGHT,
       );
 
-      // @ts-ignore
       const maximumHeight = metadataView.getPropertyBySemantic(
         MetadataSemantic.TILE_MAXIMUM_HEIGHT,
       );
 
-      // @ts-ignore
       const boundingSphereArray = metadataView.getPropertyBySemantic(
         MetadataSemantic.TILE_BOUNDING_SPHERE,
       );
@@ -594,7 +564,6 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
         new BoundingSphere(),
       );
 
-      // @ts-ignore
       const horizonOcclusionPoint = metadataView.getPropertyBySemantic(
         MetadataSemantic.TILE_HORIZON_OCCLUSION_POINT,
       );
@@ -680,21 +649,16 @@ Cesium3DTilesTerrainProvider.prototype.getTileDataAvailable = function (
     y,
   );
 
-  // @ts-ignore
   const subtreeCoord = tileCoord.getSubtreeCoordinates();
   const subtree = cache.find(rootId, subtreeCoord);
 
   // If the subtree is loaded, return the tile's availability
   if (subtree !== undefined) {
-    // @ts-ignore
     const available = subtree.tileIsAvailableAtCoordinates(tileCoord);
     return available;
   }
 
-  // If the root subtree...
-  // @ts-ignore
   if (subtreeCoord.isImplicitTilesetRoot()) {
-    // @ts-ignore
     if (tileCoord.isSubtreeRoot()) {
       // The subtree's root tile is always available
       return true;
@@ -703,25 +667,21 @@ Cesium3DTilesTerrainProvider.prototype.getTileDataAvailable = function (
     return undefined;
   }
 
-  // @ts-ignore
   const parentSubtreeCoord = subtreeCoord.getParentSubtreeCoordinates();
 
   // Check the parent subtree's child subtree availability to know if this subtree is available.
   const parentSubtree = cache.find(rootId, parentSubtreeCoord);
   if (parentSubtree !== undefined) {
-    // @ts-ignore
     const isChildSubtreeAvailable =
       parentSubtree.childSubtreeIsAvailableAtCoordinates(subtreeCoord);
 
-    return isChildSubtreeAvailable
-      ? // @ts-ignore
-        tileCoord.isSubtreeRoot()
-        ? // The root tile of the subtree is always available
-          true
-        : // Don't know if available because the subtree hasn't been loaded yet
-          undefined
-      : // Child subtree not available, so this tile isn't either
-        false;
+    if (isChildSubtreeAvailable) {
+      return tileCoord.isSubtreeRoot()
+        ? true // The root tile of the subtree is always available
+        : undefined; // Don't know if the tile is available because the subtree hasn't been loaded yet
+    }
+    // Child subtree not available, so this tile isn't either
+    return false;
   }
 
   // The parent subtree isn't loaded either, so we don't even know if the child subtree is available
@@ -729,7 +689,7 @@ Cesium3DTilesTerrainProvider.prototype.getTileDataAvailable = function (
 };
 
 /**
- * Makes sure we load availability data for a tile
+ * Make sure we load availability data for a tile
  *
  * @param {number} _x The X coordinate of the tile for which to request geometry.
  * @param {number} _y The Y coordinate of the tile for which to request geometry.
@@ -745,7 +705,7 @@ Cesium3DTilesTerrainProvider.prototype.loadTileDataAvailability = function (
 };
 
 /**
- * Gets the maximum geometric error allowed in a tile at a given level.
+ * Get the maximum geometric error allowed in a tile at a given level.
  *
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error.
@@ -770,9 +730,7 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
    * @memberof Cesium3DTilesTerrainProvider.prototype
    * @type {Event}
    */
-  // @ts-ignore
   errorEvent: {
-    // @ts-ignore
     get: function () {
       return this._errorEvent;
     },
@@ -784,9 +742,7 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
    * @memberof Cesium3DTilesTerrainProvider.prototype
    * @type {Credit}
    */
-  // @ts-ignore
   credit: {
-    // @ts-ignore
     get: function () {
       return this._credit;
     },
@@ -797,9 +753,7 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
    * @memberof Cesium3DTilesTerrainProvider.prototype
    * @type {TilingScheme}
    */
-  // @ts-ignore
   tilingScheme: {
-    // @ts-ignore
     get: function () {
       return this._tilingScheme;
     },
@@ -812,7 +766,6 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
    * @memberof Cesium3DTilesTerrainProvider.prototype
    * @type {boolean}
    */
-  // @ts-ignore
   hasWaterMask: {
     get: function () {
       return this._requestWaterMask;
@@ -824,7 +777,6 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
    * @memberof Cesium3DTilesTerrainProvider.prototype
    * @type {boolean}
    */
-  // @ts-ignore
   hasVertexNormals: {
     get: function () {
       return this._requestVertexNormals;
@@ -837,9 +789,7 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
    * @memberof Cesium3DTilesTerrainProvider.prototype
    * @type {TileAvailability|undefined}
    */
-  // @ts-ignore
   availability: {
-    // @ts-ignore
     get: function () {
       return this._subtreeCache;
     },
@@ -847,11 +797,12 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
 });
 
 /**
+ * A node in the implicit subtree cache.
  * @private
  * @constructor
- * @param {number} rootId
- * @param {ImplicitSubtree} subtree
- * @param {number} stamp
+ * @param {number} rootId The root tile ID (0 or 1)
+ * @param {ImplicitSubtree} subtree The subtree
+ * @param {number} stamp The timestamp used for priority ordering
  */
 function ImplicitSubtreeCacheNode(rootId, subtree, stamp) {
   this.rootId = rootId;
@@ -860,6 +811,7 @@ function ImplicitSubtreeCacheNode(rootId, subtree, stamp) {
 }
 
 /**
+ * A cache for implicit subtrees. TODO: Why not use `ImplicitSubtreeCache` from `ImplicitSubtree.js`??
  * @private
  * @constructor
  * @param {object} options Object with the following properties
@@ -883,16 +835,12 @@ function ImplicitSubtreeCache(options) {
  * @returns {number}
  */
 ImplicitSubtreeCache.comparator = function (a, b) {
-  // @ts-ignore
   const aCoord = a.subtree.implicitCoordinates;
-  // @ts-ignore
   const bCoord = b.subtree.implicitCoordinates;
-  // @ts-ignore
   if (aCoord.isAncestor(bCoord)) {
     // This shouldn't happen
     // The ancestor subtree should have been added first
     return +1.0;
-    // @ts-ignore
   } else if (bCoord.isAncestor(aCoord)) {
     return -1.0;
   }
@@ -900,8 +848,9 @@ ImplicitSubtreeCache.comparator = function (a, b) {
 };
 
 /**
- * @param {number} rootId
- * @param {ImplicitSubtree} subtree
+ * Adds a subtree to the cache.
+ * @param {number} rootId The root tile ID (0 or 1)
+ * @param {ImplicitSubtree} subtree The subtree
  */
 ImplicitSubtreeCache.prototype.addSubtree = function (rootId, subtree) {
   const cacheNode = new ImplicitSubtreeCacheNode(
@@ -913,13 +862,10 @@ ImplicitSubtreeCache.prototype.addSubtree = function (rootId, subtree) {
 
   this._subtreeRequestCounter++;
 
-  // @ts-ignore
   const subtreeCoord = subtree.implicitCoordinates;
 
   // Make sure the parent subtree exists in the cache
-  // @ts-ignore
   if (subtreeCoord.level > 0) {
-    // @ts-ignore
     const parentCoord = subtreeCoord.getParentSubtreeCoordinates();
     const parentNode = this.find(rootId, parentCoord);
 
@@ -931,9 +877,7 @@ ImplicitSubtreeCache.prototype.addSubtree = function (rootId, subtree) {
   }
 
   if (this._maximumSubtreeCount > 0) {
-    // @ts-ignore
     while (this._queue.length > this._maximumSubtreeCount) {
-      /** @type {ImplicitSubtreeCacheNode} */
       const lowestPriorityNode = this._queue.getMinimum();
       if (lowestPriorityNode === cacheNode) {
         // Don't remove itself
@@ -946,31 +890,25 @@ ImplicitSubtreeCache.prototype.addSubtree = function (rootId, subtree) {
 };
 
 /**
- * @param {number} rootId
- * @param {ImplicitTileCoordinates} subtreeCoord
- * @returns {ImplicitSubtree|undefined}
+ * Finds a subtree in the cache.
+ * @param {number} rootId The root tile ID (0 or 1)
+ * @param {ImplicitTileCoordinates} subtreeCoord The coordinates of the subtree
+ * @returns {ImplicitSubtree|undefined} The subtree if found; otherwise undefined.
  */
 ImplicitSubtreeCache.prototype.find = function (rootId, subtreeCoord) {
   const queue = this._queue;
-  /** @type {ImplicitSubtreeCacheNode[]} */
-  // @ts-ignore
   const array = queue.internalArray;
-  // @ts-ignore
   const arrayLength = queue.length;
 
   for (let i = 0; i < arrayLength; i++) {
     const other = array[i];
     const otherRootId = other.rootId;
     const otherSubtree = other.subtree;
-    // @ts-ignore
     const otherCoord = otherSubtree.implicitCoordinates;
     if (
       otherRootId === rootId &&
-      // @ts-ignore
       otherCoord.level === subtreeCoord.level &&
-      // @ts-ignore
       otherCoord.x === subtreeCoord.x &&
-      // @ts-ignore
       otherCoord.y === subtreeCoord.y
     ) {
       return other.subtree;
@@ -993,7 +931,6 @@ ImplicitSubtreeCache.prototype._computeMaximumImplicitTileCoordinatesAtPosition 
     const rootId = position.longitude < 0.0 ? 0 : 1;
     const implicitTileset =
       rootId === 0 ? provider._tileset0 : provider._tileset1;
-    // @ts-ignore
     const subtreeLevels = implicitTileset.subtreeLevels;
     const rootSubtreeCoord = getImplicitTileCoordinates(
       implicitTileset,
@@ -1008,13 +945,9 @@ ImplicitSubtreeCache.prototype._computeMaximumImplicitTileCoordinatesAtPosition 
       return undefined;
     }
 
-    // @ts-ignore
     let subtreeCoord = subtree.implicitCoordinates;
-    // @ts-ignore
     let subtreeX = subtreeCoord.x;
-    // @ts-ignore
     let subtreeY = subtreeCoord.y;
-    // @ts-ignore
     let subtreeLevel = subtreeCoord.level;
 
     const longitude = position.longitude;
@@ -1060,25 +993,19 @@ ImplicitSubtreeCache.prototype._computeMaximumImplicitTileCoordinatesAtPosition 
         subtreeLevels,
       );
 
-      // @ts-ignore
       if (subtree.childSubtreeIsAvailableAtCoordinates(childSubtreeCoord)) {
         const childSubtree = this.find(rootId, childSubtreeCoord);
         if (childSubtree !== undefined) {
           // Update all constiables and keep looping
           subtree = childSubtree;
-          // @ts-ignore
           subtreeCoord = subtree.implicitCoordinates;
-          // @ts-ignore
           subtreeX = subtreeCoord.x;
-          // @ts-ignore
           subtreeY = subtreeCoord.y;
-          // @ts-ignore
           subtreeLevel = subtreeCoord.level;
         } else {
           // Child subtree is available but has not been loaded yet
           // Since the root node of a subtree is always available, return the level of the child subtree
           // sampleTerrainMostDetailed will keep calling this function until all available subtrees in the chain have been loaded
-          // @ts-ignore
           return childSubtreeCoord;
         }
       } else {
@@ -1098,7 +1025,6 @@ ImplicitSubtreeCache.prototype._computeMaximumImplicitTileCoordinatesAtPosition 
         localLevel,
       );
 
-      // @ts-ignore
       if (subtree.tileIsAvailableAtCoordinates(childCoord)) {
         deepestTileCoord = childCoord;
       } else {
@@ -1126,7 +1052,6 @@ ImplicitSubtreeCache.prototype.computeMaximumLevelAtPosition = function (
   if (tileCoordinates === undefined) {
     return 0;
   }
-  // @ts-ignore
   return tileCoordinates.level;
 };
 

@@ -2027,6 +2027,12 @@ Resource._Implementations.createImage = function (
  * Wrapper for createImageBitmap
  *
  * @private
+ * @param {Blob} blob The image blob.
+ * @param {object} options An object containing the following properties:
+ * @param {boolean} options.flipY Whether to flip the image Y axis.
+ * @param {boolean} options.premultiplyAlpha Whether to premultiply the alpha channel.
+ * @param {boolean} options.skipColorSpaceConversion Whether to skip color space conversion.
+ * @returns {Promise<ImageBitmap>} A promise that resolves to the created image bitmap.
  */
 Resource.createImageBitmapFromBlob = function (blob, options) {
   Check.defined("options", options);
