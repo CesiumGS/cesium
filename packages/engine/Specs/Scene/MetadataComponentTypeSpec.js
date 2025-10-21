@@ -391,8 +391,12 @@ describe("Scene/MetadataComponentType", function () {
     // Third result is (max + 1) / 2
     const expectedResults = [
       BigInt(0),
-      BigInt("3689348814741910323"),
-      BigInt("9223372036854775808"),
+      // Note: The following value will become 3689348814741910528 at
+      // runtime, because it is no proper big number literal. The test
+      // is checking for exactly that.
+      // eslint-disable-next-line no-loss-of-precision
+      BigInt(3689348814741910323),
+      BigInt(9223372036854775808),
       max,
     ];
     for (let i = 0; i < values.length; ++i) {
