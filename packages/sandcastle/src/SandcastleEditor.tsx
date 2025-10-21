@@ -117,6 +117,10 @@ function SandcastleEditor({
     });
   }, [fontSize]);
 
+  function formatEditor() {
+    internalEditorRef.current?.getAction("editor.action.formatDocument")?.run();
+  }
+
   useImperativeHandle(ref, () => {
     return {
       formatCode() {
@@ -124,10 +128,6 @@ function SandcastleEditor({
       },
     };
   }, []);
-
-  function formatEditor() {
-    internalEditorRef.current?.getAction("editor.action.formatDocument")?.run();
-  }
 
   function handleEditorDidMount(
     editor: monaco.editor.IStandaloneCodeEditor,

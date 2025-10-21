@@ -20,7 +20,7 @@ import Texture from "../Renderer/Texture.js";
  * @private
  *
  * @param {Context} context The context in which the batch table is created.
- * @param {Object[]} attributes An array of objects describing a per instance attribute. Each object contains a datatype, components per attributes, whether it is normalized and a function name
+ * @param {object[]} attributes An array of objects describing a per instance attribute. Each object contains a datatype, components per attributes, whether it is normalized and a function name
  *     to retrieve the value in the vertex shader.
  * @param {number} numberOfInstances The number of instances in a batch table.
  *
@@ -131,7 +131,7 @@ Object.defineProperties(BatchTable.prototype, {
   /**
    * The attribute descriptions.
    * @memberOf BatchTable.prototype
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    */
   attributes: {

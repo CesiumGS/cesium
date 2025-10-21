@@ -266,7 +266,7 @@ describe(
       const pickId = context.createPickId(o);
 
       expect(pickId).toBeDefined();
-      expect(context.getObjectByPickColor(pickId.color)).toBe(o);
+      expect(context.getObjectByPickColor(pickId.color.toRgba())).toBe(o);
     });
 
     it("throws when creating a pick ID without an object", function () {
