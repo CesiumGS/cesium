@@ -1661,10 +1661,6 @@ describe(
     describe("3DTILES_metadata", function () {
       const implicitGroupMetadataLegacyUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset_1.0.json";
-      const implicitContentMetadataLegacyUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset_1.0.json";
-      const implicitMultipleContentsMetadataLegacyUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.0.json";
       const implicitHeightSemanticsLegacyUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/tileset_1.0.json";
       const implicitS2HeightSemanticsLegacyUrl =
@@ -1675,12 +1671,6 @@ describe(
         "Data/Cesium3DTiles/Metadata/ImplicitHeightAndSphereSemantics/tileset_1.0.json";
       const implicitHeightAndRegionSemanticsLegacyUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitHeightAndRegionSemantics/tileset_1.0.json";
-      const implicitContentBoundingVolumeSemanticsLegacyUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitContentBoundingVolumeSemantics/tileset_1.0.json";
-      const implicitContentHeightSemanticsLegacyUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightSemantics/tileset_1.0.json";
-      const implicitContentHeightAndRegionSemanticsLegacyUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitContentHeightAndRegionSemantics/tileset_1.0.json";
       const implicitGeometricErrorSemanticsLegacyUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGeometricErrorSemantics/tileset_1.0.json";
 
@@ -1718,103 +1708,6 @@ describe(
               expect(tile.content.group.metadata).toBe(ground);
             }
           });
-        });
-      });
-
-      it("content metadata gets transcoded correctly (legacy)", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          implicitContentMetadataLegacyUrl,
-        ).then(function (tileset) {
-          const expectedHeights = [10, 20, 0, 30, 40];
-          const expectedColors = [
-            new Cartesian3(255, 255, 255),
-            new Cartesian3(255, 0, 0),
-            Cartesian3.ZERO,
-            new Cartesian3(0, 255, 0),
-            new Cartesian3(0, 0, 255),
-          ];
-
-          const placeholderTile = tileset.root;
-          const subtreeRootTile = placeholderTile.children[0];
-          const tiles = [];
-          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-
-          for (let i = 0; i < tiles.length; i++) {
-            const tile = tiles[i];
-            const subtree = tile.implicitSubtree;
-            const coordinates = tile.implicitCoordinates;
-            const index = coordinates.tileIndex;
-            const metadata = tile.content.metadata;
-
-            if (!subtree.contentIsAvailableAtIndex(index, 0)) {
-              expect(metadata.getProperty("height")).not.toBeDefined();
-              expect(metadata.getProperty("color")).not.toBeDefined();
-            } else {
-              expect(metadata.getProperty("height")).toBe(
-                expectedHeights[index],
-              );
-              expect(metadata.getProperty("color")).toEqual(
-                expectedColors[index],
-              );
-            }
-          }
-        });
-      });
-
-      it("multiple content metadata views get transcoded correctly (legacy)", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          implicitMultipleContentsMetadataLegacyUrl,
-        ).then(function (tileset) {
-          const expectedHeights = [10, 20, 30, 40, 50];
-          const expectedColors = [
-            new Cartesian3(255, 255, 255),
-            new Cartesian3(255, 0, 0),
-            new Cartesian3(255, 255, 0),
-            new Cartesian3(0, 255, 0),
-            new Cartesian3(0, 0, 255),
-          ];
-
-          // All tiles except the subtree root tile have tree content
-          const expectedAges = [21, 7, 11, 16];
-
-          const placeholderTile = tileset.root;
-          const subtreeRootTile = placeholderTile.children[0];
-          const tiles = [];
-          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-          for (let i = 0; i < tiles.length; i++) {
-            const tile = tiles[i];
-            const coordinates = tile.implicitCoordinates;
-            const index = coordinates.tileIndex;
-
-            let buildingMetadata;
-            if (i > 0) {
-              expect(tile.hasMultipleContents).toBe(true);
-              const buildingContent = tile.content.innerContents[0];
-              buildingMetadata = buildingContent.metadata;
-            } else {
-              expect(tile.hasMultipleContents).toBe(false);
-              buildingMetadata = tile.content.metadata;
-            }
-
-            expect(buildingMetadata.getProperty("height")).toBe(
-              expectedHeights[index],
-            );
-            expect(buildingMetadata.getProperty("color")).toEqual(
-              expectedColors[index],
-            );
-
-            if (i === 0) {
-              continue;
-            }
-
-            const treeContent = tile.content.innerContents[1];
-            const treeMetadata = treeContent.metadata;
-            expect(treeMetadata.getProperty("age")).toEqual(
-              expectedAges[index - 1],
-            );
-          }
         });
       });
 
@@ -2026,93 +1919,6 @@ describe(
             expect(tileRegion.rectangle.south).toBeGreaterThan(south);
             expect(tileRegion.rectangle.east).toBeLessThan(east);
             expect(tileRegion.rectangle.north).toBeLessThan(north);
-          }
-        });
-      });
-
-      it("uses content bounding box from metadata semantics if present (legacy)", function () {
-        viewCartographicOrigin(124000);
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          implicitContentBoundingVolumeSemanticsLegacyUrl,
-        ).then(function (tileset) {
-          const placeholderTile = tileset.root.children[0];
-          const subtreeRootTile = placeholderTile.children[0];
-
-          // This tileset defines the content bounding spheres in a
-          // property with metadata semantic CONTENT_BOUNDING_SPHERE.
-          // Check that each tile has a content bounding volume.
-          const tiles = [];
-          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          tiles.forEach(function (tile) {
-            expect(
-              tile.contentBoundingVolume instanceof TileBoundingSphere,
-            ).toBe(true);
-            expect(tile.contentBoundingVolume).not.toBe(tile.boundingVolume);
-          });
-        });
-      });
-
-      it("uses content height semantics to adjust implicit region (legacy)", function () {
-        viewCartographicOrigin(10000);
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          implicitContentHeightSemanticsLegacyUrl,
-        ).then(function (tileset) {
-          const placeholderTile = tileset.root;
-          const subtreeRootTile = placeholderTile.children[0];
-
-          const implicitRegion =
-            placeholderTile.implicitTileset.boundingVolume.region;
-
-          const minimumHeight = implicitRegion[4];
-          const maximumHeight = implicitRegion[5];
-
-          // This tileset uses CONTENT_MINIMUM_HEIGHT and CONTENT_MAXIMUM_HEIGHT
-          // to set tighter bounding volumes
-          const tiles = [];
-          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          for (let i = 0; i < tiles.length; i++) {
-            const contentRegion = tiles[i].contentBoundingVolume;
-            expect(contentRegion.minimumHeight).toBeGreaterThan(minimumHeight);
-            expect(contentRegion.maximumHeight).toBeLessThan(maximumHeight);
-          }
-        });
-      });
-
-      it("uses content height semantics to adjust content region semantic (legacy)", function () {
-        viewCartographicOrigin(10000);
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          implicitContentHeightAndRegionSemanticsLegacyUrl,
-        ).then(function (tileset) {
-          const placeholderTile = tileset.root;
-          const subtreeRootTile = placeholderTile.children[0];
-
-          const implicitRegion =
-            placeholderTile.implicitTileset.boundingVolume.region;
-
-          const west = implicitRegion[0];
-          const south = implicitRegion[1];
-          const east = implicitRegion[2];
-          const north = implicitRegion[3];
-          const minimumHeight = implicitRegion[4];
-          const maximumHeight = implicitRegion[5];
-
-          // This tileset uses CONTENT_BOUNDING_REGION, CONTENT_MINIMUM_HEIGHT, and
-          // CONTENT_MAXIMUM_HEIGHT to set tighter bounding volumes
-          const tiles = [];
-          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          for (let i = 0; i < tiles.length; i++) {
-            const contentRegion = tiles[i].contentBoundingVolume;
-            expect(contentRegion.minimumHeight).toBeGreaterThan(minimumHeight);
-            expect(contentRegion.maximumHeight).toBeLessThan(maximumHeight);
-            // Check that the content bounding volume is using the explicit tile
-            // regions which are shrunken compared to the implicit tile regions
-            expect(contentRegion.rectangle.west).toBeGreaterThan(west);
-            expect(contentRegion.rectangle.south).toBeGreaterThan(south);
-            expect(contentRegion.rectangle.east).toBeLessThan(east);
-            expect(contentRegion.rectangle.north).toBeLessThan(north);
           }
         });
       });

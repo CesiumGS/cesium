@@ -39,6 +39,12 @@ function IonResource(endpoint, endpointResource) {
       retryAttempts: 1,
       retryCallback: retryCallback,
     };
+  } else if (["GOOGLE_2D_MAPS", "AZURE_MAPS"].includes(externalType)) {
+    options = {
+      url: endpoint.options.url,
+      retryAttempts: 1,
+      retryCallback: retryCallback,
+    };
   } else if (
     externalType === "3DTILES" ||
     externalType === "STK_TERRAIN_SERVER"
@@ -84,7 +90,7 @@ if (defined(Object.create)) {
  * @param {object} [options] An object with the following properties:
  * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
  * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
- * @returns {Promise<IonResource>} A Promise to am instance representing the Cesium ion Asset.
+ * @returns {Promise<IonResource>} A Promise to an instance representing the Cesium ion Asset.
  *
  * @example
  * // Load a Cesium3DTileset with asset ID of 124624234
@@ -207,7 +213,7 @@ IonResource.prototype._makeRequest = function (options) {
 
 /**
  * @private
- */
+ **/
 IonResource._createEndpointResource = function (assetId, options) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("assetId", assetId);
@@ -224,6 +230,13 @@ IonResource._createEndpointResource = function (assetId, options) {
 
   if (defined(accessToken)) {
     resourceOptions.queryParameters = { access_token: accessToken };
+  }
+
+  if (defined(options.queryParameters)) {
+    resourceOptions.queryParameters = {
+      ...resourceOptions.queryParameters,
+      ...options.queryParameters,
+    };
   }
 
   addClientHeaders(resourceOptions);
@@ -267,9 +280,21 @@ function retryCallback(that, error) {
     ionRoot._pendingPromise = endpointResource
       .fetchJson()
       .then(function (newEndpoint) {
-        //Set the token for root resource so new derived resources automatically pick it up
+        // Set the token for root resource so new derived resources automatically pick it up
         ionRoot._ionEndpoint = newEndpoint;
-        return newEndpoint;
+        // Reset the session token for Google 2D imagery
+        if (newEndpoint.externalType === "GOOGLE_2D_MAPS") {
+          ionRoot.setQueryParameters({
+            session: newEndpoint.options.session,
+            key: newEndpoint.options.key,
+          });
+        }
+        if (newEndpoint.externalType === "AZURE_MAPS") {
+          ionRoot.setQueryParameters({
+            "subscription-key": newEndpoint.options["subscription-key"],
+          });
+        }
+        return ionRoot._ionEndpoint;
       })
       .finally(function (newEndpoint) {
         // Pass or fail, we're done with this promise, the next failure should use a new one.
@@ -284,4 +309,5 @@ function retryCallback(that, error) {
     return true;
   });
 }
+
 export default IonResource;

@@ -123,7 +123,7 @@ function handleBuildWarnings(result) {
 export async function build() {
   // Configure build options from command line arguments.
   const minify = argv.minify ?? false;
-  const removePragmas = argv.pragmas ?? false;
+  const removePragmas = argv.removePragmas ?? false;
   const sourcemap = argv.sourcemap ?? true;
   const node = argv.node ?? true;
 
@@ -425,17 +425,6 @@ export async function buildDocsWatch() {
   return gulp.watch(sourceFiles, buildDocs);
 }
 
-function combineForSandcastle() {
-  const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
-  return buildCesium({
-    development: false,
-    minify: false,
-    removePragmas: false,
-    node: false,
-    outputDirectory: outputDirectory,
-  });
-}
-
 export const websiteRelease = gulp.series(
   buildEngine,
   buildWidgets,
@@ -447,7 +436,23 @@ export const websiteRelease = gulp.series(
       node: false,
     });
   },
-  combineForSandcastle,
+  function websiteReleaseBuildMinified() {
+    return buildCesium({
+      minify: true,
+      removePragmas: true,
+      node: false,
+    });
+  },
+  function combineForSandcastle() {
+    const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
+    return buildCesium({
+      development: false,
+      minify: false,
+      removePragmas: false,
+      node: false,
+      outputDirectory: outputDirectory,
+    });
+  },
   buildDocs,
 );
 
@@ -663,6 +668,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "!**/*.gitignore",
           "!Specs/e2e/*-snapshots/**",
           "!Apps/Sandcastle/gallery/development/**",
+          "!Apps/Sandcastle2/**",
         ],
         {
           encoding: false,
@@ -704,17 +710,21 @@ export async function deploySetVersion() {
 export async function deployStatus() {
   const status = argv.status;
   const message = argv.message;
-
   const deployUrl = `${devDeployUrl}`;
   const zipUrl = `${deployUrl}Cesium-${version}.zip`;
   const npmUrl = `${deployUrl}cesium-${version}.tgz`;
-  const coverageUrl = `${devDeployUrl}Build/Coverage/index.html`;
+  const coverageUrl = `${deployUrl}Build/Coverage/index.html`;
 
   return Promise.all([
-    setStatus(status, deployUrl, message, "deployment"),
-    setStatus(status, zipUrl, message, "zip file"),
-    setStatus(status, npmUrl, message, "npm package"),
-    setStatus(status, coverageUrl, message, "coverage results"),
+    setStatus(status, deployUrl, message, "deploy / artifact: deployment"),
+    setStatus(status, zipUrl, message, "deploy / artifact: zip file"),
+    setStatus(status, npmUrl, message, "deploy / artifact: npm package"),
+    setStatus(
+      status,
+      coverageUrl,
+      message,
+      "deploy / artifact: coverage results",
+    ),
   ]);
 }
 

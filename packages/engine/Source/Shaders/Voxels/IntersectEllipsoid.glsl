@@ -26,7 +26,7 @@
 #endif
 uniform float u_eccentricitySquared;
 uniform vec2 u_ellipsoidRenderLatitudeSinMinMax;
-uniform vec2 u_clipMinMaxHeight;
+uniform vec2 u_clipMinMaxHeight; // Values are negative: clipHeight - maxShapeHeight
 
 RayShapeIntersection intersectZPlane(in Ray ray, in float z) {
     float t = -ray.pos.z / ray.dir.z;
@@ -44,11 +44,11 @@ RayShapeIntersection intersectZPlane(in Ray ray, in float z) {
     }
 }
 
-RayShapeIntersection intersectHeight(in Ray ray, in float relativeHeight, in bool convex)
+RayShapeIntersection intersectHeight(in Ray ray, in float height, in bool convex)
 {
     // Scale the ray by the ellipsoid axes to make it a unit sphere
     // Note: approximating ellipsoid + height as an ellipsoid
-    vec3 radiiCorrection = u_ellipsoidRadiiUv / (u_ellipsoidRadiiUv + relativeHeight);
+    vec3 radiiCorrection = vec3(1.0) / (u_ellipsoidRadii + height);
     vec3 position = ray.pos * radiiCorrection;
     vec3 direction = ray.dir * radiiCorrection;
 
@@ -74,10 +74,14 @@ RayShapeIntersection intersectHeight(in Ray ray, in float relativeHeight, in boo
     float tmax = max(t1, t2);
 
     float directionScale = convex ? 1.0 : -1.0;
-    vec3 d1 = directionScale * normalize(position + tmin * direction);
-    vec3 d2 = directionScale * normalize(position + tmax * direction);
+    vec3 d1 = directionScale * (position + tmin * direction);
+    vec3 d2 = directionScale * (position + tmax * direction);
 
-    return RayShapeIntersection(vec4(d1, tmin), vec4(d2, tmax));
+    // Return normals in eye coordinates. Use spherical approximation for the normal.
+    vec3 normal1 = normalize(czm_normal * d1);
+    vec3 normal2 = normalize(czm_normal * d2);
+
+    return RayShapeIntersection(vec4(normal1, tmin), vec4(normal2, tmax));
 }
 
 /**
@@ -151,16 +155,13 @@ float getLatitudeConeShift(in float sinLatitude) {
     // Find prime vertical radius of curvature: 
     // the distance along the ellipsoid normal to the intersection with the z-axis
     float x2 = u_eccentricitySquared * sinLatitude * sinLatitude;
-    float primeVerticalRadius = inversesqrt(1.0 - x2);
+    float primeVerticalRadius = u_ellipsoidRadii.x * inversesqrt(1.0 - x2);
 
     // Compute a shift from the origin to the intersection of the cone with the z-axis
     return primeVerticalRadius * u_eccentricitySquared * sinLatitude;
 }
 
 void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeIntersection intersections[2]) {
-    // Undo the scaling from ellipsoid to sphere
-    ray.pos = ray.pos * u_ellipsoidRadiiUv;
-    ray.dir = ray.dir * u_ellipsoidRadiiUv;
     // Shift the ray to account for the latitude cone not being centered at the Earth center
     ray.pos.z += getLatitudeConeShift(cosHalfAngle);
 
@@ -206,9 +207,6 @@ void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeInterse
 }
 
 RayShapeIntersection intersectRegularCone(in Ray ray, in float cosHalfAngle, in bool convex) {
-    // Undo the scaling from ellipsoid to sphere
-    ray.pos = ray.pos * u_ellipsoidRadiiUv;
-    ray.dir = ray.dir * u_ellipsoidRadiiUv;
     // Shift the ray to account for the latitude cone not being centered at the Earth center
     ray.pos.z += getLatitudeConeShift(cosHalfAngle);
 
@@ -245,13 +243,7 @@ RayShapeIntersection intersectRegularCone(in Ray ray, in float cosHalfAngle, in 
     }
 }
 
-void intersectShape(in Ray ray, inout Intersections ix) {
-    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-    // Direction is scaled as well to be in sync with position.
-    ray.pos = ray.pos * 2.0 - 1.0;
-    ray.dir *= 2.0;
-
-    // Outer ellipsoid
+void intersectShape(in Ray ray, in Ray rayEC, inout Intersections ix) {    // Outer ellipsoid
     RayShapeIntersection outerIntersect = intersectHeight(ray, u_clipMinMaxHeight.y, true);
     setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX, outerIntersect);
 
