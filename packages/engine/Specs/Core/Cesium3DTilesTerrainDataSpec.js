@@ -619,9 +619,9 @@ function checkMeshGeometry(options) {
  * @param {Uint16Array|Uint32Array} options.neEdgeIndicesSouth,
  * @param {Uint16Array|Uint32Array} options.neEdgeIndicesEast,
  * @param {Uint16Array|Uint32Array} options.neEdgeIndicesNorth
- * @returns {TerrainData[]}
+ * @returns {Promise<TerrainData[]>}
  */
-function checkUpsampledTerrainData(options) {
+async function checkUpsampledTerrainData(options) {
   const terrainData = createTerrainDataFromScratch({
     tilingScheme: options.tilingScheme,
     tileLevel: options.tileLevel,
@@ -680,88 +680,90 @@ function checkUpsampledTerrainData(options) {
     options.neEdgeIndicesNorth,
   ];
 
-  return Promise.resolve(
+  const terrainMesh = await Promise.resolve(
     terrainData.createMesh({
       tilingScheme: options.tilingScheme,
       x: options.tileX,
       y: options.tileY,
       level: options.tileLevel,
     }),
-  )
-    .then(function (terrainMesh) {
-      checkMeshGeometry({
-        mesh: terrainMesh,
-        positionsCartographic: options.positionsCartographic,
-        normals: options.normals,
-        indices: options.indices,
-        edgeIndicesWest: options.edgeIndicesWest,
-        edgeIndicesSouth: options.edgeIndicesSouth,
-        edgeIndicesEast: options.edgeIndicesEast,
-        edgeIndicesNorth: options.edgeIndicesNorth,
-        ellipsoid: options.tilingScheme.ellipsoid,
-      });
+  );
 
-      const swPromise = terrainData.upsample(
-        options.tilingScheme,
-        options.tileX,
-        options.tileY,
-        options.tileLevel,
-        options.tileX * 2 + 0,
-        options.tileY * 2 + 1,
-        options.tileLevel + 1,
-      );
-      const nwPromise = terrainData.upsample(
-        options.tilingScheme,
-        options.tileX,
-        options.tileY,
-        options.tileLevel,
-        options.tileX * 2 + 0,
-        options.tileY * 2 + 0,
-        options.tileLevel + 1,
-      );
-      const sePromise = terrainData.upsample(
-        options.tilingScheme,
-        options.tileX,
-        options.tileY,
-        options.tileLevel,
-        options.tileX * 2 + 1,
-        options.tileY * 2 + 1,
-        options.tileLevel + 1,
-      );
-      const nePromise = terrainData.upsample(
-        options.tilingScheme,
-        options.tileX,
-        options.tileY,
-        options.tileLevel,
-        options.tileX * 2 + 1,
-        options.tileY * 2 + 0,
-        options.tileLevel + 1,
-      );
-      return Promise.all([swPromise, nwPromise, sePromise, nePromise]);
-    })
-    .then(function (upsampledTerrainDatas) {
-      expect(upsampledTerrainDatas.length).toBe(4);
+  checkMeshGeometry({
+    mesh: terrainMesh,
+    positionsCartographic: options.positionsCartographic,
+    normals: options.normals,
+    indices: options.indices,
+    edgeIndicesWest: options.edgeIndicesWest,
+    edgeIndicesSouth: options.edgeIndicesSouth,
+    edgeIndicesEast: options.edgeIndicesEast,
+    edgeIndicesNorth: options.edgeIndicesNorth,
+    ellipsoid: options.tilingScheme.ellipsoid,
+  });
 
-      for (let i = 0; i < upsampledTerrainDatas.length; ++i) {
-        const upsampledTerrainData = upsampledTerrainDatas[i];
-        expect(upsampledTerrainData).toBeDefined();
-        expect(upsampledTerrainData.wasCreatedByUpsampling()).toBe(true);
+  const swPromise = terrainData.upsample(
+    options.tilingScheme,
+    options.tileX,
+    options.tileY,
+    options.tileLevel,
+    options.tileX * 2 + 0,
+    options.tileY * 2 + 1,
+    options.tileLevel + 1,
+  );
+  const nwPromise = terrainData.upsample(
+    options.tilingScheme,
+    options.tileX,
+    options.tileY,
+    options.tileLevel,
+    options.tileX * 2 + 0,
+    options.tileY * 2 + 0,
+    options.tileLevel + 1,
+  );
+  const sePromise = terrainData.upsample(
+    options.tilingScheme,
+    options.tileX,
+    options.tileY,
+    options.tileLevel,
+    options.tileX * 2 + 1,
+    options.tileY * 2 + 1,
+    options.tileLevel + 1,
+  );
+  const nePromise = terrainData.upsample(
+    options.tilingScheme,
+    options.tileX,
+    options.tileY,
+    options.tileLevel,
+    options.tileX * 2 + 1,
+    options.tileY * 2 + 0,
+    options.tileLevel + 1,
+  );
+  const upsampledTerrainDatas = await Promise.all([
+    swPromise,
+    nwPromise,
+    sePromise,
+    nePromise,
+  ]);
+  expect(upsampledTerrainDatas.length).toBe(4);
 
-        checkMeshGeometry({
-          mesh: upsampledTerrainData._mesh,
-          positionsCartographic: expectedUpsampledPositionsCartographic[i],
-          normals: expectedUpsampledNormals[i],
-          indices: expectedUpsampledIndices[i],
-          edgeIndicesWest: expectedUpsampledEdgeIndicesWest[i],
-          edgeIndicesSouth: expectedUpsampledEdgeIndicesSouth[i],
-          edgeIndicesEast: expectedUpsampledEdgeIndicesEast[i],
-          edgeIndicesNorth: expectedUpsampledEdgeIndicesNorth[i],
-          ellipsoid: options.tilingScheme.ellipsoid,
-        });
-      }
+  for (let i = 0; i < upsampledTerrainDatas.length; ++i) {
+    const upsampledTerrainData = upsampledTerrainDatas[i];
+    expect(upsampledTerrainData).toBeDefined();
+    expect(upsampledTerrainData.wasCreatedByUpsampling()).toBe(true);
 
-      return upsampledTerrainDatas;
+    checkMeshGeometry({
+      mesh: upsampledTerrainData._mesh,
+      positionsCartographic: expectedUpsampledPositionsCartographic[i],
+      normals: expectedUpsampledNormals[i],
+      indices: expectedUpsampledIndices[i],
+      edgeIndicesWest: expectedUpsampledEdgeIndicesWest[i],
+      edgeIndicesSouth: expectedUpsampledEdgeIndicesSouth[i],
+      edgeIndicesEast: expectedUpsampledEdgeIndicesEast[i],
+      edgeIndicesNorth: expectedUpsampledEdgeIndicesNorth[i],
+      ellipsoid: options.tilingScheme.ellipsoid,
     });
+  }
+
+  return upsampledTerrainDatas;
 }
 
 /**
@@ -909,7 +911,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
   });
 
   describe("upsample", function () {
-    it("throws if level difference is greater than 1", function () {
+    it("throws if level difference is greater than 1", async function () {
       const tilingScheme = new GeographicTilingScheme();
       const level = 0;
       const x = 0;
@@ -934,26 +936,23 @@ describe("Core/Cesium3DTilesTerrainData", function () {
         edgeIndicesNorth: new Uint16Array([1, 3]),
       });
 
-      return data
-        .createMesh({
-          tilingScheme: tilingScheme,
-          x: x,
-          y: y,
-          level: level,
-        })
-        .then(function () {
-          expect(function () {
-            return data.upsample(
-              tilingScheme,
-              x,
-              y,
-              level,
-              x * 4,
-              y * 4,
-              level + 2,
-            );
-          }).toThrowDeveloperError();
-        });
+      await data.createMesh({
+        tilingScheme: tilingScheme,
+        x: x,
+        y: y,
+        level: level,
+      });
+      expect(function () {
+        return data.upsample(
+          tilingScheme,
+          x,
+          y,
+          level,
+          x * 4,
+          y * 4,
+          level + 2,
+        );
+      }).toThrowDeveloperError();
     });
 
     it("cannot upsample until mesh has been created", function () {
@@ -1179,7 +1178,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
       });
     });
 
-    it("upsamples an upsampled tile", function () {
+    it("upsamples an upsampled tile", async function () {
       const tilingScheme = new GeographicTilingScheme();
       const tileLevel = 0;
       const tileX = 0;
@@ -1213,79 +1212,60 @@ describe("Core/Cesium3DTilesTerrainData", function () {
       });
 
       expect(data.wasCreatedByUpsampling()).toBe(false);
-      return data
-        .createMesh({
-          tilingScheme: tilingScheme,
-          x: tileX,
-          y: tileY,
-          level: tileLevel,
-        })
-        .then(function () {
-          return data
-            .upsample(
-              tilingScheme,
-              tileX,
-              tileY,
-              tileLevel,
-              upsampledTileX,
-              upsampledTileY,
-              upsampledTileLevel,
-            )
-            .then(function (upsampledTerrainData) {
-              expect(upsampledTerrainData.wasCreatedByUpsampling()).toBe(true);
-              return upsampledTerrainData
-                .createMesh({
-                  tilingScheme: tilingScheme,
-                  x: upsampledTileX,
-                  y: upsampledTileY,
-                  level: upsampledTileLevel,
-                })
-                .then(function () {
-                  return upsampledTerrainData
-                    .upsample(
-                      tilingScheme,
-                      upsampledTileX,
-                      upsampledTileY,
-                      upsampledTileLevel,
-                      doublyUpsampledTileX,
-                      doublyUpsampledTileY,
-                      doublyUpsampledTileLevel,
-                    )
-                    .then(function (doublyUpsampleTerrainData) {
-                      expect(
-                        doublyUpsampleTerrainData.wasCreatedByUpsampling(),
-                      ).toBe(true);
-                      return doublyUpsampleTerrainData
-                        .createMesh({
-                          tilingScheme: tilingScheme,
-                          x: doublyUpsampledTileX,
-                          y: doublyUpsampledTileY,
-                          level: doublyUpsampledTileLevel,
-                        })
-                        .then(function (doublyUpsampledMesh) {
-                          const sw2 = sw;
-                          const nw2 = lerpCartographic(sw, nw, 0.25);
-                          const se2 = lerpCartographic(sw, se, 0.25);
-                          const ne2 = lerpCartographic(sw, ne, 0.25);
+      await data.createMesh({
+        tilingScheme: tilingScheme,
+        x: tileX,
+        y: tileY,
+        level: tileLevel,
+      });
+      const upsampledTerrainData = await data.upsample(
+        tilingScheme,
+        tileX,
+        tileY,
+        tileLevel,
+        upsampledTileX,
+        upsampledTileY,
+        upsampledTileLevel,
+      );
+      expect(upsampledTerrainData.wasCreatedByUpsampling()).toBe(true);
+      await upsampledTerrainData.createMesh({
+        tilingScheme: tilingScheme,
+        x: upsampledTileX,
+        y: upsampledTileY,
+        level: upsampledTileLevel,
+      });
+      const doublyUpsampleTerrainData = await upsampledTerrainData.upsample(
+        tilingScheme,
+        upsampledTileX,
+        upsampledTileY,
+        upsampledTileLevel,
+        doublyUpsampledTileX,
+        doublyUpsampledTileY,
+        doublyUpsampledTileLevel,
+      );
+      expect(doublyUpsampleTerrainData.wasCreatedByUpsampling()).toBe(true);
+      const doublyUpsampledMesh = await doublyUpsampleTerrainData.createMesh({
+        tilingScheme: tilingScheme,
+        x: doublyUpsampledTileX,
+        y: doublyUpsampledTileY,
+        level: doublyUpsampledTileLevel,
+      });
+      const sw2 = sw;
+      const nw2 = lerpCartographic(sw, nw, 0.25);
+      const se2 = lerpCartographic(sw, se, 0.25);
+      const ne2 = lerpCartographic(sw, ne, 0.25);
 
-                          checkMeshGeometry({
-                            mesh: doublyUpsampledMesh,
-                            positionsCartographic: [sw2, nw2, ne2, se2],
-                            normals: new Array(4).fill(
-                              new Cartesian3(1.0, 0.0, 0.0),
-                            ),
-                            indices: new Uint16Array([0, 2, 1, 0, 3, 2]),
-                            edgeIndicesWest: new Uint16Array([0, 1]),
-                            edgeIndicesSouth: new Uint16Array([3, 0]),
-                            edgeIndicesEast: new Uint16Array([2, 3]),
-                            edgeIndicesNorth: new Uint16Array([1, 2]),
-                            ellipsoid: tilingScheme.ellipsoid,
-                          });
-                        });
-                    });
-                });
-            });
-        });
+      checkMeshGeometry({
+        mesh: doublyUpsampledMesh,
+        positionsCartographic: [sw2, nw2, ne2, se2],
+        normals: new Array(4).fill(new Cartesian3(1.0, 0.0, 0.0)),
+        indices: new Uint16Array([0, 2, 1, 0, 3, 2]),
+        edgeIndicesWest: new Uint16Array([0, 1]),
+        edgeIndicesSouth: new Uint16Array([3, 0]),
+        edgeIndicesEast: new Uint16Array([2, 3]),
+        edgeIndicesNorth: new Uint16Array([1, 2]),
+        ellipsoid: tilingScheme.ellipsoid,
+      });
     });
   });
 
@@ -1371,71 +1351,65 @@ describe("Core/Cesium3DTilesTerrainData", function () {
       }).toThrowDeveloperError();
     });
 
-    it("creates specified vertices plus skirt vertices", function () {
+    it("creates specified vertices plus skirt vertices", async function () {
       const data = createSampleTerrain();
-      return data
-        .createMesh({
-          tilingScheme: tilingScheme,
-          x: tileX,
-          y: tileY,
-          level: tileLevel,
-        })
-        .then(function (mesh) {
-          checkMeshGeometry({
-            mesh: mesh,
-            positionsCartographic: tilePositionsCartographic,
-            normals: tileNormals,
-            indices: tileIndices,
-            edgeIndicesWest: tileEdgeIndicesWest,
-            edgeIndicesSouth: tileEdgeIndicesSouth,
-            edgeIndicesEast: tileEdgeIndicesEast,
-            edgeIndicesNorth: tileEdgeIndicesNorth,
-            ellipsoid: tilingScheme.ellipsoid,
-          });
-          expect(mesh.minimumHeight).toBe(data._minimumHeight);
-          expect(mesh.maximumHeight).toBe(data._maximumHeight);
-          expect(mesh.boundingSphere3D).toEqual(data._boundingSphere);
-          expect(mesh.orientedBoundingBox).toEqual(data._orientedBoundingBox);
-          expect(mesh.occludeePointInScaledSpace).toEqual(
-            data._horizonOcclusionPoint,
-          );
-        });
+      const mesh = await data.createMesh({
+        tilingScheme: tilingScheme,
+        x: tileX,
+        y: tileY,
+        level: tileLevel,
+      });
+      checkMeshGeometry({
+        mesh: mesh,
+        positionsCartographic: tilePositionsCartographic,
+        normals: tileNormals,
+        indices: tileIndices,
+        edgeIndicesWest: tileEdgeIndicesWest,
+        edgeIndicesSouth: tileEdgeIndicesSouth,
+        edgeIndicesEast: tileEdgeIndicesEast,
+        edgeIndicesNorth: tileEdgeIndicesNorth,
+        ellipsoid: tilingScheme.ellipsoid,
+      });
+      expect(mesh.minimumHeight).toBe(data._minimumHeight);
+      expect(mesh.maximumHeight).toBe(data._maximumHeight);
+      expect(mesh.boundingSphere3D).toEqual(data._boundingSphere);
+      expect(mesh.orientedBoundingBox).toEqual(data._orientedBoundingBox);
+      expect(mesh.occludeePointInScaledSpace).toEqual(
+        data._horizonOcclusionPoint,
+      );
     });
 
-    it("exaggerates mesh", function () {
+    it("exaggerates mesh", async function () {
       const data = createSampleTerrain();
-      return data
-        .createMesh({
-          tilingScheme: tilingScheme,
-          x: tileX,
-          y: tileY,
-          level: tileLevel,
-          exaggeration: 2,
-        })
-        .then(function (mesh) {
-          checkMeshGeometry({
-            mesh: mesh,
-            positionsCartographic: tilePositionsCartographic,
-            normals: tileNormals,
-            indices: tileIndices,
-            edgeIndicesWest: tileEdgeIndicesWest,
-            edgeIndicesSouth: tileEdgeIndicesSouth,
-            edgeIndicesEast: tileEdgeIndicesEast,
-            edgeIndicesNorth: tileEdgeIndicesNorth,
-            ellipsoid: tilingScheme.ellipsoid,
-          });
-          // Even though there's exaggeration, it doesn't affect the mesh's
-          // height, bounding sphere, or any other bounding volumes.
-          // The exaggeration is instead stored in the mesh's TerrainEncoding
-          expect(mesh.encoding.exaggeration).toBe(2);
-          expect(mesh.minimumHeight).toBe(data._minimumHeight);
-          expect(mesh.maximumHeight).toBe(data._maximumHeight);
-          expect(mesh.boundingSphere3D).toEqual(data._boundingSphere);
-          expect(mesh.orientedBoundingBox).toEqual(data._orientedBoundingBox);
-          expect(mesh.occludeePointInScaledSpace).toEqual(
-            data._horizonOcclusionPoint,
-          );
-        });
+      const mesh = await data.createMesh({
+        tilingScheme: tilingScheme,
+        x: tileX,
+        y: tileY,
+        level: tileLevel,
+        exaggeration: 2,
+      });
+      checkMeshGeometry({
+        mesh: mesh,
+        positionsCartographic: tilePositionsCartographic,
+        normals: tileNormals,
+        indices: tileIndices,
+        edgeIndicesWest: tileEdgeIndicesWest,
+        edgeIndicesSouth: tileEdgeIndicesSouth,
+        edgeIndicesEast: tileEdgeIndicesEast,
+        edgeIndicesNorth: tileEdgeIndicesNorth,
+        ellipsoid: tilingScheme.ellipsoid,
+      });
+      // Even though there's exaggeration, it doesn't affect the mesh's
+      // height, bounding sphere, or any other bounding volumes.
+      // The exaggeration is instead stored in the mesh's TerrainEncoding
+      expect(mesh.encoding.exaggeration).toBe(2);
+      expect(mesh.minimumHeight).toBe(data._minimumHeight);
+      expect(mesh.maximumHeight).toBe(data._maximumHeight);
+      expect(mesh.boundingSphere3D).toEqual(data._boundingSphere);
+      expect(mesh.orientedBoundingBox).toEqual(data._orientedBoundingBox);
+      expect(mesh.occludeePointInScaledSpace).toEqual(
+        data._horizonOcclusionPoint,
+      );
     });
 
     it("enables throttling for asynchronous tasks", function () {
@@ -1519,44 +1493,42 @@ describe("Core/Cesium3DTilesTerrainData", function () {
       expect(height).toBeUndefined();
     });
 
-    it("clamps coordinates if given a position outside the mesh", function () {
+    it("clamps coordinates if given a position outside the mesh", async function () {
       const data = createSampleTerrainData();
-      return data.createMesh(createMeshOptions).then(function () {
-        const outside = data.interpolateHeight(rect, 0.0, 0.0);
-        const inside = data.interpolateHeight(rect, rect.east, rect.south);
-        expect(outside).toBe(inside);
-      });
+      await data.createMesh(createMeshOptions);
+      const outside = data.interpolateHeight(rect, 0.0, 0.0);
+      const inside = data.interpolateHeight(rect, rect.east, rect.south);
+      expect(outside).toBe(inside);
     });
 
-    it("returns a height interpolated from the correct triangle", function () {
+    it("returns a height interpolated from the correct triangle", async function () {
       const data = createSampleTerrainData();
-      return data.createMesh(createMeshOptions).then(function () {
-        let longitude;
-        let latitude;
-        let height;
-        let interpolatedHeight;
+      await data.createMesh(createMeshOptions);
+      let longitude;
+      let latitude;
+      let height;
+      let interpolatedHeight;
 
-        // position in the northwest quadrant of the tile.
-        longitude = CesiumMath.lerp(rect.west, rect.east, 0.25);
-        latitude = CesiumMath.lerp(rect.south, rect.north, 0.75);
-        height = nw.height * 0.5 + sw.height * 0.25 + ne.height * 0.25;
-        interpolatedHeight = data.interpolateHeight(rect, longitude, latitude);
-        expect(interpolatedHeight).toEqualEpsilon(height, CesiumMath.EPSILON3);
+      // position in the northwest quadrant of the tile.
+      longitude = CesiumMath.lerp(rect.west, rect.east, 0.25);
+      latitude = CesiumMath.lerp(rect.south, rect.north, 0.75);
+      height = nw.height * 0.5 + sw.height * 0.25 + ne.height * 0.25;
+      interpolatedHeight = data.interpolateHeight(rect, longitude, latitude);
+      expect(interpolatedHeight).toEqualEpsilon(height, CesiumMath.EPSILON3);
 
-        // position in the southeast quadrant of the tile
-        longitude = CesiumMath.lerp(rect.west, rect.east, 0.75);
-        latitude = CesiumMath.lerp(rect.south, rect.north, 0.25);
-        height = se.height * 0.5 + sw.height * 0.25 + ne.height * 0.25;
-        interpolatedHeight = data.interpolateHeight(rect, longitude, latitude);
-        expect(interpolatedHeight).toEqualEpsilon(height, CesiumMath.EPSILON3);
+      // position in the southeast quadrant of the tile
+      longitude = CesiumMath.lerp(rect.west, rect.east, 0.75);
+      latitude = CesiumMath.lerp(rect.south, rect.north, 0.25);
+      height = se.height * 0.5 + sw.height * 0.25 + ne.height * 0.25;
+      interpolatedHeight = data.interpolateHeight(rect, longitude, latitude);
+      expect(interpolatedHeight).toEqualEpsilon(height, CesiumMath.EPSILON3);
 
-        // position on the line between the southwest and northeast corners.
-        longitude = CesiumMath.lerp(rect.west, rect.east, 0.5);
-        latitude = CesiumMath.lerp(rect.south, rect.north, 0.5);
-        height = sw.height * 0.5 + ne.height * 0.5;
-        interpolatedHeight = data.interpolateHeight(rect, longitude, latitude);
-        expect(interpolatedHeight).toEqualEpsilon(height, CesiumMath.EPSILON3);
-      });
+      // position on the line between the southwest and northeast corners.
+      longitude = CesiumMath.lerp(rect.west, rect.east, 0.5);
+      latitude = CesiumMath.lerp(rect.south, rect.north, 0.5);
+      height = sw.height * 0.5 + ne.height * 0.5;
+      interpolatedHeight = data.interpolateHeight(rect, longitude, latitude);
+      expect(interpolatedHeight).toEqualEpsilon(height, CesiumMath.EPSILON3);
     });
   });
 

@@ -89,5 +89,3 @@ describe("Core/Cesium3DTilesTerrainProvider", function () {
     expect(provider.hasWaterMask).toBe(true);
   });
 });
-
-// TODO: test with dataUri
