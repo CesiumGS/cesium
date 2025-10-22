@@ -4529,16 +4529,9 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * @see Scene#pick
  */
 Scene.prototype.pickAsync = async function (windowPosition, width, height) {
-  return new Promise((resolve, reject) => {
-    this._picking
-      .pick(this, windowPosition, width, height, 1, true)
-      .then((result) => {
-        resolve(result[0]);
-      })
-      .catch(reject);
-  });
+  const result = await this._picking.pick(this, windowPosition, width, height, 1, true);
+  return result[0];
 };
-
 /**
  * Returns a {@link VoxelCell} for the voxel sample rendered at a particular window coordinate,
  * or <code>undefined</code> if no voxel is rendered at that position.
