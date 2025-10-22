@@ -164,9 +164,13 @@ void doDepthTest() {
     float globeDepth = getGlobeDepthAtCoords(fragSt);
     if (globeDepth == 0.0) return; // Not on globe
     
-    float distanceToEllipsoid = -v_splitDirectionAndEllipsoidDepthEC.y; // depth is negative by convention
-    float testDistance = (eyeDepth > -u_coarseDepthTestDistance) ? globeDepth : distanceToEllipsoid;
-    if (eyeDepth < testDistance) {
+    float distanceToEllipsoid = -v_splitDirectionAndEllipsoidDepthEC.y;
+    bool useGlobeDepth = eyeDepth > -u_coarseDepthTestDistance;
+    float testDistance = useGlobeDepth ? globeDepth : distanceToEllipsoid;
+    float testDelta = eyeDepth - testDistance;
+
+    float depthsilon = useGlobeDepth ? u_threePointDepthTestDistance : u_coarseDepthTestDistance;
+    if (testDelta < -depthsilon) {
         discard;
     }
 }
