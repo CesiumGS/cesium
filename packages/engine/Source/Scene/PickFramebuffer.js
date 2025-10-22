@@ -148,7 +148,7 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
 };
 
 /**
- * Return the picked objects rendered within a given rectangle using asynchronously without staling the GPU.
+ * Return the picked objects rendered within a given rectangle using asynchronously without stalling the GPU.
  *
  * @param {BoundingRectangle} screenSpaceRectangle
  * @param {FrameState} frameState
