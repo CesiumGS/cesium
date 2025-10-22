@@ -588,11 +588,26 @@ UrlTemplateImageryProvider.prototype.pickFeatures = function (
     ++formatIndex;
 
     if (format.type === "json") {
-      return resource.fetchJson().then(format.callback).catch(doRequest);
+      return resource
+        .fetchJson()
+        .then((response) =>
+          format.callback(response, that.tilingScheme.projection),
+        )
+        .catch(doRequest);
     } else if (format.type === "xml") {
-      return resource.fetchXML().then(format.callback).catch(doRequest);
+      return resource
+        .fetchXML()
+        .then((response) =>
+          format.callback(response, that.tilingScheme.projection),
+        )
+        .catch(doRequest);
     } else if (format.type === "text" || format.type === "html") {
-      return resource.fetchText().then(format.callback).catch(doRequest);
+      return resource
+        .fetchText()
+        .then((response) =>
+          format.callback(response, that.tilingScheme.projection),
+        )
+        .catch(doRequest);
     }
     return resource
       .fetch({

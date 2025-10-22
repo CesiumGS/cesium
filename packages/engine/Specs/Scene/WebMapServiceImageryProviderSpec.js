@@ -25,6 +25,8 @@ import {
 } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import WebMercatorProjection from "../../Source/Core/WebMercatorProjection.js";
+import Cartesian3 from "../../Source/Core/Cartesian3.js";
 
 describe("Scene/WebMapServiceImageryProvider", function () {
   beforeEach(function () {
@@ -961,6 +963,50 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           expect(firstResult.description).toContain("GEOSCIENCE AUSTRALIA");
           expect(firstResult.position).toEqual(
             Cartographic.fromDegrees(145.91299, -30.19445),
+          );
+        });
+    });
+
+    it("works with GeoJSON responses in mercator projection", function () {
+      const provider = new WebMapServiceImageryProvider({
+        url: "made/up/wms/server",
+        layers: "someLayer",
+        tilingScheme: new WebMercatorTilingScheme(),
+      });
+
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+      ) {
+        expect(url).toContain("GetFeatureInfo");
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/WMS/GetFeatureInfo-GeoJSON-mercator.json",
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType,
+        );
+      };
+      const projection = new WebMercatorProjection();
+
+      return provider
+        .pickFeatures(0, 0, 0, 0.5, 0.5)
+        .then(function (pickResult) {
+          expect(pickResult.length).toBe(1);
+
+          const firstResult = pickResult[0];
+          expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+          expect(firstResult.name).toBe("TOP TANK");
+          expect(firstResult.description).toContain("GEOSCIENCE AUSTRALIA");
+          expect(firstResult.position).toEqual(
+            projection.unproject(new Cartesian3(1406877.9886, 5326443.0126, 0)),
           );
         });
     });
