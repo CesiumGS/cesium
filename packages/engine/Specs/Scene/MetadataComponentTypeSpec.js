@@ -34,14 +34,10 @@ describe("Scene/MetadataComponentType", function () {
     if (FeatureDetection.supportsBigInt()) {
       expect(
         MetadataComponentType.getMinimum(MetadataComponentType.INT64),
-      ).toBe(
-        BigInt("-9223372036854775808"), // eslint-disable-line
-      );
+      ).toBe(BigInt("-9223372036854775808"));
       expect(
         MetadataComponentType.getMinimum(MetadataComponentType.UINT64),
-      ).toBe(
-        BigInt(0), // eslint-disable-line
-      );
+      ).toBe(BigInt(0));
     }
   });
 
@@ -100,14 +96,10 @@ describe("Scene/MetadataComponentType", function () {
     if (FeatureDetection.supportsBigInt()) {
       expect(
         MetadataComponentType.getMaximum(MetadataComponentType.INT64),
-      ).toBe(
-        BigInt("9223372036854775807"), // eslint-disable-line
-      );
+      ).toBe(BigInt("9223372036854775807"));
       expect(
         MetadataComponentType.getMaximum(MetadataComponentType.UINT64),
-      ).toBe(
-        BigInt("18446744073709551615"), // eslint-disable-line
-      );
+      ).toBe(BigInt("18446744073709551615"));
     }
   });
 
@@ -262,12 +254,9 @@ describe("Scene/MetadataComponentType", function () {
     const max = MetadataComponentType.getMaximum(MetadataComponentType.INT64);
     const values = [
       min,
-      // eslint-disable-next-line no-undef
       min + BigInt(1),
-      // eslint-disable-next-line no-undef
       min / BigInt(2),
       0,
-      // eslint-disable-next-line no-undef
       (max + BigInt(1)) / BigInt(2),
       max,
     ];
@@ -287,7 +276,6 @@ describe("Scene/MetadataComponentType", function () {
     }
 
     const max = MetadataComponentType.getMaximum(MetadataComponentType.UINT64);
-    // eslint-disable-next-line no-undef
     const values = [BigInt(0), max / BigInt(5), max];
     const expectedResults = [0.0, 0.2, 1.0];
     for (let j = 0; j < values.length; ++j) {
@@ -375,10 +363,10 @@ describe("Scene/MetadataComponentType", function () {
     const values = [-1.0, -0.5, 0.0, 0.5, 1.0];
 
     const expectedResults = [
-      min + BigInt(1), // eslint-disable-line
-      min / BigInt(2), // eslint-disable-line
-      BigInt(0), // eslint-disable-line
-      (max + BigInt(1)) / BigInt(2), // eslint-disable-line
+      min + BigInt(1),
+      min / BigInt(2),
+      BigInt(0),
+      (max + BigInt(1)) / BigInt(2),
       max,
     ];
 
@@ -402,9 +390,13 @@ describe("Scene/MetadataComponentType", function () {
     // Second result is max / 5
     // Third result is (max + 1) / 2
     const expectedResults = [
-      BigInt(0), // eslint-disable-line
-      BigInt(3689348814741910323), // eslint-disable-line
-      BigInt(9223372036854775808), // eslint-disable-line
+      BigInt(0),
+      // Note: The following value will become 3689348814741910528 at
+      // runtime, because it is no proper big number literal. The test
+      // is checking for exactly that.
+      // eslint-disable-next-line no-loss-of-precision
+      BigInt(3689348814741910323),
+      BigInt(9223372036854775808),
       max,
     ];
     for (let i = 0; i < values.length; ++i) {
