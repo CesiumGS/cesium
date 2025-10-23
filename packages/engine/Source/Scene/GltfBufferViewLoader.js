@@ -207,6 +207,7 @@ GltfBufferViewLoader.prototype.load = async function () {
 function getBufferLoader(bufferViewLoader) {
   const resourceCache = bufferViewLoader._resourceCache;
   const buffer = bufferViewLoader._buffer;
+
   if (defined(buffer.uri)) {
     const baseResource = bufferViewLoader._baseResource;
     const resource = baseResource.getDerivedResource({
@@ -217,17 +218,8 @@ function getBufferLoader(bufferViewLoader) {
     });
   }
 
-  const result = resourceCache.getEmbeddedBufferLoader({
-    parentResource: bufferViewLoader._gltfResource,
-    bufferId: bufferViewLoader._bufferId,
-  });
-
-  if (defined(result)) {
-    return result;
-  }
-
-  const source = buffer.extras._pipeline.source;
-  return resourceCache.addBufferLoader({
+  const source = buffer.extras?._pipeline?.source;
+  return resourceCache.getEmbeddedBufferLoader({
     parentResource: bufferViewLoader._gltfResource,
     bufferId: bufferViewLoader._bufferId,
     typedArray: source,

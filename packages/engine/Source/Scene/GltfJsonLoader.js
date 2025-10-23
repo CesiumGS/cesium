@@ -222,19 +222,11 @@ function loadEmbeddedBuffers(gltfJsonLoader, gltf) {
     const source = buffer.extras._pipeline.source;
     if (defined(source) && !defined(buffer.uri)) {
       const resourceCache = gltfJsonLoader._resourceCache;
-      let bufferLoader = resourceCache.getEmbeddedBufferLoader({
+      const bufferLoader = resourceCache.getEmbeddedBufferLoader({
         parentResource: gltfJsonLoader._gltfResource,
         bufferId: bufferId,
+        typedArray: source,
       });
-
-      if (!defined(bufferLoader)) {
-        bufferLoader = resourceCache.addBufferLoader({
-          parentResource: gltfJsonLoader._gltfResource,
-          bufferId: bufferId,
-          typedArray: source,
-        });
-      }
-
       gltfJsonLoader._bufferLoaders.push(bufferLoader);
       promises.push(bufferLoader.load());
     }

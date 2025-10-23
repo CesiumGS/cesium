@@ -384,7 +384,7 @@ describe("ResourceCache", function () {
       parentResource: bufferParentResource,
       bufferId: 0,
     });
-    const bufferLoader = ResourceCache.addBufferLoader({
+    const bufferLoader = ResourceCache.getEmbeddedBufferLoader({
       parentResource: bufferParentResource,
       bufferId: 0,
       typedArray: bufferTypedArray,
@@ -420,6 +420,15 @@ describe("ResourceCache", function () {
       ResourceCache.getEmbeddedBufferLoader({
         parentResource: bufferParentResource,
         typedArray: bufferTypedArray,
+      }),
+    ).toThrowDeveloperError();
+  });
+
+  it("getEmbeddedBufferLoader throws if typedArray is undefined", function () {
+    expect(() =>
+      ResourceCache.getEmbeddedBufferLoader({
+        parentResource: bufferParentResource,
+        bufferId: 0,
       }),
     ).toThrowDeveloperError();
   });

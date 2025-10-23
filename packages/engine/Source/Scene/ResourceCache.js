@@ -177,45 +177,17 @@ ResourceCache.getSchemaLoader = function (options) {
 };
 
 /**
- * Gets an existing embedded buffer loader from the cache.
+ * Gets an existing embedded buffer loader from the cache, or creates a new loader if one does not already exist.
  *
  * @param {object} options Object with the following properties:
  * @param {Resource} options.parentResource The {@link Resource} containing the embedded buffer.
  * @param {number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
  * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents.
  *
- * @returns {BufferLoader|undefined} The cached buffer loader.
+ * @returns {BufferLoader} The cached buffer loader.
  * @private
  */
 ResourceCache.getEmbeddedBufferLoader = function (options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-  const { parentResource, bufferId } = options;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.parentResource", parentResource);
-  Check.typeOf.number("options.bufferId", bufferId);
-  //>>includeEnd('debug');
-
-  const cacheKey = ResourceCacheKey.getEmbeddedBufferCacheKey({
-    parentResource: parentResource,
-    bufferId: bufferId,
-  });
-
-  return ResourceCache.get(cacheKey);
-};
-
-/**
- * Creates a new buffer loader.
- *
- * @param {object} options Object with the following properties:
- * @param {Resource} options.parentResource The {@link Resource} containing the embedded buffer.
- * @param {number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
- * @param {Uint8Array} options.typedArray The typed array containing the embedded buffer contents.
- *
- * @returns {BufferLoader} The created buffer loader.
- * @private
- */
-ResourceCache.addBufferLoader = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const { parentResource, bufferId, typedArray } = options;
 
@@ -223,17 +195,24 @@ ResourceCache.addBufferLoader = function (options) {
   Check.typeOf.object("options.parentResource", parentResource);
   Check.typeOf.number("options.bufferId", bufferId);
   //>>includeEnd('debug');
-
   const cacheKey = ResourceCacheKey.getEmbeddedBufferCacheKey({
     parentResource: parentResource,
     bufferId: bufferId,
   });
 
-  const bufferLoader = new BufferLoader({
+  let bufferLoader = ResourceCache.get(cacheKey);
+  if (defined(bufferLoader)) {
+    return bufferLoader;
+  }
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.typedArray", typedArray);
+  //>>includeEnd('debug');
+
+  bufferLoader = new BufferLoader({
     typedArray: typedArray,
     cacheKey: cacheKey,
   });
-
   return ResourceCache.add(bufferLoader);
 };
 
