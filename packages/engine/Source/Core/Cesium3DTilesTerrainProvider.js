@@ -27,161 +27,6 @@ import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 
 /**
- * Gets the root ID from geographic tile coordinates.
- * There are 2 root tiles in a geographic tiling scheme: one for each hemisphere.
- * @private
- * @param {number} level The level of the tile
- * @param {number} x The x coordinate of the tile
- * @returns {number} The root tile ID (0 or 1)
- */
-function getRootIdFromGeographic(level, x) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("level", level);
-  Check.typeOf.number("x", x);
-  //>>includeEnd('debug');
-
-  const numberOfYTilesAtLevel = 1 << level;
-  const rootId = (x / numberOfYTilesAtLevel) | 0;
-  return rootId;
-}
-
-/**
- * Gets the implicit tile coordinates from geographic tile coordinates.
- * @private
- * @param {ImplicitTileset} implicitTileset
- * @param {number} level The level of the tile
- * @param {number} x The x coordinate of the tile
- * @param {number} y The y coordinate of the tile
- * @returns {ImplicitTileCoordinates} The implicit tile coordinates
- */
-function getImplicitTileCoordinatesFromGeographicCoordinates(
-  implicitTileset,
-  level,
-  x,
-  y,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("implicitTileset", implicitTileset);
-  Check.typeOf.number("level", level);
-  Check.typeOf.number("x", x);
-  Check.typeOf.number("y", y);
-  //>>includeEnd('debug');
-
-  const nuberOfYTilesAtLevel = 1 << level;
-  const implicitLevel = level;
-  const implicitX = x % nuberOfYTilesAtLevel;
-  const implicitY = nuberOfYTilesAtLevel - y - 1;
-  const { subdivisionScheme, subtreeLevels } = implicitTileset;
-
-  return new ImplicitTileCoordinates({
-    subdivisionScheme: subdivisionScheme,
-    subtreeLevels: subtreeLevels,
-    level: implicitLevel,
-    x: implicitX,
-    y: implicitY,
-  });
-}
-
-/**
- * Gets the implicit tile coordinates from geographic tile coordinates.
- * @private
- * @param {ImplicitTileset} implicitTileset
- * @param {number} level The level of the tile
- * @param {number} x The x coordinate of the tile
- * @param {number} y The y coordinate of the tile
- * @returns {ImplicitTileCoordinates}
- */
-function getImplicitTileCoordinates(implicitTileset, level, x, y) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("implicitTileset", implicitTileset);
-  Check.typeOf.number("level", level);
-  Check.typeOf.number("x", x);
-  Check.typeOf.number("y", y);
-  //>>includeEnd('debug');
-
-  const { subdivisionScheme, subtreeLevels } = implicitTileset;
-
-  return new ImplicitTileCoordinates({
-    subdivisionScheme: subdivisionScheme,
-    subtreeLevels: subtreeLevels,
-    level: level,
-    x: x,
-    y: y,
-  });
-}
-
-/**
- * Computes the descendant tile coordinates at a given (u,v) location within a subtree.
- * @private
- * @param {ImplicitTileset} implicitTileset
- * @param {ImplicitTileCoordinates} subtreeCoord
- * @param {number} u
- * @param {number} v
- * @param {number} levelOffset
- * @returns {ImplicitTileCoordinates} The parent subtree coordinate
- */
-function computeDescendantCoordinatesAtUv(
-  implicitTileset,
-  subtreeCoord,
-  u,
-  v,
-  levelOffset,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("implicitTileset", implicitTileset);
-  Check.typeOf.object("subtreeCoord", subtreeCoord);
-  Check.typeOf.number("u", u);
-  Check.typeOf.number("v", v);
-  Check.typeOf.number("levelOffset", levelOffset);
-  //>>includeEnd('debug');
-
-  const dimension = 1 << levelOffset;
-  const localX = CesiumMath.clamp((u * dimension) | 0, 0, dimension - 1);
-  const localY = CesiumMath.clamp((v * dimension) | 0, 0, dimension - 1);
-  const offset = getImplicitTileCoordinates(
-    implicitTileset,
-    levelOffset,
-    localX,
-    localY,
-  );
-  return subtreeCoord.getDescendantCoordinates(offset);
-}
-
-/**
- * Checks whether a child tile at a given tile coordinate is available in the given subtree.
- * @private
- * @param {ImplicitTileset} implicitTileset The implicit tileset
- * @param {ImplicitSubtree} subtree The subtree
- * @param {ImplicitTileCoordinates} coord The tile coordinates of the parent tile
- * @param {number} x The x coordinate of the child tile
- * @param {number} y The y coordinate of the child tile
- * @returns {boolean} <code>true</code> if the child tile is available. <code>false</code> otherwise.
- */
-function isChildAvailable(implicitTileset, subtree, coord, x, y) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("implicitTileset", implicitTileset);
-  Check.typeOf.object("subtree", subtree);
-  Check.typeOf.object("coord", coord);
-  Check.typeOf.number("x", x);
-  Check.typeOf.number("y", y);
-  //>>includeEnd('debug');
-
-  // For terrain it's required that the root tile of any available subtree is also available, so
-  // when the child tile belongs to a child subtree, we only need to check if the child subtree itself is available.
-  const isBottomOfSubtree = coord.isBottomOfSubtree();
-
-  const localLevel = 1;
-  const offset = getImplicitTileCoordinates(implicitTileset, localLevel, x, y);
-  const childCoord = coord.getDescendantCoordinates(offset);
-
-  const isAvailable = isBottomOfSubtree
-    ? subtree.childSubtreeIsAvailableAtCoordinates(childCoord)
-    : subtree.tileIsAvailableAtCoordinates(childCoord);
-
-  return isAvailable;
-}
-
-/**
  * @typedef {object} Cesium3DTilesTerrainProvider.ConstructorOptions
  *
  * Initialization options for the Cesium3DTilesTerrainProvider constructor
@@ -229,9 +74,7 @@ function Cesium3DTilesTerrainProvider(options) {
   }
   this._credit = credit;
   this._tileCredits = undefined;
-
   this._errorEvent = new Event();
-
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
 
   this._tilingScheme = new GeographicTilingScheme({
@@ -334,74 +177,6 @@ Cesium3DTilesTerrainProvider.fromUrl = async function (url, options) {
 
   return provider;
 };
-
-/**
- * Loads the water mask image texture from the glTF.
- * @private
- * @param {Object.<string,*>} gltf The glTF JSON.
- * @param {Resource} gltfResource The resource pointing to the glTF.
- * @returns {Promise<HTMLImageElement|HTMLCanvasElement|ImageBitmap>|undefined} A promise that resolves to the loaded image. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
- */
-async function loadWaterMask(gltf, gltfResource) {
-  const extension = gltf.extensions?.["EXT_structural_metadata"];
-  if (!defined(extension) || !defined(extension.propertyTextures)) {
-    return;
-  }
-
-  const schemaLoader = new MetadataSchemaLoader({
-    schema: extension.schema,
-  });
-
-  await schemaLoader.load();
-  const schema = schemaLoader.schema;
-
-  let metadataClass, waterMaskProperty;
-  if (defined(schema.classes)) {
-    for (const classId in schema.classes) {
-      if (schema.classes.hasOwnProperty(classId)) {
-        metadataClass = schema.classes[classId];
-        waterMaskProperty = metadataClass.propertiesBySemantic["WATERMASK"];
-        if (defined(waterMaskProperty)) {
-          break;
-        }
-      }
-    }
-  }
-
-  if (!defined(waterMaskProperty)) {
-    return;
-  }
-
-  const propertyTextureData = extension.propertyTextures.find(
-    (data) => data.class === metadataClass.id,
-  );
-  if (!defined(propertyTextureData)) {
-    throw new DeveloperError(
-      `Expected a propertyTexture with a class ${metadataClass.id}`,
-    );
-  }
-
-  const textureInfo = propertyTextureData.properties[waterMaskProperty.id];
-  const texture = gltf.textures[textureInfo.index];
-  const bufferViewId = gltf.images[texture.source]?.bufferView;
-
-  const bufferViewLoader = ResourceCache.getBufferViewLoader({
-    gltf: gltf,
-    bufferViewId: bufferViewId,
-    gltfResource: gltfResource,
-    baseResource: gltfResource,
-  });
-  await bufferViewLoader.load();
-
-  const image = await loadImageFromTypedArray({
-    uint8Array: new Uint8Array(bufferViewLoader.typedArray),
-    format: "image/png",
-    flipY: false,
-    skipColorSpaceConversion: true,
-  });
-
-  return image;
-}
 
 /**
  * Creates a {@link TerrainProvider} from a Cesium ion asset ID that accesses terrain data in a Cesium 3D Tiles format
@@ -686,6 +461,192 @@ Cesium3DTilesTerrainProvider.prototype.getTileDataAvailable = function (
   // The parent subtree isn't loaded either, so we don't even know if the child subtree is available
   return undefined;
 };
+
+/**
+ * Gets the root ID from geographic tile coordinates.
+ * There are 2 root tiles in a geographic tiling scheme: one for each hemisphere.
+ * @private
+ * @param {number} level The level of the tile
+ * @param {number} x The x coordinate of the tile
+ * @returns {number} The root tile ID (0 or 1)
+ */
+function getRootIdFromGeographic(level, x) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  //>>includeEnd('debug');
+
+  const numberOfYTilesAtLevel = 1 << level;
+  const rootId = (x / numberOfYTilesAtLevel) | 0;
+  return rootId;
+}
+
+/**
+ * Gets the implicit tile coordinates from geographic tile coordinates.
+ * @private
+ * @param {ImplicitTileset} implicitTileset
+ * @param {number} level The level of the tile
+ * @param {number} x The x coordinate of the tile
+ * @param {number} y The y coordinate of the tile
+ * @returns {ImplicitTileCoordinates} The implicit tile coordinates
+ */
+function getImplicitTileCoordinatesFromGeographicCoordinates(
+  implicitTileset,
+  level,
+  x,
+  y,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  //>>includeEnd('debug');
+
+  const numberOfYTilesAtLevel = 1 << level;
+  const implicitLevel = level;
+  const implicitX = x % numberOfYTilesAtLevel;
+  const implicitY = numberOfYTilesAtLevel - y - 1;
+  const { subdivisionScheme, subtreeLevels } = implicitTileset;
+
+  return new ImplicitTileCoordinates({
+    subdivisionScheme: subdivisionScheme,
+    subtreeLevels: subtreeLevels,
+    level: implicitLevel,
+    x: implicitX,
+    y: implicitY,
+  });
+}
+
+/**
+ * Loads the water mask image texture from the glTF.
+ * @private
+ * @param {Object.<string,*>} gltf The glTF JSON.
+ * @param {Resource} gltfResource The resource pointing to the glTF.
+ * @returns {Promise<HTMLImageElement|HTMLCanvasElement|ImageBitmap>|undefined} A promise that resolves to the loaded image. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ */
+async function loadWaterMask(gltf, gltfResource) {
+  const extension = gltf.extensions?.["EXT_structural_metadata"];
+  if (!defined(extension) || !defined(extension.propertyTextures)) {
+    return;
+  }
+
+  const schemaLoader = new MetadataSchemaLoader({
+    schema: extension.schema,
+  });
+
+  await schemaLoader.load();
+  const schema = schemaLoader.schema;
+
+  let metadataClass, waterMaskProperty;
+  if (defined(schema.classes)) {
+    for (const classId in schema.classes) {
+      if (schema.classes.hasOwnProperty(classId)) {
+        metadataClass = schema.classes[classId];
+        waterMaskProperty = metadataClass.propertiesBySemantic["WATERMASK"];
+        if (defined(waterMaskProperty)) {
+          break;
+        }
+      }
+    }
+  }
+
+  if (!defined(waterMaskProperty)) {
+    return;
+  }
+
+  const propertyTextureData = extension.propertyTextures.find(
+    (data) => data.class === metadataClass.id,
+  );
+  if (!defined(propertyTextureData)) {
+    throw new DeveloperError(
+      `Expected a propertyTexture with a class ${metadataClass.id}`,
+    );
+  }
+
+  const textureInfo = propertyTextureData.properties[waterMaskProperty.id];
+  const texture = gltf.textures[textureInfo.index];
+  const bufferViewId = gltf.images[texture.source]?.bufferView;
+
+  const bufferViewLoader = ResourceCache.getBufferViewLoader({
+    gltf: gltf,
+    bufferViewId: bufferViewId,
+    gltfResource: gltfResource,
+    baseResource: gltfResource,
+  });
+  await bufferViewLoader.load();
+
+  const image = await loadImageFromTypedArray({
+    uint8Array: new Uint8Array(bufferViewLoader.typedArray),
+    format: "image/png",
+    flipY: false,
+    skipColorSpaceConversion: true,
+  });
+
+  return image;
+}
+
+/**
+ * Checks whether a child tile at a given tile coordinate is available in the given subtree.
+ * @private
+ * @param {ImplicitTileset} implicitTileset The implicit tileset
+ * @param {ImplicitSubtree} subtree The subtree
+ * @param {ImplicitTileCoordinates} coord The tile coordinates of the parent tile
+ * @param {number} x The x coordinate of the child tile
+ * @param {number} y The y coordinate of the child tile
+ * @returns {boolean} <code>true</code> if the child tile is available. <code>false</code> otherwise.
+ */
+function isChildAvailable(implicitTileset, subtree, coord, x, y) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("subtree", subtree);
+  Check.typeOf.object("coord", coord);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  //>>includeEnd('debug');
+
+  // For terrain it's required that the root tile of any available subtree is also available, so
+  // when the child tile belongs to a child subtree, we only need to check if the child subtree itself is available.
+  const isBottomOfSubtree = coord.isBottomOfSubtree();
+
+  const localLevel = 1;
+  const offset = getImplicitTileCoordinates(implicitTileset, localLevel, x, y);
+  const childCoord = coord.getDescendantCoordinates(offset);
+
+  const isAvailable = isBottomOfSubtree
+    ? subtree.childSubtreeIsAvailableAtCoordinates(childCoord)
+    : subtree.tileIsAvailableAtCoordinates(childCoord);
+
+  return isAvailable;
+}
+
+/**
+ * Gets the implicit tile coordinates from geographic tile coordinates.
+ * @private
+ * @param {ImplicitTileset} implicitTileset
+ * @param {number} level The level of the tile
+ * @param {number} x The x coordinate of the tile
+ * @param {number} y The y coordinate of the tile
+ * @returns {ImplicitTileCoordinates}
+ */
+function getImplicitTileCoordinates(implicitTileset, level, x, y) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  //>>includeEnd('debug');
+
+  const { subdivisionScheme, subtreeLevels } = implicitTileset;
+
+  return new ImplicitTileCoordinates({
+    subdivisionScheme: subdivisionScheme,
+    subtreeLevels: subtreeLevels,
+    level: level,
+    x: x,
+    y: y,
+  });
+}
 
 /**
  * Make sure we load availability data for a tile
@@ -1028,6 +989,43 @@ ImplicitSubtreeCache.prototype._computeMaximumImplicitTileCoordinatesAtPosition 
 
     return deepestTileCoord;
   };
+
+/**
+ * Computes the descendant tile coordinates at a given (u,v) location within a subtree.
+ * @private
+ * @param {ImplicitTileset} implicitTileset
+ * @param {ImplicitTileCoordinates} subtreeCoord
+ * @param {number} u
+ * @param {number} v
+ * @param {number} levelOffset
+ * @returns {ImplicitTileCoordinates} The parent subtree coordinate
+ */
+function computeDescendantCoordinatesAtUv(
+  implicitTileset,
+  subtreeCoord,
+  u,
+  v,
+  levelOffset,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("subtreeCoord", subtreeCoord);
+  Check.typeOf.number("u", u);
+  Check.typeOf.number("v", v);
+  Check.typeOf.number("levelOffset", levelOffset);
+  //>>includeEnd('debug');
+
+  const dimension = 1 << levelOffset;
+  const localX = CesiumMath.clamp((u * dimension) | 0, 0, dimension - 1);
+  const localY = CesiumMath.clamp((v * dimension) | 0, 0, dimension - 1);
+  const offset = getImplicitTileCoordinates(
+    implicitTileset,
+    levelOffset,
+    localX,
+    localY,
+  );
+  return subtreeCoord.getDescendantCoordinates(offset);
+}
 
 // NOTE: ImplicitSubtreeCache implements just enough of the TileAvailability interface to support `sampleTerrain` and `sampleTerrainMostDetailed`.
 // Right now this just means implementing `computeMaximumLevelAtPosition`.

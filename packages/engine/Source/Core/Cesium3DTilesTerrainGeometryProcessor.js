@@ -23,6 +23,398 @@ import TerrainProvider from "./TerrainProvider.js";
 import Transforms from "./Transforms.js";
 import WebMercatorProjection from "./WebMercatorProjection.js";
 
+/**
+ * Contains functions to create a mesh from 3D Tiles terrain data.
+ *
+ * @namespace Cesium3DTilesTerrainGeometryProcessor
+ *
+ * @private
+ */
+const Cesium3DTilesTerrainGeometryProcessor = {};
+
+/**
+ * Contains information about geometry-related vertex arrays in a glTF asset.
+ * @private
+ * @typedef GltfInfo
+ *
+ * @property {Float32Array} positions The decoded position attributes.
+ * @property {Float32Array|undefined} normals The decoded normal attributes, or <code>undefined</code> if the glTF has no normals.
+ * @property {Uint16Array|Uint32Array} indices The decoded indices.
+ * @property {Uint16Array|Uint32Array} edgeIndicesWest The edge indices along the West side of the tile.
+ * @property {Uint16Array|Uint32Array} edgeIndicesSouth The edge indices along the South side of the tile.
+ * @property {Uint16Array|Uint32Array} edgeIndicesEast The edge indices along the East side of the tile.
+ * @property {Uint16Array|Uint32Array} edgeIndicesNorth The edge indices along the North side of the tile.
+ */
+
+const scratchGltfInfo = {
+  positions: undefined,
+  normals: undefined,
+  indices: undefined,
+  edgeIndicesWest: undefined,
+  edgeIndicesSouth: undefined,
+  edgeIndicesEast: undefined,
+  edgeIndicesNorth: undefined,
+};
+
+const scratchCenterCartographic = new Cartographic();
+const scratchCenterCartesian = new Cartesian3();
+const scratchEnuToEcef = new Matrix4();
+const scratchEcefToEnu = new Matrix4();
+const scratchTilesetTransform = new Matrix4();
+const scratchMinimumPositionENU = new Cartesian3();
+const scratchMaximumPositionENU = new Cartesian3();
+const scratchPosLocal = new Cartesian3();
+const scratchPosEcef = new Cartesian3();
+const scratchCartographic = new Cartographic();
+const scratchUV = new Cartesian2();
+const scratchNormal = new Cartesian3();
+const scratchNormalOct = new Cartesian2();
+const scratchGeodeticSurfaceNormal = new Cartesian3();
+const scratchPosEnu = new Cartesian3();
+
+/**
+ * Compares two edge indices for sorting.
+ * @private
+ * @param {number} a The first edge index.
+ * @param {number} b The second edge index.
+ * @returns {number} A negative number if <code>a</code> is less than <code>b</code>, a positive number if <code>a</code> is greater than <code>b</code>, or zero if they are equal.
+ */
+const sortedEdgeCompare = function (a, b) {
+  return a - b;
+};
+
+/**
+ * @typedef {object} Cesium3DTilesTerrainGeometryProcessor.CreateMeshOptions
+ * @property {Ellipsoid} ellipsoid The ellipsoid.
+ * @property {Rectangle} rectangle The rectangle covered by the tile.
+ * @property {boolean} hasVertexNormals <code>true</code> if the tile has vertex normals.
+ * @property {boolean} hasWebMercatorT <code>true</code> if the tile has Web Mercator T coordinates.
+ * @property {Object.<string,*>} gltf The glTF JSON of the tile.
+ * @property {number} minimumHeight The minimum height of the tile.
+ * @property {number} maximumHeight The maximum height of the tile.
+ * @property {BoundingSphere} boundingSphere The bounding sphere of the tile.
+ * @property {OrientedBoundingBox} orientedBoundingBox The oriented bounding box of the tile.
+ * @property {Cartesian3} horizonOcclusionPoint The horizon occlusion point of the tile.
+ * @property {number} skirtHeight The height of the skirts.
+ * @property {number} [exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @property {number} [exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+ */
+
+/**
+ * Creates a {@link TerrainMesh} from this terrain data.
+ * @function
+ *
+ * @private
+ *
+ * @param {Cesium3DTilesTerrainGeometryProcessor.CreateMeshOptions} options An object describing options for mesh creation.
+ * @returns {Promise.<TerrainMesh>} A promise to a terrain mesh.
+ */
+Cesium3DTilesTerrainGeometryProcessor.createMesh = async function (options) {
+  options = options ?? Frozen.EMPTY_OBJECT;
+  const {
+    exaggeration = 1.0,
+    exaggerationRelativeHeight = 0.0,
+    hasVertexNormals,
+    hasWebMercatorT,
+    gltf,
+    minimumHeight,
+    maximumHeight,
+    skirtHeight,
+  } = options;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.ellipsoid", options.ellipsoid);
+  Check.typeOf.object("options.rectangle", options.rectangle);
+  Check.typeOf.bool("options.hasVertexNormals", hasVertexNormals);
+  Check.typeOf.bool("options.hasWebMercatorT", hasWebMercatorT);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.number("options.minimumHeight", minimumHeight);
+  Check.typeOf.number("options.maximumHeight", maximumHeight);
+  Check.typeOf.object("options.boundingSphere", options.boundingSphere);
+  Check.typeOf.object(
+    "options.orientedBoundingBox",
+    options.orientedBoundingBox,
+  );
+  Check.typeOf.object(
+    "options.horizonOcclusionPoint",
+    options.horizonOcclusionPoint,
+  );
+  Check.typeOf.number("options.skirtHeight", skirtHeight);
+  //>>includeEnd('debug');
+
+  const hasExaggeration = exaggeration !== 1.0;
+  const hasGeodeticSurfaceNormals = hasExaggeration;
+
+  const boundingSphere = BoundingSphere.clone(
+    options.boundingSphere,
+    new BoundingSphere(),
+  );
+  const orientedBoundingBox = OrientedBoundingBox.clone(
+    options.orientedBoundingBox,
+    new OrientedBoundingBox(),
+  );
+  const horizonOcclusionPoint = Cartesian3.clone(
+    options.horizonOcclusionPoint,
+    new Cartesian3(),
+  );
+  const ellipsoid = Ellipsoid.clone(options.ellipsoid, new Ellipsoid());
+  const rectangle = Rectangle.clone(options.rectangle, new Rectangle());
+
+  const hasMeshOptCompression =
+    gltf.extensionsRequired !== undefined &&
+    gltf.extensionsRequired.indexOf("EXT_meshopt_compression") !== -1;
+
+  const decoderPromise = hasMeshOptCompression
+    ? MeshoptDecoder.ready
+    : Promise.resolve(undefined);
+
+  await decoderPromise;
+
+  const tileMinLongitude = rectangle.west;
+  const tileMinLatitude = rectangle.south;
+  const tileMaxLatitude = rectangle.north;
+  const tileLengthLongitude = rectangle.width;
+  const tileLengthLatitude = rectangle.height;
+
+  const approximateCenterCartographic = Rectangle.center(
+    rectangle,
+    scratchCenterCartographic,
+  );
+  approximateCenterCartographic.height = 0.5 * (minimumHeight + maximumHeight);
+
+  const approximateCenterPosition = Cartographic.toCartesian(
+    approximateCenterCartographic,
+    ellipsoid,
+    scratchCenterCartesian,
+  );
+
+  const enuToEcef = Transforms.eastNorthUpToFixedFrame(
+    approximateCenterPosition,
+    ellipsoid,
+    scratchEnuToEcef,
+  );
+  const ecefToEnu = Matrix4.inverseTransformation(enuToEcef, scratchEcefToEnu);
+
+  let tilesetTransform = Matrix4.unpack(
+    gltf.nodes[0].matrix,
+    0,
+    scratchTilesetTransform,
+  );
+
+  tilesetTransform = Matrix4.multiply(
+    Axis.Y_UP_TO_Z_UP,
+    tilesetTransform,
+    tilesetTransform,
+  );
+
+  const gltfInfo = decodeGltf(gltf, hasVertexNormals, scratchGltfInfo);
+
+  const skirtVertexCount = TerrainProvider.getSkirtVertexCount(
+    gltfInfo.edgeIndicesWest,
+    gltfInfo.edgeIndicesSouth,
+    gltfInfo.edgeIndicesEast,
+    gltfInfo.edgeIndicesNorth,
+  );
+
+  const positionsLocalWithoutSkirts = gltfInfo.positions;
+  const normalsWithoutSkirts = gltfInfo.normals;
+  const indicesWithoutSkirts = gltfInfo.indices;
+  const vertexCountWithoutSkirts = positionsLocalWithoutSkirts.length / 3;
+  const vertexCountWithSkirts = vertexCountWithoutSkirts + skirtVertexCount;
+  const indexCountWithoutSkirts = indicesWithoutSkirts.length;
+  const skirtIndexCount =
+    TerrainProvider.getSkirtIndexCountWithFilledCorners(skirtVertexCount);
+  const indexCountWithSkirts = indexCountWithoutSkirts + skirtIndexCount;
+
+  // For consistency with glTF spec, 16 bit index buffer can't contain 65535
+  const SizedIndexTypeWithSkirts =
+    vertexCountWithSkirts <= 65535 ? Uint16Array : Uint32Array;
+  const indexBufferWithSkirts = new SizedIndexTypeWithSkirts(
+    indexCountWithSkirts,
+  );
+  // TODO: do we ever actually add the skirts to this buffer?
+  indexBufferWithSkirts.set(indicesWithoutSkirts);
+
+  const westIndices = new SizedIndexTypeWithSkirts(gltfInfo.edgeIndicesWest);
+  const southIndices = new SizedIndexTypeWithSkirts(gltfInfo.edgeIndicesSouth);
+  const eastIndices = new SizedIndexTypeWithSkirts(gltfInfo.edgeIndicesEast);
+  const northIndices = new SizedIndexTypeWithSkirts(gltfInfo.edgeIndicesNorth);
+
+  const sortedWestIndices = new SizedIndexTypeWithSkirts(westIndices);
+  // TODO: why not sortedWestIndices.sort()??
+  mergeSort(sortedWestIndices, sortedEdgeCompare);
+  const sortedSouthIndices = new SizedIndexTypeWithSkirts(southIndices);
+  mergeSort(sortedSouthIndices, sortedEdgeCompare);
+  const sortedEastIndices = new SizedIndexTypeWithSkirts(eastIndices);
+  mergeSort(sortedEastIndices, sortedEdgeCompare);
+  const sortedNorthIndices = new SizedIndexTypeWithSkirts(northIndices);
+  mergeSort(sortedNorthIndices, sortedEdgeCompare);
+
+  const southMerc =
+    WebMercatorProjection.geodeticLatitudeToMercatorAngle(tileMinLatitude);
+  const northMerc =
+    WebMercatorProjection.geodeticLatitudeToMercatorAngle(tileMaxLatitude);
+
+  const oneOverMercatorHeight = 1.0 / (northMerc - southMerc);
+
+  // Use a terrain encoding without quantization.
+  // This is just an easier way to save intermediate state
+  let minPosEnu = Cartesian3.fromElements(
+    Number.POSITIVE_INFINITY,
+    Number.POSITIVE_INFINITY,
+    Number.POSITIVE_INFINITY,
+    scratchMinimumPositionENU,
+  );
+  let maxPosEnu = Cartesian3.fromElements(
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    scratchMaximumPositionENU,
+  );
+  const tempTerrainEncoding = new TerrainEncoding(
+    boundingSphere.center,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    hasVertexNormals,
+    hasWebMercatorT,
+    hasGeodeticSurfaceNormals,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const tempBufferStride = tempTerrainEncoding.stride;
+  const tempBuffer = new Float32Array(vertexCountWithSkirts * tempBufferStride);
+  let tempBufferOffset = 0;
+
+  for (let i = 0; i < vertexCountWithoutSkirts; i++) {
+    const posLocal = Cartesian3.unpack(
+      positionsLocalWithoutSkirts,
+      i * 3,
+      scratchPosLocal,
+    );
+
+    const posECEF = Matrix4.multiplyByPoint(
+      tilesetTransform,
+      posLocal,
+      scratchPosEcef,
+    );
+
+    const cartographic = Cartographic.fromCartesian(
+      posECEF,
+      ellipsoid,
+      scratchCartographic,
+    );
+
+    const { longitude, latitude, height } = cartographic;
+
+    // If a vertex is an edge vertex we already know its exact UV and don't need to derive it from the position (which can have accuracy issues).
+
+    let u = (longitude - tileMinLongitude) / tileLengthLongitude;
+    let v = (latitude - tileMinLatitude) / tileLengthLatitude;
+
+    // Clamp the UVs to the valid range
+    // This should only happen when the cartesian to cartographic conversion introduces error on a point that is already very close the edge
+    u = CesiumMath.clamp(u, 0.0, 1.0);
+    v = CesiumMath.clamp(v, 0.0, 1.0);
+
+    if (binarySearch(sortedWestIndices, i, sortedEdgeCompare) >= 0) {
+      u = 0.0;
+    } else if (binarySearch(sortedEastIndices, i, sortedEdgeCompare) >= 0) {
+      u = 1.0;
+    }
+
+    if (binarySearch(sortedSouthIndices, i, sortedEdgeCompare) >= 0) {
+      v = 0.0;
+    } else if (binarySearch(sortedNorthIndices, i, sortedEdgeCompare) >= 0) {
+      v = 1.0;
+    }
+
+    const uv = Cartesian2.fromElements(u, v, scratchUV);
+
+    let normalOct;
+    if (hasVertexNormals) {
+      let normal = Cartesian3.unpack(
+        normalsWithoutSkirts,
+        i * 3,
+        scratchNormal,
+      );
+      normal = Matrix4.multiplyByPointAsVector(
+        tilesetTransform,
+        normal,
+        scratchNormal,
+      );
+
+      normal = Cartesian3.normalize(normal, scratchNormal);
+
+      normalOct = AttributeCompression.octEncode(normal, scratchNormalOct);
+    }
+
+    let webMercatorT;
+    if (hasWebMercatorT) {
+      const mercatorAngle =
+        WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude);
+      webMercatorT = (mercatorAngle - southMerc) * oneOverMercatorHeight;
+    }
+
+    let geodeticSurfaceNormal;
+    if (hasGeodeticSurfaceNormals) {
+      geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
+        posECEF,
+        scratchGeodeticSurfaceNormal,
+      );
+    }
+
+    tempBufferOffset = tempTerrainEncoding.encode(
+      tempBuffer,
+      tempBufferOffset,
+      posECEF,
+      uv,
+      height,
+      normalOct,
+      webMercatorT,
+      geodeticSurfaceNormal,
+    );
+
+    const posEnu = Matrix4.multiplyByPoint(ecefToEnu, posECEF, scratchPosEnu);
+    minPosEnu = Cartesian3.minimumByComponent(posEnu, minPosEnu, minPosEnu);
+    maxPosEnu = Cartesian3.maximumByComponent(posEnu, maxPosEnu, maxPosEnu);
+  }
+
+  const mesh = new TerrainMesh(
+    Cartesian3.clone(tempTerrainEncoding.center, new Cartesian3()),
+    tempBuffer,
+    indexBufferWithSkirts,
+    indexCountWithoutSkirts,
+    vertexCountWithoutSkirts,
+    minimumHeight,
+    maximumHeight,
+    BoundingSphere.clone(boundingSphere, new BoundingSphere()),
+    Cartesian3.clone(horizonOcclusionPoint, new Cartesian3()),
+    tempBufferStride,
+    OrientedBoundingBox.clone(orientedBoundingBox, new OrientedBoundingBox()),
+    tempTerrainEncoding,
+    westIndices,
+    southIndices,
+    eastIndices,
+    northIndices,
+  );
+
+  addSkirtsToMesh(
+    mesh,
+    rectangle,
+    ellipsoid,
+    minPosEnu,
+    maxPosEnu,
+    enuToEcef,
+    ecefToEnu,
+    skirtHeight,
+  );
+
+  return Promise.resolve(mesh);
+};
+
 const scratchMinUV = new Cartesian2();
 const scratchMaxUV = new Cartesian2();
 const scratchPolygonIndices = new Array(6);
@@ -32,44 +424,29 @@ const scratchUvC = new Cartesian2();
 const scratchNormalA = new Cartesian3();
 const scratchNormalB = new Cartesian3();
 const scratchNormalC = new Cartesian3();
-const scratchCenterCartographic = new Cartographic();
 const scratchCenterCartographicUpsample = new Cartographic();
-const scratchCenterCartesian = new Cartesian3();
 const scratchCenterCartesianUpsample = new Cartesian3();
-const scratchCartographic = new Cartographic();
 const scratchCartographicSkirt = new Cartographic();
 const scratchCartographicUpsample = new Cartographic();
-const scratchPosEcef = new Cartesian3();
 const scratchPosEcefSkirt = new Cartesian3();
 const scratchPosEcefUpsample = new Cartesian3();
-const scratchPosEnu = new Cartesian3();
 const scratchPosEnuSkirt = new Cartesian3();
 const scratchPosEnuUpsample = new Cartesian3();
-const scratchPosLocal = new Cartesian3();
-const scratchMinimumPositionENU = new Cartesian3();
-const scratchMaximumPositionENU = new Cartesian3();
 const scratchMinimumPositionENUSkirt = new Cartesian3();
 const scratchMaximumPositionENUSkirt = new Cartesian3();
 const scratchMinimumPositionENUUpsample = new Cartesian3();
 const scratchMaximumPositionENUUpsample = new Cartesian3();
-const scratchEnuToEcef = new Matrix4();
 const scratchEnuToEcefUpsample = new Matrix4();
-const scratchEcefToEnu = new Matrix4();
 const scratchEcefToEnuUpsample = new Matrix4();
-const scratchTilesetTransform = new Matrix4();
-const scratchUV = new Cartesian2();
 const scratchUVSkirt = new Cartesian2();
 const scratchUVUpsample = new Cartesian2();
 const scratchHorizonOcclusionPoint = new Cartesian3();
 const scratchBoundingSphere = new BoundingSphere();
 const scratchOrientedBoundingBox = new OrientedBoundingBox();
 const scratchAABBEnuSkirt = new AxisAlignedBoundingBox();
-const scratchNormal = new Cartesian3();
 const scratchNormalUpsample = new Cartesian3();
-const scratchNormalOct = new Cartesian2();
 const scratchNormalOctSkirt = new Cartesian2();
 const scratchNormalOctUpsample = new Cartesian2();
-const scratchGeodeticSurfaceNormal = new Cartesian3();
 const scratchGeodeticSurfaceNormalSkirt = new Cartesian3();
 const scratchGeodeticSurfaceNormalUpsample = new Cartesian3();
 
@@ -318,30 +695,6 @@ function decodeEdgeIndices(gltf, name) {
 }
 
 /**
- * Contains information about geometry-related vertex arrays in a glTF asset.
- * @private
- * @typedef GltfInfo
- *
- * @property {Float32Array} positions The decoded position attributes.
- * @property {Float32Array|undefined} normals The decoded normal attributes, or <code>undefined</code> if the glTF has no normals.
- * @property {Uint16Array|Uint32Array} indices The decoded indices.
- * @property {Uint16Array|Uint32Array} edgeIndicesWest The edge indices along the West side of the tile.
- * @property {Uint16Array|Uint32Array} edgeIndicesSouth The edge indices along the South side of the tile.
- * @property {Uint16Array|Uint32Array} edgeIndicesEast The edge indices along the East side of the tile.
- * @property {Uint16Array|Uint32Array} edgeIndicesNorth The edge indices along the North side of the tile.
- */
-
-const scratchGltfInfo = {
-  positions: undefined,
-  normals: undefined,
-  indices: undefined,
-  edgeIndicesWest: undefined,
-  edgeIndicesSouth: undefined,
-  edgeIndicesEast: undefined,
-  edgeIndicesNorth: undefined,
-};
-
-/**
  * Decodes geometry-related vertex arrays from a glTF asset.
  * @private
  * @param {Object.<string,*>} gltf The glTF JSON.
@@ -359,384 +712,6 @@ function decodeGltf(gltf, hasNormals, result) {
   result.edgeIndicesNorth = decodeEdgeIndices(gltf, "top");
   return result;
 }
-
-/**
- * Compares two edge indices for sorting.
- * @private
- * @param {number} a The first edge index.
- * @param {number} b The second edge index.
- * @returns {number} A negative number if <code>a</code> is less than <code>b</code>, a positive number if <code>a</code> is greater than <code>b</code>, or zero if they are equal.
- */
-const sortedEdgeCompare = function (a, b) {
-  return a - b;
-};
-
-/**
- * Contains functions to create a mesh from 3D Tiles terrain data.
- *
- * @namespace Cesium3DTilesTerrainGeometryProcessor
- *
- * @private
- */
-const Cesium3DTilesTerrainGeometryProcessor = {};
-
-/**
- * @typedef {object} Cesium3DTilesTerrainGeometryProcessor.CreateMeshOptions
- * @property {Ellipsoid} ellipsoid The ellipsoid.
- * @property {Rectangle} rectangle The rectangle covered by the tile.
- * @property {boolean} hasVertexNormals <code>true</code> if the tile has vertex normals.
- * @property {boolean} hasWebMercatorT <code>true</code> if the tile has Web Mercator T coordinates.
- * @property {Object.<string,*>} gltf The glTF JSON of the tile.
- * @property {number} minimumHeight The minimum height of the tile.
- * @property {number} maximumHeight The maximum height of the tile.
- * @property {BoundingSphere} boundingSphere The bounding sphere of the tile.
- * @property {OrientedBoundingBox} orientedBoundingBox The oriented bounding box of the tile.
- * @property {Cartesian3} horizonOcclusionPoint The horizon occlusion point of the tile.
- * @property {number} skirtHeight The height of the skirts.
- * @property {number} [exaggeration=1.0] The scale used to exaggerate the terrain.
- * @property {number} [exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
- */
-
-/**
- * Creates a {@link TerrainMesh} from this terrain data.
- * @function
- *
- * @private
- *
- * @param {Cesium3DTilesTerrainGeometryProcessor.CreateMeshOptions} options An object describing options for mesh creation.
- * @returns {Promise.<TerrainMesh>} A promise to a terrain mesh.
- */
-Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-  const {
-    exaggeration = 1.0,
-    exaggerationRelativeHeight = 0.0,
-    hasVertexNormals,
-    hasWebMercatorT,
-    gltf,
-    minimumHeight,
-    maximumHeight,
-    skirtHeight,
-  } = options;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.ellipsoid", options.ellipsoid);
-  Check.typeOf.object("options.rectangle", options.rectangle);
-  Check.typeOf.bool("options.hasVertexNormals", hasVertexNormals);
-  Check.typeOf.bool("options.hasWebMercatorT", hasWebMercatorT);
-  Check.typeOf.object("options.gltf", gltf);
-  Check.typeOf.number("options.minimumHeight", minimumHeight);
-  Check.typeOf.number("options.maximumHeight", maximumHeight);
-  Check.typeOf.object("options.boundingSphere", options.boundingSphere);
-  Check.typeOf.object(
-    "options.orientedBoundingBox",
-    options.orientedBoundingBox,
-  );
-  Check.typeOf.object(
-    "options.horizonOcclusionPoint",
-    options.horizonOcclusionPoint,
-  );
-  Check.typeOf.number("options.skirtHeight", skirtHeight);
-  //>>includeEnd('debug');
-
-  const hasExaggeration = exaggeration !== 1.0;
-  const hasGeodeticSurfaceNormals = hasExaggeration;
-
-  const boundingSphere = BoundingSphere.clone(
-    options.boundingSphere,
-    new BoundingSphere(),
-  );
-  const orientedBoundingBox = OrientedBoundingBox.clone(
-    options.orientedBoundingBox,
-    new OrientedBoundingBox(),
-  );
-  const horizonOcclusionPoint = Cartesian3.clone(
-    options.horizonOcclusionPoint,
-    new Cartesian3(),
-  );
-  const ellipsoid = Ellipsoid.clone(options.ellipsoid, new Ellipsoid());
-  const rectangle = Rectangle.clone(options.rectangle, new Rectangle());
-
-  const hasMeshOptCompression =
-    gltf.extensionsRequired !== undefined &&
-    gltf.extensionsRequired.indexOf("EXT_meshopt_compression") !== -1;
-
-  const decoderPromise = hasMeshOptCompression
-    ? MeshoptDecoder.ready
-    : Promise.resolve(undefined);
-
-  return decoderPromise.then(function () {
-    const tileMinLongitude = rectangle.west;
-    const tileMinLatitude = rectangle.south;
-    const tileMaxLatitude = rectangle.north;
-    const tileLengthLongitude = rectangle.width;
-    const tileLengthLatitude = rectangle.height;
-
-    const approximateCenterCartographic = Rectangle.center(
-      rectangle,
-      scratchCenterCartographic,
-    );
-    approximateCenterCartographic.height =
-      0.5 * (minimumHeight + maximumHeight);
-
-    const approximateCenterPosition = Cartographic.toCartesian(
-      approximateCenterCartographic,
-      ellipsoid,
-      scratchCenterCartesian,
-    );
-
-    const enuToEcef = Transforms.eastNorthUpToFixedFrame(
-      approximateCenterPosition,
-      ellipsoid,
-      scratchEnuToEcef,
-    );
-    const ecefToEnu = Matrix4.inverseTransformation(
-      enuToEcef,
-      scratchEcefToEnu,
-    );
-
-    let tilesetTransform = Matrix4.unpack(
-      gltf.nodes[0].matrix,
-      0,
-      scratchTilesetTransform,
-    );
-
-    tilesetTransform = Matrix4.multiply(
-      Axis.Y_UP_TO_Z_UP,
-      tilesetTransform,
-      tilesetTransform,
-    );
-
-    const gltfInfo = decodeGltf(gltf, hasVertexNormals, scratchGltfInfo);
-
-    const skirtVertexCount = TerrainProvider.getSkirtVertexCount(
-      gltfInfo.edgeIndicesWest,
-      gltfInfo.edgeIndicesSouth,
-      gltfInfo.edgeIndicesEast,
-      gltfInfo.edgeIndicesNorth,
-    );
-
-    const positionsLocalWithoutSkirts = gltfInfo.positions;
-    const normalsWithoutSkirts = gltfInfo.normals;
-    const indicesWithoutSkirts = gltfInfo.indices;
-    const vertexCountWithoutSkirts = positionsLocalWithoutSkirts.length / 3;
-    const vertexCountWithSkirts = vertexCountWithoutSkirts + skirtVertexCount;
-    const indexCountWithoutSkirts = indicesWithoutSkirts.length;
-    const skirtIndexCount =
-      TerrainProvider.getSkirtIndexCountWithFilledCorners(skirtVertexCount);
-    const indexCountWithSkirts = indexCountWithoutSkirts + skirtIndexCount;
-
-    // For consistency with glTF spec, 16 bit index buffer can't contain 65535
-    const SizedIndexTypeWithSkirts =
-      vertexCountWithSkirts <= 65535 ? Uint16Array : Uint32Array;
-    const indexBufferWithSkirts = new SizedIndexTypeWithSkirts(
-      indexCountWithSkirts,
-    );
-    indexBufferWithSkirts.set(indicesWithoutSkirts);
-
-    const westIndicesCount = gltfInfo.edgeIndicesWest.length;
-    const westIndices = new SizedIndexTypeWithSkirts(westIndicesCount);
-    westIndices.set(gltfInfo.edgeIndicesWest);
-
-    const southIndicesCount = gltfInfo.edgeIndicesSouth.length;
-    const southIndices = new SizedIndexTypeWithSkirts(southIndicesCount);
-    southIndices.set(gltfInfo.edgeIndicesSouth);
-
-    const eastIndicesCount = gltfInfo.edgeIndicesEast.length;
-    const eastIndices = new SizedIndexTypeWithSkirts(eastIndicesCount);
-    eastIndices.set(gltfInfo.edgeIndicesEast);
-
-    const northIndicesCount = gltfInfo.edgeIndicesNorth.length;
-    const northIndices = new SizedIndexTypeWithSkirts(northIndicesCount);
-    northIndices.set(gltfInfo.edgeIndicesNorth);
-
-    const sortedWestIndices = new SizedIndexTypeWithSkirts(westIndices.length);
-    sortedWestIndices.set(westIndices);
-    mergeSort(sortedWestIndices, sortedEdgeCompare);
-
-    const sortedSouthIndices = new SizedIndexTypeWithSkirts(
-      southIndices.length,
-    );
-    sortedSouthIndices.set(southIndices);
-    mergeSort(sortedSouthIndices, sortedEdgeCompare);
-
-    const sortedEastIndices = new SizedIndexTypeWithSkirts(eastIndices.length);
-    sortedEastIndices.set(eastIndices);
-    mergeSort(sortedEastIndices, sortedEdgeCompare);
-
-    const sortedNorthIndices = new SizedIndexTypeWithSkirts(
-      northIndices.length,
-    );
-    sortedNorthIndices.set(northIndices);
-    mergeSort(sortedNorthIndices, sortedEdgeCompare);
-
-    const southMerc =
-      WebMercatorProjection.geodeticLatitudeToMercatorAngle(tileMinLatitude);
-    const northMerc =
-      WebMercatorProjection.geodeticLatitudeToMercatorAngle(tileMaxLatitude);
-
-    const oneOverMercatorHeight = 1.0 / (northMerc - southMerc);
-
-    // Use a terrain encoding without quantization.
-    // This is just an easier way to save intermediate state
-    let minPosEnu = Cartesian3.fromElements(
-      Number.POSITIVE_INFINITY,
-      Number.POSITIVE_INFINITY,
-      Number.POSITIVE_INFINITY,
-      scratchMinimumPositionENU,
-    );
-    let maxPosEnu = Cartesian3.fromElements(
-      Number.NEGATIVE_INFINITY,
-      Number.NEGATIVE_INFINITY,
-      Number.NEGATIVE_INFINITY,
-      scratchMaximumPositionENU,
-    );
-    const tempTerrainEncoding = new TerrainEncoding(
-      boundingSphere.center,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      hasVertexNormals,
-      hasWebMercatorT,
-      hasGeodeticSurfaceNormals,
-      exaggeration,
-      exaggerationRelativeHeight,
-    );
-
-    const tempBufferStride = tempTerrainEncoding.stride;
-    const tempBuffer = new Float32Array(
-      vertexCountWithSkirts * tempBufferStride,
-    );
-    let tempBufferOffset = 0;
-
-    for (let i = 0; i < vertexCountWithoutSkirts; i++) {
-      const posLocal = Cartesian3.unpack(
-        positionsLocalWithoutSkirts,
-        i * 3,
-        scratchPosLocal,
-      );
-
-      const posECEF = Matrix4.multiplyByPoint(
-        tilesetTransform,
-        posLocal,
-        scratchPosEcef,
-      );
-
-      const cartographic = Cartographic.fromCartesian(
-        posECEF,
-        ellipsoid,
-        scratchCartographic,
-      );
-
-      const { longitude, latitude, height } = cartographic;
-
-      // If a vertex is an edge vertex we already know its exact UV and don't need to derive it from the position (which can have accuracy issues).
-
-      let u = (longitude - tileMinLongitude) / tileLengthLongitude;
-      let v = (latitude - tileMinLatitude) / tileLengthLatitude;
-
-      // Clamp the UVs to the valid range
-      // This should only happen when the cartesian to cartographic conversion introduces error on a point that is already very close the edge
-      u = CesiumMath.clamp(u, 0.0, 1.0);
-      v = CesiumMath.clamp(v, 0.0, 1.0);
-
-      if (binarySearch(sortedWestIndices, i, sortedEdgeCompare) >= 0) {
-        u = 0.0;
-      } else if (binarySearch(sortedEastIndices, i, sortedEdgeCompare) >= 0) {
-        u = 1.0;
-      }
-
-      if (binarySearch(sortedSouthIndices, i, sortedEdgeCompare) >= 0) {
-        v = 0.0;
-      } else if (binarySearch(sortedNorthIndices, i, sortedEdgeCompare) >= 0) {
-        v = 1.0;
-      }
-
-      const uv = Cartesian2.fromElements(u, v, scratchUV);
-
-      let normalOct;
-      if (hasVertexNormals) {
-        let normal = Cartesian3.unpack(
-          normalsWithoutSkirts,
-          i * 3,
-          scratchNormal,
-        );
-        normal = Matrix4.multiplyByPointAsVector(
-          tilesetTransform,
-          normal,
-          scratchNormal,
-        );
-
-        normal = Cartesian3.normalize(normal, scratchNormal);
-
-        normalOct = AttributeCompression.octEncode(normal, scratchNormalOct);
-      }
-
-      let webMercatorT;
-      if (hasWebMercatorT) {
-        const mercatorAngle =
-          WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude);
-        webMercatorT = (mercatorAngle - southMerc) * oneOverMercatorHeight;
-      }
-
-      let geodeticSurfaceNormal;
-      if (hasGeodeticSurfaceNormals) {
-        geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
-          posECEF,
-          scratchGeodeticSurfaceNormal,
-        );
-      }
-
-      tempBufferOffset = tempTerrainEncoding.encode(
-        tempBuffer,
-        tempBufferOffset,
-        posECEF,
-        uv,
-        height,
-        normalOct,
-        webMercatorT,
-        geodeticSurfaceNormal,
-      );
-
-      const posEnu = Matrix4.multiplyByPoint(ecefToEnu, posECEF, scratchPosEnu);
-      minPosEnu = Cartesian3.minimumByComponent(posEnu, minPosEnu, minPosEnu);
-      maxPosEnu = Cartesian3.maximumByComponent(posEnu, maxPosEnu, maxPosEnu);
-    }
-
-    const mesh = new TerrainMesh(
-      Cartesian3.clone(tempTerrainEncoding.center, new Cartesian3()),
-      tempBuffer,
-      indexBufferWithSkirts,
-      indexCountWithoutSkirts,
-      vertexCountWithoutSkirts,
-      minimumHeight,
-      maximumHeight,
-      BoundingSphere.clone(boundingSphere, new BoundingSphere()),
-      Cartesian3.clone(horizonOcclusionPoint, new Cartesian3()),
-      tempBufferStride,
-      OrientedBoundingBox.clone(orientedBoundingBox, new OrientedBoundingBox()),
-      tempTerrainEncoding,
-      westIndices,
-      southIndices,
-      eastIndices,
-      northIndices,
-    );
-
-    addSkirtsToMesh(
-      mesh,
-      rectangle,
-      ellipsoid,
-      minPosEnu,
-      maxPosEnu,
-      enuToEcef,
-      ecefToEnu,
-      skirtHeight,
-    );
-
-    return Promise.resolve(mesh);
-  });
-};
 
 /**
  * @typedef {object} Cesium3DTilesTerrainGeometryProcessor.UpsampleMeshOptions
@@ -899,24 +874,20 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   upsampledIndexBuffer.set(upsampledIndices);
 
   const upsampledWestIndicesBuffer = new SizedIndexTypeWithSkirts(
-    upsampledWestIndices.length,
+    upsampledWestIndices,
   );
-  upsampledWestIndicesBuffer.set(upsampledWestIndices);
 
   const upsampledSouthIndicesBuffer = new SizedIndexTypeWithSkirts(
-    upsampledSouthIndices.length,
+    upsampledSouthIndices,
   );
-  upsampledSouthIndicesBuffer.set(upsampledSouthIndices);
 
   const upsampledEastIndicesBuffer = new SizedIndexTypeWithSkirts(
-    upsampledEastIndices.length,
+    upsampledEastIndices,
   );
-  upsampledEastIndicesBuffer.set(upsampledEastIndices);
 
   const upsampledNorthIndicesBuffer = new SizedIndexTypeWithSkirts(
-    upsampledNorthIndices.length,
+    upsampledNorthIndices,
   );
-  upsampledNorthIndicesBuffer.set(upsampledNorthIndices);
 
   const upsampledVertexBuffer = new Float32Array(
     upsampledVertexCountWithSkirts * upsampledVertexBufferStride,
