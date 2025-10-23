@@ -185,9 +185,24 @@ function createNode(x, y, z, level) {
 }
 
 function doesRayIntersectAABB(ray, aabb) {
-  const tx = getRayIntervalForAABB(ray, aabb.minimum.x, aabb.maximum.x);
-  const ty = getRayIntervalForAABB(ray, aabb.minimum.y, aabb.maximum.y);
-  const tz = getRayIntervalForAABB(ray, aabb.minimum.z, aabb.maximum.z);
+  const tx = getRayIntervalForAABB(
+    ray.origin.x,
+    ray.direction.x,
+    aabb.minimum.x,
+    aabb.maximum.x,
+  );
+  const ty = getRayIntervalForAABB(
+    ray.origin.y,
+    ray.direction.y,
+    aabb.minimum.y,
+    aabb.maximum.y,
+  );
+  const tz = getRayIntervalForAABB(
+    ray.origin.z,
+    ray.direction.z,
+    aabb.minimum.z,
+    aabb.maximum.z,
+  );
 
   let tMin = tx.min > ty.min ? tx.min : ty.min; //Get Greatest Min
   let tMax = tx.max < ty.max ? tx.max : ty.max; //Get Smallest Max
@@ -208,9 +223,9 @@ function doesRayIntersectAABB(ray, aabb) {
   return { intersection: true, tMin: tMin, tMax: tMax };
 }
 
-function getRayIntervalForAABB(ray, min, max) {
-  let tMin = (min - ray.origin.x) / ray.direction.x;
-  let tMax = (max - ray.origin.x) / ray.direction.x;
+function getRayIntervalForAABB(rayOrigin, rayDirection, min, max) {
+  let tMin = (min - rayOrigin) / rayDirection;
+  let tMax = (max - rayOrigin) / rayDirection;
   if (tMax < tMin) {
     const tmp = tMax;
     tMax = tMin;
