@@ -181,6 +181,7 @@ function createNode(x, y, z, level) {
     y: y,
     z: z,
     triangles: [],
+    children: [],
   };
 }
 
@@ -276,7 +277,7 @@ function rayIntersectOctree(
     const aabb = createAABBFromOctreeLocation(n.level, n.x, n.y, n.z);
     const intersection = doesRayIntersectAABB(transformedRay, aabb);
     if (intersection.intersection) {
-      const isLeaf = !n.children;
+      const isLeaf = !n.children.length;
       if (isLeaf) {
         intersections.push({
           node: n,
@@ -378,7 +379,6 @@ function createOctree(triangleAABBs) {
       0,
       x,
       triangleAABBs,
-      nodes,
     );
   }
   return nodes;
@@ -399,7 +399,6 @@ function nodeAddTriangle(
   z,
   triangleIdx,
   triangles,
-  nodes,
 ) {
   const nodeAABB = createAABBFromOctreeLocation(level, x, y, z);
   const triangleAABB = createAABBFromTriangle(triangles, triangleIdx);
@@ -434,6 +433,7 @@ function nodeAddTriangle(
     const childZ = z * 2 + ((childIdx >> 2) & 1);
 
     const childNode = createNode(childX, childY, childZ, level + 1);
+    node.children.push(childNode);
 
     const match = nodeAddTriangle(
       maxLevels,
@@ -444,7 +444,6 @@ function nodeAddTriangle(
       childZ,
       triangleIdx,
       triangles,
-      nodes,
     );
 
     if (match) {
