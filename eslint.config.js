@@ -31,6 +31,9 @@ export default [
   },
   {
     ...configCesium.configs.recommended,
+    linterOptions: {
+      reportUnusedDisableDirectives: "error",
+    },
     languageOptions: {
       sourceType: "module",
     },
