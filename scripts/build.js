@@ -684,14 +684,19 @@ async function importSandcastleBuildFunctions() {
   return await import(pathToFileURL(buildGalleryScriptPath).href);
 }
 
-export async function buildSandcastleApp(isProduction) {
+/**
+ * @param {object} options
+ * @param {boolean} options.createStaticBuild control whether sandcastle should be built and bundled together completely static into the /Build directory
+ * @returns
+ */
+export async function buildSandcastleApp({ createStaticBuild }) {
   const { join, dirname } = path;
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const { createSandcastleConfig, buildStatic } =
     await importSandcastleBuildFunctions();
   const version = await getVersion();
   let config;
-  if (isProduction) {
+  if (createStaticBuild) {
     const cesiumSource = join(__dirname, "../Build/CesiumUnminified");
     const cesiumBaseUrl = "Build/CesiumUnminified";
 
@@ -770,10 +775,11 @@ export async function buildSandcastleApp(isProduction) {
 
 /**
  * Indexes Sandcastle gallery files and writes gallery files to the configured Sandcastle output directory.
- * @param {boolean} [includeDevelopment=true] true if gallery items flagged as development should be included.
+ * @param {object} options
+ * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
  * @returns {Promise<void>} A promise that resolves once the gallery files have been indexed and written.
  */
-export async function buildSandcastleGallery(includeDevelopment) {
+export async function buildSandcastleGallery({ includeDevelopment }) {
   const { configPath, root, gallery, sourceUrl } = await getSandcastleConfig();
 
   // Use an absolute path to avoid any descrepency between working directories
@@ -810,7 +816,7 @@ export async function buildSandcastleGallery(includeDevelopment) {
  * @returns {Promise<any>}
  */
 export async function createGalleryList(noDevelopmentGallery) {
-  await buildSandcastleGallery(!noDevelopmentGallery);
+  await buildSandcastleGallery({ includeDevelopment: !noDevelopmentGallery });
 
   const demoObjects = [];
   const demoJSONs = [];

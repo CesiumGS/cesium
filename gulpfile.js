@@ -57,7 +57,7 @@ function getWorkspaces(onlyDependencies = false) {
 }
 
 const devDeployUrl = process.env.DEPLOYED_URL;
-const isProduction = process.env.PROD;
+const isProduction = process.env.PROD === "true";
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -291,10 +291,10 @@ export async function buildTs() {
 
 export const buildSandcastle = gulp.series(
   async function buildSandcastleAppStep() {
-    return buildSandcastleApp(isProduction);
+    return buildSandcastleApp({ createStaticBuild: isProduction });
   },
   async function buildGalleryStep() {
-    return buildSandcastleGallery(!isProduction);
+    return buildSandcastleGallery({ includeDevelopment: !isProduction });
   },
 );
 
@@ -598,10 +598,10 @@ async function pruneScriptsForZip(packageJsonPath) {
 export const makeZip = gulp.series(
   release,
   async function buildSandcastleAppStep() {
-    return buildSandcastleApp(false);
+    return buildSandcastleApp({ createStaticBuild: false });
   },
   async function buildGalleryStep() {
-    return buildSandcastleGallery(false);
+    return buildSandcastleGallery({ includeDevelopment: false });
   },
   async function createZipFile() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
