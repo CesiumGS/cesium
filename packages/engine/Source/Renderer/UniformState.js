@@ -26,6 +26,18 @@ function UniformState() {
    */
   this.globeDepthTexture = undefined;
   /**
+   * @type {Texture}
+   */
+  this.edgeIdTexture = undefined;
+  /**
+   * @type {Texture}
+   */
+  this.edgeColorTexture = undefined;
+  /**
+   * @type {Texture}
+   */
+  this.edgeDepthTexture = undefined; // packed depth color attachment from edge pass
+  /**
    * @type {number}
    */
   this.gamma = undefined;

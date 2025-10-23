@@ -5,7 +5,7 @@
   "schema": {
     "id": "ImplicitContentHeightSemanticsMetadataSchemaId",
     "classes": {
-      "tile": {
+      "content": {
         "properties": {
           "minimumHeight": {
             "type": "SCALAR",
