@@ -25,29 +25,6 @@ const scratchMaximum = new Cartesian3();
 const cartographicScratch = new Cartographic();
 const toPack = new Cartesian2();
 
-function createPackedTrianglesFromIndices(indices, positions, invTrans) {
-  const v0 = new Cartesian3();
-  const v1 = new Cartesian3();
-  const v2 = new Cartesian3();
-  const triangleCount = indices.length / 3;
-  let i;
-  const triangles = []; // new Float32Array(triangleCount * 6);
-
-  for (i = 0; i < triangleCount; i++) {
-    Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3]], v0);
-    Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3 + 1]], v1);
-    Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3 + 2]], v2);
-    // Get local space AABBs for triangle
-    triangles.push(Math.min(v0.x, v1.x, v2.x));
-    triangles.push(Math.max(v0.x, v1.x, v2.x));
-    triangles.push(Math.min(v0.y, v1.y, v2.y));
-    triangles.push(Math.max(v0.y, v1.y, v2.y));
-    triangles.push(Math.min(v0.z, v1.z, v2.z));
-    triangles.push(Math.max(v0.z, v1.z, v2.z));
-  }
-  return triangles;
-}
-
 function createVerticesFromQuantizedTerrainMesh(
   parameters,
   transferableObjects,
@@ -225,13 +202,13 @@ function createVerticesFromQuantizedTerrainMesh(
   );
   const inverseTransform = Matrix4.inverse(transform, new Matrix4());
 
-  const packedTriangles = createPackedTrianglesFromIndices(
+  const triangleAABBs = createTriangleAABBsFromIndices(
     parameters.indices,
     positions,
     inverseTransform,
   );
   const octree = OctreeTrianglePicking.createOctree(
-    packedTriangles,
+    triangleAABBs,
     inverseTransform,
     transform,
     orientedBoundingBox,
@@ -595,6 +572,30 @@ function copyAndSort(typedArray, comparator) {
 
   return copy;
 }
+
+function createTriangleAABBsFromIndices(indices, positions, invTrans) {
+  const v0 = new Cartesian3();
+  const v1 = new Cartesian3();
+  const v2 = new Cartesian3();
+  const triangleCount = indices.length / 3;
+  let i;
+  const trianglesAABBs = []; // new Float32Array(triangleCount * 6);
+
+  for (i = 0; i < triangleCount; i++) {
+    Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3]], v0);
+    Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3 + 1]], v1);
+    Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3 + 2]], v2);
+    // Get local space AABBs for triangle
+    trianglesAABBs.push(Math.min(v0.x, v1.x, v2.x));
+    trianglesAABBs.push(Math.max(v0.x, v1.x, v2.x));
+    trianglesAABBs.push(Math.min(v0.y, v1.y, v2.y));
+    trianglesAABBs.push(Math.max(v0.y, v1.y, v2.y));
+    trianglesAABBs.push(Math.min(v0.z, v1.z, v2.z));
+    trianglesAABBs.push(Math.max(v0.z, v1.z, v2.z));
+  }
+  return trianglesAABBs;
+}
+
 export default createTaskProcessorWorker(
   createVerticesFromQuantizedTerrainMesh,
 );

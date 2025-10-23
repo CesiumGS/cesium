@@ -29,7 +29,7 @@ function getPosition(encoding, mode, projection, vertices, index, result) {
 }
 
 /**
- *
+ * A utility for iterating through a list of triangles and testing for intersections with a given ray.
  * @param encoding
  * @param indices
  * @param vertices

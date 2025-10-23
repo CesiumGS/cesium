@@ -42,17 +42,12 @@ const v0 = new Cartesian3();
 const v1 = new Cartesian3();
 const v2 = new Cartesian3();
 
-let trianglesPerRow;
-let base;
-let isEven;
-let triIdx;
+function createTriangleAABBs(positions, invTransform, width, triangleIndexEnd) {
+  let trianglesPerRow;
+  let base;
+  let isEven;
+  let triIdx;
 
-function createPackedTriangles(
-  positions,
-  invTransform,
-  width,
-  triangleIndexEnd,
-) {
   const triangles = new Float32Array(triangleIndexEnd * 6);
 
   for (triIdx = 0; triIdx < triangleIndexEnd; triIdx++) {
@@ -527,7 +522,7 @@ HeightmapTessellator.computeVertices = function (options) {
     );
     inverseTransform = Matrix4.inverse(transform, new Matrix4());
 
-    const packedTriangles = createPackedTriangles(
+    const triangleAABBs = createTriangleAABBs(
       positions,
       inverseTransform,
       width,
@@ -535,7 +530,7 @@ HeightmapTessellator.computeVertices = function (options) {
     );
 
     octree = OctreeTrianglePicking.createOctree(
-      packedTriangles,
+      triangleAABBs,
       inverseTransform,
       transform,
       orientedBoundingBox,
