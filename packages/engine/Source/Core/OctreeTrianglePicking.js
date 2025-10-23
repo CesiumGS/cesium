@@ -114,7 +114,8 @@ function rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces) {
 
 const scratchAABBMin = new Cartesian3();
 const scratchAABBMax = new Cartesian3();
-const scratchAABBResult = new AxisAlignedBoundingBox();
+const scratchNodeAABB = new AxisAlignedBoundingBox();
+const scratchTriangleAABB = new AxisAlignedBoundingBox();
 
 /**
  *
@@ -141,11 +142,7 @@ function createAABBFromOctreeLocation(level, x, y, z) {
     scratchAABBMax,
   );
 
-  return AxisAlignedBoundingBox.fromCorners(
-    aabbMin,
-    aabbMax,
-    scratchAABBResult,
-  );
+  return AxisAlignedBoundingBox.fromCorners(aabbMin, aabbMax, scratchNodeAABB);
 }
 
 /**
@@ -167,7 +164,7 @@ function createAABBFromTriangle(triangleAABBs, triangleIdx) {
       triangleAABBs[triangleIdx * 6 + 5],
       scratchAABBMax,
     ),
-    scratchAABBResult,
+    scratchTriangleAABB,
   );
 }
 
