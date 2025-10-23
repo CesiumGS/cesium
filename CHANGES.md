@@ -9,6 +9,10 @@
 - `scene.drillPick` now uses a breadth-first search strategy instead of depth-first. This may change which entities are picked when
   using large values of `width` and `height` when providing a `limit`, prioritizing entities closer to the camera.
 
+#### Additions :tada:
+
+- Added experimental support for loading 3D Tiles as terrain, via `Cesium3DTilesTerrainProvider`. See [the PR](https://github.com/CesiumGS/cesium/pull/12963) for limitations on the types of 3D Tiles that can be used. [#12296](https://github.com/CesiumGS/cesium/issues/12296)
+
 #### Fixes :wrench:
 
 - Fixed parsing content bounding volumes contained in 3D Tiles 1.1 subtree files. [#12972](https://github.com/CesiumGS/cesium/pull/12972)

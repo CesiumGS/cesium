@@ -195,6 +195,7 @@ ResourceCache.getEmbeddedBufferLoader = function (options) {
   Check.typeOf.object("options.parentResource", parentResource);
   Check.typeOf.number("options.bufferId", bufferId);
   //>>includeEnd('debug');
+
   const cacheKey = ResourceCacheKey.getEmbeddedBufferCacheKey({
     parentResource: parentResource,
     bufferId: bufferId,
@@ -213,6 +214,7 @@ ResourceCache.getEmbeddedBufferLoader = function (options) {
     typedArray: typedArray,
     cacheKey: cacheKey,
   });
+
   return ResourceCache.add(bufferLoader);
 };
 
