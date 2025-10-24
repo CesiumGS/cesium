@@ -241,9 +241,6 @@ describe(
           if (webglStub) {
             return;
           }
-          if (!scene.context.webgl2) {
-            return;
-          }
           const rectangle = createLargeRectangle(0.0);
           const windowPosition = new Cartesian2(0, 0);
 

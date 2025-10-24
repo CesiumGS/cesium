@@ -1452,6 +1452,8 @@ Context.prototype.endFrame = function () {
  * @param {Framebuffer} [readState.framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
  * @param {Framebuffer} [readState.pbo] If true pixel data is read to PBO instead of TypedArray.
  * @returns {Uint8Array|Uint16Array|Float32Array|Uint32Array} The pixels in the specified rectangle.
+ *
+ * @exception {DeveloperError} A WebGL 2 context is required to read pixels using a PBO.
  */
 Context.prototype.readPixels = function (readState) {
   const gl = this._gl;
@@ -1465,7 +1467,9 @@ Context.prototype.readPixels = function (readState) {
   const pbo = readState.pbo ?? false;
 
   if (pbo && !this._webgl2) {
-    throw new DeveloperError("A WebGL 2 context is required.");
+    throw new DeveloperError(
+      "A WebGL 2 context is required to read pixels using a PBO.",
+    );
   }
 
   //>>includeStart('debug', pragmas.debug);

@@ -4520,6 +4520,7 @@ Scene.prototype.pick = function (windowPosition, width, height) {
 
 /**
  * Performs the same operation as Scene.pick but asynchonosly without blocking the main render thread.
+ * Requires WebGL2 else using fallback.
  *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.

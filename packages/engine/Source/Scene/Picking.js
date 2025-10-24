@@ -273,7 +273,7 @@ function computePickingDrawingBufferRectangle(
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
  * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
- * @param {boolean} [async=false] Use async non GPU blocking picking.
+ * @param {boolean} [async=false] Use async non GPU blocking picking. Requires WebGL2 else using fallback.
  * @returns {object[] | Promise<object[]>} List of objects containing the picked primitives.
  */
 Picking.prototype.pick = function (
@@ -339,7 +339,7 @@ Picking.prototype.pick = function (
   scene.resolveFramebuffers(passState);
 
   let pickedObjects;
-  if (async) {
+  if (async && context.webgl2) {
     pickedObjects = pickFramebuffer.endAsync(
       drawingBufferRectangle,
       frameState,
@@ -347,6 +347,9 @@ Picking.prototype.pick = function (
     ); // Promise<Object[]>
   } else {
     pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit); // Object[]
+    if (async) {
+      pickedObjects = Promise.resolve(pickedObjects); // Promise<Object[]> fallback if not WebGL2
+    }
   }
   context.endFrame();
   return pickedObjects;

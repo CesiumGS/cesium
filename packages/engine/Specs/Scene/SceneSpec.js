@@ -1526,9 +1526,6 @@ describe(
       if (webglStub) {
         return;
       }
-      if (!scene.context.webgl2) {
-        return;
-      }
       const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
       const rectanglePrimitive = createRectangle(rectangle);
       const primitives = scene.primitives;
