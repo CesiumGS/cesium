@@ -14,7 +14,6 @@ import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidalOccluder from "./EllipsoidalOccluder.js";
 import Frozen from "./Frozen.js";
 import Matrix4 from "./Matrix4.js";
-import mergeSort from "./mergeSort.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Rectangle from "./Rectangle.js";
 import TerrainEncoding from "./TerrainEncoding.js";
@@ -224,15 +223,14 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = async function (options) {
   const indexCountWithoutSkirts = indicesWithoutSkirts.length;
   const skirtIndexCount =
     TerrainProvider.getSkirtIndexCountWithFilledCorners(skirtVertexCount);
-  const indexCountWithSkirts = indexCountWithoutSkirts + skirtIndexCount;
 
   // For consistency with glTF spec, 16 bit index buffer can't contain 65535
   const SizedIndexTypeWithSkirts =
     vertexCountWithSkirts <= 65535 ? Uint16Array : Uint32Array;
+  // Make the index buffer large enough that we can add in the skirt indices later
   const indexBufferWithSkirts = new SizedIndexTypeWithSkirts(
-    indexCountWithSkirts,
+    indexCountWithoutSkirts + skirtIndexCount,
   );
-  // TODO: do we ever actually add the skirts to this buffer?
   indexBufferWithSkirts.set(indicesWithoutSkirts);
 
   const westIndices = new SizedIndexTypeWithSkirts(gltfInfo.edgeIndicesWest);
@@ -240,22 +238,17 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = async function (options) {
   const eastIndices = new SizedIndexTypeWithSkirts(gltfInfo.edgeIndicesEast);
   const northIndices = new SizedIndexTypeWithSkirts(gltfInfo.edgeIndicesNorth);
 
-  const sortedWestIndices = new SizedIndexTypeWithSkirts(westIndices);
-  // TODO: why not sortedWestIndices.sort()??
-  mergeSort(sortedWestIndices, sortedEdgeCompare);
-  const sortedSouthIndices = new SizedIndexTypeWithSkirts(southIndices);
-  mergeSort(sortedSouthIndices, sortedEdgeCompare);
-  const sortedEastIndices = new SizedIndexTypeWithSkirts(eastIndices);
-  mergeSort(sortedEastIndices, sortedEdgeCompare);
-  const sortedNorthIndices = new SizedIndexTypeWithSkirts(northIndices);
-  mergeSort(sortedNorthIndices, sortedEdgeCompare);
+  const sortedWestIndices = new SizedIndexTypeWithSkirts(westIndices).sort();
+  const sortedSouthIndices = new SizedIndexTypeWithSkirts(southIndices).sort();
+  const sortedEastIndices = new SizedIndexTypeWithSkirts(eastIndices).sort();
+  const sortedNorthIndices = new SizedIndexTypeWithSkirts(northIndices).sort();
 
-  const southMerc =
+  const southMercatorAngle =
     WebMercatorProjection.geodeticLatitudeToMercatorAngle(tileMinLatitude);
-  const northMerc =
+  const northMercatorAngle =
     WebMercatorProjection.geodeticLatitudeToMercatorAngle(tileMaxLatitude);
 
-  const oneOverMercatorHeight = 1.0 / (northMerc - southMerc);
+  const oneOverMercatorHeight = 1.0 / (northMercatorAngle - southMercatorAngle);
 
   // Use a terrain encoding without quantization.
   // This is just an easier way to save intermediate state
@@ -355,7 +348,8 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = async function (options) {
     if (hasWebMercatorT) {
       const mercatorAngle =
         WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude);
-      webMercatorT = (mercatorAngle - southMerc) * oneOverMercatorHeight;
+      webMercatorT =
+        (mercatorAngle - southMercatorAngle) * oneOverMercatorHeight;
     }
 
     let geodeticSurfaceNormal;
@@ -909,11 +903,11 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   const minimumLatitude = upsampleRectangle.south;
   const maximumLatitude = upsampleRectangle.north;
 
-  const southMerc =
+  const southMercatorAngle =
     WebMercatorProjection.geodeticLatitudeToMercatorAngle(minimumLatitude);
-  const northMerc =
+  const northMercatorAngle =
     WebMercatorProjection.geodeticLatitudeToMercatorAngle(maximumLatitude);
-  const oneOverMercatorHeight = 1.0 / (northMerc - southMerc);
+  const oneOverMercatorHeight = 1.0 / (northMercatorAngle - southMercatorAngle);
 
   let minimumHeight = Number.POSITIVE_INFINITY;
   let maximumHeight = Number.NEGATIVE_INFINITY;
@@ -1012,7 +1006,8 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
     if (hasWebMercatorT) {
       const mercatorAngle =
         WebMercatorProjection.geodeticLatitudeToMercatorAngle(lat);
-      webMercatorT = (mercatorAngle - southMerc) * oneOverMercatorHeight;
+      webMercatorT =
+        (mercatorAngle - southMercatorAngle) * oneOverMercatorHeight;
     }
 
     let geodeticSurfaceNormal;
