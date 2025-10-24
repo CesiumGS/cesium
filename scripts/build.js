@@ -685,18 +685,30 @@ async function importSandcastleBuildFunctions() {
 }
 
 /**
+ * Build the Sandcastle package out to static files in the repo for use in the local server
+ * or deployments.
+ *
+ * If <code>outputToBuildDir</code> is true then all necessary static files for CesiumJS and assets
+ * will be bundled with the sandcastle files in Build/Sandcastle2. Used to make deployments easier
+ *
+ * If <code>outputToBuildDir</code> is false then sandcastle will be built to Apps/Sandcastle2 with
+ * relative paths to other top level cesium assets and built files. Used for local development and the zip file
+ *
  * @param {object} options
- * @param {boolean} options.createStaticBuild control whether sandcastle should be built and bundled together completely static into the /Build directory
- * @returns
+ * @param {boolean} options.outputToBuildDir control whether sandcastle should be built and bundled together completely static into the Build directory
+ * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
  */
-export async function buildSandcastleApp({ createStaticBuild }) {
+export async function buildSandcastleApp({
+  outputToBuildDir,
+  includeDevelopment,
+}) {
   const { join, dirname } = path;
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const { createSandcastleConfig, buildStatic } =
     await importSandcastleBuildFunctions();
   const version = await getVersion();
   let config;
-  if (createStaticBuild) {
+  if (outputToBuildDir) {
     const cesiumSource = join(__dirname, "../Build/CesiumUnminified");
     const cesiumBaseUrl = "Build/CesiumUnminified";
 
@@ -770,7 +782,9 @@ export async function buildSandcastleApp({ createStaticBuild }) {
     });
   }
 
-  return buildStatic(config);
+  await buildStatic(config);
+  // Build the gallery after sandcastle to avoid clobbering the files
+  await buildSandcastleGallery({ includeDevelopment });
 }
 
 /**
@@ -816,8 +830,6 @@ export async function buildSandcastleGallery({ includeDevelopment }) {
  * @returns {Promise<any>}
  */
 export async function createGalleryList(noDevelopmentGallery) {
-  await buildSandcastleGallery({ includeDevelopment: !noDevelopmentGallery });
-
   const demoObjects = [];
   const demoJSONs = [];
   const output = path.join("Apps", "Sandcastle", "gallery", "gallery-index.js");
@@ -1391,7 +1403,11 @@ export async function buildCesium(options) {
     write: write,
   });
 
-  await Promise.all([createJsHintOptions(), createGalleryList(!development)]);
+  await Promise.all([
+    createJsHintOptions(),
+    createGalleryList(!development),
+    buildSandcastleGallery({ includeDevelopment: !development }),
+  ]);
 
   // Generate Specs bundle.
   const specsContext = await bundleCombinedSpecs({

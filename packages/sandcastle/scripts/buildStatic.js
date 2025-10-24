@@ -127,6 +127,7 @@ export function createSandcastleConfig({
  *
  * @param {UserConfig} config
  * @param {LogLevel} logLevel
+ * @returns {Promise<void>}
  */
 export async function buildStatic(config, logLevel = "warn") {
   // We have to do the compile for the Sandcastle API outside of the vite build

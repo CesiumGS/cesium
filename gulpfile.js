@@ -30,7 +30,6 @@ import {
   createCombinedSpecList,
   createJsHintOptions,
   defaultESBuildOptions,
-  buildSandcastleGallery,
   buildSandcastleApp,
 } from "./scripts/build.js";
 
@@ -289,14 +288,12 @@ export async function buildTs() {
   await createTypeScriptDefinitions();
 }
 
-export const buildSandcastle = gulp.series(
-  async function buildSandcastleAppStep() {
-    return buildSandcastleApp({ createStaticBuild: isProduction });
-  },
-  async function buildGalleryStep() {
-    return buildSandcastleGallery({ includeDevelopment: !isProduction });
-  },
-);
+export async function buildSandcastle() {
+  return buildSandcastleApp({
+    outputToBuildDir: isProduction,
+    includeDevelopment: !isProduction,
+  });
+}
 
 export const buildApps = gulp.parallel(
   buildCesiumViewer,
@@ -597,11 +594,11 @@ async function pruneScriptsForZip(packageJsonPath) {
 
 export const makeZip = gulp.series(
   release,
-  async function buildSandcastleAppStep() {
-    return buildSandcastleApp({ createStaticBuild: false });
-  },
-  async function buildGalleryStep() {
-    return buildSandcastleGallery({ includeDevelopment: false });
+  async function buildSandcastleStep() {
+    return buildSandcastleApp({
+      outputToBuildDir: false,
+      includeDevelopment: false,
+    });
   },
   async function createZipFile() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
