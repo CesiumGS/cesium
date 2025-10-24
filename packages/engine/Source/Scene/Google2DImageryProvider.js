@@ -312,7 +312,7 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
  * });
  * @example
  * // Google 2D roadmap overlay with custom styles
- * const googleTileProvider = Cesium.Google2DImageryProvider.fromIonAssetId({
+ * const googleTilesProvider = Cesium.Google2DImageryProvider.fromIonAssetId({
  *     assetId: 3830184,
  *     overlayLayerType: "layerRoadmap",
  *     styles: [
@@ -403,7 +403,7 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
  * // Google 2D roadmap overlay with custom styles
  * Cesium.GoogleMaps.defaultApiKey = "your-api-key";
  *
- * const googleTileProvider = Cesium.Google2DImageryProvider.fromUrl({
+ * const googleTilesProvider = Cesium.Google2DImageryProvider.fromUrl({
  *     overlayLayerType: "layerRoadmap",
  *     styles: [
  *         {
