@@ -30,7 +30,6 @@ const trailingSlashRegex = /\/$/;
  *
  * @alias Azure2DImageryProvider
  * @constructor
- * @private
  * @param {Azure2DImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @example
