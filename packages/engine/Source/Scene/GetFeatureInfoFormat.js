@@ -1,6 +1,8 @@
+import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import GeographicProjection from "../Core/GeographicProjection.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 
@@ -70,8 +72,7 @@ function GetFeatureInfoFormat(type, format, callback) {
 
   this.callback = callback;
 }
-
-function geoJsonToFeatureInfo(json) {
+function geoJsonToFeatureInfo(json, projection) {
   const result = [];
 
   const features = json.features;
@@ -86,9 +87,16 @@ function geoJsonToFeatureInfo(json) {
 
     // If this is a point feature, use the coordinates of the point.
     if (defined(feature.geometry) && feature.geometry.type === "Point") {
-      const longitude = feature.geometry.coordinates[0];
-      const latitude = feature.geometry.coordinates[1];
-      featureInfo.position = Cartographic.fromDegrees(longitude, latitude);
+      const x = feature.geometry.coordinates[0];
+      const y = feature.geometry.coordinates[1];
+
+      if (!defined(projection) || projection instanceof GeographicProjection) {
+        featureInfo.position = Cartographic.fromDegrees(x, y);
+      } else {
+        const positionInMeters = new Cartesian3(x, y, 0);
+        const cartographic = projection.unproject(positionInMeters);
+        featureInfo.position = cartographic;
+      }
     }
 
     result.push(featureInfo);
