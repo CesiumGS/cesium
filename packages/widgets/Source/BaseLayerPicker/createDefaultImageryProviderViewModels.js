@@ -375,6 +375,48 @@ of the world.\nhttp://www.openstreetmap.org",
     }),
   );
 
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Azure Maps Aerial",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/azureAerial.png",
+      ),
+      tooltip: "Imagery from Azure Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3891168);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Azure Maps Roads",
+      iconUrl: buildModuleUrl("Widgets/Images/ImageryProviders/azureRoads.png"),
+      tooltip:
+        "Labeled roads and other features on a base landscape from Azure Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3891169);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Azure Maps Labels Only",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/azureLabels.png",
+      ),
+      tooltip:
+        "Place labels from Azure Maps to combine with other imagery such as Sentinel-2",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3891170);
+      },
+    }),
+  );
+
   return providerViewModels;
 }
 export default createDefaultImageryProviderViewModels;
