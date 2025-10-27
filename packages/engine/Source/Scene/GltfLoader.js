@@ -2047,7 +2047,7 @@ function getLineStringPrimitiveRestartValue(componentType) {
       return 4294967295;
     default:
       throw new RuntimeError(
-        "EXT_mesh_primitive_edge_visibility lineStrings indices must use unsigned scalar component types.",
+        "EXT_mesh_primitive_edge_visibility line strings indices must use unsigned scalar component types.",
       );
   }
 }
