@@ -112,6 +112,9 @@ EdgeVisibilityPipelineStage.process = function (
     "#ifdef HAS_EDGE_FEATURE_ID",
     "    v_featureId_0 = a_edgeFeatureId;",
     "#endif",
+    "#ifdef HAS_EDGE_COLOR_OVERRIDE",
+    "    v_edgeColor = a_edgeColor;",
+    "#endif",
     "    // Transform normals from model space to view space",
     "    v_silhouetteNormalView = czm_normal * a_silhouetteNormal;",
     "    v_faceNormalAView = czm_normal * a_faceNormalA;",
@@ -133,6 +136,21 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
+  let edgeColorLocation;
+  const hasEdgeColorOverride = edgeResult.edgeData.some(function (edge) {
+    return defined(edge.color);
+  });
+
+  if (hasEdgeColorOverride) {
+    edgeColorLocation = shaderBuilder.addAttribute("vec4", "a_edgeColor");
+    shaderBuilder.addVarying("vec4", "v_edgeColor", "flat");
+    shaderBuilder.addDefine(
+      "HAS_EDGE_COLOR_OVERRIDE",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+  }
+
   // Generate paired face normals for each unique edge (used to classify silhouette edges in the shader).
   const edgeFaceNormals = generateEdgeFaceNormals(
     adjacencyData,
@@ -150,6 +168,7 @@ EdgeVisibilityPipelineStage.process = function (
     faceNormalALocation,
     faceNormalBLocation,
     edgeFeatureIdLocation,
+    edgeColorLocation,
     primitive.edgeVisibility,
     edgeFaceNormals,
   );
@@ -372,91 +391,165 @@ function generateEdgeFaceNormals(adjacencyData, edgeIndices) {
  */
 function extractVisibleEdges(primitive) {
   const edgeVisibility = primitive.edgeVisibility;
-  const visibility = edgeVisibility.visibility;
-  const indices = primitive.indices;
-
-  if (!defined(visibility) || !defined(indices)) {
+  if (!defined(edgeVisibility)) {
     return [];
   }
 
-  const triangleIndexArray = indices.typedArray;
-  const vertexCount = primitive.attributes[0].count;
+  const visibility = edgeVisibility.visibility;
+  const indices = primitive.indices;
+  const lineStrings = edgeVisibility.lineStrings;
+
+  const attributes = primitive.attributes;
+  const vertexCount =
+    defined(attributes) && attributes.length > 0 ? attributes[0].count : 0;
+
+  const hasVisibilityData =
+    defined(visibility) &&
+    defined(indices) &&
+    defined(indices.typedArray) &&
+    indices.typedArray.length > 0;
+  const hasLineStrings = defined(lineStrings) && lineStrings.length > 0;
+
+  if (!hasVisibilityData && !hasLineStrings) {
+    return [];
+  }
+
+  const triangleIndexArray = hasVisibilityData ? indices.typedArray : undefined;
   const edgeIndices = [];
   const edgeData = [];
   const seenEdgeHashes = new Set();
   let silhouetteEdgeCount = 0;
+  const globalColor = edgeVisibility.materialColor;
 
-  // Process triangles and extract edges (2 bits per edge)
-  let edgeIndex = 0;
-  const totalIndices = triangleIndexArray.length;
+  if (hasVisibilityData) {
+    let edgeIndex = 0;
+    const totalIndices = triangleIndexArray.length;
+    const visibilityArray = visibility;
 
-  for (let i = 0; i + 2 < totalIndices; i += 3) {
-    const v0 = triangleIndexArray[i];
-    const v1 = triangleIndexArray[i + 1];
-    const v2 = triangleIndexArray[i + 2];
-    for (let e = 0; e < 3; e++) {
-      let a, b;
-      if (e === 0) {
-        a = v0;
-        b = v1;
-      } else if (e === 1) {
-        a = v1;
-        b = v2;
-      } else if (e === 2) {
-        a = v2;
-        b = v0;
-      }
-      const byteIndex = Math.floor(edgeIndex / 4);
-      const bitPairOffset = (edgeIndex % 4) * 2;
-      edgeIndex++;
+    for (let i = 0; i + 2 < totalIndices; i += 3) {
+      const v0 = triangleIndexArray[i];
+      const v1 = triangleIndexArray[i + 1];
+      const v2 = triangleIndexArray[i + 2];
+      for (let e = 0; e < 3; e++) {
+        let a;
+        let b;
+        if (e === 0) {
+          a = v0;
+          b = v1;
+        } else if (e === 1) {
+          a = v1;
+          b = v2;
+        } else {
+          a = v2;
+          b = v0;
+        }
 
-      if (byteIndex >= visibility.length) {
-        break;
-      }
+        const byteIndex = Math.floor(edgeIndex / 4);
+        const bitPairOffset = (edgeIndex % 4) * 2;
+        edgeIndex++;
 
-      const byte = visibility[byteIndex];
-      const visibility2Bit = (byte >> bitPairOffset) & 0x3;
-
-      // Only include visible edge types according to EXT_mesh_primitive_edge_visibility spec
-      let shouldIncludeEdge = false;
-      switch (visibility2Bit) {
-        case 0: // HIDDEN - never draw
-          shouldIncludeEdge = false;
+        if (byteIndex >= visibilityArray.length) {
           break;
-        case 1: // SILHOUETTE - conditionally visible (front-facing vs back-facing)
-          shouldIncludeEdge = true;
-          break;
-        case 2: // HARD - always draw (primary encoding)
-          shouldIncludeEdge = true;
-          break;
-        case 3: // REPEATED - always draw (secondary encoding of a hard edge already encoded as 2)
-          shouldIncludeEdge = true;
-          break;
-      }
+        }
 
-      if (shouldIncludeEdge) {
+        const byte = visibilityArray[byteIndex];
+        const visibility2Bit = (byte >> bitPairOffset) & 0x3;
+
+        if (visibility2Bit === 0) {
+          continue;
+        }
+
         const small = Math.min(a, b);
         const big = Math.max(a, b);
-        const hash = small * vertexCount + big;
+        const edgeKey = `${small},${big}`;
 
-        if (!seenEdgeHashes.has(hash)) {
-          seenEdgeHashes.add(hash);
-          edgeIndices.push(a, b);
-
-          let mateVertexIndex = -1;
-          if (visibility2Bit === 1) {
-            mateVertexIndex = silhouetteEdgeCount;
-            silhouetteEdgeCount++;
-          }
-
-          edgeData.push({
-            edgeType: visibility2Bit,
-            triangleIndex: Math.floor(i / 3),
-            edgeIndex: e,
-            mateVertexIndex: mateVertexIndex,
-            currentTriangleVertices: [v0, v1, v2],
-          });
+        if (seenEdgeHashes.has(edgeKey)) {
+          continue;
         }
+        seenEdgeHashes.add(edgeKey);
+        edgeIndices.push(a, b);
+
+        let mateVertexIndex = -1;
+        if (visibility2Bit === 1) {
+          mateVertexIndex = silhouetteEdgeCount;
+          silhouetteEdgeCount++;
+        }
+
+        edgeData.push({
+          edgeType: visibility2Bit,
+          triangleIndex: Math.floor(i / 3),
+          edgeIndex: e,
+          mateVertexIndex: mateVertexIndex,
+          currentTriangleVertices: [v0, v1, v2],
+          color: globalColor,
+        });
+      }
+    }
+  }
+
+  if (hasLineStrings) {
+    for (let i = 0; i < lineStrings.length; i++) {
+      const lineString = lineStrings[i];
+      if (!defined(lineString) || !defined(lineString.indices)) {
+        continue;
+      }
+
+      const indicesArray = lineString.indices;
+      if (!defined(indicesArray) || indicesArray.length < 2) {
+        continue;
+      }
+
+      const restartValue = lineString.restartIndex;
+      const lineColor = defined(lineString.materialColor)
+        ? lineString.materialColor
+        : globalColor;
+
+      let previous;
+      for (let j = 0; j < indicesArray.length; j++) {
+        const currentIndex = indicesArray[j];
+        if (defined(restartValue) && currentIndex === restartValue) {
+          previous = undefined;
+          continue;
+        }
+
+        if (!defined(previous)) {
+          previous = currentIndex;
+          continue;
+        }
+
+        const a = previous;
+        const b = currentIndex;
+        previous = currentIndex;
+
+        if (a === b) {
+          continue;
+        }
+
+        if (
+          vertexCount > 0 &&
+          (a < 0 || a >= vertexCount || b < 0 || b >= vertexCount)
+        ) {
+          continue;
+        }
+
+        const small = Math.min(a, b);
+        const big = Math.max(a, b);
+        const edgeKey = `${small},${big}`;
+
+        if (seenEdgeHashes.has(edgeKey)) {
+          continue;
+        }
+
+        seenEdgeHashes.add(edgeKey);
+        edgeIndices.push(a, b);
+        edgeData.push({
+          edgeType: 2,
+          triangleIndex: -1,
+          edgeIndex: -1,
+          mateVertexIndex: -1,
+          currentTriangleVertices: undefined,
+          color: defined(lineColor) ? lineColor : undefined,
+        });
       }
     }
   }
@@ -478,6 +571,7 @@ function extractVisibleEdges(primitive) {
  * @param {number} faceNormalALocation Shader attribute location for face normal A
  * @param {number} faceNormalBLocation Shader attribute location for face normal B
  * @param {number} edgeFeatureIdLocation Shader attribute location for optional edge feature ID
+ * @param {number} edgeColorLocation Shader attribute location for optional edge color override
  * @param {Object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals[])
  * @param {Float32Array} edgeFaceNormals Packed face normals (6 floats per edge)
  * @returns {Object|undefined} Object with {vertexArray, indexBuffer, indexCount} or undefined on failure
@@ -493,6 +587,7 @@ function createCPULineEdgeGeometry(
   faceNormalALocation,
   faceNormalBLocation,
   edgeFeatureIdLocation,
+  edgeColorLocation,
   edgeVisibility,
   edgeFaceNormals,
 ) {
@@ -522,6 +617,10 @@ function createCPULineEdgeGeometry(
   const silhouetteNormalArray = new Float32Array(totalVerts * 3);
   const faceNormalAArray = new Float32Array(totalVerts * 3);
   const faceNormalBArray = new Float32Array(totalVerts * 3);
+  const needsEdgeColorAttribute = defined(edgeColorLocation);
+  const edgeColorArray = needsEdgeColorAttribute
+    ? new Float32Array(totalVerts * 4)
+    : undefined;
   let p = 0;
 
   const maxSrcVertex = srcPos.length / 3 - 1;
@@ -564,6 +663,16 @@ function createCPULineEdgeGeometry(
       faceNormalBArray[(normalIdx + 1) * 3] = 0;
       faceNormalBArray[(normalIdx + 1) * 3 + 1] = 0;
       faceNormalBArray[(normalIdx + 1) * 3 + 2] = 1;
+      if (needsEdgeColorAttribute) {
+        const colorBase = i * 8;
+        for (let k = 0; k < 2; k++) {
+          const base = colorBase + k * 4;
+          edgeColorArray[base] = 0;
+          edgeColorArray[base + 1] = 0;
+          edgeColorArray[base + 2] = 0;
+          edgeColorArray[base + 3] = -1.0;
+        }
+      }
       continue;
     }
 
@@ -587,6 +696,24 @@ function createCPULineEdgeGeometry(
 
     edgeTypeArray[i * 2] = t;
     edgeTypeArray[i * 2 + 1] = t;
+
+    if (needsEdgeColorAttribute) {
+      const color = edgeData[i].color;
+      const hasOverride = defined(color);
+      const r = hasOverride ? color.x : 0.0;
+      const g = hasOverride ? color.y : 0.0;
+      const b = hasOverride ? color.z : 0.0;
+      const a = hasOverride ? color.w : -1.0;
+      const colorBase = i * 8;
+      edgeColorArray[colorBase] = r;
+      edgeColorArray[colorBase + 1] = g;
+      edgeColorArray[colorBase + 2] = b;
+      edgeColorArray[colorBase + 3] = a;
+      edgeColorArray[colorBase + 4] = r;
+      edgeColorArray[colorBase + 5] = g;
+      edgeColorArray[colorBase + 6] = b;
+      edgeColorArray[colorBase + 7] = a;
+    }
 
     // Add silhouette normal for silhouette edges (type 1)
     let normalX = 0,
@@ -671,6 +798,14 @@ function createCPULineEdgeGeometry(
     typedArray: faceNormalBArray,
     usage: BufferUsage.STATIC_DRAW,
   });
+  let edgeColorBuffer;
+  if (needsEdgeColorAttribute) {
+    edgeColorBuffer = Buffer.createVertexBuffer({
+      context,
+      typedArray: edgeColorArray,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+  }
 
   // Create sequential indices for line pairs
   const useU32 = totalVerts > 65534;
@@ -726,6 +861,16 @@ function createCPULineEdgeGeometry(
       normalize: false,
     },
   ];
+
+  if (needsEdgeColorAttribute) {
+    attributes.push({
+      index: edgeColorLocation,
+      vertexBuffer: edgeColorBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    });
+  }
 
   // Get feature ID from original geometry
   const primitive = renderResources.runtimePrimitive.primitive;
@@ -794,6 +939,7 @@ function createCPULineEdgeGeometry(
     indexBuffer,
     indexCount: totalVerts,
     hasEdgeFeatureIds,
+    hasEdgeColors: needsEdgeColorAttribute,
   };
 }
 

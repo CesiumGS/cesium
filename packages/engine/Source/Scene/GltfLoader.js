@@ -2007,6 +2007,89 @@ function fetchSpzExtensionFrom(extensions) {
   return undefined;
 }
 
+function getEdgeVisibilityMaterialColor(loader, materialIndex) {
+  if (!defined(materialIndex)) {
+    return undefined;
+  }
+
+  const materials = loader.gltfJson.materials;
+  if (
+    !defined(materials) ||
+    materialIndex < 0 ||
+    materialIndex >= materials.length
+  ) {
+    return undefined;
+  }
+
+  const material = materials[materialIndex];
+  if (!defined(material)) {
+    return undefined;
+  }
+
+  const metallicRoughness =
+    material.pbrMetallicRoughness ?? Frozen.EMPTY_OBJECT;
+  const color = fromArray(Cartesian4, metallicRoughness.baseColorFactor);
+
+  if (defined(color)) {
+    return color;
+  }
+
+  return new Cartesian4(1.0, 1.0, 1.0, 1.0);
+}
+
+function getLineStringPrimitiveRestartValue(componentType) {
+  switch (componentType) {
+    case ComponentDatatype.UNSIGNED_BYTE:
+      return 255;
+    case ComponentDatatype.UNSIGNED_SHORT:
+      return 65535;
+    case ComponentDatatype.UNSIGNED_INT:
+      return 4294967295;
+    default:
+      throw new RuntimeError(
+        "EXT_mesh_primitive_edge_visibility lineStrings indices must use unsigned scalar component types.",
+      );
+  }
+}
+
+function loadEdgeVisibilityLineStrings(
+  loader,
+  lineStringDefinitions,
+  defaultMaterialIndex,
+) {
+  if (!defined(lineStringDefinitions) || lineStringDefinitions.length === 0) {
+    return undefined;
+  }
+
+  const result = new Array(lineStringDefinitions.length);
+  for (let i = 0; i < lineStringDefinitions.length; i++) {
+    const definition = lineStringDefinitions[i] ?? Frozen.EMPTY_OBJECT;
+    const accessorId = definition.indices;
+    const accessor = loader.gltfJson.accessors[accessorId];
+
+    if (!defined(accessor)) {
+      throw new RuntimeError("Edge visibility line string accessor not found!");
+    }
+
+    const indices = loadAccessor(loader, accessor);
+    const restartIndex = getLineStringPrimitiveRestartValue(
+      accessor.componentType,
+    );
+    const materialIndex = defined(definition.material)
+      ? definition.material
+      : defaultMaterialIndex;
+
+    result[i] = {
+      indices: indices,
+      restartIndex: restartIndex,
+      componentType: accessor.componentType,
+      materialColor: getEdgeVisibilityMaterialColor(loader, materialIndex),
+    };
+  }
+
+  return result;
+}
+
 /**
  * Load resources associated with a mesh primitive for a glTF node
  * @param {GltfLoader} loader
@@ -2046,37 +2129,44 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
 
   // Edge Visibility
   const edgeVisibilityExtension = extensions.EXT_mesh_primitive_edge_visibility;
-  const hasEdgeVisibility = defined(edgeVisibilityExtension);
-  if (hasEdgeVisibility) {
-    const visibilityAccessor =
-      loader.gltfJson.accessors[edgeVisibilityExtension.visibility];
-    if (!defined(visibilityAccessor)) {
-      throw new RuntimeError("Edge visibility accessor not found!");
-    }
-    const visibilityValues = loadAccessor(loader, visibilityAccessor);
-    primitive.edgeVisibility = {
-      visibility: visibilityValues,
-      material: edgeVisibilityExtension.material,
-    };
+  if (defined(edgeVisibilityExtension)) {
+    const edgeVisibility = {};
 
-    // Load silhouette normals
+    const visibilityAccessorId = edgeVisibilityExtension.visibility;
+    if (defined(visibilityAccessorId)) {
+      const visibilityAccessor =
+        loader.gltfJson.accessors[visibilityAccessorId];
+      if (!defined(visibilityAccessor)) {
+        throw new RuntimeError("Edge visibility accessor not found!");
+      }
+      edgeVisibility.visibility = loadAccessor(loader, visibilityAccessor);
+    }
+
+    edgeVisibility.materialColor = getEdgeVisibilityMaterialColor(
+      loader,
+      edgeVisibilityExtension.material,
+    );
+
     if (defined(edgeVisibilityExtension.silhouetteNormals)) {
       const silhouetteNormalsAccessor =
         loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
       if (defined(silhouetteNormalsAccessor)) {
-        const silhouetteNormalsValues = loadAccessor(
+        edgeVisibility.silhouetteNormals = loadAccessor(
           loader,
           silhouetteNormalsAccessor,
         );
-        primitive.edgeVisibility.silhouetteNormals = silhouetteNormalsValues;
       }
     }
 
-    // Load line strings
     if (defined(edgeVisibilityExtension.lineStrings)) {
-      primitivePlan.edgeVisibility.lineStrings =
-        edgeVisibilityExtension.lineStrings;
+      edgeVisibility.lineStrings = loadEdgeVisibilityLineStrings(
+        loader,
+        edgeVisibilityExtension.lineStrings,
+        edgeVisibilityExtension.material,
+      );
     }
+
+    primitive.edgeVisibility = edgeVisibility;
   }
 
   //support the latest glTF spec and the legacy extension
