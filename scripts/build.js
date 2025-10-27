@@ -1231,7 +1231,7 @@ export const buildEngine = async (options) => {
   // Create index.js
   await createIndexJs("engine");
 
-  await bundleIndexJs({
+  const contexts = await bundleIndexJs({
     minify: minify,
     incremental: incremental,
     sourcemap: true,
@@ -1263,6 +1263,8 @@ export const buildEngine = async (options) => {
     specListFile: specListFile,
     write: write,
   });
+
+  return contexts;
 };
 
 /**
@@ -1286,7 +1288,7 @@ export const buildWidgets = async (options) => {
   // Create index.js
   await createIndexJs("widgets");
 
-  await bundleIndexJs({
+  const contexts = await bundleIndexJs({
     minify: minify,
     incremental: incremental,
     sourcemap: true,
@@ -1311,6 +1313,8 @@ export const buildWidgets = async (options) => {
     specListFile: specListFile,
     write: write,
   });
+
+  return contexts;
 };
 
 /**
