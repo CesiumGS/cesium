@@ -13,8 +13,6 @@ import TaskProcessor from "./TaskProcessor.js";
 import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
-import OctreeTrianglePicking from "./OctreeTrianglePicking.js";
-import createTriangleVerticesCallback from "./createTriangleVerticesCallback.js";
 
 /**
  * Terrain data for a single tile where the terrain data is represented as a quantized mesh.  A quantized
@@ -367,15 +365,6 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
     const stride = result.vertexStride;
     const terrainEncoding = TerrainEncoding.clone(result.encoding);
 
-    const trianglePicking = new OctreeTrianglePicking(
-      result.octree,
-      createTriangleVerticesCallback(
-        vertices,
-        indicesTypedArray,
-        terrainEncoding,
-      ),
-    );
-
     // Clone complex result objects because the transfer from the web worker
     // has stripped them down to JSON-style objects.
     that._mesh = new TerrainMesh(
@@ -395,7 +384,6 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
       result.southIndicesEastToWest,
       result.eastIndicesNorthToSouth,
       result.northIndicesWestToEast,
-      trianglePicking,
     );
 
     // Free memory received from server after mesh is created.

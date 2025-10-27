@@ -5,11 +5,11 @@ import {
   Ellipsoid,
   EllipsoidTerrainProvider,
   GeographicTilingScheme,
+  Ray,
   GlobeSurfaceTile,
   ImageryLayerCollection,
   QuadtreeTile,
   QuadtreeTileLoadState,
-  Ray,
   TerrainState,
   TileProviderError,
 } from "../../index.js";

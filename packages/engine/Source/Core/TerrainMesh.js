@@ -1,4 +1,5 @@
 import SceneMode from "../Scene/SceneMode.js";
+import OctreeTrianglePicking from "./OctreeTrianglePicking.js";
 import TriangleSearchIntersectionTester from "./TriangleSearchIntersectionTester.js";
 
 /**
@@ -50,7 +51,6 @@ function TerrainMesh(
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
   northIndicesWestToEast,
-  octreeTrianglePicking,
 ) {
   /**
    * The center of the tile.  Vertex positions are specified relative to this center.
@@ -162,7 +162,12 @@ function TerrainMesh(
     vertices,
   );
 
-  this._octreeTrianglePicking = octreeTrianglePicking;
+  this._octreeTrianglePicking = new OctreeTrianglePicking(
+    vertices,
+    indices,
+    encoding,
+    orientedBoundingBox,
+  );
 }
 
 /**

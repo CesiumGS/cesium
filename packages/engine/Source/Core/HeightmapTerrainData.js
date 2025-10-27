@@ -15,8 +15,6 @@ import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
-import OctreeTrianglePicking from "./OctreeTrianglePicking.js";
-import createTriangleVerticesCallback from "./createTriangleVerticesCallback.js";
 
 /**
  * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
@@ -279,25 +277,11 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
 
     const vertexCountWithoutSkirts = result.gridWidth * result.gridHeight;
 
-    const encoding = TerrainEncoding.clone(result.encoding);
-    const vertices = new Float32Array(result.vertices);
-
-    let octreeTrianglePicker = null;
-    if (encoding.exaggeration === 1 && result.octree) {
-      // the octree data structure is only built off non-exaggerated triangles
-      octreeTrianglePicker = new OctreeTrianglePicking(
-        result.octree,
-        createTriangleVerticesCallback(
-          vertices,
-          indicesAndEdges.indices,
-          encoding,
-        ),
-      );
-    }
-
+    // Clone complex result objects because the transfer from the web worker
+    // has stripped them down to JSON-style objects.
     that._mesh = new TerrainMesh(
       center,
-      vertices,
+      new Float32Array(result.vertices),
       indicesAndEdges.indices,
       indicesAndEdges.indexCountWithoutSkirts,
       vertexCountWithoutSkirts,
@@ -307,12 +291,11 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
       Cartesian3.clone(result.occludeePointInScaledSpace),
       result.numberOfAttributes,
       OrientedBoundingBox.clone(result.orientedBoundingBox),
-      encoding,
+      TerrainEncoding.clone(result.encoding),
       indicesAndEdges.westIndicesSouthToNorth,
       indicesAndEdges.southIndicesEastToWest,
       indicesAndEdges.eastIndicesNorthToSouth,
       indicesAndEdges.northIndicesWestToEast,
-      octreeTrianglePicker,
     );
 
     // Free memory received from server after mesh is created.

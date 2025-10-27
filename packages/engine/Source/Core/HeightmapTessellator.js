@@ -13,7 +13,6 @@ import Rectangle from "./Rectangle.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import Transforms from "./Transforms.js";
 import WebMercatorProjection from "./WebMercatorProjection.js";
-import OctreeTrianglePicking from "./OctreeTrianglePicking.js";
 
 /**
  * Contains functions to create a mesh from a heightmap image.
@@ -37,51 +36,6 @@ HeightmapTessellator.DEFAULT_STRUCTURE = Object.freeze({
   elementMultiplier: 256.0,
   isBigEndian: false,
 });
-
-const v0 = new Cartesian3();
-const v1 = new Cartesian3();
-const v2 = new Cartesian3();
-
-function createTriangleAABBs(positions, invTransform, width, triangleIndexEnd) {
-  let trianglesPerRow;
-  let base;
-  let isEven;
-  let triIdx;
-
-  const triangles = new Float32Array(triangleIndexEnd * 6);
-
-  for (triIdx = 0; triIdx < triangleIndexEnd; triIdx++) {
-    trianglesPerRow = (width - 1) * 2;
-    base =
-      width * Math.floor(triIdx / trianglesPerRow) +
-      Math.floor((triIdx % trianglesPerRow) / 2);
-    isEven = triIdx % 2 === 0;
-
-    // isEven: TL, BL, TR
-    // isOdd: TR, BL, BR
-
-    Matrix4.multiplyByPoint(
-      invTransform,
-      positions[base + (isEven ? 0 : 1)],
-      v0,
-    );
-    Matrix4.multiplyByPoint(invTransform, positions[base + width], v1);
-    Matrix4.multiplyByPoint(
-      invTransform,
-      positions[base + 1 + (isEven ? 0 : width)],
-      v2,
-    );
-
-    // Get local space AABBs for triangle
-    triangles[triIdx * 6 + 0] = Math.min(v0.x, v1.x, v2.x);
-    triangles[triIdx * 6 + 1] = Math.max(v0.x, v1.x, v2.x);
-    triangles[triIdx * 6 + 2] = Math.min(v0.y, v1.y, v2.y);
-    triangles[triIdx * 6 + 3] = Math.max(v0.y, v1.y, v2.y);
-    triangles[triIdx * 6 + 4] = Math.min(v0.z, v1.z, v2.z);
-    triangles[triIdx * 6 + 5] = Math.max(v0.z, v1.z, v2.z);
-  }
-  return triangles;
-}
 
 const cartesian3Scratch = new Cartesian3();
 const matrix4Scratch = new Matrix4();
@@ -305,7 +259,6 @@ HeightmapTessellator.computeVertices = function (options) {
   let hMin = Number.POSITIVE_INFINITY;
 
   const gridVertexCount = width * height;
-  const gridTriangleCount = (width - 1) * (height - 1) * 2;
   const edgeVertexCount = skirtHeight > 0.0 ? width * 2 + height * 2 : 0;
   const vertexCount = gridVertexCount + edgeVertexCount;
 
@@ -502,38 +455,13 @@ HeightmapTessellator.computeVertices = function (options) {
   }
 
   const boundingSphere3D = BoundingSphere.fromPoints(positions);
-
   let orientedBoundingBox;
-  let transform;
-  let inverseTransform;
-  let octree;
-
   if (defined(rectangle)) {
     orientedBoundingBox = OrientedBoundingBox.fromRectangle(
       rectangle,
       minimumHeight,
       maximumHeight,
       ellipsoid,
-    );
-
-    transform = OrientedBoundingBox.computeTransformation(
-      orientedBoundingBox,
-      null,
-    );
-    inverseTransform = Matrix4.inverse(transform, new Matrix4());
-
-    const triangleAABBs = createTriangleAABBs(
-      positions,
-      inverseTransform,
-      width,
-      gridTriangleCount,
-    );
-
-    octree = OctreeTrianglePicking.createOctree(
-      triangleAABBs,
-      inverseTransform,
-      transform,
-      orientedBoundingBox,
     );
   }
 
@@ -585,7 +513,6 @@ HeightmapTessellator.computeVertices = function (options) {
     boundingSphere3D: boundingSphere3D,
     orientedBoundingBox: orientedBoundingBox,
     occludeePointInScaledSpace: occludeePointInScaledSpace,
-    octree: octree,
   };
 };
 export default HeightmapTessellator;
