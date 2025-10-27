@@ -18,9 +18,6 @@ import {
   glslToJavaScript,
   createIndexJs,
   buildCesium,
-  getSandcastleConfig,
-  buildSandcastleGallery,
-  buildSandcastleApp,
   buildEngine,
   buildWidgets,
 } from "./scripts/build.js";
@@ -41,6 +38,10 @@ const argv = yargs(process.argv)
     },
   })
   .help().argv;
+
+// These functions will not exist in the production zip file but they also won't be run
+const { getSandcastleConfig, buildSandcastleGallery, buildSandcastleApp } =
+  argv.production ? {} : await import("./scripts/buildSandcastle.js");
 
 const outputDirectory = path.join("Build", "CesiumDev");
 
@@ -117,7 +118,10 @@ const throttle = (callback) => {
   if (!production) {
     contexts = await generateDevelopmentBuild();
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    if (!fs.existsSync(path.join(__dirname, "/Apps/Sandcastle2/index.html"))) {
+    if (
+      buildSandcastleApp &&
+      !fs.existsSync(path.join(__dirname, "/Apps/Sandcastle2/index.html"))
+    ) {
       // Sandcastle takes a bit of time to build and is unlikely to change often
       // Only build it when we detect it doesn't exist to save on dev time
       console.log("Building Sandcastle...");
@@ -333,7 +337,7 @@ const throttle = (callback) => {
       specsCache.clear();
     });
 
-    if (!production) {
+    if (!production && getSandcastleConfig && buildSandcastleGallery) {
       const { configPath, root, gallery } = await getSandcastleConfig();
       const baseDirectory = path.relative(root, path.dirname(configPath));
       const galleryFiles = gallery.files.map((pattern) =>

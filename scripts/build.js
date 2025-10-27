@@ -4,7 +4,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { EOL } from "node:os";
 import path from "node:path";
 import { finished } from "node:stream/promises";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 import esbuild from "esbuild";
 import { globby } from "globby";
@@ -22,7 +22,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, "..");
 const packageJsonPath = path.join(projectRoot, "package.json");
 
-async function getVersion() {
+export async function getVersion() {
   const data = await readFile(packageJsonPath, "utf8");
   const { version } = JSON.parse(data);
   return version;
@@ -661,170 +661,6 @@ const externalResolvePlugin = {
 };
 
 /**
- * Parses Sandcastle config file and returns its values.
- * @returns {Promise<Record<string,any>>} A promise that resolves to the config values.
- */
-export async function getSandcastleConfig() {
-  const configPath = "packages/sandcastle/sandcastle.config.js";
-  const configImportPath = path.join(projectRoot, configPath);
-  const config = await import(pathToFileURL(configImportPath).href);
-  const options = config.default;
-  return {
-    ...options,
-    configPath,
-  };
-}
-
-async function importSandcastleBuildFunctions() {
-  // Import asynchronously, for now, because this script is not included or run in the release zip;
-  const buildGalleryScriptPath = path.join(
-    __dirname,
-    "../packages/sandcastle/index.js",
-  );
-  return await import(pathToFileURL(buildGalleryScriptPath).href);
-}
-
-/**
- * Build the Sandcastle package out to static files in the repo for use in the local server
- * or deployments.
- *
- * If <code>outputToBuildDir</code> is true then all necessary static files for CesiumJS and assets
- * will be bundled with the sandcastle files in Build/Sandcastle2. Used to make deployments easier
- *
- * If <code>outputToBuildDir</code> is false then sandcastle will be built to Apps/Sandcastle2 with
- * relative paths to other top level cesium assets and built files. Used for local development and the zip file
- *
- * @param {object} options
- * @param {boolean} options.outputToBuildDir control whether sandcastle should be built and bundled together completely static into the Build directory
- * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
- */
-export async function buildSandcastleApp({
-  outputToBuildDir,
-  includeDevelopment,
-}) {
-  const { join, dirname } = path;
-  const __dirname = dirname(fileURLToPath(import.meta.url));
-  const { createSandcastleConfig, buildStatic } =
-    await importSandcastleBuildFunctions();
-  const version = await getVersion();
-  let config;
-  if (outputToBuildDir) {
-    const cesiumSource = join(__dirname, "../Build/CesiumUnminified");
-    const cesiumBaseUrl = "Build/CesiumUnminified";
-
-    config = createSandcastleConfig({
-      outDir: join(__dirname, "../Build/Sandcastle2"),
-      basePath: "./",
-      cesiumBaseUrl: "/Build/CesiumUnminified",
-      cesiumVersion: version,
-      imports: {
-        cesium: {
-          path: "/js/Cesium.js",
-          typesPath: "/js/Cesium.d.ts",
-        },
-        "@cesium/engine": {
-          path: "/js/engine/index.js",
-          typesPath: "/js/engine/index.d.ts",
-        },
-        "@cesium/widgets": {
-          path: "/js/widgets/index.js",
-          typesPath: "/js/widgets/index.d.ts",
-        },
-      },
-      copyExtraFiles: [
-        { src: `${cesiumSource}/ThirdParty`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Workers`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Assets`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Widgets`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/*.(js|cjs)`, dest: cesiumBaseUrl },
-        { src: join(__dirname, "../Apps/SampleData"), dest: "Apps" },
-        { src: join(__dirname, "../Apps/SampleData"), dest: "" },
-        { src: join(__dirname, "../Source/Cesium.(d.ts|js)"), dest: "js" },
-        {
-          src: join(__dirname, "../packages/engine/index.d.ts"),
-          dest: "js/engine",
-        },
-        {
-          src: join(__dirname, "../packages/engine/Build/Unminified/index.js"),
-          dest: "js/engine",
-        },
-        {
-          src: join(__dirname, "../packages/widgets/index.d.ts"),
-          dest: "js/widgets",
-        },
-        {
-          src: join(__dirname, "../packages/widgets/Build/Unminified/index.js"),
-          dest: "js/widgets",
-        },
-      ],
-    });
-  } else {
-    config = createSandcastleConfig({
-      outDir: join(__dirname, "../Apps/Sandcastle2"),
-      basePath: "./",
-      cesiumBaseUrl: "../../../Build/CesiumUnminified",
-      cesiumVersion: version,
-      commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
-      imports: {
-        cesium: {
-          path: "../../../Source/Cesium.js",
-          typesPath: "../../../Source/Cesium.d.ts",
-        },
-        "@cesium/engine": {
-          path: "../../../packages/engine/Build/Unminified/index.js",
-          typesPath: "../../../packages/engine/index.d.ts",
-        },
-        "@cesium/widgets": {
-          path: "../../../packages/widgets/Build/Unminified/index.js",
-          typesPath: "../../../packages/widgets/index.d.ts",
-        },
-      },
-    });
-  }
-
-  await buildStatic(config);
-  // Build the gallery after sandcastle to avoid clobbering the files
-  await buildSandcastleGallery({ includeDevelopment });
-}
-
-/**
- * Indexes Sandcastle gallery files and writes gallery files to the configured Sandcastle output directory.
- * @param {object} options
- * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
- * @returns {Promise<void>} A promise that resolves once the gallery files have been indexed and written.
- */
-export async function buildSandcastleGallery({ includeDevelopment }) {
-  const { configPath, root, gallery, sourceUrl } = await getSandcastleConfig();
-
-  // Use an absolute path to avoid any descrepency between working directories
-  // All other directories will be relative to the specified root directory
-  const rootDirectory = path.join(path.dirname(configPath), root);
-
-  // Paths are specified relative to the config file
-  const {
-    files: galleryFiles,
-    defaultThumbnail,
-    searchOptions,
-    defaultFilters,
-    metadata,
-  } = gallery ?? {};
-
-  const { buildGalleryList } = await importSandcastleBuildFunctions();
-
-  await buildGalleryList({
-    rootDirectory,
-    publicDirectory: "../../Apps/Sandcastle2",
-    galleryFiles,
-    sourceUrl,
-    defaultThumbnail,
-    searchOptions,
-    defaultFilters,
-    metadata,
-    includeDevelopment,
-  });
-}
-
-/**
  * Creates a template html file in the Sandcastle app listing the gallery of demos
  * @param {boolean} [noDevelopmentGallery=false] true if the development gallery should not be included in the list
  * @returns {Promise<any>}
@@ -1407,11 +1243,7 @@ export async function buildCesium(options) {
     write: write,
   });
 
-  await Promise.all([
-    createJsHintOptions(),
-    createGalleryList(!development),
-    buildSandcastleGallery({ includeDevelopment: !development }),
-  ]);
+  await Promise.all([createJsHintOptions(), createGalleryList(!development)]);
 
   // Generate Specs bundle.
   const specsContext = await bundleCombinedSpecs({
