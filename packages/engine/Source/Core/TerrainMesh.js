@@ -1,6 +1,4 @@
-import SceneMode from "../Scene/SceneMode.js";
 import OctreeTrianglePicking from "./OctreeTrianglePicking.js";
-import TriangleSearchIntersectionTester from "./TriangleSearchIntersectionTester.js";
 
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
@@ -30,7 +28,6 @@ import TriangleSearchIntersectionTester from "./TriangleSearchIntersectionTester
  * @param {number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
  * @param {number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
  * @param {number[]} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
- * @param {OctreeTrianglePicking} octreeTrianglePicking An octree triangle picking instance if you have one, otherwise defaults to a iterative triangle search
  *
  * @private
  */
@@ -42,6 +39,7 @@ function TerrainMesh(
   vertexCountWithoutSkirts,
   minimumHeight,
   maximumHeight,
+  rectangle,
   boundingSphere3D,
   occludeePointInScaledSpace,
   vertexStride,
@@ -107,6 +105,12 @@ function TerrainMesh(
   this.maximumHeight = maximumHeight;
 
   /**
+   * The rectangle, in radians, covered by this tile.
+   * @type {Rectangle}
+   */
+  this.rectangle = rectangle;
+
+  /**
    * A bounding sphere that completely contains the tile.
    * @type {BoundingSphere}
    */
@@ -156,17 +160,13 @@ function TerrainMesh(
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
 
-  this._defaultPickStrategy = new TriangleSearchIntersectionTester(
-    encoding,
-    indices,
-    vertices,
-  );
-
   this._octreeTrianglePicking = new OctreeTrianglePicking(
     vertices,
     indices,
     encoding,
-    orientedBoundingBox,
+    minimumHeight,
+    maximumHeight,
+    rectangle,
   );
 }
 
@@ -184,19 +184,17 @@ TerrainMesh.prototype.pickRay = function (
   mode,
   projection,
 ) {
-  // check if we can use the faster octree path of if we fallback to using an iterative search
-  const canUseOctree = mode === SceneMode.SCENE3D;
-
-  if (canUseOctree) {
-    return this._octreeTrianglePicking.rayIntersect(ray, cullBackFaces);
-  }
-
-  return this._defaultPickStrategy.rayIntersect(
+  return this._octreeTrianglePicking.rayIntersect(
     ray,
     cullBackFaces,
     mode,
     projection,
   );
+};
+
+TerrainMesh.prototype.updateExaggeration = function () {
+  this._octreeTrianglePicking._vertices = this.vertices;
+  this._octreeTrianglePicking.needsRebuild = true;
 };
 
 export default TerrainMesh;

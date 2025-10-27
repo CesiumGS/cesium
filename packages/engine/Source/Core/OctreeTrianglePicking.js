@@ -5,6 +5,8 @@ import IntersectionTests from "./IntersectionTests.js";
 import Matrix4 from "./Matrix4.js";
 import Ray from "./Ray.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
+import Ellipsoid from "./Ellipsoid.js";
+import VerticalExaggeration from "./VerticalExaggeration.js";
 
 /**
  * Create an octree object for the main thread for testing intersection
@@ -16,16 +18,61 @@ function OctreeTrianglePicking(
   vertices,
   indices,
   encoding,
-  orientedBoundingBox,
+  minimumHeight,
+  maximumHeight,
+  rectangle,
 ) {
   this._vertices = vertices;
   this._indices = indices;
   this._encoding = encoding;
-  this._transform =
-    OrientedBoundingBox.computeTransformation(orientedBoundingBox);
-  this._inverseTransform = Matrix4.inverse(this._transform, new Matrix4());
+  this._minimumHeight = minimumHeight;
+  this._maximumHeight = maximumHeight;
+  this._rectangle = rectangle;
+  this._transform = undefined;
+  this._inverseTransform = undefined;
   this._nodes = undefined;
+  this._needsRebuild = true;
 }
+
+const scratchOrientedBoundingBox = new OrientedBoundingBox();
+
+function computeTransform(encoding, rectangle, minHeight, maxHeight) {
+  const exaggeration = encoding.exaggeration;
+  const exaggerationRelativeHeight = encoding.exaggerationRelativeHeight;
+
+  const exaggeratedMinHeight = VerticalExaggeration.getHeight(
+    minHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const exaggeratedMaxHeight = VerticalExaggeration.getHeight(
+    maxHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const obb = OrientedBoundingBox.fromRectangle(
+    rectangle,
+    exaggeratedMinHeight,
+    exaggeratedMaxHeight,
+    Ellipsoid.default,
+    scratchOrientedBoundingBox,
+  );
+
+  return OrientedBoundingBox.computeTransformation(obb);
+}
+
+Object.defineProperties(OctreeTrianglePicking.prototype, {
+  needsRebuild: {
+    get: function () {
+      return this._needsRebuild;
+    },
+    set: function (value) {
+      this._needsRebuild = value;
+    },
+  },
+});
 
 const scratchTransformedRay = new Ray();
 const scratchTrianglePoints = [
@@ -41,8 +88,15 @@ const scratchTrianglePoints = [
  * @returns {Cartesian3} result
  */
 OctreeTrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces) {
-  // Lazily create the octree on first use
-  if (!defined(this._nodes)) {
+  // Lazily create the octree
+  if (this._needsRebuild) {
+    this._transform = computeTransform(
+      this._encoding,
+      this._rectangle,
+      this._minimumHeight,
+      this._maximumHeight,
+    );
+    this._inverseTransform = Matrix4.inverse(this._transform, new Matrix4());
     this._nodes = createOctree(this);
   }
 
@@ -163,9 +217,9 @@ function getOrCreateNode(childIdx = 0, parentNode) {
   }
 
   // Use bitwise operations to get child x,y,z from child index
-  const x = parentNode ? parentNode.x : 0;
-  const y = parentNode ? parentNode.y : 0;
-  const z = parentNode ? parentNode.z : 0;
+  const x = parentNode?.x ?? 0;
+  const y = parentNode?.y ?? 0;
+  const z = parentNode?.z ?? 0;
   const childX = x * 2 + (childIdx & 1);
   const childY = y * 2 + ((childIdx >> 1) & 1);
   const childZ = z * 2 + ((childIdx >> 2) & 1);
@@ -380,6 +434,8 @@ function createOctree(octreeTrianglePicking) {
       triIdx,
     );
   }
+
+  octreeTrianglePicking.needsRebuild = false;
   return nodes;
 }
 

@@ -411,8 +411,10 @@ GlobeSurfaceTile.prototype.updateExaggeration = function (
     encoding.exaggeration !== exaggeration;
   const encodingRelativeHeightChanged =
     encoding.exaggerationRelativeHeight !== exaggerationRelativeHeight;
+  const exaggerationChanged =
+    encodingExaggerationScaleChanged || encodingRelativeHeightChanged;
 
-  if (encodingExaggerationScaleChanged || encodingRelativeHeightChanged) {
+  if (exaggerationChanged) {
     // Turning exaggeration scale on/off requires adding or removing geodetic surface normals
     // Relative height only translates, so it has no effect on normals
     if (encodingExaggerationScaleChanged) {
@@ -438,6 +440,8 @@ GlobeSurfaceTile.prototype.updateExaggeration = function (
         data.level = -1;
       }
     }
+
+    mesh.updateExaggeration();
   }
 };
 
