@@ -39,7 +39,7 @@ void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
     }
 
     vec4 finalColor = color;
-#ifdef HAS_EDGE_COLOR_OVERRIDE
+#ifdef HAS_EDGE_COLOR_ATTRIBUTE
     if (v_edgeColor.a >= 0.0) {
         finalColor = v_edgeColor;
     }
