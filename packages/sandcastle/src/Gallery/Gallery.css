@@ -126,11 +126,9 @@
     padding: var(--stratakit-space-x2);
     gap: var(--stratakit-space-x2);
     overflow-y: auto;
-    &:focus-visible {
-      /* small margin to allow focus highlight to be visible all the way around */
-      margin: 0 3px 4px;
-      border-radius: var(--stratakit-ext-radius-xs);
-    }
+    /* small margin to allow focus highlight to be visible all the way around */
+    margin: 0 3px 4px;
+    border-radius: var(--stratakit-ext-radius-xs);
   }
 
   .empty-list div {

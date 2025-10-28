@@ -1148,6 +1148,26 @@ describe("Scene/LabelCollection", function () {
       });
 
       describe("Label", function () {
+        it("should update background billboard when updating label properties while label is hidden", async function () {
+          const label = labels.add({
+            text: "abc",
+            showBackground: true,
+          });
+
+          await allLabelsReady();
+          expect(labels._backgroundBillboardCollection.length).toEqual(1);
+
+          const backgroundBillboard = label._backgroundBillboard;
+          const { width } = backgroundBillboard;
+
+          label.show = false;
+          label.text = "abcde";
+          expect(labels._backgroundBillboardCollection.length).toEqual(1);
+
+          label.show = true;
+          scene.renderForSpecs();
+          expect(backgroundBillboard.width).toBeGreaterThan(width);
+        });
         it("can compute screen space position", function () {
           labels.clampToPixel = false;
           const label = labels.add({
@@ -2446,7 +2466,6 @@ describe("Scene/LabelCollection", function () {
           });
 
           expect(l._clampedPosition).toBeDefined();
-          expect(l._glyphs[0].billboard._clampedPosition).toBeDefined();
 
           l.heightReference = HeightReference.NONE;
           expect(l._clampedPosition).toBeUndefined();
@@ -2458,6 +2477,7 @@ describe("Scene/LabelCollection", function () {
             heightReference: HeightReference.CLAMP_TO_GROUND,
             text: "t",
             position: Cartesian3.fromDegrees(-72.0, 40.0),
+            showBackground: true,
           });
 
           await pollToPromise(() => {
@@ -2465,7 +2485,7 @@ describe("Scene/LabelCollection", function () {
             return labelsWithHeight.ready;
           });
 
-          const billboard = l._glyphs[0].billboard;
+          const billboard = l._backgroundBillboard;
           expect(billboard._removeCallbackFunc).toBeDefined();
           const spy = spyOn(billboard, "_removeCallbackFunc");
           labelsWithHeight.remove(l);

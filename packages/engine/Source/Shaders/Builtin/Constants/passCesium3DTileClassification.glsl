@@ -6,4 +6,4 @@
  *
  * @see czm_pass
  */
-const float czm_passCesium3DTileClassification = 5.0;
+const float czm_passCesium3DTileClassification = 6.0;

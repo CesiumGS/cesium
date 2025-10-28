@@ -920,7 +920,6 @@ describe(
         // Render without shadows
         scene.shadowMap.enabled = false;
         let unshadowedColor;
-        //eslint-disable-next-line no-loop-func
         renderAndCall(function (rgba) {
           unshadowedColor = rgba;
           expect(rgba).not.toEqual(backgroundColor);
@@ -928,7 +927,6 @@ describe(
 
         // Render with shadows
         scene.shadowMap.enabled = true;
-        //eslint-disable-next-line no-loop-func
         renderAndCall(function (rgba) {
           expect(rgba).not.toEqual(backgroundColor);
           expect(rgba).not.toEqual(unshadowedColor);
