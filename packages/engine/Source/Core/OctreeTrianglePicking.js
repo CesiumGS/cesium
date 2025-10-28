@@ -7,6 +7,7 @@ import Ray from "./Ray.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Ellipsoid from "./Ellipsoid.js";
 import VerticalExaggeration from "./VerticalExaggeration.js";
+import TaskProcessor from "./TaskProcessor.js";
 
 /**
  * Create an octree object for the main thread for testing intersection
@@ -33,14 +34,13 @@ function OctreeTrianglePicking(
   this._needsRebuild = true;
   // Octree can be 4 levels deep (0-3)
   this._maximumLevel = 3;
-
-  const rootNode = getOrCreateNode();
-  rootNode.intersectingTriangles = Array.from(
-    { length: indices.length / 3 },
-    (_, i) => i,
-  );
-  this._rootNode = rootNode;
+  this._rootNode = createNode();
 }
+
+const incrementallyBuildOctreeTaskProcessor = new TaskProcessor(
+  "incrementallyBuildOctree",
+  5,
+);
 
 const scratchOrientedBoundingBox = new OrientedBoundingBox();
 
@@ -106,6 +106,10 @@ OctreeTrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces) {
       this._maximumHeight,
     );
     this._inverseTransform = Matrix4.inverse(this._transform, new Matrix4());
+    const intersectingTriangles = new Uint32Array(this._indices.length / 3);
+    this._rootNode.intersectingTriangles = Uint32Array.from(
+      intersectingTriangles.keys(),
+    );
     this._rootNode.children.length = 0;
   }
 
@@ -151,65 +155,35 @@ function rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces) {
 
 const scratchAABBMin = new Cartesian3();
 const scratchAABBMax = new Cartesian3();
-const scratchNodeAABB = new AxisAlignedBoundingBox();
-const scratchTriangleAABB = new AxisAlignedBoundingBox();
 
 /**
  * @param {} node
  * @returns {@link AxisAlignedBoundingBox}
  */
-function createAABBFromOctreeNode(node) {
-  const sizeAtLevel = 1.0 / Math.pow(2, node.level);
+function createAABBForNode(x, y, z, level) {
+  const sizeAtLevel = 1.0 / Math.pow(2, level);
 
   const aabbMin = Cartesian3.fromElements(
-    node.x * sizeAtLevel - 0.5,
-    node.y * sizeAtLevel - 0.5,
-    node.z * sizeAtLevel - 0.5,
+    x * sizeAtLevel - 0.5,
+    y * sizeAtLevel - 0.5,
+    z * sizeAtLevel - 0.5,
     scratchAABBMin,
   );
 
   const aabbMax = Cartesian3.fromElements(
-    (node.x + 1) * sizeAtLevel - 0.5,
-    (node.y + 1) * sizeAtLevel - 0.5,
-    (node.z + 1) * sizeAtLevel - 0.5,
+    (x + 1) * sizeAtLevel - 0.5,
+    (y + 1) * sizeAtLevel - 0.5,
+    (z + 1) * sizeAtLevel - 0.5,
     scratchAABBMax,
   );
 
-  return AxisAlignedBoundingBox.fromCorners(aabbMin, aabbMax, scratchNodeAABB);
-}
-
-/**
- * @param {Number} triangleIdx starting index of the triangle corners in the array
- * @returns {AxisAlignedBoundingBox}
- */
-function createAABBFromTriangle(inverseTransform, trianglePoints) {
-  Matrix4.multiplyByPoint(
-    inverseTransform,
-    trianglePoints[0],
-    trianglePoints[0],
-  );
-  Matrix4.multiplyByPoint(
-    inverseTransform,
-    trianglePoints[1],
-    trianglePoints[1],
-  );
-  Matrix4.multiplyByPoint(
-    inverseTransform,
-    trianglePoints[2],
-    trianglePoints[2],
-  );
-
-  return AxisAlignedBoundingBox.fromPoints(trianglePoints, scratchTriangleAABB);
+  return AxisAlignedBoundingBox.fromCorners(aabbMin, aabbMax);
 }
 
 /**
  * Represents a node in the octree
  */
-function getOrCreateNode(childIdx = 0, parentNode) {
-  if (defined(parentNode) && defined(parentNode.children[childIdx])) {
-    return parentNode.children[childIdx];
-  }
-
+function createNode(childIdx = 0, parentNode) {
   // Use bitwise operations to get child x,y,z from child index
   const x = parentNode?.x ?? 0;
   const y = parentNode?.y ?? 0;
@@ -217,14 +191,17 @@ function getOrCreateNode(childIdx = 0, parentNode) {
   const childX = x * 2 + (childIdx & 1);
   const childY = y * 2 + ((childIdx >> 1) & 1);
   const childZ = z * 2 + ((childIdx >> 2) & 1);
+  const level = defined(parentNode) ? parentNode.level + 1 : 0;
 
   const node = {
-    level: defined(parentNode) ? parentNode.level + 1 : 0,
+    level: level,
+    aabb: createAABBForNode(childX, childY, childZ, level),
     x: childX,
     y: childY,
     z: childZ,
     intersectingTriangles: [],
     children: [],
+    buildingChildren: false,
   };
 
   if (defined(parentNode)) {
@@ -235,6 +212,9 @@ function getOrCreateNode(childIdx = 0, parentNode) {
 }
 
 const scratchIntersectionResult = { intersection: false, tMin: 0, tMax: 0 };
+const scratchRayIntervalX = { min: 0, max: 0 };
+const scratchRayIntervalY = { min: 0, max: 0 };
+const scratchRayIntervalZ = { min: 0, max: 0 };
 
 function doesRayIntersectAABB(ray, aabb) {
   const tx = getRayIntervalForAABB(
@@ -242,18 +222,21 @@ function doesRayIntersectAABB(ray, aabb) {
     ray.direction.x,
     aabb.minimum.x,
     aabb.maximum.x,
+    scratchRayIntervalX,
   );
   const ty = getRayIntervalForAABB(
     ray.origin.y,
     ray.direction.y,
     aabb.minimum.y,
     aabb.maximum.y,
+    scratchRayIntervalY,
   );
   const tz = getRayIntervalForAABB(
     ray.origin.z,
     ray.direction.z,
     aabb.minimum.z,
     aabb.maximum.z,
+    scratchRayIntervalZ,
   );
 
   const result = scratchIntersectionResult;
@@ -280,9 +263,7 @@ function doesRayIntersectAABB(ray, aabb) {
   return result;
 }
 
-const scratchRayInterval = { min: 0, max: 0 };
-function getRayIntervalForAABB(rayOrigin, rayDirection, min, max) {
-  const rayInterval = scratchRayInterval;
+function getRayIntervalForAABB(rayOrigin, rayDirection, min, max, rayInterval) {
   rayInterval.min = (min - rayOrigin) / rayDirection;
   rayInterval.max = (max - rayOrigin) / rayDirection;
   if (rayInterval.max < rayInterval.min) {
@@ -292,6 +273,34 @@ function getRayIntervalForAABB(rayOrigin, rayDirection, min, max) {
   }
 
   return rayInterval;
+}
+
+function packTriangleBuffers(
+  trianglePositionsBuffer,
+  triangleIndicesBuffer,
+  trianglePosition,
+  triangleIndex,
+  bufferIndex,
+) {
+  Cartesian3.pack(
+    trianglePosition[0],
+    trianglePositionsBuffer,
+    9 * bufferIndex,
+  );
+
+  Cartesian3.pack(
+    trianglePosition[1],
+    trianglePositionsBuffer,
+    9 * bufferIndex + 3,
+  );
+
+  Cartesian3.pack(
+    trianglePosition[2],
+    trianglePositionsBuffer,
+    9 * bufferIndex + 6,
+  );
+
+  triangleIndicesBuffer[bufferIndex] = triangleIndex;
 }
 
 function getClosestTriangleInNode(
@@ -304,8 +313,18 @@ function getClosestTriangleInNode(
   const encoding = octreeTrianglePicking._encoding;
   const indices = octreeTrianglePicking._indices;
   const vertices = octreeTrianglePicking._vertices;
+  const triangleCount = node.intersectingTriangles.length;
+  const isMaxLevel = node.level >= octreeTrianglePicking._maximumLevel;
+  const shouldBuildChildren = !isMaxLevel && !node.buildingChildren;
+  let trianglePositions;
+  let triangleIndices;
+  if (shouldBuildChildren) {
+    // If the tree can be built deeper, prepare buffers to store triangle data for child nodes
+    trianglePositions = new Float32Array(triangleCount * 9); // 3 vertices per triangle * 3 floats per vertex
+    triangleIndices = new Uint32Array(triangleCount);
+  }
 
-  for (let i = 0; i < node.intersectingTriangles.length; i++) {
+  for (let i = 0; i < triangleCount; i++) {
     const triIndex = node.intersectingTriangles[i];
     const v0 = encoding.getExaggeratedPosition(
       vertices,
@@ -325,22 +344,32 @@ function getClosestTriangleInNode(
 
     const triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
 
-    // Incrementally build up the octree (on each pick, to accelerate future picks).
-    addTriangleToNodeChildren(
-      octreeTrianglePicking,
-      node,
-      triIndex,
-      scratchTrianglePoints,
-    );
-
     if (triT !== invalidIntersection && triT < result) {
       result = triT;
     }
+
+    if (shouldBuildChildren) {
+      packTriangleBuffers(
+        trianglePositions,
+        triangleIndices,
+        scratchTrianglePoints,
+        triIndex,
+        i,
+      );
+    }
   }
 
-  // Triangles have been transferred to children - clear them out of this node
-  if (node.level < octreeTrianglePicking._maximumLevel) {
-    node.intersectingTriangles.length = 0;
+  if (shouldBuildChildren) {
+    for (let childIdx = 0; childIdx < 8; childIdx++) {
+      createNode(childIdx, node);
+    }
+
+    addTrianglesToChildrenNodes(
+      octreeTrianglePicking,
+      node,
+      triangleIndices,
+      trianglePositions,
+    );
   }
 
   return result;
@@ -359,10 +388,10 @@ function rayIntersectOctree(
   const intersections = [];
   while (queue.length) {
     const n = queue.pop();
-    const aabb = createAABBFromOctreeNode(n);
+    const aabb = n.aabb;
     const intersection = doesRayIntersectAABB(transformedRay, aabb);
     if (intersection.intersection) {
-      const isLeaf = !n.children.length;
+      const isLeaf = !n.children.length || n.buildingChildren;
       if (isLeaf) {
         intersections.push({
           node: n,
@@ -403,33 +432,58 @@ function rayIntersectOctree(
   return undefined;
 }
 
-function addTriangleToNodeChildren(
+async function addTrianglesToChildrenNodes(
   octreeTrianglePicking,
   node,
-  triangleIndex,
-  trianglePoints,
+  triangleIndices,
+  trianglePositions,
 ) {
-  if (node.level >= octreeTrianglePicking._maximumLevel) {
+  node.buildingChildren = true;
+
+  // Prepare data to be sent to a worker
+  const matrixArray = new Array(16);
+  Matrix4.pack(octreeTrianglePicking._inverseTransform, matrixArray, 0);
+  const inverseTransform = new Float64Array(matrixArray);
+
+  const aabbArray = new Float64Array(6 * 8); // 6 elements per AABB, 8 children
+  for (let i = 0; i < 8; i++) {
+    Cartesian3.pack(node.children[i].aabb.minimum, aabbArray, i * 6);
+    Cartesian3.pack(node.children[i].aabb.maximum, aabbArray, i * 6 + 3);
+  }
+
+  const parameters = {
+    aabbs: aabbArray,
+    inverseTransform: inverseTransform,
+    triangleIndices: triangleIndices,
+    trianglePositions: trianglePositions,
+  };
+
+  const transferableObjects = [
+    aabbArray.buffer,
+    inverseTransform.buffer,
+    triangleIndices.buffer,
+    trianglePositions.buffer,
+  ];
+
+  const incrementallyBuildOctreePromise =
+    incrementallyBuildOctreeTaskProcessor.scheduleTask(
+      parameters,
+      transferableObjects,
+    );
+
+  if (!defined(incrementallyBuildOctreePromise)) {
+    // Failed to schedule task, retry on next pick
+    node.buildingChildren = false;
     return;
   }
 
-  const triangleAABB = createAABBFromTriangle(
-    octreeTrianglePicking._inverseTransform,
-    trianglePoints,
-  );
+  const result = await incrementallyBuildOctreePromise;
+  result.intersectingTrianglesArrays.forEach((buffer, index) => {
+    node.children[index].intersectingTriangles = new Uint32Array(buffer);
+  });
 
-  for (let childIdx = 0; childIdx < 8; childIdx++) {
-    const childNode = getOrCreateNode(childIdx, node);
-    const childNodeAABB = createAABBFromOctreeNode(childNode);
-
-    const aabbsIntersect =
-      childNodeAABB.intersectAxisAlignedBoundingBox(triangleAABB);
-    if (!aabbsIntersect) {
-      continue;
-    }
-
-    childNode.intersectingTriangles.push(triangleIndex);
-  }
+  node.buildingChildren = false;
+  node.intersectingTriangles.length = 0; // Triangles have been moved to children
 }
 
 export default OctreeTrianglePicking;
