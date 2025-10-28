@@ -14,6 +14,8 @@ import {
   UrlTemplateImageryProvider,
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
+  Google2DImageryProvider,
+  Azure2DImageryProvider,
 } from "../../index.js";
 
 describe("Scene/IonImageryProvider", function () {
@@ -128,13 +130,13 @@ describe("Scene/IonImageryProvider", function () {
     await IonImageryProvider.fromAssetId(assetId, options);
     expect(endpointResource.fetchJson.calls.count()).toBe(1);
 
-    // Same as options but in a different order to verify cache is order independant.
+    // Same as options but in a different order to verify cache is order independent.
     const options2 = {
       accessToken: "token",
       server: "http://test.invalid",
     };
     await IonImageryProvider.fromAssetId(assetId, options2);
-    //Since the data is cached, fetchJson is not called again.
+    // Since the data is cached, fetchJson is not called again.
     expect(endpointResource.fetchJson.calls.count()).toBe(1);
   });
 
@@ -197,146 +199,151 @@ describe("Scene/IonImageryProvider", function () {
     expect(credit.showOnScreen).toEqual(!serverCredit.collapsible);
   });
 
-  async function testExternalImagery(type, options, ImageryClass) {
-    const provider = await createTestProviderAsync({
-      type: "IMAGERY",
-      externalType: type,
-      options: options,
-      attributions: [],
+  async function testExternalImagery(type, ImageryClass, options, beforeFn) {
+    it(`works with "${type}"`, async function () {
+      if (beforeFn) {
+        beforeFn();
+      }
+
+      const provider = await createTestProviderAsync({
+        type: "IMAGERY",
+        externalType: type,
+        options: options,
+        attributions: [],
+      });
+      expect(provider._imageryProvider).toBeInstanceOf(ImageryClass);
     });
-    expect(provider._imageryProvider).toBeInstanceOf(ImageryClass);
   }
 
-  it("createImageryProvider works with ARCGIS_MAPSERVER", function () {
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        deferred.resolve(
-          JSON.stringify({ imageUrl: "", imageUrlSubdomains: [], zoomMax: 0 }),
-        );
-      },
-    );
-    return testExternalImagery(
-      "ARCGIS_MAPSERVER",
-      { url: "http://test.invalid" },
-      ArcGisMapServerImageryProvider,
-    );
+  testExternalImagery(
+    "ARCGIS_MAPSERVER",
+    ArcGisMapServerImageryProvider,
+    { url: "http://test.invalid" },
+    () =>
+      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+        function (
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType,
+        ) {
+          deferred.resolve(
+            JSON.stringify({
+              imageUrl: "",
+              imageUrlSubdomains: [],
+              zoomMax: 0,
+            }),
+          );
+        },
+      ),
+  );
+
+  testExternalImagery(
+    "BING",
+    BingMapsImageryProvider,
+    { url: "http://test.invalid", key: "" },
+    () =>
+      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+        function (
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType,
+        ) {
+          deferred.resolve(
+            JSON.stringify({
+              resourceSets: [
+                {
+                  resources: [
+                    { imageUrl: "", imageUrlSubdomains: [], zoomMax: 0 },
+                  ],
+                },
+              ],
+            }),
+          );
+        },
+      ),
+  );
+
+  testExternalImagery(
+    "GOOGLE_EARTH",
+    GoogleEarthEnterpriseMapsProvider,
+    { url: "http://test.invalid", channel: 0 },
+    () =>
+      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+        function (
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType,
+        ) {
+          deferred.resolve(
+            JSON.stringify({ layers: [{ id: 0, version: "" }] }),
+          );
+        },
+      ),
+  );
+
+  testExternalImagery("MAPBOX", MapboxImageryProvider, {
+    accessToken: "test-token",
+    url: "http://test.invalid",
+    mapId: 1,
   });
 
-  it("createImageryProvider works with BING", function () {
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        deferred.resolve(
-          JSON.stringify({
-            resourceSets: [
-              {
-                resources: [
-                  { imageUrl: "", imageUrlSubdomains: [], zoomMax: 0 },
-                ],
-              },
-            ],
-          }),
-        );
-      },
-    );
-    return testExternalImagery(
-      "BING",
-      { url: "http://test.invalid", key: "" },
-      BingMapsImageryProvider,
-    );
+  testExternalImagery(
+    "SINGLE_TILE",
+    SingleTileImageryProvider,
+    { url: "http://test.invalid" },
+    () =>
+      spyOn(Resource._Implementations, "createImage").and.callFake(
+        function (request, crossOrigin, deferred) {
+          deferred.resolve({
+            height: 16,
+            width: 16,
+          });
+        },
+      ),
+  );
+
+  testExternalImagery("TMS", UrlTemplateImageryProvider, {
+    url: "http://test.invalid",
   });
 
-  it("createImageryProvider works with GOOGLE_EARTH", function () {
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        deferred.resolve(JSON.stringify({ layers: [{ id: 0, version: "" }] }));
-      },
-    );
-
-    return testExternalImagery(
-      "GOOGLE_EARTH",
-      { url: "http://test.invalid", channel: 0 },
-      GoogleEarthEnterpriseMapsProvider,
-    );
+  testExternalImagery("URL_TEMPLATE", UrlTemplateImageryProvider, {
+    url: "http://test.invalid",
   });
 
-  it("createImageryProvider works with MAPBOX", function () {
-    return testExternalImagery(
-      "MAPBOX",
-      { accessToken: "test-token", url: "http://test.invalid", mapId: 1 },
-      MapboxImageryProvider,
-    );
+  testExternalImagery("WMS", WebMapServiceImageryProvider, {
+    url: "http://test.invalid",
+    layers: [],
   });
 
-  it("createImageryProvider works with SINGLE_TILE", function () {
-    spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
-        deferred.resolve({
-          height: 16,
-          width: 16,
-        });
-      },
-    );
-
-    return testExternalImagery(
-      "SINGLE_TILE",
-      { url: "http://test.invalid" },
-      SingleTileImageryProvider,
-    );
+  testExternalImagery("WMTS", WebMapTileServiceImageryProvider, {
+    url: "http://test.invalid",
+    layer: "",
+    style: "",
+    tileMatrixSetID: 1,
   });
 
-  it("createImageryProvider works with TMS", function () {
-    return testExternalImagery(
-      "TMS",
-      { url: "http://test.invalid" },
-      UrlTemplateImageryProvider,
-    );
+  testExternalImagery("GOOGLE_2D_MAPS", Google2DImageryProvider, {
+    url: "http://test.invalid",
+    key: "",
+    session: "",
+    tileWidth: 256,
+    tileHeight: 256,
   });
 
-  it("createImageryProvider works with URL_TEMPLATE", function () {
-    return testExternalImagery(
-      "URL_TEMPLATE",
-      { url: "http://test.invalid" },
-      UrlTemplateImageryProvider,
-    );
-  });
-
-  it("createImageryProvider works with WMS", function () {
-    return testExternalImagery(
-      "WMS",
-      { url: "http://test.invalid", layers: [] },
-      WebMapServiceImageryProvider,
-    );
-  });
-
-  it("createImageryProvider works with WMTS", function () {
-    return testExternalImagery(
-      "WMTS",
-      { url: "http://test.invalid", layer: "", style: "", tileMatrixSetID: 1 },
-      WebMapTileServiceImageryProvider,
-    );
+  testExternalImagery("AZURE_MAPS", Azure2DImageryProvider, {
+    url: "http://test.invalid",
+    subscriptionKey: "",
   });
 });

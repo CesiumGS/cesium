@@ -8,6 +8,14 @@ import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
 
 /**
+ * A function that will be invoked when the access token is refreshed.
+ * @callback IonResourceRefreshCallback
+ * @param {IonResource} ionResource The root IonResource being refreshed.
+ * @param {object} endpoint The result of the Cesium ion asset endpoint service. This may be modified in place by the callback.
+ * @private
+ */
+
+/**
  * A {@link Resource} instance that encapsulates Cesium ion asset access.
  * This object is normally not instantiated directly, use {@link IonResource.fromAssetId}.
  *
@@ -16,7 +24,7 @@ import RuntimeError from "./RuntimeError.js";
  * @augments Resource
  *
  * @param {object} endpoint The result of the Cesium ion asset endpoint service.
- * @param {Resource} endpointResource The resource used to retrieve the endpoint.
+ * @param {Resource} endpointResource The original resource used to retrieve the endpoint.
  *
  * @see Ion
  * @see IonImageryProvider
@@ -36,12 +44,6 @@ function IonResource(endpoint, endpointResource) {
   if (!isExternal) {
     options = {
       url: endpoint.url,
-      retryAttempts: 1,
-      retryCallback: retryCallback,
-    };
-  } else if (["GOOGLE_2D_MAPS", "AZURE_MAPS"].includes(externalType)) {
-    options = {
-      url: endpoint.options.url,
       retryAttempts: 1,
       retryCallback: retryCallback,
     };
@@ -76,6 +78,13 @@ function IonResource(endpoint, endpointResource) {
   this._pendingPromise = undefined;
   this._credits = undefined;
   this._isExternal = isExternal;
+
+  /**
+   * A function that, if defined, will be invoked when the access token is refreshed.
+   * @private
+   * @type {IonResourceRefreshCallback|undefined}
+   */
+  this.refreshCallback = undefined;
 }
 
 if (defined(Object.create)) {
@@ -205,7 +214,7 @@ IonResource.prototype._makeRequest = function (options) {
     return Resource.prototype._makeRequest.call(this, options);
   }
 
-  addClientHeaders(options);
+  options.headers = addClientHeaders(options.headers);
   options.headers.Authorization = `Bearer ${this._ionEndpoint.accessToken}`;
 
   return Resource.prototype._makeRequest.call(this, options);
@@ -239,20 +248,26 @@ IonResource._createEndpointResource = function (assetId, options) {
     };
   }
 
-  addClientHeaders(resourceOptions);
+  resourceOptions.headers = addClientHeaders(resourceOptions.headers);
 
   return server.getDerivedResource(resourceOptions);
 };
 
-function addClientHeaders(options) {
-  if (!defined(options.headers)) {
-    options.headers = {};
-  }
-  options.headers["X-Cesium-Client"] = "CesiumJS";
+/**
+ * Adds CesiumJS client headers to the provided headers object.
+ * @private
+ * @param {object} [headers={}] The headers to modify.
+ * @returns {object} The modified headers.
+ */
+function addClientHeaders(headers = {}) {
+  headers["X-Cesium-Client"] = "CesiumJS";
+
   /* global CESIUM_VERSION */
   if (typeof CESIUM_VERSION !== "undefined") {
-    options.headers["X-Cesium-Client-Version"] = CESIUM_VERSION;
+    headers["X-Cesium-Client-Version"] = CESIUM_VERSION;
   }
+
+  return headers;
 }
 
 function retryCallback(that, error) {
@@ -280,20 +295,13 @@ function retryCallback(that, error) {
     ionRoot._pendingPromise = endpointResource
       .fetchJson()
       .then(function (newEndpoint) {
+        const refreshCallback = that.refreshCallback || ionRoot.refreshCallback;
+        if (defined(refreshCallback)) {
+          refreshCallback(ionRoot, newEndpoint);
+        }
+
         // Set the token for root resource so new derived resources automatically pick it up
         ionRoot._ionEndpoint = newEndpoint;
-        // Reset the session token for Google 2D imagery
-        if (newEndpoint.externalType === "GOOGLE_2D_MAPS") {
-          ionRoot.setQueryParameters({
-            session: newEndpoint.options.session,
-            key: newEndpoint.options.key,
-          });
-        }
-        if (newEndpoint.externalType === "AZURE_MAPS") {
-          ionRoot.setQueryParameters({
-            "subscription-key": newEndpoint.options["subscription-key"],
-          });
-        }
         return ionRoot._ionEndpoint;
       })
       .finally(function (newEndpoint) {

@@ -5,8 +5,9 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import IonResource from "../Core/IonResource.js";
 import Check from "../Core/Check.js";
-import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
+import { GOOGLE_2D_MAPS as createFromIonEndpoint } from "./IonImageryProviderFactory.js";
+import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 const trailingSlashRegex = /\/$/;
 
@@ -124,8 +125,6 @@ function Google2DImageryProvider(options) {
   // This will be defined for ion resources
   this._tileCredits = resource.credits;
   this._attributionsByLevel = undefined;
-  // Asynchronously request and populate _attributionsByLevel
-  this.getViewportCredits();
 }
 
 Object.defineProperties(Google2DImageryProvider.prototype, {
@@ -353,10 +352,6 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
     },
   );
 
-  const endpoint = await endpointResource.fetchJson();
-  const endpointOptions = { ...endpoint.options };
-  delete endpointOptions.url;
-
   const providerOptions = {
     language: options.language,
     region: options.region,
@@ -367,11 +362,15 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
     credit: options.credit,
   };
 
-  return new Google2DImageryProvider({
-    ...endpointOptions,
+  const endpoint = await endpointResource.fetchJson();
+  endpoint.options = {
+    ...endpoint.options,
     ...providerOptions,
-    url: new IonResource(endpoint, endpointResource),
-  });
+  };
+
+  const url = endpoint.options.url;
+  delete endpoint.options.url;
+  return createFromIonEndpoint(url, endpoint, endpointResource);
 };
 
 /**
@@ -485,7 +484,21 @@ Google2DImageryProvider.prototype.requestImage = function (
   level,
   request,
 ) {
-  return this._imageryProvider.requestImage(x, y, level, request);
+  const promise = this._imageryProvider.requestImage(x, y, level, request);
+
+  // If the requestImage call returns undefined, it couldn't be scheduled this frame. Make sure to return undefined so this can be handled upstream.
+  if (!defined(promise)) {
+    return undefined;
+  }
+
+  // Asynchronously request and populate _attributionsByLevel if it hasn't been already. We do this here so that the promise can be properly awaited.
+  if (promise && !defined(this._attributionsByLevel)) {
+    return Promise.all([promise, this.getViewportCredits()]).then(
+      (results) => results[0],
+    );
+  }
+
+  return promise;
 };
 
 /**
