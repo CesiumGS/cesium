@@ -66,11 +66,8 @@ function EntityCluster(options) {
   this._removeEventListener = undefined;
 
   this._clusterEvent = new Event();
-
-  this._declusteredEvent = new Event();
-  this._allProcessedEntities = [];
-  this._lastClusteredEntities = [];
-  this._lastDeclusteredEntities = [];
+  this._declusterEvent = new Event();
+  this._previouslyClusteredEntities = [];
 
   /**
    * Determines if entities in this collection will be shown.
@@ -132,10 +129,6 @@ function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
 function addNonClusteredItem(item, entityCluster) {
   item.clusterShow = true;
 
-  if (defined(item.id)) {
-    entityCluster._lastDeclusteredEntities.push(item.id);
-  }
-
   if (
     !defined(item._labelCollection) &&
     defined(item.id) &&
@@ -166,16 +159,7 @@ function addCluster(position, numPoints, ids, entityCluster) {
     cluster.point.position =
       position;
 
-  entityCluster._lastClusteredEntities =
-    entityCluster._lastClusteredEntities.concat(ids);
-
   entityCluster._clusterEvent.raiseEvent(ids, cluster);
-
-  entityCluster._declusteredEvent.raiseEvent({
-    clustered: ids,
-    declustered: entityCluster._lastDeclusteredEntities.slice(),
-    cluster: cluster,
-  });
 }
 
 function hasLabelIndex(entityCluster, entityId) {
@@ -225,10 +209,6 @@ function getScreenSpacePositions(
       continue;
     }
 
-    if (defined(item.id)) {
-      entityCluster._allProcessedEntities.push(item.id);
-    }
-
     points.push({
       index: i,
       collection: collection,
@@ -248,10 +228,6 @@ function createDeclutterCallback(entityCluster) {
       return;
     }
 
-    entityCluster._allProcessedEntities = [];
-    entityCluster._lastClusteredEntities = [];
-    entityCluster._lastDeclusteredEntities = [];
-
     const scene = entityCluster._scene;
 
     const labelCollection = entityCluster._labelCollection;
@@ -266,11 +242,6 @@ function createDeclutterCallback(entityCluster) {
         !entityCluster._clusterLabels &&
         !entityCluster._clusterPoints)
     ) {
-      entityCluster._declusteredEvent.raiseEvent({
-        clustered: [],
-        declustered: [],
-        cluster: null,
-      });
       return;
     }
 
@@ -516,18 +487,6 @@ function createDeclutterCallback(entityCluster) {
       }
     }
 
-    if (
-      entityCluster._lastClusteredEntities.length > 0 ||
-      entityCluster._lastDeclusteredEntities.length > 0
-    ) {
-      entityCluster._declusteredEvent.raiseEvent({
-        clustered: entityCluster._lastClusteredEntities.slice(),
-        declustered: entityCluster._lastDeclusteredEntities.slice(),
-        cluster: null,
-        allProcessed: entityCluster._allProcessedEntities.slice(),
-      });
-    }
-
     if (clusteredLabelCollection.length === 0) {
       clusteredLabelCollection.destroy();
       entityCluster._clusterLabelCollection = undefined;
@@ -543,8 +502,28 @@ function createDeclutterCallback(entityCluster) {
       entityCluster._clusterPointCollection = undefined;
     }
 
-    entityCluster._previousClusters = newClusters;
-    entityCluster._previousHeight = currentHeight;
+    const currentlyClusteredIds = [];
+
+    if (newClusters.length > 0 && defined(clusteredLabelCollection)) {
+      for (let c = 0; c < clusteredLabelCollection.length; ++c) {
+        const clusterLabel = clusteredLabelCollection.get(c);
+        if (defined(clusterLabel) && defined(clusterLabel.id)) {
+          currentlyClusteredIds.push(...clusterLabel.id);
+        }
+      }
+    }
+
+    const hasActiveClusters = currentlyClusteredIds.length > 0;
+    const hadPreviouslyClusters =
+      entityCluster._previouslyClusteredEntities.length > 0;
+
+    if (!hasActiveClusters && hadPreviouslyClusters) {
+      entityCluster._declusterEvent.raiseEvent(
+        entityCluster._previouslyClusteredEntities,
+      );
+    }
+
+    entityCluster._previouslyClusteredEntities = currentlyClusteredIds;
   };
 }
 
@@ -611,13 +590,13 @@ Object.defineProperties(EntityCluster.prototype, {
     },
   },
   /**
-   * Gets the event that will be raised when clustering is processed, including both clustered and declustered entities.
+   * Gets the event that will be raised when all entities have been declustered.
    * @memberof EntityCluster.prototype
-   * @type {Event}
+   * @type {Event<EntityCluster.declusterCallback>}
    */
-  declusteredEvent: {
+  declusterEvent: {
     get: function () {
-      return this._declusteredEvent;
+      return this._declusterEvent;
     },
   },
   /**
@@ -900,58 +879,6 @@ function disableCollectionClustering(collection) {
   }
 }
 
-function getVisibleEntitiesFromCollection(collection) {
-  if (!defined(collection)) {
-    return [];
-  }
-
-  const visibleEntities = [];
-  for (let i = 0; i < collection.length; i++) {
-    const item = collection.get(i);
-    if (defined(item.id) && item.show) {
-      visibleEntities.push(item.id);
-    }
-  }
-  return visibleEntities;
-}
-
-function handleDeclusteredEvent(entityCluster) {
-  if (entityCluster._declusteredEvent.numberOfListeners === 0) {
-    return;
-  }
-  const allVisibleEntities = [
-    ...getVisibleEntitiesFromCollection(entityCluster._labelCollection),
-    ...getVisibleEntitiesFromCollection(entityCluster._billboardCollection),
-    ...getVisibleEntitiesFromCollection(entityCluster._pointCollection),
-  ];
-
-  if (allVisibleEntities.length > 0) {
-    const uniqueEntities = Array.from(new Set(allVisibleEntities));
-
-    entityCluster._declusteredEvent.raiseEvent({
-      clustered: [],
-      declustered: uniqueEntities,
-      cluster: null,
-      allProcessed: uniqueEntities,
-    });
-
-    entityCluster._lastClusteredEntities = [];
-    entityCluster._lastDeclusteredEntities = uniqueEntities.slice();
-    entityCluster._allProcessedEntities = uniqueEntities.slice();
-  } else {
-    entityCluster._declusteredEvent.raiseEvent({
-      clustered: [],
-      declustered: [],
-      cluster: null,
-      allProcessed: [],
-    });
-
-    entityCluster._lastClusteredEntities = [];
-    entityCluster._lastDeclusteredEntities = [];
-    entityCluster._allProcessedEntities = [];
-  }
-}
-
 function updateEnable(entityCluster) {
   if (entityCluster.enabled) {
     return;
@@ -974,8 +901,6 @@ function updateEnable(entityCluster) {
   disableCollectionClustering(entityCluster._labelCollection);
   disableCollectionClustering(entityCluster._billboardCollection);
   disableCollectionClustering(entityCluster._pointCollection);
-
-  handleDeclusteredEvent(entityCluster);
 }
 
 /**
@@ -1100,40 +1025,13 @@ EntityCluster.prototype.destroy = function () {
 
   this._previousClusters = [];
   this._previousHeight = undefined;
+  this._previouslyClusteredEntities = [];
 
   this._enabledDirty = false;
   this._pixelRangeDirty = false;
   this._minimumClusterSizeDirty = false;
 
-  this._allProcessedEntities = [];
-  this._lastClusteredEntities = [];
-  this._lastDeclusteredEntities = [];
-
   return undefined;
-};
-
-/**
- * Returns the last set of clustered entities from the most recent clustering operation.
- * @returns {Entity[]} Array of entities that were clustered
- */
-EntityCluster.prototype.getLastClusteredEntities = function () {
-  return this._lastClusteredEntities.slice();
-};
-
-/**
- * Returns the last set of declustered entities from the most recent clustering operation.
- * @returns {Entity[]} Array of entities that were not clustered
- */
-EntityCluster.prototype.getLastDeclusteredEntities = function () {
-  return this._lastDeclusteredEntities.slice();
-};
-
-/**
- * Returns all entities that were processed in the most recent clustering operation.
- * @returns {Entity[]} Array of all processed entities
- */
-EntityCluster.prototype.getAllProcessedEntities = function () {
-  return this._allProcessedEntities.slice();
 };
 
 /**
@@ -1154,26 +1052,17 @@ EntityCluster.prototype.getAllProcessedEntities = function () {
  *     cluster.label.text = entities.length.toLocaleString();
  * });
  */
-
 /**
- * A event listener function for enhanced clustering information.
- * @callback EntityCluster.declusteredCallback
+ * A event listener function used when all entities have been declustered.
+ * @callback EntityCluster.declusterCallback
  *
- * @param {object} clusteringData An object containing clustering information.
- * @param {Entity[]} clusteringData.clustered An array of entities that were clustered.
- * @param {Entity[]} clusteringData.declustered An array of entities that were not clustered.
- * @param {object|null} clusteringData.cluster The cluster object (if this event is for a specific cluster) or null for summary events.
- * @param {Entity[]} [clusteringData.allProcessed] An array of all entities processed (only in summary events).
+ * @param {Entity[]} declusteredEntities An array of the entities that were in the last
+ * remaining clusters and are now displayed individually.
  *
  * @example
- * // Using the enhanced declusteredEvent to access both clustered and declustered entities
- * dataSource.clustering.declusteredEvent.addEventListener(function(data) {
- *     console.log('Clustered entities:', data.clustered.length);
- *     console.log('Declustered entities:', data.declustered.length);
- *     if (data.allProcessed) {
- *         console.log('Total processed entities:', data.allProcessed.length);
- *     }
+ * // Listen for decluster events
+ * dataSource.clustering.declusterEvent.addEventListener(function(entities) {
+ *     console.log('All clusters removed. Last entities declustered:', entities);
  * });
  */
-
 export default EntityCluster;
