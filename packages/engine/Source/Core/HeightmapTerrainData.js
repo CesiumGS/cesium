@@ -97,9 +97,9 @@ function HeightmapTerrainData(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.buffer", options.buffer);
-  Check.defined("options.width", options.width);
-  Check.defined("options.height", options.height);
+  Check.typeOf.object("options.buffer", options.buffer);
+  Check.typeOf.number("options.width", options.width);
+  Check.typeOf.number("options.height", options.height);
   //>>includeEnd('debug');
 
   this._buffer = options.buffer;

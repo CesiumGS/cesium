@@ -128,15 +128,14 @@ Object.defineProperties(Cesium3DTilesTerrainData.prototype, {
 });
 
 /**
- * Computes the terrain height at a specified longitude and latitude.
- * @function
+ * Returns the terrain height at a specified longitude and latitude, or undefined if the mesh is undefined.
  *
  * @param {Rectangle} rectangle The rectangle covered by this terrain data.
  * @param {number} longitude The longitude in radians.
  * @param {number} latitude The latitude in radians.
- * @returns {number|undefined} The terrain height at the specified position.  If the position
- *          is outside the rectangle, this method will extrapolate the height, which is likely to be wildly
- *          incorrect for positions far outside the rectangle.
+ * @returns {number|undefined} The terrain height at the specified position, or undefined if the mesh is undefined.
+ *          If the position is outside the rectangle, this method will extrapolate the height,
+ *          which is likely to be wildly incorrect for positions far outside the rectangle.
  */
 Cesium3DTilesTerrainData.prototype.interpolateHeight = function (
   rectangle,
@@ -157,7 +156,6 @@ Cesium3DTilesTerrainData.prototype.interpolateHeight = function (
  * {@link TerrainData#childTileMask}. The given child tile coordinates are assumed
  * to be one of the four children of this tile. If non-child tile coordinates are
  * given, the availability of the southeast child tile is returned.
- * @function
  *
  * @param {number} thisX The tile X coordinate of this (the parent) tile.
  * @param {number} thisY The tile Y coordinate of this (the parent) tile.
@@ -478,7 +476,6 @@ Cesium3DTilesTerrainData.prototype._upsampleSync = function (
  * terrain data. If this value is false, the data was obtained from some other source, such
  * as by downloading it from a remote server. This method should return true for instances
  * returned from a call to {@link Cesium3DTilesTerrainData#upsample}.
- * @function
  *
  * @returns {boolean} True if this instance was created by upsampling; otherwise, false.
  */
@@ -510,7 +507,6 @@ function Cesium3DTilesUpsampleTerrainData(options) {
 
 /**
  * Creates a {@link TerrainMesh} from this terrain data.
- * @function
  *
  * @private
  *
@@ -616,7 +612,6 @@ Cesium3DTilesUpsampleTerrainData.prototype._upsampleSync = function (
 
 /**
  * Computes the terrain height at a specified longitude and latitude.
- * @function
  *
  * @param {Rectangle} rectangle The rectangle covered by this terrain data.
  * @param {number} longitude The longitude in radians.
@@ -638,7 +633,6 @@ Cesium3DTilesUpsampleTerrainData.prototype.interpolateHeight = function (
  * terrain data. If this value is false, the data was obtained from some other source, such
  * as by downloading it from a remote server. This method should return true for instances
  * returned from a call to {@link TerrainData#upsample}.
- * @function
  *
  * @returns {boolean} True if this instance was created by upsampling; otherwise, false.
  */
@@ -652,7 +646,6 @@ Cesium3DTilesUpsampleTerrainData.prototype.wasCreatedByUpsampling =
  * {@link TerrainData#childTileMask}. The given child tile coordinates are assumed
  * to be one of the four children of this tile. If non-child tile coordinates are
  * given, the availability of the southeast child tile is returned.
- * @function
  *
  * @param {number} _thisX The tile X coordinate of this (the parent) tile.
  * @param {number} _thisY The tile Y coordinate of this (the parent) tile.

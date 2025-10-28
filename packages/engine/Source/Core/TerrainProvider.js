@@ -15,6 +15,7 @@ import CesiumMath from "./Math.js";
  * @see CesiumTerrainProvider
  * @see VRTheWorldTerrainProvider
  * @see GoogleEarthEnterpriseTerrainProvider
+ * @see Cesium3DTilesTerrainProvider
  */
 function TerrainProvider() {
   DeveloperError.throwInstantiationError();
@@ -301,6 +302,7 @@ TerrainProvider.getSkirtIndexCountWithFilledCorners = function (
 
 /**
  * Adds skirt indices.
+ * This does not add filled corners. Use {@link TerrainProvider.addSkirtIndicesWithFilledCorners} to add skirt indices with filled corners.
  * @private
  * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North.
  * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West.

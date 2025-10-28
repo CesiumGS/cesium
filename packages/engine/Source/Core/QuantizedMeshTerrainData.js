@@ -95,20 +95,23 @@ function QuantizedMeshTerrainData(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug)
-  Check.defined("options.quantizedVertices", options.quantizedVertices);
-  Check.defined("options.indices", options.indices);
-  Check.defined("options.minimumHeight", options.minimumHeight);
-  Check.defined("options.maximumHeight", options.maximumHeight);
-  Check.defined("options.boundingSphere", options.boundingSphere);
-  Check.defined("options.horizonOcclusionPoint", options.horizonOcclusionPoint);
-  Check.defined("options.westIndices", options.westIndices);
-  Check.defined("options.southIndices", options.southIndices);
-  Check.defined("options.eastIndices", options.eastIndices);
-  Check.defined("options.northIndices", options.northIndices);
-  Check.defined("options.westSkirtHeight", options.westSkirtHeight);
-  Check.defined("options.southSkirtHeight", options.southSkirtHeight);
-  Check.defined("options.eastSkirtHeight", options.eastSkirtHeight);
-  Check.defined("options.northSkirtHeight", options.northSkirtHeight);
+  Check.typeOf.object("options.quantizedVertices", options.quantizedVertices);
+  Check.typeOf.object("options.indices", options.indices);
+  Check.typeOf.number("options.minimumHeight", options.minimumHeight);
+  Check.typeOf.number("options.maximumHeight", options.maximumHeight);
+  Check.typeOf.object("options.boundingSphere", options.boundingSphere);
+  Check.typeOf.object(
+    "options.horizonOcclusionPoint",
+    options.horizonOcclusionPoint,
+  );
+  Check.typeOf.object("options.westIndices", options.westIndices);
+  Check.typeOf.object("options.southIndices", options.southIndices);
+  Check.typeOf.object("options.eastIndices", options.eastIndices);
+  Check.typeOf.object("options.northIndices", options.northIndices);
+  Check.typeOf.number("options.westSkirtHeight", options.westSkirtHeight);
+  Check.typeOf.number("options.southSkirtHeight", options.southSkirtHeight);
+  Check.typeOf.number("options.eastSkirtHeight", options.eastSkirtHeight);
+  Check.typeOf.number("options.northSkirtHeight", options.northSkirtHeight);
   //>>includeEnd('debug');
 
   this._quantizedVertices = options.quantizedVertices;
