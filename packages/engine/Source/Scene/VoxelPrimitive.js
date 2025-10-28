@@ -1455,16 +1455,26 @@ function updateVerticalExaggeration(primitive, frameState) {
     // Apply the exaggeration by stretching the height bounds
     const relativeHeight = frameState.verticalExaggerationRelativeHeight;
     const exaggeration = frameState.verticalExaggeration;
-    primitive._exaggeratedMinBounds.z =
-      (primitive._minBounds.z - relativeHeight) * exaggeration + relativeHeight;
-    primitive._exaggeratedMaxBounds.z =
-      (primitive._maxBounds.z - relativeHeight) * exaggeration + relativeHeight;
-    primitive._exaggeratedMinClippingBounds.z =
-      (primitive._minClippingBounds.z - relativeHeight) * exaggeration +
-      relativeHeight;
-    primitive._exaggeratedMaxClippingBounds.z =
-      (primitive._maxClippingBounds.z - relativeHeight) * exaggeration +
-      relativeHeight;
+    primitive._exaggeratedMinBounds.z = VerticalExaggeration.getHeight(
+      primitive._minBounds.z,
+      exaggeration,
+      relativeHeight,
+    );
+    primitive._exaggeratedMaxBounds.z = VerticalExaggeration.getHeight(
+      primitive._maxBounds.z,
+      exaggeration,
+      relativeHeight,
+    );
+    primitive._exaggeratedMinClippingBounds.z = VerticalExaggeration.getHeight(
+      primitive._minClippingBounds.z,
+      exaggeration,
+      relativeHeight,
+    );
+    primitive._exaggeratedMaxClippingBounds.z = VerticalExaggeration.getHeight(
+      primitive._maxClippingBounds.z,
+      exaggeration,
+      relativeHeight,
+    );
   } else {
     // Apply the exaggeration via the model matrix
     const exaggerationScale = Cartesian3.fromElements(
