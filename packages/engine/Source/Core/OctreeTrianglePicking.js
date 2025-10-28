@@ -483,7 +483,7 @@ async function addTrianglesToChildrenNodes(
   });
 
   node.buildingChildren = false;
-  node.intersectingTriangles.length = 0; // Triangles have been moved to children
+  node.intersectingTriangles = new Uint32Array(0);
 }
 
 export default OctreeTrianglePicking;
