@@ -30,8 +30,16 @@ function OctreeTrianglePicking(
   this._rectangle = rectangle;
   this._transform = undefined;
   this._inverseTransform = undefined;
-  this._nodes = undefined;
   this._needsRebuild = true;
+  // Octree can be 4 levels deep (0-3)
+  this._maximumLevel = 3;
+
+  const rootNode = getOrCreateNode();
+  rootNode.intersectingTriangles = Array.from(
+    { length: indices.length / 3 },
+    (_, i) => i,
+  );
+  this._rootNode = rootNode;
 }
 
 const scratchOrientedBoundingBox = new OrientedBoundingBox();
@@ -88,8 +96,9 @@ const scratchTrianglePoints = [
  * @returns {Cartesian3} result
  */
 OctreeTrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces) {
-  // Lazily create the octree
+  // Lazily (re)create the octree
   if (this._needsRebuild) {
+    this._needsRebuild = false;
     this._transform = computeTransform(
       this._encoding,
       this._rectangle,
@@ -97,7 +106,7 @@ OctreeTrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces) {
       this._maximumHeight,
     );
     this._inverseTransform = Matrix4.inverse(this._transform, new Matrix4());
-    this._nodes = createOctree(this);
+    this._rootNode.children.length = 0;
   }
 
   const invTransform = this._inverseTransform;
@@ -173,39 +182,24 @@ function createAABBFromOctreeNode(node) {
  * @param {Number} triangleIdx starting index of the triangle corners in the array
  * @returns {AxisAlignedBoundingBox}
  */
-function createAABBFromTriangle(octreeTrianglePicking, triangleIdx) {
-  const encoding = octreeTrianglePicking._encoding;
-  const vertices = octreeTrianglePicking._vertices;
-  const indices = octreeTrianglePicking._indices;
-  const inverseTransform = octreeTrianglePicking._inverseTransform;
-
-  const v0 = encoding.getExaggeratedPosition(
-    vertices,
-    indices[3 * triangleIdx],
-    scratchTrianglePoints[0],
+function createAABBFromTriangle(inverseTransform, trianglePoints) {
+  Matrix4.multiplyByPoint(
+    inverseTransform,
+    trianglePoints[0],
+    trianglePoints[0],
   );
-  const v1 = encoding.getExaggeratedPosition(
-    vertices,
-    indices[3 * triangleIdx + 1],
-    scratchTrianglePoints[1],
+  Matrix4.multiplyByPoint(
+    inverseTransform,
+    trianglePoints[1],
+    trianglePoints[1],
   );
-  const v2 = encoding.getExaggeratedPosition(
-    vertices,
-    indices[3 * triangleIdx + 2],
-    scratchTrianglePoints[2],
+  Matrix4.multiplyByPoint(
+    inverseTransform,
+    trianglePoints[2],
+    trianglePoints[2],
   );
 
-  Matrix4.multiplyByPoint(inverseTransform, v0, v0);
-  Matrix4.multiplyByPoint(inverseTransform, v1, v1);
-  Matrix4.multiplyByPoint(inverseTransform, v2, v2);
-
-  scratchTrianglePoints[0] = v0;
-  scratchTrianglePoints[1] = v1;
-  scratchTrianglePoints[2] = v2;
-  return AxisAlignedBoundingBox.fromPoints(
-    scratchTrianglePoints,
-    scratchTriangleAABB,
-  );
+  return AxisAlignedBoundingBox.fromPoints(trianglePoints, scratchTriangleAABB);
 }
 
 /**
@@ -234,7 +228,7 @@ function getOrCreateNode(childIdx = 0, parentNode) {
   };
 
   if (defined(parentNode)) {
-    parentNode.children.push(node);
+    parentNode.children[childIdx] = node;
   }
 
   return node;
@@ -311,7 +305,7 @@ function getClosestTriangleInNode(
   const indices = octreeTrianglePicking._indices;
   const vertices = octreeTrianglePicking._vertices;
 
-  for (let i = 0; i < (node.intersectingTriangles || []).length; i++) {
+  for (let i = 0; i < node.intersectingTriangles.length; i++) {
     const triIndex = node.intersectingTriangles[i];
     const v0 = encoding.getExaggeratedPosition(
       vertices,
@@ -331,10 +325,24 @@ function getClosestTriangleInNode(
 
     const triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
 
+    // Incrementally build up the octree (on each pick, to accelerate future picks).
+    addTriangleToNodeChildren(
+      octreeTrianglePicking,
+      node,
+      triIndex,
+      scratchTrianglePoints,
+    );
+
     if (triT !== invalidIntersection && triT < result) {
       result = triT;
     }
   }
+
+  // Triangles have been transferred to children - clear them out of this node
+  if (node.level < octreeTrianglePicking._maximumLevel) {
+    node.intersectingTriangles.length = 0;
+  }
+
   return result;
 }
 
@@ -347,7 +355,7 @@ function rayIntersectOctree(
   // from here: http://publications.lib.chalmers.se/records/fulltext/250170/250170.pdf
   // find all the nodes which intersect the ray
 
-  let queue = [octreeTrianglePicking._nodes[0]];
+  let queue = [octreeTrianglePicking._rootNode];
   const intersections = [];
   while (queue.length) {
     const n = queue.pop();
@@ -368,18 +376,18 @@ function rayIntersectOctree(
   }
 
   // sort each intersection node by tMin ascending
-  const sortedTests = intersections.sort(function (a, b) {
+  const sortedIntersections = intersections.sort(function (a, b) {
     return a.tMin - b.tMin;
   });
 
   let minT = Number.MAX_VALUE;
   // for each intersected node - test every triangle which falls in that node
-  for (let i = 0; i < sortedTests.length; i++) {
-    const test = sortedTests[i];
+  for (let i = 0; i < sortedIntersections.length; i++) {
+    const intersection = sortedIntersections[i];
     const intersectionResult = getClosestTriangleInNode(
       octreeTrianglePicking,
       ray,
-      test.node,
+      intersection.node,
       cullBackFaces,
     );
     minT = Math.min(intersectionResult, minT);
@@ -395,108 +403,33 @@ function rayIntersectOctree(
   return undefined;
 }
 
-function createOctree(octreeTrianglePicking) {
-  const rootNode = getOrCreateNode();
-  const nodes = [rootNode];
-  // We build a more spread out octree for smaller tiles because it'll be quicker
-  const maxLevels = 2;
-
-  // We optimize adding triangles into the octree by first checking if the previously used AABB fully
-  // contains the next triangle, rather than searching from the root node again. This is a good optimization for heightmap
-  // terrain where each triangle is usually very small (relative to octree size) and the triangles are in-order.
-  // For example:
-  //   * We insert triangle A into the octree.
-  //     it may be inserted into 1 or more nodes if it crosses a boundary,
-  //     but we'll keep track of the last node we inserted it into
-  //   * When we insert triangle B
-  //     we first check if it's fully contained within the last node that triangle A was also added to,
-  //     if it is, we insert it straight there and bail from searching the whole octree again
-  let lastMatchNode;
-  const triangleCount = octreeTrianglePicking._indices.length / 3;
-  for (let triIdx = 0; triIdx < triangleCount; triIdx++) {
-    if (lastMatchNode) {
-      const isTriangleContainedWithinLastMatchedNode = doesNodeContainTriangle(
-        octreeTrianglePicking,
-        lastMatchNode,
-        triIdx,
-      );
-      if (isTriangleContainedWithinLastMatchedNode) {
-        lastMatchNode.intersectingTriangles.push(triIdx);
-        continue;
-      } else {
-        lastMatchNode = null;
-      }
-    }
-    lastMatchNode = nodeAddTriangle(
-      octreeTrianglePicking,
-      maxLevels,
-      rootNode,
-      triIdx,
-    );
+function addTriangleToNodeChildren(
+  octreeTrianglePicking,
+  node,
+  triangleIndex,
+  trianglePoints,
+) {
+  if (node.level >= octreeTrianglePicking._maximumLevel) {
+    return;
   }
 
-  octreeTrianglePicking.needsRebuild = false;
-  return nodes;
-}
-
-function doesNodeContainTriangle(octreeTrianglePicking, node, triangleIdx) {
-  const nodeAABB = createAABBFromOctreeNode(node);
   const triangleAABB = createAABBFromTriangle(
-    octreeTrianglePicking,
-    triangleIdx,
+    octreeTrianglePicking._inverseTransform,
+    trianglePoints,
   );
-  return nodeAABB.containsAxisAlignedBoundingBox(triangleAABB);
-}
 
-function nodeAddTriangle(octreeTrianglePicking, maxLevels, node, triangleIdx) {
-  const nodeAABB = createAABBFromOctreeNode(node);
-  const triangleAABB = createAABBFromTriangle(
-    octreeTrianglePicking,
-    triangleIdx,
-  );
-  const aabbsIntersect = nodeAABB.intersectAxisAlignedBoundingBox(triangleAABB);
-  const isMaxLevel = node.level === maxLevels;
-
-  if (aabbsIntersect && isMaxLevel) {
-    // We've found a match and the deepest layer of the octree, insert our triangle and return information about the match
-    node.intersectingTriangles = node.intersectingTriangles || [];
-    node.intersectingTriangles.push(triangleIdx);
-    return node;
-  }
-
-  if (!aabbsIntersect) {
-    // No match, no need to search any deeper
-    return null;
-  }
-
-  if (isMaxLevel) {
-    // Deepest layer with no match
-    return null;
-  }
-
-  // recurse into each child trying to insert the triangle
-  let childMatchCount = 0;
-  let lastChildMatch = null;
   for (let childIdx = 0; childIdx < 8; childIdx++) {
     const childNode = getOrCreateNode(childIdx, node);
+    const childNodeAABB = createAABBFromOctreeNode(childNode);
 
-    const match = nodeAddTriangle(
-      octreeTrianglePicking,
-      maxLevels,
-      childNode,
-      triangleIdx,
-    );
-
-    if (match) {
-      childMatchCount += 1;
-      // Of all 8 children nodes, take the one (or last one) that intersects
-      // with the triangle. That's our best bet for full containment of the *next* triangle to add,
-      // assuming the triangles are in some kind of order (as they are for heightmap terrain).
-      lastChildMatch = match;
+    const aabbsIntersect =
+      childNodeAABB.intersectAxisAlignedBoundingBox(triangleAABB);
+    if (!aabbsIntersect) {
+      continue;
     }
-  }
 
-  return childMatchCount > 0 ? lastChildMatch : null;
+    childNode.intersectingTriangles.push(triangleIndex);
+  }
 }
 
 export default OctreeTrianglePicking;
