@@ -363,13 +363,13 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
   };
 
   const endpoint = await endpointResource.fetchJson();
+  const url = endpoint.options.url;
+  delete endpoint.options.url;
   endpoint.options = {
     ...endpoint.options,
     ...providerOptions,
   };
 
-  const url = endpoint.options.url;
-  delete endpoint.options.url;
   return createFromIonEndpoint(url, endpoint, endpointResource);
 };
 

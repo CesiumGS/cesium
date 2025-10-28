@@ -295,7 +295,7 @@ function retryCallback(that, error) {
     ionRoot._pendingPromise = endpointResource
       .fetchJson()
       .then(function (newEndpoint) {
-        const refreshCallback = that.refreshCallback || ionRoot.refreshCallback;
+        const refreshCallback = that.refreshCallback ?? ionRoot.refreshCallback;
         if (defined(refreshCallback)) {
           refreshCallback(ionRoot, newEndpoint);
         }
