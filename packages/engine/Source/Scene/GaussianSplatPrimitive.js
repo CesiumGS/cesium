@@ -812,10 +812,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
-  if (!defined(this._rootTransform)) {
-    this._rootTransform = tileset.root.computedTransform;
-  }
-
   if (!tileset.show || tileset._selectedTiles.length === 0) {
     return;
   }
