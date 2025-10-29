@@ -4522,6 +4522,16 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * Performs the same operation as Scene.pick but asynchonosly without blocking the main render thread.
  * Requires WebGL2 else using fallback.
  *
+ * @example
+ * // On mouse over, color the feature yellow.
+ * handler.setInputAction(function(movement) {
+ *     const feature = scene.pickAsync(movement.endPosition).then(function(feature) {
+ *        if (feature instanceof Cesium.Cesium3DTileFeature) {
+ *            feature.color = Cesium.Color.YELLOW;
+ *        }
+ *     });
+ * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+ *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
