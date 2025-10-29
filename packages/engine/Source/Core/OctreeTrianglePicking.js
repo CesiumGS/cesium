@@ -8,6 +8,9 @@ import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Ellipsoid from "./Ellipsoid.js";
 import VerticalExaggeration from "./VerticalExaggeration.js";
 import TaskProcessor from "./TaskProcessor.js";
+import Cartographic from "./Cartographic.js";
+import SceneMode from "../Scene/SceneMode.js";
+import Transforms from "./Transforms.js";
 
 /**
  * Create an octree object for the main thread for testing intersection
@@ -32,6 +35,7 @@ function OctreeTrianglePicking(
   this._transform = undefined;
   this._inverseTransform = undefined;
   this._needsRebuild = true;
+  this._lastSceneMode = SceneMode.SCENE3D;
   // Octree can be 4 levels deep (0-3)
   this._maximumLevel = 3;
   this._rootNode = createNode();
@@ -44,7 +48,14 @@ const incrementallyBuildOctreeTaskProcessor = new TaskProcessor(
 
 const scratchOrientedBoundingBox = new OrientedBoundingBox();
 
-function computeTransform(encoding, rectangle, minHeight, maxHeight) {
+function computeTransform(
+  encoding,
+  rectangle,
+  minHeight,
+  maxHeight,
+  mode,
+  projection,
+) {
   const exaggeration = encoding.exaggeration;
   const exaggerationRelativeHeight = encoding.exaggerationRelativeHeight;
 
@@ -68,7 +79,10 @@ function computeTransform(encoding, rectangle, minHeight, maxHeight) {
     scratchOrientedBoundingBox,
   );
 
-  return OrientedBoundingBox.computeTransformation(obb);
+  const transform = OrientedBoundingBox.computeTransformation(obb);
+  return mode === SceneMode.SCENE3D
+    ? transform
+    : Transforms.basisTo2D(projection, transform, transform);
 }
 
 Object.defineProperties(OctreeTrianglePicking.prototype, {
@@ -95,15 +109,30 @@ const scratchTrianglePoints = [
  * @param {Boolean} cullBackFaces
  * @returns {Cartesian3} result
  */
-OctreeTrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces) {
+OctreeTrianglePicking.prototype.rayIntersect = function (
+  ray,
+  cullBackFaces,
+  mode,
+  projection,
+) {
+  if (this._lastSceneMode !== mode) {
+    this._lastSceneMode = mode;
+    this._needsRebuild = true;
+  }
+
   // Lazily (re)create the octree
   if (this._needsRebuild) {
+    // PERFORMANCE_IDEA: warm-start the octree by building a level on a worker.
+    // This currently isn't feasible because you can only copy the vertex buffer to a worker (slow) or transfer ownership (can't do picking on main thread in meantime).
+    // SharedArrayBuffers could be used, but most environments do not support them.
     this._needsRebuild = false;
     this._transform = computeTransform(
       this._encoding,
       this._rectangle,
       this._minimumHeight,
       this._maximumHeight,
+      mode,
+      projection,
     );
     this._inverseTransform = Matrix4.inverse(this._transform, new Matrix4());
     const intersectingTriangles = new Uint32Array(this._indices.length / 3);
@@ -127,7 +156,14 @@ OctreeTrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces) {
     transformedRay.direction,
   );
 
-  return rayIntersectOctree(this, ray, transformedRay, cullBackFaces);
+  return rayIntersectOctree(
+    this,
+    ray,
+    transformedRay,
+    cullBackFaces,
+    mode,
+    projection,
+  );
 };
 
 const invalidIntersection = Number.MAX_VALUE;
@@ -303,11 +339,45 @@ function packTriangleBuffers(
   triangleIndicesBuffer[bufferIndex] = triangleIndex;
 }
 
+const scratchCartographic = new Cartographic();
+
+function getVertexPosition(
+  encoding,
+  mode,
+  projection,
+  vertices,
+  index,
+  result,
+) {
+  let position = encoding.getExaggeratedPosition(vertices, index, result);
+  if (mode === SceneMode.SCENE3D) {
+    return position;
+  }
+
+  const ellipsoid = projection.ellipsoid;
+  const positionCartographic = ellipsoid.cartesianToCartographic(
+    position,
+    scratchCartographic,
+  );
+  position = projection.project(positionCartographic, result);
+  // Swizzle because coordinate basis are different in 2D/Columbus View
+  position = Cartesian3.fromElements(
+    position.z,
+    position.x,
+    position.y,
+    result,
+  );
+
+  return position;
+}
+
 function getClosestTriangleInNode(
   octreeTrianglePicking,
   ray,
   node,
   cullBackFaces,
+  mode,
+  projection,
 ) {
   let result = Number.MAX_VALUE;
   const encoding = octreeTrianglePicking._encoding;
@@ -326,17 +396,26 @@ function getClosestTriangleInNode(
 
   for (let i = 0; i < triangleCount; i++) {
     const triIndex = node.intersectingTriangles[i];
-    const v0 = encoding.getExaggeratedPosition(
+    const v0 = getVertexPosition(
+      encoding,
+      mode,
+      projection,
       vertices,
       indices[3 * triIndex],
       scratchTrianglePoints[0],
     );
-    const v1 = encoding.getExaggeratedPosition(
+    const v1 = getVertexPosition(
+      encoding,
+      mode,
+      projection,
       vertices,
       indices[3 * triIndex + 1],
       scratchTrianglePoints[1],
     );
-    const v2 = encoding.getExaggeratedPosition(
+    const v2 = getVertexPosition(
+      encoding,
+      mode,
+      projection,
       vertices,
       indices[3 * triIndex + 2],
       scratchTrianglePoints[2],
@@ -365,7 +444,7 @@ function getClosestTriangleInNode(
     }
 
     addTrianglesToChildrenNodes(
-      octreeTrianglePicking,
+      octreeTrianglePicking._inverseTransform,
       node,
       triangleIndices,
       trianglePositions,
@@ -380,6 +459,8 @@ function rayIntersectOctree(
   ray,
   transformedRay,
   cullBackFaces,
+  mode,
+  projection,
 ) {
   // from here: http://publications.lib.chalmers.se/records/fulltext/250170/250170.pdf
   // find all the nodes which intersect the ray
@@ -418,6 +499,8 @@ function rayIntersectOctree(
       ray,
       intersection.node,
       cullBackFaces,
+      mode,
+      projection,
     );
     minT = Math.min(intersectionResult, minT);
     if (minT !== invalidIntersection) {
@@ -433,7 +516,7 @@ function rayIntersectOctree(
 }
 
 async function addTrianglesToChildrenNodes(
-  octreeTrianglePicking,
+  inverseTransform,
   node,
   triangleIndices,
   trianglePositions,
@@ -442,8 +525,8 @@ async function addTrianglesToChildrenNodes(
 
   // Prepare data to be sent to a worker
   const matrixArray = new Array(16);
-  Matrix4.pack(octreeTrianglePicking._inverseTransform, matrixArray, 0);
-  const inverseTransform = new Float64Array(matrixArray);
+  Matrix4.pack(inverseTransform, matrixArray, 0);
+  const inverseTransformPacked = new Float64Array(matrixArray);
 
   const aabbArray = new Float64Array(6 * 8); // 6 elements per AABB, 8 children
   for (let i = 0; i < 8; i++) {
@@ -453,14 +536,14 @@ async function addTrianglesToChildrenNodes(
 
   const parameters = {
     aabbs: aabbArray,
-    inverseTransform: inverseTransform,
+    inverseTransform: inverseTransformPacked,
     triangleIndices: triangleIndices,
     trianglePositions: trianglePositions,
   };
 
   const transferableObjects = [
     aabbArray.buffer,
-    inverseTransform.buffer,
+    inverseTransformPacked.buffer,
     triangleIndices.buffer,
     trianglePositions.buffer,
   ];
