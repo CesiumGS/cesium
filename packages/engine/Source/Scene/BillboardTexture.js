@@ -268,6 +268,11 @@ BillboardTexture.prototype.addImageSubRegion = async function (id, subRegion) {
     return;
   }
 
+  if (this._id !== id) {
+    // Another load was initiated and resolved resolved before this one. This operation is cancelled.
+    return;
+  }
+
   if (!defined(index) || index === -1) {
     this._loadState = BillboardLoadState.FAILED;
     this._index = -1;
