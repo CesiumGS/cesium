@@ -257,23 +257,16 @@ BillboardTexture.prototype.addImageSubRegion = async function (id, subRegion) {
   this._hasSubregion = true;
 
   const atlas = this._billboardCollection.textureAtlas;
-  let index = atlas.getImageSubRegion(id, subRegion);
-  if (!index) {
-    try {
-      this._loadState = BillboardLoadState.LOADING;
-      index = await atlas.addImageSubRegion(id, subRegion);
-    } catch (error) {
-      // There was an error loading the referenced image
-      this._loadState = BillboardLoadState.ERROR;
-      this._loadError = error;
-      return;
-    }
+  const index =
+    atlas.getImageSubRegion(id, subRegion) ??
+    (await this.loadImageSubRegion(id, subRegion));
 
-    if (this._id !== id) {
-      // Another load was initiated and resolved resolved before this one. This operation is cancelled.
-      return;
-    }
-    this._loadState = BillboardLoadState.LOADED;
+  if (this._id !== id) {
+    // Another load was initiated and resolved resolved before this one. This operation is cancelled.
+    return;
+  }
+  if (index && this._index === index) {
+    return;
   }
 
   if (!defined(index) || index === -1) {
@@ -290,6 +283,28 @@ BillboardTexture.prototype.addImageSubRegion = async function (id, subRegion) {
   this._index = index;
 
   this.dirty = true;
+};
+
+/**
+ * @see {TextureAtlas#addImageSubRegion}
+ * @private
+ * @param {string} id An identifier to detect whether the image already exists in the atlas.
+ * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
+ * @returns {Promise<number | undefined>}
+ */
+BillboardTexture.prototype.loadImageSubRegion = async function (id, subRegion) {
+  try {
+    const atlas = this._billboardCollection.textureAtlas;
+    this._loadState = BillboardLoadState.LOADING;
+    const index = await atlas.addImageSubRegion(id, subRegion);
+    this._loadState = BillboardLoadState.LOADED;
+    return index;
+  } catch (error) {
+    // There was an error loading the referenced image
+    this._loadState = BillboardLoadState.ERROR;
+    this._loadError = error;
+    return;
+  }
 };
 
 /**
