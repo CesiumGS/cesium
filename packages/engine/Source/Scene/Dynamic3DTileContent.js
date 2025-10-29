@@ -1,6 +1,5 @@
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Request from "../Core/Request.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
@@ -9,6 +8,7 @@ import finishContent from "./finishContent.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 import defer from "../Core/defer.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * A generic N-dimensional map, used internally for content lookups.
@@ -403,6 +403,33 @@ class LRUCache {
   }
 }
 
+// XXX_DYNAMIC Experiments for that tileset statistics handling...
+// eslint-disable-next-line no-unused-vars
+class RequestListener {
+  requestAttempted(request) {}
+  requestStarted(request) {}
+  requestCancelled(request) {}
+  requestCompleted(request) {}
+  requestFailed(request) {}
+}
+class LoggingRequestListener {
+  requestAttempted(request) {
+    console.log(`requestAttempted for ${request.url}`);
+  }
+  requestStarted(request) {
+    console.log(`requestStarted   for ${request.url}`);
+  }
+  requestCancelled(request) {
+    console.log(`requestCancelled for ${request.url}`);
+  }
+  requestCompleted(request) {
+    console.log(`requestCompleted for ${request.url}`);
+  }
+  requestFailed(request) {
+    console.log(`requestFailed    for ${request.url}`);
+  }
+}
+
 /**
  * A class serving as a convenience wrapper around a request for
  * a resource.
@@ -448,6 +475,19 @@ class RequestHandle {
      * @readonly
      */
     this._deferred = defer();
+
+    /**
+     * The listeners that will be informed about the request state
+     *
+     * @type {RequestListener[]}
+     * @readonly
+     */
+    this._requestListeners = [];
+  }
+
+  // XXX_DYNAMIC Experiments for that tileset statistics handling...
+  addRequestListener(requestListener) {
+    this._requestListeners.push(requestListener);
   }
 
   /**
@@ -503,9 +543,10 @@ class RequestHandle {
     // the next call to 'ensureRequested'.
     const requestPromise = resource.fetchArrayBuffer();
     if (!defined(requestPromise)) {
+      this._fireRequestAttempted();
       return;
     }
-
+    this._fireRequestStarted();
     this._requestPromise = requestPromise;
 
     // When the promise is fulfilled, resolve it with the array buffer
@@ -521,12 +562,15 @@ class RequestHandle {
         );
         this._requestPromise = undefined;
         this._deferred.reject(RequestState.CANCELLED);
+        this._fireRequestCancelled();
+        this._fireRequestAttempted();
         return;
       }
       console.log(
         `RequestHandle: Resource promise fulfilled for ${request.url}`,
       );
       this._deferred.resolve(arrayBuffer);
+      this._fireRequestCompleted();
     };
 
     // Only when there is a real error, reject the result promise with
@@ -541,9 +585,13 @@ class RequestHandle {
         );
         this._requestPromise = undefined;
         this._deferred.reject(RequestState.CANCELLED);
+        this._fireRequestCancelled();
+        this._fireRequestAttempted();
         return;
       }
       this._deferred.reject(error);
+      this._fireRequestFailed();
+      this._fireRequestAttempted();
     };
     requestPromise.then(onFulfilled, onRejected);
   }
@@ -583,6 +631,33 @@ class RequestHandle {
       this._request = undefined;
     }
     this._deferred.reject(RequestState.CANCELLED);
+  }
+
+  // XXX_DYNAMIC Experiments for that tileset statistics handling...
+  _fireRequestAttempted() {
+    for (const requestListener of this._requestListeners) {
+      requestListener.requestAttempted(this._request);
+    }
+  }
+  _fireRequestStarted() {
+    for (const requestListener of this._requestListeners) {
+      requestListener.requestStarted(this._request);
+    }
+  }
+  _fireRequestCancelled() {
+    for (const requestListener of this._requestListeners) {
+      requestListener.requestCancelled(this._request);
+    }
+  }
+  _fireRequestCompleted() {
+    for (const requestListener of this._requestListeners) {
+      requestListener.requestCompleted(this._request);
+    }
+  }
+  _fireRequestFailed() {
+    for (const requestListener of this._requestListeners) {
+      requestListener.requestFailed(this._request);
+    }
   }
 }
 
@@ -630,8 +705,28 @@ class ContentHandle {
    * JSON representation of the 'content' from the tileset JSON.
    */
   constructor(tile, baseResource, contentHeader) {
+    /**
+     * The tile that the content belongs to.
+     *
+     * This is only required for passing it through to 'finishContent'.
+     *
+     * @type {Cesium3DTile}
+     */
     this._tile = tile;
+
+    /**
+     * The base resource. The content resource will be created by
+     * calling getDerivedResource with the content URI in this.
+     *
+     * @type {Resource}
+     */
     this._baseResource = baseResource;
+
+    /**
+     * The JSON representation of the 'content' from the tileset JSON.
+     *
+     * @type {object}
+     */
     this._contentHeader = contentHeader;
 
     /**
@@ -760,6 +855,28 @@ class ContentHandle {
       url: uri,
     });
     const requestHandle = new RequestHandle(resource);
+
+    // Attach a listener that will update the tileset statistics
+    const tileset = this._tile.tileset;
+    requestHandle.addRequestListener(new LoggingRequestListener());
+    requestHandle.addRequestListener({
+      requestAttempted(request) {
+        tileset.statistics.numberOfAttemptedRequests++;
+      },
+      requestStarted(request) {
+        tileset.statistics.numberOfPendingRequests++;
+      },
+      requestCancelled(request) {
+        tileset.statistics.numberOfPendingRequests--;
+      },
+      requestCompleted(request) {
+        tileset.statistics.numberOfPendingRequests--;
+      },
+      requestFailed(request) {
+        tileset.statistics.numberOfPendingRequests--;
+      },
+    });
+
     this._requestHandle = requestHandle;
     const requestHandleResultPromise = requestHandle.getResultPromise();
 
@@ -880,6 +997,8 @@ class Dynamic3DTileContent {
    * @param {Resource} tilesetResource The tileset Resource
    * @param {object} contentJson The content JSON that contains the 'dynamicContents' array
    * @returns {Dynamic3DTileContent}
+   * @throws {DeveloperError} If the tileset does not contain the
+   * top-level dynamic content extension object.
    */
   static fromJson(tileset, tile, resource, contentJson) {
     const content = new Dynamic3DTileContent(
@@ -898,17 +1017,38 @@ class Dynamic3DTileContent {
    *
    * @constructor
    *
-   * @param {Cesium3DTileset} tileset The tileset this content belongs to
-   * @param {Cesium3DTile} tile The content this content belongs to
+   * @param {Cesium3DTileset} tileset The tileset that this content belongs to
+   * @param {Cesium3DTile} tile The tile that this content belongs to
    * @param {Resource} tilesetResource The resource that points to the tileset. This will be used to derive each inner content's resource.
    * @param {object} contentJson The content JSON that contains the 'dynamicContents' array
+   * @throws {DeveloperError} If the tileset does not contain the
+   * top-level dynamic content extension object.
    *
    * @private
    */
   constructor(tileset, tile, tilesetResource, contentJson) {
+    /**
+     * The tileset that this content belongs to.
+     *
+     * The 'dynamicContentPropertyProvider' of this tileset will be
+     * used to determine which contents are currently "active" in
+     * the "_activeContentUris" getter.
+     *
+     * @type {Cesium3DTileset}
+     * @readonly
+     */
     this._tileset = tileset;
+
+    /**
+     * The tile that this content belongs to.
+     *
+     * This is only required for the Cesium3DTileContent implementation,
+     * and for handing it on to "finishContent".
+     *
+     * @type {Cesium3DTile}
+     * @readonly
+     */
     this._tile = tile;
-    this._baseResource = tilesetResource;
 
     /**
      * The array of content objects.
@@ -918,7 +1058,8 @@ class Dynamic3DTileContent {
      * are used for selecting the "active" content at any
      * point in time.
      *
-     * @type {object[]} The dynamic contents array
+     * @type {object[]}
+     * @readonly
      */
     this._dynamicContents = contentJson.dynamicContents;
 
@@ -933,7 +1074,7 @@ class Dynamic3DTileContent {
      * @type {Map<string, ContentHandle>}
      * @readonly
      */
-    this._contentHandles = this._createContentHandles();
+    this._contentHandles = this._createContentHandles(tilesetResource);
 
     /**
      * The maximum number of content objects that should be kept
@@ -961,6 +1102,7 @@ class Dynamic3DTileContent {
      * trimToSize function accordingly.
      *
      * @type {LRUCache}
+     * @readonly
      */
     this._loadedContentHandles = new LRUCache(
       Number.POSITIVE_INFINITY,
@@ -981,6 +1123,7 @@ class Dynamic3DTileContent {
      * values (URIs) are the URIs of the contents that are currently active.
      *
      * @type {NDMap}
+     * @readonly
      */
     this._dynamicContentUriLookup = this._createDynamicContentUriLookup();
 
@@ -990,7 +1133,7 @@ class Dynamic3DTileContent {
      * It will be applied to all "active" contents in the 'update'
      * function.
      *
-     * @type {Cesium3DTileStyle}
+     * @type {Cesium3DTileStyle|undefined}
      */
     this._lastStyle = DYNAMIC_CONTENT_SHOW_STYLE;
   }
@@ -1021,17 +1164,18 @@ class Dynamic3DTileContent {
    * will be used for tracking the process of requesting and
    * creating the content objects.
    *
+   * @param {Resource} baseResource The base resource (from the tileset)
    * @returns {Map}
    */
-  _createContentHandles() {
+  _createContentHandles(baseResource) {
     const dynamicContents = this._dynamicContents;
 
     const contentHandles = new Map();
     for (let i = 0; i < dynamicContents.length; i++) {
       const contentHeader = dynamicContents[i];
       const contentHandle = new ContentHandle(
-        this._tile,
-        this._baseResource,
+        this.tile,
+        baseResource,
         contentHeader,
       );
       const uri = contentHeader.uri;
@@ -1046,12 +1190,17 @@ class Dynamic3DTileContent {
    * associated with these keys.
    *
    * @returns {NDMap} The mapping
+   * @throws {DeveloperError} If the tileset does not contain the
+   * top-level dynamic content extension object.
    */
   _createDynamicContentUriLookup() {
-    // XXX_DYNAMIC This assumes the presence and structure
-    // of the extension object. Add error handling here.
     const tileset = this.tileset;
     const topLevelExtensionObject = tileset.extensions["3DTILES_dynamic"];
+    if (!defined(topLevelExtensionObject)) {
+      throw new DeveloperError(
+        "Cannot create a Dynamic3DTileContent for a tileset that does not contain a top-level dynamic content extension object.",
+      );
+    }
     const dimensions = topLevelExtensionObject.dimensions;
     const dimensionNames = dimensions.map((d) => d.name);
 
@@ -1081,7 +1230,7 @@ class Dynamic3DTileContent {
    * @type {string[]} The active content URIs
    */
   get _activeContentUris() {
-    const tileset = this._tileset;
+    const tileset = this.tileset;
     let dynamicContentPropertyProvider = tileset.dynamicContentPropertyProvider;
 
     // XXX_DYNAMIC For testing
@@ -1158,6 +1307,17 @@ class Dynamic3DTileContent {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface. Checks if any of the inner contents have dirty featurePropertiesDirty.
+   *
+   * XXX_DYNAMIC: This is offered by each Cesium3DTileContent, with varying
+   * degrees of enthusiasm about how meaningful it is. It is only used in
+   * Cesium3DTilesetTraversal.selectTile, where it dertermines whether
+   * tiles go into the tileset._selectedTilesToStyle, which seems to be
+   * some sort of optimization attempt to only style "changed" tiles
+   * (and not all selected tiles). It's quickly getting convoluted from
+   * there. Some "styleDirty" flag seems to be important...
+   * TL;DR: Let's skip theoretical optimizations (otherwise: SHOW ME
+   * THE BENCHMARK!) - likely, this should just always return true
+   * or false, leaving optimizations to the applyStyle function.
    *
    * @type {boolean}
    */
@@ -1284,7 +1444,6 @@ class Dynamic3DTileContent {
    *
    * @type {string}
    * @readonly
-   * @private
    */
   get url() {
     return undefined;
@@ -1292,20 +1451,12 @@ class Dynamic3DTileContent {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
-   *
-   * Always returns <code>undefined</code>.  Instead call <code>metadata</code> for a specific inner content.
    */
   get metadata() {
     return undefined;
   }
   set metadata(value) {
-    ////>>includeStart('debug', pragmas.debug);
-    //throw new DeveloperError("This content cannot have metadata");
-    ////>>includeEnd('debug');
-    console.log(
-      "Assigning metadata to dynamic content - what should that even mean?",
-      value,
-    );
+    // Ignored
   }
 
   /**
@@ -1319,16 +1470,12 @@ class Dynamic3DTileContent {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
-   *
-   * Always returns <code>undefined</code>.  Instead call <code>group</code> for a specific inner content.
    */
   get group() {
     return undefined;
   }
   set group(value) {
-    //>>includeStart('debug', pragmas.debug);
-    throw new DeveloperError("This content cannot have group metadata");
-    //>>includeEnd('debug');
+    // Ignored
   }
 
   /**
@@ -1353,6 +1500,8 @@ class Dynamic3DTileContent {
    * Always returns <code>false</code>.  Instead call <code>hasProperty</code> for a specific inner content
    */
   hasProperty(batchId, name) {
+    // XXX_DYNAMIC Does it make sense to just iterate over
+    // the activeContents and check them...?
     return false;
   }
 
@@ -1362,6 +1511,8 @@ class Dynamic3DTileContent {
    * Always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a specific inner content
    */
   getFeature(batchId) {
+    // XXX_DYNAMIC Does it make sense to just iterate over
+    // the activeContents and check them...?
     return undefined;
   }
 
@@ -1369,12 +1520,8 @@ class Dynamic3DTileContent {
    * Part of the {@link Cesium3DTileContent} interface.
    */
   applyDebugSettings(enabled, color) {
-    // XXX_DYNAMIC This has to store the last state, probably,
-    // and assign it in "update" to all contents that became active
-    const allContents = this._allContents;
-    for (const content of allContents) {
-      content.applyDebugSettings(enabled, color);
-    }
+    this._lastDebugSettingsEnabled = enabled;
+    this._lastDebugSettingsColor = color;
   }
 
   /**
@@ -1382,10 +1529,6 @@ class Dynamic3DTileContent {
    */
   applyStyle(style) {
     this._lastStyle = style;
-    const activeContents = this._activeContents;
-    for (const activeContent of activeContents) {
-      activeContent.applyStyle(style);
-    }
   }
 
   /**
@@ -1417,6 +1560,17 @@ class Dynamic3DTileContent {
       activeContent.applyStyle(this._lastStyle);
     }
 
+    // Assign debug settings to all active contents
+    for (const activeContent of activeContents) {
+      // The applyDebugSettings call will override any/ style color
+      // that was previously set. I'm not gonna sort this out.
+      if (this._lastDebugSettingsEnabled) {
+        activeContent.applyDebugSettings(
+          this._lastDebugSettingsEnabled,
+          this._lastDebugSettingsColor,
+        );
+      }
+    }
     this._unloadOldContent();
   }
 
@@ -1457,23 +1611,6 @@ class Dynamic3DTileContent {
     // '_loadedContentHandleEvicted' for the least recently
     // used content handles.
     loadedContentHandles.trimToSize(this._loadedContentHandlesMaxSize);
-  }
-
-  // XXX_DYNAMIC Unused right now...
-  /**
-   * Computes the difference of the given iterables.
-   *
-   * This will return a set containing all elements from the
-   * first iterable, omitting the ones from the second iterable.
-   *
-   * @param {Iterable} iterable0 The base set
-   * @param {Iterable} iterable1 The set to remove
-   * @returns {Iterable} The difference
-   */
-  static _difference(iterable0, iterable1) {
-    const difference = new Set(iterable0);
-    iterable1.forEach((e) => difference.delete(e));
-    return difference;
   }
 
   /**
