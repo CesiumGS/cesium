@@ -5,6 +5,9 @@ import {
   BufferUsage,
   Context,
   ContextLimits,
+  ClearCommand,
+  PixelFormat,
+  PixelDatatype,
 } from "../../index.js";
 
 import createContext from "../../../../Specs/createContext.js";
@@ -339,6 +342,65 @@ describe(
         });
         expect(c2._webgl2).toBe(true);
       }
+    });
+
+    it("readPixels", function () {
+      if (webglStub) {
+        return;
+      }
+      const c = createContext();
+      const command = new ClearCommand({
+        color: Color.WHITE,
+      });
+      command.execute(c);
+      const pixels = c.readPixels();
+      expect(pixels).toBeDefined();
+      expect(pixels).toEqual([255, 255, 255, 255]);
+      c.destroyForSpecs();
+    });
+
+    it("readPixels using PBO", function () {
+      if (webglStub) {
+        return;
+      }
+      if (!context.webgl2) {
+        return;
+      }
+      const c = createContext();
+      const command = new ClearCommand({
+        color: Color.WHITE,
+      });
+      command.execute(c);
+      const pixelBuffer = c.readPixels({
+        width: 1,
+        height: 1,
+        pbo: true,
+      });
+      const pixels = PixelFormat.createTypedArray(
+        PixelFormat.RGBA,
+        PixelDatatype.UNSIGNED_BYTE,
+        1,
+        1,
+      );
+      pixelBuffer.getBufferData(pixels);
+      pixelBuffer.destroy();
+      expect(pixels).toBeDefined();
+      expect(pixels).toEqual([255, 255, 255, 255]);
+      c.destroyForSpecs();
+    });
+
+    it(`readPixels using PBO throws without WebGL 2`, function () {
+      if (webglStub) {
+        return;
+      }
+      if (context.webgl2) {
+        return;
+      }
+      expect(function () {
+        context.readPixels({
+          pbo: true,
+        });
+      }).toThrowDeveloperError();
     });
   },
   "WebGL",
