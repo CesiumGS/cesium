@@ -88,7 +88,7 @@ async function createGooglePhotorealistic3DTileset(apiOptions, tilesetOptions) {
   }
 
   const resource = new Resource({
-    url: `${GoogleMaps.mapTilesApiEndpoint}3dtiles/root.json`,
+    url: `${GoogleMaps.mapTilesApiEndpoint}v1/3dtiles/root.json`,
     queryParameters: {
       key: key,
     },

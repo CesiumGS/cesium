@@ -6,8 +6,8 @@ import Frozen from "./Frozen.js";
  *
  * @function
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
  * @returns {Promise<CesiumTerrainProvider>} A promise that resolves to the created CesiumTerrainProvider
  *
  * @see Ion

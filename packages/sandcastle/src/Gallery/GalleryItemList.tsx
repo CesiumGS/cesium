@@ -8,7 +8,7 @@ import { useGalleryItemContext, type GalleryItem } from "./GalleryItemStore.ts";
 import GalleryItemCard from "./GalleryItemCard.tsx";
 
 /**
- * @typedef {Object} GalleryItemListProps
+ * @typedef {object} GalleryItemListProps
  * @prop {function} [onRunCode] A callback that gets called when a gallery item is opened.
  * @prop {function} [onOpenCode] A callback that gets called when the code editor is opened.
  */

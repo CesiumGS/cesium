@@ -13,6 +13,16 @@ export type ConsoleMessage = {
   id: string;
 };
 
+function ConsoleIcon({ type }: { type: ConsoleMessageType }) {
+  if (type === "error") {
+    return <Icon href={statusError} />;
+  }
+  if (type === "warn") {
+    return <Icon href={statusWarning} />;
+  }
+  return <div className="no-icon"></div>;
+}
+
 export function ConsoleMirror({
   logs,
   expanded: consoleExpanded,
@@ -63,12 +73,6 @@ export function ConsoleMirror({
           </div>
         )}
         {logs.map((log, i) => {
-          let icon = "";
-          if (log.type === "warn") {
-            icon = statusWarning;
-          } else if (log.type === "error") {
-            icon = statusError;
-          }
           return (
             <div
               key={i}
@@ -77,10 +81,9 @@ export function ConsoleMirror({
                 error: log.type === "error",
               })}
             >
-              <Icon href={icon} />
-              <pre className="content">
-                {i + 1}: {log.message}
-              </pre>
+              <ConsoleIcon type={log.type} />
+              <span className="message-index">{i + 1}:</span>
+              <pre className="content">{log.message}</pre>
             </div>
           );
         })}

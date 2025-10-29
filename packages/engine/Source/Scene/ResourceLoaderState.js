@@ -31,7 +31,7 @@ const ResourceLoaderState = {
   /**
    * The resource is processing. GPU resources are allocated in this state as needed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    * @private
    */

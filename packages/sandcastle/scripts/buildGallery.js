@@ -51,7 +51,7 @@ async function exists(path) {
  */
 
 /**
- * @typedef {Object} BuildGalleryOptions
+ * @typedef {object} BuildGalleryOptions
  * @property {string} [rootDirectory = ".."] The root directory to which all other paths are relative.
  * @property {string} [publicDirectory = "./public"] The static directory where the gallery list and search index will be written.
  * @property {string[]} [galleryFiles] The glob pattern(s) to find gallery yaml files.
@@ -299,7 +299,7 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
   let buildGalleryOptions;
 
   try {
-    const config = await import(configPath);
+    const config = await import(pathToFileURL(configPath).href);
     const { root, publicDir, gallery, sourceUrl } = config.default;
 
     // Paths are specified relative to the config file
