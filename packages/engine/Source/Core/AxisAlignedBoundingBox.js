@@ -247,29 +247,6 @@ AxisAlignedBoundingBox.intersectAxisAlignedBoundingBox = function (box, other) {
 };
 
 /**
- * Determines whether one axis aligned bounding box contains another.
- *
- * @param {AxisAlignedBoundingBox} box The first box
- * @param {AxisAlignedBoundingBox} other The second box
- * @returns {boolean} <code>true</code> if the first box contains the second box; otherwise, <code>false</code>.
- */
-AxisAlignedBoundingBox.containsAxisAlignedBoundingBox = function (box, other) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("box", box);
-  Check.defined("other", other);
-  //>>includeEnd('debug');
-
-  return (
-    box.minimum.x <= other.minimum.x &&
-    box.maximum.x >= other.maximum.x &&
-    box.minimum.y <= other.minimum.y &&
-    box.maximum.y >= other.maximum.y &&
-    box.minimum.z <= other.minimum.z &&
-    box.maximum.z >= other.maximum.z
-  );
-};
-
-/**
  * Duplicates this AxisAlignedBoundingBox instance.
  *
  * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
@@ -302,18 +279,6 @@ AxisAlignedBoundingBox.prototype.intersectAxisAlignedBoundingBox = function (
   other,
 ) {
   return AxisAlignedBoundingBox.intersectAxisAlignedBoundingBox(this, other);
-};
-
-/**
- * Determines whether this axis aligned bounding box contains the other box.
- *
- * @param {AxisAlignedBoundingBox} other The other axis aligned bounding box.
- * @returns {boolean} <code>true</code> if this box contains the other box; otherwise, <code>false</code>.
- */
-AxisAlignedBoundingBox.prototype.containsAxisAlignedBoundingBox = function (
-  other,
-) {
-  return AxisAlignedBoundingBox.containsAxisAlignedBoundingBox(this, other);
 };
 
 /**

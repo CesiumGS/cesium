@@ -43,7 +43,6 @@ function OctreeTrianglePicking(
 
 const incrementallyBuildOctreeTaskProcessor = new TaskProcessor(
   "incrementallyBuildOctree",
-  5,
 );
 
 const scratchOrientedBoundingBox = new OrientedBoundingBox();
@@ -247,70 +246,6 @@ function createNode(childIdx = 0, parentNode) {
   return node;
 }
 
-const scratchIntersectionResult = { intersection: false, tMin: 0, tMax: 0 };
-const scratchRayIntervalX = { min: 0, max: 0 };
-const scratchRayIntervalY = { min: 0, max: 0 };
-const scratchRayIntervalZ = { min: 0, max: 0 };
-
-function doesRayIntersectAABB(ray, aabb) {
-  const tx = getRayIntervalForAABB(
-    ray.origin.x,
-    ray.direction.x,
-    aabb.minimum.x,
-    aabb.maximum.x,
-    scratchRayIntervalX,
-  );
-  const ty = getRayIntervalForAABB(
-    ray.origin.y,
-    ray.direction.y,
-    aabb.minimum.y,
-    aabb.maximum.y,
-    scratchRayIntervalY,
-  );
-  const tz = getRayIntervalForAABB(
-    ray.origin.z,
-    ray.direction.z,
-    aabb.minimum.z,
-    aabb.maximum.z,
-    scratchRayIntervalZ,
-  );
-
-  const result = scratchIntersectionResult;
-  result.tMin = tx.min > ty.min ? tx.min : ty.min; //Get Greatest Min
-  result.tMax = tx.max < ty.max ? tx.max : ty.max; //Get Smallest Max
-  result.intersection = false;
-
-  if (tx.min > ty.max || ty.min > tx.max) {
-    return result;
-  }
-
-  if (result.tMin > tz.max || tz.min > result.tMax) {
-    return result;
-  }
-
-  if (tz.min > result.tMin) {
-    result.tMin = tz.min;
-  }
-  if (tz.max < result.tMax) {
-    result.tMax = tz.max;
-  }
-
-  result.intersection = true;
-  return result;
-}
-
-function getRayIntervalForAABB(rayOrigin, rayDirection, min, max, rayInterval) {
-  rayInterval.min = (min - rayOrigin) / rayDirection;
-  rayInterval.max = (max - rayOrigin) / rayDirection;
-  if (rayInterval.max < rayInterval.min) {
-    const tmp = rayInterval.max;
-    rayInterval.max = rayInterval.min;
-    rayInterval.min = tmp;
-  }
-
-  return rayInterval;
-}
-
 function packTriangleBuffers(
   trianglePositionsBuffer,
   triangleIndicesBuffer,
@@ -470,14 +405,16 @@ function rayIntersectOctree(
   while (queue.length) {
     const n = queue.pop();
     const aabb = n.aabb;
-    const intersection = doesRayIntersectAABB(transformedRay, aabb);
-    if (intersection.intersection) {
+    const interval = IntersectionTests.rayAxisAlignedBoundingBox(
+      transformedRay,
+      aabb,
+    );
+    if (interval) {
       const isLeaf = !n.children.length || n.buildingChildren;
       if (isLeaf) {
         intersections.push({
           node: n,
-          tMin: intersection.tMin,
-          tMax: intersection.tMax,
+          interval: interval,
         });
       } else {
         queue = queue.concat(n.children);
@@ -485,9 +422,9 @@ function rayIntersectOctree(
     }
   }
 
-  // sort each intersection node by tMin ascending
+  // sort each intersection node by start ascending
   const sortedIntersections = intersections.sort(function (a, b) {
-    return a.tMin - b.tMin;
+    return a.interval.start - b.interval.start;
   });
 
   let minT = Number.MAX_VALUE;
