@@ -32,10 +32,8 @@ function OctreeTrianglePicking(
   this._minimumHeight = minimumHeight;
   this._maximumHeight = maximumHeight;
   this._rectangle = rectangle;
-  this._transform = undefined;
   this._inverseTransform = undefined;
   this._needsRebuild = true;
-  this._lastSceneMode = SceneMode.SCENE3D;
   // Octree can be 4 levels deep (0-3)
   this._maximumLevel = 3;
   this._rootNode = createNode();
@@ -46,6 +44,7 @@ const incrementallyBuildOctreeTaskProcessor = new TaskProcessor(
 );
 
 const scratchOrientedBoundingBox = new OrientedBoundingBox();
+const scratchTransform = new Matrix4();
 
 function computeTransform(
   encoding,
@@ -78,7 +77,10 @@ function computeTransform(
     scratchOrientedBoundingBox,
   );
 
-  const transform = OrientedBoundingBox.computeTransformation(obb);
+  const transform = OrientedBoundingBox.computeTransformation(
+    obb,
+    scratchTransform,
+  );
   return mode === SceneMode.SCENE3D
     ? transform
     : Transforms.basisTo2D(projection, transform, transform);
@@ -114,31 +116,9 @@ OctreeTrianglePicking.prototype.rayIntersect = function (
   mode,
   projection,
 ) {
-  if (this._lastSceneMode !== mode) {
-    this._lastSceneMode = mode;
-    this._needsRebuild = true;
-  }
-
   // Lazily (re)create the octree
   if (this._needsRebuild) {
-    // PERFORMANCE_IDEA: warm-start the octree by building a level on a worker.
-    // This currently isn't feasible because you can only copy the vertex buffer to a worker (slow) or transfer ownership (can't do picking on main thread in meantime).
-    // SharedArrayBuffers could be used, but most environments do not support them.
-    this._needsRebuild = false;
-    this._transform = computeTransform(
-      this._encoding,
-      this._rectangle,
-      this._minimumHeight,
-      this._maximumHeight,
-      mode,
-      projection,
-    );
-    this._inverseTransform = Matrix4.inverse(this._transform, new Matrix4());
-    const intersectingTriangles = new Uint32Array(this._indices.length / 3);
-    this._rootNode.intersectingTriangles = Uint32Array.from(
-      intersectingTriangles.keys(),
-    );
-    this._rootNode.children.length = 0;
+    reset(this, mode, projection);
   }
 
   const invTransform = this._inverseTransform;
@@ -165,27 +145,31 @@ OctreeTrianglePicking.prototype.rayIntersect = function (
   );
 };
 
-const invalidIntersection = Number.MAX_VALUE;
+function reset(octreeTrianglePicking, mode, projection) {
+  // PERFORMANCE_IDEA: warm-start the octree by building a level on a worker.
+  // This currently isn't feasible because you can only copy the vertex buffer to a worker (slow) or transfer ownership (can't do picking on main thread in meantime).
+  // SharedArrayBuffers could be used, but most environments do not support them.
+  octreeTrianglePicking._needsRebuild = false;
 
-/**
- * @param {Ray} ray
- * @param {Cartesian3} v0
- * @param {Cartesian3} v1
- * @param {Cartesian3} v2
- * @param {Boolean} cullBackFaces
- * @returns {Number} t
- * @private
- */
-function rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces) {
-  const t = IntersectionTests.rayTriangleParametric(
-    ray,
-    v0,
-    v1,
-    v2,
-    cullBackFaces,
+  const transform = computeTransform(
+    octreeTrianglePicking._encoding,
+    octreeTrianglePicking._rectangle,
+    octreeTrianglePicking._minimumHeight,
+    octreeTrianglePicking._maximumHeight,
+    mode,
+    projection,
   );
-  const valid = defined(t) && t >= 0.0;
-  return valid ? t : invalidIntersection;
+  octreeTrianglePicking._inverseTransform = Matrix4.inverse(
+    transform,
+    new Matrix4(),
+  );
+  const intersectingTriangles = new Uint32Array(
+    octreeTrianglePicking._indices.length / 3,
+  );
+  octreeTrianglePicking._rootNode.intersectingTriangles = Uint32Array.from(
+    intersectingTriangles.keys(),
+  );
+  octreeTrianglePicking._rootNode.children.length = 0;
 }
 
 const scratchAABBMin = new Cartesian3();
@@ -356,9 +340,15 @@ function getClosestTriangleInNode(
       scratchTrianglePoints[2],
     );
 
-    const triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
+    const triT = IntersectionTests.rayTriangleParametric(
+      ray,
+      v0,
+      v1,
+      v2,
+      cullBackFaces,
+    );
 
-    if (triT !== invalidIntersection && triT < result) {
+    if (defined(triT) && triT < result) {
       result = triT;
     }
 
@@ -440,12 +430,12 @@ function rayIntersectOctree(
       projection,
     );
     minT = Math.min(intersectionResult, minT);
-    if (minT !== invalidIntersection) {
+    if (minT !== Number.MAX_VALUE) {
       break;
     }
   }
 
-  if (minT !== invalidIntersection) {
+  if (minT !== Number.MAX_VALUE) {
     return Ray.getPoint(ray, minT);
   }
 

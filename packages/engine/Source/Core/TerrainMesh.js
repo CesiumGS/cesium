@@ -192,8 +192,17 @@ TerrainMesh.prototype.pickRay = function (
   );
 };
 
-TerrainMesh.prototype.updateExaggeration = function () {
+TerrainMesh.prototype.updateExaggeration = function (
+  exaggeration,
+  exaggerationRelativeHeight,
+) {
+  // The encoding stored on the TerrainMesh references the updated exaggeration values already. This is just used
+  // to trigger a rebuild on the octree.
   this._octreeTrianglePicking._vertices = this.vertices;
+  this._octreeTrianglePicking.needsRebuild = true;
+};
+
+TerrainMesh.prototype.updateSceneMode = function (mode) {
   this._octreeTrianglePicking.needsRebuild = true;
 };
 

@@ -439,8 +439,18 @@ GlobeSurfaceTile.prototype.updateExaggeration = function (
       }
     }
 
-    mesh.updateExaggeration();
+    mesh.updateExaggeration(exaggeration, exaggerationRelativeHeight);
   }
+};
+
+GlobeSurfaceTile.prototype.updateSceneMode = function (mode) {
+  const surfaceTile = this;
+  const mesh = surfaceTile.renderedMesh;
+  if (mesh === undefined) {
+    return;
+  }
+
+  mesh.updateSceneMode(mode);
 };
 
 function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
