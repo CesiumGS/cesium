@@ -3978,20 +3978,20 @@ Scene.prototype.updateHeight = function (
 
   let tilesetRemoveCallbacks = {};
   const createPrimitiveEventListener = (primitive) => {
-    if (
-      ignore3dTiles ||
-      primitive.isDestroyed() ||
-      !primitive.isCesium3DTileset
-    ) {
-      return;
-    }
+    // if (
+    //   ignore3dTiles ||
+    //   primitive.isDestroyed() ||
+    //   !primitive.isCesium3DTileset
+    // ) {
+    //   return;
+    // }
 
-    const tilesetRemoveCallback = primitive.updateHeight(
-      cartographic,
-      callbackWrapper,
-      ellipsoid,
-    );
-    tilesetRemoveCallbacks[primitive.id] = tilesetRemoveCallback;
+    // const tilesetRemoveCallback = primitive.updateHeight(
+    //   cartographic,
+    //   callbackWrapper,
+    //   ellipsoid,
+    // );
+    // tilesetRemoveCallbacks[primitive.id] = tilesetRemoveCallback;
   };
 
   if (!ignore3dTiles) {

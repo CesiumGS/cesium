@@ -53,11 +53,11 @@ function GeometryVisualizer(
   this._changedObjects = new AssociativeArray();
 
   const numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
-  this._outlineBatches = new Array(numberOfShadowModes * 2);
+  // this._outlineBatches = new Array(numberOfShadowModes * 2);
   this._closedColorBatches = new Array(numberOfShadowModes * 2);
-  this._closedMaterialBatches = new Array(numberOfShadowModes * 2);
-  this._openColorBatches = new Array(numberOfShadowModes * 2);
-  this._openMaterialBatches = new Array(numberOfShadowModes * 2);
+  // this._closedMaterialBatches = new Array(numberOfShadowModes * 2);
+  // this._openColorBatches = new Array(numberOfShadowModes * 2);
+  // this._openMaterialBatches = new Array(numberOfShadowModes * 2);
 
   const supportsMaterialsforEntitiesOnTerrain =
     Entity.supportsMaterialsforEntitiesOnTerrain(scene);
@@ -66,14 +66,15 @@ function GeometryVisualizer(
 
   let i;
   for (i = 0; i < numberOfShadowModes; ++i) {
-    this._outlineBatches[i] = new StaticOutlineGeometryBatch(
-      primitives,
-      scene,
-      i,
-      false,
-    );
-    this._outlineBatches[numberOfShadowModes + i] =
-      new StaticOutlineGeometryBatch(primitives, scene, i, true);
+
+    // this._outlineBatches[i] = new StaticOutlineGeometryBatch(
+    //   primitives,
+    //   scene,
+    //   i,
+    //   false,
+    // );
+    // this._outlineBatches[numberOfShadowModes + i] =
+    //   new StaticOutlineGeometryBatch(primitives, scene, i, true);
 
     this._closedColorBatches[i] = new StaticGeometryColorBatch(
       primitives,
@@ -93,87 +94,88 @@ function GeometryVisualizer(
         false,
       );
 
-    this._closedMaterialBatches[i] = new StaticGeometryPerMaterialBatch(
-      primitives,
-      MaterialAppearance,
-      undefined,
-      true,
-      i,
-      true,
-    );
-    this._closedMaterialBatches[numberOfShadowModes + i] =
-      new StaticGeometryPerMaterialBatch(
-        primitives,
-        MaterialAppearance,
-        undefined,
-        true,
-        i,
-        false,
-      );
+    // this._closedMaterialBatches[i] = new StaticGeometryPerMaterialBatch(
+    //   primitives,
+    //   MaterialAppearance,
+    //   undefined,
+    //   true,
+    //   i,
+    //   true,
+    // );
+    // this._closedMaterialBatches[numberOfShadowModes + i] =
+    //   new StaticGeometryPerMaterialBatch(
+    //     primitives,
+    //     MaterialAppearance,
+    //     undefined,
+    //     true,
+    //     i,
+    //     false,
+    //   );
 
-    this._openColorBatches[i] = new StaticGeometryColorBatch(
-      primitives,
-      PerInstanceColorAppearance,
-      undefined,
-      false,
-      i,
-      true,
-    );
-    this._openColorBatches[numberOfShadowModes + i] =
-      new StaticGeometryColorBatch(
-        primitives,
-        PerInstanceColorAppearance,
-        undefined,
-        false,
-        i,
-        false,
-      );
+    // this._openColorBatches[i] = new StaticGeometryColorBatch(
+    //   primitives,
+    //   PerInstanceColorAppearance,
+    //   undefined,
+    //   false,
+    //   i,
+    //   true,
+    // );
+    // this._openColorBatches[numberOfShadowModes + i] =
+    //   new StaticGeometryColorBatch(
+    //     primitives,
+    //     PerInstanceColorAppearance,
+    //     undefined,
+    //     false,
+    //     i,
+    //     false,
+    //   );
 
-    this._openMaterialBatches[i] = new StaticGeometryPerMaterialBatch(
-      primitives,
-      MaterialAppearance,
-      undefined,
-      false,
-      i,
-      true,
-    );
-    this._openMaterialBatches[numberOfShadowModes + i] =
-      new StaticGeometryPerMaterialBatch(
-        primitives,
-        MaterialAppearance,
-        undefined,
-        false,
-        i,
-        false,
-      );
+    // this._openMaterialBatches[i] = new StaticGeometryPerMaterialBatch(
+    //   primitives,
+    //   MaterialAppearance,
+    //   undefined,
+    //   false,
+    //   i,
+    //   true,
+    // );
+    // this._openMaterialBatches[numberOfShadowModes + i] =
+    //   new StaticGeometryPerMaterialBatch(
+    //     primitives,
+    //     MaterialAppearance,
+    //     undefined,
+    //     false,
+    //     i,
+    //     false,
+    //   );
   }
 
   const numberOfClassificationTypes =
     ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
   const groundColorBatches = new Array(numberOfClassificationTypes);
   const groundMaterialBatches = [];
-  if (supportsMaterialsforEntitiesOnTerrain) {
-    for (i = 0; i < numberOfClassificationTypes; ++i) {
-      groundMaterialBatches.push(
-        new StaticGroundGeometryPerMaterialBatch(
-          groundPrimitives,
-          i,
-          MaterialAppearance,
-        ),
-      );
-      groundColorBatches[i] = new StaticGroundGeometryColorBatch(
-        groundPrimitives,
-        i,
-      );
-    }
-  } else {
-    for (i = 0; i < numberOfClassificationTypes; ++i) {
-      groundColorBatches[i] = new StaticGroundGeometryColorBatch(
-        groundPrimitives,
-        i,
-      );
-    }
-  }
+
+  // if (supportsMaterialsforEntitiesOnTerrain) {
+  //   for (i = 0; i < numberOfClassificationTypes; ++i) {
+  //     groundMaterialBatches.push(
+  //       new StaticGroundGeometryPerMaterialBatch(
+  //         groundPrimitives,
+  //         i,
+  //         MaterialAppearance,
+  //       ),
+  //     );
+  //     groundColorBatches[i] = new StaticGroundGeometryColorBatch(
+  //       groundPrimitives,
+  //       i,
+  //     );
+  //   }
+  // } else {
+  //   for (i = 0; i < numberOfClassificationTypes; ++i) {
+  //     groundColorBatches[i] = new StaticGroundGeometryColorBatch(
+  //       groundPrimitives,
+  //       i,
+  //     );
+  //   }
+  // }
 
   this._groundColorBatches = groundColorBatches;
   this._groundMaterialBatches = groundMaterialBatches;
@@ -181,14 +183,15 @@ function GeometryVisualizer(
   this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
   this._batches = this._closedColorBatches;
+
   // this._batches = this._outlineBatches.concat(
-    // this._closedColorBatches,
-    // this._closedMaterialBatches,
-    // this._openColorBatches,
-    // this._openMaterialBatches,
-    // this._groundColorBatches,
-    // this._groundMaterialBatches,
-    // this._dynamicBatch,
+  //   this._closedColorBatches,
+  //   this._closedMaterialBatches,
+  //   this._openColorBatches,
+  //   this._openMaterialBatches,
+  //   this._groundColorBatches,
+  //   this._groundMaterialBatches,
+  //   this._dynamicBatch,
   // );
 
   this._subscriptions = new AssociativeArray();
