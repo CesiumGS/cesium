@@ -449,7 +449,7 @@ GaussianSplatPrimitive.transformTile = function (tile) {
 
   const toGlobal = Matrix4.multiply(
     tile.tileset.modelMatrix,
-    Matrix4.fromArray(rootTransform),
+    rootTransform,
     scratchMatrix4B,
   );
   const toLocal = Matrix4.inverse(toGlobal, scratchMatrix4C);
@@ -692,7 +692,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     const tileset = primitive._tileset;
     const modelMatrix = Matrix4.multiply(
       tileset.modelMatrix,
-      Matrix4.fromArray(tileset.root.transform),
+      tileset.root.transform,
       scratchMatrix4A,
     );
     const inverseModelRotation = Matrix4.getRotation(
@@ -773,7 +773,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   const modelMatrix = Matrix4.multiply(
     tileset.modelMatrix,
-    Matrix4.fromArray(primitive._rootTransform),
+    primitive._rootTransform,
     scratchMatrix4B,
   );
 
