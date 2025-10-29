@@ -275,6 +275,8 @@ function computePickingDrawingBufferRectangle(
  * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
  * @param {boolean} [async=false] Use async non GPU blocking picking. Requires WebGL2 else using fallback.
  * @returns {object[] | Promise<object[]>} List of objects containing the picked primitives.
+ *
+ * @exception {RuntimeError} Async Picking Request Timeout.
  */
 Picking.prototype.pick = function (
   scene,

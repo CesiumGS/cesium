@@ -191,7 +191,7 @@ PickFramebuffer.prototype.endAsync = async function (
     frameState.afterRender.push(
       createAsyncPick(frameState, sync, (signaled) => {
         if (!signaled) {
-          reject("Picking Request Timeout");
+          reject("Async Picking Request Timeout");
           return;
         }
         const pixels = PixelFormat.createTypedArray(

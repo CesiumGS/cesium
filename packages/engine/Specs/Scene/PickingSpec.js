@@ -22,6 +22,8 @@ import {
   Primitive,
   SceneMode,
   VoxelPrimitive,
+  Sync,
+  WebGLConstants,
 } from "../../index.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
@@ -260,6 +262,38 @@ describe(
 
           expect(actual).toBeDefined();
           expect(actual.primitive).toEqual(rectangle);
+        });
+
+        it("picks async throws timeout if too slow", async function () {
+          if (webglStub) {
+            return;
+          }
+          if (!scene.context.webgl2) {
+            return;
+          }
+          spyOn(Sync.prototype, "getStatus").and.callFake(function () {
+            return WebGLConstants.UNSIGNALED; // simulate never being signaled
+          });
+          const windowPosition = new Cartesian2(0, 0);
+
+          let ready = false;
+          let threw = false;
+          scene._picking
+            .pick(scene, windowPosition, undefined, undefined, 1, true)
+            .then((_result) => {
+              ready = true;
+            })
+            .catch((_error) => {
+              threw = true;
+            });
+
+          await pollToPromise(function () {
+            scene.renderForSpecs();
+            return ready || threw;
+          });
+
+          expect(threw).toBe(true);
+          expect(ready).toBe(false);
         });
       });
 
