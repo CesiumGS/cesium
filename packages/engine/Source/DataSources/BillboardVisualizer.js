@@ -41,7 +41,6 @@ function EntityData(entity) {
   this.entity = entity;
   this.billboard = undefined;
   this.textureValue = undefined;
-  this.subRegion = undefined;
 }
 
 /**
@@ -129,12 +128,10 @@ BillboardVisualizer.prototype.update = function (time) {
       billboard.id = entity;
       item.billboard = billboard;
       item.textureValue = undefined;
-      item.subRegion = undefined;
     }
 
     billboard.show = show;
-    const imageUpdated = item.textureValue !== textureValue;
-    if (imageUpdated) {
+    if (item.textureValue !== textureValue) {
       billboard.image = textureValue;
       item.textureValue = textureValue;
     }
@@ -235,14 +232,7 @@ BillboardVisualizer.prototype.update = function (time) {
       time,
       boundingRectangleScratch,
     );
-    const subRegionUpdated = !BoundingRectangle.equals(
-      subRegion,
-      item.subRegion,
-    );
-    if (subRegionUpdated) {
-      item.subRegion = BoundingRectangle.clone(subRegion, item.subRegion);
-    }
-    if (defined(subRegion) && (imageUpdated || subRegionUpdated)) {
+    if (defined(subRegion)) {
       billboard.setImageSubRegion(billboard.image, subRegion);
     }
   }

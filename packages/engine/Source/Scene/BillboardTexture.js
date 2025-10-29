@@ -253,24 +253,27 @@ BillboardTexture.prototype.loadImage = async function (id, image) {
  */
 BillboardTexture.prototype.addImageSubRegion = async function (id, subRegion) {
   this._id = id;
-  this._loadState = BillboardLoadState.LOADING;
   this._loadError = undefined;
   this._hasSubregion = true;
 
-  let index;
   const atlas = this._billboardCollection.textureAtlas;
-  try {
-    index = await atlas.addImageSubRegion(id, subRegion);
-  } catch (error) {
-    // There was an error loading the referenced image
-    this._loadState = BillboardLoadState.ERROR;
-    this._loadError = error;
-    return;
-  }
+  let index = atlas.getImageSubRegion(id, subRegion);
+  if (!index) {
+    try {
+      this._loadState = BillboardLoadState.LOADING;
+      index = await atlas.addImageSubRegion(id, subRegion);
+    } catch (error) {
+      // There was an error loading the referenced image
+      this._loadState = BillboardLoadState.ERROR;
+      this._loadError = error;
+      return;
+    }
 
-  if (this._id !== id) {
-    // Another load was initiated and resolved resolved before this one. This operation is cancelled.
-    return;
+    if (this._id !== id) {
+      // Another load was initiated and resolved resolved before this one. This operation is cancelled.
+      return;
+    }
+    this._loadState = BillboardLoadState.LOADED;
   }
 
   if (!defined(index) || index === -1) {
@@ -285,7 +288,6 @@ BillboardTexture.prototype.addImageSubRegion = async function (id, subRegion) {
   this._height = subRegion.height;
 
   this._index = index;
-  this._loadState = BillboardLoadState.LOADED;
 
   this.dirty = true;
 };
