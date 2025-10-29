@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.135 - 2025-11-01
+## 1.135 - 2025-11-03
 
 ### @cesium/engine
 
@@ -9,12 +9,21 @@
 - `scene.drillPick` now uses a breadth-first search strategy instead of depth-first. This may change which entities are picked when
   using large values of `width` and `height` when providing a `limit`, prioritizing entities closer to the camera.
 
+#### Additions :tada:
+
+- Added support for [EXT_mesh_primitive_edge_visibility](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension. [#12765](https://github.com/CesiumGS/cesium/issues/12765)
+
 #### Fixes :wrench:
 
+- Fixed parsing content bounding volumes contained in 3D Tiles 1.1 subtree files. [#12972](https://github.com/CesiumGS/cesium/pull/12972)
+- Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
 - Fix issues with label background when updating properties while `label.show` is `false`. [#12138](https://github.com/CesiumGS/cesium/issues/12138)
 - Improved performance of `scene.drillPick`. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
 - Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
 - Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
+- Improved performance of terrain Quadtree handling of custom data [#12907](https://github.com/CesiumGS/cesium/pull/12907)
+- Fixed picking of `GroundPrimitive` with multiple `PolygonGeometry` instances selecting the wrong instance. [#12978](https://github.com/CesiumGS/cesium/pull/12978)
+- Fixed a bug where the removal of draped imagery layers did not update the rendered state [#12923](https://github.com/CesiumGS/cesium/issues/12923)
 
 ## 1.134.1 - 2025-10-10
 

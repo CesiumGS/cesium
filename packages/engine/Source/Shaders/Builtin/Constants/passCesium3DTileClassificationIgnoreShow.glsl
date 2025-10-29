@@ -6,4 +6,4 @@
  *
  * @see czm_pass
  */
-const float czm_passCesium3DTileClassificationIgnoreShow = 6.0;
+const float czm_passCesium3DTileClassificationIgnoreShow = 7.0;

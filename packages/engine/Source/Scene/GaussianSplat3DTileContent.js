@@ -236,7 +236,6 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    * @readonly
    */
   batchTableByteLength: {
-    // eslint-disable-next-line getter-return
     get: function () {
       return 0;
     },

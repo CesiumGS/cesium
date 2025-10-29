@@ -264,7 +264,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
 /**
  * Creates a provider for tiled imagery using the Cesium ion REST API.
  *
- * @param {Number} assetId  An ion imagery asset ID.
+ * @param {number} assetId  An ion imagery asset ID.
  * @param {IonImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<IonImageryProvider>} A promise which resolves to the created IonImageryProvider.
  *

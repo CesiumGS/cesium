@@ -795,7 +795,7 @@ const scratchCartesian = new Cartesian3();
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
- * @returns {Boolean}
+ * @returns {boolean}
  */
 function isPriorityDeferred(tile, frameState) {
   const { tileset, boundingSphere } = tile;
@@ -905,7 +905,7 @@ const scratchJulianDate = new JulianDate();
  *
  * @private
  * @param {FrameState} frameState
- * @param {Boolean} useParentGeometricError
+ * @param {boolean} useParentGeometricError
  * @param {number} progressiveResolutionHeightFraction
  */
 Cesium3DTile.prototype.getScreenSpaceError = function (
@@ -964,7 +964,7 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
- * @returns {Boolean}
+ * @returns {boolean}
  */
 function isPriorityProgressiveResolution(tileset, tile) {
   if (
