@@ -78,7 +78,9 @@ Buffer.createPixelBuffer = function (options) {
   //>>includeEnd('debug');
 
   if (!options.context._webgl2) {
-    throw new DeveloperError("A WebGL 2 context is required.");
+    throw new DeveloperError(
+      "A WebGL 2 context is required to create PixelBuffers.",
+    );
   }
 
   return new Buffer({

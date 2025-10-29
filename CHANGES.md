@@ -12,6 +12,7 @@
 #### Additions :tada:
 
 - Added support for [EXT_mesh_primitive_edge_visibility](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension. [#12765](https://github.com/CesiumGS/cesium/issues/12765)
+- Added `scene.pickAsync` for non GPU blocking picking using WebGL2 [#12983](https://github.com/CesiumGS/cesium/pull/12983)
 
 #### Fixes :wrench:
 
@@ -22,8 +23,8 @@
 - Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
 - Improved performance of terrain Quadtree handling of custom data [#12907](https://github.com/CesiumGS/cesium/pull/12907)
 - Fixed picking of `GroundPrimitive` with multiple `PolygonGeometry` instances selecting the wrong instance. [#12978](https://github.com/CesiumGS/cesium/pull/12978)
-- Fixed infinite recursion that would happen if user append post-render callbacks within existing callbacks
 - Fixed a bug where the removal of draped imagery layers did not update the rendered state [#12923](https://github.com/CesiumGS/cesium/issues/12923)
+- Fixed infinite recursion that would happen if user append post-render callbacks within existing callbacks [#12983](https://github.com/CesiumGS/cesium/pull/12983)
 
 ## 1.134.1 - 2025-10-10
 
