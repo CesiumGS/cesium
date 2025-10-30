@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
@@ -235,7 +236,7 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
     IonImageryProvider._endpointCache[cacheKey] = promise;
   }
 
-  const endpoint = await promise;
+  let endpoint = await promise;
   if (endpoint.type !== "IMAGERY") {
     throw new RuntimeError(
       `Cesium ion asset ${assetId} is not an imagery asset.`,
@@ -244,7 +245,13 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
 
   const externalType = endpoint.externalType;
   let factory = IonImageryProviderFactory.defaultFactoryCallback;
+
+  // Make a copy before editing since this object reference is cached;
+  endpoint = clone(endpoint, true);
+  endpoint.options = endpoint.options ?? {};
   const url = endpoint.options?.url;
+  delete options.url;
+
   if (defined(externalType)) {
     factory = IonImageryProviderFactory[externalType];
 
@@ -253,10 +260,6 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
         `Unrecognized Cesium ion imagery type: ${externalType}`,
       );
     }
-
-    // Make a copy before editing since this object reference is cached;
-    const options = { ...endpoint.options };
-    delete options.url;
   }
 
   const imageryProvider = await factory(url, endpoint, endpointResource);

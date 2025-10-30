@@ -19,40 +19,43 @@ import {
 } from "../../index.js";
 
 describe("Scene/IonImageryProvider", function () {
-  async function createTestProviderAsync(endpointData) {
-    endpointData = endpointData ?? {
-      type: "IMAGERY",
-      url: "http://test.invalid/layer",
-      accessToken: "not_really_a_refresh_token",
-      attributions: [],
-    };
+  let defaultAssetId;
+  let defaultEndpoint;
+  let defaultConstructorOptions;
 
-    const assetId = 12335;
-    const options = {};
+  function setUpTestEndpoint({
+    assetId = defaultAssetId,
+    endpoint = defaultEndpoint,
+    constructorOptions = defaultConstructorOptions,
+  } = {}) {
     const endpointResource = IonResource._createEndpointResource(
       assetId,
-      options,
+      constructorOptions,
     );
+
     spyOn(IonResource, "_createEndpointResource").and.returnValue(
       endpointResource,
     );
 
     spyOn(endpointResource, "fetchJson").and.returnValue(
-      Promise.resolve(endpointData),
+      Promise.resolve(endpoint),
     );
 
-    const provider = await IonImageryProvider.fromAssetId(assetId, options);
-
-    expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
-      assetId,
-      options,
-    );
-    return provider;
+    return endpointResource;
   }
 
   beforeEach(function () {
     RequestScheduler.clearForSpecs();
     IonImageryProvider._endpointCache = {};
+
+    defaultAssetId = 12335;
+    defaultEndpoint = {
+      type: "IMAGERY",
+      url: "http://test.invalid/layer",
+      accessToken: "not_really_a_refresh_token",
+      attributions: [],
+    };
+    defaultConstructorOptions = {};
   });
 
   it("conforms to ImageryProvider interface", function () {
@@ -66,13 +69,17 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   it("fromAssetId throws with non-imagery asset", async function () {
-    await expectAsync(
-      createTestProviderAsync({
+    setUpTestEndpoint({
+      endpoint: {
         type: "3DTILES",
         url: "http://test.invalid/layer",
         accessToken: "not_really_a_refresh_token",
         attributions: [],
-      }),
+      },
+    });
+
+    await expectAsync(
+      IonImageryProvider.fromAssetId(defaultAssetId, defaultConstructorOptions),
     ).toBeRejectedWithError(
       RuntimeError,
       "Cesium ion asset 12335 is not an imagery asset.",
@@ -80,13 +87,17 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   it("fromAssetId rejects with unknown external asset type", async function () {
-    await expectAsync(
-      createTestProviderAsync({
+    setUpTestEndpoint({
+      endpoint: {
         type: "IMAGERY",
         externalType: "TUBELCANE",
         options: { url: "http://test.invalid/layer" },
         attributions: [],
-      }),
+      },
+    });
+
+    await expectAsync(
+      IonImageryProvider.fromAssetId(defaultAssetId, defaultConstructorOptions),
     ).toBeRejectedWithError(
       RuntimeError,
       "Unrecognized Cesium ion imagery type: TUBELCANE",
@@ -94,54 +105,31 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   it("fromAssetId resolves to created provider", async function () {
-    const provider = await createTestProviderAsync();
+    setUpTestEndpoint();
+
+    const provider = await IonImageryProvider.fromAssetId(
+      defaultAssetId,
+      defaultConstructorOptions,
+    );
     expect(provider).toBeInstanceOf(IonImageryProvider);
     expect(provider.errorEvent).toBeDefined();
     expect(provider._imageryProvider).toBeInstanceOf(
       UrlTemplateImageryProvider,
     );
-  });
 
-  it("Uses previously fetched endpoint cache", async function () {
-    const endpointData = {
-      type: "IMAGERY",
-      url: "http://test.invalid/layer",
-      accessToken: "not_really_a_refresh_token",
-      attributions: [],
-    };
-
-    const assetId = 12335;
-    const options = {
-      accessToken: "token",
-      server: "http://test.invalid",
-    };
-    const endpointResource = IonResource._createEndpointResource(
-      assetId,
-      options,
+    expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
+      defaultAssetId,
+      defaultConstructorOptions,
     );
-    spyOn(IonResource, "_createEndpointResource").and.returnValue(
-      endpointResource,
-    );
-    spyOn(endpointResource, "fetchJson").and.returnValue(
-      Promise.resolve(endpointData),
-    );
-
-    expect(endpointResource.fetchJson.calls.count()).toBe(0);
-    await IonImageryProvider.fromAssetId(assetId, options);
-    expect(endpointResource.fetchJson.calls.count()).toBe(1);
-
-    // Same as options but in a different order to verify cache is order independent.
-    const options2 = {
-      accessToken: "token",
-      server: "http://test.invalid",
-    };
-    await IonImageryProvider.fromAssetId(assetId, options2);
-    // Since the data is cached, fetchJson is not called again.
-    expect(endpointResource.fetchJson.calls.count()).toBe(1);
   });
 
   it("propagates called to underlying imagery provider resolves when ready", async function () {
-    const provider = await createTestProviderAsync();
+    setUpTestEndpoint();
+
+    const provider = await IonImageryProvider.fromAssetId(
+      defaultAssetId,
+      defaultConstructorOptions,
+    );
     const internalProvider = provider._imageryProvider;
     expect(provider.rectangle).toBe(internalProvider.rectangle);
     expect(provider.tileWidth).toBe(internalProvider.tileWidth);
@@ -180,46 +168,83 @@ describe("Scene/IonImageryProvider", function () {
     expect(credits).toContain(innerCredit);
   });
 
-  it("handles server-sent credits", async function () {
-    const serverCredit = {
-      html: '<a href="http://test.invalid/">Text</a>',
-      collapsible: false,
-    };
-    const provider = await createTestProviderAsync({
-      type: "IMAGERY",
-      url: "http://test.invalid/layer",
-      accessToken: "not_really_a_refresh_token",
-      attributions: [serverCredit],
+  async function testExternalImagery(type, ImageryClass, options) {
+    it(`works with type "${type}"`, async function () {
+      setUpTestEndpoint({
+        endpoint: {
+          type: "IMAGERY",
+          externalType: type,
+          options: options,
+          attributions: [],
+        },
+      });
+
+      const provider = await IonImageryProvider.fromAssetId(
+        defaultAssetId,
+        defaultConstructorOptions,
+      );
+
+      expect(provider._imageryProvider).toBeInstanceOf(ImageryClass);
     });
 
-    const credits = provider.getTileCredits(0, 0, 0);
-    const credit = credits[0];
-    expect(credit).toBeInstanceOf(Credit);
-    expect(credit.html).toEqual(serverCredit.html);
-    expect(credit.showOnScreen).toEqual(!serverCredit.collapsible);
-  });
-
-  async function testExternalImagery(type, ImageryClass, options, beforeFn) {
-    it(`works with "${type}"`, async function () {
-      if (beforeFn) {
-        beforeFn();
-      }
-
-      const provider = await createTestProviderAsync({
-        type: "IMAGERY",
-        externalType: type,
-        options: options,
-        attributions: [],
+    it(`works with cached type "${type}"`, async function () {
+      const endpointResource = setUpTestEndpoint({
+        endpoint: {
+          type: "IMAGERY",
+          externalType: type,
+          options: options,
+          attributions: [],
+        },
       });
-      expect(provider._imageryProvider).toBeInstanceOf(ImageryClass);
+
+      const providerA = await IonImageryProvider.fromAssetId(
+        defaultAssetId,
+        defaultConstructorOptions,
+      );
+      expect(providerA._imageryProvider).toBeInstanceOf(ImageryClass);
+
+      expect(endpointResource.fetchJson.calls.count()).toBe(1);
+
+      const providerB = await IonImageryProvider.fromAssetId(
+        defaultAssetId,
+        // Same options, but different reference
+        { ...defaultConstructorOptions },
+      );
+      expect(providerB._imageryProvider).toBeInstanceOf(ImageryClass);
+
+      expect(endpointResource.fetchJson.calls.count()).toBe(1);
+    });
+
+    it(`works with type "${type}" and server-sent credits`, async function () {
+      const serverCredit = {
+        html: '<a href="http://test.invalid/">Text</a>',
+        collapsible: false,
+      };
+
+      setUpTestEndpoint({
+        endpoint: {
+          type: "IMAGERY",
+          externalType: type,
+          options: options,
+          attributions: [serverCredit],
+        },
+      });
+
+      const provider = await IonImageryProvider.fromAssetId(
+        defaultAssetId,
+        defaultConstructorOptions,
+      );
+
+      const credits = provider.getTileCredits(0, 0, 0);
+      const credit = credits[0];
+      expect(credit).toBeInstanceOf(Credit);
+      expect(credit.html).toEqual(serverCredit.html);
+      expect(credit.showOnScreen).toEqual(!serverCredit.collapsible);
     });
   }
 
-  testExternalImagery(
-    "ARCGIS_MAPSERVER",
-    ArcGisMapServerImageryProvider,
-    { url: "http://test.invalid" },
-    () =>
+  describe("ARCGIS_MAPSERVER", function () {
+    beforeEach(function () {
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
         function (
           url,
@@ -238,14 +263,16 @@ describe("Scene/IonImageryProvider", function () {
             }),
           );
         },
-      ),
-  );
+      );
+    });
 
-  testExternalImagery(
-    "BING",
-    BingMapsImageryProvider,
-    { url: "http://test.invalid", key: "" },
-    () =>
+    testExternalImagery("ARCGIS_MAPSERVER", ArcGisMapServerImageryProvider, {
+      url: "http://test.invalid",
+    });
+  });
+
+  describe("BING", function () {
+    beforeEach(function () {
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
         function (
           url,
@@ -268,14 +295,17 @@ describe("Scene/IonImageryProvider", function () {
             }),
           );
         },
-      ),
-  );
+      );
+    });
 
-  testExternalImagery(
-    "GOOGLE_EARTH",
-    GoogleEarthEnterpriseMapsProvider,
-    { url: "http://test.invalid", channel: 0 },
-    () =>
+    testExternalImagery("BING", BingMapsImageryProvider, {
+      url: "http://test.invalid",
+      key: "",
+    });
+  });
+
+  describe("GOOGLE_EARTH", function () {
+    beforeEach(function () {
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
         function (
           url,
@@ -290,8 +320,14 @@ describe("Scene/IonImageryProvider", function () {
             JSON.stringify({ layers: [{ id: 0, version: "" }] }),
           );
         },
-      ),
-  );
+      );
+    });
+
+    testExternalImagery("GOOGLE_EARTH", GoogleEarthEnterpriseMapsProvider, {
+      url: "http://test.invalid",
+      channel: 0,
+    });
+  });
 
   testExternalImagery("MAPBOX", MapboxImageryProvider, {
     accessToken: "test-token",
@@ -299,11 +335,8 @@ describe("Scene/IonImageryProvider", function () {
     mapId: 1,
   });
 
-  testExternalImagery(
-    "SINGLE_TILE",
-    SingleTileImageryProvider,
-    { url: "http://test.invalid" },
-    () =>
+  describe("SINGLE_TILE", function () {
+    beforeEach(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(
         function (request, crossOrigin, deferred) {
           deferred.resolve({
@@ -311,8 +344,13 @@ describe("Scene/IonImageryProvider", function () {
             width: 16,
           });
         },
-      ),
-  );
+      );
+    });
+
+    testExternalImagery("SINGLE_TILE", SingleTileImageryProvider, {
+      url: "http://test.invalid",
+    });
+  });
 
   testExternalImagery("TMS", UrlTemplateImageryProvider, {
     url: "http://test.invalid",
