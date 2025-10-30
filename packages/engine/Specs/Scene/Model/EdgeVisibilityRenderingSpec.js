@@ -6,7 +6,7 @@ import pollToPromise from "../../../../../Specs/pollToPromise.js";
 describe("Scene/Model/EdgeVisibilityRendering", function () {
   let scene;
   const edgeVisibilityTestData =
-    "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility2.glb";
+    "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility.glb";
 
   beforeAll(function () {
     scene = createScene();

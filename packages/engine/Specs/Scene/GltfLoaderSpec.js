@@ -132,6 +132,10 @@ describe(
       "./Data/Models/glTF-2.0/MeshPrimitiveRestart/glTF/MeshPrimitiveRestart.gltf";
     const edgeVisibilityTestData =
       "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility.glb";
+    const edgeVisibilityMaterialTestData =
+      "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibilityMaterial.glb";
+    const edgeVisibilityLineStringTestData =
+      "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibilityLineString.glb";
 
     let scene;
     const gltfLoaders = [];
@@ -4372,6 +4376,38 @@ describe(
         expect(isNaN(normal.y)).toBe(false);
         expect(isNaN(normal.z)).toBe(false);
       }
+    });
+
+    it("loads edge visibility material color override", async function () {
+      const gltfLoader = await loadGltf(edgeVisibilityMaterialTestData);
+      const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+
+      const edgeVisibility = primitive.edgeVisibility;
+      expect(edgeVisibility).toBeDefined();
+      expect(edgeVisibility.materialColor).toBeDefined();
+
+      const materialColor = edgeVisibility.materialColor;
+      expect(materialColor.x).toBeDefined();
+      expect(materialColor.y).toBeDefined();
+      expect(materialColor.z).toBeDefined();
+      expect(materialColor.w).toBeDefined();
+    });
+
+    it("loads edge visibility line strings", async function () {
+      const gltfLoader = await loadGltf(edgeVisibilityLineStringTestData);
+      const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+
+      const edgeVisibility = primitive.edgeVisibility;
+      expect(edgeVisibility).toBeDefined();
+      expect(edgeVisibility.lineStrings).toBeDefined();
+
+      const lineStrings = edgeVisibility.lineStrings;
+      expect(lineStrings.length).toBeGreaterThan(0);
+
+      const firstLineString = lineStrings[0];
+      expect(firstLineString.indices).toBeDefined();
+      expect(firstLineString.indices.length).toBeGreaterThan(0);
+      expect(firstLineString.restartIndex).toBeDefined();
     });
 
     it("validates edge visibility data loading", async function () {
