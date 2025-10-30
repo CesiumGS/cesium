@@ -4374,6 +4374,75 @@ describe(
       }
     });
 
+    it("loads edge visibility material color and line strings", async function () {
+      function modifyGltf(gltf) {
+        const primitive = gltf.meshes[0].primitives[0];
+        const edgeVisibility =
+          primitive.extensions.EXT_mesh_primitive_edge_visibility;
+
+        edgeVisibility.material = 0;
+        const globalColor = [0.2, 0.4, 0.6, 0.8];
+        const overrideColor = [0.9, 0.1, 0.2, 1.0];
+
+        const pbr =
+          gltf.materials[0].pbrMetallicRoughness ??
+          (gltf.materials[0].pbrMetallicRoughness = {});
+        pbr.baseColorFactor = globalColor.slice();
+
+        gltf.materials.push({
+          pbrMetallicRoughness: {
+            baseColorFactor: overrideColor.slice(),
+          },
+        });
+
+        const overrideMaterialIndex = gltf.materials.length - 1;
+
+        edgeVisibility.lineStrings = [
+          {
+            indices: primitive.indices,
+          },
+          {
+            indices: primitive.indices,
+            material: overrideMaterialIndex,
+          },
+        ];
+
+        return gltf;
+      }
+
+      const gltfLoader = await loadModifiedGltfAndTest(
+        edgeVisibilityTestData,
+        undefined,
+        modifyGltf,
+      );
+      const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+
+      const edgeVisibility = primitive.edgeVisibility;
+      expect(edgeVisibility).toBeDefined();
+      expect(edgeVisibility.materialColor).toEqualEpsilon(
+        new Cartesian4(0.2, 0.4, 0.6, 0.8),
+        CesiumMath.EPSILON7,
+      );
+
+      const lineStrings = edgeVisibility.lineStrings;
+      expect(lineStrings).toBeDefined();
+      expect(lineStrings.length).toBe(2);
+      expect(lineStrings[0].indices.length).toBeGreaterThan(0);
+      expect(lineStrings[0].restartIndex).toBe(255);
+      expect(
+        Cartesian4.equals(
+          lineStrings[0].materialColor,
+          edgeVisibility.materialColor,
+        ),
+      ).toBe(true);
+      expect(
+        Cartesian4.equals(
+          lineStrings[1].materialColor,
+          new Cartesian4(0.9, 0.1, 0.2, 1.0),
+        ),
+      ).toBe(true);
+    });
+
     it("validates edge visibility data loading", async function () {
       const gltfLoader = await loadGltf(edgeVisibilityTestData);
       const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
