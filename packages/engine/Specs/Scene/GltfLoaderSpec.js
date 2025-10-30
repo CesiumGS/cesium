@@ -131,7 +131,7 @@ describe(
     const meshPrimitiveRestartTestData =
       "./Data/Models/glTF-2.0/MeshPrimitiveRestart/glTF/MeshPrimitiveRestart.gltf";
     const edgeVisibilityTestData =
-      "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility.glb";
+      "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility2.glb";
 
     let scene;
     const gltfLoaders = [];
