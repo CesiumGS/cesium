@@ -692,7 +692,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     const tileset = primitive._tileset;
     const modelMatrix = Matrix4.multiply(
       tileset.modelMatrix,
-      tileset.root.transform,
+      primitive._rootTransform,
       scratchMatrix4A,
     );
     const inverseModelRotation = Matrix4.getRotation(
