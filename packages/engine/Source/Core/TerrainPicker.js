@@ -4,13 +4,9 @@ import defined from "./defined.js";
 import IntersectionTests from "./IntersectionTests.js";
 import Matrix4 from "./Matrix4.js";
 import Ray from "./Ray.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
-import Ellipsoid from "./Ellipsoid.js";
-import VerticalExaggeration from "./VerticalExaggeration.js";
 import TaskProcessor from "./TaskProcessor.js";
 import Cartographic from "./Cartographic.js";
 import SceneMode from "../Scene/SceneMode.js";
-import Transforms from "./Transforms.js";
 
 /**
  * Create an terrain picker object for the main thread for testing intersection
@@ -18,21 +14,12 @@ import Transforms from "./Transforms.js";
  * @constructor
  * @private
  */
-function TerrainPicker(
-  vertices,
-  indices,
-  encoding,
-  minimumHeight,
-  maximumHeight,
-  rectangle,
-) {
+function TerrainPicker(vertices, indices, encoding, transform) {
   this._vertices = vertices;
   this._indices = indices;
   this._encoding = encoding;
-  this._minimumHeight = minimumHeight;
-  this._maximumHeight = maximumHeight;
-  this._rectangle = rectangle;
-  this._inverseTransform = undefined;
+  this._transform = transform;
+  this._inverseTransform = new Matrix4(); // Compute as-needed on rebuild
   this._needsRebuild = true;
   // Terrain picker can be 4 levels deep (0-3)
   this._maximumLevel = 3;
@@ -42,49 +29,6 @@ function TerrainPicker(
 const incrementallyBuildTerrainPickerTaskProcessor = new TaskProcessor(
   "incrementallyBuildTerrainPicker",
 );
-
-const scratchOrientedBoundingBox = new OrientedBoundingBox();
-const scratchTransform = new Matrix4();
-
-function computeTransform(
-  encoding,
-  rectangle,
-  minHeight,
-  maxHeight,
-  mode,
-  projection,
-) {
-  const exaggeration = encoding.exaggeration;
-  const exaggerationRelativeHeight = encoding.exaggerationRelativeHeight;
-
-  const exaggeratedMinHeight = VerticalExaggeration.getHeight(
-    minHeight,
-    exaggeration,
-    exaggerationRelativeHeight,
-  );
-
-  const exaggeratedMaxHeight = VerticalExaggeration.getHeight(
-    maxHeight,
-    exaggeration,
-    exaggerationRelativeHeight,
-  );
-
-  const obb = OrientedBoundingBox.fromRectangle(
-    rectangle,
-    exaggeratedMinHeight,
-    exaggeratedMaxHeight,
-    Ellipsoid.default,
-    scratchOrientedBoundingBox,
-  );
-
-  const transform = OrientedBoundingBox.computeTransformation(
-    obb,
-    scratchTransform,
-  );
-  return mode === SceneMode.SCENE3D
-    ? transform
-    : Transforms.basisTo2D(projection, transform, transform);
-}
 
 Object.defineProperties(TerrainPicker.prototype, {
   needsRebuild: {
@@ -118,7 +62,7 @@ TerrainPicker.prototype.rayIntersect = function (
 ) {
   // Lazily (re)create the terrain picker
   if (this._needsRebuild) {
-    reset(this, mode, projection);
+    reset(this);
   }
 
   const invTransform = this._inverseTransform;
@@ -145,21 +89,13 @@ TerrainPicker.prototype.rayIntersect = function (
   );
 };
 
-function reset(terrainPicker, mode, projection) {
+function reset(terrainPicker) {
   // PERFORMANCE_IDEA: warm-start the terrain picker by building a level on a worker.
   // This currently isn't feasible because you can only copy the vertex buffer to a worker (slow) or transfer ownership (can't do picking on main thread in meantime).
   // SharedArrayBuffers could be used, but most environments do not support them.
-  terrainPicker._needsRebuild = false;
+  Matrix4.inverse(terrainPicker._transform, terrainPicker._inverseTransform);
 
-  const transform = computeTransform(
-    terrainPicker._encoding,
-    terrainPicker._rectangle,
-    terrainPicker._minimumHeight,
-    terrainPicker._maximumHeight,
-    mode,
-    projection,
-  );
-  terrainPicker._inverseTransform = Matrix4.inverse(transform, new Matrix4());
+  terrainPicker._needsRebuild = false;
   const intersectingTriangles = new Uint32Array(
     terrainPicker._indices.length / 3,
   );

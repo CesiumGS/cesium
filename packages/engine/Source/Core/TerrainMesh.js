@@ -1,4 +1,10 @@
+import SceneMode from "../Scene/SceneMode.js";
+import Ellipsoid from "./Ellipsoid.js";
+import Matrix4 from "./Matrix4.js";
+import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import TerrainPicker from "./TerrainPicker.js";
+import Transforms from "./Transforms.js";
+import VerticalExaggeration from "./VerticalExaggeration.js";
 
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
@@ -160,14 +166,56 @@ function TerrainMesh(
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
 
+  /**
+   * The transform from model to world coordinates based on the terrain mesh's oriented bounding box.
+   * Currently, only computed when needed for picking.
+   * @type {Matrix4}
+   */
+  this.transform = new Matrix4();
+
+  /**
+   * True if the transform needs to be recomputed (due to changes in exaggeration or scene mode).
+   * @type {boolean}
+   */
+  this._recomputeTransform = true;
+
   this._terrainPicker = new TerrainPicker(
     vertices,
     indices,
     encoding,
-    minimumHeight,
-    maximumHeight,
-    rectangle,
+    this.transform,
   );
+}
+
+function computeTransform(mesh, mode, projection, result) {
+  const exaggeration = mesh.encoding.exaggeration;
+  const exaggerationRelativeHeight = mesh.encoding.exaggerationRelativeHeight;
+
+  const exaggeratedMinHeight = VerticalExaggeration.getHeight(
+    mesh.minimumHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const exaggeratedMaxHeight = VerticalExaggeration.getHeight(
+    mesh.maximumHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const obb = OrientedBoundingBox.fromRectangle(
+    mesh.rectangle,
+    exaggeratedMinHeight,
+    exaggeratedMaxHeight,
+    Ellipsoid.default,
+    mesh.orientedBoundingBox,
+  );
+
+  OrientedBoundingBox.computeTransformation(obb, result);
+
+  return mode === SceneMode.SCENE3D
+    ? result
+    : Transforms.basisTo2D(projection, result, result);
 }
 
 /**
@@ -184,6 +232,12 @@ TerrainMesh.prototype.pickRay = function (
   mode,
   projection,
 ) {
+  // For the time being, the only consumer of the TerrainMesh's transform in the terrain picker. To avoid
+  // unnecessary recomputation, we only update it when it's needed. This could be changed later, if needed.
+  if (this._recomputeTransform) {
+    computeTransform(this, mode, projection, this.transform);
+    this._recomputeTransform = false;
+  }
   return this._terrainPicker.rayIntersect(ray, cullBackFaces, mode, projection);
 };
 
@@ -195,10 +249,12 @@ TerrainMesh.prototype.updateExaggeration = function (
   // to trigger a rebuild on the terrain picker.
   this._terrainPicker._vertices = this.vertices;
   this._terrainPicker.needsRebuild = true;
+  this._recomputeTransform = true;
 };
 
 TerrainMesh.prototype.updateSceneMode = function (mode) {
   this._terrainPicker.needsRebuild = true;
+  this._recomputeTransform = true;
 };
 
 export default TerrainMesh;
