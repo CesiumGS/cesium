@@ -12,6 +12,7 @@
 #### Additions :tada:
 
 - Added support for [EXT_mesh_primitive_edge_visibility](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension. [#12765](https://github.com/CesiumGS/cesium/issues/12765)
+- Extended edge visibility loading to honor material colors and line-string overrides from EXT_mesh_primitive_edge_visibility.
 
 #### Fixes :wrench:
 
