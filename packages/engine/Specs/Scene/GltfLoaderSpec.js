@@ -227,9 +227,7 @@ describe(
     }
 
     async function loadModifiedGltfAndTest(gltfPath, options, modifyFunction) {
-      let gltf = await Resource.fetchJson({
-        url: gltfPath,
-      });
+      let gltf = await loadGlbAsJson(gltfPath);
 
       gltf = modifyFunction(gltf);
 
@@ -244,6 +242,40 @@ describe(
       await waitForLoaderProcess(gltfLoader, scene);
 
       return gltfLoader;
+    }
+
+    async function loadGlbAsJson(gltfPath) {
+      const arrayBuffer = await Resource.fetchArrayBuffer({
+        url: gltfPath,
+      });
+
+      const dataView = new DataView(arrayBuffer);
+      if (dataView.byteLength >= 4) {
+        const magic = dataView.getUint32(0, true);
+        if (magic !== 0x46546c67) {
+          const text = new TextDecoder().decode(new Uint8Array(arrayBuffer));
+          return JSON.parse(text);
+        }
+      }
+
+      let offset = 12;
+      const textDecoder = new TextDecoder();
+      while (offset < arrayBuffer.byteLength) {
+        const chunkLength = dataView.getUint32(offset, true);
+        offset += 4;
+        const chunkType = dataView.getUint32(offset, true);
+        offset += 4;
+
+        if (chunkType === 0x4e4f534a) {
+          const chunk = new Uint8Array(arrayBuffer, offset, chunkLength);
+          const jsonText = textDecoder.decode(chunk);
+          return JSON.parse(jsonText);
+        }
+
+        offset += chunkLength;
+      }
+
+      return undefined;
     }
 
     function getAttribute(attributes, semantic, setIndex) {
@@ -4429,18 +4461,14 @@ describe(
       expect(lineStrings.length).toBe(2);
       expect(lineStrings[0].indices.length).toBeGreaterThan(0);
       expect(lineStrings[0].restartIndex).toBe(255);
-      expect(
-        Cartesian4.equals(
-          lineStrings[0].materialColor,
-          edgeVisibility.materialColor,
-        ),
-      ).toBe(true);
-      expect(
-        Cartesian4.equals(
-          lineStrings[1].materialColor,
-          new Cartesian4(0.9, 0.1, 0.2, 1.0),
-        ),
-      ).toBe(true);
+      expect(lineStrings[0].materialColor).toEqualEpsilon(
+        edgeVisibility.materialColor,
+        CesiumMath.EPSILON7,
+      );
+      expect(lineStrings[1].materialColor).toEqualEpsilon(
+        new Cartesian4(0.9, 0.1, 0.2, 1.0),
+        CesiumMath.EPSILON7,
+      );
     });
 
     it("validates edge visibility data loading", async function () {
