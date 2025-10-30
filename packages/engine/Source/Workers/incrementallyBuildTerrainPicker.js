@@ -12,10 +12,10 @@ const scratchTrianglePoints = [
 ];
 const scratchTriangleAABB = new AxisAlignedBoundingBox();
 
-function incrementallyBuildOctree(parameters, transferableObjects) {
+function incrementallyBuildTerrainPicker(parameters, transferableObjects) {
   // Rehydrate worker inputs
   const aabbs = new Float64Array(parameters.aabbs);
-  const nodeAABBs = Array.from({ length: 8 }, (_, i) => {
+  const nodeAABBs = Array.from({ length: 4 }, (_, i) => {
     const min = Cartesian3.unpack(aabbs, i * 6, scratchAABBCornerMin);
     const max = Cartesian3.unpack(aabbs, i * 6 + 3, scratchAABBCornerMax);
     return AxisAlignedBoundingBox.fromCorners(
@@ -34,7 +34,7 @@ function incrementallyBuildOctree(parameters, transferableObjects) {
 
   const triangleIndices = new Uint32Array(parameters.triangleIndices);
   const trianglePositions = new Float32Array(parameters.trianglePositions);
-  const intersectingTrianglesArrays = Array.from({ length: 8 }, () => []);
+  const intersectingTrianglesArrays = Array.from({ length: 4 }, () => []);
 
   for (let j = 0; j < triangleIndices.length; j++) {
     Cartesian3.unpack(trianglePositions, j * 9, scratchTrianglePoints[0]);
@@ -46,7 +46,7 @@ function incrementallyBuildOctree(parameters, transferableObjects) {
       scratchTrianglePoints,
     );
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 4; i++) {
       const aabbsIntersect =
         nodeAABBs[i].intersectAxisAlignedBoundingBox(triangleAABB);
       if (!aabbsIntersect) {
@@ -94,4 +94,4 @@ function createAABBFromTriangle(inverseTransform, trianglePoints) {
   return AxisAlignedBoundingBox.fromPoints(trianglePoints, scratchTriangleAABB);
 }
 
-export default createTaskProcessorWorker(incrementallyBuildOctree);
+export default createTaskProcessorWorker(incrementallyBuildTerrainPicker);

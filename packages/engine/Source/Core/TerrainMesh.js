@@ -1,4 +1,4 @@
-import OctreeTrianglePicking from "./OctreeTrianglePicking.js";
+import TerrainPicker from "./TerrainPicker.js";
 
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
@@ -160,7 +160,7 @@ function TerrainMesh(
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
 
-  this._octreeTrianglePicking = new OctreeTrianglePicking(
+  this._terrainPicker = new TerrainPicker(
     vertices,
     indices,
     encoding,
@@ -184,12 +184,7 @@ TerrainMesh.prototype.pickRay = function (
   mode,
   projection,
 ) {
-  return this._octreeTrianglePicking.rayIntersect(
-    ray,
-    cullBackFaces,
-    mode,
-    projection,
-  );
+  return this._terrainPicker.rayIntersect(ray, cullBackFaces, mode, projection);
 };
 
 TerrainMesh.prototype.updateExaggeration = function (
@@ -197,13 +192,13 @@ TerrainMesh.prototype.updateExaggeration = function (
   exaggerationRelativeHeight,
 ) {
   // The encoding stored on the TerrainMesh references the updated exaggeration values already. This is just used
-  // to trigger a rebuild on the octree.
-  this._octreeTrianglePicking._vertices = this.vertices;
-  this._octreeTrianglePicking.needsRebuild = true;
+  // to trigger a rebuild on the terrain picker.
+  this._terrainPicker._vertices = this.vertices;
+  this._terrainPicker.needsRebuild = true;
 };
 
 TerrainMesh.prototype.updateSceneMode = function (mode) {
-  this._octreeTrianglePicking.needsRebuild = true;
+  this._terrainPicker.needsRebuild = true;
 };
 
 export default TerrainMesh;

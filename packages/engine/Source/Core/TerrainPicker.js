@@ -13,12 +13,12 @@ import SceneMode from "../Scene/SceneMode.js";
 import Transforms from "./Transforms.js";
 
 /**
- * Create an octree object for the main thread for testing intersection
- * @alias OctreeTrianglePicking
+ * Create an terrain picker object for the main thread for testing intersection
+ * @alias TerrainPicker
  * @constructor
  * @private
  */
-function OctreeTrianglePicking(
+function TerrainPicker(
   vertices,
   indices,
   encoding,
@@ -34,13 +34,13 @@ function OctreeTrianglePicking(
   this._rectangle = rectangle;
   this._inverseTransform = undefined;
   this._needsRebuild = true;
-  // Octree can be 4 levels deep (0-3)
+  // Terrain picker can be 4 levels deep (0-3)
   this._maximumLevel = 3;
   this._rootNode = createNode();
 }
 
-const incrementallyBuildOctreeTaskProcessor = new TaskProcessor(
-  "incrementallyBuildOctree",
+const incrementallyBuildTerrainPickerTaskProcessor = new TaskProcessor(
+  "incrementallyBuildTerrainPicker",
 );
 
 const scratchOrientedBoundingBox = new OrientedBoundingBox();
@@ -86,7 +86,7 @@ function computeTransform(
     : Transforms.basisTo2D(projection, transform, transform);
 }
 
-Object.defineProperties(OctreeTrianglePicking.prototype, {
+Object.defineProperties(TerrainPicker.prototype, {
   needsRebuild: {
     get: function () {
       return this._needsRebuild;
@@ -110,13 +110,13 @@ const scratchTrianglePoints = [
  * @param {Boolean} cullBackFaces
  * @returns {Cartesian3} result
  */
-OctreeTrianglePicking.prototype.rayIntersect = function (
+TerrainPicker.prototype.rayIntersect = function (
   ray,
   cullBackFaces,
   mode,
   projection,
 ) {
-  // Lazily (re)create the octree
+  // Lazily (re)create the terrain picker
   if (this._needsRebuild) {
     reset(this, mode, projection);
   }
@@ -135,7 +135,7 @@ OctreeTrianglePicking.prototype.rayIntersect = function (
     transformedRay.direction,
   );
 
-  return rayIntersectOctree(
+  return rayIntersectTerrainPicker(
     this,
     ray,
     transformedRay,
@@ -145,31 +145,28 @@ OctreeTrianglePicking.prototype.rayIntersect = function (
   );
 };
 
-function reset(octreeTrianglePicking, mode, projection) {
-  // PERFORMANCE_IDEA: warm-start the octree by building a level on a worker.
+function reset(terrainPicker, mode, projection) {
+  // PERFORMANCE_IDEA: warm-start the terrain picker by building a level on a worker.
   // This currently isn't feasible because you can only copy the vertex buffer to a worker (slow) or transfer ownership (can't do picking on main thread in meantime).
   // SharedArrayBuffers could be used, but most environments do not support them.
-  octreeTrianglePicking._needsRebuild = false;
+  terrainPicker._needsRebuild = false;
 
   const transform = computeTransform(
-    octreeTrianglePicking._encoding,
-    octreeTrianglePicking._rectangle,
-    octreeTrianglePicking._minimumHeight,
-    octreeTrianglePicking._maximumHeight,
+    terrainPicker._encoding,
+    terrainPicker._rectangle,
+    terrainPicker._minimumHeight,
+    terrainPicker._maximumHeight,
     mode,
     projection,
   );
-  octreeTrianglePicking._inverseTransform = Matrix4.inverse(
-    transform,
-    new Matrix4(),
-  );
+  terrainPicker._inverseTransform = Matrix4.inverse(transform, new Matrix4());
   const intersectingTriangles = new Uint32Array(
-    octreeTrianglePicking._indices.length / 3,
+    terrainPicker._indices.length / 3,
   );
-  octreeTrianglePicking._rootNode.intersectingTriangles = Uint32Array.from(
+  terrainPicker._rootNode.intersectingTriangles = Uint32Array.from(
     intersectingTriangles.keys(),
   );
-  octreeTrianglePicking._rootNode.children.length = 0;
+  terrainPicker._rootNode.children.length = 0;
 }
 
 const scratchAABBMin = new Cartesian3();
@@ -179,20 +176,20 @@ const scratchAABBMax = new Cartesian3();
  * @param {} node
  * @returns {@link AxisAlignedBoundingBox}
  */
-function createAABBForNode(x, y, z, level) {
+function createAABBForNode(x, y, level) {
   const sizeAtLevel = 1.0 / Math.pow(2, level);
 
   const aabbMin = Cartesian3.fromElements(
     x * sizeAtLevel - 0.5,
     y * sizeAtLevel - 0.5,
-    z * sizeAtLevel - 0.5,
+    -0.5,
     scratchAABBMin,
   );
 
   const aabbMax = Cartesian3.fromElements(
     (x + 1) * sizeAtLevel - 0.5,
     (y + 1) * sizeAtLevel - 0.5,
-    (z + 1) * sizeAtLevel - 0.5,
+    0.5,
     scratchAABBMax,
   );
 
@@ -200,24 +197,21 @@ function createAABBForNode(x, y, z, level) {
 }
 
 /**
- * Represents a node in the octree
+ * Represents a node in the terrain picker
  */
 function createNode(childIdx = 0, parentNode) {
-  // Use bitwise operations to get child x,y,z from child index
+  // Use bitwise operations to get child x,y from child index
   const x = parentNode?.x ?? 0;
   const y = parentNode?.y ?? 0;
-  const z = parentNode?.z ?? 0;
   const childX = x * 2 + (childIdx & 1);
   const childY = y * 2 + ((childIdx >> 1) & 1);
-  const childZ = z * 2 + ((childIdx >> 2) & 1);
   const level = defined(parentNode) ? parentNode.level + 1 : 0;
 
   const node = {
     level: level,
-    aabb: createAABBForNode(childX, childY, childZ, level),
+    aabb: createAABBForNode(childX, childY, level),
     x: childX,
     y: childY,
-    z: childZ,
     intersectingTriangles: [],
     children: [],
     buildingChildren: false,
@@ -291,7 +285,7 @@ function getVertexPosition(
 }
 
 function getClosestTriangleInNode(
-  octreeTrianglePicking,
+  terrainPicker,
   ray,
   node,
   cullBackFaces,
@@ -299,11 +293,11 @@ function getClosestTriangleInNode(
   projection,
 ) {
   let result = Number.MAX_VALUE;
-  const encoding = octreeTrianglePicking._encoding;
-  const indices = octreeTrianglePicking._indices;
-  const vertices = octreeTrianglePicking._vertices;
+  const encoding = terrainPicker._encoding;
+  const indices = terrainPicker._indices;
+  const vertices = terrainPicker._vertices;
   const triangleCount = node.intersectingTriangles.length;
-  const isMaxLevel = node.level >= octreeTrianglePicking._maximumLevel;
+  const isMaxLevel = node.level >= terrainPicker._maximumLevel;
   const shouldBuildChildren = !isMaxLevel && !node.buildingChildren;
   let trianglePositions;
   let triangleIndices;
@@ -364,12 +358,12 @@ function getClosestTriangleInNode(
   }
 
   if (shouldBuildChildren) {
-    for (let childIdx = 0; childIdx < 8; childIdx++) {
+    for (let childIdx = 0; childIdx < 4; childIdx++) {
       createNode(childIdx, node);
     }
 
     addTrianglesToChildrenNodes(
-      octreeTrianglePicking._inverseTransform,
+      terrainPicker._inverseTransform,
       node,
       triangleIndices,
       trianglePositions,
@@ -379,8 +373,8 @@ function getClosestTriangleInNode(
   return result;
 }
 
-function rayIntersectOctree(
-  octreeTrianglePicking,
+function rayIntersectTerrainPicker(
+  terrainPicker,
   ray,
   transformedRay,
   cullBackFaces,
@@ -390,7 +384,7 @@ function rayIntersectOctree(
   // from here: http://publications.lib.chalmers.se/records/fulltext/250170/250170.pdf
   // find all the nodes which intersect the ray
 
-  let queue = [octreeTrianglePicking._rootNode];
+  let queue = [terrainPicker._rootNode];
   const intersections = [];
   while (queue.length) {
     const n = queue.pop();
@@ -422,7 +416,7 @@ function rayIntersectOctree(
   for (let i = 0; i < sortedIntersections.length; i++) {
     const intersection = sortedIntersections[i];
     const intersectionResult = getClosestTriangleInNode(
-      octreeTrianglePicking,
+      terrainPicker,
       ray,
       intersection.node,
       cullBackFaces,
@@ -455,8 +449,8 @@ async function addTrianglesToChildrenNodes(
   Matrix4.pack(inverseTransform, matrixArray, 0);
   const inverseTransformPacked = new Float64Array(matrixArray);
 
-  const aabbArray = new Float64Array(6 * 8); // 6 elements per AABB, 8 children
-  for (let i = 0; i < 8; i++) {
+  const aabbArray = new Float64Array(6 * 4); // 6 elements per AABB, 4 children
+  for (let i = 0; i < 4; i++) {
     Cartesian3.pack(node.children[i].aabb.minimum, aabbArray, i * 6);
     Cartesian3.pack(node.children[i].aabb.maximum, aabbArray, i * 6 + 3);
   }
@@ -475,19 +469,19 @@ async function addTrianglesToChildrenNodes(
     trianglePositions.buffer,
   ];
 
-  const incrementallyBuildOctreePromise =
-    incrementallyBuildOctreeTaskProcessor.scheduleTask(
+  const incrementallyBuildTerrainPickerPromise =
+    incrementallyBuildTerrainPickerTaskProcessor.scheduleTask(
       parameters,
       transferableObjects,
     );
 
-  if (!defined(incrementallyBuildOctreePromise)) {
+  if (!defined(incrementallyBuildTerrainPickerPromise)) {
     // Failed to schedule task, retry on next pick
     node.buildingChildren = false;
     return;
   }
 
-  const result = await incrementallyBuildOctreePromise;
+  const result = await incrementallyBuildTerrainPickerPromise;
   result.intersectingTrianglesArrays.forEach((buffer, index) => {
     node.children[index].intersectingTriangles = new Uint32Array(buffer);
   });
@@ -496,4 +490,4 @@ async function addTrianglesToChildrenNodes(
   node.intersectingTriangles = new Uint32Array(0);
 }
 
-export default OctreeTrianglePicking;
+export default TerrainPicker;
