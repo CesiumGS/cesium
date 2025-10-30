@@ -71,11 +71,13 @@ function Azure2DImageryProvider(options) {
   resource.setQueryParameters({
     "api-version": "2024-04-01",
     tilesetId: tilesetId,
+    "subscription-key": this._subscriptionKey,
     zoom: `{z}`,
     x: `{x}`,
     y: `{y}`,
-    "subscription-key": this._subscriptionKey,
   });
+
+  this._resource = resource;
 
   let credit;
   if (defined(options.credit)) {
@@ -98,8 +100,6 @@ function Azure2DImageryProvider(options) {
   // This will be defined for ion resources
   this._tileCredits = resource.credits;
   this._attributionsByLevel = undefined;
-  // Asynchronously request and populate _attributionsByLevel
-  this.getViewportCredits();
 }
 
 Object.defineProperties(Azure2DImageryProvider.prototype, {
@@ -300,7 +300,21 @@ Azure2DImageryProvider.prototype.requestImage = function (
   level,
   request,
 ) {
-  return this._imageryProvider.requestImage(x, y, level, request);
+  const promise = this._imageryProvider.requestImage(x, y, level, request);
+
+  // If the requestImage call returns undefined, it couldn't be scheduled this frame. Make sure to return undefined so this can be handled upstream.
+  if (!defined(promise)) {
+    return undefined;
+  }
+
+  // Asynchronously request and populate _attributionsByLevel if it hasn't been already. We do this here so that the promise can be properly awaited.
+  if (promise && !defined(this._attributionsByLevel)) {
+    return Promise.all([promise, this.getViewportCredits()]).then(
+      (results) => results[0],
+    );
+  }
+
+  return promise;
 };
 
 /**
@@ -336,6 +350,7 @@ Azure2DImageryProvider.prototype.getViewportCredits = async function () {
   for (let level = 0; level < maximumLevel + 1; level++) {
     promises.push(
       fetchViewportAttribution(
+        this._resource,
         this._viewportUrl,
         this._subscriptionKey,
         this._tilesetId,
@@ -361,19 +376,17 @@ Azure2DImageryProvider.prototype.getViewportCredits = async function () {
   return attributionsByLevel;
 };
 
-async function fetchViewportAttribution(url, key, tilesetId, level) {
-  const viewport = await Resource.fetch({
-    url: url,
+async function fetchViewportAttribution(resource, url, key, tilesetId, level) {
+  const viewportResource = resource.getDerivedResource({
+    url,
     queryParameters: {
-      tilesetId,
-      "subscription-key": key,
-      "api-version": "2024-04-01",
       zoom: level,
       bounds: "-180,-90,180,90",
     },
     data: JSON.stringify(Frozen.EMPTY_OBJECT),
   });
-  const viewportJson = JSON.parse(viewport);
+
+  const viewportJson = await viewportResource.fetchJson();
   return viewportJson.copyrights;
 }
 
