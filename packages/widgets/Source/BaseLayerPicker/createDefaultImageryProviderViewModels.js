@@ -347,21 +347,6 @@ of the world.\nhttp://www.openstreetmap.org",
 
   providerViewModels.push(
     new ProviderViewModel({
-      name: "Google Maps Labels Only",
-      iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/googleLabels.png",
-      ),
-      tooltip:
-        "Place labels from Google Maps to combine with other imagery such as Sentinel-2",
-      category: "Cesium ion",
-      creationFunction: function () {
-        return IonImageryProvider.fromAssetId(3830185);
-      },
-    }),
-  );
-
-  providerViewModels.push(
-    new ProviderViewModel({
       name: "Google Maps Contour",
       iconUrl: buildModuleUrl(
         "Widgets/Images/ImageryProviders/googleContour.png",
@@ -398,21 +383,6 @@ of the world.\nhttp://www.openstreetmap.org",
       category: "Cesium ion",
       creationFunction: function () {
         return IonImageryProvider.fromAssetId(3891169);
-      },
-    }),
-  );
-
-  providerViewModels.push(
-    new ProviderViewModel({
-      name: "Azure Maps Labels Only",
-      iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/azureLabels.png",
-      ),
-      tooltip:
-        "Place labels from Azure Maps to combine with other imagery such as Sentinel-2",
-      category: "Cesium ion",
-      creationFunction: function () {
-        return IonImageryProvider.fromAssetId(3891170);
       },
     }),
   );
