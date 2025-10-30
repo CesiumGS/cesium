@@ -22,6 +22,8 @@
 - Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
 - Improved performance of terrain Quadtree handling of custom data [#12907](https://github.com/CesiumGS/cesium/pull/12907)
 - Fixed picking of `GroundPrimitive` with multiple `PolygonGeometry` instances selecting the wrong instance. [#12978](https://github.com/CesiumGS/cesium/pull/12978)
+- Fixed a bug where the removal of draped imagery layers did not update the rendered state [#12923](https://github.com/CesiumGS/cesium/issues/12923)
+- Fixed precision issues with Gaussian splat tilesets where the root tile does not have a world transform. [#12925](https://github.com/CesiumGS/cesium/issues/12925)
 
 ## 1.134.1 - 2025-10-10
 
