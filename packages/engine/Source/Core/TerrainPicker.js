@@ -342,7 +342,7 @@ function getClosestTriangleInNode(
       cullBackFaces,
     );
 
-    if (defined(triT) && triT < result) {
+    if (defined(triT) && triT < result && triT >= 0) {
       result = triT;
     }
 
