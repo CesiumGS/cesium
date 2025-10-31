@@ -53,10 +53,27 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
+        channel: "chromium",
         viewport: defaultViewport,
         launchOptions: {
           // this forces chrome to use the gpu for webgl which greatly speeds up tests
-          args: ["--use-angle=gl"],
+          // args: ["--use-angle=gl"],
+          args: ["--use-angle=vulkan"],
+          // args: ["--ignore-gpu-blacklist", "--use-angle=gl"],
+          // args: ["--use-gl=egl", "--use-angle=gl", "--enable-features=Vulkan"],
+          // args: [
+          //   "--ignore-gpu-blocklist",
+          //   "--use-gl=angle",
+          //   "--use-angle=gl-egl",
+          // ],
+          // args: ["--ignore-gpu-blocklist", "--enable-gpu", "--use-gl=angle"],
+          // args: ["--ignore-gpu-blocklist", "--use-angle=gl-egl"],
+          // args: [
+          //   "--ignore-gpu-blocklist",
+          //   "--use-gl=egl-angle",
+          //   "--use-angle=opengl",
+          // ],
+          // args: ["--ignore-gpu-blocklist", "--use-angle=gl"],
         },
       },
     },
