@@ -9,12 +9,28 @@ import Cartographic from "./Cartographic.js";
 import SceneMode from "../Scene/SceneMode.js";
 
 /**
- * Create an terrain picker object for the main thread for testing intersection
+ * Creates an object that handles arbitrary ray intersections with a terrain mesh using spatially accelerated structures.
+ *
  * @alias TerrainPicker
  * @constructor
  * @private
  */
 function TerrainPicker(vertices, indices, encoding, transform) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(vertices)) {
+    throw new Error("vertices is required.");
+  }
+  if (!defined(indices)) {
+    throw new Error("indices is required.");
+  }
+  if (!defined(encoding)) {
+    throw new Error("encoding is required.");
+  }
+  if (!defined(transform)) {
+    throw new Error("transform is required.");
+  }
+  //>>includeEnd('debug');
+
   this._vertices = vertices;
   this._indices = indices;
   this._encoding = encoding;
@@ -23,7 +39,7 @@ function TerrainPicker(vertices, indices, encoding, transform) {
   this._needsRebuild = true;
   // Terrain picker can be 4 levels deep (0-3)
   this._maximumLevel = 3;
-  this._rootNode = createNode();
+  this._rootNode = new TerrainPickerNode();
 }
 
 const incrementallyBuildTerrainPickerTaskProcessor = new TaskProcessor(
@@ -31,6 +47,10 @@ const incrementallyBuildTerrainPickerTaskProcessor = new TaskProcessor(
 );
 
 Object.defineProperties(TerrainPicker.prototype, {
+  /**
+   * Indicates whether the terrain picker needs to be rebuilt due to changes in the underlying terrain mesh's vertices or indices.
+   * @type {boolean}
+   */
   needsRebuild: {
     get: function () {
       return this._needsRebuild;
@@ -41,6 +61,43 @@ Object.defineProperties(TerrainPicker.prototype, {
   },
 });
 
+/**
+ * A node in the terrain picker quadtree.
+ * @constructor
+ * @private
+ */
+function TerrainPickerNode() {
+  this.x = 0;
+  this.y = 0;
+  this.level = 0;
+  this.aabb = createAABBForNode(this.x, this.y, this.level);
+  this.intersectingTriangles = [];
+  this.children = [];
+  this.buildingChildren = false;
+}
+
+/**
+ * Adds a child node to this node.
+ *
+ * @param {number} childIdx The index of the child to add (0-3).
+ */
+TerrainPickerNode.prototype.addChild = function (childIdx) {
+  //>>includeStart('debug', pragmas.debug);
+  if (childIdx < 0 || childIdx > 3) {
+    throw new Error("TerrainPickerNode child index must be between 0 and 3.");
+  }
+  //>>includeEnd('debug');
+
+  const childNode = new TerrainPickerNode();
+  // Use bitwise operations to get child x,y from child index and parent x,y
+  childNode.x = this.x * 2 + (childIdx & 1);
+  childNode.y = this.y * 2 + ((childIdx >> 1) & 1);
+  childNode.level = this.level + 1;
+  childNode.aabb = createAABBForNode(childNode.x, childNode.y, childNode.level);
+
+  this.children[childIdx] = childNode;
+};
+
 const scratchTransformedRay = new Ray();
 const scratchTrianglePoints = [
   new Cartesian3(),
@@ -49,10 +106,10 @@ const scratchTrianglePoints = [
 ];
 
 /**
- * Ray intersection test
- * @param {Ray} ray
- * @param {Boolean} cullBackFaces
- * @returns {Cartesian3} result
+ * Determines the point on the mesh where the given ray intersects.
+ * @param {Ray} ray The ray to test.
+ * @param {Boolean} cullBackFaces Whether to consider back-facing triangles as intersections.
+ * @returns {Cartesian3 | undefined} result The intersection point, or undefined if there is no intersection.
  */
 TerrainPicker.prototype.rayIntersect = function (
   ray,
@@ -79,16 +136,23 @@ TerrainPicker.prototype.rayIntersect = function (
     transformedRay.direction,
   );
 
-  return rayIntersectTerrainPicker(
+  const intersections = [];
+  getNodesIntersectingRay(this._rootNode, transformedRay, intersections);
+
+  return getClosestPointInNode(
     this,
+    intersections,
     ray,
-    transformedRay,
     cullBackFaces,
     mode,
     projection,
   );
 };
 
+/**
+ * Resets the terrain picker's quadtree structure to just a root node. Done whenever the underlying terrain mesh changes.
+ * @param terrainPicker The terrain picker to reset.
+ */
 function reset(terrainPicker) {
   // PERFORMANCE_IDEA: warm-start the terrain picker by building a level on a worker.
   // This currently isn't feasible because you can only copy the vertex buffer to a worker (slow) or transfer ownership (can't do picking on main thread in meantime).
@@ -109,8 +173,13 @@ const scratchAABBMin = new Cartesian3();
 const scratchAABBMax = new Cartesian3();
 
 /**
- * @param {} node
- * @returns {@link AxisAlignedBoundingBox}
+ * Creates an axis-aligned bounding box for a quadtree node at the given coordinates and level.
+ * This AABB is in the node's local space (where the root node of the tree is a unit cube in its own local space).
+ *
+ * @param {number} x The x coordinate of the node.
+ * @param {number} y The y coordinate of the node.
+ * @param {number} level The level of the node.
+ * @returns {AxisAlignedBoundingBox} The axis-aligned bounding box for the node.
  */
 function createAABBForNode(x, y, level) {
   const sizeAtLevel = 1.0 / Math.pow(2, level);
@@ -133,33 +202,9 @@ function createAABBForNode(x, y, level) {
 }
 
 /**
- * Represents a node in the terrain picker
+ * Packs triangle vertex positions and index into provided buffers, for the worker to process.
+ * (The worker does tests to organize triangles into child nodes of the quadtree.)
  */
-function createNode(childIdx = 0, parentNode) {
-  // Use bitwise operations to get child x,y from child index
-  const x = parentNode?.x ?? 0;
-  const y = parentNode?.y ?? 0;
-  const childX = x * 2 + (childIdx & 1);
-  const childY = y * 2 + ((childIdx >> 1) & 1);
-  const level = defined(parentNode) ? parentNode.level + 1 : 0;
-
-  const node = {
-    level: level,
-    aabb: createAABBForNode(childX, childY, level),
-    x: childX,
-    y: childY,
-    intersectingTriangles: [],
-    children: [],
-    buildingChildren: false,
-  };
-
-  if (defined(parentNode)) {
-    parentNode.children[childIdx] = node;
-  }
-
-  return node;
-}
-
 function packTriangleBuffers(
   trianglePositionsBuffer,
   triangleIndicesBuffer,
@@ -188,38 +233,96 @@ function packTriangleBuffers(
   triangleIndicesBuffer[bufferIndex] = triangleIndex;
 }
 
-const scratchCartographic = new Cartographic();
+/**
+ * Recursively gets all nodes in the quadtree that the ray intersects.
+ *
+ * @param {TerrainPickerNode} currentNode The current node being tested.
+ * @param {Ray} ray The ray to test.
+ * @param {*} intersectingNodes The array to store intersecting nodes in.
+ */
+function getNodesIntersectingRay(currentNode, ray, intersectingNodes) {
+  const interval = IntersectionTests.rayAxisAlignedBoundingBox(
+    ray,
+    currentNode.aabb,
+  );
 
-function getVertexPosition(
-  encoding,
-  mode,
-  projection,
-  vertices,
-  index,
-  result,
-) {
-  let position = encoding.getExaggeratedPosition(vertices, index, result);
-  if (mode === SceneMode.SCENE3D) {
-    return position;
+  if (!defined(interval)) {
+    return;
   }
 
-  const ellipsoid = projection.ellipsoid;
-  const positionCartographic = ellipsoid.cartesianToCartographic(
-    position,
-    scratchCartographic,
-  );
-  position = projection.project(positionCartographic, result);
-  // Swizzle because coordinate basis are different in 2D/Columbus View
-  position = Cartesian3.fromElements(
-    position.z,
-    position.x,
-    position.y,
-    result,
-  );
+  const isLeaf = !currentNode.children.length || currentNode.buildingChildren;
+  if (isLeaf) {
+    intersectingNodes.push({
+      node: currentNode,
+      interval: interval,
+    });
+    return;
+  }
 
-  return position;
+  for (let i = 0; i < currentNode.children.length; i++) {
+    getNodesIntersectingRay(currentNode.children[i], ray, intersectingNodes);
+  }
 }
 
+/**
+ * Gets the closest intersection point in the given node, in world space, by testing all triangles in the node against the ray.
+ *
+ * @param {TerrainPicker} terrainPicker The terrain picker.
+ * @param {*} intersections The nodes that intersect the ray, along with the intersection intervals along said ray.
+ * @param {Ray} ray The ray to test.
+ * @param {boolean} cullBackFaces Whether to cull back faces.
+ * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
+ * @param {MapProjection} projection The map projection.
+ * @returns The closest point in world space, or undefined if no intersection.
+ */
+function getClosestPointInNode(
+  terrainPicker,
+  intersections,
+  ray,
+  cullBackFaces,
+  mode,
+  projection,
+) {
+  const sortedIntersections = intersections.sort(function (a, b) {
+    return a.interval.start - b.interval.start;
+  });
+
+  let minT = Number.MAX_VALUE;
+  for (let i = 0; i < sortedIntersections.length; i++) {
+    const intersection = sortedIntersections[i];
+    const intersectionResult = getClosestTriangleInNode(
+      terrainPicker,
+      ray,
+      intersection.node,
+      cullBackFaces,
+      mode,
+      projection,
+    );
+    minT = Math.min(intersectionResult, minT);
+    if (minT !== Number.MAX_VALUE) {
+      break;
+    }
+  }
+
+  if (minT !== Number.MAX_VALUE) {
+    return Ray.getPoint(ray, minT);
+  }
+
+  return undefined;
+}
+
+/**
+ * Test all triangles in the given node against the ray, returning the closest intersection t value along the ray.
+ * Additionally, collect the triangles' positions and indices along the way to launch worker process that uses them to build out child nodes.
+ *
+ * @param {TerrainPicker} terrainPicker The terrain picker.
+ * @param {Ray} ray The ray to test.
+ * @param {TerrainPickerNode} node The node to test.
+ * @param {boolean} cullBackFaces Whether to cull back faces.
+ * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
+ * @param {MapProjection} projection The map projection.
+ * @returns {number} The closest intersection t value along the ray, or Number.MAX_VALUE if no intersection.
+ */
 function getClosestTriangleInNode(
   terrainPicker,
   ray,
@@ -295,7 +398,7 @@ function getClosestTriangleInNode(
 
   if (shouldBuildChildren) {
     for (let childIdx = 0; childIdx < 4; childIdx++) {
-      createNode(childIdx, node);
+      node.addChild(childIdx);
     }
 
     addTrianglesToChildrenNodes(
@@ -309,69 +412,58 @@ function getClosestTriangleInNode(
   return result;
 }
 
-function rayIntersectTerrainPicker(
-  terrainPicker,
-  ray,
-  transformedRay,
-  cullBackFaces,
+const scratchCartographic = new Cartographic();
+
+/**
+ * Gets a vertex position in world space, taking into account the exaggeration and scene mode of the terrain.
+ *
+ * @param {TerrainEncoding} encoding The terrain encoding.
+ * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
+ * @param {MapProjection} projection
+ * @param {Float32Array} vertices
+ * @param {Number} index
+ * @param {Cartesian3} result
+ * @returns
+ */
+function getVertexPosition(
+  encoding,
   mode,
   projection,
+  vertices,
+  index,
+  result,
 ) {
-  // from here: http://publications.lib.chalmers.se/records/fulltext/250170/250170.pdf
-  // find all the nodes which intersect the ray
-
-  let queue = [terrainPicker._rootNode];
-  const intersections = [];
-  while (queue.length) {
-    const n = queue.pop();
-    const aabb = n.aabb;
-    const interval = IntersectionTests.rayAxisAlignedBoundingBox(
-      transformedRay,
-      aabb,
-    );
-    if (interval) {
-      const isLeaf = !n.children.length || n.buildingChildren;
-      if (isLeaf) {
-        intersections.push({
-          node: n,
-          interval: interval,
-        });
-      } else {
-        queue = queue.concat(n.children);
-      }
-    }
+  let position = encoding.getExaggeratedPosition(vertices, index, result);
+  if (mode === SceneMode.SCENE3D) {
+    return position;
   }
 
-  // sort each intersection node by start ascending
-  const sortedIntersections = intersections.sort(function (a, b) {
-    return a.interval.start - b.interval.start;
-  });
+  const ellipsoid = projection.ellipsoid;
+  const positionCartographic = ellipsoid.cartesianToCartographic(
+    position,
+    scratchCartographic,
+  );
+  position = projection.project(positionCartographic, result);
+  // Swizzle because coordinate basis are different in 2D/Columbus View
+  position = Cartesian3.fromElements(
+    position.z,
+    position.x,
+    position.y,
+    result,
+  );
 
-  let minT = Number.MAX_VALUE;
-  // for each intersected node - test every triangle which falls in that node
-  for (let i = 0; i < sortedIntersections.length; i++) {
-    const intersection = sortedIntersections[i];
-    const intersectionResult = getClosestTriangleInNode(
-      terrainPicker,
-      ray,
-      intersection.node,
-      cullBackFaces,
-      mode,
-      projection,
-    );
-    minT = Math.min(intersectionResult, minT);
-    if (minT !== Number.MAX_VALUE) {
-      break;
-    }
-  }
-
-  if (minT !== Number.MAX_VALUE) {
-    return Ray.getPoint(ray, minT);
-  }
-
-  return undefined;
+  return position;
 }
 
+/**
+ * Adds triangles to the child nodes of the given node by launching a worker process to do the categorization.
+ *
+ * @param {Matrix4} inverseTransform
+ * @param {TerrainNode} node
+ * @param {Uint32Array} triangleIndices
+ * @param {Float32Array} trianglePositions
+ * @returns {Promise<void>} A promise that resolves when the triangles have been added to the child nodes.
+ */
 async function addTrianglesToChildrenNodes(
   inverseTransform,
   node,

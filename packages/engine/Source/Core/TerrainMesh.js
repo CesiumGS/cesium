@@ -1,4 +1,5 @@
 import SceneMode from "../Scene/SceneMode.js";
+import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Matrix4 from "./Matrix4.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
@@ -171,7 +172,7 @@ function TerrainMesh(
    * Currently, only computed when needed for picking.
    * @type {Matrix4}
    */
-  this.transform = new Matrix4();
+  this._transform = new Matrix4();
 
   /**
    * True if the transform needs to be recomputed (due to changes in exaggeration or scene mode).
@@ -183,9 +184,17 @@ function TerrainMesh(
     vertices,
     indices,
     encoding,
-    this.transform,
+    this._transform,
   );
 }
+
+TerrainMesh.prototype.getTransform = function (mode, projection) {
+  if (this._recomputeTransform && defined(mode) && defined(projection)) {
+    computeTransform(this, mode, projection, this._transform);
+    this._recomputeTransform = false;
+  }
+  return this._transform;
+};
 
 function computeTransform(mesh, mode, projection, result) {
   const exaggeration = mesh.encoding.exaggeration;
@@ -232,12 +241,7 @@ TerrainMesh.prototype.pickRay = function (
   mode,
   projection,
 ) {
-  // For the time being, the only consumer of the TerrainMesh's transform in the terrain picker. To avoid
-  // unnecessary recomputation, we only update it when it's needed. This could be changed later, if needed.
-  if (this._recomputeTransform) {
-    computeTransform(this, mode, projection, this.transform);
-    this._recomputeTransform = false;
-  }
+  this.getTransform(mode, projection); // Ensure transform is up to date
   return this._terrainPicker.rayIntersect(ray, cullBackFaces, mode, projection);
 };
 
