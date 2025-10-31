@@ -180,6 +180,10 @@ function TerrainMesh(
    */
   this._recomputeTransform = true;
 
+  /**
+   * The terrain picker for this mesh, used for ray intersection tests.
+   * @type {TerrainPicker}
+   */
   this._terrainPicker = new TerrainPicker(
     vertices,
     indices,
@@ -229,11 +233,12 @@ function computeTransform(mesh, mode, projection, result) {
 
 /**
  * Gives the point on the mesh where the give ray intersects
- * @param {Ray} ray
- * @param {boolean} cullBackFaces
- * @param {SceneMode} mode
- * @param projection
- * @returns {Cartesian3}
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {boolean} cullBackFaces Whether to consider back-facing triangles as intersections.
+ * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
+ * @param {MapProjection} projection The map projection.
+ * @returns {Cartesian3} The point on the mesh where the ray intersects, or undefined if there is no intersection.
+ * @private
  */
 TerrainMesh.prototype.pickRay = function (
   ray,
@@ -245,6 +250,12 @@ TerrainMesh.prototype.pickRay = function (
   return this._terrainPicker.rayIntersect(ray, cullBackFaces, mode, projection);
 };
 
+/**
+ * Updates the terrain mesh to account for changes in vertical exaggeration.
+ * @param {Number} exaggeration A scalar used to exaggerate terrain.
+ * @param {Number} exaggerationRelativeHeight The relative height from which terrain is exaggerated.
+ * @private
+ */
 TerrainMesh.prototype.updateExaggeration = function (
   exaggeration,
   exaggerationRelativeHeight,
@@ -256,6 +267,11 @@ TerrainMesh.prototype.updateExaggeration = function (
   this._recomputeTransform = true;
 };
 
+/**
+ * Updates the terrain mesh to account for changes in scene mode.
+ * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
+ * @private
+ */
 TerrainMesh.prototype.updateSceneMode = function (mode) {
   this._terrainPicker.needsRebuild = true;
   this._recomputeTransform = true;

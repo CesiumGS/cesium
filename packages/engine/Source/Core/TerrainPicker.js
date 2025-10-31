@@ -175,6 +175,7 @@ const scratchTrianglePoints = [
  * @param {Boolean} cullBackFaces Whether to consider back-facing triangles as intersections.
  * @returns {Cartesian3 | undefined} result The intersection point, or undefined if there is no intersection.
  * @memberof TerrainPicker
+ * @private
  */
 TerrainPicker.prototype.rayIntersect = function (
   ray,
@@ -217,6 +218,7 @@ TerrainPicker.prototype.rayIntersect = function (
 /**
  * Resets the terrain picker's quadtree structure to just the root node. Done whenever the underlying terrain mesh changes.
  * @param terrainPicker The terrain picker to reset.
+ * @private
  */
 function reset(terrainPicker) {
   // PERFORMANCE_IDEA: warm-start the terrain picker by building a level on a worker.
@@ -269,6 +271,12 @@ function createAABBForNode(x, y, level) {
 /**
  * Packs triangle vertex positions and index into provided buffers, for the worker to process.
  * (The worker does tests to organize triangles into child nodes of the quadtree.)
+ * @param {Float32Array} trianglePositionsBuffer The buffer to pack triangle vertex positions into.
+ * @param {Uint32Array} triangleIndicesBuffer The buffer to pack triangle indices into.
+ * @param {Cartesian3[]} trianglePosition The triangle's vertex positions.
+ * @param {number} triangleIndex The triangle's index in the overall tile's index buffer.
+ * @param {number} bufferIndex The index to use to pack into the buffers.
+ * @private
  */
 function packTriangleBuffers(
   trianglePositionsBuffer,
@@ -302,6 +310,7 @@ function packTriangleBuffers(
  * @typedef {Object} IntersectingNode
  * @property {TerrainPickerNode} node - The intersecting quadtree node.
  * @property {Interval} interval - The interval along the ray where the intersection occurs.
+ * @private
  */
 
 /**
@@ -310,6 +319,7 @@ function packTriangleBuffers(
  * @param {TerrainPickerNode} currentNode The current node being tested.
  * @param {Ray} ray The ray to test.
  * @param {IntersectingNode[]} intersectingNodes The array to store intersecting nodes in.
+ * @private
  */
 function getNodesIntersectingRay(currentNode, ray, intersectingNodes) {
   const interval = IntersectionTests.rayAxisAlignedBoundingBox(
@@ -345,6 +355,7 @@ function getNodesIntersectingRay(currentNode, ray, intersectingNodes) {
  * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
  * @param {MapProjection} projection The map projection.
  * @returns The closest point in world space, or undefined if no intersection.
+ * @private
  */
 function getClosestPointInNode(
   terrainPicker,
@@ -393,6 +404,7 @@ function getClosestPointInNode(
  * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
  * @param {MapProjection} projection The map projection.
  * @returns {number} The closest intersection t value along the ray, or Number.MAX_VALUE if no intersection.
+ * @private
  */
 function getClosestTriangleInNode(
   terrainPicker,
@@ -496,6 +508,7 @@ const scratchCartographic = new Cartographic();
  * @param {Number} index The index of the vertex to get.
  * @param {Cartesian3} result The decoded, exaggerated, and possibly projected vertex position.
  * @returns {Cartesian3} The result vertex position.
+ * @private
  */
 function getVertexPosition(
   encoding,
@@ -535,6 +548,7 @@ function getVertexPosition(
  * @param {Uint32Array} triangleIndices
  * @param {Float32Array} trianglePositions
  * @returns {Promise<void>} A promise that resolves when the triangles have been added to the child nodes.
+ * @private
  */
 async function addTrianglesToChildrenNodes(
   inverseTransform,
