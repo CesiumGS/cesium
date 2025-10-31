@@ -173,38 +173,6 @@ function VoxelPrimitive(options) {
   this._maxBoundsOld = new Cartesian3();
 
   /**
-   * Minimum bounds with vertical exaggeration applied
-   *
-   * @type {Cartesian3}
-   * @private
-   */
-  this._exaggeratedMinBounds = new Cartesian3();
-
-  /**
-   * Used to detect if the shape is dirty.
-   *
-   * @type {Cartesian3}
-   * @private
-   */
-  this._exaggeratedMinBoundsOld = new Cartesian3();
-
-  /**
-   * Maximum bounds with vertical exaggeration applied
-   *
-   * @type {Cartesian3}
-   * @private
-   */
-  this._exaggeratedMaxBounds = new Cartesian3();
-
-  /**
-   * Used to detect if the shape is dirty.
-   *
-   * @type {Cartesian3}
-   * @private
-   */
-  this._exaggeratedMaxBoundsOld = new Cartesian3();
-
-  /**
    * This member is not known until the provider is ready.
    *
    * @type {Cartesian3}
@@ -239,38 +207,20 @@ function VoxelPrimitive(options) {
   this._maxClippingBoundsOld = new Cartesian3();
 
   /**
-   * Minimum clipping bounds with vertical exaggeration applied
+   * Vertical exaggeration applied to the voxel shape
    *
-   * @type {Cartesian3}
+   * @type {number}
    * @private
    */
-  this._exaggeratedMinClippingBounds = new Cartesian3();
+  this._verticalExaggeration = 1.0;
 
   /**
-   * Used to detect if the clipping is dirty.
-   * This member is not known until the provider is ready.
+   * The height relative to which the shape is exaggerated.
    *
-   * @type {Cartesian3}
+   * @type {number}
    * @private
    */
-  this._exaggeratedMinClippingBoundsOld = new Cartesian3();
-
-  /**
-   * Maximum clipping bounds with vertical exaggeration applied
-   *
-   * @type {Cartesian3}
-   * @private
-   */
-  this._exaggeratedMaxClippingBounds = new Cartesian3();
-
-  /**
-   * Used to detect if the clipping is dirty.
-   * This member is not known until the provider is ready.
-   *
-   * @type {Cartesian3}
-   * @private
-   */
-  this._exaggeratedMaxClippingBoundsOld = new Cartesian3();
+  this._verticalExaggerationRelativeHeight = 0.0;
 
   /**
    * Clipping planes on the primitive
@@ -305,30 +255,12 @@ function VoxelPrimitive(options) {
   this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
-   * Model matrix with vertical exaggeration applied. Only used for BOX shape type.
+   * Used to detect if the model matrix is dirty.
    *
    * @type {Matrix4}
    * @private
    */
-  this._exaggeratedModelMatrix = Matrix4.clone(this._modelMatrix);
-
-  /**
-   * The primitive's model matrix multiplied by the provider's model matrix.
-   * This member is not known until the provider is ready.
-   *
-   * @type {Matrix4}
-   * @private
-   */
-  this._compoundModelMatrix = new Matrix4();
-
-  /**
-   * Used to detect if the shape is dirty.
-   * This member is not known until the provider is ready.
-   *
-   * @type {Matrix4}
-   * @private
-   */
-  this._compoundModelMatrixOld = new Matrix4();
+  this._modelMatrixOld = Matrix4.clone(this._modelMatrix);
 
   /**
    * @type {CustomShader}
@@ -656,29 +588,7 @@ function initialize(primitive, provider) {
   primitive.minClippingBounds = minBounds.clone();
   primitive.maxClippingBounds = maxBounds.clone();
 
-  // Initialize the exaggerated versions of bounds and model matrix
-  primitive._exaggeratedMinBounds = Cartesian3.clone(
-    primitive._minBounds,
-    primitive._exaggeratedMinBounds,
-  );
-  primitive._exaggeratedMaxBounds = Cartesian3.clone(
-    primitive._maxBounds,
-    primitive._exaggeratedMaxBounds,
-  );
-  primitive._exaggeratedMinClippingBounds = Cartesian3.clone(
-    primitive._minClippingBounds,
-    primitive._exaggeratedMinClippingBounds,
-  );
-  primitive._exaggeratedMaxClippingBounds = Cartesian3.clone(
-    primitive._maxClippingBounds,
-    primitive._exaggeratedMaxClippingBounds,
-  );
-  primitive._exaggeratedModelMatrix = Matrix4.clone(
-    primitive._modelMatrix,
-    primitive._exaggeratedModelMatrix,
-  );
-
-  checkTransformAndBounds(primitive, provider);
+  checkTransformAndBounds(primitive);
 
   // Create the shape object, and update it so it is valid for VoxelTraversal
   const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
@@ -1218,13 +1128,12 @@ VoxelPrimitive.prototype.update = function (frameState) {
     return;
   }
 
-  updateVerticalExaggeration(this, frameState);
-
   // Check if the shape is dirty before updating it. This needs to happen every
   // frame because the member variables can be modified externally via the
   // getters.
-  const shapeDirty = checkTransformAndBounds(this, provider);
-  if (shapeDirty) {
+  const shapeDirty = checkTransformAndBounds(this);
+  const exaggerationChanged = updateVerticalExaggeration(this, frameState);
+  if (shapeDirty || exaggerationChanged) {
     this._shapeVisible = updateShapeAndTransforms(this);
     if (checkShapeDefines(this)) {
       this._shaderDirty = true;
@@ -1425,126 +1334,30 @@ function getTileCoordinates(primitive, positionLocal, result) {
 const scratchExaggerationScale = new Cartesian3();
 const scratchExaggerationCenter = new Cartesian3();
 const scratchCartographicCenter = new Cartographic();
-const scratchExaggerationTranslation = new Cartesian3();
 
 /**
- * Update the exaggerated bounds of a primitive to account for vertical exaggeration
- * @param {VoxelPrimitive} primitive
- * @param {FrameState} frameState
+ * Check for changes in the vertical exaggeration of the primitive
+ * @param {VoxelPrimitive} primitive The primitive to update
+ * @param {FrameState} frameState The current frame state
+ * @returns {boolean} <code>true</code> if the exaggeration was changed
  * @private
  */
 function updateVerticalExaggeration(primitive, frameState) {
-  primitive._exaggeratedMinBounds = Cartesian3.clone(
-    primitive._minBounds,
-    primitive._exaggeratedMinBounds,
-  );
-  primitive._exaggeratedMaxBounds = Cartesian3.clone(
-    primitive._maxBounds,
-    primitive._exaggeratedMaxBounds,
-  );
-  primitive._exaggeratedMinClippingBounds = Cartesian3.clone(
-    primitive._minClippingBounds,
-    primitive._exaggeratedMinClippingBounds,
-  );
-  primitive._exaggeratedMaxClippingBounds = Cartesian3.clone(
-    primitive._maxClippingBounds,
-    primitive._exaggeratedMaxClippingBounds,
-  );
+  const { verticalExaggeration, verticalExaggerationRelativeHeight } =
+    frameState;
 
-  if (primitive.shape === VoxelShapeType.ELLIPSOID) {
-    // Apply the exaggeration by stretching the height bounds
-    const relativeHeight = frameState.verticalExaggerationRelativeHeight;
-    const exaggeration = frameState.verticalExaggeration;
-    primitive._exaggeratedMinBounds.z = VerticalExaggeration.getHeight(
-      primitive._minBounds.z,
-      exaggeration,
-      relativeHeight,
-    );
-    primitive._exaggeratedMaxBounds.z = VerticalExaggeration.getHeight(
-      primitive._maxBounds.z,
-      exaggeration,
-      relativeHeight,
-    );
-    primitive._exaggeratedMinClippingBounds.z = VerticalExaggeration.getHeight(
-      primitive._minClippingBounds.z,
-      exaggeration,
-      relativeHeight,
-    );
-    primitive._exaggeratedMaxClippingBounds.z = VerticalExaggeration.getHeight(
-      primitive._maxClippingBounds.z,
-      exaggeration,
-      relativeHeight,
-    );
-  } else {
-    // Apply the exaggeration via the model matrix
-    const exaggerationScale = Cartesian3.fromElements(
-      1.0,
-      1.0,
-      frameState.verticalExaggeration,
-      scratchExaggerationScale,
-    );
-    primitive._exaggeratedModelMatrix = Matrix4.multiplyByScale(
-      primitive._modelMatrix,
-      exaggerationScale,
-      primitive._exaggeratedModelMatrix,
-    );
-    primitive._exaggeratedModelMatrix = Matrix4.multiplyByTranslation(
-      primitive._exaggeratedModelMatrix,
-      computeBoxExaggerationTranslation(primitive, frameState),
-      primitive._exaggeratedModelMatrix,
-    );
-  }
-}
-
-function computeBoxExaggerationTranslation(primitive, frameState) {
-  // Compute translation based on box center, relative height, and exaggeration
-  const {
-    shapeTransform = Matrix4.IDENTITY,
-    globalTransform = Matrix4.IDENTITY,
-  } = primitive._provider;
-
-  // Find the Cartesian position of the center of the OBB
-  const initialCenter = Matrix4.getTranslation(
-    shapeTransform,
-    scratchExaggerationCenter,
-  );
-  const intermediateCenter = Matrix4.multiplyByPoint(
-    primitive._modelMatrix,
-    initialCenter,
-    scratchExaggerationCenter,
-  );
-  const transformedCenter = Matrix4.multiplyByPoint(
-    globalTransform,
-    intermediateCenter,
-    scratchExaggerationCenter,
-  );
-
-  // Find the cartographic height
-  const ellipsoid = Ellipsoid.WGS84;
-  const centerCartographic = ellipsoid.cartesianToCartographic(
-    transformedCenter,
-    scratchCartographicCenter,
-  );
-
-  let centerHeight = 0.0;
-  if (defined(centerCartographic)) {
-    centerHeight = centerCartographic.height;
+  if (
+    primitive._verticalExaggeration === verticalExaggeration &&
+    primitive._verticalExaggerationRelativeHeight ===
+      verticalExaggerationRelativeHeight
+  ) {
+    return false;
   }
 
-  // Find the shift that will put the center in the right position relative
-  // to relativeHeight, after it is scaled by verticalExaggeration
-  const exaggeratedHeight = VerticalExaggeration.getHeight(
-    centerHeight,
-    frameState.verticalExaggeration,
-    frameState.verticalExaggerationRelativeHeight,
-  );
-
-  return Cartesian3.fromElements(
-    0.0,
-    0.0,
-    (exaggeratedHeight - centerHeight) / frameState.verticalExaggeration,
-    scratchExaggerationTranslation,
-  );
+  primitive._verticalExaggeration = verticalExaggeration;
+  primitive._verticalExaggerationRelativeHeight =
+    verticalExaggerationRelativeHeight;
+  return true;
 }
 
 /**
@@ -1641,51 +1454,16 @@ function initFromProvider(primitive, provider, context) {
 /**
  * Track changes in provider transform and primitive bounds
  * @param {VoxelPrimitive} primitive
- * @param {VoxelProvider} provider
  * @returns {boolean} Whether any of the transform or bounds changed
  * @private
  */
-function checkTransformAndBounds(primitive, provider) {
-  const shapeTransform = provider.shapeTransform ?? Matrix4.IDENTITY;
-  const globalTransform = provider.globalTransform ?? Matrix4.IDENTITY;
-
-  // Compound model matrix = global transform * model matrix * shape transform
-  Matrix4.multiplyTransformation(
-    globalTransform,
-    primitive._exaggeratedModelMatrix,
-    primitive._compoundModelMatrix,
-  );
-  Matrix4.multiplyTransformation(
-    primitive._compoundModelMatrix,
-    shapeTransform,
-    primitive._compoundModelMatrix,
-  );
+function checkTransformAndBounds(primitive) {
   const numChanges =
-    updateBound(primitive, "_compoundModelMatrix", "_compoundModelMatrixOld") +
+    updateBound(primitive, "_modelMatrix", "_modelMatrixOld") +
     updateBound(primitive, "_minBounds", "_minBoundsOld") +
     updateBound(primitive, "_maxBounds", "_maxBoundsOld") +
-    updateBound(
-      primitive,
-      "_exaggeratedMinBounds",
-      "_exaggeratedMinBoundsOld",
-    ) +
-    updateBound(
-      primitive,
-      "_exaggeratedMaxBounds",
-      "_exaggeratedMaxBoundsOld",
-    ) +
     updateBound(primitive, "_minClippingBounds", "_minClippingBoundsOld") +
-    updateBound(primitive, "_maxClippingBounds", "_maxClippingBoundsOld") +
-    updateBound(
-      primitive,
-      "_exaggeratedMinClippingBounds",
-      "_exaggeratedMinClippingBoundsOld",
-    ) +
-    updateBound(
-      primitive,
-      "_exaggeratedMaxClippingBounds",
-      "_exaggeratedMaxClippingBoundsOld",
-    );
+    updateBound(primitive, "_maxClippingBounds", "_maxClippingBoundsOld");
   return numChanges > 0;
 }
 
@@ -1709,6 +1487,13 @@ function updateBound(primitive, newBoundKey, oldBoundKey) {
   return changed ? 1 : 0;
 }
 
+const scratchExaggeratedMinBounds = new Cartesian3();
+const scratchExaggeratedMaxBounds = new Cartesian3();
+const scratchExaggeratedMinClippingBounds = new Cartesian3();
+const scratchExaggeratedMaxClippingBounds = new Cartesian3();
+const scratchExaggeratedModelMatrix = new Matrix4();
+const scratchCompoundModelMatrix = new Matrix4();
+
 /**
  * Update the shape and related transforms
  * @param {VoxelPrimitive} primitive
@@ -1716,13 +1501,95 @@ function updateBound(primitive, newBoundKey, oldBoundKey) {
  * @private
  */
 function updateShapeAndTransforms(primitive) {
+  const verticalExaggeration = primitive._verticalExaggeration;
+  const verticalExaggerationRelativeHeight =
+    primitive._verticalExaggerationRelativeHeight;
+  const exaggeratedMinBounds = Cartesian3.clone(
+    primitive._minBounds,
+    scratchExaggeratedMinBounds,
+  );
+  const exaggeratedMaxBounds = Cartesian3.clone(
+    primitive._maxBounds,
+    scratchExaggeratedMaxBounds,
+  );
+  const exaggeratedMinClippingBounds = Cartesian3.clone(
+    primitive._minClippingBounds,
+    scratchExaggeratedMinClippingBounds,
+  );
+  const exaggeratedMaxClippingBounds = Cartesian3.clone(
+    primitive._maxClippingBounds,
+    scratchExaggeratedMaxClippingBounds,
+  );
+  const exaggeratedModelMatrix = Matrix4.clone(
+    primitive._modelMatrix,
+    scratchExaggeratedModelMatrix,
+  );
+
+  if (primitive.shape === VoxelShapeType.ELLIPSOID) {
+    // Apply the exaggeration by stretching the height bounds
+    exaggeratedMinBounds.z = VerticalExaggeration.getHeight(
+      primitive._minBounds.z,
+      verticalExaggeration,
+      verticalExaggerationRelativeHeight,
+    );
+    exaggeratedMaxBounds.z = VerticalExaggeration.getHeight(
+      primitive._maxBounds.z,
+      verticalExaggeration,
+      verticalExaggerationRelativeHeight,
+    );
+    exaggeratedMinClippingBounds.z = VerticalExaggeration.getHeight(
+      primitive._minClippingBounds.z,
+      verticalExaggeration,
+      verticalExaggerationRelativeHeight,
+    );
+    exaggeratedMaxClippingBounds.z = VerticalExaggeration.getHeight(
+      primitive._maxClippingBounds.z,
+      verticalExaggeration,
+      verticalExaggerationRelativeHeight,
+    );
+  } else {
+    // Apply the exaggeration via the model matrix
+    const exaggerationScale = Cartesian3.fromElements(
+      1.0,
+      1.0,
+      verticalExaggeration,
+      scratchExaggerationScale,
+    );
+    Matrix4.multiplyByScale(
+      exaggeratedModelMatrix,
+      exaggerationScale,
+      exaggeratedModelMatrix,
+    );
+    Matrix4.multiplyByTranslation(
+      exaggeratedModelMatrix,
+      computeBoxExaggerationTranslation(primitive),
+      exaggeratedModelMatrix,
+    );
+  }
+
+  const provider = primitive._provider;
+  const shapeTransform = provider.shapeTransform ?? Matrix4.IDENTITY;
+  const globalTransform = provider.globalTransform ?? Matrix4.IDENTITY;
+
+  // Compound model matrix = global transform * model matrix * shape transform
+  const compoundModelMatrix = Matrix4.multiplyTransformation(
+    globalTransform,
+    exaggeratedModelMatrix,
+    scratchCompoundModelMatrix,
+  );
+  Matrix4.multiplyTransformation(
+    compoundModelMatrix,
+    shapeTransform,
+    compoundModelMatrix,
+  );
+
   const shape = primitive._shape;
   const visible = shape.update(
-    primitive._compoundModelMatrix,
-    primitive._exaggeratedMinBounds,
-    primitive._exaggeratedMaxBounds,
-    primitive._exaggeratedMinClippingBounds,
-    primitive._exaggeratedMaxClippingBounds,
+    compoundModelMatrix,
+    exaggeratedMinBounds,
+    exaggeratedMaxBounds,
+    exaggeratedMinClippingBounds,
+    exaggeratedMaxClippingBounds,
   );
   if (!visible) {
     return false;
@@ -1742,6 +1609,70 @@ function updateShapeAndTransforms(primitive) {
   );
 
   return true;
+}
+
+const scratchExaggerationTranslation = new Cartesian3();
+
+/**
+ * Compute the translation to apply to box shapes to account for vertical exaggeration
+ *
+ * @param {VoxelPrimitive} primitive
+ * @returns {Cartesian3} The translation to apply to the box to account for vertical exaggeration
+ * @private
+ */
+function computeBoxExaggerationTranslation(primitive) {
+  const verticalExaggeration = primitive._verticalExaggeration;
+  const verticalExaggerationRelativeHeight =
+    primitive._verticalExaggerationRelativeHeight;
+
+  // Compute translation based on box center, relative height, and exaggeration
+  const {
+    shapeTransform = Matrix4.IDENTITY,
+    globalTransform = Matrix4.IDENTITY,
+  } = primitive._provider;
+
+  // Find the Cartesian position of the center of the OBB
+  const initialCenter = Matrix4.getTranslation(
+    shapeTransform,
+    scratchExaggerationCenter,
+  );
+  const intermediateCenter = Matrix4.multiplyByPoint(
+    primitive._modelMatrix,
+    initialCenter,
+    scratchExaggerationCenter,
+  );
+  const transformedCenter = Matrix4.multiplyByPoint(
+    globalTransform,
+    intermediateCenter,
+    scratchExaggerationCenter,
+  );
+
+  // Find the cartographic height
+  const ellipsoid = Ellipsoid.WGS84;
+  const centerCartographic = ellipsoid.cartesianToCartographic(
+    transformedCenter,
+    scratchCartographicCenter,
+  );
+
+  let centerHeight = 0.0;
+  if (defined(centerCartographic)) {
+    centerHeight = centerCartographic.height;
+  }
+
+  // Find the shift that will put the center in the right position relative
+  // to relativeHeight, after it is scaled by verticalExaggeration
+  const exaggeratedHeight = VerticalExaggeration.getHeight(
+    centerHeight,
+    verticalExaggeration,
+    verticalExaggerationRelativeHeight,
+  );
+
+  return Cartesian3.fromElements(
+    0.0,
+    0.0,
+    (exaggeratedHeight - centerHeight) / verticalExaggeration,
+    scratchExaggerationTranslation,
+  );
 }
 
 /**
