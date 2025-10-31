@@ -858,7 +858,7 @@ const scratchUv2 = new Cartesian2();
 const scratchBary = new Cartesian3();
 
 /**
- * Computes the terrain height at a specified longitude and latitude.
+ * Computes the terrain height at a specified longitude and latitude. Returns 0.0 if the position is outside the mesh.
  * @private
  * @param {TerrainMesh} mesh The terrain mesh.
  * @param {Rectangle} rectangle The rectangle covered by this terrain data.
@@ -923,6 +923,7 @@ function interpolateMeshHeight(mesh, rectangle, longitude, latitude) {
   }
 
   // Position does not lie in any triangle in this mesh.
+  // This should not happen often since we start by clamping to the rectangle.
   return 0.0;
 }
 

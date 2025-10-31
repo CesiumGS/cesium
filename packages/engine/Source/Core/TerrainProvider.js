@@ -15,6 +15,7 @@ import CesiumMath from "./Math.js";
  * @see CesiumTerrainProvider
  * @see VRTheWorldTerrainProvider
  * @see GoogleEarthEnterpriseTerrainProvider
+ * @see ArcGISTiledElevationTerrainProvider
  * @see Cesium3DTilesTerrainProvider
  */
 function TerrainProvider() {
