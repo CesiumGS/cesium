@@ -2,7 +2,7 @@ name: sandcastle-dev
 on:
   push:
     branches:
-      - 'cesium.com'
+      - "main"
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -20,7 +20,7 @@ jobs:
       - name: install node 22
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: "22"
       - name: npm install
         run: npm install
       - name: build website release
@@ -28,7 +28,7 @@ jobs:
       - name: build types
         run: npm run build-ts
       - name: build prod sandcastle
-        run: npm run build-prod -w packages/sandcastle -- -l warn
+        run: npm run build-sandcastle
       - name: deploy to dev-sandcastle.cesium.com
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: |

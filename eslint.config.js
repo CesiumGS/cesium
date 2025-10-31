@@ -48,6 +48,8 @@ export default [
       "scripts/**/*.js",
       "packages/sandcastle/scripts/**/*.js",
       "gulpfile.js",
+      "gulpfile.apps.js",
+      "gulpfile.makezip.js",
       "server.js",
     ],
     ...configCesium.configs.node,

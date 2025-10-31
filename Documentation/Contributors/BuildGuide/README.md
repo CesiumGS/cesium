@@ -77,7 +77,7 @@ npm start
 Then browse to [http://localhost:8080/](http://localhost:8080/). The landing page includes apps and tools commonly used during development, including:
 
 - **Hello World** : an example for how to create a 3D globe. [Tutorial here](https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/)
-- **Sandcastle** : an app for viewing and creating [code examples](https://sandcastle.cesium.com?src=Hello%20World.html&label=Showcases), complete with a live preview
+- **Sandcastle** : an app for viewing and creating [code examples](https://sandcastle.cesium.com), complete with a live preview
 - **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/TestingGuide/README.md#testing-guide)
 - **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
 
