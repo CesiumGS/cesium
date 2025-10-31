@@ -1,10 +1,7 @@
-import SceneMode from "../Scene/SceneMode.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Matrix4 from "./Matrix4.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import TerrainPicker from "./TerrainPicker.js";
-import Transforms from "./Transforms.js";
 import VerticalExaggeration from "./VerticalExaggeration.js";
 
 /**
@@ -192,15 +189,22 @@ function TerrainMesh(
   );
 }
 
-TerrainMesh.prototype.getTransform = function (mode, projection) {
-  if (this._recomputeTransform && defined(mode) && defined(projection)) {
-    computeTransform(this, mode, projection, this._transform);
-    this._recomputeTransform = false;
-  }
-  return this._transform;
-};
+Object.defineProperties(TerrainMesh.prototype, {
+  /**
+   * Gets the tile's transform from model to world coordinates based on the terrain mesh's oriented bounding box.
+   */
+  transform: {
+    get: function () {
+      if (this._recomputeTransform) {
+        computeTransform(this, this._transform);
+        this._recomputeTransform = false;
+      }
+      return this._transform;
+    },
+  },
+});
 
-function computeTransform(mesh, mode, projection, result) {
+function computeTransform(mesh, result) {
   const exaggeration = mesh.encoding.exaggeration;
   const exaggerationRelativeHeight = mesh.encoding.exaggerationRelativeHeight;
 
@@ -224,11 +228,7 @@ function computeTransform(mesh, mode, projection, result) {
     mesh.orientedBoundingBox,
   );
 
-  OrientedBoundingBox.computeTransformation(obb, result);
-
-  return mode === SceneMode.SCENE3D
-    ? result
-    : Transforms.basisTo2D(projection, result, result);
+  return OrientedBoundingBox.computeTransformation(obb, result);
 }
 
 /**
@@ -246,8 +246,14 @@ TerrainMesh.prototype.pickRay = function (
   mode,
   projection,
 ) {
-  this.getTransform(mode, projection); // Ensure transform is up to date
-  return this._terrainPicker.rayIntersect(ray, cullBackFaces, mode, projection);
+  // Note: use the getter for transform to ensure it's up to date.
+  return this._terrainPicker.rayIntersect(
+    ray,
+    this.transform,
+    cullBackFaces,
+    mode,
+    projection,
+  );
 };
 
 /**

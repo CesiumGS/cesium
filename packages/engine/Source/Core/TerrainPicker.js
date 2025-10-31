@@ -7,6 +7,7 @@ import Ray from "./Ray.js";
 import TaskProcessor from "./TaskProcessor.js";
 import Cartographic from "./Cartographic.js";
 import SceneMode from "../Scene/SceneMode.js";
+import Transforms from "./Transforms.js";
 
 // Terrain picker can be 4 levels deep (0-3)
 const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
@@ -55,11 +56,6 @@ function TerrainPicker(vertices, indices, encoding, transform) {
    * @type {TerrainEncoding}
    */
   this._encoding = encoding;
-  /**
-   * The terrain mesh tile's transform from local space to world space.
-   * @type {Matrix4}
-   */
-  this._transform = transform;
   /**
    * The inverse of the terrain mesh tile's transform from world space to local space.
    * @type {Matrix4}
@@ -172,20 +168,24 @@ const scratchTrianglePoints = [
 /**
  * Determines the point on the mesh where the given ray intersects.
  * @param {Ray} ray The ray to test.
+ * @param {Matrix4} tileTransform The terrain mesh tile's transform from local space to world space.
  * @param {Boolean} cullBackFaces Whether to consider back-facing triangles as intersections.
+ * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
+ * @param {MapProjection} projection The map projection.
  * @returns {Cartesian3 | undefined} result The intersection point, or undefined if there is no intersection.
  * @memberof TerrainPicker
  * @private
  */
 TerrainPicker.prototype.rayIntersect = function (
   ray,
+  tileTransform,
   cullBackFaces,
   mode,
   projection,
 ) {
   // Lazily (re)create the terrain picker
   if (this._needsRebuild) {
-    reset(this);
+    reset(this, tileTransform, mode, projection);
   }
 
   const invTransform = this._inverseTransform;
@@ -215,16 +215,22 @@ TerrainPicker.prototype.rayIntersect = function (
   );
 };
 
+const scratchTransform = new Matrix4();
+
 /**
  * Resets the terrain picker's quadtree structure to just the root node. Done whenever the underlying terrain mesh changes.
  * @param terrainPicker The terrain picker to reset.
  * @private
  */
-function reset(terrainPicker) {
+function reset(terrainPicker, tileTransform, mode, projection) {
   // PERFORMANCE_IDEA: warm-start the terrain picker by building a level on a worker.
   // This currently isn't feasible because you can only copy the vertex buffer to a worker (slow) or transfer ownership (can't do picking on main thread in meantime).
   // SharedArrayBuffers could be used, but most environments do not support them.
-  Matrix4.inverse(terrainPicker._transform, terrainPicker._inverseTransform);
+  const transform =
+    mode === SceneMode.SCENE3D
+      ? tileTransform
+      : Transforms.basisTo2D(projection, tileTransform, scratchTransform);
+  Matrix4.inverse(transform, terrainPicker._inverseTransform);
 
   terrainPicker._needsRebuild = false;
   const intersectingTriangles = new Uint32Array(
