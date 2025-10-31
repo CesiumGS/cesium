@@ -12,6 +12,15 @@ const scratchTrianglePoints = [
 ];
 const scratchTriangleAABB = new AxisAlignedBoundingBox();
 
+/**
+ * Builds the next layer of the terrain picker's quadtree by determining which triangles intersect
+ * each of the four child nodes. (Essentially distributing the parent's triangles to its children.)
+ *
+ * Takes in the AABBs of the four child nodes in the tree's local space, an inverse transform
+ * to convert triangle positions to the tree's local space, and the parent node's triangle indices and positions.
+ *
+ * Returns an four arrays - one for each child node - containing the indices of the triangles that intersect each node.
+ */
 function incrementallyBuildTerrainPicker(parameters, transferableObjects) {
   // Rehydrate worker inputs
   const aabbs = new Float64Array(parameters.aabbs);
@@ -71,8 +80,10 @@ function incrementallyBuildTerrainPicker(parameters, transferableObjects) {
 }
 
 /**
- * @param {Number} triangleIdx starting index of the triangle corners in the array
- * @returns {AxisAlignedBoundingBox}
+ * Creates a tree-space axis-aligned bounding box from the given triangle points and inverse transform (from world to tree space).
+ * @param {Matrix4} inverseTransform transform from world space to tree local space
+ * @param {Cartesian3[]} trianglePoints array of 3 Cartesian3 points representing the triangle
+ * @returns {AxisAlignedBoundingBox} the axis-aligned bounding box enclosing the triangle in tree local space
  */
 function createAABBFromTriangle(inverseTransform, trianglePoints) {
   Matrix4.multiplyByPoint(
