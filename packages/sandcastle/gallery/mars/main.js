@@ -201,9 +201,6 @@ try {
       scaleByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.5),
       translucencyByDistance: new Cesium.NearFarScalar(2.5e7, 1.0, 4.0e7, 0.0),
       heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-      disableDepthTestDistance: new Cesium.CallbackProperty(() => {
-        return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
-      }, false),
     });
 
     entity.point = new Cesium.PointGraphics({
@@ -213,9 +210,6 @@ try {
       outlineWidth: 2,
       scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1.0, 4.0e7, 0.1),
       heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-      disableDepthTestDistance: new Cesium.CallbackProperty(() => {
-        return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
-      }, false),
     });
 
     entity.name = entity.properties.text.getValue();
