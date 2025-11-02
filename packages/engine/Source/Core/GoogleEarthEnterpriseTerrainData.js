@@ -210,6 +210,7 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
       result.vertexCountWithoutSkirts,
       result.minimumHeight,
       result.maximumHeight,
+      rectangleScratch,
       BoundingSphere.clone(result.boundingSphere3D),
       Cartesian3.clone(result.occludeePointInScaledSpace),
       result.numberOfAttributes,

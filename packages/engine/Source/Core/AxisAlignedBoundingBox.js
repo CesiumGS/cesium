@@ -223,6 +223,30 @@ AxisAlignedBoundingBox.intersectPlane = function (box, plane) {
 };
 
 /**
+ * Determines whether two axis aligned bounding boxes intersect.
+ *
+ * @param {AxisAlignedBoundingBox} box first box
+ * @param {AxisAlignedBoundingBox} other second box
+ * @returns {boolean} <code>true</code> if the boxes intersect; otherwise, <code>false</code>.
+ */
+AxisAlignedBoundingBox.intersectAxisAlignedBoundingBox = function (box, other) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("box", box);
+  Check.defined("other", other);
+  //>>includeEnd('debug');
+
+  // This short circuits in favor of AABBs that do not intersect.
+  return (
+    box.minimum.x <= other.maximum.x &&
+    box.maximum.x >= other.minimum.x &&
+    box.minimum.y <= other.maximum.y &&
+    box.maximum.y >= other.minimum.y &&
+    box.minimum.z <= other.maximum.z &&
+    box.maximum.z >= other.minimum.z
+  );
+};
+
+/**
  * Duplicates this AxisAlignedBoundingBox instance.
  *
  * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
@@ -243,6 +267,18 @@ AxisAlignedBoundingBox.prototype.clone = function (result) {
  */
 AxisAlignedBoundingBox.prototype.intersectPlane = function (plane) {
   return AxisAlignedBoundingBox.intersectPlane(this, plane);
+};
+
+/**
+ * Determines whether some other axis aligned bounding box intersects this box.
+ *
+ * @param {AxisAlignedBoundingBox} other The other axis aligned bounding box.
+ * @returns {boolean} <code>true</code> if the boxes intersect; otherwise, <code>false</code>.
+ */
+AxisAlignedBoundingBox.prototype.intersectAxisAlignedBoundingBox = function (
+  other,
+) {
+  return AxisAlignedBoundingBox.intersectAxisAlignedBoundingBox(this, other);
 };
 
 /**

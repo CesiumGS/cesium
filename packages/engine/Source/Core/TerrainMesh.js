@@ -1,3 +1,9 @@
+import Ellipsoid from "./Ellipsoid.js";
+import Matrix4 from "./Matrix4.js";
+import OrientedBoundingBox from "./OrientedBoundingBox.js";
+import TerrainPicker from "./TerrainPicker.js";
+import VerticalExaggeration from "./VerticalExaggeration.js";
+
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
  * usually created from raw {@link TerrainData}.
@@ -37,6 +43,7 @@ function TerrainMesh(
   vertexCountWithoutSkirts,
   minimumHeight,
   maximumHeight,
+  rectangle,
   boundingSphere3D,
   occludeePointInScaledSpace,
   vertexStride,
@@ -102,6 +109,12 @@ function TerrainMesh(
   this.maximumHeight = maximumHeight;
 
   /**
+   * The rectangle, in radians, covered by this tile.
+   * @type {Rectangle}
+   */
+  this.rectangle = rectangle;
+
+  /**
    * A bounding sphere that completely contains the tile.
    * @type {BoundingSphere}
    */
@@ -150,5 +163,124 @@ function TerrainMesh(
    * @type {number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
+
+  /**
+   * The transform from model to world coordinates based on the terrain mesh's oriented bounding box.
+   * Currently, only computed when needed for picking.
+   * @type {Matrix4}
+   */
+  this._transform = new Matrix4();
+
+  /**
+   * True if the transform needs to be recomputed (due to changes in exaggeration or scene mode).
+   * @type {boolean}
+   */
+  this._recomputeTransform = true;
+
+  /**
+   * The terrain picker for this mesh, used for ray intersection tests.
+   * @type {TerrainPicker}
+   */
+  this._terrainPicker = new TerrainPicker(
+    vertices,
+    indices,
+    encoding,
+    this._transform,
+  );
 }
+
+Object.defineProperties(TerrainMesh.prototype, {
+  /**
+   * Gets the tile's transform from model to world coordinates based on the terrain mesh's oriented bounding box.
+   */
+  transform: {
+    get: function () {
+      if (this._recomputeTransform) {
+        computeTransform(this, this._transform);
+        this._recomputeTransform = false;
+      }
+      return this._transform;
+    },
+  },
+});
+
+function computeTransform(mesh, result) {
+  const exaggeration = mesh.encoding.exaggeration;
+  const exaggerationRelativeHeight = mesh.encoding.exaggerationRelativeHeight;
+
+  const exaggeratedMinHeight = VerticalExaggeration.getHeight(
+    mesh.minimumHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const exaggeratedMaxHeight = VerticalExaggeration.getHeight(
+    mesh.maximumHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const obb = OrientedBoundingBox.fromRectangle(
+    mesh.rectangle,
+    exaggeratedMinHeight,
+    exaggeratedMaxHeight,
+    Ellipsoid.default,
+    mesh.orientedBoundingBox,
+  );
+
+  return OrientedBoundingBox.computeTransformation(obb, result);
+}
+
+/**
+ * Gives the point on the mesh where the give ray intersects
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {boolean} cullBackFaces Whether to consider back-facing triangles as intersections.
+ * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
+ * @param {MapProjection} projection The map projection.
+ * @returns {Cartesian3} The point on the mesh where the ray intersects, or undefined if there is no intersection.
+ * @private
+ */
+TerrainMesh.prototype.pickRay = function (
+  ray,
+  cullBackFaces,
+  mode,
+  projection,
+) {
+  // Note: use the getter for transform to ensure it's up to date.
+  return this._terrainPicker.rayIntersect(
+    ray,
+    this.transform,
+    cullBackFaces,
+    mode,
+    projection,
+  );
+};
+
+/**
+ * Updates the terrain mesh to account for changes in vertical exaggeration.
+ * @param {Number} exaggeration A scalar used to exaggerate terrain.
+ * @param {Number} exaggerationRelativeHeight The relative height from which terrain is exaggerated.
+ * @private
+ */
+TerrainMesh.prototype.updateExaggeration = function (
+  exaggeration,
+  exaggerationRelativeHeight,
+) {
+  // The encoding stored on the TerrainMesh references the updated exaggeration values already. This is just used
+  // to trigger a rebuild on the terrain picker.
+  this._terrainPicker._vertices = this.vertices;
+  this._terrainPicker.needsRebuild = true;
+  this._recomputeTransform = true;
+};
+
+/**
+ * Updates the terrain mesh to account for changes in scene mode.
+ * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
+ * @private
+ */
+TerrainMesh.prototype.updateSceneMode = function (mode) {
+  this._terrainPicker.needsRebuild = true;
+  this._recomputeTransform = true;
+};
+
 export default TerrainMesh;
