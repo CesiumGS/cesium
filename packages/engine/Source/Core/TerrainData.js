@@ -10,6 +10,7 @@ import DeveloperError from "./DeveloperError.js";
  * @see HeightmapTerrainData
  * @see QuantizedMeshTerrainData
  * @see GoogleEarthEnterpriseTerrainData
+ * @see Cesium3DTilesTerrainData
  */
 function TerrainData() {
   DeveloperError.throwInstantiationError();
@@ -29,7 +30,7 @@ Object.defineProperties(TerrainData.prototype, {
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
    * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
    * @memberof TerrainData.prototype
-   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement|undefined}
+   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement|ImageBitmap|undefined}
    */
   waterMask: {
     get: DeveloperError.throwInstantiationError,

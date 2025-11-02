@@ -76,32 +76,36 @@ function TerrainEncoding(
       quantization = TerrainQuantization.NONE;
     }
 
-    toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
+    // Scale and bias from [0,1] to [ENU min, ENU max]
+    // Also compute the inverse of the scale and bias
+    let st = Matrix4.fromScale(dimensions, matrix4Scratch);
+    st = Matrix4.setTranslation(st, minimum, st);
 
-    const translation = Cartesian3.negate(minimum, cartesian3Scratch);
-    Matrix4.multiply(
-      Matrix4.fromTranslation(translation, matrix4Scratch),
-      toENU,
-      toENU,
+    let invSt = Matrix4.fromScale(
+      Cartesian3.fromElements(
+        1.0 / dimensions.x,
+        1.0 / dimensions.y,
+        1.0 / dimensions.z,
+        cartesian3Scratch,
+      ),
+      matrix4Scratch2,
+    );
+    invSt = Matrix4.multiplyByTranslation(
+      invSt,
+      Cartesian3.negate(minimum, cartesian3Scratch),
+      invSt,
     );
 
-    const scale = cartesian3Scratch;
-    scale.x = 1.0 / dimensions.x;
-    scale.y = 1.0 / dimensions.y;
-    scale.z = 1.0 / dimensions.z;
-    Matrix4.multiply(Matrix4.fromScale(scale, matrix4Scratch), toENU, toENU);
+    matrix = Matrix4.clone(fromENU, new Matrix4());
+    let rtcOffset = Matrix4.getTranslation(fromENU, cartesian3Scratch);
+    rtcOffset = Cartesian3.subtract(rtcOffset, center, cartesian3Scratch);
+    matrix = Matrix4.setTranslation(matrix, rtcOffset, matrix);
+    matrix = Matrix4.multiply(matrix, st, matrix);
 
-    matrix = Matrix4.clone(fromENU);
-    Matrix4.setTranslation(matrix, Cartesian3.ZERO, matrix);
+    toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
+    toENU = Matrix4.multiply(invSt, toENU, toENU);
 
-    fromENU = Matrix4.clone(fromENU, new Matrix4());
-
-    const translationMatrix = Matrix4.fromTranslation(minimum, matrix4Scratch);
-    const scaleMatrix = Matrix4.fromScale(dimensions, matrix4Scratch2);
-    const st = Matrix4.multiply(translationMatrix, scaleMatrix, matrix4Scratch);
-
-    Matrix4.multiply(fromENU, st, fromENU);
-    Matrix4.multiply(matrix, st, matrix);
+    fromENU = Matrix4.multiply(fromENU, st, new Matrix4());
   }
 
   /**
@@ -568,6 +572,23 @@ TerrainEncoding.prototype.getOctEncodedNormal = function (
   const y = (temp - x) * 256.0;
 
   return Cartesian2.fromElements(x, y, result);
+};
+
+/**
+ * @param {Float32Array} buffer
+ * @param {number} index
+ * @param {Cartesian3} result
+ * @returns {Cartesian3}
+ */
+TerrainEncoding.prototype.decodeNormal = function (buffer, index, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const bufferIndex = (index = index * this.stride + this._offsetVertexNormal);
+  return AttributeCompression.octDecodeFloat(buffer[bufferIndex], result);
 };
 
 /**
