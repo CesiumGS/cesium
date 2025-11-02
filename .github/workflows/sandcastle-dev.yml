@@ -13,7 +13,6 @@ jobs:
       AWS_REGION: us-east-1
       BRANCH: ${{ github.ref_name }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GITHUB_REPO: ${{ github.repository }}
       GITHUB_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v5
