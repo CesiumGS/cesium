@@ -680,13 +680,13 @@ TextureAtlas.prototype.addImage = function (id, image) {
 };
 
 /**
- * Add a sub-region of an existing atlas image as additional image indices.
+ * Get a sub-region of an existing atlas image as additional image indices.
  * @private
  * @param {string} id The identifier of the existing image.
  * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
- * @returns {Promise<number>} A Promise that resolves to the image region index. -1 is returned if resouces are in the process of being destroyed.
+ * @returns {number | undefined} The existing subRegion index, or undefined if not yet added.
  */
-TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
+TextureAtlas.prototype.getImageSubRegion = function (id, subRegion) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("id", id);
   Check.defined("subRegion", subRegion);
@@ -697,28 +697,36 @@ TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
     throw new RuntimeError(`image with id "${id}" not found in the atlas.`);
   }
 
-  const indexPromise = this._indexPromiseById.get(id);
   for (const [index, parentIndex] of this._subRegions.entries()) {
     if (imageIndex === parentIndex) {
       const boundingRegion = this._rectangles[index];
       if (boundingRegion.equals(subRegion)) {
         // The subregion is already being tracked
-        return indexPromise.then((resolvedImageIndex) => {
-          if (resolvedImageIndex === -1) {
-            // The atlas has been destroyed
-            return -1;
-          }
-
-          return index;
-        });
+        return index;
       }
     }
   }
+};
 
-  const index = this._nextIndex++;
+/**
+ * Add a sub-region of an existing atlas image as additional image indices.
+ * @private
+ * @param {string} id The identifier of the existing image.
+ * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
+ * @returns {Promise<number>} A Promise that resolves to the image region index. -1 is returned if resouces are in the process of being destroyed.
+ */
+TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
+  let index = this.getImageSubRegion(id, subRegion);
+  if (index) {
+    return index;
+  }
+  const imageIndex = this._indexById.get(id);
+
+  index = this._nextIndex++;
   this._subRegions.set(index, imageIndex);
   this._rectangles[index] = subRegion.clone();
 
+  const indexPromise = this._indexPromiseById.get(id);
   return indexPromise.then((imageIndex) => {
     if (imageIndex === -1) {
       // The atlas has been destroyed

@@ -189,8 +189,6 @@ function Billboard(options, billboardCollection) {
   this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
 
   this._imageTexture = new BillboardTexture(billboardCollection);
-  this._imageWidth = undefined;
-  this._imageHeight = undefined;
 
   this._labelDimensions = undefined;
   this._labelHorizontalOrigin = undefined;
