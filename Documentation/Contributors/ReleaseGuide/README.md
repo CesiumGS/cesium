@@ -21,7 +21,8 @@ There is no one release manager; instead, [our community shares the responsibili
    - If `prettier` needs updated you _should_ still update it but keep the version pinned. If you run `npm install prettier@latest` you must remove the `^` in `package.json`. If the number of changes when running `npm run prettier` is large it may be worth opening a separate PR for only those.
 3. Verify each update. If an update can be resolved, open a PR with your changes. If an update is incompatible, open an issue. Check the [`dependencies` label](https://github.com/CesiumGS/cesium/issues?q=is%3Aissue+is%3Aopen+label%3Adependencies) for any open issues pinning versions.
 4. Check the [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release). If there are any outstanding items, post a message to the `CesiumJS` channel in Teams to figure out what needs to be addressed before we can release.
-5. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
+5. Check the [`remove in [this version number]` issues](https://github.com/CesiumGS/cesium/labels?q=remove) and open PRs to address any deprecations.
+6. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
 
 ## Release testing and packaging
 

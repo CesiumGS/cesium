@@ -8,6 +8,7 @@
 
 - `scene.drillPick` now uses a breadth-first search strategy instead of depth-first. This may change which entities are picked when
   using large values of `width` and `height` when providing a `limit`, prioritizing entities closer to the camera.
+- Removed support for the `KHR_spz_gaussian_splats_compression` extension in favor of the latest 3D Gaussian splatting extensions for glTF, `KHR_gaussian_splatting` and `KHR_gaussian_splatting_compression_spz_2`. Please re-tile existing Gaussian splatting 3D Tiles [#12837](https://github.com/CesiumGS/cesium/issues/12837)
 
 #### Additions :tada:
 
