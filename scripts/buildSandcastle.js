@@ -134,16 +134,25 @@ export async function buildSandcastleApp({
 
   await buildStatic(config);
   // Build the gallery after sandcastle to avoid clobbering the files
-  await buildSandcastleGallery({ includeDevelopment });
+  await buildSandcastleGallery({
+    includeDevelopment,
+    outputDir: outputToBuildDir
+      ? "../../Build/Sandcastle2"
+      : "../../Apps/Sandcastle2",
+  });
 }
 
 /**
  * Indexes Sandcastle gallery files and writes gallery files to the configured Sandcastle output directory.
  * @param {object} options
  * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
+ * @param {string} [options.outputDir] change the directory the gallery is built to. Defaults to /Apps/Sandcastle2
  * @returns {Promise<void>} A promise that resolves once the gallery files have been indexed and written.
  */
-export async function buildSandcastleGallery({ includeDevelopment }) {
+export async function buildSandcastleGallery({
+  includeDevelopment,
+  outputDir = "../../Apps/Sandcastle2",
+}) {
   const { configPath, root, gallery, sourceUrl } = await getSandcastleConfig();
 
   // Use an absolute path to avoid any descrepency between working directories
@@ -163,7 +172,7 @@ export async function buildSandcastleGallery({ includeDevelopment }) {
 
   await buildGalleryList({
     rootDirectory,
-    publicDirectory: "../../Apps/Sandcastle2",
+    publicDirectory: outputDir,
     galleryFiles,
     sourceUrl,
     defaultThumbnail,
