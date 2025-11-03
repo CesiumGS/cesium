@@ -5,28 +5,28 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import IonResource from "../Core/IonResource.js";
 import Check from "../Core/Check.js";
-import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
+import { GOOGLE_2D_MAPS as createFromIonEndpoint } from "./IonImageryProviderFactory.js";
+import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 const trailingSlashRegex = /\/$/;
 
 /**
- * @typedef {Object} Google2DImageryProvider.ConstructorOptions
+ * @typedef {object} Google2DImageryProvider.ConstructorOptions
  *
  * Initialization options for the Google2DImageryProvider constructor
  *
- * @property {object} options Object with the following properties:
- * @property {string} options.key The Google api key to send with tile requests.
- * @property {string} options.session The Google session token that tracks the current state of your map and viewport.
- * @property {string|Resource|IonResource} options.url The Google 2D maps endpoint.
- * @property {string} options.tileWidth The width of each tile in pixels.
- * @property {string} options.tileHeight The height of each tile in pixels.
- * @property {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
- * @property {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ * @property {string} key The Google api key to send with tile requests.
+ * @property {string} session The Google session token that tracks the current state of your map and viewport.
+ * @property {string|Resource|IonResource} url The Google 2D maps endpoint.
+ * @property {string} tileWidth The width of each tile in pixels.
+ * @property {string} tileHeight The height of each tile in pixels.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @property {number} [options.maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
- * @property {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @property {number} [maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  */
 
 /**
@@ -36,7 +36,7 @@ const trailingSlashRegex = /\/$/;
  *
  *
  * Provides 2D image tiles from {@link https://developers.google.com/maps/documentation/tile/2d-tiles-overview|Google 2D Tiles}.
- * 
+ *
  * Google 2D Tiles can only be used with the Google geocoder.
  *
  * @alias Google2DImageryProvider
@@ -52,7 +52,7 @@ const trailingSlashRegex = /\/$/;
   * @example
  * // Use your own Google api key
  * Cesium.GoogleMaps.defaultApiKey = "your-api-key";
- * 
+ *
  * const googleTilesProvider = Cesium.Google2DImageryProvider.fromUrl({
  *     mapType: "SATELLITE"
  * });
@@ -125,8 +125,6 @@ function Google2DImageryProvider(options) {
   // This will be defined for ion resources
   this._tileCredits = resource.credits;
   this._attributionsByLevel = undefined;
-  // Asynchronously request and populate _attributionsByLevel
-  this.getViewportCredits();
 }
 
 Object.defineProperties(Google2DImageryProvider.prototype, {
@@ -296,7 +294,7 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
  * @param {string} [options.language="en_US"] an IETF language tag that specifies the language used to display information on the tiles
  * @param {string} [options.region="US"] A Common Locale Data Repository region identifier (two uppercase letters) that represents the physical location of the user.
  * @param {"layerRoadmap" | "layerStreetview" | "layerTraffic"} [options.overlayLayerType] Returns a transparent overlay map with the specified layerType. If no value is provided, a basemap of mapType is returned. Use multiple instances of Google2DImageryProvider to add multiple Google Maps overlays to a scene. layerRoadmap is included in terrain and roadmap mapTypes, so adding as overlay to terrain or roadmap has no effect.
- * @param {Object} [options.styles] An array of JSON style objects that specify the appearance and detail level of map features such as roads, parks, and built-up areas. Styling is used to customize the standard Google base map. The styles parameter is valid only if the mapType is roadmap. For the complete style syntax, see the ({@link https://developers.google.com/maps/documentation/tile/style-reference|Google Style Reference}).
+ * @param {object} [options.styles] An array of JSON style objects that specify the appearance and detail level of map features such as roads, parks, and built-up areas. Styling is used to customize the standard Google base map. The styles parameter is valid only if the mapType is roadmap. For the complete style syntax, see the ({@link https://developers.google.com/maps/documentation/tile/style-reference|Google Style Reference}).
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @param {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
@@ -354,10 +352,6 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
     },
   );
 
-  const endpoint = await endpointResource.fetchJson();
-  const endpointOptions = { ...endpoint.options };
-  delete endpointOptions.url;
-
   const providerOptions = {
     language: options.language,
     region: options.region,
@@ -368,11 +362,15 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
     credit: options.credit,
   };
 
-  return new Google2DImageryProvider({
-    ...endpointOptions,
+  const endpoint = await endpointResource.fetchJson();
+  const url = endpoint.options.url;
+  delete endpoint.options.url;
+  endpoint.options = {
+    ...endpoint.options,
     ...providerOptions,
-    url: new IonResource(endpoint, endpointResource),
-  });
+  };
+
+  return createFromIonEndpoint(url, endpoint, endpointResource);
 };
 
 /**
@@ -383,7 +381,7 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
  * @param {string} [options.language="en_US"] an IETF language tag that specifies the language used to display information on the tiles
  * @param {string} [options.region="US"] A Common Locale Data Repository region identifier (two uppercase letters) that represents the physical location of the user.
  * @param {"layerRoadmap" | "layerStreetview" | "layerTraffic"} [options.overlayLayerType] Returns a transparent overlay map with the specified layerType. If no value is provided, a basemap of mapType is returned. Use multiple instances of Google2DImageryProvider to add multiple Google Maps overlays to a scene. layerRoadmap is included in terrain and roadmap mapTypes, so adding as overlay to terrain or roadmap has no effect.
- * @param {Object} [options.styles] An array of JSON style objects that specify the appearance and detail level of map features such as roads, parks, and built-up areas. Styling is used to customize the standard Google base map. The styles parameter is valid only if the mapType is roadmap. For the complete style syntax, see the ({@link https://developers.google.com/maps/documentation/tile/style-reference|Google Style Reference}).
+ * @param {object} [options.styles] An array of JSON style objects that specify the appearance and detail level of map features such as roads, parks, and built-up areas. Styling is used to customize the standard Google base map. The styles parameter is valid only if the mapType is roadmap. For the complete style syntax, see the ({@link https://developers.google.com/maps/documentation/tile/style-reference|Google Style Reference}).
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @param {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
@@ -486,7 +484,21 @@ Google2DImageryProvider.prototype.requestImage = function (
   level,
   request,
 ) {
-  return this._imageryProvider.requestImage(x, y, level, request);
+  const promise = this._imageryProvider.requestImage(x, y, level, request);
+
+  // If the requestImage call returns undefined, it couldn't be scheduled this frame. Make sure to return undefined so this can be handled upstream.
+  if (!defined(promise)) {
+    return undefined;
+  }
+
+  // Asynchronously request and populate _attributionsByLevel if it hasn't been already. We do this here so that the promise can be properly awaited.
+  if (promise && !defined(this._attributionsByLevel)) {
+    return Promise.all([promise, this.getViewportCredits()]).then(
+      (results) => results[0],
+    );
+  }
+
+  return promise;
 };
 
 /**

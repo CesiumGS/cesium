@@ -493,10 +493,8 @@ GlobeSurfaceTile.prototype.updateExaggeration = function (
     if (quadtree !== undefined) {
       quadtree._tileToUpdateHeights.push(tile);
       const customData = tile.customData;
-      const customDataLength = customData.length;
-      for (let i = 0; i < customDataLength; i++) {
+      for (const data of customData) {
         // Restart the level so that a height update is triggered
-        const data = customData[i];
         data.level = -1;
       }
     }
@@ -931,7 +929,15 @@ function createWaterMaskTextureIfNeeded(context, surfaceTile) {
   let texture;
 
   const waterMaskLength = waterMask.length;
-  if (waterMaskLength === 1) {
+  if (waterMask instanceof ImageBitmap) {
+    texture = Texture.create({
+      context: context,
+      source: waterMask,
+      sampler: waterMaskData.sampler,
+      flipY: false,
+      skipColorSpaceConversion: true,
+    });
+  } else if (waterMaskLength === 1) {
     // Length 1 means the tile is entirely land or entirely water.
     // A value of 0 indicates entirely land, a value of 1 indicates entirely water.
     if (waterMask[0] !== 0) {

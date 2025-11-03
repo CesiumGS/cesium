@@ -106,7 +106,12 @@ function RightSideAllotment({
       ]);
     }
     setConsoleExpanded(!consoleExpanded);
-  }, [consoleExpanded, previousConsoleHeight]);
+  }, [
+    consoleExpanded,
+    previousConsoleHeight,
+    consoleCollapsedHeight,
+    setConsoleExpanded,
+  ]);
 
   useImperativeHandle(ref, () => {
     return {
@@ -482,14 +487,6 @@ function App() {
       colorScheme={settings.theme}
       synchronizeColorScheme
     >
-      <div className="banner">
-        <Anchor
-          href="https://cesium.com/downloads/cesiumjs/releases/1.134/Apps/Sandcastle/index.html"
-          tone="accent"
-        >
-          Looking for the old Sandcastle? It's still here (for a little while) →
-        </Anchor>
-      </div>
       <header className="header">
         <a className="logo" href={getBaseUrl()}>
           <img
