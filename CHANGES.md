@@ -6,9 +6,8 @@
 
 #### Breaking Changes :mega:
 
-- `scene.drillPick` now uses a breadth-first search strategy instead of depth-first. This may change which entities are picked when
-  using large values of `width` and `height` when providing a `limit`, prioritizing entities closer to the camera.
 - Removed support for the `KHR_spz_gaussian_splats_compression` extension in favor of the latest 3D Gaussian splatting extensions for glTF, `KHR_gaussian_splatting` and `KHR_gaussian_splatting_compression_spz_2`. Please re-tile existing Gaussian splatting 3D Tiles [#12837](https://github.com/CesiumGS/cesium/issues/12837)
+- `scene.drillPick` now uses a breadth-first search strategy instead of depth-first. This may change which entities are picked when using large values of `width` and `height` when providing a `limit`, prioritizing entities closer to the camera. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
 
 #### Additions :tada:
 
@@ -17,13 +16,13 @@
 
 #### Fixes :wrench:
 
+- Improved performance of `scene.drillPick`. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
+- Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
+- Improved performance of terrain Quadtree handling of custom data [#12907](https://github.com/CesiumGS/cesium/pull/12907)
 - Fixed vertical exaggeration of ellipsoid-shaped voxels. [#12811](https://github.com/CesiumGS/cesium/issues/12811)
 - Fixed parsing content bounding volumes contained in 3D Tiles 1.1 subtree files. [#12972](https://github.com/CesiumGS/cesium/pull/12972)
 - Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
 - Fix issues with label background when updating properties while `label.show` is `false`. [#12138](https://github.com/CesiumGS/cesium/issues/12138)
-- Improved performance of `scene.drillPick`. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
-- Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
-- Improved performance of terrain Quadtree handling of custom data [#12907](https://github.com/CesiumGS/cesium/pull/12907)
 - Fixed picking of `GroundPrimitive` with multiple `PolygonGeometry` instances selecting the wrong instance. [#12978](https://github.com/CesiumGS/cesium/pull/12978)
 - Fixed a bug where the removal of draped imagery layers did not update the rendered state [#12923](https://github.com/CesiumGS/cesium/issues/12923)
 - Fixed precision issues with Gaussian splat tilesets where the root tile does not have a world transform. [#12925](https://github.com/CesiumGS/cesium/issues/12925)
