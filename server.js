@@ -203,6 +203,7 @@ const throttle = (callback) => {
     /\.glb/,
     /\.geom/,
     /\.vctr/,
+    /\.subtree/,
     /tileset.*\.json$/,
   ];
   app.get(knownTilesetFormats, checkGzipAndNext);
