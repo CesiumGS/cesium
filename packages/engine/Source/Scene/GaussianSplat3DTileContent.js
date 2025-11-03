@@ -137,7 +137,7 @@ GaussianSplat3DTileContent.tilesetRequiresGaussianSplattingExt = function (
     ) {
       deprecationWarning(
         "KHR_spz_gaussian_splats_compression",
-        "Support for the original KHR_spz_gaussian_splats_compression extension has been deprecated in favor " +
+        "Support for the original KHR_spz_gaussian_splats_compression extension has been removed in favor " +
           "of the up to date KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extensions" +
           "\n\nPlease retile your tileset with the KHR_gaussian_splatting and " +
           "KHR_gaussian_splatting_compression_spz_2 extensions.",
