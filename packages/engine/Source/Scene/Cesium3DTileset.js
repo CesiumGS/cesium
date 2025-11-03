@@ -1147,6 +1147,17 @@ function Cesium3DTileset(options) {
     instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
   }
   this._instanceFeatureIdLabel = instanceFeatureIdLabel;
+
+  /**
+   * The function that determines which inner contents of a dynamic
+   * contents object are currently active.
+   *
+   * See setDynamicContentPropertyProvider for details.
+   *
+   * @type {Function|undefined}
+   * @private
+   */
+  this._dynamicContentPropertyProvider = undefined;
 }
 
 Object.defineProperties(Cesium3DTileset.prototype, {
@@ -2173,6 +2184,21 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       this._instanceFeatureIdLabel = value;
     },
   },
+
+  /**
+   * Returns the function that provides the properties based on
+   * which inner contents of a dynamic content should be active.
+   *
+   * @memberof Cesium3DTileset.prototype
+   * @readonly
+   * @type {Function|undefined}
+   * @private
+   */
+  dynamicContentPropertyProvider: {
+    get: function () {
+      return this._dynamicContentPropertyProvider;
+    },
+  },
 });
 
 /**
@@ -2332,7 +2358,9 @@ Cesium3DTileset.fromUrl = async function (url, options) {
   );
 
   // Extract the information about the "dimensions" of the dynamic contents,
-  // if present
+  // if present.
+  // XXX_DYNAMIC This should probably not be done here, but ...
+  // maybe in the constructor or so...? The lifecycle, though...
   const hasDynamicContents = hasExtension(tilesetJson, "3DTILES_dynamic");
   if (hasDynamicContents) {
     const dynamicContentsExtension = tilesetJson.extensions["3DTILES_dynamic"];
@@ -2446,7 +2474,7 @@ Cesium3DTileset.prototype.loadTileset = function (
  * Set the function that determines which dynamic content is currently active.
  *
  * This is a function that returns a JSON plain object. This object corresponds
- * to one 'key' of a dynamic content definition. It will caused the content
+ * to one 'key' of a dynamic content definition. It will cause the content
  * with this key to be the currently active content.
  *
  * @param {Function|undefined} dynamicContentPropertyProvider The function
@@ -2461,10 +2489,57 @@ Cesium3DTileset.prototype.setDynamicContentPropertyProvider = function (
     console.log(
       "This tileset does not contain the 3DTILES_dynamic extension. The given function will not have an effect.",
     );
-    return;
   }
-  this.dynamicContentPropertyProvider = dynamicContentPropertyProvider;
+  this._dynamicContentPropertyProvider = dynamicContentPropertyProvider;
 };
+
+/**
+ * XXX_DYNAMIC A draft for a convenience function for the dynamic content
+ * properties provider. Whether or not this should be offered depends on
+ * how much we want to specialize all this for single ISO8601 date strings.
+ * We could even omit the "timeDimensionName" if this was a fixed, specified
+ * string like "isoTimeStamp" or so.
+ *
+ * ---
+ *
+ * Set the function that determines which dynamic content is currently active,
+ * based on the ISO8601 string representation of the current time of the given
+ * clock.
+ *
+ * @param {string} timeDimensionName The name of the property that will
+ * contain the ISO8601 date string of the current time of the clock
+ * @param {Clock} clock The clock that provides the current time
+ */
+Cesium3DTileset.prototype.setDefaultTimeDynamicContentPropertyProvider =
+  function (timeDimensionName, clock) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("timeDimensionName", timeDimensionName);
+    Check.typeOf.object("clock", clock);
+    //>>includeEnd('debug');
+
+    const dimensions = this._dynamicContentsDimensions;
+    if (defined(dimensions)) {
+      const dimensionNames = dimensions.map((d) => d.name);
+      if (!dimensionNames.includes(timeDimensionName)) {
+        console.log(
+          `The time dimension name ${timeDimensionName} is not a valid dimension name. Valid dimension names are`,
+          dimensionNames,
+        );
+      }
+    }
+
+    const dynamicContentPropertyProvider = () => {
+      const currentTime = clock.currentTime;
+      if (!defined(currentTime)) {
+        return undefined;
+      }
+      const currentTimeString = JulianDate.toIso8601(currentTime);
+      return {
+        [timeDimensionName]: currentTimeString,
+      };
+    };
+    this.setDynamicContentPropertyProvider(dynamicContentPropertyProvider);
+  };
 
 /**
  * Make a {@link Cesium3DTile} for a specific tile. If the tile's header has implicit

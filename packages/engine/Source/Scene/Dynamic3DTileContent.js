@@ -44,6 +44,9 @@ class NDMap {
    * in the 'key' for set/get operations, to determine the coordinates
    * within the N-dimensional space.
    *
+   * The given array may not be modified after it was passed to
+   * this constructor.
+   *
    * @param {string[]} dimensionNames
    */
   constructor(dimensionNames) {
@@ -143,7 +146,7 @@ class NDMap {
   /**
    * Delete the entry from the given key, if it exists.
    *
-   * @param {key} key The key
+   * @param {object} key The key
    */
   delete(key) {
     const lookupKey = this._computeLookupKey(key);
@@ -205,6 +208,24 @@ class NDMap {
    */
   [Symbol.iterator]() {
     return this.entries();
+  }
+
+  /**
+   * Returns the value corresponding to the specified key, creating and
+   * inserting it if it was not yet present, using the given function
+   * for its creation.
+   *
+   * @param {object} key The key
+   * @param {Function} defaultCreator The default creator
+   */
+  getOrInsertComputed(key, defaultCreator) {
+    const lookupKey = this._computeLookupKey(key);
+    if (this._lookup.has(lookupKey)) {
+      return this._lookup.get(lookupKey);
+    }
+    const value = defaultCreator();
+    this._lookup.set(lookupKey, value);
+    return value;
   }
 }
 
@@ -403,16 +424,55 @@ class LRUCache {
   }
 }
 
-// XXX_DYNAMIC Experiments for that tileset statistics handling...
-// eslint-disable-next-line no-unused-vars
+/**
+ * Interface for all classes that want to be informed about the
+ * state of a request
+ */
 class RequestListener {
+  /**
+   * Will be called when the given request was attempted.
+   *
+   * This means that the request was started, and then
+   * was cancelled or failed (but not completed).
+   *
+   * @param {Request} request The request
+   */
   requestAttempted(request) {}
+
+  /**
+   * Will be called when the given request was started.
+   *
+   * @param {Request} request The request
+   */
   requestStarted(request) {}
+
+  /**
+   * Will be called when the given request was cancelled.
+   *
+   * @param {Request} request The request
+   */
   requestCancelled(request) {}
+
+  /**
+   * Will be called when the given request was completed.
+   *
+   * @param {Request} request The request
+   */
   requestCompleted(request) {}
+
+  /**
+   * Will be called when the given request failed
+   *
+   * @param {Request} request The request
+   */
   requestFailed(request) {}
 }
-class LoggingRequestListener {
+
+/**
+ * Implementation of a RequestListener that just logs the
+ * request states to the console.
+ */
+class LoggingRequestListener extends RequestListener {
   requestAttempted(request) {
     console.log(`requestAttempted for ${request.url}`);
   }
@@ -479,15 +539,29 @@ class RequestHandle {
     /**
      * The listeners that will be informed about the request state
      *
-     * @type {RequestListener[]}
+     * @type {Set<RequestListener>}
      * @readonly
      */
-    this._requestListeners = [];
+    this._requestListeners = new Set();
   }
 
-  // XXX_DYNAMIC Experiments for that tileset statistics handling...
+  /**
+   * Add the given listener to be informed about the state of the
+   * underlying request.
+   *
+   * @param {RequestListener} requestListener The listener
+   */
   addRequestListener(requestListener) {
-    this._requestListeners.push(requestListener);
+    this._requestListeners.add(requestListener);
+  }
+
+  /**
+   * Remove the given listener
+   *
+   * @param {RequestListener} requestListener The listener
+   */
+  removeRequestListener(requestListener) {
+    this._requestListeners.delete(requestListener);
   }
 
   /**
@@ -495,7 +569,7 @@ class RequestHandle {
    *
    * This will never be 'undefined'. It will never change. It will
    * just be a promise that is either fulfilled with the response
-   * data from the equest, or rejected with an error indicating
+   * data from the request, or rejected with an error indicating
    * the reason for the rejection.
    *
    * The reason for the rejection can either be a real error,
@@ -633,31 +707,84 @@ class RequestHandle {
     this._deferred.reject(RequestState.CANCELLED);
   }
 
-  // XXX_DYNAMIC Experiments for that tileset statistics handling...
+  /**
+   * Inform all registered listeners that the request was attempted
+   */
   _fireRequestAttempted() {
     for (const requestListener of this._requestListeners) {
       requestListener.requestAttempted(this._request);
     }
   }
+
+  /**
+   * Inform all registered listeners that the request was started
+   */
   _fireRequestStarted() {
     for (const requestListener of this._requestListeners) {
       requestListener.requestStarted(this._request);
     }
   }
+
+  /**
+   * Inform all registered listeners that the request was cancelled
+   */
   _fireRequestCancelled() {
     for (const requestListener of this._requestListeners) {
       requestListener.requestCancelled(this._request);
     }
   }
+
+  /**
+   * Inform all registered listeners that the request was completed
+   */
   _fireRequestCompleted() {
     for (const requestListener of this._requestListeners) {
       requestListener.requestCompleted(this._request);
     }
   }
+
+  /**
+   * Inform all registered listeners that the request failed
+   */
   _fireRequestFailed() {
     for (const requestListener of this._requestListeners) {
       requestListener.requestFailed(this._request);
     }
+  }
+}
+
+/**
+ * Interface for all classes that want to be informed about the
+ * state of a content
+ */
+class ContentListener {
+  /**
+   * Will be called when the given content was loaded
+   * and became 'ready'
+   *
+   * @param {Cesium3DTileContent} content The content
+   */
+  contentLoadedAndReady(content) {}
+
+  /**
+   * Will be called when the given content is unloaded,
+   * immediately before calling its 'destroy' method.
+   *
+   * @param {Cesium3DTileContent} content The content
+   */
+  contentUnloaded(content) {}
+}
+
+/**
+ * Implementation of a ContentListener that just logs the
+ * states to the console.
+ */
+class LoggingContentListener extends ContentListener {
+  contentLoadedAndReady(content) {
+    console.log(`contentLoadedAndReady for `, content);
+  }
+  contentUnloaded(content) {
+    console.log(`contentUnloaded       for `, content);
   }
 }
 
@@ -761,6 +888,87 @@ class ContentHandle {
      * @type {boolean}
      */
     this._failed = false;
+
+    /**
+     * Only used for testing. See awaitPromise.
+     * @type {object}
+     * @readonly
+     */
+    this._deferred = defer();
+
+    /**
+     * The listeners that will be informed about the state of the
+     * request that is created and handled by this instance.
+     *
+     * @type {Set<RequestListener>}
+     * @readonly
+     */
+    this._requestListeners = new Set();
+
+    /**
+     * The listeners that will be informed about the state of the
+     * content that is handled by this instance.
+     *
+     * @type {Set<ContentListener>}
+     * @readonly
+     */
+    this._contentListeners = new Set();
+  }
+
+  /**
+   * XXX_DYNAMIC: Only intended for testing: If there is a pending
+   * request for the content, then wait until the content is
+   * created, or the content creation failed.
+   *
+   * This is here because all the request handling is in the content
+   * classes, without abstractions and clear lifecycle definitions.
+   */
+  async awaitPromise() {
+    if (defined(this._requestHandle)) {
+      try {
+        await this._deferred.promise;
+      } catch (error) {
+        // Ignored
+      }
+    }
+  }
+
+  /**
+   * Add the given listener to be informed about the state of the
+   * underlying request.
+   *
+   * @param {RequestListener} requestListener The listener
+   */
+  addRequestListener(requestListener) {
+    this._requestListeners.add(requestListener);
+  }
+
+  /**
+   * Remove the given listener
+   *
+   * @param {RequestListener} requestListener The listener
+   */
+  removeRequestListener(requestListener) {
+    this._requestListeners.delete(requestListener);
+  }
+
+  /**
+   * Add the given listener to be informed about the state of the
+   * content.
+   *
+   * @param {ContentListener} contentListener The listener
+   */
+  addContentListener(contentListener) {
+    this._contentListeners.add(contentListener);
+  }
+
+  /**
+   * Remove the given listener
+   *
+   * @param {ContentListener} contentListener The listener
+   */
+  removeContentListener(contentListener) {
+    this._contentListeners.delete(contentListener);
   }
 
   /**
@@ -856,26 +1064,9 @@ class ContentHandle {
     });
     const requestHandle = new RequestHandle(resource);
 
-    // Attach a listener that will update the tileset statistics
-    const tileset = this._tile.tileset;
-    requestHandle.addRequestListener(new LoggingRequestListener());
-    requestHandle.addRequestListener({
-      requestAttempted(request) {
-        tileset.statistics.numberOfAttemptedRequests++;
-      },
-      requestStarted(request) {
-        tileset.statistics.numberOfPendingRequests++;
-      },
-      requestCancelled(request) {
-        tileset.statistics.numberOfPendingRequests--;
-      },
-      requestCompleted(request) {
-        tileset.statistics.numberOfPendingRequests--;
-      },
-      requestFailed(request) {
-        tileset.statistics.numberOfPendingRequests--;
-      },
-    });
+    for (const requestListener of this._requestListeners) {
+      requestHandle.addRequestListener(requestListener);
+    }
 
     this._requestHandle = requestHandle;
     const requestHandleResultPromise = requestHandle.getResultPromise();
@@ -889,12 +1080,13 @@ class ContentHandle {
         const content = await this._createContent(resource, arrayBuffer);
         console.log(`ContentHandle: Content was created for ${uri}`);
         this._content = content;
-        // XXX_DYNAMIC Trigger some update...?!
+        this._deferred.resolve();
       } catch (error) {
         console.log(
           `ContentHandle: Content creation for ${uri} caused error ${error}`,
         );
         this._failed = true;
+        this._deferred.resolve();
       }
     };
 
@@ -916,12 +1108,14 @@ class ContentHandle {
           `ContentHandle: Request was rejected for ${uri}, but actually only cancelled. Better luck next time!`,
         );
         this._requestHandle = undefined;
+        this._deferred.resolve();
         return;
       }
 
       // Other errors should indeed cause this handle
       // to be marked as "failed"
       this._failed = true;
+      this._deferred.resolve();
     };
     requestHandleResultPromise.then(onRequestFulfilled, onRequestRejected);
     requestHandle.ensureRequested();
@@ -960,10 +1154,56 @@ class ContentHandle {
     }
     this._requestHandle = undefined;
     if (defined(this._content)) {
+      this._fireContentUnloaded(this._content);
       this._content.destroy();
     }
     this._content = undefined;
     this._failed = false;
+    this._deferred = defer();
+  }
+
+  /**
+   * Wrapper around content.update, for implementing the
+   * Cesium3DTileContent interface...
+   *
+   * @param {Cesium3DTileset} tileset The tileset
+   * @param {FrameState} frameState The frame state
+   */
+  updateContent(tileset, frameState) {
+    const content = this._content;
+    if (!defined(content)) {
+      return;
+    }
+    const oldReady = content.ready;
+    content.update(tileset, frameState);
+    const newReady = content.ready;
+    if (!oldReady && newReady) {
+      this._fireContentLoadedAndReady(content);
+    }
+  }
+
+  /**
+   * Inform all registered listeners that the content was loaded
+   * and became 'ready' (meaning that it was really loaded...)
+   *
+   * @param {Cesium3DTileContent} content The content
+   */
+  _fireContentLoadedAndReady(content) {
+    for (const contentListener of this._contentListeners) {
+      contentListener.contentLoadedAndReady(content);
+    }
+  }
+
+  /**
+   * Inform all registered listeners that the content was unloaded,
+   * just before it is destroyed
+   *
+   * @param {Cesium3DTileContent} content The content
+   */
+  _fireContentUnloaded(content) {
+    for (const contentListener of this._contentListeners) {
+      contentListener.contentUnloaded(content);
+    }
   }
 }
 
@@ -1153,7 +1393,7 @@ class Dynamic3DTileContent {
    * @param {ContentHandle} contentHandle The ContentHandle
    */
   loadedContentHandleEvicted(uri, contentHandle) {
-    console.log("_loadedContentHandleEvicted with ", uri);
+    console.log(`_loadedContentHandleEvicted with ${uri}`);
     contentHandle.reset();
   }
 
@@ -1165,7 +1405,7 @@ class Dynamic3DTileContent {
    * creating the content objects.
    *
    * @param {Resource} baseResource The base resource (from the tileset)
-   * @returns {Map}
+   * @returns {Map} The content handles
    */
   _createContentHandles(baseResource) {
     const dynamicContents = this._dynamicContents;
@@ -1178,10 +1418,60 @@ class Dynamic3DTileContent {
         baseResource,
         contentHeader,
       );
+      this._attachTilesetStatisticsTracker(contentHandle);
+
       const uri = contentHeader.uri;
       contentHandles.set(uri, contentHandle);
     }
     return contentHandles;
+  }
+
+  /**
+   * Attach a listener to the given content handle that will update
+   * the tileset statistics based on the request state.
+   *
+   * @param {ContentHandle} contentHandle The content handle
+   */
+  _attachTilesetStatisticsTracker(contentHandle) {
+    // XXX_DYNAMIC Debug logs...
+    contentHandle.addRequestListener(new LoggingRequestListener());
+    contentHandle.addContentListener(new LoggingContentListener());
+
+    const tileset = this._tile.tileset;
+    contentHandle.addRequestListener({
+      requestAttempted(request) {
+        tileset.statistics.numberOfAttemptedRequests++;
+      },
+      requestStarted(request) {
+        tileset.statistics.numberOfPendingRequests++;
+      },
+      requestCancelled(request) {
+        tileset.statistics.numberOfPendingRequests--;
+      },
+      requestCompleted(request) {
+        tileset.statistics.numberOfPendingRequests--;
+      },
+      requestFailed(request) {
+        tileset.statistics.numberOfPendingRequests--;
+      },
+    });
+
+    contentHandle.addContentListener({
+      contentLoadedAndReady(content) {
+        console.log(
+          "-------------------------- update statistics for   loaded ",
+          content,
+        );
+        tileset.statistics.incrementLoadCounts(content);
+      },
+      contentUnloaded(content) {
+        console.log(
+          "-------------------------- update statistics for unloaded ",
+          content,
+        );
+        tileset.statistics.decrementLoadCounts(content);
+      },
+    });
   }
 
   /**
@@ -1195,7 +1485,8 @@ class Dynamic3DTileContent {
    */
   _createDynamicContentUriLookup() {
     const tileset = this.tileset;
-    const topLevelExtensionObject = tileset.extensions["3DTILES_dynamic"];
+    const extensions = tileset.extensions ?? {};
+    const topLevelExtensionObject = extensions["3DTILES_dynamic"];
     if (!defined(topLevelExtensionObject)) {
       throw new DeveloperError(
         "Cannot create a Dynamic3DTileContent for a tileset that does not contain a top-level dynamic content extension object.",
@@ -1208,12 +1499,11 @@ class Dynamic3DTileContent {
     const dynamicContentUriLookup = new NDMap(dimensionNames);
     for (let i = 0; i < dynamicContents.length; i++) {
       const dynamicContent = dynamicContents[i];
-      let entries = dynamicContentUriLookup.get(dynamicContent.keys);
-      if (!defined(entries)) {
-        entries = Array();
-        dynamicContentUriLookup.set(dynamicContent.keys, entries);
-      }
       const uri = dynamicContent.uri;
+      const key = dynamicContent.keys;
+      const entries = dynamicContentUriLookup.getOrInsertComputed(key, () =>
+        Array(),
+      );
       entries.push(uri);
     }
     return dynamicContentUriLookup;
@@ -1227,25 +1517,30 @@ class Dynamic3DTileContent {
    * '_dynamicContentUriLookup'. This method returns the array of
    * URIs that are found in that lookup, for the respective key.
    *
+   * If there is no dynamicContentPropertyProvider, then an empty
+   * array will be returned.
+   *
+   * If the dynamicContentPropertyProvider returns undefined, then
+   * an empty array will be returned.
+   *
+   * If there are no active contents, then an empty array will be
+   * returned.
+   *
+   * Callers may NOT modify the returned array.
+   *
    * @type {string[]} The active content URIs
    */
   get _activeContentUris() {
     const tileset = this.tileset;
-    let dynamicContentPropertyProvider = tileset.dynamicContentPropertyProvider;
-
-    // XXX_DYNAMIC For testing
+    const dynamicContentPropertyProvider =
+      tileset.dynamicContentPropertyProvider;
     if (!defined(dynamicContentPropertyProvider)) {
-      console.log("No dynamicContentPropertyProvider, using default");
-      dynamicContentPropertyProvider = () => {
-        return {
-          exampleTimeStamp: "2025-09-26",
-          exampleRevision: "revision2",
-        };
-      };
-      tileset.dynamicContentPropertyProvider = dynamicContentPropertyProvider;
+      return [];
     }
-
     const currentProperties = dynamicContentPropertyProvider();
+    if (!defined(currentProperties)) {
+      return [];
+    }
     const lookup = this._dynamicContentUriLookup;
     const currentEntries = lookup.get(currentProperties) ?? [];
     return currentEntries;
@@ -1258,6 +1553,11 @@ class Dynamic3DTileContent {
    * check whether the content was already requested and created. If
    * it was already requested and created, it will be contained in
    * the returned array.
+   *
+   * If there are no active contents, then an empty array will be
+   * returned.
+   *
+   * Callers may NOT modify the returned array.
    *
    * @type {Cesium3DTileContent[]}
    */
@@ -1275,34 +1575,20 @@ class Dynamic3DTileContent {
   }
 
   /**
-   * Returns ALL content URIs that have been defined as contents
-   * in the dynamic content definition.
-   *
-   * @type {string[]} The content URIs
-   */
-  get _allContentUris() {
-    // TODO Should be computed from the dynamicContents,
-    // once, in the constructor, as a SET (!)
-    const keys = this._contentHandles.keys();
-    const allContentUris = [...keys];
-    return allContentUris;
-  }
-
-  /**
    * Returns ALL contents that are currently loaded.
    *
    * @type {Cesium3DTileContent[]} The contents
    */
-  get _allContents() {
-    const allContents = [];
+  get _allLoadedContents() {
+    const allLoadedContents = [];
     const contentHandleValues = this._contentHandles.values();
     for (const contentHandle of contentHandleValues) {
       const content = contentHandle.getContentOptional();
       if (defined(content)) {
-        allContents.push(content);
+        allLoadedContents.push(content);
       }
     }
-    return allContents;
+    return allLoadedContents;
   }
 
   /**
@@ -1322,8 +1608,8 @@ class Dynamic3DTileContent {
    * @type {boolean}
    */
   get featurePropertiesDirty() {
-    const allContents = this._allContents;
-    for (const content of allContents) {
+    const allLoadedContents = this._allLoadedContents;
+    for (const content of allLoadedContents) {
       if (content.featurePropertiesDirty) {
         return true;
       }
@@ -1332,83 +1618,178 @@ class Dynamic3DTileContent {
     return false;
   }
   set featurePropertiesDirty(value) {
-    const allContents = this._allContents;
-    for (const content of allContents) {
+    const allLoadedContents = this._allLoadedContents;
+    for (const content of allLoadedContents) {
       content.featurePropertiesDirty = value;
     }
   }
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
-   * Always returns <code>0</code>.  Instead call <code>featuresLength</code> for a specific inner content.
    *
    * @type {number}
    * @readonly
    */
   get featuresLength() {
+    // XXX_DYNAMIC It's not clear whether this should return
+    // the aggregated value, or whether it is only used for
+    // the statistics, which are now tracked manually in
+    // _attachTilesetStatisticsTracker
+    //return this.getAggregatedLoaded("featuresLength");
     return 0;
   }
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
-   * Always returns <code>0</code>.  Instead, call <code>pointsLength</code> for a specific inner content.
    *
    * @type {number}
    * @readonly
    */
   get pointsLength() {
+    // XXX_DYNAMIC It's not clear whether this should return
+    // the aggregated value, or whether it is only used for
+    // the statistics, which are now tracked manually in
+    // _attachTilesetStatisticsTracker
+    //return this.getAggregatedLoaded("pointsLength");
     return 0;
   }
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
-   * Always returns <code>0</code>.  Instead call <code>trianglesLength</code> for a specific inner content.
    *
    * @type {number}
    * @readonly
    */
   get trianglesLength() {
+    // XXX_DYNAMIC It's not clear whether this should return
+    // the aggregated value, or whether it is only used for
+    // the statistics, which are now tracked manually in
+    // _attachTilesetStatisticsTracker
+    //return this.getAggregatedLoaded("trianglesLength");
     return 0;
   }
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
-   * Always returns <code>0</code>.  Instead call <code>geometryByteLength</code> for a specific inner content.
    *
    * @type {number}
    * @readonly
    */
   get geometryByteLength() {
+    // XXX_DYNAMIC It's not clear whether this should return
+    // the aggregated value, or whether it is only used for
+    // the statistics, which are now tracked manually in
+    // _attachTilesetStatisticsTracker
+    //return this.getAggregatedLoaded("geometryByteLength");
     return 0;
   }
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
-   * Always returns <code>0</code>.  Instead call <code>texturesByteLength</code> for a specific inner content.
    *
    * @type {number}
    * @readonly
    */
   get texturesByteLength() {
+    // XXX_DYNAMIC It's not clear whether this should return
+    // the aggregated value, or whether it is only used for
+    // the statistics, which are now tracked manually in
+    // _attachTilesetStatisticsTracker
+    //return this.getAggregatedLoaded("texturesByteLength");
     return 0;
   }
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
-   * Always returns <code>0</code>.  Instead call <code>batchTableByteLength</code> for a specific inner content.
    *
    * @type {number}
    * @readonly
    */
   get batchTableByteLength() {
+    // XXX_DYNAMIC It's not clear whether this should return
+    // the aggregated value, or whether it is only used for
+    // the statistics, which are now tracked manually in
+    // _attachTilesetStatisticsTracker
+    //return this.getAggregatedLoaded("batchTableByteLength");
     return 0;
+  }
+
+  /**
+   * Calls getAggregated with each loaded content and the given
+   * property, and returns the sum.
+   *
+   * See getAggregated for details.
+   *
+   * @param {string} property The property
+   * @returns The result
+   */
+  getAggregatedLoaded(property) {
+    const allLoadedContents = this._allLoadedContents;
+    let result = 0;
+    for (const content of allLoadedContents) {
+      result += Dynamic3DTileContent.getAggregated(content, property);
+    }
+    return result;
+  }
+
+  /**
+   * The Cesium3DTileContent interface does not really make sense.
+   *
+   * It is underspecified, the functions/properties that it contains have no
+   * coherence, and most of them do not make sense for most implementations.
+   * The way how that interface and its functions are used shows that
+   * ambiguity and vagueness, even without the corner case of dynamic
+   * content. For example, the "tile debug labels" show a geometry- and
+   * memory size of 0 for composite content, because the function that
+   * creates these labels is not aware that Composite3DTileContent and
+   * Multiple3DTileContent require it to iterate over the "innerContents".
+   * Some of the functions are called at places where the state of
+   * the content is not clear, including Cesium3DTile.process, in the
+   * block with that "if (...!this.contentReady && this._content.ready)"
+   * statement that does not make sense for dynamic content. (This could
+   * be avoided by proper state management, but let's not get into that).
+   *
+   * So this function tries to squeeze some sense out of what is there:
+   *
+   * It fetches the value of the specified property of the given content,
+   * or the sum of the values from recursing into "innerContents" if
+   * the latter are defined.
+   *
+   * Note that a content could have the specified property AND innerContents.
+   * This function could take the value from the content itself, and ADD the
+   * values from the inner contents. But if, at any point in time, the
+   * implementation of the composite- and multiple content are fixed by
+   * computing this sum on their own, such an implementation would break.
+   *
+   * At some point, we have to shrug this off.
+   *
+   * @param {Cesium3DTileContent} content The content
+   * @param {string} property The property
+   * @returns The result
+   */
+  static getAggregated(content, property) {
+    const innerContents = content.innerContents;
+    if (defined(innerContents)) {
+      let sum = 0;
+      for (const innerContent of content.innerContents) {
+        sum += Dynamic3DTileContent.getAggregated(innerContent[property]);
+      }
+      return sum;
+    }
+    return content[property];
   }
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
    */
   get innerContents() {
-    return this._allContents;
+    // XXX_DYNAMIC It's not clear whether this should return
+    // the loaded contents. Most of the tracking that could
+    // require clients to call this function should happen
+    // INSIDE this class, because the "inner contents" can
+    // be loaded and unloaded at any point in time.
+    //return this._allLoadedContents;
+    return [];
   }
 
   /**
@@ -1535,10 +1916,9 @@ class Dynamic3DTileContent {
    * Part of the {@link Cesium3DTileContent} interface.
    */
   update(tileset, frameState) {
-    // Call the 'update' on all contents.
-    const allContents = this._allContents;
-    for (const content of allContents) {
-      content.update(tileset, frameState);
+    // Call update for all contents
+    for (const contentHandle of this._contentHandles.values()) {
+      contentHandle.updateContent(tileset, frameState);
     }
 
     // XXX_DYNAMIC There is no way to show or hide contents.
@@ -1550,7 +1930,8 @@ class Dynamic3DTileContent {
     // It could be called "doRandomStuff" at this point.
 
     // Hide all contents.
-    for (const content of allContents) {
+    const allLoadedContents = this._allLoadedContents;
+    for (const content of allLoadedContents) {
       content.applyStyle(DYNAMIC_CONTENT_HIDE_STYLE);
     }
 
@@ -1562,7 +1943,7 @@ class Dynamic3DTileContent {
 
     // Assign debug settings to all active contents
     for (const activeContent of activeContents) {
-      // The applyDebugSettings call will override any/ style color
+      // The applyDebugSettings call will override any style color
       // that was previously set. I'm not gonna sort this out.
       if (this._lastDebugSettingsEnabled) {
         activeContent.applyDebugSettings(
@@ -1578,10 +1959,10 @@ class Dynamic3DTileContent {
    * Unload the least-recently used content.
    */
   _unloadOldContent() {
-    // Collect all content handles that have a content that
-    // is currently loaded
-    const loadedContentHandles = this._loadedContentHandles;
+    // Iterate over all content handles. If the content of a certain handle
+    // is currently loaded, then store it in the loadedContentHandles.
     const contentHandleEntries = this._contentHandles.entries();
+    const loadedContentHandles = this._loadedContentHandles;
     for (const [url, contentHandle] of contentHandleEntries) {
       if (!loadedContentHandles.has(url)) {
         const content = contentHandle.getContentOptional();
@@ -1591,7 +1972,8 @@ class Dynamic3DTileContent {
       }
     }
 
-    // Mark the active contents as "recently used"
+    // Mark the "active" contents as "recently used", to prevent
+    // them from being evicted from the loadedContentHandles cache
     const activeContentUris = this._activeContentUris;
     for (const activeContentUri of activeContentUris) {
       if (loadedContentHandles.has(activeContentUri)) {
@@ -1616,7 +1998,8 @@ class Dynamic3DTileContent {
   /**
    * Part of the {@link Cesium3DTileContent} interface.
    *
-   * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
+   * Find an intersection between a ray and the tile content surface that was
+   * rendered. The ray must be given in world coordinates.
    *
    * @param {Ray} ray The ray to test for intersection.
    * @param {FrameState} frameState The frame state.
@@ -1660,8 +2043,8 @@ class Dynamic3DTileContent {
    * Part of the {@link Cesium3DTileContent} interface.
    */
   destroy() {
-    const allContents = this._allContents;
-    for (const content of allContents) {
+    const allLoadedContents = this._allLoadedContents;
+    for (const content of allLoadedContents) {
       content.destroy();
     }
     return destroyObject(this);
