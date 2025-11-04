@@ -289,19 +289,23 @@ function computeTransform2D(mesh, projection, result) {
     scratchNECartesian,
   );
 
-  const dx = northeast.x - southwest.x;
-  const dy = northeast.y - southwest.y;
-  const dz = exaggeratedMaxHeight - exaggeratedMinHeight;
+  const heightRange = exaggeratedMaxHeight - exaggeratedMinHeight;
+  const scale = Cartesian3.fromElements(
+    northeast.x - southwest.x,
+    northeast.y - southwest.y,
+    heightRange > 0 ? heightRange : 1.0, // Avoid zero scale
+    scratchScale2D,
+  );
 
-  const centerX = southwest.x + dx * 0.5;
-  const centerY = southwest.y + dy * 0.5;
-  const centerZ = exaggeratedMinHeight + dz * 0.5;
+  const center = Cartesian3.fromElements(
+    southwest.x + scale.x * 0.5,
+    southwest.y + scale.y * 0.5,
+    exaggeratedMinHeight + scale.z * 0.5,
+    scratchCenter2D,
+  );
 
-  Cartesian3.fromElements(dx, dy, dz, scratchScale2D);
-  Cartesian3.fromElements(centerX, centerY, centerZ, scratchCenter2D);
-
-  Matrix4.fromTranslation(scratchCenter2D, result);
-  Matrix4.setScale(result, scratchScale2D, result);
+  Matrix4.fromTranslation(center, result);
+  Matrix4.setScale(result, scale, result);
   Matrix4.multiply(Transforms.swizzleMatrix, result, result);
 
   return result;
