@@ -26,6 +26,7 @@ import VerticalExaggeration from "./VerticalExaggeration.js";
  * @param {number} vertexCountWithoutSkirts The vertex count of the mesh not including skirts.
  * @param {number} minimumHeight The lowest height in the tile, in meters above the ellipsoid.
  * @param {number} maximumHeight The highest height in the tile, in meters above the ellipsoid.
+ * @param {Rectangle} rectangle The rectangle, in radians, covered by this tile.
  * @param {BoundingSphere} boundingSphere3D A bounding sphere that completely contains the tile.
  * @param {Cartesian3} occludeePointInScaledSpace The occludee point of the tile, represented in ellipsoid-
  *                     scaled space, and used for horizon culling.  If this point is below the horizon,

@@ -297,7 +297,7 @@ describe(
         y: 1336,
       });
 
-      // scene.frameState.verticalExaggeration = 2.0;
+      scene.frameState.verticalExaggeration = 2.0;
       processor.frameState = scene.frameState;
       processor.terrainProvider = terrainProvider;
 
