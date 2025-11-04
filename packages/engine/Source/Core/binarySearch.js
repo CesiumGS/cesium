@@ -4,7 +4,7 @@ import Check from "./Check.js";
  * Finds an item in a sorted array.
  *
  * @function
- * @param {Array} array The sorted array to search.
+ * @param {Array|Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} array The sorted array to search.
  * @param {*} itemToFind The item to find in the array.
  * @param {binarySearchComparator} comparator The function to use to compare the item to
  *        elements in the array.

@@ -94,16 +94,12 @@ import TerrainProvider from "./TerrainProvider.js";
  * @see GoogleEarthEnterpriseTerrainData
  */
 function HeightmapTerrainData(options) {
+  options = options ?? Frozen.EMPTY_OBJECT;
+
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(options) || !defined(options.buffer)) {
-    throw new DeveloperError("options.buffer is required.");
-  }
-  if (!defined(options.width)) {
-    throw new DeveloperError("options.width is required.");
-  }
-  if (!defined(options.height)) {
-    throw new DeveloperError("options.height is required.");
-  }
+  Check.typeOf.object("options.buffer", options.buffer);
+  Check.typeOf.number("options.width", options.width);
+  Check.typeOf.number("options.height", options.height);
   //>>includeEnd('debug');
 
   this._buffer = options.buffer;
@@ -158,7 +154,7 @@ Object.defineProperties(HeightmapTerrainData.prototype, {
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
    * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
    * @memberof HeightmapTerrainData.prototype
-   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement|undefined}
+   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement|ImageBitmap|undefined}
    */
   waterMask: {
     get: function () {
@@ -647,18 +643,10 @@ HeightmapTerrainData.prototype.isChildAvailable = function (
   childY,
 ) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(thisX)) {
-    throw new DeveloperError("thisX is required.");
-  }
-  if (!defined(thisY)) {
-    throw new DeveloperError("thisY is required.");
-  }
-  if (!defined(childX)) {
-    throw new DeveloperError("childX is required.");
-  }
-  if (!defined(childY)) {
-    throw new DeveloperError("childY is required.");
-  }
+  Check.typeOf.number("thisX", thisX);
+  Check.typeOf.number("thisY", thisY);
+  Check.typeOf.number("childX", childX);
+  Check.typeOf.number("childY", childY);
   //>>includeEnd('debug');
 
   let bitNumber = 2; // northwest child
