@@ -1149,6 +1149,7 @@ const swizzleMatrix = new Matrix4(
   0.0,
   1.0,
 );
+Transforms.swizzleMatrix = swizzleMatrix;
 
 const scratchCartographic = new Cartographic();
 const scratchCartesian3Projection = new Cartesian3();

@@ -1,7 +1,12 @@
+import SceneMode from "../Scene/SceneMode.js";
+import Cartesian3 from "./Cartesian3.js";
+import Cartographic from "./Cartographic.js";
+import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Matrix4 from "./Matrix4.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import TerrainPicker from "./TerrainPicker.js";
+import Transforms from "./Transforms.js";
 import VerticalExaggeration from "./VerticalExaggeration.js";
 
 /**
@@ -166,7 +171,8 @@ function TerrainMesh(
 
   /**
    * The transform from model to world coordinates based on the terrain mesh's oriented bounding box.
-   * Currently, only computed when needed for picking.
+   * In 3D mode, this is computed from the oriented bounding box.  In 2D and Columbus View modes,
+   * this is computed from the tile's rectangle's projected coordinates.
    * @type {Matrix4}
    */
   this._transform = new Matrix4();
@@ -181,28 +187,28 @@ function TerrainMesh(
    * The terrain picker for this mesh, used for ray intersection tests.
    * @type {TerrainPicker}
    */
-  this._terrainPicker = new TerrainPicker(
-    vertices,
-    indices,
-    encoding,
-    this._transform,
-  );
+  this._terrainPicker = new TerrainPicker(vertices, indices, encoding);
 }
 
-Object.defineProperties(TerrainMesh.prototype, {
-  /**
-   * Gets the tile's transform from model to world coordinates based on the terrain mesh's oriented bounding box.
-   */
-  transform: {
-    get: function () {
-      if (this._recomputeTransform) {
-        computeTransform(this, this._transform);
-        this._recomputeTransform = false;
-      }
-      return this._transform;
-    },
-  },
-});
+/**
+ * Get the terrain tile's model-to-world transform matrix for the given scene mode and projection.
+ * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
+ * @param {MapProjection} projection The map projection.
+ * @returns {Matrix4} The transform matrix.
+ * @private
+ */
+TerrainMesh.prototype.getTransform = function (mode, projection) {
+  if (!this._recomputeTransform) {
+    return this._transform;
+  }
+  this._recomputeTransform = false;
+
+  if (!defined(mode) || mode === SceneMode.SCENE3D) {
+    return computeTransform(this, this._transform);
+  }
+
+  return computeTransform2D(this, projection, this._transform);
+};
 
 function computeTransform(mesh, result) {
   const exaggeration = mesh.encoding.exaggeration;
@@ -231,8 +237,78 @@ function computeTransform(mesh, result) {
   return OrientedBoundingBox.computeTransformation(obb, result);
 }
 
+const scratchSWCartesian = new Cartesian3();
+const scratchNECartesian = new Cartesian3();
+const scratchSWCartographic = new Cartographic();
+const scratchNECartographic = new Cartographic();
+const scratchScale2D = new Cartesian3();
+const scratchCenter2D = new Cartesian3();
+
 /**
- * Gives the point on the mesh where the give ray intersects
+ * Get the terrain tile's model-to-world transform matrix for 2D or Columbus View modes.
+ * Assumes tiles in 2D are axis-aligned and still rectangular. (This is true for Web Mercator and Geographic projections.)
+ * @param {TerrainMesh} mesh The terrain mesh.
+ * @param {MapProjection} projection The map projection.
+ * @param {Matrix4} result The object in which to store the result.
+ * @returns {Matrix4} The transform matrix.
+ * @private
+ */
+function computeTransform2D(mesh, projection, result) {
+  const exaggeration = mesh.encoding.exaggeration;
+  const exaggerationRelativeHeight = mesh.encoding.exaggerationRelativeHeight;
+
+  const exaggeratedMinHeight = VerticalExaggeration.getHeight(
+    mesh.minimumHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const exaggeratedMaxHeight = VerticalExaggeration.getHeight(
+    mesh.maximumHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const southwest = projection.project(
+    Cartographic.fromRadians(
+      mesh.rectangle.west,
+      mesh.rectangle.south,
+      0,
+      scratchSWCartographic,
+    ),
+    scratchSWCartesian,
+  );
+
+  const northeast = projection.project(
+    Cartographic.fromRadians(
+      mesh.rectangle.east,
+      mesh.rectangle.north,
+      0,
+      scratchNECartographic,
+    ),
+    scratchNECartesian,
+  );
+
+  const dx = northeast.x - southwest.x;
+  const dy = northeast.y - southwest.y;
+  const dz = exaggeratedMaxHeight - exaggeratedMinHeight;
+
+  const centerX = southwest.x + dx * 0.5;
+  const centerY = southwest.y + dy * 0.5;
+  const centerZ = exaggeratedMinHeight + dz * 0.5;
+
+  Cartesian3.fromElements(dx, dy, dz, scratchScale2D);
+  Cartesian3.fromElements(centerX, centerY, centerZ, scratchCenter2D);
+
+  Matrix4.fromTranslation(scratchCenter2D, result);
+  Matrix4.setScale(result, scratchScale2D, result);
+  Matrix4.multiply(Transforms.swizzleMatrix, result, result);
+
+  return result;
+}
+
+/**
+ * Gives the point on this terrain tile where the given ray intersects
  * @param {Ray} ray The ray to test for intersection.
  * @param {boolean} cullBackFaces Whether to consider back-facing triangles as intersections.
  * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
@@ -240,16 +316,10 @@ function computeTransform(mesh, result) {
  * @returns {Cartesian3} The point on the mesh where the ray intersects, or undefined if there is no intersection.
  * @private
  */
-TerrainMesh.prototype.pickRay = function (
-  ray,
-  cullBackFaces,
-  mode,
-  projection,
-) {
-  // Note: use the getter for transform to ensure it's up to date.
+TerrainMesh.prototype.pick = function (ray, cullBackFaces, mode, projection) {
   return this._terrainPicker.rayIntersect(
     ray,
-    this.transform,
+    this.getTransform(mode, projection),
     cullBackFaces,
     mode,
     projection,

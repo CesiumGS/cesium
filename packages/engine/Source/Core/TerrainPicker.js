@@ -7,13 +7,13 @@ import Ray from "./Ray.js";
 import TaskProcessor from "./TaskProcessor.js";
 import Cartographic from "./Cartographic.js";
 import SceneMode from "../Scene/SceneMode.js";
-import Transforms from "./Transforms.js";
+import Interval from "./Interval.js";
 
 // Terrain picker can be 4 levels deep (0-3)
 const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
 
 /**
- * Creates an object that handles arbitrary ray intersections with a terrain mesh using spatially accelerated structures.
+ * Creates an object that handles arbitrary ray intersections with a terrain mesh using a spatial acceleration structure.
  *
  * @alias TerrainPicker
  * @constructor
@@ -21,11 +21,10 @@ const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
  * @param {Float32Array} vertices The terrain mesh's vertex buffer.
  * @param {Uint32Array} indices The terrain mesh's index buffer.
  * @param {TerrainEncoding} encoding The terrain mesh's vertex encoding.
- * @param {Matrix4} transform The terrain mesh tile's transform from local space to world space.
  *
  * @private
  */
-function TerrainPicker(vertices, indices, encoding, transform) {
+function TerrainPicker(vertices, indices, encoding) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(vertices)) {
     throw new Error("vertices is required.");
@@ -35,9 +34,6 @@ function TerrainPicker(vertices, indices, encoding, transform) {
   }
   if (!defined(encoding)) {
     throw new Error("encoding is required.");
-  }
-  if (!defined(transform)) {
-    throw new Error("transform is required.");
   }
   //>>includeEnd('debug');
 
@@ -191,6 +187,7 @@ TerrainPicker.prototype.rayIntersect = function (
   const invTransform = this._inverseTransform;
 
   const transformedRay = scratchTransformedRay;
+
   transformedRay.origin = Matrix4.multiplyByPoint(
     invTransform,
     ray.origin,
@@ -215,8 +212,6 @@ TerrainPicker.prototype.rayIntersect = function (
   );
 };
 
-const scratchTransform = new Matrix4();
-
 /**
  * Resets the terrain picker's quadtree structure to just the root node. Done whenever the underlying terrain mesh changes.
  * @param terrainPicker The terrain picker to reset.
@@ -226,11 +221,7 @@ function reset(terrainPicker, tileTransform, mode, projection) {
   // PERFORMANCE_IDEA: warm-start the terrain picker by building a level on a worker.
   // This currently isn't feasible because you can only copy the vertex buffer to a worker (slow) or transfer ownership (can't do picking on main thread in meantime).
   // SharedArrayBuffers could be used, but most environments do not support them.
-  const transform =
-    mode === SceneMode.SCENE3D
-      ? tileTransform
-      : Transforms.basisTo2D(projection, tileTransform, scratchTransform);
-  Matrix4.inverse(transform, terrainPicker._inverseTransform);
+  Matrix4.inverse(tileTransform, terrainPicker._inverseTransform);
 
   terrainPicker._needsRebuild = false;
   const intersectingTriangles = new Uint32Array(
@@ -319,6 +310,8 @@ function packTriangleBuffers(
  * @private
  */
 
+const scratchInterval = new Interval();
+
 /**
  * Recursively gathers all nodes in the quadtree that intersect the ray.
  *
@@ -331,6 +324,7 @@ function getNodesIntersectingRay(currentNode, ray, intersectingNodes) {
   const interval = IntersectionTests.rayAxisAlignedBoundingBox(
     ray,
     currentNode.aabb,
+    scratchInterval,
   );
 
   if (!defined(interval)) {
@@ -341,7 +335,7 @@ function getNodesIntersectingRay(currentNode, ray, intersectingNodes) {
   if (isLeaf) {
     intersectingNodes.push({
       node: currentNode,
-      interval: interval,
+      interval: new Interval(interval.start, interval.stop),
     });
     return;
   }
