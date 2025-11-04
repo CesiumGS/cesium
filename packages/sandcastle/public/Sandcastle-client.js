@@ -15,6 +15,17 @@
     return "undefined";
   }
 
+  const originalClear = console.clear;
+  console.clear = function () {
+    originalClear();
+    window.parent.postMessage(
+      {
+        type: "consoleClear",
+      },
+      "*",
+    );
+  };
+
   const originalLog = console.log;
   console.log = function (d1) {
     originalLog.apply(console, arguments);

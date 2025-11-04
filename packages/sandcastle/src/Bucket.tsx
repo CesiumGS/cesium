@@ -5,6 +5,7 @@ import { ConsoleMessageType } from "./ConsoleMirror";
 
 type SandcastleMessage =
   | { type: "reload" }
+  | { type: "consoleClear" }
   | { type: "consoleLog"; log: string }
   | { type: "consoleWarn"; warn: string }
   | { type: "consoleError"; error: string; lineNumber?: number; url?: string }
@@ -30,7 +31,7 @@ function Bucket({
    */
   highlightLine: (lineNumber: number) => void;
   appendConsole: (type: ConsoleMessageType, message: string) => void;
-  resetConsole: () => void;
+  resetConsole: (options?: { showMessage?: boolean | undefined }) => void;
 }) {
   const bucket = useRef<HTMLIFrameElement>(null);
   const lastRunNumber = useRef<number>(Number.NEGATIVE_INFINITY);
@@ -172,6 +173,8 @@ function Bucket({
           // into the iframe, causing the demo to run there.
           activateBucketScripts(bucket.current, code, html);
         }
+      } else if (e.data.type === "consoleClear") {
+        resetConsole({ showMessage: true });
       } else if (e.data.type === "consoleLog") {
         // Console log messages from the iframe display in Sandcastle.
         appendConsole("log", e.data.log);
