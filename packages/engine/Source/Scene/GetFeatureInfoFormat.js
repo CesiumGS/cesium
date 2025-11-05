@@ -93,8 +93,8 @@ function geoJsonToFeatureInfo(json, projection) {
       if (!defined(projection) || projection instanceof GeographicProjection) {
         featureInfo.position = Cartographic.fromDegrees(x, y);
       } else {
-        const positionInMeters = new Cartesian3(x, y, 0);
-        const cartographic = projection.unproject(positionInMeters);
+        const positionProjected = new Cartesian3(x, y, 0);
+        const cartographic = projection.unproject(positionProjected);
         featureInfo.position = cartographic;
       }
     }
