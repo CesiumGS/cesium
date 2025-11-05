@@ -34,6 +34,7 @@ import SDFSettings from "./SDFSettings.js";
 import TextureAtlas from "../Renderer/TextureAtlas.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
+import WebGLConstants from "../Core/WebGLConstants.js";
 
 const SHOW_INDEX = Billboard.SHOW_INDEX;
 const POSITION_INDEX = Billboard.POSITION_INDEX;
@@ -2039,7 +2040,8 @@ BillboardCollection.prototype.update = function (frameState) {
     ) {
       this._rsOpaque = RenderState.fromCache({
         depthTest: {
-          enabled: false,
+          enabled: true,
+          func: WebGLConstants.LESS,
         },
         depthMask: true,
       });
@@ -2059,7 +2061,10 @@ BillboardCollection.prototype.update = function (frameState) {
     ) {
       this._rsTranslucent = RenderState.fromCache({
         depthTest: {
-          enabled: false,
+          enabled: true,
+          func: useTranslucentDepthMask
+            ? WebGLConstants.LEQUAL
+            : WebGLConstants.LESS,
         },
         depthMask: useTranslucentDepthMask,
         blending: BlendingState.ALPHA_BLEND,
