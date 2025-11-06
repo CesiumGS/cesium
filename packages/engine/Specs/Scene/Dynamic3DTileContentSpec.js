@@ -1,5 +1,6 @@
 import Dynamic3DTileContent, {
   ContentHandle,
+  RequestHandle,
 } from "../../Source/Scene/Dynamic3DTileContent.js";
 import Clock from "../../Source/Core/Clock.js";
 import JulianDate from "../../Source/Core/JulianDate.js";
@@ -480,6 +481,45 @@ describe(
   },
   "WebGL",
 );
+
+describe("Scene/Dynamic3DTileContent/RequestHandle", function () {
+  beforeAll(function () {
+    initializeMockContextLimits();
+  });
+
+  it("___XXX_DYNAMIC_REQUEST_HANDLE_WORKS___", async function () {
+    const resource = new Resource({ url: "http://example.com/SPEC_DATA.glb" });
+    const requestHandle = new RequestHandle(resource);
+
+    // Create a mock promise to manually resolve the
+    // resource request
+    const mockPromise = new MockResourceFetchArrayBufferPromise();
+
+    // Fetch the promise from the request handle
+    const resultPromise = requestHandle.getResultPromise();
+    resultPromise
+      .then(function (arrayBuffer) {
+        // use the data
+        console.log("resolved with ", arrayBuffer);
+      })
+      .catch(function (error) {
+        // an error occurred
+        console.log("rejected with ", error);
+      });
+
+    // Ensure that there is a pending request
+    requestHandle.ensureRequested();
+
+    // This can be called any number of times...
+    requestHandle.ensureRequested();
+    requestHandle.ensureRequested();
+
+    // Now resolve the pending request, one way or another...
+    mockPromise.resolve(createDummyGltfBuffer());
+    //mockPromise.reject("SPEC_REJECTION");
+    //requestHandle.cancel();
+  });
+});
 
 describe(
   "Scene/Dynamic3DTileContent/ContentHandle",
