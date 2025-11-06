@@ -8,6 +8,7 @@ import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Matrix4 from "../Core/Matrix4.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
 import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
@@ -351,6 +352,10 @@ Picking.prototype.pick = function (
     pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit); // Object[]
     if (async) {
       pickedObjects = Promise.resolve(pickedObjects); // Promise<Object[]> fallback if not WebGL2
+      oneTimeWarning(
+        "picking-async-fallback",
+        "Fallback to synchronous picking because async operation requires WebGL2 context.",
+      );
     }
   }
   context.endFrame();
