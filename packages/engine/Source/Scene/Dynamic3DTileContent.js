@@ -916,19 +916,21 @@ class ContentHandle {
   }
 
   /**
-   * XXX_DYNAMIC: Only intended for testing: If there is a pending
-   * request for the content, then wait until the content is
-   * created, or the content creation failed.
+   * Only intended for testing:
+   *
+   * If there is a pending request for the content, then wait until
+   * the content is created, or the content creation failed.
    *
    * This is here because all the request handling is in the content
    * classes, without abstractions and clear lifecycle definitions.
    */
-  async awaitPromise() {
+  async waitForSpecs() {
     if (defined(this._requestHandle)) {
       try {
         await this._deferred.promise;
       } catch (error) {
         // Ignored
+        console.log(error);
       }
     }
   }
@@ -1080,13 +1082,16 @@ class ContentHandle {
         const content = await this._createContent(resource, arrayBuffer);
         console.log(`ContentHandle: Content was created for ${uri}`);
         this._content = content;
-        this._deferred.resolve();
+        this._deferred.resolve(content);
       } catch (error) {
         console.log(
           `ContentHandle: Content creation for ${uri} caused error ${error}`,
         );
         this._failed = true;
-        this._deferred.resolve();
+
+        // The promise is only intended for testign, and may not be awaited,
+        // so it cannot be rejected without causing an uncaught error.
+        this._deferred.resolve(error);
       }
     };
 
@@ -1108,14 +1113,20 @@ class ContentHandle {
           `ContentHandle: Request was rejected for ${uri}, but actually only cancelled. Better luck next time!`,
         );
         this._requestHandle = undefined;
-        this._deferred.resolve();
+
+        // The promise is only intended for testign, and may not be awaited,
+        // so it cannot be rejected without causing an uncaught error.
+        this._deferred.resolve(error);
         return;
       }
 
       // Other errors should indeed cause this handle
       // to be marked as "failed"
       this._failed = true;
-      this._deferred.resolve();
+
+      // The promise is only intended for testign, and may not be awaited,
+      // so it cannot be rejected without causing an uncaught error.
+      this._deferred.resolve(error);
     };
     requestHandleResultPromise.then(onRequestFulfilled, onRequestRejected);
     requestHandle.ensureRequested();
@@ -1317,19 +1328,6 @@ class Dynamic3DTileContent {
     this._contentHandles = this._createContentHandles(tilesetResource);
 
     /**
-     * The maximum number of content objects that should be kept
-     * in memory at the same time.
-     *
-     * This is initialized with an arbitrary value. It will be
-     * increased as necessary to accommodate for the maximum
-     * number of contents that are found to be "active" at
-     * the same time.
-     *
-     * @type {number}
-     */
-    this._loadedContentHandlesMaxSize = 10;
-
-    /**
      * The mapping from URLs to the ContentHandle objects whose
      * content is currently defined (i.e. loaded).
      *
@@ -1348,6 +1346,19 @@ class Dynamic3DTileContent {
       Number.POSITIVE_INFINITY,
       this.loadedContentHandleEvicted,
     );
+
+    /**
+     * The maximum number of content objects that should be kept
+     * in the "_loadedContentHandles" LRU cache at the same time.
+     *
+     * This is initialized with an arbitrary value. It will be
+     * increased as necessary to accommodate for the maximum
+     * number of contents that are found to be "active" at
+     * any point in time.
+     *
+     * @type {number}
+     */
+    this._loadedContentHandlesMaxSize = 10;
 
     /**
      * The mapping from "keys" to arrays(!) of URIs for the dynamic content.
@@ -2049,6 +2060,21 @@ class Dynamic3DTileContent {
     }
     return destroyObject(this);
   }
+
+  /**
+   * Only intended for testing:
+   *
+   * Wait until all pending promises from content requests are
+   * either resolved or rejected.
+   */
+  async waitForSpecs() {
+    for (const contentHandle of this._contentHandles.values()) {
+      await contentHandle.waitForSpecs();
+    }
+  }
 }
 
 export default Dynamic3DTileContent;
+
+// Exposed for testing. They should be individual files, though...
+export { NDMap, LRUCache, RequestHandle, ContentHandle };

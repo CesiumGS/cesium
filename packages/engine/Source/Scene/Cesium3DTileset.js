@@ -1152,7 +1152,7 @@ function Cesium3DTileset(options) {
    * The function that determines which inner contents of a dynamic
    * contents object are currently active.
    *
-   * See setDynamicContentPropertyProvider for details.
+   * See the setter of this property for details.
    *
    * @type {Function|undefined}
    * @private
@@ -2186,8 +2186,13 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * Returns the function that provides the properties based on
-   * which inner contents of a dynamic content should be active.
+   * The function that provides the properties based on which inner
+   * contents of a dynamic content should be active.
+   *
+   * This is a function that returns a JSON plain object. This object corresponds
+   * to one 'key' of a dynamic content definition. It will cause the content
+   * with this key to be the currently active content, namely, when the
+   * "update" function of that content is called.
    *
    * @memberof Cesium3DTileset.prototype
    * @readonly
@@ -2197,6 +2202,14 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   dynamicContentPropertyProvider: {
     get: function () {
       return this._dynamicContentPropertyProvider;
+    },
+    set: function (value) {
+      if (defined(value) && !defined(this._dynamicContentsDimensions)) {
+        console.log(
+          "This tileset does not contain the 3DTILES_dynamic extension. The given function will not have an effect.",
+        );
+      }
+      this._dynamicContentPropertyProvider = value;
     },
   },
 });
@@ -2471,29 +2484,6 @@ Cesium3DTileset.prototype.loadTileset = function (
 };
 
 /**
- * Set the function that determines which dynamic content is currently active.
- *
- * This is a function that returns a JSON plain object. This object corresponds
- * to one 'key' of a dynamic content definition. It will cause the content
- * with this key to be the currently active content.
- *
- * @param {Function|undefined} dynamicContentPropertyProvider The function
- */
-Cesium3DTileset.prototype.setDynamicContentPropertyProvider = function (
-  dynamicContentPropertyProvider,
-) {
-  if (
-    defined(dynamicContentPropertyProvider) &&
-    !defined(this._dynamicContentsDimensions)
-  ) {
-    console.log(
-      "This tileset does not contain the 3DTILES_dynamic extension. The given function will not have an effect.",
-    );
-  }
-  this._dynamicContentPropertyProvider = dynamicContentPropertyProvider;
-};
-
-/**
  * XXX_DYNAMIC A draft for a convenience function for the dynamic content
  * properties provider. Whether or not this should be offered depends on
  * how much we want to specialize all this for single ISO8601 date strings.
@@ -2538,7 +2528,7 @@ Cesium3DTileset.prototype.setDefaultTimeDynamicContentPropertyProvider =
         [timeDimensionName]: currentTimeString,
       };
     };
-    this.setDynamicContentPropertyProvider(dynamicContentPropertyProvider);
+    this.dynamicContentPropertyProvider = dynamicContentPropertyProvider;
   };
 
 /**
