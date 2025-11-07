@@ -685,11 +685,13 @@ TextureAtlas.prototype.addImage = function (id, image) {
 
   promise = resolveAndAddImage();
   this._indexPromiseById.set(id, promise);
-
-  return promise.then((index) => {
-    this._indexPromiseById.delete(id);
-    return index;
+  promise.then(() => {
+    if (!this.isDestroyed()) {
+      this._indexPromiseById.delete(id);
+    }
   });
+
+  return promise;
 };
 
 /**
