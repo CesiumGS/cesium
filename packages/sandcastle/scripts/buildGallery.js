@@ -118,8 +118,17 @@ export async function buildGalleryList(options = {}) {
   };
 
   const galleryFiles = await globby(
-    galleryFilesPattern.map((pattern) => join(rootDirectory, pattern, "**/*")),
+    galleryFilesPattern.map((pattern) =>
+      // globby can only work with paths using '/' but node on windows uses '\'
+      // convert them right before passing to globby to ensure all joins work as expected
+      join(rootDirectory, pattern, "**/*").replaceAll("\\", "/"),
+    ),
   );
+  if (galleryFiles.length === 0) {
+    console.warn(
+      "Did not find any gallery files. Please check the configuration is correct",
+    );
+  }
   const yamlFiles = galleryFiles.filter((path) =>
     basename(path).match(galleryItemConfig),
   );
