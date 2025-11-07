@@ -151,11 +151,6 @@ function Bucket({
     lastRunNumber.current = runNumber;
   }, [code, html, runNumber]);
 
-  function scriptLineToEditorLine(line: number) {
-    // editor lines are zero-indexed, plus 3 lines of boilerplate
-    return line - 1;
-  }
-
   useEffect(() => {
     const messageHandler = function (e: MessageEvent<SandcastleMessage>) {
       // The iframe (bucket.html) sends this message on load.
@@ -181,16 +176,14 @@ function Bucket({
       } else if (e.data.type === "consoleError") {
         // Console error messages from the iframe display in Sandcastle
         let errorMsg = e.data.error;
-        let lineNumber = e.data.lineNumber;
+        const lineNumber = e.data.lineNumber;
         if (lineNumber) {
-          errorMsg += " (on line ";
+          errorMsg += ` (on line ${lineNumber}`;
 
           if (e.data.url) {
-            errorMsg += `${lineNumber} of ${e.data.url})`;
-          } else {
-            lineNumber = scriptLineToEditorLine(lineNumber);
-            errorMsg += `${lineNumber + 1})`;
+            errorMsg += ` of ${e.data.url}`;
           }
+          errorMsg += ")";
         }
         appendConsole("error", errorMsg);
       } else if (e.data.type === "consoleWarn") {
