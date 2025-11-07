@@ -648,7 +648,7 @@ async function resolveImage(image, id) {
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas,
  *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
- * @returns {Promise<number>} A Promise that resolves to the image region index. -1 is returned if resouces are in the process of being destroyed.
+ * @returns {Promise<number>} A Promise that resolves to the image region index, or -1 if resources are in the process of being destroyed.
  */
 TextureAtlas.prototype.addImage = function (id, image) {
   //>>includeStart('debug', pragmas.debug);
@@ -661,9 +661,10 @@ TextureAtlas.prototype.addImage = function (id, image) {
   if (defined(promise)) {
     // This image is already being added
     return promise;
-  } else if (defined(index)) {
+  }
+  if (defined(index)) {
     // This image has already been added and resolved
-    return index;
+    return Promise.resolve(index);
   }
 
   index = this._nextIndex++;
@@ -679,15 +680,16 @@ TextureAtlas.prototype.addImage = function (id, image) {
       return -1;
     }
 
-    return this._addImage(index, image).then((index) => {
-      this._indexPromiseById.delete(id);
-      return index;
-    });
+    return this._addImage(index, image);
   };
 
   promise = resolveAndAddImage();
   this._indexPromiseById.set(id, promise);
-  return promise;
+
+  return promise.then((index) => {
+    this._indexPromiseById.delete(id);
+    return index;
+  });
 };
 
 /**
