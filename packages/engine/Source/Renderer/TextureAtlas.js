@@ -61,14 +61,14 @@ function TextureAtlas(options) {
   this._texturePacker = undefined;
   /** @type {BoundingRectangle[]} */
   this._rectangles = [];
-  /** @type {Map<number, number} */
+  /** @type {Map<number, number>} */
   this._subRegions = new Map();
   this._guid = createGuid();
 
   this._imagesToAddQueue = [];
-  /** @type {Map<string, number} */
+  /** @type {Map<string, number>} */
   this._indexById = new Map();
-  /** @type {Map<string, Promise<number>} */
+  /** @type {Map<string, Promise<number>>} */
   this._indexPromiseById = new Map();
   this._nextIndex = 0;
 }
