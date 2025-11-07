@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.136
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
+
 ## 1.135 - 2025-11-03
 
 ### @cesium/engine
@@ -18,7 +26,6 @@
 
 - Improved performance of `scene.drillPick`. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
 - Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
-- Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
 - Improved performance of terrain Quadtree handling of custom data [#12907](https://github.com/CesiumGS/cesium/pull/12907)
 - Fixed vertical exaggeration of ellipsoid-shaped voxels. [#12811](https://github.com/CesiumGS/cesium/issues/12811)
 - Fixed parsing content bounding volumes contained in 3D Tiles 1.1 subtree files. [#12972](https://github.com/CesiumGS/cesium/pull/12972)
