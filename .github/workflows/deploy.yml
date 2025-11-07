@@ -2,7 +2,7 @@ name: deploy
 on:
   push:
     branches-ignore:
-      - 'cesium.com'
+      - "cesium.com"
       - production
 concurrency:
   group: deploy-${{ github.ref }}
@@ -22,14 +22,13 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_REPO: ${{ github.repository }}
       GITHUB_SHA: ${{ github.sha }}
-      BASE_URL: /cesium/${{ github.ref_name }}/
       DEPLOYED_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
     steps:
       - uses: actions/checkout@v5
       - name: install node 22
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: "22"
       - name: npm install
         run: npm install
       - name: set the version in package.json
@@ -42,8 +41,6 @@ jobs:
         run: npm pack --workspaces &> /dev/null
       - name: build apps
         run: npm run build-apps
-      - name: build sandcastle v2
-        run: npm run build-ci -w packages/sandcastle -- -l warn
       - uses: ./.github/actions/verify-package
       - name: deploy to s3
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
