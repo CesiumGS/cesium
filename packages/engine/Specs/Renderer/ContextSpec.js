@@ -41,48 +41,54 @@ describe(
     it("get maximumCombinedTextureImageUnits", function () {
       expect(
         ContextLimits.maximumCombinedTextureImageUnits,
-      ).toBeGreaterThanOrEqual(8);
+      ).toBeGreaterThanOrEqual(32);
     });
 
     it("get maximumCubeMapSize", function () {
-      expect(ContextLimits.maximumCubeMapSize).toBeGreaterThanOrEqual(16);
+      expect(ContextLimits.maximumCubeMapSize).toBeGreaterThanOrEqual(2048);
     });
 
     it("get maximumFragmentUniformVectors", function () {
       expect(
         ContextLimits.maximumFragmentUniformVectors,
-      ).toBeGreaterThanOrEqual(16);
+      ).toBeGreaterThanOrEqual(224);
     });
 
     it("get maximumTextureImageUnits", function () {
-      expect(ContextLimits.maximumTextureImageUnits).toBeGreaterThanOrEqual(8);
+      expect(ContextLimits.maximumTextureImageUnits).toBeGreaterThanOrEqual(16);
     });
 
     it("get maximumRenderbufferSize", function () {
-      expect(ContextLimits.maximumRenderbufferSize).toBeGreaterThanOrEqual(1);
+      expect(ContextLimits.maximumRenderbufferSize).toBeGreaterThanOrEqual(
+        2048,
+      );
     });
 
     it("get maximumTextureSize", function () {
-      expect(ContextLimits.maximumTextureSize).toBeGreaterThanOrEqual(64);
+      expect(ContextLimits.maximumTextureSize).toBeGreaterThanOrEqual(2048);
+    });
+
+    it("get maximum3DTextureSize", function () {
+      expect(ContextLimits.maximum3DTextureSize).toBeGreaterThanOrEqual(256);
     });
 
     it("get maximumVaryingVectors", function () {
-      expect(ContextLimits.maximumVaryingVectors).toBeGreaterThanOrEqual(8);
+      expect(ContextLimits.maximumVaryingVectors).toBeGreaterThanOrEqual(15);
     });
 
     it("get maximumVertexAttributes", function () {
-      expect(ContextLimits.maximumVertexAttributes).toBeGreaterThanOrEqual(8);
+      expect(ContextLimits.maximumVertexAttributes).toBeGreaterThanOrEqual(16);
     });
 
     it("get maximumVertexTextureImageUnits", function () {
       expect(
         ContextLimits.maximumVertexTextureImageUnits,
-      ).toBeGreaterThanOrEqual(0);
+      ).toBeGreaterThanOrEqual(16);
     });
 
     it("get maximumVertexUniformVectors", function () {
       expect(ContextLimits.maximumVertexUniformVectors).toBeGreaterThanOrEqual(
-        1,
+        256,
       );
     });
 

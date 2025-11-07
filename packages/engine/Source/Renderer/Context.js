@@ -85,32 +85,33 @@ function Context(canvas, options) {
 
   ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(
     gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS,
-  ); // min: 8
+  );
   ContextLimits._maximumCubeMapSize = gl.getParameter(
     gl.MAX_CUBE_MAP_TEXTURE_SIZE,
-  ); // min: 16
+  );
   ContextLimits._maximumFragmentUniformVectors = gl.getParameter(
     gl.MAX_FRAGMENT_UNIFORM_VECTORS,
-  ); // min: 16
+  );
   ContextLimits._maximumTextureImageUnits = gl.getParameter(
     gl.MAX_TEXTURE_IMAGE_UNITS,
-  ); // min: 8
+  );
   ContextLimits._maximumRenderbufferSize = gl.getParameter(
     gl.MAX_RENDERBUFFER_SIZE,
-  ); // min: 1
-  ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE); // min: 64
+  );
+  ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  ContextLimits._maximum3DTextureSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
   ContextLimits._maximumVaryingVectors = gl.getParameter(
     gl.MAX_VARYING_VECTORS,
-  ); // min: 8
+  );
   ContextLimits._maximumVertexAttributes = gl.getParameter(
     gl.MAX_VERTEX_ATTRIBS,
-  ); // min: 8
+  );
   ContextLimits._maximumVertexTextureImageUnits = gl.getParameter(
     gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS,
-  ); // min: 0
+  );
   ContextLimits._maximumVertexUniformVectors = gl.getParameter(
     gl.MAX_VERTEX_UNIFORM_VECTORS,
-  ); // min: 128
+  );
 
   ContextLimits._maximumSamples = this._webgl2
     ? gl.getParameter(gl.MAX_SAMPLES)

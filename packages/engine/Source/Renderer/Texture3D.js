@@ -113,25 +113,25 @@ function Texture3D(options) {
 
   Check.typeOf.number.greaterThan("width", width, 0);
 
-  if (width > ContextLimits.maximumTextureSize) {
+  if (width > ContextLimits.maximum3DTextureSize) {
     throw new DeveloperError(
-      `Width must be less than or equal to the maximum texture3D size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`,
+      `Width must be less than or equal to the maximum texture3D size (${ContextLimits.maximum3DTextureSize}).  Check maximum3DTextureSize.`,
     );
   }
 
   Check.typeOf.number.greaterThan("height", height, 0);
 
-  if (height > ContextLimits.maximumTextureSize) {
+  if (height > ContextLimits.maximum3DTextureSize) {
     throw new DeveloperError(
-      `Height must be less than or equal to the maximum texture3D size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`,
+      `Height must be less than or equal to the maximum texture3D size (${ContextLimits.maximum3DTextureSize}).  Check maximum3DTextureSize.`,
     );
   }
 
   Check.typeOf.number.greaterThan("depth", depth, 0);
 
-  if (depth > ContextLimits.maximumTextureSize) {
+  if (depth > ContextLimits.maximum3DTextureSize) {
     throw new DeveloperError(
-      `Depth must be less than or equal to the maximum texture3D size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`,
+      `Depth must be less than or equal to the maximum texture3D size (${ContextLimits.maximum3DTextureSize}).  Check maximum3DTextureSize.`,
     );
   }
 
