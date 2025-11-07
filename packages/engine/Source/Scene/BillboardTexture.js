@@ -257,13 +257,14 @@ BillboardTexture.prototype.addImageSubRegion = function (id, subRegion) {
   this._hasSubregion = true;
 
   const atlas = this._billboardCollection.textureAtlas;
-  const index = atlas.getImageSubRegion(id, subRegion);
+  const indexOrPromise = atlas.addImageSubRegion(id, subRegion);
 
-  if (index) {
-    this.setImageSubRegion(index, subRegion);
-  } else {
-    this.loadImageSubRegion(id, subRegion);
+  if (typeof indexOrPromise === "number") {
+    this.setImageSubRegion(indexOrPromise, subRegion);
+    return;
   }
+
+  this.loadImageSubRegion(id, subRegion, indexOrPromise);
 };
 
 /**
@@ -271,14 +272,18 @@ BillboardTexture.prototype.addImageSubRegion = function (id, subRegion) {
  * @private
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
+ * @param {Promise<number>} indexPromise A promise that resolves to the image region index.
  * @returns {Promise<number | undefined>}
  */
-BillboardTexture.prototype.loadImageSubRegion = async function (id, subRegion) {
+BillboardTexture.prototype.loadImageSubRegion = async function (
+  id,
+  subRegion,
+  indexPromise,
+) {
   let index;
-  const atlas = this._billboardCollection.textureAtlas;
   try {
     this._loadState = BillboardLoadState.LOADING;
-    index = await atlas.addImageSubRegion(id, subRegion);
+    index = await indexPromise;
   } catch (error) {
     // There was an error loading the referenced image
     this._loadState = BillboardLoadState.ERROR;
