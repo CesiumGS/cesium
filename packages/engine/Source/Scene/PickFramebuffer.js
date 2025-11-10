@@ -7,6 +7,7 @@ import PassState from "../Renderer/PassState.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Sync from "../Renderer/Sync.js";
+import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * @private
@@ -181,7 +182,7 @@ PickFramebuffer.prototype.endAsync = async function (
     );
     return pickedObjects;
   } catch (e) {
-    throw "Async Picking Request Timeout";
+    throw new RuntimeError("Async Picking Request Timeout");
   } finally {
     sync.destroy();
     pbo.destroy();

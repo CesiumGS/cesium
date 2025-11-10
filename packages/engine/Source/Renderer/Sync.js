@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
@@ -90,7 +91,7 @@ Sync.prototype.waitForSignal = async function (scheduleFunction, ttl) {
       if (signaled) {
         resolve();
       } else if (ttl <= 0) {
-        reject("Wait for signal timeout");
+        reject(new RuntimeError("Wait for signal timeout"));
       } else {
         scheduleFunction(waitForSignal0(resolve, reject, ttl - 1));
       }

@@ -2,6 +2,7 @@ import { Sync, WebGLConstants } from "../../index.js";
 
 import createContext from "../../../../Specs/createContext.js";
 import createWebglVersionHelper from "../createWebglVersionHelper.js";
+import { RuntimeError } from "@cesium/engine";
 
 describe(
   "Renderer/Sync",
@@ -89,6 +90,65 @@ describe(
         });
         const status = sync.getStatus();
         expect(status).toEqual(WebGLConstants.UNSIGNALED);
+      });
+
+      it(`waitForSignal to resolve`, async function () {
+        if (!context.webgl2) {
+          return;
+        }
+        let i = 0;
+        spyOn(Sync.prototype, "getStatus").and.callFake(function () {
+          if (i++ < 3) {
+            return WebGLConstants.UNSIGNALED;
+          }
+          return WebGLConstants.SIGNALED;
+        });
+        sync = Sync.create({
+          context: context,
+        });
+        await expectAsync(
+          sync.waitForSignal(function (next) {
+            setTimeout(next, 100);
+          }),
+        ).toBeResolved();
+      });
+
+      it(`waitForSignal throws on timeout`, async function () {
+        if (!context.webgl2) {
+          return;
+        }
+        spyOn(Sync.prototype, "getStatus").and.callFake(function () {
+          return WebGLConstants.UNSIGNALED; // simulate never being signaled
+        });
+        sync = Sync.create({
+          context: context,
+        });
+        await expectAsync(
+          sync.waitForSignal(function (next) {
+            setTimeout(next, 100);
+          }),
+        ).toBeRejectedWithError(RuntimeError, "Wait for signal timeout");
+      });
+
+      it(`waitForSignal throws on custom timeout`, async function () {
+        if (!context.webgl2) {
+          return;
+        }
+        let i = 0;
+        spyOn(Sync.prototype, "getStatus").and.callFake(function () {
+          if (i++ < 6) {
+            return WebGLConstants.UNSIGNALED;
+          }
+          return WebGLConstants.SIGNALED;
+        });
+        sync = Sync.create({
+          context: context,
+        });
+        await expectAsync(
+          sync.waitForSignal(function (next) {
+            setTimeout(next, 100);
+          }, 5),
+        ).toBeRejectedWithError(RuntimeError, "Wait for signal timeout");
       });
     }
   },
