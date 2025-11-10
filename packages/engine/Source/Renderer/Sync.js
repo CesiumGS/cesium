@@ -59,4 +59,45 @@ Sync.prototype.destroy = function () {
   this._gl.deleteSync(this._sync);
   return destroyObject(this);
 };
+
+/**
+ * Incremantally polls the status of the Sync object until signaled then resolves.
+ * Usually polling should be done once per frame.
+ *
+ * @example
+ * try {
+ *  await sync.waitForSignal(function (next) {
+ *    setTimeout(next, 100);
+ *  });
+ *} catch (e) {
+ *  throw "Signal timeout";
+ *} finally {
+ *  sync.destroy();
+ *}
+ *
+ * @param {function} scheduleFunction Function for scheduling the next poll. Receives a callback as its only parameter.
+ * @param {number} [ttl=10] Max number of iterations to poll until timeout.
+ *
+ * @exception {RuntimeError} Wait for signal timeout.
+ */
+Sync.prototype.waitForSignal = async function (scheduleFunction, ttl) {
+  const self = this;
+  ttl = ttl ?? 10;
+  function waitForSignal0(resolve, reject, ttl) {
+    return () => {
+      const syncStatus = self.getStatus();
+      const signaled = syncStatus === WebGLConstants.SIGNALED;
+      if (signaled) {
+        resolve();
+      } else if (ttl <= 0) {
+        reject("Wait for signal timeout");
+      } else {
+        scheduleFunction(waitForSignal0(resolve, reject, ttl - 1));
+      }
+    };
+  }
+  return new Promise((resolve, reject) => {
+    scheduleFunction(waitForSignal0(resolve, reject, ttl));
+  });
+};
 export default Sync;

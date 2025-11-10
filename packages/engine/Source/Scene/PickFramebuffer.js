@@ -6,7 +6,6 @@ import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import PixelFormat from "../Core/PixelFormat.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
 import Sync from "../Renderer/Sync.js";
 
 /**
@@ -98,31 +97,6 @@ function pickObjectsFromPixels(context, pixels, width, height, limit = 1) {
   return [...objects];
 }
 
-/**
- * Creates a callback function that will once per frame poll the Sync state until signaled.
- *
- * @private
- * @param {number} [frameState] The active framestate.
- * @param {number} [sync] The Sync object to poll.
- * @param {function} onSignalCallback Callback to execute on Sync Signal.
- * @param {number} [ttl=10] Max number of frames to poll until reject.
- */
-function createAsyncPick(frameState, sync, onSignalCallback, ttl) {
-  return () => {
-    ttl = ttl ?? 10;
-    const syncStatus = sync.getStatus();
-    const signaled = syncStatus === WebGLConstants.SIGNALED;
-    if (signaled || ttl <= 0) {
-      sync.destroy();
-      onSignalCallback(signaled);
-    } else {
-      frameState.afterRender.push(
-        createAsyncPick(frameState, sync, onSignalCallback, ttl - 1),
-      );
-    }
-  };
-}
-
 PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
   const context = this._context;
   const { width, height } = viewport;
@@ -153,6 +127,7 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
  * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
  * @returns {Promise<object[]>} A list of rendered objects, ordered by distance to the middle of the rectangle.
  *
+ * @exception {RuntimeError} Async Picking Request Timeout.
  * @exception {DeveloperError} A WebGL 2 context is required.
  */
 PickFramebuffer.prototype.endAsync = async function (
@@ -187,32 +162,30 @@ PickFramebuffer.prototype.endAsync = async function (
     context: context,
   });
 
-  return new Promise((resolve, reject) => {
-    frameState.afterRender.push(
-      createAsyncPick(frameState, sync, (signaled) => {
-        if (!signaled) {
-          reject("Async Picking Request Timeout");
-          return;
-        }
-        const pixels = PixelFormat.createTypedArray(
-          pixelFormat,
-          pixelDatatype,
-          width,
-          height,
-        );
-        pbo.getBufferData(pixels);
-        pbo.destroy();
-        const pickedObjects = pickObjectsFromPixels(
-          context,
-          pixels,
-          width,
-          height,
-          limit,
-        );
-        resolve(pickedObjects);
-      }),
+  // Wait for the GPU to signal that it is ready to readback the PBO data
+  try {
+    await sync.waitForSignal((next) => frameState.afterRender.push(next));
+    const pixels = PixelFormat.createTypedArray(
+      pixelFormat,
+      pixelDatatype,
+      width,
+      height,
     );
-  });
+    pbo.getBufferData(pixels);
+    const pickedObjects = pickObjectsFromPixels(
+      context,
+      pixels,
+      width,
+      height,
+      limit,
+    );
+    return pickedObjects;
+  } catch (e) {
+    throw "Async Picking Request Timeout";
+  } finally {
+    sync.destroy();
+    pbo.destroy();
+  }
 };
 
 /**
