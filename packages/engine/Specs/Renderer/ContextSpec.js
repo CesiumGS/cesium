@@ -363,18 +363,17 @@ describe(
       if (webglStub) {
         return;
       }
-      if (!context.webgl2) {
+      const c = createContext();
+      if (!c.webgl2) {
         return;
       }
-      const c = createContext();
       const command = new ClearCommand({
         color: Color.WHITE,
       });
       command.execute(c);
-      const pixelBuffer = c.readPixels({
+      const pixelBuffer = c.readPixelsToPBO({
         width: 1,
         height: 1,
-        pbo: true,
       });
       const pixels = PixelFormat.createTypedArray(
         PixelFormat.RGBA,
@@ -393,14 +392,15 @@ describe(
       if (webglStub) {
         return;
       }
-      if (context.webgl2) {
-        return;
-      }
+      const c = createContext({
+        requestWebgl1: true,
+      });
       expect(function () {
-        context.readPixels({
-          pbo: true,
-        });
-      }).toThrowDeveloperError();
+        c.readPixelsToPBO();
+      }).toThrowDeveloperError(
+        "A WebGL 2 context is required to read pixels using a PBO.",
+      );
+      c.destroyForSpecs();
     });
   },
   "WebGL",

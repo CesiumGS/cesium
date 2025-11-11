@@ -150,13 +150,12 @@ PickFramebuffer.prototype.endAsync = async function (
     pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
   }
 
-  const pbo = context.readPixels({
+  const pbo = context.readPixelsToPBO({
     x: screenSpaceRectangle.x,
     y: screenSpaceRectangle.y,
     width: width,
     height: height,
     framebuffer: framebuffer,
-    pbo: true,
   });
 
   const sync = Sync.create({
