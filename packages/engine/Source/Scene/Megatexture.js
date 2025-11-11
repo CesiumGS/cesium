@@ -439,6 +439,124 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
   return textureMemoryByteLength;
 };
 
+Megatexture.get3DTextureDimension = function (
+  tileCount,
+  tileDimensions,
+  bytesPerSample,
+  availableTextureMemoryBytes,
+) {
+  const textureDimension = new Cartesian3();
+  const { maximum3DTextureSize } = ContextLimits;
+  // Find the number of tiles we can fit.
+  const tileSizeInBytes =
+    bytesPerSample * tileDimensions.x * tileDimensions.y * tileDimensions.z;
+  const maxTileCount = Math.floor(
+    availableTextureMemoryBytes / tileSizeInBytes,
+  );
+  tileCount = Math.min(tileCount, maxTileCount);
+
+  // Sort the tile dimensions from smallest to largest.
+  const sortedDimensions = Object.entries(tileDimensions).sort(
+    (a, b) => a[1] - b[1],
+  );
+
+  // Try arranging all tiles in a single column along the axis of the smallest tile dimension.
+  const singleColumnLength = sortedDimensions[0][1] * tileCount;
+  if (singleColumnLength <= maximum3DTextureSize) {
+    textureDimension[sortedDimensions[0][0]] = singleColumnLength;
+    textureDimension[sortedDimensions[1][0]] = sortedDimensions[1][1];
+    textureDimension[sortedDimensions[2][0]] = sortedDimensions[2][1];
+    return textureDimension;
+  }
+
+  // Find a nearby number with no prime factor larger than 7.
+  const factors = findFactorsOfNearbyComposite(tileCount, maxTileCount);
+
+  // Split these factors into the three dimensions, keeping the total texture size
+  // smaller than the maximum in each dimension.
+  for (let i = 0; i < 3; i++) {
+    const [axis, length] = sortedDimensions[i];
+    const maxTileCountAlongAxis = Math.floor(maximum3DTextureSize / length);
+    const axisFactors = getDimensionFromFactors(factors, maxTileCountAlongAxis);
+    textureDimension[axis] = getProductOfFactors(axisFactors) * length;
+    // Remove used factors.
+    for (let j = 0; j < factors.length; j++) {
+      factors[j] -= axisFactors[j];
+    }
+  }
+
+  return textureDimension;
+};
+
+/**
+ * Approximate an integer by a product of small prime factors (2, 3, 5, and 7).
+ * @private
+ * @param {number} n The integer to be approximated
+ * @param {number} maxN A maximum integer which the approximation should not exceed
+ * @returns {number[]} The exponents of the prime factors 2, 3, 5, and 7 whose product is the approximation of n
+ */
+function findFactorsOfNearbyComposite(n, maxN) {
+  n = Math.min(n, maxN);
+  if (Math.floor(n) !== n) {
+    throw new DeveloperError("n and maxN must be integers");
+  } else if (n < 2) {
+    throw new DeveloperError("n and maxN must be at least 2");
+  }
+  switch (n) {
+    case 2:
+      return [1, 0, 0, 0];
+    case 3:
+      return [0, 1, 0, 0];
+  }
+  const log2n = Math.floor(Math.log2(n));
+  const previousPowerOfTwo = 2 ** log2n;
+  const residual = n - previousPowerOfTwo;
+  const interval = 2 ** (log2n - 2);
+  let intervalIndex = Math.ceil(residual / interval);
+  const nextComposite = previousPowerOfTwo + intervalIndex * interval;
+  if (nextComposite > maxN) {
+    // Use the previous composite instead
+    intervalIndex--;
+  }
+  switch (intervalIndex) {
+    case 0:
+      // previousPowerOfTwo
+      return [log2n, 0, 0, 0];
+    case 1:
+      // previousPowerOfTwo * 5 / 4
+      return [log2n - 2, 0, 1, 0];
+    case 2:
+      // previousPowerOfTwo * 6 / 4
+      return [log2n - 1, 1, 0, 0];
+    case 3:
+      // previousPowerOfTwo * 7 / 4
+      return [log2n - 2, 0, 0, 1];
+  }
+}
+
+function getDimensionFromFactors(factorPowers, maxDimension) {
+  const maxPowerOfTwo = Math.floor(Math.log2(maxDimension));
+  const log2n = Math.min(factorPowers[0], maxPowerOfTwo);
+  const remainingDimension = maxDimension / 2 ** log2n;
+  if (remainingDimension >= 7 / 4 && factorPowers[3] > 0) {
+    return [log2n - 2, 0, 0, 1];
+  } else if (remainingDimension >= 6 / 4 && factorPowers[1] > 0) {
+    return [log2n - 1, 1, 0, 0];
+  } else if (remainingDimension >= 5 / 4 && factorPowers[2] > 0) {
+    return [log2n - 2, 0, 1, 0];
+  }
+  return [log2n, 0, 0, 0];
+}
+
+function getProductOfFactors(factorPowers) {
+  let product = 1;
+  const primeFactors = [2, 3, 5, 7];
+  for (let i = 0; i < primeFactors.length; i++) {
+    product *= primeFactors[i] ** factorPowers[i];
+  }
+  return product;
+}
+
 /**
  * Write an array of tile metadata to the megatexture.
  * @param {number} index The index of the tile's location in the megatexture.
