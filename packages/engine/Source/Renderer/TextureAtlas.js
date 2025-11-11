@@ -677,20 +677,17 @@ TextureAtlas.prototype.addImage = function (id, image) {
     //>>includeEnd('debug');
 
     if (this.isDestroyed() || !defined(image)) {
+      this._indexPromiseById.delete(id);
       return -1;
     }
 
-    return this._addImage(index, image);
+    const imageIndex = await this._addImage(index, image);
+    this._indexPromiseById.delete(id);
+    return imageIndex;
   };
 
   promise = resolveAndAddImage();
   this._indexPromiseById.set(id, promise);
-  promise.then(() => {
-    if (!this.isDestroyed()) {
-      this._indexPromiseById.delete(id);
-    }
-  });
-
   return promise;
 };
 
