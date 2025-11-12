@@ -8,6 +8,8 @@ import TaskProcessor from "./TaskProcessor.js";
 import Cartographic from "./Cartographic.js";
 import SceneMode from "../Scene/SceneMode.js";
 import Interval from "./Interval.js";
+import Check from "./Check.js";
+import DeveloperError from "./DeveloperError.js";
 
 // Terrain picker can be 4 levels deep (0-3)
 const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
@@ -19,22 +21,16 @@ const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
  * @constructor
  *
  * @param {Float32Array} vertices The terrain mesh's vertex buffer.
- * @param {Uint32Array} indices The terrain mesh's index buffer.
+ * @param {Uint8Array|Uint16Array|Uint32Array} indices The terrain mesh's index buffer.
  * @param {TerrainEncoding} encoding The terrain mesh's vertex encoding.
  *
  * @private
  */
 function TerrainPicker(vertices, indices, encoding) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(vertices)) {
-    throw new Error("vertices is required.");
-  }
-  if (!defined(indices)) {
-    throw new Error("indices is required.");
-  }
-  if (!defined(encoding)) {
-    throw new Error("encoding is required.");
-  }
+  Check.defined("vertices", vertices);
+  Check.defined("indices", indices);
+  Check.defined("encoding", encoding);
   //>>includeEnd('debug');
 
   /**
@@ -118,7 +114,7 @@ function TerrainPickerNode() {
    * The indices of the triangles that intersect this node.
    * @type {Uint32Array}
    */
-  this.intersectingTriangles = [];
+  this.intersectingTriangles = new Uint32Array(0);
   /**
    * The child terrain picker nodes of this node.
    * @type {TerrainPickerNode[]}
@@ -140,7 +136,9 @@ function TerrainPickerNode() {
 TerrainPickerNode.prototype.addChild = function (childIdx) {
   //>>includeStart('debug', pragmas.debug);
   if (childIdx < 0 || childIdx > 3) {
-    throw new Error("TerrainPickerNode child index must be between 0 and 3.");
+    throw new DeveloperError(
+      "TerrainPickerNode child index must be between 0 and 3, inclusive.",
+    );
   }
   //>>includeEnd('debug');
 
@@ -181,7 +179,7 @@ TerrainPicker.prototype.rayIntersect = function (
 ) {
   // Lazily (re)create the terrain picker
   if (this._needsRebuild) {
-    reset(this, tileTransform, mode, projection);
+    reset(this, tileTransform);
   }
 
   const invTransform = this._inverseTransform;
@@ -202,7 +200,7 @@ TerrainPicker.prototype.rayIntersect = function (
   const intersections = [];
   getNodesIntersectingRay(this._rootNode, transformedRay, intersections);
 
-  return getClosestPointInNode(
+  return findClosestPointInClosestNode(
     this,
     intersections,
     ray,
@@ -217,19 +215,21 @@ TerrainPicker.prototype.rayIntersect = function (
  * @param terrainPicker The terrain picker to reset.
  * @private
  */
-function reset(terrainPicker, tileTransform, mode, projection) {
+function reset(terrainPicker, tileTransform) {
   // PERFORMANCE_IDEA: warm-start the terrain picker by building a level on a worker.
   // This currently isn't feasible because you can only copy the vertex buffer to a worker (slow) or transfer ownership (can't do picking on main thread in meantime).
   // SharedArrayBuffers could be used, but most environments do not support them.
   Matrix4.inverse(tileTransform, terrainPicker._inverseTransform);
 
   terrainPicker._needsRebuild = false;
-  const intersectingTriangles = new Uint32Array(
-    terrainPicker._indices.length / 3,
-  );
-  terrainPicker._rootNode.intersectingTriangles = Uint32Array.from(
-    intersectingTriangles.keys(),
-  );
+  const triangleCount = terrainPicker._indices.length / 3;
+  const intersectingTriangles = new Uint32Array(triangleCount);
+
+  for (let i = 0; i < triangleCount; ++i) {
+    intersectingTriangles[i] = i;
+  }
+
+  terrainPicker._rootNode.intersectingTriangles = intersectingTriangles;
   terrainPicker._rootNode.children.length = 0;
 }
 
@@ -268,39 +268,27 @@ function createAABBForNode(x, y, level) {
 /**
  * Packs triangle vertex positions and index into provided buffers, for the worker to process.
  * (The worker does tests to organize triangles into child nodes of the quadtree.)
- * @param {Float32Array} trianglePositionsBuffer The buffer to pack triangle vertex positions into.
- * @param {Uint32Array} triangleIndicesBuffer The buffer to pack triangle indices into.
+ * @param {Float32Array} trianglePositions The buffer to pack triangle vertex positions into.
+ * @param {Uint32Array} triangleIndices The buffer to pack triangle indices into.
  * @param {Cartesian3[]} trianglePosition The triangle's vertex positions.
  * @param {number} triangleIndex The triangle's index in the overall tile's index buffer.
  * @param {number} bufferIndex The index to use to pack into the buffers.
  * @private
  */
 function packTriangleBuffers(
-  trianglePositionsBuffer,
-  triangleIndicesBuffer,
+  trianglePositions,
+  triangleIndices,
   trianglePosition,
   triangleIndex,
   bufferIndex,
 ) {
-  Cartesian3.pack(
-    trianglePosition[0],
-    trianglePositionsBuffer,
-    9 * bufferIndex,
-  );
+  Cartesian3.pack(trianglePosition[0], trianglePositions, 9 * bufferIndex);
 
-  Cartesian3.pack(
-    trianglePosition[1],
-    trianglePositionsBuffer,
-    9 * bufferIndex + 3,
-  );
+  Cartesian3.pack(trianglePosition[1], trianglePositions, 9 * bufferIndex + 3);
 
-  Cartesian3.pack(
-    trianglePosition[2],
-    trianglePositionsBuffer,
-    9 * bufferIndex + 6,
-  );
+  Cartesian3.pack(trianglePosition[2], trianglePositions, 9 * bufferIndex + 6);
 
-  triangleIndicesBuffer[bufferIndex] = triangleIndex;
+  triangleIndices[bufferIndex] = triangleIndex;
 }
 
 /**
@@ -346,7 +334,8 @@ function getNodesIntersectingRay(currentNode, ray, intersectingNodes) {
 }
 
 /**
- * Gets the closest intersection point in the given node, in world space, by testing all triangles in the node against the ray.
+ * Finds the closest intersecting node along the ray, in world space, and the closest point in that node,
+ * by testing all triangles in the closest node against the ray.
  *
  * @param {TerrainPicker} terrainPicker The terrain picker.
  * @param {IntersectingNode[]} intersections The nodes that intersect the ray, along with the intersection intervals along said ray.
@@ -357,7 +346,7 @@ function getNodesIntersectingRay(currentNode, ray, intersectingNodes) {
  * @returns The closest point in world space, or undefined if no intersection.
  * @private
  */
-function getClosestPointInNode(
+function findClosestPointInClosestNode(
   terrainPicker,
   intersections,
   ray,
@@ -559,9 +548,8 @@ async function addTrianglesToChildrenNodes(
   node.buildingChildren = true;
 
   // Prepare data to be sent to a worker
-  const matrixArray = new Array(16);
-  Matrix4.pack(inverseTransform, matrixArray, 0);
-  const inverseTransformPacked = new Float64Array(matrixArray);
+  const inverseTransformPacked = new Float64Array(16);
+  Matrix4.pack(inverseTransform, inverseTransformPacked, 0);
 
   const aabbArray = new Float64Array(6 * 4); // 6 elements per AABB, 4 children
   for (let i = 0; i < 4; i++) {

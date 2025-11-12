@@ -307,7 +307,7 @@ function computeTransform2D(mesh, projection, result) {
 
   Matrix4.fromTranslation(center, result);
   Matrix4.setScale(result, scale, result);
-  Matrix4.multiply(Transforms.swizzleMatrix, result, result);
+  Matrix4.multiply(Transforms.SWIZZLE_3D_TO_2D_MATRIX, result, result);
 
   return result;
 }

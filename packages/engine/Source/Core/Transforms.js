@@ -1131,25 +1131,33 @@ Transforms.rotationMatrixFromPositionVelocity = function (
   return result;
 };
 
-const swizzleMatrix = new Matrix4(
-  0.0,
-  0.0,
-  1.0,
-  0.0,
-  1.0,
-  0.0,
-  0.0,
-  0.0,
-  0.0,
-  1.0,
-  0.0,
-  0.0,
-  0.0,
-  0.0,
-  0.0,
-  1.0,
+/**
+ * An immutable matrix that swaps x, y, z for 2D.
+ *
+ * @type {Matrix4}
+ * @constant
+ * @private
+ */
+Transforms.SWIZZLE_3D_TO_2D_MATRIX = Object.freeze(
+  new Matrix4(
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+  ),
 );
-Transforms.swizzleMatrix = swizzleMatrix;
 
 const scratchCartographic = new Cartographic();
 const scratchCartesian3Projection = new Cartesian3();
@@ -1211,7 +1219,7 @@ Transforms.basisTo2D = function (projection, matrix, result) {
   const toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
   const rotation = Matrix4.getMatrix3(matrix, scratchRotation);
   const local = Matrix4.multiplyByMatrix3(toENU, rotation, result);
-  Matrix4.multiply(swizzleMatrix, local, result); // Swap x, y, z for 2D
+  Matrix4.multiply(Transforms.SWIZZLE_3D_TO_2D_MATRIX, local, result); // Swap x, y, z for 2D
   Matrix4.setTranslation(result, projectedPosition, result); // Use the projected center
 
   return result;
@@ -1261,7 +1269,7 @@ Transforms.ellipsoidTo2DModelMatrix = function (projection, center, result) {
     projectedPosition,
     scratchFromENU,
   );
-  Matrix4.multiply(swizzleMatrix, toENU, result);
+  Matrix4.multiply(Transforms.SWIZZLE_3D_TO_2D_MATRIX, toENU, result);
   Matrix4.multiply(translation, result, result);
 
   return result;
