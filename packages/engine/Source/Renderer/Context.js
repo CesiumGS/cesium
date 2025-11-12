@@ -1451,7 +1451,7 @@ Context.prototype.endFrame = function () {
  * @property {number} [y=0] The y offset of the rectangle to read from.
  * @property {number} [width=this.drawingBufferWidth] The width of the rectangle to read from.
  * @property {number} [height=this.drawingBufferHeight] The height of the rectangle to read from.
- * @property {Framebuffer} [framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
+ * @property {any} [framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
  */
 
 /**

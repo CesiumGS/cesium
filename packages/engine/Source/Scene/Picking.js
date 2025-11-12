@@ -267,16 +267,16 @@ function computePickingDrawingBufferRectangle(
  *
  * @param {Scene} scene
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {BoundingRectangle} drawingBufferRectangle The output drawing buffer recangle.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @param {BoundingRectangle} drawingBufferRectangle The output drawing buffer recangle.
  */
 function pickBegin(
   scene,
   windowPosition,
+  drawingBufferRectangle,
   width,
   height,
-  drawingBufferRectangle,
 ) {
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
@@ -367,7 +367,7 @@ Picking.prototype.pickAsync = async function (
   const { context, frameState, defaultView } = scene;
   const { pickFramebuffer } = defaultView;
   const drawingBufferRectangle = scratchRectangle;
-  pickBegin(scene, windowPosition, width, height, drawingBufferRectangle);
+  pickBegin(scene, windowPosition, drawingBufferRectangle, width, height);
   let pickedObjects;
   if (context.webgl2) {
     pickedObjects = pickFramebuffer.endAsync(
@@ -416,7 +416,7 @@ Picking.prototype.pick = function (
   const { defaultView } = scene;
   const { pickFramebuffer } = defaultView;
   const drawingBufferRectangle = scratchRectangle;
-  pickBegin(scene, windowPosition, width, height, drawingBufferRectangle);
+  pickBegin(scene, windowPosition, drawingBufferRectangle, width, height);
   const pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit); // Object[]
   pickEnd(scene);
   return pickedObjects;
