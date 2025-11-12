@@ -38,6 +38,22 @@ describe("Scene/Megatexture", function () {
     expect(megatexture.voxelCountPerTile).toEqual(dimensions);
   });
 
+  it("computes 3D texture dimensions", function () {
+    const dimensions = new Cartesian3(43, 17, 19);
+    const bytesPerSample = 4;
+    const tileCount = 8 ** 5;
+    const availableTextureMemoryBytes = 512 * 1024 * 1024;
+
+    const textureDimensions = Megatexture.get3DTextureDimension(
+      dimensions,
+      bytesPerSample,
+      tileCount,
+      availableTextureMemoryBytes,
+    );
+    const expectedDimensions = new Cartesian3(43, 8704, 304);
+    expect(textureDimensions).toEqual(expectedDimensions);
+  });
+
   it("adds data to an existing megatexture", function () {
     const dimension = 16;
     const dimensions = new Cartesian3(dimension, dimension, dimension);

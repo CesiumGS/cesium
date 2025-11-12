@@ -1,4 +1,4 @@
-// See Octree.glsl for the definitions of SampleData and intMod
+// See Octree.glsl for the definitions of SampleData
 
 /* Megatexture defines (set in Scene/VoxelRenderResources.js)
 #define SAMPLE_COUNT ###
@@ -12,20 +12,9 @@ uniform vec2 u_megatextureVoxelSizeUv;
 uniform vec2 u_megatextureSliceSizeUv;
 uniform vec2 u_megatextureTileSizeUv;
 
-// Integer min, max, clamp: For WebGL1 only
-int intMin(int a, int b) {
-    return a <= b ? a : b;
-}
-int intMax(int a, int b) {
-    return a >= b ? a : b;
-}
-int intClamp(int v, int minVal, int maxVal) {
-    return intMin(intMax(v, minVal), maxVal);
-}
-
 vec2 index1DTo2DTexcoord(int index, ivec2 dimensions, vec2 uvScale)
 {
-    int indexX = intMod(index, dimensions.x);
+    int indexX = index % dimensions.x;
     int indexY = index / dimensions.x;
     return vec2(indexX, indexY) * uvScale;
 }
@@ -79,7 +68,7 @@ Properties getPropertiesFromMegatexture(in SampleData sampleData) {
     // Slice location
     float slice = voxelCoord.z - 0.5;
     int sliceIndex = int(floor(slice));
-    int sliceIndex0 = intClamp(sliceIndex, 0, u_inputDimensions.z - 1);
+    int sliceIndex0 = clamp(sliceIndex, 0, u_inputDimensions.z - 1);
     vec2 sliceUvOffset0 = index1DTo2DTexcoord(sliceIndex0, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
 
     // Voxel location
@@ -92,7 +81,7 @@ Properties getPropertiesFromMegatexture(in SampleData sampleData) {
         return getPropertiesFromMegatextureAtUv(uv0);
     #else
         float sliceLerp = fract(slice);
-        int sliceIndex1 = intMin(sliceIndex + 1, u_inputDimensions.z - 1);
+        int sliceIndex1 = min(sliceIndex + 1, u_inputDimensions.z - 1);
         vec2 sliceUvOffset1 = index1DTo2DTexcoord(sliceIndex1, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
         vec2 uv1 = tileUvOffset + sliceUvOffset1 + voxelUvOffset;
         Properties properties0 = getPropertiesFromMegatextureAtUv(uv0);

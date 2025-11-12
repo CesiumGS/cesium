@@ -47,13 +47,6 @@ function Megatexture(
     componentType = MetadataComponentType.FLOAT32;
   }
 
-  if (
-    componentType === MetadataComponentType.FLOAT32 &&
-    !context.floatingPointTexture
-  ) {
-    throw new RuntimeError("Floating point texture not supported");
-  }
-
   const pixelDataType = getPixelDataType(componentType);
   const pixelFormat = getPixelFormat(channelCount, context.webgl2);
   const componentTypeByteLength =
@@ -439,14 +432,23 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
   return textureMemoryByteLength;
 };
 
+/**
+ * Compute a 3D texture dimension that can fit the given number of tiles within the available texture memory.
+ * @param {Cartesian3} tileDimensions The dimensions of one tile in number of voxels.
+ * @param {number} bytesPerSample The number of bytes per voxel sample.
+ * @param {number} tileCount The total number of tiles in the tileset.
+ * @param {number} availableTextureMemoryBytes An upper limit on the texture memory size in bytes.
+ * @returns {Cartesian3} The computed 3D texture dimensions.
+ */
 Megatexture.get3DTextureDimension = function (
-  tileCount,
   tileDimensions,
   bytesPerSample,
+  tileCount,
   availableTextureMemoryBytes,
 ) {
   const textureDimension = new Cartesian3();
   const { maximum3DTextureSize } = ContextLimits;
+
   // Find the number of tiles we can fit.
   const tileSizeInBytes =
     bytesPerSample * tileDimensions.x * tileDimensions.y * tileDimensions.z;

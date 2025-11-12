@@ -1691,9 +1691,8 @@ function setTraversalUniforms(traversal, uniforms) {
 
   const megatextures = traversal.megatextures;
   const megatexture = megatextures[0];
-  const megatextureLength = megatextures.length;
-  uniforms.megatextureTextures = new Array(megatextureLength);
-  for (let i = 0; i < megatextureLength; i++) {
+  uniforms.megatextureTextures = new Array(megatextures.length);
+  for (let i = 0; i < megatextures.length; i++) {
     uniforms.megatextureTextures[i] = megatextures[i].texture;
   }
 
