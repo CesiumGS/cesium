@@ -251,20 +251,63 @@ BillboardTexture.prototype.loadImage = async function (id, image) {
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
  */
-BillboardTexture.prototype.addImageSubRegion = async function (id, subRegion) {
+BillboardTexture.prototype.addImageSubRegion = function (id, subRegion) {
   this._id = id;
-  this._loadState = BillboardLoadState.LOADING;
   this._loadError = undefined;
   this._hasSubregion = true;
 
-  let index;
   const atlas = this._billboardCollection.textureAtlas;
+  const indexOrPromise = atlas.addImageSubRegion(id, subRegion);
+
+  if (typeof indexOrPromise === "number") {
+    this.setImageSubRegion(indexOrPromise, subRegion);
+    return;
+  }
+
+  this.loadImageSubRegion(id, subRegion, indexOrPromise);
+};
+
+/**
+ * @see {TextureAtlas#addImageSubRegion}
+ * @private
+ * @param {string} id An identifier to detect whether the image already exists in the atlas.
+ * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
+ * @param {Promise<number>} indexPromise A promise that resolves to the image region index.
+ */
+BillboardTexture.prototype.loadImageSubRegion = async function (
+  id,
+  subRegion,
+  indexPromise,
+) {
+  let index;
   try {
-    index = await atlas.addImageSubRegion(id, subRegion);
+    this._loadState = BillboardLoadState.LOADING;
+    index = await indexPromise;
   } catch (error) {
     // There was an error loading the referenced image
     this._loadState = BillboardLoadState.ERROR;
     this._loadError = error;
+    return;
+  }
+
+  if (this._id !== id) {
+    // Another load was initiated and resolved resolved before this one. This operation is cancelled.
+    return;
+  }
+
+  this._loadState = BillboardLoadState.LOADED;
+
+  this.setImageSubRegion(index, subRegion);
+};
+
+/**
+ * @see {TextureAtlas#addImageSubRegion}
+ * @private
+ * @param {number} index The resolved index in the {@link TextureAtlas}
+ * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
+ */
+BillboardTexture.prototype.setImageSubRegion = function (index, subRegion) {
+  if (this._index === index) {
     return;
   }
 
@@ -280,7 +323,6 @@ BillboardTexture.prototype.addImageSubRegion = async function (id, subRegion) {
   this._height = subRegion.height;
 
   this._index = index;
-  this._loadState = BillboardLoadState.LOADED;
 
   this.dirty = true;
 };

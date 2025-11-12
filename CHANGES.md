@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.136
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
+
 ## 1.135 - 2025-11-03
 
 ### @cesium/engine
