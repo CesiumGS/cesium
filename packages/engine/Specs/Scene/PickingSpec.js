@@ -249,7 +249,7 @@ describe(
           let actual;
           let ready = false;
           scene._picking
-            .pick(scene, windowPosition, undefined, undefined, 1, true)
+            .pickAsync(scene, windowPosition, undefined, undefined, 1)
             .then((result) => {
               actual = result[0];
               ready = true;
@@ -279,7 +279,7 @@ describe(
           let ready = false;
           let threw = false;
           scene._picking
-            .pick(scene, windowPosition, undefined, undefined, 1, true)
+            .pickAsync(scene, windowPosition, undefined, undefined, 1)
             .then((_result) => {
               ready = true;
             })

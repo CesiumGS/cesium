@@ -4540,13 +4540,12 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * @see Scene#pick
  */
 Scene.prototype.pickAsync = async function (windowPosition, width, height) {
-  const result = await this._picking.pick(
+  const result = await this._picking.pickAsync(
     this,
     windowPosition,
     width,
     height,
     1,
-    true,
   );
   return result[0];
 };

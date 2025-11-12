@@ -48,6 +48,7 @@ import {
   ColorGeometryInstanceAttribute,
   HeightReference,
   SharedContext,
+  Sync,
 } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";
@@ -1537,18 +1538,64 @@ describe(
 
       let result;
       let ready = false;
-      scene.pickAsync(windowPosition).then((result0) => {
-        result = result0;
-        ready = true;
-      });
+      let threw = false;
+      scene
+        .pickAsync(windowPosition)
+        .then((result0) => {
+          result = result0;
+          ready = true;
+        })
+        .catch((_error) => {
+          threw = true;
+        });
 
       await pollToPromise(function () {
         scene.renderForSpecs();
-        return ready;
+        return ready || threw;
       });
 
+      expect(scene.context.webgl2).toBeTrue();
+      expect(threw).toBeFalse();
+      expect(ready).toBeTrue();
       expect(result).toBeDefined();
       expect(result.primitive).toEqual(rectanglePrimitive);
+    });
+
+    it("pickAsync can reject", async function () {
+      if (webglStub) {
+        return;
+      }
+      spyOn(Sync.prototype, "getStatus").and.callFake(function () {
+        return WebGLConstants.UNSIGNALED; // simulate never being signaled
+      });
+      const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+      const rectanglePrimitive = createRectangle(rectangle);
+      const primitives = scene.primitives;
+      primitives.add(rectanglePrimitive);
+
+      scene.camera.setView({ destination: rectangle });
+
+      const windowPosition = new Cartesian2(0, 0);
+
+      let ready = false;
+      let threw = false;
+      scene
+        .pickAsync(windowPosition)
+        .then((_result0) => {
+          ready = true;
+        })
+        .catch((_error) => {
+          threw = true;
+        });
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return ready || threw;
+      });
+
+      expect(scene.context.webgl2).toBeTrue();
+      expect(threw).toBeTrue();
+      expect(ready).toBeFalse();
     });
 
     it("pickPosition", function () {

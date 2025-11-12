@@ -263,37 +263,23 @@ function computePickingDrawingBufferRectangle(
 }
 
 /**
- * Returns a list of objects with a <code>primitive</code> property that contains the first (top) primitives
- * in the scene at a particular window coordinate. Other properties may potentially be set depending on the
- * type of primitive and may be used to further identify the picked object.
- * <p>
- * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
- * </p>
+ * Setup needed before picking.
+ *
  * @param {Scene} scene
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
- * @param {boolean} [async=false] Use async non GPU blocking picking. Requires WebGL2 else using fallback.
- * @returns {object[] | Promise<object[]>} List of objects containing the picked primitives.
- *
- * @exception {RuntimeError} Async Picking Request Timeout.
+ * @param {BoundingRectangle} drawingBufferRectangle The output drawing buffer recangle.
  */
-Picking.prototype.pick = function (
+function pickBegin(
   scene,
   windowPosition,
   width,
   height,
-  limit = 1,
-  async,
+  drawingBufferRectangle,
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("windowPosition", windowPosition);
-  //>>includeEnd('debug');
-
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
-  async = async ?? false;
 
   scene.view = defaultView;
 
@@ -310,12 +296,12 @@ Picking.prototype.pick = function (
     windowPosition,
     scratchPosition,
   );
-  const drawingBufferRectangle = computePickingDrawingBufferRectangle(
+  computePickingDrawingBufferRectangle(
     context.drawingBufferHeight,
     drawingBufferPosition,
     width,
     height,
-    scratchRectangle,
+    drawingBufferRectangle,
   );
 
   scene.jobScheduler.disableThisFrame();
@@ -340,9 +326,50 @@ Picking.prototype.pick = function (
 
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
+}
 
+/**
+ * Teardown needed after picking.
+ *
+ * @param {Scene} scene
+ */
+function pickEnd(scene) {
+  const { context } = scene;
+  context.endFrame();
+}
+
+/**
+ * Same operation as {@link Picking#pick}, but returns a Promise that resolves asynchronously without blocking the main render thread.
+ * Requires WebGL2 else using synchronous fallback.
+ *
+ * @see Picking#pick
+ *
+ * @param {Scene} scene
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
+ * @returns {Promise<object[]>} List of objects containing the picked primitives.
+ *
+ * @exception {RuntimeError} Async Picking Request Timeout.
+ */
+Picking.prototype.pickAsync = async function (
+  scene,
+  windowPosition,
+  width,
+  height,
+  limit = 1,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("windowPosition", windowPosition);
+  //>>includeEnd('debug');
+
+  const { context, frameState, defaultView } = scene;
+  const { pickFramebuffer } = defaultView;
+  const drawingBufferRectangle = scratchRectangle;
+  pickBegin(scene, windowPosition, width, height, drawingBufferRectangle);
   let pickedObjects;
-  if (async && context.webgl2) {
+  if (context.webgl2) {
     pickedObjects = pickFramebuffer.endAsync(
       drawingBufferRectangle,
       frameState,
@@ -350,15 +377,48 @@ Picking.prototype.pick = function (
     ); // Promise<Object[]>
   } else {
     pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit); // Object[]
-    if (async) {
-      pickedObjects = Promise.resolve(pickedObjects); // Promise<Object[]> fallback if not WebGL2
-      oneTimeWarning(
-        "picking-async-fallback",
-        "Fallback to synchronous picking because async operation requires WebGL2 context.",
-      );
-    }
+    pickedObjects = Promise.resolve(pickedObjects); // Promise<Object[]> Wrap as Promise
+    oneTimeWarning(
+      "picking-async-fallback",
+      "Fallback to synchronous picking because async operation requires WebGL2 context.",
+    );
   }
-  context.endFrame();
+  pickEnd(scene);
+  return pickedObjects;
+};
+
+/**
+ * Returns a list of objects with a <code>primitive</code> property that contains the first (top) primitives
+ * in the scene at a particular window coordinate. Other properties may potentially be set depending on the
+ * type of primitive and may be used to further identify the picked object.
+ * <p>
+ * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
+ * </p>
+ * @param {Scene} scene
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
+ * @returns {object[]} List of objects containing the picked primitives.
+ *
+ */
+Picking.prototype.pick = function (
+  scene,
+  windowPosition,
+  width,
+  height,
+  limit = 1,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("windowPosition", windowPosition);
+  //>>includeEnd('debug');
+
+  const { defaultView } = scene;
+  const { pickFramebuffer } = defaultView;
+  const drawingBufferRectangle = scratchRectangle;
+  pickBegin(scene, windowPosition, width, height, drawingBufferRectangle);
+  const pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit); // Object[]
+  pickEnd(scene);
   return pickedObjects;
 };
 
