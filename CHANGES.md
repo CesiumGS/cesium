@@ -8,6 +8,10 @@
 
 - Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
 
+#### Additions :tada:
+
+- Added `scene.pickAsync` for non GPU blocking picking using WebGL2 [#12983](https://github.com/CesiumGS/cesium/pull/12983)
+
 ## 1.135 - 2025-11-03
 
 ### @cesium/engine
@@ -21,7 +25,6 @@
 
 - Added experimental support for loading 3D Tiles as terrain, via `Cesium3DTilesTerrainProvider`. See [the PR](https://github.com/CesiumGS/cesium/pull/12963) for limitations on the types of 3D Tiles that can be used. [#12296](https://github.com/CesiumGS/cesium/issues/12296)
 - Added support for [EXT_mesh_primitive_edge_visibility](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension. [#12765](https://github.com/CesiumGS/cesium/issues/12765)
-- Added `scene.pickAsync` for non GPU blocking picking using WebGL2 [#12983](https://github.com/CesiumGS/cesium/pull/12983)
 
 #### Fixes :wrench:
 
