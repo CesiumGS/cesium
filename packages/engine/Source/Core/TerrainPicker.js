@@ -268,27 +268,36 @@ function createAABBForNode(x, y, level) {
 /**
  * Packs triangle vertex positions and index into provided buffers, for the worker to process.
  * (The worker does tests to organize triangles into child nodes of the quadtree.)
- * @param {Float32Array} trianglePositions The buffer to pack triangle vertex positions into.
- * @param {Uint32Array} triangleIndices The buffer to pack triangle indices into.
- * @param {Cartesian3[]} trianglePosition The triangle's vertex positions.
+ * @param {Float32Array} trianglePositionsBuffer The buffer to pack triangle vertex positions into.
+ * @param {Uint32Array} triangleIndicesBuffer The buffer to pack triangle indices into.
+ * @param {Cartesian3[]} trianglePositions The triangle's vertex positions.
  * @param {number} triangleIndex The triangle's index in the overall tile's index buffer.
  * @param {number} bufferIndex The index to use to pack into the buffers.
  * @private
  */
 function packTriangleBuffers(
+  trianglePositionsBuffer,
+  triangleIndicesBuffer,
   trianglePositions,
-  triangleIndices,
-  trianglePosition,
   triangleIndex,
   bufferIndex,
 ) {
-  Cartesian3.pack(trianglePosition[0], trianglePositions, 9 * bufferIndex);
-
-  Cartesian3.pack(trianglePosition[1], trianglePositions, 9 * bufferIndex + 3);
-
-  Cartesian3.pack(trianglePosition[2], trianglePositions, 9 * bufferIndex + 6);
-
-  triangleIndices[bufferIndex] = triangleIndex;
+  Cartesian3.pack(
+    trianglePositions[0],
+    trianglePositionsBuffer,
+    9 * bufferIndex,
+  );
+  Cartesian3.pack(
+    trianglePositions[1],
+    trianglePositionsBuffer,
+    9 * bufferIndex + 3,
+  );
+  Cartesian3.pack(
+    trianglePositions[2],
+    trianglePositionsBuffer,
+    9 * bufferIndex + 6,
+  );
+  triangleIndicesBuffer[bufferIndex] = triangleIndex;
 }
 
 /**
