@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
+- Improved rendering performance when a 3D tileset is loaded [#12974](https://github.com/CesiumGS/cesium/pull/12974)
 
 #### Additions :tada:
 
