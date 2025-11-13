@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
+- Fix render issues when updating Billboards with syncronous textures with `requestRenderMode=true`. [#12543](https://github.com/CesiumGS/cesium/issues/12543)
 
 #### Additions :tada:
 
