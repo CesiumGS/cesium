@@ -15,18 +15,15 @@ function getPropertyDescriptorMap(object) {
         propertyDescriptorMap[name] = descriptor;
       },
     );
-    Object.getOwnPropertySymbols(current).forEach(
-      // eslint-disable-next-line no-loop-func
-      (symbol) => {
-        if (propertyDescriptorMap[symbol]) {
-          return;
-        }
-        propertyDescriptorMap[symbol] = {
-          value: object[symbol],
-          enumerable: false,
-        };
-      },
-    );
+    Object.getOwnPropertySymbols(current).forEach((symbol) => {
+      if (propertyDescriptorMap[symbol]) {
+        return;
+      }
+      propertyDescriptorMap[symbol] = {
+        value: object[symbol],
+        enumerable: false,
+      };
+    });
 
     // Move up the prototype chain
     current = Object.getPrototypeOf(current);

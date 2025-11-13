@@ -11,6 +11,7 @@
 #### Additions :tada:
 
 - Added `scene.pickAsync` for non GPU blocking picking using WebGL2 [#12983](https://github.com/CesiumGS/cesium/pull/12983)
+- Speed up `MatrixN` operations, improving performance when picking terrain and 3D tiles. [#12973](https://github.com/CesiumGS/cesium/pull/12973)
 
 ## 1.135 - 2025-11-03
 
@@ -25,10 +26,6 @@
 
 - Added experimental support for loading 3D Tiles as terrain, via `Cesium3DTilesTerrainProvider`. See [the PR](https://github.com/CesiumGS/cesium/pull/12963) for limitations on the types of 3D Tiles that can be used. [#12296](https://github.com/CesiumGS/cesium/issues/12296)
 - Added support for [EXT_mesh_primitive_edge_visibility](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension. [#12765](https://github.com/CesiumGS/cesium/issues/12765)
-
-#### Additions :tada:
-
-- Matrices are now backed by `Float64Array`'s, making operations up to 2x faster, resulting in performance improvements across the board. [#12973](https://github.com/CesiumGS/cesium/pull/12973)
 
 #### Fixes :wrench:
 
