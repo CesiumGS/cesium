@@ -1447,11 +1447,12 @@ Context.prototype.endFrame = function () {
  *
  * Options defining a rectangle to read pixels from.
  *
+ * @private
  * @property {number} [x=0] The x offset of the rectangle to read from.
  * @property {number} [y=0] The y offset of the rectangle to read from.
  * @property {number} [width=this.drawingBufferWidth] The width of the rectangle to read from.
  * @property {number} [height=this.drawingBufferHeight] The height of the rectangle to read from.
- * @property {any} [framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
+ * @property {FrameBuffer|undefined} [framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
  */
 
 /**
