@@ -358,7 +358,7 @@ describe("Core/Matrix3", function () {
 
   it("fromRotationX works without a result parameter", function () {
     const matrix = Matrix3.fromRotationX(0.0);
-    expect(matrix).toEqual(Matrix3.IDENTITY);
+    expect(Matrix3.equals(matrix, Matrix3.IDENTITY)).toBe(true);
   });
 
   it("fromRotationX works with a result parameter", function () {
@@ -371,7 +371,7 @@ describe("Core/Matrix3", function () {
 
   it("fromRotationY works without a result parameter", function () {
     const matrix = Matrix3.fromRotationY(0.0);
-    expect(matrix).toEqual(Matrix3.IDENTITY);
+    expect(Matrix3.equals(matrix, Matrix3.IDENTITY)).toBe(true);
   });
 
   it("fromRotationY works with a result parameter", function () {
@@ -384,7 +384,7 @@ describe("Core/Matrix3", function () {
 
   it("fromRotationZ works without a result parameter", function () {
     const matrix = Matrix3.fromRotationZ(0.0);
-    expect(matrix).toEqual(Matrix3.IDENTITY);
+    expect(Matrix3.equals(matrix, Matrix3.IDENTITY)).toBe(true);
   });
 
   it("fromRotationZ works with a result parameter", function () {

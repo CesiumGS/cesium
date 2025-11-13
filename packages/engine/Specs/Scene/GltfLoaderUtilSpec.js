@@ -328,7 +328,9 @@ describe(
       });
 
       expect(modelTexture.texCoord).toBe(1);
-      expect(modelTexture.transform).toEqual(expectedTransform);
+      expect(Matrix3.equals(modelTexture.transform, expectedTransform)).toBe(
+        true,
+      );
     });
 
     it("createModelTextureReader handles KHR_texture_transform rotation correctly", function () {

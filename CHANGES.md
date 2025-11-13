@@ -11,6 +11,7 @@
 #### Additions :tada:
 
 - Added `scene.pickAsync` for non GPU blocking picking using WebGL2 [#12983](https://github.com/CesiumGS/cesium/pull/12983)
+- Speed up `MatrixN` operations, improving performance when picking terrain and 3D tiles. [#12973](https://github.com/CesiumGS/cesium/pull/12973)
 
 ## 1.135 - 2025-11-03
 

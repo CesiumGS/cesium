@@ -109,7 +109,9 @@ describe(
       const modelTextureReader = propertyTextureProperty.textureReader;
       expect(modelTextureReader.texture).toBe(texture);
       expect(modelTextureReader.texCoord).toBe(1);
-      expect(modelTextureReader.transform).toEqual(expectedTransform);
+      expect(
+        Matrix3.equals(modelTextureReader.transform, expectedTransform),
+      ).toBe(true);
       expect(modelTextureReader.channels).toBe("rgb");
     });
 
