@@ -122,7 +122,7 @@ MetadataPipelineStage.process = function (
  * @param {PropertyAttribute[]} propertyAttributes The PropertyAttributes with properties to be described
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @param {object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
- * @returns {Object[]} An array of objects containing information about each PropertyAttributeProperty
+ * @returns {object[]} An array of objects containing information about each PropertyAttributeProperty
  * @private
  */
 function getPropertyAttributesInfo(propertyAttributes, primitive, statistics) {
@@ -139,7 +139,7 @@ function getPropertyAttributesInfo(propertyAttributes, primitive, statistics) {
  * @param {PropertyAttribute} propertyAttribute The PropertyAttribute with properties to be described
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @param {object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
- * @returns {Object[]} An array of objects containing information about each PropertyAttributeProperty
+ * @returns {object[]} An array of objects containing information about each PropertyAttributeProperty
  * @private
  */
 function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
@@ -176,7 +176,7 @@ function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
  * return as a flattened Array
  * @param {PropertyTexture[]} propertyTextures The PropertyTextures with properties to be described
  * @param {object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
- * @returns {Object[]} An array of objects containing information about each PropertyTextureProperty
+ * @returns {object[]} An array of objects containing information about each PropertyTextureProperty
  * @private
  */
 function getPropertyTexturesInfo(propertyTextures, statistics) {
@@ -192,7 +192,7 @@ function getPropertyTexturesInfo(propertyTextures, statistics) {
  * Collect info about the properties of a single PropertyTexture
  * @param {PropertyTexture} propertyTexture The PropertyTexture with properties to be described
  * @param {object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
- * @returns {Object[]} An array of objects containing information about each PropertyTextureProperty
+ * @returns {object[]} An array of objects containing information about each PropertyTextureProperty
  * @private
  */
 function getPropertyTextureInfo(propertyTexture, statistics) {
@@ -225,7 +225,7 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
 /**
  * Declare <type>MetadataClass structs in the shader for each PropertyAttributeProperty and PropertyTextureProperty
  * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
- * @param {Object[]} propertyInfos Information about the PropertyAttributeProperties and PropertyTextureProperties
+ * @param {object[]} propertyInfos Information about the PropertyAttributeProperties and PropertyTextureProperties
  * @private
  */
 function declareMetadataTypeStructs(shaderBuilder, propertyInfos) {
@@ -408,7 +408,7 @@ function addPropertyAttributePropertyMetadata(renderResources, propertyInfo) {
 /**
  * Update the shader for a single PropertyTextureProperty
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
- * @param {Object[]} propertyInfo Info about the PropertyTextureProperty
+ * @param {object[]} propertyInfo Info about the PropertyTextureProperty
  * @private
  */
 function processPropertyTextureProperty(renderResources, propertyInfo) {
@@ -596,7 +596,7 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
 
 /**
  * Construct GLSL assignment statements to set metadata spec values in a struct
- * @param {Object[]} fieldNames An object with the following properties:
+ * @param {object[]} fieldNames An object with the following properties:
  * @param {string} fieldNames[].specName The name of the property in the spec
  * @param {string} fieldNames[].shaderName The name of the property in the shader
  * @param {object} values A source of property values, keyed on fieldNames[].specName

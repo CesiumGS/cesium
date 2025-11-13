@@ -3,7 +3,12 @@
 We release CesiumJS on the first work day of every month.
 
 - [**Release Schedule**](./ReleaseSchedule.md): The upcoming monthly release schedule and the developer responsible for managing each release
-- [**Perelease Guide**](./Prereleases/README.md): If and how to publish a prerelease version ahead of the typical monthly release
+- [**Patch Release Guide**](./PatchReleases/README.md): If and how to publish a patch release[^1] ahead of the regular monthly release, typically used in the case of a significant regression or an issue with published dependency versions.
+- [**Prerelease Guide**](./Prereleases/README.md): If and how to publish a tagged prerelease[^2] ahead of the regular monthly release, typically used for internal testing.
+
+[^1]: See ["About semantic versioning" on docs.npmjs.com](https://docs.npmjs.com/about-semantic-versioning)
+
+[^2]: See ["Adding dist-tags to packages" on docs.npmjs.com](https://docs.npmjs.com/adding-dist-tags-to-packages)
 
 ## Motivation
 
@@ -16,7 +21,9 @@ There is no one release manager; instead, [our community shares the responsibili
    - If `prettier` needs updated you _should_ still update it but keep the version pinned. If you run `npm install prettier@latest` you must remove the `^` in `package.json`. If the number of changes when running `npm run prettier` is large it may be worth opening a separate PR for only those.
 3. Verify each update. If an update can be resolved, open a PR with your changes. If an update is incompatible, open an issue. Check the [`dependencies` label](https://github.com/CesiumGS/cesium/issues?q=is%3Aissue+is%3Aopen+label%3Adependencies) for any open issues pinning versions.
 4. Check the [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release). If there are any outstanding items, post a message to the `CesiumJS` channel in Teams to figure out what needs to be addressed before we can release.
-5. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
+5. Check the [`remove in [this version number]` issues](https://github.com/CesiumGS/cesium/labels?q=remove) and open PRs to address any deprecations.
+6. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
+7. Start thinking ahead for a good image for the release blog post in case you need to prepare any data, assets or examples.
 
 ## Release testing and packaging
 
@@ -27,9 +34,9 @@ There is no one release manager; instead, [our community shares the responsibili
 3. Make sure you are using the latest drivers for your video card.
 4. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
 5. Pull down the latest `main` branch and run `npm install`.
-6. Update the Cesium ion demo token in `Ion.js` with a new token from the CesiumJS ion team account with read and geocode permissions. These tokens are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the token from 2 releases ago.
+6. Update the Cesium ion demo token in `Ion.js` with a new token from the CesiumJS ion team account with `read` and `geocode` permissions. These tokens are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the token from 2 releases ago.
 7. Update the ArcGIS Developer API key in `ArcGisMapService.js` with a new API key from the [CesiumJS ArcGIS Developer](https://links.esri.com/agol-sign-in) account. These API keys are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the API key from the last release.
-   1. Sign in with LastPass
+   1. Sign in with Bitwarden
    2. Go to Content at the top
    3. Click "New Item" -> Developer Credentials -> API Key credentials
    4. Set the expiration date to the day after the next release (no referrer URLs)
@@ -54,7 +61,7 @@ There is no one release manager; instead, [our community shares the responsibili
 20. Verify that the [documentation](http://localhost:8080/Build/Documentation/index.html) built correctly
 21. Make sure [Hello World](http://localhost:8080/Apps/HelloWorld.html) loads.
 22. Make sure [Cesium Viewer](http://localhost:8080/Apps/CesiumViewer/index.html) loads.
-23. Run [Sandcastle](http://localhost:8080/Apps/Sandcastle/index.html) on the browser of your choice (or multiple browsers if you are up for it). Switch to the `All` tab and spot test more complicated demos. Actually play with each of the buttons and sliders on each demo to ensure everything works as expected.
+23. Run [Sandcastle](http://localhost:8080/Apps/Sandcastle2/index.html) on the browser of your choice (or multiple browsers if you are up for it). Remove the `Showcases` filter and spot test the more complicated demos. Actually play with each of the buttons and sliders on each demo to ensure everything works as expected.
 24. If any of the above steps fail, post a message to the `CesiumJS` channel in Teams to figure out what needs to be fixed before we can release. **Do NOT proceed to the next step until issues are resolved.**
 25. Push your commits to main
     - `git push`

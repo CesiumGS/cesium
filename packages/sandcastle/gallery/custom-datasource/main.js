@@ -36,7 +36,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
   /**
    * Gets a human-readable name for this instance.
    * @memberof WebGLGlobeDataSource.prototype
-   * @type {String}
+   * @type {string}
    */
   name: {
     get: function () {
@@ -65,7 +65,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
   /**
    * Gets a value indicating if the data source is currently loading data.
    * @memberof WebGLGlobeDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   isLoading: {
     get: function () {
@@ -122,7 +122,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
    * so that only one series is viewed at a time.  Valid values are defined
    * in the seriesNames property.
    * @memberof WebGLGlobeDataSource.prototype
-   * @type {String}
+   * @type {string}
    */
   seriesToDisplay: {
     get: function () {
@@ -146,7 +146,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
   /**
    * Gets or sets the scale factor applied to the height of each line.
    * @memberof WebGLGlobeDataSource.prototype
-   * @type {Number}
+   * @type {number}
    */
   heightScale: {
     get: function () {
@@ -162,7 +162,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
   /**
    * Gets whether or not this data source should be displayed.
    * @memberof WebGLGlobeDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {

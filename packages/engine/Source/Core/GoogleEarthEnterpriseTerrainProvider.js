@@ -65,7 +65,7 @@ TerrainCache.prototype.tidy = function () {
 };
 
 /**
- * @typedef {Object} GoogleEarthEnterpriseTerrainProvider.ConstructorOptions
+ * @typedef {object} GoogleEarthEnterpriseTerrainProvider.ConstructorOptions
  *
  * Initialization options for GoogleEarthEnterpriseTerrainProvider constructor
  *

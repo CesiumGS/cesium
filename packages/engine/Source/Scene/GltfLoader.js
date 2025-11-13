@@ -1441,13 +1441,18 @@ function loadIndices(
   loader,
   accessorId,
   primitive,
-  draco,
   hasFeatureIds,
   needsPostProcessing,
   frameState,
 ) {
   const accessor = loader.gltfJson.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
+  // Infer compression / extensions directly from the glTF primitive instead of passing in flags
+  const extensions = primitive.extensions ?? Frozen.EMPTY_OBJECT;
+  const draco = extensions.KHR_draco_mesh_compression;
+  const hasEdgeVisibility = defined(
+    extensions.EXT_mesh_primitive_edge_visibility,
+  );
 
   if (!defined(draco) && !defined(bufferViewId)) {
     return undefined;
@@ -1470,7 +1475,10 @@ function loadIndices(
   const outputTypedArrayOnly = loadAttributesAsTypedArray;
   const outputBuffer = !outputTypedArrayOnly;
   const outputTypedArray =
-    loadAttributesAsTypedArray || loadForCpuOperations || loadForClassification;
+    loadAttributesAsTypedArray ||
+    loadForCpuOperations ||
+    loadForClassification ||
+    hasEdgeVisibility;
 
   // Determine what to load right now:
   //
@@ -1991,11 +1999,6 @@ function fetchSpzExtensionFrom(extensions) {
     return spz;
   }
 
-  const legacySpz = extensions?.KHR_spz_gaussian_splats_compression;
-  if (defined(legacySpz)) {
-    return legacySpz;
-  }
-
   return undefined;
 }
 
@@ -2036,8 +2039,44 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
+  // Edge Visibility
+  const edgeVisibilityExtension = extensions.EXT_mesh_primitive_edge_visibility;
+  const hasEdgeVisibility = defined(edgeVisibilityExtension);
+  if (hasEdgeVisibility) {
+    const visibilityAccessor =
+      loader.gltfJson.accessors[edgeVisibilityExtension.visibility];
+    if (!defined(visibilityAccessor)) {
+      throw new RuntimeError("Edge visibility accessor not found!");
+    }
+    const visibilityValues = loadAccessor(loader, visibilityAccessor);
+    primitive.edgeVisibility = {
+      visibility: visibilityValues,
+      material: edgeVisibilityExtension.material,
+    };
+
+    // Load silhouette normals
+    if (defined(edgeVisibilityExtension.silhouetteNormals)) {
+      const silhouetteNormalsAccessor =
+        loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
+      if (defined(silhouetteNormalsAccessor)) {
+        const silhouetteNormalsValues = loadAccessor(
+          loader,
+          silhouetteNormalsAccessor,
+        );
+        primitive.edgeVisibility.silhouetteNormals = silhouetteNormalsValues;
+      }
+    }
+
+    // Load line strings
+    if (defined(edgeVisibilityExtension.lineStrings)) {
+      primitivePlan.edgeVisibility.lineStrings =
+        edgeVisibilityExtension.lineStrings;
+    }
+  }
+
   //support the latest glTF spec and the legacy extension
   const spzExtension = fetchSpzExtensionFrom(extensions);
+
   if (defined(spzExtension)) {
     needsPostProcessing = true;
     primitivePlan.needsGaussianSplats = true;
@@ -2108,7 +2147,6 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       loader,
       indices,
       gltfPrimitive,
-      draco,
       hasFeatureIds,
       needsPostProcessing,
       frameState,

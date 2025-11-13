@@ -247,7 +247,7 @@ EllipsoidalOccluder.prototype.computeHorizonCullingPointPossiblyUnderEllipsoid =
  *                     A reasonable direction to use is the direction from the center of the ellipsoid to
  *                     the center of the bounding sphere computed from the positions.  The direction need not
  *                     be normalized.
- * @param {number[]} vertices  The vertices from which to compute the horizon culling point.  The positions
+ * @param {number[]|Float32Array|Float64Array} vertices  The vertices from which to compute the horizon culling point. The positions
  *                   must be expressed in a reference frame centered at the ellipsoid and aligned with the
  *                   ellipsoid's axes.
  * @param {number} [stride=3]
@@ -277,7 +277,7 @@ EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVertices =
  *                     A reasonable direction to use is the direction from the center of the ellipsoid to
  *                     the center of the bounding sphere computed from the positions.  The direction need not
  *                     be normalized.
- * @param {number[]} vertices  The vertices from which to compute the horizon culling point.  The positions
+ * @param {number[]|Float32Array|Float64Array} vertices  The vertices from which to compute the horizon culling point.  The positions
  *                   must be expressed in a reference frame centered at the ellipsoid and aligned with the
  *                   ellipsoid's axes.
  * @param {number} [stride=3]

@@ -1,3 +1,4 @@
+uniform float u_threePointDepthTestDistance;
 #ifdef INSTANCED
 in vec2 direction;
 #endif
@@ -9,10 +10,10 @@ in vec4 compressedAttribute2;                       // label horizontal origin, 
 in vec4 eyeOffset;                                  // eye offset in meters, 4 bytes free (texture range)
 in vec4 scaleByDistance;                            // near, nearScale, far, farScale
 in vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
-in vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistance, dimensions
+in vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistanceSq, dimensions
 in vec2 sdf;                                        // sdf outline color (rgb) and width (w)
 in float splitDirection;                            // splitDirection
-#if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
+#if defined(VS_THREE_POINT_DEPTH_CHECK) || defined(FS_THREE_POINT_DEPTH_CHECK)
 in vec4 textureCoordinateBoundsOrLabelTranslate;    // the min and max x and y values for the texture coordinates
 #endif
 #ifdef VECTOR_TILE
@@ -20,12 +21,12 @@ in float a_batchId;
 #endif
 
 out vec2 v_textureCoordinates;
-#ifdef FRAGMENT_DEPTH_CHECK
+#ifdef FS_THREE_POINT_DEPTH_CHECK
 out vec4 v_textureCoordinateBounds;
 out vec4 v_originTextureCoordinateAndTranslate;
-out vec4 v_compressed;                                 // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
 out mat2 v_rotationMatrix;
 #endif
+out vec4 v_compressed;                                 // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
 
 out vec4 v_pickColor;
 out vec4 v_color;
@@ -92,7 +93,7 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
     return positionEC;
 }
 
-#ifdef VERTEX_DEPTH_CHECK
+#ifdef VS_THREE_POINT_DEPTH_CHECK
 float getGlobeDepth(vec4 positionEC)
 {
     vec4 posWC = czm_eyeToWindowCoordinates(positionEC);
@@ -137,7 +138,7 @@ void main()
     origin.y = floor(compressed * SHIFT_RIGHT3);
     compressed -= origin.y * SHIFT_LEFT3;
 
-#ifdef FRAGMENT_DEPTH_CHECK
+#ifdef FS_THREE_POINT_DEPTH_CHECK
     vec2 depthOrigin = origin.xy;
 #endif
     origin -= vec2(1.0);
@@ -176,10 +177,10 @@ void main()
 
     vec2 imageSize = vec2(floor(temp), temp2);
 
-#ifdef FRAGMENT_DEPTH_CHECK
+#ifdef FS_THREE_POINT_DEPTH_CHECK
     float labelHorizontalOrigin = floor(compressedAttribute2.w - (temp2 * SHIFT_LEFT2));
     float applyTranslate = 0.0;
-    if (labelHorizontalOrigin != 0.0) // is a billboard, so set apply translate to false
+    if (labelHorizontalOrigin != 0.0) // is a label, so set apply translate to true
     {
         applyTranslate = 1.0;
         labelHorizontalOrigin -= 2.0;
@@ -200,7 +201,7 @@ void main()
     translucencyByDistance.w = ((temp - floor(temp)) * SHIFT_LEFT8) / 255.0;
 #endif
 
-#if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
+#if defined(VS_THREE_POINT_DEPTH_CHECK) || defined(FS_THREE_POINT_DEPTH_CHECK)
     temp = compressedAttribute3.w;
     temp = temp * SHIFT_RIGHT12;
 
@@ -249,10 +250,6 @@ void main()
 
     vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
     vec4 positionEC = czm_modelViewRelativeToEye * p;
-
-#if defined(FRAGMENT_DEPTH_CHECK) || defined(VERTEX_DEPTH_CHECK)
-    float eyeDepth = positionEC.z;
-#endif
 
     positionEC = czm_eyeOffset(positionEC, eyeOffset.xyz);
     positionEC.xyz *= show;
@@ -311,35 +308,56 @@ void main()
     mat2 rotationMatrix;
     float mpp;
 
+    float enableDepthCheck = 1.0;
 #ifdef DISABLE_DEPTH_DISTANCE
-    float disableDepthTestDistance = compressedAttribute3.z;
+    float disableDepthTestDistanceSq = compressedAttribute3.z;
+    if (disableDepthTestDistanceSq == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
+    {
+        disableDepthTestDistanceSq = czm_minimumDisableDepthTestDistance;
+    }
+
+    if (lengthSq < disableDepthTestDistanceSq || disableDepthTestDistanceSq < 0.0)
+    {
+        enableDepthCheck = 0.0;
+    }
 #endif
 
-#ifdef VERTEX_DEPTH_CHECK
-if (lengthSq < disableDepthTestDistance) {
-    float depthsilon = 10.0;
+    v_compressed.y = enableDepthCheck;
 
-    vec2 labelTranslate = textureCoordinateBoundsOrLabelTranslate.xy;
-    vec4 pEC1 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+#ifdef VS_THREE_POINT_DEPTH_CHECK
+if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) && (enableDepthCheck == 1.0)) {
+    float depthsilon = 10.0;
+    vec2 depthOrigin;
+    // Horizontal origin for labels comes from a special attribute. If that value is 0, this is a billboard - use the regular origin. 
+    // Otherwise, transform the label origin to -1, 0, 1 (right, center, left).
+    depthOrigin.x = floor(compressedAttribute2.w - (temp2 * SHIFT_LEFT2));
+    depthOrigin.x = czm_branchFreeTernary(depthOrigin.x == 0.0, origin.x, depthOrigin.x - 2.0);
+    depthOrigin.y = origin.y;
+
+    vec4 pEC1 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0), depthOrigin, vec2(0.0), pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
     float globeDepth1 = getGlobeDepth(pEC1);
 
     if (globeDepth1 != 0.0 && pEC1.z + depthsilon < globeDepth1)
     {
-        vec4 pEC2 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0, 1.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+        vec4 pEC2 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(0.0, 1.0), depthOrigin, vec2(0.0), pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
         float globeDepth2 = getGlobeDepth(pEC2);
 
         if (globeDepth2 != 0.0 && pEC2.z + depthsilon < globeDepth2)
         {
-            vec4 pEC3 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(1.0), origin, labelTranslate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
+            vec4 pEC3 = addScreenSpaceOffset(positionEC, dimensions, scale, vec2(1.0), depthOrigin, vec2(0.0), pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
             float globeDepth3 = getGlobeDepth(pEC3);
             if (globeDepth3 != 0.0 && pEC3.z + depthsilon < globeDepth3)
             {
+                // "Discard" this vertex, as three key points fail depth test.
                 positionEC.xyz = vec3(0.0);
             }
         }
     }
 }
 #endif
+    // Write out the eyespace depth before applying the screen space offset, but after potentially "discarding" the vertex
+    // by setting its eyespace position to zero, via the three-point depth test above.
+    v_compressed.x = positionEC.z;
 
     positionEC = addScreenSpaceOffset(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters, rotationMatrix, mpp);
     gl_Position = czm_projection * positionEC;
@@ -350,17 +368,14 @@ if (lengthSq < disableDepthTestDistance) {
 #endif
 
 #ifdef DISABLE_DEPTH_DISTANCE
-    if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
-    {
-        disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
-    }
 
-    if (disableDepthTestDistance != 0.0)
+    if (disableDepthTestDistanceSq != 0.0)
     {
         // Don't try to "multiply both sides" by w.  Greater/less-than comparisons won't work for negative values of w.
         float zclip = gl_Position.z / gl_Position.w;
         bool clipped = (zclip < -1.0 || zclip > 1.0);
-        if (!clipped && (disableDepthTestDistance < 0.0 || (lengthSq > 0.0 && lengthSq < disableDepthTestDistance)))
+        // disableDepthTestDistanceSq can be less than zero if it's explicitly set to -1 in JS (as a sentinel value equivalent to infinity)
+        if (!clipped && (disableDepthTestDistanceSq < 0.0 || (lengthSq > 0.0 && lengthSq < disableDepthTestDistanceSq)))
         {
             // Position z on the near plane.
             gl_Position.z = -gl_Position.w;
@@ -371,7 +386,7 @@ if (lengthSq < disableDepthTestDistance) {
     }
 #endif
 
-#ifdef FRAGMENT_DEPTH_CHECK
+#ifdef FS_THREE_POINT_DEPTH_CHECK
     if (sizeInMeters) {
         translate /= mpp;
         dimensions /= mpp;
@@ -383,21 +398,13 @@ if (lengthSq < disableDepthTestDistance) {
 #else
     v_rotationMatrix = mat2(1.0, 0.0, 0.0, 1.0);
 #endif
-
-    float enableDepthCheck = 0.0;
-    if (lengthSq < disableDepthTestDistance)
-    {
-        enableDepthCheck = 1.0;
-    }
-
     float dw = floor(clamp(dimensions.x, 0.0, SHIFT_LEFT12));
     float dh = floor(clamp(dimensions.y, 0.0, SHIFT_LEFT12));
 
     float iw = floor(clamp(imageSize.x, 0.0, SHIFT_LEFT12));
     float ih = floor(clamp(imageSize.y, 0.0, SHIFT_LEFT12));
 
-    v_compressed.x = eyeDepth;
-    v_compressed.y = applyTranslate * SHIFT_LEFT1 + enableDepthCheck;
+    v_compressed.y += applyTranslate * SHIFT_LEFT1;
     v_compressed.z = dw * SHIFT_LEFT12 + dh;
     v_compressed.w = iw * SHIFT_LEFT12 + ih;
     v_originTextureCoordinateAndTranslate.xy = depthOrigin;

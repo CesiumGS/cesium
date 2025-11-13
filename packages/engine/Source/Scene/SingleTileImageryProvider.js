@@ -283,18 +283,18 @@ async function doRequest(resource, provider, previousError) {
 }
 
 /**
- * @typedef {Object} SingleTileImageryProvider.fromUrlOptions
+ * @typedef {object} SingleTileImageryProvider.fromUrlOptions
  *
  * Initialization options for the SingleTileImageryProvider constructor when using SingleTileImageryProvider.fromUrl
  *
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  */
 
 /**
  * Creates a provider for a single, top-level imagery tile.  The single image is assumed to use a
- * @param {Resource|String} url The url for the tile
+ * @param {Resource|string} url The url for the tile
  * @param {SingleTileImageryProvider.fromUrlOptions} [options] Object describing initialization options.
  * @returns {Promise.<SingleTileImageryProvider>} The resolved SingleTileImageryProvider.
  *

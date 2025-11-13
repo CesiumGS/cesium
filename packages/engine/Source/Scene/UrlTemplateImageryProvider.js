@@ -134,7 +134,7 @@ const pickFeaturesTags = combine(tags, {
  *        that this can be dynamically overridden by modifying the {@link UriTemplateImageryProvider#enablePickFeatures}
  *        property.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] A policy for discarding tile images according to some criteria
- * @property {Object} [customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
+ * @property {object} [customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
  */
 
 /**

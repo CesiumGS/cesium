@@ -14,7 +14,7 @@ const trailingSlashRegex = /\/$/;
  *
  * @property {object} options Object with the following properties:
  * @property {string} [options.url="https://atlas.microsoft.com/"] The Azure server url.
- * @property {string} [options.tilesetId="microsoft.imagery"] The Azure tileset ID. Valid options are {@link microsoft.imagery}, {@link microsoft.base.road}, and {@link microsoft.base.labels.road}
+ * @property {string} options.tilesetId="microsoft.imagery" The Azure tileset ID. Valid options are {@link microsoft.imagery}, {@link microsoft.base.road}, and {@link microsoft.base.labels.road}
  * @property {string} options.subscriptionKey The public subscription key for the imagery.
  * @property {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @property {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
@@ -41,13 +41,13 @@ const trailingSlashRegex = /\/$/;
  */
 function Azure2DImageryProvider(options) {
   options = options ?? {};
-  options.maximumLevel = options.maximumLevel ?? 22;
-  options.minimumLevel = options.minimumLevel ?? 0;
+  const maximumLevel = options.maximumLevel ?? 22;
+  const minimumLevel = options.minimumLevel ?? 0;
+  const tilesetId = options.tilesetId ?? "microsoft.imagery";
 
   const subscriptionKey =
     options.subscriptionKey ?? options["subscription-key"];
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.tilesetId", options.tilesetId);
   Check.defined("options.subscriptionKey", subscriptionKey);
   //>>includeEnd('debug');
 
@@ -66,7 +66,7 @@ function Azure2DImageryProvider(options) {
 
   resource.setQueryParameters({
     "api-version": "2024-04-01",
-    tilesetId: options.tilesetId,
+    tilesetId: tilesetId,
     zoom: `{z}`,
     x: `{x}`,
     y: `{y}`,
@@ -83,6 +83,8 @@ function Azure2DImageryProvider(options) {
 
   const provider = new UrlTemplateImageryProvider({
     ...options,
+    maximumLevel,
+    minimumLevel,
     url: resource,
     credit: credit,
   });

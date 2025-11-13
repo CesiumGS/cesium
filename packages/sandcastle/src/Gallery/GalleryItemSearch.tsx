@@ -3,7 +3,7 @@ import GalleryItemSearchInput from "./GalleryItemSearchInput.tsx";
 
 export function GalleryItemSearch() {
   return (
-    <form role="search">
+    <form role="search" onSubmit={(e) => e.preventDefault()}>
       <GalleryItemSearchInput />
       <GalleryItemSearchFilter />
     </form>

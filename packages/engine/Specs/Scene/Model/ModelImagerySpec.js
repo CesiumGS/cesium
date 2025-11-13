@@ -133,4 +133,30 @@ describe("Scene/Model/ModelImagery", function () {
     const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
     expect(modelPrimitiveImageries.length).toBe(4);
   });
+
+  it("removes ModelPrimitiveImagery objects when imagery layers are removed", async function () {
+    if (!scene.context.webgl2) {
+      return;
+    }
+
+    const tileset = await loadTilesetWithImagery(scene);
+
+    const root = tileset.root;
+    const content = root.content;
+    const model = content._model;
+    const modelImagery = model._modelImagery;
+
+    // The model has four primitives
+    const modelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+    expect(modelPrimitiveImageries.length).toBe(4);
+
+    // Remove the imagery layer from the tileset, and trigger an update
+    tileset.imageryLayers.removeAll(false);
+    scene.renderForSpecs();
+
+    // The model imagery should no longer contain any
+    // modelPrimitiveImagery objects now
+    const newModelPrimitiveImageries = modelImagery._modelPrimitiveImageries;
+    expect(newModelPrimitiveImageries).toBeUndefined();
+  });
 });

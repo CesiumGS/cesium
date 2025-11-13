@@ -1,4 +1,3 @@
-/* eslint-disable new-cap */
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
@@ -209,15 +208,12 @@ S2Cell.isValidId = function (cellId) {
   }
 
   // Check if face bits indicate a valid value, in range [0-5].
-  // eslint-disable-next-line
   if (cellId >> BigInt(S2_POSITION_BITS) > 5) {
     return false;
   }
 
   // Check trailing 1 bit is in one of the even bit positions allowed for the 30 levels, using a bitmask.
-  // eslint-disable-next-line no-undef
   const lowestSetBit = cellId & (~cellId + BigInt(1));
-  // eslint-disable-next-line
   if (!(lowestSetBit & BigInt("0x1555555555555555"))) {
     return false;
   }
@@ -296,14 +292,12 @@ S2Cell.getLevel = function (cellId) {
   //>>includeEnd('debug');
 
   let lsbPosition = 0;
-  // eslint-disable-next-line
   while (cellId !== BigInt(0)) {
-    // eslint-disable-next-line
     if (cellId & BigInt(1)) {
       break;
     }
     lsbPosition++;
-    cellId = cellId >> BigInt(1); // eslint-disable-line
+    cellId = cellId >> BigInt(1);
   }
 
   // We use (>> 1) because there are 2 bits per level.
@@ -329,10 +323,8 @@ S2Cell.prototype.getChild = function (index) {
   //>>includeEnd('debug');
 
   // Shift sentinel bit 2 positions to the right.
-  // eslint-disable-next-line no-undef
   const newLsb = lsb(this._cellId) >> BigInt(2);
   // Insert child index before the sentinel bit.
-  // eslint-disable-next-line no-undef
   const childCellId = this._cellId + BigInt(2 * index + 1 - 4) * newLsb;
   return new S2Cell(childCellId);
 };
@@ -350,10 +342,8 @@ S2Cell.prototype.getParent = function () {
   }
   //>>includeEnd('debug');
   // Shift the sentinel bit 2 positions to the left.
-  // eslint-disable-next-line no-undef
   const newLsb = lsb(this._cellId) << BigInt(2);
   // Erase the left over bits to the right of the sentinel bit.
-  // eslint-disable-next-line no-undef
   return new S2Cell((this._cellId & (~newLsb + BigInt(1))) | newLsb);
 };
 
@@ -455,7 +445,6 @@ S2Cell.fromFacePositionLevel = function (face, position, level) {
   ).join("0");
   const positionSuffixPadding = Array(S2_POSITION_BITS - 2 * level).join("0");
 
-  // eslint-disable-next-line no-undef
   const cellId = BigInt(
     `0b${faceBitString}${positionPrefixPadding}${positionBitString}1${
       // Adding the sentinel bit that always follows the position bits.
@@ -500,7 +489,7 @@ function convertCellIdToFaceSiTi(cellId, level) {
   // that represent the parent cell center.
   const isLeaf = level === 30;
   const shouldCorrect =
-    !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1); // eslint-disable-line
+    !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1);
   const correction = isLeaf ? 1 : shouldCorrect ? 2 : 0;
   const si = (i << 1) + correction;
   const ti = (j << 1) + correction;
@@ -515,7 +504,6 @@ function convertCellIdToFaceIJ(cellId) {
     generateLookupTable();
   }
 
-  // eslint-disable-next-line no-undef
   const face = Number(cellId >> BigInt(S2_POSITION_BITS));
   let bits = face & S2_SWAP_MASK;
   const lookupMask = (1 << S2_LOOKUP_BITS) - 1;
@@ -529,7 +517,7 @@ function convertCellIdToFaceIJ(cellId) {
     const extractMask = (1 << (2 * numberOfBits)) - 1;
     bits +=
       Number(
-        (cellId >> BigInt(k * 2 * S2_LOOKUP_BITS + 1)) & BigInt(extractMask), // eslint-disable-line
+        (cellId >> BigInt(k * 2 * S2_LOOKUP_BITS + 1)) & BigInt(extractMask),
       ) << 2;
 
     bits = S2_LOOKUP_IJ[bits];
@@ -715,7 +703,7 @@ function generateLookupTable() {
  * @private
  */
 function lsb(cellId) {
-  return cellId & (~cellId + BigInt(1)); // eslint-disable-line
+  return cellId & (~cellId + BigInt(1));
 }
 
 /**
@@ -723,7 +711,7 @@ function lsb(cellId) {
  * @private
  */
 function lsbForLevel(level) {
-  return BigInt(1) << BigInt(2 * (S2_MAX_LEVEL - level)); // eslint-disable-line
+  return BigInt(1) << BigInt(2 * (S2_MAX_LEVEL - level));
 }
 
 // Lookup table for getting trailing zero bits.
@@ -740,7 +728,7 @@ const Mod67BitPosition = [
  * @private
  */
 function countTrailingZeroBits(x) {
-  return Mod67BitPosition[(-x & x) % BigInt(67)]; // eslint-disable-line
+  return Mod67BitPosition[(-x & x) % BigInt(67)];
 }
 
 export default S2Cell;
