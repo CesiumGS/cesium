@@ -11,6 +11,7 @@
 #### Additions :tada:
 
 - Added `scene.pickAsync` for non GPU blocking picking using WebGL2 [#12983](https://github.com/CesiumGS/cesium/pull/12983)
+- Improves performance of terrain picks via new terrain picking quadtrees [#8481](https://github.com/CesiumGS/cesium/issues/8481)
 
 ## 1.135 - 2025-11-03
 
