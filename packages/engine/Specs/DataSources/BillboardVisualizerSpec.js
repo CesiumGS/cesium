@@ -178,9 +178,10 @@ describe(
       const bb = billboardCollection.get(0);
 
       await pollToPromise(function () {
+        entityCluster.update(scene.frameState);
         scene.renderForSpecs();
         visualizer.update(time);
-        return bb.show;
+        return bb.ready;
       });
 
       expect(bb.position).toEqual(testObject.position.getValue(time));
