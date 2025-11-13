@@ -759,6 +759,15 @@ function Scene(options) {
    */
   this.light = new SunLight();
 
+  /**
+   * Whether or not to enable edge visibility rendering for 3D tiles.
+   * When enabled, creates a framebuffer with multiple render targets
+   * for advanced edge detection and visibility techniques.
+   * @type {boolean}
+   * @default false
+   */
+  this._enableEdgeVisibility = false;
+
   // Give frameState, camera, and screen space camera controller initial state before rendering
   updateFrameNumber(this, 0.0, JulianDate.now());
   this.updateFrameState();
@@ -2565,6 +2574,48 @@ function performTranslucent3DTilesClassification(
   );
 }
 
+function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
+  scene.context.uniformState.updatePass(Pass.CESIUM_3D_TILE_EDGES);
+
+  const originalFramebuffer = passState.framebuffer;
+
+  scene.context.uniformState.edgeColorTexture = scene.context.defaultTexture;
+  scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+  scene.context.uniformState.edgeDepthTexture = scene.context.defaultTexture;
+
+  // Set edge framebuffer for rendering
+  if (
+    scene._enableEdgeVisibility &&
+    defined(scene._view) &&
+    defined(scene._view.edgeFramebuffer)
+  ) {
+    passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
+  }
+
+  // performPass
+  const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_EDGES];
+  const commandCount = frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES];
+
+  // clear edge framebuffer
+  if (
+    scene._enableEdgeVisibility &&
+    defined(scene._view) &&
+    defined(scene._view.edgeFramebuffer)
+  ) {
+    const clearCommand = scene._view.edgeFramebuffer.getClearCommand(
+      new Color(0.0, 0.0, 0.0, 0.0),
+    );
+    clearCommand.execute(scene.context, passState);
+  }
+
+  // Then execute edge rendering commands
+  for (let j = 0; j < commandCount; ++j) {
+    executeCommand(commands[j], scene, passState);
+  }
+
+  passState.framebuffer = originalFramebuffer;
+}
+
 /**
  * Execute the draw commands for all the render passes.
  *
@@ -2707,6 +2758,48 @@ function executeCommands(scene, passState) {
     }
 
     let commandCount;
+
+    // Draw edges FIRST - before binding textures to avoid feedback loop
+    performCesium3DTileEdgesPass(scene, passState, frustumCommands);
+
+    if (
+      scene._enableEdgeVisibility &&
+      defined(scene._view) &&
+      defined(scene._view.edgeFramebuffer)
+    ) {
+      // Get edge color texture (attachment 0)
+      const colorTexture = scene._view.edgeFramebuffer.colorTexture;
+      if (defined(colorTexture)) {
+        scene.context.uniformState.edgeColorTexture = colorTexture;
+      } else {
+        scene.context.uniformState.edgeColorTexture =
+          scene.context.defaultTexture;
+      }
+
+      // Get edge ID texture (attachment 1)
+      const idTexture = scene._view.edgeFramebuffer.idTexture;
+      if (defined(idTexture)) {
+        scene.context.uniformState.edgeIdTexture = idTexture;
+      } else {
+        scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+      }
+
+      // Get edge depth texture (attachment 2)
+      const edgeDepthTexture = scene._view.edgeFramebuffer.depthTexture;
+      if (defined(edgeDepthTexture)) {
+        scene.context.uniformState.edgeDepthTexture = edgeDepthTexture;
+      } else {
+        scene.context.uniformState.edgeDepthTexture =
+          scene.context.defaultTexture;
+      }
+    } else {
+      scene.context.uniformState.edgeColorTexture =
+        scene.context.defaultTexture;
+      scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+      scene.context.uniformState.edgeDepthTexture =
+        scene.context.defaultTexture;
+    }
+
     if (!useInvertClassification || picking || renderTranslucentDepthForPick) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
@@ -3593,8 +3686,19 @@ function updateShadowMaps(scene) {
 function updateAndRenderPrimitives(scene) {
   const frameState = scene._frameState;
 
+  // Reset per-frame edge visibility request flag before primitives update
+  frameState.edgeVisibilityRequested = false;
+
   scene._groundPrimitives.update(frameState);
   scene._primitives.update(frameState);
+
+  // If any primitive requested edge visibility this frame, flip the scene flag lazily.
+  if (
+    frameState.edgeVisibilityRequested &&
+    scene._enableEdgeVisibility === false
+  ) {
+    scene._enableEdgeVisibility = true;
+  }
 
   updateDebugFrustumPlanes(scene);
   updateShadowMaps(scene);
@@ -3712,6 +3816,13 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
 
   const useInvertClassification = (environmentState.useInvertClassification =
     !picking && defined(passState.framebuffer) && scene.invertClassification);
+
+  // Update edge framebuffer for 3D tile edge rendering
+  const useEdgeFramebuffer = !picking && scene._enableEdgeVisibility;
+  if (useEdgeFramebuffer) {
+    view.edgeFramebuffer.update(context, view.viewport, scene._hdr);
+  }
+
   if (useInvertClassification) {
     let depthFramebuffer;
     if (frameState.invertClassificationColor.alpha === 1.0) {
@@ -3819,14 +3930,15 @@ function callAfterRenderFunctions(scene) {
   // Functions are queued up during primitive update and executed here in case
   // the function modifies scene state that should remain constant over the frame.
   const functions = scene._frameState.afterRender;
-  for (let i = 0; i < functions.length; ++i) {
-    const shouldRequestRender = functions[i]();
+  const functionsCpy = functions.slice(); // Snapshot before iterate allows callbacks to add functions for next frame
+  functions.length = 0;
+
+  for (let i = 0; i < functionsCpy.length; ++i) {
+    const shouldRequestRender = functionsCpy[i]();
     if (shouldRequestRender) {
       scene.requestRender();
     }
   }
-
-  functions.length = 0;
 }
 
 function getGlobeHeight(scene) {
@@ -4404,6 +4516,37 @@ Scene.prototype.pick = function (windowPosition, width, height) {
   return this._picking.pick(this, windowPosition, width, height, 1)[0];
 };
 
+/**
+ * Performs the same operation as Scene.pick but asynchonosly without blocking the main render thread.
+ * Requires WebGL2 else using fallback.
+ *
+ * @example
+ * // On mouse over, color the feature yellow.
+ * handler.setInputAction(function(movement) {
+ *     const feature = scene.pickAsync(movement.endPosition).then(function(feature) {
+ *        if (feature instanceof Cesium.Cesium3DTileFeature) {
+ *            feature.color = Cesium.Color.YELLOW;
+ *        }
+ *     });
+ * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @returns {Promise<Object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
+ *
+ * @see Scene#pick
+ */
+Scene.prototype.pickAsync = async function (windowPosition, width, height) {
+  const result = await this._picking.pickAsync(
+    this,
+    windowPosition,
+    width,
+    height,
+    1,
+  );
+  return result[0];
+};
 /**
  * Returns a {@link VoxelCell} for the voxel sample rendered at a particular window coordinate,
  * or <code>undefined</code> if no voxel is rendered at that position.

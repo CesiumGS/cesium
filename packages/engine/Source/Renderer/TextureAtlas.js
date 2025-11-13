@@ -59,12 +59,16 @@ function TextureAtlas(options) {
   this._initialSize = initialSize;
 
   this._texturePacker = undefined;
+  /** @type {BoundingRectangle[]} */
   this._rectangles = [];
+  /** @type {Map<number, number>} */
   this._subRegions = new Map();
   this._guid = createGuid();
 
   this._imagesToAddQueue = [];
+  /** @type {Map<string, number>} */
   this._indexById = new Map();
+  /** @type {Map<string, Promise<number>>} */
   this._indexPromiseById = new Map();
   this._nextIndex = 0;
 }
@@ -651,7 +655,7 @@ function getImage(image, id) {
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas,
  *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
- * @returns {Promise<number>} A Promise that resolves to the image region index. -1 is returned if resouces are in the process of being destroyed.
+ * @returns {Promise<number>} A Promise that resolves to the image region index, or -1 if resources are in the process of being destroyed.
  */
 TextureAtlas.prototype.addImage = function (id, image) {
   //>>includeStart('debug', pragmas.debug);
@@ -660,12 +664,17 @@ TextureAtlas.prototype.addImage = function (id, image) {
   //>>includeEnd('debug');
 
   let promise = this._indexPromiseById.get(id);
+  let index = this._indexById.get(id);
   if (defined(promise)) {
-    // This image has already been added
+    // This image is already being added
     return promise;
   }
+  if (defined(index)) {
+    // This image has already been added and resolved
+    return Promise.resolve(index);
+  }
 
-  const index = this._nextIndex++;
+  index = this._nextIndex++;
   this._indexById.set(id, index);
   image = getImage(image, id);
 
@@ -682,10 +691,44 @@ TextureAtlas.prototype.addImage = function (id, image) {
 
     return this._addImage(index, image);
   };
-  promise = resolveAndAddImage(index, image);
 
+  promise = resolveAndAddImage(index, image).then((index) => {
+    this._indexPromiseById.delete(id);
+    return index;
+  });
   this._indexPromiseById.set(id, promise);
+
   return promise;
+};
+
+/**
+ * Get an existing sub-region of an existing atlas image as additional image indices.
+ * @private
+ * @param {string} id The identifier of the existing image.
+ * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
+ * @param {number} imageIndex The index of the image.
+ * @returns {Promise<number> | number | undefined} The existing subRegion index, or undefined if not yet added.
+ */
+TextureAtlas.prototype.getCachedImageSubRegion = function (
+  id,
+  subRegion,
+  imageIndex,
+) {
+  const imagePromise = this._indexPromiseById.get(id);
+  for (const [index, parentIndex] of this._subRegions.entries()) {
+    if (imageIndex === parentIndex) {
+      const boundingRegion = this._rectangles[index];
+      if (boundingRegion.equals(subRegion)) {
+        // The subregion is already being tracked
+        if (imagePromise) {
+          return imagePromise.then((resolvedImageIndex) =>
+            resolvedImageIndex === -1 ? -1 : index,
+          );
+        }
+        return index;
+      }
+    }
+  }
 };
 
 /**
@@ -693,40 +736,29 @@ TextureAtlas.prototype.addImage = function (id, image) {
  * @private
  * @param {string} id The identifier of the existing image.
  * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
- * @returns {Promise<number>} A Promise that resolves to the image region index. -1 is returned if resouces are in the process of being destroyed.
+ * @returns {number | Promise<number>} The resolved image region index, or a Promise that resolves to it. -1 is returned if resources are in the process of being destroyed.
  */
 TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("id", id);
   Check.defined("subRegion", subRegion);
   //>>includeEnd('debug');
-
   const imageIndex = this._indexById.get(id);
   if (!defined(imageIndex)) {
     throw new RuntimeError(`image with id "${id}" not found in the atlas.`);
   }
 
-  const indexPromise = this._indexPromiseById.get(id);
-  for (const [index, parentIndex] of this._subRegions.entries()) {
-    if (imageIndex === parentIndex) {
-      const boundingRegion = this._rectangles[index];
-      if (boundingRegion.equals(subRegion)) {
-        // The subregion is already being tracked
-        return indexPromise.then((resolvedImageIndex) => {
-          if (resolvedImageIndex === -1) {
-            // The atlas has been destroyed
-            return -1;
-          }
-
-          return index;
-        });
-      }
-    }
+  let index = this.getCachedImageSubRegion(id, subRegion, imageIndex);
+  if (defined(index)) {
+    return index;
   }
 
-  const index = this._nextIndex++;
+  index = this._nextIndex++;
   this._subRegions.set(index, imageIndex);
   this._rectangles[index] = subRegion.clone();
+
+  const indexPromise =
+    this._indexPromiseById.get(id) ?? Promise.resolve(imageIndex);
 
   return indexPromise.then((imageIndex) => {
     if (imageIndex === -1) {
