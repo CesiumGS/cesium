@@ -160,8 +160,15 @@ BillboardTexture.prototype.unload = async function () {
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas,
  *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
+ * @param {number} width A number specifying the width of the texture. If undefined, the image width will be used.
+ * @param {number} height A number specifying the height of the texture. If undefined, the image height will be used.
  */
-BillboardTexture.prototype.loadImage = async function (id, image) {
+BillboardTexture.prototype.loadImage = async function (
+  id,
+  image,
+  width,
+  height,
+) {
   if (this._id === id) {
     // This image has already been loaded
     return;
@@ -192,7 +199,7 @@ BillboardTexture.prototype.loadImage = async function (id, image) {
   let index;
   const atlas = this._billboardCollection.textureAtlas;
   try {
-    index = await atlas.addImage(id, image);
+    index = await atlas.addImage(id, image, width, height);
   } catch (error) {
     // There was an error loading the image
     billboardTexture._loadState = BillboardLoadState.ERROR;
