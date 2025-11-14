@@ -57,7 +57,7 @@ const noDevelopmentGallery =
   taskName === "release" ||
   taskName === "makeZip" ||
   taskName === "websiteRelease";
-const argv = yargs(process.argv).argv;
+const argv = yargs(process.argv).parse();
 const verbose = argv.verbose;
 
 const sourceFiles = [
