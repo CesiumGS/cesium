@@ -9,6 +9,7 @@ import { rimraf } from "rimraf";
 import { parse } from "yaml";
 import { globby } from "globby";
 import * as pagefind from "pagefind";
+import { AutoModel, AutoTokenizer } from "@huggingface/transformers";
 
 import createGalleryRecord from "./createGalleryRecord.js";
 
@@ -19,6 +20,78 @@ const defaultGalleryFiles = ["gallery"];
 const defaultThumbnailPath = "images/placeholder-thumbnail.jpg";
 const requiredMetadataKeys = ["title", "description"];
 const galleryItemConfig = /sandcastle\.(yml|yaml)/;
+
+// Embedding configuration
+const MODEL_ID = "avsolatorio/GIST-small-Embedding-v0";
+const DOCUMENT_PREFIX = "title: none | text: ";
+
+/**
+ * Initialize the embedding model (singleton pattern)
+ */
+let embeddingModel = null;
+let embeddingTokenizer = null;
+
+async function initEmbeddingModel() {
+  if (embeddingModel && embeddingTokenizer) {
+    return { model: embeddingModel, tokenizer: embeddingTokenizer };
+  }
+
+  console.log("Loading embedding model...");
+  console.log("This may take a while on first run as the model is downloaded.");
+
+  embeddingTokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
+  embeddingModel = await AutoModel.from_pretrained(MODEL_ID, {
+    dtype: "fp32", // Options: "fp32" | "q8" | "q4"
+  });
+
+  console.log("Embedding model loaded successfully!");
+  return { model: embeddingModel, tokenizer: embeddingTokenizer };
+}
+
+/**
+ * Convert a gallery item to text for embedding
+ */
+function itemToText(title, description, labels) {
+  const text = `Title: ${title}
+Description: ${description}
+Labels: ${labels.join(", ")}`;
+
+  return DOCUMENT_PREFIX + text;
+}
+
+/**
+ * Generate embeddings for a batch of items
+ */
+async function generateEmbeddings(items) {
+  const { model, tokenizer } = await initEmbeddingModel();
+
+  console.log(`\nGenerating embeddings for ${items.length} gallery items...`);
+
+  const embeddings = [];
+  const batchSize = 10;
+
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const batchEnd = Math.min(i + batchSize, items.length);
+
+    console.log(
+      `Processing embeddings ${i + 1} to ${batchEnd} of ${items.length}...`,
+    );
+
+    const texts = batch.map((item) =>
+      itemToText(item.title, item.description, item.labels),
+    );
+
+    const inputs = await tokenizer(texts, { padding: true, truncation: true });
+    const { sentence_embedding } = await model(inputs);
+
+    const batchEmbeddings = sentence_embedding.tolist();
+    embeddings.push(...batchEmbeddings);
+  }
+
+  console.log(`Generated ${embeddings.length} embeddings`);
+  return embeddings;
+}
 
 async function createPagefindIndex() {
   try {
@@ -89,6 +162,7 @@ export async function buildGalleryList(options = {}) {
    * @property {number} lineCount
    * @property {string} description
    * @property {string[]} labels
+   * @property {number[]} [embedding] - Vector embedding for semantic search
    */
 
   /**
@@ -117,8 +191,12 @@ export async function buildGalleryList(options = {}) {
     return condition;
   };
 
+  // globby requires forward slashes in glob patterns, even on Windows.
+  // path.join() uses backslashes on Windows, so convert them to forward slashes.
   const galleryFiles = await globby(
-    galleryFilesPattern.map((pattern) => join(rootDirectory, pattern, "**/*")),
+    galleryFilesPattern.map((pattern) => 
+      join(rootDirectory, pattern, "**/*").replace(/\\/g, "/")
+    ),
   );
   const yamlFiles = galleryFiles.filter((path) =>
     basename(path).match(galleryItemConfig),
@@ -264,6 +342,21 @@ export async function buildGalleryList(options = {}) {
   // Sort alphabetically so the default sort order when loaded is alphabetical,
   // regardless of if titles match the directory names
   output.entries.sort((a, b) => a.title.localeCompare(b.title));
+
+  // Generate embeddings for all entries
+  try {
+    const embeddings = await generateEmbeddings(output.entries);
+    // Add embeddings to each entry
+    output.entries.forEach((entry, index) => {
+      entry.embedding = embeddings[index];
+    });
+    console.log(
+      `\n✓ Successfully added embeddings to ${output.entries.length} gallery items`,
+    );
+  } catch (error) {
+    console.error("Failed to generate embeddings:", error);
+    console.log("Continuing without embeddings...");
+  }
 
   const outputDirectory = join(rootDirectory, publicDirectory, "gallery");
   await rimraf(outputDirectory);

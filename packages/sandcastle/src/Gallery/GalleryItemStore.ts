@@ -7,15 +7,12 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useRef,
 } from "react";
 import { getBaseUrl } from "../util/getBaseUrl.ts";
-import { applyHighlightToItem } from "./applyHighlight.tsx";
 import { loadFromUrl } from "./loadFromUrl.ts";
-import "../../@types/pagefind-client.d.ts";
+import { vectorSearch, type VectorSearchResult } from "./EmbeddingSearch.ts";
 
 const galleryListPath = `gallery/list.json`;
-const pagefindUrl = `gallery/pagefind/pagefind.js`;
 
 export type GalleryItem = {
   url: string;
@@ -30,22 +27,15 @@ export type GalleryItem = {
   codeExerpts?: string;
 };
 
-export type HighlightedGalleryItem = ReturnType<typeof applyHighlightToItem>;
+export type HighlightedGalleryItem = GalleryItem & {
+  searchRank?: number;
+  searchDistance?: number;
+};
 
 export type GalleryFilter = Record<string, string | string[]> | null;
-export type GalleryFilters = PagefindFilterCounts | null;
+export type GalleryFilters = Record<string, Record<string, number>> | null;
 
 export function useGalleryItemStore() {
-  // Pagefind library and config
-  const pagefindRef = useRef<Pagefind>(null);
-  const getPagefind = () => {
-    return pagefindRef.current;
-  };
-  const [searchOptions, setSearchOptions] = useState<null | Record<
-    string,
-    string | object
-  >>(null);
-
   // Gallery items
   const [galleryLoaded, setGalleryLoaded] = useState(false);
   const [items, setItems] = useState<GalleryItem[]>([]);
@@ -59,88 +49,102 @@ export function useGalleryItemStore() {
   // Searches
   const [searchTerm, setSearchTerm] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState<GalleryFilter>(null);
-  const [searchResults, setSearchResults] = useState<
-    PagefindSearchFragment[] | null
-  >(null);
+  const [searchResults, setSearchResults] = useState<VectorSearchResult[] | null>(null);
   const [isSearchPending, startSearch] = useTransition();
+  
+  // Perform vector search when search term changes (with debounce)
   useEffect(() => {
-    const pagefind = getPagefind();
-    if (!pagefind) {
+    if (!searchTerm || searchTerm.trim().length === 0) {
+      setSearchResults(null);
       return;
     }
 
-    startSearch(async () => {
-      /* @ts-expect-error: null is a valid search term value */
-      const { results } = await pagefind.search(searchTerm, {
-        filters: searchFilter,
-      });
-      const data = await Promise.allSettled(
-        results.map((result) => result.data()),
-      );
+    // Debounce: wait 300ms after user stops typing
+    const timeoutId = setTimeout(() => {
+      const performSearch = async () => {
+        try {
+          const results = await vectorSearch(searchTerm, 20);
+          setSearchResults(results);
+        } catch (error) {
+          console.error("Vector search failed:", error);
+          setSearchResults([]);
+        }
+      };
+      
+      // Wrap only the state update in a transition, not the async search
+      startSearch(performSearch);
+    }, 10);
 
-      const isFulfilled = <T>(
-        input: PromiseSettledResult<T>,
-      ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
-
-      const values = data.filter(isFulfilled).map(({ value }) => value);
-      startSearch(() => setSearchResults(values));
-    });
-  }, [searchTerm, searchFilter]);
+    // Cleanup: cancel the timeout if searchTerm changes before 300ms
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const memoizedSearchResults = useMemo(() => {
-    if (!searchResults) {
+    if (!searchResults || searchResults.length === 0) {
       return items ?? [];
     }
 
-    return searchResults.map((result) => {
-      const { id } = result.meta;
-      const item = items.find((item) => item.id === id);
+    // Map vector search results to gallery items
+    const mapped = searchResults.map((result) => {
+      // Find the item by matching the legacy_id to the slug
+      // The legacyIds map should provide legacy_id -> slug mapping
+      const slug = legacyIds[result.legacy_id];
+      
+      const item = items.find((item) => {
+        // Try matching by slug first (if we have it)
+        if (slug && item.id === slug) {
+          return true;
+        }
+        // Fallback: try matching by legacy_id directly
+        if (item.id === result.legacy_id || item.id === result.id) {
+          return true;
+        }
+        // Also check the URL path
+        const itemId = item.url.split('/').filter(Boolean).pop() || '';
+        return itemId === result.id || itemId === result.legacy_id;
+      });
 
       if (!item) {
-        return;
+        console.warn('[GalleryItemStore] Could not find gallery item for search result:', result);
+        return undefined;
       }
 
-      return applyHighlightToItem(item, result);
-    });
-  }, [items, searchResults]);
+      // Return item with search metadata (no highlighting for vector search)
+      return {
+        ...item,
+        searchRank: result.rank,
+        searchDistance: result.distance,
+      };
+    }).filter(Boolean);
 
-  // Pagefind search configuration is loaded with the rest of the gallery options.
-  // Once we've loaded those options, load and intiate pagefind.
+    return mapped;
+  }, [items, searchResults, legacyIds]);
+
+  // Initialize gallery filters from labels
   useEffect(() => {
-    const fetchPagefindAction = async () => {
-      let pagefind = getPagefind();
-      if (!pagefind) {
-        const baseUrl = getBaseUrl();
-        const url = new URL(pagefindUrl, baseUrl);
-        pagefind = await import(/* @vite-ignore */ url.href);
-        pagefindRef.current = pagefind;
+    if (items.length === 0) {
+      return;
+    }
 
-        if (!pagefind) {
-          console.error(`Pagefind failed to load from ${pagefindUrl}`);
-          return;
-        }
+    // Extract all unique labels from items
+    const labelSet = new Set<string>();
+    items.forEach(item => {
+      item.labels.forEach(label => labelSet.add(label));
+    });
 
-        pagefind.init();
-
-        await pagefind.options({
-          baseUrl,
-          ...searchOptions,
-        });
-      }
-
-      const filters = await pagefind.filters();
-
-      // See https://react.dev/reference/react/useTransition#react-doesnt-treat-my-state-update-after-await-as-a-transition
-      startTransition(() => {
-        setGalleryFilters(filters);
-        setSearchFilter(defaultSearchFilter);
-      });
+    // Create filter structure similar to Pagefind
+    const filters: GalleryFilters = {
+      labels: Object.fromEntries(
+        Array.from(labelSet).map(label => [
+          label,
+          items.filter(item => item.labels.includes(label)).length
+        ])
+      )
     };
 
-    if (searchOptions) {
-      startTransition(fetchPagefindAction);
-    }
-  }, [searchOptions, defaultSearchFilter]);
+    setGalleryFilters(filters);
+    setSearchFilter(defaultSearchFilter);
+  }, [items, defaultSearchFilter]);
 
   // Kick off initial gallery fetch
   useEffect(() => {
@@ -148,7 +152,7 @@ export function useGalleryItemStore() {
       const baseUrl = getBaseUrl();
       const galleryListUrl = new URL(galleryListPath, baseUrl);
       const request = await fetch(galleryListUrl.href);
-      const { entries, searchOptions, legacyIds, defaultFilters } =
+      const { entries, legacyIds, defaultFilters } =
         await request.json();
       const items = entries.map((entry: GalleryItem) => {
         let entryUrl = entry.url;
@@ -180,7 +184,6 @@ export function useGalleryItemStore() {
       startTransition(() => {
         setItems(items);
         setLegacyIds(legacyIds);
-        setSearchOptions(searchOptions);
         setDefaultSearchFilter(defaultFilters);
         setGalleryLoaded(true);
       });
