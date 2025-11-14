@@ -9,7 +9,7 @@ uniform vec4 u_highlightColor;
 in vec2 v_textureCoordinates;
 in vec4 v_pickColor;
 in vec4 v_color;
-in float v_splitDirection;
+in vec2 v_splitDirectionAndEllipsoidDepthEC;
 
 #ifdef SDF
 in vec4 v_outlineColor;
@@ -164,17 +164,21 @@ void doDepthTest() {
     float globeDepth = getGlobeDepthAtCoords(fragSt);
     if (globeDepth == 0.0) return; // Not on globe
     
-    float distanceToEllipsoidCenter = -length(czm_viewerPositionWC); // depth is negative by convention
-    float testDistance = (eyeDepth > -u_coarseDepthTestDistance) ? globeDepth : distanceToEllipsoidCenter;
-    if (eyeDepth < testDistance) {
+    float distanceToEllipsoid = -v_splitDirectionAndEllipsoidDepthEC.y;
+    bool useGlobeDepth = eyeDepth > -u_coarseDepthTestDistance;
+    float testDistance = useGlobeDepth ? globeDepth : distanceToEllipsoid;
+    float testDelta = eyeDepth - testDistance;
+
+    float depthsilon = useGlobeDepth ? u_threePointDepthTestDistance : u_coarseDepthTestDistance;
+    if (testDelta < -depthsilon) {
         discard;
     }
 }
 
 void main()
 {
-    if (v_splitDirection < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
-    if (v_splitDirection > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
+    if (v_splitDirectionAndEllipsoidDepthEC.x < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
+    if (v_splitDirectionAndEllipsoidDepthEC.x > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
     doDepthTest();
     
     vec4 color = texture(u_atlas, v_textureCoordinates);
