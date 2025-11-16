@@ -15,6 +15,9 @@ import Matrix4 from "../../Source/Core/Matrix4.js";
 import Cesium3DTileset from "../../Source/Scene/Cesium3DTileset.js";
 import Resource from "../../Source/Core/Resource.js";
 
+// A basic top-level extension object that will be added to the
+// tileset extensions: It defines the "dimensions" of the
+// dynamic content, matching the basicDynamicExampleContent
 const basicDynamicExampleExtensionObject = {
   dimensions: [
     {
@@ -28,6 +31,9 @@ const basicDynamicExampleExtensionObject = {
   ],
 };
 
+// A basic dynamic content that represents what is read from
+// the content JSON. The structure is described in the
+// basicDynamicExampleExtensionObject
 const basicDynamicExampleContent = {
   dynamicContents: [
     {
@@ -61,6 +67,10 @@ const basicDynamicExampleContent = {
   ],
 };
 
+// A top-level extension object that will be added to the
+// tileset extensions: It defines the "dimensions" of the
+// dynamic content, matching the isoDynamicExampleContent,
+// where the time stamp is an actual ISO8601 string.
 const isoDynamicExampleExtensionObject = {
   dimensions: [
     {
@@ -70,6 +80,9 @@ const isoDynamicExampleExtensionObject = {
   ],
 };
 
+// A dynamic content that represents what is read from
+// the content JSON. The structure is described in the
+// isoDynamicExampleExtensionObject
 const isoDynamicExampleContent = {
   dynamicContents: [
     {
@@ -88,6 +101,15 @@ const isoDynamicExampleContent = {
   ],
 };
 
+/**
+ * Creates a buffer containing a minimal valid glTF 2.0 asset
+ * in JSON representation.
+ *
+ * This asset does not contain any binary data. It is only
+ * used for the specs.
+ *
+ * @returns {ArrayBuffer} The buffer
+ */
 function createDummyGltfBuffer() {
   const gltf = {
     asset: {
@@ -97,7 +119,78 @@ function createDummyGltfBuffer() {
   return generateJsonBuffer(gltf).buffer;
 }
 
-class MockResourceFetchArrayBufferPromise {
+/**
+ * A class that tries to provide mocking infrastructure for the
+ * obscure Resource.fetchArrayBuffer behavior.
+ *
+ * It establishes a spy on Resource.fetchArrayBuffer to return
+ * a "mocking" promise. Calling "resolve" or "reject" will
+ * resolve or reject this promise accordingly
+ */
+class ResourceFetchArrayBufferPromiseMock {
+  /**
+   * Returns a single mocking object.
+   *
+   * After calling this function, the next call to Resource.fetchArrayBuffer
+   * will return a promise that can be resolved or rejected by calling
+   * "resolve" or "reject" on this ResourceFetchArrayBufferPromiseMock
+   *
+   * @returns {ResourceFetchArrayBufferPromiseMock} The mocking object
+   */
+  static create() {
+    const result = new ResourceFetchArrayBufferPromiseMock();
+    ResourceFetchArrayBufferPromiseMock.setup([result]);
+    return result;
+  }
+
+  /**
+   * Creates a single object that can be used for mocking
+   * Resource.fetchArrayBuffer calls.
+   *
+   * Instances that are created with this method can be passed
+   * to the "setup" method.
+   *
+   * @returns {ResourceFetchArrayBufferPromiseMock} The mocking object
+   */
+  static createSingle() {
+    const result = new ResourceFetchArrayBufferPromiseMock();
+    return result;
+  }
+
+  /**
+   * Set up the spy for Resource.fetchArrayBuffer to return the
+   * mocking promises from the given mocking objects.
+   *
+   * Subsequent calls to Resource.fetchArrayBuffer will return
+   * the "mocking promises" of the given objects. If any
+   * of the given objects is undefined, then undefined will
+   * be returned (emulating the "throttling" stuff..)
+   *
+   * @param {ResourceFetchArrayBufferPromiseMock|undefined} resourceFetchArrayBufferPromiseMocks The mocking objects
+   */
+  static setup(resourceFetchArrayBufferPromiseMocks) {
+    let counter = 0;
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+      // XXX_DYNAMIC For some reason, fetchArrayBuffer twiddles with the
+      // state of the request, and assigns the url from the
+      // resource to it. Seriously, what is all this?
+      this.request.url = this.url;
+      const resourceFetchArrayBufferPromiseMock =
+        resourceFetchArrayBufferPromiseMocks[counter];
+      const promise = resourceFetchArrayBufferPromiseMock?.mockPromise;
+      counter++;
+      console.log(
+        `Calling mocked Resource.fetchArrayBuffer for ${this.request.url}, returning ${promise}`,
+      );
+      return promise;
+    });
+  }
+
+  /**
+   * Default constructor.
+   *
+   * Only called from factory methods.
+   */
   constructor() {
     this.mockResolve = undefined;
     this.mockReject = undefined;
@@ -105,24 +198,45 @@ class MockResourceFetchArrayBufferPromise {
       this.mockResolve = resolve;
       this.mockReject = reject;
     });
-    const that = this;
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
-      // XXX For some reason, fetchArrayBuffer twiddles with the
-      // state of the request, and assigns the url from the
-      // resource to it. Seriously, what is all this?
-      this.request.url = this.url;
-      return that.mockPromise;
-    });
   }
 
+  /**
+   * Resolve the promise that was previously returned by
+   * Resource.fetchArrayBuffer with the given object.
+   *
+   * @param {any} result The result
+   */
   resolve(result) {
     this.mockResolve(result);
   }
+
+  /**
+   * Reject the promise that was previously returned by
+   * Resource.fetchArrayBuffer with the given error.
+   *
+   * @param {any} error The error
+   */
   reject(error) {
     this.mockReject(error);
   }
 }
 
+/**
+ * Creates a new, actual Cesium3DTileset object that is used in these
+ * specs.
+ *
+ * The returned tileset will have the given object as its
+ * "3DTILES_dynamic" extension.
+ *
+ * The returned tileset may not be ~"fully valid". It may contain
+ * some stuff that only has to be inserted so that it does not
+ * crash at random places. (For example, its "root" may not be
+ * a real Cesium3DTile objects, but only some dummy object).
+ *
+ * @param {any} dynamicExtensionObject The extension object that
+ * defines the structure of the dynamic content
+ * @returns The tileset
+ */
 function createMockTileset(dynamicExtensionObject) {
   const tileset = new Cesium3DTileset();
   tileset._extensions = {
@@ -130,10 +244,10 @@ function createMockTileset(dynamicExtensionObject) {
   };
   tileset._dynamicContentsDimensions = dynamicExtensionObject.dimensions;
 
-  // XXX Has to be inserted, otherwise it crashes...
+  // XXX_DYNAMIC Has to be inserted, otherwise it crashes...
   tileset.imageBasedLighting = new ImageBasedLighting();
 
-  // XXX Have to mock all sorts of stuff, because everybody
+  // XXX_DYNAMIC Have to mock all sorts of stuff, because everybody
   // thinks that "private" does not mean anything.
   const root = {
     tileset: tileset,
@@ -145,23 +259,43 @@ function createMockTileset(dynamicExtensionObject) {
   return tileset;
 }
 
+/**
+ * A function that has to be called before all specs, and that
+ * initializes some ContextLimits values with dummy values to
+ * prevent crashes.
+ */
 function initializeMockContextLimits() {
-  // XXX Have to do this...
+  // XXX_DYNAMIC Have to do this...
   ContextLimits._maximumCubeMapSize = 2;
-  // otherwise, it crashes due to invalid array size after at https://github.com/CesiumGS/cesium/blob/453b40d6f10d6da35366ab7c7b7dc5667b1cde06/packages/engine/Source/Scene/DynamicEnvironmentMapManager.js#L84
+  // otherwise, it crashes due to invalid array size near https://github.com/CesiumGS/cesium/blob/453b40d6f10d6da35366ab7c7b7dc5667b1cde06/packages/engine/Source/Scene/DynamicEnvironmentMapManager.js#L84
 
-  // XXX Have to do this as well. Sure, the maximum
+  // XXX_DYNAMIC Have to do this as well. Sure, the maximum
   // aliased line width has to be set properly for
   // testing dynamic contents.
   ContextLimits._minimumAliasedLineWidth = -10000;
   ContextLimits._maximumAliasedLineWidth = 10000;
 }
 
+/**
+ * Creates an object that can be used in place of a "FrameState"
+ * for these specs.
+ *
+ * This is not a real FrameState object. It does not contain or
+ * require a GL context. It only contains some properties that
+ * are acccessed somewhere, and that are filled with dummy
+ * values to prevent crashes, but still allow to load the
+ * DUMMY(!) Model3DTileContent that is created from the
+ * createDummyGltfBuffer glTF objects.
+ *
+ * @returns {any} Something that can be used like a FrameState
+ * in the narrow context of these specs.
+ */
 function createMockFrameState() {
-  // XXX More mocking, otherwise it crashes somewhere...
+  // A dummy object that contains the properties that are
+  // somewhere assumed to be present...
   const frameState = {
     context: {
-      id: "01234",
+      id: "MOCK_CONTEXT_ID",
       uniformState: {
         view3D: new Matrix4(),
       },
@@ -170,7 +304,7 @@ function createMockFrameState() {
     afterRender: [],
     brdfLutGenerator: {
       update() {
-        // console.log("Oh, whatever...");
+        // Not updating anything here.
       },
     },
     fog: {},
@@ -178,19 +312,38 @@ function createMockFrameState() {
   return frameState;
 }
 
+/**
+ * Wait util the content from the given content handle is "ready".
+ *
+ * This will poll the content handle util its content is available
+ * (by the underlying request being resolved), and then poll
+ * that content until its "ready" flag turns "true", calling
+ * contentHandle.updateContent repeatedly.
+ *
+ * @param {ContentHandle} contentHandle The content handle
+ * @param {Cesium3DTileset} tileset The tileset
+ * @param {frameState} frameState The frame state
+ * @returns {Promise<void>} The promise
+ */
 async function waitForContentHandleReady(contentHandle, tileset, frameState) {
+  await contentHandle.waitForSpecs();
   return pollToPromise(() => {
+    // The _content is created once the response was received
     const currentContent = contentHandle._content;
     if (!defined(currentContent)) {
-      console.log("No content yet");
+      //console.log("No content yet");
       return false;
     }
+
+    // All the magic is happening here...
     contentHandle.updateContent(tileset, frameState);
+
+    // The afterRender callbacks are what's setting ready=true...
     for (const afterRenderCallback of frameState.afterRender) {
       afterRenderCallback();
     }
     if (!currentContent.ready) {
-      console.log("currentContent not ready", currentContent);
+      //console.log("currentContent not ready", currentContent);
       return false;
     }
     return true;
@@ -204,6 +357,7 @@ describe(
       initializeMockContextLimits();
     });
 
+    /*/ Quarry/experiments
     it("___XXX_DYNAMIC_WORKS___", async function () {
       const tilesetResource = new Resource({ url: "http://example.com" });
       const tileset = createMockTileset(basicDynamicExampleExtensionObject);
@@ -224,9 +378,9 @@ describe(
         return dynamicContentProperties;
       };
 
-      // Create a mock promise to manually resolve the
+      // Create a promise mock to manually resolve the
       // resource request
-      const mockPromise = new MockResourceFetchArrayBufferPromise();
+      const resourceFetchArrayBufferPromiseMock = ResourceFetchArrayBufferPromiseMock.create();
 
       // Initially, expect there to be no active contents, but
       // one pending request
@@ -236,7 +390,8 @@ describe(
       expect(tileset.statistics.numberOfAttemptedRequests).toBe(0);
 
       // Now reject the pending request, and wait for things to settle...
-      mockPromise.reject("SPEC_REJECTION");
+      resourceFetchArrayBufferPromiseMock.reject("SPEC_REJECTION");
+
       await content.waitForSpecs();
 
       // Now expect there to be one content, but no pending requests
@@ -245,9 +400,15 @@ describe(
       expect(tileset.statistics.numberOfPendingRequests).toBe(0);
       expect(tileset.statistics.numberOfAttemptedRequests).toBe(1);
     });
+    //*/
 
     //========================================================================
-    // Experimental
+    // Experimental:
+    // Test for the "setDefaultTimeDynamicContentPropertyProvider"
+    // convenience function. It allows setting a dynamic content
+    // property provider based on a CesiumJS "Clock", and uses
+    // this to determine the current dynamic content properties
+    // from the ISO8601 string of the currentTime of the clock.
 
     it("returns the active content URIs matching the object that is returned by the default time-dynamic content property provider", function () {
       const tilesetResource = new Resource({ url: "http://example.com" });
@@ -288,7 +449,7 @@ describe(
     });
 
     //========================================================================
-    // Veeery experimental...
+    // Tileset statistics tracking:
 
     it("tracks the number of pending requests in the tileset statistics", async function () {
       const tilesetResource = new Resource({ url: "http://example.com" });
@@ -310,29 +471,33 @@ describe(
         return dynamicContentProperties;
       };
 
-      const mockPromise = new MockResourceFetchArrayBufferPromise();
+      const resourceFetchArrayBufferPromiseMock =
+        ResourceFetchArrayBufferPromiseMock.create();
 
-      // Initially, expect there to be no active contents, but
-      // one pending request
+      // Expect there to be NO active contents
+      // Expect there to be ONE pending request
+      // Expect there to be NO attempted requests
       const activeContentsA = content._activeContents;
       expect(activeContentsA).toEqual([]);
       expect(tileset.statistics.numberOfPendingRequests).toBe(1);
       expect(tileset.statistics.numberOfAttemptedRequests).toBe(0);
 
       // Now resolve the pending request...
-      mockPromise.resolve(createDummyGltfBuffer());
+      resourceFetchArrayBufferPromiseMock.resolve(createDummyGltfBuffer());
 
       // Wait for things to settle...
       await content.waitForSpecs();
 
-      // Now expect there to be one content, but no pending requests
+      // Expect there to be ONE active contents
+      // Expect there to be NO pending requests
+      // Expect there to be NO attempted requests (the request was resolved!)
       const activeContentsB = content._activeContents;
       expect(activeContentsB.length).toEqual(1);
       expect(tileset.statistics.numberOfPendingRequests).toBe(0);
       expect(tileset.statistics.numberOfAttemptedRequests).toBe(0);
     });
 
-    it("tracks the number of attempted requests in the tileset statistics", async function () {
+    it("tracks the number of attempted requests in the tileset statistics when a request fails", async function () {
       const tilesetResource = new Resource({ url: "http://example.com" });
       const tileset = createMockTileset(basicDynamicExampleExtensionObject);
       const tile = tileset._root;
@@ -352,22 +517,73 @@ describe(
         return dynamicContentProperties;
       };
 
-      // Create a mock promise to manually resolve the
+      // Create a promise mock to manually resolve the
       // resource request
-      const mockPromise = new MockResourceFetchArrayBufferPromise();
+      const resourceFetchArrayBufferPromiseMock =
+        ResourceFetchArrayBufferPromiseMock.create();
 
-      // Initially, expect there to be no active contents, but
-      // one pending request
+      // Expect there to be NO active contents
+      // Expect there to be ONE pending request
+      // Expect there to be NO attempted requests
       const activeContentsA = content._activeContents;
       expect(activeContentsA).toEqual([]);
       expect(tileset.statistics.numberOfPendingRequests).toBe(1);
       expect(tileset.statistics.numberOfAttemptedRequests).toBe(0);
 
       // Now reject the pending request and wait for things to settle
-      mockPromise.reject("SPEC_REJECTION");
+      resourceFetchArrayBufferPromiseMock.reject("SPEC_REJECTION");
       await content.waitForSpecs();
 
-      // Now expect there to be one content, but no pending requests
+      // Expect there to STILL be to active content (the request failed!)
+      // Expect there to be NO more pending requests
+      // Expect there to be ONE attempted request
+      const activeContentsB = content._activeContents;
+      expect(activeContentsB.length).toEqual(0);
+      expect(tileset.statistics.numberOfPendingRequests).toBe(0);
+      expect(tileset.statistics.numberOfAttemptedRequests).toBe(1);
+    });
+
+    it("tracks the number of attempted requests in the tileset statistics when a request was not issued due to throttling", async function () {
+      const tilesetResource = new Resource({ url: "http://example.com" });
+      const tileset = createMockTileset(basicDynamicExampleExtensionObject);
+      const tile = tileset._root;
+
+      const content = new Dynamic3DTileContent(
+        tileset,
+        tile,
+        tilesetResource,
+        basicDynamicExampleContent,
+      );
+
+      const dynamicContentProperties = {
+        exampleTimeStamp: "2025-09-25",
+        exampleRevision: "revision0",
+      };
+      tileset.dynamicContentPropertyProvider = () => {
+        return dynamicContentProperties;
+      };
+
+      // Set up the Resource.fetchArrayBuffer mock to return
+      // "undefined", emulating that the request was not
+      // issued due to throttling
+      ResourceFetchArrayBufferPromiseMock.setup([undefined]);
+
+      // Expect there to be NO active contents
+      // Expect there to be ONE pending request
+      // Expect there to be NO attempted requests
+      const activeContentsA = content._activeContents;
+      expect(activeContentsA).toEqual([]);
+      expect(tileset.statistics.numberOfPendingRequests).toBe(1);
+      expect(tileset.statistics.numberOfAttemptedRequests).toBe(0);
+
+      // Now wait for things to settle. This will involve the
+      // fetchArrayBuffer call returning "undefined", meaning
+      // that the request was not really issued
+      await content.waitForSpecs();
+
+      // Expect there to STILL be NO active contents
+      // Expect there to be NO pending requests
+      // Expect there to be ONE attempted requests
       const activeContentsB = content._activeContents;
       expect(activeContentsB.length).toEqual(0);
       expect(tileset.statistics.numberOfPendingRequests).toBe(0);
@@ -375,7 +591,7 @@ describe(
     });
 
     //========================================================================
-    // DONE:
+    // Active content URI handling
 
     it("returns an empty array as the active content URIs when there is no dynamicContentPropertyProvider", function () {
       const tilesetResource = new Resource({ url: "http://example.com" });
@@ -482,29 +698,170 @@ describe(
   "WebGL",
 );
 
+//============================================================================
+
+//============================================================================
+// RequestHandle:
+// TODO: There should be dedicated tests for the listener handling
+// The existing ones (that update the statistics) are actually
+// already "integration tests".
+
 describe("Scene/Dynamic3DTileContent/RequestHandle", function () {
   beforeAll(function () {
     initializeMockContextLimits();
   });
 
+  /*/ Quarry/experiments
   it("___XXX_DYNAMIC_REQUEST_HANDLE_WORKS___", async function () {
+    // XXX_DYNAMIC So here's the deal:
+    //
+    // Resource, Request, and RequestScheduler are exposing a
+    // pretty confusing and underspecified behavior.
+    //
+    // For example, Resource.prototype._makeRequest (undocumented!!!) is 
+    // doing a lot of stuff:
+    // - Assigning some URLs.
+    // - Creating a request function (Yeah. Why not...)
+    // - Passing that whole thing to the RequestScheduler.
+    // - Ignoring the quirks of that class, and setting up some 
+    //   chain of promises for some sorts of "retries"....
+    //
+    // The actual behavior of Resource.fetchArraybuffer has nothing
+    // to do with what the inlined code snippet suggests.
+    //
+    // The whole behavior that is related to "throttling" is 
+    // undocumented and confusing (e.g. a request can suddenly
+    // become "cancelled" when it is not issued at all...)
+    //
+    // The fact that it was necessary to introduce the RequestHandle 
+    // and ContentHandle classes in an attempt to hide all this already
+    // is a time sink that is hard to account for.
+    // But in order to test whether these classes DO hide the quirks 
+    // of the existing classes, it would be necessary to create mocks 
+    // that perfectly(!) mimic this exact behavior. Nothing of that is 
+    // specified, so it's nearly impossible to mock it in a way that 
+    // reflects the actual behavior. 
+    // 
+    const urlA = "http://example.com/SPEC_DATA_A.glb";
+    const urlB = "http://example.com/SPEC_DATA_B.glb";
+    const urlC = "http://example.com/SPEC_DATA_C.glb";
+    const resourceA = new Resource({
+      url: urlA,
+    });
+    const requestHandleA = new RequestHandle(resourceA);
+
+    const resourceB = new Resource({
+      url: urlB
+    });
+    const requestHandleB = new RequestHandle(resourceB);
+
+    const resourceC = new Resource({
+      url: urlC
+    });
+    const requestHandleC = new RequestHandle(resourceC);
+
+    // Create mocks to manually resolve the requests
+    const resourceFetchArrayBufferPromiseMocks = [];
+    resourceFetchArrayBufferPromiseMocks.push(ResourceFetchArrayBufferPromiseMock.createSingle());
+    resourceFetchArrayBufferPromiseMocks.push(undefined); // Pretend throttling kicks in here...
+    resourceFetchArrayBufferPromiseMocks.push(ResourceFetchArrayBufferPromiseMock.createSingle());
+    resourceFetchArrayBufferPromiseMocks.push(ResourceFetchArrayBufferPromiseMock.createSingle());
+    ResourceFetchArrayBufferPromiseMock.setup(resourceFetchArrayBufferPromiseMocks);
+
+    // Track the URLs that are resolved/rejected for the specs
+    const resolvedUrls = [];
+    const rejectedUrls = [];
+
+    // Fetch the promises from the request handles,
+    // and track the resolved/rejected URLs
+    const resultPromiseA = requestHandleA.getResultPromise();
+    resultPromiseA
+      .then(function (arrayBuffer) {
+        //console.log("resolved A with ", arrayBuffer);
+        resolvedUrls.push(urlA);
+      })
+      .catch(function (error) {
+        //console.log("rejected A with ", error);
+        rejectedUrls.push(urlA);
+      });
+
+      const resultPromiseB = requestHandleB.getResultPromise();
+    resultPromiseB
+      .then(function (arrayBuffer) {
+        //console.log("resolved B with ", arrayBuffer);
+        resolvedUrls.push(urlB);
+      })
+      .catch(function (error) {
+        //console.log("rejected B with ", error);
+        rejectedUrls.push(urlB);
+      });
+
+    const resultPromiseC = requestHandleC.getResultPromise();
+    resultPromiseC
+      .then(function (arrayBuffer) {
+        //console.log("resolved C with ", arrayBuffer);
+        resolvedUrls.push(urlC);
+      })
+      .catch(function (error) {
+        //console.log("rejected C with ", error);
+        rejectedUrls.push(urlC);
+      });
+
+    // Ensure that there are pending requests
+    requestHandleA.ensureRequested();
+    requestHandleB.ensureRequested();
+    requestHandleC.ensureRequested();
+
+    // Resolve the requests that have not been throttled
+    resourceFetchArrayBufferPromiseMocks[0].resolve(new ArrayBuffer(12));
+    // The second mock is "undefined", emulating throttling
+    resourceFetchArrayBufferPromiseMocks[2].resolve(new ArrayBuffer(23));
+
+    // Ensure that there are pending requests (this will retry
+    // the one that has been throttled)
+    requestHandleA.ensureRequested();
+    requestHandleB.ensureRequested();
+    requestHandleC.ensureRequested();
+
+    // Finally, resolve the request that was retried after being
+    // throttled in the first call
+    resourceFetchArrayBufferPromiseMocks[3].resolve(new ArrayBuffer(34));
+
+    // Wait and see...
+    await resultPromiseA;
+    await resultPromiseC;
+    await resultPromiseB;
+
+    //console.log("resolvedUrls: ", resolvedUrls);
+    //console.log("rejectedUrls: ", rejectedUrls);
+
+    // Expect the resolved URLs in the order in which they have been resolved
+    // Expect no URLs to have been rejected
+    expect(resolvedUrls).toEqual([ urlA, urlC, urlB ]);
+    expect(rejectedUrls).toEqual([]);
+  });
+  //*/
+
+  it("properly resolves the result promise when the resource promise is resolved", async function () {
     const resource = new Resource({ url: "http://example.com/SPEC_DATA.glb" });
     const requestHandle = new RequestHandle(resource);
 
-    // Create a mock promise to manually resolve the
+    // Create a promise mock to manually resolve the
     // resource request
-    const mockPromise = new MockResourceFetchArrayBufferPromise();
+    const resourceFetchArrayBufferPromiseMock =
+      ResourceFetchArrayBufferPromiseMock.create();
 
     // Fetch the promise from the request handle
+    let resolveCount = 0;
     const resultPromise = requestHandle.getResultPromise();
     resultPromise
       .then(function (arrayBuffer) {
-        // use the data
-        console.log("resolved with ", arrayBuffer);
+        if (defined(arrayBuffer)) {
+          resolveCount++;
+        }
       })
       .catch(function (error) {
-        // an error occurred
-        console.log("rejected with ", error);
+        console.log("Should not happen in this spec: ", error);
       });
 
     // Ensure that there is a pending request
@@ -514,12 +871,191 @@ describe("Scene/Dynamic3DTileContent/RequestHandle", function () {
     requestHandle.ensureRequested();
     requestHandle.ensureRequested();
 
-    // Now resolve the pending request, one way or another...
-    mockPromise.resolve(createDummyGltfBuffer());
-    //mockPromise.reject("SPEC_REJECTION");
-    //requestHandle.cancel();
+    // Now resolve the pending request
+    resourceFetchArrayBufferPromiseMock.resolve(createDummyGltfBuffer());
+
+    await expectAsync(resultPromise).toBeResolved();
+    expect(resolveCount).toBe(1);
+  });
+
+  it("properly rejects the result promise when the resource promise is rejected", async function () {
+    const resource = new Resource({ url: "http://example.com/SPEC_DATA.glb" });
+    const requestHandle = new RequestHandle(resource);
+
+    // Create a promise mock to manually resolve the
+    // resource request
+    const resourceFetchArrayBufferPromiseMock =
+      ResourceFetchArrayBufferPromiseMock.create();
+
+    // Fetch the promise from the request handle
+    let rejectCount = 0;
+    const resultPromise = requestHandle.getResultPromise();
+    resultPromise
+      .then(function (arrayBuffer) {
+        console.log("Should not happen in this spec: ", arrayBuffer);
+      })
+      .catch(function (error) {
+        rejectCount++;
+      });
+
+    // Ensure that there is a pending request
+    requestHandle.ensureRequested();
+
+    // This can be called any number of times...
+    requestHandle.ensureRequested();
+    requestHandle.ensureRequested();
+
+    // Now resolve the pending request
+    resourceFetchArrayBufferPromiseMock.reject("SPEC_REJECTION");
+
+    await expectAsync(resultPromise).toBeRejectedWith("SPEC_REJECTION");
+    expect(rejectCount).toBe(1);
+  });
+
+  it("properly rejects the result promise when the request is cancelled", async function () {
+    const resource = new Resource({ url: "http://example.com/SPEC_DATA.glb" });
+    const requestHandle = new RequestHandle(resource);
+
+    // Create a promise mock to not actually send out a request
+    ResourceFetchArrayBufferPromiseMock.create();
+
+    // Fetch the promise from the request handle
+    let rejectCount = 0;
+    const resultPromise = requestHandle.getResultPromise();
+    resultPromise
+      .then(function (arrayBuffer) {
+        console.log("Should not happen in this spec: ", arrayBuffer);
+      })
+      .catch(function (error) {
+        rejectCount++;
+      });
+
+    // Ensure that there is a pending request
+    requestHandle.ensureRequested();
+
+    // This can be called any number of times...
+    requestHandle.ensureRequested();
+    requestHandle.ensureRequested();
+
+    // Now cancel the pending request
+    requestHandle.cancel();
+
+    await expectAsync(resultPromise).toBeRejectedWithError();
+    expect(rejectCount).toBe(1);
+  });
+
+  it("properly retries and eventually resolves throttled requests", async function () {
+    const urlA = "http://example.com/SPEC_DATA_A.glb";
+    const urlB = "http://example.com/SPEC_DATA_B.glb";
+    const urlC = "http://example.com/SPEC_DATA_C.glb";
+    const resourceA = new Resource({
+      url: urlA,
+    });
+    const requestHandleA = new RequestHandle(resourceA);
+
+    const resourceB = new Resource({
+      url: urlB,
+    });
+    const requestHandleB = new RequestHandle(resourceB);
+
+    const resourceC = new Resource({
+      url: urlC,
+    });
+    const requestHandleC = new RequestHandle(resourceC);
+
+    // Create mocks to manually resolve the requests
+    const resourceFetchArrayBufferPromiseMocks = [];
+    resourceFetchArrayBufferPromiseMocks.push(
+      ResourceFetchArrayBufferPromiseMock.createSingle(),
+    );
+    resourceFetchArrayBufferPromiseMocks.push(undefined); // Pretend throttling kicks in here...
+    resourceFetchArrayBufferPromiseMocks.push(
+      ResourceFetchArrayBufferPromiseMock.createSingle(),
+    );
+    resourceFetchArrayBufferPromiseMocks.push(
+      ResourceFetchArrayBufferPromiseMock.createSingle(),
+    );
+    ResourceFetchArrayBufferPromiseMock.setup(
+      resourceFetchArrayBufferPromiseMocks,
+    );
+
+    // Track the URLs that are resolved/rejected for the specs
+    const resolvedUrls = [];
+    const rejectedUrls = [];
+
+    // Fetch the promises from the request handles,
+    // and track the resolved/rejected URLs
+    const resultPromiseA = requestHandleA.getResultPromise();
+    resultPromiseA
+      .then(function (arrayBuffer) {
+        //console.log("resolved A with ", arrayBuffer);
+        resolvedUrls.push(urlA);
+      })
+      .catch(function (error) {
+        //console.log("rejected A with ", error);
+        rejectedUrls.push(urlA);
+      });
+
+    const resultPromiseB = requestHandleB.getResultPromise();
+    resultPromiseB
+      .then(function (arrayBuffer) {
+        //console.log("resolved B with ", arrayBuffer);
+        resolvedUrls.push(urlB);
+      })
+      .catch(function (error) {
+        //console.log("rejected B with ", error);
+        rejectedUrls.push(urlB);
+      });
+
+    const resultPromiseC = requestHandleC.getResultPromise();
+    resultPromiseC
+      .then(function (arrayBuffer) {
+        //console.log("resolved C with ", arrayBuffer);
+        resolvedUrls.push(urlC);
+      })
+      .catch(function (error) {
+        //console.log("rejected C with ", error);
+        rejectedUrls.push(urlC);
+      });
+
+    // Ensure that there are pending requests
+    requestHandleA.ensureRequested();
+    requestHandleB.ensureRequested();
+    requestHandleC.ensureRequested();
+
+    // Resolve the requests that have not been throttled
+    resourceFetchArrayBufferPromiseMocks[0].resolve(new ArrayBuffer(12));
+    // The second mock is "undefined", emulating throttling
+    resourceFetchArrayBufferPromiseMocks[2].resolve(new ArrayBuffer(23));
+
+    // Ensure that there are pending requests (this will retry
+    // the one that has been throttled)
+    requestHandleA.ensureRequested();
+    requestHandleB.ensureRequested();
+    requestHandleC.ensureRequested();
+
+    // Finally, resolve the request that was retried after being
+    // throttled in the first call
+    resourceFetchArrayBufferPromiseMocks[3].resolve(new ArrayBuffer(34));
+
+    // Wait and see...
+    await resultPromiseA;
+    await resultPromiseC;
+    await resultPromiseB;
+
+    //console.log("resolvedUrls: ", resolvedUrls);
+    //console.log("rejectedUrls: ", rejectedUrls);
+
+    // Expect the resolved URLs in the order in which they have been resolved
+    // Expect no URLs to have been rejected
+    expect(resolvedUrls).toEqual([urlA, urlC, urlB]);
+    expect(rejectedUrls).toEqual([]);
   });
 });
+//============================================================================
+
+//============================================================================
+// ContentHandle:
 
 describe(
   "Scene/Dynamic3DTileContent/ContentHandle",
@@ -528,6 +1064,7 @@ describe(
       initializeMockContextLimits();
     });
 
+    /*/ Quarry/experiments
     it("___XXX_DYNAMIC_CONTENT_HANDLE_WORKS___", async function () {
       const tilesetResource = new Resource({ url: "http://example.com" });
       const tileset = createMockTileset(basicDynamicExampleExtensionObject);
@@ -589,23 +1126,43 @@ describe(
         return dynamicContentProperties;
       };
 
-      // Create a mock promise to manually resolve the
+      // Create a promise mock to manually resolve the
       // resource request
-      const mockPromise = new MockResourceFetchArrayBufferPromise();
+      const resourceFetchArrayBufferPromiseMock = ResourceFetchArrayBufferPromiseMock.create();
 
       const triedContent = contentHandle.tryGetContent();
       console.log("tryGetContent", triedContent);
 
       // Now resolve the pending request...
-      mockPromise.resolve(createDummyGltfBuffer());
+      resourceFetchArrayBufferPromiseMock.resolve(createDummyGltfBuffer());
 
       // Wait for the content to become "ready"
-      await contentHandle.waitForSpecs();
       await waitForContentHandleReady(contentHandle, tileset, frameState);
     });
+    //*/
 
     //========================================================================
-    // DONE:
+    // Content listener handling.
+    //
+    // These listeners will, in reality, be attached to the content handles
+    // that are created in the Dynamic3DTileContent, via the
+    //  _attachTilesetStatisticsTracker function. There, they will
+    // be used to update the tileset statistics according to the content
+    // that is loaded or unloaded.
+    //
+    // It does not matter what these listeners are doing!
+    //
+    // There should be specs for the tileset statistics, to check whether
+    // they are properly handling loaded/unloaded content.
+    //
+    // Here is a spec that only checks whether the listeners are informed
+    // properly.
+    //
+    // (Later, there may be some "integration level" test (with an actual
+    // tileset JSON being loaded from the Specs/Data), where the combination
+    // of both is tested. But apart from that, "loading contents" and
+    // "updating some statistics" are COMPLETELY unrelated things, and
+    // should be tested independently)
 
     it("informs listeners about contentLoadedAndReady", async function () {
       const tilesetResource = new Resource({ url: "http://example.com" });
@@ -646,18 +1203,18 @@ describe(
         return dynamicContentProperties;
       };
 
-      // Create a mock promise to manually resolve the
+      // Create a promise mock to manually resolve the
       // resource request
-      const mockPromise = new MockResourceFetchArrayBufferPromise();
+      const resourceFetchArrayBufferPromiseMock =
+        ResourceFetchArrayBufferPromiseMock.create();
 
       // Try to get the content (it's not there yet...)
       contentHandle.tryGetContent();
 
       // Now resolve the pending request...
-      mockPromise.resolve(createDummyGltfBuffer());
+      resourceFetchArrayBufferPromiseMock.resolve(createDummyGltfBuffer());
 
       // Wait for the content to become "ready"
-      await contentHandle.waitForSpecs();
       await waitForContentHandleReady(contentHandle, tileset, frameState);
 
       // Expect the listener to have been informed
@@ -705,18 +1262,18 @@ describe(
         return dynamicContentProperties;
       };
 
-      // Create a mock promise to manually resolve the
+      // Create a promise mock to manually resolve the
       // resource request
-      const mockPromise = new MockResourceFetchArrayBufferPromise();
+      const resourceFetchArrayBufferPromiseMock =
+        ResourceFetchArrayBufferPromiseMock.create();
 
       // Try to get the content (it's not there yet...)
       contentHandle.tryGetContent();
 
       // Now resolve the pending request...
-      mockPromise.resolve(createDummyGltfBuffer());
+      resourceFetchArrayBufferPromiseMock.resolve(createDummyGltfBuffer());
 
       // Wait for the content to become "ready"
-      await contentHandle.waitForSpecs();
       await waitForContentHandleReady(contentHandle, tileset, frameState);
 
       // Reset the handle to unload the content

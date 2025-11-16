@@ -572,8 +572,7 @@ class RequestHandle {
    * data from the request, or rejected with an error indicating
    * the reason for the rejection.
    *
-   * The reason for the rejection can either be a real error,
-   * or 'RequestState.CANCELLED' when the request was cancelled
+   * The error may simply indicate that the request was cancelled
    * (or never issued due to this throttling thingy).
    *
    * @returns {Promise<ArrayBuffer>} The promise
@@ -596,11 +595,6 @@ class RequestHandle {
       return;
     }
 
-    // XXX_DYNAMIC The tileset.statistics.numberOfAttemptedRequests
-    // and tileset.statistics.numberOfPendingRequests values will
-    // have to be updated here. This class should not know these
-    // statistics, and even less know the tileset.
-
     // XXX_DYNAMIC: The Multiple3DTileContent class rambled about it being
     // important to CLONE the resource, because of some resource leak, and
     // to create a new request, to "avoid getting stuck in the cancelled state".
@@ -617,6 +611,9 @@ class RequestHandle {
     // the next call to 'ensureRequested'.
     const requestPromise = resource.fetchArrayBuffer();
     if (!defined(requestPromise)) {
+      console.log(
+        `RequestHandle: Could not schedule request for ${request.url}, probably throttling`,
+      );
       this._fireRequestAttempted();
       return;
     }
@@ -635,7 +632,9 @@ class RequestHandle {
           `RequestHandle: Resource promise fulfilled but cancelled for ${request.url}`,
         );
         this._requestPromise = undefined;
-        this._deferred.reject(RequestState.CANCELLED);
+        const rejectionError = new Error("Request was cancelled");
+        rejectionError.code = RequestState.CANCELLED;
+        this._deferred.reject(rejectionError);
         this._fireRequestCancelled();
         this._fireRequestAttempted();
         return;
@@ -651,14 +650,16 @@ class RequestHandle {
     // this exact error. Otherwise, do that CANCELLED handling.
     const onRejected = (error) => {
       console.log(
-        `RequestHandle: Resource promise rejected for ${request.url} with error ${error}`,
+        `RequestHandle: Request promise rejected for ${request.url} with error ${error}, checking for cancellation....`,
       );
       if (request.state === RequestState.CANCELLED) {
         console.log(
-          `RequestHandle: Resource promise rejected but actually only cancelled for ${request.url} - better luck next time!`,
+          `RequestHandle: Request promise rejected but actually only cancelled for ${request.url} - better luck next time!`,
         );
         this._requestPromise = undefined;
-        this._deferred.reject(RequestState.CANCELLED);
+        const rejectionError = new Error("Request was cancelled");
+        rejectionError.code = RequestState.CANCELLED;
+        this._deferred.reject(rejectionError);
         this._fireRequestCancelled();
         this._fireRequestAttempted();
         return;
@@ -704,7 +705,9 @@ class RequestHandle {
       this._request.cancel();
       this._request = undefined;
     }
-    this._deferred.reject(RequestState.CANCELLED);
+    const rejectionError = new Error("Request was cancelled");
+    rejectionError.code = RequestState.CANCELLED;
+    this._deferred.reject(rejectionError);
   }
 
   /**
@@ -1108,13 +1111,13 @@ class ContentHandle {
       // the request handle is discarded, so that it
       // will be re-created during the next call to
       // _ensureRequestPending
-      if (error === RequestState.CANCELLED) {
+      if (defined(error) && error.code === RequestState.CANCELLED) {
         console.log(
           `ContentHandle: Request was rejected for ${uri}, but actually only cancelled. Better luck next time!`,
         );
         this._requestHandle = undefined;
 
-        // The promise is only intended for testign, and may not be awaited,
+        // The promise is only intended for testing, and may not be awaited,
         // so it cannot be rejected without causing an uncaught error.
         this._deferred.resolve(error);
         return;
@@ -1470,14 +1473,14 @@ class Dynamic3DTileContent {
     contentHandle.addContentListener({
       contentLoadedAndReady(content) {
         console.log(
-          "-------------------------- update statistics for   loaded ",
+          "Dynamic3DTileContent content handle listener contentLoadedAndReady - update statistics for   loaded content: ",
           content,
         );
         tileset.statistics.incrementLoadCounts(content);
       },
       contentUnloaded(content) {
         console.log(
-          "-------------------------- update statistics for unloaded ",
+          "Dynamic3DTileContent content handle listener contentUnloaded       - update statistics for unloaded content: ",
           content,
         );
         tileset.statistics.decrementLoadCounts(content);
