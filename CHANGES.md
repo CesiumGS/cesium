@@ -7,7 +7,8 @@
 #### Fixes :wrench:
 
 - Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
-- Improved scaling of SVGs in billboards [#TODO](https://github.com/CesiumGS/cesium/issues/TODO)
+- Improved scaling of SVGs in billboards [#13020](https://github.com/CesiumGS/cesium/issues/13020)
+- Fixed unexpected outline artifacts around billboards [#13038](https://github.com/CesiumGS/cesium/issues/13038)
 
 #### Additions :tada:
 
