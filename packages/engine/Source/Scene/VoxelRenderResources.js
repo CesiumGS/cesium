@@ -62,7 +62,7 @@ function VoxelRenderResources(primitive) {
   // The reason this uniform is added by shader builder is because some of the
   // dynamically generated shader code reads from it.
   shaderBuilder.addUniform(
-    "sampler2D",
+    "sampler3D",
     "u_megatextureTextures[METADATA_COUNT]",
     ShaderDestination.FRAGMENT,
   );

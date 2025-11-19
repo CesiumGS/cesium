@@ -28,7 +28,7 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @param {VoxelPrimitive} primitive The voxel primitive for which this traversal will be used.
  * @param {Context} context The context in which to create GPU resources.
  * @param {number} keyframeCount The number of keyframes in the tileset.
- * @param {number} [maximumTextureMemoryByteLength] The maximum amount of memory to use for textures.
+ * @param {number} [maximumTextureMemoryByteLength=536870912] The maximum amount of memory to use for textures.
  *
  * @private
  */
@@ -41,6 +41,7 @@ function VoxelTraversal(
   const { provider, dimensions, paddingBefore, paddingAfter } = primitive;
   const { types, componentTypes, metadataOrder } = provider;
 
+  // TODO: duplicates primitive.inputDimensions!
   const inputDimensions = Cartesian3.add(
     dimensions,
     paddingBefore,
@@ -54,16 +55,14 @@ function VoxelTraversal(
     inputDimensions.z = inputDimensionsY;
   }
 
-  if (
-    !defined(maximumTextureMemoryByteLength) &&
-    defined(provider.maximumTileCount)
-  ) {
-    maximumTextureMemoryByteLength = getApproximateTextureMemoryByteLength(
-      provider.maximumTileCount,
-      inputDimensions,
-      types,
-      componentTypes,
+  // TODO: refine this. If provider.maximumTileCount is not defined, we will always allocate 512 MB per metadata property.
+  if (defined(maximumTextureMemoryByteLength)) {
+    maximumTextureMemoryByteLength = Math.min(
+      Math.max(0, maximumTextureMemoryByteLength),
+      512 * 1024 * 1024,
     );
+  } else {
+    maximumTextureMemoryByteLength = 512 * 1024 * 1024;
   }
 
   /**
@@ -96,12 +95,14 @@ function VoxelTraversal(
       componentCount,
       componentType,
       maximumTextureMemoryByteLength,
+      provider.maximumTileCount,
     );
 
     this.textureMemoryByteLength +=
       this.megatextures[i].textureMemoryByteLength;
   }
 
+  // TODO: this number actually varies per megatexture, depending on bytes per sample!
   const maximumTileCount = this.megatextures[0].maximumTileCount;
 
   /**
@@ -1226,39 +1227,6 @@ function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
   };
 
   texture.copyFrom(copyOptions);
-}
-
-/**
- * @param {number} tileCount
- * @param {Cartesian3} dimensions
- * @param {MetadataType[]} types
- * @param {MetadataComponentType[]} componentTypes
- * @private
- */
-function getApproximateTextureMemoryByteLength(
-  tileCount,
-  dimensions,
-  types,
-  componentTypes,
-) {
-  let textureMemoryByteLength = 0;
-
-  const length = types.length;
-  for (let i = 0; i < length; i++) {
-    const type = types[i];
-    const componentType = componentTypes[i];
-    const componentCount = MetadataType.getComponentCount(type);
-
-    textureMemoryByteLength +=
-      Megatexture.getApproximateTextureMemoryByteLength(
-        tileCount,
-        dimensions,
-        componentCount,
-        componentType,
-      );
-  }
-
-  return textureMemoryByteLength;
 }
 
 export default VoxelTraversal;

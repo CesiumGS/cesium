@@ -47,8 +47,8 @@ describe("Scene/Megatexture", function () {
     const textureDimensions = Megatexture.get3DTextureDimension(
       dimensions,
       bytesPerSample,
-      tileCount,
       availableTextureMemoryBytes,
+      tileCount,
     );
     const expectedDimensions = new Cartesian3(43, 8704, 304);
     expect(textureDimensions).toEqual(expectedDimensions);
@@ -157,28 +157,6 @@ describe("Scene/Megatexture", function () {
     expect(function () {
       megatexture.remove(4);
     }).toThrowDeveloperError();
-  });
-
-  it("reports approximate memory size", function () {
-    const tileCount = 4;
-    const dimension = 16;
-    const dimensions = new Cartesian3(dimension, dimension, dimension);
-    const channelCount = 4;
-    const componentType = MetadataComponentType.FLOAT32;
-    const textureMemoryByteLength =
-      tileCount *
-      dimension ** 3 *
-      channelCount *
-      MetadataComponentType.getSizeInBytes(componentType);
-
-    expect(
-      Megatexture.getApproximateTextureMemoryByteLength(
-        tileCount,
-        dimensions,
-        channelCount,
-        componentType,
-      ),
-    ).toBe(textureMemoryByteLength);
   });
 
   it("destroys", function () {

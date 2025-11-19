@@ -405,11 +405,7 @@ function VoxelPrimitive(options) {
     octreeLeafNodeTilesPerRow: 0,
     octreeLeafNodeTexelSizeUv: new Cartesian2(),
     megatextureTextures: [],
-    megatextureSliceDimensions: new Cartesian2(),
-    megatextureTileDimensions: new Cartesian2(),
-    megatextureVoxelSizeUv: new Cartesian2(),
-    megatextureSliceSizeUv: new Cartesian2(),
-    megatextureTileSizeUv: new Cartesian2(),
+    megatextureTileCounts: new Cartesian3(),
     dimensions: new Cartesian3(),
     inputDimensions: new Cartesian3(),
     paddingBefore: new Cartesian3(),
@@ -1689,32 +1685,15 @@ function setTraversalUniforms(traversal, uniforms) {
   );
   uniforms.octreeInternalNodeTilesPerRow = traversal.internalNodeTilesPerRow;
 
-  const megatextures = traversal.megatextures;
+  const { megatextures } = traversal;
   const megatexture = megatextures[0];
   uniforms.megatextureTextures = new Array(megatextures.length);
   for (let i = 0; i < megatextures.length; i++) {
     uniforms.megatextureTextures[i] = megatextures[i].texture;
   }
-
-  uniforms.megatextureSliceDimensions = Cartesian2.clone(
-    megatexture.sliceCountPerRegion,
-    uniforms.megatextureSliceDimensions,
-  );
-  uniforms.megatextureTileDimensions = Cartesian2.clone(
-    megatexture.regionCountPerMegatexture,
-    uniforms.megatextureTileDimensions,
-  );
-  uniforms.megatextureVoxelSizeUv = Cartesian2.clone(
-    megatexture.voxelSizeUv,
-    uniforms.megatextureVoxelSizeUv,
-  );
-  uniforms.megatextureSliceSizeUv = Cartesian2.clone(
-    megatexture.sliceSizeUv,
-    uniforms.megatextureSliceSizeUv,
-  );
-  uniforms.megatextureTileSizeUv = Cartesian2.clone(
-    megatexture.regionSizeUv,
-    uniforms.megatextureTileSizeUv,
+  uniforms.megatextureTileCounts = Cartesian3.clone(
+    megatexture.tileCounts,
+    uniforms.megatextureTileCounts,
   );
 }
 
