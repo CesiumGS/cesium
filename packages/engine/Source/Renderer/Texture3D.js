@@ -334,6 +334,164 @@ function loadBufferSource(texture3D, source) {
 }
 
 /**
+ * Copy new image data into this texture, from a source object with width, height, depth, and arrayBufferView properties.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.source The source object with width, height, depth, and arrayBufferView properties.
+ * @param {number} [options.xOffset=0] The offset in the x direction within the texture to copy into.
+ * @param {number} [options.yOffset=0] The offset in the y direction within the texture to copy into.
+ * @param {number} [options.zOffset=0] The offset in the z direction within the texture to copy into.
+ * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the texture will be ignored.
+ *
+ * @exception {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
+ * @exception {DeveloperError} xOffset must be greater than or equal to zero.
+ * @exception {DeveloperError} yOffset must be greater than or equal to zero.
+ * @exception {DeveloperError} zOffset must be greater than or equal to zero.
+ * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
+ * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
+ * @exception {DeveloperError} zOffset + source.depth must be less than or equal to depth.
+ * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
+ * @private
+ * @example
+ * texture.copyFrom({
+ *  source: {
+ *   width : 1,
+ *   height : 1,
+ *   depth : 1,
+ *   arrayBufferView : new Uint8Array([255, 0, 0, 255])
+ *  }
+ * });
+ */
+Texture3D.prototype.copyFrom = function (options) {
+  options = options ?? Frozen.EMPTY_OBJECT;
+
+  const { source, xOffset = 0, yOffset = 0, zOffset = 0 } = options;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.source", source);
+  Check.defined("options.source.arrayBufferView", source.arrayBufferView);
+  if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
+    throw new DeveloperError(
+      "Cannot call copyFrom with a compressed texture pixel format.",
+    );
+  }
+  Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
+  Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
+  Check.typeOf.number.greaterThanOrEquals("zOffset", zOffset, 0);
+  Check.typeOf.number.lessThanOrEquals(
+    "xOffset + options.source.width",
+    xOffset + source.width,
+    this._width,
+  );
+  Check.typeOf.number.lessThanOrEquals(
+    "yOffset + options.source.height",
+    yOffset + source.height,
+    this._height,
+  );
+  Check.typeOf.number.lessThanOrEquals(
+    "zOffset + options.source.depth",
+    zOffset + source.depth,
+    this._depth,
+  );
+  //>>includeEnd('debug');
+
+  const context = this._context;
+  const gl = context._gl;
+  const target = this._textureTarget;
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(target, this._texture);
+
+  const { width, height, depth } = source;
+  let uploaded = false;
+  if (!this._initialized) {
+    if (
+      xOffset === 0 &&
+      yOffset === 0 &&
+      zOffset === 0 &&
+      width === this._width &&
+      height === this._height &&
+      depth === this._depth
+    ) {
+      loadBufferSource(this, source);
+      uploaded = true;
+    } else {
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      loadNull(this);
+    }
+    this._initialized = true;
+  }
+
+  if (!uploaded) {
+    loadPartialBufferSource(
+      this,
+      source.arrayBufferView,
+      xOffset,
+      yOffset,
+      zOffset,
+      width,
+      height,
+      depth,
+    );
+  }
+
+  gl.bindTexture(target, null);
+};
+
+/**
+ * Load texel data from a buffer into part of a 3D texture
+ *
+ * @param {Texture3D} texture3D The texture3D to which texel values will be loaded.
+ * @param {TypedArray} arrayBufferView The texel values to be loaded into the texture3D.
+ * @param {number} xOffset The texel x coordinate of the lower left corner of the subregion of the texture to be updated.
+ * @param {number} yOffset The texel y coordinate of the lower left corner of the subregion of the texture to be updated.
+ * @param {number} zOffset The texel z coordinate of the lower left corner of the subregion of the texture to be updated.
+ * @param {number} width The width of the source data, in pixels.
+ * @param {number} height The height of the source data, in pixels.
+ * @param {number} depth The depth of the source data, in pixels.
+ *
+ * @private
+ */
+function loadPartialBufferSource(
+  texture3D,
+  arrayBufferView,
+  xOffset,
+  yOffset,
+  zOffset,
+  width,
+  height,
+  depth,
+) {
+  const context = texture3D._context;
+  const gl = context._gl;
+
+  const { pixelFormat, pixelDatatype } = texture3D;
+
+  const unpackAlignment = PixelFormat.alignmentInBytes(
+    pixelFormat,
+    pixelDatatype,
+    width,
+  );
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+  gl.texSubImage3D(
+    texture3D._textureTarget,
+    0,
+    xOffset,
+    yOffset,
+    zOffset,
+    width,
+    height,
+    depth,
+    pixelFormat,
+    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    arrayBufferView,
+  );
+}
+
+/**
  * Compute a dimension of the image for the next mip level.
  *
  * @param {number} currentSize The size of the current mip level.
