@@ -364,26 +364,17 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
     toPack.push(queue[i]);
   }
 
-  // At minimum, the texture will need to scale to accommodate the largest width and height
-  width = Math.max(maxWidth, width);
-  height = Math.max(maxHeight, height);
+  // At minimum, atlas must fit its largest input images. Texture coordinates are
+  // compressed to 0–1 with 12-bit precision, so use power-of-two size to align pixels.
+  width = CesiumMath.nextPowerOfTwo(Math.max(maxWidth, width));
+  height = CesiumMath.nextPowerOfTwo(Math.max(maxHeight, height));
 
-  if (!context.webgl2) {
-    width = CesiumMath.nextPowerOfTwo(width);
-    height = CesiumMath.nextPowerOfTwo(height);
-  }
-
-  // Determine by what factor the texture need to be scaled by at minimum
-  const areaDifference = areaQueued;
-  let scalingFactor = 1.0;
-  while (areaDifference / width / height >= 1.0) {
-    scalingFactor *= 2.0;
-
-    // Resize by one dimension
+  // Iteratively double the smallest dimension until atlas area is (approximately) sufficient.
+  while (areaQueued >= width * height) {
     if (width > height) {
-      height *= scalingFactor;
+      height *= 2;
     } else {
-      width *= scalingFactor;
+      width *= 2;
     }
   }
 
