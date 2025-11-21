@@ -37,7 +37,8 @@ const argv = yargs(process.argv)
       description: "If true, skip build step and serve existing built files.",
     },
   })
-  .help().argv;
+  .help()
+  .parse();
 
 // These functions will not exist in the production zip file but they also won't be run
 const { getSandcastleConfig, buildSandcastleGallery, buildSandcastleApp } =
