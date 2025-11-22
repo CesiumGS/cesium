@@ -25,7 +25,7 @@ import MetadataEnum from "./MetadataEnum.js";
  * @constructor
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function MetadataSchema(options) {
+function MetadataSchema(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const classes = options.classes ?? {};
@@ -52,7 +52,9 @@ function MetadataSchema(options) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataSchema.fromJson = function (schema) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("schema", schema);
+  //>>includeEnd('debug');
 
   const enums = {};
   if (defined(schema.enums)) {
@@ -197,5 +199,4 @@ Object.defineProperties(MetadataSchema.prototype, {
   },
 });
 
-export { MetadataSchema };
 export default MetadataSchema;

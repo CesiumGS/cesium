@@ -17,7 +17,7 @@ import CesiumMath from "./Math.js";
  *
  * @see GeographicProjection
  */
-function WebMercatorProjection(ellipsoid) {
+function WebMercatorProjection(ellipsoid: any) {
   this._ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
   this._semimajorAxis = this._ellipsoid.maximumRadius;
   this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
@@ -127,7 +127,11 @@ WebMercatorProjection.prototype.project = function (cartographic, result) {
  * @returns {Cartographic} The equivalent cartographic coordinates.
  */
 WebMercatorProjection.prototype.unproject = function (cartesian, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(cartesian)) {
+    throw new DeveloperError("cartesian is required");
+  }
+  //>>includeEnd('debug');
 
   const oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
   const longitude = cartesian.x * oneOverEarthSemimajorAxis;
@@ -145,5 +149,4 @@ WebMercatorProjection.prototype.unproject = function (cartesian, result) {
   result.height = height;
   return result;
 };
-export { WebMercatorProjection };
 export default WebMercatorProjection;

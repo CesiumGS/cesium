@@ -421,5 +421,4 @@ ForEach.texture = function (gltf, handler) {
   return ForEach.topLevel(gltf, "textures", handler);
 };
 
-export { ForEach };
 export default ForEach;

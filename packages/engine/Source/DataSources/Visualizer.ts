@@ -58,5 +58,4 @@ Visualizer.prototype.isDestroyed = DeveloperError.throwInstantiationError;
  * @function
  */
 Visualizer.prototype.destroy = DeveloperError.throwInstantiationError;
-export { Visualizer };
 export default Visualizer;

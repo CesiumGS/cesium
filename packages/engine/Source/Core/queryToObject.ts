@@ -22,8 +22,12 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @see objectToQuery
  */
-function queryToObject(queryString) {
-  ;
+function queryToObject(queryString: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(queryString)) {
+    throw new DeveloperError("queryString is required.");
+  }
+  //>>includeEnd('debug');
 
   const result = {};
   if (queryString === "") {
@@ -53,5 +57,4 @@ function queryToObject(queryString) {
   }
   return result;
 }
-export { queryToObject };
 export default queryToObject;

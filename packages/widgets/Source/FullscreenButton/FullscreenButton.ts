@@ -25,8 +25,12 @@ const exitFullScreenPath =
  *
  * @see Fullscreen
  */
-function FullscreenButton(container, fullscreenElement) {
-  ;
+function FullscreenButton(container: any, fullscreenElement: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -101,5 +105,4 @@ FullscreenButton.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { FullscreenButton };
 export default FullscreenButton;

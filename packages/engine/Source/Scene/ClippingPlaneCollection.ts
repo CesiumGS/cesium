@@ -65,7 +65,7 @@ import ClippingPlane from "./ClippingPlane.js";
  * });
  * viewer.zoomTo(entity);
  */
-function ClippingPlaneCollection(options) {
+function ClippingPlaneCollection(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._planes = [];
@@ -143,11 +143,11 @@ function ClippingPlaneCollection(options) {
   }
 }
 
-function unionIntersectFunction(value) {
+function unionIntersectFunction(value: any) {
   return value === Intersect.OUTSIDE;
 }
 
-function defaultIntersectFunction(value) {
+function defaultIntersectFunction(value: any) {
   return value === Intersect.INSIDE;
 }
 
@@ -257,7 +257,7 @@ Object.defineProperties(ClippingPlaneCollection.prototype, {
   },
 });
 
-function setIndexDirty(collection, index) {
+function setIndexDirty(collection: any, index: any) {
   // If there's already a different _dirtyIndex set, more than one plane has changed since update.
   // Entire texture must be reloaded
   collection._multipleDirtyPlanes =
@@ -304,12 +304,14 @@ ClippingPlaneCollection.prototype.add = function (plane) {
  * @see ClippingPlaneCollection#length
  */
 ClippingPlaneCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   return this._planes[index];
 };
 
-function indexOf(planes, plane) {
+function indexOf(planes: any, plane: any) {
   const length = planes.length;
   for (let i = 0; i < length; ++i) {
     if (Plane.equals(planes[i], plane)) {
@@ -399,7 +401,7 @@ ClippingPlaneCollection.prototype.removeAll = function () {
 
 const distanceEncodeScratch = new Cartesian4();
 const oct32EncodeScratch = new Cartesian4();
-function packPlanesAsUint8(clippingPlaneCollection, startIndex, endIndex) {
+function packPlanesAsUint8(clippingPlaneCollection: any, startIndex: any, endIndex: any) {
   const uint8View = clippingPlaneCollection._uint8View;
   const planes = clippingPlaneCollection._planes;
   let byteIndex = 0;
@@ -429,7 +431,7 @@ function packPlanesAsUint8(clippingPlaneCollection, startIndex, endIndex) {
 }
 
 // Pack starting at the beginning of the buffer to allow partial update
-function packPlanesAsFloats(clippingPlaneCollection, startIndex, endIndex) {
+function packPlanesAsFloats(clippingPlaneCollection: any, startIndex: any, endIndex: any) {
   const float32View = clippingPlaneCollection._float32View;
   const planes = clippingPlaneCollection._planes;
 
@@ -447,7 +449,7 @@ function packPlanesAsFloats(clippingPlaneCollection, startIndex, endIndex) {
   }
 }
 
-function computeTextureResolution(pixelsNeeded, result) {
+function computeTextureResolution(pixelsNeeded: any, result: any) {
   const maxSize = ContextLimits.maximumTextureSize;
   result.x = Math.min(pixelsNeeded, maxSize);
   result.y = Math.ceil(pixelsNeeded / result.x);
@@ -668,7 +670,13 @@ ClippingPlaneCollection.setOwner = function (
   // Destroy the existing ClippingPlaneCollection, if any
   owner[key] = owner[key] && owner[key].destroy();
   if (defined(clippingPlaneCollection)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(clippingPlaneCollection._owner)) {
+      throw new DeveloperError(
+        "ClippingPlaneCollection should only be assigned to one object",
+      );
+    }
+    //>>includeEnd('debug');
     clippingPlaneCollection._owner = owner;
     owner[key] = clippingPlaneCollection;
   }
@@ -753,5 +761,4 @@ ClippingPlaneCollection.prototype.destroy = function () {
     this._clippingPlanesTexture && this._clippingPlanesTexture.destroy();
   return destroyObject(this);
 };
-export { ClippingPlaneCollection };
 export default ClippingPlaneCollection;

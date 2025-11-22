@@ -78,7 +78,11 @@ Object.defineProperties(DataSourceCollection.prototype, {
  * @returns {Promise<DataSource>} A Promise that resolves once the data source has been added to the collection.
  */
 DataSourceCollection.prototype.add = function (dataSource) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(dataSource)) {
+    throw new DeveloperError("dataSource is required.");
+  }
+  //>>includeEnd('debug');
 
   const that = this;
   const dataSources = this._dataSources;
@@ -166,7 +170,11 @@ DataSourceCollection.prototype.indexOf = function (dataSource) {
  * @returns {DataSource} The data source at the specified index.
  */
 DataSourceCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.");
+  }
+  //>>includeEnd('debug');
 
   return this._dataSources[index];
 };
@@ -178,24 +186,36 @@ DataSourceCollection.prototype.get = function (index) {
  * @returns {DataSource[]} A list of all data sources matching the provided name.
  */
 DataSourceCollection.prototype.getByName = function (name) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(name)) {
+    throw new DeveloperError("name is required.");
+  }
+  //>>includeEnd('debug');
 
   return this._dataSources.filter(function (dataSource) {
     return dataSource.name === name;
   });
 };
 
-function getIndex(dataSources, dataSource) {
-  ;
+function getIndex(dataSources: any, dataSource: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(dataSource)) {
+    throw new DeveloperError("dataSource is required.");
+  }
+  //>>includeEnd('debug');
 
   const index = dataSources.indexOf(dataSource);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (index === -1) {
+    throw new DeveloperError("dataSource is not in this collection.");
+  }
+  //>>includeEnd('debug');
 
   return index;
 }
 
-function swapDataSources(collection, i, j) {
+function swapDataSources(collection: any, i: any, j: any) {
   const arr = collection._dataSources;
   const length = arr.length - 1;
   i = CesiumMath.clamp(i, 0, length);
@@ -312,5 +332,4 @@ DataSourceCollection.prototype.destroy = function () {
   this.removeAll(true);
   return destroyObject(this);
 };
-export { DataSourceCollection };
 export default DataSourceCollection;

@@ -46,7 +46,7 @@ import Material from "./Material.js";
      *
      * });
      */
-function MaterialAppearance(options) {
+function MaterialAppearance(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const translucent = options.translucent ?? true;
@@ -325,5 +325,4 @@ MaterialAppearance.MaterialSupport = {
     fragmentShaderSource: AllMaterialAppearanceFS,
   }),
 };
-export { MaterialAppearance };
 export default MaterialAppearance;

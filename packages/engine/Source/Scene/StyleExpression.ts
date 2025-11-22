@@ -83,5 +83,4 @@ StyleExpression.prototype.getVariables = function () {
   DeveloperError.throwInstantiationError();
 };
 
-export { StyleExpression };
 export default StyleExpression;

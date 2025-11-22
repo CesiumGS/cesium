@@ -11,8 +11,10 @@ import BillboardLoadState from "./BillboardLoadState.js";
  * @alias BillboardTexture
  * @param {BillboardCollection} billboardCollection The associated billboard collecion.
  */
-function BillboardTexture(billboardCollection) {
-  ;
+function BillboardTexture(billboardCollection: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("billboardCollection", billboardCollection);
+  //>>includeEnd('debug');
 
   this._billboardCollection = billboardCollection;
 
@@ -392,5 +394,4 @@ BillboardTexture.clone = function (billboardTexture, target) {
   return target;
 };
 
-export { BillboardTexture };
 export default BillboardTexture;

@@ -31,7 +31,7 @@ import defined from "./defined.js";
  *
  * @function
  */
-function combine(object1, object2, deep) {
+function combine(object1: any, object2: any, deep: any) {
   deep = deep ?? false;
 
   const result = {};
@@ -76,5 +76,4 @@ function combine(object1, object2, deep) {
   }
   return result;
 }
-export { combine };
 export default combine;

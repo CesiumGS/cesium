@@ -164,5 +164,4 @@ Iau2000Orientation.ComputeMoon = function (date, result) {
 
   return result;
 };
-export { Iau2000Orientation };
 export default Iau2000Orientation;

@@ -33,7 +33,7 @@ const gradientDisabledColor1 = Color.fromCssColorString("rgba(255,255,255,0)");
 const gradientKnobColor = Color.fromCssColorString("rgba(66,67,68,0.3)");
 const gradientPointerColor = Color.fromCssColorString("rgba(0,0,0,0.5)");
 
-function getElementColor(element) {
+function getElementColor(element: any) {
   return Color.fromCssColorString(
     window.getComputedStyle(element).getPropertyValue("color"),
   );
@@ -85,7 +85,7 @@ const svgIconsById = {
 };
 
 //Dynamically builds an SVG element from a JSON object.
-function svgFromObject(obj) {
+function svgFromObject(obj: any) {
   const ele = document.createElementNS(svgNS, obj.tagName);
   for (const field in obj) {
     if (obj.hasOwnProperty(field) && field !== "tagName") {
@@ -106,7 +106,7 @@ function svgFromObject(obj) {
   return ele;
 }
 
-function svgText(x, y, msg) {
+function svgText(x: any, y: any, msg: any) {
   const text = document.createElementNS(svgNS, "text");
   text.setAttribute("x", x);
   text.setAttribute("y", y);
@@ -118,7 +118,7 @@ function svgText(x, y, msg) {
   return text;
 }
 
-function setShuttleRingPointer(shuttleRingPointer, knobOuter, angle) {
+function setShuttleRingPointer(shuttleRingPointer: any, knobOuter: any, angle: any) {
   shuttleRingPointer.setAttribute(
     "transform",
     `translate(100,100) rotate(${angle})`,
@@ -127,7 +127,7 @@ function setShuttleRingPointer(shuttleRingPointer, knobOuter, angle) {
 }
 
 const makeColorStringScratch = new Color();
-function makeColorString(background, gradient) {
+function makeColorString(background: any, gradient: any) {
   const gradientAlpha = gradient.alpha;
   const backgroundAlpha = 1.0 - gradientAlpha;
   makeColorStringScratch.red =
@@ -139,7 +139,7 @@ function makeColorString(background, gradient) {
   return makeColorStringScratch.toCssColorString();
 }
 
-function rectButton(x, y, path) {
+function rectButton(x: any, y: any, path: any) {
   const iconInfo = svgIconsById[path];
 
   const button = {
@@ -179,7 +179,7 @@ function rectButton(x, y, path) {
   return svgFromObject(button);
 }
 
-function wingButton(x, y, path) {
+function wingButton(x: any, y: any, path: any) {
   const buttonIconInfo = svgIconsById[path];
   const wingIconInfo = svgIconsById["animation_pathWingButton"];
 
@@ -216,7 +216,7 @@ function wingButton(x, y, path) {
   return svgFromObject(button);
 }
 
-function setShuttleRingFromMouseOrTouch(widget, e) {
+function setShuttleRingFromMouseOrTouch(widget: any, e: any) {
   const viewModel = widget._viewModel;
   const shuttleRingDragging = viewModel.shuttleRingDragging;
 
@@ -290,7 +290,7 @@ function setShuttleRingFromMouseOrTouch(widget, e) {
 
 //This is a private class for treating an SVG element like a button.
 //If we ever need a general purpose SVG button, we can make this generic.
-function SvgButton(svgElement, viewModel) {
+function SvgButton(svgElement: any, viewModel: any) {
   this._viewModel = viewModel;
   this.svgElement = svgElement;
   this._enabled = undefined;
@@ -428,8 +428,15 @@ SvgButton.prototype.setTooltip = function (tooltip) {
  * @see AnimationViewModel
  * @see Clock
  */
-function Animation(container, viewModel) {
-  ;
+function Animation(container: any, viewModel: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  if (!defined(viewModel)) {
+    throw new DeveloperError("viewModel is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
   this._viewModel = viewModel;
@@ -621,7 +628,7 @@ function Animation(container, viewModel) {
   container.appendChild(svg);
 
   const that = this;
-  function mouseCallback(e) {
+  function mouseCallback(e: any) {
     setShuttleRingFromMouseOrTouch(that, e);
   }
   this._mouseCallback = mouseCallback;
@@ -1233,5 +1240,4 @@ Animation.prototype.applyThemeChanges = function () {
   }
   this._defsElement = defsElement;
 };
-export { Animation };
 export default Animation;

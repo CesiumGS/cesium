@@ -128,5 +128,4 @@ PositionProperty.convertToReferenceFrame = function (
     );
   }
 };
-export { PositionProperty };
 export default PositionProperty;

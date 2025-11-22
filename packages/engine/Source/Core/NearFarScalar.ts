@@ -13,7 +13,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @see Packable
  */
-function NearFarScalar(near, nearValue, far, farValue) {
+function NearFarScalar(near: any, nearValue: any, far: any, farValue: any) {
   /**
    * The lower bound of the camera range.
    * @type {number}
@@ -84,7 +84,14 @@ NearFarScalar.packedLength = 4;
  * @returns {number[]} The array that was packed into
  */
 NearFarScalar.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -105,7 +112,11 @@ NearFarScalar.pack = function (value, array, startingIndex) {
  * @returns {NearFarScalar} The modified result parameter or a new NearFarScalar instance if one was not provided.
  */
 NearFarScalar.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -159,5 +170,4 @@ NearFarScalar.prototype.clone = function (result) {
 NearFarScalar.prototype.equals = function (right) {
   return NearFarScalar.equals(this, right);
 };
-export { NearFarScalar };
 export default NearFarScalar;

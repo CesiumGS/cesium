@@ -69,7 +69,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  *
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} options An object describing initialization options
  */
-function ImageryProviderBuilder(options) {
+function ImageryProviderBuilder(options: any) {
   this.useTiles = options.usePreCachedTilesIfAvailable ?? true;
 
   const ellipsoid = options.ellipsoid;
@@ -127,7 +127,7 @@ ImageryProviderBuilder.prototype.build = function (provider) {
   }
 };
 
-function metadataSuccess(data, imageryProviderBuilder) {
+function metadataSuccess(data: any, imageryProviderBuilder: any) {
   const tileInfo = data.tileInfo;
   if (!defined(tileInfo)) {
     imageryProviderBuilder.useTiles = false;
@@ -228,7 +228,7 @@ function metadataSuccess(data, imageryProviderBuilder) {
   }
 }
 
-function metadataFailure(resource, error) {
+function metadataFailure(resource: any, error: any) {
   let message = `An error occurred while accessing ${resource.url}`;
   if (defined(error) && defined(error.message)) {
     message += `: ${error.message}`;
@@ -237,7 +237,7 @@ function metadataFailure(resource, error) {
   throw new RuntimeError(message);
 }
 
-async function requestMetadata(resource, imageryProviderBuilder) {
+async function requestMetadata(resource: any, imageryProviderBuilder: any) {
   const jsonResource = resource.getDerivedResource({
     queryParameters: {
       f: "json",
@@ -298,7 +298,7 @@ async function requestMetadata(resource, imageryProviderBuilder) {
  * @see {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security| ArcGIS Access Token }
 
  */
-function ArcGisMapServerImageryProvider(options) {
+function ArcGisMapServerImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
@@ -374,7 +374,9 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
   style,
   options,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("style", style);
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
   let accessToken;
@@ -424,7 +426,9 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
       }
       break;
     default:
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError(`Unsupported basemap type: ${style}`);
+    //>>includeEnd('debug');
   }
 
   return ArcGisMapServerImageryProvider.fromUrl(server, {
@@ -435,7 +439,7 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
   });
 };
 
-function buildImageResource(imageryProvider, x, y, level, request) {
+function buildImageResource(imageryProvider: any, x: any, y: any, level: any, request: any) {
   let resource;
   if (imageryProvider._useTiles) {
     resource = imageryProvider._resource.getDerivedResource({
@@ -690,7 +694,9 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
  * @exception {RuntimeError} metadata fullExtent.spatialReference specifies an unknown WKID
  */
 ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -866,5 +872,4 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
   });
 };
 ArcGisMapServerImageryProvider._metadataCache = {};
-export { ArcGisMapServerImageryProvider };
 export default ArcGisMapServerImageryProvider;

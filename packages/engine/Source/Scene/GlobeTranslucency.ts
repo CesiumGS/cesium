@@ -47,7 +47,9 @@ Object.defineProperties(GlobeTranslucency.prototype, {
       return this._enabled;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("enabled", value);
+      //>>includeEnd('debug');
       this._enabled = value;
     },
   },
@@ -75,7 +77,10 @@ Object.defineProperties(GlobeTranslucency.prototype, {
       return this._frontFaceAlpha;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("frontFaceAlpha", value, 0.0);
+      Check.typeOf.number.lessThanOrEquals("frontFaceAlpha", value, 1.0);
+      //>>includeEnd('debug');
       this._frontFaceAlpha = value;
     },
   },
@@ -115,7 +120,13 @@ Object.defineProperties(GlobeTranslucency.prototype, {
       return this._frontFaceAlphaByDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far < value.near) {
+        throw new DeveloperError(
+          "far distance must be greater than near distance.",
+        );
+      }
+      //>>includeEnd('debug');
       this._frontFaceAlphaByDistance = NearFarScalar.clone(
         value,
         this._frontFaceAlphaByDistance,
@@ -146,7 +157,10 @@ Object.defineProperties(GlobeTranslucency.prototype, {
       return this._backFaceAlpha;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("backFaceAlpha", value, 0.0);
+      Check.typeOf.number.lessThanOrEquals("backFaceAlpha", value, 1.0);
+      //>>includeEnd('debug');
       this._backFaceAlpha = value;
     },
   },
@@ -186,7 +200,13 @@ Object.defineProperties(GlobeTranslucency.prototype, {
       return this._backFaceAlphaByDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far < value.near) {
+        throw new DeveloperError(
+          "far distance must be greater than near distance.",
+        );
+      }
+      //>>includeEnd('debug');
       this._backFaceAlphaByDistance = NearFarScalar.clone(
         value,
         this._backFaceAlphaByDistance,
@@ -216,5 +236,4 @@ Object.defineProperties(GlobeTranslucency.prototype, {
   },
 });
 
-export { GlobeTranslucency };
 export default GlobeTranslucency;

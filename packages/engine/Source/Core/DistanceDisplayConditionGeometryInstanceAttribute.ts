@@ -31,11 +31,17 @@ import DeveloperError from "./DeveloperError.js";
  * @see GeometryInstance
  * @see GeometryInstanceAttribute
  */
-function DistanceDisplayConditionGeometryInstanceAttribute(near, far) {
+function DistanceDisplayConditionGeometryInstanceAttribute(near: any, far: any) {
   near = near ?? 0.0;
   far = far ?? Number.MAX_VALUE;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (far <= near) {
+    throw new DeveloperError(
+      "far distance must be greater than near distance.",
+    );
+  }
+  //>>includeEnd('debug');
 
   /**
    * The values for the attributes stored in a typed array.
@@ -122,7 +128,16 @@ Object.defineProperties(
  */
 DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition =
   function (distanceDisplayCondition) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(distanceDisplayCondition)) {
+      throw new DeveloperError("distanceDisplayCondition is required.");
+    }
+    if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+      throw new DeveloperError(
+        "distanceDisplayCondition.far distance must be greater than distanceDisplayCondition.near distance.",
+      );
+    }
+    //>>includeEnd('debug');
 
     return new DistanceDisplayConditionGeometryInstanceAttribute(
       distanceDisplayCondition.near,
@@ -145,7 +160,11 @@ DistanceDisplayConditionGeometryInstanceAttribute.toValue = function (
   distanceDisplayCondition,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(distanceDisplayCondition)) {
+    throw new DeveloperError("distanceDisplayCondition is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Float32Array([
@@ -157,5 +176,4 @@ DistanceDisplayConditionGeometryInstanceAttribute.toValue = function (
   result[1] = distanceDisplayCondition.far;
   return result;
 };
-export { DistanceDisplayConditionGeometryInstanceAttribute };
 export default DistanceDisplayConditionGeometryInstanceAttribute;

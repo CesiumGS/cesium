@@ -13,7 +13,7 @@ import Property from "./Property.js";
  *
  * @param {Property[]} [value] An array of Property instances.
  */
-function PropertyArray(value) {
+function PropertyArray(value: any) {
   this._value = undefined;
   this._definitionChanged = new Event();
   this._eventHelper = new EventHelper();
@@ -144,5 +144,4 @@ PropertyArray.prototype.equals = function (other) {
 PropertyArray.prototype._raiseDefinitionChanged = function () {
   this._definitionChanged.raiseEvent(this);
 };
-export { PropertyArray };
 export default PropertyArray;

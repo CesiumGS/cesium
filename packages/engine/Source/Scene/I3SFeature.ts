@@ -9,7 +9,7 @@ import I3SDataProvider from "./I3SDataProvider.js";
  * @alias I3SFeature
  * @internalConstructor
  */
-function I3SFeature(parent, uri) {
+function I3SFeature(parent: any, uri: any) {
   this._parent = parent;
   this._dataProvider = parent._dataProvider;
   this._layer = parent._layer;
@@ -58,5 +58,4 @@ I3SFeature.prototype.load = async function () {
   return this._data;
 };
 
-export { I3SFeature };
 export default I3SFeature;

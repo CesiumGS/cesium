@@ -56,5 +56,4 @@ CylinderGeometryLibrary.computePositions = function (
 
   return positions;
 };
-export { CylinderGeometryLibrary };
 export default CylinderGeometryLibrary;

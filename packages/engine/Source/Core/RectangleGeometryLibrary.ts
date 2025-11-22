@@ -84,15 +84,7 @@ const centerScratch = new Cartographic();
 let centerCartesian = new Cartesian3();
 const proj = new GeographicProjection();
 
-function getRotationOptions(
-  nwCorner,
-  rotation,
-  granularityX,
-  granularityY,
-  center,
-  width,
-  height,
-) {
+function getRotationOptions(nwCorner: any, rotation: any, granularityX: any, granularityY: any, center: any, width: any, height: any, ) {
   const cosRotation = Math.cos(rotation);
   const granYCos = granularityY * cosRotation;
   const granXCos = granularityX * cosRotation;
@@ -234,7 +226,18 @@ RectangleGeometryLibrary.computeOptions = function (
     east = rotationOptions.east;
     west = rotationOptions.west;
 
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (
+      north < -CesiumMath.PI_OVER_TWO ||
+      north > CesiumMath.PI_OVER_TWO ||
+      south < -CesiumMath.PI_OVER_TWO ||
+      south > CesiumMath.PI_OVER_TWO
+    ) {
+      throw new DeveloperError(
+        "Rotated rectangle is invalid.  It crosses over either the north or south pole.",
+      );
+    }
+    //>>includeEnd('debug');
 
     computedOptions.granYCos = rotationOptions.granYCos;
     computedOptions.granYSin = rotationOptions.granYSin;
@@ -272,5 +275,4 @@ RectangleGeometryLibrary.computeOptions = function (
 
   return computedOptions;
 };
-export { RectangleGeometryLibrary };
 export default RectangleGeometryLibrary;

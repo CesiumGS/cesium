@@ -18,10 +18,18 @@ import RequestType from "../Core/RequestType.js";
  * @param {Function} options.requestImageFunction A function that will request imagery tiles.
  * @param {Function} options.reloadFunction A function that will be called when all imagery tiles need to be reloaded.
  */
-function TimeDynamicImagery(options) {
+function TimeDynamicImagery(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.clock", options.clock);
+  Check.typeOf.object("options.times", options.times);
+  Check.typeOf.func(
+    "options.requestImageFunction",
+    options.requestImageFunction,
+  );
+  Check.typeOf.func("options.reloadFunction", options.reloadFunction);
+  //>>includeEnd('debug');
 
   this._tileCache = {};
   this._tilesRequestedForInterval = [];
@@ -47,7 +55,11 @@ Object.defineProperties(TimeDynamicImagery.prototype, {
       return this._clock;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._clock !== value) {
         this._clock = value;
@@ -66,7 +78,11 @@ Object.defineProperties(TimeDynamicImagery.prototype, {
       return this._times;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._times !== value) {
         this._times = value;
@@ -198,11 +214,11 @@ TimeDynamicImagery.prototype._clockOnTick = function (clock) {
   }
 };
 
-function getKey(x, y, level) {
+function getKey(x: any, y: any, level: any) {
   return `${x}-${y}-${level}`;
 }
 
-function getKeyElements(key) {
+function getKeyElements(key: any) {
   const s = key.split("-");
   if (s.length !== 3) {
     return undefined;
@@ -215,7 +231,7 @@ function getKeyElements(key) {
   };
 }
 
-function getApproachingInterval(that) {
+function getApproachingInterval(that: any) {
   const times = that._times;
   if (!defined(times)) {
     return undefined;
@@ -251,7 +267,7 @@ function getApproachingInterval(that) {
   return index >= 0 && seconds <= 5.0 ? times.get(index) : undefined;
 }
 
-function addToCache(that, tile, interval) {
+function addToCache(that: any, tile: any, interval: any) {
   const index = that._times.indexOf(interval.start);
   const tileCache = that._tileCache;
   let intervalTileCache = tileCache[index];
@@ -289,5 +305,4 @@ function addToCache(that, tile, interval) {
 
   return true;
 }
-export { TimeDynamicImagery };
 export default TimeDynamicImagery;

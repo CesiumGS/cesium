@@ -77,5 +77,4 @@ ArcGisMapService.getDefaultTokenCredit = function (providedKey) {
 
   return defaultTokenCredit;
 };
-export { ArcGisMapService };
 export default ArcGisMapService;

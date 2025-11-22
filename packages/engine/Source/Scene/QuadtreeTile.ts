@@ -57,8 +57,29 @@ const MAX_CACHE_ENTRIES = 1000;
  * @param {TilingScheme} options.tilingScheme The tiling scheme in which this tile exists.
  * @param {QuadtreeTile} [options.parent] This tile's parent, or undefined if this is a root tile.
  */
-function QuadtreeTile(options) {
-  ;
+function QuadtreeTile(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options)) {
+    throw new DeveloperError("options is required.");
+  }
+  if (!defined(options.x)) {
+    throw new DeveloperError("options.x is required.");
+  } else if (!defined(options.y)) {
+    throw new DeveloperError("options.y is required.");
+  } else if (options.x < 0 || options.y < 0) {
+    throw new DeveloperError(
+      "options.x and options.y must be greater than or equal to zero.",
+    );
+  }
+  if (!defined(options.level)) {
+    throw new DeveloperError(
+      "options.level is required and must be greater than or equal to zero.",
+    );
+  }
+  if (!defined(options.tilingScheme)) {
+    throw new DeveloperError("options.tilingScheme is required.");
+  }
+  //>>includeEnd('debug');
 
   this._tilingScheme = options.tilingScheme;
   this._x = options.x;
@@ -141,7 +162,11 @@ function QuadtreeTile(options) {
  * tile in the northwest corner and followed by the tile (if any) to its east.
  */
 QuadtreeTile.createLevelZeroTiles = function (tilingScheme) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(tilingScheme)) {
+    throw new DeveloperError("tilingScheme is required.");
+  }
+  //>>includeEnd('debug');
 
   const numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
   const numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
@@ -198,12 +223,7 @@ QuadtreeTile.createLevelZeroTiles = function (tilingScheme) {
  */
 const TILE_SIZE = 256;
 
-function createSpatialHashKey(
-  longitude,
-  latitude,
-  rectangle,
-  maximumScreenSpaceError,
-) {
+function createSpatialHashKey(longitude: any, latitude: any, rectangle: any, maximumScreenSpaceError: any, ) {
   // Adjust precision based on quadtree level - higher levels get finer precision
   const maxError = (rectangle.width / TILE_SIZE) * maximumScreenSpaceError;
   // Round to the grid precision
@@ -328,7 +348,7 @@ const splitPointScratch = new Cartographic();
  * @param {Cartographic} positionCartographic - The cartographic position.
  * @returns {QuadtreeTile} The child tile that contains the position.
  */
-function childTileAtPosition(tile, positionCartographic) {
+function childTileAtPosition(tile: any, positionCartographic: any) {
   // Can't assume that a given tiling scheme divides a parent into four tiles at its rectangle's center.
   // But we can safely take any child tile's rectangle and take its center-facing corner as the parent's split point.
   const nwChildRectangle = tile.northwestChild.rectangle;
@@ -696,10 +716,9 @@ QuadtreeTile.prototype.freeResources = function () {
   this._northeastChild = undefined;
 };
 
-function freeTile(tile) {
+function freeTile(tile: any) {
   if (defined(tile)) {
     tile.freeResources();
   }
 }
-export { QuadtreeTile };
 export default QuadtreeTile;

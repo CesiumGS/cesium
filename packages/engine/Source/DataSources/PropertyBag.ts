@@ -16,7 +16,7 @@ import Property from "./Property.js";
  * @param {object} [value] An object, containing key-value mapping of property names to properties.
  * @param {Function} [createPropertyCallback] A function that will be called when the value of any of the properties in value are not a Property.
  */
-function PropertyBag(value, createPropertyCallback) {
+function PropertyBag(value: any, createPropertyCallback: any) {
   this._propertyNames = [];
   this._definitionChanged = new Event();
 
@@ -82,7 +82,7 @@ PropertyBag.prototype.hasProperty = function (propertyName) {
   return this._propertyNames.indexOf(propertyName) !== -1;
 };
 
-function createConstantProperty(value) {
+function createConstantProperty(value: any) {
   return new ConstantProperty(value);
 }
 
@@ -102,7 +102,16 @@ PropertyBag.prototype.addProperty = function (
 ) {
   const propertyNames = this._propertyNames;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(propertyName)) {
+    throw new DeveloperError("propertyName is required.");
+  }
+  if (propertyNames.indexOf(propertyName) !== -1) {
+    throw new DeveloperError(
+      `${propertyName} is already a registered property.`,
+    );
+  }
+  //>>includeEnd('debug');
 
   propertyNames.push(propertyName);
   Object.defineProperty(
@@ -133,7 +142,14 @@ PropertyBag.prototype.removeProperty = function (propertyName) {
   const propertyNames = this._propertyNames;
   const index = propertyNames.indexOf(propertyName);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(propertyName)) {
+    throw new DeveloperError("propertyName is required.");
+  }
+  if (index === -1) {
+    throw new DeveloperError(`${propertyName} is not a registered property.`);
+  }
+  //>>includeEnd('debug');
 
   this._propertyNames.splice(index, 1);
   delete this[propertyName];
@@ -181,7 +197,11 @@ PropertyBag.prototype.getValue = function (time, result) {
  * @param {Function} [createPropertyCallback] A function that will be called when the value of any of the properties in value are not a Property.
  */
 PropertyBag.prototype.merge = function (source, createPropertyCallback) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   const propertyNames = this._propertyNames;
   const sourcePropertyNames = defined(source._propertyNames)
@@ -216,7 +236,7 @@ PropertyBag.prototype.merge = function (source, createPropertyCallback) {
   }
 };
 
-function propertiesEqual(a, b) {
+function propertiesEqual(a: any, b: any) {
   const aPropertyNames = a._propertyNames;
   const bPropertyNames = b._propertyNames;
 
@@ -252,5 +272,4 @@ PropertyBag.prototype.equals = function (other) {
       propertiesEqual(this, other))
   );
 };
-export { PropertyBag };
 export default PropertyBag;

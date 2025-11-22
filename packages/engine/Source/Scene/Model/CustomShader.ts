@@ -119,7 +119,7 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  *   `
  * });
  */
-function CustomShader(options) {
+function CustomShader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -237,14 +237,20 @@ function CustomShader(options) {
   validateBuiltinVariables(this);
 }
 
-function buildUniformMap(customShader) {
+function buildUniformMap(customShader: any) {
   const uniforms = customShader.uniforms;
   const uniformMap = {};
   for (const uniformName in uniforms) {
     if (uniforms.hasOwnProperty(uniformName)) {
       const uniform = uniforms[uniformName];
       const type = uniform.type;
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (type === UniformType.SAMPLER_CUBE) {
+        throw new DeveloperError(
+          "CustomShader does not support samplerCube uniforms",
+        );
+      }
+      //>>includeEnd('debug');
 
       if (type === UniformType.SAMPLER_2D) {
         customShader._textureManager.loadTexture2D(uniformName, uniform.value);
@@ -263,7 +269,7 @@ function buildUniformMap(customShader) {
   return uniformMap;
 }
 
-function createUniformTexture2DFunction(customShader, uniformName) {
+function createUniformTexture2DFunction(customShader: any, uniformName: any) {
   return function () {
     return (
       customShader._textureManager.getTexture(uniformName) ??
@@ -272,13 +278,13 @@ function createUniformTexture2DFunction(customShader, uniformName) {
   };
 }
 
-function createUniformFunction(customShader, uniformName) {
+function createUniformFunction(customShader: any, uniformName: any) {
   return function () {
     return customShader.uniforms[uniformName].value;
   };
 }
 
-function getVariables(shaderText, regex, outputSet) {
+function getVariables(shaderText: any, regex: any, outputSet: any) {
   let match;
   while ((match = regex.exec(shaderText)) !== null) {
     const variableName = match[1];
@@ -290,7 +296,7 @@ function getVariables(shaderText, regex, outputSet) {
   }
 }
 
-function findUsedVariables(customShader) {
+function findUsedVariables(customShader: any) {
   const attributeRegex = /[vf]sInput\.attributes\.(\w+)/g;
   const featureIdRegex = /[vf]sInput\.featureIds\.(\w+)/g;
   const metadataRegex = /[vf]sInput\.metadata.(\w+)/g;
@@ -325,7 +331,7 @@ function findUsedVariables(customShader) {
   }
 }
 
-function expandCoordinateAbbreviations(variableName) {
+function expandCoordinateAbbreviations(variableName: any) {
   const modelCoordinatesRegex = /^.*MC$/;
   const worldCoordinatesRegex = /^.*WC$/;
   const eyeCoordinatesRegex = /^.*EC$/;
@@ -345,12 +351,7 @@ function expandCoordinateAbbreviations(variableName) {
   return variableName;
 }
 
-function validateVariableUsage(
-  variableSet,
-  incorrectVariable,
-  correctVariable,
-  vertexOrFragment,
-) {
+function validateVariableUsage(variableSet: any, incorrectVariable: any, correctVariable: any, vertexOrFragment: any, ) {
   if (variableSet.hasOwnProperty(incorrectVariable)) {
     const message = `${expandCoordinateAbbreviations(
       incorrectVariable,
@@ -361,7 +362,7 @@ function validateVariableUsage(
   }
 }
 
-function validateBuiltinVariables(customShader) {
+function validateBuiltinVariables(customShader: any) {
   const attributesVS = customShader.usedVariablesVertex.attributeSet;
 
   // names without MC/WC/EC are ambiguous
@@ -400,7 +401,15 @@ function validateBuiltinVariables(customShader) {
  * @param {boolean|number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|string|Resource|TextureUniform} value The new value of the uniform.
  */
 CustomShader.prototype.setUniform = function (uniformName, value) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("uniformName", uniformName);
+  Check.defined("value", value);
+  if (!defined(this.uniforms[uniformName])) {
+    throw new DeveloperError(
+      `Uniform ${uniformName} must be declared in the CustomShader constructor.`,
+    );
+  }
+  //>>includeEnd('debug');
   const uniform = this.uniforms[uniformName];
   if (uniform.type === UniformType.SAMPLER_2D) {
     // Textures are loaded asynchronously
@@ -452,5 +461,4 @@ CustomShader.prototype.destroy = function () {
   destroyObject(this);
 };
 
-export { CustomShader };
 export default CustomShader;

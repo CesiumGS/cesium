@@ -14,8 +14,21 @@ import RuntimeError from "./RuntimeError.js";
  *
  * @private
  */
-function getStringFromTypedArray(uint8Array, byteOffset, byteLength) {
-  ;
+function getStringFromTypedArray(uint8Array: any, byteOffset: any, byteLength: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(uint8Array)) {
+    throw new DeveloperError("uint8Array is required.");
+  }
+  if (byteOffset < 0) {
+    throw new DeveloperError("byteOffset cannot be negative.");
+  }
+  if (byteLength < 0) {
+    throw new DeveloperError("byteLength cannot be negative.");
+  }
+  if (byteOffset + byteLength > uint8Array.byteLength) {
+    throw new DeveloperError("sub-region exceeds array bounds.");
+  }
+  //>>includeEnd('debug');
 
   byteOffset = byteOffset ?? 0;
   byteLength = byteLength ?? uint8Array.byteLength - byteOffset;
@@ -47,12 +60,12 @@ getStringFromTypedArray.decodeWithFromCharCode = function (view) {
   return result;
 };
 
-function inRange(a, min, max) {
+function inRange(a: any, min: any, max: any) {
   return min <= a && a <= max;
 }
 
 // This code is inspired by public domain code found here: https://github.com/inexorabletash/text-encoding
-function utf8Handler(utfBytes) {
+function utf8Handler(utfBytes: any) {
   let codePoint = 0;
   let bytesSeen = 0;
   let bytesNeeded = 0;
@@ -149,5 +162,4 @@ if (typeof TextDecoder !== "undefined") {
   getStringFromTypedArray.decode =
     getStringFromTypedArray.decodeWithFromCharCode;
 }
-export { getStringFromTypedArray };
 export default getStringFromTypedArray;

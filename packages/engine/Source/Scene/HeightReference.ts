@@ -62,7 +62,7 @@ export default Object.freeze(HeightReference);
  * @returns true if the height should be clamped to the surface
  * @private
  */
-export function isHeightReferenceClamp(heightReference) {
+export function isHeightReferenceClamp(heightReference: any) {
   return (
     heightReference === HeightReference.CLAMP_TO_GROUND ||
     heightReference === HeightReference.CLAMP_TO_3D_TILE ||
@@ -76,7 +76,7 @@ export function isHeightReferenceClamp(heightReference) {
  * @returns true if the height should be offset relative to the surface
  * @private
  */
-export function isHeightReferenceRelative(heightReference) {
+export function isHeightReferenceRelative(heightReference: any) {
   return (
     heightReference === HeightReference.RELATIVE_TO_GROUND ||
     heightReference === HeightReference.RELATIVE_TO_3D_TILE ||

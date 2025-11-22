@@ -16,7 +16,7 @@ const scratchV = new Cartesian3();
 const scratchW = new Cartesian3();
 const scratchCartesian = new Cartesian3();
 
-function computeMissingVector(a, b, result) {
+function computeMissingVector(a: any, b: any, result: any) {
   result = Cartesian3.cross(a, b, result);
   const magnitude = Cartesian3.magnitude(result);
   return Cartesian3.multiplyByScalar(
@@ -26,7 +26,7 @@ function computeMissingVector(a, b, result) {
   );
 }
 
-function findOrthogonalVector(a, result) {
+function findOrthogonalVector(a: any, result: any) {
   const temp = Cartesian3.normalize(a, scratchCartesian);
   const b = Cartesian3.equalsEpsilon(
     temp,
@@ -38,7 +38,7 @@ function findOrthogonalVector(a, result) {
   return computeMissingVector(a, b, result);
 }
 
-function checkHalfAxes(halfAxes) {
+function checkHalfAxes(halfAxes: any) {
   let u = Matrix3.getColumn(halfAxes, 0, scratchU);
   let v = Matrix3.getColumn(halfAxes, 1, scratchV);
   let w = Matrix3.getColumn(halfAxes, 2, scratchW);
@@ -92,7 +92,7 @@ function checkHalfAxes(halfAxes) {
  *
  * @private
  */
-function TileOrientedBoundingBox(center, halfAxes) {
+function TileOrientedBoundingBox(center: any, halfAxes: any) {
   halfAxes = checkHalfAxes(halfAxes);
   this._orientedBoundingBox = new OrientedBoundingBox(center, halfAxes);
   this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
@@ -136,7 +136,9 @@ Object.defineProperties(TileOrientedBoundingBox.prototype, {
  * @returns {number} The distance between the camera and the bounding box in meters. Returns 0 if the camera is inside the bounding volume.
  */
 TileOrientedBoundingBox.prototype.distanceToCamera = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("frameState", frameState);
+  //>>includeEnd('debug');
   return Math.sqrt(
     this._orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC),
   );
@@ -152,7 +154,9 @@ TileOrientedBoundingBox.prototype.distanceToCamera = function (frameState) {
  *                      intersects the plane.
  */
 TileOrientedBoundingBox.prototype.intersectPlane = function (plane) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("plane", plane);
+  //>>includeEnd('debug');
   return this._orientedBoundingBox.intersectPlane(plane);
 };
 
@@ -181,7 +185,9 @@ TileOrientedBoundingBox.prototype.update = function (center, halfAxes) {
  * @return {Primitive}
  */
 TileOrientedBoundingBox.prototype.createDebugVolume = function (color) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("color", color);
+  //>>includeEnd('debug');
 
   const geometry = new BoxOutlineGeometry({
     // Make a 2x2x2 cube
@@ -210,5 +216,4 @@ TileOrientedBoundingBox.prototype.createDebugVolume = function (color) {
     asynchronous: false,
   });
 };
-export { TileOrientedBoundingBox };
 export default TileOrientedBoundingBox;

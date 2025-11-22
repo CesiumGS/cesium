@@ -12,13 +12,7 @@
  *
  * @private
  */
-function EarthOrientationParametersSample(
-  xPoleWander,
-  yPoleWander,
-  xPoleOffset,
-  yPoleOffset,
-  ut1MinusUtc,
-) {
+function EarthOrientationParametersSample(xPoleWander: any, yPoleWander: any, xPoleOffset: any, yPoleOffset: any, ut1MinusUtc: any, ) {
   /**
    * The pole wander about the X axis, in radians.
    * @type {number}
@@ -49,5 +43,4 @@ function EarthOrientationParametersSample(
    */
   this.ut1MinusUtc = ut1MinusUtc;
 }
-export { EarthOrientationParametersSample };
 export default EarthOrientationParametersSample;

@@ -11,7 +11,7 @@ import knockout from "../ThirdParty/knockout.js";
 import NoSleep from "nosleep.js";
 import createCommand from "../createCommand.js";
 
-function lockScreen(orientation) {
+function lockScreen(orientation: any) {
   let locked = false;
   const screen = window.screen;
   if (defined(screen)) {
@@ -43,7 +43,7 @@ function unlockScreen() {
   }
 }
 
-function toggleVR(viewModel, scene, isVRMode, isOrthographic) {
+function toggleVR(viewModel: any, scene: any, isVRMode: any, isOrthographic: any) {
   if (isOrthographic()) {
     return;
   }
@@ -78,8 +78,12 @@ function toggleVR(viewModel, scene, isVRMode, isOrthographic) {
  * @param {Scene} scene The scene.
  * @param {Element|string} [vrElement=document.body] The element or id to be placed into VR mode.
  */
-function VRButtonViewModel(scene, vrElement) {
-  ;
+function VRButtonViewModel(scene: any, vrElement: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   const that = this;
 
@@ -181,7 +185,11 @@ Object.defineProperties(VRButtonViewModel.prototype, {
       return this._vrElement;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!(value instanceof Element)) {
+        throw new DeveloperError("value must be a valid Element.");
+      }
+      //>>includeEnd('debug');
 
       this._vrElement = value;
     },
@@ -216,5 +224,4 @@ VRButtonViewModel.prototype.destroy = function () {
   document.removeEventListener(Fullscreen.changeEventName, this._callback);
   destroyObject(this);
 };
-export { VRButtonViewModel };
 export default VRButtonViewModel;

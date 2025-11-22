@@ -105,5 +105,4 @@ class CartesianRectangle {
   }
 }
 
-export { CartesianRectangle };
 export default CartesianRectangle;

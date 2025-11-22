@@ -17,7 +17,7 @@ import defined from "./defined.js";
  * @see GeometryInstance
  * @see GeometryInstanceAttribute
  */
-function OffsetGeometryInstanceAttribute(x, y, z) {
+function OffsetGeometryInstanceAttribute(x: any, y: any, z: any) {
   x = x ?? 0;
   y = y ?? 0;
   z = z ?? 0;
@@ -90,7 +90,9 @@ Object.defineProperties(OffsetGeometryInstanceAttribute.prototype, {
  * @returns {OffsetGeometryInstanceAttribute} The new {@link OffsetGeometryInstanceAttribute} instance.
  */
 OffsetGeometryInstanceAttribute.fromCartesian3 = function (offset) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("offset", offset);
+  //>>includeEnd('debug');
 
   return new OffsetGeometryInstanceAttribute(offset.x, offset.y, offset.z);
 };
@@ -107,7 +109,9 @@ OffsetGeometryInstanceAttribute.fromCartesian3 = function (offset) {
  * attributes.modelMatrix = Cesium.OffsetGeometryInstanceAttribute.toValue(modelMatrix, attributes.modelMatrix);
  */
 OffsetGeometryInstanceAttribute.toValue = function (offset, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("offset", offset);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Float32Array([offset.x, offset.y, offset.z]);
@@ -118,5 +122,4 @@ OffsetGeometryInstanceAttribute.toValue = function (offset, result) {
   result[2] = offset.z;
   return result;
 };
-export { OffsetGeometryInstanceAttribute };
 export default OffsetGeometryInstanceAttribute;

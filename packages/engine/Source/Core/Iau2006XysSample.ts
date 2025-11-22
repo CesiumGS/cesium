@@ -10,7 +10,7 @@
  *
  * @private
  */
-function Iau2006XysSample(x, y, s) {
+function Iau2006XysSample(x: any, y: any, s: any) {
   /**
    * The X value.
    * @type {number}
@@ -29,5 +29,4 @@ function Iau2006XysSample(x, y, s) {
    */
   this.s = s;
 }
-export { Iau2006XysSample };
 export default Iau2006XysSample;

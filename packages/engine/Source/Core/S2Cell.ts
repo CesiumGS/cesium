@@ -155,11 +155,18 @@ const S2_POSITION_TO_ORIENTATION_MASK = [
  * @param {bigint} [cellId] The 64-bit S2CellId.
  * @private
  */
-function S2Cell(cellId) {
+function S2Cell(cellId: any) {
   if (!FeatureDetection.supportsBigInt()) {
     throw new RuntimeError("S2 required BigInt support");
   }
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(cellId)) {
+    throw new DeveloperError("cell ID is required.");
+  }
+  if (!S2Cell.isValidId(cellId)) {
+    throw new DeveloperError("cell ID is invalid.");
+  }
+  //>>includeEnd('debug');
 
   this._cellId = cellId;
   this._level = S2Cell.getLevel(cellId);
@@ -173,7 +180,12 @@ function S2Cell(cellId) {
  * @private
  */
 S2Cell.fromToken = function (token) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("token", token);
+  if (!S2Cell.isValidToken(token)) {
+    throw new DeveloperError("token is invalid.");
+  }
+  //>>includeEnd('debug');
 
   return new S2Cell(S2Cell.getIdFromToken(token));
 };
@@ -186,7 +198,9 @@ S2Cell.fromToken = function (token) {
  * @private
  */
 S2Cell.isValidId = function (cellId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.bigint("cellId", cellId);
+  //>>includeEnd('debug');
 
   // Check if sentinel bit is missing.
   if (cellId <= 0) {
@@ -215,7 +229,9 @@ S2Cell.isValidId = function (cellId) {
  * @private
  */
 S2Cell.isValidToken = function (token) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("token", token);
+  //>>includeEnd('debug');
 
   if (!/^[0-9a-fA-F]{1,16}$/.test(token)) {
     return false;
@@ -232,7 +248,9 @@ S2Cell.isValidToken = function (token) {
  * @private
  */
 S2Cell.getIdFromToken = function (token) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("token", token);
+  //>>includeEnd('debug');
 
   return BigInt("0x" + token + "0".repeat(16 - token.length)); // eslint-disable-line
 };
@@ -245,7 +263,9 @@ S2Cell.getIdFromToken = function (token) {
  * @private
  */
 S2Cell.getTokenFromId = function (cellId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.bigint("cellId", cellId);
+  //>>includeEnd('debug');
 
   const trailingZeroHexChars = Math.floor(countTrailingZeroBits(cellId) / 4);
   const hexString = cellId.toString(16).replace(/0*$/, "");
@@ -264,7 +284,12 @@ S2Cell.getTokenFromId = function (cellId) {
  * @private
  */
 S2Cell.getLevel = function (cellId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.bigint("cellId", cellId);
+  if (!S2Cell.isValidId(cellId)) {
+    throw new DeveloperError();
+  }
+  //>>includeEnd('debug');
 
   let lsbPosition = 0;
   while (cellId !== BigInt(0)) {
@@ -287,7 +312,15 @@ S2Cell.getLevel = function (cellId) {
  * @private
  */
 S2Cell.prototype.getChild = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  if (index < 0 || index > 3) {
+    throw new DeveloperError("child index must be in the range [0-3].");
+  }
+  if (this._level === 30) {
+    throw new DeveloperError("cannot get child of leaf cell.");
+  }
+  //>>includeEnd('debug');
 
   // Shift sentinel bit 2 positions to the right.
   const newLsb = lsb(this._cellId) >> BigInt(2);
@@ -303,7 +336,11 @@ S2Cell.prototype.getChild = function (index) {
  * @private
  */
 S2Cell.prototype.getParent = function () {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (this._level === 0) {
+    throw new DeveloperError("cannot get parent of root cell.");
+  }
+  //>>includeEnd('debug');
   // Shift the sentinel bit 2 positions to the left.
   const newLsb = lsb(this._cellId) << BigInt(2);
   // Erase the left over bits to the right of the sentinel bit.
@@ -317,7 +354,11 @@ S2Cell.prototype.getParent = function () {
  * @private
  */
 S2Cell.prototype.getParentAtLevel = function (level) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (this._level === 0 || level < 0 || this._level < level) {
+    throw new DeveloperError("cannot get parent at invalid level.");
+  }
+  //>>includeEnd('debug');
   const newLsb = lsbForLevel(level);
   return new S2Cell((this._cellId & -newLsb) | newLsb);
 };
@@ -352,7 +393,12 @@ S2Cell.prototype.getCenter = function (ellipsoid) {
  * @private
  */
 S2Cell.prototype.getVertex = function (index, ellipsoid) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  if (index < 0 || index > 3) {
+    throw new DeveloperError("vertex index must be in the range [0-3].");
+  }
+  //>>includeEnd('debug');
 
   ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
 
@@ -377,7 +423,19 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
  * @private
  */
 S2Cell.fromFacePositionLevel = function (face, position, level) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.bigint("position", position);
+  if (face < 0 || face > 5) {
+    throw new DeveloperError("Invalid S2 Face (must be within 0-5)");
+  }
+
+  if (level < 0 || level > S2_MAX_LEVEL) {
+    throw new DeveloperError("Invalid level (must be within 0-30)");
+  }
+  if (position < 0 || position >= Math.pow(4, level)) {
+    throw new DeveloperError("Invalid Hilbert position for level");
+  }
+  //>>includeEnd('debug');
 
   const faceBitString =
     (face < 4 ? "0" : "") + (face < 2 ? "0" : "") + face.toString(2);
@@ -399,14 +457,14 @@ S2Cell.fromFacePositionLevel = function (face, position, level) {
 /**
  * @private
  */
-function getS2Center(cellId, level) {
+function getS2Center(cellId: any, level: any) {
   const faceSiTi = convertCellIdToFaceSiTi(cellId, level);
   return convertFaceSiTitoXYZ(faceSiTi[0], faceSiTi[1], faceSiTi[2]);
 }
 /**
  * @private
  */
-function getS2Vertex(cellId, level, index) {
+function getS2Vertex(cellId: any, level: any, index: any) {
   const faceIJ = convertCellIdToFaceIJ(cellId, level);
   const uv = convertIJLeveltoBoundUV([faceIJ[1], faceIJ[2]], level);
   // Handles CCW ordering of the vertices.
@@ -419,7 +477,7 @@ function getS2Vertex(cellId, level, index) {
 /**
  * @private
  */
-function convertCellIdToFaceSiTi(cellId, level) {
+function convertCellIdToFaceSiTi(cellId: any, level: any) {
   const faceIJ = convertCellIdToFaceIJ(cellId);
   const face = faceIJ[0];
   const i = faceIJ[1];
@@ -441,7 +499,7 @@ function convertCellIdToFaceSiTi(cellId, level) {
 /**
  * @private
  */
-function convertCellIdToFaceIJ(cellId) {
+function convertCellIdToFaceIJ(cellId: any) {
   if (S2_LOOKUP_POSITIONS.length === 0) {
     generateLookupTable();
   }
@@ -477,7 +535,7 @@ function convertCellIdToFaceIJ(cellId) {
 /**
  * @private
  */
-function convertFaceSiTitoXYZ(face, si, ti) {
+function convertFaceSiTitoXYZ(face: any, si: any, ti: any) {
   const s = convertSiTitoST(si);
   const t = convertSiTitoST(ti);
 
@@ -489,7 +547,7 @@ function convertFaceSiTitoXYZ(face, si, ti) {
 /**
  * @private
  */
-function convertFaceUVtoXYZ(face, u, v) {
+function convertFaceUVtoXYZ(face: any, u: any, v: any) {
   switch (face) {
     case 0:
       return new Cartesian3(1, u, v);
@@ -515,7 +573,7 @@ function convertFaceUVtoXYZ(face, u, v) {
  * {@link https://github.com/google/s2geometry/blob/0c4c460bdfe696da303641771f9def900b3e440f/src/s2/s2metrics.cc}
  * @private
  */
-function convertSTtoUV(s) {
+function convertSTtoUV(s: any) {
   if (s >= 0.5) {
     return (1 / 3) * (4 * s * s - 1);
   }
@@ -525,14 +583,14 @@ function convertSTtoUV(s) {
 /**
  * @private
  */
-function convertSiTitoST(si) {
+function convertSiTitoST(si: any) {
   return (1.0 / S2_MAX_SITI) * si;
 }
 
 /**
  * @private
  */
-function convertIJLeveltoBoundUV(ij, level) {
+function convertIJLeveltoBoundUV(ij: any, level: any) {
   const result = [[], []];
   const cellSize = getSizeIJ(level);
   for (let d = 0; d < 2; ++d) {
@@ -547,14 +605,14 @@ function convertIJLeveltoBoundUV(ij, level) {
 /**
  * @private
  */
-function getSizeIJ(level) {
+function getSizeIJ(level: any) {
   return (1 << (S2_MAX_LEVEL - level)) >>> 0;
 }
 
 /**
  * @private
  */
-function convertIJtoSTMinimum(i) {
+function convertIJtoSTMinimum(i: any) {
   return (1.0 / S2_LIMIT_IJ) * i;
 }
 
@@ -568,14 +626,7 @@ function convertIJtoSTMinimum(i) {
  * See {@link https://github.com/google/s2geometry/blob/c59d0ca01ae3976db7f8abdc83fcc871a3a95186/src/s2/s2cell_id.cc#L75-L109}
  * @private
  */
-function generateLookupCell(
-  level,
-  i,
-  j,
-  originalOrientation,
-  position,
-  orientation,
-) {
+function generateLookupCell(level: any, i: any, j: any, originalOrientation: any, position: any, orientation: any, ) {
   if (level === S2_LOOKUP_BITS) {
     const ij = (i << S2_LOOKUP_BITS) + j;
     S2_LOOKUP_POSITIONS[(ij << 2) + originalOrientation] =
@@ -644,7 +695,7 @@ function generateLookupTable() {
  * Return the lowest-numbered bit that is on for this cell id
  * @private
  */
-function lsb(cellId) {
+function lsb(cellId: any) {
   return cellId & (~cellId + BigInt(1));
 }
 
@@ -652,7 +703,7 @@ function lsb(cellId) {
  * Return the lowest-numbered bit that is on for cells at the given level.
  * @private
  */
-function lsbForLevel(level) {
+function lsbForLevel(level: any) {
   return BigInt(1) << BigInt(2 * (S2_MAX_LEVEL - level));
 }
 
@@ -669,9 +720,8 @@ const Mod67BitPosition = [
  * Return the number of trailing zeros in number.
  * @private
  */
-function countTrailingZeroBits(x) {
+function countTrailingZeroBits(x: any) {
   return Mod67BitPosition[(-x & x) % BigInt(67)];
 }
 
-export { S2Cell };
 export default S2Cell;

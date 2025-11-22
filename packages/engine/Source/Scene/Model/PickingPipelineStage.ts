@@ -71,7 +71,7 @@ PickingPipelineStage.process = function (
 /**
  * @private
  */
-function buildPickObject(renderResources, instanceId) {
+function buildPickObject(renderResources: any, instanceId: any) {
   const model = renderResources.model;
 
   // Primitives that wrap Model may define the pickObject differently.
@@ -114,7 +114,7 @@ function buildPickObject(renderResources, instanceId) {
   return pickObject;
 }
 
-function processPickTexture(renderResources, primitive, instances) {
+function processPickTexture(renderResources: any, primitive: any, instances: any) {
   const model = renderResources.model;
   let featureTableId;
   let featureIdAttribute;
@@ -159,7 +159,7 @@ function processPickTexture(renderResources, primitive, instances) {
     "((selectedFeature.id < int(model_featuresLength)) ? texture(model_pickTexture, selectedFeature.st) : vec4(0.0))";
 }
 
-function processInstancedPickIds(renderResources, context) {
+function processInstancedPickIds(renderResources: any, context: any) {
   const instanceCount = renderResources.instanceCount;
   const pickIds = new Array(instanceCount);
   const pickIdsTypedArray = new Uint8Array(instanceCount * 4);
@@ -215,5 +215,4 @@ function processInstancedPickIds(renderResources, context) {
   renderResources.pickId = "v_pickColor";
 }
 
-export { PickingPipelineStage };
 export default PickingPipelineStage;

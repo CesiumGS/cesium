@@ -392,5 +392,4 @@ ModelUtility.checkSupportedExtensions = function (extensionsRequired) {
   }
 };
 
-export { ModelUtility };
 export default ModelUtility;

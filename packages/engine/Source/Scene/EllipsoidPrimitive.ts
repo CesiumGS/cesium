@@ -46,7 +46,7 @@ const attributeLocations = {
  *
  * @private
  */
-function EllipsoidPrimitive(options) {
+function EllipsoidPrimitive(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -204,7 +204,7 @@ function EllipsoidPrimitive(options) {
   };
 }
 
-function getVertexArray(context) {
+function getVertexArray(context: any) {
   let vertexArray = context.cache.ellipsoidPrimitive_vertexArray;
 
   if (defined(vertexArray)) {
@@ -250,7 +250,11 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
     return;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(this.material)) {
+    throw new DeveloperError("this.material must be defined.");
+  }
+  //>>includeEnd('debug');
 
   const context = frameState.context;
   const translucent = this.material.isTranslucent();
@@ -489,5 +493,4 @@ EllipsoidPrimitive.prototype.destroy = function () {
   this._pickId = this._pickId && this._pickId.destroy();
   return destroyObject(this);
 };
-export { EllipsoidPrimitive };
 export default EllipsoidPrimitive;

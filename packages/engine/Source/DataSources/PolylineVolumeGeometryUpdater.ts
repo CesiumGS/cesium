@@ -18,7 +18,7 @@ import Property from "./Property.js";
 
 const scratchColor = new Color();
 
-function PolylineVolumeGeometryOptions(entity) {
+function PolylineVolumeGeometryOptions(entity: any) {
   this.id = entity;
   this.vertexFormat = undefined;
   this.polylinePositions = undefined;
@@ -36,7 +36,7 @@ function PolylineVolumeGeometryOptions(entity) {
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
-function PolylineVolumeGeometryUpdater(entity, scene) {
+function PolylineVolumeGeometryUpdater(entity: any, scene: any) {
   GeometryUpdater.call(this, {
     entity: entity,
     scene: scene,
@@ -72,7 +72,15 @@ if (defined(Object.create)) {
 PolylineVolumeGeometryUpdater.prototype.createFillGeometryInstance = function (
   time,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._fillEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent a filled geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -133,7 +141,15 @@ PolylineVolumeGeometryUpdater.prototype.createFillGeometryInstance = function (
  */
 PolylineVolumeGeometryUpdater.prototype.createOutlineGeometryInstance =
   function (time) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("time", time);
+
+    if (!this._outlineEnabled) {
+      throw new DeveloperError(
+        "This instance does not represent an outlined geometry.",
+      );
+    }
+    //>>includeEnd('debug');
 
     const entity = this._entity;
     const isAvailable = entity.isAvailable(time);
@@ -224,11 +240,7 @@ PolylineVolumeGeometryUpdater.DynamicGeometryUpdater =
 /**
  * @private
  */
-function DynamicPolylineVolumeGeometryUpdater(
-  geometryUpdater,
-  primitives,
-  groundPrimitives,
-) {
+function DynamicPolylineVolumeGeometryUpdater(geometryUpdater: any, primitives: any, groundPrimitives: any, ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
@@ -287,5 +299,4 @@ DynamicPolylineVolumeGeometryUpdater.prototype._setOptions = function (
     time,
   );
 };
-export { PolylineVolumeGeometryUpdater };
 export default PolylineVolumeGeometryUpdater;

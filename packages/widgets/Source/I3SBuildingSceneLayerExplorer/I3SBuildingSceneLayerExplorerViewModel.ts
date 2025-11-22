@@ -1,7 +1,7 @@
 import { defined } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 
-function expandItemsHandler(data, event) {
+function expandItemsHandler(data: any, event: any) {
   const nestedList =
     event.currentTarget.parentElement.parentElement.querySelector(
       `#${data.name}-expander`,
@@ -11,7 +11,7 @@ function expandItemsHandler(data, event) {
     event.currentTarget.textContent === "+" ? "-" : "+";
 }
 
-function trackSublayer(sublayer, viewModel) {
+function trackSublayer(sublayer: any, viewModel: any) {
   knockout.track(sublayer);
 
   for (let i = 0; i < sublayer.sublayers.length; i++) {
@@ -19,19 +19,19 @@ function trackSublayer(sublayer, viewModel) {
   }
 }
 
-function isFullModel(layer) {
+function isFullModel(layer: any) {
   return layer.modelName === "FullModel";
 }
 
-function isOverview(layer) {
+function isOverview(layer: any) {
   return layer.modelName === "Overview";
 }
 
-function isTopLayer(layer) {
+function isTopLayer(layer: any) {
   return isOverview(layer) || isFullModel(layer);
 }
 
-function addTopLayer(layer, viewModel) {
+function addTopLayer(layer: any, viewModel: any) {
   if (isTopLayer(layer)) {
     layer.visibility = false;
     for (let i = 0; i < layer.sublayers.length; i++) {
@@ -50,9 +50,9 @@ function addTopLayer(layer, viewModel) {
   }
 }
 
-function handleTopLayerSelector(layer, viewModel) {
+function handleTopLayerSelector(layer: any, viewModel: any) {
   if (isTopLayer(layer)) {
-    viewModel.sublayers.forEach((elem) => (elem.visibility = false));
+    viewModel.sublayers.forEach((elem: any) => (elem.visibility = false));
     viewModel.sublayers[layer.index].visibility = true;
     const bsl = document.getElementById("bsl-wrapper");
     if (isFullModel(layer)) {
@@ -66,7 +66,7 @@ function handleTopLayerSelector(layer, viewModel) {
   }
 }
 
-async function setLevels(i3sProvider, levels) {
+async function setLevels(i3sProvider: any, levels: any) {
   try {
     const attributes = i3sProvider.getAttributeNames();
     for (let index = 0; index < attributes.length; index++) {
@@ -78,7 +78,7 @@ async function setLevels(i3sProvider, levels) {
       }
     }
 
-    levels.sort((a, b) => a - b);
+    levels.sort((a: any, b: any) => a - b);
     levels.unshift("All");
   } catch (error) {
     console.log(`There was an error getting attributes: ${error}`);
@@ -92,7 +92,7 @@ async function setLevels(i3sProvider, levels) {
  *
  * @param {I3SDataProvider} i3sProvider I3S Data provider instance.
  */
-function I3SBuildingSceneLayerExplorerViewModel(i3sProvider) {
+function I3SBuildingSceneLayerExplorerViewModel(i3sProvider: any) {
   const that = this;
   this.levels = [];
   this.viewModel = {
@@ -170,5 +170,4 @@ function I3SBuildingSceneLayerExplorerViewModel(i3sProvider) {
   return this.viewModel;
 }
 
-export { I3SBuildingSceneLayerExplorerViewModel };
 export default I3SBuildingSceneLayerExplorerViewModel;

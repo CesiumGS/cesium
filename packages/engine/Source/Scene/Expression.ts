@@ -34,8 +34,10 @@ import ExpressionNodeType from "./ExpressionNodeType.js";
  * const expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
  * expression.evaluateColor(feature, result); // returns a Cesium.Color object
  */
-function Expression(expression, defines) {
-  ;
+function Expression(expression: any, defines: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("expression", expression);
+  //>>includeEnd('debug');
 
   this._expression = expression;
   expression = replaceDefines(expression, defines);
@@ -303,19 +305,19 @@ const ternaryFunctions = {
   mix: getEvaluateTernaryComponentwise(CesiumMath.lerp, true),
 };
 
-function fract(number) {
+function fract(number: any) {
   return number - Math.floor(number);
 }
 
-function exp2(exponent) {
+function exp2(exponent: any) {
   return Math.pow(2.0, exponent);
 }
 
-function log2(number) {
+function log2(number: any) {
   return CesiumMath.log2(number);
 }
 
-function getEvaluateUnaryComponentwise(operation) {
+function getEvaluateUnaryComponentwise(operation: any) {
   return function (call, left) {
     if (typeof left === "number") {
       return operation(left);
@@ -347,7 +349,7 @@ function getEvaluateUnaryComponentwise(operation) {
   };
 }
 
-function getEvaluateBinaryComponentwise(operation, allowScalar) {
+function getEvaluateBinaryComponentwise(operation: any, allowScalar: any) {
   return function (call, left, right) {
     if (allowScalar && typeof right === "number") {
       if (typeof left === "number") {
@@ -407,7 +409,7 @@ function getEvaluateBinaryComponentwise(operation, allowScalar) {
   };
 }
 
-function getEvaluateTernaryComponentwise(operation, allowScalar) {
+function getEvaluateTernaryComponentwise(operation: any, allowScalar: any) {
   return function (call, left, right, test) {
     if (allowScalar && typeof test === "number") {
       if (typeof left === "number" && typeof right === "number") {
@@ -483,7 +485,7 @@ function getEvaluateTernaryComponentwise(operation, allowScalar) {
   };
 }
 
-function length(call, left) {
+function length(call: any, left: any) {
   if (typeof left === "number") {
     return Math.abs(left);
   } else if (left instanceof Cartesian2) {
@@ -499,7 +501,7 @@ function length(call, left) {
   );
 }
 
-function normalize(call, left) {
+function normalize(call: any, left: any) {
   if (typeof left === "number") {
     return 1.0;
   } else if (left instanceof Cartesian2) {
@@ -515,7 +517,7 @@ function normalize(call, left) {
   );
 }
 
-function distance(call, left, right) {
+function distance(call: any, left: any, right: any) {
   if (typeof left === "number" && typeof right === "number") {
     return Math.abs(left - right);
   } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
@@ -531,7 +533,7 @@ function distance(call, left, right) {
   );
 }
 
-function dot(call, left, right) {
+function dot(call: any, left: any, right: any) {
   if (typeof left === "number" && typeof right === "number") {
     return left * right;
   } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
@@ -547,7 +549,7 @@ function dot(call, left, right) {
   );
 }
 
-function cross(call, left, right) {
+function cross(call: any, left: any, right: any) {
   if (left instanceof Cartesian3 && right instanceof Cartesian3) {
     return Cartesian3.cross(left, right, scratchStorage.getCartesian3());
   }
@@ -557,7 +559,7 @@ function cross(call, left, right) {
   );
 }
 
-function Node(type, value, left, right, test) {
+function Node(type: any, value: any, left: any, right: any, test: any) {
   this._type = type;
   this._value = value;
   this._left = left;
@@ -568,7 +570,7 @@ function Node(type, value, left, right, test) {
   setEvaluateFunction(this);
 }
 
-function replaceDefines(expression, defines) {
+function replaceDefines(expression: any, defines: any) {
   if (!defined(defines)) {
     return expression;
   }
@@ -584,15 +586,15 @@ function replaceDefines(expression, defines) {
   return expression;
 }
 
-function removeBackslashes(expression) {
+function removeBackslashes(expression: any) {
   return expression.replace(backslashRegex, backslashReplacement);
 }
 
-function replaceBackslashes(expression) {
+function replaceBackslashes(expression: any) {
   return expression.replace(replacementRegex, "\\");
 }
 
-function replaceVariables(expression) {
+function replaceVariables(expression: any) {
   let exp = expression;
   let result = "";
   let i = exp.indexOf("${");
@@ -626,7 +628,7 @@ function replaceVariables(expression) {
   return result;
 }
 
-function parseLiteral(ast) {
+function parseLiteral(ast: any) {
   const type = typeof ast.value;
   if (ast.value === null) {
     return new Node(ExpressionNodeType.LITERAL_NULL, null);
@@ -645,7 +647,7 @@ function parseLiteral(ast) {
   }
 }
 
-function parseCall(expression, ast) {
+function parseCall(expression: any, ast: any) {
   const args = ast.arguments;
   const argsLength = args.length;
   let call;
@@ -783,7 +785,7 @@ function parseCall(expression, ast) {
   throw new RuntimeError(`Unexpected function call "${call}".`);
 }
 
-function parseRegex(expression, ast) {
+function parseRegex(expression: any, ast: any) {
   const args = ast.arguments;
   // no arguments, return default regex
   if (args.length === 0) {
@@ -822,7 +824,7 @@ function parseRegex(expression, ast) {
   return new Node(ExpressionNodeType.REGEX, pattern);
 }
 
-function parseKeywordsAndVariables(ast) {
+function parseKeywordsAndVariables(ast: any) {
   if (isVariable(ast.name)) {
     const name = getPropertyName(ast.name);
     if (name.substr(0, 8) === "tiles3d_") {
@@ -840,7 +842,7 @@ function parseKeywordsAndVariables(ast) {
   throw new RuntimeError(`${ast.name} is not defined.`);
 }
 
-function parseMathConstant(ast) {
+function parseMathConstant(ast: any) {
   const name = ast.property.name;
   if (name === "PI") {
     return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.PI);
@@ -849,7 +851,7 @@ function parseMathConstant(ast) {
   }
 }
 
-function parseNumberConstant(ast) {
+function parseNumberConstant(ast: any) {
   const name = ast.property.name;
   if (name === "POSITIVE_INFINITY") {
     return new Node(
@@ -859,7 +861,7 @@ function parseNumberConstant(ast) {
   }
 }
 
-function parseMemberExpression(expression, ast) {
+function parseMemberExpression(expression: any, ast: any) {
   if (ast.object.name === "Math") {
     return parseMathConstant(ast);
   } else if (ast.object.name === "Number") {
@@ -877,19 +879,19 @@ function parseMemberExpression(expression, ast) {
   return new Node(ExpressionNodeType.MEMBER, "dot", obj, val);
 }
 
-function isLiteralType(node) {
+function isLiteralType(node: any) {
   return node._type >= ExpressionNodeType.LITERAL_NULL;
 }
 
-function isVariable(name) {
+function isVariable(name: any) {
   return name.substr(0, 4) === "czm_";
 }
 
-function getPropertyName(variable) {
+function getPropertyName(variable: any) {
   return variable.substr(4);
 }
 
-function createRuntimeAst(expression, ast) {
+function createRuntimeAst(expression: any, ast: any) {
   let node;
   let op;
   let left;
@@ -948,7 +950,7 @@ function createRuntimeAst(expression, ast) {
   return node;
 }
 
-function setEvaluateFunction(node) {
+function setEvaluateFunction(node: any) {
   if (node._type === ExpressionNodeType.CONDITIONAL) {
     node.evaluate = node._evaluateConditional;
   } else if (node._type === ExpressionNodeType.FUNCTION_CALL) {
@@ -1050,14 +1052,14 @@ function setEvaluateFunction(node) {
   }
 }
 
-function evaluateTilesetTime(feature) {
+function evaluateTilesetTime(feature: any) {
   if (!defined(feature)) {
     return 0.0;
   }
   return feature.content.tileset.timeSinceLoad;
 }
 
-function getEvaluateUnaryFunction(call) {
+function getEvaluateUnaryFunction(call: any) {
   const evaluate = unaryFunctions[call];
   return function (feature) {
     const left = this._left.evaluate(feature);
@@ -1065,7 +1067,7 @@ function getEvaluateUnaryFunction(call) {
   };
 }
 
-function getEvaluateBinaryFunction(call) {
+function getEvaluateBinaryFunction(call: any) {
   const evaluate = binaryFunctions[call];
   return function (feature) {
     const left = this._left.evaluate(feature);
@@ -1074,7 +1076,7 @@ function getEvaluateBinaryFunction(call) {
   };
 }
 
-function getEvaluateTernaryFunction(call) {
+function getEvaluateTernaryFunction(call: any) {
   const evaluate = ternaryFunctions[call];
   return function (feature) {
     const left = this._left.evaluate(feature);
@@ -1084,7 +1086,7 @@ function getEvaluateTernaryFunction(call) {
   };
 }
 
-function getFeatureProperty(feature, name) {
+function getFeatureProperty(feature: any, name: any) {
   // Returns undefined if the feature is not defined or the property name is not defined for that feature
   if (defined(feature)) {
     return feature.getPropertyInherited(name);
@@ -1234,7 +1236,7 @@ Node.prototype._evaluateVariable = function (feature) {
   return getFeatureProperty(feature, this._value);
 };
 
-function checkFeature(ast) {
+function checkFeature(ast: any) {
   return ast._value === "feature";
 }
 
@@ -1811,7 +1813,7 @@ Node.prototype._evaluateToString = function (feature) {
   throw new RuntimeError(`Unexpected function call "${this._value}".`);
 };
 
-function convertHSLToRGB(ast) {
+function convertHSLToRGB(ast: any) {
   // Check if the color contains any nested expressions to see if the color can be converted here.
   // E.g. "hsl(0.9, 0.6, 0.7)" is able to convert directly to rgb, "hsl(0.9, 0.6, ${Height})" is not.
   const channels = ast._left;
@@ -1828,7 +1830,7 @@ function convertHSLToRGB(ast) {
   return Color.fromHsl(h, s, l, a, scratchColor);
 }
 
-function convertRGBToColor(ast) {
+function convertRGBToColor(ast: any) {
   // Check if the color contains any nested expressions to see if the color can be converted here.
   // E.g. "rgb(255, 255, 255)" is able to convert directly to Color, "rgb(255, 255, ${Height})" is not.
   const channels = ast._left;
@@ -1846,7 +1848,7 @@ function convertRGBToColor(ast) {
   return color;
 }
 
-function numberToString(number) {
+function numberToString(number: any) {
   if (number % 1 === 0) {
     // Add a .0 to whole numbers
     return number.toFixed(1);
@@ -1855,14 +1857,14 @@ function numberToString(number) {
   return number.toString();
 }
 
-function colorToVec3(color) {
+function colorToVec3(color: any) {
   const r = numberToString(color.red);
   const g = numberToString(color.green);
   const b = numberToString(color.blue);
   return `vec3(${r}, ${g}, ${b})`;
 }
 
-function colorToVec4(color) {
+function colorToVec4(color: any) {
   const r = numberToString(color.red);
   const g = numberToString(color.green);
   const b = numberToString(color.blue);
@@ -1870,12 +1872,7 @@ function colorToVec4(color) {
   return `vec4(${r}, ${g}, ${b}, ${a})`;
 }
 
-function getExpressionArray(
-  array,
-  variableSubstitutionMap,
-  shaderState,
-  parent,
-) {
+function getExpressionArray(array: any, variableSubstitutionMap: any, shaderState: any, parent: any, ) {
   const length = array.length;
   const expressions = new Array(length);
   for (let i = 0; i < length; ++i) {
@@ -1888,7 +1885,7 @@ function getExpressionArray(
   return expressions;
 }
 
-function getVariableName(variableName, variableSubstitutionMap) {
+function getVariableName(variableName: any, variableSubstitutionMap: any) {
   if (!defined(variableSubstitutionMap[variableName])) {
     return Expression.NULL_SENTINEL;
   }
@@ -2134,7 +2131,13 @@ Node.prototype.getShaderExpression = function (
       }
       break;
     case ExpressionNodeType.LITERAL_VECTOR:
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(left)) {
+        throw new DeveloperError(
+          "left should always be defined for type ExpressionNodeType.LITERAL_VECTOR",
+        );
+      }
+      //>>includeEnd('debug');
       length = left.length;
       vectorExpression = `${value}(`;
       for (let i = 0; i < length; ++i) {
@@ -2222,5 +2225,4 @@ Node.prototype.getVariables = function (variables, parent) {
   }
 };
 
-export { Expression };
 export default Expression;

@@ -103,7 +103,11 @@ const ComponentDatatype = {
  * const size = Cesium.ComponentDatatype.getSizeInBytes(Cesium.ComponentDatatype.BYTE);
  */
 ComponentDatatype.getSizeInBytes = function (componentDatatype) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(componentDatatype)) {
+    throw new DeveloperError("value is required.");
+  }
+  //>>includeEnd('debug');
 
   switch (componentDatatype) {
     case ComponentDatatype.BYTE:
@@ -122,7 +126,10 @@ ComponentDatatype.getSizeInBytes = function (componentDatatype) {
       return Float32Array.BYTES_PER_ELEMENT;
     case ComponentDatatype.DOUBLE:
       return Float64Array.BYTES_PER_ELEMENT;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("componentDatatype is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 
@@ -158,7 +165,11 @@ ComponentDatatype.fromTypedArray = function (array) {
     return ComponentDatatype.DOUBLE;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "array must be an Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, or Float64Array.",
+  );
+  //>>includeEnd('debug');
 };
 
 /**
@@ -203,7 +214,14 @@ ComponentDatatype.createTypedArray = function (
   componentDatatype,
   valuesOrLength,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(componentDatatype)) {
+    throw new DeveloperError("componentDatatype is required.");
+  }
+  if (!defined(valuesOrLength)) {
+    throw new DeveloperError("valuesOrLength is required.");
+  }
+  //>>includeEnd('debug');
 
   switch (componentDatatype) {
     case ComponentDatatype.BYTE:
@@ -222,7 +240,10 @@ ComponentDatatype.createTypedArray = function (
       return new Float32Array(valuesOrLength);
     case ComponentDatatype.DOUBLE:
       return new Float64Array(valuesOrLength);
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("componentDatatype is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 
@@ -243,7 +264,14 @@ ComponentDatatype.createArrayBufferView = function (
   byteOffset,
   length,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(componentDatatype)) {
+    throw new DeveloperError("componentDatatype is required.");
+  }
+  if (!defined(buffer)) {
+    throw new DeveloperError("buffer is required.");
+  }
+  //>>includeEnd('debug');
 
   byteOffset = byteOffset ?? 0;
   length =
@@ -268,7 +296,10 @@ ComponentDatatype.createArrayBufferView = function (
       return new Float32Array(buffer, byteOffset, length);
     case ComponentDatatype.DOUBLE:
       return new Float64Array(buffer, byteOffset, length);
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("componentDatatype is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 
@@ -298,7 +329,10 @@ ComponentDatatype.fromName = function (name) {
       return ComponentDatatype.FLOAT;
     case "DOUBLE":
       return ComponentDatatype.DOUBLE;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("name is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 export default Object.freeze(ComponentDatatype);

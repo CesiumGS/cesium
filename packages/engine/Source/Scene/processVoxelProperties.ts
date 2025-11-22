@@ -12,7 +12,7 @@ import ShaderDestination from "../Renderer/ShaderDestination.js";
  *
  * @private
  */
-function processVoxelProperties(renderResources, primitive) {
+function processVoxelProperties(renderResources: any, primitive: any) {
   const { shaderBuilder } = renderResources;
 
   const { names, types, componentTypes, minimumValues, maximumValues } =
@@ -324,7 +324,7 @@ function processVoxelProperties(renderResources, primitive) {
  *
  * @private
  */
-function getGlslType(type) {
+function getGlslType(type: any) {
   if (type === MetadataType.SCALAR) {
     return "float";
   } else if (type === MetadataType.VEC2) {
@@ -346,7 +346,7 @@ function getGlslType(type) {
  *
  * @private
  */
-function getGlslTextureSwizzle(type) {
+function getGlslTextureSwizzle(type: any) {
   if (type === MetadataType.SCALAR) {
     return ".r";
   } else if (type === MetadataType.VEC2) {
@@ -369,7 +369,7 @@ function getGlslTextureSwizzle(type) {
  *
  * @private
  */
-function getGlslNumberAsFloat(number) {
+function getGlslNumberAsFloat(number: any) {
   let numberString = number.toString();
   if (numberString.indexOf(".") === -1) {
     numberString = `${number}.0`;
@@ -388,12 +388,11 @@ function getGlslNumberAsFloat(number) {
  *
  * @private
  */
-function getGlslField(type, index) {
+function getGlslField(type: any, index: any) {
   if (type === MetadataType.SCALAR) {
     return "";
   }
   return `[${index}]`;
 }
 
-export { processVoxelProperties };
 export default processVoxelProperties;

@@ -23,5 +23,4 @@ if (
     return Date.now();
   };
 }
-export { getTimestamp };
 export default getTimestamp;

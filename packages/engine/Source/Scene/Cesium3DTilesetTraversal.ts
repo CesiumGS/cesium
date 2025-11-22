@@ -159,7 +159,7 @@ Cesium3DTilesetTraversal.loadTile = function (tile, frameState) {
  * @param {FrameState} frameState
  * @returns {boolean}
  */
-function isOnScreenLongEnough(tile, frameState) {
+function isOnScreenLongEnough(tile: any, frameState: any) {
   const { tileset } = tile;
   if (!tileset._cullRequestsWhileMoving) {
     return true;
@@ -205,7 +205,7 @@ Cesium3DTilesetTraversal.updateTile = function (tile, frameState) {
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
  */
-function updateTileVisibility(tile, frameState) {
+function updateTileVisibility(tile: any, frameState: any) {
   tile.updateVisibility(frameState);
 
   if (!tile.isVisible) {
@@ -248,7 +248,7 @@ function updateTileVisibility(tile, frameState) {
  * @param {FrameState} frameState
  * @returns {boolean}
  */
-function meetsScreenSpaceErrorEarly(tile, frameState) {
+function meetsScreenSpaceErrorEarly(tile: any, frameState: any) {
   const { parent, tileset } = tile;
   if (
     !defined(parent) ||
@@ -272,7 +272,7 @@ function meetsScreenSpaceErrorEarly(tile, frameState) {
  * @param {FrameState} frameState
  * @returns {boolean}
  */
-function anyChildrenVisible(tile, frameState) {
+function anyChildrenVisible(tile: any, frameState: any) {
   let anyVisible = false;
   const children = tile.children;
   for (let i = 0; i < children.length; ++i) {
@@ -287,7 +287,7 @@ function anyChildrenVisible(tile, frameState) {
  * @private
  * @param {Cesium3DTile} tile
  */
-function updateMinimumMaximumPriority(tile) {
+function updateMinimumMaximumPriority(tile: any) {
   const minimumPriority = tile.tileset._minimumPriority;
   const maximumPriority = tile.tileset._maximumPriority;
   const priorityHolder = tile._priorityHolder;
@@ -320,5 +320,4 @@ function updateMinimumMaximumPriority(tile) {
   );
 }
 
-export { Cesium3DTilesetTraversal };
 export default Cesium3DTilesetTraversal;

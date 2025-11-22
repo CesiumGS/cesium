@@ -15,17 +15,10 @@ import knockout from "./ThirdParty/knockout.js";
  * @param {string} [event='change'] The name of the event to receive notification for.
  * @returns The subscription object from Knockout which can be used to dispose the subscription later.
  */
-function subscribeAndEvaluate(
-  owner,
-  observablePropertyName,
-  callback,
-  target,
-  event,
-) {
+function subscribeAndEvaluate(owner: any, observablePropertyName: any, callback: any, target: any, event: any, ) {
   callback.call(target, owner[observablePropertyName]);
   return knockout
     .getObservable(owner, observablePropertyName)
     .subscribe(callback, target, event);
 }
-export { subscribeAndEvaluate };
 export default subscribeAndEvaluate;

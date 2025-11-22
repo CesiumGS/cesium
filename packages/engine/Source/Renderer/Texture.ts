@@ -44,10 +44,12 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @param {Texture.ConstructorOptions} options
  * @private
  */
-function Texture(options) {
+function Texture(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  //>>includeEnd('debug');
 
   const {
     context,
@@ -85,7 +87,131 @@ function Texture(options) {
 
   const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(width) || !defined(height)) {
+    throw new DeveloperError(
+      "options requires a source field to create an initialized texture or width and height fields to create a blank texture.",
+    );
+  }
+
+  Check.typeOf.number.greaterThan("width", width, 0);
+
+  if (width > ContextLimits.maximumTextureSize) {
+    throw new DeveloperError(
+      `Width must be less than or equal to the maximum texture size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`,
+    );
+  }
+
+  Check.typeOf.number.greaterThan("height", height, 0);
+
+  if (height > ContextLimits.maximumTextureSize) {
+    throw new DeveloperError(
+      `Height must be less than or equal to the maximum texture size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`,
+    );
+  }
+
+  if (!PixelFormat.validate(pixelFormat)) {
+    throw new DeveloperError("Invalid options.pixelFormat.");
+  }
+
+  if (!isCompressed && !PixelDatatype.validate(pixelDatatype)) {
+    throw new DeveloperError("Invalid options.pixelDatatype.");
+  }
+
+  if (
+    pixelFormat === PixelFormat.DEPTH_COMPONENT &&
+    pixelDatatype !== PixelDatatype.UNSIGNED_SHORT &&
+    pixelDatatype !== PixelDatatype.UNSIGNED_INT
+  ) {
+    throw new DeveloperError(
+      "When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.",
+    );
+  }
+
+  if (
+    pixelFormat === PixelFormat.DEPTH_STENCIL &&
+    pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8
+  ) {
+    throw new DeveloperError(
+      "When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8.",
+    );
+  }
+
+  if (pixelDatatype === PixelDatatype.FLOAT && !context.floatingPointTexture) {
+    throw new DeveloperError(
+      "When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.",
+    );
+  }
+
+  if (
+    pixelDatatype === PixelDatatype.HALF_FLOAT &&
+    !context.halfFloatingPointTexture
+  ) {
+    throw new DeveloperError(
+      "When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension. Check context.halfFloatingPointTexture.",
+    );
+  }
+
+  if (PixelFormat.isDepthFormat(pixelFormat)) {
+    if (defined(source)) {
+      throw new DeveloperError(
+        "When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.",
+      );
+    }
+
+    if (!context.depthTexture) {
+      throw new DeveloperError(
+        "When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.",
+      );
+    }
+  }
+
+  if (isCompressed) {
+    if (!defined(source) || !defined(source.arrayBufferView)) {
+      throw new DeveloperError(
+        "When options.pixelFormat is compressed, options.source.arrayBufferView must be defined.",
+      );
+    }
+
+    if (PixelFormat.isDXTFormat(internalFormat) && !context.s3tc) {
+      throw new DeveloperError(
+        "When options.pixelFormat is S3TC compressed, this WebGL implementation must support the WEBGL_compressed_texture_s3tc extension. Check context.s3tc.",
+      );
+    } else if (PixelFormat.isPVRTCFormat(internalFormat) && !context.pvrtc) {
+      throw new DeveloperError(
+        "When options.pixelFormat is PVRTC compressed, this WebGL implementation must support the WEBGL_compressed_texture_pvrtc extension. Check context.pvrtc.",
+      );
+    } else if (PixelFormat.isASTCFormat(internalFormat) && !context.astc) {
+      throw new DeveloperError(
+        "When options.pixelFormat is ASTC compressed, this WebGL implementation must support the WEBGL_compressed_texture_astc extension. Check context.astc.",
+      );
+    } else if (PixelFormat.isETC2Format(internalFormat) && !context.etc) {
+      throw new DeveloperError(
+        "When options.pixelFormat is ETC2 compressed, this WebGL implementation must support the WEBGL_compressed_texture_etc extension. Check context.etc.",
+      );
+    } else if (PixelFormat.isETC1Format(internalFormat) && !context.etc1) {
+      throw new DeveloperError(
+        "When options.pixelFormat is ETC1 compressed, this WebGL implementation must support the WEBGL_compressed_texture_etc1 extension. Check context.etc1.",
+      );
+    } else if (PixelFormat.isBC7Format(internalFormat) && !context.bc7) {
+      throw new DeveloperError(
+        "When options.pixelFormat is BC7 compressed, this WebGL implementation must support the EXT_texture_compression_bptc extension. Check context.bc7.",
+      );
+    }
+
+    if (
+      PixelFormat.compressedTextureSizeInBytes(
+        internalFormat,
+        width,
+        height,
+      ) !== source.arrayBufferView.byteLength
+    ) {
+      throw new DeveloperError(
+        "The byte length of the array buffer is invalid for the compressed texture with the given width and height.",
+      );
+    }
+  }
+  //>>includeEnd('debug');
 
   const gl = context._gl;
 
@@ -154,7 +280,7 @@ function Texture(options) {
  *
  * @private
  */
-function loadCompressedBufferSource(texture, source) {
+function loadCompressedBufferSource(texture: any, source: any) {
   const context = texture._context;
   const gl = context._gl;
   const textureTarget = texture._textureTarget;
@@ -203,7 +329,7 @@ function loadCompressedBufferSource(texture, source) {
  *
  * @private
  */
-function loadBufferSource(texture, source) {
+function loadBufferSource(texture: any, source: any) {
   const context = texture._context;
   const gl = context._gl;
   const textureTarget = texture._textureTarget;
@@ -276,14 +402,7 @@ function loadBufferSource(texture, source) {
  *
  * @private
  */
-function loadPartialBufferSource(
-  texture,
-  arrayBufferView,
-  xOffset,
-  yOffset,
-  width,
-  height,
-) {
+function loadPartialBufferSource(texture: any, arrayBufferView: any, xOffset: any, yOffset: any, width: any, height: any, ) {
   const context = texture._context;
   const gl = context._gl;
 
@@ -328,7 +447,7 @@ function loadPartialBufferSource(
  *
  * @private
  */
-function loadFramebufferSource(texture, source) {
+function loadFramebufferSource(texture: any, source: any) {
   const context = texture._context;
   const gl = context._gl;
 
@@ -364,7 +483,7 @@ function loadFramebufferSource(texture, source) {
  *
  * @private
  */
-function loadImageSource(texture, source) {
+function loadImageSource(texture: any, source: any) {
   const context = texture._context;
   const gl = context._gl;
 
@@ -392,7 +511,7 @@ function loadImageSource(texture, source) {
  *
  * @private
  */
-function loadPartialImageSource(texture, source, xOffset, yOffset) {
+function loadPartialImageSource(texture: any, source: any, xOffset: any, yOffset: any) {
   const context = texture._context;
   const gl = context._gl;
 
@@ -419,7 +538,7 @@ function loadPartialImageSource(texture, source, xOffset, yOffset) {
  *
  * @private
  */
-function nextMipSize(currentSize) {
+function nextMipSize(currentSize: any) {
   const nextSize = Math.floor(currentSize / 2) | 0;
   return Math.max(nextSize, 1);
 }
@@ -431,7 +550,7 @@ function nextMipSize(currentSize) {
  *
  * @private
  */
-function loadNull(texture) {
+function loadNull(texture: any) {
   const context = texture._context;
 
   context._gl.texImage2D(
@@ -492,7 +611,9 @@ Texture.create = function (options) {
 Texture.fromFramebuffer = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  //>>includeEnd('debug');
 
   const context = options.context;
   const {
@@ -504,7 +625,40 @@ Texture.fromFramebuffer = function (options) {
     framebuffer,
   } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!PixelFormat.validate(pixelFormat)) {
+    throw new DeveloperError("Invalid pixelFormat.");
+  }
+  if (
+    PixelFormat.isDepthFormat(pixelFormat) ||
+    PixelFormat.isCompressedFormat(pixelFormat)
+  ) {
+    throw new DeveloperError(
+      "pixelFormat cannot be DEPTH_COMPONENT, DEPTH_STENCIL or a compressed format.",
+    );
+  }
+  Check.defined("options.context", context);
+  Check.typeOf.number.greaterThanOrEquals(
+    "framebufferXOffset",
+    framebufferXOffset,
+    0,
+  );
+  Check.typeOf.number.greaterThanOrEquals(
+    "framebufferYOffset",
+    framebufferYOffset,
+    0,
+  );
+  if (framebufferXOffset + width > context.drawingBufferWidth) {
+    throw new DeveloperError(
+      "framebufferXOffset + width must be less than or equal to drawingBufferWidth",
+    );
+  }
+  if (framebufferYOffset + height > context.drawingBufferHeight) {
+    throw new DeveloperError(
+      "framebufferYOffset + height must be less than or equal to drawingBufferHeight.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const texture = new Texture({
     context: context,
@@ -613,7 +767,7 @@ Object.defineProperties(Texture.prototype, {
  * @param {Sampler} sampler Information about how to sample the texture
  * @private
  */
-function setupSampler(texture, sampler) {
+function setupSampler(texture: any, sampler: any) {
   let { minificationFilter, magnificationFilter } = sampler;
 
   const mipmap = [
@@ -696,7 +850,9 @@ function setupSampler(texture, sampler) {
  * });
  */
 Texture.prototype.copyFrom = function (options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options", options);
+  //>>includeEnd('debug');
 
   const {
     xOffset = 0,
@@ -705,7 +861,31 @@ Texture.prototype.copyFrom = function (options) {
     skipColorSpaceConversion = false,
   } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.source", source);
+  if (PixelFormat.isDepthFormat(this._pixelFormat)) {
+    throw new DeveloperError(
+      "Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.",
+    );
+  }
+  if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
+    throw new DeveloperError(
+      "Cannot call copyFrom with a compressed texture pixel format.",
+    );
+  }
+  Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
+  Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
+  Check.typeOf.number.lessThanOrEquals(
+    "xOffset + options.source.width",
+    xOffset + source.width,
+    this._width,
+  );
+  Check.typeOf.number.lessThanOrEquals(
+    "yOffset + options.source.height",
+    yOffset + source.height,
+    this._height,
+  );
+  //>>includeEnd('debug');
 
   const context = this._context;
   const gl = context._gl;
@@ -810,7 +990,51 @@ Texture.prototype.copyFromFramebuffer = function (
   width = width ?? this._width;
   height = height ?? this._height;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (PixelFormat.isDepthFormat(this._pixelFormat)) {
+    throw new DeveloperError(
+      "Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.",
+    );
+  }
+  if (this._pixelDatatype === PixelDatatype.FLOAT) {
+    throw new DeveloperError(
+      "Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.",
+    );
+  }
+  if (this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
+    throw new DeveloperError(
+      "Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.",
+    );
+  }
+  if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
+    throw new DeveloperError(
+      "Cannot call copyFrom with a compressed texture pixel format.",
+    );
+  }
+
+  Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
+  Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
+  Check.typeOf.number.greaterThanOrEquals(
+    "framebufferXOffset",
+    framebufferXOffset,
+    0,
+  );
+  Check.typeOf.number.greaterThanOrEquals(
+    "framebufferYOffset",
+    framebufferYOffset,
+    0,
+  );
+  Check.typeOf.number.lessThanOrEquals(
+    "xOffset + width",
+    xOffset + width,
+    this._width,
+  );
+  Check.typeOf.number.lessThanOrEquals(
+    "yOffset + height",
+    yOffset + height,
+    this._height,
+  );
+  //>>includeEnd('debug');
 
   const gl = this._context._gl;
   const target = this._textureTarget;
@@ -844,7 +1068,33 @@ Texture.prototype.copyFromFramebuffer = function (
 Texture.prototype.generateMipmap = function (hint) {
   hint = hint ?? MipmapHint.DONT_CARE;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (PixelFormat.isDepthFormat(this._pixelFormat)) {
+    throw new DeveloperError(
+      "Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.",
+    );
+  }
+  if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
+    throw new DeveloperError(
+      "Cannot call generateMipmap with a compressed pixel format.",
+    );
+  }
+  if (!this._context.webgl2) {
+    if (this._width > 1 && !CesiumMath.isPowerOfTwo(this._width)) {
+      throw new DeveloperError(
+        "width must be a power of two to call generateMipmap() in a WebGL1 context.",
+      );
+    }
+    if (this._height > 1 && !CesiumMath.isPowerOfTwo(this._height)) {
+      throw new DeveloperError(
+        "height must be a power of two to call generateMipmap() in a WebGL1 context.",
+      );
+    }
+  }
+  if (!MipmapHint.validate(hint)) {
+    throw new DeveloperError("hint is invalid.");
+  }
+  //>>includeEnd('debug');
 
   this._hasMipmap = true;
 
@@ -866,5 +1116,4 @@ Texture.prototype.destroy = function () {
   this._context._gl.deleteTexture(this._texture);
   return destroyObject(this);
 };
-export { Texture };
 export default Texture;

@@ -13,7 +13,7 @@ import CesiumMath from "./Math.js";
  * @param {number} [pitch=0.0] The pitch component in radians.
  * @param {number} [roll=0.0] The roll component in radians.
  */
-function HeadingPitchRoll(heading, pitch, roll) {
+function HeadingPitchRoll(heading: any, pitch: any, roll: any) {
   /**
    * Gets or sets the heading.
    * @type {number}
@@ -42,7 +42,11 @@ function HeadingPitchRoll(heading, pitch, roll) {
  * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if one was not provided.
  */
 HeadingPitchRoll.fromQuaternion = function (quaternion, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(quaternion)) {
+    throw new DeveloperError("quaternion is required");
+  }
+  //>>includeEnd('debug');
   if (!defined(result)) {
     result = new HeadingPitchRoll();
   }
@@ -71,7 +75,17 @@ HeadingPitchRoll.fromQuaternion = function (quaternion, result) {
  * @returns {HeadingPitchRoll} A new HeadingPitchRoll instance
  */
 HeadingPitchRoll.fromDegrees = function (heading, pitch, roll, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(heading)) {
+    throw new DeveloperError("heading is required");
+  }
+  if (!defined(pitch)) {
+    throw new DeveloperError("pitch is required");
+  }
+  if (!defined(roll)) {
+    throw new DeveloperError("roll is required");
+  }
+  //>>includeEnd('debug');
   if (!defined(result)) {
     result = new HeadingPitchRoll();
   }
@@ -218,5 +232,4 @@ HeadingPitchRoll.prototype.equalsEpsilon = function (
 HeadingPitchRoll.prototype.toString = function () {
   return `(${this.heading}, ${this.pitch}, ${this.roll})`;
 };
-export { HeadingPitchRoll };
 export default HeadingPitchRoll;

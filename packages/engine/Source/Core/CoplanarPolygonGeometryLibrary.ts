@@ -16,7 +16,9 @@ const scratchZAxis = new Cartesian3();
 const obbScratch = new OrientedBoundingBox();
 
 CoplanarPolygonGeometryLibrary.validOutline = function (positions) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("positions", positions);
+  //>>includeEnd('debug');
 
   const orientedBoundingBox = OrientedBoundingBox.fromPoints(
     positions,
@@ -45,7 +47,12 @@ CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments = function (
   planeAxis1Result,
   planeAxis2Result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("positions", positions);
+  Check.defined("centerResult", centerResult);
+  Check.defined("planeAxis1Result", planeAxis1Result);
+  Check.defined("planeAxis2Result", planeAxis2Result);
+  //>>includeEnd('debug');
 
   const orientedBoundingBox = OrientedBoundingBox.fromPoints(
     positions,
@@ -90,7 +97,7 @@ CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments = function (
   return true;
 };
 
-function projectTo2D(position, center, axis1, axis2, result) {
+function projectTo2D(position: any, center: any, axis1: any, axis2: any, result: any) {
   const v = Cartesian3.subtract(position, center, scratchIntersectionPoint);
   const x = Cartesian3.dot(axis1, v);
   const y = Cartesian3.dot(axis2, v);
@@ -122,5 +129,4 @@ CoplanarPolygonGeometryLibrary.createProjectPointTo2DFunction = function (
     return projectTo2D(position, center, axis1, axis2, result);
   };
 };
-export { CoplanarPolygonGeometryLibrary };
 export default CoplanarPolygonGeometryLibrary;

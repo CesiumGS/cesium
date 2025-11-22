@@ -26,7 +26,7 @@ const debugShowPackedDepth = false;
  *
  * @private
  */
-function TranslucentTileClassification(context) {
+function TranslucentTileClassification(context: any) {
   this._drawClassificationFBO = new FramebufferManager({
     createDepthAttachments: false,
   });
@@ -86,7 +86,7 @@ Object.defineProperties(TranslucentTileClassification.prototype, {
   },
 });
 
-function destroyTextures(transpClass) {
+function destroyTextures(transpClass: any) {
   transpClass._textureToComposite = undefined;
 
   transpClass._translucentDepthStencilTexture =
@@ -95,13 +95,13 @@ function destroyTextures(transpClass) {
     transpClass._translucentDepthStencilTexture.destroy();
 }
 
-function destroyFramebuffers(transpClass) {
+function destroyFramebuffers(transpClass: any) {
   transpClass._drawClassificationFBO.destroy();
   transpClass._accumulationFBO.destroy();
   transpClass._packFBO.destroy();
 }
 
-function updateTextures(transpClass, context, width, height) {
+function updateTextures(transpClass: any, context: any, width: any, height: any) {
   destroyTextures(transpClass);
 
   transpClass._translucentDepthStencilTexture = new Texture({
@@ -114,7 +114,7 @@ function updateTextures(transpClass, context, width, height) {
   });
 }
 
-function updateFramebuffers(transpClass, context, width, height) {
+function updateFramebuffers(transpClass: any, context: any, width: any, height: any) {
   destroyFramebuffers(transpClass);
   transpClass._drawClassificationFBO.setDepthStencilTexture(
     transpClass._translucentDepthStencilTexture,
@@ -129,12 +129,7 @@ function updateFramebuffers(transpClass, context, width, height) {
   transpClass._packFBO.update(context, width, height);
 }
 
-function updateResources(
-  transpClass,
-  context,
-  passState,
-  globeDepthStencilTexture,
-) {
+function updateResources(transpClass: any, context: any, passState: any, globeDepthStencilTexture: any, ) {
   if (!transpClass.isSupported()) {
     return;
   }
@@ -456,7 +451,7 @@ TranslucentTileClassification.prototype.execute = function (scene, passState) {
   clear(this, scene, passState);
 };
 
-function clear(translucentTileClassification, scene, passState) {
+function clear(translucentTileClassification: any, scene: any, passState: any) {
   if (!translucentTileClassification._hasTranslucentDepth) {
     return;
   }
@@ -511,5 +506,4 @@ TranslucentTileClassification.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { TranslucentTileClassification };
 export default TranslucentTileClassification;

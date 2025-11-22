@@ -231,5 +231,4 @@ VoxelProvider.prototype.requestData = function (options) {
   DeveloperError.throwInstantiationError();
 };
 
-export { VoxelProvider };
 export default VoxelProvider;

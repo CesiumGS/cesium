@@ -37,7 +37,7 @@ GaussianSplatSorter._getSorterTaskProcessor = function () {
           );
         }
       })
-      .catch((error) => {
+      .catch((error: any) => {
         GaussianSplatSorter._error = error;
       });
     GaussianSplatSorter._sorterTaskProcessor = processor;
@@ -70,5 +70,4 @@ GaussianSplatSorter.radixSortIndexes = function (parameters) {
   ]);
 };
 
-export { GaussianSplatSorter };
 export default GaussianSplatSorter;

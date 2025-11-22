@@ -57,5 +57,4 @@ GeocoderService.getCreditsFromResult = function (geocoderResult) {
  * @returns {Promise<GeocoderService.Result[]>}
  */
 GeocoderService.prototype.geocode = DeveloperError.throwInstantiationError;
-export { GeocoderService };
 export default GeocoderService;

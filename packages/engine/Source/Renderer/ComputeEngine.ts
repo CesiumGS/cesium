@@ -15,7 +15,7 @@ import ShaderProgram from "./ShaderProgram.js";
 /**
  * @private
  */
-function ComputeEngine(context) {
+function ComputeEngine(context: any) {
   this._context = context;
 }
 
@@ -27,7 +27,7 @@ const clearCommandScratch = new ClearCommand({
   color: new Color(0.0, 0.0, 0.0, 0.0),
 });
 
-function createFramebuffer(context, outputTexture) {
+function createFramebuffer(context: any, outputTexture: any) {
   return new Framebuffer({
     context: context,
     colorTextures: [outputTexture],
@@ -35,7 +35,7 @@ function createFramebuffer(context, outputTexture) {
   });
 }
 
-function createViewportQuadShader(context, fragmentShaderSource) {
+function createViewportQuadShader(context: any, fragmentShaderSource: any) {
   return ShaderProgram.fromCache({
     context: context,
     vertexShaderSource: ViewportQuadVS,
@@ -47,7 +47,7 @@ function createViewportQuadShader(context, fragmentShaderSource) {
   });
 }
 
-function createRenderState(width, height) {
+function createRenderState(width: any, height: any) {
   if (
     !defined(renderStateScratch) ||
     renderStateScratch.viewport.width !== width ||
@@ -61,14 +61,27 @@ function createRenderState(width, height) {
 }
 
 ComputeEngine.prototype.execute = function (computeCommand) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("computeCommand", computeCommand);
+  //>>includeEnd('debug');
 
   // This may modify the command's resources, so do error checking afterwards
   if (defined(computeCommand.preExecute)) {
     computeCommand.preExecute(computeCommand);
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    !defined(computeCommand.fragmentShaderSource) &&
+    !defined(computeCommand.shaderProgram)
+  ) {
+    throw new DeveloperError(
+      "computeCommand.fragmentShaderSource or computeCommand.shaderProgram is required.",
+    );
+  }
+
+  Check.defined("computeCommand.outputTexture", computeCommand.outputTexture);
+  //>>includeEnd('debug');
 
   const outputTexture = computeCommand.outputTexture;
   const width = outputTexture.width;
@@ -119,5 +132,4 @@ ComputeEngine.prototype.isDestroyed = function () {
 ComputeEngine.prototype.destroy = function () {
   return destroyObject(this);
 };
-export { ComputeEngine };
 export default ComputeEngine;

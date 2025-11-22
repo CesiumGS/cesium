@@ -32,7 +32,7 @@ import TimeStandard from "./TimeStandard.js";
  *
  * @private
  */
-function EarthOrientationParameters(options) {
+function EarthOrientationParameters(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._dates = undefined;
@@ -103,7 +103,9 @@ function EarthOrientationParameters(options) {
  * Cesium.Transforms.earthOrientationParameters = eop;
  */
 EarthOrientationParameters.fromUrl = async function (url, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -232,11 +234,11 @@ EarthOrientationParameters.prototype.compute = function (date, result) {
   return result;
 };
 
-function compareLeapSecondDates(leapSecond, dateToFind) {
+function compareLeapSecondDates(leapSecond: any, dateToFind: any) {
   return JulianDate.compare(leapSecond.julianDate, dateToFind);
 }
 
-function onDataReady(eop, eopData) {
+function onDataReady(eop: any, eopData: any) {
   if (!defined(eopData.columnNames)) {
     throw new RuntimeError(
       "Error in loaded EOP data: The columnNames property is required.",
@@ -325,7 +327,7 @@ function onDataReady(eop, eopData) {
   }
 }
 
-function fillResultFromIndex(eop, samples, index, columnCount, result) {
+function fillResultFromIndex(eop: any, samples: any, index: any, columnCount: any, result: any) {
   const start = index * columnCount;
   result.xPoleWander = samples[start + eop._xPoleWanderRadiansColumn];
   result.yPoleWander = samples[start + eop._yPoleWanderRadiansColumn];
@@ -334,11 +336,11 @@ function fillResultFromIndex(eop, samples, index, columnCount, result) {
   result.ut1MinusUtc = samples[start + eop._ut1MinusUtcSecondsColumn];
 }
 
-function linearInterp(dx, y1, y2) {
+function linearInterp(dx: any, y1: any, y2: any) {
   return y1 + dx * (y2 - y1);
 }
 
-function interpolate(eop, dates, samples, date, before, after, result) {
+function interpolate(eop: any, dates: any, samples: any, date: any, before: any, after: any, result: any) {
   const columnCount = eop._columnCount;
 
   // First check the bounds on the EOP data
@@ -426,5 +428,4 @@ function interpolate(eop, dates, samples, date, before, after, result) {
   return result;
 }
 
-export { EarthOrientationParameters };
 export default EarthOrientationParameters;

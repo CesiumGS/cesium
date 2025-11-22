@@ -25,12 +25,12 @@ Object.defineProperties(PickDepth.prototype, {
   },
 });
 
-function updateFramebuffers(pickDepth, context, depthTexture) {
+function updateFramebuffers(pickDepth: any, context: any, depthTexture: any) {
   const { width, height } = depthTexture;
   pickDepth._framebuffer.update(context, width, height);
 }
 
-function updateCopyCommands(pickDepth, context, depthTexture) {
+function updateCopyCommands(pickDepth: any, context: any, depthTexture: any) {
   if (!defined(pickDepth._copyDepthCommand)) {
     pickDepth._copyDepthCommand = context.createViewportQuadCommand(
       `uniform highp sampler2D colorTexture;
@@ -122,5 +122,4 @@ PickDepth.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { PickDepth };
 export default PickDepth;

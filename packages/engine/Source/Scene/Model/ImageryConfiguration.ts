@@ -23,5 +23,4 @@ class ImageryConfiguration {
   }
 }
 
-export { ImageryConfiguration };
 export default ImageryConfiguration;

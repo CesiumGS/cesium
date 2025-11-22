@@ -18,14 +18,20 @@ import Frozen from "../Core/Frozen.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function ImplicitMetadataView(options) {
+function ImplicitMetadataView(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const metadataTable = options.metadataTable;
   const metadataClass = options.class;
   const entityId = options.entityId;
   const propertyTableJson = options.propertyTableJson;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.metadataTable", metadataTable);
+  Check.typeOf.object("options.class", metadataClass);
+  Check.typeOf.number("options.entityId", entityId);
+  Check.typeOf.object("options.propertyTableJson", propertyTableJson);
+
+  //>>includeEnd('debug');
 
   this._class = metadataClass;
   this._metadataTable = metadataTable;
@@ -116,7 +122,7 @@ ImplicitMetadataView.prototype.getPropertyIds = function (results) {
  * </p>
  *
  * @param {string} propertyId The case-sensitive ID of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the tile does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this property.
  * @private
  */
 ImplicitMetadataView.prototype.getProperty = function (propertyId) {
@@ -142,7 +148,7 @@ ImplicitMetadataView.prototype.setProperty = function (propertyId, value) {
  * Returns a copy of the value of the property with the given semantic in the metadata table.
  *
  * @param {string} semantic The case-sensitive semantic of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the tile does not have this semantic.
+ * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this semantic.
  * @private
  */
 ImplicitMetadataView.prototype.getPropertyBySemantic = function (semantic) {
@@ -169,5 +175,4 @@ ImplicitMetadataView.prototype.setPropertyBySemantic = function (
   );
 };
 
-export { ImplicitMetadataView };
 export default ImplicitMetadataView;

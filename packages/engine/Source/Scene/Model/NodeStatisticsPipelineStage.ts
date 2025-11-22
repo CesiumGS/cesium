@@ -33,7 +33,7 @@ NodeStatisticsPipelineStage.process = function (
   countGeneratedBuffers(statistics, runtimeNode);
 };
 
-function countInstancingAttributes(statistics, instances) {
+function countInstancingAttributes(statistics: any, instances: any) {
   if (!defined(instances)) {
     return;
   }
@@ -50,7 +50,7 @@ function countInstancingAttributes(statistics, instances) {
   }
 }
 
-function countGeneratedBuffers(statistics, runtimeNode) {
+function countGeneratedBuffers(statistics: any, runtimeNode: any) {
   if (defined(runtimeNode.instancingTransformsBuffer)) {
     // The typed array containing the computed transforms isn't saved
     // after the buffer is created.
@@ -72,5 +72,4 @@ function countGeneratedBuffers(statistics, runtimeNode) {
   }
 }
 
-export { NodeStatisticsPipelineStage };
 export default NodeStatisticsPipelineStage;

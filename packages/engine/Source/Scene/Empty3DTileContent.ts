@@ -14,7 +14,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  *
  * @private
  */
-function Empty3DTileContent(tileset, tile) {
+function Empty3DTileContent(tileset: any, tile: any) {
   this._tileset = tileset;
   this._tile = tile;
 
@@ -102,7 +102,11 @@ Object.defineProperties(Empty3DTileContent.prototype, {
       return undefined;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError(
+        "Empty3DTileContent cannot have content metadata",
+      );
+      //>>includeEnd('debug');
     },
   },
 
@@ -117,7 +121,9 @@ Object.defineProperties(Empty3DTileContent.prototype, {
       return undefined;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError("Empty3DTileContent cannot have group metadata");
+      //>>includeEnd('debug');
     },
   },
 });
@@ -155,5 +161,4 @@ Empty3DTileContent.prototype.isDestroyed = function () {
 Empty3DTileContent.prototype.destroy = function () {
   return destroyObject(this);
 };
-export { Empty3DTileContent };
 export default Empty3DTileContent;

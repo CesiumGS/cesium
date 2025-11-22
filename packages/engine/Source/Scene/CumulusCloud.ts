@@ -33,7 +33,7 @@ import defined from "../Core/defined.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Cloud%20Parameters.html|Cesium Sandcastle Cloud Parameters Demo}
  */
-function CumulusCloud(options, cloudCollection) {
+function CumulusCloud(options: any, cloudCollection: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   this._show = options.show ?? true;
 
@@ -69,7 +69,7 @@ const BRIGHTNESS_INDEX = (CumulusCloud.BRIGHTNESS_INDEX = 5);
 const COLOR_INDEX = (CumulusCloud.COLOR_INDEX = 6);
 CumulusCloud.NUMBER_OF_PROPERTIES = 7;
 
-function makeDirty(cloud, propertyChanged) {
+function makeDirty(cloud: any, propertyChanged: any) {
   const cloudCollection = cloud._cloudCollection;
   if (defined(cloudCollection)) {
     cloudCollection._updateCloud(cloud, propertyChanged);
@@ -90,7 +90,9 @@ Object.defineProperties(CumulusCloud.prototype, {
       return this._show;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("value", value);
+      //>>includeEnd('debug');
 
       if (this._show !== value) {
         this._show = value;
@@ -109,7 +111,9 @@ Object.defineProperties(CumulusCloud.prototype, {
       return this._position;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug)
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
 
       const position = this._position;
       if (!Cartesian3.equals(position, value)) {
@@ -149,7 +153,9 @@ Object.defineProperties(CumulusCloud.prototype, {
       return this._scale;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug)
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
 
       const scale = this._scale;
       if (!Cartesian2.equals(scale, value)) {
@@ -203,7 +209,9 @@ Object.defineProperties(CumulusCloud.prototype, {
       return this._maximumSize;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug)
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
 
       const maximumSize = this._maximumSize;
       if (!Cartesian3.equals(maximumSize, value)) {
@@ -223,7 +231,9 @@ Object.defineProperties(CumulusCloud.prototype, {
       return this._color;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug)
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
 
       const color = this._color;
       if (!Color.equals(color, value)) {
@@ -285,7 +295,9 @@ Object.defineProperties(CumulusCloud.prototype, {
       return this._slice;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug)
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
 
       const slice = this._slice;
       if (slice !== value) {
@@ -315,7 +327,9 @@ Object.defineProperties(CumulusCloud.prototype, {
       return this._brightness;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug)
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
 
       const brightness = this._brightness;
       if (brightness !== value) {
@@ -330,5 +344,4 @@ CumulusCloud.prototype._destroy = function () {
   this._cloudCollection = undefined;
 };
 
-export { CumulusCloud };
 export default CumulusCloud;

@@ -20,7 +20,7 @@ Object.defineProperties(DoublyLinkedList.prototype, {
 /**
  * @private
  */
-function DoublyLinkedListNode(item, previous, next) {
+function DoublyLinkedListNode(item: any, previous: any, next: any) {
   this.item = item;
   this.previous = previous;
   this.next = next;
@@ -47,7 +47,7 @@ DoublyLinkedList.prototype.add = function (item) {
   return node;
 };
 
-function remove(list, node) {
+function remove(list: any, node: any) {
   if (defined(node.previous) && defined(node.next)) {
     node.previous.next = node.next;
     node.next.previous = node.previous;
@@ -109,5 +109,4 @@ DoublyLinkedList.prototype.splice = function (node, nextNode) {
   nextNode.next = oldNodeNext;
   nextNode.previous = node;
 };
-export { DoublyLinkedList };
 export default DoublyLinkedList;

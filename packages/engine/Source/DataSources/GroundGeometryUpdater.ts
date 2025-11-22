@@ -25,7 +25,7 @@ const defaultZIndex = new ConstantProperty(0);
  * @param {string} options.geometryPropertyName The geometry property name
  * @param {string[]} options.observedPropertyNames The entity properties this geometry cares about
  */
-function GroundGeometryUpdater(options) {
+function GroundGeometryUpdater(options: any) {
   GeometryUpdater.call(this, options);
 
   this._zIndex = 0;
@@ -155,7 +155,9 @@ GroundGeometryUpdater.prototype.destroy = function () {
  * @private
  */
 GroundGeometryUpdater.getGeometryHeight = function (height, heightReference) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("heightReference", heightReference);
+  //>>includeEnd('debug');
   if (!defined(height)) {
     if (heightReference !== HeightReference.NONE) {
       oneTimeWarning(oneTimeWarning.geometryHeightReference);
@@ -177,7 +179,9 @@ GroundGeometryUpdater.getGeometryExtrudedHeight = function (
   extrudedHeight,
   extrudedHeightReference,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("extrudedHeightReference", extrudedHeightReference);
+  //>>includeEnd('debug');
   if (!defined(extrudedHeight)) {
     if (extrudedHeightReference !== HeightReference.NONE) {
       oneTimeWarning(oneTimeWarning.geometryExtrudedHeightReference);
@@ -227,5 +231,4 @@ GroundGeometryUpdater.computeGeometryOffsetAttribute = function (
 
   return undefined;
 };
-export { GroundGeometryUpdater };
 export default GroundGeometryUpdater;

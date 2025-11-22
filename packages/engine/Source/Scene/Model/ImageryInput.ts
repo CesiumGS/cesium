@@ -57,5 +57,4 @@ class ImageryInput {
   }
 }
 
-export { ImageryInput };
 export default ImageryInput;

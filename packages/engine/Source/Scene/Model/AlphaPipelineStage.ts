@@ -48,5 +48,4 @@ AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
   }
 };
 
-export { AlphaPipelineStage };
 export default AlphaPipelineStage;

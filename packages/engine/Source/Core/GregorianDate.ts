@@ -21,16 +21,7 @@ const daysInYear = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
  *
  * @see JulianDate#toGregorianDate
  */
-function GregorianDate(
-  year,
-  month,
-  day,
-  hour,
-  minute,
-  second,
-  millisecond,
-  isLeapSecond,
-) {
+function GregorianDate(year: any, month: any, day: any, hour: any, minute: any, second: any, millisecond: any, isLeapSecond: any, ) {
   const minimumYear = 1;
   const minimumMonth = 1;
   const minimumDay = 1;
@@ -47,7 +38,10 @@ function GregorianDate(
   second = second ?? minimumSecond;
   millisecond = millisecond ?? minimumMillisecond;
   isLeapSecond = isLeapSecond ?? false;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  validateRange();
+  validateDate();
+  //>>includeEnd('debug');
 
   /**
    * Gets or sets the year as a whole number.
@@ -147,5 +141,4 @@ function GregorianDate(
     }
   }
 }
-export { GregorianDate };
 export default GregorianDate;

@@ -25,7 +25,7 @@ const defaultRepeat = 1;
  * @param {Property|number} [options.offset=0] A numeric Property specifying how far into the pattern to start the material.
  * @param {Property|number} [options.repeat=1] A numeric Property specifying how many times the stripes repeat.
  */
-function StripeMaterialProperty(options) {
+function StripeMaterialProperty(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
@@ -190,5 +190,4 @@ StripeMaterialProperty.prototype.equals = function (other) {
       Property.equals(this._repeat, other._repeat))
   );
 };
-export { StripeMaterialProperty };
 export default StripeMaterialProperty;

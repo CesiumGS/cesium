@@ -41,7 +41,7 @@ import Material from "./Material.js";
  *   })
  * });
  */
-function EllipsoidSurfaceAppearance(options) {
+function EllipsoidSurfaceAppearance(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const translucent = options.translucent ?? true;
@@ -275,5 +275,4 @@ EllipsoidSurfaceAppearance.prototype.isTranslucent =
  */
 EllipsoidSurfaceAppearance.prototype.getRenderState =
   Appearance.prototype.getRenderState;
-export { EllipsoidSurfaceAppearance };
 export default EllipsoidSurfaceAppearance;

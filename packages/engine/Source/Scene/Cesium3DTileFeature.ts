@@ -36,7 +36,7 @@ import defined from "../Core/defined.js";
  *     }
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
-function Cesium3DTileFeature(content, batchId) {
+function Cesium3DTileFeature(content: any, batchId: any) {
   this._content = content;
   this._batchId = batchId;
   this._color = undefined; // for calling getColor
@@ -214,7 +214,7 @@ Cesium3DTileFeature.prototype.getPropertyIds = function (results) {
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {string} name The case-sensitive name of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @example
  * // Display all the properties for a feature in the console log.
@@ -354,7 +354,7 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
  * properties.
  * </p>
  * @param {string} name The case-sensitive name of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  */
 Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
@@ -441,5 +441,4 @@ Cesium3DTileFeature.prototype.isClass = function (className) {
 Cesium3DTileFeature.prototype.getExactClassName = function () {
   return this._content.batchTable.getExactClassName(this._batchId);
 };
-export { Cesium3DTileFeature };
 export default Cesium3DTileFeature;

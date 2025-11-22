@@ -28,13 +28,16 @@ import StencilOperation from "../StencilOperation.js";
  *
  * @private
  */
-function ClassificationModelDrawCommand(options) {
+function ClassificationModelDrawCommand(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const command = options.command;
   const renderResources = options.primitiveRenderResources;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.command", command);
+  Check.typeOf.object("options.primitiveRenderResources", renderResources);
+  //>>includeEnd('debug');
 
   const model = renderResources.model;
 
@@ -69,7 +72,7 @@ function ClassificationModelDrawCommand(options) {
   initialize(this);
 }
 
-function getStencilDepthRenderState(stencilFunction) {
+function getStencilDepthRenderState(stencilFunction: any) {
   return {
     colorMask: {
       red: false,
@@ -156,7 +159,7 @@ const pickRenderState = {
 
 const scratchDerivedCommands = [];
 
-function initialize(drawCommand) {
+function initialize(drawCommand: any) {
   const command = drawCommand._command;
   const derivedCommands = scratchDerivedCommands;
 
@@ -238,7 +241,7 @@ function initialize(drawCommand) {
   }
 }
 
-function createBatchCommands(drawCommand, derivedCommands, result) {
+function createBatchCommands(drawCommand: any, derivedCommands: any, result: any) {
   const runtimePrimitive = drawCommand._runtimePrimitive;
   const batchLengths = runtimePrimitive.batchLengths;
   const batchOffsets = runtimePrimitive.batchOffsets;
@@ -262,7 +265,7 @@ function createBatchCommands(drawCommand, derivedCommands, result) {
   return result;
 }
 
-function deriveStencilDepthCommand(command, pass) {
+function deriveStencilDepthCommand(command: any, pass: any) {
   const stencilDepthCommand = DrawCommand.shallowClone(command);
   stencilDepthCommand.cull = false;
   stencilDepthCommand.pass = pass;
@@ -277,7 +280,7 @@ function deriveStencilDepthCommand(command, pass) {
   return stencilDepthCommand;
 }
 
-function deriveColorCommand(command, pass) {
+function deriveColorCommand(command: any, pass: any) {
   const colorCommand = DrawCommand.shallowClone(command);
   colorCommand.cull = false;
   colorCommand.pass = pass;
@@ -289,7 +292,7 @@ function deriveColorCommand(command, pass) {
 
 const scratchPickCommands = [];
 
-function createPickCommands(drawCommand, derivedCommands, commandList) {
+function createPickCommands(drawCommand: any, derivedCommands: any, commandList: any) {
   const renderState = RenderState.fromCache(pickRenderState);
   const stencilDepthCommand = derivedCommands[0];
   const colorCommand = derivedCommands[1];
@@ -528,5 +531,4 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
   return result;
 };
 
-export { ClassificationModelDrawCommand };
 export default ClassificationModelDrawCommand;

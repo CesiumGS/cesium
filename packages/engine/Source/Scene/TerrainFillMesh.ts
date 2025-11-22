@@ -19,7 +19,7 @@ import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import GlobeSurfaceTile from "./GlobeSurfaceTile.js";
 import TileSelectionResult from "./TileSelectionResult.js";
 
-function TerrainFillMesh(tile) {
+function TerrainFillMesh(tile: any) {
   this.tile = tile;
   this.frameLastUpdated = undefined;
   this.westMeshes = []; // north to south (CCW)
@@ -225,17 +225,7 @@ TerrainFillMesh.updateFillTiles = function (
   }
 };
 
-function visitRenderedTiles(
-  tileProvider,
-  frameState,
-  sourceTile,
-  startTile,
-  currentFrameNumber,
-  tileEdge,
-  downOnly,
-  traversalQueue,
-  vertexArraysToDestroy,
-) {
+function visitRenderedTiles(tileProvider: any, frameState: any, sourceTile: any, startTile: any, currentFrameNumber: any, tileEdge: any, downOnly: any, traversalQueue: any, vertexArraysToDestroy: any, ) {
   if (startTile === undefined) {
     // There are no tiles North or South of the poles.
     return;
@@ -463,16 +453,7 @@ function visitRenderedTiles(
   }
 }
 
-function visitTile(
-  tileProvider,
-  frameState,
-  sourceTile,
-  destinationTile,
-  tileEdge,
-  frameNumber,
-  traversalQueue,
-  vertexArraysToDestroy,
-) {
+function visitTile(tileProvider: any, frameState: any, sourceTile: any, destinationTile: any, tileEdge: any, frameNumber: any, traversalQueue: any, vertexArraysToDestroy: any, ) {
   const destinationSurfaceTile = destinationTile.data;
 
   if (destinationSurfaceTile.fill === undefined) {
@@ -499,14 +480,7 @@ function visitTile(
   );
 }
 
-function propagateEdge(
-  tileProvider,
-  frameState,
-  sourceTile,
-  destinationTile,
-  tileEdge,
-  vertexArraysToDestroy,
-) {
+function propagateEdge(tileProvider: any, frameState: any, sourceTile: any, destinationTile: any, tileEdge: any, vertexArraysToDestroy: any, ) {
   const destinationFill = destinationTile.data.fill;
 
   let sourceMesh;
@@ -757,17 +731,7 @@ function HeightAndNormal() {
   this.encodedNormal = new Cartesian2();
 }
 
-function fillMissingCorner(
-  fill,
-  ellipsoid,
-  u,
-  v,
-  corner,
-  adjacentCorner1,
-  adjacentCorner2,
-  oppositeCorner,
-  vertex,
-) {
+function fillMissingCorner(fill: any, ellipsoid: any, u: any, v: any, corner: any, adjacentCorner1: any, adjacentCorner2: any, oppositeCorner: any, vertex: any, ) {
   if (defined(corner)) {
     return corner;
   }
@@ -819,7 +783,7 @@ const scratchCreateMeshSyncOptions = {
   exaggeration: 1.0,
   exaggerationRelativeHeight: 0.0,
 };
-function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
+function createFillMesh(tileProvider: any, frameState: any, tile: any, vertexArraysToDestroy: any) {
   GlobeSurfaceTile.initialize(
     tile,
     tileProvider.terrainProvider,
@@ -1335,19 +1299,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
   }
 }
 
-function addVertexWithComputedPosition(
-  ellipsoid,
-  rectangle,
-  encoding,
-  buffer,
-  index,
-  u,
-  v,
-  height,
-  encodedNormal,
-  webMercatorT,
-  heightRange,
-) {
+function addVertexWithComputedPosition(ellipsoid: any, rectangle: any, encoding: any, buffer: any, index: any, u: any, v: any, height: any, encodedNormal: any, webMercatorT: any, heightRange: any, ) {
   const cartographic = cartographicScratch;
   cartographic.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u);
   cartographic.latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v);
@@ -1388,12 +1340,7 @@ function addVertexWithComputedPosition(
 
 const sourceRectangleScratch = new Rectangle();
 
-function transformTextureCoordinates(
-  sourceTile,
-  targetTile,
-  coordinates,
-  result,
-) {
+function transformTextureCoordinates(sourceTile: any, targetTile: any, coordinates: any, result: any, ) {
   let sourceRectangle = sourceTile.rectangle;
   const targetRectangle = targetTile.rectangle;
 
@@ -1455,7 +1402,7 @@ function transformTextureCoordinates(
 
 const encodedNormalScratch = new Cartesian2();
 
-function getVertexFromTileAtCorner(sourceMesh, sourceIndex, u, v, vertex) {
+function getVertexFromTileAtCorner(sourceMesh: any, sourceIndex: any, u: any, v: any, vertex: any) {
   const sourceEncoding = sourceMesh.encoding;
   const sourceVertices = sourceMesh.vertices;
 
@@ -1477,18 +1424,7 @@ function getVertexFromTileAtCorner(sourceMesh, sourceIndex, u, v, vertex) {
 const encodedNormalScratch2 = new Cartesian2();
 const cartesianScratch2 = new Cartesian3();
 
-function getInterpolatedVertexAtCorner(
-  ellipsoid,
-  sourceTile,
-  targetTile,
-  sourceMesh,
-  previousIndex,
-  nextIndex,
-  u,
-  v,
-  interpolateU,
-  vertex,
-) {
+function getInterpolatedVertexAtCorner(ellipsoid: any, sourceTile: any, targetTile: any, sourceMesh: any, previousIndex: any, nextIndex: any, u: any, v: any, interpolateU: any, vertex: any, ) {
   const sourceEncoding = sourceMesh.encoding;
   const sourceVertices = sourceMesh.vertices;
 
@@ -1574,14 +1510,7 @@ function getInterpolatedVertexAtCorner(
   }
 }
 
-function getVertexWithHeightAtCorner(
-  terrainFillMesh,
-  ellipsoid,
-  u,
-  v,
-  height,
-  vertex,
-) {
+function getVertexWithHeightAtCorner(terrainFillMesh: any, ellipsoid: any, u: any, v: any, height: any, vertex: any, ) {
   vertex.height = height;
   const normal = ellipsoid.geodeticSurfaceNormalCartographic(
     cartographicScratch,
@@ -1590,19 +1519,7 @@ function getVertexWithHeightAtCorner(
   AttributeCompression.octEncode(normal, vertex.encodedNormal);
 }
 
-function getCorner(
-  terrainFillMesh,
-  ellipsoid,
-  u,
-  v,
-  cornerTile,
-  cornerMesh,
-  previousEdgeTiles,
-  previousEdgeMeshes,
-  nextEdgeTiles,
-  nextEdgeMeshes,
-  vertex,
-) {
+function getCorner(terrainFillMesh: any, ellipsoid: any, u: any, v: any, cornerTile: any, cornerMesh: any, previousEdgeTiles: any, previousEdgeMeshes: any, nextEdgeTiles: any, nextEdgeMeshes: any, vertex: any, ) {
   const gotCorner =
     getCornerFromEdge(
       terrainFillMesh,
@@ -1725,16 +1642,7 @@ function getCorner(
   return undefined;
 }
 
-function getClosestHeightToCorner(
-  previousMeshes,
-  previousTiles,
-  previousEdge,
-  nextMeshes,
-  nextTiles,
-  nextEdge,
-  u,
-  v,
-) {
+function getClosestHeightToCorner(previousMeshes: any, previousTiles: any, previousEdge: any, nextMeshes: any, nextTiles: any, nextEdge: any, u: any, v: any, ) {
   const height1 = getNearestHeightOnEdge(
     previousMeshes,
     previousTiles,
@@ -1761,17 +1669,7 @@ function getClosestHeightToCorner(
   return height2;
 }
 
-function addEdge(
-  terrainFillMesh,
-  ellipsoid,
-  encoding,
-  typedArray,
-  nextIndex,
-  edgeTiles,
-  edgeMeshes,
-  tileEdge,
-  heightRange,
-) {
+function addEdge(terrainFillMesh: any, ellipsoid: any, encoding: any, typedArray: any, nextIndex: any, edgeTiles: any, edgeMeshes: any, tileEdge: any, heightRange: any, ) {
   for (let i = 0; i < edgeTiles.length; ++i) {
     nextIndex = addEdgeMesh(
       terrainFillMesh,
@@ -1788,17 +1686,7 @@ function addEdge(
   return nextIndex;
 }
 
-function addEdgeMesh(
-  terrainFillMesh,
-  ellipsoid,
-  encoding,
-  typedArray,
-  nextIndex,
-  edgeTile,
-  edgeMesh,
-  tileEdge,
-  heightRange,
-) {
+function addEdgeMesh(terrainFillMesh: any, ellipsoid: any, encoding: any, typedArray: any, nextIndex: any, edgeTile: any, edgeMesh: any, tileEdge: any, heightRange: any, ) {
   // Handle copying edges across the anti-meridian.
   let sourceRectangle = edgeTile.rectangle;
   if (tileEdge === TileEdge.EAST && terrainFillMesh.tile.x === 0) {
@@ -1969,7 +1857,7 @@ function addEdgeMesh(
   return nextIndex;
 }
 
-function getNearestHeightOnEdge(meshes, tiles, isNext, edge, u, v) {
+function getNearestHeightOnEdge(meshes: any, tiles: any, isNext: any, edge: any, u: any, v: any) {
   let meshStart;
   let meshEnd;
   let meshStep;
@@ -2020,23 +1908,14 @@ function getNearestHeightOnEdge(meshes, tiles, isNext, edge, u, v) {
   return undefined;
 }
 
-function meshIsUsable(tile, mesh) {
+function meshIsUsable(tile: any, mesh: any) {
   return (
     defined(mesh) &&
     (!defined(tile.data.fill) || !tile.data.fill.changedThisFrame)
   );
 }
 
-function getCornerFromEdge(
-  terrainFillMesh,
-  ellipsoid,
-  edgeMeshes,
-  edgeTiles,
-  isNext,
-  u,
-  v,
-  vertex,
-) {
+function getCornerFromEdge(terrainFillMesh: any, ellipsoid: any, edgeMeshes: any, edgeTiles: any, isNext: any, u: any, v: any, vertex: any, ) {
   let edgeVertices;
   let compareU;
   let increasing;
@@ -2171,14 +2050,7 @@ const cornerPositionsScratch = [
   new Cartesian3(),
 ];
 
-function computeOccludeePoint(
-  tileProvider,
-  center,
-  rectangle,
-  minimumHeight,
-  maximumHeight,
-  result,
-) {
+function computeOccludeePoint(tileProvider: any, center: any, rectangle: any, minimumHeight: any, maximumHeight: any, result: any, ) {
   const ellipsoidalOccluder = tileProvider.quadtree._occluders.ellipsoid;
   const ellipsoid = ellipsoidalOccluder.ellipsoid;
 
@@ -2219,5 +2091,4 @@ function computeOccludeePoint(
     result,
   );
 }
-export { TerrainFillMesh };
 export default TerrainFillMesh;

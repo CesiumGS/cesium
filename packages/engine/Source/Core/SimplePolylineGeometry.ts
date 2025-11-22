@@ -15,7 +15,7 @@ import CesiumMath from "./Math.js";
 import PolylinePipeline from "./PolylinePipeline.js";
 import PrimitiveType from "./PrimitiveType.js";
 
-function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
+function interpolateColors(p0: any, p1: any, color0: any, color1: any, minDistance: any, array: any, offset: any) {
   const numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
   let i;
 
@@ -86,13 +86,24 @@ function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
  * });
  * const geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);
  */
-function SimplePolylineGeometry(options) {
+function SimplePolylineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
   const colors = options.colors;
   const colorsPerVertex = options.colorsPerVertex ?? false;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(positions) || positions.length < 2) {
+    throw new DeveloperError("At least two positions are required.");
+  }
+  if (
+    defined(colors) &&
+    ((colorsPerVertex && colors.length < positions.length) ||
+      (!colorsPerVertex && colors.length < positions.length - 1))
+  ) {
+    throw new DeveloperError("colors has an invalid length.");
+  }
+  //>>includeEnd('debug');
 
   this._positions = positions;
   this._colors = colors;
@@ -123,7 +134,14 @@ function SimplePolylineGeometry(options) {
  * @returns {number[]} The array that was packed into
  */
 SimplePolylineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -164,7 +182,11 @@ SimplePolylineGeometry.pack = function (value, array, startingIndex) {
  * @returns {SimplePolylineGeometry} The modified result parameter or a new SimplePolylineGeometry instance if one was not provided.
  */
 SimplePolylineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -429,5 +451,4 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
     boundingSphere: BoundingSphere.fromPoints(positions),
   });
 };
-export { SimplePolylineGeometry };
 export default SimplePolylineGeometry;

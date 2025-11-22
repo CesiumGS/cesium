@@ -30,14 +30,14 @@ const cartesian6 = new Cartesian3();
 const scratch1 = new Cartesian3();
 const scratch2 = new Cartesian3();
 
-function scaleToSurface(positions, ellipsoid) {
+function scaleToSurface(positions: any, ellipsoid: any) {
   for (let i = 0; i < positions.length; i++) {
     positions[i] = ellipsoid.scaleToGeodeticSurface(positions[i], positions[i]);
   }
   return positions;
 }
 
-function addNormals(attr, normal, left, front, back, vertexFormat) {
+function addNormals(attr: any, normal: any, left: any, front: any, back: any, vertexFormat: any) {
   const normals = attr.normals;
   const tangents = attr.tangents;
   const bitangents = attr.bitangents;
@@ -56,7 +56,7 @@ function addNormals(attr, normal, left, front, back, vertexFormat) {
   }
 }
 
-function combine(computedPositions, vertexFormat, ellipsoid) {
+function combine(computedPositions: any, vertexFormat: any, ellipsoid: any) {
   const positions = computedPositions.positions;
   const corners = computedPositions.corners;
   const endPositions = computedPositions.endPositions;
@@ -529,7 +529,7 @@ function combine(computedPositions, vertexFormat, ellipsoid) {
   };
 }
 
-function extrudedAttributes(attributes, vertexFormat) {
+function extrudedAttributes(attributes: any, vertexFormat: any) {
   if (
     !vertexFormat.normal &&
     !vertexFormat.tangent &&
@@ -710,7 +710,7 @@ function extrudedAttributes(attributes, vertexFormat) {
   return attributes;
 }
 
-function addWallPositions(positions, index, wallPositions) {
+function addWallPositions(positions: any, index: any, wallPositions: any) {
   wallPositions[index++] = positions[0];
   wallPositions[index++] = positions[1];
   wallPositions[index++] = positions[2];
@@ -732,7 +732,7 @@ function addWallPositions(positions, index, wallPositions) {
   return wallPositions;
 }
 
-function computePositionsExtruded(params, vertexFormat) {
+function computePositionsExtruded(params: any, vertexFormat: any) {
   const topVertexFormat = new VertexFormat({
     position: vertexFormat.position,
     normal:
@@ -861,14 +861,7 @@ const scratchCartesian1 = new Cartesian3();
 const scratchCartesian2 = new Cartesian3();
 const scratchCartographic = new Cartographic();
 
-function computeOffsetPoints(
-  position1,
-  position2,
-  ellipsoid,
-  halfWidth,
-  min,
-  max,
-) {
+function computeOffsetPoints(position1: any, position2: any, ellipsoid: any, halfWidth: any, min: any, max: any, ) {
   // Compute direction of offset the point
   const direction = Cartesian3.subtract(
     position2,
@@ -921,7 +914,7 @@ const scratchCartesianEnds = new Cartesian3();
 const scratchCartographicMin = new Cartographic();
 const scratchCartographicMax = new Cartographic();
 
-function computeRectangle(positions, ellipsoid, width, cornerType, result) {
+function computeRectangle(positions: any, ellipsoid: any, width: any, cornerType: any, result: any) {
   positions = scaleToSurface(positions, ellipsoid);
   const cleanPositions = arrayRemoveDuplicates(
     positions,
@@ -1069,12 +1062,15 @@ function computeRectangle(positions, ellipsoid, width, cornerType, result) {
  *   width : 100000
  * });
  */
-function CorridorGeometry(options) {
+function CorridorGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
   const width = options.width;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.positions", positions);
+  Check.defined("options.width", width);
+  //>>includeEnd('debug');
 
   const height = options.height ?? 0.0;
   const extrudedHeight = options.extrudedHeight ?? height;
@@ -1116,7 +1112,10 @@ function CorridorGeometry(options) {
  * @returns {number[]} The array that was packed into
  */
 CorridorGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -1169,7 +1168,9 @@ const scratchOptions = {
  * @returns {CorridorGeometry} The modified result parameter or a new CorridorGeometry instance if one was not provided.
  */
 CorridorGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -1244,7 +1245,10 @@ CorridorGeometry.computeRectangle = function (options, result) {
   const positions = options.positions;
   const width = options.width;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.positions", positions);
+  Check.defined("options.width", width);
+  //>>includeEnd('debug');
 
   const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   const cornerType = options.cornerType ?? CornerType.ROUNDED;
@@ -1397,5 +1401,4 @@ Object.defineProperties(CorridorGeometry.prototype, {
     },
   },
 });
-export { CorridorGeometry };
 export default CorridorGeometry;

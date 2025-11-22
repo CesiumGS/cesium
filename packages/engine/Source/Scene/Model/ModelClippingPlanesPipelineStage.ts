@@ -123,5 +123,4 @@ ModelClippingPlanesPipelineStage.process = function (
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
 
-export { ModelClippingPlanesPipelineStage };
 export default ModelClippingPlanesPipelineStage;

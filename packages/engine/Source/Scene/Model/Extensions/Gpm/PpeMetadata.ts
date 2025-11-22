@@ -21,8 +21,10 @@ import Check from "../../../../Core/Check.js";
  *
  * @private
  */
-function PpeMetadata(options) {
-  ;
+function PpeMetadata(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.source", options.source);
+  //>>includeEnd('debug');
 
   this._min = options.min;
   this._max = options.max;
@@ -74,5 +76,4 @@ Object.defineProperties(PpeMetadata.prototype, {
   },
 });
 
-export { PpeMetadata };
 export default PpeMetadata;

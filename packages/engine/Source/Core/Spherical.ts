@@ -11,7 +11,7 @@ import defined from "./defined.js";
  * @param {number} [cone=0.0] The angular coordinate measured from the positive z-axis and toward the negative z-axis.
  * @param {number} [magnitude=1.0] The linear coordinate measured from the origin.
  */
-function Spherical(clock, cone, magnitude) {
+function Spherical(clock: any, cone: any, magnitude: any) {
   /**
    * The clock component.
    * @type {number}
@@ -40,7 +40,9 @@ function Spherical(clock, cone, magnitude) {
  * @returns {Spherical} The modified result parameter, or a new instance if one was not provided.
  */
 Spherical.fromCartesian3 = function (cartesian3, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian3", cartesian3);
+  //>>includeEnd('debug');
 
   const x = cartesian3.x;
   const y = cartesian3.y;
@@ -87,7 +89,9 @@ Spherical.clone = function (spherical, result) {
  * @returns {Spherical} The modified result parameter or a new instance if result was undefined.
  */
 Spherical.normalize = function (spherical, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("spherical", spherical);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Spherical(spherical.clock, spherical.cone, 1.0);
@@ -176,5 +180,4 @@ Spherical.prototype.equalsEpsilon = function (other, epsilon) {
 Spherical.prototype.toString = function () {
   return `(${this.clock}, ${this.cone}, ${this.magnitude})`;
 };
-export { Spherical };
 export default Spherical;

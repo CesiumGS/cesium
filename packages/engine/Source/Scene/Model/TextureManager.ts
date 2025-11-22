@@ -36,7 +36,7 @@ TextureManager.prototype.getTexture = function (textureId) {
   return this._textures[textureId];
 };
 
-function fetchTexture2D(textureManager, textureId, textureUniform) {
+function fetchTexture2D(textureManager: any, textureId: any, textureUniform: any) {
   textureUniform.resource
     .fetchImage()
     .then(function (image) {
@@ -76,7 +76,7 @@ TextureManager.prototype.loadTexture2D = function (textureId, textureUniform) {
   }
 };
 
-function createTexture(textureManager, loadedImage, context) {
+function createTexture(textureManager: any, loadedImage: any, context: any) {
   const { id, textureUniform, image } = loadedImage;
 
   // If the context is WebGL1, and the sampler needs mipmaps or repeating
@@ -94,7 +94,7 @@ function createTexture(textureManager, loadedImage, context) {
   textureManager._textures[id] = texture;
 }
 
-function getTextureAndMips(textureUniform, image, context) {
+function getTextureAndMips(textureUniform: any, image: any, context: any) {
   const { typedArray, sampler } = textureUniform;
 
   const texture = defined(typedArray)
@@ -108,7 +108,7 @@ function getTextureAndMips(textureUniform, image, context) {
   return texture;
 }
 
-function getWebGL1Texture(textureUniform, image, context) {
+function getWebGL1Texture(textureUniform: any, image: any, context: any) {
   const { typedArray, sampler } = textureUniform;
 
   // WebGL1 requires power-of-two texture dimensions for mipmapping and REPEAT wrap modes
@@ -148,7 +148,7 @@ function getWebGL1Texture(textureUniform, image, context) {
   return getTextureFromTypedArray(textureUniform, context);
 }
 
-function samplerRequiresMipmap(sampler) {
+function samplerRequiresMipmap(sampler: any) {
   return [
     TextureMinificationFilter.NEAREST_MIPMAP_NEAREST,
     TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
@@ -157,7 +157,7 @@ function samplerRequiresMipmap(sampler) {
   ].includes(sampler.minificationFilter);
 }
 
-function getTextureFromTypedArray(textureUniform, context) {
+function getTextureFromTypedArray(textureUniform: any, context: any) {
   const {
     pixelFormat,
     pixelDatatype,
@@ -241,5 +241,4 @@ TextureManager.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { TextureManager };
 export default TextureManager;

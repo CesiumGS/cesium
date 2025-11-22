@@ -13,7 +13,7 @@ import destroyObject from "../Core/destroyObject.js";
  *
  * @private
  */
-function Tileset3DTileContent(tileset, tile, resource) {
+function Tileset3DTileContent(tileset: any, tile: any, resource: any) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -179,5 +179,4 @@ Tileset3DTileContent.prototype.isDestroyed = function () {
 Tileset3DTileContent.prototype.destroy = function () {
   return destroyObject(this);
 };
-export { Tileset3DTileContent };
 export default Tileset3DTileContent;

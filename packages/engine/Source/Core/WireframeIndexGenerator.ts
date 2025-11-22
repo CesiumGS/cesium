@@ -11,7 +11,7 @@ import PrimitiveType from "./PrimitiveType.js";
  */
 const WireframeIndexGenerator = {};
 
-function createWireframeFromTriangles(vertexCount) {
+function createWireframeFromTriangles(vertexCount: any) {
   const wireframeIndices = IndexDatatype.createTypedArray(
     vertexCount,
     vertexCount * 2,
@@ -30,7 +30,7 @@ function createWireframeFromTriangles(vertexCount) {
   return wireframeIndices;
 }
 
-function createWireframeFromTriangleIndices(vertexCount, originalIndices) {
+function createWireframeFromTriangleIndices(vertexCount: any, originalIndices: any) {
   const originalIndicesCount = originalIndices.length;
   const wireframeIndices = IndexDatatype.createTypedArray(
     vertexCount,
@@ -53,7 +53,7 @@ function createWireframeFromTriangleIndices(vertexCount, originalIndices) {
   return wireframeIndices;
 }
 
-function createWireframeFromTriangleStrip(vertexCount) {
+function createWireframeFromTriangleStrip(vertexCount: any) {
   const numberOfTriangles = vertexCount - 2;
   const wireframeIndicesCount = 2 + numberOfTriangles * 4;
   const wireframeIndices = IndexDatatype.createTypedArray(
@@ -77,7 +77,7 @@ function createWireframeFromTriangleStrip(vertexCount) {
   return wireframeIndices;
 }
 
-function createWireframeFromTriangleStripIndices(vertexCount, originalIndices) {
+function createWireframeFromTriangleStripIndices(vertexCount: any, originalIndices: any) {
   const originalIndicesCount = originalIndices.length;
   const numberOfTriangles = originalIndicesCount - 2;
   const wireframeIndicesCount = 2 + numberOfTriangles * 4;
@@ -106,7 +106,7 @@ function createWireframeFromTriangleStripIndices(vertexCount, originalIndices) {
   return wireframeIndices;
 }
 
-function createWireframeFromTriangleFan(vertexCount) {
+function createWireframeFromTriangleFan(vertexCount: any) {
   const numberOfTriangles = vertexCount - 2;
   const wireframeIndicesCount = 2 + numberOfTriangles * 4;
   const wireframeIndices = IndexDatatype.createTypedArray(
@@ -130,7 +130,7 @@ function createWireframeFromTriangleFan(vertexCount) {
   return wireframeIndices;
 }
 
-function createWireframeFromTriangleFanIndices(vertexCount, originalIndices) {
+function createWireframeFromTriangleFanIndices(vertexCount: any, originalIndices: any) {
   const originalIndicesCount = originalIndices.length;
   const numberOfTriangles = originalIndicesCount - 2;
   const wireframeIndicesCount = 2 + numberOfTriangles * 4;
@@ -235,5 +235,4 @@ WireframeIndexGenerator.getWireframeIndicesCount = function (
   return originalCount;
 };
 
-export { WireframeIndexGenerator };
 export default WireframeIndexGenerator;

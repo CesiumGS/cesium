@@ -65,12 +65,17 @@ const trailingSlashRegex = /\/$/;
  * @see {@link https://cldr.unicode.org/|Common Locale Data Repository region identifiers}
  */
 
-function Google2DImageryProvider(options) {
+function Google2DImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   this._maximumLevel = options.maximumLevel ?? 22;
   this._minimumLevel = options.minimumLevel ?? 0;
 
-  ;
+  //>>includeStart("debug", pragmas.debug);
+  Check.defined("options.session", options.session);
+  Check.defined("options.tileWidth", options.tileWidth);
+  Check.defined("options.tileHeight", options.tileHeight);
+  Check.defined("options.key", options.key);
+  //>>includeEnd("debug");
 
   this._session = options.session;
   this._key = options.key;
@@ -329,7 +334,12 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
   options.region = options.region ?? "US";
 
   const overlayLayerType = options.overlayLayerType;
-  ;
+  //>>includeStart("debug", pragmas.debug);
+  if (defined(overlayLayerType)) {
+    Check.typeOf.string("options.overlayLayerType", overlayLayerType);
+  }
+  Check.defined("options.assetId", options.assetId);
+  //>>includeEnd("debug");
 
   const queryOptions = buildQueryOptions(options);
 
@@ -416,7 +426,16 @@ Google2DImageryProvider.fromUrl = async function (options) {
   options.key = options.key ?? GoogleMaps.defaultApiKey;
 
   const overlayLayerType = options.overlayLayerType;
-  ;
+  //>>includeStart("debug", pragmas.debug);
+  if (defined(overlayLayerType)) {
+    Check.typeOf.string("overlayLayerType", overlayLayerType);
+  }
+  if (!defined(options.key) && !defined(GoogleMaps.defaultApiKey)) {
+    throw new DeveloperError(
+      "options.key or GoogleMaps.defaultApiKey is required.",
+    );
+  }
+  //>>includeEnd("debug");
 
   const sessionJson = await createGoogleImagerySession(options);
   return new Google2DImageryProvider({
@@ -475,7 +494,7 @@ Google2DImageryProvider.prototype.requestImage = function (
   // Asynchronously request and populate _attributionsByLevel if it hasn't been already. We do this here so that the promise can be properly awaited.
   if (promise && !defined(this._attributionsByLevel)) {
     return Promise.all([promise, this.getViewportCredits()]).then(
-      (results) => results[0],
+      (results: any) => results[0],
     );
   }
 
@@ -540,7 +559,7 @@ Google2DImageryProvider.prototype.getViewportCredits = async function () {
   return attributionsByLevel;
 };
 
-async function fetchViewportAttribution(url, key, session, level) {
+async function fetchViewportAttribution(url: any, key: any, session: any, level: any) {
   const viewport = await Resource.fetch({
     url: url,
     queryParameters: {
@@ -558,7 +577,7 @@ async function fetchViewportAttribution(url, key, session, level) {
   return viewportJson.copyright;
 }
 
-function buildQueryOptions(options) {
+function buildQueryOptions(options: any) {
   const { mapType, overlayLayerType, styles } = options;
 
   const queryOptions = {
@@ -581,7 +600,7 @@ function buildQueryOptions(options) {
   return queryOptions;
 }
 
-async function createGoogleImagerySession(options) {
+async function createGoogleImagerySession(options: any) {
   const { language, region, key, url } = options;
 
   const queryOptions = buildQueryOptions(options);
@@ -604,5 +623,4 @@ async function createGoogleImagerySession(options) {
   return responseJson;
 }
 
-export { Google2DImageryProvider };
 export default Google2DImageryProvider;

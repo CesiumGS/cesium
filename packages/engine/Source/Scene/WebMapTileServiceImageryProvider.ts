@@ -13,7 +13,8 @@ const defaultParameters = Object.freeze({
   service: "WMTS",
   version: "1.0.0",
   request: "GetTile",
-});
+} as const);
+export type defaultParameters = typeof defaultParameters[keyof typeof defaultParameters];
 
 /**
  * @typedef {object} WebMapTileServiceImageryProvider.ConstructorOptions
@@ -84,7 +85,7 @@ const defaultParameters = Object.freeze({
  * // Example 3. NASA time dynamic weather data (RESTful)
  * const times = Cesium.TimeIntervalCollection.fromIso8601({
  *     iso8601: '2015-07-30/2017-06-16/P1D',
- *     dataCallback: function dataCallback(interval, index) {
+ *     dataCallback: function dataCallback(interval: any, index: any) {
  *         return {
  *             Time: Cesium.JulianDate.toIso8601(interval.start)
  *         };
@@ -112,10 +113,28 @@ const defaultParameters = Object.freeze({
  * @see WebMapServiceImageryProvider
  * @see UrlTemplateImageryProvider
  */
-function WebMapTileServiceImageryProvider(options) {
+function WebMapTileServiceImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.url)) {
+    throw new DeveloperError("options.url is required.");
+  }
+  if (!defined(options.layer)) {
+    throw new DeveloperError("options.layer is required.");
+  }
+  if (!defined(options.style)) {
+    throw new DeveloperError("options.style is required.");
+  }
+  if (!defined(options.tileMatrixSetID)) {
+    throw new DeveloperError("options.tileMatrixSetID is required.");
+  }
+  if (defined(options.times) && !defined(options.clock)) {
+    throw new DeveloperError(
+      "options.times was specified, so options.clock is required.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -204,7 +223,7 @@ function WebMapTileServiceImageryProvider(options) {
   }
 }
 
-function requestImage(imageryProvider, col, row, level, request, interval) {
+function requestImage(imageryProvider: any, col: any, row: any, level: any, request: any, interval: any) {
   const labels = imageryProvider._tileMatrixLabels;
   const tileMatrix = defined(labels) ? labels[level] : level.toString();
   const subdomains = imageryProvider._subdomains;
@@ -554,5 +573,4 @@ WebMapTileServiceImageryProvider.prototype.pickFeatures = function (
 ) {
   return undefined;
 };
-export { WebMapTileServiceImageryProvider };
 export default WebMapTileServiceImageryProvider;

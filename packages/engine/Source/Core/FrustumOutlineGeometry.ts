@@ -26,8 +26,13 @@ const ORTHOGRAPHIC = 1;
  * @param {Cartesian3} options.origin The origin of the frustum.
  * @param {Quaternion} options.orientation The orientation of the frustum.
  */
-function FrustumOutlineGeometry(options) {
-  ;
+function FrustumOutlineGeometry(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.object("options.frustum", options.frustum);
+  Check.typeOf.object("options.origin", options.origin);
+  Check.typeOf.object("options.orientation", options.orientation);
+  //>>includeEnd('debug');
 
   const frustum = options.frustum;
   const orientation = options.orientation;
@@ -73,7 +78,10 @@ function FrustumOutlineGeometry(options) {
  * @returns {number[]} The array that was packed into
  */
 FrustumOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -112,7 +120,9 @@ const scratchPackorigin = new Cartesian3();
  * @param {FrustumOutlineGeometry} [result] The object into which to store the result.
  */
 FrustumOutlineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -240,5 +250,4 @@ FrustumOutlineGeometry.createGeometry = function (frustumGeometry) {
     boundingSphere: BoundingSphere.fromVertices(positions),
   });
 };
-export { FrustumOutlineGeometry };
 export default FrustumOutlineGeometry;

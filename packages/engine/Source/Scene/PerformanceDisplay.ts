@@ -8,11 +8,15 @@ import getElement from "../DataSources/getElement.js";
 /**
  * @private
  */
-function PerformanceDisplay(options) {
+function PerformanceDisplay(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const container = getElement(options.container);
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required");
+  }
+  //>>includeEnd('debug');
 
   this._container = container;
 
@@ -113,5 +117,4 @@ PerformanceDisplay.prototype.update = function (renderedThisFrame) {
 PerformanceDisplay.prototype.destroy = function () {
   return destroyObject(this);
 };
-export { PerformanceDisplay };
 export default PerformanceDisplay;

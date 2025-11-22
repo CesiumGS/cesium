@@ -5,7 +5,7 @@
  * @private
  * @constructor
  */
-function PassState(context) {
+function PassState(context: any) {
   /**
    * The context used to execute commands for this pass.
    *
@@ -54,5 +54,4 @@ function PassState(context) {
    */
   this.viewport = undefined;
 }
-export { PassState };
 export default PassState;

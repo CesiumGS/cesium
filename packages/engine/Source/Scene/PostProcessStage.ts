@@ -91,7 +91,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * }));
  * stage.selected = [cesium3DTileFeature];
  */
-function PostProcessStage(options) {
+function PostProcessStage(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const {
     name = createGuid(),
@@ -106,7 +106,18 @@ function PostProcessStage(options) {
     scissorRectangle,
   } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.fragmentShader", fragmentShader);
+  Check.typeOf.number.greaterThan("options.textureScale", textureScale, 0.0);
+  Check.typeOf.number.lessThanOrEquals(
+    "options.textureScale",
+    textureScale,
+    1.0,
+  );
+  if (!PixelFormat.isColorFormat(pixelFormat)) {
+    throw new DeveloperError("options.pixelFormat must be a color format.");
+  }
+  //>>includeEnd('debug');
 
   this._fragmentShader = fragmentShader;
   this._uniforms = uniforms;
@@ -390,7 +401,7 @@ PostProcessStage.prototype._isSupported = function (context) {
   return !depthTextureRegex.test(this._fragmentShader) || context.depthTexture;
 };
 
-function getUniformValueGetterAndSetter(stage, uniforms, name) {
+function getUniformValueGetterAndSetter(stage: any, uniforms: any, name: any) {
   const currentValue = uniforms[name];
   if (
     typeof currentValue === "string" ||
@@ -442,7 +453,7 @@ function getUniformValueGetterAndSetter(stage, uniforms, name) {
   };
 }
 
-function getUniformMapFunction(stage, name) {
+function getUniformMapFunction(stage: any, name: any) {
   return function () {
     const value = stage._actualUniforms[name];
     if (typeof value === "function") {
@@ -452,7 +463,7 @@ function getUniformMapFunction(stage, name) {
   };
 }
 
-function getUniformMapDimensionsFunction(uniformMap, name) {
+function getUniformMapDimensionsFunction(uniformMap: any, name: any) {
   return function () {
     const texture = uniformMap[name]();
     if (defined(texture)) {
@@ -462,7 +473,7 @@ function getUniformMapDimensionsFunction(uniformMap, name) {
   };
 }
 
-function createUniformMap(stage) {
+function createUniformMap(stage: any) {
   if (defined(stage._uniformMap)) {
     return;
   }
@@ -528,7 +539,7 @@ function createUniformMap(stage) {
   });
 }
 
-function addSelectedIdToShader(shaderSource, idTextureWidth) {
+function addSelectedIdToShader(shaderSource: any, idTextureWidth: any) {
   shaderSource = shaderSource.replace(/in\s+vec2\s+v_textureCoordinates;/g, "");
   return `#define CZM_SELECTED_FEATURE
 uniform sampler2D czm_idTexture;
@@ -557,7 +568,7 @@ bool czm_selected()
 ${shaderSource}`;
 }
 
-function createDrawCommand(stage, context) {
+function createDrawCommand(stage: any, context: any) {
   if (
     defined(stage._command) &&
     !stage._logDepthChanged &&
@@ -582,7 +593,7 @@ function createDrawCommand(stage, context) {
   });
 }
 
-function createSampler(stage) {
+function createSampler(stage: any) {
   const mode = stage._sampleMode;
 
   let minFilter;
@@ -611,7 +622,7 @@ function createSampler(stage) {
   }
 }
 
-function createLoadImageFunction(stage, name) {
+function createLoadImageFunction(stage: any, name: any) {
   return function (image) {
     stage._texturesToCreate.push({
       name: name,
@@ -620,13 +631,13 @@ function createLoadImageFunction(stage, name) {
   };
 }
 
-function createStageOutputTextureFunction(stage, name) {
+function createStageOutputTextureFunction(stage: any, name: any) {
   return function () {
     return stage._textureCache.getOutputTexture(name);
   };
 }
 
-function updateUniformTextures(stage, context) {
+function updateUniformTextures(stage: any, context: any) {
   const texturesToRelease = stage._texturesToRelease;
   for (let i = 0; i < texturesToRelease.length; ++i) {
     let texture = texturesToRelease[i];
@@ -695,7 +706,7 @@ function updateUniformTextures(stage, context) {
   }
 }
 
-function releaseResources(stage) {
+function releaseResources(stage: any) {
   if (defined(stage._command)) {
     stage._command.shaderProgram =
       stage._command.shaderProgram && stage._command.shaderProgram.destroy();
@@ -726,7 +737,7 @@ function releaseResources(stage) {
   }
 }
 
-function isSelectedTextureDirty(stage) {
+function isSelectedTextureDirty(stage: any) {
   const length = defined(stage._selected) ? stage._selected.length : 0;
   const parentLength = defined(stage._parentSelected)
     ? stage._parentSelected
@@ -759,7 +770,7 @@ function isSelectedTextureDirty(stage) {
   return dirty;
 }
 
-function createSelectedTexture(stage, context) {
+function createSelectedTexture(stage: any, context: any) {
   if (!stage._selectedDirty) {
     return;
   }
@@ -986,5 +997,4 @@ PostProcessStage.prototype.destroy = function () {
   releaseResources(this);
   return destroyObject(this);
 };
-export { PostProcessStage };
 export default PostProcessStage;

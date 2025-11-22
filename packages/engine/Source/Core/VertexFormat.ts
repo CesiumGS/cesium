@@ -22,7 +22,7 @@ import DeveloperError from "./DeveloperError.js";
  * @see Geometry#attributes
  * @see Packable
  */
-function VertexFormat(options) {
+function VertexFormat(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -234,7 +234,14 @@ VertexFormat.packedLength = 6;
  * @returns {number[]} The array that was packed into
  */
 VertexFormat.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -257,7 +264,11 @@ VertexFormat.pack = function (value, array, startingIndex) {
  * @returns {VertexFormat} The modified result parameter or a new VertexFormat instance if one was not provided.
  */
 VertexFormat.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -297,5 +308,4 @@ VertexFormat.clone = function (vertexFormat, result) {
   result.color = vertexFormat.color;
   return result;
 };
-export { VertexFormat };
 export default VertexFormat;

@@ -28,7 +28,7 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
  *
  * @private
  */
-function GltfDracoLoader(options) {
+function GltfDracoLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -38,7 +38,14 @@ function GltfDracoLoader(options) {
   const baseResource = options.baseResource;
   const cacheKey = options.cacheKey;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("options.resourceCache", resourceCache);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.object("options.draco", draco);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
 
   this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
@@ -92,7 +99,7 @@ Object.defineProperties(GltfDracoLoader.prototype, {
   },
 });
 
-async function loadResources(loader) {
+async function loadResources(loader: any) {
   const resourceCache = loader._resourceCache;
   try {
     const bufferViewLoader = resourceCache.getBufferViewLoader({
@@ -135,14 +142,14 @@ GltfDracoLoader.prototype.load = async function () {
   return this._promise;
 };
 
-function handleError(dracoLoader, error) {
+function handleError(dracoLoader: any, error: any) {
   dracoLoader.unload();
   dracoLoader._state = ResourceLoaderState.FAILED;
   const errorMessage = "Failed to load Draco";
   throw dracoLoader.getError(errorMessage, error);
 }
 
-async function processDecode(loader, decodePromise) {
+async function processDecode(loader: any, decodePromise: any) {
   try {
     const results = await decodePromise;
     if (loader.isDestroyed()) {
@@ -174,7 +181,7 @@ SemanticToDracoAttributeType[VertexAttributeSemantic.NORMAL] = "NORMAL";
 SemanticToDracoAttributeType[VertexAttributeSemantic.COLOR] = "COLOR";
 SemanticToDracoAttributeType[VertexAttributeSemantic.TEXCOORD] = "TEX_COORD";
 
-function getDracoAttributeType(attribute) {
+function getDracoAttributeType(attribute: any) {
   for (const semantic in SemanticToDracoAttributeType) {
     if (SemanticToDracoAttributeType.hasOwnProperty(semantic)) {
       if (attribute.startsWith(semantic)) {
@@ -193,7 +200,9 @@ function getDracoAttributeType(attribute) {
  * @private
  */
 GltfDracoLoader.prototype.process = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
 
   if (this._state === ResourceLoaderState.READY) {
     return true;
@@ -281,5 +290,4 @@ GltfDracoLoader.prototype.unload = function () {
   this._primitive = undefined;
 };
 
-export { GltfDracoLoader };
 export default GltfDracoLoader;

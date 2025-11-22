@@ -53,7 +53,7 @@ const wrapLongitudeOffset = new Cartesian3();
 
 const subdivideHeightsScratchArray = [];
 
-function subdivideHeights(numPoints, h0, h1) {
+function subdivideHeights(numPoints: any, h0: any, h1: any) {
   const heights = subdivideHeightsScratchArray;
   heights.length = numPoints;
 
@@ -87,16 +87,7 @@ let ellipsoidRhumb = new EllipsoidRhumbLine();
 //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
 //Result includes p1, but not include p2.  This function is called for a sequence of line segments,
 //and this prevents duplication of end point.
-function generateCartesianArc(
-  p0,
-  p1,
-  minDistance,
-  ellipsoid,
-  h0,
-  h1,
-  array,
-  offset,
-) {
+function generateCartesianArc(p0: any, p1: any, minDistance: any, ellipsoid: any, h0: any, h1: any, array: any, offset: any, ) {
   const first = ellipsoid.scaleToGeodeticSurface(p0, scaleFirst);
   const last = ellipsoid.scaleToGeodeticSurface(p1, scaleLast);
   const numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
@@ -131,16 +122,7 @@ function generateCartesianArc(
 //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
 //Result includes p1, but not include p2.  This function is called for a sequence of line segments,
 //and this prevents duplication of end point.
-function generateCartesianRhumbArc(
-  p0,
-  p1,
-  granularity,
-  ellipsoid,
-  h0,
-  h1,
-  array,
-  offset,
-) {
+function generateCartesianRhumbArc(p0: any, p1: any, granularity: any, ellipsoid: any, h0: any, h1: any, array: any, offset: any, ) {
   const start = ellipsoid.cartesianToCartographic(p0, carto1);
   const end = ellipsoid.cartesianToCartographic(p1, carto2);
   const numPoints = PolylinePipeline.numberOfPointsRhumbLine(
@@ -329,7 +311,11 @@ PolylinePipeline.generateArc = function (options) {
     options = {};
   }
   const positions = options.positions;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(positions)) {
+    throw new DeveloperError("options.positions is required.");
+  }
+  //>>includeEnd('debug');
 
   const length = positions.length;
   const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
@@ -429,7 +415,11 @@ PolylinePipeline.generateRhumbArc = function (options) {
     options = {};
   }
   const positions = options.positions;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(positions)) {
+    throw new DeveloperError("options.positions is required.");
+  }
+  //>>includeEnd('debug');
 
   const length = positions.length;
   const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
@@ -562,5 +552,4 @@ PolylinePipeline.generateCartesianRhumbArc = function (options) {
   }
   return newPositions;
 };
-export { PolylinePipeline };
 export default PolylinePipeline;

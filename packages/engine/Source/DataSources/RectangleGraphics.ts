@@ -43,7 +43,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
  */
-function RectangleGraphics(options) {
+function RectangleGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -286,7 +286,11 @@ RectangleGraphics.prototype.clone = function (result) {
  * @param {RectangleGraphics} source The object to be merged into this object.
  */
 RectangleGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.coordinates = this.coordinates ?? source.coordinates;
@@ -310,5 +314,4 @@ RectangleGraphics.prototype.merge = function (source) {
     this.classificationType ?? source.classificationType;
   this.zIndex = this.zIndex ?? source.zIndex;
 };
-export { RectangleGraphics };
 export default RectangleGraphics;

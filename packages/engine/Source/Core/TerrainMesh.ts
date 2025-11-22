@@ -41,25 +41,7 @@ import VerticalExaggeration from "./VerticalExaggeration.js";
  *
  * @private
  */
-function TerrainMesh(
-  center,
-  vertices,
-  indices,
-  indexCountWithoutSkirts,
-  vertexCountWithoutSkirts,
-  minimumHeight,
-  maximumHeight,
-  rectangle,
-  boundingSphere3D,
-  occludeePointInScaledSpace,
-  vertexStride,
-  orientedBoundingBox,
-  encoding,
-  westIndicesSouthToNorth,
-  southIndicesEastToWest,
-  eastIndicesNorthToSouth,
-  northIndicesWestToEast,
-) {
+function TerrainMesh(center: any, vertices: any, indices: any, indexCountWithoutSkirts: any, vertexCountWithoutSkirts: any, minimumHeight: any, maximumHeight: any, rectangle: any, boundingSphere3D: any, occludeePointInScaledSpace: any, vertexStride: any, orientedBoundingBox: any, encoding: any, westIndicesSouthToNorth: any, southIndicesEastToWest: any, eastIndicesNorthToSouth: any, northIndicesWestToEast: any, ) {
   /**
    * The center of the tile.  Vertex positions are specified relative to this center.
    * @type {Cartesian3}
@@ -211,7 +193,7 @@ TerrainMesh.prototype.getTransform = function (mode, projection) {
   return computeTransform2D(this, projection, this._transform);
 };
 
-function computeTransform(mesh, result) {
+function computeTransform(mesh: any, result: any) {
   const exaggeration = mesh.encoding.exaggeration;
   const exaggerationRelativeHeight = mesh.encoding.exaggerationRelativeHeight;
 
@@ -254,7 +236,7 @@ const scratchCenter2D = new Cartesian3();
  * @returns {Matrix4} The transform matrix.
  * @private
  */
-function computeTransform2D(mesh, projection, result) {
+function computeTransform2D(mesh: any, projection: any, result: any) {
   const exaggeration = mesh.encoding.exaggeration;
   const exaggerationRelativeHeight = mesh.encoding.exaggerationRelativeHeight;
 
@@ -358,5 +340,4 @@ TerrainMesh.prototype.updateSceneMode = function (mode) {
   this._recomputeTransform = true;
 };
 
-export { TerrainMesh };
 export default TerrainMesh;

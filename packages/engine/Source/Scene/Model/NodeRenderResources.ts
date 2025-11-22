@@ -14,8 +14,11 @@ import clone from "../../Core/clone.js";
  *
  * @private
  */
-function NodeRenderResources(modelRenderResources, runtimeNode) {
-  ;
+function NodeRenderResources(modelRenderResources: any, runtimeNode: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("modelRenderResources", modelRenderResources);
+  Check.typeOf.object("runtimeNode", runtimeNode);
+  //>>includeEnd('debug');
 
   // Properties inherited from the ModelRenderResources.
   /**
@@ -164,5 +167,4 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.primitiveRenderResources = [];
 }
 
-export { NodeRenderResources };
 export default NodeRenderResources;

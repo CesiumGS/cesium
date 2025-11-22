@@ -14,7 +14,7 @@ import DeveloperError from "./DeveloperError.js";
  * // Make a billboard that is only visible when the distance to the camera is between 10 and 20 meters.
  * billboard.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(10.0, 20.0);
  */
-function DistanceDisplayCondition(near, far) {
+function DistanceDisplayCondition(near: any, far: any) {
   near = near ?? 0.0;
   this._near = near;
 
@@ -69,7 +69,14 @@ DistanceDisplayCondition.packedLength = 2;
  * @returns {number[]} The array that was packed into
  */
 DistanceDisplayCondition.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -88,7 +95,11 @@ DistanceDisplayCondition.pack = function (value, array, startingIndex) {
  * @returns {DistanceDisplayCondition} The modified result parameter or a new DistanceDisplayCondition instance if one was not provided.
  */
 DistanceDisplayCondition.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -157,5 +168,4 @@ DistanceDisplayCondition.prototype.clone = function (result) {
 DistanceDisplayCondition.prototype.equals = function (other) {
   return DistanceDisplayCondition.equals(this, other);
 };
-export { DistanceDisplayCondition };
 export default DistanceDisplayCondition;

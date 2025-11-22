@@ -18,8 +18,12 @@ import SelectionIndicatorViewModel from "./SelectionIndicatorViewModel.js";
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  */
-function SelectionIndicator(container, scene) {
-  ;
+function SelectionIndicator(container: any, scene: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -109,5 +113,4 @@ SelectionIndicator.prototype.destroy = function () {
   container.removeChild(this._element);
   return destroyObject(this);
 };
-export { SelectionIndicator };
 export default SelectionIndicator;

@@ -19,8 +19,12 @@ import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
  *        in order to produce an array of picked {@link ImageryLayerFeatureInfo} instances.  If this parameter is not specified,
  *        a default function for the type of response is used.
  */
-function GetFeatureInfoFormat(type, format, callback) {
-  ;
+function GetFeatureInfoFormat(type: any, format: any, callback: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(type)) {
+    throw new DeveloperError("type is required.");
+  }
+  //>>includeEnd('debug');
 
   this.type = type;
 
@@ -34,7 +38,13 @@ function GetFeatureInfoFormat(type, format, callback) {
     } else if (type === "text") {
       format = "text/plain";
     }
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    else {
+      throw new DeveloperError(
+        'format is required when type is not "json", "xml", "html", or "text".',
+      );
+    }
+    //>>includeEnd('debug');
   }
 
   this.format = format;
@@ -49,13 +59,19 @@ function GetFeatureInfoFormat(type, format, callback) {
     } else if (type === "text") {
       callback = textToFeatureInfo;
     }
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    else {
+      throw new DeveloperError(
+        'callback is required when type is not "json", "xml", "html", or "text".',
+      );
+    }
+    //>>includeEnd('debug');
   }
 
   this.callback = callback;
 }
 
-function geoJsonToFeatureInfo(json) {
+function geoJsonToFeatureInfo(json: any) {
   const result = [];
 
   const features = json.features;
@@ -86,7 +102,7 @@ const esriWmsNamespace = "http://www.esri.com/wms";
 const wfsNamespace = "http://www.opengis.net/wfs";
 const gmlNamespace = "http://www.opengis.net/gml";
 
-function xmlToFeatureInfo(xml) {
+function xmlToFeatureInfo(xml: any) {
   const documentElement = xml.documentElement;
   if (
     documentElement.localName === "MultiFeatureCollection" &&
@@ -119,7 +135,7 @@ function xmlToFeatureInfo(xml) {
   }
 }
 
-function mapInfoXmlToFeatureInfo(xml) {
+function mapInfoXmlToFeatureInfo(xml: any) {
   const result = [];
 
   const multiFeatureCollection = xml.documentElement;
@@ -161,7 +177,7 @@ function mapInfoXmlToFeatureInfo(xml) {
   return result;
 }
 
-function esriXmlToFeatureInfo(xml) {
+function esriXmlToFeatureInfo(xml: any) {
   const featureInfoResponse = xml.documentElement;
   const result = [];
   let properties;
@@ -228,7 +244,7 @@ function esriXmlToFeatureInfo(xml) {
   return result;
 }
 
-function gmlToFeatureInfo(xml) {
+function gmlToFeatureInfo(xml: any) {
   const result = [];
 
   const featureCollection = xml.documentElement;
@@ -257,7 +273,7 @@ function gmlToFeatureInfo(xml) {
 // msGmlToFeatureInfo is similar to gmlToFeatureInfo, but assumes different XML structure
 // eg. <msGMLOutput> <ABC_layer> <ABC_feature> <foo>bar</foo> ... </ABC_feature> </ABC_layer> </msGMLOutput>
 
-function msGmlToFeatureInfo(xml) {
+function msGmlToFeatureInfo(xml: any) {
   const result = [];
 
   // Find the first child. Except for IE, this would work:
@@ -294,7 +310,7 @@ function msGmlToFeatureInfo(xml) {
   return result;
 }
 
-function getGmlPropertiesRecursively(gmlNode, properties) {
+function getGmlPropertiesRecursively(gmlNode: any, properties: any) {
   let isSingleValue = true;
 
   for (let i = 0; i < gmlNode.childNodes.length; ++i) {
@@ -324,7 +340,7 @@ function getGmlPropertiesRecursively(gmlNode, properties) {
   return isSingleValue;
 }
 
-function imageryLayerFeatureInfoFromDataAndProperties(data, properties) {
+function imageryLayerFeatureInfoFromDataAndProperties(data: any, properties: any) {
   const featureInfo = new ImageryLayerFeatureInfo();
   featureInfo.data = data;
   featureInfo.properties = properties;
@@ -333,7 +349,7 @@ function imageryLayerFeatureInfoFromDataAndProperties(data, properties) {
   return featureInfo;
 }
 
-function unknownXmlToFeatureInfo(xml) {
+function unknownXmlToFeatureInfo(xml: any) {
   const xmlText = new XMLSerializer().serializeToString(xml);
 
   const element = document.createElement("div");
@@ -352,7 +368,7 @@ const wmsServiceExceptionReportRegex =
   /<ServiceExceptionReport([\s\S]*)<\/ServiceExceptionReport>/im;
 const titleRegex = /<title>([\s\S]*)<\/title>/im;
 
-function textToFeatureInfo(text) {
+function textToFeatureInfo(text: any) {
   // If the text is HTML and it has an empty body tag, assume it means no features were found.
   if (emptyBodyRegex.test(text)) {
     return undefined;
@@ -377,5 +393,4 @@ function textToFeatureInfo(text) {
   featureInfo.data = text;
   return [featureInfo];
 }
-export { GetFeatureInfoFormat };
 export default GetFeatureInfoFormat;

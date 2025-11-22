@@ -16,7 +16,7 @@ import createCommand from "../createCommand.js";
  * @param {Element|string} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
  * @param {Element|string} [container] The DOM element or ID that will contain the widget.
  */
-function FullscreenButtonViewModel(fullscreenElement, container) {
+function FullscreenButtonViewModel(fullscreenElement: any, container: any) {
   if (!defined(container)) {
     container = document.body;
   }
@@ -103,7 +103,11 @@ Object.defineProperties(FullscreenButtonViewModel.prototype, {
       return this._fullscreenElement;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!(value instanceof Element)) {
+        throw new DeveloperError("value must be a valid Element.");
+      }
+      //>>includeEnd('debug');
 
       this._fullscreenElement = value;
     },
@@ -137,5 +141,4 @@ FullscreenButtonViewModel.prototype.destroy = function () {
   document.removeEventListener(Fullscreen.changeEventName, this._callback);
   destroyObject(this);
 };
-export { FullscreenButtonViewModel };
 export default FullscreenButtonViewModel;

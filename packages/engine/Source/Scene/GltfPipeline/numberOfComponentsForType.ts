@@ -8,7 +8,7 @@
  *
  * @private
  */
-function numberOfComponentsForType(type) {
+function numberOfComponentsForType(type: any) {
   switch (type) {
     case "SCALAR":
       return 1;
@@ -26,5 +26,4 @@ function numberOfComponentsForType(type) {
   }
 }
 
-export { numberOfComponentsForType };
 export default numberOfComponentsForType;

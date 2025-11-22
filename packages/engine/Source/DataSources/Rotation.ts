@@ -45,7 +45,15 @@ const Rotation = {
    * @returns {number[]} The array that was packed into
    */
   pack: function (value, array, startingIndex) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(value)) {
+      throw new DeveloperError("value is required");
+    }
+
+    if (!defined(array)) {
+      throw new DeveloperError("array is required");
+    }
+    //>>includeEnd('debug');
 
     startingIndex = startingIndex ?? 0;
     array[startingIndex] = value;
@@ -62,7 +70,11 @@ const Rotation = {
    * @returns {Rotation} The modified result parameter or a new Rotation instance if one was not provided.
    */
   unpack: function (array, startingIndex, result) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(array)) {
+      throw new DeveloperError("array is required");
+    }
+    //>>includeEnd('debug');
 
     startingIndex = startingIndex ?? 0;
     return array[startingIndex];
@@ -82,7 +94,11 @@ const Rotation = {
     lastIndex,
     result,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(packedArray)) {
+      throw new DeveloperError("packedArray is required");
+    }
+    //>>includeEnd('debug');
 
     if (!defined(result)) {
       result = [];
@@ -120,7 +136,14 @@ const Rotation = {
     lastIndex,
     result,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(array)) {
+      throw new DeveloperError("array is required");
+    }
+    if (!defined(sourceArray)) {
+      throw new DeveloperError("sourceArray is required");
+    }
+    //>>includeEnd('debug');
 
     result = array[0];
     if (result < 0) {
@@ -129,5 +152,4 @@ const Rotation = {
     return result;
   },
 };
-export { Rotation };
 export default Rotation;

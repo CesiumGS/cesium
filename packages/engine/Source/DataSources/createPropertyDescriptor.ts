@@ -1,13 +1,7 @@
 import defined from "../Core/defined.js";
 import ConstantProperty from "./ConstantProperty.js";
 
-function createProperty(
-  name,
-  privateName,
-  subscriptionName,
-  configurable,
-  createPropertyCallback,
-) {
+function createProperty(name: any, privateName: any, subscriptionName: any, configurable: any, createPropertyCallback: any, ) {
   return {
     configurable: configurable,
     get: function () {
@@ -47,7 +41,7 @@ function createProperty(
   };
 }
 
-function createConstantProperty(value) {
+function createConstantProperty(value: any) {
   return new ConstantProperty(value);
 }
 
@@ -57,7 +51,7 @@ function createConstantProperty(value) {
  * job of optimizing lookups if it notices that the string is constant throughout the function.
  * @private
  */
-function createPropertyDescriptor(name, configurable, createPropertyCallback) {
+function createPropertyDescriptor(name: any, configurable: any, createPropertyCallback: any) {
   //Safari 8.0.3 has a JavaScript bug that causes it to confuse two variables and treat them as the same.
   //The two extra toString calls work around the issue.
   return createProperty(
@@ -68,5 +62,4 @@ function createPropertyDescriptor(name, configurable, createPropertyCallback) {
     createPropertyCallback ?? createConstantProperty,
   );
 }
-export { createPropertyDescriptor };
 export default createPropertyDescriptor;

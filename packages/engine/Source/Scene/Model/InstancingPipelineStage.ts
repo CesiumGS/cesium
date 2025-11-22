@@ -217,13 +217,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
 const projectedTransformScratch = new Matrix4();
 const projectedPositionScratch = new Cartesian3();
 
-function projectTransformTo2D(
-  transform,
-  modelMatrix,
-  nodeTransform,
-  frameState,
-  result,
-) {
+function projectTransformTo2D(transform: any, modelMatrix: any, nodeTransform: any, frameState: any, result: any, ) {
   let projectedTransform = Matrix4.multiplyTransformation(
     modelMatrix,
     transform,
@@ -245,13 +239,7 @@ function projectTransformTo2D(
   return result;
 }
 
-function projectPositionTo2D(
-  position,
-  modelMatrix,
-  nodeTransform,
-  frameState,
-  result,
-) {
+function projectPositionTo2D(position: any, modelMatrix: any, nodeTransform: any, frameState: any, result: any, ) {
   const translationMatrix = Matrix4.fromTranslation(
     position,
     projectedTransformScratch,
@@ -283,11 +271,7 @@ function projectPositionTo2D(
   return result;
 }
 
-function getModelMatrixAndNodeTransform(
-  renderResources,
-  modelMatrix,
-  nodeComputedTransform,
-) {
+function getModelMatrixAndNodeTransform(renderResources: any, modelMatrix: any, nodeComputedTransform: any, ) {
   const model = renderResources.model;
   const sceneGraph = model.sceneGraph;
 
@@ -326,12 +310,7 @@ const nodeComputedTransformScratch = new Matrix4();
 const transformScratch = new Matrix4();
 const positionScratch = new Cartesian3();
 
-function projectTransformsTo2D(
-  transforms,
-  renderResources,
-  frameState,
-  result,
-) {
+function projectTransformsTo2D(transforms: any, renderResources: any, frameState: any, result: any, ) {
   const modelMatrix = modelMatrixScratch;
   const nodeComputedTransform = nodeComputedTransformScratch;
 
@@ -377,12 +356,7 @@ function projectTransformsTo2D(
   return result;
 }
 
-function projectTranslationsTo2D(
-  translations,
-  renderResources,
-  frameState,
-  result,
-) {
+function projectTranslationsTo2D(translations: any, renderResources: any, frameState: any, result: any, ) {
   const modelMatrix = modelMatrixScratch;
   const nodeComputedTransform = nodeComputedTransformScratch;
 
@@ -419,7 +393,7 @@ function projectTranslationsTo2D(
 const scratchProjectedMin = new Cartesian3();
 const scratchProjectedMax = new Cartesian3();
 
-function computeReferencePoint2D(renderResources, frameState) {
+function computeReferencePoint2D(renderResources: any, frameState: any) {
   // Compute the reference point by averaging the instancing translation
   // min / max values after they are projected to 2D.
   const runtimeNode = renderResources.runtimeNode;
@@ -456,7 +430,7 @@ function computeReferencePoint2D(renderResources, frameState) {
   );
 }
 
-function transformsToTypedArray(transforms) {
+function transformsToTypedArray(transforms: any) {
   const elements = 12;
   const count = transforms.length;
   const transformsTypedArray = new Float32Array(count * elements);
@@ -482,7 +456,7 @@ function transformsToTypedArray(transforms) {
   return transformsTypedArray;
 }
 
-function translationsToTypedArray(translations) {
+function translationsToTypedArray(translations: any) {
   const elements = 3;
   const count = translations.length;
   const transationsTypedArray = new Float32Array(count * elements);
@@ -503,7 +477,7 @@ const translationScratch = new Cartesian3();
 const rotationScratch = new Quaternion();
 const scaleScratch = new Cartesian3();
 
-function getInstanceTransformsAsMatrices(instances, count, renderResources) {
+function getInstanceTransformsAsMatrices(instances: any, count: any, renderResources: any) {
   const transforms = new Array(count);
 
   const translationAttribute = ModelUtility.getAttributeBySemantic(
@@ -627,11 +601,7 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   return transforms;
 }
 
-function getInstanceTranslationsAsCartesian3s(
-  translationAttribute,
-  count,
-  renderResources,
-) {
+function getInstanceTranslationsAsCartesian3s(translationAttribute: any, count: any, renderResources: any, ) {
   const instancingTranslations = new Array(count);
   const translationTypedArray = translationAttribute.typedArray;
 
@@ -678,7 +648,7 @@ function getInstanceTranslationsAsCartesian3s(
   return instancingTranslations;
 }
 
-function createVertexBuffer(typedArray, frameState) {
+function createVertexBuffer(typedArray: any, frameState: any) {
   const buffer = Buffer.createVertexBuffer({
     context: frameState.context,
     typedArray: typedArray,
@@ -692,14 +662,7 @@ function createVertexBuffer(typedArray, frameState) {
   return buffer;
 }
 
-function processTransformAttributes(
-  renderResources,
-  frameState,
-  instances,
-  instancingVertexAttributes,
-  use2D,
-  keepTypedArray,
-) {
+function processTransformAttributes(renderResources: any, frameState: any, instances: any, instancingVertexAttributes: any, use2D: any, keepTypedArray: any, ) {
   const rotationAttribute = ModelUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.ROTATION,
@@ -726,14 +689,7 @@ function processTransformAttributes(
   }
 }
 
-function processTransformMatrixAttributes(
-  renderResources,
-  instances,
-  instancingVertexAttributes,
-  frameState,
-  use2D,
-  keepTypedArray,
-) {
+function processTransformMatrixAttributes(renderResources: any, instances: any, instancingVertexAttributes: any, frameState: any, use2D: any, keepTypedArray: any, ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const count = instances.attributes[0].count;
 
@@ -814,14 +770,7 @@ function processTransformMatrixAttributes(
   );
 }
 
-function processTransformVec3Attributes(
-  renderResources,
-  instances,
-  instancingVertexAttributes,
-  frameState,
-  use2D,
-  keepTypedArray,
-) {
+function processTransformVec3Attributes(renderResources: any, instances: any, instancingVertexAttributes: any, frameState: any, use2D: any, keepTypedArray: any, ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const runtimeNode = renderResources.runtimeNode;
   const translationAttribute = ModelUtility.getAttributeBySemantic(
@@ -936,12 +885,7 @@ function processTransformVec3Attributes(
   );
 }
 
-function processMatrixAttributes(
-  renderResources,
-  buffer,
-  instancingVertexAttributes,
-  attributeString,
-) {
+function processMatrixAttributes(renderResources: any, buffer: any, instancingVertexAttributes: any, attributeString: any, ) {
   const vertexSizeInFloats = 12;
   const componentByteSize = ComponentDatatype.getSizeInBytes(
     ComponentDatatype.FLOAT,
@@ -989,14 +933,7 @@ function processMatrixAttributes(
   addAllToArray(instancingVertexAttributes, matrixAttributes);
 }
 
-function processVec3Attribute(
-  renderResources,
-  buffer,
-  byteOffset,
-  byteStride,
-  instancingVertexAttributes,
-  attributeString,
-) {
+function processVec3Attribute(renderResources: any, buffer: any, byteOffset: any, byteStride: any, instancingVertexAttributes: any, attributeString: any, ) {
   instancingVertexAttributes.push({
     index: renderResources.attributeIndex++,
     vertexBuffer: buffer,
@@ -1012,12 +949,7 @@ function processVec3Attribute(
   shaderBuilder.addAttribute("vec3", `a_instance${attributeString}`);
 }
 
-function processFeatureIdAttributes(
-  renderResources,
-  frameState,
-  instances,
-  instancingVertexAttributes,
-) {
+function processFeatureIdAttributes(renderResources: any, frameState: any, instances: any, instancingVertexAttributes: any, ) {
   const attributes = instances.attributes;
   const shaderBuilder = renderResources.shaderBuilder;
 
@@ -1053,5 +985,4 @@ function processFeatureIdAttributes(
   }
 }
 
-export { InstancingPipelineStage };
 export default InstancingPipelineStage;

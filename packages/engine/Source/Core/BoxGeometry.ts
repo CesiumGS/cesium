@@ -39,13 +39,24 @@ const diffScratch = new Cartesian3();
  * });
  * const geometry = Cesium.BoxGeometry.createGeometry(box);
  */
-function BoxGeometry(options) {
+function BoxGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const min = options.minimum;
   const max = options.maximum;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("min", min);
+  Check.typeOf.object("max", max);
+  if (
+    defined(options.offsetAttribute) &&
+    options.offsetAttribute === GeometryOffsetAttribute.TOP
+  ) {
+    throw new DeveloperError(
+      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
 
@@ -80,7 +91,12 @@ BoxGeometry.fromDimensions = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const dimensions = options.dimensions;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("dimensions", dimensions);
+  Check.typeOf.number.greaterThanOrEquals("dimensions.x", dimensions.x, 0);
+  Check.typeOf.number.greaterThanOrEquals("dimensions.y", dimensions.y, 0);
+  Check.typeOf.number.greaterThanOrEquals("dimensions.z", dimensions.z, 0);
+  //>>includeEnd('debug');
 
   const corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
 
@@ -113,7 +129,9 @@ BoxGeometry.fromDimensions = function (options) {
  * @see BoxGeometry.createGeometry
  */
 BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("boundingBox", boundingBox);
+  //>>includeEnd('debug');
 
   return new BoxGeometry({
     minimum: boundingBox.minimum,
@@ -138,7 +156,10 @@ BoxGeometry.packedLength =
  * @returns {number[]} The array that was packed into
  */
 BoxGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -179,7 +200,9 @@ const scratchOptions = {
  * @returns {BoxGeometry} The modified result parameter or a new BoxGeometry instance if one was not provided.
  */
 BoxGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -867,5 +890,4 @@ BoxGeometry.getUnitBox = function () {
   }
   return unitBoxGeometry;
 };
-export { BoxGeometry };
 export default BoxGeometry;

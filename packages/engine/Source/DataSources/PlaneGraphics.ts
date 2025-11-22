@@ -32,7 +32,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Plane.html|Cesium Sandcastle Plane Demo}
  */
-function PlaneGraphics(options) {
+function PlaneGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -187,7 +187,11 @@ PlaneGraphics.prototype.clone = function (result) {
  * @param {PlaneGraphics} source The object to be merged into this object.
  */
 PlaneGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.plane = this.plane ?? source.plane;
@@ -201,5 +205,4 @@ PlaneGraphics.prototype.merge = function (source) {
   this.distanceDisplayCondition =
     this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
-export { PlaneGraphics };
 export default PlaneGraphics;

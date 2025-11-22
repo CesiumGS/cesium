@@ -53,7 +53,7 @@ ITwinData.createTilesetFromIModelId = async function ({
 
   if (
     exports.length > 0 &&
-    exports.every((exportObj) => {
+    exports.every((exportObj: any) => {
       return exportObj.status === ITwinPlatform.ExportStatus.Invalid;
     })
   ) {
@@ -62,7 +62,7 @@ ITwinData.createTilesetFromIModelId = async function ({
     );
   }
 
-  const completeExport = exports.find((exportObj) => {
+  const completeExport = exports.find((exportObj: any) => {
     return exportObj.status === ITwinPlatform.ExportStatus.Complete;
   });
 
@@ -113,7 +113,16 @@ ITwinData.createTilesetForRealityDataId = async function ({
   rootDocument,
   tilesetOptions,
 }) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("realityDataId", realityDataId);
+  if (defined(type)) {
+    Check.typeOf.string("type", type);
+  }
+  if (defined(rootDocument)) {
+    Check.typeOf.string("rootDocument", rootDocument);
+  }
+  //>>includeEnd('debug');
 
   if (!defined(type) || !defined(rootDocument)) {
     const metadata = await ITwinPlatform.getRealityDataMetadata(
@@ -175,7 +184,16 @@ ITwinData.createDataSourceForRealityDataId = async function ({
   type,
   rootDocument,
 }) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("realityDataId", realityDataId);
+  if (defined(type)) {
+    Check.typeOf.string("type", type);
+  }
+  if (defined(rootDocument)) {
+    Check.typeOf.string("rootDocument", rootDocument);
+  }
+  //>>includeEnd('debug');
 
   if (!defined(type) || !defined(rootDocument)) {
     const metadata = await ITwinPlatform.getRealityDataMetadata(
@@ -225,7 +243,23 @@ ITwinData.loadGeospatialFeatures = async function ({
   collectionId,
   limit,
 }) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("collectionId", collectionId);
+  if (defined(limit)) {
+    Check.typeOf.number("limit", limit);
+    Check.typeOf.number.lessThanOrEquals("limit", limit, 10000);
+    Check.typeOf.number.greaterThanOrEquals("limit", limit, 1);
+  }
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
+  }
+  //>>includeEnd('debug');
 
   const pageLimit = limit ?? 10000;
 
@@ -246,5 +280,4 @@ ITwinData.loadGeospatialFeatures = async function ({
   return GeoJsonDataSource.load(resource);
 };
 
-export { ITwinData };
 export default ITwinData;

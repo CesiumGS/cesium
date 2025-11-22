@@ -10,8 +10,12 @@ import createCommand from "../createCommand.js";
  * @param {Scene} scene The scene instance to use.
  * @param {number} [duration] The duration of the camera flight in seconds.
  */
-function HomeButtonViewModel(scene, duration) {
-  ;
+function HomeButtonViewModel(scene: any, duration: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   this._scene = scene;
   this._duration = duration;
@@ -69,11 +73,14 @@ Object.defineProperties(HomeButtonViewModel.prototype, {
       return this._duration;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value < 0) {
+        throw new DeveloperError("value must be positive.");
+      }
+      //>>includeEnd('debug');
 
       this._duration = value;
     },
   },
 });
-export { HomeButtonViewModel };
 export default HomeButtonViewModel;

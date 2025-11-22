@@ -6,7 +6,7 @@
  * @param {number} [start=0.0] The beginning of the interval.
  * @param {number} [stop=0.0] The end of the interval.
  */
-function Interval(start, stop) {
+function Interval(start: any, stop: any) {
   /**
    * The beginning of the interval.
    * @type {number}
@@ -20,5 +20,4 @@ function Interval(start, stop) {
    */
   this.stop = stop ?? 0.0;
 }
-export { Interval };
 export default Interval;

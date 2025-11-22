@@ -36,7 +36,10 @@ class ModelImageryMapping {
     mappedPositions,
     projection,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("mappedPositions", mappedPositions);
+    Check.defined("projection", projection);
+    //>>includeEnd('debug');
 
     const cartographicPositions = mappedPositions.cartographicPositions;
     const cartographicBoundingRectangle =
@@ -75,7 +78,15 @@ class ModelImageryMapping {
     cartographicBoundingRectangle,
     projection,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("cartographicPositions", cartographicPositions);
+    Check.typeOf.number.greaterThanOrEquals("numPositions", numPositions, 0);
+    Check.defined(
+      "cartographicBoundingRectangle",
+      cartographicBoundingRectangle,
+    );
+    Check.defined("projection", projection);
+    //>>includeEnd('debug');
 
     // Convert the bounding `Rectangle`(!) of the cartographic positions
     // into a `BoundingRectangle`(!) using the given projection
@@ -133,7 +144,10 @@ class ModelImageryMapping {
     mappedPositions,
     projection,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("mappedPositions", mappedPositions);
+    Check.defined("projection", projection);
+    //>>includeEnd('debug');
 
     // Create the typed array that contains the texture coordinates
     const texCoordsTypedArray =
@@ -164,7 +178,11 @@ class ModelImageryMapping {
     primitivePositionTransform,
     ellipsoid,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("primitivePositionAttribute", primitivePositionAttribute);
+    Check.defined("primitivePositionTransform", primitivePositionTransform);
+    Check.defined("ellipsoid", ellipsoid);
+    //>>includeEnd('debug');
 
     // Extract the positions as a typed array
     const typedArray = ModelReader.readAttributeAsTypedArray(
@@ -207,7 +225,10 @@ class ModelImageryMapping {
    * @returns {Iterable<Cartesian3>} The iterable
    */
   static createIterableCartesian3FromTypedArray(typedArray, stride) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("typedArray", typedArray);
+    Check.typeOf.number.greaterThanOrEquals("stride", stride, 3);
+    //>>includeEnd('debug');
 
     const cartesian = new Cartesian3();
     const numElements = typedArray.length / stride;
@@ -232,7 +253,10 @@ class ModelImageryMapping {
    * @returns {Iterable} The mapped iterable
    */
   static map(iterable, mapper) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("iterable", iterable);
+    Check.defined("mapper", mapper);
+    //>>includeEnd('debug');
 
     const result = {
       [Symbol.iterator]: function* () {
@@ -256,7 +280,9 @@ class ModelImageryMapping {
    * @returns {Rectangle} The result
    */
   static computeCartographicBoundingRectangle(cartographicPositions, result) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("cartographicPositions", cartographicPositions);
+    //>>includeEnd('debug');
 
     if (!defined(result)) {
       result = new Rectangle();
@@ -293,10 +319,13 @@ class ModelImageryMapping {
    * @returns {Iterable<Cartesian3>} The transformed cartesians
    */
   static transformCartesians3(positions, matrix) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("positions", positions);
+    Check.defined("matrix", matrix);
+    //>>includeEnd('debug');
 
     const transformedPosition = new Cartesian3();
-    const transformedPositions = ModelImageryMapping.map(positions, (p) => {
+    const transformedPositions = ModelImageryMapping.map(positions, (p: any) => {
       Matrix4.multiplyByPoint(matrix, p, transformedPosition);
       return transformedPosition;
     });
@@ -316,10 +345,13 @@ class ModelImageryMapping {
    * @returns {Iterable<Cartographic>} The cartographic positions
    */
   static transformToCartographic(positions, ellipsoid) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("positions", positions);
+    Check.defined("ellipsoid", ellipsoid);
+    //>>includeEnd('debug');
 
     const cartographicPosition = new Cartographic();
-    const cartographicPositions = ModelImageryMapping.map(positions, (p) => {
+    const cartographicPositions = ModelImageryMapping.map(positions, (p: any) => {
       // Note: This will not yield valid results for p=(0,0,0).
       // But there is no sensible cartographic position for
       // that, so simply accept the unspecified output here.
@@ -342,12 +374,15 @@ class ModelImageryMapping {
    * @returns {Iterable<Cartesian3>} The projected positions
    */
   static createProjectedPositions(cartographicPositions, projection) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("cartographicPositions", cartographicPositions);
+    Check.defined("projection", projection);
+    //>>includeEnd('debug');
 
     const projectedPosition = new Cartesian3();
     const projectedPositions = ModelImageryMapping.map(
       cartographicPositions,
-      (c) => {
+      (c: any) => {
         projection.project(c, projectedPosition);
         return projectedPosition;
       },
@@ -372,12 +407,15 @@ class ModelImageryMapping {
    * @returns {Iterable<Cartesian2>} The texture coordinates
    */
   static computeTexCoords(positions, boundingRectangle) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("positions", positions);
+    Check.defined("boundingRectangle", boundingRectangle);
+    //>>includeEnd('debug');
 
     const texCoord = new Cartesian2();
     const invSizeX = 1.0 / boundingRectangle.width;
     const invSizeY = 1.0 / boundingRectangle.height;
-    const texCoords = ModelImageryMapping.map(positions, (p) => {
+    const texCoords = ModelImageryMapping.map(positions, (p: any) => {
       const uRaw = (p.x - boundingRectangle.x) * invSizeX;
       const vRaw = (p.y - boundingRectangle.y) * invSizeY;
       const u = Math.min(Math.max(uRaw, 0.0), 1.0);
@@ -397,7 +435,10 @@ class ModelImageryMapping {
    * @returns {TypedArray} The typed array
    */
   static createTypedArrayFromCartesians2(numElements, elements) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("numElements", numElements, 0);
+    Check.defined("elements", elements);
+    //>>includeEnd('debug');
 
     const typedArray = new Float32Array(numElements * 2);
     let index = 0;
@@ -422,7 +463,9 @@ class ModelImageryMapping {
    * @returns {ModelComponents.Attribute} The attribute
    */
   static createTexCoordAttribute(texCoordsTypedArray) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("texCoordsTypedArray", texCoordsTypedArray);
+    //>>includeEnd('debug');
 
     const texCoordAttribute = {
       name: "Imagery Texture Coordinates",
@@ -443,5 +486,4 @@ class ModelImageryMapping {
     return texCoordAttribute;
   }
 }
-export { ModelImageryMapping };
 export default ModelImageryMapping;

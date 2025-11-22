@@ -296,5 +296,4 @@ Object.defineProperties(ContextLimits, {
     },
   },
 });
-export { ContextLimits };
 export default ContextLimits;

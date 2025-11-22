@@ -9,7 +9,7 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-function removePipelineExtras(gltf) {
+function removePipelineExtras(gltf: any) {
   ForEach.shader(gltf, function (shader) {
     removeExtras(shader);
   });
@@ -25,7 +25,7 @@ function removePipelineExtras(gltf) {
   return gltf;
 }
 
-function removeExtras(object) {
+function removeExtras(object: any) {
   if (!defined(object.extras)) {
     return;
   }
@@ -39,5 +39,4 @@ function removeExtras(object) {
   }
 }
 
-export { removePipelineExtras };
 export default removePipelineExtras;

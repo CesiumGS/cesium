@@ -93,7 +93,7 @@ import StencilOperation from "./StencilOperation.js";
  *   appearance : new Cesium.PolylineColorAppearance()
  * }));
  */
-function GroundPolylinePrimitive(options) {
+function GroundPolylinePrimitive(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -314,7 +314,7 @@ GroundPolylinePrimitive.initializeTerrainHeights = function () {
   return ApproximateTerrainHeights.initialize();
 };
 
-function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
+function createShaderProgram(groundPolylinePrimitive: any, frameState: any, appearance: any) {
   const context = frameState.context;
   const primitive = groundPolylinePrimitive._primitive;
   const attributeLocations = primitive._attributeLocations;
@@ -456,7 +456,7 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
   groundPolylinePrimitive._spMorph = colorProgramMorph;
 }
 
-function getRenderState(mask3DTiles) {
+function getRenderState(mask3DTiles: any) {
   return RenderState.fromCache({
     cull: {
       enabled: true, // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
@@ -483,14 +483,7 @@ function getRenderState(mask3DTiles) {
   });
 }
 
-function createCommands(
-  groundPolylinePrimitive,
-  appearance,
-  material,
-  translucent,
-  colorCommands,
-  pickCommands,
-) {
+function createCommands(groundPolylinePrimitive: any, appearance: any, material: any, translucent: any, colorCommands: any, pickCommands: any, ) {
   const primitive = groundPolylinePrimitive._primitive;
   const length = primitive._va.length;
   colorCommands.length = length;
@@ -557,15 +550,7 @@ function createCommands(
   }
 }
 
-function updateAndQueueCommand(
-  groundPolylinePrimitive,
-  command,
-  frameState,
-  modelMatrix,
-  cull,
-  boundingVolume,
-  debugShowBoundingVolume,
-) {
+function updateAndQueueCommand(groundPolylinePrimitive: any, command: any, frameState: any, modelMatrix: any, cull: any, boundingVolume: any, debugShowBoundingVolume: any, ) {
   // Use derived appearance command for morph and 2D
   if (frameState.mode === SceneMode.MORPHING) {
     command = command.derivedCommands.colorMorph;
@@ -580,15 +565,7 @@ function updateAndQueueCommand(
   frameState.commandList.push(command);
 }
 
-function updateAndQueueCommands(
-  groundPolylinePrimitive,
-  frameState,
-  colorCommands,
-  pickCommands,
-  modelMatrix,
-  cull,
-  debugShowBoundingVolume,
-) {
+function updateAndQueueCommands(groundPolylinePrimitive: any, frameState: any, colorCommands: any, pickCommands: any, modelMatrix: any, cull: any, debugShowBoundingVolume: any, ) {
   const primitive = groundPolylinePrimitive._primitive;
 
   Primitive._updateBoundingVolumes(primitive, frameState, modelMatrix); // Expected to be identity - GroundPrimitives don't support other model matrices
@@ -665,7 +642,13 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
   }
 
   if (!ApproximateTerrainHeights.initialized) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!this.asynchronous) {
+      throw new DeveloperError(
+        "For synchronous GroundPolylinePrimitives, you must call GroundPolylinePrimitives.initializeTerrainHeights() and wait for the returned promise to resolve.",
+      );
+    }
+    //>>includeEnd('debug');
 
     GroundPolylinePrimitive.initializeTerrainHeights();
     return;
@@ -819,7 +802,13 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
 GroundPolylinePrimitive.prototype.getGeometryInstanceAttributes = function (
   id,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(this._primitive)) {
+    throw new DeveloperError(
+      "must call update before calling getGeometryInstanceAttributes",
+    );
+  }
+  //>>includeEnd('debug');
   return this._primitive.getGeometryInstanceAttributes(id);
 };
 
@@ -875,5 +864,4 @@ GroundPolylinePrimitive.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { GroundPolylinePrimitive };
 export default GroundPolylinePrimitive;

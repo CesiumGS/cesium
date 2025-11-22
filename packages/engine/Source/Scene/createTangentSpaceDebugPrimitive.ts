@@ -29,12 +29,16 @@ import Primitive from "./Primitive.js";
  *    modelMatrix : instance.modelMatrix
  * }));
  */
-function createTangentSpaceDebugPrimitive(options) {
+function createTangentSpaceDebugPrimitive(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const instances = [];
   let geometry = options.geometry;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("options.geometry is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(geometry.attributes) || !defined(geometry.primitiveType)) {
     // to create the debug lines, we need the computed attributes.
@@ -107,5 +111,4 @@ function createTangentSpaceDebugPrimitive(options) {
 
   return undefined;
 }
-export { createTangentSpaceDebugPrimitive };
 export default createTangentSpaceDebugPrimitive;

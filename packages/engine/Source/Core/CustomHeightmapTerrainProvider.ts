@@ -53,10 +53,14 @@ import TerrainProvider from "./TerrainProvider.js";
  *
  * @see TerrainProvider
  */
-function CustomHeightmapTerrainProvider(options) {
+function CustomHeightmapTerrainProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.callback", options.callback);
+  Check.defined("options.width", options.width);
+  Check.defined("options.height", options.height);
+  //>>includeEnd('debug');
 
   this._callback = options.callback;
 
@@ -280,5 +284,4 @@ CustomHeightmapTerrainProvider.prototype.loadTileDataAvailability = function (
 ) {
   return undefined;
 };
-export { CustomHeightmapTerrainProvider };
 export default CustomHeightmapTerrainProvider;

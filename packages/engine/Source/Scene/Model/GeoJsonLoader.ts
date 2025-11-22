@@ -41,10 +41,12 @@ import addAllToArray from "../../Core/addAllToArray.js";
  * @param {object} options Object with the following properties:
  * @param {object} options.geoJson The GeoJson object.
  */
-function GeoJsonLoader(options) {
+function GeoJsonLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.geoJson", options.geoJson);
+  //>>includeEnd('debug');
 
   this._geoJson = options.geoJson;
   this._components = undefined;
@@ -102,7 +104,9 @@ GeoJsonLoader.prototype.load = function () {
  * @private
  */
 GeoJsonLoader.prototype.process = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
 
   if (defined(this._components)) {
     return true;
@@ -123,14 +127,14 @@ function ParseResult() {
   this.features = [];
 }
 
-function parsePosition(position) {
+function parsePosition(position: any) {
   const x = position[0];
   const y = position[1];
   const z = position[2] ?? 0.0;
   return new Cartesian3(x, y, z);
 }
 
-function parseLineString(coordinates) {
+function parseLineString(coordinates: any) {
   const positionsLength = coordinates.length;
   const line = new Array(positionsLength);
   for (let i = 0; i < positionsLength; i++) {
@@ -140,7 +144,7 @@ function parseLineString(coordinates) {
   return lines;
 }
 
-function parseMultiLineString(coordinates) {
+function parseMultiLineString(coordinates: any) {
   const linesLength = coordinates.length;
   const lines = new Array(linesLength);
   for (let i = 0; i < linesLength; i++) {
@@ -149,7 +153,7 @@ function parseMultiLineString(coordinates) {
   return lines;
 }
 
-function parsePolygon(coordinates) {
+function parsePolygon(coordinates: any) {
   // Treat exterior polygon and interior polygons as lines
   const linesLength = coordinates.length;
   const lines = new Array(linesLength);
@@ -159,7 +163,7 @@ function parsePolygon(coordinates) {
   return lines;
 }
 
-function parseMultiPolygon(coordinates) {
+function parseMultiPolygon(coordinates: any) {
   const polygonsLength = coordinates.length;
   const lines = [];
   for (let i = 0; i < polygonsLength; i++) {
@@ -169,11 +173,11 @@ function parseMultiPolygon(coordinates) {
   return lines;
 }
 
-function parsePoint(coordinates) {
+function parsePoint(coordinates: any) {
   return [parsePosition(coordinates)];
 }
 
-function parseMultiPoint(coordinates) {
+function parseMultiPoint(coordinates: any) {
   const pointsLength = coordinates.length;
   const points = new Array(pointsLength);
   for (let i = 0; i < pointsLength; i++) {
@@ -200,7 +204,7 @@ const primitiveTypes = {
   Point: PrimitiveType.POINTS,
 };
 
-function parseFeature(feature, result) {
+function parseFeature(feature: any, result: any) {
   if (!defined(feature.geometry)) {
     return;
   }
@@ -231,7 +235,7 @@ function parseFeature(feature, result) {
   result.features.push(parsedFeature);
 }
 
-function parseFeatureCollection(featureCollection, result) {
+function parseFeatureCollection(featureCollection: any, result: any) {
   const features = featureCollection.features;
   const featuresLength = features.length;
   for (let i = 0; i < featuresLength; i++) {
@@ -246,7 +250,7 @@ const geoJsonObjectTypes = {
 
 const scratchCartesian = new Cartesian3();
 
-function createLinesPrimitive(features, toLocal, frameState) {
+function createLinesPrimitive(features: any, toLocal: any, frameState: any) {
   // Count the number of vertices and indices
   let vertexCount = 0;
   let indexCount = 0;
@@ -403,7 +407,7 @@ function createLinesPrimitive(features, toLocal, frameState) {
   return primitive;
 }
 
-function createPointsPrimitive(features, toLocal, frameState) {
+function createPointsPrimitive(features: any, toLocal: any, frameState: any) {
   // Count the number of vertices
   let vertexCount = 0;
 
@@ -524,7 +528,7 @@ function createPointsPrimitive(features, toLocal, frameState) {
   return primitive;
 }
 
-function parse(geoJson, frameState) {
+function parse(geoJson: any, frameState: any) {
   const result = new ParseResult();
 
   // Parse the GeoJSON
@@ -690,5 +694,4 @@ GeoJsonLoader.prototype.unload = function () {
   this._components = undefined;
 };
 
-export { GeoJsonLoader };
 export default GeoJsonLoader;

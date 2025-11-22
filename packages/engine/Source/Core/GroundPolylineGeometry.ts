@@ -71,11 +71,24 @@ const WALL_INITIAL_MAX_HEIGHT = 1000.0;
  *   positions : positions
  * });
  */
-function GroundPolylineGeometry(options) {
+function GroundPolylineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(positions) || positions.length < 2) {
+    throw new DeveloperError("At least two positions are required.");
+  }
+  if (
+    defined(options.arcType) &&
+    options.arcType !== ArcType.GEODESIC &&
+    options.arcType !== ArcType.RHUMB
+  ) {
+    throw new DeveloperError(
+      "Valid options for arcType are ArcType.GEODESIC and ArcType.RHUMB.",
+    );
+  }
+  //>>includeEnd('debug');
 
   /**
    * The screen space width in pixels.
@@ -169,7 +182,7 @@ GroundPolylineGeometry.setProjectionAndEllipsoid = function (
 const cart3Scratch1 = new Cartesian3();
 const cart3Scratch2 = new Cartesian3();
 const cart3Scratch3 = new Cartesian3();
-function computeRightNormal(start, end, maxHeight, ellipsoid, result) {
+function computeRightNormal(start: any, end: any, maxHeight: any, ellipsoid: any, result: any) {
   const startBottom = getPosition(ellipsoid, start, 0.0, cart3Scratch1);
   const startTop = getPosition(ellipsoid, start, maxHeight, cart3Scratch2);
   const endBottom = getPosition(ellipsoid, end, 0.0, cart3Scratch3);
@@ -185,19 +198,7 @@ const interpolatedCartographicScratch = new Cartographic();
 const interpolatedBottomScratch = new Cartesian3();
 const interpolatedTopScratch = new Cartesian3();
 const interpolatedNormalScratch = new Cartesian3();
-function interpolateSegment(
-  start,
-  end,
-  minHeight,
-  maxHeight,
-  granularity,
-  arcType,
-  ellipsoid,
-  normalsArray,
-  bottomPositionsArray,
-  topPositionsArray,
-  cartographicsArray,
-) {
+function interpolateSegment(start: any, end: any, minHeight: any, maxHeight: any, granularity: any, arcType: any, ellipsoid: any, normalsArray: any, bottomPositionsArray: any, topPositionsArray: any, cartographicsArray: any, ) {
   if (granularity === 0.0) {
     return;
   }
@@ -259,7 +260,7 @@ function interpolateSegment(
 }
 
 const heightlessCartographicScratch = new Cartographic();
-function getPosition(ellipsoid, cartographic, height, result) {
+function getPosition(ellipsoid: any, cartographic: any, height: any, result: any) {
   Cartographic.clone(cartographic, heightlessCartographicScratch);
   heightlessCartographicScratch.height = height;
   return Cartographic.toCartesian(
@@ -279,7 +280,10 @@ function getPosition(ellipsoid, cartographic, height, result) {
  * @returns {number[]} The array that was packed into
  */
 GroundPolylineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   let index = startingIndex ?? 0;
 
@@ -315,7 +319,9 @@ GroundPolylineGeometry.pack = function (value, array, startingIndex) {
  * @param {PolygonGeometry} [result] The object into which to store the result.
  */
 GroundPolylineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   let index = startingIndex ?? 0;
   const positionsLength = array[index++];
@@ -353,13 +359,13 @@ GroundPolylineGeometry.unpack = function (array, startingIndex, result) {
   return result;
 };
 
-function direction(target, origin, result) {
+function direction(target: any, origin: any, result: any) {
   Cartesian3.subtract(target, origin, result);
   Cartesian3.normalize(result, result);
   return result;
 }
 
-function tangentDirection(target, origin, up, result) {
+function tangentDirection(target: any, origin: any, up: any, result: any) {
   result = direction(target, origin, result);
 
   // orthogonalize
@@ -375,13 +381,7 @@ const forwardScratch = new Cartesian3();
 const vertexUpScratch = new Cartesian3();
 const cosine90 = 0.0;
 const cosine180 = -1.0;
-function computeVertexMiterNormal(
-  previousBottom,
-  vertexBottom,
-  vertexTop,
-  nextBottom,
-  result,
-) {
+function computeVertexMiterNormal(previousBottom: any, vertexBottom: any, vertexTop: any, nextBottom: any, result: any, ) {
   const up = direction(vertexTop, vertexBottom, vertexUpScratch);
 
   // Compute vectors pointing towards neighboring points but tangent to this point on the ellipsoid
@@ -785,7 +785,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
 const lineDirectionScratch = new Cartesian3();
 const matrix3Scratch = new Matrix3();
 const quaternionScratch = new Quaternion();
-function breakMiter(endGeometryNormal, startBottom, endBottom, endTop) {
+function breakMiter(endGeometryNormal: any, startBottom: any, endBottom: any, endTop: any) {
   const lineDirection = direction(endBottom, startBottom, lineDirectionScratch);
 
   const dot = Cartesian3.dot(lineDirection, endGeometryNormal);
@@ -814,13 +814,7 @@ function breakMiter(endGeometryNormal, startBottom, endBottom, endTop) {
 const endPosCartographicScratch = new Cartographic();
 const normalStartpointScratch = new Cartesian3();
 const normalEndpointScratch = new Cartesian3();
-function projectNormal(
-  projection,
-  cartographic,
-  normal,
-  projectedPosition,
-  result,
-) {
+function projectNormal(projection: any, cartographic: any, normal: any, projectedPosition: any, result: any, ) {
   const position = Cartographic.toCartesian(
     cartographic,
     projection._ellipsoid,
@@ -874,14 +868,7 @@ function projectNormal(
 
 const adjustHeightNormalScratch = new Cartesian3();
 const adjustHeightOffsetScratch = new Cartesian3();
-function adjustHeights(
-  bottom,
-  top,
-  minHeight,
-  maxHeight,
-  adjustHeightBottom,
-  adjustHeightTop,
-) {
+function adjustHeights(bottom: any, top: any, minHeight: any, maxHeight: any, adjustHeightBottom: any, adjustHeightTop: any, ) {
   // bottom and top should be at WALL_INITIAL_MIN_HEIGHT and WALL_INITIAL_MAX_HEIGHT, respectively
   const adjustHeightNormal = Cartesian3.subtract(
     top,
@@ -908,7 +895,7 @@ function adjustHeights(
 }
 
 const nudgeDirectionScratch = new Cartesian3();
-function nudgeXZ(start, end) {
+function nudgeXZ(start: any, end: any) {
   const startToXZdistance = Plane.getPointDistance(XZ_PLANE, start);
   const endToXZdistance = Plane.getPointDistance(XZ_PLANE, end);
   let offset = nudgeDirectionScratch;
@@ -929,7 +916,7 @@ function nudgeXZ(start, end) {
 // "Nudge" cartographic coordinates so start and end are on the same side of the IDL.
 // Nudge amounts are tiny, basically just an IDL flip.
 // Only used for 2D/CV.
-function nudgeCartographic(start, end) {
+function nudgeCartographic(start: any, end: any) {
   const absStartLon = Math.abs(start.longitude);
   const absEndLon = Math.abs(end.longitude);
   if (
@@ -1035,15 +1022,7 @@ const REFERENCE_INDICES_LENGTH = REFERENCE_INDICES.length;
 // Each shadow volume's vertices encode a description of the line it contains,
 // including mitering planes at the end points, a plane along the line itself,
 // and attributes for computing length-wise texture coordinates.
-function generateGeometryAttributes(
-  loop,
-  projection,
-  bottomPositionsArray,
-  topPositionsArray,
-  normalsArray,
-  cartographicsArray,
-  compute2dAttributes,
-) {
+function generateGeometryAttributes(loop: any, projection: any, bottomPositionsArray: any, topPositionsArray: any, normalsArray: any, cartographicsArray: any, compute2dAttributes: any, ) {
   let i;
   let index;
   const ellipsoid = projection._ellipsoid;
@@ -1616,7 +1595,7 @@ function generateGeometryAttributes(
   });
 }
 
-function getVec4GeometryAttribute(typedArray) {
+function getVec4GeometryAttribute(typedArray: any) {
   return new GeometryAttribute({
     componentDatatype: ComponentDatatype.FLOAT,
     componentsPerAttribute: 4,
@@ -1638,5 +1617,4 @@ function getVec4GeometryAttribute(typedArray) {
  * @private
  */
 GroundPolylineGeometry._projectNormal = projectNormal;
-export { GroundPolylineGeometry };
 export default GroundPolylineGeometry;

@@ -10,7 +10,7 @@ import defined from "../Core/defined.js";
  *
  * @see DiscardMissingTileImagePolicy
  */
-function DiscardEmptyTileImagePolicy(options) {}
+function DiscardEmptyTileImagePolicy(options: any) {}
 
 /**
  * Determines if the discard policy is ready to process images.
@@ -51,5 +51,4 @@ Object.defineProperties(DiscardEmptyTileImagePolicy, {
     },
   },
 });
-export { DiscardEmptyTileImagePolicy };
 export default DiscardEmptyTileImagePolicy;

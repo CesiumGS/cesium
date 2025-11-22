@@ -33,7 +33,7 @@ const geometryUpdaters = [
  * @param {Entity} entity
  * @param {Scene} scene
  */
-function GeometryUpdaterSet(entity, scene) {
+function GeometryUpdaterSet(entity: any, scene: any) {
   this.entity = entity;
   this.scene = scene;
   const updaters = new Array(geometryUpdaters.length);
@@ -41,7 +41,7 @@ function GeometryUpdaterSet(entity, scene) {
   const eventHelper = new EventHelper();
   for (let i = 0; i < updaters.length; i++) {
     const updater = new geometryUpdaters[i](entity, scene);
-    eventHelper.add(updater.geometryChanged, (geometry) => {
+    eventHelper.add(updater.geometryChanged, (geometry: any) => {
       geometryChanged.raiseEvent(geometry);
     });
     updaters[i] = updater;
@@ -111,5 +111,4 @@ GeometryUpdaterSet.unregisterUpdater = function (updater) {
   }
 };
 
-export { GeometryUpdaterSet };
 export default GeometryUpdaterSet;

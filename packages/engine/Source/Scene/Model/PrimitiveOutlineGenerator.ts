@@ -64,13 +64,17 @@ const MAX_GLTF_UINT8_INDEX = 255;
  *
  * @private
  */
-function PrimitiveOutlineGenerator(options) {
+function PrimitiveOutlineGenerator(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const triangleIndices = options.triangleIndices;
   const outlineIndices = options.outlineIndices;
   const originalVertexCount = options.originalVertexCount;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.triangleIndices", triangleIndices);
+  Check.typeOf.object("options.outlineIndices", outlineIndices);
+  Check.typeOf.number("options.originalVertexCount", originalVertexCount);
+  //>>includeEnd('debug');
 
   /**
    * The triangle indices. It will be modified in place.
@@ -171,7 +175,7 @@ Object.defineProperties(PrimitiveOutlineGenerator.prototype, {
  *
  * @private
  */
-function initialize(outlineGenerator) {
+function initialize(outlineGenerator: any) {
   // triangle indices may be extended from 16-bits to 32 bits if needed.
   let triangleIndices = outlineGenerator._triangleIndices;
 
@@ -301,15 +305,7 @@ function initialize(outlineGenerator) {
  *
  * @private
  */
-function matchAndStoreCoordinates(
-  outlineCoordinates,
-  i0,
-  i1,
-  i2,
-  hasEdge01,
-  hasEdge12,
-  hasEdge20,
-) {
+function matchAndStoreCoordinates(outlineCoordinates: any, i0: any, i1: any, i2: any, hasEdge01: any, hasEdge12: any, hasEdge20: any, ) {
   const a0 = hasEdge20 ? 1.0 : 0.0;
   const b0 = hasEdge01 ? 1.0 : 0.0;
   const c0 = 0.0;
@@ -453,7 +449,7 @@ function matchAndStoreCoordinates(
  *
  * @private
  */
-function computeOrderMask(outlineCoordinates, vertexIndex, a, b, c) {
+function computeOrderMask(outlineCoordinates: any, vertexIndex: any, a: any, b: any, c: any) {
   const startIndex = vertexIndex * 3;
   const first = outlineCoordinates[startIndex];
   const second = outlineCoordinates[startIndex + 1];
@@ -484,7 +480,7 @@ function computeOrderMask(outlineCoordinates, vertexIndex, a, b, c) {
  *
  * @private
  */
-function popcount6Bit(value) {
+function popcount6Bit(value: any) {
   return (
     (value & 1) +
     ((value >> 1) & 1) +
@@ -602,7 +598,7 @@ PrimitiveOutlineGenerator.createTexture = function (context) {
  *
  * @private
  */
-function createMipLevel(size) {
+function createMipLevel(size: any) {
   const texture = new Uint8Array(size);
 
   // This lookup texture creates an outline with width 0.75 px in screen space.
@@ -635,7 +631,7 @@ function createMipLevel(size) {
  *
  * @private
  */
-function EdgeSet(edgeIndices, originalVertexCount) {
+function EdgeSet(edgeIndices: any, originalVertexCount: any) {
   /**
    * Original number of vertices in the primitive. This is used for computing
    * the hash key
@@ -682,5 +678,4 @@ EdgeSet.prototype.hasEdge = function (a, b) {
   return this._edges.has(hash);
 };
 
-export { PrimitiveOutlineGenerator };
 export default PrimitiveOutlineGenerator;

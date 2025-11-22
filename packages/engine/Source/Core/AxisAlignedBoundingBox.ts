@@ -15,7 +15,7 @@ import Intersect from "./Intersect.js";
  * @see BoundingSphere
  * @see BoundingRectangle
  */
-function AxisAlignedBoundingBox(minimum, maximum, center) {
+function AxisAlignedBoundingBox(minimum: any, maximum: any, center: any) {
   /**
    * The minimum point defining the bounding box.
    * @type {Cartesian3}
@@ -57,7 +57,10 @@ function AxisAlignedBoundingBox(minimum, maximum, center) {
  * const box = Cesium.AxisAlignedBoundingBox.fromCorners(new Cesium.Cartesian3(-1, -1, -1), new Cesium.Cartesian3(1, 1, 1));
  */
 AxisAlignedBoundingBox.fromCorners = function (minimum, maximum, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("minimum", minimum);
+  Check.defined("maximum", maximum);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new AxisAlignedBoundingBox();
@@ -185,7 +188,10 @@ let intersectScratch = new Cartesian3();
  *                      intersects the plane.
  */
 AxisAlignedBoundingBox.intersectPlane = function (box, plane) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("box", box);
+  Check.defined("plane", plane);
+  //>>includeEnd('debug');
 
   intersectScratch = Cartesian3.subtract(
     box.maximum,
@@ -224,7 +230,10 @@ AxisAlignedBoundingBox.intersectPlane = function (box, plane) {
  * @returns {boolean} <code>true</code> if the boxes intersect; otherwise, <code>false</code>.
  */
 AxisAlignedBoundingBox.intersectAxisAlignedBoundingBox = function (box, other) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("box", box);
+  Check.defined("other", other);
+  //>>includeEnd('debug');
 
   // This short circuits in favor of AABBs that do not intersect.
   return (
@@ -282,5 +291,4 @@ AxisAlignedBoundingBox.prototype.intersectAxisAlignedBoundingBox = function (
 AxisAlignedBoundingBox.prototype.equals = function (right) {
   return AxisAlignedBoundingBox.equals(this, right);
 };
-export { AxisAlignedBoundingBox };
 export default AxisAlignedBoundingBox;

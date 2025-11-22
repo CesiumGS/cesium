@@ -61,14 +61,34 @@ const scratchNormal = new Cartesian3();
  * });
  * const geometry = Cesium.WallGeometry.createGeometry(wall);
  */
-function WallGeometry(options) {
+function WallGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const wallPositions = options.positions;
   const maximumHeights = options.maximumHeights;
   const minimumHeights = options.minimumHeights;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(wallPositions)) {
+    throw new DeveloperError("options.positions is required.");
+  }
+  if (
+    defined(maximumHeights) &&
+    maximumHeights.length !== wallPositions.length
+  ) {
+    throw new DeveloperError(
+      "options.positions and options.maximumHeights must have the same length.",
+    );
+  }
+  if (
+    defined(minimumHeights) &&
+    minimumHeights.length !== wallPositions.length
+  ) {
+    throw new DeveloperError(
+      "options.positions and options.minimumHeights must have the same length.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
   const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
@@ -108,7 +128,14 @@ function WallGeometry(options) {
  * @returns {number[]} The array that was packed into
  */
 WallGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -173,7 +200,11 @@ const scratchOptions = {
  * @returns {WallGeometry} The modified result parameter or a new WallGeometry instance if one was not provided.
  */
 WallGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -272,7 +303,11 @@ WallGeometry.fromConstantHeights = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(positions)) {
+    throw new DeveloperError("options.positions is required.");
+  }
+  //>>includeEnd('debug');
 
   let minHeights;
   let maxHeights;
@@ -585,5 +620,4 @@ WallGeometry.createGeometry = function (wallGeometry) {
     boundingSphere: new BoundingSphere.fromVertices(positions),
   });
 };
-export { WallGeometry };
 export default WallGeometry;

@@ -20,7 +20,7 @@ import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
  *
  * @private
  */
-function BatchTableHierarchy(options) {
+function BatchTableHierarchy(options: any) {
   this._classes = undefined;
   this._classIds = undefined;
   this._classIndexes = undefined;
@@ -31,11 +31,15 @@ function BatchTableHierarchy(options) {
   // Total memory used by the typed arrays
   this._byteLength = 0;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.extension", options.extension);
+  //>>includeEnd('debug');
 
   initialize(this, options.extension, options.binaryBody);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  validateHierarchy(this);
+  //>>includeEnd('debug');
 }
 
 Object.defineProperties(BatchTableHierarchy.prototype, {
@@ -55,7 +59,7 @@ Object.defineProperties(BatchTableHierarchy.prototype, {
  * @param {Uint8Array} [binaryBody] The binary body of the batch table for accessing binary properties
  * @private
  */
-function initialize(hierarchy, hierarchyJson, binaryBody) {
+function initialize(hierarchy: any, hierarchyJson: any, binaryBody: any) {
   let i;
   let classId;
   let binaryAccessor;
@@ -150,7 +154,7 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
   hierarchy._byteLength = byteLength;
 }
 
-function countBinaryPropertyMemory(binaryProperties) {
+function countBinaryPropertyMemory(binaryProperties: any) {
   let byteLength = 0;
   for (const name in binaryProperties) {
     if (binaryProperties.hasOwnProperty(name)) {
@@ -160,17 +164,64 @@ function countBinaryPropertyMemory(binaryProperties) {
   return byteLength;
 }
 
-;
+//>>includeStart('debug', pragmas.debug);
+const scratchValidateStack = [];
+function validateHierarchy(hierarchy: any) {
+  const stack = scratchValidateStack;
+  stack.length = 0;
+
+  const classIds = hierarchy._classIds;
+  const instancesLength = classIds.length;
+
+  for (let i = 0; i < instancesLength; ++i) {
+    validateInstance(hierarchy, i, stack);
+  }
+}
+
+function validateInstance(hierarchy: any, instanceIndex: any, stack: any) {
+  const parentCounts = hierarchy._parentCounts;
+  const parentIds = hierarchy._parentIds;
+  const parentIndexes = hierarchy._parentIndexes;
+  const classIds = hierarchy._classIds;
+  const instancesLength = classIds.length;
+
+  if (!defined(parentIds)) {
+    // No need to validate if there are no parents
+    return;
+  }
+
+  if (instanceIndex >= instancesLength) {
+    throw new DeveloperError(
+      `Parent index ${instanceIndex} exceeds the total number of instances: ${instancesLength}`,
+    );
+  }
+  if (stack.indexOf(instanceIndex) > -1) {
+    throw new DeveloperError(
+      "Circular dependency detected in the batch table hierarchy.",
+    );
+  }
+
+  stack.push(instanceIndex);
+  const parentCount = defined(parentCounts) ? parentCounts[instanceIndex] : 1;
+  const parentIndex = defined(parentCounts)
+    ? parentIndexes[instanceIndex]
+    : instanceIndex;
+  for (let i = 0; i < parentCount; ++i) {
+    const parentId = parentIds[parentIndex + i];
+    // Stop the traversal when the instance has no parent (its parentId equals itself), else continue the traversal.
+    if (parentId !== instanceIndex) {
+      validateInstance(hierarchy, parentId, stack);
+    }
+  }
+  stack.pop(instanceIndex);
+}
+//>>includeEnd('debug');
 
 // The size of this array equals the maximum instance count among all loaded tiles, which has the potential to be large.
 const scratchVisited = [];
 const scratchStack = [];
 let marker = 0;
-function traverseHierarchyMultipleParents(
-  hierarchy,
-  instanceIndex,
-  endConditionCallback,
-) {
+function traverseHierarchyMultipleParents(hierarchy: any, instanceIndex: any, endConditionCallback: any, ) {
   const classIds = hierarchy._classIds;
   const parentCounts = hierarchy._parentCounts;
   const parentIds = hierarchy._parentIds;
@@ -213,11 +264,7 @@ function traverseHierarchyMultipleParents(
   }
 }
 
-function traverseHierarchySingleParent(
-  hierarchy,
-  instanceIndex,
-  endConditionCallback,
-) {
+function traverseHierarchySingleParent(hierarchy: any, instanceIndex: any, endConditionCallback: any, ) {
   let hasParent = true;
   while (hasParent) {
     const result = endConditionCallback(hierarchy, instanceIndex);
@@ -231,7 +278,7 @@ function traverseHierarchySingleParent(
   }
 }
 
-function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
+function traverseHierarchy(hierarchy: any, instanceIndex: any, endConditionCallback: any) {
   // Traverse over the hierarchy and process each instance with the endConditionCallback.
   // When the endConditionCallback returns a value, the traversal stops and that value is returned.
   const parentCounts = hierarchy._parentCounts;
@@ -327,7 +374,7 @@ BatchTableHierarchy.prototype.getPropertyIds = function (batchId, results) {
  *
  * @param {number} batchId the batch ID of the feature
  * @param {string} propertyId The case-sensitive ID of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  */
 BatchTableHierarchy.prototype.getProperty = function (batchId, propertyId) {
@@ -345,7 +392,7 @@ BatchTableHierarchy.prototype.getProperty = function (batchId, propertyId) {
   });
 };
 
-function getBinaryProperty(binaryProperty, index) {
+function getBinaryProperty(binaryProperty: any, index: any) {
   const typedArray = binaryProperty.typedArray;
   const componentCount = binaryProperty.componentCount;
   if (componentCount === 1) {
@@ -380,7 +427,13 @@ BatchTableHierarchy.prototype.setProperty = function (
       const indexInClass = hierarchy._classIndexes[instanceIndex];
       const propertyValues = instanceClass.instances[propertyId];
       if (defined(propertyValues)) {
-        ;
+        //>>includeStart('debug', pragmas.debug);
+        if (instanceIndex !== batchId) {
+          throw new DeveloperError(
+            `Inherited property "${propertyId}" is read-only.`,
+          );
+        }
+        //>>includeEnd('debug');
         if (defined(propertyValues.typedArray)) {
           setBinaryProperty(propertyValues, indexInClass, value);
         } else {
@@ -393,7 +446,7 @@ BatchTableHierarchy.prototype.setProperty = function (
   return defined(result);
 };
 
-function setBinaryProperty(binaryProperty, index, value) {
+function setBinaryProperty(binaryProperty: any, index: any, value: any) {
   const typedArray = binaryProperty.typedArray;
   const componentCount = binaryProperty.componentCount;
   if (componentCount === 1) {
@@ -440,5 +493,4 @@ BatchTableHierarchy.prototype.getClassName = function (batchId) {
   return instanceClass.name;
 };
 
-export { BatchTableHierarchy };
 export default BatchTableHierarchy;

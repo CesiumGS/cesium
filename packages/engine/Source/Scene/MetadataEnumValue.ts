@@ -19,12 +19,16 @@ import Frozen from "../Core/Frozen.js";
  * @constructor
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function MetadataEnumValue(options) {
+function MetadataEnumValue(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const value = options.value;
   const name = options.name;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("options.value", value);
+  Check.typeOf.string("options.name", name);
+
+  //>>includeEnd('debug');
 
   this._value = value;
   this._name = name;
@@ -44,7 +48,9 @@ function MetadataEnumValue(options) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataEnumValue.fromJson = function (value) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  //>>includeEnd('debug');
 
   return new MetadataEnumValue({
     value: value.value,
@@ -122,5 +128,4 @@ Object.defineProperties(MetadataEnumValue.prototype, {
   },
 });
 
-export { MetadataEnumValue };
 export default MetadataEnumValue;

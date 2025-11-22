@@ -19,12 +19,20 @@ const offScreen = "-1000px";
  * @param {Element} selectionIndicatorElement The element containing all elements that make up the selection indicator.
  * @param {Element} container The DOM element that contains the widget.
  */
-function SelectionIndicatorViewModel(
-  scene,
-  selectionIndicatorElement,
-  container,
-) {
-  ;
+function SelectionIndicatorViewModel(scene: any, selectionIndicatorElement: any, container: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+
+  if (!defined(selectionIndicatorElement)) {
+    throw new DeveloperError("selectionIndicatorElement is required.");
+  }
+
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  //>>includeEnd('debug');
 
   this._scene = scene;
   this._screenPositionX = offScreen;
@@ -199,5 +207,4 @@ Object.defineProperties(SelectionIndicatorViewModel.prototype, {
  * @param {Cartesian2} result An object to return the input position transformed to window coordinates.
  * @returns {Cartesian2} The modified result parameter.
  */
-export { SelectionIndicatorViewModel };
 export default SelectionIndicatorViewModel;

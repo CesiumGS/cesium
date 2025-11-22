@@ -42,7 +42,7 @@ import CesiumMath from "../Core/Math.js";
  *
  * @private
  */
-function GltfVertexBufferLoader(options) {
+function GltfVertexBufferLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -59,7 +59,55 @@ function GltfVertexBufferLoader(options) {
   const loadBuffer = options.loadBuffer ?? false;
   const loadTypedArray = options.loadTypedArray ?? false;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("options.resourceCache", resourceCache);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  if (!loadBuffer && !loadTypedArray) {
+    throw new DeveloperError(
+      "At least one of loadBuffer and loadTypedArray must be true.",
+    );
+  }
+
+  const hasBufferViewId = defined(bufferViewId);
+  const hasPrimitive = defined(primitive);
+  const hasDraco = hasDracoCompression(draco, attributeSemantic);
+  const hasAttributeSemantic = defined(attributeSemantic);
+  const hasAccessorId = defined(accessorId);
+  const hasSpz = defined(spz);
+  if (hasBufferViewId === (hasDraco !== hasSpz)) {
+    throw new DeveloperError(
+      "One of options.bufferViewId, options.draco, or options.spz must be defined.",
+    );
+  }
+
+  if (hasDraco && !hasAttributeSemantic) {
+    throw new DeveloperError(
+      "When options.draco is defined options.attributeSemantic must also be defined.",
+    );
+  }
+
+  if (hasDraco && !hasAccessorId) {
+    throw new DeveloperError(
+      "When options.draco is defined options.accessorId must also be defined.",
+    );
+  }
+
+  if (hasDraco && !hasPrimitive) {
+    throw new DeveloperError(
+      "When options.draco is defined options.primitive must also be defined.",
+    );
+  }
+
+  if (hasDraco) {
+    Check.typeOf.object("options.primitive", primitive);
+    Check.typeOf.object("options.draco", draco);
+    Check.typeOf.string("options.attributeSemantic", attributeSemantic);
+    Check.typeOf.number("options.accessorId", accessorId);
+  }
+
+  //>>includeEnd('debug');
 
   this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
@@ -148,7 +196,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
   },
 });
 
-function hasDracoCompression(draco, semantic) {
+function hasDracoCompression(draco: any, semantic: any) {
   return (
     defined(draco) &&
     defined(draco.attributes) &&
@@ -180,12 +228,7 @@ GltfVertexBufferLoader.prototype.load = async function () {
   return this._promise;
 };
 
-function getQuantizationInformation(
-  dracoQuantization,
-  componentDatatype,
-  componentCount,
-  type,
-) {
+function getQuantizationInformation(dracoQuantization: any, componentDatatype: any, componentCount: any, type: any, ) {
   const quantizationBits = dracoQuantization.quantizationBits;
   const normalizationRange = (1 << quantizationBits) - 1;
   const normalizationDivisor = 1.0 / normalizationRange;
@@ -231,7 +274,7 @@ function getQuantizationInformation(
   return quantization;
 }
 
-async function loadFromSpz(vertexBufferLoader) {
+async function loadFromSpz(vertexBufferLoader: any) {
   vertexBufferLoader._state = ResourceLoaderState.LOADING;
   const resourceCache = vertexBufferLoader._resourceCache;
   try {
@@ -258,14 +301,14 @@ async function loadFromSpz(vertexBufferLoader) {
   }
 }
 
-function getShAttributePrefix(attribute) {
+function getShAttributePrefix(attribute: any) {
   const prefix = attribute.startsWith("KHR_gaussian_splatting:")
     ? "KHR_gaussian_splatting:"
     : "_";
   return `${prefix}SH_DEGREE_`;
 }
 
-function extractSHDegreeAndCoef(attribute) {
+function extractSHDegreeAndCoef(attribute: any) {
   const prefix = getShAttributePrefix(attribute);
   const separator = "_COEF_";
 
@@ -278,7 +321,7 @@ function extractSHDegreeAndCoef(attribute) {
   return { l, n };
 }
 
-function processSpz(vertexBufferLoader) {
+function processSpz(vertexBufferLoader: any) {
   vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
   const spzLoader = vertexBufferLoader._spzLoader;
 
@@ -353,7 +396,7 @@ function processSpz(vertexBufferLoader) {
   }
 }
 
-async function loadFromDraco(vertexBufferLoader) {
+async function loadFromDraco(vertexBufferLoader: any) {
   vertexBufferLoader._state = ResourceLoaderState.LOADING;
   const resourceCache = vertexBufferLoader._resourceCache;
   try {
@@ -383,7 +426,7 @@ async function loadFromDraco(vertexBufferLoader) {
   }
 }
 
-function processDraco(vertexBufferLoader) {
+function processDraco(vertexBufferLoader: any) {
   vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
   const dracoLoader = vertexBufferLoader._dracoLoader;
 
@@ -412,7 +455,7 @@ function processDraco(vertexBufferLoader) {
   );
 }
 
-async function loadFromBufferView(vertexBufferLoader) {
+async function loadFromBufferView(vertexBufferLoader: any) {
   vertexBufferLoader._state = ResourceLoaderState.LOADING;
   const resourceCache = vertexBufferLoader._resourceCache;
   try {
@@ -441,7 +484,7 @@ async function loadFromBufferView(vertexBufferLoader) {
   }
 }
 
-function handleError(vertexBufferLoader, error) {
+function handleError(vertexBufferLoader: any, error: any) {
   vertexBufferLoader.unload();
   vertexBufferLoader._state = ResourceLoaderState.FAILED;
   const errorMessage = "Failed to load vertex buffer";
@@ -463,7 +506,7 @@ CreateVertexBufferJob.prototype.execute = function () {
   this.buffer = createVertexBuffer(this.typedArray, this.context);
 };
 
-function createVertexBuffer(typedArray, context) {
+function createVertexBuffer(typedArray: any, context: any) {
   const buffer = Buffer.createVertexBuffer({
     typedArray: typedArray,
     context: context,
@@ -482,7 +525,9 @@ const scratchVertexBufferJob = new CreateVertexBufferJob();
  * @private
  */
 GltfVertexBufferLoader.prototype.process = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
 
   if (this._state === ResourceLoaderState.READY) {
     return true;
@@ -581,5 +626,4 @@ GltfVertexBufferLoader.prototype.unload = function () {
   this._primitive = undefined;
 };
 
-export { GltfVertexBufferLoader };
 export default GltfVertexBufferLoader;

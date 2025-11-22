@@ -16,11 +16,13 @@ import WebGLConstants from "../Core/WebGLConstants.js";
  * @private
  * @constructor
  */
-function Sync(options) {
+function Sync(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const context = options.context;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", context);
+  //>>includeEnd('debug');
 
   if (!context._webgl2) {
     throw new DeveloperError(
@@ -82,7 +84,7 @@ Sync.prototype.destroy = function () {
 Sync.prototype.waitForSignal = async function (scheduleFunction, ttl) {
   const self = this;
   ttl = ttl ?? 10;
-  function waitForSignal0(resolve, reject, ttl) {
+  function waitForSignal0(resolve: any, reject: any, ttl: any) {
     return () => {
       const syncStatus = self.getStatus();
       const signaled = syncStatus === WebGLConstants.SIGNALED;
@@ -95,9 +97,8 @@ Sync.prototype.waitForSignal = async function (scheduleFunction, ttl) {
       }
     };
   }
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve: any, reject: any) => {
     scheduleFunction(waitForSignal0(resolve, reject, ttl));
   });
 };
-export { Sync };
 export default Sync;

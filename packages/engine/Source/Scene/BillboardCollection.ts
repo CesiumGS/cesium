@@ -142,7 +142,7 @@ const attributeLocationsInstanced = {
  *   image : 'url/to/another/image'
  * });
  */
-function BillboardCollection(options) {
+function BillboardCollection(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._scene = options.scene;
@@ -381,7 +381,9 @@ Object.defineProperties(BillboardCollection.prototype, {
       return this._textureAtlas;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("textureAtlas", value);
+      //>>includeEnd('debug');
 
       if (this._textureAtlas !== value) {
         this._textureAtlas =
@@ -464,7 +466,7 @@ Object.defineProperties(BillboardCollection.prototype, {
   },
 });
 
-function destroyBillboards(billboards) {
+function destroyBillboards(billboards: any) {
   const length = billboards.length;
   for (let i = 0; i < length; ++i) {
     if (billboards[i]) {
@@ -594,7 +596,7 @@ BillboardCollection.prototype.removeAll = function () {
   this._createVertexArray = true;
 };
 
-function removeBillboards(billboardCollection) {
+function removeBillboards(billboardCollection: any) {
   if (billboardCollection._billboardsRemoved) {
     billboardCollection._billboardsRemoved = false;
 
@@ -664,7 +666,9 @@ BillboardCollection.prototype.contains = function (billboard) {
  * @see BillboardCollection#length
  */
 BillboardCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   removeBillboards(this);
   return this._billboards[index];
@@ -672,7 +676,7 @@ BillboardCollection.prototype.get = function (index) {
 
 let getIndexBuffer;
 
-function getIndexBufferBatched(context) {
+function getIndexBufferBatched(context: any) {
   const sixteenK = 16 * 1024;
 
   let indexBuffer = context.cache.billboardCollection_indexBufferBatched;
@@ -707,7 +711,7 @@ function getIndexBufferBatched(context) {
   return indexBuffer;
 }
 
-function getIndexBufferInstanced(context) {
+function getIndexBufferInstanced(context: any) {
   let indexBuffer = context.cache.billboardCollection_indexBufferInstanced;
   if (defined(indexBuffer)) {
     return indexBuffer;
@@ -725,7 +729,7 @@ function getIndexBufferInstanced(context) {
   return indexBuffer;
 }
 
-function getVertexBufferInstanced(context) {
+function getVertexBufferInstanced(context: any) {
   let vertexBuffer = context.cache.billboardCollection_vertexBufferInstanced;
   if (defined(vertexBuffer)) {
     return vertexBuffer;
@@ -757,14 +761,7 @@ BillboardCollection.prototype.computeNewBuffersUsage = function () {
   return usageChanged;
 };
 
-function createVAF(
-  context,
-  numberOfBillboards,
-  buffersUsage,
-  instanced,
-  batchTable,
-  sdf,
-) {
+function createVAF(context: any, numberOfBillboards: any, buffersUsage: any, instanced: any, batchTable: any, sdf: any, ) {
   const attributes = [
     {
       index: attributeLocations.positionHighAndScale,
@@ -878,12 +875,7 @@ function createVAF(
 
 const writePositionScratch = new EncodedCartesian3();
 
-function writePositionScaleAndRotation(
-  billboardCollection,
-  frameState,
-  vafWriters,
-  billboard,
-) {
+function writePositionScaleAndRotation(billboardCollection: any, frameState: any, vafWriters: any, billboard: any, ) {
   let i;
   const positionHighWriter =
     vafWriters[attributeLocations.positionHighAndScale];
@@ -955,12 +947,7 @@ const UPPER_LEFT = 1.0;
 
 const scratchBoundingRectangle = new BoundingRectangle();
 
-function writeCompressedAttrib0(
-  billboardCollection,
-  frameState,
-  vafWriters,
-  billboard,
-) {
+function writeCompressedAttrib0(billboardCollection: any, frameState: any, vafWriters: any, billboard: any, ) {
   let i;
   const writer = vafWriters[attributeLocations.compressedAttribute0];
   const pixelOffset = billboard.pixelOffset;
@@ -1101,12 +1088,7 @@ function writeCompressedAttrib0(
   }
 }
 
-function writeCompressedAttrib1(
-  billboardCollection,
-  frameState,
-  vafWriters,
-  billboard,
-) {
+function writeCompressedAttrib1(billboardCollection: any, frameState: any, vafWriters: any, billboard: any, ) {
   let i;
   const writer = vafWriters[attributeLocations.compressedAttribute1];
   const alignedAxis = billboard.alignedAxis;
@@ -1169,12 +1151,7 @@ function writeCompressedAttrib1(
   }
 }
 
-function writeCompressedAttrib2(
-  billboardCollection,
-  frameState,
-  vafWriters,
-  billboard,
-) {
+function writeCompressedAttrib2(billboardCollection: any, frameState: any, vafWriters: any, billboard: any, ) {
   let i;
   const writer = vafWriters[attributeLocations.compressedAttribute2];
   const color = billboard.color;
@@ -1227,12 +1204,7 @@ function writeCompressedAttrib2(
   }
 }
 
-function writeEyeOffset(
-  billboardCollection,
-  frameState,
-  vafWriters,
-  billboard,
-) {
+function writeEyeOffset(billboardCollection: any, frameState: any, vafWriters: any, billboard: any, ) {
   let i;
   const writer = vafWriters[attributeLocations.eyeOffset];
   const eyeOffset = billboard.eyeOffset;
@@ -1276,12 +1248,7 @@ function writeEyeOffset(
   }
 }
 
-function writeScaleByDistance(
-  billboardCollection,
-  frameState,
-  vafWriters,
-  billboard,
-) {
+function writeScaleByDistance(billboardCollection: any, frameState: any, vafWriters: any, billboard: any, ) {
   let i;
   const writer = vafWriters[attributeLocations.scaleByDistance];
   let near = 0.0;
@@ -1315,12 +1282,7 @@ function writeScaleByDistance(
   }
 }
 
-function writePixelOffsetScaleByDistance(
-  billboardCollection,
-  frameState,
-  vafWriters,
-  billboard,
-) {
+function writePixelOffsetScaleByDistance(billboardCollection: any, frameState: any, vafWriters: any, billboard: any, ) {
   let i;
   const writer = vafWriters[attributeLocations.pixelOffsetScaleByDistance];
   let near = 0.0;
@@ -1354,12 +1316,7 @@ function writePixelOffsetScaleByDistance(
   }
 }
 
-function writeCompressedAttribute3(
-  billboardCollection,
-  frameState,
-  vafWriters,
-  billboard,
-) {
+function writeCompressedAttribute3(billboardCollection: any, frameState: any, vafWriters: any, billboard: any, ) {
   let i;
   const writer = vafWriters[attributeLocations.compressedAttribute3];
   let near = 0.0;
@@ -1416,12 +1373,7 @@ function writeCompressedAttribute3(
   }
 }
 
-function writeTextureCoordinateBoundsOrLabelTranslate(
-  billboardCollection,
-  frameState,
-  vafWriters,
-  billboard,
-) {
+function writeTextureCoordinateBoundsOrLabelTranslate(billboardCollection: any, frameState: any, vafWriters: any, billboard: any, ) {
   if (isHeightReferenceClamp(billboard.heightReference)) {
     const scene = billboardCollection._scene;
     const context = frameState.context;
@@ -1488,7 +1440,7 @@ function writeTextureCoordinateBoundsOrLabelTranslate(
   }
 }
 
-function writeBatchId(billboardCollection, frameState, vafWriters, billboard) {
+function writeBatchId(billboardCollection: any, frameState: any, vafWriters: any, billboard: any) {
   if (!defined(billboardCollection._batchTable)) {
     return;
   }
@@ -1509,7 +1461,7 @@ function writeBatchId(billboardCollection, frameState, vafWriters, billboard) {
   }
 }
 
-function writeSDF(billboardCollection, frameState, vafWriters, billboard) {
+function writeSDF(billboardCollection: any, frameState: any, vafWriters: any, billboard: any) {
   if (!billboardCollection._sdf) {
     return;
   }
@@ -1543,12 +1495,7 @@ function writeSDF(billboardCollection, frameState, vafWriters, billboard) {
   }
 }
 
-function writeSplitDirection(
-  billboardCollection,
-  frameState,
-  vafWriters,
-  billboard,
-) {
+function writeSplitDirection(billboardCollection: any, frameState: any, vafWriters: any, billboard: any, ) {
   const writer = vafWriters[attributeLocations.splitDirection];
   let direction = 0.0;
 
@@ -1570,12 +1517,7 @@ function writeSplitDirection(
   }
 }
 
-function writeBillboard(
-  billboardCollection,
-  frameState,
-  vafWriters,
-  billboard,
-) {
+function writeBillboard(billboardCollection: any, frameState: any, vafWriters: any, billboard: any, ) {
   writePositionScaleAndRotation(
     billboardCollection,
     frameState,
@@ -1625,14 +1567,7 @@ function writeBillboard(
   writeSplitDirection(billboardCollection, frameState, vafWriters, billboard);
 }
 
-function recomputeActualPositions(
-  billboardCollection,
-  billboards,
-  length,
-  frameState,
-  modelMatrix,
-  recomputeBoundingVolume,
-) {
+function recomputeActualPositions(billboardCollection: any, billboards: any, length: any, frameState: any, modelMatrix: any, recomputeBoundingVolume: any, ) {
   let boundingVolume;
   if (frameState.mode === SceneMode.SCENE3D) {
     boundingVolume = billboardCollection._baseVolume;
@@ -1667,7 +1602,7 @@ function recomputeActualPositions(
   }
 }
 
-function updateMode(billboardCollection, frameState) {
+function updateMode(billboardCollection: any, frameState: any) {
   const mode = frameState.mode;
 
   const billboards = billboardCollection._billboards;
@@ -1719,7 +1654,7 @@ function updateMode(billboardCollection, frameState) {
   }
 }
 
-function updateBoundingVolume(collection, frameState, boundingVolume) {
+function updateBoundingVolume(collection: any, frameState: any, boundingVolume: any) {
   let pixelScale = 1.0;
   if (!collection._allSizedInMeters || collection._maxPixelOffset !== 0.0) {
     pixelScale = frameState.camera.getPixelSize(
@@ -1739,7 +1674,7 @@ function updateBoundingVolume(collection, frameState, boundingVolume) {
   boundingVolume.radius += size + offset;
 }
 
-function createDebugCommand(billboardCollection, context) {
+function createDebugCommand(billboardCollection: any, context: any) {
   const fs =
     "uniform sampler2D billboard_texture; \n" +
     "in vec2 v_textureCoordinates; \n" +
@@ -2384,5 +2319,4 @@ BillboardCollection.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { BillboardCollection };
 export default BillboardCollection;

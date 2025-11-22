@@ -47,7 +47,7 @@ if (!FeatureDetection.isInternetExplorer()) {
  *   })
  * });
  */
-function PolylineMaterialAppearance(options) {
+function PolylineMaterialAppearance(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const translucent = options.translucent ?? true;
@@ -228,5 +228,4 @@ PolylineMaterialAppearance.prototype.isTranslucent =
  */
 PolylineMaterialAppearance.prototype.getRenderState =
   Appearance.prototype.getRenderState;
-export { PolylineMaterialAppearance };
 export default PolylineMaterialAppearance;

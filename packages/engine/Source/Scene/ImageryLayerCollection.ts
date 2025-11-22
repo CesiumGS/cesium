@@ -88,7 +88,20 @@ Object.defineProperties(ImageryLayerCollection.prototype, {
 ImageryLayerCollection.prototype.add = function (layer, index) {
   const hasIndex = defined(index);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(layer)) {
+    throw new DeveloperError("layer is required.");
+  }
+  if (hasIndex) {
+    if (index < 0) {
+      throw new DeveloperError("index must be greater than or equal to zero.");
+    } else if (index > this._layers.length) {
+      throw new DeveloperError(
+        "index must be less than or equal to the number of layers.",
+      );
+    }
+  }
+  //>>includeEnd('debug');
 
   if (!hasIndex) {
     index = this._layers.length;
@@ -125,7 +138,11 @@ ImageryLayerCollection.prototype.addImageryProvider = function (
   imageryProvider,
   index,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(imageryProvider)) {
+    throw new DeveloperError("imageryProvider is required.");
+  }
+  //>>includeEnd('debug');
 
   const layer = new ImageryLayer(imageryProvider);
   this.add(layer, index);
@@ -212,22 +229,34 @@ ImageryLayerCollection.prototype.indexOf = function (layer) {
  * @returns {ImageryLayer} The imagery layer at the given index.
  */
 ImageryLayerCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.", "index");
+  }
+  //>>includeEnd('debug');
 
   return this._layers[index];
 };
 
-function getLayerIndex(layers, layer) {
-  ;
+function getLayerIndex(layers: any, layer: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(layer)) {
+    throw new DeveloperError("layer is required.");
+  }
+  //>>includeEnd('debug');
 
   const index = layers.indexOf(layer);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (index === -1) {
+    throw new DeveloperError("layer is not in this collection.");
+  }
+  //>>includeEnd('debug');
 
   return index;
 }
 
-function swapLayers(collection, i, j) {
+function swapLayers(collection: any, i: any, j: any) {
   const arr = collection._layers;
   i = CesiumMath.clamp(i, 0, arr.length - 1);
   j = CesiumMath.clamp(j, 0, arr.length - 1);
@@ -315,7 +344,7 @@ ImageryLayerCollection.prototype.lowerToBottom = function (layer) {
 
 const applicableRectangleScratch = new Rectangle();
 
-function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
+function pickImageryHelper(scene: any, pickedLocation: any, pickFeatures: any, callback: any) {
   // Find the terrain tile containing the picked location.
   const tilesToRender = scene.globe._surface._tilesToRender;
   let pickedTile;
@@ -613,5 +642,4 @@ ImageryLayerCollection.prototype._update = function () {
     }
   }
 };
-export { ImageryLayerCollection };
 export default ImageryLayerCollection;

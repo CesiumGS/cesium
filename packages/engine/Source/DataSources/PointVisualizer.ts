@@ -26,7 +26,7 @@ const scaleByDistanceScratch = new NearFarScalar();
 const translucencyByDistanceScratch = new NearFarScalar();
 const distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
-function EntityData(entity) {
+function EntityData(entity: any) {
   this.entity = entity;
   this.pointPrimitive = undefined;
   this.billboard = undefined;
@@ -44,8 +44,15 @@ function EntityData(entity) {
  * @param {EntityCluster} entityCluster The entity cluster to manage the collection of billboards and optionally cluster with other entities.
  * @param {EntityCollection} entityCollection The entityCollection to visualize.
  */
-function PointVisualizer(entityCluster, entityCollection) {
-  ;
+function PointVisualizer(entityCluster: any, entityCollection: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(entityCluster)) {
+    throw new DeveloperError("entityCluster is required.");
+  }
+  if (!defined(entityCollection)) {
+    throw new DeveloperError("entityCollection is required.");
+  }
+  //>>includeEnd('debug');
 
   entityCollection.collectionChanged.addEventListener(
     PointVisualizer.prototype._onCollectionChanged,
@@ -66,7 +73,11 @@ function PointVisualizer(entityCluster, entityCollection) {
  * @returns {boolean} This function always returns true.
  */
 PointVisualizer.prototype.update = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  //>>includeEnd('debug');
 
   const items = this._items.values;
   const cluster = this._cluster;
@@ -314,7 +325,14 @@ PointVisualizer.prototype.update = function (time) {
  * @private
  */
 PointVisualizer.prototype.getBoundingSphere = function (entity, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(entity)) {
+    throw new DeveloperError("entity is required.");
+  }
+  if (!defined(result)) {
+    throw new DeveloperError("result is required.");
+  }
+  //>>includeEnd('debug');
 
   const item = this._items.get(entity.id);
   if (
@@ -402,7 +420,7 @@ PointVisualizer.prototype._onCollectionChanged = function (
   }
 };
 
-function returnPrimitive(item, entity, cluster) {
+function returnPrimitive(item: any, entity: any, cluster: any) {
   if (defined(item)) {
     const pointPrimitive = item.pointPrimitive;
     if (defined(pointPrimitive)) {
@@ -417,5 +435,4 @@ function returnPrimitive(item, entity, cluster) {
     }
   }
 }
-export { PointVisualizer };
 export default PointVisualizer;

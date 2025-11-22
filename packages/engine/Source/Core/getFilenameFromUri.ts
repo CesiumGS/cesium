@@ -13,8 +13,12 @@ import DeveloperError from "./DeveloperError.js";
  * //fileName will be"simple.czml";
  * const fileName = Cesium.getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
  */
-function getFilenameFromUri(uri) {
-  ;
+function getFilenameFromUri(uri: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(uri)) {
+    throw new DeveloperError("uri is required.");
+  }
+  //>>includeEnd('debug');
 
   const uriObject = new Uri(uri);
   uriObject.normalize();
@@ -25,5 +29,4 @@ function getFilenameFromUri(uri) {
   }
   return path;
 }
-export { getFilenameFromUri };
 export default getFilenameFromUri;

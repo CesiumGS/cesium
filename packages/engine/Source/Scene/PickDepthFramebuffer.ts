@@ -23,11 +23,11 @@ Object.defineProperties(PickDepthFramebuffer.prototype, {
   },
 });
 
-function destroyResources(pickDepth) {
+function destroyResources(pickDepth: any) {
   pickDepth._framebuffer.destroy();
 }
 
-function createResources(pickDepth, context) {
+function createResources(pickDepth: any, context: any) {
   const width = context.drawingBufferWidth;
   const height = context.drawingBufferHeight;
 
@@ -76,5 +76,4 @@ PickDepthFramebuffer.prototype.destroy = function () {
   destroyResources(this);
   return destroyObject(this);
 };
-export { PickDepthFramebuffer };
 export default PickDepthFramebuffer;

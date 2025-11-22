@@ -12,7 +12,7 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-function getAccessorByteStride(gltf, accessor) {
+function getAccessorByteStride(gltf: any, accessor: any) {
   const bufferViewId = accessor.bufferView;
   if (defined(bufferViewId)) {
     const bufferView = gltf.bufferViews[bufferViewId];
@@ -26,5 +26,4 @@ function getAccessorByteStride(gltf, accessor) {
   );
 }
 
-export { getAccessorByteStride };
 export default getAccessorByteStride;

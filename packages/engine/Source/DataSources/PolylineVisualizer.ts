@@ -17,7 +17,7 @@ import StaticGroundPolylinePerMaterialBatch from "./StaticGroundPolylinePerMater
 
 const emptyArray = [];
 
-function removeUpdater(that, updater) {
+function removeUpdater(that: any, updater: any) {
   //We don't keep track of which batch an updater is in, so just remove it from all of them.
   const batches = that._batches;
   const length = batches.length;
@@ -26,7 +26,7 @@ function removeUpdater(that, updater) {
   }
 }
 
-function insertUpdaterIntoBatch(that, time, updater) {
+function insertUpdaterIntoBatch(that: any, time: any, updater: any) {
   if (updater.isDynamic) {
     that._dynamicBatch.add(time, updater);
     return;
@@ -77,13 +77,11 @@ function insertUpdaterIntoBatch(that, time, updater) {
  * @param {PrimitiveCollection} [primitives=scene.primitives] A collection to add primitives related to the entities
  * @param {PrimitiveCollection} [groundPrimitives=scene.groundPrimitives] A collection to add ground primitives related to the entities
  */
-function PolylineVisualizer(
-  scene,
-  entityCollection,
-  primitives,
-  groundPrimitives,
-) {
-  ;
+function PolylineVisualizer(scene: any, entityCollection: any, primitives: any, groundPrimitives: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("scene", scene);
+  Check.defined("entityCollection", entityCollection);
+  //>>includeEnd('debug');
 
   groundPrimitives = groundPrimitives ?? scene.groundPrimitives;
   primitives = primitives ?? scene.primitives;
@@ -193,7 +191,9 @@ function PolylineVisualizer(
  * false if the visualizer is waiting for asynchronous primitives to be created.
  */
 PolylineVisualizer.prototype.update = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+  //>>includeEnd('debug');
 
   const addedObjects = this._addedObjects;
   const added = addedObjects.values;
@@ -281,7 +281,10 @@ const getBoundingSphereBoundingSphereScratch = new BoundingSphere();
  * @private
  */
 PolylineVisualizer.prototype.getBoundingSphere = function (entity, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("entity", entity);
+  Check.defined("result", result);
+  //>>includeEnd('debug');
 
   const boundingSpheres = getBoundingSphereArrayScratch;
   const tmp = getBoundingSphereBoundingSphereScratch;
@@ -398,5 +401,4 @@ PolylineVisualizer.prototype._onCollectionChanged = function (
     }
   }
 };
-export { PolylineVisualizer };
 export default PolylineVisualizer;

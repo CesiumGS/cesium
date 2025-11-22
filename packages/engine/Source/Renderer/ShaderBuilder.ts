@@ -118,7 +118,9 @@ Object.defineProperties(ShaderBuilder.prototype, {
  * shaderBuilder.addDefine("PI", 3.141593, ShaderDestination.FRAGMENT);
  */
 ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("identifier", identifier);
+  //>>includeEnd('debug');
 
   destination = destination ?? ShaderDestination.BOTH;
 
@@ -155,7 +157,11 @@ ShaderBuilder.prototype.addStruct = function (
   structName,
   destination,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("structId", structId);
+  Check.typeOf.string("structName", structName);
+  Check.typeOf.number("destination", destination);
+  //>>includeEnd('debug');
   this._structs[structId] = new ShaderStruct(structName);
   if (ShaderDestination.includesVertexShader(destination)) {
     this._vertexShaderParts.structIds.push(structId);
@@ -184,7 +190,11 @@ ShaderBuilder.prototype.addStruct = function (
  * shaderBuilder.addStructField("testStructId", "float", "minimum");
  */
 ShaderBuilder.prototype.addStructField = function (structId, type, identifier) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("structId", structId);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", identifier);
+  //>>includeEnd('debug');
   this._structs[structId].addField(type, identifier);
 };
 
@@ -205,7 +215,11 @@ ShaderBuilder.prototype.addFunction = function (
   signature,
   destination,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("functionName", functionName);
+  Check.typeOf.string("signature", signature);
+  Check.typeOf.number("destination", destination);
+  //>>includeEnd('debug');
   this._functions[functionName] = new ShaderFunction(signature);
 
   if (ShaderDestination.includesVertexShader(destination)) {
@@ -236,7 +250,14 @@ ShaderBuilder.prototype.addFunction = function (
  * ]);
  */
 ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("functionName", functionName);
+  if (typeof lines !== "string" && !Array.isArray(lines)) {
+    throw new DeveloperError(
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`,
+    );
+  }
+  //>>includeEnd('debug');
   this._functions[functionName].addLines(lines);
 };
 
@@ -255,7 +276,10 @@ ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
  * shaderBuilder.addUniform("float", "u_time", ShaderDestination.BOTH);
  */
 ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", identifier);
+  //>>includeEnd('debug');
 
   destination = destination ?? ShaderDestination.BOTH;
   const line = `uniform ${type} ${identifier};`;
@@ -287,7 +311,16 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
  * shaderBuilder.setPositionAttribute("vec3", "a_position");
  */
 ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", identifier);
+
+  if (defined(this._positionAttributeLine)) {
+    throw new DeveloperError(
+      "setPositionAttribute() must be called exactly once for the attribute used for gl_Position. For other attributes, use addAttribute()",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._positionAttributeLine = `in ${type} ${identifier};`;
 
@@ -314,7 +347,10 @@ ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
  * shaderBuilder.addAttribute("vec2", "a_texCoord0");
  */
 ShaderBuilder.prototype.addAttribute = function (type, identifier) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", identifier);
+  //>>includeEnd('debug');
 
   const line = `in ${type} ${identifier};`;
   this._attributeLines.push(line);
@@ -341,7 +377,10 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
  * shaderBuilder.addVarying("vec3", "v_color");
  */
 ShaderBuilder.prototype.addVarying = function (type, identifier, qualifier) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  Check.typeOf.string("identifier", identifier);
+  //>>includeEnd('debug');
 
   qualifier = defined(qualifier) ? `${qualifier} ` : "";
 
@@ -365,7 +404,13 @@ ShaderBuilder.prototype.addVarying = function (type, identifier, qualifier) {
  * ]);
  */
 ShaderBuilder.prototype.addVertexLines = function (lines) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof lines !== "string" && !Array.isArray(lines)) {
+    throw new DeveloperError(
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`,
+    );
+  }
+  //>>includeEnd('debug');
 
   const vertexLines = this._vertexShaderParts.shaderLines;
   if (Array.isArray(lines)) {
@@ -394,7 +439,13 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
  * ]);
  */
 ShaderBuilder.prototype.addFragmentLines = function (lines) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof lines !== "string" && !Array.isArray(lines)) {
+    throw new DeveloperError(
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`,
+    );
+  }
+  //>>includeEnd('debug');
 
   const fragmentLines = this._fragmentShaderParts.shaderLines;
   if (Array.isArray(lines)) {
@@ -417,7 +468,9 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
  * const shaderProgram = shaderBuilder.buildShaderProgram(context);
  */
 ShaderBuilder.prototype.buildShaderProgram = function (context) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("context", context);
+  //>>includeEnd('debug');
 
   const positionAttribute = defined(this._positionAttributeLine)
     ? [this._positionAttributeLine]
@@ -468,7 +521,7 @@ ShaderBuilder.prototype.clone = function () {
   return clone(this, true);
 };
 
-function generateStructLines(shaderBuilder) {
+function generateStructLines(shaderBuilder: any) {
   const vertexLines = [];
   const fragmentLines = [];
 
@@ -498,7 +551,7 @@ function generateStructLines(shaderBuilder) {
   };
 }
 
-function getAttributeLocationCount(glslType) {
+function getAttributeLocationCount(glslType: any) {
   switch (glslType) {
     case "mat2":
       return 2;
@@ -511,7 +564,7 @@ function getAttributeLocationCount(glslType) {
   }
 }
 
-function generateFunctionLines(shaderBuilder) {
+function generateFunctionLines(shaderBuilder: any) {
   const vertexLines = [];
   const fragmentLines = [];
 
@@ -541,5 +594,4 @@ function generateFunctionLines(shaderBuilder) {
   };
 }
 
-export { ShaderBuilder };
 export default ShaderBuilder;

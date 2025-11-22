@@ -34,7 +34,10 @@ PlaneOutlineGeometry.packedLength = 0;
  * @returns {number[]} The array that was packed into
  */
 PlaneOutlineGeometry.pack = function (value, array) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   return array;
 };
@@ -48,7 +51,9 @@ PlaneOutlineGeometry.pack = function (value, array) {
  * @returns {PlaneOutlineGeometry} The modified result parameter or a new PlaneOutlineGeometry instance if one was not provided.
  */
 PlaneOutlineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new PlaneOutlineGeometry();
@@ -105,5 +110,4 @@ PlaneOutlineGeometry.createGeometry = function () {
     boundingSphere: new BoundingSphere(Cartesian3.ZERO, Math.sqrt(2.0)),
   });
 };
-export { PlaneOutlineGeometry };
 export default PlaneOutlineGeometry;

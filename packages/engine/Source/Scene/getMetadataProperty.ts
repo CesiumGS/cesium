@@ -21,7 +21,7 @@ import defined from "../Core/defined.js";
  * @returns {PropertyTextureProperty|undefined}
  * @private
  */
-function getMetadataProperty(structuralMetadata, className, propertyName) {
+function getMetadataProperty(structuralMetadata: any, className: any, propertyName: any) {
   if (!defined(structuralMetadata)) {
     return undefined;
   }
@@ -45,5 +45,4 @@ function getMetadataProperty(structuralMetadata, className, propertyName) {
   return undefined;
 }
 
-export { getMetadataProperty };
 export default getMetadataProperty;

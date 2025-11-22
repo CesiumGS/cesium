@@ -11,10 +11,13 @@ import DeveloperError from "./DeveloperError.js";
  * @example
  * const leapYear = Cesium.isLeapYear(2000); // true
  */
-function isLeapYear(year) {
-  ;
+function isLeapYear(year: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (year === null || isNaN(year)) {
+    throw new DeveloperError("year is required and must be a number.");
+  }
+  //>>includeEnd('debug');
 
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
-export { isLeapYear };
 export default isLeapYear;

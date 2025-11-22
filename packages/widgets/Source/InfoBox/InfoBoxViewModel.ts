@@ -114,5 +114,4 @@ Object.defineProperties(InfoBoxViewModel.prototype, {
     },
   },
 });
-export { InfoBoxViewModel };
 export default InfoBoxViewModel;

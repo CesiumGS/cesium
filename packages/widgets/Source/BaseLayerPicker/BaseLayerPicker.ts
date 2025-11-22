@@ -93,8 +93,12 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
  * @see ImageryProvider
  * @see ImageryLayerCollection
  */
-function BaseLayerPicker(container, options) {
-  ;
+function BaseLayerPicker(container: any, options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -305,5 +309,4 @@ BaseLayerPicker.prototype.destroy = function () {
   this._container.removeChild(this._dropPanel);
   return destroyObject(this);
 };
-export { BaseLayerPicker };
 export default BaseLayerPicker;

@@ -32,13 +32,7 @@ const cartesian10 = new Cartesian3();
 
 const quaterion = new Quaternion();
 const rotMatrix = new Matrix3();
-function computeRoundCorner(
-  cornerPoint,
-  startPoint,
-  endPoint,
-  cornerType,
-  leftIsOutside,
-) {
+function computeRoundCorner(cornerPoint: any, startPoint: any, endPoint: any, cornerType: any, leftIsOutside: any, ) {
   const angle = Cartesian3.angleBetween(
     Cartesian3.subtract(startPoint, cornerPoint, scratch1),
     Cartesian3.subtract(endPoint, cornerPoint, scratch2),
@@ -84,7 +78,7 @@ function computeRoundCorner(
   return array;
 }
 
-function addEndCaps(calculatedPositions) {
+function addEndCaps(calculatedPositions: any) {
   let cornerPoint = cartesian1;
   let startPoint = cartesian2;
   let endPoint = cartesian3;
@@ -126,12 +120,7 @@ function addEndCaps(calculatedPositions) {
   return [firstEndCap, lastEndCap];
 }
 
-function computeMiteredCorner(
-  position,
-  leftCornerDirection,
-  lastPoint,
-  leftIsOutside,
-) {
+function computeMiteredCorner(position: any, leftCornerDirection: any, lastPoint: any, leftIsOutside: any, ) {
   let cornerPoint = scratch1;
   if (leftIsOutside) {
     cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
@@ -152,7 +141,7 @@ function computeMiteredCorner(
   ];
 }
 
-function addShiftedPositions(positions, left, scalar, calculatedPositions) {
+function addShiftedPositions(positions: any, left: any, scalar: any, calculatedPositions: any) {
   const rightPositions = new Array(positions.length);
   const leftPositions = new Array(positions.length);
   const scaledLeft = Cartesian3.multiplyByScalar(left, scalar, scratch1);
@@ -498,5 +487,4 @@ CorridorGeometryLibrary.computePositions = function (params) {
     endPositions: endPositions,
   };
 };
-export { CorridorGeometryLibrary };
 export default CorridorGeometryLibrary;

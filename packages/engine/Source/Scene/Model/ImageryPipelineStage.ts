@@ -781,7 +781,14 @@ class ImageryPipelineStage {
     modelPrimitiveImagery,
     imageryTexCoordAttributeSetIndices,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("imageryLayers", imageryLayers);
+    Check.defined("modelPrimitiveImagery", modelPrimitiveImagery);
+    Check.defined(
+      "imageryTexCoordAttributeSetIndices",
+      imageryTexCoordAttributeSetIndices,
+    );
+    //>>includeEnd('debug');
 
     const imageryInputs = [];
 
@@ -846,7 +853,19 @@ class ImageryPipelineStage {
     cartographicBoundingRectangle,
     imageryTexCoordAttributeSetIndex,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("imageryLayer", imageryLayer);
+    Check.defined("coverage", coverage);
+    Check.defined(
+      "cartographicBoundingRectangle",
+      cartographicBoundingRectangle,
+    );
+    Check.typeOf.number.greaterThanOrEquals(
+      "imageryTexCoordAttributeSetIndex",
+      imageryTexCoordAttributeSetIndex,
+      0,
+    );
+    //>>includeEnd('debug');
 
     // Bail out early if something went wrong in the imagery
     // loading state machine
@@ -926,7 +945,11 @@ class ImageryPipelineStage {
     nonNativeBoundingRectangle,
     nonNativeImageryRectangle,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("imageryLayer", imageryLayer);
+    Check.defined("nonNativeBoundingRectangle", nonNativeBoundingRectangle);
+    Check.defined("nonNativeImageryRectangle", nonNativeImageryRectangle);
+    //>>includeEnd('debug');
 
     const tilingScheme = imageryLayer.imageryProvider.tilingScheme;
 
@@ -971,7 +994,10 @@ class ImageryPipelineStage {
     nativeBoundingRectangle,
     nativeImageryRectangle,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("nativeBoundingRectangle", nativeBoundingRectangle);
+    Check.defined("nativeImageryRectangle", nativeImageryRectangle);
+    //>>includeEnd('debug');
 
     const invImageryWidth = 1.0 / nativeImageryRectangle.width;
     const invImageryHeight = 1.0 / nativeImageryRectangle.height;
@@ -998,7 +1024,10 @@ class ImageryPipelineStage {
    * @returns {number[]} The result
    */
   static _computeIndexMapping(source, target) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("source", source);
+    Check.defined("target", target);
+    //>>includeEnd('debug');
 
     const result = [];
     const length = source.length;
@@ -1014,5 +1043,4 @@ class ImageryPipelineStage {
 // Static properties (direct initialization disallowed by eslint)
 //ImageryPipelineStage.name = "ImageryPipelineStage"; // Helps with debugging, if you know where to look
 
-export { ImageryPipelineStage };
 export default ImageryPipelineStage;

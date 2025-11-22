@@ -23,19 +23,54 @@ import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {string} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  */
-function ImageBasedLighting(options) {
+function ImageBasedLighting(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const imageBasedLightingFactor = defined(options.imageBasedLightingFactor)
     ? Cartesian2.clone(options.imageBasedLightingFactor)
     : new Cartesian2(1.0, 1.0);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object(
+    "options.imageBasedLightingFactor",
+    imageBasedLightingFactor,
+  );
+  Check.typeOf.number.greaterThanOrEquals(
+    "options.imageBasedLightingFactor.x",
+    imageBasedLightingFactor.x,
+    0.0,
+  );
+  Check.typeOf.number.lessThanOrEquals(
+    "options.imageBasedLightingFactor.x",
+    imageBasedLightingFactor.x,
+    1.0,
+  );
+  Check.typeOf.number.greaterThanOrEquals(
+    "options.imageBasedLightingFactor.y",
+    imageBasedLightingFactor.y,
+    0.0,
+  );
+  Check.typeOf.number.lessThanOrEquals(
+    "options.imageBasedLightingFactor.y",
+    imageBasedLightingFactor.y,
+    1.0,
+  );
+  //>>includeEnd('debug');
 
   this._imageBasedLightingFactor = imageBasedLightingFactor;
 
   const sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    defined(sphericalHarmonicCoefficients) &&
+    (!Array.isArray(sphericalHarmonicCoefficients) ||
+      sphericalHarmonicCoefficients.length !== 9)
+  ) {
+    throw new DeveloperError(
+      "options.sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.",
+    );
+  }
+  //>>includeEnd('debug');
   this._sphericalHarmonicCoefficients = sphericalHarmonicCoefficients;
 
   // The specular environment map texture is created in update();
@@ -78,7 +113,29 @@ Object.defineProperties(ImageBasedLighting.prototype, {
       return this._imageBasedLightingFactor;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("imageBasedLightingFactor", value);
+      Check.typeOf.number.greaterThanOrEquals(
+        "imageBasedLightingFactor.x",
+        value.x,
+        0.0,
+      );
+      Check.typeOf.number.lessThanOrEquals(
+        "imageBasedLightingFactor.x",
+        value.x,
+        1.0,
+      );
+      Check.typeOf.number.greaterThanOrEquals(
+        "imageBasedLightingFactor.y",
+        value.y,
+        0.0,
+      );
+      Check.typeOf.number.lessThanOrEquals(
+        "imageBasedLightingFactor.y",
+        value.y,
+        1.0,
+      );
+      //>>includeEnd('debug');
       this._previousImageBasedLightingFactor = Cartesian2.clone(
         this._imageBasedLightingFactor,
         this._previousImageBasedLightingFactor,
@@ -113,7 +170,13 @@ Object.defineProperties(ImageBasedLighting.prototype, {
       return this._sphericalHarmonicCoefficients;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && (!Array.isArray(value) || value.length !== 9)) {
+        throw new DeveloperError(
+          "sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.",
+        );
+      }
+      //>>includeEnd('debug');
       this._previousSphericalHarmonicCoefficients =
         this._sphericalHarmonicCoefficients;
       this._sphericalHarmonicCoefficients = value;
@@ -236,7 +299,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   },
 });
 
-function createSpecularEnvironmentCubeMap(imageBasedLighting, context) {
+function createSpecularEnvironmentCubeMap(imageBasedLighting: any, context: any) {
   if (!SpecularEnvironmentCubeMap.isSupported(context)) {
     return;
   }
@@ -252,7 +315,7 @@ function createSpecularEnvironmentCubeMap(imageBasedLighting, context) {
     imageBasedLighting._specularEnvironmentCubeMap = cubeMap;
 
     imageBasedLighting._removeErrorListener =
-      cubeMap.errorEvent.addEventListener((error) => {
+      cubeMap.errorEvent.addEventListener((error: any) => {
         console.error(`Error loading specularEnvironmentMaps: ${error}`);
       });
   }
@@ -397,5 +460,4 @@ ImageBasedLighting.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { ImageBasedLighting };
 export default ImageBasedLighting;

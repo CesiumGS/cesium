@@ -68,10 +68,12 @@ import VertexArray from "./VertexArray.js";
  * @param {CubeMap.ConstructorOptions} options An object describing initialization options.
  * @private
  */
-function CubeMap(options) {
+function CubeMap(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  //>>includeEnd('debug');
 
   const {
     context,
@@ -93,16 +95,86 @@ function CubeMap(options) {
   let { width, height } = options;
 
   if (defined(source)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (
+      !Object.values(CubeMap.FaceName).every((faceName: any) =>
+        defined(source[faceName]),
+      )
+    ) {
+      throw new DeveloperError(
+        `options.source requires faces ${Object.values(CubeMap.FaceName).join(
+          ", ",
+        )}.`,
+      );
+    }
+    //>>includeEnd('debug');
 
     ({ width, height } = source.positiveX);
 
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    for (const faceName of CubeMap.faceNames()) {
+      const face = source[faceName];
+      if (Number(face.width) !== width || Number(face.height) !== height) {
+        throw new DeveloperError(
+          "Each face in options.source must have the same width and height.",
+        );
+      }
+    }
+    //>>includeEnd('debug');
   }
 
   const size = width;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(width) || !defined(height)) {
+    throw new DeveloperError(
+      "options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.",
+    );
+  }
+
+  if (width !== height) {
+    throw new DeveloperError("Width must equal height.");
+  }
+
+  if (size <= 0) {
+    throw new DeveloperError("Width and height must be greater than zero.");
+  }
+
+  if (size > ContextLimits.maximumCubeMapSize) {
+    throw new DeveloperError(
+      `Width and height must be less than or equal to the maximum cube map size (${ContextLimits.maximumCubeMapSize}). Check maximumCubeMapSize.`,
+    );
+  }
+
+  if (!PixelFormat.validate(pixelFormat)) {
+    throw new DeveloperError("Invalid options.pixelFormat.");
+  }
+
+  if (PixelFormat.isDepthFormat(pixelFormat)) {
+    throw new DeveloperError(
+      "options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.",
+    );
+  }
+
+  if (!PixelDatatype.validate(pixelDatatype)) {
+    throw new DeveloperError("Invalid options.pixelDatatype.");
+  }
+
+  if (pixelDatatype === PixelDatatype.FLOAT && !context.floatingPointTexture) {
+    throw new DeveloperError(
+      "When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.",
+    );
+  }
+
+  if (
+    pixelDatatype === PixelDatatype.HALF_FLOAT &&
+    !context.halfFloatingPointTexture
+  ) {
+    throw new DeveloperError(
+      "When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const sizeInBytes =
     PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, size, size) * 6;
@@ -129,7 +201,7 @@ function CubeMap(options) {
   this._flipY = flipY;
 
   const initialized = defined(source);
-  function constructFace(targetFace) {
+  function constructFace(targetFace: any) {
     return new CubeMapFace(
       context,
       texture,
@@ -241,7 +313,7 @@ CubeMap.faceNames = function () {
  * @param {number} [mipLevel=0] The mip level to which the texel values will be loaded.
  * @private
  */
-function loadFace(cubeMapFace, source, mipLevel) {
+function loadFace(cubeMapFace: any, source: any, mipLevel: any) {
   mipLevel = mipLevel ?? 0;
   const targetFace = cubeMapFace._targetFace;
   const size = Math.max(Math.floor(cubeMapFace._size / 2 ** mipLevel), 1);
@@ -435,7 +507,7 @@ CubeMap.getDirection = function (face, result) {
  * @param {Sampler} sampler Information about how to sample the cubemap texture.
  * @private
  */
-function setupSampler(cubeMap, sampler) {
+function setupSampler(cubeMap: any, sampler: any) {
   let { minificationFilter, magnificationFilter } = sampler;
 
   const mipmap = [
@@ -489,7 +561,16 @@ function setupSampler(cubeMap, sampler) {
  * @private
  */
 CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("source", source);
+  if (!Array.isArray(source)) {
+    throw new DeveloperError(`source must be an array`);
+  }
+  const mipCount = Math.log2(this._size);
+  if (source.length !== mipCount) {
+    throw new DeveloperError(`all mip levels must be defined`);
+  }
+  //>>includeEnd('debug');
 
   skipColorSpaceConversion = skipColorSpaceConversion ?? false;
   const gl = this._context._gl;
@@ -543,7 +624,16 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
 CubeMap.prototype.generateMipmap = function (hint) {
   hint = hint ?? MipmapHint.DONT_CARE;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (this._size > 1 && !CesiumMath.isPowerOfTwo(this._size)) {
+    throw new DeveloperError(
+      "width and height must be a power of two to call generateMipmap().",
+    );
+  }
+  if (!MipmapHint.validate(hint)) {
+    throw new DeveloperError("hint is invalid.");
+  }
+  //>>includeEnd('debug');
 
   this._hasMipmap = true;
 
@@ -593,5 +683,4 @@ CubeMap.prototype.destroy = function () {
   this._negativeZ = destroyObject(this._negativeZ);
   return destroyObject(this);
 };
-export { CubeMap };
 export default CubeMap;

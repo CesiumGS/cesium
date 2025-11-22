@@ -43,7 +43,7 @@ const projectedCenterScratch = new Cartesian3();
 const scratchMinTexCoord = new Cartesian2();
 const scratchMaxTexCoord = new Cartesian2();
 
-function computeTopBottomAttributes(positions, options, extrude) {
+function computeTopBottomAttributes(positions: any, options: any, extrude: any) {
   const vertexFormat = options.vertexFormat;
   const center = options.center;
   const semiMajorAxis = options.semiMajorAxis;
@@ -311,7 +311,7 @@ function computeTopBottomAttributes(positions, options, extrude) {
   return attributes;
 }
 
-function topIndices(numPts) {
+function topIndices(numPts: any) {
   // numTriangles in half = 3 + 8 + 12 + ... = -1 + 4 + (4 + 4) + (4 + 4 + 4) + ... = -1 + 4 * (1 + 2 + 3 + ...)
   //              = -1 + 4 * ((n * ( n + 1)) / 2)
   // total triangles = 2 * numTriangles in half
@@ -414,7 +414,7 @@ function topIndices(numPts) {
 
 let boundingSphereCenter = new Cartesian3();
 
-function computeEllipse(options) {
+function computeEllipse(options: any) {
   const center = options.center;
   boundingSphereCenter = Cartesian3.multiplyByScalar(
     options.ellipsoid.geodeticSurfaceNormal(center, boundingSphereCenter),
@@ -447,7 +447,7 @@ function computeEllipse(options) {
   };
 }
 
-function computeWallAttributes(positions, options) {
+function computeWallAttributes(positions: any, options: any) {
   const vertexFormat = options.vertexFormat;
   const center = options.center;
   const semiMajorAxis = options.semiMajorAxis;
@@ -720,7 +720,7 @@ function computeWallAttributes(positions, options) {
   return attributes;
 }
 
-function computeWallIndices(positions) {
+function computeWallIndices(positions: any) {
   const length = positions.length / 3;
   const indices = IndexDatatype.createTypedArray(length, length * 6);
   let index = 0;
@@ -743,7 +743,7 @@ function computeWallIndices(positions) {
 const topBoundingSphere = new BoundingSphere();
 const bottomBoundingSphere = new BoundingSphere();
 
-function computeExtrudedEllipse(options) {
+function computeExtrudedEllipse(options: any) {
   const center = options.center;
   const ellipsoid = options.ellipsoid;
   const semiMajorAxis = options.semiMajorAxis;
@@ -838,15 +838,7 @@ function computeExtrudedEllipse(options) {
   };
 }
 
-function computeRectangle(
-  center,
-  semiMajorAxis,
-  semiMinorAxis,
-  rotation,
-  granularity,
-  ellipsoid,
-  result,
-) {
+function computeRectangle(center: any, semiMajorAxis: any, semiMinorAxis: any, rotation: any, granularity: any, ellipsoid: any, result: any, ) {
   const cep = EllipseGeometryLibrary.computeEllipsePositions(
     {
       center: center,
@@ -917,7 +909,7 @@ function computeRectangle(
  *
  * @see EllipseGeometry.createGeometry
  */
-function EllipseGeometry(options) {
+function EllipseGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const center = options.center;
@@ -927,7 +919,19 @@ function EllipseGeometry(options) {
   const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
   const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.center", center);
+  Check.typeOf.number("options.semiMajorAxis", semiMajorAxis);
+  Check.typeOf.number("options.semiMinorAxis", semiMinorAxis);
+  if (semiMajorAxis < semiMinorAxis) {
+    throw new DeveloperError(
+      "semiMajorAxis must be greater than or equal to the semiMinorAxis.",
+    );
+  }
+  if (granularity <= 0.0) {
+    throw new DeveloperError("granularity must be greater than zero.");
+  }
+  //>>includeEnd('debug');
 
   const height = options.height ?? 0.0;
   const extrudedHeight = options.extrudedHeight ?? height;
@@ -970,7 +974,10 @@ EllipseGeometry.packedLength =
  * @returns {number[]} The array that was packed into
  */
 EllipseGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -1023,7 +1030,9 @@ const scratchOptions = {
  * @returns {EllipseGeometry} The modified result parameter or a new EllipseGeometry instance if one was not provided.
  */
 EllipseGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -1106,7 +1115,19 @@ EllipseGeometry.computeRectangle = function (options, result) {
   const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
   const rotation = options.rotation ?? 0.0;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.center", center);
+  Check.typeOf.number("options.semiMajorAxis", semiMajorAxis);
+  Check.typeOf.number("options.semiMinorAxis", semiMinorAxis);
+  if (semiMajorAxis < semiMinorAxis) {
+    throw new DeveloperError(
+      "semiMajorAxis must be greater than or equal to the semiMinorAxis.",
+    );
+  }
+  if (granularity <= 0.0) {
+    throw new DeveloperError("granularity must be greater than zero.");
+  }
+  //>>includeEnd('debug');
 
   return computeRectangle(
     center,
@@ -1219,7 +1240,7 @@ EllipseGeometry.createShadowVolume = function (
   });
 };
 
-function textureCoordinateRotationPoints(ellipseGeometry) {
+function textureCoordinateRotationPoints(ellipseGeometry: any) {
   const stRotation = -ellipseGeometry._stRotation;
   if (stRotation === 0.0) {
     return [0, 0, 0, 1, 1, 0];
@@ -1286,5 +1307,4 @@ Object.defineProperties(EllipseGeometry.prototype, {
     },
   },
 });
-export { EllipseGeometry };
 export default EllipseGeometry;

@@ -31,8 +31,11 @@ import RuntimeError from "./RuntimeError.js";
  * @see createWorldTerrain
  * @see https://cesium.com
  */
-function IonResource(endpoint, endpointResource) {
-  ;
+function IonResource(endpoint: any, endpointResource: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("endpoint", endpoint);
+  Check.defined("endpointResource", endpointResource);
+  //>>includeEnd('debug');
 
   let options;
   const externalType = endpoint.externalType;
@@ -221,7 +224,9 @@ IonResource.prototype._makeRequest = function (options) {
  * @private
  **/
 IonResource._createEndpointResource = function (assetId, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("assetId", assetId);
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
   let server = options.server ?? Ion.defaultServer;
@@ -265,7 +270,7 @@ function addClientHeaders(headers = {}) {
   return headers;
 }
 
-function retryCallback(that, error) {
+function retryCallback(that: any, error: any) {
   const ionRoot = that._ionRoot ?? that;
   const endpointResource = ionRoot._ionEndpointResource;
 
@@ -313,5 +318,4 @@ function retryCallback(that, error) {
   });
 }
 
-export { IonResource };
 export default IonResource;

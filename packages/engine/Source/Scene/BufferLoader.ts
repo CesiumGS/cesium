@@ -23,13 +23,19 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-function BufferLoader(options) {
+function BufferLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const typedArray = options.typedArray;
   const resource = options.resource;
   const cacheKey = options.cacheKey;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (defined(typedArray) === defined(resource)) {
+    throw new DeveloperError(
+      "One of options.typedArray and options.resource must be defined.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._typedArray = typedArray;
   this._resource = resource;
@@ -93,7 +99,7 @@ BufferLoader.prototype.load = async function () {
   return this._promise;
 };
 
-async function loadExternalBuffer(bufferLoader) {
+async function loadExternalBuffer(bufferLoader: any) {
   const resource = bufferLoader._resource;
   bufferLoader._state = ResourceLoaderState.LOADING;
   try {
@@ -132,5 +138,4 @@ BufferLoader.prototype.unload = function () {
   this._typedArray = undefined;
 };
 
-export { BufferLoader };
 export default BufferLoader;

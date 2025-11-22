@@ -59,7 +59,9 @@ ResourceCacheStatistics.prototype.clear = function () {
  * @private
  */
 ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("loader", loader);
+  //>>includeEnd('debug');
 
   const cacheKey = loader.cacheKey;
 
@@ -97,7 +99,9 @@ ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
  * @private
  */
 ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("loader", loader);
+  //>>includeEnd('debug');
 
   const cacheKey = loader.cacheKey;
 
@@ -122,7 +126,9 @@ ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
  * @private
  */
 ResourceCacheStatistics.prototype.removeLoader = function (loader) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("loader", loader);
+  //>>includeEnd('debug');
 
   const cacheKey = loader.cacheKey;
   const geometrySize = this._geometrySizes[cacheKey];
@@ -140,5 +146,4 @@ ResourceCacheStatistics.prototype.removeLoader = function (loader) {
   }
 };
 
-export { ResourceCacheStatistics };
 export default ResourceCacheStatistics;

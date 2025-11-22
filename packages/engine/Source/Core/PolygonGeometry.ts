@@ -29,7 +29,7 @@ import WindingOrder from "./WindingOrder.js";
 
 const scratchCarto1 = new Cartographic();
 const scratchCarto2 = new Cartographic();
-function adjustPosHeightsForNormal(position, p1, p2, ellipsoid) {
+function adjustPosHeightsForNormal(position: any, p1: any, p2: any, ellipsoid: any) {
   const carto1 = ellipsoid.cartesianToCartographic(position, scratchCarto1);
   const height = carto1.height;
   const p1Carto = ellipsoid.cartesianToCartographic(p1, scratchCarto2);
@@ -59,7 +59,7 @@ const appendTextureCoordinatesQuaternion = new Quaternion();
 const appendTextureCoordinatesMatrix3 = new Matrix3();
 const tangentMatrixScratch = new Matrix3();
 
-function computeAttributes(options) {
+function computeAttributes(options: any) {
   const vertexFormat = options.vertexFormat;
   const geometry = options.geometry;
   const shadowVolume = options.shadowVolume;
@@ -425,18 +425,7 @@ function computeAttributes(options) {
 
 const createGeometryFromPositionsExtrudedPositions = [];
 
-function createGeometryFromPositionsExtruded(
-  ellipsoid,
-  polygon,
-  textureCoordinates,
-  granularity,
-  hierarchy,
-  perPositionHeight,
-  closeTop,
-  closeBottom,
-  vertexFormat,
-  arcType,
-) {
+function createGeometryFromPositionsExtruded(ellipsoid: any, polygon: any, textureCoordinates: any, granularity: any, hierarchy: any, perPositionHeight: any, closeTop: any, closeBottom: any, vertexFormat: any, arcType: any, ) {
   const geos = {
     walls: [],
   };
@@ -665,8 +654,29 @@ function createGeometryFromPositionsExtruded(
  * });
  * const geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
  */
-function PolygonGeometry(options) {
-  ;
+function PolygonGeometry(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.object("options.polygonHierarchy", options.polygonHierarchy);
+  if (
+    defined(options.perPositionHeight) &&
+    options.perPositionHeight &&
+    defined(options.height)
+  ) {
+    throw new DeveloperError(
+      "Cannot use both options.perPositionHeight and options.height",
+    );
+  }
+  if (
+    defined(options.arcType) &&
+    options.arcType !== ArcType.GEODESIC &&
+    options.arcType !== ArcType.RHUMB
+  ) {
+    throw new DeveloperError(
+      "Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const polygonHierarchy = options.polygonHierarchy;
   const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
@@ -762,7 +772,9 @@ function PolygonGeometry(options) {
 PolygonGeometry.fromPositions = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.positions", options.positions);
+  //>>includeEnd('debug');
 
   const newOptions = {
     polygonHierarchy: {
@@ -794,7 +806,10 @@ PolygonGeometry.fromPositions = function (options) {
  * @returns {number[]} The array that was packed into
  */
 PolygonGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -853,7 +868,9 @@ const dummyOptions = {
  * @returns {PolygonGeometry} The modified result parameter or a new PolygonGeometry instance if one was not provided.
  */
 PolygonGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -930,14 +947,7 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
 const scratchCartesian0 = new Cartesian2();
 const scratchCartesian1 = new Cartesian2();
 const scratchPolarClosest = new Stereographic();
-function expandRectangle(
-  polar,
-  lastPolar,
-  ellipsoid,
-  arcType,
-  polygon,
-  result,
-) {
+function expandRectangle(polar: any, lastPolar: any, ellipsoid: any, arcType: any, polygon: any, result: any, ) {
   const longitude = polar.longitude;
   const lonAdjusted =
     longitude >= 0.0 ? longitude : longitude + CesiumMath.TWO_PI;
@@ -1022,7 +1032,9 @@ PolygonGeometry.computeRectangleFromPositions = function (
   arcType,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("positions", positions);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Rectangle();
@@ -1114,7 +1126,7 @@ PolygonGeometry.computeRectangleFromPositions = function (
 };
 
 const scratchPolarForPlane = new Stereographic();
-function getTangentPlane(rectangle, positions, ellipsoid) {
+function getTangentPlane(rectangle: any, positions: any, ellipsoid: any) {
   if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
     const polar = Stereographic.fromCartesian(
       positions[0],
@@ -1128,8 +1140,8 @@ function getTangentPlane(rectangle, positions, ellipsoid) {
 }
 
 const scratchCartographicCyllindrical = new Cartographic();
-function createProjectTo2d(rectangle, outerPositions, ellipsoid) {
-  return (positions, results) => {
+function createProjectTo2d(rectangle: any, outerPositions: any, ellipsoid: any) {
+  return (positions: any, results: any) => {
     // If the polygon positions span a large enough extent, use a specialized projection
     if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
       // polygons that cross the equator must use cyllindrical coordinates to correctly compute winding order.
@@ -1165,10 +1177,10 @@ function createProjectTo2d(rectangle, outerPositions, ellipsoid) {
   };
 }
 
-function createProjectPositionTo2d(rectangle, outerRing, ellipsoid) {
+function createProjectPositionTo2d(rectangle: any, outerRing: any, ellipsoid: any) {
   // If the polygon positions span a large enough extent, use a specialized projection
   if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
-    return (position, result) => {
+    return (position: any, result: any) => {
       // polygons that cross the equator must use cyllindrical coordinates to correctly compute winding order.
       if (rectangle.south < 0 && rectangle.north > 0) {
         const cartographic = ellipsoid.cartesianToCartographic(
@@ -1189,14 +1201,14 @@ function createProjectPositionTo2d(rectangle, outerRing, ellipsoid) {
   }
 
   const tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
-  return (position, result) => {
+  return (position: any, result: any) => {
     // Use a local tangent plane for smaller extents
     return tangentPlane.projectPointsOntoPlane(position, result);
   };
 }
 
-function createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight) {
-  return (polygons, results) => {
+function createSplitPolygons(rectangle: any, ellipsoid: any, arcType: any, perPositionHeight: any) {
+  return (polygons: any, results: any) => {
     if (
       !perPositionHeight &&
       (rectangle.height >= CesiumMath.PI_OVER_TWO ||
@@ -1214,7 +1226,7 @@ function createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight) {
   };
 }
 
-function computeBoundingRectangle(outerRing, rectangle, ellipsoid, stRotation) {
+function computeBoundingRectangle(outerRing: any, rectangle: any, ellipsoid: any, stRotation: any) {
   if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
     return BoundingRectangle.fromRectangle(
       rectangle,
@@ -1499,7 +1511,7 @@ PolygonGeometry.createShadowVolume = function (
   });
 };
 
-function textureCoordinateRotationPoints(polygonGeometry) {
+function textureCoordinateRotationPoints(polygonGeometry: any) {
   const stRotation = -polygonGeometry._stRotation;
   if (stRotation === 0.0) {
     return [0, 0, 0, 1, 1, 0];
@@ -1547,5 +1559,4 @@ Object.defineProperties(PolygonGeometry.prototype, {
     },
   },
 });
-export { PolygonGeometry };
 export default PolygonGeometry;

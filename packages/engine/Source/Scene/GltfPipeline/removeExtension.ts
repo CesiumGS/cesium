@@ -8,9 +8,9 @@ import defined from "../../Core/defined.js";
  * @param {object} gltf A javascript object containing a glTF asset.
  * @param {string} extension The extension to remove.
  *
- * @returns {any} The extension data removed from gltf.extensions.
+ * @returns {*} The extension data removed from gltf.extensions.
  */
-function removeExtension(gltf, extension) {
+function removeExtension(gltf: any, extension: any) {
   removeExtensionsUsed(gltf, extension); // Also removes from extensionsRequired
 
   if (extension === "CESIUM_RTC") {
@@ -20,7 +20,7 @@ function removeExtension(gltf, extension) {
   return removeExtensionAndTraverse(gltf, extension);
 }
 
-function removeCesiumRTC(gltf) {
+function removeCesiumRTC(gltf: any) {
   ForEach.technique(gltf, function (technique) {
     ForEach.techniqueUniform(technique, function (uniform) {
       if (uniform.semantic === "CESIUM_RTC_MODELVIEW") {
@@ -30,7 +30,7 @@ function removeCesiumRTC(gltf) {
   });
 }
 
-function removeExtensionAndTraverse(object, extension) {
+function removeExtensionAndTraverse(object: any, extension: any) {
   if (Array.isArray(object)) {
     const length = object.length;
     for (let i = 0; i < length; ++i) {
@@ -61,5 +61,4 @@ function removeExtensionAndTraverse(object, extension) {
   }
 }
 
-export { removeExtension };
 export default removeExtension;

@@ -12,8 +12,11 @@ import Cesium3DTilesInspectorViewModel from "./Cesium3DTilesInspectorViewModel.j
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene the Scene instance to use.
  */
-function Cesium3DTilesInspector(container, scene) {
-  ;
+function Cesium3DTilesInspector(container: any, scene: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("container", container);
+  Check.typeOf.object("scene", scene);
+  //>>includeEnd('debug');
 
   container = getElement(container);
   const element = document.createElement("div");
@@ -381,5 +384,4 @@ Cesium3DTilesInspector.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { Cesium3DTilesInspector };
 export default Cesium3DTilesInspector;

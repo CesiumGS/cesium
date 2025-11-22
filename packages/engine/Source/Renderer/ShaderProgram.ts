@@ -14,7 +14,7 @@ let nextShaderProgramId = 0;
 /**
  * @private
  */
-function ShaderProgram(options) {
+function ShaderProgram(options: any) {
   let vertexShaderText = options.vertexShaderText;
   let fragmentShaderText = options.fragmentShaderText;
 
@@ -65,7 +65,9 @@ function ShaderProgram(options) {
 ShaderProgram.fromCache = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  //>>includeEnd('debug');
 
   return options.context.shaderCache.getShaderProgram(options);
 };
@@ -73,7 +75,9 @@ ShaderProgram.fromCache = function (options) {
 ShaderProgram.replaceCache = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  //>>includeEnd('debug');
 
   return options.context.shaderCache.replaceShaderProgram(options);
 };
@@ -123,7 +127,7 @@ Object.defineProperties(ShaderProgram.prototype, {
   },
 });
 
-function extractUniforms(shaderText) {
+function extractUniforms(shaderText: any) {
   const uniformNames = [];
   const uniformLines = shaderText.match(/uniform.*?(?![^{]*})(?=[=\[;])/g);
   if (defined(uniformLines)) {
@@ -137,10 +141,7 @@ function extractUniforms(shaderText) {
   return uniformNames;
 }
 
-function handleUniformPrecisionMismatches(
-  vertexShaderText,
-  fragmentShaderText,
-) {
+function handleUniformPrecisionMismatches(vertexShaderText: any, fragmentShaderText: any, ) {
   // If a uniform exists in both the vertex and fragment shader but with different precision qualifiers,
   // give the fragment shader uniform a different name. This fixes shader compilation errors on devices
   // that only support mediump in the fragment shader.
@@ -177,7 +178,7 @@ function handleUniformPrecisionMismatches(
 
 const consolePrefix = "[Cesium WebGL] ";
 
-function createAndLinkProgram(gl, shader) {
+function createAndLinkProgram(gl: any, shader: any) {
   const vsSource = shader._vertexShaderText;
   const fsSource = shader._fragmentShaderText;
 
@@ -261,7 +262,7 @@ function createAndLinkProgram(gl, shader) {
   gl.deleteProgram(program);
   throw new RuntimeError(errorMessage);
 
-  function logTranslatedSource(compiledShader, name) {
+  function logTranslatedSource(compiledShader: any, name: any) {
     if (!defined(debugShaders)) {
       return;
     }
@@ -276,7 +277,7 @@ function createAndLinkProgram(gl, shader) {
   }
 }
 
-function findVertexAttributes(gl, program, numberOfAttributes) {
+function findVertexAttributes(gl: any, program: any, numberOfAttributes: any) {
   const attributes = {};
   for (let i = 0; i < numberOfAttributes; ++i) {
     const attr = gl.getActiveAttrib(program, i);
@@ -292,7 +293,7 @@ function findVertexAttributes(gl, program, numberOfAttributes) {
   return attributes;
 }
 
-function findUniforms(gl, program) {
+function findUniforms(gl: any, program: any) {
   const uniformsByName = {};
   const uniforms = [];
   const samplerUniforms = [];
@@ -405,7 +406,7 @@ function findUniforms(gl, program) {
   };
 }
 
-function partitionUniforms(shader, uniforms) {
+function partitionUniforms(shader: any, uniforms: any) {
   const automaticUniforms = [];
   const manualUniforms = [];
 
@@ -437,7 +438,7 @@ function partitionUniforms(shader, uniforms) {
   };
 }
 
-function setSamplerUniforms(gl, program, samplerUniforms) {
+function setSamplerUniforms(gl: any, program: any, samplerUniforms: any) {
   gl.useProgram(program);
 
   let textureUnitIndex = 0;
@@ -451,7 +452,7 @@ function setSamplerUniforms(gl, program, samplerUniforms) {
   return textureUnitIndex;
 }
 
-function initialize(shader) {
+function initialize(shader: any) {
   if (defined(shader._program)) {
     return;
   }
@@ -459,7 +460,7 @@ function initialize(shader) {
   reinitialize(shader);
 }
 
-function reinitialize(shader) {
+function reinitialize(shader: any) {
   const oldProgram = shader._program;
 
   const gl = shader._gl;
@@ -553,7 +554,11 @@ ShaderProgram.prototype._setUniforms = function (
     for (i = 0; i < len; ++i) {
       const mu = manualUniforms[i];
 
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(uniformMap[mu.name])) {
+        throw new DeveloperError(`Unknown uniform: ${mu.name}`);
+      }
+      //>>includeEnd('debug');
 
       mu.value = uniformMap[mu.name]();
     }
@@ -583,7 +588,15 @@ ShaderProgram.prototype._setUniforms = function (
     const program = this._program;
 
     gl.validateProgram(program);
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
+      throw new DeveloperError(
+        `Program validation failed.  Program info log: ${gl.getProgramInfoLog(
+          program,
+        )}`,
+      );
+    }
+    //>>includeEnd('debug');
   }
 };
 
@@ -600,5 +613,4 @@ ShaderProgram.prototype.finalDestroy = function () {
   this._gl.deleteProgram(this._program);
   return destroyObject(this);
 };
-export { ShaderProgram };
 export default ShaderProgram;

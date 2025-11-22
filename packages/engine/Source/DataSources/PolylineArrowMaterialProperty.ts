@@ -13,7 +13,7 @@ import Property from "./Property.js";
  * @alias PolylineArrowMaterialProperty
  * @constructor
  */
-function PolylineArrowMaterialProperty(color) {
+function PolylineArrowMaterialProperty(color: any) {
   this._definitionChanged = new Event();
   this._color = undefined;
   this._colorSubscription = undefined;
@@ -107,5 +107,4 @@ PolylineArrowMaterialProperty.prototype.equals = function (other) {
       Property.equals(this._color, other._color))
   );
 };
-export { PolylineArrowMaterialProperty };
 export default PolylineArrowMaterialProperty;

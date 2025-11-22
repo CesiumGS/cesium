@@ -20,7 +20,7 @@ const defaultOutlineWidth = 1.0;
  * @param {Property|Color} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
  * @param {Property|number} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
  */
-function PolylineOutlineMaterialProperty(options) {
+function PolylineOutlineMaterialProperty(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
@@ -155,5 +155,4 @@ PolylineOutlineMaterialProperty.prototype.equals = function (other) {
       Property.equals(this._outlineWidth, other._outlineWidth))
   );
 };
-export { PolylineOutlineMaterialProperty };
 export default PolylineOutlineMaterialProperty;

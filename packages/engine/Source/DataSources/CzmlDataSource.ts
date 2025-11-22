@@ -103,14 +103,14 @@ UnitCartesian3.pack = Cartesian3.pack;
 
 let currentId;
 
-function createReferenceProperty(entityCollection, referenceString) {
+function createReferenceProperty(entityCollection: any, referenceString: any) {
   if (referenceString[0] === "#") {
     referenceString = currentId + referenceString;
   }
   return ReferenceProperty.fromString(entityCollection, referenceString);
 }
 
-function createSpecializedProperty(type, entityCollection, packetData) {
+function createSpecializedProperty(type: any, entityCollection: any, packetData: any) {
   if (defined(packetData.reference)) {
     return createReferenceProperty(entityCollection, packetData.reference);
   }
@@ -135,7 +135,7 @@ function createSpecializedProperty(type, entityCollection, packetData) {
   throw new RuntimeError(`${JSON.stringify(packetData)} is not valid CZML.`);
 }
 
-function createAdapterProperty(property, adapterFunction) {
+function createAdapterProperty(property: any, adapterFunction: any) {
   return new CallbackProperty(function (time, result) {
     return adapterFunction(property.getValue(time, result));
   }, property.isConstant);
@@ -147,7 +147,7 @@ const scratchCartographic = new Cartographic();
 const scratchTimeInterval = new TimeInterval();
 const scratchQuaternion = new Quaternion();
 
-function unwrapColorInterval(czmlInterval) {
+function unwrapColorInterval(czmlInterval: any) {
   let rgbaf = czmlInterval.rgbaf;
   if (defined(rgbaf)) {
     return rgbaf;
@@ -179,7 +179,7 @@ function unwrapColorInterval(czmlInterval) {
   return rgbaf;
 }
 
-function unwrapUriInterval(czmlInterval, sourceUri) {
+function unwrapUriInterval(czmlInterval: any, sourceUri: any) {
   const uri = czmlInterval.uri ?? czmlInterval;
   if (defined(sourceUri)) {
     return sourceUri.getDerivedResource({
@@ -190,7 +190,7 @@ function unwrapUriInterval(czmlInterval, sourceUri) {
   return Resource.createIfNeeded(uri);
 }
 
-function unwrapRectangleInterval(czmlInterval) {
+function unwrapRectangleInterval(czmlInterval: any) {
   let wsen = czmlInterval.wsen;
   if (defined(wsen)) {
     return wsen;
@@ -222,7 +222,7 @@ function unwrapRectangleInterval(czmlInterval) {
   return wsen;
 }
 
-function convertUnitSphericalToCartesian(unitSpherical) {
+function convertUnitSphericalToCartesian(unitSpherical: any) {
   const length = unitSpherical.length;
   scratchSpherical.magnitude = 1.0;
   if (length === 2) {
@@ -247,7 +247,7 @@ function convertUnitSphericalToCartesian(unitSpherical) {
   return result;
 }
 
-function convertSphericalToCartesian(spherical) {
+function convertSphericalToCartesian(spherical: any) {
   const length = spherical.length;
   if (length === 3) {
     scratchSpherical.clock = spherical[0];
@@ -273,7 +273,7 @@ function convertSphericalToCartesian(spherical) {
   return result;
 }
 
-function convertCartographicRadiansToCartesian(cartographicRadians) {
+function convertCartographicRadiansToCartesian(cartographicRadians: any) {
   const length = cartographicRadians.length;
   if (length === 3) {
     scratchCartographic.longitude = cartographicRadians[0];
@@ -305,7 +305,7 @@ function convertCartographicRadiansToCartesian(cartographicRadians) {
   return result;
 }
 
-function convertCartographicDegreesToCartesian(cartographicDegrees) {
+function convertCartographicDegreesToCartesian(cartographicDegrees: any) {
   const length = cartographicDegrees.length;
   if (length === 3) {
     scratchCartographic.longitude = CesiumMath.toRadians(
@@ -343,7 +343,7 @@ function convertCartographicDegreesToCartesian(cartographicDegrees) {
   return result;
 }
 
-function unwrapCartesianInterval(czmlInterval) {
+function unwrapCartesianInterval(czmlInterval: any) {
   const cartesian = czmlInterval.cartesian;
   if (defined(cartesian)) {
     return cartesian;
@@ -384,13 +384,13 @@ function unwrapCartesianInterval(czmlInterval) {
   );
 }
 
-function normalizePackedCartesianArray(array, startingIndex) {
+function normalizePackedCartesianArray(array: any, startingIndex: any) {
   Cartesian3.unpack(array, startingIndex, scratchCartesian);
   Cartesian3.normalize(scratchCartesian, scratchCartesian);
   Cartesian3.pack(scratchCartesian, array, startingIndex);
 }
 
-function unwrapUnitCartesianInterval(czmlInterval) {
+function unwrapUnitCartesianInterval(czmlInterval: any) {
   const cartesian = unwrapCartesianInterval(czmlInterval);
   if (cartesian.length === 3) {
     normalizePackedCartesianArray(cartesian, 0);
@@ -404,13 +404,13 @@ function unwrapUnitCartesianInterval(czmlInterval) {
   return cartesian;
 }
 
-function normalizePackedQuaternionArray(array, startingIndex) {
+function normalizePackedQuaternionArray(array: any, startingIndex: any) {
   Quaternion.unpack(array, startingIndex, scratchQuaternion);
   Quaternion.normalize(scratchQuaternion, scratchQuaternion);
   Quaternion.pack(scratchQuaternion, array, startingIndex);
 }
 
-function unwrapQuaternionInterval(czmlInterval) {
+function unwrapQuaternionInterval(czmlInterval: any) {
   const unitQuaternion = czmlInterval.unitQuaternion;
   if (defined(unitQuaternion)) {
     if (unitQuaternion.length === 4) {
@@ -425,7 +425,7 @@ function unwrapQuaternionInterval(czmlInterval) {
   return unitQuaternion;
 }
 
-function getPropertyType(czmlInterval) {
+function getPropertyType(czmlInterval: any) {
   // The associations in this function need to be kept in sync with the
   // associations in unwrapInterval.
 
@@ -516,7 +516,7 @@ function getPropertyType(czmlInterval) {
   return Object;
 }
 
-function unwrapInterval(type, czmlInterval, sourceUri) {
+function unwrapInterval(type: any, czmlInterval: any, sourceUri: any) {
   // The associations in this function need to be kept in sync with the
   // associations in getPropertyType
   switch (type) {
@@ -595,7 +595,7 @@ const interpolators = {
   LINEAR: LinearApproximation,
 };
 
-function updateInterpolationSettings(packetData, property) {
+function updateInterpolationSettings(packetData: any, property: any) {
   const interpolationAlgorithm = packetData.interpolationAlgorithm;
   const interpolationDegree = packetData.interpolationDegree;
   if (defined(interpolationAlgorithm) || defined(interpolationDegree)) {
@@ -633,7 +633,7 @@ const iso8601Scratch = {
   iso8601: undefined,
 };
 
-function intervalFromString(intervalString) {
+function intervalFromString(intervalString: any) {
   if (!defined(intervalString)) {
     return undefined;
   }
@@ -641,35 +641,27 @@ function intervalFromString(intervalString) {
   return TimeInterval.fromIso8601(iso8601Scratch);
 }
 
-function wrapPropertyInInfiniteInterval(property) {
+function wrapPropertyInInfiniteInterval(property: any) {
   const interval = Iso8601.MAXIMUM_INTERVAL.clone();
   interval.data = property;
   return interval;
 }
 
-function convertPropertyToComposite(property) {
+function convertPropertyToComposite(property: any) {
   // Create the composite and add the old property, wrapped in an infinite interval.
   const composite = new CompositeProperty();
   composite.intervals.addInterval(wrapPropertyInInfiniteInterval(property));
   return composite;
 }
 
-function convertPositionPropertyToComposite(property) {
+function convertPositionPropertyToComposite(property: any) {
   // Create the composite and add the old property, wrapped in an infinite interval.
   const composite = new CompositePositionProperty(property.referenceFrame);
   composite.intervals.addInterval(wrapPropertyInInfiniteInterval(property));
   return composite;
 }
 
-function processProperty(
-  type,
-  object,
-  propertyName,
-  packetData,
-  constrainedInterval,
-  sourceUri,
-  entityCollection,
-) {
+function processProperty(type: any, object: any, propertyName: any, packetData: any, constrainedInterval: any, sourceUri: any, entityCollection: any, ) {
   let combinedInterval = intervalFromString(packetData.interval);
   if (defined(constrainedInterval)) {
     if (defined(combinedInterval)) {
@@ -839,7 +831,7 @@ function processProperty(
   updateInterpolationSettings(packetData, interval.data);
 }
 
-function removePropertyData(property, interval) {
+function removePropertyData(property: any, interval: any) {
   if (property instanceof SampledProperty) {
     property.removeSamples(interval);
     return;
@@ -865,15 +857,7 @@ function removePropertyData(property, interval) {
   }
 }
 
-function processPacketData(
-  type,
-  object,
-  propertyName,
-  packetData,
-  interval,
-  sourceUri,
-  entityCollection,
-) {
+function processPacketData(type: any, object: any, propertyName: any, packetData: any, interval: any, sourceUri: any, entityCollection: any, ) {
   if (!defined(packetData)) {
     return;
   }
@@ -903,14 +887,7 @@ function processPacketData(
   }
 }
 
-function processPositionProperty(
-  object,
-  propertyName,
-  packetData,
-  constrainedInterval,
-  sourceUri,
-  entityCollection,
-) {
+function processPositionProperty(object: any, propertyName: any, packetData: any, constrainedInterval: any, sourceUri: any, entityCollection: any, ) {
   let combinedInterval = intervalFromString(packetData.interval);
   if (defined(constrainedInterval)) {
     if (defined(combinedInterval)) {
@@ -1091,7 +1068,7 @@ function processPositionProperty(
   updateInterpolationSettings(packetData, interval.data);
 }
 
-function removePositionPropertyData(property, interval) {
+function removePositionPropertyData(property: any, interval: any) {
   if (property instanceof SampledPositionProperty) {
     property.removeSamples(interval);
     return;
@@ -1117,14 +1094,7 @@ function removePositionPropertyData(property, interval) {
   }
 }
 
-function processPositionPacketData(
-  object,
-  propertyName,
-  packetData,
-  interval,
-  sourceUri,
-  entityCollection,
-) {
+function processPositionPacketData(object: any, propertyName: any, packetData: any, interval: any, sourceUri: any, entityCollection: any, ) {
   if (!defined(packetData)) {
     return;
   }
@@ -1152,12 +1122,7 @@ function processPositionPacketData(
   }
 }
 
-function processShapePacketData(
-  object,
-  propertyName,
-  packetData,
-  entityCollection,
-) {
+function processShapePacketData(object: any, propertyName: any, packetData: any, entityCollection: any, ) {
   if (defined(packetData.references)) {
     processReferencesArrayPacketData(
       object,
@@ -1190,14 +1155,7 @@ function processShapePacketData(
   }
 }
 
-function processMaterialProperty(
-  object,
-  propertyName,
-  packetData,
-  constrainedInterval,
-  sourceUri,
-  entityCollection,
-) {
+function processMaterialProperty(object: any, propertyName: any, packetData: any, constrainedInterval: any, sourceUri: any, entityCollection: any, ) {
   let combinedInterval = intervalFromString(packetData.interval);
   if (defined(constrainedInterval)) {
     if (defined(combinedInterval)) {
@@ -1555,14 +1513,7 @@ function processMaterialProperty(
   }
 }
 
-function processMaterialPacketData(
-  object,
-  propertyName,
-  packetData,
-  interval,
-  sourceUri,
-  entityCollection,
-) {
+function processMaterialPacketData(object: any, propertyName: any, packetData: any, interval: any, sourceUri: any, entityCollection: any, ) {
   if (!defined(packetData)) {
     return;
   }
@@ -1590,14 +1541,14 @@ function processMaterialPacketData(
   }
 }
 
-function processName(entity, packet, entityCollection, sourceUri) {
+function processName(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const nameData = packet.name;
   if (defined(nameData)) {
     entity.name = packet.name;
   }
 }
 
-function processDescription(entity, packet, entityCollection, sourceUri) {
+function processDescription(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const descriptionData = packet.description;
   if (defined(descriptionData)) {
     processPacketData(
@@ -1612,7 +1563,7 @@ function processDescription(entity, packet, entityCollection, sourceUri) {
   }
 }
 
-function processPosition(entity, packet, entityCollection, sourceUri) {
+function processPosition(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const positionData = packet.position;
   if (defined(positionData)) {
     processPositionPacketData(
@@ -1626,7 +1577,7 @@ function processPosition(entity, packet, entityCollection, sourceUri) {
   }
 }
 
-function processViewFrom(entity, packet, entityCollection, sourceUri) {
+function processViewFrom(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const viewFromData = packet.viewFrom;
   if (defined(viewFromData)) {
     processPacketData(
@@ -1641,7 +1592,7 @@ function processViewFrom(entity, packet, entityCollection, sourceUri) {
   }
 }
 
-function processOrientation(entity, packet, entityCollection, sourceUri) {
+function processOrientation(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const orientationData = packet.orientation;
   if (defined(orientationData)) {
     processPacketData(
@@ -1656,7 +1607,7 @@ function processOrientation(entity, packet, entityCollection, sourceUri) {
   }
 }
 
-function processProperties(entity, packet, entityCollection, sourceUri) {
+function processProperties(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const propertiesData = packet.properties;
   if (defined(propertiesData)) {
     if (!defined(entity.properties)) {
@@ -1702,15 +1653,7 @@ function processProperties(entity, packet, entityCollection, sourceUri) {
   }
 }
 
-function processReferencesArrayPacketData(
-  object,
-  propertyName,
-  references,
-  interval,
-  entityCollection,
-  PropertyArrayType,
-  CompositePropertyArrayType,
-) {
+function processReferencesArrayPacketData(object: any, propertyName: any, references: any, interval: any, entityCollection: any, PropertyArrayType: any, CompositePropertyArrayType: any, ) {
   const properties = references.map(function (reference) {
     return createReferenceProperty(entityCollection, reference);
   });
@@ -1736,12 +1679,7 @@ function processReferencesArrayPacketData(
   }
 }
 
-function processArrayPacketData(
-  object,
-  propertyName,
-  packetData,
-  entityCollection,
-) {
+function processArrayPacketData(object: any, propertyName: any, packetData: any, entityCollection: any, ) {
   const references = packetData.references;
   if (defined(references)) {
     processReferencesArrayPacketData(
@@ -1766,7 +1704,7 @@ function processArrayPacketData(
   }
 }
 
-function processArray(object, propertyName, packetData, entityCollection) {
+function processArray(object: any, propertyName: any, packetData: any, entityCollection: any) {
   if (!defined(packetData)) {
     return;
   }
@@ -1785,12 +1723,7 @@ function processArray(object, propertyName, packetData, entityCollection) {
   }
 }
 
-function processPositionArrayPacketData(
-  object,
-  propertyName,
-  packetData,
-  entityCollection,
-) {
+function processPositionArrayPacketData(object: any, propertyName: any, packetData: any, entityCollection: any, ) {
   const references = packetData.references;
   if (defined(references)) {
     processReferencesArrayPacketData(
@@ -1831,12 +1764,7 @@ function processPositionArrayPacketData(
   }
 }
 
-function processPositionArray(
-  object,
-  propertyName,
-  packetData,
-  entityCollection,
-) {
+function processPositionArray(object: any, propertyName: any, packetData: any, entityCollection: any, ) {
   if (!defined(packetData)) {
     return;
   }
@@ -1860,24 +1788,19 @@ function processPositionArray(
   }
 }
 
-function unpackCartesianArray(array) {
+function unpackCartesianArray(array: any) {
   return Cartesian3.unpackArray(array);
 }
 
-function unpackCartographicRadiansArray(array) {
+function unpackCartographicRadiansArray(array: any) {
   return Cartesian3.fromRadiansArrayHeights(array, Ellipsoid.default);
 }
 
-function unpackCartographicDegreesArray(array) {
+function unpackCartographicDegreesArray(array: any) {
   return Cartesian3.fromDegreesArrayHeights(array, Ellipsoid.default);
 }
 
-function processPositionArrayOfArraysPacketData(
-  object,
-  propertyName,
-  packetData,
-  entityCollection,
-) {
+function processPositionArrayOfArraysPacketData(object: any, propertyName: any, packetData: any, entityCollection: any, ) {
   const references = packetData.references;
   if (defined(references)) {
     const properties = references.map(function (referenceArray) {
@@ -1921,12 +1844,7 @@ function processPositionArrayOfArraysPacketData(
   }
 }
 
-function processPositionArrayOfArrays(
-  object,
-  propertyName,
-  packetData,
-  entityCollection,
-) {
+function processPositionArrayOfArrays(object: any, propertyName: any, packetData: any, entityCollection: any, ) {
   if (!defined(packetData)) {
     return;
   }
@@ -1950,7 +1868,7 @@ function processPositionArrayOfArrays(
   }
 }
 
-function processShape(object, propertyName, packetData, entityCollection) {
+function processShape(object: any, propertyName: any, packetData: any, entityCollection: any) {
   if (!defined(packetData)) {
     return;
   }
@@ -1969,7 +1887,7 @@ function processShape(object, propertyName, packetData, entityCollection) {
   }
 }
 
-function processAvailability(entity, packet, entityCollection, sourceUri) {
+function processAvailability(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const packetData = packet.availability;
   if (!defined(packetData)) {
     return;
@@ -1990,13 +1908,7 @@ function processAvailability(entity, packet, entityCollection, sourceUri) {
   entity.availability = intervals;
 }
 
-function processAlignedAxis(
-  billboard,
-  packetData,
-  interval,
-  sourceUri,
-  entityCollection,
-) {
+function processAlignedAxis(billboard: any, packetData: any, interval: any, sourceUri: any, entityCollection: any, ) {
   if (!defined(packetData)) {
     return;
   }
@@ -2012,7 +1924,7 @@ function processAlignedAxis(
   );
 }
 
-function processBillboard(entity, packet, entityCollection, sourceUri) {
+function processBillboard(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const billboardData = packet.billboard;
   if (!defined(billboardData)) {
     return;
@@ -2204,7 +2116,7 @@ function processBillboard(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processBox(entity, packet, entityCollection, sourceUri) {
+function processBox(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const boxData = packet.box;
   if (!defined(boxData)) {
     return;
@@ -2307,7 +2219,7 @@ function processBox(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processCorridor(entity, packet, entityCollection, sourceUri) {
+function processCorridor(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const corridorData = packet.corridor;
   if (!defined(corridorData)) {
     return;
@@ -2479,7 +2391,7 @@ function processCorridor(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processCylinder(entity, packet, entityCollection, sourceUri) {
+function processCylinder(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const cylinderData = packet.cylinder;
   if (!defined(cylinderData)) {
     return;
@@ -2618,7 +2530,7 @@ function processCylinder(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processDocument(packet, dataSource) {
+function processDocument(packet: any, dataSource: any) {
   const version = packet.version;
   if (defined(version)) {
     if (typeof version === "string") {
@@ -2665,7 +2577,7 @@ function processDocument(packet, dataSource) {
   }
 }
 
-function processEllipse(entity, packet, entityCollection, sourceUri) {
+function processEllipse(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const ellipseData = packet.ellipse;
   if (!defined(ellipseData)) {
     return;
@@ -2858,7 +2770,7 @@ function processEllipse(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processEllipsoid(entity, packet, entityCollection, sourceUri) {
+function processEllipsoid(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const ellipsoidData = packet.ellipsoid;
   if (!defined(ellipsoidData)) {
     return;
@@ -3033,7 +2945,7 @@ function processEllipsoid(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processLabel(entity, packet, entityCollection, sourceUri) {
+function processLabel(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const labelData = packet.label;
   if (!defined(labelData)) {
     return;
@@ -3236,7 +3148,7 @@ function processLabel(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processModel(entity, packet, entityCollection, sourceUri) {
+function processModel(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const modelData = packet.model;
   if (!defined(modelData)) {
     return;
@@ -3441,13 +3353,7 @@ function processModel(entity, packet, entityCollection, sourceUri) {
   }
 }
 
-function processNodeTransformations(
-  model,
-  nodeTransformationsData,
-  constrainedInterval,
-  sourceUri,
-  entityCollection,
-) {
+function processNodeTransformations(model: any, nodeTransformationsData: any, constrainedInterval: any, sourceUri: any, entityCollection: any, ) {
   let combinedInterval = intervalFromString(nodeTransformationsData.interval);
   if (defined(constrainedInterval)) {
     if (defined(combinedInterval)) {
@@ -3518,13 +3424,7 @@ function processNodeTransformations(
   }
 }
 
-function processArticulations(
-  model,
-  articulationsData,
-  constrainedInterval,
-  sourceUri,
-  entityCollection,
-) {
+function processArticulations(model: any, articulationsData: any, constrainedInterval: any, sourceUri: any, entityCollection: any, ) {
   let combinedInterval = intervalFromString(articulationsData.interval);
   if (defined(constrainedInterval)) {
     if (defined(combinedInterval)) {
@@ -3571,7 +3471,7 @@ function processArticulations(
   }
 }
 
-function processPath(entity, packet, entityCollection, sourceUri) {
+function processPath(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const pathData = packet.path;
   if (!defined(pathData)) {
     return;
@@ -3647,7 +3547,7 @@ function processPath(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processPoint(entity, packet, entityCollection, sourceUri) {
+function processPoint(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const pointData = packet.point;
   if (!defined(pointData)) {
     return;
@@ -3751,7 +3651,7 @@ function processPoint(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function PolygonHierarchyProperty(polygon) {
+function PolygonHierarchyProperty(polygon: any) {
   this.polygon = polygon;
   this._definitionChanged = new Event();
 }
@@ -3808,7 +3708,7 @@ PolygonHierarchyProperty.prototype.equals = function (other) {
   );
 };
 
-function processPolygon(entity, packet, entityCollection, sourceUri) {
+function processPolygon(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const polygonData = packet.polygon;
   if (!defined(polygonData)) {
     return;
@@ -4021,11 +3921,11 @@ function processPolygon(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function adaptFollowSurfaceToArcType(followSurface) {
+function adaptFollowSurfaceToArcType(followSurface: any) {
   return followSurface ? ArcType.GEODESIC : ArcType.NONE;
 }
 
-function processPolyline(entity, packet, entityCollection, sourceUri) {
+function processPolyline(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const polylineData = packet.polyline;
   if (!defined(polylineData)) {
     return;
@@ -4160,7 +4060,7 @@ function processPolyline(entity, packet, entityCollection, sourceUri) {
   }
 }
 
-function processPolylineVolume(entity, packet, entityCollection, sourceUri) {
+function processPolylineVolume(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const polylineVolumeData = packet.polylineVolume;
   if (!defined(polylineVolumeData)) {
     return;
@@ -4275,7 +4175,7 @@ function processPolylineVolume(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processRectangle(entity, packet, entityCollection, sourceUri) {
+function processRectangle(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const rectangleData = packet.rectangle;
   if (!defined(rectangleData)) {
     return;
@@ -4450,7 +4350,7 @@ function processRectangle(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processTileset(entity, packet, entityCollection, sourceUri) {
+function processTileset(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const tilesetData = packet.tileset;
   if (!defined(tilesetData)) {
     return;
@@ -4491,7 +4391,7 @@ function processTileset(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processWall(entity, packet, entityCollection, sourceUri) {
+function processWall(entity: any, packet: any, entityCollection: any, sourceUri: any) {
   const wallData = packet.wall;
   if (!defined(wallData)) {
     return;
@@ -4598,13 +4498,7 @@ function processWall(entity, packet, entityCollection, sourceUri) {
   );
 }
 
-function processCzmlPacket(
-  packet,
-  entityCollection,
-  updaterFunctions,
-  sourceUri,
-  dataSource,
-) {
+function processCzmlPacket(packet: any, entityCollection: any, updaterFunctions: any, sourceUri: any, dataSource: any, ) {
   let objectId = packet.id;
   if (!defined(objectId)) {
     objectId = createGuid();
@@ -4638,7 +4532,7 @@ function processCzmlPacket(
   currentId = undefined;
 }
 
-function updateClock(dataSource) {
+function updateClock(dataSource: any) {
   let clock;
   const clockPacket = dataSource._documentPacket.clock;
   if (!defined(clockPacket)) {
@@ -4704,8 +4598,12 @@ function updateClock(dataSource) {
   return false;
 }
 
-function load(dataSource, czml, options, clear) {
-  ;
+function load(dataSource: any, czml: any, options: any, clear: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(czml)) {
+    throw new DeveloperError("czml is required.");
+  }
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -4752,7 +4650,7 @@ function load(dataSource, czml, options, clear) {
     });
 }
 
-function loadCzml(dataSource, czml, sourceUri, clear) {
+function loadCzml(dataSource: any, czml: any, sourceUri: any, clear: any) {
   DataSource.setLoading(dataSource, true);
   const entityCollection = dataSource._entityCollection;
 
@@ -4815,7 +4713,7 @@ function DocumentPacket() {
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
  */
-function CzmlDataSource(name) {
+function CzmlDataSource(name: any) {
   this._name = name;
   this._changed = new Event();
   this._error = new Event();
@@ -4940,7 +4838,11 @@ Object.defineProperties(CzmlDataSource.prototype, {
       return this._entityCluster;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value must be defined.");
+      }
+      //>>includeEnd('debug');
       this._entityCluster = value;
     },
   },
@@ -5131,5 +5033,4 @@ CzmlDataSource._processCzml = function (
     );
   }
 };
-export { CzmlDataSource };
 export default CzmlDataSource;

@@ -55,7 +55,7 @@ const defaultImageSize = new Cartesian2(1.0, 1.0);
  * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System.html&label=Showcases|Particle Systems Tutorial Demo}
  * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
  */
-function ParticleSystem(options) {
+function ParticleSystem(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -164,7 +164,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._emitter;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      //>>includeEnd('debug');
       this._emitter = value;
     },
   },
@@ -194,7 +196,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._modelMatrix;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      //>>includeEnd('debug');
       this._matrixDirty =
         this._matrixDirty || !Matrix4.equals(this._modelMatrix, value);
       Matrix4.clone(value, this._modelMatrix);
@@ -211,7 +215,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._emitterModelMatrix;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      //>>includeEnd('debug');
       this._matrixDirty =
         this._matrixDirty || !Matrix4.equals(this._emitterModelMatrix, value);
       Matrix4.clone(value, this._emitterModelMatrix);
@@ -228,7 +234,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._startColor;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      //>>includeEnd('debug');
       Color.clone(value, this._startColor);
     },
   },
@@ -243,7 +251,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._endColor;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      //>>includeEnd('debug');
       Color.clone(value, this._endColor);
     },
   },
@@ -258,7 +268,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._startScale;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0.0);
+      //>>includeEnd('debug');
       this._startScale = value;
     },
   },
@@ -273,7 +285,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._endScale;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0.0);
+      //>>includeEnd('debug');
       this._endScale = value;
     },
   },
@@ -288,7 +302,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._emissionRate;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0.0);
+      //>>includeEnd('debug');
       this._emissionRate = value;
       this._updateParticlePool = true;
     },
@@ -304,7 +320,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._minimumSpeed;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0.0);
+      //>>includeEnd('debug');
       this._minimumSpeed = value;
     },
   },
@@ -319,7 +337,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._maximumSpeed;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0.0);
+      //>>includeEnd('debug');
       this._maximumSpeed = value;
     },
   },
@@ -334,7 +354,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._minimumParticleLife;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0.0);
+      //>>includeEnd('debug');
       this._minimumParticleLife = value;
     },
   },
@@ -349,7 +371,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._maximumParticleLife;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0.0);
+      //>>includeEnd('debug');
       this._maximumParticleLife = value;
       this._updateParticlePool = true;
     },
@@ -365,7 +389,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._minimumMass;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0.0);
+      //>>includeEnd('debug');
       this._minimumMass = value;
     },
   },
@@ -380,7 +406,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._maximumMass;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0.0);
+      //>>includeEnd('debug');
       this._maximumMass = value;
     },
   },
@@ -395,7 +423,11 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._minimumImageSize;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("value", value);
+      Check.typeOf.number.greaterThanOrEquals("value.x", value.x, 0.0);
+      Check.typeOf.number.greaterThanOrEquals("value.y", value.y, 0.0);
+      //>>includeEnd('debug');
       this._minimumImageSize = value;
     },
   },
@@ -410,7 +442,11 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._maximumImageSize;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("value", value);
+      Check.typeOf.number.greaterThanOrEquals("value.x", value.x, 0.0);
+      Check.typeOf.number.greaterThanOrEquals("value.y", value.y, 0.0);
+      //>>includeEnd('debug');
       this._maximumImageSize = value;
     },
   },
@@ -425,7 +461,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._sizeInMeters;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("value", value);
+      //>>includeEnd('debug');
       this._sizeInMeters = value;
     },
   },
@@ -440,7 +478,9 @@ Object.defineProperties(ParticleSystem.prototype, {
       return this._lifetime;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0.0);
+      //>>includeEnd('debug');
       this._lifetime = value;
     },
   },
@@ -466,7 +506,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   },
 });
 
-function updateParticlePool(system) {
+function updateParticlePool(system: any) {
   const emissionRate = system._emissionRate;
   const life = system._maximumParticleLife;
 
@@ -506,7 +546,7 @@ function updateParticlePool(system) {
   system._particleEstimate = particleEstimate;
 }
 
-function getOrCreateParticle(system) {
+function getOrCreateParticle(system: any) {
   // Try to reuse an existing particle from the pool.
   let particle = system._particlePool.pop();
   if (!defined(particle)) {
@@ -516,11 +556,11 @@ function getOrCreateParticle(system) {
   return particle;
 }
 
-function addParticleToPool(system, particle) {
+function addParticleToPool(system: any, particle: any) {
   system._particlePool.push(particle);
 }
 
-function freeParticlePool(system) {
+function freeParticlePool(system: any) {
   const particles = system._particles;
   const particlePool = system._particlePool;
   const billboardCollection = system._billboardCollection;
@@ -537,13 +577,13 @@ function freeParticlePool(system) {
   particlePool.length = start;
 }
 
-function removeBillboard(particle) {
+function removeBillboard(particle: any) {
   if (defined(particle._billboard)) {
     particle._billboard.show = false;
   }
 }
 
-function updateBillboard(system, particle) {
+function updateBillboard(system: any, particle: any) {
   let billboard = particle._billboard;
   if (!defined(billboard)) {
     billboard = particle._billboard = system._billboardCollection.add({
@@ -587,7 +627,7 @@ function updateBillboard(system, particle) {
   );
 }
 
-function addParticle(system, particle) {
+function addParticle(system: any, particle: any) {
   particle.startColor = Color.clone(system._startColor, particle.startColor);
   particle.endColor = Color.clone(system._endColor, particle.endColor);
   particle.startScale = system._startScale;
@@ -623,7 +663,7 @@ function addParticle(system, particle) {
   system._particles.push(particle);
 }
 
-function calculateNumberToEmit(system, dt) {
+function calculateNumberToEmit(system: any, dt: any) {
   // This emitter is finished if it exceeds it's lifetime.
   if (system._isComplete) {
     return 0;
@@ -835,12 +875,11 @@ ParticleSystem.prototype.destroy = function () {
  * @param {number} dt The time in seconds since the last update.
  *
  * @example
- * function applyGravity(particle, dt) {
+ * function applyGravity(particle: any, dt: any) {
  *    const position = particle.position;
  *    const gravityVector = Cesium.Cartesian3.normalize(position, new Cesium.Cartesian3());
  *    Cesium.Cartesian3.multiplyByScalar(gravityVector, GRAVITATIONAL_CONSTANT * dt, gravityVector);
  *    particle.velocity = Cesium.Cartesian3.add(particle.velocity, gravityVector, particle.velocity);
  * }
  */
-export { ParticleSystem };
 export default ParticleSystem;

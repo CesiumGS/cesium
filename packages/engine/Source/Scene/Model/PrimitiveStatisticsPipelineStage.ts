@@ -51,7 +51,7 @@ PrimitiveStatisticsPipelineStage.process = function (
   // - FeatureIdPipelineStage (feature ID implicit ranges only)
 };
 
-function countGeometry(statistics, primitive) {
+function countGeometry(statistics: any, primitive: any) {
   const indicesCount = defined(primitive.indices)
     ? primitive.indices.count
     : ModelUtility.getAttributeBySemantic(primitive, "POSITION").count;
@@ -88,7 +88,7 @@ function countGeometry(statistics, primitive) {
   }
 }
 
-function countTriangles(primitiveType, indicesCount) {
+function countTriangles(primitiveType: any, indicesCount: any) {
   switch (primitiveType) {
     case PrimitiveType.TRIANGLES:
       return indicesCount / 3;
@@ -100,7 +100,7 @@ function countTriangles(primitiveType, indicesCount) {
   }
 }
 
-function count2DPositions(statistics, runtimePrimitive) {
+function count2DPositions(statistics: any, runtimePrimitive: any) {
   const buffer2D = runtimePrimitive.positionBuffer2D;
 
   // The 2D buffer is only created the first time the scene switches to 2D mode.
@@ -118,7 +118,7 @@ function count2DPositions(statistics, runtimePrimitive) {
   }
 }
 
-function countMorphTargetAttributes(statistics, primitive) {
+function countMorphTargetAttributes(statistics: any, primitive: any) {
   const morphTargets = primitive.morphTargets;
   if (!defined(morphTargets)) {
     return;
@@ -140,7 +140,7 @@ function countMorphTargetAttributes(statistics, primitive) {
   }
 }
 
-function countMaterialTextures(statistics, material) {
+function countMaterialTextures(statistics: any, material: any) {
   // gltf-pipeline provides a default material so material will always be
   // defined.
   const textureReaders = getAllTextureReaders(material);
@@ -155,7 +155,7 @@ function countMaterialTextures(statistics, material) {
   }
 }
 
-function getAllTextureReaders(material) {
+function getAllTextureReaders(material: any) {
   const metallicRoughness = material.metallicRoughness;
   const textureReaders = [
     material.emissiveTexture,
@@ -174,7 +174,7 @@ function getAllTextureReaders(material) {
   return textureReaders;
 }
 
-function countFeatureIdTextures(statistics, featureIdSets) {
+function countFeatureIdTextures(statistics: any, featureIdSets: any) {
   // Feature ID attributes are handled by countGeometry()
 
   // Feature ID implicit ranges are handled in the FeatureIdPipelineStage,
@@ -192,7 +192,7 @@ function countFeatureIdTextures(statistics, featureIdSets) {
   }
 }
 
-function countBinaryMetadata(statistics, model) {
+function countBinaryMetadata(statistics: any, model: any) {
   // Add metadata memory to the statistics. Note that feature ID memory is
   // handled by the Feature ID pipeline stage.
   const structuralMetadata = model.structuralMetadata;
@@ -226,7 +226,7 @@ function countBinaryMetadata(statistics, model) {
   }
 }
 
-function countPropertyTextures(statistics, structuralMetadata) {
+function countPropertyTextures(statistics: any, structuralMetadata: any) {
   const propertyTextures = structuralMetadata.propertyTextures;
   if (!defined(propertyTextures)) {
     return;
@@ -250,5 +250,4 @@ function countPropertyTextures(statistics, structuralMetadata) {
   }
 }
 
-export { PrimitiveStatisticsPipelineStage };
 export default PrimitiveStatisticsPipelineStage;

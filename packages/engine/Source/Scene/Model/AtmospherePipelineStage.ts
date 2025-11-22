@@ -61,5 +61,4 @@ AtmospherePipelineStage.process = function (
   };
 };
 
-export { AtmospherePipelineStage };
 export default AtmospherePipelineStage;

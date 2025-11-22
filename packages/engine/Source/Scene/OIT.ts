@@ -21,7 +21,7 @@ import BlendFunction from "./BlendFunction.js";
  * @constructor
  * @param {Context} context
  */
-function OIT(context) {
+function OIT(context: any) {
   this._numSamples = 1;
   // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
   this._translucentMultipassSupport = false;
@@ -96,7 +96,7 @@ function OIT(context) {
  * @private
  * @param {OIT} oit
  */
-function destroyTextures(oit) {
+function destroyTextures(oit: any) {
   oit._accumulationTexture =
     oit._accumulationTexture &&
     !oit._accumulationTexture.isDestroyed() &&
@@ -111,7 +111,7 @@ function destroyTextures(oit) {
  * @private
  * @param {OIT} oit
  */
-function destroyFramebuffers(oit) {
+function destroyFramebuffers(oit: any) {
   oit._translucentFBO.destroy();
   oit._alphaFBO.destroy();
   oit._adjustTranslucentFBO.destroy();
@@ -122,7 +122,7 @@ function destroyFramebuffers(oit) {
  * @private
  * @param {OIT} oit
  */
-function destroyResources(oit) {
+function destroyResources(oit: any) {
   destroyTextures(oit);
   destroyFramebuffers(oit);
 }
@@ -134,7 +134,7 @@ function destroyResources(oit) {
  * @param {number} width
  * @param {number} height
  */
-function updateTextures(oit, context, width, height) {
+function updateTextures(oit: any, context: any, width: any, height: any) {
   destroyTextures(oit);
 
   oit._accumulationTexture = new Texture({
@@ -161,7 +161,7 @@ function updateTextures(oit, context, width, height) {
  * @param {Context} context
  * @returns {boolean}
  */
-function updateFramebuffers(oit, context) {
+function updateFramebuffers(oit: any, context: any) {
   destroyFramebuffers(oit);
 
   const completeFBO = WebGLConstants.FRAMEBUFFER_COMPLETE;
@@ -438,12 +438,7 @@ const translucentAlphaBlend = {
   functionDestinationAlpha: BlendFunction.ONE_MINUS_SOURCE_ALPHA,
 };
 
-function getTranslucentRenderState(
-  context,
-  translucentBlending,
-  cache,
-  renderState,
-) {
+function getTranslucentRenderState(context: any, translucentBlending: any, cache: any, renderState: any, ) {
   let translucentState = cache[renderState.id];
   if (!defined(translucentState)) {
     const rs = RenderState.getState(renderState);
@@ -457,7 +452,7 @@ function getTranslucentRenderState(
   return translucentState;
 }
 
-function getTranslucentMRTRenderState(oit, context, renderState) {
+function getTranslucentMRTRenderState(oit: any, context: any, renderState: any) {
   return getTranslucentRenderState(
     context,
     translucentMRTBlend,
@@ -466,7 +461,7 @@ function getTranslucentMRTRenderState(oit, context, renderState) {
   );
 }
 
-function getTranslucentColorRenderState(oit, context, renderState) {
+function getTranslucentColorRenderState(oit: any, context: any, renderState: any) {
   return getTranslucentRenderState(
     context,
     translucentColorBlend,
@@ -475,7 +470,7 @@ function getTranslucentColorRenderState(oit, context, renderState) {
   );
 }
 
-function getTranslucentAlphaRenderState(oit, context, renderState) {
+function getTranslucentAlphaRenderState(oit: any, context: any, renderState: any) {
   return getTranslucentRenderState(
     context,
     translucentAlphaBlend,
@@ -508,7 +503,7 @@ const alphaShaderSource =
  * @param {string} source
  * @returns {ShaderProgram}
  */
-function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
+function getTranslucentShaderProgram(context: any, shaderProgram: any, keyword: any, source: any) {
   const { shaderCache } = context;
   const shader = shaderCache.getDerivedShaderProgram(shaderProgram, keyword);
   if (defined(shader)) {
@@ -574,7 +569,7 @@ function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
   });
 }
 
-function getTranslucentMRTShaderProgram(context, shaderProgram) {
+function getTranslucentMRTShaderProgram(context: any, shaderProgram: any) {
   return getTranslucentShaderProgram(
     context,
     shaderProgram,
@@ -583,7 +578,7 @@ function getTranslucentMRTShaderProgram(context, shaderProgram) {
   );
 }
 
-function getTranslucentColorShaderProgram(context, shaderProgram) {
+function getTranslucentColorShaderProgram(context: any, shaderProgram: any) {
   return getTranslucentShaderProgram(
     context,
     shaderProgram,
@@ -592,7 +587,7 @@ function getTranslucentColorShaderProgram(context, shaderProgram) {
   );
 }
 
-function getTranslucentAlphaShaderProgram(context, shaderProgram) {
+function getTranslucentAlphaShaderProgram(context: any, shaderProgram: any) {
   return getTranslucentShaderProgram(
     context,
     shaderProgram,
@@ -606,7 +601,7 @@ function getTranslucentAlphaShaderProgram(context, shaderProgram) {
  * @param {DrawCommand} command
  * @param {Context} context
  * @param {*} result
- * @returns {any}
+ * @returns {*}
  */
 OIT.prototype.createDerivedCommands = function (command, context, result) {
   if (!defined(result)) {
@@ -706,14 +701,7 @@ OIT.prototype.createDerivedCommands = function (command, context, result) {
  * @param {DrawCommand[]} commands
  * @param {InvertClassification} invertClassification
  */
-function executeTranslucentCommandsSortedMultipass(
-  oit,
-  scene,
-  executeFunction,
-  passState,
-  commands,
-  invertClassification,
-) {
+function executeTranslucentCommandsSortedMultipass(oit: any, scene: any, executeFunction: any, passState: any, commands: any, invertClassification: any, ) {
   const { context, frameState } = scene;
   const { useLogDepth, shadowState } = frameState;
   const useHdr = scene._hdr;
@@ -783,14 +771,7 @@ function executeTranslucentCommandsSortedMultipass(
  * @param {DrawCommand[]} commands
  * @param {InvertClassification} invertClassification
  */
-function executeTranslucentCommandsSortedMRT(
-  oit,
-  scene,
-  executeFunction,
-  passState,
-  commands,
-  invertClassification,
-) {
+function executeTranslucentCommandsSortedMRT(oit: any, scene: any, executeFunction: any, passState: any, commands: any, invertClassification: any, ) {
   const { context, frameState } = scene;
   const { useLogDepth, shadowState } = frameState;
   const useHdr = scene._hdr;
@@ -943,5 +924,4 @@ OIT.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { OIT };
 export default OIT;

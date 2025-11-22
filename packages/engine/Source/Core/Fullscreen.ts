@@ -246,5 +246,4 @@ Fullscreen.exitFullscreen = function () {
 
 //For unit tests
 Fullscreen._names = _names;
-export { Fullscreen };
 export default Fullscreen;

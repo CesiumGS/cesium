@@ -8,8 +8,12 @@ import Quaternion from "../Core/Quaternion.js";
 /**
  * @private
  */
-function DeviceOrientationCameraController(scene) {
-  ;
+function DeviceOrientationCameraController(scene: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   this._scene = scene;
 
@@ -23,7 +27,7 @@ function DeviceOrientationCameraController(scene) {
 
   const that = this;
 
-  function callback(e) {
+  function callback(e: any) {
     const alpha = e.alpha;
     if (!defined(alpha)) {
       that._alpha = undefined;
@@ -48,7 +52,7 @@ const scratchQuaternion1 = new Quaternion();
 const scratchQuaternion2 = new Quaternion();
 const scratchMatrix3 = new Matrix3();
 
-function rotate(camera, alpha, beta, gamma) {
+function rotate(camera: any, alpha: any, beta: any, gamma: any) {
   const direction = camera.direction;
   const right = camera.right;
   const up = camera.up;
@@ -113,5 +117,4 @@ DeviceOrientationCameraController.prototype.destroy = function () {
   this._removeListener();
   return destroyObject(this);
 };
-export { DeviceOrientationCameraController };
 export default DeviceOrientationCameraController;

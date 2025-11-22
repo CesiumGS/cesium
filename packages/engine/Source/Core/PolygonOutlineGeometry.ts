@@ -23,13 +23,7 @@ import WindingOrder from "./WindingOrder.js";
 const createGeometryFromPositionsPositions = [];
 const createGeometryFromPositionsSubdivided = [];
 
-function createGeometryFromPositions(
-  ellipsoid,
-  positions,
-  minDistance,
-  perPositionHeight,
-  arcType,
-) {
+function createGeometryFromPositions(ellipsoid: any, positions: any, minDistance: any, perPositionHeight: any, arcType: any, ) {
   const tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
   const positions2D = tangentPlane.projectPointsOntoPlane(
     positions,
@@ -133,13 +127,7 @@ function createGeometryFromPositions(
   });
 }
 
-function createGeometryFromPositionsExtruded(
-  ellipsoid,
-  positions,
-  minDistance,
-  perPositionHeight,
-  arcType,
-) {
+function createGeometryFromPositionsExtruded(ellipsoid: any, positions: any, minDistance: any, perPositionHeight: any, arcType: any, ) {
   const tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
   const positions2D = tangentPlane.projectPointsOntoPlane(
     positions,
@@ -346,8 +334,26 @@ function createGeometryFromPositionsExtruded(
  * });
  * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
  */
-function PolygonOutlineGeometry(options) {
-  ;
+function PolygonOutlineGeometry(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.object("options.polygonHierarchy", options.polygonHierarchy);
+
+  if (options.perPositionHeight && defined(options.height)) {
+    throw new DeveloperError(
+      "Cannot use both options.perPositionHeight and options.height",
+    );
+  }
+  if (
+    defined(options.arcType) &&
+    options.arcType !== ArcType.GEODESIC &&
+    options.arcType !== ArcType.RHUMB
+  ) {
+    throw new DeveloperError(
+      "Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const polygonHierarchy = options.polygonHierarchy;
   const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
@@ -400,7 +406,10 @@ function PolygonOutlineGeometry(options) {
  * @returns {number[]} The array that was packed into
  */
 PolygonOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -440,7 +449,9 @@ const dummyOptions = {
  * @returns {PolygonOutlineGeometry} The modified result parameter or a new PolygonOutlineGeometry instance if one was not provided.
  */
 PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -515,7 +526,9 @@ PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
 PolygonOutlineGeometry.fromPositions = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.positions", options.positions);
+  //>>includeEnd('debug');
 
   const newOptions = {
     polygonHierarchy: {
@@ -659,5 +672,4 @@ PolygonOutlineGeometry.createGeometry = function (polygonGeometry) {
     offsetAttribute: polygonGeometry._offsetAttribute,
   });
 };
-export { PolygonOutlineGeometry };
 export default PolygonOutlineGeometry;

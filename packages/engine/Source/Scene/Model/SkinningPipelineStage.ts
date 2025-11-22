@@ -59,7 +59,7 @@ SkinningPipelineStage.process = function (renderResources, primitive) {
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
 
-function getMaximumAttributeSetIndex(primitive) {
+function getMaximumAttributeSetIndex(primitive: any) {
   let setIndex = -1;
   const attributes = primitive.attributes;
   const length = attributes.length;
@@ -79,7 +79,7 @@ function getMaximumAttributeSetIndex(primitive) {
   return setIndex;
 }
 
-function addGetSkinningMatrixFunction(shaderBuilder, primitive) {
+function addGetSkinningMatrixFunction(shaderBuilder: any, primitive: any) {
   shaderBuilder.addFunction(
     SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,
     SkinningPipelineStage.FUNCTION_SIGNATURE_GET_SKINNING_MATRIX,
@@ -115,5 +115,4 @@ function addGetSkinningMatrixFunction(shaderBuilder, primitive) {
   );
 }
 
-export { SkinningPipelineStage };
 export default SkinningPipelineStage;

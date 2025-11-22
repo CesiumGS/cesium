@@ -16,7 +16,7 @@ import ClearCommand from "../Renderer/ClearCommand.js";
  *
  * @private
  */
-function EdgeFramebuffer(options) {
+function EdgeFramebuffer(options: any) {
   options = options || {};
 
   // Create framebuffer manager with multiple render targets (MRT)
@@ -242,5 +242,4 @@ EdgeFramebuffer.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { EdgeFramebuffer };
 export default EdgeFramebuffer;

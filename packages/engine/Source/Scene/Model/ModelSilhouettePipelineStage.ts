@@ -106,5 +106,4 @@ ModelSilhouettePipelineStage.process = function (
   renderResources.hasSilhouette = true;
 };
 
-export { ModelSilhouettePipelineStage };
 export default ModelSilhouettePipelineStage;

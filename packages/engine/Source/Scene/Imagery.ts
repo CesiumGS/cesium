@@ -8,7 +8,7 @@ import ImageryState from "./ImageryState.js";
  * @alias Imagery
  * @private
  */
-function Imagery(imageryLayer, x, y, level, rectangle) {
+function Imagery(imageryLayer: any, x: any, y: any, level: any, rectangle: any) {
   this.imageryLayer = imageryLayer;
   this.x = x;
   this.y = y;
@@ -117,5 +117,4 @@ Imagery.prototype.processStateMachine = function (
     );
   }
 };
-export { Imagery };
 export default Imagery;

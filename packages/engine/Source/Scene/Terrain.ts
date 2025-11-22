@@ -40,8 +40,10 @@ import createWorldTerrainAsync from "../Core/createWorldTerrainAsync.js";
  *
  * @param {Promise<TerrainProvider>} terrainProviderPromise A promise which resolves to a terrain provider
  */
-function Terrain(terrainProviderPromise) {
-  ;
+function Terrain(terrainProviderPromise: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("terrainProviderPromise", terrainProviderPromise);
+  //>>includeEnd('debug');
 
   this._ready = false;
   this._provider = undefined;
@@ -203,7 +205,7 @@ Terrain.fromWorldBathymetry = function (options) {
   return new Terrain(createWorldBathymetryAsync(options));
 };
 
-function handleError(errorEvent, error) {
+function handleError(errorEvent: any, error: any) {
   if (errorEvent.numberOfListeners > 0) {
     errorEvent.raiseEvent(error);
   } else {
@@ -212,7 +214,7 @@ function handleError(errorEvent, error) {
   }
 }
 
-async function handlePromise(instance, promise) {
+async function handlePromise(instance: any, promise: any) {
   let provider;
   try {
     provider = await Promise.resolve(promise);
@@ -224,7 +226,6 @@ async function handlePromise(instance, promise) {
   }
 }
 
-export { Terrain };
 export default Terrain;
 
 /**

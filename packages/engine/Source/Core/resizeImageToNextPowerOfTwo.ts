@@ -10,7 +10,7 @@ import CesiumMath from "./Math.js";
  *
  * @private
  */
-function resizeImageToNextPowerOfTwo(image) {
+function resizeImageToNextPowerOfTwo(image: any) {
   const canvas = document.createElement("canvas");
   canvas.width = CesiumMath.nextPowerOfTwo(image.width);
   canvas.height = CesiumMath.nextPowerOfTwo(image.height);
@@ -28,5 +28,4 @@ function resizeImageToNextPowerOfTwo(image) {
   );
   return canvas;
 }
-export { resizeImageToNextPowerOfTwo };
 export default resizeImageToNextPowerOfTwo;

@@ -6,7 +6,7 @@
  *
  * @see DiscardMissingTileImagePolicy
  */
-function NeverTileDiscardPolicy(options) {}
+function NeverTileDiscardPolicy(options: any) {}
 
 /**
  * Determines if the discard policy is ready to process images.
@@ -25,5 +25,4 @@ NeverTileDiscardPolicy.prototype.isReady = function () {
 NeverTileDiscardPolicy.prototype.shouldDiscardImage = function (image) {
   return false;
 };
-export { NeverTileDiscardPolicy };
 export default NeverTileDiscardPolicy;

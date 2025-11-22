@@ -10,7 +10,7 @@ import Frozen from "./Frozen.js";
  * @alias GeometryAttributes
  * @constructor
  */
-function GeometryAttributes(options) {
+function GeometryAttributes(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -85,5 +85,4 @@ function GeometryAttributes(options) {
    */
   this.color = options.color;
 }
-export { GeometryAttributes };
 export default GeometryAttributes;

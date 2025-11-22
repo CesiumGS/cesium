@@ -11,7 +11,7 @@ import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
  *
  * @private
  */
-function ImplicitSubtreeCache(options) {
+function ImplicitSubtreeCache(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -53,7 +53,11 @@ ImplicitSubtreeCache.prototype.addSubtree = function (subtree) {
     const parentCoord = subtreeCoord.getParentSubtreeCoordinates();
     const parentNode = this.find(parentCoord);
 
-    ;
+    //>>includeStart('debug', pragmas.debug)
+    if (parentNode === undefined) {
+      throw new DeveloperError("parent node needs to exist");
+    }
+    //>>includeEnd('debug');
   }
 
   if (this._maximumSubtreeCount > 0) {
@@ -115,10 +119,9 @@ ImplicitSubtreeCache.comparator = function (a, b) {
  *
  * @private
  */
-function ImplicitSubtreeCacheNode(subtree, stamp) {
+function ImplicitSubtreeCacheNode(subtree: any, stamp: any) {
   this.subtree = subtree;
   this.stamp = stamp;
 }
 
-export { ImplicitSubtreeCache };
 export default ImplicitSubtreeCache;

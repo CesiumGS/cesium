@@ -28,24 +28,14 @@ const scratchTimeInterval = new TimeInterval();
 const subSampleCompositePropertyScratch = new TimeInterval();
 const subSampleIntervalPropertyScratch = new TimeInterval();
 
-function EntityData(entity) {
+function EntityData(entity: any) {
   this.entity = entity;
   this.polyline = undefined;
   this.index = undefined;
   this.updater = undefined;
 }
 
-function subSampleSampledProperty(
-  property,
-  start,
-  stop,
-  times,
-  updateTime,
-  referenceFrame,
-  maximumStep,
-  startingIndex,
-  result,
-) {
+function subSampleSampledProperty(property: any, start: any, stop: any, times: any, updateTime: any, referenceFrame: any, maximumStep: any, startingIndex: any, result: any, ) {
   let r = startingIndex;
   //Always step exactly on start (but only use it if it exists.)
   let tmp;
@@ -136,16 +126,7 @@ function subSampleSampledProperty(
   return r;
 }
 
-function subSampleCallbackPositionProperty(
-  property,
-  start,
-  stop,
-  updateTime,
-  referenceFrame,
-  maximumStep,
-  startingIndex,
-  result,
-) {
+function subSampleCallbackPositionProperty(property: any, start: any, stop: any, updateTime: any, referenceFrame: any, maximumStep: any, startingIndex: any, result: any, ) {
   let tmp;
   let i = 0;
   let index = startingIndex;
@@ -188,16 +169,7 @@ function subSampleCallbackPositionProperty(
   return index;
 }
 
-function subSampleGenericProperty(
-  property,
-  start,
-  stop,
-  updateTime,
-  referenceFrame,
-  maximumStep,
-  startingIndex,
-  result,
-) {
+function subSampleGenericProperty(property: any, start: any, stop: any, updateTime: any, referenceFrame: any, maximumStep: any, startingIndex: any, result: any, ) {
   let tmp;
   let i = 0;
   let index = startingIndex;
@@ -241,16 +213,7 @@ function subSampleGenericProperty(
   return index;
 }
 
-function subSampleIntervalProperty(
-  property,
-  start,
-  stop,
-  updateTime,
-  referenceFrame,
-  maximumStep,
-  startingIndex,
-  result,
-) {
+function subSampleIntervalProperty(property: any, start: any, stop: any, updateTime: any, referenceFrame: any, maximumStep: any, startingIndex: any, result: any, ) {
   subSampleIntervalPropertyScratch.start = start;
   subSampleIntervalPropertyScratch.stop = stop;
 
@@ -291,16 +254,7 @@ function subSampleIntervalProperty(
   return index;
 }
 
-function subSampleConstantProperty(
-  property,
-  start,
-  stop,
-  updateTime,
-  referenceFrame,
-  maximumStep,
-  startingIndex,
-  result,
-) {
+function subSampleConstantProperty(property: any, start: any, stop: any, updateTime: any, referenceFrame: any, maximumStep: any, startingIndex: any, result: any, ) {
   const tmp = property.getValueInReferenceFrame(
     start,
     referenceFrame,
@@ -312,16 +266,7 @@ function subSampleConstantProperty(
   return startingIndex;
 }
 
-function subSampleCompositeProperty(
-  property,
-  start,
-  stop,
-  updateTime,
-  referenceFrame,
-  maximumStep,
-  startingIndex,
-  result,
-) {
+function subSampleCompositeProperty(property: any, start: any, stop: any, updateTime: any, referenceFrame: any, maximumStep: any, startingIndex: any, result: any, ) {
   subSampleCompositePropertyScratch.start = start;
   subSampleCompositePropertyScratch.stop = stop;
 
@@ -364,16 +309,7 @@ function subSampleCompositeProperty(
   return index;
 }
 
-function reallySubSample(
-  property,
-  start,
-  stop,
-  updateTime,
-  referenceFrame,
-  maximumStep,
-  index,
-  result,
-) {
+function reallySubSample(property: any, start: any, stop: any, updateTime: any, referenceFrame: any, maximumStep: any, index: any, result: any, ) {
   //Unwrap any references until we have the actual property.
   while (property instanceof ReferenceProperty) {
     property = property.resolvedProperty;
@@ -456,15 +392,7 @@ function reallySubSample(
   return index;
 }
 
-function subSample(
-  property,
-  start,
-  stop,
-  updateTime,
-  referenceFrame,
-  maximumStep,
-  result,
-) {
+function subSample(property: any, start: any, stop: any, updateTime: any, referenceFrame: any, maximumStep: any, result: any, ) {
   if (!defined(result)) {
     result = [];
   }
@@ -484,7 +412,7 @@ function subSample(
 }
 
 const toFixedScratch = new Matrix3();
-function PolylineUpdater(scene, referenceFrame) {
+function PolylineUpdater(scene: any, referenceFrame: any) {
   this._unusedIndexes = [];
   this._polylineCollection = new PolylineCollection();
   this._scene = scene;
@@ -648,8 +576,15 @@ PolylineUpdater.prototype.destroy = function () {
  * @param {Scene} scene The scene the primitives will be rendered in.
  * @param {EntityCollection} entityCollection The entityCollection to visualize.
  */
-function PathVisualizer(scene, entityCollection) {
-  ;
+function PathVisualizer(scene: any, entityCollection: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  if (!defined(entityCollection)) {
+    throw new DeveloperError("entityCollection is required.");
+  }
+  //>>includeEnd('debug');
 
   entityCollection.collectionChanged.addEventListener(
     PathVisualizer.prototype._onCollectionChanged,
@@ -672,7 +607,11 @@ function PathVisualizer(scene, entityCollection) {
  * @returns {boolean} This function always returns true.
  */
 PathVisualizer.prototype.update = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  //>>includeEnd('debug');
 
   const updaters = this._updaters;
   for (const key in updaters) {
@@ -809,5 +748,4 @@ PathVisualizer.prototype._onCollectionChanged = function (
 
 //for testing
 PathVisualizer._subSample = subSample;
-export { PathVisualizer };
 export default PathVisualizer;

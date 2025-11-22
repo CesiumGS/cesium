@@ -36,7 +36,7 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function VoxelCell(primitive, tileIndex, sampleIndex) {
+function VoxelCell(primitive: any, tileIndex: any, sampleIndex: any) {
   this._primitive = primitive;
   this._tileIndex = tileIndex;
   this._sampleIndex = sampleIndex;
@@ -63,7 +63,12 @@ VoxelCell.fromKeyframeNode = function (
   sampleIndex,
   keyframeNode,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("primitive", primitive);
+  Check.typeOf.number("tileIndex", tileIndex);
+  Check.typeOf.number("sampleIndex", sampleIndex);
+  Check.typeOf.object("keyframeNode", keyframeNode);
+  //>>includeEnd('debug');
 
   const voxelCell = new VoxelCell(primitive, tileIndex, sampleIndex);
   const { spatialNode, content } = keyframeNode;
@@ -84,7 +89,7 @@ VoxelCell.fromKeyframeNode = function (
  * @param {number} sampleIndex
  * @returns {object}
  */
-function getMetadataForSample(primitive, content, sampleIndex) {
+function getMetadataForSample(primitive: any, content: any, sampleIndex: any) {
   if (!defined(content) || !defined(content.metadata)) {
     return undefined;
   }
@@ -113,7 +118,7 @@ const tileUvScratch = new Cartesian3();
  * @param {OrientedBoundingBox} result
  * @returns {OrientedBoundingBox}
  */
-function getOrientedBoundingBox(primitive, spatialNode, sampleIndex, result) {
+function getOrientedBoundingBox(primitive: any, spatialNode: any, sampleIndex: any, result: any) {
   // Convert the sample index into a 3D tile coordinate
   // Note: dimensions from the spatialNode include padding
   const paddedDimensions = spatialNode.dimensions;
@@ -252,7 +257,7 @@ VoxelCell.prototype.getNames = function () {
  * Returns a copy of the value of the metadata in the cell with the given name.
  *
  * @param {string} name The case-sensitive name of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @example
  * // Display all the properties for a voxel cell in the console log.
@@ -266,5 +271,4 @@ VoxelCell.prototype.getProperty = function (name) {
   return this._metadata[name];
 };
 
-export { VoxelCell };
 export default VoxelCell;

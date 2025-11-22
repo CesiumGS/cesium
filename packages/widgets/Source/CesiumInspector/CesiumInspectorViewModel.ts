@@ -14,7 +14,7 @@ import {
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 
-function frustumStatisticsToString(statistics) {
+function frustumStatisticsToString(statistics: any) {
   let str;
   if (defined(statistics)) {
     str = "Command Statistics";
@@ -45,7 +45,7 @@ function frustumStatisticsToString(statistics) {
   return str;
 }
 
-function boundDepthFrustum(lower, upper, proposed) {
+function boundDepthFrustum(lower: any, upper: any, proposed: any) {
   let bounded = Math.min(proposed, upper);
   bounded = Math.max(bounded, lower);
   return bounded;
@@ -62,8 +62,16 @@ const scratchPickCartesian = new Cartesian3();
  * @param {Scene} scene The scene instance to use.
  * @param {Element} performanceContainer The instance to use for performance container.
  */
-function CesiumInspectorViewModel(scene, performanceContainer) {
-  ;
+function CesiumInspectorViewModel(scene: any, performanceContainer: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required");
+  }
+
+  if (!defined(performanceContainer)) {
+    throw new DeveloperError("performanceContainer is required");
+  }
+  //>>includeEnd('debug');
 
   const that = this;
   const canvas = scene.canvas;
@@ -479,7 +487,7 @@ function CesiumInspectorViewModel(scene, performanceContainer) {
       that._scene.requestRender();
     });
 
-  function pickPrimitive(e) {
+  function pickPrimitive(e: any) {
     const newPick = that._scene.pick({
       x: e.position.x,
       y: e.position.y,
@@ -511,7 +519,7 @@ function CesiumInspectorViewModel(scene, performanceContainer) {
       }
     });
 
-  function selectTile(e) {
+  function selectTile(e: any) {
     let selectedTile;
     const ellipsoid = globe.ellipsoid;
 
@@ -969,5 +977,4 @@ CesiumInspectorViewModel.prototype.destroy = function () {
   this._pickTileActiveSubscription.dispose();
   return destroyObject(this);
 };
-export { CesiumInspectorViewModel };
 export default CesiumInspectorViewModel;

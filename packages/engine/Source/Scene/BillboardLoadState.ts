@@ -41,5 +41,4 @@ const BillboardLoadState = Object.freeze({
   FAILED: 5,
 });
 
-export { BillboardLoadState };
 export default BillboardLoadState;

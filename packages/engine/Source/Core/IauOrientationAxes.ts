@@ -18,7 +18,7 @@ import Quaternion from "./Quaternion.js";
  *
  * @private
  */
-function IauOrientationAxes(computeFunction) {
+function IauOrientationAxes(computeFunction: any) {
   if (!defined(computeFunction) || typeof computeFunction !== "function") {
     computeFunction = Iau2000Orientation.ComputeMoon;
   }
@@ -30,7 +30,7 @@ const xAxisScratch = new Cartesian3();
 const yAxisScratch = new Cartesian3();
 const zAxisScratch = new Cartesian3();
 
-function computeRotationMatrix(alpha, delta, result) {
+function computeRotationMatrix(alpha: any, delta: any, result: any) {
   const xAxis = xAxisScratch;
   xAxis.x = Math.cos(alpha + CesiumMath.PI_OVER_TWO);
   xAxis.y = Math.sin(alpha + CesiumMath.PI_OVER_TWO);
@@ -102,5 +102,4 @@ IauOrientationAxes.prototype.evaluate = function (date, result) {
  * @returns {IauOrientationParameters} The orientation parameters.
  * @private
  */
-export { IauOrientationAxes };
 export default IauOrientationAxes;

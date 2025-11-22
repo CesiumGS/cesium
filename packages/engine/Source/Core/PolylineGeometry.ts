@@ -20,7 +20,7 @@ import VertexFormat from "./VertexFormat.js";
 
 const scratchInterpolateColorsArray = [];
 
-function interpolateColors(p0, p1, color0, color1, numPoints) {
+function interpolateColors(p0: any, p1: any, color0: any, color1: any, numPoints: any) {
   const colors = scratchInterpolateColorsArray;
   colors.length = numPoints;
   let i;
@@ -97,14 +97,28 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  * });
  * const geometry = Cesium.PolylineGeometry.createGeometry(polyline);
  */
-function PolylineGeometry(options) {
+function PolylineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
   const colors = options.colors;
   const width = options.width ?? 1.0;
   const colorsPerVertex = options.colorsPerVertex ?? false;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(positions) || positions.length < 2) {
+    throw new DeveloperError("At least two positions are required.");
+  }
+  if (typeof width !== "number") {
+    throw new DeveloperError("width must be a number");
+  }
+  if (
+    defined(colors) &&
+    ((colorsPerVertex && colors.length < positions.length) ||
+      (!colorsPerVertex && colors.length < positions.length - 1))
+  ) {
+    throw new DeveloperError("colors has an invalid length.");
+  }
+  //>>includeEnd('debug');
 
   this._positions = positions;
   this._colors = colors;
@@ -140,7 +154,14 @@ function PolylineGeometry(options) {
  * @returns {number[]} The array that was packed into
  */
 PolylineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -198,7 +219,11 @@ const scratchOptions = {
  * @returns {PolylineGeometry} The modified result parameter or a new PolylineGeometry instance if one was not provided.
  */
 PolylineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -545,5 +570,4 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
     geometryType: GeometryType.POLYLINES,
   });
 };
-export { PolylineGeometry };
 export default PolylineGeometry;

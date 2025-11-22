@@ -18,13 +18,7 @@ const distanceDisplayConditionScratch = new DistanceDisplayCondition();
 const defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
 // Encapsulates a Primitive and all the entities that it represents.
-function Batch(
-  orderedGroundPrimitives,
-  classificationType,
-  materialProperty,
-  zIndex,
-  asynchronous,
-) {
+function Batch(orderedGroundPrimitives: any, classificationType: any, materialProperty: any, zIndex: any, asynchronous: any, ) {
   let appearanceType;
   if (materialProperty instanceof ColorMaterialProperty) {
     appearanceType = PolylineColorAppearance;
@@ -331,11 +325,7 @@ Batch.prototype.destroy = function () {
 /**
  * @private
  */
-function StaticGroundPolylinePerMaterialBatch(
-  orderedGroundPrimitives,
-  classificationType,
-  asynchronous,
-) {
+function StaticGroundPolylinePerMaterialBatch(orderedGroundPrimitives: any, classificationType: any, asynchronous: any, ) {
   this._items = [];
   this._orderedGroundPrimitives = orderedGroundPrimitives;
   this._classificationType = classificationType;
@@ -431,5 +421,4 @@ StaticGroundPolylinePerMaterialBatch.prototype.removeAllPrimitives =
     }
     this._items.length = 0;
   };
-export { StaticGroundPolylinePerMaterialBatch };
 export default StaticGroundPolylinePerMaterialBatch;

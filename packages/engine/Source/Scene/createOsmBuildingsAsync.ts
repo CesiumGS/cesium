@@ -57,7 +57,7 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  *   console.log(`Error creating tileset: ${error}`);
  * }
  */
-async function createOsmBuildingsAsync(options) {
+async function createOsmBuildingsAsync(options: any) {
   const tileset = await Cesium3DTileset.fromIonAssetId(96188, options);
 
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -76,5 +76,4 @@ async function createOsmBuildingsAsync(options) {
   return tileset;
 }
 
-export { createOsmBuildingsAsync };
 export default createOsmBuildingsAsync;

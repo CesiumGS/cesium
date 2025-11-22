@@ -54,8 +54,11 @@ const DecodingState = {
  *
  * @private
  */
-function PointCloud(options) {
-  ;
+function PointCloud(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.object("options.arrayBuffer", options.arrayBuffer);
+  //>>includeEnd('debug');
 
   // Hold onto the payload until the render resources are created
   this._parsedContent = undefined;
@@ -194,7 +197,7 @@ Object.defineProperties(PointCloud.prototype, {
   },
 });
 
-function initialize(pointCloud, options) {
+function initialize(pointCloud: any, options: any) {
   const parsedContent = PntsParser.parse(
     options.arrayBuffer,
     options.byteOffset,
@@ -281,7 +284,7 @@ const scratchPosition = new Cartesian3();
 let randomNumberGenerator;
 let randomValues;
 
-function getRandomValues(samplesLength) {
+function getRandomValues(samplesLength: any) {
   // Use same random values across all runs
   if (!defined(randomValues)) {
     // Use MersenneTwister directly to avoid interfering with CesiumMath.nextRandomNumber()
@@ -295,7 +298,7 @@ function getRandomValues(samplesLength) {
   return randomValues;
 }
 
-function computeApproximateBoundingSphereFromPositions(positions) {
+function computeApproximateBoundingSphereFromPositions(positions: any) {
   const maximumSamplesLength = 20;
   const pointsLength = positions.length / 3;
   const samplesLength = Math.min(pointsLength, maximumSamplesLength);
@@ -316,7 +319,7 @@ function computeApproximateBoundingSphereFromPositions(positions) {
   return boundingSphere;
 }
 
-function prepareVertexAttribute(typedArray, name) {
+function prepareVertexAttribute(typedArray: any, name: any) {
   // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
   const componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
   if (
@@ -347,7 +350,7 @@ const numberOfAttributes = 4;
 const scratchClippingPlanesMatrix = new Matrix4();
 const scratchInverseTransposeClippingPlanesMatrix = new Matrix4();
 
-function createResources(pointCloud, frameState) {
+function createResources(pointCloud: any, frameState: any) {
   const context = frameState.context;
   const parsedContent = pointCloud._parsedContent;
   const pointsLength = pointCloud._pointsLength;
@@ -607,7 +610,7 @@ function createResources(pointCloud, frameState) {
   });
 }
 
-function createUniformMap(pointCloud, frameState) {
+function createUniformMap(pointCloud: any, frameState: any) {
   const context = frameState.context;
   const isQuantized = pointCloud._isQuantized;
   const isQuantizedDraco = pointCloud._isQuantizedDraco;
@@ -718,7 +721,7 @@ function createUniformMap(pointCloud, frameState) {
   pointCloud._drawCommand.uniformMap = uniformMap;
 }
 
-function getStyleablePropertyIds(source, propertyIds) {
+function getStyleablePropertyIds(source: any, propertyIds: any) {
   // Get all the property IDs used by this style
   const regex = /czm_3dtiles_property_(\d+)/g;
   let matches = regex.exec(source);
@@ -731,7 +734,7 @@ function getStyleablePropertyIds(source, propertyIds) {
   }
 }
 
-function getBuiltinPropertyNames(source, propertyNames) {
+function getBuiltinPropertyNames(source: any, propertyNames: any) {
   // Get all the builtin property names used by this style, ignoring the function signature
   source = source.slice(source.indexOf("\n"));
   const regex = /czm_3dtiles_builtin_property_(\w+)/g;
@@ -745,7 +748,7 @@ function getBuiltinPropertyNames(source, propertyNames) {
   }
 }
 
-function getVertexAttribute(vertexArray, index) {
+function getVertexAttribute(vertexArray: any, index: any) {
   const numberOfAttributes = vertexArray.numberOfAttributes;
   for (let i = 0; i < numberOfAttributes; ++i) {
     const attribute = vertexArray.getAttribute(i);
@@ -762,7 +765,7 @@ const builtinVariableSubstitutionMap = {
   NORMAL: "czm_3dtiles_builtin_property_NORMAL",
 };
 
-function createShaders(pointCloud, frameState, style) {
+function createShaders(pointCloud: any, frameState: any, style: any) {
   let i;
   let name;
   let attribute;
@@ -1160,7 +1163,7 @@ function createShaders(pointCloud, frameState, style) {
   }
 }
 
-function decodeDraco(pointCloud, context) {
+function decodeDraco(pointCloud: any, context: any) {
   if (pointCloud._decodingState === DecodingState.READY) {
     return false;
   }
@@ -1406,5 +1409,4 @@ PointCloud.prototype.destroy = function () {
   }
   return destroyObject(this);
 };
-export { PointCloud };
 export default PointCloud;

@@ -62,5 +62,4 @@ InterpolationAlgorithm.interpolateOrderZero =
  * @returns {number[]} The array of interpolated values, or the result parameter if one was provided.
  */
 InterpolationAlgorithm.interpolate = DeveloperError.throwInstantiationError;
-export { InterpolationAlgorithm };
 export default InterpolationAlgorithm;

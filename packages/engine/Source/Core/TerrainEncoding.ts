@@ -37,18 +37,7 @@ const SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
  *
  * @private
  */
-function TerrainEncoding(
-  center,
-  axisAlignedBoundingBox,
-  minimumHeight,
-  maximumHeight,
-  fromENU,
-  hasVertexNormals,
-  hasWebMercatorT,
-  hasGeodeticSurfaceNormals,
-  exaggeration,
-  exaggerationRelativeHeight,
-) {
+function TerrainEncoding(center: any, axisAlignedBoundingBox: any, minimumHeight: any, maximumHeight: any, fromENU: any, hasVertexNormals: any, hasWebMercatorT: any, hasGeodeticSurfaceNormals: any, exaggeration: any, exaggerationRelativeHeight: any, ) {
   let quantization = TerrainQuantization.NONE;
   let toENU;
   let matrix;
@@ -217,7 +206,13 @@ TerrainEncoding.prototype.encode = function (
   webMercatorT,
   geodeticSurfaceNormal,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("vertexBuffer", vertexBuffer);
+  Check.typeOf.number("bufferIndex", bufferIndex);
+  Check.typeOf.object("position", position);
+  Check.typeOf.object("uv", uv);
+  Check.typeOf.number("height", height);
+  //>>includeEnd('debug');
 
   const u = uv.x;
   const v = uv.y;
@@ -301,7 +296,11 @@ TerrainEncoding.prototype.addGeodeticSurfaceNormals = function (
   newBuffer,
   ellipsoid,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("oldBuffer", oldBuffer);
+  Check.typeOf.object("newBuffer", newBuffer);
+  Check.typeOf.object("ellipsoid", ellipsoid);
+  //>>includeEnd('debug');
 
   if (this.hasGeodeticSurfaceNormals) {
     return;
@@ -342,7 +341,10 @@ TerrainEncoding.prototype.removeGeodeticSurfaceNormals = function (
   oldBuffer,
   newBuffer,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("oldBuffer", oldBuffer);
+  Check.typeOf.object("newBuffer", newBuffer);
+  //>>includeEnd('debug');
 
   if (!this.hasGeodeticSurfaceNormals) {
     return;
@@ -372,7 +374,10 @@ TerrainEncoding.prototype.removeGeodeticSurfaceNormals = function (
  * @returns {Cartesian3} The decoded position.
  */
 TerrainEncoding.prototype.decodePosition = function (buffer, index, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -457,7 +462,10 @@ TerrainEncoding.prototype.decodeTextureCoordinates = function (
   index,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian2();
@@ -483,7 +491,10 @@ TerrainEncoding.prototype.decodeTextureCoordinates = function (
  * @returns {number} The decoded height.
  */
 TerrainEncoding.prototype.decodeHeight = function (buffer, index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   index *= this.stride;
 
@@ -508,7 +519,10 @@ TerrainEncoding.prototype.decodeHeight = function (buffer, index) {
  * @returns {number} The decoded web mercator T coordinate.
  */
 TerrainEncoding.prototype.decodeWebMercatorT = function (buffer, index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   index *= this.stride;
 
@@ -535,7 +549,10 @@ TerrainEncoding.prototype.getOctEncodedNormal = function (
   index,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   index = index * this.stride + this._offsetVertexNormal;
 
@@ -553,7 +570,11 @@ TerrainEncoding.prototype.getOctEncodedNormal = function (
  * @returns {Cartesian3}
  */
 TerrainEncoding.prototype.decodeNormal = function (buffer, index, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const bufferIndex = (index = index * this.stride + this._offsetVertexNormal);
   return AttributeCompression.octDecodeFloat(buffer[bufferIndex], result);
@@ -572,7 +593,11 @@ TerrainEncoding.prototype.decodeGeodeticSurfaceNormal = function (
   index,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.number("index", index);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   index = index * this.stride + this._offsetGeodeticSurfaceNormal;
 
@@ -628,7 +653,9 @@ const attributesIndicesBits12 = {
  * @returns {object[]} The attributes.
  */
 TerrainEncoding.prototype.getAttributes = function (buffer) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  //>>includeEnd('debug');
 
   const datatype = ComponentDatatype.FLOAT;
   const sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
@@ -636,7 +663,7 @@ TerrainEncoding.prototype.getAttributes = function (buffer) {
   let offsetInBytes = 0;
 
   const attributes = [];
-  function addAttribute(index, componentsPerAttribute) {
+  function addAttribute(index: any, componentsPerAttribute: any) {
     attributes.push({
       index: index,
       vertexBuffer: buffer,
@@ -731,5 +758,4 @@ TerrainEncoding.clone = function (encoding, result) {
 
   return result;
 };
-export { TerrainEncoding };
 export default TerrainEncoding;

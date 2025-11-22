@@ -4,14 +4,7 @@ import CesiumMath from "./Math.js";
 
 const factorial = CesiumMath.factorial;
 
-function calculateCoefficientTerm(
-  x,
-  zIndices,
-  xTable,
-  derivOrder,
-  termOrder,
-  reservedIndices,
-) {
+function calculateCoefficientTerm(x: any, zIndices: any, xTable: any, derivOrder: any, termOrder: any, reservedIndices: any, ) {
   let result = 0;
   let reserved;
   let i;
@@ -84,7 +77,17 @@ HermitePolynomialApproximation.getRequiredDataPoints = function (
 ) {
   inputOrder = inputOrder ?? 0;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(degree)) {
+    throw new DeveloperError("degree is required.");
+  }
+  if (degree < 0) {
+    throw new DeveloperError("degree must be 0 or greater.");
+  }
+  if (inputOrder < 0) {
+    throw new DeveloperError("inputOrder must be 0 or greater.");
+  }
+  //>>includeEnd('debug');
 
   return Math.max(Math.floor((degree + 1) / (inputOrder + 1)), 2);
 };
@@ -268,14 +271,7 @@ HermitePolynomialApproximation.interpolate = function (
   return result;
 };
 
-function fillCoefficientList(
-  coefficients,
-  zIndices,
-  xTable,
-  yTable,
-  yStride,
-  inputOrder,
-) {
+function fillCoefficientList(coefficients: any, zIndices: any, xTable: any, yTable: any, yStride: any, inputOrder: any, ) {
   let j;
   let index;
   let highestNonZero = -1;
@@ -328,5 +324,4 @@ function fillCoefficientList(
 
   return highestNonZero;
 }
-export { HermitePolynomialApproximation };
 export default HermitePolynomialApproximation;

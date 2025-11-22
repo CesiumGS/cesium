@@ -25,13 +25,21 @@ const scratchCart4 = new Cartesian4();
  *
  * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
  */
-function EllipsoidTangentPlane(origin, ellipsoid) {
-  ;
+function EllipsoidTangentPlane(origin: any, ellipsoid: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("origin", origin);
+  //>>includeEnd('debug');
 
   ellipsoid = ellipsoid ?? Ellipsoid.default;
   origin = ellipsoid.scaleToGeodeticSurface(origin);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(origin)) {
+    throw new DeveloperError(
+      "origin must not be at the center of the ellipsoid.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
   this._ellipsoid = ellipsoid;
@@ -131,7 +139,9 @@ const tmp = new AxisAlignedBoundingBox();
  * @returns {EllipsoidTangentPlane} The new instance of EllipsoidTangentPlane.
  */
 EllipsoidTangentPlane.fromPoints = function (cartesians, ellipsoid) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesians", cartesians);
+  //>>includeEnd('debug');
 
   const box = AxisAlignedBoundingBox.fromPoints(cartesians, tmp);
   return new EllipsoidTangentPlane(box.center, ellipsoid);
@@ -151,7 +161,9 @@ EllipsoidTangentPlane.prototype.projectPointOntoPlane = function (
   cartesian,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesian", cartesian);
+  //>>includeEnd('debug');
 
   const ray = scratchProjectPointOntoPlaneRay;
   ray.origin = cartesian;
@@ -204,7 +216,9 @@ EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function (
   cartesians,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesians", cartesians);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = [];
@@ -234,7 +248,9 @@ EllipsoidTangentPlane.prototype.projectPointToNearestOnPlane = function (
   cartesian,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesian", cartesian);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian2();
@@ -284,7 +300,9 @@ EllipsoidTangentPlane.prototype.projectPointsToNearestOnPlane = function (
   cartesians,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesians", cartesians);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = [];
@@ -310,7 +328,9 @@ EllipsoidTangentPlane.prototype.projectPointOntoEllipsoid = function (
   cartesian,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesian", cartesian);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -342,7 +362,9 @@ EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function (
   cartesians,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesians", cartesians);
+  //>>includeEnd('debug');
 
   const length = cartesians.length;
   if (!defined(result)) {
@@ -357,5 +379,4 @@ EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function (
 
   return result;
 };
-export { EllipsoidTangentPlane };
 export default EllipsoidTangentPlane;

@@ -48,7 +48,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
  */
-function LabelGraphics(options) {
+function LabelGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -366,7 +366,11 @@ LabelGraphics.prototype.clone = function (result) {
  * @param {LabelGraphics} source The object to be merged into this object.
  */
 LabelGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.text = this.text ?? source.text;
@@ -394,5 +398,4 @@ LabelGraphics.prototype.merge = function (source) {
   this.disableDepthTestDistance =
     this.disableDepthTestDistance ?? source.disableDepthTestDistance;
 };
-export { LabelGraphics };
 export default LabelGraphics;

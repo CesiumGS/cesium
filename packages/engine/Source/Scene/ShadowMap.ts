@@ -78,11 +78,25 @@ import ShadowMapShader from "./ShadowMapShader.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
  */
-function ShadowMap(options) {
+function ShadowMap(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const context = options.context;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(context)) {
+    throw new DeveloperError("context is required.");
+  }
+  if (!defined(options.lightCamera)) {
+    throw new DeveloperError("lightCamera is required.");
+  }
+  if (
+    defined(options.numberOfCascades) &&
+    options.numberOfCascades !== 1 &&
+    options.numberOfCascades !== 4
+  ) {
+    throw new DeveloperError("Only one or four cascades are supported.");
+  }
+  //>>includeEnd('debug');
 
   this._enabled = options.enabled ?? true;
   this._softShadows = options.softShadows ?? false;
@@ -279,7 +293,7 @@ function ShadowMap(options) {
  */
 ShadowMap.MAXIMUM_DISTANCE = 20000.0;
 
-function ShadowPass(context) {
+function ShadowPass(context: any) {
   this.camera = new ShadowMapCamera();
   this.passState = new PassState(context);
   this.framebuffer = undefined;
@@ -288,7 +302,7 @@ function ShadowPass(context) {
   this.cullingVolume = undefined;
 }
 
-function createRenderState(colorMask, bias) {
+function createRenderState(colorMask: any, bias: any) {
   return RenderState.fromCache({
     cull: {
       enabled: true,
@@ -312,7 +326,7 @@ function createRenderState(colorMask, bias) {
   });
 }
 
-function createRenderStates(shadowMap) {
+function createRenderStates(shadowMap: any) {
   // Enable the color mask if the shadow map is backed by a color texture, e.g. when depth textures aren't supported
   const colorMask = !shadowMap._usesDepthTexture;
   shadowMap._primitiveRenderState = createRenderState(
@@ -482,7 +496,7 @@ Object.defineProperties(ShadowMap.prototype, {
   },
 });
 
-function destroyFramebuffer(shadowMap) {
+function destroyFramebuffer(shadowMap: any) {
   const length = shadowMap._passes.length;
   for (let i = 0; i < length; ++i) {
     const pass = shadowMap._passes[i];
@@ -500,7 +514,7 @@ function destroyFramebuffer(shadowMap) {
     shadowMap._colorAttachment && shadowMap._colorAttachment.destroy();
 }
 
-function createFramebufferColor(shadowMap, context) {
+function createFramebufferColor(shadowMap: any, context: any) {
   const depthRenderbuffer = new Renderbuffer({
     context: context,
     width: shadowMap._textureSize.x,
@@ -536,7 +550,7 @@ function createFramebufferColor(shadowMap, context) {
   shadowMap._colorAttachment = colorTexture;
 }
 
-function createFramebufferDepth(shadowMap, context) {
+function createFramebufferDepth(shadowMap: any, context: any) {
   const depthStencilTexture = new Texture({
     context: context,
     width: shadowMap._textureSize.x,
@@ -563,7 +577,7 @@ function createFramebufferDepth(shadowMap, context) {
   shadowMap._depthAttachment = depthStencilTexture;
 }
 
-function createFramebufferCube(shadowMap, context) {
+function createFramebufferCube(shadowMap: any, context: any) {
   const depthRenderbuffer = new Renderbuffer({
     context: context,
     width: shadowMap._textureSize.x,
@@ -606,7 +620,7 @@ function createFramebufferCube(shadowMap, context) {
   shadowMap._colorAttachment = cubeMap;
 }
 
-function createFramebuffer(shadowMap, context) {
+function createFramebuffer(shadowMap: any, context: any) {
   if (shadowMap._isPointLight) {
     createFramebufferCube(shadowMap, context);
   } else if (shadowMap._usesDepthTexture) {
@@ -616,7 +630,7 @@ function createFramebuffer(shadowMap, context) {
   }
 }
 
-function checkFramebuffer(shadowMap, context) {
+function checkFramebuffer(shadowMap: any, context: any) {
   // Attempt to make an FBO with only a depth texture. If it fails, fallback to a color texture.
   if (
     shadowMap._usesDepthTexture &&
@@ -630,7 +644,7 @@ function checkFramebuffer(shadowMap, context) {
   }
 }
 
-function updateFramebuffer(shadowMap, context) {
+function updateFramebuffer(shadowMap: any, context: any) {
   if (
     !defined(shadowMap._passes[0].framebuffer) ||
     shadowMap._shadowMapTexture.width !== shadowMap._textureSize.x
@@ -642,7 +656,7 @@ function updateFramebuffer(shadowMap, context) {
   }
 }
 
-function clearFramebuffer(shadowMap, context, shadowPass) {
+function clearFramebuffer(shadowMap: any, context: any, shadowPass: any) {
   shadowPass = shadowPass ?? 0;
   if (shadowMap._isPointLight || shadowPass === 0) {
     shadowMap._clearCommand.framebuffer =
@@ -651,7 +665,7 @@ function clearFramebuffer(shadowMap, context, shadowPass) {
   }
 }
 
-function resize(shadowMap, size) {
+function resize(shadowMap: any, size: any) {
   shadowMap._size = size;
   const passes = shadowMap._passes;
   const numberOfPasses = passes.length;
@@ -744,7 +758,7 @@ function resize(shadowMap, size) {
 
 const scratchViewport = new BoundingRectangle();
 
-function createDebugShadowViewCommand(shadowMap, context) {
+function createDebugShadowViewCommand(shadowMap: any, context: any) {
   let fs;
   if (shadowMap._isPointLight) {
     fs =
@@ -829,7 +843,7 @@ function createDebugShadowViewCommand(shadowMap, context) {
   return drawCommand;
 }
 
-function updateDebugShadowViewCommand(shadowMap, frameState) {
+function updateDebugShadowViewCommand(shadowMap: any, frameState: any) {
   // Draws the shadow map on the bottom-right corner of the screen
   const context = frameState.context;
   const screenWidth = frameState.context.drawingBufferWidth;
@@ -877,7 +891,7 @@ for (let i = 0; i < 8; ++i) {
   scratchFrustumCorners[i] = new Cartesian4();
 }
 
-function createDebugPointLight(modelMatrix, color) {
+function createDebugPointLight(modelMatrix: any, color: any) {
   const box = new GeometryInstance({
     geometry: new BoxOutlineGeometry({
       minimum: new Cartesian3(-0.5, -0.5, -0.5),
@@ -911,7 +925,7 @@ function createDebugPointLight(modelMatrix, color) {
 const debugOutlineColors = [Color.RED, Color.GREEN, Color.BLUE, Color.MAGENTA];
 const scratchScale = new Cartesian3();
 
-function applyDebugSettings(shadowMap, frameState) {
+function applyDebugSettings(shadowMap: any, frameState: any) {
   updateDebugShadowViewCommand(shadowMap, frameState);
 
   const enterFreezeFrame =
@@ -1064,7 +1078,7 @@ const scratchCascadeDistances = new Array(4);
 const scratchMin = new Cartesian3();
 const scratchMax = new Cartesian3();
 
-function computeCascades(shadowMap, frameState) {
+function computeCascades(shadowMap: any, frameState: any) {
   const shadowMapCamera = shadowMap._shadowMapCamera;
   const sceneCamera = shadowMap._sceneCamera;
   const cameraNear = sceneCamera.frustum.near;
@@ -1224,7 +1238,7 @@ const scratchRight = new Cartesian3();
 const scratchUp = new Cartesian3();
 const scratchTranslation = new Cartesian3();
 
-function fitShadowMapToScene(shadowMap, frameState) {
+function fitShadowMapToScene(shadowMap: any, frameState: any) {
   const shadowMapCamera = shadowMap._shadowMapCamera;
   const sceneCamera = shadowMap._sceneCamera;
 
@@ -1360,7 +1374,7 @@ const rights = [
   new Cartesian3(1.0, 0.0, 0.0),
 ];
 
-function computeOmnidirectional(shadowMap, frameState) {
+function computeOmnidirectional(shadowMap: any, frameState: any) {
   // All sides share the same frustum
   const frustum = new PerspectiveFrustum();
   frustum.fov = CesiumMath.PI_OVER_TWO;
@@ -1398,7 +1412,7 @@ const scratchCartesian2 = new Cartesian3();
 const scratchBoundingSphere = new BoundingSphere();
 const scratchCenter = scratchBoundingSphere.center;
 
-function checkVisibility(shadowMap, frameState) {
+function checkVisibility(shadowMap: any, frameState: any) {
   const sceneCamera = shadowMap._sceneCamera;
   const shadowMapCamera = shadowMap._shadowMapCamera;
 
@@ -1481,7 +1495,7 @@ function checkVisibility(shadowMap, frameState) {
   }
 }
 
-function updateCameras(shadowMap, frameState) {
+function updateCameras(shadowMap: any, frameState: any) {
   const camera = frameState.camera; // The actual camera in the scene
   const lightCamera = shadowMap._lightCamera; // The external camera representing the light source
   const sceneCamera = shadowMap._sceneCamera; // Clone of camera, with clamped near and far planes
@@ -1611,7 +1625,7 @@ ShadowMap.prototype.updatePass = function (context, shadowPass) {
 
 const scratchTexelStepSize = new Cartesian2();
 
-function combineUniforms(shadowMap, uniforms, isTerrain) {
+function combineUniforms(shadowMap: any, uniforms: any, isTerrain: any) {
   const bias = shadowMap._isPointLight
     ? shadowMap._pointBias
     : isTerrain
@@ -1673,14 +1687,7 @@ function combineUniforms(shadowMap, uniforms, isTerrain) {
   return combine(uniforms, mapUniforms, false);
 }
 
-function createCastDerivedCommand(
-  shadowMap,
-  shadowsDirty,
-  command,
-  context,
-  oldShaderId,
-  result,
-) {
+function createCastDerivedCommand(shadowMap: any, shadowsDirty: any, command: any, context: any, oldShaderId: any, result: any, ) {
   let castShader;
   let castRenderState;
   let castUniformMap;
@@ -1940,5 +1947,4 @@ ShadowMap.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { ShadowMap };
 export default ShadowMap;

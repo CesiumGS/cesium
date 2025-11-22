@@ -5,14 +5,7 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import getClippingFunction from "./getClippingFunction.js";
 import SceneMode from "./SceneMode.js";
 
-function GlobeSurfaceShader(
-  numberOfDayTextures,
-  flags,
-  material,
-  shaderProgram,
-  clippingShaderState,
-  clippingPolygonShaderState,
-) {
+function GlobeSurfaceShader(numberOfDayTextures: any, flags: any, material: any, shaderProgram: any, clippingShaderState: any, clippingPolygonShaderState: any, ) {
   this.numberOfDayTextures = numberOfDayTextures;
   this.flags = flags;
   this.material = material;
@@ -36,7 +29,7 @@ function GlobeSurfaceShaderSet() {
   this.material = undefined;
 }
 
-function getPositionMode(sceneMode) {
+function getPositionMode(sceneMode: any) {
   const getPosition3DMode =
     "vec4 getPosition(vec3 position, float height, vec2 textureCoordinates) { return getPosition3DMode(position, height, textureCoordinates); }";
   const getPositionColumbusViewAnd2DMode =
@@ -62,7 +55,7 @@ function getPositionMode(sceneMode) {
   return positionMode;
 }
 
-function getPolygonClippingFunction(context) {
+function getPolygonClippingFunction(context: any) {
   // return a noop for webgl1
   if (!context.webgl2) {
     return `void clipPolygons(highp sampler2D clippingDistance, int regionsLength, vec2 clippingPosition, int regionIndex) {
@@ -74,7 +67,7 @@ function getPolygonClippingFunction(context) {
   }`;
 }
 
-function getUnpackClippingFunction(context) {
+function getUnpackClippingFunction(context: any) {
   // return a noop for webgl1
   if (!context.webgl2) {
     return `vec4 unpackClippingExtents(highp sampler2D extentsTexture, int index) {
@@ -87,7 +80,7 @@ function getUnpackClippingFunction(context) {
   }`;
 }
 
-function get2DYPositionFraction(useWebMercatorProjection) {
+function get2DYPositionFraction(useWebMercatorProjection: any) {
   const get2DYPositionFractionGeographicProjection =
     "float get2DYPositionFraction(vec2 textureCoordinates) { return get2DGeographicYPositionFraction(textureCoordinates); }";
   const get2DYPositionFractionMercatorProjection =
@@ -482,5 +475,4 @@ GlobeSurfaceShaderSet.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { GlobeSurfaceShaderSet };
 export default GlobeSurfaceShaderSet;

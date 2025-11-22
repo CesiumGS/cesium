@@ -17,7 +17,7 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
  * @param {string} url The url to the KTX2 file containing the specular environment map and convoluted mipmaps.
  * @private
  */
-function SpecularEnvironmentCubeMap(url) {
+function SpecularEnvironmentCubeMap(url: any) {
   this._url = url;
 
   this._cubeMapBuffers = undefined;
@@ -100,7 +100,7 @@ SpecularEnvironmentCubeMap.isSupported = function (context) {
   return supportsFloatBuffersAndTextures && context.supportsTextureLod;
 };
 
-function cleanupResources(map) {
+function cleanupResources(map: any) {
   map._cubeMapBuffers = undefined;
 }
 
@@ -175,7 +175,7 @@ SpecularEnvironmentCubeMap.prototype.update = function (frameState) {
     // for roughness 1.0.
     // Fill the remaining levels with null values, to avoid WebGL errors.
     const dummyMipLevel = {};
-    Object.values(CubeMap.FaceName).forEach((faceName) => {
+    Object.values(CubeMap.FaceName).forEach((faceName: any) => {
       dummyMipLevel[faceName] = undefined;
     });
     for (let mipLevel = mipLevels; mipLevel < expectedMipLevels; mipLevel++) {
@@ -237,5 +237,4 @@ SpecularEnvironmentCubeMap.prototype.destroy = function () {
   this._texture = this._texture && this._texture.destroy();
   return destroyObject(this);
 };
-export { SpecularEnvironmentCubeMap };
 export default SpecularEnvironmentCubeMap;

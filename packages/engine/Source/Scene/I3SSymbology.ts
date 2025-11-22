@@ -10,7 +10,7 @@ import srgbToLinear from "../Core/srgbToLinear.js";
  * @alias I3SSymbology
  * @internalConstructor
  */
-function I3SSymbology(layer) {
+function I3SSymbology(layer: any) {
   this._layer = layer;
   this._defaultSymbology = undefined;
   this._valueFields = [];
@@ -34,7 +34,7 @@ Object.defineProperties(I3SSymbology.prototype, {
   },
 });
 
-function convertColor(color, transparency) {
+function convertColor(color: any, transparency: any) {
   // color is represented as a three or four-element array, values range from 0 through 255.
   // transparency value has to lie between 100 (full transparency) and 0 (full opacity).
   const convertedColor = [];
@@ -56,7 +56,7 @@ function convertColor(color, transparency) {
   return convertedColor;
 }
 
-function parseSymbol(symbol, isColorCaptured) {
+function parseSymbol(symbol: any, isColorCaptured: any) {
   const symbology = {
     edges: undefined,
     material: undefined,
@@ -106,7 +106,7 @@ function parseSymbol(symbol, isColorCaptured) {
   return symbology;
 }
 
-function buildUniqueValueHash(renderer, isColorCaptured) {
+function buildUniqueValueHash(renderer: any, isColorCaptured: any) {
   if (defined(renderer.uniqueValueGroups)) {
     const valueHash = {};
     for (
@@ -161,7 +161,7 @@ function buildUniqueValueHash(renderer, isColorCaptured) {
   return undefined;
 }
 
-function buildClassBreaksHash(renderer, isColorCaptured) {
+function buildClassBreaksHash(renderer: any, isColorCaptured: any) {
   if (defined(renderer.classBreakInfos)) {
     const classBreakInfos = [...renderer.classBreakInfos];
     classBreakInfos.sort(function (a, b) {
@@ -242,7 +242,7 @@ I3SSymbology.prototype._parseLayerSymbology = function () {
   }
 };
 
-function findHashForUniqueValues(hash, values, hashLevel, valueIndex) {
+function findHashForUniqueValues(hash: any, values: any, hashLevel: any, valueIndex: any) {
   const levelValues = values[hashLevel];
   if (valueIndex < levelValues.length) {
     const hashValue = levelValues[valueIndex];
@@ -255,7 +255,7 @@ function findHashForUniqueValues(hash, values, hashLevel, valueIndex) {
   return undefined;
 }
 
-function bisect(array, value) {
+function bisect(array: any, value: any) {
   let low = 0;
   let high = array.length;
   if (low < high) {
@@ -271,7 +271,7 @@ function bisect(array, value) {
   return low;
 }
 
-function findHashForClassBreaks(hash, values, valueIndex) {
+function findHashForClassBreaks(hash: any, values: any, valueIndex: any) {
   const value = values[valueIndex];
   const range = bisect(hash.ranges, value);
   return hash.symbols[range];
@@ -299,7 +299,7 @@ I3SSymbology.prototype._getSymbology = async function (node) {
 
     let featureHashFn;
     if (defined(this._uniqueValueHash)) {
-      featureHashFn = (featureIndex) =>
+      featureHashFn = (featureIndex: any) =>
         findHashForUniqueValues(
           this._uniqueValueHash,
           fieldsValues,
@@ -307,7 +307,7 @@ I3SSymbology.prototype._getSymbology = async function (node) {
           featureIndex,
         );
     } else if (defined(this._classBreaksHash)) {
-      featureHashFn = (featureIndex) =>
+      featureHashFn = (featureIndex: any) =>
         findHashForClassBreaks(
           this._classBreaksHash,
           fieldsValues[0],
@@ -333,5 +333,4 @@ I3SSymbology.prototype._getSymbology = async function (node) {
   return symbology;
 };
 
-export { I3SSymbology };
 export default I3SSymbology;

@@ -43,7 +43,7 @@ const pickTilesetPassState = new Cesium3DTilePassState({
 /**
  * @private
  */
-function Picking(scene) {
+function Picking(scene: any) {
   this._mostDetailedRayPicks = [];
   this.pickRenderStateCache = {};
   this._pickPositionCache = {};
@@ -84,13 +84,7 @@ const scratchOrthoDirection = new Cartesian3();
 const scratchOrthoPixelSize = new Cartesian2();
 const scratchOrthoPickVolumeMatrix4 = new Matrix4();
 
-function getPickOrthographicCullingVolume(
-  scene,
-  drawingBufferPosition,
-  width,
-  height,
-  viewport,
-) {
+function getPickOrthographicCullingVolume(scene: any, drawingBufferPosition: any, width: any, height: any, viewport: any, ) {
   const camera = scene.camera;
   let frustum = camera.frustum;
   const offCenterFrustum = frustum.offCenterFrustum;
@@ -146,13 +140,7 @@ function getPickOrthographicCullingVolume(
 const scratchPerspPickingFrustum = new PerspectiveOffCenterFrustum();
 const scratchPerspPixelSize = new Cartesian2();
 
-function getPickPerspectiveCullingVolume(
-  scene,
-  drawingBufferPosition,
-  width,
-  height,
-  viewport,
-) {
+function getPickPerspectiveCullingVolume(scene: any, drawingBufferPosition: any, width: any, height: any, viewport: any, ) {
   const camera = scene.camera;
   const frustum = camera.frustum;
   const near = frustum.near;
@@ -195,13 +183,7 @@ function getPickPerspectiveCullingVolume(
   );
 }
 
-function getPickCullingVolume(
-  scene,
-  drawingBufferPosition,
-  width,
-  height,
-  viewport,
-) {
+function getPickCullingVolume(scene: any, drawingBufferPosition: any, width: any, height: any, viewport: any, ) {
   const frustum = scene.camera.frustum;
   if (
     frustum instanceof OrthographicFrustum ||
@@ -248,13 +230,7 @@ const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
  * @param {BoundingRectangle} result The result rectangle
  * @returns {BoundingRectangle} The result rectangle
  */
-function computePickingDrawingBufferRectangle(
-  drawingBufferHeight,
-  position,
-  width,
-  height,
-  result,
-) {
+function computePickingDrawingBufferRectangle(drawingBufferHeight: any, position: any, width: any, height: any, result: any, ) {
   result.width = width ?? 3.0;
   result.height = height ?? result.width;
   result.x = position.x - (result.width - 1.0) * 0.5;
@@ -271,13 +247,7 @@ function computePickingDrawingBufferRectangle(
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
  */
-function pickBegin(
-  scene,
-  windowPosition,
-  drawingBufferRectangle,
-  width,
-  height,
-) {
+function pickBegin(scene: any, windowPosition: any, drawingBufferRectangle: any, width: any, height: any, ) {
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
 
@@ -333,7 +303,7 @@ function pickBegin(
  *
  * @param {Scene} scene
  */
-function pickEnd(scene) {
+function pickEnd(scene: any) {
   const { context } = scene;
   context.endFrame();
 }
@@ -360,7 +330,9 @@ Picking.prototype.pickAsync = async function (
   height,
   limit = 1,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("windowPosition", windowPosition);
+  //>>includeEnd('debug');
 
   const { context, frameState, defaultView } = scene;
   const { pickFramebuffer } = defaultView;
@@ -407,7 +379,9 @@ Picking.prototype.pick = function (
   height,
   limit = 1,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("windowPosition", windowPosition);
+  //>>includeEnd('debug');
 
   const { defaultView } = scene;
   const { pickFramebuffer } = defaultView;
@@ -435,7 +409,9 @@ Picking.prototype.pickVoxelCoordinate = function (
   width,
   height,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("windowPosition", windowPosition);
+  //>>includeEnd('debug');
 
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
@@ -524,7 +500,10 @@ Picking.prototype.pickMetadata = function (
   windowPosition,
   pickedMetadataInfo,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("windowPosition", windowPosition);
+  Check.typeOf.object("pickedMetadataInfo", pickedMetadataInfo);
+  //>>includeEnd('debug');
 
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
@@ -619,7 +598,7 @@ Picking.prototype.pickMetadata = function (
  * @property {MetadataClassProperty} classProperty The metadata class property
  */
 
-function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
+function renderTranslucentDepthForPick(scene: any, drawingBufferPosition: any) {
   // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
   const { defaultView, context, frameState, environmentState } = scene;
   const { viewport, pickDepthFramebuffer } = defaultView;
@@ -674,7 +653,14 @@ Picking.prototype.pickPositionWorldCoordinates = function (
     return undefined;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("windowPosition", windowPosition);
+  if (!scene.context.depthTexture) {
+    throw new DeveloperError(
+      "Picking from the depth buffer is not supported. Check pickPositionSupported.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const cacheKey = windowPosition.toString();
 
@@ -793,14 +779,7 @@ Picking.prototype.pickPosition = function (scene, windowPosition, result) {
  * @param {object[]} pickedFeatures
  * @returns {boolean} whether picking should end
  */
-function addDrillPickedResults(
-  pickedResults,
-  limit,
-  results,
-  pickedPrimitives,
-  pickedAttributes,
-  pickedFeatures,
-) {
+function addDrillPickedResults(pickedResults: any, limit: any, results: any, pickedPrimitives: any, pickedAttributes: any, pickedFeatures: any, ) {
   for (const pickedResult of pickedResults) {
     const object = pickedResult.object;
     const position = pickedResult.position;
@@ -860,7 +839,7 @@ function addDrillPickedResults(
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop drilling after collecting this many picks
  * @returns {object[]} List of picked results
  */
-function drillPick(pickCallback, limit) {
+function drillPick(pickCallback: any, limit: any) {
   // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
   // we could update the primitive once, and then just execute their commands for each pass,
   // and cull commands for picked primitives.  e.g., base on the command's owner.
@@ -915,7 +894,7 @@ Picking.prototype.drillPick = function (
   width,
   height,
 ) {
-  const pickCallback = (limit) => {
+  const pickCallback = (limit: any) => {
     const pickedObjects = this.pick(
       scene,
       windowPosition,
@@ -923,33 +902,33 @@ Picking.prototype.drillPick = function (
       height,
       limit,
     );
-    return pickedObjects.map((object) => ({
+    return pickedObjects.map((object: any) => ({
       object: object,
       position: undefined,
       exclude: false,
     }));
   };
   const objects = drillPick(pickCallback, limit);
-  return objects.map((element) => element.object);
+  return objects.map((element: any) => element.object);
 };
 
 const scratchRight = new Cartesian3();
 const scratchUp = new Cartesian3();
 
-function MostDetailedRayPick(ray, width, tilesets) {
+function MostDetailedRayPick(ray: any, width: any, tilesets: any) {
   this.ray = ray;
   this.width = width;
   this.tilesets = tilesets;
   this.ready = false;
   const pick = this;
-  this.promise = new Promise((resolve) => {
+  this.promise = new Promise((resolve: any) => {
     pick._completePick = () => {
       resolve();
     };
   });
 }
 
-function updateOffscreenCameraFromRay(picking, ray, width, camera) {
+function updateOffscreenCameraFromRay(picking: any, ray: any, width: any, camera: any) {
   const direction = ray.direction;
   const orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
   const right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
@@ -968,7 +947,7 @@ function updateOffscreenCameraFromRay(picking, ray, width, camera) {
   );
 }
 
-function updateMostDetailedRayPick(picking, scene, rayPick) {
+function updateMostDetailedRayPick(picking: any, scene: any, rayPick: any) {
   const frameState = scene.frameState;
 
   const { ray, width, tilesets } = rayPick;
@@ -1014,7 +993,7 @@ Picking.prototype.updateMostDetailedRayPicks = function (scene) {
   }
 };
 
-function getTilesets(primitives, objectsToExclude, tilesets) {
+function getTilesets(primitives: any, objectsToExclude: any, tilesets: any) {
   for (let i = 0; i < primitives.length; ++i) {
     const primitive = primitives.get(i);
     if (primitive.show) {
@@ -1042,14 +1021,7 @@ function getTilesets(primitives, objectsToExclude, tilesets) {
  * @param {Function} callback
  * @returns {Promise<Cartesian3 | undefined>}
  */
-function launchMostDetailedRayPick(
-  picking,
-  scene,
-  ray,
-  objectsToExclude,
-  width,
-  callback,
-) {
+function launchMostDetailedRayPick(picking: any, scene: any, ray: any, objectsToExclude: any, width: any, callback: any, ) {
   const tilesets = [];
   getTilesets(scene.primitives, objectsToExclude, tilesets);
   if (tilesets.length === 0) {
@@ -1063,7 +1035,7 @@ function launchMostDetailedRayPick(
   });
 }
 
-function isExcluded(object, objectsToExclude) {
+function isExcluded(object: any, objectsToExclude: any) {
   if (
     !defined(object) ||
     !defined(objectsToExclude) ||
@@ -1078,15 +1050,7 @@ function isExcluded(object, objectsToExclude) {
   );
 }
 
-function getRayIntersection(
-  picking,
-  scene,
-  ray,
-  objectsToExclude,
-  width,
-  requirePosition,
-  mostDetailed,
-) {
+function getRayIntersection(picking: any, scene: any, ray: any, objectsToExclude: any, width: any, requirePosition: any, mostDetailed: any, ) {
   const { context, frameState } = scene;
   const uniformState = context.uniformState;
 
@@ -1164,16 +1128,7 @@ function getRayIntersection(
   }
 }
 
-function drillPickFromRay(
-  picking,
-  scene,
-  ray,
-  limit,
-  objectsToExclude,
-  width,
-  requirePosition,
-  mostDetailed,
-) {
+function drillPickFromRay(picking: any, scene: any, ray: any, limit: any, objectsToExclude: any, width: any, requirePosition: any, mostDetailed: any, ) {
   const pickCallback = function () {
     const pickResult = getRayIntersection(
       picking,
@@ -1189,15 +1144,7 @@ function drillPickFromRay(
   return drillPick(pickCallback, limit);
 }
 
-function pickFromRay(
-  picking,
-  scene,
-  ray,
-  objectsToExclude,
-  width,
-  requirePosition,
-  mostDetailed,
-) {
+function pickFromRay(picking: any, scene: any, ray: any, objectsToExclude: any, width: any, requirePosition: any, mostDetailed: any, ) {
   // Use drillPickFromRay rather than getRayIntersection directly to select the first non-excluded object
   const results = drillPickFromRay(
     picking,
@@ -1214,10 +1161,10 @@ function pickFromRay(
   }
 }
 
-function deferPromiseUntilPostRender(scene, promise) {
+function deferPromiseUntilPostRender(scene: any, promise: any) {
   // Resolve promise after scene's postRender in case entities are created when the promise resolves.
   // Entities can't be created between viewer._onTick and viewer._postRender.
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve: any, reject: any) => {
     promise
       .then(function (result) {
         const removeCallback = scene.postRender.addEventListener(function () {
@@ -1233,7 +1180,14 @@ function deferPromiseUntilPostRender(scene, promise) {
 }
 
 Picking.prototype.pickFromRay = function (scene, ray, objectsToExclude, width) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("ray", ray);
+  if (scene.mode !== SceneMode.SCENE3D) {
+    throw new DeveloperError(
+      "Ray intersections are only supported in 3D mode.",
+    );
+  }
+  //>>includeEnd('debug');
 
   return pickFromRay(this, scene, ray, objectsToExclude, width, false, false);
 };
@@ -1245,7 +1199,14 @@ Picking.prototype.drillPickFromRay = function (
   objectsToExclude,
   width,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("ray", ray);
+  if (scene.mode !== SceneMode.SCENE3D) {
+    throw new DeveloperError(
+      "Ray intersections are only supported in 3D mode.",
+    );
+  }
+  //>>includeEnd('debug');
 
   return drillPickFromRay(
     this,
@@ -1265,7 +1226,14 @@ Picking.prototype.pickFromRayMostDetailed = function (
   objectsToExclude,
   width,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("ray", ray);
+  if (scene.mode !== SceneMode.SCENE3D) {
+    throw new DeveloperError(
+      "Ray intersections are only supported in 3D mode.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const that = this;
   ray = Ray.clone(ray);
@@ -1302,7 +1270,14 @@ Picking.prototype.drillPickFromRayMostDetailed = function (
   objectsToExclude,
   width,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("ray", ray);
+  if (scene.mode !== SceneMode.SCENE3D) {
+    throw new DeveloperError(
+      "Ray intersections are only supported in 3D mode.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const that = this;
   ray = Ray.clone(ray);
@@ -1344,7 +1319,7 @@ const scratchCartographic = new Cartographic();
  * @param {Cartographic} cartographic
  * @returns {Ray}
  */
-function getRayForSampleHeight(scene, cartographic) {
+function getRayForSampleHeight(scene: any, cartographic: any) {
   const ellipsoid = scene.ellipsoid;
   const height = ApproximateTerrainHeights._defaultMaxTerrainHeight;
   const surfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(
@@ -1371,7 +1346,7 @@ function getRayForSampleHeight(scene, cartographic) {
  * @param {Cartesian3} cartesian
  * @returns {Ray}
  */
-function getRayForClampToHeight(scene, cartesian) {
+function getRayForClampToHeight(scene: any, cartesian: any) {
   const ellipsoid = scene.ellipsoid;
   const cartographic = Cartographic.fromCartesian(
     cartesian,
@@ -1381,7 +1356,7 @@ function getRayForClampToHeight(scene, cartesian) {
   return getRayForSampleHeight(scene, cartographic);
 }
 
-function getHeightFromCartesian(scene, cartesian) {
+function getHeightFromCartesian(scene: any, cartesian: any) {
   const ellipsoid = scene.ellipsoid;
   const cartographic = Cartographic.fromCartesian(
     cartesian,
@@ -1391,13 +1366,7 @@ function getHeightFromCartesian(scene, cartesian) {
   return cartographic.height;
 }
 
-function sampleHeightMostDetailed(
-  picking,
-  scene,
-  cartographic,
-  objectsToExclude,
-  width,
-) {
+function sampleHeightMostDetailed(picking: any, scene: any, cartographic: any, objectsToExclude: any, width: any, ) {
   const ray = getRayForSampleHeight(scene, cartographic);
   return launchMostDetailedRayPick(
     picking,
@@ -1432,14 +1401,7 @@ function sampleHeightMostDetailed(
  * @param {Cartesian3} [result]
  * @returns {Promise<Cartesian3 | undefined>}
  */
-function clampToHeightMostDetailed(
-  picking,
-  scene,
-  cartesian,
-  objectsToExclude,
-  width,
-  result,
-) {
+function clampToHeightMostDetailed(picking: any, scene: any, cartesian: any, objectsToExclude: any, width: any, result: any, ) {
   const ray = getRayForClampToHeight(scene, cartesian);
   return launchMostDetailedRayPick(
     picking,
@@ -1470,7 +1432,17 @@ Picking.prototype.sampleHeight = function (
   objectsToExclude,
   width,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("position", position);
+  if (scene.mode !== SceneMode.SCENE3D) {
+    throw new DeveloperError("sampleHeight is only supported in 3D mode.");
+  }
+  if (!scene.sampleHeightSupported) {
+    throw new DeveloperError(
+      "sampleHeight requires depth texture support. Check sampleHeightSupported.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const ray = getRayForSampleHeight(scene, position);
   const pickResult = pickFromRay(
@@ -1494,7 +1466,17 @@ Picking.prototype.clampToHeight = function (
   width,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesian", cartesian);
+  if (scene.mode !== SceneMode.SCENE3D) {
+    throw new DeveloperError("clampToHeight is only supported in 3D mode.");
+  }
+  if (!scene.clampToHeightSupported) {
+    throw new DeveloperError(
+      "clampToHeight requires depth texture support. Check clampToHeightSupported.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const ray = getRayForClampToHeight(scene, cartesian);
   const pickResult = pickFromRay(
@@ -1517,7 +1499,19 @@ Picking.prototype.sampleHeightMostDetailed = function (
   objectsToExclude,
   width,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("positions", positions);
+  if (scene.mode !== SceneMode.SCENE3D) {
+    throw new DeveloperError(
+      "sampleHeightMostDetailed is only supported in 3D mode.",
+    );
+  }
+  if (!scene.sampleHeightSupported) {
+    throw new DeveloperError(
+      "sampleHeightMostDetailed requires depth texture support. Check sampleHeightSupported.",
+    );
+  }
+  //>>includeEnd('debug');
 
   objectsToExclude = defined(objectsToExclude)
     ? objectsToExclude.slice()
@@ -1559,7 +1553,19 @@ Picking.prototype.clampToHeightMostDetailed = function (
   objectsToExclude,
   width,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesians", cartesians);
+  if (scene.mode !== SceneMode.SCENE3D) {
+    throw new DeveloperError(
+      "clampToHeightMostDetailed is only supported in 3D mode.",
+    );
+  }
+  if (!scene.clampToHeightSupported) {
+    throw new DeveloperError(
+      "clampToHeightMostDetailed requires depth texture support. Check clampToHeightSupported.",
+    );
+  }
+  //>>includeEnd('debug');
 
   objectsToExclude = defined(objectsToExclude)
     ? objectsToExclude.slice()
@@ -1592,5 +1598,4 @@ Picking.prototype.destroy = function () {
   this._pickOffscreenView =
     this._pickOffscreenView && this._pickOffscreenView.destroy();
 };
-export { Picking };
 export default Picking;

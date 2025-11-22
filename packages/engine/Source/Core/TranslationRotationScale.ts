@@ -15,7 +15,7 @@ const defaultRotation = Quaternion.IDENTITY;
  * @param {Quaternion} [rotation=Quaternion.IDENTITY] A {@link Quaternion} specifying the (x, y, z, w) rotation to apply to the node.
  * @param {Cartesian3} [scale=new Cartesian3(1.0, 1.0, 1.0)] A {@link Cartesian3} specifying the (x, y, z) scaling to apply to the node.
  */
-function TranslationRotationScale(translation, rotation, scale) {
+function TranslationRotationScale(translation: any, rotation: any, scale: any) {
   /**
    * Gets or sets the (x, y, z) translation to apply to the node.
    * @type {Cartesian3}
@@ -54,5 +54,4 @@ TranslationRotationScale.prototype.equals = function (right) {
       Cartesian3.equals(this.scale, right.scale))
   );
 };
-export { TranslationRotationScale };
 export default TranslationRotationScale;

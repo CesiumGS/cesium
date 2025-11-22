@@ -50,7 +50,9 @@ function EncodedCartesian3() {
  * const splitValue = Cesium.EncodedCartesian3.encode(value);
  */
 EncodedCartesian3.encode = function (value, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("value", value);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = {
@@ -94,7 +96,9 @@ const scratchEncode = {
  * const encoded = Cesium.EncodedCartesian3.fromCartesian(cart);
  */
 EncodedCartesian3.fromCartesian = function (cartesian, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new EncodedCartesian3();
@@ -146,7 +150,11 @@ const encodedP = new EncodedCartesian3();
  * }
  */
 EncodedCartesian3.writeElements = function (cartesian, cartesianArray, index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesianArray", cartesianArray);
+  Check.typeOf.number("index", index);
+  Check.typeOf.number.greaterThanOrEquals("index", index, 0);
+  //>>includeEnd('debug');
 
   EncodedCartesian3.fromCartesian(cartesian, encodedP);
   const high = encodedP.high;
@@ -159,5 +167,4 @@ EncodedCartesian3.writeElements = function (cartesian, cartesianArray, index) {
   cartesianArray[index + 4] = low.y;
   cartesianArray[index + 5] = low.z;
 };
-export { EncodedCartesian3 };
 export default EncodedCartesian3;

@@ -24,8 +24,12 @@ import Check from "../../../../Core/Check.js";
  * @param {CorrelationGroup.ConstructorOptions} options An object describing initialization options
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function CorrelationGroup(options) {
-  ;
+function CorrelationGroup(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.groupFlags", options.groupFlags);
+  Check.typeOf.object("options.rotationThetas", options.rotationThetas);
+  Check.typeOf.object("options.params", options.params);
+  //>>includeEnd('debug');
 
   this._groupFlags = options.groupFlags;
   this._rotationThetas = options.rotationThetas;
@@ -74,5 +78,4 @@ Object.defineProperties(CorrelationGroup.prototype, {
   },
 });
 
-export { CorrelationGroup };
 export default CorrelationGroup;

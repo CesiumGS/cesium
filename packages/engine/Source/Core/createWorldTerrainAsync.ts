@@ -38,7 +38,7 @@ import Ellipsoid from "./Ellipsoid.js";
  * }
  *
  */
-function createWorldTerrainAsync(options) {
+function createWorldTerrainAsync(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   return CesiumTerrainProvider.fromIonAssetId(1, {
@@ -47,5 +47,4 @@ function createWorldTerrainAsync(options) {
     ellipsoid: Ellipsoid.WGS84,
   });
 }
-export { createWorldTerrainAsync };
 export default createWorldTerrainAsync;

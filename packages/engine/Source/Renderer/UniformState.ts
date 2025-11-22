@@ -1189,7 +1189,7 @@ Object.defineProperties(UniformState.prototype, {
   },
 });
 
-function setView(uniformState, matrix) {
+function setView(uniformState: any, matrix: any) {
   Matrix4.clone(matrix, uniformState._view);
   Matrix4.getMatrix3(matrix, uniformState._viewRotation);
 
@@ -1211,12 +1211,12 @@ function setView(uniformState, matrix) {
   uniformState._inverseNormal3DDirty = true;
 }
 
-function setInverseView(uniformState, matrix) {
+function setInverseView(uniformState: any, matrix: any) {
   Matrix4.clone(matrix, uniformState._inverseView);
   Matrix4.getMatrix3(matrix, uniformState._inverseViewRotation);
 }
 
-function setProjection(uniformState, matrix) {
+function setProjection(uniformState: any, matrix: any) {
   Matrix4.clone(matrix, uniformState._projection);
 
   uniformState._inverseProjectionDirty = true;
@@ -1226,7 +1226,7 @@ function setProjection(uniformState, matrix) {
   uniformState._modelViewProjectionRelativeToEyeDirty = true;
 }
 
-function setInfiniteProjection(uniformState, matrix) {
+function setInfiniteProjection(uniformState: any, matrix: any) {
   Matrix4.clone(matrix, uniformState._infiniteProjection);
 
   uniformState._modelViewInfiniteProjectionDirty = true;
@@ -1235,7 +1235,7 @@ function setInfiniteProjection(uniformState, matrix) {
 const surfacePositionScratch = new Cartesian3();
 const enuTransformScratch = new Matrix4();
 
-function setCamera(uniformState, camera) {
+function setCamera(uniformState: any, camera: any) {
   Cartesian3.clone(camera.positionWC, uniformState._cameraPosition);
   Cartesian3.clone(camera.directionWC, uniformState._cameraDirection);
   Cartesian3.clone(camera.rightWC, uniformState._cameraRight);
@@ -1319,7 +1319,7 @@ function setCamera(uniformState, camera) {
 
 const transformMatrix = new Matrix3();
 const sunCartographicScratch = new Cartographic();
-function setSunAndMoonDirections(uniformState, frameState) {
+function setSunAndMoonDirections(uniformState: any, frameState: any) {
   Transforms.computeIcrfToCentralBodyFixedMatrix(
     frameState.time,
     transformMatrix,
@@ -1577,7 +1577,7 @@ UniformState.prototype.update = function (frameState) {
   }
 };
 
-function cleanViewport(uniformState) {
+function cleanViewport(uniformState: any) {
   if (uniformState._viewportDirty) {
     const v = uniformState._viewport;
     Matrix4.computeOrthographicOffCenter(
@@ -1599,7 +1599,7 @@ function cleanViewport(uniformState) {
   }
 }
 
-function cleanInverseProjection(uniformState) {
+function cleanInverseProjection(uniformState: any) {
   if (uniformState._inverseProjectionDirty) {
     uniformState._inverseProjectionDirty = false;
 
@@ -1619,7 +1619,7 @@ function cleanInverseProjection(uniformState) {
 }
 
 // Derived
-function cleanModelView(uniformState) {
+function cleanModelView(uniformState: any) {
   if (uniformState._modelViewDirty) {
     uniformState._modelViewDirty = false;
 
@@ -1631,7 +1631,7 @@ function cleanModelView(uniformState) {
   }
 }
 
-function cleanModelView3D(uniformState) {
+function cleanModelView3D(uniformState: any) {
   if (uniformState._modelView3DDirty) {
     uniformState._modelView3DDirty = false;
 
@@ -1643,7 +1643,7 @@ function cleanModelView3D(uniformState) {
   }
 }
 
-function cleanInverseModelView(uniformState) {
+function cleanInverseModelView(uniformState: any) {
   if (uniformState._inverseModelViewDirty) {
     uniformState._inverseModelViewDirty = false;
 
@@ -1651,7 +1651,7 @@ function cleanInverseModelView(uniformState) {
   }
 }
 
-function cleanInverseModelView3D(uniformState) {
+function cleanInverseModelView3D(uniformState: any) {
   if (uniformState._inverseModelView3DDirty) {
     uniformState._inverseModelView3DDirty = false;
 
@@ -1659,7 +1659,7 @@ function cleanInverseModelView3D(uniformState) {
   }
 }
 
-function cleanViewProjection(uniformState) {
+function cleanViewProjection(uniformState: any) {
   if (uniformState._viewProjectionDirty) {
     uniformState._viewProjectionDirty = false;
 
@@ -1671,7 +1671,7 @@ function cleanViewProjection(uniformState) {
   }
 }
 
-function cleanInverseViewProjection(uniformState) {
+function cleanInverseViewProjection(uniformState: any) {
   if (uniformState._inverseViewProjectionDirty) {
     uniformState._inverseViewProjectionDirty = false;
 
@@ -1682,7 +1682,7 @@ function cleanInverseViewProjection(uniformState) {
   }
 }
 
-function cleanModelViewProjection(uniformState) {
+function cleanModelViewProjection(uniformState: any) {
   if (uniformState._modelViewProjectionDirty) {
     uniformState._modelViewProjectionDirty = false;
 
@@ -1694,7 +1694,7 @@ function cleanModelViewProjection(uniformState) {
   }
 }
 
-function cleanModelViewRelativeToEye(uniformState) {
+function cleanModelViewRelativeToEye(uniformState: any) {
   if (uniformState._modelViewRelativeToEyeDirty) {
     uniformState._modelViewRelativeToEyeDirty = false;
 
@@ -1719,7 +1719,7 @@ function cleanModelViewRelativeToEye(uniformState) {
   }
 }
 
-function cleanInverseModelViewProjection(uniformState) {
+function cleanInverseModelViewProjection(uniformState: any) {
   if (uniformState._inverseModelViewProjectionDirty) {
     uniformState._inverseModelViewProjectionDirty = false;
 
@@ -1730,7 +1730,7 @@ function cleanInverseModelViewProjection(uniformState) {
   }
 }
 
-function cleanModelViewProjectionRelativeToEye(uniformState) {
+function cleanModelViewProjectionRelativeToEye(uniformState: any) {
   if (uniformState._modelViewProjectionRelativeToEyeDirty) {
     uniformState._modelViewProjectionRelativeToEyeDirty = false;
 
@@ -1742,7 +1742,7 @@ function cleanModelViewProjectionRelativeToEye(uniformState) {
   }
 }
 
-function cleanModelViewInfiniteProjection(uniformState) {
+function cleanModelViewInfiniteProjection(uniformState: any) {
   if (uniformState._modelViewInfiniteProjectionDirty) {
     uniformState._modelViewInfiniteProjectionDirty = false;
 
@@ -1754,7 +1754,7 @@ function cleanModelViewInfiniteProjection(uniformState) {
   }
 }
 
-function cleanNormal(uniformState) {
+function cleanNormal(uniformState: any) {
   if (uniformState._normalDirty) {
     uniformState._normalDirty = false;
 
@@ -1764,7 +1764,7 @@ function cleanNormal(uniformState) {
   }
 }
 
-function cleanNormal3D(uniformState) {
+function cleanNormal3D(uniformState: any) {
   if (uniformState._normal3DDirty) {
     uniformState._normal3DDirty = false;
 
@@ -1774,7 +1774,7 @@ function cleanNormal3D(uniformState) {
   }
 }
 
-function cleanInverseNormal(uniformState) {
+function cleanInverseNormal(uniformState: any) {
   if (uniformState._inverseNormalDirty) {
     uniformState._inverseNormalDirty = false;
 
@@ -1784,7 +1784,7 @@ function cleanInverseNormal(uniformState) {
   }
 }
 
-function cleanInverseNormal3D(uniformState) {
+function cleanInverseNormal3D(uniformState: any) {
   if (uniformState._inverseNormal3DDirty) {
     uniformState._inverseNormal3DDirty = false;
 
@@ -1796,7 +1796,7 @@ function cleanInverseNormal3D(uniformState) {
 
 const cameraPositionMC = new Cartesian3();
 
-function cleanEncodedCameraPositionMC(uniformState) {
+function cleanEncodedCameraPositionMC(uniformState: any) {
   if (uniformState._encodedCameraPositionMCDirty) {
     uniformState._encodedCameraPositionMCDirty = false;
 
@@ -1820,16 +1820,7 @@ const view2Dto3DCartographicScratch = new Cartographic();
 const view2Dto3DCartesian3Scratch = new Cartesian3();
 const view2Dto3DMatrix4Scratch = new Matrix4();
 
-function view2Dto3D(
-  position2D,
-  direction2D,
-  right2D,
-  up2D,
-  frustum2DWidth,
-  mode,
-  projection,
-  result,
-) {
+function view2Dto3D(position2D: any, direction2D: any, right2D: any, up2D: any, frustum2DWidth: any, mode: any, projection: any, result: any, ) {
   // The camera position and directions are expressed in the 2D coordinate system where the Y axis is to the East,
   // the Z axis is to the North, and the X axis is out of the map.  Express them instead in the ENU axes where
   // X is to the East, Y is to the North, and Z is out of the local horizontal plane.
@@ -1917,7 +1908,7 @@ function view2Dto3D(
   return result;
 }
 
-function updateView3D(that) {
+function updateView3D(that: any) {
   if (that._view3DDirty) {
     if (that._mode === SceneMode.SCENE3D) {
       Matrix4.clone(that._view, that._view3D);
@@ -1938,12 +1929,11 @@ function updateView3D(that) {
   }
 }
 
-function updateInverseView3D(that) {
+function updateInverseView3D(that: any) {
   if (that._inverseView3DDirty) {
     Matrix4.inverseTransformation(that.view3D, that._inverseView3D);
     Matrix4.getMatrix3(that._inverseView3D, that._inverseViewRotation3D);
     that._inverseView3DDirty = false;
   }
 }
-export { UniformState };
 export default UniformState;

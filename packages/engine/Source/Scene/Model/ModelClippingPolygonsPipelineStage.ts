@@ -95,5 +95,4 @@ ModelClippingPolygonsPipelineStage.process = function (
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
 
-export { ModelClippingPolygonsPipelineStage };
 export default ModelClippingPolygonsPipelineStage;

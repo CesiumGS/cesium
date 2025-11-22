@@ -14,7 +14,7 @@ const Splitter = {
    * {@link Splitter#addUniforms}, and the split position is given by an
    * automatic uniform called `czm_splitPosition`.
    */
-  modifyFragmentShader: function modifyFragmentShader(shader) {
+  modifyFragmentShader: function modifyFragmentShader(shader: any) {
     shader = ShaderSource.replaceMain(shader, "czm_splitter_main");
     shader +=
       // czm_splitPosition is not declared because it is an automatic uniform.
@@ -39,12 +39,11 @@ const Splitter = {
    * @param {object} object The object on which the `splitDirection` property may be found.
    * @param {object} uniformMap The uniform map.
    */
-  addUniforms: function addUniforms(object, uniformMap) {
+  addUniforms: function addUniforms(object: any, uniformMap: any) {
     uniformMap.czm_splitDirection = function () {
       return object.splitDirection;
     };
   },
 };
 
-export { Splitter };
 export default Splitter;

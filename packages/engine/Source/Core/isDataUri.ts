@@ -12,10 +12,11 @@ const dataUriRegex = /^data:/i;
  *
  * @private
  */
-function isDataUri(uri) {
-  ;
+function isDataUri(uri: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("uri", uri);
+  //>>includeEnd('debug');
 
   return dataUriRegex.test(uri);
 }
-export { isDataUri };
 export default isDataUri;

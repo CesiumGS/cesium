@@ -30,7 +30,7 @@ import CullFace from "./CullFace.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
  */
-function Appearance(options) {
+function Appearance(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -201,5 +201,4 @@ Appearance.getDefaultRenderState = function (translucent, closed, existing) {
 
   return rs;
 };
-export { Appearance };
 export default Appearance;

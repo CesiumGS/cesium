@@ -7,7 +7,7 @@
  * @param {JulianDate} [date] A Julian date representing the time of the leap second.
  * @param {number} [offset] The cumulative number of seconds that TAI is ahead of UTC at the provided date.
  */
-function LeapSecond(date, offset) {
+function LeapSecond(date: any, offset: any) {
   /**
    * Gets or sets the date at which this leap second occurs.
    * @type {JulianDate}
@@ -21,5 +21,4 @@ function LeapSecond(date, offset) {
    */
   this.offset = offset;
 }
-export { LeapSecond };
 export default LeapSecond;

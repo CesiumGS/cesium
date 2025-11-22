@@ -39,7 +39,7 @@ import SceneMode from "./SceneMode.js";
  *
  * @see Scene.skyAtmosphere
  */
-function SkyAtmosphere(ellipsoid) {
+function SkyAtmosphere(ellipsoid: any) {
   ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
 
   /**
@@ -340,7 +340,7 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
   return command;
 };
 
-function hasColorCorrection(skyAtmosphere) {
+function hasColorCorrection(skyAtmosphere: any) {
   return !(
     CesiumMath.equalsEpsilon(
       skyAtmosphere.hueShift,
@@ -397,5 +397,4 @@ SkyAtmosphere.prototype.destroy = function () {
     this._spSkyAtmosphere && this._spSkyAtmosphere.destroy();
   return destroyObject(this);
 };
-export { SkyAtmosphere };
 export default SkyAtmosphere;

@@ -22,7 +22,7 @@ const defaultDashPattern = 255.0;
  * @param {Property|number} [options.dashLength=16.0] A numeric Property specifying the length of the dash pattern in pixels.
  * @param {Property|number} [options.dashPattern=255.0] A numeric Property specifying a 16 bit pattern for the dash
  */
-function PolylineDashMaterialProperty(options) {
+function PolylineDashMaterialProperty(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
@@ -171,5 +171,4 @@ PolylineDashMaterialProperty.prototype.equals = function (other) {
       Property.equals(this._dashPattern, other._dashPattern))
   );
 };
-export { PolylineDashMaterialProperty };
 export default PolylineDashMaterialProperty;

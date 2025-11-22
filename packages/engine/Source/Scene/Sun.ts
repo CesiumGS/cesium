@@ -360,5 +360,4 @@ Sun.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { Sun };
 export default Sun;

@@ -32,7 +32,9 @@ Object.defineProperties(CartographicGeocoderService.prototype, {
  * @returns {Promise<GeocoderService.Result[]>}
  */
 CartographicGeocoderService.prototype.geocode = function (query) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("query", query);
+  //>>includeEnd('debug');
 
   const splitQuery = query.match(/[^\s,\n]+/g);
   if (splitQuery.length === 2 || splitQuery.length === 3) {
@@ -68,5 +70,4 @@ CartographicGeocoderService.prototype.geocode = function (query) {
   }
   return Promise.resolve([]);
 };
-export { CartographicGeocoderService };
 export default CartographicGeocoderService;

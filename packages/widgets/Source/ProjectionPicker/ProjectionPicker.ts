@@ -31,8 +31,15 @@ const orthographicPath =
  *
  * const projectionPicker = new Cesium.ProjectionPicker('projectionPickerContainer', scene);
  */
-function ProjectionPicker(container, scene) {
-  ;
+function ProjectionPicker(container: any, scene: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -167,5 +174,4 @@ ProjectionPicker.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { ProjectionPicker };
 export default ProjectionPicker;

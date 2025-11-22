@@ -24,7 +24,7 @@ const defaultSize = new Cartesian2(1.0, 1.0);
  * @param {number} [options.endScale=1.0] The scale of the particle when it dies.
  * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] The dimensions, width by height, to scale the particle image in pixels.
  */
-function Particle(options) {
+function Particle(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -146,5 +146,4 @@ Particle.prototype.update = function (dt, particleUpdateFunction) {
   // If this particle is older than it's lifespan then die.
   return this._age <= this.life;
 };
-export { Particle };
 export default Particle;

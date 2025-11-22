@@ -11,7 +11,7 @@ import Event from "../Core/Event.js";
  *
  * @see ConstantPositionProperty
  */
-function ConstantProperty(value) {
+function ConstantProperty(value: any) {
   this._value = undefined;
   this._hasClone = false;
   this._hasEquals = false;
@@ -99,7 +99,7 @@ ConstantProperty.prototype.equals = function (other) {
 /**
  * Gets this property's value.
  *
- * @returns {any} This property's value.
+ * @returns {*} This property's value.
  */
 ConstantProperty.prototype.valueOf = function () {
   return this._value;
@@ -113,5 +113,4 @@ ConstantProperty.prototype.valueOf = function () {
 ConstantProperty.prototype.toString = function () {
   return String(this._value);
 };
-export { ConstantProperty };
 export default ConstantProperty;

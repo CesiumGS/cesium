@@ -11,14 +11,14 @@ const gregorianDateScratch = new GregorianDate();
 const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const daysInLeapFebruary = 29;
 
-function compareLeapSecondDates(leapSecond, dateToFind) {
+function compareLeapSecondDates(leapSecond: any, dateToFind: any) {
   return JulianDate.compare(leapSecond.julianDate, dateToFind.julianDate);
 }
 
 // we don't really need a leap second instance, anything with a julianDate property will do
 const binarySearchScratchLeapSecond = new LeapSecond();
 
-function convertUtcToTai(julianDate) {
+function convertUtcToTai(julianDate: any) {
   //Even though julianDate is in UTC, we'll treat it as TAI and
   //search the leap second table for it.
   binarySearchScratchLeapSecond.julianDate = julianDate;
@@ -56,7 +56,7 @@ function convertUtcToTai(julianDate) {
   JulianDate.addSeconds(julianDate, offset, julianDate);
 }
 
-function convertTaiToUtc(julianDate, result) {
+function convertTaiToUtc(julianDate: any, result: any) {
   binarySearchScratchLeapSecond.julianDate = julianDate;
   const leapSeconds = JulianDate.leapSeconds;
   let index = binarySearch(
@@ -111,7 +111,7 @@ function convertTaiToUtc(julianDate, result) {
   );
 }
 
-function setComponents(wholeDays, secondsOfDay, julianDate) {
+function setComponents(wholeDays: any, secondsOfDay: any, julianDate: any) {
   const extraDays = (secondsOfDay / TimeConstants.SECONDS_PER_DAY) | 0;
   wholeDays += extraDays;
   secondsOfDay -= TimeConstants.SECONDS_PER_DAY * extraDays;
@@ -126,15 +126,7 @@ function setComponents(wholeDays, secondsOfDay, julianDate) {
   return julianDate;
 }
 
-function computeJulianDateComponents(
-  year,
-  month,
-  day,
-  hour,
-  minute,
-  second,
-  millisecond,
-) {
+function computeJulianDateComponents(year: any, month: any, day: any, hour: any, minute: any, second: any, millisecond: any, ) {
   // Algorithm from page 604 of the Explanatory Supplement to the
   // Astronomical Almanac (Seidelmann 1992).
 
@@ -202,7 +194,7 @@ const iso8601ErrorMessage = "Invalid ISO 8601 date.";
  * @param {number} [secondsOfDay=0.0] The number of seconds into the current Julian Day Number.  Fractional seconds, negative seconds and seconds greater than a day will be handled correctly.
  * @param {TimeStandard} [timeStandard=TimeStandard.UTC] The time standard in which the first two parameters are defined.
  */
-function JulianDate(julianDayNumber, secondsOfDay, timeStandard) {
+function JulianDate(julianDayNumber: any, secondsOfDay: any, timeStandard: any) {
   /**
    * Gets or sets the number of whole days.
    * @type {number}
@@ -242,7 +234,11 @@ function JulianDate(julianDayNumber, secondsOfDay, timeStandard) {
  * @exception {DeveloperError} date must be a valid GregorianDate.
  */
 JulianDate.fromGregorianDate = function (date, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!(date instanceof GregorianDate)) {
+    throw new DeveloperError("date must be a valid GregorianDate.");
+  }
+  //>>includeEnd('debug');
 
   const components = computeJulianDateComponents(
     date.year,
@@ -271,7 +267,11 @@ JulianDate.fromGregorianDate = function (date, result) {
  * @exception {DeveloperError} date must be a valid JavaScript Date.
  */
 JulianDate.fromDate = function (date, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    throw new DeveloperError("date must be a valid JavaScript Date.");
+  }
+  //>>includeEnd('debug');
 
   const components = computeJulianDateComponents(
     date.getUTCFullYear(),
@@ -302,7 +302,11 @@ JulianDate.fromDate = function (date, result) {
  * @exception {DeveloperError} Invalid ISO 8601 date.
  */
 JulianDate.fromIso8601 = function (iso8601String, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof iso8601String !== "string") {
+    throw new DeveloperError(iso8601ErrorMessage);
+  }
+  //>>includeEnd('debug');
 
   //Comma and decimal point both indicate a fractional number according to ISO 8601,
   //start out by blanket replacing , with . which is the only valid such symbol in JS.
@@ -323,12 +327,23 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
   const time = tokens[1];
   let tmp;
   let inLeapYear;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(date)) {
+    throw new DeveloperError(iso8601ErrorMessage);
+  }
+
+  let dashCount;
+  //>>includeEnd('debug');
 
   //First match the date against possible regular expressions.
   tokens = date.match(matchCalendarDate);
   if (tokens !== null) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    dashCount = date.split("-").length - 1;
+    if (dashCount > 0 && dashCount !== 2) {
+      throw new DeveloperError(iso8601ErrorMessage);
+    }
+    //>>includeEnd('debug');
     year = +tokens[1];
     month = +tokens[2];
     day = +tokens[3];
@@ -351,7 +366,15 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
           inLeapYear = isLeapYear(year);
 
           //This validation is only applicable for this format.
-          ;
+          //>>includeStart('debug', pragmas.debug);
+          if (
+            dayOfYear < 1 ||
+            (inLeapYear && dayOfYear > 366) ||
+            (!inLeapYear && dayOfYear > 365)
+          ) {
+            throw new DeveloperError(iso8601ErrorMessage);
+          }
+          //>>includeEnd('debug');
         } else {
           tokens = date.match(matchWeekDate);
           if (tokens !== null) {
@@ -361,13 +384,24 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
             const weekNumber = +tokens[2];
             const dayOfWeek = +tokens[3] || 0;
 
-            ;
+            //>>includeStart('debug', pragmas.debug);
+            dashCount = date.split("-").length - 1;
+            if (
+              dashCount > 0 &&
+              ((!defined(tokens[3]) && dashCount !== 1) ||
+                (defined(tokens[3]) && dashCount !== 2))
+            ) {
+              throw new DeveloperError(iso8601ErrorMessage);
+            }
+            //>>includeEnd('debug');
 
             const january4 = new Date(Date.UTC(year, 0, 4));
             dayOfYear = weekNumber * 7 + dayOfWeek - january4.getUTCDay() - 3;
           } else {
             //None of our regular expressions succeeded in parsing the date properly.
-            ;
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError(iso8601ErrorMessage);
+            //>>includeEnd('debug');
           }
         }
         //Split an ordinal date into month/day.
@@ -381,7 +415,17 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
 
   //Now that we have all of the date components, validate them to make sure nothing is out of range.
   inLeapYear = isLeapYear(year);
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    ((month !== 2 || !inLeapYear) && day > daysInMonth[month - 1]) ||
+    (inLeapYear && month === 2 && day > daysInLeapFebruary)
+  ) {
+    throw new DeveloperError(iso8601ErrorMessage);
+  }
+  //>>includeEnd('debug');
 
   //Now move onto the time string, which is much simpler.
   //If no time is specified, it is considered the beginning of the day, UTC to match Javascript's implementation.
@@ -389,7 +433,12 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
   if (defined(time)) {
     tokens = time.match(matchHoursMinutesSeconds);
     if (tokens !== null) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      dashCount = time.split(":").length - 1;
+      if (dashCount > 0 && dashCount !== 2 && dashCount !== 3) {
+        throw new DeveloperError(iso8601ErrorMessage);
+      }
+      //>>includeEnd('debug');
 
       hour = +tokens[1];
       minute = +tokens[2];
@@ -399,7 +448,12 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
     } else {
       tokens = time.match(matchHoursMinutes);
       if (tokens !== null) {
-        ;
+        //>>includeStart('debug', pragmas.debug);
+        dashCount = time.split(":").length - 1;
+        if (dashCount > 2) {
+          throw new DeveloperError(iso8601ErrorMessage);
+        }
+        //>>includeEnd('debug');
 
         hour = +tokens[1];
         minute = +tokens[2];
@@ -412,13 +466,24 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
           minute = +(tokens[2] || 0) * 60.0;
           offsetIndex = 3;
         } else {
-          ;
+          //>>includeStart('debug', pragmas.debug);
+          throw new DeveloperError(iso8601ErrorMessage);
+          //>>includeEnd('debug');
         }
       }
     }
 
     //Validate that all values are in proper range.  Minutes and hours have special cases at 60 and 24.
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (
+      minute >= 60 ||
+      second >= 61 ||
+      hour > 24 ||
+      (hour === 24 && (minute > 0 || second > 0 || millisecond > 0))
+    ) {
+      throw new DeveloperError(iso8601ErrorMessage);
+    }
+    //>>includeEnd('debug');
 
     //Check the UTC offset value, if no value exists, use local time
     //a Z indicates UTC, + or - are offsets.
@@ -552,7 +617,11 @@ const toGregorianDateScratch = new JulianDate(0, 0, TimeStandard.TAI);
  * @returns {GregorianDate} The modified result parameter or a new instance if none was provided.
  */
 JulianDate.toGregorianDate = function (julianDate, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(julianDate)) {
+    throw new DeveloperError("julianDate is required.");
+  }
+  //>>includeEnd('debug');
 
   let isLeapSecond = false;
   let thisUtc = convertTaiToUtc(julianDate, toGregorianDateScratch);
@@ -639,7 +708,11 @@ JulianDate.toGregorianDate = function (julianDate, result) {
  * @returns {Date} A new instance representing the provided date.
  */
 JulianDate.toDate = function (julianDate) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(julianDate)) {
+    throw new DeveloperError("julianDate is required.");
+  }
+  //>>includeEnd('debug');
 
   const gDate = JulianDate.toGregorianDate(julianDate, gregorianDateScratch);
   let second = gDate.second;
@@ -667,7 +740,11 @@ JulianDate.toDate = function (julianDate) {
  * @returns {string} The ISO8601 representation of the provided date.
  */
 JulianDate.toIso8601 = function (julianDate, precision) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(julianDate)) {
+    throw new DeveloperError("julianDate is required.");
+  }
+  //>>includeEnd('debug');
 
   const gDate = JulianDate.toGregorianDate(julianDate, gregorianDateScratch);
   let year = gDate.year;
@@ -772,7 +849,14 @@ JulianDate.clone = function (julianDate, result) {
  * @returns {number} A negative value if left is less than right, a positive value if left is greater than right, or zero if left and right are equal.
  */
 JulianDate.compare = function (left, right) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(left)) {
+    throw new DeveloperError("left is required.");
+  }
+  if (!defined(right)) {
+    throw new DeveloperError("right is required.");
+  }
+  //>>includeEnd('debug');
 
   const julianDayNumberDifference = left.dayNumber - right.dayNumber;
   if (julianDayNumberDifference !== 0) {
@@ -827,7 +911,11 @@ JulianDate.equalsEpsilon = function (left, right, epsilon) {
  * @returns {number} The Julian date as single floating point number.
  */
 JulianDate.totalDays = function (julianDate) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(julianDate)) {
+    throw new DeveloperError("julianDate is required.");
+  }
+  //>>includeEnd('debug');
   return (
     julianDate.dayNumber +
     julianDate.secondsOfDay / TimeConstants.SECONDS_PER_DAY
@@ -842,7 +930,14 @@ JulianDate.totalDays = function (julianDate) {
  * @returns {number} The difference, in seconds, when subtracting <code>right</code> from <code>left</code>.
  */
 JulianDate.secondsDifference = function (left, right) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(left)) {
+    throw new DeveloperError("left is required.");
+  }
+  if (!defined(right)) {
+    throw new DeveloperError("right is required.");
+  }
+  //>>includeEnd('debug');
 
   const dayDifference =
     (left.dayNumber - right.dayNumber) * TimeConstants.SECONDS_PER_DAY;
@@ -857,7 +952,14 @@ JulianDate.secondsDifference = function (left, right) {
  * @returns {number} The difference, in days, when subtracting <code>right</code> from <code>left</code>.
  */
 JulianDate.daysDifference = function (left, right) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(left)) {
+    throw new DeveloperError("left is required.");
+  }
+  if (!defined(right)) {
+    throw new DeveloperError("right is required.");
+  }
+  //>>includeEnd('debug');
 
   const dayDifference = left.dayNumber - right.dayNumber;
   const secondDifference =
@@ -898,7 +1000,17 @@ JulianDate.computeTaiMinusUtc = function (julianDate) {
  * @returns {JulianDate} The modified result parameter.
  */
 JulianDate.addSeconds = function (julianDate, seconds, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(julianDate)) {
+    throw new DeveloperError("julianDate is required.");
+  }
+  if (!defined(seconds)) {
+    throw new DeveloperError("seconds is required.");
+  }
+  if (!defined(result)) {
+    throw new DeveloperError("result is required.");
+  }
+  //>>includeEnd('debug');
 
   return setComponents(
     julianDate.dayNumber,
@@ -916,7 +1028,17 @@ JulianDate.addSeconds = function (julianDate, seconds, result) {
  * @returns {JulianDate} The modified result parameter.
  */
 JulianDate.addMinutes = function (julianDate, minutes, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(julianDate)) {
+    throw new DeveloperError("julianDate is required.");
+  }
+  if (!defined(minutes)) {
+    throw new DeveloperError("minutes is required.");
+  }
+  if (!defined(result)) {
+    throw new DeveloperError("result is required.");
+  }
+  //>>includeEnd('debug');
 
   const newSecondsOfDay =
     julianDate.secondsOfDay + minutes * TimeConstants.SECONDS_PER_MINUTE;
@@ -932,7 +1054,17 @@ JulianDate.addMinutes = function (julianDate, minutes, result) {
  * @returns {JulianDate} The modified result parameter.
  */
 JulianDate.addHours = function (julianDate, hours, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(julianDate)) {
+    throw new DeveloperError("julianDate is required.");
+  }
+  if (!defined(hours)) {
+    throw new DeveloperError("hours is required.");
+  }
+  if (!defined(result)) {
+    throw new DeveloperError("result is required.");
+  }
+  //>>includeEnd('debug');
 
   const newSecondsOfDay =
     julianDate.secondsOfDay + hours * TimeConstants.SECONDS_PER_HOUR;
@@ -948,7 +1080,17 @@ JulianDate.addHours = function (julianDate, hours, result) {
  * @returns {JulianDate} The modified result parameter.
  */
 JulianDate.addDays = function (julianDate, days, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(julianDate)) {
+    throw new DeveloperError("julianDate is required.");
+  }
+  if (!defined(days)) {
+    throw new DeveloperError("days is required.");
+  }
+  if (!defined(result)) {
+    throw new DeveloperError("result is required.");
+  }
+  //>>includeEnd('debug');
 
   const newJulianDayNumber = julianDate.dayNumber + days;
   return setComponents(newJulianDayNumber, julianDate.secondsOfDay, result);
@@ -1076,5 +1218,4 @@ JulianDate.leapSeconds = [
   new LeapSecond(new JulianDate(2457204, 43236.0, TimeStandard.TAI), 36), // July 1, 2015 00:00:00 UTC
   new LeapSecond(new JulianDate(2457754, 43237.0, TimeStandard.TAI), 37), // January 1, 2017 00:00:00 UTC
 ];
-export { JulianDate };
 export default JulianDate;

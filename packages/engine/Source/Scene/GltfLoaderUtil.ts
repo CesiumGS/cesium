@@ -37,7 +37,11 @@ GltfLoaderUtil.getImageIdFromTexture = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, textureId, supportedImageFormats } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.number("options.textureId", textureId);
+  Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
+  //>>includeEnd('debug');
 
   const texture = gltf.textures[textureId];
   const extensions = texture.extensions;
@@ -69,7 +73,10 @@ GltfLoaderUtil.createSampler = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const { gltf, textureInfo, compressedTextureNoMipmap = false } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.textureInfo", textureInfo);
+  //>>includeEnd('debug');
 
   // Default sampler properties
   let wrapS = TextureWrap.REPEAT;
@@ -128,7 +135,9 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const { textureInfo, channels, texture } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.textureInfo", textureInfo);
+  //>>includeEnd('debug');
 
   let texCoord = textureInfo.texCoord ?? 0;
   let transform;
@@ -172,5 +181,4 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   return modelTextureReader;
 };
 
-export { GltfLoaderUtil };
 export default GltfLoaderUtil;

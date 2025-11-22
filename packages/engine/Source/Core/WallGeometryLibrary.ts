@@ -10,7 +10,7 @@ import PolylinePipeline from "./PolylinePipeline.js";
  */
 const WallGeometryLibrary = {};
 
-function latLonEquals(c0, c1) {
+function latLonEquals(c0: any, c1: any) {
   return (
     CesiumMath.equalsEpsilon(c0.latitude, c1.latitude, CesiumMath.EPSILON10) &&
     CesiumMath.equalsEpsilon(c0.longitude, c1.longitude, CesiumMath.EPSILON10)
@@ -19,7 +19,7 @@ function latLonEquals(c0, c1) {
 
 const scratchCartographic1 = new Cartographic();
 const scratchCartographic2 = new Cartographic();
-function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
+function removeDuplicates(ellipsoid: any, positions: any, topHeights: any, bottomHeights: any) {
   positions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
   const length = positions.length;
@@ -209,5 +209,4 @@ WallGeometryLibrary.computePositions = function (
     numCorners: numCorners,
   };
 };
-export { WallGeometryLibrary };
 export default WallGeometryLibrary;

@@ -35,12 +35,11 @@ import Frozen from "./Frozen.js";
  * }
  *
  */
-function createWorldBathymetryAsync(options) {
+function createWorldBathymetryAsync(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   return CesiumTerrainProvider.fromIonAssetId(2426648, {
     requestVertexNormals: options.requestVertexNormals ?? false,
   });
 }
-export { createWorldBathymetryAsync };
 export default createWorldBathymetryAsync;

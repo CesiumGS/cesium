@@ -5,7 +5,7 @@ import CzmBuiltins from "../Shaders/Builtin/CzmBuiltins.js";
 import AutomaticUniforms from "./AutomaticUniforms.js";
 import demodernizeShader from "./demodernizeShader.js";
 
-function removeComments(source) {
+function removeComments(source: any) {
   // remove inline comments
   source = source.replace(/\/\/.*/g, "");
   // remove multiline comment block
@@ -20,7 +20,7 @@ function removeComments(source) {
   });
 }
 
-function getDependencyNode(name, glslSource, nodes) {
+function getDependencyNode(name: any, glslSource: any, nodes: any) {
   let dependencyNode;
 
   // check if already loaded
@@ -49,7 +49,7 @@ function getDependencyNode(name, glslSource, nodes) {
   return dependencyNode;
 }
 
-function generateDependencies(currentNode, dependencyNodes) {
+function generateDependencies(currentNode: any, dependencyNodes: any) {
   if (currentNode.evaluated) {
     return;
   }
@@ -84,7 +84,7 @@ function generateDependencies(currentNode, dependencyNodes) {
   }
 }
 
-function sortDependencies(dependencyNodes) {
+function sortDependencies(dependencyNodes: any) {
   const nodesWithoutIncomingEdges = [];
   const allNodes = [];
 
@@ -123,10 +123,19 @@ function sortDependencies(dependencyNodes) {
     }
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (badNodes.length !== 0) {
+    let message =
+      "A circular dependency was found in the following built-in functions/structs/constants: \n";
+    for (let k = 0; k < badNodes.length; ++k) {
+      message = `${message + badNodes[k].name}\n`;
+    }
+    throw new DeveloperError(message);
+  }
+  //>>includeEnd('debug');
 }
 
-function getBuiltinsAndAutomaticUniforms(shaderSource) {
+function getBuiltinsAndAutomaticUniforms(shaderSource: any) {
   // generate a dependency graph for builtin functions
   const dependencyNodes = [];
   const root = getDependencyNode("main", shaderSource, dependencyNodes);
@@ -143,7 +152,7 @@ function getBuiltinsAndAutomaticUniforms(shaderSource) {
   return builtinsSource.replace(root.glslSource, "");
 }
 
-function combineShader(shaderSource, isFragmentShader, context) {
+function combineShader(shaderSource: any, isFragmentShader: any, context: any) {
   let i;
   let length;
 
@@ -164,7 +173,13 @@ function combineShader(shaderSource, isFragmentShader, context) {
   combinedSources = combinedSources.replace(
     /#version\s+(.*?)\n/gm,
     function (match, group1) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(version) && version !== group1) {
+        throw new DeveloperError(
+          `inconsistent versions found: ${version} and ${group1}`,
+        );
+      }
+      //>>includeEnd('debug');
 
       // Extract #version to put at the top
       version = group1;
@@ -313,11 +328,21 @@ function combineShader(shaderSource, isFragmentShader, context) {
  *
  * @private
  */
-function ShaderSource(options) {
+function ShaderSource(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const pickColorQualifier = options.pickColorQualifier;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    defined(pickColorQualifier) &&
+    pickColorQualifier !== "uniform" &&
+    pickColorQualifier !== "in"
+  ) {
+    throw new DeveloperError(
+      "options.pickColorQualifier must be 'uniform' or 'in'.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this.defines = defined(options.defines) ? options.defines.slice(0) : [];
   this.sources = defined(options.sources) ? options.sources.slice(0) : [];
@@ -443,7 +468,7 @@ ShaderSource.createPickFragmentShaderSource = function (
   return `${renamedFS}\n${pickMain}`;
 };
 
-function containsDefine(shaderSource, define) {
+function containsDefine(shaderSource: any, define: any) {
   const defines = shaderSource.defines;
   const definesLength = defines.length;
   for (let i = 0; i < definesLength; ++i) {
@@ -454,7 +479,7 @@ function containsDefine(shaderSource, define) {
   return false;
 }
 
-function containsString(shaderSource, string) {
+function containsString(shaderSource: any, string: any) {
   const sources = shaderSource.sources;
   const sourcesLength = sources.length;
   for (let i = 0; i < sourcesLength; ++i) {
@@ -465,7 +490,7 @@ function containsString(shaderSource, string) {
   return false;
 }
 
-function findFirstString(shaderSource, strings) {
+function findFirstString(shaderSource: any, strings: any) {
   const stringsLength = strings.length;
   for (let i = 0; i < stringsLength; ++i) {
     const string = strings[i];
@@ -496,5 +521,4 @@ const positionVaryingNames = ["v_positionEC"];
 ShaderSource.findPositionVarying = function (shaderSource) {
   return findFirstString(shaderSource, positionVaryingNames);
 };
-export { ShaderSource };
 export default ShaderSource;

@@ -68,7 +68,11 @@ Object.defineProperties(CompositeMaterialProperty.prototype, {
  * @returns {string} The type of material.
  */
 CompositeMaterialProperty.prototype.getType = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required");
+  }
+  //>>includeEnd('debug');
 
   const innerProperty =
     this._composite._intervals.findDataForIntervalContainingDate(time);
@@ -121,5 +125,4 @@ CompositeMaterialProperty.prototype.equals = function (other) {
 CompositeMaterialProperty.prototype._raiseDefinitionChanged = function () {
   this._definitionChanged.raiseEvent(this);
 };
-export { CompositeMaterialProperty };
 export default CompositeMaterialProperty;

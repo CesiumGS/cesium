@@ -10,7 +10,7 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-function forEachTextureInMaterial(material, handler) {
+function forEachTextureInMaterial(material: any, handler: any) {
   Check.typeOf.object("material", material);
   Check.defined("handler", handler);
 
@@ -152,5 +152,4 @@ function forEachTextureInMaterial(material, handler) {
  * @private
  */
 
-export { forEachTextureInMaterial };
 export default forEachTextureInMaterial;

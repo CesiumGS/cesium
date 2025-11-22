@@ -11,7 +11,7 @@ import Frozen from "../Core/Frozen.js";
  * @alias SunLight
  * @constructor
  */
-function SunLight(options) {
+function SunLight(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   /**
    * The color of the light.
@@ -28,5 +28,4 @@ function SunLight(options) {
   this.intensity = options.intensity ?? 2.0;
 }
 
-export { SunLight };
 export default SunLight;

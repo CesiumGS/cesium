@@ -134,7 +134,10 @@ ModelStatistics.prototype.clear = function () {
  * @private
  */
 ModelStatistics.prototype.addBuffer = function (buffer, hasCpuCopy) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("buffer", buffer);
+  Check.typeOf.bool("hasCpuCopy", hasCpuCopy);
+  //>>includeEnd('debug');
 
   if (!this._bufferIdSet.hasOwnProperty(buffer._id)) {
     // If there's a CPU copy, count the memory twice.
@@ -161,7 +164,9 @@ ModelStatistics.prototype.addBuffer = function (buffer, hasCpuCopy) {
  * @private
  */
 ModelStatistics.prototype.addTexture = function (texture) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("texture", texture);
+  //>>includeEnd('debug');
 
   if (!this._textureIdByteLengths.hasOwnProperty(texture._id)) {
     this.texturesByteLength += texture.sizeInBytes;
@@ -208,12 +213,13 @@ ModelStatistics.prototype.getTextureByteLengthById = function (textureId) {
  * @private
  */
 ModelStatistics.prototype.addBatchTexture = function (batchTexture) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("batchTexture", batchTexture);
+  //>>includeEnd('debug');
 
   if (!this._batchTextureIdMap.contains(batchTexture._id)) {
     this._batchTextureIdMap.set(batchTexture._id, batchTexture);
   }
 };
 
-export { ModelStatistics };
 export default ModelStatistics;

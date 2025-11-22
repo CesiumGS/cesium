@@ -41,7 +41,7 @@ const pixelOffsetScaleByDistanceScratch = new NearFarScalar();
 const scaleByDistanceScratch = new NearFarScalar();
 const distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
-function EntityData(entity) {
+function EntityData(entity: any) {
   this.entity = entity;
   this.label = undefined;
   this.index = undefined;
@@ -56,8 +56,15 @@ function EntityData(entity) {
  * @param {EntityCluster} entityCluster The entity cluster to manage the collection of billboards and optionally cluster with other entities.
  * @param {EntityCollection} entityCollection The entityCollection to visualize.
  */
-function LabelVisualizer(entityCluster, entityCollection) {
-  ;
+function LabelVisualizer(entityCluster: any, entityCollection: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(entityCluster)) {
+    throw new DeveloperError("entityCluster is required.");
+  }
+  if (!defined(entityCollection)) {
+    throw new DeveloperError("entityCollection is required.");
+  }
+  //>>includeEnd('debug');
 
   entityCollection.collectionChanged.addEventListener(
     LabelVisualizer.prototype._onCollectionChanged,
@@ -79,7 +86,11 @@ function LabelVisualizer(entityCluster, entityCollection) {
  * @returns {boolean} This function always returns true.
  */
 LabelVisualizer.prototype.update = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  //>>includeEnd('debug');
 
   const items = this._items.values;
   const cluster = this._cluster;
@@ -255,7 +266,14 @@ LabelVisualizer.prototype.update = function (time) {
  * @private
  */
 LabelVisualizer.prototype.getBoundingSphere = function (entity, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(entity)) {
+    throw new DeveloperError("entity is required.");
+  }
+  if (!defined(result)) {
+    throw new DeveloperError("result is required.");
+  }
+  //>>includeEnd('debug');
 
   const item = this._items.get(entity.id);
   if (!defined(item) || !defined(item.label)) {
@@ -332,11 +350,10 @@ LabelVisualizer.prototype._onCollectionChanged = function (
   }
 };
 
-function returnPrimitive(item, entity, cluster) {
+function returnPrimitive(item: any, entity: any, cluster: any) {
   if (defined(item)) {
     item.label = undefined;
     cluster.removeLabel(entity);
   }
 }
-export { LabelVisualizer };
 export default LabelVisualizer;

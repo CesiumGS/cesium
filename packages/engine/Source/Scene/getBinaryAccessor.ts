@@ -29,7 +29,7 @@ const ClassPerType = {
 /**
  * @private
  */
-function getBinaryAccessor(accessor) {
+function getBinaryAccessor(accessor: any) {
   const componentType = accessor.componentType;
   let componentDatatype;
   if (typeof componentType === "string") {
@@ -53,5 +53,4 @@ function getBinaryAccessor(accessor) {
     },
   };
 }
-export { getBinaryAccessor };
 export default getBinaryAccessor;

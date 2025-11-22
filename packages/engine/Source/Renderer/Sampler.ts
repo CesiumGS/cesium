@@ -9,7 +9,7 @@ import TextureWrap from "./TextureWrap.js";
 /**
  * @private
  */
-function Sampler(options) {
+function Sampler(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const {
@@ -21,7 +21,33 @@ function Sampler(options) {
     maximumAnisotropy = 1.0,
   } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!TextureWrap.validate(wrapR)) {
+    throw new DeveloperError("Invalid sampler.wrapR.");
+  }
+
+  if (!TextureWrap.validate(wrapS)) {
+    throw new DeveloperError("Invalid sampler.wrapS.");
+  }
+
+  if (!TextureWrap.validate(wrapT)) {
+    throw new DeveloperError("Invalid sampler.wrapT.");
+  }
+
+  if (!TextureMinificationFilter.validate(minificationFilter)) {
+    throw new DeveloperError("Invalid sampler.minificationFilter.");
+  }
+
+  if (!TextureMagnificationFilter.validate(magnificationFilter)) {
+    throw new DeveloperError("Invalid sampler.magnificationFilter.");
+  }
+
+  Check.typeOf.number.greaterThanOrEquals(
+    "maximumAnisotropy",
+    maximumAnisotropy,
+    1.0,
+  );
+  //>>includeEnd('debug');
 
   this._wrapR = wrapR;
   this._wrapS = wrapS;
@@ -87,5 +113,4 @@ Sampler.NEAREST = Object.freeze(
     magnificationFilter: TextureMagnificationFilter.NEAREST,
   }),
 );
-export { Sampler };
 export default Sampler;

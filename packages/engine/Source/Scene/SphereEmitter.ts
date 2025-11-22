@@ -11,10 +11,12 @@ import CesiumMath from "../Core/Math.js";
  *
  * @param {number} [radius=1.0] The radius of the sphere in meters.
  */
-function SphereEmitter(radius) {
+function SphereEmitter(radius: any) {
   radius = radius ?? 1.0;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThan("radius", radius, 0.0);
+  //>>includeEnd('debug');
 
   this._radius = radius ?? 1.0;
 }
@@ -31,7 +33,9 @@ Object.defineProperties(SphereEmitter.prototype, {
       return this._radius;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThan("value", value, 0.0);
+      //>>includeEnd('debug');
       this._radius = value;
     },
   },
@@ -58,5 +62,4 @@ SphereEmitter.prototype.emit = function (particle) {
     particle.velocity,
   );
 };
-export { SphereEmitter };
 export default SphereEmitter;

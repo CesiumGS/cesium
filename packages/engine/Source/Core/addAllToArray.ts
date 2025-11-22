@@ -23,7 +23,7 @@ import defined from "./defined.js";
  * Cesium.addAllToArray(target, source);
  * // The target is now [ 0, 1, 2, 3, 4, 5 ]
  */
-function addAllToArray(target, source) {
+function addAllToArray(target: any, source: any) {
   if (!defined(source)) {
     return;
   }
@@ -37,5 +37,4 @@ function addAllToArray(target, source) {
     target[targetLength + i] = source[i];
   }
 }
-export { addAllToArray };
 export default addAllToArray;

@@ -20,7 +20,7 @@ import defined from "../Core/defined.js";
  * @returns {MetadataClassProperty|undefined}
  * @private
  */
-function getMetadataClassProperty(schema, schemaId, className, propertyName) {
+function getMetadataClassProperty(schema: any, schemaId: any, className: any, propertyName: any) {
   if (!defined(schema)) {
     return undefined;
   }
@@ -40,5 +40,4 @@ function getMetadataClassProperty(schema, schemaId, className, propertyName) {
   return metadataProperty;
 }
 
-export { getMetadataClassProperty };
 export default getMetadataClassProperty;

@@ -16,7 +16,7 @@ import Ray from "./Ray.js";
  * @param {Cartesian2} [position] The steroegraphic coordinates.
  * @param {EllipseGeometry} [tangentPlane] The tangent plane onto which the point was projected.
  */
-function Stereographic(position, tangentPlane) {
+function Stereographic(position: any, tangentPlane: any) {
   this.position = position;
   if (!defined(this.position)) {
     this.position = new Cartesian2();
@@ -130,7 +130,9 @@ const scratchProjectPointOntoPlaneCartesian3 = new Cartesian3();
  * @returns {Sterographic} The modified result parameter or a new Sterographic instance if none was provided.
  */
 Stereographic.fromCartesian = function (cartesian, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesian", cartesian);
+  //>>includeEnd('debug');
 
   const sign = CesiumMath.signNotZero(cartesian.z);
   let tangentPlane = Stereographic.NORTH_POLE_TANGENT_PLANE;
@@ -178,7 +180,9 @@ Stereographic.fromCartesian = function (cartesian, result) {
  * @returns {Sterographic[]} The modified result parameter or a new Sterographic instance if none was provided.
  */
 Stereographic.fromCartesianArray = function (cartesians, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesians", cartesians);
+  //>>includeEnd('debug');
 
   const length = cartesians.length;
   if (!defined(result)) {
@@ -240,5 +244,4 @@ Stereographic.SOUTH_POLE_TANGENT_PLANE = Object.freeze(
   ),
 );
 
-export { Stereographic };
 export default Stereographic;

@@ -15,7 +15,7 @@ import FramebufferManager from "../Renderer/FramebufferManager.js";
  *
  * @private
  */
-function PostProcessStageTextureCache(postProcessStageCollection) {
+function PostProcessStageTextureCache(postProcessStageCollection: any) {
   this._collection = postProcessStageCollection;
 
   this._framebuffers = [];
@@ -26,20 +26,14 @@ function PostProcessStageTextureCache(postProcessStageCollection) {
   this._updateDependencies = false;
 }
 
-function getLastStageName(stage) {
+function getLastStageName(stage: any) {
   while (defined(stage.length)) {
     stage = stage.get(stage.length - 1);
   }
   return stage.name;
 }
 
-function getStageDependencies(
-  collection,
-  context,
-  dependencies,
-  stage,
-  previousName,
-) {
+function getStageDependencies(collection: any, context: any, dependencies: any, stage: any, previousName: any, ) {
   if (!stage.enabled || !stage._isSupported(context)) {
     return previousName;
   }
@@ -67,13 +61,7 @@ function getStageDependencies(
   return stage.name;
 }
 
-function getCompositeDependencies(
-  collection,
-  context,
-  dependencies,
-  composite,
-  previousName,
-) {
+function getCompositeDependencies(collection: any, context: any, dependencies: any, composite: any, previousName: any, ) {
   if (
     (defined(composite.enabled) && !composite.enabled) ||
     (defined(composite._isSupported) && !composite._isSupported(context))
@@ -139,7 +127,7 @@ function getCompositeDependencies(
   return currentName;
 }
 
-function getDependencies(collection, context) {
+function getDependencies(collection: any, context: any) {
   const dependencies = {};
 
   if (defined(collection.ambientOcclusion)) {
@@ -190,7 +178,7 @@ function getDependencies(collection, context) {
   return dependencies;
 }
 
-function getFramebuffer(cache, stageName, dependencies) {
+function getFramebuffer(cache: any, stageName: any, dependencies: any) {
   const collection = cache._collection;
   const stage = collection.getStageByName(stageName);
 
@@ -255,7 +243,7 @@ function getFramebuffer(cache, stageName, dependencies) {
   return framebuffer;
 }
 
-function createFramebuffers(cache, context) {
+function createFramebuffers(cache: any, context: any) {
   const dependencies = getDependencies(cache._collection, context);
   for (const stageName in dependencies) {
     if (dependencies.hasOwnProperty(stageName)) {
@@ -268,7 +256,7 @@ function createFramebuffers(cache, context) {
   }
 }
 
-function releaseResources(cache) {
+function releaseResources(cache: any) {
   const framebuffers = cache._framebuffers;
   const length = framebuffers.length;
   for (let i = 0; i < length; ++i) {
@@ -277,7 +265,7 @@ function releaseResources(cache) {
   }
 }
 
-function updateFramebuffers(cache, context) {
+function updateFramebuffers(cache: any, context: any) {
   const width = cache._width;
   const height = cache._height;
 
@@ -451,5 +439,4 @@ PostProcessStageTextureCache.prototype.destroy = function () {
   releaseResources(this);
   return destroyObject(this);
 };
-export { PostProcessStageTextureCache };
 export default PostProcessStageTextureCache;

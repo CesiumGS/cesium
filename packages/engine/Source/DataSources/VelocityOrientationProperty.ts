@@ -28,7 +28,7 @@ import VelocityVectorProperty from "./VelocityVectorProperty.js";
  *   orientation : new Cesium.VelocityOrientationProperty(position)
  * }));
  */
-function VelocityOrientationProperty(position, ellipsoid) {
+function VelocityOrientationProperty(position: any, ellipsoid: any) {
   this._velocityVectorProperty = new VelocityVectorProperty(position, true);
   this._subscription = undefined;
   this._ellipsoid = undefined;
@@ -155,5 +155,4 @@ VelocityOrientationProperty.prototype.equals = function (other) {
         this._ellipsoid.equals(other._ellipsoid)))
   );
 };
-export { VelocityOrientationProperty };
 export default VelocityOrientationProperty;

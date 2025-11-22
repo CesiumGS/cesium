@@ -30,7 +30,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {PointGraphics.ConstructorOptions} [options] Object describing initialization options
  */
-function PointGraphics(options) {
+function PointGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -198,7 +198,11 @@ PointGraphics.prototype.clone = function (result) {
  * @param {PointGraphics} source The object to be merged into this object.
  */
 PointGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.pixelSize = this.pixelSize ?? source.pixelSize;
@@ -216,5 +220,4 @@ PointGraphics.prototype.merge = function (source) {
 
   this.splitDirection = this.splitDirection ?? source.splitDirection;
 };
-export { PointGraphics };
 export default PointGraphics;

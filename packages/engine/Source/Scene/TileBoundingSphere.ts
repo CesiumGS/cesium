@@ -19,7 +19,7 @@ import Primitive from "./Primitive.js";
  *
  * @private
  */
-function TileBoundingSphere(center, radius) {
+function TileBoundingSphere(center: any, radius: any) {
   if (radius === 0) {
     radius = CesiumMath.EPSILON7;
   }
@@ -91,7 +91,9 @@ Object.defineProperties(TileBoundingSphere.prototype, {
  *
  */
 TileBoundingSphere.prototype.distanceToCamera = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("frameState", frameState);
+  //>>includeEnd('debug');
   const boundingSphere = this._boundingSphere;
   return Math.max(
     0.0,
@@ -110,7 +112,9 @@ TileBoundingSphere.prototype.distanceToCamera = function (frameState) {
  *                      intersects the plane.
  */
 TileBoundingSphere.prototype.intersectPlane = function (plane) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("plane", plane);
+  //>>includeEnd('debug');
   return BoundingSphere.intersectPlane(this._boundingSphere, plane);
 };
 
@@ -132,7 +136,9 @@ TileBoundingSphere.prototype.update = function (center, radius) {
  * @return {Primitive}
  */
 TileBoundingSphere.prototype.createDebugVolume = function (color) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("color", color);
+  //>>includeEnd('debug');
   const geometry = new SphereOutlineGeometry({
     radius: this.radius,
   });
@@ -158,5 +164,4 @@ TileBoundingSphere.prototype.createDebugVolume = function (color) {
     asynchronous: false,
   });
 };
-export { TileBoundingSphere };
 export default TileBoundingSphere;

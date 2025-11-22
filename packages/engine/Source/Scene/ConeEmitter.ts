@@ -13,7 +13,7 @@ const defaultAngle = CesiumMath.toRadians(30.0);
  *
  * @param {number} [angle=Cesium.Math.toRadians(30.0)] The angle of the cone in radians.
  */
-function ConeEmitter(angle) {
+function ConeEmitter(angle: any) {
   this._angle = angle ?? defaultAngle;
 }
 
@@ -29,7 +29,9 @@ Object.defineProperties(ConeEmitter.prototype, {
       return this._angle;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
       this._angle = value;
     },
   },
@@ -56,5 +58,4 @@ ConeEmitter.prototype.emit = function (particle) {
   Cartesian3.normalize(particle.velocity, particle.velocity);
   particle.position = Cartesian3.clone(Cartesian3.ZERO, particle.position);
 };
-export { ConeEmitter };
 export default ConeEmitter;

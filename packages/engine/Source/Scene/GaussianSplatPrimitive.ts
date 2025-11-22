@@ -47,7 +47,7 @@ const GaussianSplatSortingState = {
   ERROR: 4,
 };
 
-function createSphericalHarmonicsTexture(context, shData) {
+function createSphericalHarmonicsTexture(context: any, shData: any) {
   const texture = new Texture({
     context: context,
     source: {
@@ -66,7 +66,7 @@ function createSphericalHarmonicsTexture(context, shData) {
   return texture;
 }
 
-function createGaussianSplatTexture(context, splatTextureData) {
+function createGaussianSplatTexture(context: any, splatTextureData: any) {
   return new Texture({
     context: context,
     source: {
@@ -96,7 +96,7 @@ function createGaussianSplatTexture(context, splatTextureData) {
  * @private
  */
 
-function GaussianSplatPrimitive(options) {
+function GaussianSplatPrimitive(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -548,7 +548,7 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
     return;
   }
   promise
-    .then((splatTextureData) => {
+    .then((splatTextureData: any) => {
       if (!primitive._gaussianSplatTexture) {
         // First frame, so create the texture.
         primitive.gaussianSplatTexture = createGaussianSplatTexture(
@@ -592,7 +592,7 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
         primitive._indexes[i] = i;
       }
     })
-    .catch((error) => {
+    .catch((error: any) => {
       console.error("Error generating Gaussian splat texture:", error);
       primitive._gaussianSplatTexturePending = false;
     });
@@ -858,7 +858,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
       const tiles = tileset._selectedTiles;
       const totalElements = tiles.reduce(
-        (total, tile) => total + tile.content.pointsLength,
+        (total: any, tile: any) => total + tile.content.pointsLength,
         0,
       );
       const aggregateAttributeValues = (
@@ -916,25 +916,25 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
       this._positions = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
-        (content) => content.positions,
+        (content: any) => content.positions,
         3,
       );
 
       this._scales = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
-        (content) => content.scales,
+        (content: any) => content.scales,
         3,
       );
 
       this._rotations = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
-        (content) => content.rotations,
+        (content: any) => content.rotations,
         4,
       );
 
       this._colors = aggregateAttributeValues(
         ComponentDatatype.UNSIGNED_BYTE,
-        (content) =>
+        (content: any) =>
           ModelUtility.getAttributeBySemantic(
             content.gltfPrimitive,
             VertexAttributeSemantic.COLOR,
@@ -1014,11 +1014,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
-    this._sorterPromise.catch((err) => {
+    this._sorterPromise.catch((err: any) => {
       this._sorterState = GaussianSplatSortingState.ERROR;
       this._sorterError = err;
     });
-    this._sorterPromise.then((sortedData) => {
+    this._sorterPromise.then((sortedData: any) => {
       this._indexes = sortedData;
       this._sorterState = GaussianSplatSortingState.SORTED;
     });
@@ -1037,11 +1037,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
-    this._sorterPromise.catch((err) => {
+    this._sorterPromise.catch((err: any) => {
       this._sorterState = GaussianSplatSortingState.ERROR;
       this._sorterError = err;
     });
-    this._sorterPromise.then((sortedData) => {
+    this._sorterPromise.then((sortedData: any) => {
       this._indexes = sortedData;
       this._sorterState = GaussianSplatSortingState.SORTED;
     });
@@ -1062,5 +1062,4 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   this._dirty = false;
 };
 
-export { GaussianSplatPrimitive };
 export default GaussianSplatPrimitive;

@@ -23,12 +23,15 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * @constructor
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function MetadataEnum(options) {
+function MetadataEnum(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
   const values = options.values;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.id", id);
+  Check.defined("options.values", values);
+  //>>includeEnd('debug');
 
   const namesByValue = {};
   const valuesByName = {};
@@ -70,7 +73,10 @@ MetadataEnum.fromJson = function (options) {
   const id = options.id;
   const enumDefinition = options.enum;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.id", id);
+  Check.typeOf.object("options.enum", enumDefinition);
+  //>>includeEnd('debug');
 
   const values = enumDefinition.values.map(function (value) {
     return MetadataEnumValue.fromJson(value);
@@ -210,5 +216,4 @@ Object.defineProperties(MetadataEnum.prototype, {
   },
 });
 
-export { MetadataEnum };
 export default MetadataEnum;

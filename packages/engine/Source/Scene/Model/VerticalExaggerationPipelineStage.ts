@@ -55,5 +55,4 @@ VerticalExaggerationPipelineStage.process = function (
   };
 };
 
-export { VerticalExaggerationPipelineStage };
 export default VerticalExaggerationPipelineStage;

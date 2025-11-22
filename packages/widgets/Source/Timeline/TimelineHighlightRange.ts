@@ -3,7 +3,7 @@ import { JulianDate } from "@cesium/engine";
 /**
  * @private
  */
-function TimelineHighlightRange(color, heightInPx, base) {
+function TimelineHighlightRange(color: any, heightInPx: any, base: any) {
   this._color = color;
   this._height = heightInPx;
   this._base = base ?? 0;
@@ -63,5 +63,4 @@ TimelineHighlightRange.prototype.render = function (renderState) {
   }
   return range;
 };
-export { TimelineHighlightRange };
 export default TimelineHighlightRange;

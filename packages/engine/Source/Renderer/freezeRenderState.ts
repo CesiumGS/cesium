@@ -8,7 +8,7 @@
  * @returns {object} Returns frozen renderState.
  *
  */
-function freezeRenderState(renderState) {
+function freezeRenderState(renderState: any) {
   if (typeof renderState !== "object" || renderState === null) {
     return renderState;
   }
@@ -27,5 +27,4 @@ function freezeRenderState(renderState) {
   }
   return Object.freeze(renderState);
 }
-export { freezeRenderState };
 export default freezeRenderState;

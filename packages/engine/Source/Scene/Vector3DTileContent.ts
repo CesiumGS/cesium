@@ -30,7 +30,7 @@ import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions
  *
  * @private
  */
-function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
+function Vector3DTileContent(tileset: any, tile: any, resource: any, arrayBuffer: any, byteOffset: any) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -178,7 +178,7 @@ Object.defineProperties(Vector3DTileContent.prototype, {
   },
 });
 
-function createColorChangedCallback(content) {
+function createColorChangedCallback(content: any) {
   return function (batchId, color) {
     if (defined(content._polygons)) {
       content._polygons.updateCommands(batchId, color);
@@ -186,7 +186,7 @@ function createColorChangedCallback(content) {
   };
 }
 
-function getBatchIds(featureTableJson, featureTableBinary) {
+function getBatchIds(featureTableJson: any, featureTableBinary: any) {
   let polygonBatchIds;
   let polylineBatchIds;
   let pointBatchIds;
@@ -279,15 +279,15 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 
 const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-function createFloatingPolylines(options) {
+function createFloatingPolylines(options: any) {
   return new Vector3DTilePolylines(options);
 }
 
-function createClampedPolylines(options) {
+function createClampedPolylines(options: any) {
   return new Vector3DTileClampedPolylines(options);
 }
 
-function initialize(content, arrayBuffer, byteOffset) {
+function initialize(content: any, arrayBuffer: any, byteOffset: any) {
   byteOffset = byteOffset ?? 0;
 
   const uint8Array = new Uint8Array(arrayBuffer);
@@ -630,7 +630,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   }
 }
 
-function createFeatures(content) {
+function createFeatures(content: any) {
   const featuresLength = content.featuresLength;
   if (!defined(content._features) && featuresLength > 0) {
     const features = new Array(featuresLength);
@@ -653,7 +653,16 @@ Vector3DTileContent.prototype.hasProperty = function (batchId, name) {
 };
 
 Vector3DTileContent.prototype.getFeature = function (batchId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  const featuresLength = this.featuresLength;
+  if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
+    throw new DeveloperError(
+      `batchId is required and between zero and featuresLength - 1 (${
+        featuresLength - 1
+      }).`,
+    );
+  }
+  //>>includeEnd('debug');
 
   if (!defined(this._features)) {
     createFeatures(this);
@@ -739,14 +748,7 @@ Vector3DTileContent.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-function examineVectorLines(
-  positions,
-  counts,
-  batchIds,
-  batchTable,
-  url,
-  callback,
-) {
+function examineVectorLines(positions: any, counts: any, batchIds: any, batchTable: any, url: any, callback: any, ) {
   const countsLength = counts.length;
   let polylineStart = 0;
   for (let i = 0; i < countsLength; i++) {
@@ -758,5 +760,4 @@ function examineVectorLines(
   }
 }
 
-export { Vector3DTileContent };
 export default Vector3DTileContent;

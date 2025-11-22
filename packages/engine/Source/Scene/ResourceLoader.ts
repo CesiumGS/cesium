@@ -73,7 +73,9 @@ ResourceLoader.prototype.process = function (frameState) {
  * @private
  */
 ResourceLoader.prototype.getError = function (errorMessage, error) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("errorMessage", errorMessage);
+  //>>includeEnd('debug');
 
   if (defined(error) && defined(error.message)) {
     errorMessage += `\n${error.message}`;
@@ -122,5 +124,4 @@ ResourceLoader.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { ResourceLoader };
 export default ResourceLoader;

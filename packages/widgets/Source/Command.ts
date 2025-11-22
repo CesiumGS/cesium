@@ -39,5 +39,4 @@ function Command() {
 
   DeveloperError.throwInstantiationError();
 }
-export { Command };
 export default Command;

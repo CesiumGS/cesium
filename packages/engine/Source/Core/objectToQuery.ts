@@ -22,8 +22,12 @@ import DeveloperError from "./DeveloperError.js";
  * // str will be:
  * // 'key1=some%20value&key2=a%2Fb&key3=x&key3=y'
  */
-function objectToQuery(obj) {
-  ;
+function objectToQuery(obj: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(obj)) {
+    throw new DeveloperError("obj is required.");
+  }
+  //>>includeEnd('debug');
 
   let result = "";
   for (const propName in obj) {
@@ -50,5 +54,4 @@ function objectToQuery(obj) {
 
   return result;
 }
-export { objectToQuery };
 export default objectToQuery;

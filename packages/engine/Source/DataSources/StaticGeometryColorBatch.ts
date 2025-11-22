@@ -19,15 +19,7 @@ const defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 const defaultOffset = Cartesian3.ZERO;
 const offsetScratch = new Cartesian3();
 
-function Batch(
-  primitives,
-  translucent,
-  appearanceType,
-  depthFailAppearanceType,
-  depthFailMaterialProperty,
-  closed,
-  shadows,
-) {
+function Batch(primitives: any, translucent: any, appearanceType: any, depthFailAppearanceType: any, depthFailMaterialProperty: any, closed: any, shadows: any, ) {
   this.translucent = translucent;
   this.appearanceType = appearanceType;
   this.depthFailAppearanceType = depthFailAppearanceType;
@@ -399,13 +391,7 @@ Batch.prototype.destroy = function () {
 /**
  * @private
  */
-function StaticGeometryColorBatch(
-  primitives,
-  appearanceType,
-  depthFailAppearanceType,
-  closed,
-  shadows,
-) {
+function StaticGeometryColorBatch(primitives: any, appearanceType: any, depthFailAppearanceType: any, closed: any, shadows: any, ) {
   this._solidItems = [];
   this._translucentItems = [];
   this._primitives = primitives;
@@ -448,7 +434,7 @@ StaticGeometryColorBatch.prototype.add = function (time, updater) {
   items.push(batch);
 };
 
-function removeItem(items, updater) {
+function removeItem(items: any, updater: any) {
   const length = items.length;
   for (let i = length - 1; i >= 0; i--) {
     const item = items[i];
@@ -469,7 +455,7 @@ StaticGeometryColorBatch.prototype.remove = function (updater) {
   }
 };
 
-function moveItems(batch, items, time) {
+function moveItems(batch: any, items: any, time: any) {
   let itemsMoved = false;
   const length = items.length;
   for (let i = 0; i < length; ++i) {
@@ -488,7 +474,7 @@ function moveItems(batch, items, time) {
   return itemsMoved;
 }
 
-function updateItems(batch, items, time, isUpdated) {
+function updateItems(batch: any, items: any, time: any, isUpdated: any) {
   let length = items.length;
   let i;
   for (i = length - 1; i >= 0; i--) {
@@ -533,7 +519,7 @@ StaticGeometryColorBatch.prototype.update = function (time) {
   return isUpdated;
 };
 
-function getBoundingSphere(items, updater, result) {
+function getBoundingSphere(items: any, updater: any, result: any) {
   const length = items.length;
   for (let i = 0; i < length; i++) {
     const item = items[i];
@@ -555,7 +541,7 @@ StaticGeometryColorBatch.prototype.getBoundingSphere = function (
   return boundingSphere;
 };
 
-function removeAllPrimitives(items) {
+function removeAllPrimitives(items: any) {
   const length = items.length;
   for (let i = 0; i < length; i++) {
     items[i].destroy();
@@ -567,5 +553,4 @@ StaticGeometryColorBatch.prototype.removeAllPrimitives = function () {
   removeAllPrimitives(this._solidItems);
   removeAllPrimitives(this._translucentItems);
 };
-export { StaticGeometryColorBatch };
 export default StaticGeometryColorBatch;

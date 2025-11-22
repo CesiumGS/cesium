@@ -87,7 +87,7 @@ ImageryLayerFeatureInfo.prototype.configureNameFromProperties = function (
  */
 ImageryLayerFeatureInfo.prototype.configureDescriptionFromProperties =
   function (properties) {
-    function describe(properties) {
+    function describe(properties: any) {
       let html = '<table class="cesium-infoBox-defaultTable">';
       for (const key in properties) {
         if (properties.hasOwnProperty(key)) {
@@ -108,5 +108,4 @@ ImageryLayerFeatureInfo.prototype.configureDescriptionFromProperties =
 
     this.description = describe(properties);
   };
-export { ImageryLayerFeatureInfo };
 export default ImageryLayerFeatureInfo;

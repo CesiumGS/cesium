@@ -32,8 +32,11 @@ let centerCartographicScratch = new Cartographic();
  *
  * @private
  */
-function TileBoundingS2Cell(options) {
-  ;
+function TileBoundingS2Cell(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.string("options.token", options.token);
+  //>>includeEnd('debug');
 
   const s2Cell = S2Cell.fromToken(options.token);
   const minimumHeight = options.minimumHeight ?? 0.0;
@@ -128,12 +131,7 @@ const sideScratch = new Cartesian3();
  * Computes bounding planes of the kDOP.
  * @private
  */
-function computeBoundingPlanes(
-  s2Cell,
-  minimumHeight,
-  maximumHeight,
-  ellipsoid,
-) {
+function computeBoundingPlanes(s2Cell: any, minimumHeight: any, maximumHeight: any, ellipsoid: any, ) {
   const planes = new Array(6);
   const centerPoint = s2Cell.getCenter();
 
@@ -228,7 +226,7 @@ const matrixScratch = new Matrix3();
  * Computes intersection of 3 planes.
  * @private
  */
-function computeIntersection(p0, p1, p2) {
+function computeIntersection(p0: any, p1: any, p2: any) {
   n0Scratch = p0.normal;
   n1Scratch = p1.normal;
   n2Scratch = p2.normal;
@@ -275,7 +273,7 @@ function computeIntersection(p0, p1, p2) {
  * Compute the vertices of the kDOP.
  * @private
  */
-function computeVertices(boundingPlanes) {
+function computeVertices(boundingPlanes: any) {
   const vertices = new Array(8);
   for (let i = 0; i < 4; i++) {
     // Vertices on the top plane.
@@ -300,7 +298,7 @@ let edgeNormalScratch = new Cartesian3();
  * Compute edge normals on a plane.
  * @private
  */
-function computeEdgeNormals(plane, vertices) {
+function computeEdgeNormals(plane: any, vertices: any) {
   const edgeNormals = [];
   for (let i = 0; i < 4; i++) {
     edgeScratch = Cartesian3.subtract(
@@ -385,7 +383,9 @@ const facePointScratch = new Cartesian3();
  * Since we are on an ellipsoid, this will only happen in the bottom plane, which is what we will use for the distance test.
  */
 TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("frameState", frameState);
+  //>>includeEnd('debug');
 
   const point = frameState.camera.positionWC;
 
@@ -509,7 +509,7 @@ const pL0Scratch = new Cartesian3();
  * Finds point on a line segment closest to a given point.
  * @private
  */
-function closestPointLineSegment(p, l0, l1) {
+function closestPointLineSegment(p: any, l0: any, l1: any) {
   const d = Cartesian3.subtract(l1, l0, dScratch);
   const pL0 = Cartesian3.subtract(p, l0, pL0Scratch);
   let t = Cartesian3.dot(d, pL0);
@@ -537,7 +537,7 @@ const edgePlaneScratch = new Plane(Cartesian3.UNIT_X, 0.0);
  * a point. The test point and the polygon are all on the same plane.
  * @private
  */
-function closestPointPolygon(p, vertices, plane, edgeNormals) {
+function closestPointPolygon(p: any, vertices: any, plane: any, edgeNormals: any) {
   let minDistance = Number.MAX_VALUE;
   let distance;
   let closestPoint;
@@ -586,7 +586,9 @@ function closestPointPolygon(p, vertices, plane, edgeNormals) {
  *                      intersects the plane.
  */
 TileBoundingS2Cell.prototype.intersectPlane = function (plane) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("plane", plane);
+  //>>includeEnd('debug');
 
   let plusCount = 0;
   let negCount = 0;
@@ -616,7 +618,9 @@ TileBoundingS2Cell.prototype.intersectPlane = function (plane) {
  * @return {Primitive}
  */
 TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("color", color);
+  //>>includeEnd('debug');
 
   const modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
   const topPlanePolygon = new CoplanarPolygonOutlineGeometry({
@@ -687,5 +691,4 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
   });
 };
 
-export { TileBoundingS2Cell };
 export default TileBoundingS2Cell;

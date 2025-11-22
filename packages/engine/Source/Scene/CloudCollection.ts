@@ -103,7 +103,7 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  * });
  *
  */
-function CloudCollection(options) {
+function CloudCollection(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._clouds = [];
@@ -229,7 +229,7 @@ function CloudCollection(options) {
 }
 
 // Wraps useful texture metrics into a single vec3 for less overhead.
-function getNoiseTextureDimensions(collection) {
+function getNoiseTextureDimensions(collection: any) {
   return function () {
     scratchTextureDimensions.x = collection._textureSliceWidth;
     scratchTextureDimensions.y = collection._noiseTextureRows;
@@ -252,7 +252,7 @@ Object.defineProperties(CloudCollection.prototype, {
   },
 });
 
-function destroyClouds(clouds) {
+function destroyClouds(clouds: any) {
   const length = clouds.length;
   for (let i = 0; i < length; ++i) {
     if (clouds[i]) {
@@ -298,7 +298,11 @@ function destroyClouds(clouds) {
 CloudCollection.prototype.add = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const cloudType = options.cloudType ?? CloudType.CUMULUS;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!CloudType.validate(cloudType)) {
+    throw new DeveloperError("invalid cloud type");
+  }
+  //>>includeEnd('debug');
 
   let cloud;
   if (cloudType === CloudType.CUMULUS) {
@@ -366,7 +370,7 @@ CloudCollection.prototype.removeAll = function () {
   this._createVertexArray = true;
 };
 
-function removeClouds(cloudCollection) {
+function removeClouds(cloudCollection: any) {
   if (cloudCollection._cloudsRemoved) {
     cloudCollection._cloudsRemoved = false;
 
@@ -432,7 +436,9 @@ CloudCollection.prototype.contains = function (cloud) {
  * @see CloudCollection#length
  */
 CloudCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   removeClouds(this);
   return this._clouds[index];
@@ -444,7 +450,7 @@ const texturePositions = new Float32Array([
 
 const textureIndices = new Uint16Array([0, 1, 2, 0, 2, 3]);
 
-function createTextureVA(context) {
+function createTextureVA(context: any) {
   const positionBuffer = Buffer.createVertexBuffer({
     context: context,
     typedArray: texturePositions,
@@ -475,7 +481,7 @@ function createTextureVA(context) {
 
 let getIndexBuffer;
 
-function getIndexBufferBatched(context) {
+function getIndexBufferBatched(context: any) {
   const sixteenK = 16 * 1024;
 
   let indexBuffer = context.cache.cloudCollection_indexBufferBatched;
@@ -508,7 +514,7 @@ function getIndexBufferBatched(context) {
   return indexBuffer;
 }
 
-function getIndexBufferInstanced(context) {
+function getIndexBufferInstanced(context: any) {
   let indexBuffer = context.cache.cloudCollection_indexBufferInstanced;
   if (defined(indexBuffer)) {
     return indexBuffer;
@@ -526,7 +532,7 @@ function getIndexBufferInstanced(context) {
   return indexBuffer;
 }
 
-function getVertexBufferInstanced(context) {
+function getVertexBufferInstanced(context: any) {
   let vertexBuffer = context.cache.cloudCollection_vertexBufferInstanced;
   if (defined(vertexBuffer)) {
     return vertexBuffer;
@@ -543,7 +549,7 @@ function getVertexBufferInstanced(context) {
   return vertexBuffer;
 }
 
-function createVAF(context, numberOfClouds, instanced) {
+function createVAF(context: any, numberOfClouds: any, instanced: any) {
   const attributes = [
     {
       index: attributeLocations.positionHighAndScaleX,
@@ -593,7 +599,7 @@ function createVAF(context, numberOfClouds, instanced) {
 
 const writePositionScratch = new EncodedCartesian3();
 
-function writePositionAndScale(cloudCollection, frameState, vafWriters, cloud) {
+function writePositionAndScale(cloudCollection: any, frameState: any, vafWriters: any, cloud: any) {
   let i;
   const positionHighWriter =
     vafWriters[attributeLocations.positionHighAndScaleX];
@@ -624,7 +630,7 @@ function writePositionAndScale(cloudCollection, frameState, vafWriters, cloud) {
   }
 }
 
-function writePackedAttribute0(cloudCollection, frameState, vafWriters, cloud) {
+function writePackedAttribute0(cloudCollection: any, frameState: any, vafWriters: any, cloud: any) {
   let i;
   const writer = vafWriters[attributeLocations.packedAttribute0];
   const show = cloud.show;
@@ -642,7 +648,7 @@ function writePackedAttribute0(cloudCollection, frameState, vafWriters, cloud) {
   }
 }
 
-function writePackedAttribute1(cloudCollection, frameState, vafWriters, cloud) {
+function writePackedAttribute1(cloudCollection: any, frameState: any, vafWriters: any, cloud: any) {
   let i;
   const writer = vafWriters[attributeLocations.packedAttribute1];
   const maximumSize = cloud.maximumSize;
@@ -660,7 +666,7 @@ function writePackedAttribute1(cloudCollection, frameState, vafWriters, cloud) {
   }
 }
 
-function writeColor(cloudCollection, frameState, vafWriters, cloud) {
+function writeColor(cloudCollection: any, frameState: any, vafWriters: any, cloud: any) {
   let i;
   const writer = vafWriters[attributeLocations.color];
   const color = cloud.color;
@@ -680,19 +686,28 @@ function writeColor(cloudCollection, frameState, vafWriters, cloud) {
     writer(i + 3, red, green, blue, alpha);
   }
 }
-function writeCloud(cloudCollection, frameState, vafWriters, cloud) {
+function writeCloud(cloudCollection: any, frameState: any, vafWriters: any, cloud: any) {
   writePositionAndScale(cloudCollection, frameState, vafWriters, cloud);
   writePackedAttribute0(cloudCollection, frameState, vafWriters, cloud);
   writePackedAttribute1(cloudCollection, frameState, vafWriters, cloud);
   writeColor(cloudCollection, frameState, vafWriters, cloud);
 }
 
-function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
+function createNoiseTexture(cloudCollection: any, frameState: any, vsSource: any, fsSource: any) {
   const that = cloudCollection;
 
   const textureSliceWidth = that._textureSliceWidth;
   const noiseTextureRows = that._noiseTextureRows;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    textureSliceWidth / noiseTextureRows < 1 ||
+    textureSliceWidth % noiseTextureRows !== 0
+  ) {
+    throw new DeveloperError(
+      "noiseTextureRows must evenly divide textureSliceWidth",
+    );
+  }
+  //>>includeEnd('debug');
 
   const context = frameState.context;
   that._vaNoise = createTextureVA(context);
@@ -747,7 +762,7 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
   that._loading = true;
 }
 
-function createVertexArray(cloudCollection, frameState) {
+function createVertexArray(cloudCollection: any, frameState: any) {
   const that = cloudCollection;
   const context = frameState.context;
   that._createVertexArray = false;
@@ -773,7 +788,7 @@ function createVertexArray(cloudCollection, frameState) {
 
 const scratchWriterArray = [];
 
-function updateClouds(cloudCollection, frameState) {
+function updateClouds(cloudCollection: any, frameState: any) {
   const context = frameState.context;
   const that = cloudCollection;
   const clouds = that._clouds;
@@ -841,7 +856,7 @@ function updateClouds(cloudCollection, frameState) {
   that._cloudsToUpdateIndex = 0;
 }
 
-function createShaderProgram(cloudCollection, frameState, vsSource, fsSource) {
+function createShaderProgram(cloudCollection: any, frameState: any, vsSource: any, fsSource: any) {
   const context = frameState.context;
   const that = cloudCollection;
   const vs = new ShaderSource({
@@ -888,7 +903,7 @@ function createShaderProgram(cloudCollection, frameState, vsSource, fsSource) {
   that._compiledDebugEllipsoids = that.debugEllipsoids;
 }
 
-function createDrawCommands(cloudCollection, frameState) {
+function createDrawCommands(cloudCollection: any, frameState: any) {
   const that = cloudCollection;
   const pass = frameState.passes;
   const uniforms = that._uniforms;
@@ -1023,5 +1038,4 @@ CloudCollection.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { CloudCollection };
 export default CloudCollection;

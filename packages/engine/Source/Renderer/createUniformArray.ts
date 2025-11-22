@@ -13,7 +13,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @private
  * @constructor
  */
-function createUniformArray(gl, activeUniform, uniformName, locations) {
+function createUniformArray(gl: any, activeUniform: any, uniformName: any, locations: any) {
   switch (activeUniform.type) {
     case gl.FLOAT:
       return new UniformArrayFloat(gl, activeUniform, uniformName, locations);
@@ -71,7 +71,7 @@ function createUniformArray(gl, activeUniform, uniformName, locations) {
  * @private
  * @constructor
  */
-function UniformArrayFloat(gl, activeUniform, uniformName, locations) {
+function UniformArrayFloat(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -113,7 +113,7 @@ UniformArrayFloat.prototype.set = function () {
  * @private
  * @constructor
  */
-function UniformArrayFloatVec2(gl, activeUniform, uniformName, locations) {
+function UniformArrayFloatVec2(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -157,7 +157,7 @@ UniformArrayFloatVec2.prototype.set = function () {
  * @private
  * @constructor
  */
-function UniformArrayFloatVec3(gl, activeUniform, uniformName, locations) {
+function UniformArrayFloatVec3(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -200,7 +200,9 @@ UniformArrayFloatVec3.prototype.set = function () {
         changed = true;
       }
     } else {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError("Invalid vec3 value.");
+      //>>includeEnd('debug');
     }
 
     j += 3;
@@ -217,7 +219,7 @@ UniformArrayFloatVec3.prototype.set = function () {
  * @private
  * @constructor
  */
-function UniformArrayFloatVec4(gl, activeUniform, uniformName, locations) {
+function UniformArrayFloatVec4(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -265,7 +267,9 @@ UniformArrayFloatVec4.prototype.set = function () {
         changed = true;
       }
     } else {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError("Invalid vec4 value.");
+      //>>includeEnd('debug');
     }
 
     j += 4;
@@ -282,7 +286,7 @@ UniformArrayFloatVec4.prototype.set = function () {
  * @private
  * @constructor
  */
-function UniformArraySampler(gl, activeUniform, uniformName, locations) {
+function UniformArraySampler(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -332,7 +336,7 @@ UniformArraySampler.prototype._setSampler = function (textureUnitIndex) {
  * @private
  * @constructor
  */
-function UniformArrayInt(gl, activeUniform, uniformName, locations) {
+function UniformArrayInt(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -374,7 +378,7 @@ UniformArrayInt.prototype.set = function () {
  * @private
  * @constructor
  */
-function UniformArrayIntVec2(gl, activeUniform, uniformName, locations) {
+function UniformArrayIntVec2(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -418,7 +422,7 @@ UniformArrayIntVec2.prototype.set = function () {
  * @private
  * @constructor
  */
-function UniformArrayIntVec3(gl, activeUniform, uniformName, locations) {
+function UniformArrayIntVec3(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -462,7 +466,7 @@ UniformArrayIntVec3.prototype.set = function () {
  * @private
  * @constructor
  */
-function UniformArrayIntVec4(gl, activeUniform, uniformName, locations) {
+function UniformArrayIntVec4(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -506,7 +510,7 @@ UniformArrayIntVec4.prototype.set = function () {
  * @private
  * @constructor
  */
-function UniformArrayMat2(gl, activeUniform, uniformName, locations) {
+function UniformArrayMat2(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -550,7 +554,7 @@ UniformArrayMat2.prototype.set = function () {
  * @private
  * @constructor
  */
-function UniformArrayMat3(gl, activeUniform, uniformName, locations) {
+function UniformArrayMat3(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -594,7 +598,7 @@ UniformArrayMat3.prototype.set = function () {
  * @private
  * @constructor
  */
-function UniformArrayMat4(gl, activeUniform, uniformName, locations) {
+function UniformArrayMat4(gl: any, activeUniform: any, uniformName: any, locations: any) {
   const length = locations.length;
 
   /**
@@ -631,5 +635,4 @@ UniformArrayMat4.prototype.set = function () {
     this._gl.uniformMatrix4fv(this._location, false, arraybuffer);
   }
 };
-export { createUniformArray };
 export default createUniformArray;

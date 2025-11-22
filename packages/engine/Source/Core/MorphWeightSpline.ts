@@ -39,13 +39,22 @@ import Spline from "./Spline.js";
  * @see CatmullRomSpline
  * @see QuaternionSpline
  */
-function MorphWeightSpline(options) {
+function MorphWeightSpline(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const weights = options.weights;
   const times = options.times;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("weights", weights);
+  Check.defined("times", times);
+  Check.typeOf.number.greaterThanOrEquals("weights.length", weights.length, 3);
+  if (weights.length % times.length !== 0) {
+    throw new DeveloperError(
+      "times.length must be a factor of weights.length.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._times = times;
   this._weights = weights;
@@ -149,5 +158,4 @@ MorphWeightSpline.prototype.evaluate = function (time, result) {
 
   return result;
 };
-export { MorphWeightSpline };
 export default MorphWeightSpline;

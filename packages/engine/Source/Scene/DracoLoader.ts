@@ -37,7 +37,7 @@ DracoLoader._getDecoderTaskProcessor = function () {
           );
         }
       })
-      .catch((error) => {
+      .catch((error: any) => {
         DracoLoader._error = error;
       });
     DracoLoader._decoderTaskProcessor = processor;
@@ -96,5 +96,4 @@ DracoLoader.decodeBufferView = function (options) {
   return decoderTaskProcessor.scheduleTask(options, [options.array.buffer]);
 };
 
-export { DracoLoader };
 export default DracoLoader;

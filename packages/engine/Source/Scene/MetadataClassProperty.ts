@@ -44,12 +44,15 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * @constructor
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function MetadataClassProperty(options) {
+function MetadataClassProperty(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
   const type = options.type;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.id", id);
+  Check.typeOf.string("options.type", type);
+  //>>includeEnd('debug');
 
   const componentType = options.componentType;
   const enumType = options.enumType;
@@ -134,7 +137,11 @@ MetadataClassProperty.fromJson = function (options) {
   const id = options.id;
   const property = options.property;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.id", id);
+  Check.typeOf.object("options.property", property);
+  Check.typeOf.string("options.property.type", property.type);
+  //>>includeEnd('debug');
 
   // Try to determine if this is the legacy extension. This is not
   // always possible, as there are some types that are valid in both
@@ -486,7 +493,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 });
 
-function isLegacy(property) {
+function isLegacy(property: any) {
   if (property.type === "ARRAY") {
     return true;
   }
@@ -528,7 +535,7 @@ function isLegacy(property) {
   return undefined;
 }
 
-function parseType(property, enums) {
+function parseType(property: any, enums: any) {
   const type = property.type;
   const componentType = property.componentType;
 
@@ -664,7 +671,11 @@ function parseType(property, enums) {
     };
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    `unknown metadata type {type: ${type}, componentType: ${componentType})`,
+  );
+  //>>includeEnd('debug');
 }
 
 /**
@@ -684,7 +695,7 @@ function parseType(property, enums) {
  * </p>
  *
  * @param {*} value The integer value or array of integer values.
- * @returns {any} The normalized value or array of normalized values.
+ * @returns {*} The normalized value or array of normalized values.
  *
  * @private
  */
@@ -717,7 +728,7 @@ MetadataClassProperty.prototype.normalize = function (value) {
  * </p>
  *
  * @param {*} value The normalized value or array of normalized values.
- * @returns {any} The integer value or array of integer values.
+ * @returns {*} The integer value or array of integer values.
  *
  * @private
  */
@@ -813,7 +824,7 @@ MetadataClassProperty.prototype.expandConstant = function (
  * If the value is the noData sentinel, return undefined. Otherwise, return
  * the value.
  * @param {*} value The raw value
- * @returns {any} Either the value or undefined if the value was a no data value.
+ * @returns {*} Either the value or undefined if the value was a no data value.
  *
  * @private
  */
@@ -830,7 +841,7 @@ MetadataClassProperty.prototype.handleNoData = function (value) {
   return value;
 };
 
-function arrayEquals(left, right) {
+function arrayEquals(left: any, right: any) {
   if (!Array.isArray(left)) {
     return left === right;
   }
@@ -860,7 +871,7 @@ function arrayEquals(left, right) {
  *
  * @param {*} value the original, normalized values.
  * @param {boolean} [enableNestedArrays=false] If true, arrays of vectors are represented as nested arrays. This is used for JSON encoding but not binary encoding
- * @returns {any} The appropriate vector or matrix type if the value is a vector or matrix type, respectively. If the property is an array of vectors or matrices, an array of the appropriate vector or matrix type is returned. Otherwise, the value is returned unaltered.
+ * @returns {*} The appropriate vector or matrix type if the value is a vector or matrix type, respectively. If the property is an array of vectors or matrices, an array of the appropriate vector or matrix type is returned. Otherwise, the value is returned unaltered.
  * @private
  */
 MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
@@ -899,7 +910,7 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
  *
  * @param {*} value The value of this property
  * @param {boolean} [enableNestedArrays=false] If true, arrays of vectors are represented as nested arrays. This is used for JSON encoding but not binary encoding
- * @returns {any} An array of the appropriate length if the property is a vector or matrix type. Otherwise, the value is returned unaltered.
+ * @returns {*} An array of the appropriate length if the property is a vector or matrix type. Otherwise, the value is returned unaltered.
  * @private
  */
 MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (
@@ -953,7 +964,7 @@ MetadataClassProperty.prototype.validate = function (value) {
   return validateSingleValue(this, value);
 };
 
-function validateArray(classProperty, value) {
+function validateArray(classProperty: any, value: any) {
   if (!Array.isArray(value)) {
     return `value ${value} must be an array`;
   }
@@ -974,7 +985,7 @@ function validateArray(classProperty, value) {
   }
 }
 
-function validateSingleValue(classProperty, value) {
+function validateSingleValue(classProperty: any, value: any) {
   const type = classProperty._type;
   const componentType = classProperty._componentType;
   const enumType = classProperty._enumType;
@@ -995,7 +1006,7 @@ function validateSingleValue(classProperty, value) {
   return validateScalar(value, componentType, normalized);
 }
 
-function validateVector(value, type, componentType) {
+function validateVector(value: any, type: any, componentType: any) {
   if (!MetadataComponentType.isVectorCompatible(componentType)) {
     return `componentType ${componentType} is incompatible with vector type ${type}`;
   }
@@ -1013,7 +1024,7 @@ function validateVector(value, type, componentType) {
   }
 }
 
-function validateMatrix(value, type, componentType) {
+function validateMatrix(value: any, type: any, componentType: any) {
   if (!MetadataComponentType.isVectorCompatible(componentType)) {
     return `componentType ${componentType} is incompatible with matrix type ${type}`;
   }
@@ -1031,19 +1042,19 @@ function validateMatrix(value, type, componentType) {
   }
 }
 
-function validateString(value) {
+function validateString(value: any) {
   if (typeof value !== "string") {
     return getTypeErrorMessage(value, MetadataType.STRING);
   }
 }
 
-function validateBoolean(value) {
+function validateBoolean(value: any) {
   if (typeof value !== "boolean") {
     return getTypeErrorMessage(value, MetadataType.BOOLEAN);
   }
 }
 
-function validateEnum(value, enumType) {
+function validateEnum(value: any, enumType: any) {
   const javascriptType = typeof value;
   if (defined(enumType)) {
     if (javascriptType !== "string" || !defined(enumType.valuesByName[value])) {
@@ -1053,7 +1064,7 @@ function validateEnum(value, enumType) {
   }
 }
 
-function validateScalar(value, componentType, normalized) {
+function validateScalar(value: any, componentType: any, normalized: any) {
   const javascriptType = typeof value;
 
   switch (componentType) {
@@ -1084,11 +1095,11 @@ function validateScalar(value, componentType, normalized) {
   }
 }
 
-function getTypeErrorMessage(value, type) {
+function getTypeErrorMessage(value: any, type: any) {
   return `value ${value} does not match type ${type}`;
 }
 
-function getOutOfRangeErrorMessage(value, type, normalized) {
+function getOutOfRangeErrorMessage(value: any, type: any, normalized: any) {
   let errorMessage = `value ${value} is out of range for type ${type}`;
   if (normalized) {
     errorMessage += " (normalized)";
@@ -1096,7 +1107,7 @@ function getOutOfRangeErrorMessage(value, type, normalized) {
   return errorMessage;
 }
 
-function checkInRange(value, componentType, normalized) {
+function checkInRange(value: any, componentType: any, normalized: any) {
   if (normalized) {
     const min = MetadataComponentType.isUnsignedIntegerType(componentType)
       ? 0.0
@@ -1116,11 +1127,11 @@ function checkInRange(value, componentType, normalized) {
   }
 }
 
-function getNonFiniteErrorMessage(value, type) {
+function getNonFiniteErrorMessage(value: any, type: any) {
   return `value ${value} of type ${type} must be finite`;
 }
 
-function normalizeInPlace(values, valueType, normalizeFunction) {
+function normalizeInPlace(values: any, valueType: any, normalizeFunction: any) {
   if (!Array.isArray(values)) {
     return normalizeFunction(values, valueType);
   }
@@ -1177,5 +1188,4 @@ MetadataClassProperty.valueTransformInPlace = function (
   return values;
 };
 
-export { MetadataClassProperty };
 export default MetadataClassProperty;

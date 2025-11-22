@@ -59,8 +59,18 @@ import Texture from "../Renderer/Texture.js";
  *     // ...
  * }
  */
-function BatchTable(context, attributes, numberOfInstances) {
-  ;
+function BatchTable(context: any, attributes: any, numberOfInstances: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(context)) {
+    throw new DeveloperError("context is required");
+  }
+  if (!defined(attributes)) {
+    throw new DeveloperError("attributes is required");
+  }
+  if (!defined(numberOfInstances)) {
+    throw new DeveloperError("numberOfInstances is required");
+  }
+  //>>includeEnd('debug');
 
   this._attributes = attributes;
   this._numberOfInstances = numberOfInstances;
@@ -142,7 +152,7 @@ Object.defineProperties(BatchTable.prototype, {
   },
 });
 
-function getDatatype(attributes) {
+function getDatatype(attributes: any) {
   let foundFloatDatatype = false;
   const length = attributes.length;
   for (let i = 0; i < length; ++i) {
@@ -154,7 +164,7 @@ function getDatatype(attributes) {
   return foundFloatDatatype ? PixelDatatype.FLOAT : PixelDatatype.UNSIGNED_BYTE;
 }
 
-function getAttributeType(attributes, attributeIndex) {
+function getAttributeType(attributes: any, attributeIndex: any) {
   const componentsPerAttribute =
     attributes[attributeIndex].componentsPerAttribute;
   if (componentsPerAttribute === 2) {
@@ -167,7 +177,7 @@ function getAttributeType(attributes, attributeIndex) {
   return Number;
 }
 
-function createOffsets(attributes, packFloats) {
+function createOffsets(attributes: any, packFloats: any) {
   const offsets = new Array(attributes.length);
 
   let currentOffset = 0;
@@ -188,7 +198,7 @@ function createOffsets(attributes, packFloats) {
   return offsets;
 }
 
-function getStride(offsets, attributes, packFloats) {
+function getStride(offsets: any, attributes: any, packFloats: any) {
   const length = offsets.length;
   const lastOffset = offsets[length - 1];
   const lastAttribute = attributes[length - 1];
@@ -202,7 +212,7 @@ function getStride(offsets, attributes, packFloats) {
 
 const scratchPackedFloatCartesian4 = new Cartesian4();
 
-function getPackedFloat(array, index, result) {
+function getPackedFloat(array: any, index: any, result: any) {
   let packed = Cartesian4.unpack(array, index, scratchPackedFloatCartesian4);
   const x = Cartesian4.unpackFloat(packed);
 
@@ -218,7 +228,7 @@ function getPackedFloat(array, index, result) {
   return Cartesian4.fromElements(x, y, z, w, result);
 }
 
-function setPackedAttribute(value, array, index) {
+function setPackedAttribute(value: any, array: any, index: any) {
   let packed = Cartesian4.packFloat(value.x, scratchPackedFloatCartesian4);
   Cartesian4.pack(packed, array, index);
 
@@ -250,7 +260,14 @@ BatchTable.prototype.getBatchedAttribute = function (
   attributeIndex,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (instanceIndex < 0 || instanceIndex >= this._numberOfInstances) {
+    throw new DeveloperError("instanceIndex is out of range.");
+  }
+  if (attributeIndex < 0 || attributeIndex >= this._attributes.length) {
+    throw new DeveloperError("attributeIndex is out of range");
+  }
+  //>>includeEnd('debug');
 
   const attributes = this._attributes;
   const offset = this._offsets[attributeIndex];
@@ -310,7 +327,17 @@ BatchTable.prototype.setBatchedAttribute = function (
   attributeIndex,
   value,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (instanceIndex < 0 || instanceIndex >= this._numberOfInstances) {
+    throw new DeveloperError("instanceIndex is out of range.");
+  }
+  if (attributeIndex < 0 || attributeIndex >= this._attributes.length) {
+    throw new DeveloperError("attributeIndex is out of range");
+  }
+  if (!defined(value)) {
+    throw new DeveloperError("value is required.");
+  }
+  //>>includeEnd('debug');
 
   const attributes = this._attributes;
   const result =
@@ -352,7 +379,7 @@ BatchTable.prototype.setBatchedAttribute = function (
   this._batchValuesDirty = true;
 };
 
-function createTexture(batchTable, context) {
+function createTexture(batchTable: any, context: any) {
   const dimensions = batchTable._textureDimensions;
   batchTable._texture = new Texture({
     context: context,
@@ -365,7 +392,7 @@ function createTexture(batchTable, context) {
   });
 }
 
-function updateTexture(batchTable) {
+function updateTexture(batchTable: any) {
   const dimensions = batchTable._textureDimensions;
   batchTable._texture.copyFrom({
     source: {
@@ -425,7 +452,7 @@ BatchTable.prototype.getUniformMapCallback = function () {
   };
 };
 
-function getGlslComputeSt(batchTable) {
+function getGlslComputeSt(batchTable: any) {
   const stride = batchTable._stride;
 
   // GLSL batchId is zero-based: [0, numberOfInstances - 1]
@@ -463,14 +490,14 @@ function getGlslComputeSt(batchTable) {
   );
 }
 
-function getComponentType(componentsPerAttribute) {
+function getComponentType(componentsPerAttribute: any) {
   if (componentsPerAttribute === 1) {
     return "float";
   }
   return `vec${componentsPerAttribute}`;
 }
 
-function getComponentSwizzle(componentsPerAttribute) {
+function getComponentSwizzle(componentsPerAttribute: any) {
   if (componentsPerAttribute === 1) {
     return ".x";
   } else if (componentsPerAttribute === 2) {
@@ -481,7 +508,7 @@ function getComponentSwizzle(componentsPerAttribute) {
   return "";
 }
 
-function getGlslAttributeFunction(batchTable, attributeIndex) {
+function getGlslAttributeFunction(batchTable: any, attributeIndex: any) {
   const attributes = batchTable._attributes;
   const attribute = attributes[attributeIndex];
   const componentsPerAttribute = attribute.componentsPerAttribute;
@@ -606,5 +633,4 @@ BatchTable.prototype.destroy = function () {
  * @param {string} vertexShaderSource The vertex shader source.
  * @returns {string} The new vertex shader source with the functions for retrieving batch table values injected.
  */
-export { BatchTable };
 export default BatchTable;

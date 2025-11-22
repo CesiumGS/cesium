@@ -4,7 +4,7 @@ import DepthFunction from "../Scene/DepthFunction.js";
 import ModelAlphaOptions from "./Model/ModelAlphaOptions.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
 
-function GaussianSplatRenderResources(primitive) {
+function GaussianSplatRenderResources(primitive: any) {
   const shaderBuilder = new ShaderBuilder();
   /**
    * An object used to build a shader incrementally. Each pipeline stage
@@ -78,5 +78,4 @@ function GaussianSplatRenderResources(primitive) {
   }
 }
 
-export { GaussianSplatRenderResources };
 export default GaussianSplatRenderResources;

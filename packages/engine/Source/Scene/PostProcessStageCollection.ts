@@ -319,7 +319,11 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
       if (this._tonemapper === value) {
         return;
       }
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!validateTonemapper(value)) {
+        throw new DeveloperError("tonemapper was set to an invalid value.");
+      }
+      //>>includeEnd('debug');
 
       if (defined(this._tonemapping)) {
         delete this._stageNames[this._tonemapping.name];
@@ -401,7 +405,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
   },
 });
 
-function removeStages(collection) {
+function removeStages(collection: any) {
   if (!collection._stagesRemoved) {
     return;
   }
@@ -430,7 +434,9 @@ function removeStages(collection) {
  * @exception {DeveloperError} The post-process stage has already been added to the collection or does not have a unique name.
  */
 PostProcessStageCollection.prototype.add = function (stage) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("stage", stage);
+  //>>includeEnd('debug');
 
   const stageNames = this._stageNames;
 
@@ -438,7 +444,13 @@ PostProcessStageCollection.prototype.add = function (stage) {
   stack.push(stage);
   while (stack.length > 0) {
     const currentStage = stack.pop();
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(stageNames[currentStage.name])) {
+      throw new DeveloperError(
+        `${currentStage.name} has already been added to the collection or does not have a unique name.`,
+      );
+    }
+    //>>includeEnd('debug');
     stageNames[currentStage.name] = currentStage;
     currentStage._textureCache = this._textureCache;
 
@@ -516,7 +528,12 @@ PostProcessStageCollection.prototype.contains = function (stage) {
 PostProcessStageCollection.prototype.get = function (index) {
   removeStages(this);
   const stages = this._stages;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  const length = stages.length;
+  Check.typeOf.number.greaterThanOrEquals("stages length", length, 0);
+  Check.typeOf.number.greaterThanOrEquals("index", index, 0);
+  Check.typeOf.number.lessThan("index", index, length);
+  //>>includeEnd('debug');
   return stages[index];
 };
 
@@ -691,7 +708,7 @@ PostProcessStageCollection.prototype.clear = function (context) {
   }
 };
 
-function getOutputTexture(stage) {
+function getOutputTexture(stage: any) {
   while (defined(stage.length)) {
     stage = stage.get(stage.length - 1);
   }
@@ -714,7 +731,7 @@ PostProcessStageCollection.prototype.getOutputTexture = function (stageName) {
   return getOutputTexture(stage);
 };
 
-function execute(stage, context, colorTexture, depthTexture, idTexture) {
+function execute(stage: any, context: any, colorTexture: any, depthTexture: any, idTexture: any) {
   if (defined(stage.execute)) {
     stage.execute(context, colorTexture, depthTexture, idTexture);
     return;
@@ -880,5 +897,4 @@ PostProcessStageCollection.prototype.destroy = function () {
   this._textureCache = this._textureCache && this._textureCache.destroy();
   return destroyObject(this);
 };
-export { PostProcessStageCollection };
 export default PostProcessStageCollection;

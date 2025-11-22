@@ -21,8 +21,12 @@ import PerformanceWatchdog from "../PerformanceWatchdog/PerformanceWatchdog.js";
  *     lowFrameRateMessage : 'Why is this going so <em>slowly</em>?'
  * });
  */
-function viewerPerformanceWatchdogMixin(viewer, options) {
-  ;
+function viewerPerformanceWatchdogMixin(viewer: any, options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(viewer)) {
+    throw new DeveloperError("viewer is required.");
+  }
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -40,5 +44,4 @@ function viewerPerformanceWatchdogMixin(viewer, options) {
     },
   });
 }
-export { viewerPerformanceWatchdogMixin };
 export default viewerPerformanceWatchdogMixin;

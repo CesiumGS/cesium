@@ -42,7 +42,7 @@ import Expression from "./Expression.js";
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}
  */
-function Cesium3DTileStyle(style) {
+function Cesium3DTileStyle(style: any) {
   this._style = {};
   this._ready = false;
 
@@ -86,7 +86,7 @@ function Cesium3DTileStyle(style) {
   setup(this, style);
 }
 
-function setup(that, styleJson) {
+function setup(that: any, styleJson: any) {
   styleJson = clone(styleJson, true) ?? that._style;
   that._style = styleJson;
 
@@ -133,7 +133,7 @@ function setup(that, styleJson) {
   that._ready = true;
 }
 
-function getExpression(tileStyle, value) {
+function getExpression(tileStyle: any, value: any) {
   const defines = (tileStyle._style ?? Frozen.EMPTY_OBJECT).defines;
 
   if (!defined(value)) {
@@ -148,7 +148,7 @@ function getExpression(tileStyle, value) {
   return value;
 }
 
-function getJsonFromExpression(expression) {
+function getJsonFromExpression(expression: any) {
   if (!defined(expression)) {
     return undefined;
   } else if (defined(expression.expression)) {
@@ -1320,7 +1320,11 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
  * @private
  */
 Cesium3DTileStyle.fromUrl = function (url) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(url)) {
+    throw new DeveloperError("url is required");
+  }
+  //>>includeEnd('debug');
 
   const resource = Resource.createIfNeeded(url);
   return resource.fetchJson(url).then(function (styleJson) {
@@ -1468,5 +1472,4 @@ Cesium3DTileStyle.prototype.getVariables = function () {
   return variables;
 };
 
-export { Cesium3DTileStyle };
 export default Cesium3DTileStyle;

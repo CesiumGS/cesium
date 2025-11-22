@@ -33,7 +33,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Box.html|Cesium Sandcastle Box Demo}
  */
-function BoxGraphics(options) {
+function BoxGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -187,7 +187,11 @@ BoxGraphics.prototype.clone = function (result) {
  * @param {BoxGraphics} source The object to be merged into this object.
  */
 BoxGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.dimensions = this.dimensions ?? source.dimensions;
@@ -201,5 +205,4 @@ BoxGraphics.prototype.merge = function (source) {
   this.distanceDisplayCondition =
     this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
-export { BoxGraphics };
 export default BoxGraphics;

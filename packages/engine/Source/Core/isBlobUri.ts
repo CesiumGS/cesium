@@ -12,10 +12,11 @@ const blobUriRegex = /^blob:/i;
  *
  * @private
  */
-function isBlobUri(uri) {
-  ;
+function isBlobUri(uri: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("uri", uri);
+  //>>includeEnd('debug');
 
   return blobUriRegex.test(uri);
 }
-export { isBlobUri };
 export default isBlobUri;

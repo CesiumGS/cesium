@@ -32,7 +32,7 @@ const scratch2 = new Cartesian3();
 const PolylineVolumeGeometryLibrary = {};
 
 let cartographic = new Cartographic();
-function scaleToSurface(positions, ellipsoid) {
+function scaleToSurface(positions: any, ellipsoid: any) {
   const heights = new Array(positions.length);
   for (let i = 0; i < positions.length; i++) {
     const pos = positions[i];
@@ -43,7 +43,7 @@ function scaleToSurface(positions, ellipsoid) {
   return heights;
 }
 
-function subdivideHeights(points, h0, h1, granularity) {
+function subdivideHeights(points: any, h0: any, h1: any, granularity: any) {
   const p0 = points[0];
   const p1 = points[1];
   const angleBetween = Cartesian3.angleBetween(p0, p1);
@@ -74,7 +74,7 @@ function subdivideHeights(points, h0, h1, granularity) {
 const nextScratch = new Cartesian3();
 const prevScratch = new Cartesian3();
 
-function computeRotationAngle(start, end, position, ellipsoid) {
+function computeRotationAngle(start: any, end: any, position: any, ellipsoid: any) {
   const tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
   const next = tangentPlane.projectPointOntoPlane(
     Cartesian3.add(position, start, nextScratch),
@@ -97,16 +97,7 @@ const scaleMatrix = Matrix3.IDENTITY.clone();
 const westScratch = new Cartesian3();
 const finalPosScratch = new Cartesian4();
 const heightCartesian = new Cartesian3();
-function addPosition(
-  center,
-  left,
-  shape,
-  finalPositions,
-  ellipsoid,
-  height,
-  xScalar,
-  repeat,
-) {
+function addPosition(center: any, left: any, shape: any, finalPositions: any, ellipsoid: any, height: any, xScalar: any, repeat: any, ) {
   let west = westScratch;
   let finalPosition = finalPosScratch;
   transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, transform);
@@ -146,15 +137,7 @@ function addPosition(
 }
 
 const centerScratch = new Cartesian3();
-function addPositions(
-  centers,
-  left,
-  shape,
-  finalPositions,
-  ellipsoid,
-  heights,
-  xScalar,
-) {
+function addPositions(centers: any, left: any, shape: any, finalPositions: any, ellipsoid: any, heights: any, xScalar: any, ) {
   for (let i = 0; i < centers.length; i += 3) {
     const center = Cartesian3.fromArray(centers, i, centerScratch);
     finalPositions = addPosition(
@@ -171,7 +154,7 @@ function addPositions(
   return finalPositions;
 }
 
-function convertShapeTo3DDuplicate(shape2D, boundingRectangle) {
+function convertShapeTo3DDuplicate(shape2D: any, boundingRectangle: any) {
   //orientate 2D shape to XZ plane center at (0, 0, 0), duplicate points
   const length = shape2D.length;
   const shape = new Array(length * 6);
@@ -203,7 +186,7 @@ function convertShapeTo3DDuplicate(shape2D, boundingRectangle) {
   return shape;
 }
 
-function convertShapeTo3D(shape2D, boundingRectangle) {
+function convertShapeTo3D(shape2D: any, boundingRectangle: any) {
   //orientate 2D shape to XZ plane center at (0, 0, 0)
   const length = shape2D.length;
   const shape = new Array(length * 3);
@@ -223,18 +206,7 @@ function convertShapeTo3D(shape2D, boundingRectangle) {
 const quaterion = new Quaternion();
 const startPointScratch = new Cartesian3();
 const rotMatrix = new Matrix3();
-function computeRoundCorner(
-  pivot,
-  startPoint,
-  endPoint,
-  cornerType,
-  leftIsOutside,
-  ellipsoid,
-  finalPositions,
-  shape,
-  height,
-  duplicatePoints,
-) {
+function computeRoundCorner(pivot: any, startPoint: any, endPoint: any, cornerType: any, leftIsOutside: any, ellipsoid: any, finalPositions: any, shape: any, height: any, duplicatePoints: any, ) {
   const angle = Cartesian3.angleBetween(
     Cartesian3.subtract(startPoint, pivot, scratch1),
     Cartesian3.subtract(endPoint, pivot, scratch2),
@@ -698,5 +670,4 @@ PolylineVolumeGeometryLibrary.computePositions = function (
 
   return combinedPositions;
 };
-export { PolylineVolumeGeometryLibrary };
 export default PolylineVolumeGeometryLibrary;

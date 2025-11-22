@@ -7,7 +7,7 @@ import Frozen from "../Core/Frozen.js";
  * @private
  * @constructor
  */
-function ClearCommand(options) {
+function ClearCommand(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -99,5 +99,4 @@ ClearCommand.ALL = Object.freeze(
 ClearCommand.prototype.execute = function (context, passState) {
   context.clear(this, passState);
 };
-export { ClearCommand };
 export default ClearCommand;

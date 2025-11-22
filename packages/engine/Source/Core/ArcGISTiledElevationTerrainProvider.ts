@@ -40,7 +40,7 @@ const ALL_CHILDREN = 15;
  *
  * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  */
-function TerrainProviderBuilder(options) {
+function TerrainProviderBuilder(options: any) {
   this.ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
   this.credit = undefined;
@@ -78,7 +78,7 @@ TerrainProviderBuilder.prototype.build = function (provider) {
   provider._terrainDataStructure = this.terrainDataStructure;
 };
 
-function parseMetadataSuccess(terrainProviderBuilder, metadata) {
+function parseMetadataSuccess(terrainProviderBuilder: any, metadata: any) {
   const copyrightText = metadata.copyrightText;
   if (defined(copyrightText)) {
     terrainProviderBuilder.credit = new Credit(copyrightText);
@@ -191,11 +191,7 @@ function parseMetadataSuccess(terrainProviderBuilder, metadata) {
   }
 }
 
-async function requestMetadata(
-  terrainProviderBuilder,
-  metadataResource,
-  provider,
-) {
+async function requestMetadata(terrainProviderBuilder: any, metadataResource: any, provider: any, ) {
   try {
     const metadata = await metadataResource.fetchJson();
     parseMetadataSuccess(terrainProviderBuilder, metadata);
@@ -233,7 +229,7 @@ async function requestMetadata(
  *
  * @see TerrainProvider
  */
-function ArcGISTiledElevationTerrainProvider(options) {
+function ArcGISTiledElevationTerrainProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._resource = undefined;
@@ -353,7 +349,9 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
  * @exception {RuntimeError} metadata does not specify tileInfo
  */
 ArcGISTiledElevationTerrainProvider.fromUrl = async function (url, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -468,7 +466,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
     });
 };
 
-function isTileAvailable(that, level, x, y) {
+function isTileAvailable(that: any, level: any, x: any, y: any) {
   if (!that._hasAvailability) {
     return undefined;
   }
@@ -544,7 +542,7 @@ ArcGISTiledElevationTerrainProvider.prototype.loadTileDataAvailability =
     return undefined;
   };
 
-function findRange(origin, width, height, data) {
+function findRange(origin: any, width: any, height: any, data: any) {
   const endCol = width - 1;
   const endRow = height - 1;
 
@@ -624,7 +622,7 @@ function findRange(origin, width, height, data) {
   };
 }
 
-function computeAvailability(x, y, width, height, data) {
+function computeAvailability(x: any, y: any, width: any, height: any, data: any) {
   const ranges = [];
 
   const singleValue = data.every(function (val) {
@@ -667,7 +665,7 @@ function computeAvailability(x, y, width, height, data) {
   return ranges;
 }
 
-function requestAvailability(that, level, x, y) {
+function requestAvailability(that: any, level: any, x: any, y: any) {
   if (!that._hasAvailability) {
     return {};
   }
@@ -750,5 +748,4 @@ function requestAvailability(that, level, x, y) {
     request: request,
   };
 }
-export { ArcGISTiledElevationTerrainProvider };
 export default ArcGISTiledElevationTerrainProvider;

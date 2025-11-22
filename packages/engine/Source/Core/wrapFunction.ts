@@ -7,13 +7,20 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @private
  */
-function wrapFunction(obj, oldFunction, newFunction) {
-  ;
+function wrapFunction(obj: any, oldFunction: any, newFunction: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof oldFunction !== "function") {
+    throw new DeveloperError("oldFunction is required to be a function.");
+  }
+
+  if (typeof newFunction !== "function") {
+    throw new DeveloperError("oldFunction is required to be a function.");
+  }
+  //>>includeEnd('debug');
 
   return function () {
     newFunction.apply(obj, arguments);
     oldFunction.apply(obj, arguments);
   };
 }
-export { wrapFunction };
 export default wrapFunction;

@@ -19,5 +19,4 @@ function createGuid() {
     return v.toString(16);
   });
 }
-export { createGuid };
 export default createGuid;

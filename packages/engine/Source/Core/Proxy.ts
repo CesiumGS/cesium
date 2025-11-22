@@ -21,5 +21,4 @@ function Proxy() {
  */
 Proxy.prototype.getURL = DeveloperError.throwInstantiationError;
 
-export { Proxy };
 export default Proxy;

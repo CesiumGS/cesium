@@ -1,12 +1,12 @@
 /**
  * @private
  */
-function loadAndExecuteScript(url) {
+function loadAndExecuteScript(url: any) {
   const script = document.createElement("script");
   script.async = true;
   script.src = url;
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve: any, reject: any) => {
     if (window.crossOriginIsolated) {
       script.setAttribute("crossorigin", "anonymous");
     }
@@ -24,5 +24,4 @@ function loadAndExecuteScript(url) {
     head.appendChild(script);
   });
 }
-export { loadAndExecuteScript };
 export default loadAndExecuteScript;

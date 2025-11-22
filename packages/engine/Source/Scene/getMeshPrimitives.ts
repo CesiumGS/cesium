@@ -10,7 +10,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
  * @returns {object[]} An array of mesh primitives
  * @private
  */
-function getMeshPrimitives(mesh) {
+function getMeshPrimitives(mesh: any) {
   const meshExtensions = mesh.extensions ?? Frozen.EMPTY_OBJECT;
   const primitiveRestartExtension = meshExtensions.EXT_mesh_primitive_restart;
   const meshPrimitives = mesh.primitives;
@@ -69,5 +69,4 @@ function getMeshPrimitives(mesh) {
 
   return primitives.filter(defined);
 }
-export { getMeshPrimitives };
 export default getMeshPrimitives;

@@ -29,7 +29,7 @@ import Texture from "../Renderer/Texture.js";
  *
  * @private
  */
-function VoxelBoundsCollection(options) {
+function VoxelBoundsCollection(options: any) {
   const {
     planes,
     modelMatrix = Matrix4.IDENTITY,
@@ -80,11 +80,11 @@ function VoxelBoundsCollection(options) {
   }
 }
 
-function unionIntersectFunction(value) {
+function unionIntersectFunction(value: any) {
   return value === Intersect.OUTSIDE;
 }
 
-function defaultIntersectFunction(value) {
+function defaultIntersectFunction(value: any) {
   return value === Intersect.INSIDE;
 }
 
@@ -118,7 +118,9 @@ Object.defineProperties(VoxelBoundsCollection.prototype, {
       return this._unionClippingRegions;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("value", value);
+      //>>includeEnd('debug');
       if (this._unionClippingRegions === value) {
         return;
       }
@@ -194,12 +196,14 @@ VoxelBoundsCollection.prototype.add = function (plane) {
  * @see VoxelBoundsCollection#length
  */
 VoxelBoundsCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   return this._planes[index];
 };
 
-function indexOf(planes, plane) {
+function indexOf(planes: any, plane: any) {
   for (let i = 0; i < planes.length; ++i) {
     if (Plane.equals(planes[i], plane)) {
       return i;
@@ -284,7 +288,7 @@ VoxelBoundsCollection.prototype.removeAll = function () {
 const scratchPlane = new Plane(Cartesian3.fromElements(1.0, 0.0, 0.0), 0.0);
 
 // Pack starting at the beginning of the buffer to allow partial update
-function transformAndPackPlanes(clippingPlaneCollection, transform) {
+function transformAndPackPlanes(clippingPlaneCollection: any, transform: any) {
   const float32View = clippingPlaneCollection._float32View;
   const planes = clippingPlaneCollection._planes;
 
@@ -308,8 +312,11 @@ function transformAndPackPlanes(clippingPlaneCollection, transform) {
 const scratchPlaneCartesian4 = new Cartesian4();
 const scratchTransformedNormal = new Cartesian3();
 
-function transformPlane(plane, transform, result) {
-  ;
+function transformPlane(plane: any, transform: any, result: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("plane", plane);
+  Check.typeOf.object("transform", transform);
+  //>>includeEnd('debug');
 
   const { normal, distance } = plane;
   const planeAsCartesian4 = Cartesian4.fromElements(
@@ -339,7 +346,7 @@ function transformPlane(plane, transform, result) {
   return Plane.fromCartesian4(transformedPlane, result);
 }
 
-function computeTextureResolution(pixelsNeeded, result) {
+function computeTextureResolution(pixelsNeeded: any, result: any) {
   result.x = Math.min(pixelsNeeded, ContextLimits.maximumTextureSize);
   result.y = Math.ceil(pixelsNeeded / result.x);
   return result;
@@ -484,5 +491,4 @@ VoxelBoundsCollection.prototype.destroy = function () {
     this._clippingPlanesTexture && this._clippingPlanesTexture.destroy();
   return destroyObject(this);
 };
-export { VoxelBoundsCollection };
 export default VoxelBoundsCollection;

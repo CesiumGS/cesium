@@ -11,10 +11,12 @@ import CesiumMath from "../Core/Math.js";
  *
  * @param {number} [radius=1.0] The radius of the circle in meters.
  */
-function CircleEmitter(radius) {
+function CircleEmitter(radius: any) {
   radius = radius ?? 1.0;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThan("radius", radius, 0.0);
+  //>>includeEnd('debug');
 
   this._radius = radius ?? 1.0;
 }
@@ -31,7 +33,9 @@ Object.defineProperties(CircleEmitter.prototype, {
       return this._radius;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThan("value", value, 0.0);
+      //>>includeEnd('debug');
       this._radius = value;
     },
   },
@@ -54,5 +58,4 @@ CircleEmitter.prototype.emit = function (particle) {
   particle.position = Cartesian3.fromElements(x, y, z, particle.position);
   particle.velocity = Cartesian3.clone(Cartesian3.UNIT_Z, particle.velocity);
 };
-export { CircleEmitter };
 export default CircleEmitter;

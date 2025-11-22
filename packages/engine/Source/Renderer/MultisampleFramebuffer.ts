@@ -28,7 +28,7 @@ import Framebuffer from "./Framebuffer.js";
  * @private
  * @constructor
  */
-function MultisampleFramebuffer(options) {
+function MultisampleFramebuffer(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const {
@@ -42,7 +42,11 @@ function MultisampleFramebuffer(options) {
     destroyAttachments,
   } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", context);
+  Check.defined("options.width", width);
+  Check.defined("options.height", height);
+  //>>includeEnd('debug');
 
   this._width = width;
   this._height = height;
@@ -129,5 +133,4 @@ MultisampleFramebuffer.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { MultisampleFramebuffer };
 export default MultisampleFramebuffer;

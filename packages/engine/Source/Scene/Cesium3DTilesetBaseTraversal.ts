@@ -78,7 +78,7 @@ Cesium3DTilesetBaseTraversal.selectTiles = function (tileset, frameState) {
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
  */
-function selectDesiredTile(tile, frameState) {
+function selectDesiredTile(tile: any, frameState: any) {
   if (tile.contentAvailable) {
     Cesium3DTilesetTraversal.selectTile(tile, frameState);
   }
@@ -91,7 +91,7 @@ function selectDesiredTile(tile, frameState) {
  * @param {FrameState} frameState
  * @returns {boolean}
  */
-function updateAndPushChildren(tile, stack, frameState) {
+function updateAndPushChildren(tile: any, stack: any, frameState: any) {
   const replace = tile.refine === Cesium3DTileRefine.REPLACE;
   const { tileset, children } = tile;
   const { updateTile, loadTile, touchTile } = Cesium3DTilesetTraversal;
@@ -186,7 +186,7 @@ function updateAndPushChildren(tile, stack, frameState) {
  * @param {Cesium3DTile} root
  * @param {FrameState} frameState
  */
-function executeTraversal(root, frameState) {
+function executeTraversal(root: any, frameState: any) {
   const { tileset } = root;
 
   const { canTraverse, loadTile, visitTile, touchTile } =
@@ -244,7 +244,7 @@ function executeTraversal(root, frameState) {
  * @param {FrameState} frameState
  * @returns {boolean}
  */
-function executeEmptyTraversal(root, frameState) {
+function executeEmptyTraversal(root: any, frameState: any) {
   const { canTraverse, updateTile, loadTile, touchTile } =
     Cesium3DTilesetTraversal;
   let allDescendantsLoaded = true;
@@ -288,5 +288,4 @@ function executeEmptyTraversal(root, frameState) {
   return root.hasEmptyContent || allDescendantsLoaded;
 }
 
-export { Cesium3DTilesetBaseTraversal };
 export default Cesium3DTilesetBaseTraversal;

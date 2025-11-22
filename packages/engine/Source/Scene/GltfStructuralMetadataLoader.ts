@@ -32,7 +32,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function GltfStructuralMetadataLoader(options) {
+function GltfStructuralMetadataLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const {
     gltf,
@@ -46,7 +46,19 @@ function GltfStructuralMetadataLoader(options) {
     asynchronous = true,
   } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
+  Check.typeOf.object("options.frameState", frameState);
+
+  if (!defined(options.extension) && !defined(options.extensionLegacy)) {
+    throw new DeveloperError(
+      "One of options.extension or options.extensionLegacy must be specified",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
@@ -106,7 +118,7 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
   },
 });
 
-async function loadResources(loader) {
+async function loadResources(loader: any) {
   try {
     const bufferViewsPromise = loadBufferViews(loader);
     const texturesPromise = loadTextures(loader);
@@ -149,7 +161,7 @@ GltfStructuralMetadataLoader.prototype.load = function () {
   return this._promise;
 };
 
-function gatherBufferViewIdsFromProperties(properties, bufferViewIdSet) {
+function gatherBufferViewIdsFromProperties(properties: any, bufferViewIdSet: any) {
   for (const propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
       const property = properties[propertyId];
@@ -171,7 +183,7 @@ function gatherBufferViewIdsFromProperties(properties, bufferViewIdSet) {
   }
 }
 
-function gatherBufferViewIdsFromPropertiesLegacy(properties, bufferViewIdSet) {
+function gatherBufferViewIdsFromPropertiesLegacy(properties: any, bufferViewIdSet: any) {
   for (const propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
       const property = properties[propertyId];
@@ -193,7 +205,7 @@ function gatherBufferViewIdsFromPropertiesLegacy(properties, bufferViewIdSet) {
   }
 }
 
-function gatherUsedBufferViewIds(extension) {
+function gatherUsedBufferViewIds(extension: any) {
   const propertyTables = extension.propertyTables;
   const bufferViewIdSet = {};
   if (defined(propertyTables)) {
@@ -208,7 +220,7 @@ function gatherUsedBufferViewIds(extension) {
   return bufferViewIdSet;
 }
 
-function gatherUsedBufferViewIdsLegacy(extensionLegacy) {
+function gatherUsedBufferViewIdsLegacy(extensionLegacy: any) {
   const featureTables = extensionLegacy.featureTables;
 
   const bufferViewIdSet = {};
@@ -226,7 +238,7 @@ function gatherUsedBufferViewIdsLegacy(extensionLegacy) {
   return bufferViewIdSet;
 }
 
-async function loadBufferViews(structuralMetadataLoader) {
+async function loadBufferViews(structuralMetadataLoader: any) {
   let bufferViewIds;
   if (defined(structuralMetadataLoader._extension)) {
     bufferViewIds = gatherUsedBufferViewIds(
@@ -259,7 +271,7 @@ async function loadBufferViews(structuralMetadataLoader) {
   return Promise.all(bufferViewPromises);
 }
 
-function gatherUsedTextureIds(structuralMetadataExtension) {
+function gatherUsedTextureIds(structuralMetadataExtension: any) {
   // Gather the used textures
   const textureIds = {};
   const propertyTextures = structuralMetadataExtension.propertyTextures;
@@ -275,7 +287,7 @@ function gatherUsedTextureIds(structuralMetadataExtension) {
   return textureIds;
 }
 
-function gatherTextureIdsFromProperties(properties, textureIds) {
+function gatherTextureIdsFromProperties(properties: any, textureIds: any) {
   for (const propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
       // in EXT_structural_metadata the property is a valid textureInfo.
@@ -285,7 +297,7 @@ function gatherTextureIdsFromProperties(properties, textureIds) {
   }
 }
 
-function gatherUsedTextureIdsLegacy(extensionLegacy) {
+function gatherUsedTextureIdsLegacy(extensionLegacy: any) {
   // Gather the used textures
   const textureIds = {};
   const featureTextures = extensionLegacy.featureTextures;
@@ -304,7 +316,7 @@ function gatherUsedTextureIdsLegacy(extensionLegacy) {
   return textureIds;
 }
 
-function gatherTextureIdsFromPropertiesLegacy(properties, textureIds) {
+function gatherTextureIdsFromPropertiesLegacy(properties: any, textureIds: any) {
   for (const propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
       const property = properties[propertyId];
@@ -314,7 +326,7 @@ function gatherTextureIdsFromPropertiesLegacy(properties, textureIds) {
   }
 }
 
-function loadTextures(structuralMetadataLoader) {
+function loadTextures(structuralMetadataLoader: any) {
   let textureIds;
   if (defined(structuralMetadataLoader._extension)) {
     textureIds = gatherUsedTextureIds(structuralMetadataLoader._extension);
@@ -353,7 +365,7 @@ function loadTextures(structuralMetadataLoader) {
   return Promise.all(texturePromises);
 }
 
-async function loadSchema(structuralMetadataLoader) {
+async function loadSchema(structuralMetadataLoader: any) {
   const extension =
     structuralMetadataLoader._extension ??
     structuralMetadataLoader._extensionLegacy;
@@ -386,7 +398,9 @@ async function loadSchema(structuralMetadataLoader) {
  * @private
  */
 GltfStructuralMetadataLoader.prototype.process = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
 
   if (this._state === ResourceLoaderState.READY) {
     return true;
@@ -452,7 +466,7 @@ GltfStructuralMetadataLoader.prototype.process = function (frameState) {
   return true;
 };
 
-function unloadBufferViews(structuralMetadataLoader) {
+function unloadBufferViews(structuralMetadataLoader: any) {
   const bufferViewLoaders = structuralMetadataLoader._bufferViewLoaders;
   const bufferViewLoadersLength = bufferViewLoaders.length;
   for (let i = 0; i < bufferViewLoadersLength; ++i) {
@@ -462,7 +476,7 @@ function unloadBufferViews(structuralMetadataLoader) {
   structuralMetadataLoader._bufferViewIds.length = 0;
 }
 
-function unloadTextures(structuralMetadataLoader) {
+function unloadTextures(structuralMetadataLoader: any) {
   const textureLoaders = structuralMetadataLoader._textureLoaders;
   const textureLoadersLength = textureLoaders.length;
   for (let i = 0; i < textureLoadersLength; ++i) {
@@ -488,5 +502,4 @@ GltfStructuralMetadataLoader.prototype.unload = function () {
   this._structuralMetadata = undefined;
 };
 
-export { GltfStructuralMetadataLoader };
 export default GltfStructuralMetadataLoader;

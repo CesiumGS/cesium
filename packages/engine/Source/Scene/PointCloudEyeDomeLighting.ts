@@ -51,7 +51,7 @@ Object.defineProperties(PointCloudEyeDomeLighting.prototype, {
   },
 });
 
-function destroyFramebuffer(processor) {
+function destroyFramebuffer(processor: any) {
   processor._framebuffer.destroy();
   processor._drawCommand = undefined;
   processor._clearCommand = undefined;
@@ -59,7 +59,7 @@ function destroyFramebuffer(processor) {
 
 const distanceAndEdlStrengthScratch = new Cartesian2();
 
-function createCommands(processor, context) {
+function createCommands(processor: any, context: any) {
   const blendFS = new ShaderSource({
     defines: ["LOG_DEPTH_WRITE"],
     sources: [PointCloudEyeDomeLightingShader],
@@ -106,20 +106,20 @@ function createCommands(processor, context) {
   });
 }
 
-function createResources(processor, context) {
+function createResources(processor: any, context: any) {
   const width = context.drawingBufferWidth;
   const height = context.drawingBufferHeight;
   processor._framebuffer.update(context, width, height);
   createCommands(processor, context);
 }
 
-function isSupported(context) {
+function isSupported(context: any) {
   return context.drawBuffers && context.fragmentDepth;
 }
 
 PointCloudEyeDomeLighting.isSupported = isSupported;
 
-function getECShaderProgram(context, shaderProgram) {
+function getECShaderProgram(context: any, shaderProgram: any) {
   let shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, "EC");
   if (!defined(shader)) {
     const attributeLocations = shaderProgram._attributeLocations;
@@ -281,5 +281,4 @@ PointCloudEyeDomeLighting.prototype.destroy = function () {
   destroyFramebuffer(this);
   return destroyObject(this);
 };
-export { PointCloudEyeDomeLighting };
 export default PointCloudEyeDomeLighting;

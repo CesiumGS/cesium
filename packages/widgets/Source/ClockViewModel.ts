@@ -16,7 +16,7 @@ import knockout from "./ThirdParty/knockout.js";
  *
  * @see Clock
  */
-function ClockViewModel(clock) {
+function ClockViewModel(clock: any) {
   if (!defined(clock)) {
     clock = new Clock();
   }
@@ -193,5 +193,4 @@ ClockViewModel.prototype.destroy = function () {
 
   destroyObject(this);
 };
-export { ClockViewModel };
 export default ClockViewModel;

@@ -65,12 +65,12 @@ Object.defineProperties(GlobeTranslucencyFramebuffer.prototype, {
   },
 });
 
-function destroyResources(globeTranslucency) {
+function destroyResources(globeTranslucency: any) {
   globeTranslucency._framebuffer.destroy();
   globeTranslucency._packedDepthFramebuffer.destroy();
 }
 
-function updateResources(globeTranslucency, context, width, height, hdr) {
+function updateResources(globeTranslucency: any, context: any, width: any, height: any, hdr: any) {
   const pixelDatatype = hdr
     ? context.halfFloatingPointTexture
       ? PixelDatatype.HALF_FLOAT
@@ -86,7 +86,7 @@ function updateResources(globeTranslucency, context, width, height, hdr) {
   globeTranslucency._packedDepthFramebuffer.update(context, width, height);
 }
 
-function updateCommands(globeTranslucency, context, width, height, passState) {
+function updateCommands(globeTranslucency: any, context: any, width: any, height: any, passState: any) {
   globeTranslucency._viewport.width = width;
   globeTranslucency._viewport.height = height;
 
@@ -198,5 +198,4 @@ GlobeTranslucencyFramebuffer.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { GlobeTranslucencyFramebuffer };
 export default GlobeTranslucencyFramebuffer;

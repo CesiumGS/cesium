@@ -51,7 +51,7 @@ const Tonemapper = {
  *
  * @param {string} tonemapper
  */
-export function validateTonemapper(tonemapper) {
+export function validateTonemapper(tonemapper: any) {
   return (
     tonemapper === Tonemapper.REINHARD ||
     tonemapper === Tonemapper.MODIFIED_REINHARD ||

@@ -215,7 +215,11 @@ VoxelCylinderShape.prototype.update = function (
   clipMinBounds,
   clipMaxBounds,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("modelMatrix", modelMatrix);
+  Check.typeOf.object("minBounds", minBounds);
+  Check.typeOf.object("maxBounds", maxBounds);
+  //>>includeEnd('debug');
 
   clipMinBounds = clipMinBounds ?? minBounds.clone(scratchClipMinBounds);
   clipMaxBounds = clipMaxBounds ?? maxBounds.clone(scratchClipMaxBounds);
@@ -510,7 +514,10 @@ VoxelCylinderShape.prototype.convertLocalToShapeUvSpace = function (
   positionLocal,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("positionLocal", positionLocal);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   let radius = Math.hypot(positionLocal.x, positionLocal.y);
   let angle = Math.atan2(positionLocal.y, positionLocal.x);
@@ -559,7 +566,13 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForTile = function (
   tileZ,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("tileLevel", tileLevel);
+  Check.typeOf.number("tileX", tileX);
+  Check.typeOf.number("tileY", tileY);
+  Check.typeOf.number("tileZ", tileZ);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const minBounds = this._minBounds;
   const maxBounds = this._maxBounds;
@@ -604,7 +617,12 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForSample = function (
   tileUv,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("spatialNode", spatialNode);
+  Check.typeOf.object("tileDimensions", tileDimensions);
+  Check.typeOf.object("tileUv", tileUv);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const tileSizeAtLevel = 1.0 / Math.pow(2.0, spatialNode.level);
   const sampleSize = Cartesian3.divideComponents(
@@ -696,11 +714,11 @@ for (let i = 0; i < 8; i++) {
   scratchCorners[i] = new Cartesian3();
 }
 
-function orthogonal(a, b, epsilon) {
+function orthogonal(a: any, b: any, epsilon: any) {
   return Math.abs(Cartesian4.dot(a, b)) < epsilon;
 }
 
-function isValidOrientedBoundingBoxTransformation(matrix) {
+function isValidOrientedBoundingBoxTransformation(matrix: any) {
   const column0 = Matrix4.getColumn(matrix, 0, scratchColumn0);
   const column1 = Matrix4.getColumn(matrix, 1, scratchColumn1);
   const column2 = Matrix4.getColumn(matrix, 2, scratchColumn2);
@@ -713,7 +731,7 @@ function isValidOrientedBoundingBoxTransformation(matrix) {
   );
 }
 
-function computeLooseOrientedBoundingBox(matrix, result) {
+function computeLooseOrientedBoundingBox(matrix: any, result: any) {
   const corners = scratchCorners;
   Cartesian3.fromElements(-0.5, -0.5, -0.5, corners[0]);
   Cartesian3.fromElements(-0.5, -0.5, 0.5, corners[1]);
@@ -745,7 +763,7 @@ const scratchBoxScale = new Cartesian3();
  *
  * @private
  */
-function getCylinderChunkObb(chunkMinBounds, chunkMaxBounds, matrix, result) {
+function getCylinderChunkObb(chunkMinBounds: any, chunkMaxBounds: any, matrix: any, result: any) {
   const radiusStart = chunkMinBounds.x;
   const radiusEnd = chunkMaxBounds.x;
   const angleStart = chunkMinBounds.y;
@@ -847,5 +865,4 @@ function getCylinderChunkObb(chunkMinBounds, chunkMaxBounds, matrix, result) {
   return OrientedBoundingBox.fromTransformation(globalMatrix, result);
 }
 
-export { VoxelCylinderShape };
 export default VoxelCylinderShape;

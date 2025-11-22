@@ -48,13 +48,21 @@ const defaultCredit = new Credit(
  * @see {@link https://docs.mapbox.com/api/maps/#styles}
  * @see {@link https://docs.mapbox.com/api/#access-tokens-and-token-scopes}
  */
-function MapboxStyleImageryProvider(options) {
+function MapboxStyleImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const styleId = options.styleId;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(styleId)) {
+    throw new DeveloperError("options.styleId is required.");
+  }
+  //>>includeEnd('debug');
 
   const accessToken = options.accessToken;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(accessToken)) {
+    throw new DeveloperError("options.accessToken is required.");
+  }
+  //>>includeEnd('debug');
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -331,5 +339,4 @@ MapboxStyleImageryProvider.prototype.pickFeatures = function (
 
 // Exposed for tests
 MapboxStyleImageryProvider._defaultCredit = defaultCredit;
-export { MapboxStyleImageryProvider };
 export default MapboxStyleImageryProvider;

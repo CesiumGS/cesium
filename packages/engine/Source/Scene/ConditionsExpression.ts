@@ -29,7 +29,7 @@ import Expression from "./Expression.js";
  * });
  * expression.evaluateColor(feature, result); // returns a Cesium.Color object
  */
-function ConditionsExpression(conditionsExpression, defines) {
+function ConditionsExpression(conditionsExpression: any, defines: any) {
   this._conditionsExpression = clone(conditionsExpression, true);
   this._conditions = conditionsExpression.conditions;
   this._runtimeConditions = undefined;
@@ -55,12 +55,12 @@ Object.defineProperties(ConditionsExpression.prototype, {
   },
 });
 
-function Statement(condition, expression) {
+function Statement(condition: any, expression: any) {
   this.condition = condition;
   this.expression = expression;
 }
 
-function setRuntime(expression, defines) {
+function setRuntime(expression: any, defines: any) {
   const runtimeConditions = [];
   const conditions = expression._conditions;
   if (!defined(conditions)) {
@@ -216,5 +216,4 @@ ConditionsExpression.prototype.getVariables = function () {
   return variables;
 };
 
-export { ConditionsExpression };
 export default ConditionsExpression;

@@ -27,7 +27,7 @@ const defaultOffset = Cartesian3.ZERO;
 const offsetScratch = new Cartesian3();
 const scratchRectangle = new Rectangle();
 
-function CorridorGeometryOptions(entity) {
+function CorridorGeometryOptions(entity: any) {
   this.id = entity;
   this.vertexFormat = undefined;
   this.positions = undefined;
@@ -48,7 +48,7 @@ function CorridorGeometryOptions(entity) {
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
-function CorridorGeometryUpdater(entity, scene) {
+function CorridorGeometryUpdater(entity: any, scene: any) {
   GroundGeometryUpdater.call(this, {
     entity: entity,
     scene: scene,
@@ -76,7 +76,15 @@ if (defined(Object.create)) {
  * @exception {DeveloperError} This instance does not represent a filled geometry.
  */
 CorridorGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._fillEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent a filled geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -139,7 +147,15 @@ CorridorGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 CorridorGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   time,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._outlineEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent an outlined geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -295,11 +311,7 @@ CorridorGeometryUpdater.DynamicGeometryUpdater = DynamicCorridorGeometryUpdater;
 /**
  * @private
  */
-function DynamicCorridorGeometryUpdater(
-  geometryUpdater,
-  primitives,
-  groundPrimitives,
-) {
+function DynamicCorridorGeometryUpdater(geometryUpdater: any, primitives: any, groundPrimitives: any, ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
@@ -390,5 +402,4 @@ DynamicCorridorGeometryUpdater.prototype._setOptions = function (
 
   options.extrudedHeight = extrudedHeightValue;
 };
-export { CorridorGeometryUpdater };
 export default CorridorGeometryUpdater;

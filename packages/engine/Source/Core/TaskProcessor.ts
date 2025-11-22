@@ -31,7 +31,7 @@ function canTransferArrayBuffer() {
       return TaskProcessor._canTransferArrayBuffer;
     }
 
-    TaskProcessor._canTransferArrayBuffer = new Promise((resolve) => {
+    TaskProcessor._canTransferArrayBuffer = new Promise((resolve: any) => {
       worker.onmessage = function (event) {
         const array = event.data.array;
 
@@ -53,7 +53,7 @@ function canTransferArrayBuffer() {
 
 const taskCompletedEvent = new Event();
 
-function urlFromScript(script) {
+function urlFromScript(script: any) {
   let blob;
   try {
     blob = new Blob([script], {
@@ -74,7 +74,7 @@ function urlFromScript(script) {
   return URL.createObjectURL(blob);
 }
 
-function createWorker(url) {
+function createWorker(url: any) {
   const uri = new Uri(url);
   const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
   const moduleID = url.replace(/\.js$/, "");
@@ -135,7 +135,7 @@ function createWorker(url) {
   return new Worker(workerPath, options);
 }
 
-async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
+async function getWebAssemblyLoaderConfig(processor: any, wasmOptions: any) {
   const config = {
     modulePath: undefined,
     wasmBinaryFile: undefined,
@@ -178,7 +178,7 @@ async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  *                                        scheduleTask will not queue any more tasks, allowing
  *                                        work to be rescheduled in future frames.
  */
-function TaskProcessor(workerPath, maximumActiveTasks) {
+function TaskProcessor(workerPath: any, maximumActiveTasks: any) {
   this._workerPath = workerPath;
   this._maximumActiveTasks = maximumActiveTasks ?? Number.POSITIVE_INFINITY;
   this._activeTasks = 0;
@@ -186,7 +186,7 @@ function TaskProcessor(workerPath, maximumActiveTasks) {
   this._webAssemblyPromise = undefined;
 }
 
-const createOnmessageHandler = (worker, id, resolve, reject) => {
+const createOnmessageHandler = (worker: any, id: any, resolve: any, reject: any) => {
   const listener = ({ data }) => {
     if (data.id !== id) {
       return;
@@ -218,7 +218,7 @@ const createOnmessageHandler = (worker, id, resolve, reject) => {
 };
 
 const emptyTransferableObjectArray = [];
-async function runTask(processor, parameters, transferableObjects) {
+async function runTask(processor: any, parameters: any, transferableObjects: any) {
   const canTransfer = await Promise.resolve(canTransferArrayBuffer());
   if (!defined(transferableObjects)) {
     transferableObjects = emptyTransferableObjectArray;
@@ -227,7 +227,7 @@ async function runTask(processor, parameters, transferableObjects) {
   }
 
   const id = processor._nextID++;
-  const promise = new Promise((resolve, reject) => {
+  const promise = new Promise((resolve: any, reject: any) => {
     processor._worker.addEventListener(
       "message",
       createOnmessageHandler(processor._worker, id, resolve, reject),
@@ -247,7 +247,7 @@ async function runTask(processor, parameters, transferableObjects) {
   return promise;
 }
 
-async function scheduleTask(processor, parameters, transferableObjects) {
+async function scheduleTask(processor: any, parameters: any, transferableObjects: any) {
   ++processor._activeTasks;
 
   try {
@@ -310,7 +310,7 @@ TaskProcessor.prototype.scheduleTask = function (
  * @param {string} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
  * @param {string} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
  * @param {string} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
- * @returns {Promise<any>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
+ * @returns {Promise<*>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
  *
  * @exception {RuntimeError} This browser does not support Web Assembly, and no backup module was provided
  */
@@ -334,7 +334,7 @@ TaskProcessor.prototype.initWebAssemblyModule = async function (
       transferableObjects = [binary];
     }
 
-    const promise = new Promise((resolve, reject) => {
+    const promise = new Promise((resolve: any, reject: any) => {
       worker.onmessage = function ({ data }) {
         if (defined(data)) {
           resolve(data.result);
@@ -400,5 +400,4 @@ TaskProcessor.taskCompletedEvent = taskCompletedEvent;
 TaskProcessor._defaultWorkerModulePrefix = "Workers/";
 TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
 TaskProcessor._canTransferArrayBuffer = undefined;
-export { TaskProcessor };
 export default TaskProcessor;

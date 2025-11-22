@@ -21,7 +21,7 @@ const Flags = {
  *
  * @private
  */
-function DrawCommand(options) {
+function DrawCommand(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._boundingVolume = options.boundingVolume;
@@ -64,11 +64,11 @@ function DrawCommand(options) {
   this.derivedCommands = {};
 }
 
-function hasFlag(command, flag) {
+function hasFlag(command: any, flag: any) {
   return (command._flags & flag) === flag;
 }
 
-function setFlag(command, flag, value) {
+function setFlag(command: any, flag: any, value: any) {
   if (value) {
     command._flags |= flag;
   } else {
@@ -641,5 +641,4 @@ DrawCommand.shallowClone = function (command, result) {
 DrawCommand.prototype.execute = function (context, passState) {
   context.draw(this, passState);
 };
-export { DrawCommand };
 export default DrawCommand;

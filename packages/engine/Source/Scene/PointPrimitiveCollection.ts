@@ -90,7 +90,7 @@ const attributeLocations = {
  * @see PointPrimitiveCollection#remove
  * @see PointPrimitive
  */
-function PointPrimitiveCollection(options) {
+function PointPrimitiveCollection(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._sp = undefined;
@@ -235,7 +235,7 @@ Object.defineProperties(PointPrimitiveCollection.prototype, {
   },
 });
 
-function destroyPointPrimitives(pointPrimitives) {
+function destroyPointPrimitives(pointPrimitives: any) {
   const length = pointPrimitives.length;
   for (let i = 0; i < length; ++i) {
     if (pointPrimitives[i]) {
@@ -351,7 +351,7 @@ PointPrimitiveCollection.prototype.removeAll = function () {
   this._createVertexArray = true;
 };
 
-function removePointPrimitives(pointPrimitiveCollection) {
+function removePointPrimitives(pointPrimitiveCollection: any) {
   if (pointPrimitiveCollection._pointPrimitivesRemoved) {
     pointPrimitiveCollection._pointPrimitivesRemoved = false;
 
@@ -424,7 +424,11 @@ PointPrimitiveCollection.prototype.contains = function (pointPrimitive) {
  * @see PointPrimitiveCollection#length
  */
 PointPrimitiveCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.");
+  }
+  //>>includeEnd('debug');
 
   removePointPrimitives(this);
   return this._pointPrimitives[index];
@@ -445,7 +449,7 @@ PointPrimitiveCollection.prototype.computeNewBuffersUsage = function () {
   return usageChanged;
 };
 
-function createVAF(context, numberOfPointPrimitives, buffersUsage) {
+function createVAF(context: any, numberOfPointPrimitives: any, buffersUsage: any) {
   return new VertexArrayFacade(
     context,
     [
@@ -498,12 +502,7 @@ function createVAF(context, numberOfPointPrimitives, buffersUsage) {
 
 const writePositionScratch = new EncodedCartesian3();
 
-function writePositionSizeAndOutline(
-  pointPrimitiveCollection,
-  context,
-  vafWriters,
-  pointPrimitive,
-) {
+function writePositionSizeAndOutline(pointPrimitiveCollection: any, context: any, vafWriters: any, pointPrimitive: any, ) {
   const i = pointPrimitive._index;
   const position = pointPrimitive._getActualPosition();
 
@@ -538,12 +537,7 @@ function writePositionSizeAndOutline(
 const LEFT_SHIFT16 = 65536.0; // 2^16
 const LEFT_SHIFT8 = 256.0; // 2^8
 
-function writeCompressedAttrib0(
-  pointPrimitiveCollection,
-  context,
-  vafWriters,
-  pointPrimitive,
-) {
+function writeCompressedAttrib0(pointPrimitiveCollection: any, context: any, vafWriters: any, pointPrimitive: any, ) {
   const i = pointPrimitive._index;
 
   const color = pointPrimitive.color;
@@ -574,12 +568,7 @@ function writeCompressedAttrib0(
   writer(i, compressed0, compressed1, compressed2, compressed3);
 }
 
-function writeCompressedAttrib1(
-  pointPrimitiveCollection,
-  context,
-  vafWriters,
-  pointPrimitive,
-) {
+function writeCompressedAttrib1(pointPrimitiveCollection: any, context: any, vafWriters: any, pointPrimitive: any, ) {
   const i = pointPrimitive._index;
 
   let near = 0.0;
@@ -624,12 +613,7 @@ function writeCompressedAttrib1(
   writer(i, compressed0, compressed1, near, far);
 }
 
-function writeScaleByDistance(
-  pointPrimitiveCollection,
-  context,
-  vafWriters,
-  pointPrimitive,
-) {
+function writeScaleByDistance(pointPrimitiveCollection: any, context: any, vafWriters: any, pointPrimitive: any, ) {
   const i = pointPrimitive._index;
   const writer = vafWriters[attributeLocations.scaleByDistance];
   let near = 0.0;
@@ -654,12 +638,7 @@ function writeScaleByDistance(
   writer(i, near, nearValue, far, farValue);
 }
 
-function writeDistanceDisplayConditionAndDepthDisableAndSplitDirection(
-  pointPrimitiveCollection,
-  context,
-  vafWriters,
-  pointPrimitive,
-) {
+function writeDistanceDisplayConditionAndDepthDisableAndSplitDirection(pointPrimitiveCollection: any, context: any, vafWriters: any, pointPrimitive: any, ) {
   const i = pointPrimitive._index;
   const writer =
     vafWriters[
@@ -697,12 +676,7 @@ function writeDistanceDisplayConditionAndDepthDisableAndSplitDirection(
   writer(i, near, far, disableDepthTestDistance, direction);
 }
 
-function writePointPrimitive(
-  pointPrimitiveCollection,
-  context,
-  vafWriters,
-  pointPrimitive,
-) {
+function writePointPrimitive(pointPrimitiveCollection: any, context: any, vafWriters: any, pointPrimitive: any, ) {
   writePositionSizeAndOutline(
     pointPrimitiveCollection,
     context,
@@ -735,14 +709,7 @@ function writePointPrimitive(
   );
 }
 
-function recomputeActualPositions(
-  pointPrimitiveCollection,
-  pointPrimitives,
-  length,
-  frameState,
-  modelMatrix,
-  recomputeBoundingVolume,
-) {
+function recomputeActualPositions(pointPrimitiveCollection: any, pointPrimitives: any, length: any, frameState: any, modelMatrix: any, recomputeBoundingVolume: any, ) {
   let boundingVolume;
   if (frameState.mode === SceneMode.SCENE3D) {
     boundingVolume = pointPrimitiveCollection._baseVolume;
@@ -776,7 +743,7 @@ function recomputeActualPositions(
   }
 }
 
-function updateMode(pointPrimitiveCollection, frameState) {
+function updateMode(pointPrimitiveCollection: any, frameState: any) {
   const mode = frameState.mode;
 
   const pointPrimitives = pointPrimitiveCollection._pointPrimitives;
@@ -829,7 +796,7 @@ function updateMode(pointPrimitiveCollection, frameState) {
   }
 }
 
-function updateBoundingVolume(collection, frameState, boundingVolume) {
+function updateBoundingVolume(collection: any, frameState: any, boundingVolume: any) {
   const pixelSize = frameState.camera.getPixelSize(
     boundingVolume,
     frameState.context.drawingBufferWidth,
@@ -1216,5 +1183,4 @@ PointPrimitiveCollection.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { PointPrimitiveCollection };
 export default PointPrimitiveCollection;

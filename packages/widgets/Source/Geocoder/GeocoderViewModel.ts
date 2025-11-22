@@ -32,8 +32,12 @@ const DEFAULT_HEIGHT = 1000;
  * @param {number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
  * @param {Geocoder.DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
  */
-function GeocoderViewModel(options) {
-  ;
+function GeocoderViewModel(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options) || !defined(options.scene)) {
+    throw new DeveloperError("options.scene is required.");
+  }
+  //>>includeEnd('debug');
 
   if (defined(options.geocoderServices)) {
     this._geocoderServices = options.geocoderServices;
@@ -202,7 +206,11 @@ function GeocoderViewModel(options) {
       return this._searchText;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (typeof value !== "string") {
+        throw new DeveloperError("value must be a valid string.");
+      }
+      //>>includeEnd('debug');
       this._searchText = value;
     },
   });
@@ -221,7 +229,11 @@ function GeocoderViewModel(options) {
       return this._flightDuration;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value < 0) {
+        throw new DeveloperError("value must be positive.");
+      }
+      //>>includeEnd('debug');
 
       this._flightDuration = value;
     },
@@ -298,7 +310,7 @@ GeocoderViewModel.prototype.destroy = function () {
   this._suggestionSubscription.dispose();
 };
 
-function handleArrowUp(viewModel) {
+function handleArrowUp(viewModel: any) {
   if (viewModel._suggestions.length === 0) {
     return;
   }
@@ -314,7 +326,7 @@ function handleArrowUp(viewModel) {
   GeocoderViewModel._adjustSuggestionsScroll(viewModel, next);
 }
 
-function handleArrowDown(viewModel) {
+function handleArrowDown(viewModel: any) {
   if (viewModel._suggestions.length === 0) {
     return;
   }
@@ -328,7 +340,7 @@ function handleArrowDown(viewModel) {
   GeocoderViewModel._adjustSuggestionsScroll(viewModel, next);
 }
 
-function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
+function computeFlyToLocationForCartographic(cartographic: any, terrainProvider: any) {
   const availability = defined(terrainProvider)
     ? terrainProvider.availability
     : undefined;
@@ -347,7 +359,7 @@ function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
   );
 }
 
-function flyToDestination(viewModel, destination) {
+function flyToDestination(viewModel: any, destination: any) {
   const scene = viewModel._scene;
   const ellipsoid = scene.ellipsoid;
 
@@ -401,7 +413,7 @@ function flyToDestination(viewModel, destination) {
     });
 }
 
-async function attemptGeocode(geocoderService, query, geocodeType) {
+async function attemptGeocode(geocoderService: any, query: any, geocodeType: any) {
   try {
     const result = await geocoderService.geocode(query, geocodeType);
     return {
@@ -414,7 +426,7 @@ async function attemptGeocode(geocoderService, query, geocodeType) {
   }
 }
 
-async function geocode(viewModel, geocoderServices, geocodeType) {
+async function geocode(viewModel: any, geocoderServices: any, geocodeType: any) {
   const query = viewModel._searchText;
 
   if (hasOnlyWhitespace(query)) {
@@ -471,7 +483,7 @@ async function geocode(viewModel, geocoderServices, geocodeType) {
   viewModel._searchText = `${query} (not found)`;
 }
 
-function updateCredit(viewModel, credit) {
+function updateCredit(viewModel: any, credit: any) {
   if (
     defined(credit) &&
     !viewModel._scene.isDestroyed() &&
@@ -482,20 +494,20 @@ function updateCredit(viewModel, credit) {
   }
 }
 
-function updateCredits(viewModel, credits) {
+function updateCredits(viewModel: any, credits: any) {
   if (defined(credits)) {
-    credits.forEach((credit) => updateCredit(viewModel, credit));
+    credits.forEach((credit: any) => updateCredit(viewModel, credit));
   }
 
   return credits;
 }
 
-function clearCredits(viewModel) {
+function clearCredits(viewModel: any) {
   if (
     !viewModel._scene.isDestroyed() &&
     !viewModel._scene.frameState.creditDisplay.isDestroyed()
   ) {
-    viewModel._previousCredits.forEach((credit) => {
+    viewModel._previousCredits.forEach((credit: any) => {
       viewModel._scene.frameState.creditDisplay.removeStaticCredit(credit);
     });
   }
@@ -503,7 +515,7 @@ function clearCredits(viewModel) {
   viewModel._previousCredits.length = 0;
 }
 
-function adjustSuggestionsScroll(viewModel, focusedItemIndex) {
+function adjustSuggestionsScroll(viewModel: any, focusedItemIndex: any) {
   const container = getElement(viewModel._viewContainer);
   const searchResults = container.getElementsByClassName("search-results")[0];
   const listItems = container.getElementsByTagName("li");
@@ -522,22 +534,22 @@ function adjustSuggestionsScroll(viewModel, focusedItemIndex) {
   }
 }
 
-function cancelGeocode(viewModel) {
+function cancelGeocode(viewModel: any) {
   if (viewModel._isSearchInProgress) {
     viewModel._isSearchInProgress = false;
     viewModel._wasGeocodeCancelled = true;
   }
 }
 
-function hasOnlyWhitespace(string) {
+function hasOnlyWhitespace(string: any) {
   return /^\s*$/.test(string);
 }
 
-function clearSuggestions(viewModel) {
+function clearSuggestions(viewModel: any) {
   knockout.getObservable(viewModel, "_suggestions").removeAll();
 }
 
-async function updateSearchSuggestions(viewModel) {
+async function updateSearchSuggestions(viewModel: any) {
   if (!viewModel.autoComplete) {
     return;
   }
@@ -556,7 +568,7 @@ async function updateSearchSuggestions(viewModel) {
     viewModel._suggestions = viewModel._suggestions.concat(newResults);
     if (newResults.length > 0) {
       let useDefaultCredit = true;
-      newResults.forEach((result) => {
+      newResults.forEach((result: any) => {
         const credits = GeocoderService.getCreditsFromResult(result);
         useDefaultCredit = useDefaultCredit && !defined(credits);
         updateCredits(viewModel, credits);
@@ -599,5 +611,4 @@ GeocoderViewModel.prototype.destroy = function () {
   clearCredits(this);
   return destroyObject(this);
 };
-export { GeocoderViewModel };
 export default GeocoderViewModel;

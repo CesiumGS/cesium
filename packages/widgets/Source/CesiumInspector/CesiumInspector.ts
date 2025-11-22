@@ -19,8 +19,16 @@ import CesiumInspectorViewModel from "./CesiumInspectorViewModel.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
  */
-function CesiumInspector(container, scene) {
-  ;
+function CesiumInspector(container: any, scene: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -312,5 +320,4 @@ CesiumInspector.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { CesiumInspector };
 export default CesiumInspector;

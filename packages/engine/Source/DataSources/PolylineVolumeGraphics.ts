@@ -36,7 +36,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
  */
-function PolylineVolumeGraphics(options) {
+function PolylineVolumeGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -212,7 +212,11 @@ PolylineVolumeGraphics.prototype.clone = function (result) {
  * @param {PolylineVolumeGraphics} source The object to be merged into this object.
  */
 PolylineVolumeGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.positions = this.positions ?? source.positions;
@@ -228,5 +232,4 @@ PolylineVolumeGraphics.prototype.merge = function (source) {
   this.distanceDisplayCondition =
     this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
-export { PolylineVolumeGraphics };
 export default PolylineVolumeGraphics;

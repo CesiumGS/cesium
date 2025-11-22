@@ -114,7 +114,7 @@ const attributeLocations = {
  *   width : 4
  * });
  */
-function PolylineCollection(options) {
+function PolylineCollection(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -350,13 +350,17 @@ PolylineCollection.prototype.contains = function (polyline) {
  * @see PolylineCollection#length
  */
 PolylineCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.");
+  }
+  //>>includeEnd('debug');
 
   removePolylines(this);
   return this._polylines[index];
 };
 
-function createBatchTable(collection, context) {
+function createBatchTable(collection: any, context: any) {
   if (defined(collection._batchTable)) {
     collection._batchTable.destroy();
   }
@@ -585,12 +589,7 @@ PolylineCollection.prototype.update = function (frameState) {
 const boundingSphereScratch = new BoundingSphere();
 const boundingSphereScratch2 = new BoundingSphere();
 
-function createCommandLists(
-  polylineCollection,
-  frameState,
-  commands,
-  modelMatrix,
-) {
+function createCommandLists(polylineCollection: any, frameState: any, commands: any, modelMatrix: any, ) {
   const context = frameState.context;
   const commandList = frameState.commandList;
 
@@ -809,7 +808,7 @@ PolylineCollection.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-function computeNewBuffersUsage(collection) {
+function computeNewBuffersUsage(collection: any) {
   let usageChanged = false;
   const properties = collection._propertiesChanged;
   const bufferUsage = collection._positionBufferUsage;
@@ -835,7 +834,7 @@ function computeNewBuffersUsage(collection) {
 
 const emptyVertexBuffer = [0.0, 0.0, 0.0];
 
-function createVertexArrays(collection, context, projection) {
+function createVertexArrays(collection: any, context: any, projection: any) {
   collection._createVertexArray = false;
   releaseShaders(collection);
   destroyVertexArrays(collection);
@@ -1117,7 +1116,7 @@ function createVertexArrays(collection, context, projection) {
   }
 }
 
-function replacer(key, value) {
+function replacer(key: any, value: any) {
   if (value instanceof Texture) {
     return value.id;
   }
@@ -1126,7 +1125,7 @@ function replacer(key, value) {
 }
 
 const scratchUniformArray = [];
-function createMaterialId(material) {
+function createMaterialId(material: any) {
   const uniforms = Material._uniformList[material.type];
   const length = uniforms.length;
   scratchUniformArray.length = 2.0 * length;
@@ -1142,7 +1141,7 @@ function createMaterialId(material) {
   return `${material.type}:${JSON.stringify(scratchUniformArray, replacer)}`;
 }
 
-function sortPolylinesIntoBuckets(collection) {
+function sortPolylinesIntoBuckets(collection: any) {
   const mode = collection._mode;
   const modelMatrix = collection._modelMatrix;
 
@@ -1167,7 +1166,7 @@ function sortPolylinesIntoBuckets(collection) {
   }
 }
 
-function updateMode(collection, frameState) {
+function updateMode(collection: any, frameState: any) {
   const mode = frameState.mode;
 
   if (
@@ -1180,7 +1179,7 @@ function updateMode(collection, frameState) {
   }
 }
 
-function removePolylines(collection) {
+function removePolylines(collection: any) {
   if (collection._polylinesRemoved) {
     collection._polylinesRemoved = false;
     const definedPolylines = [];
@@ -1203,7 +1202,7 @@ function removePolylines(collection) {
   }
 }
 
-function releaseShaders(collection) {
+function releaseShaders(collection: any) {
   const polylines = collection._polylines;
   const length = polylines.length;
   for (let i = 0; i < length; ++i) {
@@ -1217,7 +1216,7 @@ function releaseShaders(collection) {
   }
 }
 
-function destroyVertexArrays(collection) {
+function destroyVertexArrays(collection: any) {
   const length = collection._vertexArrays.length;
   for (let t = 0; t < length; ++t) {
     collection._vertexArrays[t].va.destroy();
@@ -1236,7 +1235,7 @@ PolylineCollection.prototype._updatePolyline = function (
   ++this._propertiesChanged[propertyChanged];
 };
 
-function destroyPolylines(collection) {
+function destroyPolylines(collection: any) {
   const polylines = collection._polylines;
   const length = polylines.length;
   for (let i = 0; i < length; ++i) {
@@ -1246,13 +1245,13 @@ function destroyPolylines(collection) {
   }
 }
 
-function VertexArrayBucketLocator(count, offset, bucket) {
+function VertexArrayBucketLocator(count: any, offset: any, bucket: any) {
   this.count = count;
   this.offset = offset;
   this.bucket = bucket;
 }
 
-function PolylineBucket(material, mode, modelMatrix) {
+function PolylineBucket(material: any, mode: any, modelMatrix: any) {
   this.polylines = [];
   this.lengthOfPositions = 0;
   this.material = material;
@@ -1313,7 +1312,7 @@ PolylineBucket.prototype.updateShader = function (
   });
 };
 
-function intersectsIDL(polyline) {
+function intersectsIDL(polyline: any) {
   return (
     Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) < 0 ||
     polyline._boundingVolume.intersectPlane(Plane.ORIGIN_ZX_PLANE) ===
@@ -1943,5 +1942,4 @@ PolylineBucket.prototype.writeUpdate = function (
     );
   }
 };
-export { PolylineCollection };
 export default PolylineCollection;

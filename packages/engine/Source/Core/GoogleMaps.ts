@@ -37,5 +37,4 @@ GoogleMaps.getDefaultCredit = function () {
     true,
   );
 };
-export { GoogleMaps };
 export default GoogleMaps;

@@ -38,7 +38,7 @@ function CommandExtent() {
  *
  * @private
  */
-function View(scene, camera, viewport) {
+function View(scene: any, camera: any, viewport: any) {
   const context = scene.context;
 
   let globeDepth;
@@ -95,7 +95,7 @@ const scratchPosition1 = new Cartesian3();
  *
  * @private
  */
-function cameraEqual(camera0, camera1, epsilon) {
+function cameraEqual(camera0: any, camera1: any, epsilon: any) {
   const maximumPositionComponent = Math.max(
     Cartesian3.maximumComponent(
       Cartesian3.abs(camera0.position, scratchPosition0),
@@ -162,7 +162,7 @@ View.prototype.checkForCameraUpdates = function (scene) {
  *
  * @private
  */
-function updateFrustums(view, scene, near, far) {
+function updateFrustums(view: any, scene: any, near: any, far: any) {
   const { frameState } = scene;
   const { camera, useLogDepth } = frameState;
   const farToNearRatio = useLogDepth
@@ -234,7 +234,7 @@ function updateFrustums(view, scene, near, far) {
  *
  * @private
  */
-function insertIntoBin(view, scene, commandExtent) {
+function insertIntoBin(view: any, scene: any, commandExtent: any) {
   const { command, near, far } = commandExtent;
 
   if (scene.debugShowFrustums) {
@@ -462,5 +462,4 @@ View.prototype.destroy = function () {
     pickDepths[i].destroy();
   }
 };
-export { View };
 export default View;

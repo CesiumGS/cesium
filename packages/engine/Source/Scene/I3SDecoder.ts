@@ -57,7 +57,11 @@ I3SDecoder.decode = async function (
   featureData,
   symbologyData,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("url", url);
+  Check.defined("defaultGeometrySchema", defaultGeometrySchema);
+  Check.defined("geometryData", geometryData);
+  //>>includeEnd('debug');
 
   if (!defined(I3SDecoder._promise)) {
     I3SDecoder._promise = initializeDecoder();
@@ -126,5 +130,4 @@ I3SDecoder.decode = async function (
   });
 };
 
-export { I3SDecoder };
 export default I3SDecoder;

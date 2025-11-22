@@ -408,5 +408,4 @@ Cesium3DTileContent.prototype.isDestroyed = function () {
 Cesium3DTileContent.prototype.destroy = function () {
   DeveloperError.throwInstantiationError();
 };
-export { Cesium3DTileContent };
 export default Cesium3DTileContent;

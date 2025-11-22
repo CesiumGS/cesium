@@ -22,7 +22,7 @@ const topBoundingSphere = new BoundingSphere();
 const positionScratch = new Cartesian3();
 const rectangleScratch = new Rectangle();
 
-function constructRectangle(geometry, computedOptions) {
+function constructRectangle(geometry: any, computedOptions: any) {
   const ellipsoid = geometry._ellipsoid;
   const height = computedOptions.height;
   const width = computedOptions.width;
@@ -158,7 +158,7 @@ function constructRectangle(geometry, computedOptions) {
   return geo;
 }
 
-function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
+function constructExtrudedRectangle(rectangleGeometry: any, computedOptions: any) {
   const maxHeight = rectangleGeometry._surfaceHeight;
   const minHeight = rectangleGeometry._extrudedHeight;
   const ellipsoid = rectangleGeometry._ellipsoid;
@@ -269,7 +269,7 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
  * });
  * const geometry = Cesium.RectangleOutlineGeometry.createGeometry(rectangle);
  */
-function RectangleOutlineGeometry(options) {
+function RectangleOutlineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const rectangle = options.rectangle;
@@ -277,7 +277,17 @@ function RectangleOutlineGeometry(options) {
   const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   const rotation = options.rotation ?? 0.0;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(rectangle)) {
+    throw new DeveloperError("rectangle is required.");
+  }
+  Rectangle._validate(rectangle);
+  if (rectangle.north < rectangle.south) {
+    throw new DeveloperError(
+      "options.rectangle.north must be greater than options.rectangle.south",
+    );
+  }
+  //>>includeEnd('debug');
 
   const height = options.height ?? 0.0;
   const extrudedHeight = options.extrudedHeight ?? height;
@@ -309,7 +319,15 @@ RectangleOutlineGeometry.packedLength =
  * @returns {number[]} The array that was packed into
  */
 RectangleOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -349,7 +367,11 @@ const scratchOptions = {
  * @returns {RectangleOutlineGeometry} The modified result parameter or a new RectangleOutlineGeometry instance if one was not provided.
  */
 RectangleOutlineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -507,5 +529,4 @@ RectangleOutlineGeometry.createGeometry = function (rectangleGeometry) {
     offsetAttribute: rectangleGeometry._offsetAttribute,
   });
 };
-export { RectangleOutlineGeometry };
 export default RectangleOutlineGeometry;

@@ -22,7 +22,7 @@ const defaultColor = Color.WHITE;
  * @param {Property|Color} [options.color=Color.WHITE] The color applied to the image
  * @param {Property|boolean} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
  */
-function ImageMaterialProperty(options) {
+function ImageMaterialProperty(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
@@ -170,5 +170,4 @@ ImageMaterialProperty.prototype.equals = function (other) {
       Property.equals(this._transparent, other._transparent))
   );
 };
-export { ImageMaterialProperty };
 export default ImageMaterialProperty;

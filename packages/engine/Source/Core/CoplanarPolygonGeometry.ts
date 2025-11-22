@@ -38,17 +38,7 @@ const textureMatrixScratch = new Matrix3();
 const tangentRotationScratch = new Matrix3();
 const surfaceNormalScratch = new Cartesian3();
 
-function createGeometryFromPolygon(
-  polygon,
-  vertexFormat,
-  boundingRectangle,
-  stRotation,
-  hardcodedTextureCoordinates,
-  projectPointTo2D,
-  normal,
-  tangent,
-  bitangent,
-) {
+function createGeometryFromPolygon(polygon: any, vertexFormat: any, boundingRectangle: any, stRotation: any, hardcodedTextureCoordinates: any, projectPointTo2D: any, normal: any, tangent: any, bitangent: any, ) {
   const positions = polygon.positions;
   let indices = PolygonPipeline.triangulate(polygon.positions2D, polygon.holes);
 
@@ -246,11 +236,13 @@ function createGeometryFromPolygon(
  * });
  *
  */
-function CoplanarPolygonGeometry(options) {
+function CoplanarPolygonGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const polygonHierarchy = options.polygonHierarchy;
   const textureCoordinates = options.textureCoordinates;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.polygonHierarchy", polygonHierarchy);
+  //>>includeEnd('debug');
 
   const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
   this._vertexFormat = VertexFormat.clone(vertexFormat);
@@ -309,7 +301,9 @@ function CoplanarPolygonGeometry(options) {
 CoplanarPolygonGeometry.fromPositions = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.positions", options.positions);
+  //>>includeEnd('debug');
 
   const newOptions = {
     polygonHierarchy: {
@@ -333,7 +327,10 @@ CoplanarPolygonGeometry.fromPositions = function (options) {
  * @returns {number[]} The array that was packed into
  */
 CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -380,7 +377,9 @@ const scratchOptions = {
  * @returns {CoplanarPolygonGeometry} The modified result parameter or a new CoplanarPolygonGeometry instance if one was not provided.
  */
 CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -588,5 +587,4 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
     boundingSphere: boundingSphere,
   });
 };
-export { CoplanarPolygonGeometry };
 export default CoplanarPolygonGeometry;

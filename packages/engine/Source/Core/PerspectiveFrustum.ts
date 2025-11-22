@@ -32,7 +32,7 @@ import PerspectiveOffCenterFrustum from "./PerspectiveOffCenterFrustum.js";
  *
  * @see PerspectiveOffCenterFrustum
  */
-function PerspectiveFrustum(options) {
+function PerspectiveFrustum(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._offCenterFrustum = new PerspectiveOffCenterFrustum();
@@ -107,7 +107,10 @@ PerspectiveFrustum.packedLength = 6;
  * @returns {number[]} The array that was packed into
  */
 PerspectiveFrustum.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -130,7 +133,9 @@ PerspectiveFrustum.pack = function (value, array, startingIndex) {
  * @returns {PerspectiveFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
  */
 PerspectiveFrustum.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -148,8 +153,19 @@ PerspectiveFrustum.unpack = function (array, startingIndex, result) {
   return result;
 };
 
-function update(frustum) {
-  ;
+function update(frustum: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    !defined(frustum.fov) ||
+    !defined(frustum.aspectRatio) ||
+    !defined(frustum.near) ||
+    !defined(frustum.far)
+  ) {
+    throw new DeveloperError(
+      "fov, aspectRatio, near, or far parameters are not set.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const changed =
     frustum.fov !== frustum._fov ||
@@ -163,7 +179,21 @@ function update(frustum) {
     return;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("fov", frustum.fov, 0.0);
+  Check.typeOf.number.lessThan("fov", frustum.fov, Math.PI);
+
+  Check.typeOf.number.greaterThanOrEquals(
+    "aspectRatio",
+    frustum.aspectRatio,
+    0.0,
+  );
+
+  Check.typeOf.number.greaterThanOrEquals("near", frustum.near, 0.0);
+  if (frustum.near > frustum.far) {
+    throw new DeveloperError("near must be less than far.");
+  }
+  //>>includeEnd('debug');
 
   frustum._aspectRatio = frustum.aspectRatio;
   frustum._fov = frustum.fov;
@@ -426,5 +456,4 @@ PerspectiveFrustum.prototype.equalsEpsilon = function (
     )
   );
 };
-export { PerspectiveFrustum };
 export default PerspectiveFrustum;

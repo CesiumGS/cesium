@@ -75,7 +75,11 @@ function TexturePacker({ width, height, borderPadding }) {
  * @returns {TextureNode|undefined} The created region, or <code>undefined</code> if there is no region large enough to accommodate the object's dimensions.
  */
 TexturePacker.prototype.pack = function (index, { width, height }) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("index", index, 0);
+  Check.typeOf.number.greaterThanOrEquals("image.width", width, 1);
+  Check.typeOf.number.greaterThanOrEquals("image.height", height, 1);
+  //>>includeEnd('debug');
 
   const node = this._findNode(this._root, { width, height });
   if (!defined(node)) {
@@ -174,5 +178,4 @@ TexturePacker.prototype._findNode = function (node, { width, height }) {
   );
 };
 
-export { TexturePacker };
 export default TexturePacker;

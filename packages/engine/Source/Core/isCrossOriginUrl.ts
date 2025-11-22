@@ -7,7 +7,7 @@ let a;
  *
  * @private
  */
-function isCrossOriginUrl(url) {
+function isCrossOriginUrl(url: any) {
   if (!defined(a)) {
     a = document.createElement("a");
   }
@@ -27,5 +27,4 @@ function isCrossOriginUrl(url) {
 
   return protocol !== a.protocol || host !== a.host;
 }
-export { isCrossOriginUrl };
 export default isCrossOriginUrl;

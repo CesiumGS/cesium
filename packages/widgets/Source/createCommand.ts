@@ -14,8 +14,12 @@ import knockout from "./ThirdParty/knockout.js";
  * @param {Function} func The function to execute.
  * @param {boolean} [canExecute=true] A boolean indicating whether the function can currently be executed.
  */
-function createCommand(func, canExecute) {
-  ;
+function createCommand(func: any, canExecute: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(func)) {
+    throw new DeveloperError("func is required.");
+  }
+  //>>includeEnd('debug');
 
   canExecute = canExecute ?? true;
 
@@ -23,7 +27,11 @@ function createCommand(func, canExecute) {
   const afterExecute = new Event();
 
   function command() {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!command.canExecute) {
+      throw new DeveloperError("Cannot execute command, canExecute is false.");
+    }
+    //>>includeEnd('debug');
 
     const commandInfo = {
       args: arguments,
@@ -53,5 +61,4 @@ function createCommand(func, canExecute) {
 
   return command;
 }
-export { createCommand };
 export default createCommand;

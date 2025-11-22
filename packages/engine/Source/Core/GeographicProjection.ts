@@ -17,7 +17,7 @@ import Ellipsoid from "./Ellipsoid.js";
  *
  * @see WebMercatorProjection
  */
-function GeographicProjection(ellipsoid) {
+function GeographicProjection(ellipsoid: any) {
   this._ellipsoid = ellipsoid ?? Ellipsoid.default;
   this._semimajorAxis = this._ellipsoid.maximumRadius;
   this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
@@ -81,7 +81,11 @@ GeographicProjection.prototype.project = function (cartographic, result) {
  *          created and returned.
  */
 GeographicProjection.prototype.unproject = function (cartesian, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(cartesian)) {
+    throw new DeveloperError("cartesian is required");
+  }
+  //>>includeEnd('debug');
 
   const oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
   const longitude = cartesian.x * oneOverEarthSemimajorAxis;
@@ -98,5 +102,4 @@ GeographicProjection.prototype.unproject = function (cartesian, result) {
   return result;
 };
 
-export { GeographicProjection };
 export default GeographicProjection;

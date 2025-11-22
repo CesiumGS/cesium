@@ -133,5 +133,4 @@ TimeIntervalCollectionProperty.prototype.equals = function (other) {
 TimeIntervalCollectionProperty.prototype._intervalsChanged = function () {
   this._definitionChanged.raiseEvent(this);
 };
-export { TimeIntervalCollectionProperty };
 export default TimeIntervalCollectionProperty;

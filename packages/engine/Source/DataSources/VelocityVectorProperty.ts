@@ -26,7 +26,7 @@ import Property from "./Property.js";
  *   }
  * }));
  */
-function VelocityVectorProperty(position, normalize) {
+function VelocityVectorProperty(position: any, normalize: any) {
   this._position = undefined;
   this._subscription = undefined;
   this._definitionChanged = new Event();
@@ -210,5 +210,4 @@ VelocityVectorProperty.prototype.equals = function (other) {
       Property.equals(this._position, other._position))
   );
 };
-export { VelocityVectorProperty };
 export default VelocityVectorProperty;

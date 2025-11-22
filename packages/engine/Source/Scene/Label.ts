@@ -25,9 +25,10 @@ const textTypes = Object.freeze({
   RTL: 1,
   WEAK: 2,
   BRACKETS: 3,
-});
+} as const);
+export type textTypes = typeof textTypes[keyof typeof textTypes];
 
-function rebindAllGlyphs(label) {
+function rebindAllGlyphs(label: any) {
   if (!label._rebindAllGlyphs && !label._repositionAllGlyphs) {
     // only push label if it's not already been marked dirty
     label._labelCollection._labelsToUpdate.push(label);
@@ -35,7 +36,7 @@ function rebindAllGlyphs(label) {
   label._rebindAllGlyphs = true;
 }
 
-function repositionAllGlyphs(label) {
+function repositionAllGlyphs(label: any) {
   if (!label._rebindAllGlyphs && !label._repositionAllGlyphs) {
     // only push label if it's not already been marked dirty
     label._labelCollection._labelsToUpdate.push(label);
@@ -43,13 +44,13 @@ function repositionAllGlyphs(label) {
   label._repositionAllGlyphs = true;
 }
 
-function getCSSValue(element, property) {
+function getCSSValue(element: any, property: any) {
   return document.defaultView
     .getComputedStyle(element, null)
     .getPropertyValue(property);
 }
 
-function parseFont(label) {
+function parseFont(label: any) {
   let fontInfo = fontInfoCache[label._font];
   if (!defined(fontInfo)) {
     const div = document.createElement("div");
@@ -136,31 +137,64 @@ function parseFont(label) {
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
  */
-function Label(options, labelCollection) {
+function Label(options: any, labelCollection: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    defined(options.disableDepthTestDistance) &&
+    options.disableDepthTestDistance < 0.0
+  ) {
+    throw new DeveloperError(
+      "disableDepthTestDistance must be greater than 0.0.",
+    );
+  }
+  //>>includeEnd('debug');
 
   let translucencyByDistance = options.translucencyByDistance;
   let pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
   let scaleByDistance = options.scaleByDistance;
   let distanceDisplayCondition = options.distanceDisplayCondition;
   if (defined(translucencyByDistance)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (translucencyByDistance.far <= translucencyByDistance.near) {
+      throw new DeveloperError(
+        "translucencyByDistance.far must be greater than translucencyByDistance.near.",
+      );
+    }
+    //>>includeEnd('debug');
     translucencyByDistance = NearFarScalar.clone(translucencyByDistance);
   }
   if (defined(pixelOffsetScaleByDistance)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (pixelOffsetScaleByDistance.far <= pixelOffsetScaleByDistance.near) {
+      throw new DeveloperError(
+        "pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.",
+      );
+    }
+    //>>includeEnd('debug');
     pixelOffsetScaleByDistance = NearFarScalar.clone(
       pixelOffsetScaleByDistance,
     );
   }
   if (defined(scaleByDistance)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (scaleByDistance.far <= scaleByDistance.near) {
+      throw new DeveloperError(
+        "scaleByDistance.far must be greater than scaleByDistance.near.",
+      );
+    }
+    //>>includeEnd('debug');
     scaleByDistance = NearFarScalar.clone(scaleByDistance);
   }
   if (defined(distanceDisplayCondition)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+      throw new DeveloperError(
+        "distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.",
+      );
+    }
+    //>>includeEnd('debug');
     distanceDisplayCondition = DistanceDisplayCondition.clone(
       distanceDisplayCondition,
     );
@@ -231,7 +265,11 @@ Object.defineProperties(Label.prototype, {
       return this._show;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._show !== value) {
         this._show = value;
@@ -261,7 +299,11 @@ Object.defineProperties(Label.prototype, {
       return this._position;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const position = this._position;
       if (!Cartesian3.equals(position, value)) {
@@ -295,7 +337,11 @@ Object.defineProperties(Label.prototype, {
       return this._heightReference;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (value !== this._heightReference) {
         this._heightReference = value;
@@ -329,7 +375,11 @@ Object.defineProperties(Label.prototype, {
       return this._text;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._text !== value) {
         this._text = value;
@@ -355,7 +405,11 @@ Object.defineProperties(Label.prototype, {
       return this._font;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._font !== value) {
         this._font = value;
@@ -377,7 +431,11 @@ Object.defineProperties(Label.prototype, {
       return this._fillColor;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const fillColor = this._fillColor;
       if (!Color.equals(fillColor, value)) {
@@ -399,7 +457,11 @@ Object.defineProperties(Label.prototype, {
       return this._outlineColor;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const outlineColor = this._outlineColor;
       if (!Color.equals(outlineColor, value)) {
@@ -421,7 +483,11 @@ Object.defineProperties(Label.prototype, {
       return this._outlineWidth;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._outlineWidth !== value) {
         this._outlineWidth = value;
@@ -441,7 +507,11 @@ Object.defineProperties(Label.prototype, {
       return this._showBackground;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._showBackground !== value) {
         this._showBackground = value;
@@ -461,7 +531,11 @@ Object.defineProperties(Label.prototype, {
       return this._backgroundColor;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const backgroundColor = this._backgroundColor;
       if (!Color.equals(backgroundColor, value)) {
@@ -487,7 +561,11 @@ Object.defineProperties(Label.prototype, {
       return this._backgroundPadding;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const backgroundPadding = this._backgroundPadding;
       if (!Cartesian2.equals(backgroundPadding, value)) {
@@ -508,7 +586,11 @@ Object.defineProperties(Label.prototype, {
       return this._style;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._style !== value) {
         this._style = value;
@@ -539,7 +621,11 @@ Object.defineProperties(Label.prototype, {
       return this._pixelOffset;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const pixelOffset = this._pixelOffset;
       if (!Cartesian2.equals(pixelOffset, value)) {
@@ -587,7 +673,13 @@ Object.defineProperties(Label.prototype, {
       return this._translucencyByDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far <= value.near) {
+        throw new DeveloperError(
+          "far distance must be greater than near distance.",
+        );
+      }
+      //>>includeEnd('debug');
 
       const translucencyByDistance = this._translucencyByDistance;
       if (!NearFarScalar.equals(translucencyByDistance, value)) {
@@ -639,7 +731,13 @@ Object.defineProperties(Label.prototype, {
       return this._pixelOffsetScaleByDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far <= value.near) {
+        throw new DeveloperError(
+          "far distance must be greater than near distance.",
+        );
+      }
+      //>>includeEnd('debug');
 
       const pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
       if (!NearFarScalar.equals(pixelOffsetScaleByDistance, value)) {
@@ -690,7 +788,13 @@ Object.defineProperties(Label.prototype, {
       return this._scaleByDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far <= value.near) {
+        throw new DeveloperError(
+          "far distance must be greater than near distance.",
+        );
+      }
+      //>>includeEnd('debug');
 
       const scaleByDistance = this._scaleByDistance;
       if (!NearFarScalar.equals(scaleByDistance, value)) {
@@ -739,7 +843,11 @@ Object.defineProperties(Label.prototype, {
       return this._eyeOffset;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const eyeOffset = this._eyeOffset;
       if (!Cartesian3.equals(eyeOffset, value)) {
@@ -780,7 +888,11 @@ Object.defineProperties(Label.prototype, {
       return this._horizontalOrigin;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._horizontalOrigin !== value) {
         this._horizontalOrigin = value;
@@ -809,7 +921,11 @@ Object.defineProperties(Label.prototype, {
       return this._verticalOrigin;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._verticalOrigin !== value) {
         this._verticalOrigin = value;
@@ -854,7 +970,11 @@ Object.defineProperties(Label.prototype, {
       return this._scale;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._scale !== value) {
         this._scale = value;
@@ -900,7 +1020,11 @@ Object.defineProperties(Label.prototype, {
       return this._distanceDisplayCondition;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far <= value.near) {
+        throw new DeveloperError("far must be greater than near");
+      }
+      //>>includeEnd('debug');
       if (
         !DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)
       ) {
@@ -936,7 +1060,13 @@ Object.defineProperties(Label.prototype, {
     },
     set: function (value) {
       if (this._disableDepthTestDistance !== value) {
-        ;
+        //>>includeStart('debug', pragmas.debug);
+        if (defined(value) && value < 0.0) {
+          throw new DeveloperError(
+            "disableDepthTestDistance must be greater than 0.0.",
+          );
+        }
+        //>>includeEnd('debug');
         this._disableDepthTestDistance = value;
 
         const glyphs = this._glyphs;
@@ -1078,7 +1208,11 @@ Label.prototype._updateClamping = function () {
  * @see Label#pixelOffset
  */
 Label.prototype.computeScreenSpacePosition = function (scene, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian2();
@@ -1299,7 +1433,7 @@ Label.prototype.isDestroyed = function () {
  */
 Label.enableRightToLeftDetection = false;
 
-function convertTextToTypes(text, rtlChars) {
+function convertTextToTypes(text: any, rtlChars: any) {
   const ltrChars = /[a-zA-Z0-9]/;
   const bracketsChars = /[()[\]{}<>]/;
   const parsedText = [];
@@ -1337,15 +1471,15 @@ function convertTextToTypes(text, rtlChars) {
   return parsedText;
 }
 
-function reverseWord(word) {
+function reverseWord(word: any) {
   return word.split("").reverse().join("");
 }
 
-function spliceWord(result, pointer, word) {
+function spliceWord(result: any, pointer: any, word: any) {
   return result.slice(0, pointer) + word + result.slice(pointer);
 }
 
-function reverseBrackets(bracket) {
+function reverseBrackets(bracket: any) {
   switch (bracket) {
     case "(":
       return ")";
@@ -1377,7 +1511,7 @@ const rtlChars = new RegExp(`[${hebrew}${arabic}]`);
  * @returns {string} the text as rightToLeft direction
  * @private
  */
-function reverseRtl(value) {
+function reverseRtl(value: any) {
   const texts = value.split("\n");
   let result = "";
   for (let i = 0; i < texts.length; i++) {
@@ -1482,5 +1616,4 @@ function reverseRtl(value) {
   }
   return result;
 }
-export { Label };
 export default Label;

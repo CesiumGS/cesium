@@ -18,15 +18,7 @@ const defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 const defaultOffset = Cartesian3.ZERO;
 const offsetScratch = new Cartesian3();
 
-function Batch(
-  primitives,
-  appearanceType,
-  materialProperty,
-  depthFailAppearanceType,
-  depthFailMaterialProperty,
-  closed,
-  shadows,
-) {
+function Batch(primitives: any, appearanceType: any, materialProperty: any, depthFailAppearanceType: any, depthFailMaterialProperty: any, closed: any, shadows: any, ) {
   this.primitives = primitives;
   this.appearanceType = appearanceType;
   this.materialProperty = materialProperty;
@@ -384,13 +376,7 @@ Batch.prototype.destroy = function () {
 /**
  * @private
  */
-function StaticGeometryPerMaterialBatch(
-  primitives,
-  appearanceType,
-  depthFailAppearanceType,
-  closed,
-  shadows,
-) {
+function StaticGeometryPerMaterialBatch(primitives: any, appearanceType: any, depthFailAppearanceType: any, closed: any, shadows: any, ) {
   this._items = [];
   this._primitives = primitives;
   this._appearanceType = appearanceType;
@@ -485,5 +471,4 @@ StaticGeometryPerMaterialBatch.prototype.removeAllPrimitives = function () {
   }
   this._items.length = 0;
 };
-export { StaticGeometryPerMaterialBatch };
 export default StaticGeometryPerMaterialBatch;

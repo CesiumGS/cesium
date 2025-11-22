@@ -15,7 +15,7 @@ import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
  *
  * @see Ellipsoid
  */
-function Cartographic(longitude, latitude, height) {
+function Cartographic(longitude: any, latitude: any, height: any) {
   /**
    * The longitude, in radians.
    * @type {number}
@@ -49,7 +49,10 @@ function Cartographic(longitude, latitude, height) {
  * @returns {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
  */
 Cartographic.fromRadians = function (longitude, latitude, height, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("longitude", longitude);
+  Check.typeOf.number("latitude", latitude);
+  //>>includeEnd('debug');
 
   height = height ?? 0.0;
 
@@ -75,7 +78,10 @@ Cartographic.fromRadians = function (longitude, latitude, height, result) {
  * @returns {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
  */
 Cartographic.fromDegrees = function (longitude, latitude, height, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("longitude", longitude);
+  Check.typeOf.number("latitude", latitude);
+  //>>includeEnd('debug');
 
   longitude = CesiumMath.toRadians(longitude);
   latitude = CesiumMath.toRadians(latitude);
@@ -166,7 +172,9 @@ Cartographic.fromCartesian = function (cartesian, ellipsoid, result) {
  * @returns {Cartesian3} The position
  */
 Cartographic.toCartesian = function (cartographic, ellipsoid, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartographic", cartographic);
+  //>>includeEnd('debug');
 
   return Cartesian3.fromRadians(
     cartographic.longitude,
@@ -293,5 +301,4 @@ Cartographic.prototype.equalsEpsilon = function (right, epsilon) {
 Cartographic.prototype.toString = function () {
   return `(${this.longitude}, ${this.latitude}, ${this.height})`;
 };
-export { Cartographic };
 export default Cartographic;

@@ -73,7 +73,7 @@ WireframePipelineStage.process = function (
   );
 };
 
-function createWireframeIndexBuffer(primitive, indices, frameState) {
+function createWireframeIndexBuffer(primitive: any, indices: any, frameState: any) {
   const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.POSITION,
@@ -115,5 +115,4 @@ function createWireframeIndexBuffer(primitive, indices, frameState) {
   });
 }
 
-export { WireframePipelineStage };
 export default WireframePipelineStage;

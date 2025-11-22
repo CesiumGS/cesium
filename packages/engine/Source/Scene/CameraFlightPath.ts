@@ -19,7 +19,7 @@ import SceneMode from "./SceneMode.js";
  */
 const CameraFlightPath = {};
 
-function getAltitude(frustum, dx, dy) {
+function getAltitude(frustum: any, dx: any, dy: any) {
   let near;
   let top;
   let right;
@@ -42,12 +42,7 @@ function getAltitude(frustum, dx, dy) {
 const scratchCart = new Cartesian3();
 const scratchCart2 = new Cartesian3();
 
-function createPitchFunction(
-  startPitch,
-  endPitch,
-  heightFunction,
-  pitchAdjustHeight,
-) {
+function createPitchFunction(startPitch: any, endPitch: any, heightFunction: any, pitchAdjustHeight: any, ) {
   if (defined(pitchAdjustHeight) && heightFunction(0.5) > pitchAdjustHeight) {
     const startHeight = heightFunction(0.0);
     const endHeight = heightFunction(1.0);
@@ -72,13 +67,7 @@ function createPitchFunction(
   };
 }
 
-function createHeightFunction(
-  camera,
-  destination,
-  startHeight,
-  endHeight,
-  optionAltitude,
-) {
+function createHeightFunction(camera: any, destination: any, startHeight: any, endHeight: any, optionAltitude: any, ) {
   let altitude = optionAltitude;
   const maxHeight = Math.max(startHeight, endHeight);
 
@@ -125,7 +114,7 @@ function createHeightFunction(
   };
 }
 
-function adjustAngleForLERP(startAngle, endAngle) {
+function adjustAngleForLERP(startAngle: any, endAngle: any) {
   if (
     CesiumMath.equalsEpsilon(
       startAngle,
@@ -147,16 +136,7 @@ function adjustAngleForLERP(startAngle, endAngle) {
 
 const scratchStart = new Cartesian3();
 
-function createUpdateCV(
-  scene,
-  duration,
-  destination,
-  heading,
-  pitch,
-  roll,
-  optionAltitude,
-  optionPitchAdjustHeight,
-) {
+function createUpdateCV(scene: any, duration: any, destination: any, heading: any, pitch: any, roll: any, optionAltitude: any, optionPitchAdjustHeight: any, ) {
   const camera = scene.camera;
 
   const start = Cartesian3.clone(camera.position, scratchStart);
@@ -179,7 +159,7 @@ function createUpdateCV(
     optionPitchAdjustHeight,
   );
 
-  function update(value) {
+  function update(value: any) {
     const time = value.time / duration;
 
     camera.setView({
@@ -196,7 +176,7 @@ function createUpdateCV(
   return update;
 }
 
-function useLongestFlight(startCart, destCart) {
+function useLongestFlight(startCart: any, destCart: any) {
   if (startCart.longitude < destCart.longitude) {
     startCart.longitude += CesiumMath.TWO_PI;
   } else {
@@ -204,7 +184,7 @@ function useLongestFlight(startCart, destCart) {
   }
 }
 
-function useShortestFlight(startCart, destCart) {
+function useShortestFlight(startCart: any, destCart: any) {
   const diff = startCart.longitude - destCart.longitude;
   if (diff < -CesiumMath.PI) {
     startCart.longitude += CesiumMath.TWO_PI;
@@ -216,18 +196,7 @@ function useShortestFlight(startCart, destCart) {
 const scratchStartCart = new Cartographic();
 const scratchEndCart = new Cartographic();
 
-function createUpdate3D(
-  scene,
-  duration,
-  destination,
-  heading,
-  pitch,
-  roll,
-  optionAltitude,
-  optionFlyOverLongitude,
-  optionFlyOverLongitudeWeight,
-  optionPitchAdjustHeight,
-) {
+function createUpdate3D(scene: any, duration: any, destination: any, heading: any, pitch: any, roll: any, optionAltitude: any, optionFlyOverLongitude: any, optionFlyOverLongitudeWeight: any, optionPitchAdjustHeight: any, ) {
   const camera = scene.camera;
   const projection = scene.mapProjection;
   const ellipsoid = projection.ellipsoid;
@@ -308,7 +277,7 @@ function createUpdate3D(
     const startLatitude = startCart.latitude;
     const destLatitude = destCart.latitude;
 
-    return function update(value) {
+    return function update(value: any) {
       const time = value.time / duration;
 
       const position = Cartesian3.fromRadians(
@@ -331,15 +300,7 @@ function createUpdate3D(
   return isolateUpdateFunction();
 }
 
-function createUpdate2D(
-  scene,
-  duration,
-  destination,
-  heading,
-  pitch,
-  roll,
-  optionAltitude,
-) {
+function createUpdate2D(scene: any, duration: any, destination: any, heading: any, pitch: any, roll: any, optionAltitude: any, ) {
   const camera = scene.camera;
 
   const start = Cartesian3.clone(camera.position, scratchStart);
@@ -354,7 +315,7 @@ function createUpdate2D(
     optionAltitude,
   );
 
-  function update(value) {
+  function update(value: any) {
     const time = value.time / duration;
 
     camera.setView({
@@ -382,7 +343,7 @@ function createUpdate2D(
 const scratchCartographic = new Cartographic();
 const scratchDestination = new Cartesian3();
 
-function emptyFlight(complete, cancel) {
+function emptyFlight(complete: any, cancel: any) {
   return {
     startObject: {},
     stopObject: {},
@@ -392,7 +353,7 @@ function emptyFlight(complete, cancel) {
   };
 }
 
-function wrapCallback(controller, cb) {
+function wrapCallback(controller: any, cb: any) {
   function wrapped() {
     if (typeof cb === "function") {
       cb();
@@ -407,7 +368,14 @@ CameraFlightPath.createTween = function (scene, options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   let destination = options.destination;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  if (!defined(destination)) {
+    throw new DeveloperError("destination is required.");
+  }
+  //>>includeEnd('debug');
   const mode = scene.mode;
 
   if (mode === SceneMode.MORPHING) {
@@ -566,5 +534,4 @@ CameraFlightPath.createTween = function (scene, options) {
     cancel: cancel,
   };
 };
-export { CameraFlightPath };
 export default CameraFlightPath;

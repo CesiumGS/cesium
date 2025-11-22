@@ -18,12 +18,15 @@ import ModelArticulationStage from "./ModelArticulationStage.js";
  *
  * @private
  */
-function ModelArticulation(options) {
+function ModelArticulation(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const articulation = options.articulation;
   const sceneGraph = options.sceneGraph;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.articulation", articulation);
+  Check.typeOf.object("options.sceneGraph", sceneGraph);
+  //>>includeEnd('debug');
 
   this._articulation = articulation;
   this._sceneGraph = sceneGraph;
@@ -119,7 +122,7 @@ Object.defineProperties(ModelArticulation.prototype, {
   },
 });
 
-function initialize(runtimeArticulation) {
+function initialize(runtimeArticulation: any) {
   const articulation = runtimeArticulation.articulation;
 
   const stages = articulation.stages;
@@ -208,5 +211,4 @@ ModelArticulation.prototype.apply = function () {
   }
 };
 
-export { ModelArticulation };
 export default ModelArticulation;

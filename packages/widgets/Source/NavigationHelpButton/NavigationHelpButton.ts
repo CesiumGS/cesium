@@ -30,8 +30,12 @@ import NavigationHelpButtonViewModel from "./NavigationHelpButtonViewModel.js";
  *     container : 'navigationHelpButtonContainer'
  * });
  */
-function NavigationHelpButton(options) {
-  ;
+function NavigationHelpButton(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options) || !defined(options.container)) {
+    throw new DeveloperError("options.container is required.");
+  }
+  //>>includeEnd('debug');
 
   const container = getElement(options.container);
 
@@ -264,5 +268,4 @@ NavigationHelpButton.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { NavigationHelpButton };
 export default NavigationHelpButton;

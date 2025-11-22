@@ -32,7 +32,7 @@ GaussianSplatTextureGenerator._getTextureTaskProcessor = function () {
           );
         }
       })
-      .catch((error) => {
+      .catch((error: any) => {
         GaussianSplatTextureGenerator._error = error;
       });
     GaussianSplatTextureGenerator._textureTaskProcessor = processor;
@@ -61,5 +61,4 @@ GaussianSplatTextureGenerator.generateFromAttributes = function (parameters) {
   ]);
 };
 
-export { GaussianSplatTextureGenerator };
 export default GaussianSplatTextureGenerator;

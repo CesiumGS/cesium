@@ -34,7 +34,7 @@ import IonImageryProviderFactory from "./IonImageryProviderFactory.js";
  *
  * @see IonImageryProvider.fromAssetId
  */
-function IonImageryProvider(options) {
+function IonImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
@@ -215,7 +215,9 @@ Object.defineProperties(IonImageryProvider.prototype, {
  * @exception {RuntimeError} Unrecognized Cesium ion imagery type
  */
 IonImageryProvider.fromAssetId = async function (assetId, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("assetId", assetId);
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
   const endpointResource = IonResource._createEndpointResource(
@@ -341,5 +343,4 @@ IonImageryProvider.prototype.pickFeatures = function (
 
 //exposed for testing
 IonImageryProvider._endpointCache = {};
-export { IonImageryProvider };
 export default IonImageryProvider;

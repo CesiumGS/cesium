@@ -41,13 +41,25 @@ import Spline from "./Spline.js";
  * @see QuaternionSpline
  * @see MorphWeightSpline
  */
-function LinearSpline(options) {
+function LinearSpline(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const points = options.points;
   const times = options.times;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(points) || !defined(times)) {
+    throw new DeveloperError("points and times are required.");
+  }
+  if (points.length < 2) {
+    throw new DeveloperError(
+      "points.length must be greater than or equal to 2.",
+    );
+  }
+  if (times.length !== points.length) {
+    throw new DeveloperError("times.length must be equal to points.length.");
+  }
+  //>>includeEnd('debug');
 
   this._times = times;
   this._points = points;
@@ -151,5 +163,4 @@ LinearSpline.prototype.evaluate = function (time, result) {
   return Cartesian3.lerp(points[i], points[i + 1], u, result);
 };
 
-export { LinearSpline };
 export default LinearSpline;

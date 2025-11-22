@@ -13,11 +13,14 @@ import Resource from "./Resource.js";
  * @returns {Promise<HTMLImageElement|HTMLCanvasElement|ImageBitmap>|undefined} A promise that resolves to the loaded image. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  * @private
  */
-function loadImageFromTypedArray(options) {
+function loadImageFromTypedArray(options: any) {
   const { uint8Array, format, request } = options;
   const flipY = options.flipY ?? false;
   const skipColorSpaceConversion = options.skipColorSpaceConversion ?? false;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("uint8Array", uint8Array);
+  Check.typeOf.string("format", format);
+  //>>includeEnd('debug');
 
   const blob = new Blob([uint8Array], {
     type: format,
@@ -60,5 +63,4 @@ function loadImageFromTypedArray(options) {
       return Promise.reject(error);
     });
 }
-export { loadImageFromTypedArray };
 export default loadImageFromTypedArray;

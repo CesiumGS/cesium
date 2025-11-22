@@ -25,7 +25,14 @@ const IntersectionTests = {};
  * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
  */
 IntersectionTests.rayPlane = function (ray, plane, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(ray)) {
+    throw new DeveloperError("ray is required.");
+  }
+  if (!defined(plane)) {
+    throw new DeveloperError("plane is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -80,7 +87,20 @@ IntersectionTests.rayTriangleParametric = function (
   p2,
   cullBackFaces,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(ray)) {
+    throw new DeveloperError("ray is required.");
+  }
+  if (!defined(p0)) {
+    throw new DeveloperError("p0 is required.");
+  }
+  if (!defined(p1)) {
+    throw new DeveloperError("p1 is required.");
+  }
+  if (!defined(p2)) {
+    throw new DeveloperError("p2 is required.");
+  }
+  //>>includeEnd('debug');
 
   cullBackFaces = cullBackFaces ?? false;
 
@@ -213,7 +233,23 @@ IntersectionTests.lineSegmentTriangle = function (
   cullBackFaces,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(v0)) {
+    throw new DeveloperError("v0 is required.");
+  }
+  if (!defined(v1)) {
+    throw new DeveloperError("v1 is required.");
+  }
+  if (!defined(p0)) {
+    throw new DeveloperError("p0 is required.");
+  }
+  if (!defined(p1)) {
+    throw new DeveloperError("p1 is required.");
+  }
+  if (!defined(p2)) {
+    throw new DeveloperError("p2 is required.");
+  }
+  //>>includeEnd('debug');
 
   const ray = scratchLineSegmentTriangleRay;
   Cartesian3.clone(v0, ray.origin);
@@ -239,7 +275,7 @@ IntersectionTests.lineSegmentTriangle = function (
   return Cartesian3.add(ray.origin, result, result);
 };
 
-function solveQuadratic(a, b, c, result) {
+function solveQuadratic(a: any, b: any, c: any, result: any) {
   const det = b * b - 4.0 * a * c;
   if (det < 0.0) {
     return undefined;
@@ -274,7 +310,7 @@ const raySphereRoots = {
   root1: 0.0,
 };
 
-function raySphere(ray, sphere, result) {
+function raySphere(ray: any, sphere: any, result: any) {
   if (!defined(result)) {
     result = new Interval();
   }
@@ -311,7 +347,14 @@ function raySphere(ray, sphere, result) {
  * @returns {Interval} The interval containing scalar points along the ray or undefined if there are no intersections.
  */
 IntersectionTests.raySphere = function (ray, sphere, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(ray)) {
+    throw new DeveloperError("ray is required.");
+  }
+  if (!defined(sphere)) {
+    throw new DeveloperError("sphere is required.");
+  }
+  //>>includeEnd('debug');
 
   result = raySphere(ray, sphere, result);
   if (!defined(result) || result.stop < 0.0) {
@@ -335,7 +378,17 @@ const scratchLineSegmentRay = new Ray();
  * @returns {Interval} The interval containing scalar points along the ray or undefined if there are no intersections.
  */
 IntersectionTests.lineSegmentSphere = function (p0, p1, sphere, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(p0)) {
+    throw new DeveloperError("p0 is required.");
+  }
+  if (!defined(p1)) {
+    throw new DeveloperError("p1 is required.");
+  }
+  if (!defined(sphere)) {
+    throw new DeveloperError("sphere is required.");
+  }
+  //>>includeEnd('debug');
 
   const ray = scratchLineSegmentRay;
   Cartesian3.clone(p0, ray.origin);
@@ -365,7 +418,14 @@ const scratchW = new Cartesian3();
  * @returns {Interval} The interval containing scalar points along the ray or undefined if there are no intersections.
  */
 IntersectionTests.rayEllipsoid = function (ray, ellipsoid) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(ray)) {
+    throw new DeveloperError("ray is required.");
+  }
+  if (!defined(ellipsoid)) {
+    throw new DeveloperError("ellipsoid is required.");
+  }
+  //>>includeEnd('debug');
 
   const inverseRadii = ellipsoid.oneOverRadii;
   const q = Cartesian3.multiplyComponents(inverseRadii, ray.origin, scratchQ);
@@ -447,7 +507,14 @@ const scratchRayIntervalZ = new Interval();
  * @param {Interval | undefined} result The interval containing scalar points along the ray or undefined if there are no intersections.
  */
 IntersectionTests.rayAxisAlignedBoundingBox = function (ray, box, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(ray)) {
+    throw new DeveloperError("ray is required.");
+  }
+  if (!defined(box)) {
+    throw new DeveloperError("box is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Interval();
@@ -496,7 +563,7 @@ IntersectionTests.rayAxisAlignedBoundingBox = function (ray, box, result) {
   return result;
 };
 
-function rayIntervalAlongAABBAxis(origin, direction, min, max, result) {
+function rayIntervalAlongAABBAxis(origin: any, direction: any, min: any, max: any, result: any) {
   result.start = (min - origin) / direction;
   result.stop = (max - origin) / direction;
   if (result.stop < result.start) {
@@ -508,7 +575,7 @@ function rayIntervalAlongAABBAxis(origin, direction, min, max, result) {
   return result;
 }
 
-function addWithCancellationCheck(left, right, tolerance) {
+function addWithCancellationCheck(left: any, right: any, tolerance: any) {
   const difference = left + right;
   if (
     CesiumMath.sign(left) !== CesiumMath.sign(right) &&
@@ -675,7 +742,14 @@ const surfPointScratch = new Cartographic();
  * @returns {Cartesian3} The nearest planetodetic point on the ray.
  */
 IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(ray)) {
+    throw new DeveloperError("ray is required.");
+  }
+  if (!defined(ellipsoid)) {
+    throw new DeveloperError("ellipsoid is required.");
+  }
+  //>>includeEnd('debug');
 
   const position = ray.origin;
   const direction = ray.direction;
@@ -826,7 +900,17 @@ IntersectionTests.lineSegmentPlane = function (
   plane,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(endPoint0)) {
+    throw new DeveloperError("endPoint0 is required.");
+  }
+  if (!defined(endPoint1)) {
+    throw new DeveloperError("endPoint1 is required.");
+  }
+  if (!defined(plane)) {
+    throw new DeveloperError("plane is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -881,7 +965,11 @@ IntersectionTests.lineSegmentPlane = function (
  * const triangles = Cesium.IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
  */
 IntersectionTests.trianglePlaneIntersection = function (p0, p1, p2, plane) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(p0) || !defined(p1) || !defined(p2) || !defined(plane)) {
+    throw new DeveloperError("p0, p1, p2, and plane are required.");
+  }
+  //>>includeEnd('debug');
 
   const planeNormal = plane.normal;
   const planeD = plane.distance;
@@ -996,5 +1084,4 @@ IntersectionTests.trianglePlaneIntersection = function (p0, p1, p2, plane) {
   // otherwise, it is completely in front (numBehind is 0).
   return undefined;
 };
-export { IntersectionTests };
 export default IntersectionTests;

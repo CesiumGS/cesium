@@ -95,5 +95,4 @@ ModelColorPipelineStage.process = function (
   );
 };
 
-export { ModelColorPipelineStage };
 export default ModelColorPipelineStage;

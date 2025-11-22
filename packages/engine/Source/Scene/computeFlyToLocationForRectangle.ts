@@ -14,7 +14,7 @@ import SceneMode from "./SceneMode.js";
  *
  * @private
  */
-async function computeFlyToLocationForRectangle(rectangle, scene) {
+async function computeFlyToLocationForRectangle(rectangle: any, scene: any) {
   const terrainProvider = scene.terrainProvider;
   const mapProjection = scene.mapProjection;
   const ellipsoid = mapProjection.ellipsoid;
@@ -71,5 +71,4 @@ async function computeFlyToLocationForRectangle(rectangle, scene) {
 //Exposed for testing.
 computeFlyToLocationForRectangle._sampleTerrainMostDetailed =
   sampleTerrainMostDetailed;
-export { computeFlyToLocationForRectangle };
 export default computeFlyToLocationForRectangle;

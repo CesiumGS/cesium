@@ -34,7 +34,7 @@ const innerRadiiScratch = new Cartesian3();
 const scratchColor = new Color();
 const unitSphere = new Cartesian3(1, 1, 1);
 
-function EllipsoidGeometryOptions(entity) {
+function EllipsoidGeometryOptions(entity: any) {
   this.id = entity;
   this.vertexFormat = undefined;
   this.radii = undefined;
@@ -58,7 +58,7 @@ function EllipsoidGeometryOptions(entity) {
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
-function EllipsoidGeometryUpdater(entity, scene) {
+function EllipsoidGeometryUpdater(entity: any, scene: any) {
   GeometryUpdater.call(this, {
     entity: entity,
     scene: scene,
@@ -115,7 +115,9 @@ EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
   skipModelMatrix,
   modelMatrixResult,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -197,7 +199,9 @@ EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   skipModelMatrix,
   modelMatrixResult,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -346,11 +350,7 @@ EllipsoidGeometryUpdater.DynamicGeometryUpdater =
 /**
  * @private
  */
-function DynamicEllipsoidGeometryUpdater(
-  geometryUpdater,
-  primitives,
-  groundPrimitives,
-) {
+function DynamicEllipsoidGeometryUpdater(geometryUpdater: any, primitives: any, groundPrimitives: any, ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
@@ -380,7 +380,9 @@ if (defined(Object.create)) {
 }
 
 DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const ellipsoid = entity.ellipsoid;
@@ -701,5 +703,4 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     this._outlinePrimitive.modelMatrix = modelMatrix;
   }
 };
-export { EllipsoidGeometryUpdater };
 export default EllipsoidGeometryUpdater;

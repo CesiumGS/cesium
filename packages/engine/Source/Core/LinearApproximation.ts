@@ -42,7 +42,17 @@ LinearApproximation.interpolateOrderZero = function (
   yStride,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (xTable.length !== 2) {
+    throw new DeveloperError(
+      "The xTable provided to the linear interpolator must have exactly two elements.",
+    );
+  } else if (yStride <= 0) {
+    throw new DeveloperError(
+      "There must be at least 1 dependent variable for each independent variable.",
+    );
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Array(yStride);
@@ -54,7 +64,13 @@ LinearApproximation.interpolateOrderZero = function (
   const x0 = xTable[0];
   const x1 = xTable[1];
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (x0 === x1) {
+    throw new DeveloperError(
+      "Divide by zero error: xTable[0] and xTable[1] are equal",
+    );
+  }
+  //>>includeEnd('debug');
 
   for (i = 0; i < yStride; i++) {
     y0 = yTable[i];
@@ -64,5 +80,4 @@ LinearApproximation.interpolateOrderZero = function (
 
   return result;
 };
-export { LinearApproximation };
 export default LinearApproximation;

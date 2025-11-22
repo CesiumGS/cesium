@@ -24,7 +24,14 @@ let _servers = {};
  * TrustedServers.add('my.server.com', 80);
  */
 TrustedServers.add = function (host, port) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(host)) {
+    throw new DeveloperError("host is required.");
+  }
+  if (!defined(port) || port <= 0) {
+    throw new DeveloperError("port is required to be greater than 0.");
+  }
+  //>>includeEnd('debug');
 
   const authority = `${host.toLowerCase()}:${port}`;
   if (!defined(_servers[authority])) {
@@ -43,7 +50,14 @@ TrustedServers.add = function (host, port) {
  * TrustedServers.remove('my.server.com', 80);
  */
 TrustedServers.remove = function (host, port) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(host)) {
+    throw new DeveloperError("host is required.");
+  }
+  if (!defined(port) || port <= 0) {
+    throw new DeveloperError("port is required to be greater than 0.");
+  }
+  //>>includeEnd('debug');
 
   const authority = `${host.toLowerCase()}:${port}`;
   if (defined(_servers[authority])) {
@@ -51,7 +65,7 @@ TrustedServers.remove = function (host, port) {
   }
 };
 
-function getAuthority(url) {
+function getAuthority(url: any) {
   const uri = new Uri(url);
   uri.normalize();
 
@@ -106,7 +120,11 @@ function getAuthority(url) {
  * }
  */
 TrustedServers.contains = function (url) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(url)) {
+    throw new DeveloperError("url is required.");
+  }
+  //>>includeEnd('debug');
   const authority = getAuthority(url);
   if (defined(authority) && defined(_servers[authority])) {
     return true;
@@ -125,5 +143,4 @@ TrustedServers.contains = function (url) {
 TrustedServers.clear = function () {
   _servers = {};
 };
-export { TrustedServers };
 export default TrustedServers;

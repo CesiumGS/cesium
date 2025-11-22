@@ -9,7 +9,7 @@ import Check from "./Check.js";
  *
  * @param {number} [length=0] The initial length of the array.
  */
-function ManagedArray(length) {
+function ManagedArray(length: any) {
   length = length ?? 0;
   this._array = new Array(length);
   this._length = length;
@@ -28,7 +28,9 @@ Object.defineProperties(ManagedArray.prototype, {
       return this._length;
     },
     set: function (length) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("length", length, 0);
+      //>>includeEnd('debug');
       const array = this._array;
       const originalLength = this._length;
       if (length < originalLength) {
@@ -63,7 +65,9 @@ Object.defineProperties(ManagedArray.prototype, {
  * @param {number} index The index to get.
  */
 ManagedArray.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.lessThan("index", index, this._array.length);
+  //>>includeEnd('debug');
 
   return this._array[index];
 };
@@ -75,7 +79,9 @@ ManagedArray.prototype.get = function (index) {
  * @param {*} element The element to set at index.
  */
 ManagedArray.prototype.set = function (index, element) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   if (index >= this._length) {
     this.length = index + 1;
@@ -86,7 +92,7 @@ ManagedArray.prototype.set = function (index, element) {
 /**
  * Returns the last element in the array without modifying the array.
  *
- * @returns {any} The last element in the array.
+ * @returns {*} The last element in the array.
  */
 ManagedArray.prototype.peek = function () {
   return this._array[this._length - 1];
@@ -105,7 +111,7 @@ ManagedArray.prototype.push = function (element) {
 /**
  * Pop an element from the array.
  *
- * @returns {any} The last element in the array.
+ * @returns {*} The last element in the array.
  */
 ManagedArray.prototype.pop = function () {
   if (this._length === 0) {
@@ -122,7 +128,9 @@ ManagedArray.prototype.pop = function () {
  * @param {number} length The length.
  */
 ManagedArray.prototype.reserve = function (length) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("length", length, 0);
+  //>>includeEnd('debug');
 
   if (length > this._array.length) {
     this._array.length = length;
@@ -135,7 +143,9 @@ ManagedArray.prototype.reserve = function (length) {
  * @param {number} length The length.
  */
 ManagedArray.prototype.resize = function (length) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("length", length, 0);
+  //>>includeEnd('debug');
 
   this.length = length;
 };
@@ -149,5 +159,4 @@ ManagedArray.prototype.trim = function (length) {
   length = length ?? this._length;
   this._array.length = length;
 };
-export { ManagedArray };
 export default ManagedArray;

@@ -134,5 +134,4 @@ Property.getValueOrClonedDefault = function (
   }
   return value;
 };
-export { Property };
 export default Property;

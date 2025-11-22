@@ -11,7 +11,7 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-function addExtensionsRequired(gltf, extension) {
+function addExtensionsRequired(gltf: any, extension: any) {
   let extensionsRequired = gltf.extensionsRequired;
   if (!defined(extensionsRequired)) {
     extensionsRequired = [];
@@ -21,5 +21,4 @@ function addExtensionsRequired(gltf, extension) {
   addExtensionsUsed(gltf, extension);
 }
 
-export { addExtensionsRequired };
 export default addExtensionsRequired;

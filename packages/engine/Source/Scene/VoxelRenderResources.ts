@@ -30,7 +30,7 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  *
  * @private
  */
-function VoxelRenderResources(primitive) {
+function VoxelRenderResources(primitive: any) {
   const shaderBuilder = new ShaderBuilder();
   /**
    * An object used to build a shader incrementally. Each pipeline stage
@@ -256,5 +256,4 @@ function VoxelRenderResources(primitive) {
   );
 }
 
-export { VoxelRenderResources };
 export default VoxelRenderResources;

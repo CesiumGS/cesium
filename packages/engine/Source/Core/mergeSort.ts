@@ -4,7 +4,7 @@ import DeveloperError from "./DeveloperError.js";
 const leftScratchArray = [];
 const rightScratchArray = [];
 
-function merge(array, compare, userDefinedObject, start, middle, end) {
+function merge(array: any, compare: any, userDefinedObject: any, start: any, middle: any, end: any) {
   const leftLength = middle - start + 1;
   const rightLength = end - middle;
 
@@ -41,7 +41,7 @@ function merge(array, compare, userDefinedObject, start, middle, end) {
   }
 }
 
-function sort(array, compare, userDefinedObject, start, end) {
+function sort(array: any, compare: any, userDefinedObject: any, start: any, end: any) {
   if (start >= end) {
     return;
   }
@@ -68,8 +68,15 @@ function sort(array, compare, userDefinedObject, start, end) {
  *     return Cesium.BoundingSphere.distanceSquaredTo(b, position) - Cesium.BoundingSphere.distanceSquaredTo(a, position);
  * }, position);
  */
-function mergeSort(array, comparator, userDefinedObject) {
-  ;
+function mergeSort(array: any, comparator: any, userDefinedObject: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required.");
+  }
+  if (!defined(comparator)) {
+    throw new DeveloperError("comparator is required.");
+  }
+  //>>includeEnd('debug');
 
   const length = array.length;
   const scratchLength = Math.ceil(length * 0.5);
@@ -97,9 +104,8 @@ function mergeSort(array, comparator, userDefinedObject) {
  *          0 if <code>a</code> is equal to <code>b</code>.
  *
  * @example
- * function compareNumbers(a, b, userDefinedObject) {
+ * function compareNumbers(a: any, b: any, userDefinedObject: any) {
  *     return a - b;
  * }
  */
-export { mergeSort };
 export default mergeSort;

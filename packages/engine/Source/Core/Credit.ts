@@ -19,8 +19,10 @@ const creditToId = {};
  * // Create a credit with a tooltip, image and link
  * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png"  style="vertical-align: -7px" title="Cesium"/></a>');
  */
-function Credit(html, showOnScreen) {
-  ;
+function Credit(html: any, showOnScreen: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("html", html);
+  //>>includeEnd('debug');
   let id;
   const key = html;
 
@@ -167,5 +169,4 @@ Credit.clone = function (credit) {
     return new Credit(credit.html, credit.showOnScreen);
   }
 };
-export { Credit };
 export default Credit;

@@ -27,7 +27,7 @@ const offsetScratch = new Cartesian3();
 const positionScratch = new Cartesian3();
 const scratchColor = new Color();
 
-function CylinderGeometryOptions(entity) {
+function CylinderGeometryOptions(entity: any) {
   this.id = entity;
   this.vertexFormat = undefined;
   this.length = undefined;
@@ -47,7 +47,7 @@ function CylinderGeometryOptions(entity) {
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
-function CylinderGeometryUpdater(entity, scene) {
+function CylinderGeometryUpdater(entity: any, scene: any) {
   GeometryUpdater.call(this, {
     entity: entity,
     scene: scene,
@@ -93,7 +93,15 @@ Object.defineProperties(CylinderGeometryUpdater.prototype, {
  * @exception {DeveloperError} This instance does not represent a filled geometry.
  */
 CylinderGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._fillEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent a filled geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -166,7 +174,15 @@ CylinderGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 CylinderGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   time,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._outlineEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent an outlined geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -283,11 +299,7 @@ CylinderGeometryUpdater.DynamicGeometryUpdater = DynamicCylinderGeometryUpdater;
 /**
  * @private
  */
-function DynamicCylinderGeometryUpdater(
-  geometryUpdater,
-  primitives,
-  groundPrimitives,
-) {
+function DynamicCylinderGeometryUpdater(geometryUpdater: any, primitives: any, groundPrimitives: any, ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
@@ -356,5 +368,4 @@ DynamicCylinderGeometryUpdater.prototype._setOptions = function (
       ? GeometryOffsetAttribute.ALL
       : undefined;
 };
-export { CylinderGeometryUpdater };
 export default CylinderGeometryUpdater;

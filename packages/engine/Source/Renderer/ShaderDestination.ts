@@ -20,7 +20,9 @@ const ShaderDestination = {
  * @private
  */
 ShaderDestination.includesVertexShader = function (destination) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("destination", destination);
+  //>>includeEnd('debug');
 
   return (
     destination === ShaderDestination.VERTEX ||
@@ -36,7 +38,9 @@ ShaderDestination.includesVertexShader = function (destination) {
  * @private
  */
 ShaderDestination.includesFragmentShader = function (destination) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("destination", destination);
+  //>>includeEnd('debug');
   //
   return (
     destination === ShaderDestination.FRAGMENT ||

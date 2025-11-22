@@ -9,7 +9,7 @@ import addToArray from "./addToArray.js";
  *
  * @private
  */
-function addBuffer(gltf, buffer) {
+function addBuffer(gltf: any, buffer: any) {
   const newBuffer = {
     byteLength: buffer.length,
     extras: {
@@ -27,5 +27,4 @@ function addBuffer(gltf, buffer) {
   return addToArray(gltf.bufferViews, bufferView);
 }
 
-export { addBuffer };
 export default addBuffer;

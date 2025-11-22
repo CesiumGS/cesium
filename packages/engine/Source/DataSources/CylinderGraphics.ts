@@ -35,7 +35,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {CylinderGraphics.ConstructorOptions} [options] Object describing initialization options
  */
-function CylinderGraphics(options) {
+function CylinderGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -232,7 +232,11 @@ CylinderGraphics.prototype.clone = function (result) {
  * @param {CylinderGraphics} source The object to be merged into this object.
  */
 CylinderGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.length = this.length ?? source.length;
@@ -251,5 +255,4 @@ CylinderGraphics.prototype.merge = function (source) {
   this.distanceDisplayCondition =
     this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
-export { CylinderGraphics };
 export default CylinderGraphics;

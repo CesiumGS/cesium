@@ -25,13 +25,19 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function MetadataSchemaLoader(options) {
+function MetadataSchemaLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const schema = options.schema;
   const resource = options.resource;
   const cacheKey = options.cacheKey;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (defined(schema) === defined(resource)) {
+    throw new DeveloperError(
+      "One of options.schema and options.resource must be defined.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._schema = defined(schema) ? MetadataSchema.fromJson(schema) : undefined;
   this._resource = resource;
@@ -95,7 +101,7 @@ MetadataSchemaLoader.prototype.load = async function () {
   return this._promise;
 };
 
-async function loadExternalSchema(schemaLoader) {
+async function loadExternalSchema(schemaLoader: any) {
   const resource = schemaLoader._resource;
   schemaLoader._state = ResourceLoaderState.LOADING;
   try {
@@ -126,5 +132,4 @@ MetadataSchemaLoader.prototype.unload = function () {
   this._schema = undefined;
 };
 
-export { MetadataSchemaLoader };
 export default MetadataSchemaLoader;

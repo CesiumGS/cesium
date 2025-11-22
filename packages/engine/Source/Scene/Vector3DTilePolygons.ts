@@ -38,7 +38,7 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  *
  * @private
  */
-function Vector3DTilePolygons(options) {
+function Vector3DTilePolygons(options: any) {
   // All of the private properties will be released except _primitive after the Vector3DTilePrimitive is created.
   this._batchTable = options.batchTable;
 
@@ -150,7 +150,7 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
   },
 });
 
-function packBuffer(polygons) {
+function packBuffer(polygons: any) {
   const packedBuffer = new Float64Array(
     3 +
       Cartesian3.packedLength +
@@ -175,7 +175,7 @@ function packBuffer(polygons) {
   return packedBuffer;
 }
 
-function unpackBuffer(polygons, packedBuffer) {
+function unpackBuffer(polygons: any, packedBuffer: any) {
   let offset = 1;
 
   const numBVS = packedBuffer[offset++];
@@ -218,7 +218,7 @@ const createVerticesTaskProcessor = new TaskProcessor(
 );
 const scratchColor = new Color();
 
-function createPrimitive(polygons) {
+function createPrimitive(polygons: any) {
   if (defined(polygons._primitive)) {
     return;
   }
@@ -301,7 +301,7 @@ function createPrimitive(polygons) {
   }
 
   return verticesPromise
-    .then((result) => {
+    .then((result: any) => {
       if (polygons.isDestroyed()) {
         return;
       }
@@ -330,7 +330,7 @@ function createPrimitive(polygons) {
 
       polygons._ready = true;
     })
-    .catch((error) => {
+    .catch((error: any) => {
       if (polygons.isDestroyed()) {
         return;
       }
@@ -340,7 +340,7 @@ function createPrimitive(polygons) {
     });
 }
 
-function finishPrimitive(polygons) {
+function finishPrimitive(polygons: any) {
   if (!defined(polygons._primitive)) {
     polygons._primitive = new Vector3DTilePrimitive({
       batchTable: polygons._batchTable,
@@ -476,5 +476,4 @@ Vector3DTilePolygons.prototype.destroy = function () {
   this._primitive = this._primitive && this._primitive.destroy();
   return destroyObject(this);
 };
-export { Vector3DTilePolygons };
 export default Vector3DTilePolygons;

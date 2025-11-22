@@ -186,12 +186,14 @@ const pickFeaturesTags = combine(tags, {
  * @see WebMapServiceImageryProvider
  * @see WebMapTileServiceImageryProvider
  */
-function UrlTemplateImageryProvider(options) {
+function UrlTemplateImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._errorEvent = new Event();
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.url", options.url);
+  //>>includeEnd('debug');
 
   const resource = Resource.createIfNeeded(options.url);
   const pickFeaturesResource = Resource.createIfNeeded(options.pickFeaturesUrl);
@@ -562,7 +564,7 @@ UrlTemplateImageryProvider.prototype.pickFeatures = function (
 
   const that = this;
 
-  function handleResponse(format, data) {
+  function handleResponse(format: any, data: any) {
     return format.callback(data);
   }
 
@@ -608,7 +610,7 @@ const degreesScratch = new Rectangle();
 let projectedScratchComputed = false;
 const projectedScratch = new Rectangle();
 
-function buildImageResource(imageryProvider, x, y, level, request) {
+function buildImageResource(imageryProvider: any, x: any, y: any, level: any, request: any) {
   degreesScratchComputed = false;
   projectedScratchComputed = false;
 
@@ -637,15 +639,7 @@ let ijScratchComputed = false;
 const ijScratch = new Cartesian2();
 let longitudeLatitudeProjectedScratchComputed = false;
 
-function buildPickFeaturesResource(
-  imageryProvider,
-  x,
-  y,
-  level,
-  longitude,
-  latitude,
-  format,
-) {
+function buildPickFeaturesResource(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any, ) {
   degreesScratchComputed = false;
   projectedScratchComputed = false;
   ijScratchComputed = false;
@@ -678,7 +672,7 @@ function buildPickFeaturesResource(
   });
 }
 
-function padWithZerosIfNecessary(imageryProvider, key, value) {
+function padWithZerosIfNecessary(imageryProvider: any, key: any, value: any) {
   if (
     imageryProvider &&
     imageryProvider.urlSchemeZeroPadding &&
@@ -700,27 +694,27 @@ function padWithZerosIfNecessary(imageryProvider, key, value) {
   return value;
 }
 
-function xTag(imageryProvider, x, y, level) {
+function xTag(imageryProvider: any, x: any, y: any, level: any) {
   return padWithZerosIfNecessary(imageryProvider, "{x}", x);
 }
 
-function reverseXTag(imageryProvider, x, y, level) {
+function reverseXTag(imageryProvider: any, x: any, y: any, level: any) {
   const reverseX =
     imageryProvider.tilingScheme.getNumberOfXTilesAtLevel(level) - x - 1;
   return padWithZerosIfNecessary(imageryProvider, "{reverseX}", reverseX);
 }
 
-function yTag(imageryProvider, x, y, level) {
+function yTag(imageryProvider: any, x: any, y: any, level: any) {
   return padWithZerosIfNecessary(imageryProvider, "{y}", y);
 }
 
-function reverseYTag(imageryProvider, x, y, level) {
+function reverseYTag(imageryProvider: any, x: any, y: any, level: any) {
   const reverseY =
     imageryProvider.tilingScheme.getNumberOfYTilesAtLevel(level) - y - 1;
   return padWithZerosIfNecessary(imageryProvider, "{reverseY}", reverseY);
 }
 
-function reverseZTag(imageryProvider, x, y, level) {
+function reverseZTag(imageryProvider: any, x: any, y: any, level: any) {
   const maximumLevel = imageryProvider.maximumLevel;
   const reverseZ =
     defined(maximumLevel) && level < maximumLevel
@@ -729,16 +723,16 @@ function reverseZTag(imageryProvider, x, y, level) {
   return padWithZerosIfNecessary(imageryProvider, "{reverseZ}", reverseZ);
 }
 
-function zTag(imageryProvider, x, y, level) {
+function zTag(imageryProvider: any, x: any, y: any, level: any) {
   return padWithZerosIfNecessary(imageryProvider, "{z}", level);
 }
 
-function sTag(imageryProvider, x, y, level) {
+function sTag(imageryProvider: any, x: any, y: any, level: any) {
   const index = (x + y + level) % imageryProvider._subdomains.length;
   return imageryProvider._subdomains[index];
 }
 
-function computeDegrees(imageryProvider, x, y, level) {
+function computeDegrees(imageryProvider: any, x: any, y: any, level: any) {
   if (degreesScratchComputed) {
     return;
   }
@@ -752,27 +746,27 @@ function computeDegrees(imageryProvider, x, y, level) {
   degreesScratchComputed = true;
 }
 
-function westDegreesTag(imageryProvider, x, y, level) {
+function westDegreesTag(imageryProvider: any, x: any, y: any, level: any) {
   computeDegrees(imageryProvider, x, y, level);
   return degreesScratch.west;
 }
 
-function southDegreesTag(imageryProvider, x, y, level) {
+function southDegreesTag(imageryProvider: any, x: any, y: any, level: any) {
   computeDegrees(imageryProvider, x, y, level);
   return degreesScratch.south;
 }
 
-function eastDegreesTag(imageryProvider, x, y, level) {
+function eastDegreesTag(imageryProvider: any, x: any, y: any, level: any) {
   computeDegrees(imageryProvider, x, y, level);
   return degreesScratch.east;
 }
 
-function northDegreesTag(imageryProvider, x, y, level) {
+function northDegreesTag(imageryProvider: any, x: any, y: any, level: any) {
   computeDegrees(imageryProvider, x, y, level);
   return degreesScratch.north;
 }
 
-function computeProjected(imageryProvider, x, y, level) {
+function computeProjected(imageryProvider: any, x: any, y: any, level: any) {
   if (projectedScratchComputed) {
     return;
   }
@@ -787,66 +781,50 @@ function computeProjected(imageryProvider, x, y, level) {
   projectedScratchComputed = true;
 }
 
-function westProjectedTag(imageryProvider, x, y, level) {
+function westProjectedTag(imageryProvider: any, x: any, y: any, level: any) {
   computeProjected(imageryProvider, x, y, level);
   return projectedScratch.west;
 }
 
-function southProjectedTag(imageryProvider, x, y, level) {
+function southProjectedTag(imageryProvider: any, x: any, y: any, level: any) {
   computeProjected(imageryProvider, x, y, level);
   return projectedScratch.south;
 }
 
-function eastProjectedTag(imageryProvider, x, y, level) {
+function eastProjectedTag(imageryProvider: any, x: any, y: any, level: any) {
   computeProjected(imageryProvider, x, y, level);
   return projectedScratch.east;
 }
 
-function northProjectedTag(imageryProvider, x, y, level) {
+function northProjectedTag(imageryProvider: any, x: any, y: any, level: any) {
   computeProjected(imageryProvider, x, y, level);
   return projectedScratch.north;
 }
 
-function widthTag(imageryProvider, x, y, level) {
+function widthTag(imageryProvider: any, x: any, y: any, level: any) {
   return imageryProvider.tileWidth;
 }
 
-function heightTag(imageryProvider, x, y, level) {
+function heightTag(imageryProvider: any, x: any, y: any, level: any) {
   return imageryProvider.tileHeight;
 }
 
-function iTag(imageryProvider, x, y, level, longitude, latitude, format) {
+function iTag(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any) {
   computeIJ(imageryProvider, x, y, level, longitude, latitude);
   return ijScratch.x;
 }
 
-function jTag(imageryProvider, x, y, level, longitude, latitude, format) {
+function jTag(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any) {
   computeIJ(imageryProvider, x, y, level, longitude, latitude);
   return ijScratch.y;
 }
 
-function reverseITag(
-  imageryProvider,
-  x,
-  y,
-  level,
-  longitude,
-  latitude,
-  format,
-) {
+function reverseITag(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any, ) {
   computeIJ(imageryProvider, x, y, level, longitude, latitude);
   return imageryProvider.tileWidth - ijScratch.x - 1;
 }
 
-function reverseJTag(
-  imageryProvider,
-  x,
-  y,
-  level,
-  longitude,
-  latitude,
-  format,
-) {
+function reverseJTag(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any, ) {
   computeIJ(imageryProvider, x, y, level, longitude, latitude);
   return imageryProvider.tileHeight - ijScratch.y - 1;
 }
@@ -854,7 +832,7 @@ function reverseJTag(
 const rectangleScratch = new Rectangle();
 const longitudeLatitudeProjectedScratch = new Cartesian3();
 
-function computeIJ(imageryProvider, x, y, level, longitude, latitude, format) {
+function computeIJ(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any) {
   if (ijScratchComputed) {
     return;
   }
@@ -886,39 +864,15 @@ function computeIJ(imageryProvider, x, y, level, longitude, latitude, format) {
   ijScratchComputed = true;
 }
 
-function longitudeDegreesTag(
-  imageryProvider,
-  x,
-  y,
-  level,
-  longitude,
-  latitude,
-  format,
-) {
+function longitudeDegreesTag(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any, ) {
   return CesiumMath.toDegrees(longitude);
 }
 
-function latitudeDegreesTag(
-  imageryProvider,
-  x,
-  y,
-  level,
-  longitude,
-  latitude,
-  format,
-) {
+function latitudeDegreesTag(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any, ) {
   return CesiumMath.toDegrees(latitude);
 }
 
-function longitudeProjectedTag(
-  imageryProvider,
-  x,
-  y,
-  level,
-  longitude,
-  latitude,
-  format,
-) {
+function longitudeProjectedTag(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any, ) {
   computeLongitudeLatitudeProjected(
     imageryProvider,
     x,
@@ -930,15 +884,7 @@ function longitudeProjectedTag(
   return longitudeLatitudeProjectedScratch.x;
 }
 
-function latitudeProjectedTag(
-  imageryProvider,
-  x,
-  y,
-  level,
-  longitude,
-  latitude,
-  format,
-) {
+function latitudeProjectedTag(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any, ) {
   computeLongitudeLatitudeProjected(
     imageryProvider,
     x,
@@ -952,15 +898,7 @@ function latitudeProjectedTag(
 
 const cartographicScratch = new Cartographic();
 
-function computeLongitudeLatitudeProjected(
-  imageryProvider,
-  x,
-  y,
-  level,
-  longitude,
-  latitude,
-  format,
-) {
+function computeLongitudeLatitudeProjected(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any, ) {
   if (longitudeLatitudeProjectedScratchComputed) {
     return;
   }
@@ -981,8 +919,7 @@ function computeLongitudeLatitudeProjected(
   longitudeLatitudeProjectedScratchComputed = true;
 }
 
-function formatTag(imageryProvider, x, y, level, longitude, latitude, format) {
+function formatTag(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, format: any) {
   return format;
 }
-export { UrlTemplateImageryProvider };
 export default UrlTemplateImageryProvider;

@@ -11,8 +11,11 @@ import defined from "./defined.js";
  * @param {object} options Object with the following properties:
  * @param {Heap.ComparatorCallback} options.comparator The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
  */
-function Heap(options) {
-  ;
+function Heap(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.defined("options.comparator", options.comparator);
+  //>>includeEnd('debug');
 
   this._comparator = options.comparator;
   this._array = [];
@@ -61,7 +64,9 @@ Object.defineProperties(Heap.prototype, {
       return this._maximumLength;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("maximumLength", value, 0);
+      //>>includeEnd('debug');
       const originalLength = this._length;
       if (value < originalLength) {
         const array = this._array;
@@ -90,7 +95,7 @@ Object.defineProperties(Heap.prototype, {
   },
 });
 
-function swap(array, a, b) {
+function swap(array: any, a: any, b: any) {
   const temp = array[a];
   array[a] = array[b];
   array[b] = temp;
@@ -160,7 +165,9 @@ Heap.prototype.resort = function () {
  * @return {*} The element that was removed from the heap if the heap is at full capacity.
  */
 Heap.prototype.insert = function (element) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("element", element);
+  //>>includeEnd('debug');
 
   const array = this._array;
   const comparator = this._comparator;
@@ -197,14 +204,16 @@ Heap.prototype.insert = function (element) {
  * Remove the element specified by index from the heap and return it.
  *
  * @param {number} [index=0] The index to remove.
- * @returns {any} The specified element of the heap.
+ * @returns {*} The specified element of the heap.
  */
 Heap.prototype.pop = function (index) {
   index = index ?? 0;
   if (this._length === 0) {
     return undefined;
   }
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.lessThan("index", index, this._length);
+  //>>includeEnd('debug');
 
   const array = this._array;
   const root = array[index];
@@ -221,5 +230,4 @@ Heap.prototype.pop = function (index) {
  * @param {*} b An element in the heap.
  * @returns {number} If the result of the comparison is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
  */
-export { Heap };
 export default Heap;

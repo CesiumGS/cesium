@@ -68,7 +68,7 @@ const Instances = ModelComponents.Instances;
  * @param {boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
  * @param {boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  */
-function I3dmLoader(options) {
+function I3dmLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const i3dmResource = options.i3dmResource;
@@ -86,7 +86,10 @@ function I3dmLoader(options) {
   const loadPrimitiveOutline = options.loadPrimitiveOutline ?? true;
   const enablePick = options.enablePick ?? false;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.i3dmResource", i3dmResource);
+  Check.typeOf.object("options.arrayBuffer", arrayBuffer);
+  //>>includeEnd('debug');
 
   baseResource = defined(baseResource) ? baseResource : i3dmResource.clone();
 
@@ -269,7 +272,7 @@ I3dmLoader.prototype.load = function () {
       this._state = I3dmLoaderState.PROCESSING;
       return this;
     })
-    .catch((error) => {
+    .catch((error: any) => {
       if (this.isDestroyed()) {
         return;
       }
@@ -279,7 +282,7 @@ I3dmLoader.prototype.load = function () {
   return this._promise;
 };
 
-function handleError(i3dmLoader, error) {
+function handleError(i3dmLoader: any, error: any) {
   i3dmLoader.unload();
   i3dmLoader._state = I3dmLoaderState.FAILED;
   const errorMessage = "Failed to load i3dm";
@@ -287,7 +290,9 @@ function handleError(i3dmLoader, error) {
 }
 
 I3dmLoader.prototype.process = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
 
   if (this._state === I3dmLoaderState.READY) {
     return true;
@@ -325,7 +330,7 @@ I3dmLoader.prototype.process = function (frameState) {
   return true;
 };
 
-function createStructuralMetadata(loader, components) {
+function createStructuralMetadata(loader: any, components: any) {
   const batchTable = loader._batchTable;
   const instancesLength = loader._instancesLength;
 
@@ -360,7 +365,7 @@ const positionScratch = new Cartesian3();
 const propertyScratch1 = new Array(4);
 const transformScratch = new Matrix4();
 
-function createInstances(loader, components, frameState) {
+function createInstances(loader: any, components: any, frameState: any) {
   let i;
   const featureTable = loader._featureTable;
   const instancesLength = loader._instancesLength;
@@ -634,7 +639,7 @@ function createInstances(loader, components, frameState) {
  *
  * @private
  */
-function createInstancesCopy(instances) {
+function createInstancesCopy(instances: any) {
   const instancesCopy = new Instances();
   instancesCopy.transformInWorldSpace = instances.transformInWorldSpace;
 
@@ -657,7 +662,7 @@ function createInstancesCopy(instances) {
  *
  * @private
  */
-function getPositions(featureTable, instancesLength) {
+function getPositions(featureTable: any, instancesLength: any) {
   if (featureTable.hasProperty("POSITION")) {
     // Handle positions.
     return featureTable.getPropertyArray(
@@ -716,18 +721,7 @@ function getPositions(featureTable, instancesLength) {
 }
 
 const propertyScratch2 = new Array(4);
-function processRotation(
-  featureTable,
-  eastNorthUp,
-  i,
-  instanceQuaternion,
-  instancePosition,
-  instanceNormalUp,
-  instanceNormalRight,
-  instanceNormalForward,
-  instanceRotation,
-  instanceTransform,
-) {
+function processRotation(featureTable: any, eastNorthUp: any, i: any, instanceQuaternion: any, instancePosition: any, instanceNormalUp: any, instanceNormalRight: any, instanceNormalForward: any, instanceRotation: any, instanceTransform: any, ) {
   // Get the instance rotation
   const normalUp = featureTable.getProperty(
     "NORMAL_UP",
@@ -822,7 +816,7 @@ function processRotation(
   Quaternion.fromRotationMatrix(instanceRotation, instanceQuaternion);
 }
 
-function processScale(featureTable, i, instanceScale) {
+function processScale(featureTable: any, i: any, instanceScale: any) {
   instanceScale = Cartesian3.fromElements(1.0, 1.0, 1.0, instanceScale);
   const scale = featureTable.getProperty(
     "SCALE",
@@ -847,7 +841,7 @@ function processScale(featureTable, i, instanceScale) {
   }
 }
 
-function unloadBuffers(loader) {
+function unloadBuffers(loader: any) {
   const buffers = loader._buffers;
   const length = buffers.length;
   for (let i = 0; i < length; i++) {
@@ -875,5 +869,4 @@ I3dmLoader.prototype.unload = function () {
   this._state = I3dmLoaderState.UNLOADED;
 };
 
-export { I3dmLoader };
 export default I3dmLoader;

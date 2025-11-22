@@ -19,7 +19,7 @@ import PolylineVolumeGeometryLibrary from "./PolylineVolumeGeometryLibrary.js";
 import PrimitiveType from "./PrimitiveType.js";
 import WindingOrder from "./WindingOrder.js";
 
-function computeAttributes(positions, shape) {
+function computeAttributes(positions: any, shape: any) {
   const attributes = new GeometryAttributes();
   attributes.position = new GeometryAttribute({
     componentDatatype: ComponentDatatype.DOUBLE,
@@ -90,7 +90,7 @@ function computeAttributes(positions, shape) {
  * @see PolylineVolumeOutlineGeometry#createGeometry
  *
  * @example
- * function computeCircle(radius) {
+ * function computeCircle(radius: any) {
  *   const positions = [];
  *   for (let i = 0; i < 360; i++) {
  *     const radians = Cesium.Math.toRadians(i);
@@ -107,12 +107,19 @@ function computeAttributes(positions, shape) {
  *   shapePositions : computeCircle(100000.0)
  * });
  */
-function PolylineVolumeOutlineGeometry(options) {
+function PolylineVolumeOutlineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.polylinePositions;
   const shape = options.shapePositions;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(positions)) {
+    throw new DeveloperError("options.polylinePositions is required.");
+  }
+  if (!defined(shape)) {
+    throw new DeveloperError("options.shapePositions is required.");
+  }
+  //>>includeEnd('debug');
 
   this._positions = positions;
   this._shape = shape;
@@ -141,7 +148,14 @@ function PolylineVolumeOutlineGeometry(options) {
  * @returns {number[]} The array that was packed into
  */
 PolylineVolumeOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -191,7 +205,11 @@ const scratchOptions = {
  * @returns {PolylineVolumeOutlineGeometry} The modified result parameter or a new PolylineVolumeOutlineGeometry instance if one was not provided.
  */
 PolylineVolumeOutlineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -273,5 +291,4 @@ PolylineVolumeOutlineGeometry.createGeometry = function (
   );
   return computeAttributes(computedPositions, shape2D);
 };
-export { PolylineVolumeOutlineGeometry };
 export default PolylineVolumeOutlineGeometry;

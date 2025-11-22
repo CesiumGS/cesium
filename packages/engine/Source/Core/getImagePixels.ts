@@ -13,7 +13,7 @@ const context2DsByWidthAndHeight = {};
  * @param {number} height The height of the image. If not defined, then image.height is assigned.
  * @returns {ImageData} The pixels of the image.
  */
-function getImagePixels(image, width, height) {
+function getImagePixels(image: any, width: any, height: any) {
   if (!defined(width)) {
     width = image.width;
   }
@@ -41,5 +41,4 @@ function getImagePixels(image, width, height) {
   context2d.drawImage(image, 0, 0, width, height);
   return context2d.getImageData(0, 0, width, height).data;
 }
-export { getImagePixels };
 export default getImagePixels;

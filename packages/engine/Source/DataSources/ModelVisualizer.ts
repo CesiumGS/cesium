@@ -53,8 +53,11 @@ const scratchCartesian = new Cartesian3();
  * @param {Scene} scene The scene the primitives will be rendered in.
  * @param {EntityCollection} entityCollection The entityCollection to visualize.
  */
-function ModelVisualizer(scene, entityCollection) {
-  ;
+function ModelVisualizer(scene: any, entityCollection: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("scene", scene);
+  Check.typeOf.object("entityCollection", entityCollection);
+  //>>includeEnd('debug');
 
   entityCollection.collectionChanged.addEventListener(
     ModelVisualizer.prototype._onCollectionChanged,
@@ -70,13 +73,7 @@ function ModelVisualizer(scene, entityCollection) {
   this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
 }
 
-async function createModelPrimitive(
-  visualizer,
-  entity,
-  resource,
-  incrementallyLoadTextures,
-  environmentMapOptions,
-) {
+async function createModelPrimitive(visualizer: any, entity: any, resource: any, incrementallyLoadTextures: any, environmentMapOptions: any, ) {
   const primitives = visualizer._primitives;
   const modelHash = visualizer._modelHash;
 
@@ -95,7 +92,7 @@ async function createModelPrimitive(
     model.id = entity;
     primitives.add(model);
     modelHash[entity.id].modelPrimitive = model;
-    model.errorEvent.addEventListener((error) => {
+    model.errorEvent.addEventListener((error: any) => {
       if (!defined(modelHash[entity.id])) {
         return;
       }
@@ -126,7 +123,11 @@ async function createModelPrimitive(
  * @returns {boolean} This function always returns true.
  */
 ModelVisualizer.prototype.update = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  //>>includeEnd('debug');
 
   const entities = this._entitiesToVisualize.values;
   const modelHash = this._modelHash;
@@ -435,7 +436,14 @@ const scratchCartographic = new Cartographic();
  * @private
  */
 ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(entity)) {
+    throw new DeveloperError("entity is required.");
+  }
+  if (!defined(result)) {
+    throw new DeveloperError("result is required.");
+  }
+  //>>includeEnd('debug');
 
   const modelData = this._modelHash[entity.id];
   if (!defined(modelData)) {
@@ -527,7 +535,7 @@ ModelVisualizer.prototype._onCollectionChanged = function (
   }
 };
 
-function removeModel(visualizer, entity, modelHash, primitives) {
+function removeModel(visualizer: any, entity: any, modelHash: any, primitives: any) {
   const modelData = modelHash[entity.id];
   if (defined(modelData)) {
     primitives.removeAndDestroy(modelData.modelPrimitive);
@@ -535,7 +543,7 @@ function removeModel(visualizer, entity, modelHash, primitives) {
   }
 }
 
-function clearNodeTransformationsArticulationsScratch(entity, modelHash) {
+function clearNodeTransformationsArticulationsScratch(entity: any, modelHash: any) {
   const modelData = modelHash[entity.id];
   if (defined(modelData)) {
     modelData.nodeTransformationsScratch = {};
@@ -543,5 +551,4 @@ function clearNodeTransformationsArticulationsScratch(entity, modelHash) {
   }
 }
 
-export { ModelVisualizer };
 export default ModelVisualizer;

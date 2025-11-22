@@ -52,14 +52,34 @@ const scratchCartesian3Position2 = new Cartesian3();
  * });
  * const geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
  */
-function WallOutlineGeometry(options) {
+function WallOutlineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const wallPositions = options.positions;
   const maximumHeights = options.maximumHeights;
   const minimumHeights = options.minimumHeights;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(wallPositions)) {
+    throw new DeveloperError("options.positions is required.");
+  }
+  if (
+    defined(maximumHeights) &&
+    maximumHeights.length !== wallPositions.length
+  ) {
+    throw new DeveloperError(
+      "options.positions and options.maximumHeights must have the same length.",
+    );
+  }
+  if (
+    defined(minimumHeights) &&
+    minimumHeights.length !== wallPositions.length
+  ) {
+    throw new DeveloperError(
+      "options.positions and options.minimumHeights must have the same length.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
   const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
@@ -96,7 +116,14 @@ function WallOutlineGeometry(options) {
  * @returns {number[]} The array that was packed into
  */
 WallOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -156,7 +183,11 @@ const scratchOptions = {
  * @returns {WallOutlineGeometry} The modified result parameter or a new WallOutlineGeometry instance if one was not provided.
  */
 WallOutlineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -246,7 +277,11 @@ WallOutlineGeometry.fromConstantHeights = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(positions)) {
+    throw new DeveloperError("options.positions is required.");
+  }
+  //>>includeEnd('debug');
 
   let minHeights;
   let maxHeights;
@@ -393,5 +428,4 @@ WallOutlineGeometry.createGeometry = function (wallGeometry) {
     boundingSphere: new BoundingSphere.fromVertices(positions),
   });
 };
-export { WallOutlineGeometry };
 export default WallOutlineGeometry;

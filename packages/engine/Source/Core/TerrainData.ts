@@ -123,5 +123,4 @@ TerrainData.prototype.wasCreatedByUpsampling =
  */
 TerrainData.maximumAsynchronousTasks = 5;
 
-export { TerrainData };
 export default TerrainData;

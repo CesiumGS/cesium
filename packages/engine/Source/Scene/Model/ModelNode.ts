@@ -22,8 +22,11 @@ import defined from "../../Core/defined.js";
  *
  * @see Model#getNode
  */
-function ModelNode(model, runtimeNode) {
-  ;
+function ModelNode(model: any, runtimeNode: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("model", model);
+  Check.typeOf.object("runtimeNode", runtimeNode);
+  //>>includeEnd('debug');
 
   this._model = model;
   this._runtimeNode = runtimeNode;
@@ -119,5 +122,4 @@ Object.defineProperties(ModelNode.prototype, {
   },
 });
 
-export { ModelNode };
 export default ModelNode;

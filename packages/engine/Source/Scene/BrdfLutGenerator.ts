@@ -25,7 +25,7 @@ Object.defineProperties(BrdfLutGenerator.prototype, {
   },
 });
 
-function createCommand(generator, context, framebuffer) {
+function createCommand(generator: any, context: any, framebuffer: any) {
   const drawCommand = context.createViewportQuadCommand(BrdfLutGeneratorFS, {
     framebuffer: framebuffer,
     renderState: RenderState.fromCache({
@@ -72,5 +72,4 @@ BrdfLutGenerator.prototype.destroy = function () {
   this._colorTexture = this._colorTexture && this._colorTexture.destroy();
   return destroyObject(this);
 };
-export { BrdfLutGenerator };
 export default BrdfLutGenerator;

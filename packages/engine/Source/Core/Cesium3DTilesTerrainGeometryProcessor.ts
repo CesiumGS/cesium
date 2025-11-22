@@ -121,7 +121,25 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = async function (options) {
     skirtHeight,
   } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.ellipsoid", options.ellipsoid);
+  Check.typeOf.object("options.rectangle", options.rectangle);
+  Check.typeOf.bool("options.hasVertexNormals", hasVertexNormals);
+  Check.typeOf.bool("options.hasWebMercatorT", hasWebMercatorT);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.number("options.minimumHeight", minimumHeight);
+  Check.typeOf.number("options.maximumHeight", maximumHeight);
+  Check.typeOf.object("options.boundingSphere", options.boundingSphere);
+  Check.typeOf.object(
+    "options.orientedBoundingBox",
+    options.orientedBoundingBox,
+  );
+  Check.typeOf.object(
+    "options.horizonOcclusionPoint",
+    options.horizonOcclusionPoint,
+  );
+  Check.typeOf.number("options.skirtHeight", skirtHeight);
+  //>>includeEnd('debug');
 
   const hasExaggeration = exaggeration !== 1.0;
   const hasGeodeticSurfaceNormals = hasExaggeration;
@@ -433,7 +451,7 @@ const scratchGeodeticSurfaceNormalUpsample = new Cartesian3();
  * @param {Object.<string,*>} gltf The glTF JSON.
  * @returns {Float32Array} The decoded positions, as a flattened array of x, y, z values.
  */
-function decodePositions(gltf) {
+function decodePositions(gltf: any) {
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.attributes["POSITION"]];
   const bufferView = gltf.bufferViews[accessor.bufferView];
@@ -494,7 +512,7 @@ function decodePositions(gltf) {
  * @param {Object.<string,*>} gltf The glTF JSON.
  * @returns {Float32Array} The decoded normals, as a flattened array of x, y, z values.
  */
-function decodeNormals(gltf) {
+function decodeNormals(gltf: any) {
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.attributes["NORMAL"]];
   const bufferView = gltf.bufferViews[accessor.bufferView];
@@ -572,7 +590,7 @@ function decodeNormals(gltf) {
  * @param {Object.<string,*>} gltf The glTF JSON.
  * @returns {Uint16Array|Uint32Array} An array of indices.
  */
-function decodeIndices(gltf) {
+function decodeIndices(gltf: any) {
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.indices];
   const bufferView = gltf.bufferViews[accessor.bufferView];
@@ -624,7 +642,7 @@ function decodeIndices(gltf) {
  * @param {string} name The name of the edge indices to decode.
  * @returns {Uint16Array|Uint32Array} An array of edge indices.
  */
-function decodeEdgeIndices(gltf, name) {
+function decodeEdgeIndices(gltf: any, name: any) {
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.extensions.CESIUM_tile_edges[name]];
   const bufferView = gltf.bufferViews[accessor.bufferView];
@@ -679,7 +697,7 @@ function decodeEdgeIndices(gltf, name) {
  * @param {GltfInfo} result The object to store the decoded arrays.
  * @returns {GltfInfo} The decoded geometry info.
  */
-function decodeGltf(gltf, hasNormals, result) {
+function decodeGltf(gltf: any, hasNormals: any, result: any) {
   result.positions = decodePositions(gltf);
   result.normals = hasNormals ? decodeNormals(gltf) : undefined;
   result.indices = decodeIndices(gltf);
@@ -733,7 +751,26 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
     skirtHeight,
   } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug)
+  Check.typeOf.bool("options.isEastChild", isEastChild);
+  Check.typeOf.bool("options.isNorthChild", isNorthChild);
+  Check.typeOf.object("options.parentVertices", options.parentVertices);
+  Check.typeOf.object("options.parentIndices", options.parentIndices);
+  Check.typeOf.number(
+    "options.parentVertexCountWithoutSkirts",
+    options.parentVertexCountWithoutSkirts,
+  );
+  Check.typeOf.number(
+    "options.parentIndexCountWithoutSkirts",
+    options.parentIndexCountWithoutSkirts,
+  );
+  Check.typeOf.number("options.parentMinimumHeight", parentMinimumHeight);
+  Check.typeOf.number("options.parentMaximumHeight", parentMaximumHeight);
+  Check.typeOf.object("options.parentEncoding", options.parentEncoding);
+  Check.typeOf.object("options.rectangle", options.rectangle);
+  Check.typeOf.number("options.skirtHeight", skirtHeight);
+  Check.typeOf.object("options.ellipsoid", options.ellipsoid);
+  //>>includeEnd('debug');
 
   const indexCount = options.parentIndexCountWithoutSkirts;
   const indices = options.parentIndices;
@@ -1069,16 +1106,7 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
  * @param {Matrix4} ecefToEnu
  * @param {number} skirtHeight
  */
-function addSkirtsToMesh(
-  mesh,
-  rectangle,
-  ellipsoid,
-  enuMinimum,
-  enuMaximum,
-  enuToEcef,
-  ecefToEnu,
-  skirtHeight,
-) {
+function addSkirtsToMesh(mesh: any, rectangle: any, ellipsoid: any, enuMinimum: any, enuMaximum: any, enuToEcef: any, ecefToEnu: any, skirtHeight: any, ) {
   const { encoding } = mesh;
   const vertexStride = encoding.stride;
   const vertexBuffer = mesh.vertices;
@@ -1339,7 +1367,7 @@ const scratchOutPoints = [
  * @param {Cartesian2} p The point to test.
  * @returns {number} Positive if inside, negative if outside, zero if on the edge.
  */
-function inside(boxMinimum, boxMaximum, edgeId, p) {
+function inside(boxMinimum: any, boxMaximum: any, edgeId: any, p: any) {
   switch (edgeId) {
     case EDGE_ID_LEFT:
       return CesiumMath.sign(p.x - boxMinimum.x);
@@ -1364,7 +1392,7 @@ function inside(boxMinimum, boxMaximum, edgeId, p) {
  * @param {Cartesian3} result The object into which to copy the result.
  * @returns {Cartesian3} The intersection point in 2D coordinates and the interpolation factor t as the third component.
  */
-function intersect(boxMinimum, boxMaximum, edgeId, a, b, result) {
+function intersect(boxMinimum: any, boxMaximum: any, edgeId: any, a: any, b: any, result: any) {
   let t, intersectX, intersectY;
   switch (edgeId) {
     case EDGE_ID_LEFT:
@@ -1442,16 +1470,7 @@ const scratchPolygon = {
  * @param {PolygonResult} result The object into which to copy the result.
  * @returns {PolygonResult} The polygon that results after the clip, specified as a list of coordinates in counter-clockwise order.
  */
-function clipTriangleAgainstBoxEdgeRange(
-  edgeStart,
-  edgeCount,
-  boxMinimum,
-  boxMaximum,
-  p0,
-  p1,
-  p2,
-  result,
-) {
+function clipTriangleAgainstBoxEdgeRange(edgeStart: any, edgeCount: any, boxMinimum: any, boxMaximum: any, p0: any, p1: any, p2: any, result: any, ) {
   let inputLength = 0;
   let inputPoints = scratchInPoints;
   let inputBarys = scratchInBarys;
@@ -1558,16 +1577,7 @@ function clipTriangleAgainstBoxEdgeRange(
  * @param {PolygonResult} result The object into which to copy the result.
  * @returns {PolygonResult} The polygon that results after the clip, specified as a list of coordinates in counter-clockwise order.
  */
-function clipTriangleFromQuadrant(
-  isEastChild,
-  isNorthChild,
-  boxMinimum,
-  boxMaximum,
-  p0,
-  p1,
-  p2,
-  result,
-) {
+function clipTriangleFromQuadrant(isEastChild: any, isNorthChild: any, boxMinimum: any, boxMaximum: any, p0: any, p1: any, p2: any, result: any, ) {
   const edgeStart = isEastChild
     ? isNorthChild
       ? EDGE_ID_BOTTOM
@@ -1618,23 +1628,7 @@ const lookUpTableBaryToPrim = [
  * @param {number[]} resultBary Per-vertex barycentric coordinate corresponding to the originating triangle.
  * @param {number[]} resultUVs Per-vertex UV within the quadrant.
  */
-function clipTileFromQuadrant(
-  isEastChild,
-  isNorthChild,
-  indexCount,
-  indices,
-  vertexCount,
-  vertices,
-  vertexEncoding,
-  resultIndices,
-  resultWestIndices,
-  resultSouthIndices,
-  resultEastIndices,
-  resultNorthIndices,
-  resultTriIds,
-  resultBary,
-  resultUVs,
-) {
+function clipTileFromQuadrant(isEastChild: any, isNorthChild: any, indexCount: any, indices: any, vertexCount: any, vertices: any, vertexEncoding: any, resultIndices: any, resultWestIndices: any, resultSouthIndices: any, resultEastIndices: any, resultNorthIndices: any, resultTriIds: any, resultBary: any, resultUVs: any, ) {
   const upsampledVertexMap = {};
 
   const minU = isEastChild ? 0.5 : 0.0;
@@ -1828,5 +1822,4 @@ function clipTileFromQuadrant(
   });
 }
 
-export { Cesium3DTilesTerrainGeometryProcessor };
 export default Cesium3DTilesTerrainGeometryProcessor;

@@ -13,7 +13,7 @@ import SceneMode from "./SceneMode.js";
  *
  * @private
  */
-function FrameState(context, creditDisplay, jobScheduler) {
+function FrameState(context: any, creditDisplay: any, jobScheduler: any) {
   /**
    * The rendering context.
    *
@@ -474,5 +474,4 @@ function FrameState(context, creditDisplay, jobScheduler) {
  * @callback FrameState.AfterRenderCallback
  * @returns {boolean} true if another render should be requested in request render mode
  */
-export { FrameState };
 export default FrameState;

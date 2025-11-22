@@ -28,5 +28,4 @@ class ImageryFlags {
   }
 }
 
-export { ImageryFlags };
 export default ImageryFlags;

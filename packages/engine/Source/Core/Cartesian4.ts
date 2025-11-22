@@ -17,7 +17,7 @@ import CesiumMath from "./Math.js";
  * @see Cartesian3
  * @see Packable
  */
-function Cartesian4(x, y, z, w) {
+function Cartesian4(x: any, y: any, z: any, w: any) {
   /**
    * The X component.
    * @type {number}
@@ -78,7 +78,9 @@ Cartesian4.fromElements = function (x, y, z, w, result) {
  * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
  */
 Cartesian4.fromColor = function (color, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("color", color);
+  //>>includeEnd('debug');
   if (!defined(result)) {
     return new Cartesian4(color.red, color.green, color.blue, color.alpha);
   }
@@ -129,7 +131,10 @@ Cartesian4.packedLength = 4;
  * @returns {number[]} The array that was packed into
  */
 Cartesian4.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -150,7 +155,9 @@ Cartesian4.pack = function (value, array, startingIndex) {
  * @returns {Cartesian4}  The modified result parameter or a new Cartesian4 instance if one was not provided.
  */
 Cartesian4.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -172,14 +179,20 @@ Cartesian4.unpack = function (array, startingIndex, result) {
  * @returns {number[]} The packed array.
  */
 Cartesian4.packArray = function (array, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   const length = array.length;
   const resultLength = length * 4;
   if (!defined(result)) {
     result = new Array(resultLength);
   } else if (!Array.isArray(result) && result.length !== resultLength) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    throw new DeveloperError(
+      "If result is a typed array, it must have exactly array.length * 4 elements",
+    );
+    //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
     result.length = resultLength;
   }
@@ -198,7 +211,13 @@ Cartesian4.packArray = function (array, result) {
  * @returns {Cartesian4[]} The unpacked array.
  */
 Cartesian4.unpackArray = function (array, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  Check.typeOf.number.greaterThanOrEquals("array.length", array.length, 4);
+  if (array.length % 4 !== 0) {
+    throw new DeveloperError("array length must be a multiple of 4.");
+  }
+  //>>includeEnd('debug');
 
   const length = array.length;
   if (!defined(result)) {
@@ -241,7 +260,9 @@ Cartesian4.fromArray = Cartesian4.unpack;
  * @returns {number} The value of the maximum component.
  */
 Cartesian4.maximumComponent = function (cartesian) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  //>>includeEnd('debug');
 
   return Math.max(cartesian.x, cartesian.y, cartesian.z, cartesian.w);
 };
@@ -253,7 +274,9 @@ Cartesian4.maximumComponent = function (cartesian) {
  * @returns {number} The value of the minimum component.
  */
 Cartesian4.minimumComponent = function (cartesian) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  //>>includeEnd('debug');
 
   return Math.min(cartesian.x, cartesian.y, cartesian.z, cartesian.w);
 };
@@ -267,7 +290,11 @@ Cartesian4.minimumComponent = function (cartesian) {
  * @returns {Cartesian4} A cartesian with the minimum components.
  */
 Cartesian4.minimumByComponent = function (first, second, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("first", first);
+  Check.typeOf.object("second", second);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.x = Math.min(first.x, second.x);
   result.y = Math.min(first.y, second.y);
@@ -286,7 +313,11 @@ Cartesian4.minimumByComponent = function (first, second, result) {
  * @returns {Cartesian4} A cartesian with the maximum components.
  */
 Cartesian4.maximumByComponent = function (first, second, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("first", first);
+  Check.typeOf.object("second", second);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.x = Math.max(first.x, second.x);
   result.y = Math.max(first.y, second.y);
@@ -306,7 +337,12 @@ Cartesian4.maximumByComponent = function (first, second, result) {
  * @returns {Cartesian4} The clamped value such that min <= result <= max.
  */
 Cartesian4.clamp = function (value, min, max, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.typeOf.object("min", min);
+  Check.typeOf.object("max", max);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const x = CesiumMath.clamp(value.x, min.x, max.x);
   const y = CesiumMath.clamp(value.y, min.y, max.y);
@@ -328,7 +364,9 @@ Cartesian4.clamp = function (value, min, max, result) {
  * @returns {number} The squared magnitude.
  */
 Cartesian4.magnitudeSquared = function (cartesian) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  //>>includeEnd('debug');
 
   return (
     cartesian.x * cartesian.x +
@@ -364,7 +402,10 @@ const distanceScratch = new Cartesian4();
  *   new Cesium.Cartesian4(2.0, 0.0, 0.0, 0.0));
  */
 Cartesian4.distance = function (left, right) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
 
   Cartesian4.subtract(left, right, distanceScratch);
   return Cartesian4.magnitude(distanceScratch);
@@ -385,7 +426,10 @@ Cartesian4.distance = function (left, right) {
  *   new Cesium.Cartesian4(3.0, 0.0, 0.0, 0.0));
  */
 Cartesian4.distanceSquared = function (left, right) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
 
   Cartesian4.subtract(left, right, distanceScratch);
   return Cartesian4.magnitudeSquared(distanceScratch);
@@ -399,7 +443,10 @@ Cartesian4.distanceSquared = function (left, right) {
  * @returns {Cartesian4} The modified result parameter.
  */
 Cartesian4.normalize = function (cartesian, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const magnitude = Cartesian4.magnitude(cartesian);
 
@@ -408,7 +455,16 @@ Cartesian4.normalize = function (cartesian, result) {
   result.z = cartesian.z / magnitude;
   result.w = cartesian.w / magnitude;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    isNaN(result.x) ||
+    isNaN(result.y) ||
+    isNaN(result.z) ||
+    isNaN(result.w)
+  ) {
+    throw new DeveloperError("normalized result is not a number");
+  }
+  //>>includeEnd('debug');
 
   return result;
 };
@@ -421,7 +477,10 @@ Cartesian4.normalize = function (cartesian, result) {
  * @returns {number} The dot product.
  */
 Cartesian4.dot = function (left, right) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
 
   return (
     left.x * right.x + left.y * right.y + left.z * right.z + left.w * right.w
@@ -437,7 +496,11 @@ Cartesian4.dot = function (left, right) {
  * @returns {Cartesian4} The modified result parameter.
  */
 Cartesian4.multiplyComponents = function (left, right, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.x = left.x * right.x;
   result.y = left.y * right.y;
@@ -455,7 +518,11 @@ Cartesian4.multiplyComponents = function (left, right, result) {
  * @returns {Cartesian4} The modified result parameter.
  */
 Cartesian4.divideComponents = function (left, right, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.x = left.x / right.x;
   result.y = left.y / right.y;
@@ -473,7 +540,11 @@ Cartesian4.divideComponents = function (left, right, result) {
  * @returns {Cartesian4} The modified result parameter.
  */
 Cartesian4.add = function (left, right, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.x = left.x + right.x;
   result.y = left.y + right.y;
@@ -491,7 +562,11 @@ Cartesian4.add = function (left, right, result) {
  * @returns {Cartesian4} The modified result parameter.
  */
 Cartesian4.subtract = function (left, right, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.x = left.x - right.x;
   result.y = left.y - right.y;
@@ -509,7 +584,11 @@ Cartesian4.subtract = function (left, right, result) {
  * @returns {Cartesian4} The modified result parameter.
  */
 Cartesian4.multiplyByScalar = function (cartesian, scalar, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  Check.typeOf.number("scalar", scalar);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.x = cartesian.x * scalar;
   result.y = cartesian.y * scalar;
@@ -527,7 +606,11 @@ Cartesian4.multiplyByScalar = function (cartesian, scalar, result) {
  * @returns {Cartesian4} The modified result parameter.
  */
 Cartesian4.divideByScalar = function (cartesian, scalar, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  Check.typeOf.number("scalar", scalar);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.x = cartesian.x / scalar;
   result.y = cartesian.y / scalar;
@@ -544,7 +627,10 @@ Cartesian4.divideByScalar = function (cartesian, scalar, result) {
  * @returns {Cartesian4} The modified result parameter.
  */
 Cartesian4.negate = function (cartesian, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.x = -cartesian.x;
   result.y = -cartesian.y;
@@ -561,7 +647,10 @@ Cartesian4.negate = function (cartesian, result) {
  * @returns {Cartesian4} The modified result parameter.
  */
 Cartesian4.abs = function (cartesian, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.x = Math.abs(cartesian.x);
   result.y = Math.abs(cartesian.y);
@@ -581,7 +670,12 @@ const lerpScratch = new Cartesian4();
  * @returns {Cartesian4} The modified result parameter.
  */
 Cartesian4.lerp = function (start, end, t, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("start", start);
+  Check.typeOf.object("end", end);
+  Check.typeOf.number("t", t);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   Cartesian4.multiplyByScalar(end, t, lerpScratch);
   result = Cartesian4.multiplyByScalar(start, 1.0 - t, result);
@@ -597,7 +691,10 @@ const mostOrthogonalAxisScratch = new Cartesian4();
  * @returns {Cartesian4} The most orthogonal axis.
  */
 Cartesian4.mostOrthogonalAxis = function (cartesian, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const f = Cartesian4.normalize(cartesian, mostOrthogonalAxisScratch);
   Cartesian4.abs(f, f);
@@ -826,7 +923,9 @@ const littleEndian = testU8[0] === 0x44;
  * @returns {Cartesian4} A Cartesian4 representing the float packed to values in x, y, z, and w.
  */
 Cartesian4.packFloat = function (value, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("value", value);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian4();
@@ -858,7 +957,9 @@ Cartesian4.packFloat = function (value, result) {
  * @private
  */
 Cartesian4.unpackFloat = function (packedFloat) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("packedFloat", packedFloat);
+  //>>includeEnd('debug');
 
   // scratchU8Array and scratchF32Array are views into the same buffer
   if (littleEndian) {
@@ -875,5 +976,4 @@ Cartesian4.unpackFloat = function (packedFloat) {
   }
   return scratchF32Array[0];
 };
-export { Cartesian4 };
 export default Cartesian4;

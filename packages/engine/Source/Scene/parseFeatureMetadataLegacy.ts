@@ -20,7 +20,7 @@ import MetadataTable from "./MetadataTable.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function parseFeatureMetadataLegacy(options) {
+function parseFeatureMetadataLegacy(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const extension = options.extension;
 
@@ -28,7 +28,10 @@ function parseFeatureMetadataLegacy(options) {
   // This keeps metadata parsing synchronous.
   const schema = options.schema;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.extension", extension);
+  Check.typeOf.object("options.schema", schema);
+  //>>includeEnd('debug');
 
   let i;
   const propertyTables = [];
@@ -92,7 +95,7 @@ function parseFeatureMetadataLegacy(options) {
   });
 }
 
-function transcodeToPropertyTexture(featureTexture) {
+function transcodeToPropertyTexture(featureTexture: any) {
   const propertyTexture = {
     class: featureTexture.class,
     properties: {},
@@ -124,7 +127,7 @@ function transcodeToPropertyTexture(featureTexture) {
   return propertyTexture;
 }
 
-function reformatChannels(channelsString) {
+function reformatChannels(channelsString: any) {
   const length = channelsString.length;
   const result = new Array(length);
   for (let i = 0; i < length; i++) {
@@ -133,5 +136,4 @@ function reformatChannels(channelsString) {
   return result;
 }
 
-export { parseFeatureMetadataLegacy };
 export default parseFeatureMetadataLegacy;

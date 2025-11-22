@@ -108,5 +108,4 @@ MaterialProperty.getValue = function (time, materialProperty, material) {
 
   return material;
 };
-export { MaterialProperty };
 export default MaterialProperty;

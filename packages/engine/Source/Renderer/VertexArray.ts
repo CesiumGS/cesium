@@ -13,14 +13,79 @@ import BufferUsage from "./BufferUsage.js";
 import ContextLimits from "./ContextLimits.js";
 import AttributeType from "../Scene/AttributeType.js";
 
-function addAttribute(attributes, attribute, index, context) {
+function addAttribute(attributes: any, attribute: any, index: any, context: any) {
   const hasVertexBuffer = defined(attribute.vertexBuffer);
   const hasValue = defined(attribute.value);
   const componentsPerAttribute = attribute.value
     ? attribute.value.length
     : attribute.componentsPerAttribute;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!hasVertexBuffer && !hasValue) {
+    throw new DeveloperError("attribute must have a vertexBuffer or a value.");
+  }
+  if (hasVertexBuffer && hasValue) {
+    throw new DeveloperError(
+      "attribute cannot have both a vertexBuffer and a value.  It must have either a vertexBuffer property defining per-vertex data or a value property defining data for all vertices.",
+    );
+  }
+  if (
+    componentsPerAttribute !== 1 &&
+    componentsPerAttribute !== 2 &&
+    componentsPerAttribute !== 3 &&
+    componentsPerAttribute !== 4
+  ) {
+    if (hasValue) {
+      throw new DeveloperError(
+        "attribute.value.length must be in the range [1, 4].",
+      );
+    }
+
+    throw new DeveloperError(
+      "attribute.componentsPerAttribute must be in the range [1, 4].",
+    );
+  }
+  if (
+    defined(attribute.componentDatatype) &&
+    !ComponentDatatype.validate(attribute.componentDatatype)
+  ) {
+    throw new DeveloperError(
+      "attribute must have a valid componentDatatype or not specify it.",
+    );
+  }
+  if (defined(attribute.strideInBytes) && attribute.strideInBytes > 255) {
+    // WebGL limit.  Not in GL ES.
+    throw new DeveloperError(
+      "attribute must have a strideInBytes less than or equal to 255 or not specify it.",
+    );
+  }
+  if (
+    defined(attribute.instanceDivisor) &&
+    attribute.instanceDivisor > 0 &&
+    !context.instancedArrays
+  ) {
+    throw new DeveloperError("instanced arrays is not supported");
+  }
+  if (defined(attribute.instanceDivisor) && attribute.instanceDivisor < 0) {
+    throw new DeveloperError(
+      "attribute must have an instanceDivisor greater than or equal to zero",
+    );
+  }
+  if (defined(attribute.instanceDivisor) && hasValue) {
+    throw new DeveloperError(
+      "attribute cannot have have an instanceDivisor if it is not backed by a buffer",
+    );
+  }
+  if (
+    defined(attribute.instanceDivisor) &&
+    attribute.instanceDivisor > 0 &&
+    attribute.index === 0
+  ) {
+    throw new DeveloperError(
+      "attribute zero cannot have an instanceDivisor greater than 0",
+    );
+  }
+  //>>includeEnd('debug');
 
   // Shallow copy the attribute; we do not want to copy the vertex buffer.
   const attr = {
@@ -94,7 +159,7 @@ function addAttribute(attributes, attribute, index, context) {
   attributes.push(attr);
 }
 
-function bind(gl, attributes, indexBuffer) {
+function bind(gl: any, attributes: any, indexBuffer: any) {
   for (let i = 0; i < attributes.length; ++i) {
     const attribute = attributes[i];
     if (attribute.enabled) {
@@ -219,10 +284,13 @@ function bind(gl, attributes, indexBuffer) {
  *
  * @private
  */
-function VertexArray(options) {
+function VertexArray(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  Check.defined("options.attributes", options.attributes);
+  //>>includeEnd('debug');
 
   const context = options.context;
   const gl = context._gl;
@@ -264,7 +332,19 @@ function VertexArray(options) {
     }
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  // Verify all attribute names are unique
+  const uniqueIndices = {};
+  for (i = 0; i < length; ++i) {
+    const index = vaAttributes[i].index;
+    if (uniqueIndices[index]) {
+      throw new DeveloperError(
+        `Index ${index} is used by more than one attribute.`,
+      );
+    }
+    uniqueIndices[index] = true;
+  }
+  //>>includeEnd('debug');
 
   let vao;
 
@@ -286,18 +366,18 @@ function VertexArray(options) {
   this._indexBuffer = indexBuffer;
 }
 
-function computeNumberOfVertices(attribute) {
+function computeNumberOfVertices(attribute: any) {
   return attribute.values.length / attribute.componentsPerAttribute;
 }
 
-function computeAttributeSizeInBytes(attribute) {
+function computeAttributeSizeInBytes(attribute: any) {
   return (
     ComponentDatatype.getSizeInBytes(attribute.componentDatatype) *
     attribute.componentsPerAttribute
   );
 }
 
-function interleaveAttributes(attributes) {
+function interleaveAttributes(attributes: any) {
   let j;
   let name;
   let attribute;
@@ -491,7 +571,9 @@ function interleaveAttributes(attributes) {
 VertexArray.fromGeometry = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  //>>includeEnd('debug');
 
   const context = options.context;
   const geometry = options.geometry ?? Frozen.EMPTY_OBJECT;
@@ -659,7 +741,9 @@ Object.defineProperties(VertexArray.prototype, {
  * index is the location in the array of attributes, not the index property of an attribute.
  */
 VertexArray.prototype.getAttribute = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("index", index);
+  //>>includeEnd('debug');
 
   return this._attributes[index];
 };
@@ -668,7 +752,7 @@ VertexArray.prototype.getAttribute = function (index) {
 // of the VAO state. This function is called when the vao is bound, and should be removed
 // once the ANGLE issue is resolved. Setting the divisor should normally happen in vertexAttrib and
 // disableVertexAttribArray.
-function setVertexAttribDivisor(vertexArray) {
+function setVertexAttribDivisor(vertexArray: any) {
   const context = vertexArray._context;
   const hasInstancedAttributes = vertexArray._hasInstancedAttributes;
   if (!hasInstancedAttributes && !context._previousDrawInstanced) {
@@ -706,7 +790,7 @@ function setVertexAttribDivisor(vertexArray) {
 
 // Vertex attributes backed by a constant value go through vertexAttrib[1234]f[v]
 // which is part of context state rather than VAO state.
-function setConstantAttributes(vertexArray, gl) {
+function setConstantAttributes(vertexArray: any, gl: any) {
   const attributes = vertexArray._attributes;
   const length = attributes.length;
   for (let i = 0; i < length; ++i) {
@@ -782,5 +866,4 @@ VertexArray.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { VertexArray };
 export default VertexArray;

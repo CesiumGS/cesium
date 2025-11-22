@@ -49,7 +49,9 @@ const InstanceAttributeSemantic = {
  * @private
  */
 InstanceAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("gltfSemantic", gltfSemantic);
+  //>>includeEnd('debug');
 
   let semantic = gltfSemantic;
 

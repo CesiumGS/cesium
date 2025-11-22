@@ -12,7 +12,7 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-function moveTechniquesToExtension(gltf) {
+function moveTechniquesToExtension(gltf: any) {
   const techniquesLegacy = gltf.techniques;
   const mappedUniforms = {};
   const updatedTechniqueIndices = {};
@@ -142,5 +142,4 @@ function moveTechniquesToExtension(gltf) {
   return gltf;
 }
 
-export { moveTechniquesToExtension };
 export default moveTechniquesToExtension;

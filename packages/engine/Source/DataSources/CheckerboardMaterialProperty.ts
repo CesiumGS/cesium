@@ -21,7 +21,7 @@ const defaultRepeat = new Cartesian2(2.0, 2.0);
  * @param {Property|Color} [options.oddColor=Color.BLACK] A Property specifying the second {@link Color}.
  * @param {Property|Cartesian2} [options.repeat=new Cartesian2(2.0, 2.0)] A {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
  */
-function CheckerboardMaterialProperty(options) {
+function CheckerboardMaterialProperty(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
@@ -154,5 +154,4 @@ CheckerboardMaterialProperty.prototype.equals = function (other) {
       Property.equals(this._repeat, other._repeat))
   );
 };
-export { CheckerboardMaterialProperty };
 export default CheckerboardMaterialProperty;

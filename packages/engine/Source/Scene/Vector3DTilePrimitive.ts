@@ -50,7 +50,7 @@ import Vector3DTileBatch from "./Vector3DTileBatch.js";
  *
  * @private
  */
-function Vector3DTilePrimitive(options) {
+function Vector3DTilePrimitive(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._batchTable = options.batchTable;
@@ -183,7 +183,7 @@ const defaultAttributeLocations = {
   a_batchId: 1,
 };
 
-function createVertexArray(primitive, context) {
+function createVertexArray(primitive: any, context: any) {
   if (defined(primitive._va)) {
     return;
   }
@@ -249,7 +249,7 @@ function createVertexArray(primitive, context) {
   primitive._vertexBatchIds = undefined;
 }
 
-function createShaders(primitive, context) {
+function createShaders(primitive: any, context: any) {
   if (defined(primitive._sp)) {
     return;
   }
@@ -356,7 +356,7 @@ function createShaders(primitive, context) {
   });
 }
 
-function getStencilDepthRenderState(mask3DTiles) {
+function getStencilDepthRenderState(mask3DTiles: any) {
   const stencilFunction = mask3DTiles
     ? StencilFunction.EQUAL
     : StencilFunction.ALWAYS;
@@ -444,7 +444,7 @@ const pickRenderState = {
   depthMask: false,
 };
 
-function createRenderStates(primitive) {
+function createRenderStates(primitive: any) {
   if (defined(primitive._rsStencilDepthPass)) {
     return;
   }
@@ -462,7 +462,7 @@ function createRenderStates(primitive) {
 const modifiedModelViewScratch = new Matrix4();
 const rtcScratch = new Cartesian3();
 
-function createUniformMap(primitive, context) {
+function createUniformMap(primitive: any, context: any) {
   if (defined(primitive._uniformMap)) {
     return;
   }
@@ -498,15 +498,7 @@ function createUniformMap(primitive, context) {
     primitive._batchTable.getUniformMapCallback()(uniformMap);
 }
 
-function copyIndicesCPU(
-  indices,
-  newIndices,
-  currentOffset,
-  offsets,
-  counts,
-  batchIds,
-  batchIdLookUp,
-) {
+function copyIndicesCPU(indices: any, newIndices: any, currentOffset: any, offsets: any, counts: any, batchIds: any, batchIdLookUp: any, ) {
   const sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
 
   const batchedIdsLength = batchIds.length;
@@ -530,7 +522,7 @@ function copyIndicesCPU(
   return currentOffset;
 }
 
-function rebatchCPU(primitive, batchedIndices) {
+function rebatchCPU(primitive: any, batchedIndices: any) {
   const indices = primitive._indices;
   const indexOffsets = primitive._indexOffsets;
   const indexCounts = primitive._indexCounts;
@@ -593,15 +585,7 @@ function rebatchCPU(primitive, batchedIndices) {
   primitive._batchedIndices = newBatchedIndices;
 }
 
-function copyIndicesGPU(
-  readBuffer,
-  writeBuffer,
-  currentOffset,
-  offsets,
-  counts,
-  batchIds,
-  batchIdLookUp,
-) {
+function copyIndicesGPU(readBuffer: any, writeBuffer: any, currentOffset: any, offsets: any, counts: any, batchIds: any, batchIdLookUp: any, ) {
   const sizeInBytes = readBuffer.bytesPerIndex;
 
   const batchedIdsLength = batchIds.length;
@@ -625,7 +609,7 @@ function copyIndicesGPU(
   return currentOffset;
 }
 
-function rebatchGPU(primitive, batchedIndices) {
+function rebatchGPU(primitive: any, batchedIndices: any) {
   const indexOffsets = primitive._indexOffsets;
   const indexCounts = primitive._indexCounts;
   const batchIdLookUp = primitive._batchIdLookUp;
@@ -688,13 +672,13 @@ function rebatchGPU(primitive, batchedIndices) {
   primitive._batchedIndices = newBatchedIndices;
 }
 
-function compareColors(a, b) {
+function compareColors(a: any, b: any) {
   return b.color.toRgba() - a.color.toRgba();
 }
 
 // PERFORMANCE_IDEA: For WebGL 2, we can use copyBufferSubData for buffer-to-buffer copies.
 // PERFORMANCE_IDEA: Not supported, but we could use glMultiDrawElements here.
-function rebatchCommands(primitive, context) {
+function rebatchCommands(primitive: any, context: any) {
   if (!primitive._batchDirty) {
     return false;
   }
@@ -745,7 +729,7 @@ function rebatchCommands(primitive, context) {
   return true;
 }
 
-function createColorCommands(primitive, context) {
+function createColorCommands(primitive: any, context: any) {
   const needsRebatch = rebatchCommands(primitive, context);
 
   const commands = primitive._commands;
@@ -829,7 +813,7 @@ function createColorCommands(primitive, context) {
   primitive._commandsDirty = true;
 }
 
-function createColorCommandsIgnoreShow(primitive, frameState) {
+function createColorCommandsIgnoreShow(primitive: any, frameState: any) {
   if (
     primitive.classificationType === ClassificationType.TERRAIN ||
     !frameState.invertClassification ||
@@ -860,7 +844,7 @@ function createColorCommandsIgnoreShow(primitive, frameState) {
   primitive._commandsDirty = false;
 }
 
-function createPickCommands(primitive) {
+function createPickCommands(primitive: any) {
   if (!primitive._pickCommandsDirty) {
     return;
   }
@@ -963,7 +947,7 @@ Vector3DTilePrimitive.prototype.applyDebugSettings = function (enabled, color) {
   this._highlightColor = enabled ? color : this._constantColor;
 };
 
-function clearStyle(polygons, features) {
+function clearStyle(polygons: any, features: any) {
   polygons._updatingAllCommands = true;
 
   const batchIds = polygons._batchIds;
@@ -1131,7 +1115,7 @@ Vector3DTilePrimitive.prototype.updateCommands = function (batchId, color) {
   this._batchDirty = true;
 };
 
-function queueCommands(primitive, frameState, commands, commandsIgnoreShow) {
+function queueCommands(primitive: any, frameState: any, commands: any, commandsIgnoreShow: any) {
   const classificationType = primitive.classificationType;
   const queueTerrainCommands =
     classificationType !== ClassificationType.CESIUM_3D_TILE;
@@ -1165,7 +1149,7 @@ function queueCommands(primitive, frameState, commands, commandsIgnoreShow) {
   }
 }
 
-function queueWireframeCommands(frameState, commands) {
+function queueWireframeCommands(frameState: any, commands: any) {
   const commandList = frameState.commandList;
   const commandLength = commands.length;
   for (let i = 0; i < commandLength; i += 2) {
@@ -1175,7 +1159,7 @@ function queueWireframeCommands(frameState, commands) {
   }
 }
 
-function updateWireframe(primitive) {
+function updateWireframe(primitive: any) {
   let earlyExit = primitive.debugWireframe === primitive._debugWireframe;
   earlyExit =
     earlyExit && !(primitive.debugWireframe && primitive._wireframeDirty);
@@ -1273,5 +1257,4 @@ Vector3DTilePrimitive.prototype.destroy = function () {
   this._vaSwap = this._vaSwap && this._vaSwap.destroy();
   return destroyObject(this);
 };
-export { Vector3DTilePrimitive };
 export default Vector3DTilePrimitive;

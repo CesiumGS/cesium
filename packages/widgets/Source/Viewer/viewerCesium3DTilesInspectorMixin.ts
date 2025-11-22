@@ -13,8 +13,10 @@ import Cesium3DTilesInspector from "../Cesium3DTilesInspector/Cesium3DTilesInspe
  * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
  */
-function viewerCesium3DTilesInspectorMixin(viewer) {
-  ;
+function viewerCesium3DTilesInspectorMixin(viewer: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("viewer", viewer);
+  //>>includeEnd('debug');
 
   const container = document.createElement("div");
   container.className = "cesium-viewer-cesium3DTilesInspectorContainer";
@@ -32,5 +34,4 @@ function viewerCesium3DTilesInspectorMixin(viewer) {
     },
   });
 }
-export { viewerCesium3DTilesInspectorMixin };
 export default viewerCesium3DTilesInspectorMixin;

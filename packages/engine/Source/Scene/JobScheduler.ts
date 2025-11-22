@@ -8,7 +8,7 @@ import JobType from "./JobType.js";
  * @private
  * @constructor
  */
-function JobTypeBudget(total) {
+function JobTypeBudget(total: any) {
   /**
    * Total budget, in milliseconds, allowed for one frame
    */
@@ -64,8 +64,14 @@ Object.defineProperties(JobTypeBudget.prototype, {
  *
  * @private
  */
-function JobScheduler(budgets) {
-  ;
+function JobScheduler(budgets: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (defined(budgets) && budgets.length !== JobType.NUMBER_OF_JOB_TYPES) {
+    throw new DeveloperError(
+      "A budget must be specified for each job type; budgets.length should equal JobType.NUMBER_OF_JOB_TYPES.",
+    );
+  }
+  //>>includeEnd('debug');
 
   // Total for defaults is half of of one frame at 10 fps
   const jobBudgets = new Array(JobType.NUMBER_OF_JOB_TYPES);
@@ -190,5 +196,4 @@ JobScheduler.prototype.execute = function (job, jobType) {
 
   return true;
 };
-export { JobScheduler };
 export default JobScheduler;

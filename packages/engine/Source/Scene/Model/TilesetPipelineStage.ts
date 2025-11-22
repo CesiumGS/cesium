@@ -70,5 +70,4 @@ TilesetPipelineStage.process = function (renderResources, model, frameState) {
   renderStateOptions.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
 };
 
-export { TilesetPipelineStage };
 export default TilesetPipelineStage;

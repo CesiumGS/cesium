@@ -23,13 +23,17 @@ import PropertyTextureProperty from "./PropertyTextureProperty.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function PropertyTexture(options) {
+function PropertyTexture(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const propertyTexture = options.propertyTexture;
   const classDefinition = options.class;
   const textures = options.textures;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.propertyTexture", propertyTexture);
+  Check.typeOf.object("options.class", classDefinition);
+  Check.typeOf.object("options.textures", textures);
+  //>>includeEnd('debug');
 
   const extensions = propertyTexture.extensions;
   const extras = propertyTexture.extras;
@@ -148,10 +152,11 @@ Object.defineProperties(PropertyTexture.prototype, {
  * @private
  */
 PropertyTexture.prototype.getProperty = function (propertyId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
 
   return this._properties[propertyId];
 };
 
-export { PropertyTexture };
 export default PropertyTexture;

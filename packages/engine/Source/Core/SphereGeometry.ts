@@ -28,7 +28,7 @@ import VertexFormat from "./VertexFormat.js";
  * });
  * const geometry = Cesium.SphereGeometry.createGeometry(sphere);
  */
-function SphereGeometry(options) {
+function SphereGeometry(options: any) {
   const radius = options.radius ?? 1.0;
   const radii = new Cartesian3(radius, radius, radius);
   const ellipsoidOptions = {
@@ -58,7 +58,9 @@ SphereGeometry.packedLength = EllipsoidGeometry.packedLength;
  * @returns {number[]} The array that was packed into
  */
 SphereGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  //>>includeEnd('debug');
 
   return EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
 };
@@ -112,5 +114,4 @@ SphereGeometry.unpack = function (array, startingIndex, result) {
 SphereGeometry.createGeometry = function (sphereGeometry) {
   return EllipsoidGeometry.createGeometry(sphereGeometry._ellipsoidGeometry);
 };
-export { SphereGeometry };
 export default SphereGeometry;

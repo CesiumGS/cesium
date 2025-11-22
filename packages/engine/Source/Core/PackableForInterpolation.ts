@@ -40,5 +40,4 @@ const PackableForInterpolation = {
    */
   unpackInterpolationResult: DeveloperError.throwInstantiationError,
 };
-export { PackableForInterpolation };
 export default PackableForInterpolation;

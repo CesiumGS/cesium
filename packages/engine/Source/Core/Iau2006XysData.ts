@@ -25,7 +25,7 @@ import TimeStandard from "./TimeStandard.js";
  *
  * @private
  */
-function Iau2006XysData(options) {
+function Iau2006XysData(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._xysFileUrlTemplate = Resource.createIfNeeded(
@@ -73,7 +73,7 @@ function Iau2006XysData(options) {
 
 const julianDateScratch = new JulianDate(0, 0.0, TimeStandard.TAI);
 
-function getDaysSinceEpoch(xys, dayTT, secondTT) {
+function getDaysSinceEpoch(xys: any, dayTT: any, secondTT: any) {
   const dateTT = julianDateScratch;
   dateTT.dayNumber = dayTT;
   dateTT.secondsOfDay = secondTT;
@@ -237,7 +237,7 @@ Iau2006XysData.prototype.computeXysRadians = function (
   return result;
 };
 
-function requestXysChunk(xysData, chunkIndex) {
+function requestXysChunk(xysData: any, chunkIndex: any) {
   if (xysData._chunkDownloadsInProgress[chunkIndex]) {
     // Chunk has already been requested.
     return xysData._chunkDownloadsInProgress[chunkIndex];
@@ -272,5 +272,4 @@ function requestXysChunk(xysData, chunkIndex) {
 
   return promise;
 }
-export { Iau2006XysData };
 export default Iau2006XysData;

@@ -13,10 +13,10 @@ import Resource from "./Resource.js";
  * @throws {DeveloperError}
  * @private
  */
-function validateIonGeocodeProviderType(geocodeProviderType) {
+function validateIonGeocodeProviderType(geocodeProviderType: any) {
   if (
     !Object.values(IonGeocodeProviderType).some(
-      (value) => value === geocodeProviderType,
+      (value: any) => value === geocodeProviderType,
     )
   ) {
     throw new DeveloperError(
@@ -29,15 +29,16 @@ const providerToParameterMap = Object.freeze({
   [IonGeocodeProviderType.GOOGLE]: "google",
   [IonGeocodeProviderType.BING]: "bing",
   [IonGeocodeProviderType.DEFAULT]: undefined,
-});
+} as const);
+export type providerToParameterMap = typeof providerToParameterMap[keyof typeof providerToParameterMap];
 
-function providerToQueryParameter(provider) {
+function providerToQueryParameter(provider: any) {
   return providerToParameterMap[provider];
 }
 
-function queryParameterToProvider(parameter) {
+function queryParameterToProvider(parameter: any) {
   return Object.entries(providerToParameterMap).find(
-    (entry) => entry[1] === parameter,
+    (entry: any) => entry[1] === parameter,
   )[0];
 }
 
@@ -54,14 +55,18 @@ function queryParameterToProvider(parameter) {
  *
  * @see Ion
  */
-function IonGeocoderService(options) {
+function IonGeocoderService(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.scene", options.scene);
+  //>>includeEnd('debug');
 
   const geocodeProviderType =
     options.geocodeProviderType ?? IonGeocodeProviderType.DEFAULT;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  validateIonGeocodeProviderType(geocodeProviderType);
+  //>>includeEnd('debug');
 
   const accessToken = options.accessToken ?? Ion.defaultAccessToken;
   const server = Resource.createIfNeeded(options.server ?? Ion.defaultServer);
@@ -140,5 +145,4 @@ Object.defineProperties(IonGeocoderService.prototype, {
 IonGeocoderService.prototype.geocode = async function (query, geocodeType) {
   return this._pelias.geocode(query, geocodeType);
 };
-export { IonGeocoderService };
 export default IonGeocoderService;

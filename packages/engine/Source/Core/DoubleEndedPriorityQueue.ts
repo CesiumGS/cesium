@@ -14,8 +14,18 @@ import defined from "./defined.js";
  * @param {DoubleEndedPriorityQueue.ComparatorCallback} options.comparator The comparator to use for the queue. If comparator(a, b) is less than 0, a is lower priority than b.
  * @param {number} [options.maximumLength] The maximum length of the queue. If an element is inserted when the queue is at full capacity, the minimum element is removed. By default, the size of the queue is unlimited.
  */
-function DoubleEndedPriorityQueue(options) {
-  ;
+function DoubleEndedPriorityQueue(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.defined("options.comparator", options.comparator);
+  if (defined(options.maximumLength)) {
+    Check.typeOf.number.greaterThanOrEquals(
+      "options.maximumLength",
+      options.maximumLength,
+      0,
+    );
+  }
+  //>>includeEnd('debug');
 
   this._comparator = options.comparator;
   this._maximumLength = options.maximumLength;
@@ -57,7 +67,9 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
     },
     set: function (value) {
       if (defined(value)) {
-        ;
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.greaterThanOrEquals("maximumLength", value, 0);
+        //>>includeEnd('debug');
 
         // Remove elements until the maximum length is met.
         while (this._length > value) {
@@ -162,7 +174,7 @@ DoubleEndedPriorityQueue.prototype.resort = function () {
  * The new element is returned (and not added) if it is less than or equal priority to the minimum element.
  *
  * @param {*} element
- * @returns {any|undefined} The minimum element if the queue is at full capacity. Returns undefined if there is no maximum length.
+ * @returns {*|undefined} The minimum element if the queue is at full capacity. Returns undefined if there is no maximum length.
  */
 DoubleEndedPriorityQueue.prototype.insert = function (element) {
   let removedElement;
@@ -196,7 +208,7 @@ DoubleEndedPriorityQueue.prototype.insert = function (element) {
  * Removes the minimum element from the queue and returns it.
  * If the queue is empty, the return value is undefined.
  *
- * @returns {any|undefined} The minimum element, or undefined if the queue is empty.
+ * @returns {*|undefined} The minimum element, or undefined if the queue is empty.
  */
 DoubleEndedPriorityQueue.prototype.removeMinimum = function () {
   const length = this._length;
@@ -224,7 +236,7 @@ DoubleEndedPriorityQueue.prototype.removeMinimum = function () {
  * Removes the maximum element from the queue and returns it.
  * If the queue is empty, the return value is undefined.
  *
- * @returns {any|undefined} The maximum element, or undefined if the queue is empty.
+ * @returns {*|undefined} The maximum element, or undefined if the queue is empty.
  */
 DoubleEndedPriorityQueue.prototype.removeMaximum = function () {
   const length = this._length;
@@ -261,7 +273,7 @@ DoubleEndedPriorityQueue.prototype.removeMaximum = function () {
  * Gets the minimum element in the queue.
  * If the queue is empty, the result is undefined.
  *
- * @returns {any|undefined} element
+ * @returns {*|undefined} element
  */
 
 DoubleEndedPriorityQueue.prototype.getMinimum = function () {
@@ -278,7 +290,7 @@ DoubleEndedPriorityQueue.prototype.getMinimum = function () {
  * Gets the maximum element in the queue.
  * If the queue is empty, the result is undefined.
  *
- * @returns {any|undefined} element
+ * @returns {*|undefined} element
  */
 DoubleEndedPriorityQueue.prototype.getMaximum = function () {
   const length = this._length;
@@ -298,22 +310,22 @@ DoubleEndedPriorityQueue.prototype.getMaximum = function () {
 
 // Helper functions
 
-function swap(that, indexA, indexB) {
+function swap(that: any, indexA: any, indexB: any) {
   const array = that._array;
   const temp = array[indexA];
   array[indexA] = array[indexB];
   array[indexB] = temp;
 }
 
-function lessThan(that, indexA, indexB) {
+function lessThan(that: any, indexA: any, indexB: any) {
   return that._comparator(that._array[indexA], that._array[indexB]) < 0.0;
 }
 
-function greaterThan(that, indexA, indexB) {
+function greaterThan(that: any, indexA: any, indexB: any) {
   return that._comparator(that._array[indexA], that._array[indexB]) > 0.0;
 }
 
-function pushUp(that, index) {
+function pushUp(that: any, index: any) {
   if (index === 0) {
     return;
   }
@@ -341,7 +353,7 @@ function pushUp(that, index) {
   }
 }
 
-function pushDown(that, index) {
+function pushDown(that: any, index: any) {
   const length = that._length;
   const onMinLevel = Math.floor(CesiumMath.log2(index + 1)) % 2 === 0;
 
@@ -390,5 +402,4 @@ function pushDown(that, index) {
  * @param {*} b An element in the queue.
  * @returns {number} If the result of the comparison is less than 0, a is lower priority than b.
  */
-export { DoubleEndedPriorityQueue };
 export default DoubleEndedPriorityQueue;

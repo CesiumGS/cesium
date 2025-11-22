@@ -27,7 +27,7 @@ import EllipsoidOutlineGeometry from "./EllipsoidOutlineGeometry.js";
  * });
  * const geometry = Cesium.SphereOutlineGeometry.createGeometry(sphere);
  */
-function SphereOutlineGeometry(options) {
+function SphereOutlineGeometry(options: any) {
   const radius = options.radius ?? 1.0;
   const radii = new Cartesian3(radius, radius, radius);
   const ellipsoidOptions = {
@@ -57,7 +57,9 @@ SphereOutlineGeometry.packedLength = EllipsoidOutlineGeometry.packedLength;
  * @returns {number[]} The array that was packed into
  */
 SphereOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  //>>includeEnd('debug');
 
   return EllipsoidOutlineGeometry.pack(
     value._ellipsoidGeometry,
@@ -114,5 +116,4 @@ SphereOutlineGeometry.createGeometry = function (sphereGeometry) {
     sphereGeometry._ellipsoidGeometry,
   );
 };
-export { SphereOutlineGeometry };
 export default SphereOutlineGeometry;

@@ -10,7 +10,7 @@ import Pass from "../Renderer/Pass.js";
  *
  * @private
  */
-function FrustumCommands(near, far) {
+function FrustumCommands(near: any, far: any) {
   this.near = near ?? 0.0;
   this.far = far ?? 0.0;
 
@@ -26,5 +26,4 @@ function FrustumCommands(near, far) {
   this.commands = commands;
   this.indices = indices;
 }
-export { FrustumCommands };
 export default FrustumCommands;

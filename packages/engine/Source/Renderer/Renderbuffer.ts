@@ -9,10 +9,12 @@ import RenderbufferFormat from "./RenderbufferFormat.js";
 /**
  * @private
  */
-function Renderbuffer(options) {
+function Renderbuffer(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  //>>includeEnd('debug');
 
   const context = options.context;
   const gl = context._gl;
@@ -27,7 +29,27 @@ function Renderbuffer(options) {
     : context.drawingBufferHeight;
   const numSamples = options.numSamples ?? 1;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!RenderbufferFormat.validate(format)) {
+    throw new DeveloperError("Invalid format.");
+  }
+
+  Check.typeOf.number.greaterThan("width", width, 0);
+
+  if (width > maximumRenderbufferSize) {
+    throw new DeveloperError(
+      `Width must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`,
+    );
+  }
+
+  Check.typeOf.number.greaterThan("height", height, 0);
+
+  if (height > maximumRenderbufferSize) {
+    throw new DeveloperError(
+      `Height must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`,
+    );
+  }
+  //>>includeEnd('debug');
 
   this._gl = gl;
   this._format = format;
@@ -80,5 +102,4 @@ Renderbuffer.prototype.destroy = function () {
   this._gl.deleteRenderbuffer(this._renderbuffer);
   return destroyObject(this);
 };
-export { Renderbuffer };
 export default Renderbuffer;

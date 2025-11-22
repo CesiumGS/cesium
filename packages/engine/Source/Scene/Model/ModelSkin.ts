@@ -16,9 +16,12 @@ import Frozen from "../../Core/Frozen.js";
  *
  * @private
  */
-function ModelSkin(options) {
+function ModelSkin(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.skin", options.skin);
+  Check.typeOf.object("options.sceneGraph", options.sceneGraph);
+  //>>includeEnd('debug');
 
   this._sceneGraph = options.sceneGraph;
   const skin = options.skin;
@@ -113,7 +116,7 @@ Object.defineProperties(ModelSkin.prototype, {
   },
 });
 
-function initialize(runtimeSkin) {
+function initialize(runtimeSkin: any) {
   const skin = runtimeSkin.skin;
   const inverseBindMatrices = skin.inverseBindMatrices;
   runtimeSkin._inverseBindMatrices = inverseBindMatrices;
@@ -139,7 +142,7 @@ function initialize(runtimeSkin) {
   }
 }
 
-function computeJointMatrix(joint, inverseBindMatrix, result) {
+function computeJointMatrix(joint: any, inverseBindMatrix: any, result: any) {
   const jointWorldTransform = Matrix4.multiplyTransformation(
     joint.transformToRoot,
     joint.transform,
@@ -174,5 +177,4 @@ ModelSkin.prototype.updateJointMatrices = function () {
   }
 };
 
-export { ModelSkin };
 export default ModelSkin;

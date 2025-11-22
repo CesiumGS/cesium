@@ -3,7 +3,7 @@ import { Color, defined, JulianDate } from "@cesium/engine";
 /**
  * @private
  */
-function TimelineTrack(interval, pixelHeight, color, backgroundColor) {
+function TimelineTrack(interval: any, pixelHeight: any, color: any, backgroundColor: any) {
   this.interval = interval;
   this.height = pixelHeight;
   this.color = color || new Color(0.5, 0.5, 0.5, 1.0);
@@ -71,5 +71,4 @@ TimelineTrack.prototype.render = function (context, renderState) {
     }
   }
 };
-export { TimelineTrack };
 export default TimelineTrack;

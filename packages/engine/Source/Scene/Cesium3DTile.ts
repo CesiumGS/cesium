@@ -58,7 +58,7 @@ import VerticalExaggeration from "../Core/VerticalExaggeration.js";
  * @param {object} header The JSON header for the tile
  * @param {Cesium3DTile} parent The parent tile of the new tile
  */
-function Cesium3DTile(tileset, baseResource, header, parent) {
+function Cesium3DTile(tileset: any, baseResource: any, header: any, parent: any) {
   this._tileset = tileset;
   this._header = header;
 
@@ -797,7 +797,7 @@ const scratchCartesian = new Cartesian3();
  * @param {FrameState} frameState
  * @returns {boolean}
  */
-function isPriorityDeferred(tile, frameState) {
+function isPriorityDeferred(tile: any, frameState: any) {
   const { tileset, boundingSphere } = tile;
   const { radius, center } = boundingSphere;
   const { camera } = frameState;
@@ -966,7 +966,7 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
  * @param {Cesium3DTile} tile
  * @returns {boolean}
  */
-function isPriorityProgressiveResolution(tileset, tile) {
+function isPriorityProgressiveResolution(tileset: any, tile: any) {
   if (
     tileset.progressiveResolutionHeightFraction <= 0.0 ||
     tileset.progressiveResolutionHeightFraction > 0.5
@@ -998,7 +998,7 @@ function isPriorityProgressiveResolution(tileset, tile) {
  * @param {Cesium3DTile} tile
  * @returns {number}
  */
-function getPriorityReverseScreenSpaceError(tileset, tile) {
+function getPriorityReverseScreenSpaceError(tileset: any, tile: any) {
   const parent = tile.parent;
   const useParentScreenSpaceError =
     defined(parent) &&
@@ -1083,7 +1083,7 @@ Cesium3DTile.prototype.updateExpiration = function () {
  * @private
  * @param {Cesium3DTile} tile
  */
-function updateExpireDate(tile) {
+function updateExpireDate(tile: any) {
   if (!defined(tile.expireDuration)) {
     return;
   }
@@ -1108,7 +1108,7 @@ function updateExpireDate(tile) {
  * @param {Cesium3DTile} tile
  * @returns {Function}
  */
-function createPriorityFunction(tile) {
+function createPriorityFunction(tile: any) {
   return function () {
     return tile._priority;
   };
@@ -1150,7 +1150,7 @@ Cesium3DTile.prototype.requestContent = function () {
  * @param {Cesium3DTile} tile
  * @returns {Promise<Cesium3DTileContent>|Promise<undefined>|undefined} A promise that resolves to the tile content once loaded, or a promise that resolves to undefined if the request was cancelled mid-flight, or undefined if the request cannot be scheduled this frame
  */
-function requestMultipleContents(tile) {
+function requestMultipleContents(tile: any) {
   let multipleContents = tile._content;
   const tileset = tile._tileset;
 
@@ -1179,7 +1179,7 @@ function requestMultipleContents(tile) {
 
   tile._contentState = Cesium3DTileContentState.LOADING;
   return promise
-    .then((content) => {
+    .then((content: any) => {
       if (tile.isDestroyed()) {
         // Tile is unloaded before the content can process
         return;
@@ -1193,7 +1193,7 @@ function requestMultipleContents(tile) {
       tile._contentState = Cesium3DTileContentState.PROCESSING;
       return multipleContents;
     })
-    .catch((error) => {
+    .catch((error: any) => {
       if (tile.isDestroyed()) {
         // Tile is unloaded before the content can process
         return;
@@ -1204,13 +1204,7 @@ function requestMultipleContents(tile) {
     });
 }
 
-async function processArrayBuffer(
-  tile,
-  tileset,
-  request,
-  expired,
-  requestPromise,
-) {
+async function processArrayBuffer(tile: any, tileset: any, request: any, expired: any, requestPromise: any, ) {
   const previousState = tile._contentState;
   tile._contentState = Cesium3DTileContentState.LOADING;
   ++tileset.statistics.numberOfPendingRequests;
@@ -1284,7 +1278,7 @@ async function processArrayBuffer(
  * @param {Cesium3DTile} tile
  * @returns {Promise<Cesium3DTileContent>|Promise<undefined>|undefined} A promise that resolves to the tile content once loaded; a promise that resolves to undefined if the tile was destroyed before processing can happen or the request was cancelled mid-flight; or undefined if the request cannot be scheduled this frame.
  */
-function requestSingleContent(tile) {
+function requestSingleContent(tile: any) {
   // it is important to clone here. The fetchArrayBuffer() below uses
   // throttling, but other uses of the resources do not.
   const resource = tile._contentResource.clone();
@@ -1327,7 +1321,7 @@ function requestSingleContent(tile) {
  * @return {Promise<Cesium3DTileContent>} A content object
  * @private
  */
-async function makeContent(tile, arrayBuffer) {
+async function makeContent(tile: any, arrayBuffer: any) {
   const preprocessed = preprocess3DTileContent(arrayBuffer);
 
   // Vector and Geometry tile rendering do not support the skip LOD optimization.
@@ -1450,7 +1444,7 @@ const scratchProjectedBoundingSphere = new BoundingSphere();
  * @param {FrameState} frameState
  * @returns {TileBoundingVolume}
  */
-function getBoundingVolume(tile, frameState) {
+function getBoundingVolume(tile: any, frameState: any) {
   if (
     frameState.mode !== SceneMode.SCENE3D &&
     !defined(tile._boundingVolume2D)
@@ -1478,7 +1472,7 @@ function getBoundingVolume(tile, frameState) {
  * @param {FrameState} frameState
  * @returns {TileBoundingVolume}
  */
-function getContentBoundingVolume(tile, frameState) {
+function getContentBoundingVolume(tile: any, frameState: any) {
   if (
     frameState.mode !== SceneMode.SCENE3D &&
     !defined(tile._contentBoundingVolume2D)
@@ -1662,7 +1656,7 @@ const scratchTransform = new Matrix4();
  * @param {TileBoundingVolume} [result]
  * @returns {TileOrientedBoundingBox}
  */
-function createBox(box, transform, result) {
+function createBox(box: any, transform: any, result: any) {
   let center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
   let halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
 
@@ -1686,12 +1680,7 @@ function createBox(box, transform, result) {
  * @param {TileOrientedBoundingBox} [result]
  * @returns {TileOrientedBoundingBox}
  */
-function createBoxFromTransformedRegion(
-  region,
-  transform,
-  initialTransform,
-  result,
-) {
+function createBoxFromTransformedRegion(region: any, transform: any, initialTransform: any, result: any, ) {
   const rectangle = Rectangle.unpack(region, 0, scratchRectangle);
   const minimumHeight = region[4];
   const maximumHeight = region[5];
@@ -1755,7 +1744,7 @@ function createBoxFromTransformedRegion(
  * @param {TileBoundingVolume} [result] An optional result.
  * @returns {TileBoundingVolume} The resulting bounding volume
  */
-function createRegion(region, transform, initialTransform, result) {
+function createRegion(region: any, transform: any, initialTransform: any, result: any) {
   if (
     !Matrix4.equalsEpsilon(transform, initialTransform, CesiumMath.EPSILON8)
   ) {
@@ -1801,7 +1790,7 @@ function createRegion(region, transform, initialTransform, result) {
  * @param {TileBoundingVolume} [result]
  * @returns {TileBoundingSphere}
  */
-function createSphere(sphere, transform, result) {
+function createSphere(sphere: any, transform: any, result: any) {
   let center = Cartesian3.fromElements(
     sphere[0],
     sphere[1],
@@ -1937,14 +1926,10 @@ const scratchExaggeratedCorners = Cartesian3.unpackArray(
  * @param {number} exaggeration - The exaggeration factor to apply to the tile's bounding box.
  * @param {number} exaggerationRelativeHeight - The height relative to which exaggeration will be applied.
  */
-function exaggerateBoundingBox(
-  tileOrientedBoundingBox,
-  exaggeration,
-  exaggerationRelativeHeight,
-) {
+function exaggerateBoundingBox(tileOrientedBoundingBox: any, exaggeration: any, exaggerationRelativeHeight: any, ) {
   const exaggeratedCorners = tileOrientedBoundingBox.boundingVolume
     .computeCorners(scratchExaggeratedCorners)
-    .map((corner) =>
+    .map((corner: any) =>
       VerticalExaggeration.getPosition(
         corner,
         Ellipsoid.WGS84,
@@ -2056,7 +2041,7 @@ Cesium3DTile.prototype.updateGeometricErrorScale = function () {
  * @param {FrameState} frameState
  * @param {object} passOptions
  */
-function applyDebugSettings(tile, tileset, frameState, passOptions) {
+function applyDebugSettings(tile: any, tileset: any, frameState: any, passOptions: any) {
   if (!passOptions.isRender) {
     return;
   }
@@ -2151,7 +2136,7 @@ function applyDebugSettings(tile, tileset, frameState, passOptions) {
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
  */
-function updateContent(tile, tileset, frameState) {
+function updateContent(tile: any, tileset: any, frameState: any) {
   const expiredContent = tile._expiredContent;
 
   // expired content is not supported for multiple contents
@@ -2194,7 +2179,7 @@ function updateContent(tile, tileset, frameState) {
  * @param {Cesium3DTile} tile
  * @param {Cesium3DTileset} tileset
  */
-function updateClippingPlanes(tile, tileset) {
+function updateClippingPlanes(tile: any, tileset: any) {
   const clippingPlanes = tileset.clippingPlanes;
   let currentClippingPlanesState = 0;
   if (defined(clippingPlanes) && tile._isClipped && clippingPlanes.enabled) {
@@ -2217,7 +2202,7 @@ function updateClippingPlanes(tile, tileset) {
  * @param {Cesium3DTile} tile
  * @param {Cesium3DTileset} tileset
  */
-function updateClippingPolygons(tile, tileset) {
+function updateClippingPolygons(tile: any, tileset: any) {
   const clippingPolygons = tileset.clippingPolygons;
   let currentClippingPolygonsState = 0;
   if (
@@ -2318,7 +2303,7 @@ Cesium3DTile.prototype.process = function (tileset, frameState) {
  * @param {number} leftShift
  * @returns {number}
  */
-function isolateDigits(normalizedValue, numberOfDigits, leftShift) {
+function isolateDigits(normalizedValue: any, numberOfDigits: any, leftShift: any) {
   const scaled = normalizedValue * Math.pow(10, numberOfDigits);
   const integer = parseInt(scaled);
   return integer * Math.pow(10, leftShift);
@@ -2331,7 +2316,7 @@ function isolateDigits(normalizedValue, numberOfDigits, leftShift) {
  * @param {number} maximum
  * @returns {number}
  */
-function priorityNormalizeAndClamp(value, minimum, maximum) {
+function priorityNormalizeAndClamp(value: any, minimum: any, maximum: any) {
   // Subtract epsilon since we only want decimal digits present in the output.
   return Math.max(
     CesiumMath.normalize(value, minimum, maximum) - CesiumMath.EPSILON7,
@@ -2472,5 +2457,4 @@ Cesium3DTile.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { Cesium3DTile };
 export default Cesium3DTile;

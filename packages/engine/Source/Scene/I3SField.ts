@@ -9,7 +9,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @privateParam {I3SNode} parent The parent of that geometry
  * @privateParam {object} storageInfo The structure containing the storage info of the field
  */
-function I3SField(parent, storageInfo) {
+function I3SField(parent: any, storageInfo: any) {
   this._storageInfo = storageInfo;
   this._parent = parent;
   this._dataProvider = parent._dataProvider;
@@ -81,7 +81,7 @@ Object.defineProperties(I3SField.prototype, {
   },
 });
 
-function getNumericTypeSize(type) {
+function getNumericTypeSize(type: any) {
   if (type === "UInt8" || type === "Int8") {
     return 1;
   } else if (type === "UInt16" || type === "Int16") {
@@ -101,14 +101,14 @@ function getNumericTypeSize(type) {
   return 0;
 }
 
-function getValueTypeSize(type) {
+function getValueTypeSize(type: any) {
   if (type === "String") {
     return 1;
   }
   return getNumericTypeSize(type);
 }
 
-async function load(field) {
+async function load(field: any) {
   const data = await field._dataProvider._loadBinary(field._resource);
   const dataView = new DataView(data);
   field._data = data;
@@ -357,5 +357,4 @@ I3SField.prototype._validateBody = function (dataView, offset) {
   }
 };
 
-export { I3SField };
 export default I3SField;

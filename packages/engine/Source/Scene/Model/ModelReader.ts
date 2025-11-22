@@ -57,7 +57,9 @@ class ModelReader {
    * @returns {TypedArray} The attribute data
    */
   static readAttributeAsTypedArray(attribute) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("attribute", attribute);
+    //>>includeEnd('debug');
 
     // Obtain a compact (non-interleaved) typed array that contains
     // the components.
@@ -116,7 +118,9 @@ class ModelReader {
    * @returns {TypedArray} The raw attribute data
    */
   static readAttributeAsRawCompactTypedArray(attribute) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("attribute", attribute);
+    //>>includeEnd('debug');
 
     const elementType = attribute.type;
     const elementCount = attribute.count;
@@ -212,7 +216,12 @@ class ModelReader {
     elementType,
     quantization,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("quantizedTypedArray", quantizedTypedArray);
+    Check.typeOf.number.greaterThanOrEquals("elementCount", elementCount, 0);
+    Check.defined("elementType", elementType);
+    Check.defined("quantization", quantization);
+    //>>includeEnd('debug');
 
     if (quantization.octEncoded) {
       const dequantizedTypedArray = ModelReader.octDecode(
@@ -295,7 +304,15 @@ class ModelReader {
     normalizationRange,
     dequantizedTypedArray,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("quantizedTypedArray", quantizedTypedArray);
+    Check.typeOf.number.greaterThanOrEquals("elementCount", elementCount, 0);
+    Check.typeOf.number.greaterThan(
+      "normalizationRange",
+      normalizationRange,
+      0,
+    );
+    //>>includeEnd('debug');
 
     if (!defined(dequantizedTypedArray)) {
       dequantizedTypedArray = new Float32Array(quantizedTypedArray.length);
@@ -321,7 +338,10 @@ class ModelReader {
    * @returns {TypedArray} The result
    */
   static convertZxyToXyz(input, elementCount, output) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("input", input);
+    Check.typeOf.number.greaterThanOrEquals("elementCount", elementCount, 0);
+    //>>includeEnd('debug');
 
     if (!defined(output)) {
       output = new Float32Array(input.length);
@@ -360,7 +380,12 @@ class ModelReader {
     offset,
     dequantizedTypedArray,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("quantizedTypedArray", quantizedTypedArray);
+    Check.typeOf.number.greaterThanOrEquals("elementCount", elementCount, 0);
+    Check.defined("stepSize", stepSize);
+    Check.defined("offset", offset);
+    //>>includeEnd('debug');
 
     if (!defined(dequantizedTypedArray)) {
       dequantizedTypedArray = new Float32Array(quantizedTypedArray.length);
@@ -396,7 +421,12 @@ class ModelReader {
     offset,
     dequantizedTypedArray,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("quantizedTypedArray", quantizedTypedArray);
+    Check.typeOf.number.greaterThanOrEquals("elementCount", elementCount, 0);
+    Check.defined("stepSize", stepSize);
+    Check.defined("offset", offset);
+    //>>includeEnd('debug');
 
     if (!defined(dequantizedTypedArray)) {
       dequantizedTypedArray = new Float32Array(quantizedTypedArray.length);
@@ -434,7 +464,12 @@ class ModelReader {
     offset,
     dequantizedTypedArray,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("quantizedTypedArray", quantizedTypedArray);
+    Check.typeOf.number.greaterThanOrEquals("elementCount", elementCount, 0);
+    Check.defined("stepSize", stepSize);
+    Check.defined("offset", offset);
+    //>>includeEnd('debug');
 
     if (!defined(dequantizedTypedArray)) {
       dequantizedTypedArray = new Float32Array(quantizedTypedArray.length);
@@ -472,7 +507,12 @@ class ModelReader {
     offset,
     dequantizedTypedArray,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("quantizedTypedArray", quantizedTypedArray);
+    Check.typeOf.number.greaterThanOrEquals("elementCount", elementCount, 0);
+    Check.defined("stepSize", stepSize);
+    Check.defined("offset", offset);
+    //>>includeEnd('debug');
 
     if (!defined(dequantizedTypedArray)) {
       dequantizedTypedArray = new Float32Array(quantizedTypedArray.length);
@@ -587,7 +627,10 @@ class ModelReader {
    * @returns {TypedArray} The result
    */
   static transform3D(input, matrix, result) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("input", input);
+    Check.defined("matrix", matrix);
+    //>>includeEnd('debug');
 
     if (!defined(result)) {
       result = new Float32Array(input.length);
@@ -744,7 +787,9 @@ class ModelReader {
    * nor <code>UNSIGNED_INT</code>, or the size is negative.
    */
   static createIndexTypedArray(indexDatatype, size) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("size", size, 0);
+    //>>includeEnd('debug');
 
     switch (indexDatatype) {
       case IndexDatatype.UNSIGNED_BYTE:
@@ -762,5 +807,4 @@ class ModelReader {
   }
 }
 
-export { ModelReader };
 export default ModelReader;

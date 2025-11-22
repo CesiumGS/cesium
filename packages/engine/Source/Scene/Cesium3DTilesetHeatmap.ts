@@ -10,7 +10,7 @@ import CesiumMath from "../Core/Math.js";
  * @constructor
  * @private
  */
-function Cesium3DTilesetHeatmap(tilePropertyName) {
+function Cesium3DTilesetHeatmap(tilePropertyName: any) {
   /**
    * The tile variable to track for heatmap colorization.
    * Tile's will be colorized relative to the other visible tile's values for this variable.
@@ -37,7 +37,7 @@ function Cesium3DTilesetHeatmap(tilePropertyName) {
  * Convert to a usable heatmap value (i.e. a number). Ensures that tile values that aren't stored as numbers can be used for colorization.
  * @private
  */
-function getHeatmapValue(tileValue, tilePropertyName) {
+function getHeatmapValue(tileValue: any, tilePropertyName: any) {
   let value;
   if (tilePropertyName === "_loadTimestamp") {
     value = JulianDate.toDate(tileValue).getTime();
@@ -69,7 +69,7 @@ Cesium3DTilesetHeatmap.prototype.setReferenceMinimumMaximum = function (
   );
 };
 
-function getHeatmapValueAndUpdateMinimumMaximum(heatmap, tile) {
+function getHeatmapValueAndUpdateMinimumMaximum(heatmap: any, tile: any) {
   const tilePropertyName = heatmap.tilePropertyName;
   if (defined(tilePropertyName)) {
     const heatmapValue = getHeatmapValue(
@@ -162,5 +162,4 @@ Cesium3DTilesetHeatmap.prototype.resetMinimumMaximum = function () {
     this._maximum = -Number.MAX_VALUE;
   }
 };
-export { Cesium3DTilesetHeatmap };
 export default Cesium3DTilesetHeatmap;

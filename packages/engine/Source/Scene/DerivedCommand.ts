@@ -14,7 +14,7 @@ function DerivedCommand() {}
 const fragDepthRegex = /\bgl_FragDepth\b/;
 const discardRegex = /\bdiscard\b/;
 
-function getDepthOnlyShaderProgram(context, shaderProgram) {
+function getDepthOnlyShaderProgram(context: any, shaderProgram: any) {
   const cachedShader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
     "depthOnly",
@@ -69,7 +69,7 @@ function getDepthOnlyShaderProgram(context, shaderProgram) {
   );
 }
 
-function getDepthOnlyRenderState(scene, renderState) {
+function getDepthOnlyRenderState(scene: any, renderState: any) {
   const cache = scene._depthOnlyRenderStateCache;
 
   const cachedDepthOnlyState = cache[renderState.id];
@@ -136,7 +136,7 @@ DerivedCommand.createDepthOnlyDerivedCommand = function (
 const writeLogDepthRegex = /\s+czm_writeLogDepth\(/;
 const vertexlogDepthRegex = /\s+czm_vertexLogDepth\(/;
 
-function getLogDepthShaderProgram(context, shaderProgram) {
+function getLogDepthShaderProgram(context: any, shaderProgram: any) {
   const disableLogDepthWrite =
     shaderProgram.fragmentShaderSource.defines.indexOf("LOG_DEPTH_READ_ONLY") >=
     0;
@@ -250,7 +250,7 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
   return result;
 };
 
-function getPickShaderProgram(context, shaderProgram, pickId) {
+function getPickShaderProgram(context: any, shaderProgram: any, pickId: any) {
   const cachedShader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
     "pick",
@@ -262,7 +262,7 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
   const attributeLocations = shaderProgram._attributeLocations;
   const { sources, defines } = shaderProgram.fragmentShaderSource;
 
-  const hasFragData = sources.some((source) => source.includes("out_FragData"));
+  const hasFragData = sources.some((source: any) => source.includes("out_FragData"));
   const outputColorVariable = hasFragData ? "out_FragData_0" : "out_FragColor";
   const newMain = `void main () 
 { 
@@ -290,7 +290,7 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
   });
 }
 
-function getPickRenderState(scene, renderState) {
+function getPickRenderState(scene: any, renderState: any) {
   const cache = scene.picking.pickRenderStateCache;
   const cachedPickState = cache[renderState.id];
   if (defined(cachedPickState)) {
@@ -364,7 +364,7 @@ DerivedCommand.createPickDerivedCommand = function (
  * will become the token string for the define directive
  * @private
  */
-function replaceDefine(defines, defineName, newDefineValue) {
+function replaceDefine(defines: any, defineName: any, newDefineValue: any) {
   const n = defines.length;
   for (let i = 0; i < n; i++) {
     const define = defines[i];
@@ -387,7 +387,7 @@ function replaceDefine(defines, defineName, newDefineValue) {
  * @returns {number} The component count
  * @private
  */
-function getComponentCount(classProperty) {
+function getComponentCount(classProperty: any) {
   if (!classProperty.isArray) {
     return MetadataType.getComponentCount(classProperty.type);
   }
@@ -403,7 +403,7 @@ function getComponentCount(classProperty) {
  * @param {MetadataClassProperty} classProperty The class property
  * @returns {string} The GLSL shader type string for the property
  */
-function getGlslType(classProperty) {
+function getGlslType(classProperty: any) {
   const componentCount = getComponentCount(classProperty);
   if (classProperty.normalized) {
     if (componentCount === 1) {
@@ -427,7 +427,7 @@ function getGlslType(classProperty) {
  * @param {string} scale The scale
  * @returns {string} The statement
  */
-function unapplyValueTransform(input, offset, scale) {
+function unapplyValueTransform(input: any, offset: any, scale: any) {
   return `((${input} - float(${offset})) / float(${scale}))`;
 }
 
@@ -439,7 +439,7 @@ function unapplyValueTransform(input, offset, scale) {
  * @param {string} componentType The component type
  * @returns {string} The statement
  */
-function unnormalize(input, componentType) {
+function unnormalize(input: any, componentType: any) {
   const max = MetadataComponentType.getMaximum(componentType);
   return `(${input}) / float(${max})`;
 }
@@ -453,7 +453,7 @@ function unnormalize(input, componentType) {
  * a `PropertyTextureProperty` or a `PropertyAttributeProperty`
  * @returns {string} The string
  */
-function getSourceValueStringScalar(classProperty, metadataProperty) {
+function getSourceValueStringScalar(classProperty: any, metadataProperty: any) {
   let result = `float(value)`;
 
   // The 'hasValueTransform' indicates whether the property
@@ -481,11 +481,7 @@ function getSourceValueStringScalar(classProperty, metadataProperty) {
  * @param {string} componentName The name, in ["x", "y", "z", "w"]
  * @returns {string} The string
  */
-function getSourceValueStringComponent(
-  classProperty,
-  metadataProperty,
-  componentName,
-) {
+function getSourceValueStringComponent(classProperty: any, metadataProperty: any, componentName: any, ) {
   const valueString = `value.${componentName}`;
   let result = `float(${valueString})`;
 
@@ -528,11 +524,7 @@ function getSourceValueStringComponent(
  * @returns {ShaderProgram} The new shader program
  * @private
  */
-function getPickMetadataShaderProgram(
-  context,
-  shaderProgram,
-  pickedMetadataInfo,
-) {
+function getPickMetadataShaderProgram(context: any, shaderProgram: any, pickedMetadataInfo: any, ) {
   const schemaId = pickedMetadataInfo.schemaId;
   const className = pickedMetadataInfo.className;
   const propertyName = pickedMetadataInfo.propertyName;
@@ -659,7 +651,7 @@ DerivedCommand.createPickMetadataDerivedCommand = function (
   return result;
 };
 
-function getHdrShaderProgram(context, shaderProgram) {
+function getHdrShaderProgram(context: any, shaderProgram: any) {
   const cachedShader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
     "HDR",
@@ -705,5 +697,4 @@ DerivedCommand.createHdrCommand = function (command, context, result) {
 
   return result;
 };
-export { DerivedCommand };
 export default DerivedCommand;

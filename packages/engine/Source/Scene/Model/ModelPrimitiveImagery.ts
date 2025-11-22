@@ -36,7 +36,11 @@ class ModelPrimitiveImagery {
    * @throws {DeveloperError} If any argument is not defined
    */
   constructor(model, runtimeNode, runtimePrimitive) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("model", model);
+    Check.defined("runtimeNode", runtimeNode);
+    Check.defined("runtimePrimitive", runtimePrimitive);
+    //>>includeEnd('debug');
 
     /**
      * The model that this instance was created for.
@@ -218,7 +222,9 @@ class ModelPrimitiveImagery {
    * @param {FrameState} frameState The frame state
    */
   update(frameState) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("frameState", frameState);
+    //>>includeEnd('debug');
 
     // If the imagery layers have been modified since the last call
     // to this function, then re-build everything
@@ -309,7 +315,9 @@ class ModelPrimitiveImagery {
    * @param {Context} context The GL context
    */
   _uploadImageryTexCoordAttributes(context) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("context", context);
+    //>>includeEnd('debug');
 
     const attributes = this._imageryTexCoordAttributesPerProjection;
     if (!defined(attributes)) {
@@ -465,7 +473,9 @@ class ModelPrimitiveImagery {
    * @private
    */
   static _computeUniqueEllipsoids(imageryLayers) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("imageryLayers", imageryLayers);
+    //>>includeEnd('debug');
 
     const ellipsoidsSet = new Set();
     const length = imageryLayers.length;
@@ -518,7 +528,9 @@ class ModelPrimitiveImagery {
    * @private
    */
   static _extractProjections(imageryLayers) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("imageryLayers", imageryLayers);
+    //>>includeEnd('debug');
 
     const projections = [];
     const length = imageryLayers.length;
@@ -540,7 +552,9 @@ class ModelPrimitiveImagery {
    * @private
    */
   static _getProjection(imageryLayer) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("imageryLayer", imageryLayer);
+    //>>includeEnd('debug');
     const projection = imageryLayer.imageryProvider.tilingScheme.projection;
     return projection;
   }
@@ -558,7 +572,9 @@ class ModelPrimitiveImagery {
    * @returns {ModelComponents.Attribute[]} The attributes
    */
   _createImageryTexCoordAttributes(uniqueProjections) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("uniqueProjections", uniqueProjections);
+    //>>includeEnd('debug');
 
     const imageryTexCoordAttributePerUniqueProjection = [];
     const length = uniqueProjections.length;
@@ -889,7 +905,10 @@ class ModelPrimitiveImagery {
    * @private
    */
   static _computePrimitivePositionTransform(model, runtimeNode, result) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("model", model);
+    Check.defined("runtimeNode", runtimeNode);
+    //>>includeEnd('debug');
 
     if (!defined(result)) {
       result = new Matrix4();
@@ -918,7 +937,9 @@ class ModelPrimitiveImagery {
    * @private
    */
   static _obtainPrimitivePositionAttribute(primitive) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("primitive", primitive);
+    //>>includeEnd('debug');
 
     const primitivePositionAttribute = ModelUtility.getAttributeBySemantic(
       primitive,
@@ -948,5 +969,4 @@ class ModelPrimitiveImagery {
   }
 }
 
-export { ModelPrimitiveImagery };
 export default ModelPrimitiveImagery;

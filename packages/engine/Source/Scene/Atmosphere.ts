@@ -146,5 +146,4 @@ Atmosphere.requiresColorCorrect = function (atmosphere) {
   );
 };
 
-export { Atmosphere };
 export default Atmosphere;

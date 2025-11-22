@@ -55,7 +55,7 @@ SceneTransforms.worldToWindowCoordinates = function (scene, position, result) {
 const scratchCartesian4 = new Cartesian4();
 const scratchEyeOffset = new Cartesian3();
 
-function worldToClip(position, eyeOffset, camera, result) {
+function worldToClip(position: any, eyeOffset: any, camera: any, result: any) {
   const viewMatrix = camera.viewMatrix;
 
   const positionEC = Matrix4.multiplyByVector(
@@ -102,7 +102,14 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
   eyeOffset,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  if (!defined(position)) {
+    throw new DeveloperError("position is required.");
+  }
+  //>>includeEnd('debug');
 
   // Transform for 3D, 2D, or Columbus view
   const frameState = scene.frameState;
@@ -453,5 +460,4 @@ SceneTransforms.drawingBufferToWorldCoordinates = function (
   }
   return Cartesian3.fromCartesian4(worldCoords, result);
 };
-export { SceneTransforms };
 export default SceneTransforms;

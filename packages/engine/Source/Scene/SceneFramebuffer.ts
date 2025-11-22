@@ -27,7 +27,7 @@ function SceneFramebuffer() {
   });
 }
 
-function destroyResources(post) {
+function destroyResources(post: any) {
   post._colorFramebuffer.destroy();
   post._idFramebuffer.destroy();
 }
@@ -103,5 +103,4 @@ SceneFramebuffer.prototype.destroy = function () {
   destroyResources(this);
   return destroyObject(this);
 };
-export { SceneFramebuffer };
 export default SceneFramebuffer;

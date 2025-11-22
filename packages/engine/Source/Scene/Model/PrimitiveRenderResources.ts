@@ -15,8 +15,11 @@ import ModelLightingOptions from "./ModelLightingOptions.js";
  *
  * @private
  */
-function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
-  ;
+function PrimitiveRenderResources(nodeRenderResources: any, runtimePrimitive: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("nodeRenderResources", nodeRenderResources);
+  Check.typeOf.object("runtimePrimitive", runtimePrimitive);
+  //>>includeEnd('debug');
 
   // Properties inherited from NodeRenderResources.
   /**
@@ -291,5 +294,4 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
   this.pickId = undefined;
 }
 
-export { PrimitiveRenderResources };
 export default PrimitiveRenderResources;

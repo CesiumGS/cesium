@@ -20,8 +20,12 @@ import Check from "../../../../Core/Check.js";
  * @param {AnchorPointIndirect.ConstructorOptions} options An object describing initialization options
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function AnchorPointIndirect(options) {
-  ;
+function AnchorPointIndirect(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.position", options.position);
+  Check.typeOf.object("options.adjustmentParams", options.adjustmentParams);
+  Check.typeOf.object("options.covarianceMatrix", options.covarianceMatrix);
+  //>>includeEnd('debug');
 
   this._position = options.position;
   this._adjustmentParams = options.adjustmentParams;
@@ -70,5 +74,4 @@ Object.defineProperties(AnchorPointIndirect.prototype, {
   },
 });
 
-export { AnchorPointIndirect };
 export default AnchorPointIndirect;

@@ -89,7 +89,7 @@ SelectedFeatureIdPipelineStage.process = function (
   shaderBuilder.addFragmentLines(SelectedFeatureIdStageCommon);
 };
 
-function getFeatureIdDefine(featureIds) {
+function getFeatureIdDefine(featureIds: any) {
   if (featureIds instanceof ModelComponents.FeatureIdTexture) {
     return "HAS_SELECTED_FEATURE_ID_TEXTURE";
   }
@@ -97,7 +97,7 @@ function getFeatureIdDefine(featureIds) {
   return "HAS_SELECTED_FEATURE_ID_ATTRIBUTE";
 }
 
-function getShaderDestination(featureIds) {
+function getShaderDestination(featureIds: any) {
   // Feature ID textures are only supported in the fragment shader.
   if (featureIds instanceof ModelComponents.FeatureIdTexture) {
     return ShaderDestination.FRAGMENT;
@@ -106,7 +106,7 @@ function getShaderDestination(featureIds) {
   return ShaderDestination.BOTH;
 }
 
-function getSelectedFeatureIds(model, node, primitive) {
+function getSelectedFeatureIds(model: any, node: any, primitive: any) {
   let variableName;
   let featureIds;
   // Check instances first, as this is the most specific type of
@@ -157,7 +157,7 @@ function getSelectedFeatureIds(model, node, primitive) {
  *
  * @private
  */
-function updateFeatureStruct(shaderBuilder) {
+function updateFeatureStruct(shaderBuilder: any) {
   shaderBuilder.addStructField(
     SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
     "int",
@@ -177,5 +177,4 @@ function updateFeatureStruct(shaderBuilder) {
   );
 }
 
-export { SelectedFeatureIdPipelineStage };
 export default SelectedFeatureIdPipelineStage;

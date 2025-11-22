@@ -32,7 +32,9 @@ const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
  */
 PntsParser.parse = function (arrayBuffer, byteOffset) {
   byteOffset = byteOffset ?? 0;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("arrayBuffer", arrayBuffer);
+  //>>includeEnd('debug');
 
   const uint8Array = new Uint8Array(arrayBuffer);
   const view = new DataView(arrayBuffer);
@@ -213,7 +215,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
  *
  * @param {object} parsedContent The parsed content
  */
-function removeInvalidBinaryBodyReferences(parsedContent) {
+function removeInvalidBinaryBodyReferences(parsedContent: any) {
   const batchTableJson = parsedContent.batchTableJson;
   if (!defined(batchTableJson)) {
     return;
@@ -251,7 +253,7 @@ function removeInvalidBinaryBodyReferences(parsedContent) {
   }
 }
 
-function parseDracoProperties(featureTable, batchTableJson) {
+function parseDracoProperties(featureTable: any, batchTableJson: any) {
   const featureTableJson = featureTable.json;
   let dracoBuffer;
   let dracoFeatureTableProperties;
@@ -324,7 +326,7 @@ function parseDracoProperties(featureTable, batchTableJson) {
   };
 }
 
-function parsePositions(featureTable) {
+function parsePositions(featureTable: any) {
   const featureTableJson = featureTable.json;
 
   let positions;
@@ -389,7 +391,7 @@ function parsePositions(featureTable) {
   }
 }
 
-function parseColors(featureTable) {
+function parseColors(featureTable: any) {
   const featureTableJson = featureTable.json;
 
   let colors;
@@ -479,7 +481,7 @@ function parseColors(featureTable) {
   return undefined;
 }
 
-function parseNormals(featureTable) {
+function parseNormals(featureTable: any) {
   const featureTableJson = featureTable.json;
   let normals;
   if (defined(featureTableJson.NORMAL)) {
@@ -521,7 +523,7 @@ function parseNormals(featureTable) {
   return undefined;
 }
 
-function parseBatchIds(featureTable) {
+function parseBatchIds(featureTable: any) {
   const featureTableJson = featureTable.json;
   if (defined(featureTableJson.BATCH_ID)) {
     const batchIds = featureTable.getPropertyArray(
@@ -542,5 +544,4 @@ function parseBatchIds(featureTable) {
   return undefined;
 }
 
-export { PntsParser };
 export default PntsParser;

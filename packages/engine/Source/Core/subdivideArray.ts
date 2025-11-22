@@ -11,8 +11,16 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @exception {DeveloperError} numberOfArrays must be greater than 0.
  */
-function subdivideArray(array, numberOfArrays) {
-  ;
+function subdivideArray(array: any, numberOfArrays: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required.");
+  }
+
+  if (!defined(numberOfArrays) || numberOfArrays < 1) {
+    throw new DeveloperError("numberOfArrays must be greater than 0.");
+  }
+  //>>includeEnd('debug');
 
   const result = [];
   const len = array.length;
@@ -24,5 +32,4 @@ function subdivideArray(array, numberOfArrays) {
   }
   return result;
 }
-export { subdivideArray };
 export default subdivideArray;

@@ -57,7 +57,7 @@ import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
  *    polygons: [ polygon ]
  * });
  */
-function ClippingPolygonCollection(options) {
+function ClippingPolygonCollection(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._polygons = [];
@@ -288,7 +288,9 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
  * @see ClippingPolygonCollection#removeAll
  */
 ClippingPolygonCollection.prototype.add = function (polygon) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("polygon", polygon);
+  //>>includeEnd('debug');
 
   const newPlaneIndex = this._polygons.length;
   this._polygons.push(polygon);
@@ -309,7 +311,9 @@ ClippingPolygonCollection.prototype.add = function (polygon) {
  * @see ClippingPolygonCollection#length
  */
 ClippingPolygonCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   return this._polygons[index];
 };
@@ -323,9 +327,11 @@ ClippingPolygonCollection.prototype.get = function (index) {
  * @see ClippingPolygonCollection#get
  */
 ClippingPolygonCollection.prototype.contains = function (polygon) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("polygon", polygon);
+  //>>includeEnd('debug');
 
-  return this._polygons.some((p) => ClippingPolygon.equals(p, polygon));
+  return this._polygons.some((p: any) => ClippingPolygon.equals(p, polygon));
 };
 
 /**
@@ -339,10 +345,12 @@ ClippingPolygonCollection.prototype.contains = function (polygon) {
  * @see ClippingPolygonCollection#removeAll
  */
 ClippingPolygonCollection.prototype.remove = function (polygon) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("polygon", polygon);
+  //>>includeEnd('debug');
 
   const polygons = this._polygons;
-  const index = polygons.findIndex((p) => ClippingPolygon.equals(p, polygon));
+  const index = polygons.findIndex((p: any) => ClippingPolygon.equals(p, polygon));
 
   if (index === -1) {
     return false;
@@ -358,7 +366,7 @@ const scratchRectangle = new Rectangle();
 
 // Map the polygons to a list of extents-- Overlapping extents will be merged
 // into a single encompassing extent
-function getExtents(polygons) {
+function getExtents(polygons: any) {
   const extentsList = [];
   const polygonIndicesList = [];
 
@@ -393,7 +401,7 @@ function getExtents(polygons) {
         const intersectingPolygons = polygonIndicesList[i];
         polygonIndices.push(...intersectingPolygons);
         intersectingPolygons.reduce(
-          (extents, p) =>
+          (extents: any, p: any) =>
             Rectangle.union(
               polygons[p].computeSphericalExtents(scratchRectangle),
               extents,
@@ -431,8 +439,8 @@ function getExtents(polygons) {
   const extentsIndexByPolygon = new Map();
   polygonIndicesList
     .filter(defined)
-    .forEach((polygonIndices, e) =>
-      polygonIndices.forEach((p) => extentsIndexByPolygon.set(p, e)),
+    .forEach((polygonIndices: any, e: any) =>
+      polygonIndices.forEach((p: any) => extentsIndexByPolygon.set(p, e)),
     );
 
   return {
@@ -458,7 +466,7 @@ ClippingPolygonCollection.prototype.removeAll = function () {
   this._polygons = [];
 };
 
-function packPolygonsAsFloats(clippingPolygonCollection) {
+function packPolygonsAsFloats(clippingPolygonCollection: any) {
   const polygonsFloat32View = clippingPolygonCollection._float32View;
   const extentsFloat32View = clippingPolygonCollection._extentsFloat32View;
   const polygons = clippingPolygonCollection._polygons;
@@ -530,7 +538,7 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
 
   // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has had elements added or removed, which should be good enough for most cases.
   const totalPositions = this._polygons.reduce(
-    (totalPositions, polygon) => totalPositions + polygon.length,
+    (totalPositions: any, polygon: any) => totalPositions + polygon.length,
     0,
   );
 
@@ -692,7 +700,7 @@ ClippingPolygonCollection.prototype.queueCommands = function (frameState) {
   }
 };
 
-function createSignedDistanceTextureCommand(collection) {
+function createSignedDistanceTextureCommand(collection: any) {
   const polygonTexture = collection._polygonsTexture;
   const extentsTexture = collection._extentsTexture;
 
@@ -802,7 +810,13 @@ ClippingPolygonCollection.setOwner = function (
   // Destroy the existing ClippingPolygonCollection, if any
   owner[key] = owner[key] && owner[key].destroy();
   if (defined(clippingPolygonsCollection)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(clippingPolygonsCollection._owner)) {
+      throw new DeveloperError(
+        "ClippingPolygonCollection should only be assigned to one object",
+      );
+    }
+    //>>includeEnd('debug');
     clippingPolygonsCollection._owner = owner;
     owner[key] = clippingPolygonsCollection;
   }
@@ -948,5 +962,4 @@ ClippingPolygonCollection.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { ClippingPolygonCollection };
 export default ClippingPolygonCollection;

@@ -28,7 +28,9 @@ const scratchAxis = new Cartesian3();
  * @returns {boolean} Whether the childrenWithinParent optimization is supported.
  */
 Cesium3DTileOptimizations.checkChildrenWithinParent = function (tile) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("tile", tile);
+  //>>includeEnd('debug');
 
   const children = tile.children;
   const length = children.length;
@@ -110,5 +112,4 @@ Cesium3DTileOptimizations.checkChildrenWithinParent = function (tile) {
     Cesium3DTileOptimizationHint.USE_OPTIMIZATION
   );
 };
-export { Cesium3DTileOptimizations };
 export default Cesium3DTileOptimizations;

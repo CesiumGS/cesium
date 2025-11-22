@@ -22,12 +22,7 @@ import PrimitiveType from "./PrimitiveType.js";
 import VertexFormat from "./VertexFormat.js";
 import WindingOrder from "./WindingOrder.js";
 
-function computeAttributes(
-  combinedPositions,
-  shape,
-  boundingRectangle,
-  vertexFormat,
-) {
+function computeAttributes(combinedPositions: any, shape: any, boundingRectangle: any, vertexFormat: any, ) {
   const attributes = new GeometryAttributes();
   if (vertexFormat.position) {
     attributes.position = new GeometryAttribute({
@@ -188,7 +183,7 @@ function computeAttributes(
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
  *
  * @example
- * function computeCircle(radius) {
+ * function computeCircle(radius: any) {
  *   const positions = [];
  *   for (let i = 0; i < 360; i++) {
  *     const radians = Cesium.Math.toRadians(i);
@@ -206,12 +201,19 @@ function computeAttributes(
  *   shapePositions : computeCircle(100000.0)
  * });
  */
-function PolylineVolumeGeometry(options) {
+function PolylineVolumeGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.polylinePositions;
   const shape = options.shapePositions;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(positions)) {
+    throw new DeveloperError("options.polylinePositions is required.");
+  }
+  if (!defined(shape)) {
+    throw new DeveloperError("options.shapePositions is required.");
+  }
+  //>>includeEnd('debug');
 
   this._positions = positions;
   this._shape = shape;
@@ -244,7 +246,14 @@ function PolylineVolumeGeometry(options) {
  * @returns {number[]} The array that was packed into
  */
 PolylineVolumeGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -298,7 +307,11 @@ const scratchOptions = {
  * @returns {PolylineVolumeGeometry} The modified result parameter or a new PolylineVolumeGeometry instance if one was not provided.
  */
 PolylineVolumeGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -391,5 +404,4 @@ PolylineVolumeGeometry.createGeometry = function (polylineVolumeGeometry) {
     polylineVolumeGeometry._vertexFormat,
   );
 };
-export { PolylineVolumeGeometry };
 export default PolylineVolumeGeometry;

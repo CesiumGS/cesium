@@ -27,7 +27,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {PathGraphics.ConstructorOptions} [options] Object describing initialization options
  */
-function PathGraphics(options) {
+function PathGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -143,7 +143,11 @@ PathGraphics.prototype.clone = function (result) {
  * @param {PathGraphics} source The object to be merged into this object.
  */
 PathGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.leadTime = this.leadTime ?? source.leadTime;
@@ -154,5 +158,4 @@ PathGraphics.prototype.merge = function (source) {
   this.distanceDisplayCondition =
     this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
-export { PathGraphics };
 export default PathGraphics;

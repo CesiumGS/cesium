@@ -22,12 +22,14 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function ImplicitTileset(baseResource, tileJson, metadataSchema) {
+function ImplicitTileset(baseResource: any, tileJson: any, metadataSchema: any) {
   const implicitTiling = hasExtension(tileJson, "3DTILES_implicit_tiling")
     ? tileJson.extensions["3DTILES_implicit_tiling"]
     : tileJson.implicitTiling;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("implicitTiling", implicitTiling);
+  //>>includeEnd('debug');
 
   /**
    * The base resource for the tileset. This is stored here as it is needed
@@ -224,7 +226,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
  * @return {object[]} An array of JSON headers for the contents of each tile
  * @private
  */
-function gatherContentHeaders(tileJson) {
+function gatherContentHeaders(tileJson: any) {
   if (hasExtension(tileJson, "3DTILES_multiple_contents")) {
     const extension = tileJson.extensions["3DTILES_multiple_contents"];
     return defined(extension.contents) ? extension.contents : extension.content;
@@ -241,7 +243,7 @@ function gatherContentHeaders(tileJson) {
   return [];
 }
 
-function makeTileHeaderTemplate(tileJson) {
+function makeTileHeaderTemplate(tileJson: any) {
   const template = clone(tileJson, true);
 
   // Remove the implicit tiling extension to prevent infinite loops,
@@ -264,5 +266,4 @@ function makeTileHeaderTemplate(tileJson) {
   return template;
 }
 
-export { ImplicitTileset };
 export default ImplicitTileset;

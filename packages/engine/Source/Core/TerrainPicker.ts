@@ -26,8 +26,12 @@ const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
  *
  * @private
  */
-function TerrainPicker(vertices, indices, encoding) {
-  ;
+function TerrainPicker(vertices: any, indices: any, encoding: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("vertices", vertices);
+  Check.defined("indices", indices);
+  Check.defined("encoding", encoding);
+  //>>includeEnd('debug');
 
   /**
    * The terrain mesh's vertex buffer.
@@ -130,7 +134,13 @@ function TerrainPickerNode() {
  * @memberof TerrainPickerNode
  */
 TerrainPickerNode.prototype.addChild = function (childIdx) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (childIdx < 0 || childIdx > 3) {
+    throw new DeveloperError(
+      "TerrainPickerNode child index must be between 0 and 3, inclusive.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const childNode = new TerrainPickerNode();
   // Use bitwise operations to get child x,y from child index and parent x,y
@@ -205,7 +215,7 @@ TerrainPicker.prototype.rayIntersect = function (
  * @param terrainPicker The terrain picker to reset.
  * @private
  */
-function reset(terrainPicker, tileTransform) {
+function reset(terrainPicker: any, tileTransform: any) {
   // PERFORMANCE_IDEA: warm-start the terrain picker by building a level on a worker.
   // This currently isn't feasible because you can only copy the vertex buffer to a worker (slow) or transfer ownership (can't do picking on main thread in meantime).
   // SharedArrayBuffers could be used, but most environments do not support them.
@@ -235,7 +245,7 @@ const scratchAABBMax = new Cartesian3();
  * @param {number} level The level of the node.
  * @returns {AxisAlignedBoundingBox} The axis-aligned bounding box for the node.
  */
-function createAABBForNode(x, y, level) {
+function createAABBForNode(x: any, y: any, level: any) {
   const sizeAtLevel = 1.0 / Math.pow(2, level);
 
   const aabbMin = Cartesian3.fromElements(
@@ -265,13 +275,7 @@ function createAABBForNode(x, y, level) {
  * @param {number} bufferIndex The index to use to pack into the buffers.
  * @private
  */
-function packTriangleBuffers(
-  trianglePositionsBuffer,
-  triangleIndicesBuffer,
-  trianglePositions,
-  triangleIndex,
-  bufferIndex,
-) {
+function packTriangleBuffers(trianglePositionsBuffer: any, triangleIndicesBuffer: any, trianglePositions: any, triangleIndex: any, bufferIndex: any, ) {
   Cartesian3.pack(
     trianglePositions[0],
     trianglePositionsBuffer,
@@ -307,7 +311,7 @@ const scratchInterval = new Interval();
  * @param {IntersectingNode[]} intersectingNodes The array to store intersecting nodes in.
  * @private
  */
-function getNodesIntersectingRay(currentNode, ray, intersectingNodes) {
+function getNodesIntersectingRay(currentNode: any, ray: any, intersectingNodes: any) {
   const interval = IntersectionTests.rayAxisAlignedBoundingBox(
     ray,
     currentNode.aabb,
@@ -345,14 +349,7 @@ function getNodesIntersectingRay(currentNode, ray, intersectingNodes) {
  * @returns The closest point in world space, or undefined if no intersection.
  * @private
  */
-function findClosestPointInClosestNode(
-  terrainPicker,
-  intersections,
-  ray,
-  cullBackFaces,
-  mode,
-  projection,
-) {
+function findClosestPointInClosestNode(terrainPicker: any, intersections: any, ray: any, cullBackFaces: any, mode: any, projection: any, ) {
   const sortedIntersections = intersections.sort(function (a, b) {
     return a.interval.start - b.interval.start;
   });
@@ -394,14 +391,7 @@ function findClosestPointInClosestNode(
  * @returns {number} The closest intersection t value along the ray, or Number.MAX_VALUE if no intersection.
  * @private
  */
-function getClosestTriangleInNode(
-  terrainPicker,
-  ray,
-  node,
-  cullBackFaces,
-  mode,
-  projection,
-) {
+function getClosestTriangleInNode(terrainPicker: any, ray: any, node: any, cullBackFaces: any, mode: any, projection: any, ) {
   let result = Number.MAX_VALUE;
   const encoding = terrainPicker._encoding;
   const indices = terrainPicker._indices;
@@ -498,14 +488,7 @@ const scratchCartographic = new Cartographic();
  * @returns {Cartesian3} The result vertex position.
  * @private
  */
-function getVertexPosition(
-  encoding,
-  mode,
-  projection,
-  vertices,
-  index,
-  result,
-) {
+function getVertexPosition(encoding: any, mode: any, projection: any, vertices: any, index: any, result: any, ) {
   let position = encoding.getExaggeratedPosition(vertices, index, result);
   if (mode === SceneMode.SCENE3D) {
     return position;
@@ -538,12 +521,7 @@ function getVertexPosition(
  * @returns {Promise<void>} A promise that resolves when the triangles have been added to the child nodes.
  * @private
  */
-async function addTrianglesToChildrenNodes(
-  inverseTransform,
-  node,
-  triangleIndices,
-  trianglePositions,
-) {
+async function addTrianglesToChildrenNodes(inverseTransform: any, node: any, triangleIndices: any, trianglePositions: any, ) {
   node.buildingChildren = true;
 
   // Prepare data to be sent to a worker
@@ -585,7 +563,7 @@ async function addTrianglesToChildrenNodes(
   // After worker completes, it transfers back a buffer of intersecting triangles for each child node
   // Assign these to the child nodes
   const result = await incrementallyBuildTerrainPickerPromise;
-  result.intersectingTrianglesArrays.forEach((buffer, index) => {
+  result.intersectingTrianglesArrays.forEach((buffer: any, index: any) => {
     node.children[index].intersectingTriangles = new Uint32Array(buffer);
   });
 
@@ -594,5 +572,4 @@ async function addTrianglesToChildrenNodes(
   node.buildingChildren = false;
 }
 
-export { TerrainPicker };
 export default TerrainPicker;

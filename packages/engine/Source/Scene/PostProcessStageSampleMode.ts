@@ -19,5 +19,4 @@ const PostProcessStageSampleMode = {
    */
   LINEAR: 1,
 };
-export { PostProcessStageSampleMode };
 export default PostProcessStageSampleMode;

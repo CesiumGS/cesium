@@ -113,7 +113,20 @@ const maximumScratch = new Cartesian3();
  * const position = encoding.decodePosition(statistics.vertices, index);
  */
 HeightmapTessellator.computeVertices = function (options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options) || !defined(options.heightmap)) {
+    throw new DeveloperError("options.heightmap is required.");
+  }
+  if (!defined(options.width) || !defined(options.height)) {
+    throw new DeveloperError("options.width and options.height are required.");
+  }
+  if (!defined(options.nativeRectangle)) {
+    throw new DeveloperError("options.nativeRectangle is required.");
+  }
+  if (!defined(options.skirtHeight)) {
+    throw new DeveloperError("options.skirtHeight is required.");
+  }
+  //>>includeEnd('debug');
 
   // This function tends to be a performance hotspot for terrain rendering,
   // so it employs a lot of inlining and unrolling as an optimization.
@@ -502,5 +515,4 @@ HeightmapTessellator.computeVertices = function (options) {
     occludeePointInScaledSpace: occludeePointInScaledSpace,
   };
 };
-export { HeightmapTessellator };
 export default HeightmapTessellator;

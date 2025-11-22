@@ -17,8 +17,12 @@ import CesiumInspector from "../CesiumInspector/CesiumInspector.js";
  * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerCesiumInspectorMixin);
  */
-function viewerCesiumInspectorMixin(viewer) {
-  ;
+function viewerCesiumInspectorMixin(viewer: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(viewer)) {
+    throw new DeveloperError("viewer is required.");
+  }
+  //>>includeEnd('debug');
 
   const cesiumInspectorContainer = document.createElement("div");
   cesiumInspectorContainer.className = "cesium-viewer-cesiumInspectorContainer";
@@ -36,5 +40,4 @@ function viewerCesiumInspectorMixin(viewer) {
     },
   });
 }
-export { viewerCesiumInspectorMixin };
 export default viewerCesiumInspectorMixin;

@@ -71,7 +71,9 @@ const ModelType = {
  * @returns {boolean} <code>true</code> if the model is a 3D Tiles format, <code>false</code> otherwise
  */
 ModelType.is3DTiles = function (modelType) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("modelType", modelType);
+  //>>includeEnd('debug');
 
   switch (modelType) {
     case ModelType.TILE_GLTF:
@@ -82,7 +84,10 @@ ModelType.is3DTiles = function (modelType) {
       return true;
     case ModelType.GLTF:
       return false;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("modelType is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 

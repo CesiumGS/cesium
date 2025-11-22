@@ -117,7 +117,9 @@ const MetadataType = {
  * @private
  */
 MetadataType.isVectorType = function (type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
 
   switch (type) {
     case MetadataType.VEC2:
@@ -137,7 +139,9 @@ MetadataType.isVectorType = function (type) {
  * @private
  */
 MetadataType.isMatrixType = function (type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
 
   switch (type) {
     case MetadataType.MAT2:
@@ -158,7 +162,9 @@ MetadataType.isMatrixType = function (type) {
  * @private
  */
 MetadataType.getComponentCount = function (type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
 
   switch (type) {
     case MetadataType.SCALAR:
@@ -178,7 +184,10 @@ MetadataType.getComponentCount = function (type) {
       return 9;
     case MetadataType.MAT4:
       return 16;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(`Invalid metadata type ${type}`);
+    //>>includeEnd('debug');
   }
 };
 

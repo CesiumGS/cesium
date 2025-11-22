@@ -21,7 +21,7 @@ const PackableNumber = {
 
 //We can't use splice for inserting new elements because function apply can't handle
 //a huge number of arguments.  See https://code.google.com/p/chromium/issues/detail?id=56588
-function arrayInsert(array, startIndex, items) {
+function arrayInsert(array: any, startIndex: any, items: any) {
   let i;
   const arrayLength = array.length;
   const itemsLength = items.length;
@@ -40,7 +40,7 @@ function arrayInsert(array, startIndex, items) {
   }
 }
 
-function convertDate(date, epoch) {
+function convertDate(date: any, epoch: any) {
   if (date instanceof JulianDate) {
     return date;
   }
@@ -53,7 +53,7 @@ function convertDate(date, epoch) {
 const timesSpliceArgs = [];
 const valuesSpliceArgs = [];
 
-function mergeNewSamples(epoch, times, values, newData, packedLength) {
+function mergeNewSamples(epoch: any, times: any, values: any, newData: any, packedLength: any) {
   let newDataIndex = 0;
   let i;
   let prevItem;
@@ -155,8 +155,10 @@ function mergeNewSamples(epoch, times, values, newData, packedLength) {
  *
  * @see SampledPositionProperty
  */
-function SampledProperty(type, derivativeTypes) {
-  ;
+function SampledProperty(type: any, derivativeTypes: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("type", type);
+  //>>includeEnd('debug');
 
   let innerType = type;
   if (innerType === Number) {
@@ -577,7 +579,13 @@ SampledProperty.prototype.addSample = function (time, value, derivatives) {
   const innerDerivativeTypes = this._innerDerivativeTypes;
   const hasDerivatives = defined(innerDerivativeTypes);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+  Check.defined("value", value);
+  if (hasDerivatives) {
+    Check.defined("derivatives", derivatives);
+  }
+  //>>includeEnd('debug');
 
   const innerType = this._innerType;
   const data = [];
@@ -619,7 +627,21 @@ SampledProperty.prototype.addSamples = function (
   const innerDerivativeTypes = this._innerDerivativeTypes;
   const hasDerivatives = defined(innerDerivativeTypes);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("times", times);
+  Check.defined("values", values);
+  if (times.length !== values.length) {
+    throw new DeveloperError("times and values must be the same length.");
+  }
+  if (
+    hasDerivatives &&
+    (!defined(derivativeValues) || derivativeValues.length !== times.length)
+  ) {
+    throw new DeveloperError(
+      "times and derivativeValues must be the same length.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const innerType = this._innerType;
   const length = times.length;
@@ -654,7 +676,9 @@ SampledProperty.prototype.addSamples = function (
  * @returns {JulianDate | undefined} The JulianDate time of the sample, or undefined if failed.
  */
 SampledProperty.prototype.getSample = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
 
   const times = this._times;
   const len = times.length;
@@ -680,7 +704,9 @@ SampledProperty.prototype.addSamplesPackedArray = function (
   packedSamples,
   epoch,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("packedSamples", packedSamples);
+  //>>includeEnd('debug');
 
   mergeNewSamples(
     epoch,
@@ -700,7 +726,9 @@ SampledProperty.prototype.addSamplesPackedArray = function (
  * @returns {boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
  */
 SampledProperty.prototype.removeSample = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+  //>>includeEnd('debug');
 
   const index = binarySearch(this._times, time, JulianDate.compare);
   if (index < 0) {
@@ -710,7 +738,7 @@ SampledProperty.prototype.removeSample = function (time) {
   return true;
 };
 
-function removeSamples(property, startIndex, numberToRemove) {
+function removeSamples(property: any, startIndex: any, numberToRemove: any) {
   const packedLength = property._packedLength;
   property._times.splice(startIndex, numberToRemove);
   property._values.splice(
@@ -727,7 +755,9 @@ function removeSamples(property, startIndex, numberToRemove) {
  * @param {TimeInterval} time The time interval for which to remove all samples.
  */
 SampledProperty.prototype.removeSamples = function (timeInterval) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("timeInterval", timeInterval);
+  //>>includeEnd('debug');
 
   const times = this._times;
   let startIndex = binarySearch(times, timeInterval.start, JulianDate.compare);
@@ -822,5 +852,4 @@ SampledProperty.prototype.equals = function (other) {
 
 //Exposed for testing.
 SampledProperty._mergeNewSamples = mergeNewSamples;
-export { SampledProperty };
 export default SampledProperty;

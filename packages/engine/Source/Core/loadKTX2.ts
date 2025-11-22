@@ -79,8 +79,10 @@ loadKTX2.setKTX2SupportedFormats = function (
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  * @private
  */
-function loadKTX2(resourceOrUrlOrBuffer) {
-  ;
+function loadKTX2(resourceOrUrlOrBuffer: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("resourceOrUrlOrBuffer", resourceOrUrlOrBuffer);
+  //>>includeEnd('debug');
 
   let loadPromise;
   if (
@@ -99,5 +101,4 @@ function loadKTX2(resourceOrUrlOrBuffer) {
   });
 }
 
-export { loadKTX2 };
 export default loadKTX2;

@@ -15,7 +15,7 @@ import TimeStandard from "./TimeStandard.js";
  */
 const Simon1994PlanetaryPositions = {};
 
-function computeTdbMinusTtSpice(daysSinceJ2000InTerrestrialTime) {
+function computeTdbMinusTtSpice(daysSinceJ2000InTerrestrialTime: any) {
   /* STK Comments ------------------------------------------------------
    * This function uses constants designed to be consistent with
    * the SPICE Toolkit from JPL version N0051 (unitim.c)
@@ -43,7 +43,7 @@ function computeTdbMinusTtSpice(daysSinceJ2000InTerrestrialTime) {
 
 const TdtMinusTai = 32.184;
 const J2000d = 2451545;
-function taiToTdb(date, result) {
+function taiToTdb(date: any, result: any) {
   //Converts TAI to TT
   result = JulianDate.addSeconds(date, TdtMinusTai, result);
 
@@ -61,21 +61,19 @@ const RadiansPerArcSecond = CesiumMath.RADIANS_PER_ARCSECOND;
 const MetersPerAstronomicalUnit = 1.4959787e11; // IAU 1976 value
 
 const perifocalToEquatorial = new Matrix3();
-function elementsToCartesian(
-  semimajorAxis,
-  eccentricity,
-  inclination,
-  longitudeOfPerigee,
-  longitudeOfNode,
-  meanLongitude,
-  result,
-) {
+function elementsToCartesian(semimajorAxis: any, eccentricity: any, inclination: any, longitudeOfPerigee: any, longitudeOfNode: any, meanLongitude: any, result: any, ) {
   if (inclination < 0.0) {
     inclination = -inclination;
     longitudeOfNode += CesiumMath.PI;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (inclination < 0 || inclination > CesiumMath.PI) {
+    throw new DeveloperError(
+      "The inclination is out of range. Inclination must be greater than or equal to zero and less than or equal to Pi radians.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const radiusOfPeriapsis = semimajorAxis * (1.0 - eccentricity);
   const argumentOfPeriapsis = longitudeOfPerigee - longitudeOfNode;
@@ -86,7 +84,17 @@ function elementsToCartesian(
   );
   const type = chooseOrbit(eccentricity, 0.0);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    type === "Hyperbolic" &&
+    Math.abs(CesiumMath.negativePiToPi(trueAnomaly)) >=
+      Math.acos(-1.0 / eccentricity)
+  ) {
+    throw new DeveloperError(
+      "The true anomaly of the hyperbolic orbit lies outside of the bounds of the hyperbola.",
+    );
+  }
+  //>>includeEnd('debug');
 
   perifocalToCartesianMatrix(
     argumentOfPeriapsis,
@@ -100,7 +108,11 @@ function elementsToCartesian(
 
   const denom = 1.0 + eccentricity * costheta;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (denom <= CesiumMath.Epsilon10) {
+    throw new DeveloperError("elements cannot be converted to cartesian");
+  }
+  //>>includeEnd('debug');
 
   const radius = semilatus / denom;
   if (!defined(result)) {
@@ -114,8 +126,12 @@ function elementsToCartesian(
   return Matrix3.multiplyByVector(perifocalToEquatorial, result, result);
 }
 
-function chooseOrbit(eccentricity, tolerance) {
-  ;
+function chooseOrbit(eccentricity: any, tolerance: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (eccentricity < 0) {
+    throw new DeveloperError("eccentricity cannot be negative.");
+  }
+  //>>includeEnd('debug');
 
   if (eccentricity <= tolerance) {
     return "Circular";
@@ -128,8 +144,12 @@ function chooseOrbit(eccentricity, tolerance) {
 }
 
 // Calculates the true anomaly given the mean anomaly and the eccentricity.
-function meanAnomalyToTrueAnomaly(meanAnomaly, eccentricity) {
-  ;
+function meanAnomalyToTrueAnomaly(meanAnomaly: any, eccentricity: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (eccentricity < 0.0 || eccentricity >= 1.0) {
+    throw new DeveloperError("eccentricity out of range.");
+  }
+  //>>includeEnd('debug');
 
   const eccentricAnomaly = meanAnomalyToEccentricAnomaly(
     meanAnomaly,
@@ -141,8 +161,12 @@ function meanAnomalyToTrueAnomaly(meanAnomaly, eccentricity) {
 const maxIterationCount = 50;
 const keplerEqConvergence = CesiumMath.EPSILON8;
 // Calculates the eccentric anomaly given the mean anomaly and the eccentricity.
-function meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity) {
-  ;
+function meanAnomalyToEccentricAnomaly(meanAnomaly: any, eccentricity: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (eccentricity < 0.0 || eccentricity >= 1.0) {
+    throw new DeveloperError("eccentricity out of range.");
+  }
+  //>>includeEnd('debug');
 
   const revs = Math.floor(meanAnomaly / CesiumMath.TWO_PI);
 
@@ -174,15 +198,25 @@ function meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity) {
     iterationValue = eccentricAnomaly - NRfunction / dNRfunction;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (count >= maxIterationCount) {
+    throw new DeveloperError("Kepler equation did not converge");
+    // STK Components uses a numerical method to find the eccentric anomaly in the case that Kepler's
+    // equation does not converge. We don't expect that to ever be necessary for the reasonable orbits used here.
+  }
+  //>>includeEnd('debug');
 
   eccentricAnomaly = iterationValue + revs * CesiumMath.TWO_PI;
   return eccentricAnomaly;
 }
 
 // Calculates the true anomaly given the eccentric anomaly and the eccentricity.
-function eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity) {
-  ;
+function eccentricAnomalyToTrueAnomaly(eccentricAnomaly: any, eccentricity: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (eccentricity < 0.0 || eccentricity >= 1.0) {
+    throw new DeveloperError("eccentricity out of range.");
+  }
+  //>>includeEnd('debug');
 
   // Calculate the number of previous revolutions
   const revs = Math.floor(eccentricAnomaly / CesiumMath.TWO_PI);
@@ -211,13 +245,12 @@ function eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity) {
 
 // Calculates the transformation matrix to convert from the perifocal (PQW) coordinate
 // system to inertial cartesian coordinates.
-function perifocalToCartesianMatrix(
-  argumentOfPeriapsis,
-  inclination,
-  rightAscension,
-  result,
-) {
-  ;
+function perifocalToCartesianMatrix(argumentOfPeriapsis: any, inclination: any, rightAscension: any, result: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  if (inclination < 0 || inclination > CesiumMath.PI) {
+    throw new DeveloperError("inclination out of range");
+  }
+  //>>includeEnd('debug');
 
   const cosap = Math.cos(argumentOfPeriapsis);
   const sinap = Math.sin(argumentOfPeriapsis);
@@ -317,7 +350,7 @@ const Sl8 = -80 * 1e-7;
 
 const scratchDate = new JulianDate(0, 0.0, TimeStandard.TAI);
 // Gets a point describing the motion of the Earth-Moon barycenter according to the equations described in section 6.
-function computeSimonEarthMoonBarycenter(date, result) {
+function computeSimonEarthMoonBarycenter(date: any, result: any) {
   // t is thousands of years from J2000 TDB
   taiToTdb(date, scratchDate);
   const x =
@@ -386,7 +419,7 @@ function computeSimonEarthMoonBarycenter(date, result) {
 }
 
 // Gets a point describing the position of the moon according to the equations described in section 4.
-function computeSimonMoon(date, result) {
+function computeSimonMoon(date: any, result: any) {
   taiToTdb(date, scratchDate);
   const x =
     scratchDate.dayNumber -
@@ -561,7 +594,7 @@ function computeSimonMoon(date, result) {
 // to determine the position of the Earth relative to the Earth-Moon barycenter.
 const moonEarthMassRatio = 0.012300034; // From 1992 mu value in Table 2
 const factor = (moonEarthMassRatio / (moonEarthMassRatio + 1.0)) * -1;
-function computeSimonEarth(date, result) {
+function computeSimonEarth(date: any, result: any) {
   result = computeSimonMoon(date, result);
   return Cartesian3.multiplyByScalar(result, factor, result);
 }
@@ -635,5 +668,4 @@ Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame = function (
   return result;
 };
 
-export { Simon1994PlanetaryPositions };
 export default Simon1994PlanetaryPositions;

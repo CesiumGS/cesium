@@ -28,8 +28,15 @@ const stopSearchPath =
  * @param {number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
  * @param {Geocoder.DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
  */
-function Geocoder(options) {
-  ;
+function Geocoder(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options) || !defined(options.container)) {
+    throw new DeveloperError("options.container is required.");
+  }
+  if (!defined(options.scene)) {
+    throw new DeveloperError("options.scene is required.");
+  }
+  //>>includeEnd('debug');
 
   const container = getElement(options.container);
   const viewModel = new GeocoderViewModel(options);
@@ -223,5 +230,4 @@ Geocoder.prototype.destroy = function () {
  * @param {GeocoderViewModel} viewModel The view model.
  * @param {Cartesian3|Rectangle} destination The destination result of the geocode.
  */
-export { Geocoder };
 export default Geocoder;

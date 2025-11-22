@@ -38,7 +38,7 @@ const updateFunctions = {
  *
  * @private
  */
-function updateVersion(gltf, options) {
+function updateVersion(gltf: any, options: any) {
   options = options ?? {};
   const targetVersion = options.targetVersion;
   let version = gltf.version;
@@ -81,7 +81,7 @@ function updateVersion(gltf, options) {
   return gltf;
 }
 
-function updateInstanceTechniques(gltf) {
+function updateInstanceTechniques(gltf: any) {
   const materials = gltf.materials;
   for (const materialId in materials) {
     if (Object.prototype.hasOwnProperty.call(materials, materialId)) {
@@ -96,7 +96,7 @@ function updateInstanceTechniques(gltf) {
   }
 }
 
-function setPrimitiveModes(gltf) {
+function setPrimitiveModes(gltf: any) {
   const meshes = gltf.meshes;
   for (const meshId in meshes) {
     if (Object.prototype.hasOwnProperty.call(meshes, meshId)) {
@@ -115,7 +115,7 @@ function setPrimitiveModes(gltf) {
   }
 }
 
-function updateNodes(gltf) {
+function updateNodes(gltf: any) {
   const nodes = gltf.nodes;
   const axis = new Cartesian3();
   const quat = new Quaternion();
@@ -139,7 +139,7 @@ function updateNodes(gltf) {
   }
 }
 
-function updateAnimations(gltf) {
+function updateAnimations(gltf: any) {
   const animations = gltf.animations;
   const accessors = gltf.accessors;
   const bufferViews = gltf.bufferViews;
@@ -194,7 +194,7 @@ function updateAnimations(gltf) {
   }
 }
 
-function removeTechniquePasses(gltf) {
+function removeTechniquePasses(gltf: any) {
   const techniques = gltf.techniques;
   for (const techniqueId in techniques) {
     if (Object.prototype.hasOwnProperty.call(techniques, techniqueId)) {
@@ -218,7 +218,7 @@ function removeTechniquePasses(gltf) {
   }
 }
 
-function glTF08to10(gltf) {
+function glTF08to10(gltf: any) {
   if (!defined(gltf.asset)) {
     gltf.asset = {};
   }
@@ -267,7 +267,7 @@ function glTF08to10(gltf) {
   }
 }
 
-function removeAnimationSamplersIndirection(gltf) {
+function removeAnimationSamplersIndirection(gltf: any) {
   const animations = gltf.animations;
   for (const animationId in animations) {
     if (Object.prototype.hasOwnProperty.call(animations, animationId)) {
@@ -288,7 +288,7 @@ function removeAnimationSamplersIndirection(gltf) {
   }
 }
 
-function objectToArray(object, mapping) {
+function objectToArray(object: any, mapping: any) {
   const array = [];
   for (const id in object) {
     if (Object.prototype.hasOwnProperty.call(object, id)) {
@@ -303,7 +303,7 @@ function objectToArray(object, mapping) {
   return array;
 }
 
-function objectsToArrays(gltf) {
+function objectsToArrays(gltf: any) {
   let i;
   const globalMapping = {
     accessors: {},
@@ -562,7 +562,7 @@ function objectsToArrays(gltf) {
   });
 }
 
-function removeAnimationSamplerNames(gltf) {
+function removeAnimationSamplerNames(gltf: any) {
   ForEach.animation(gltf, function (animation) {
     ForEach.animationSampler(animation, function (sampler) {
       delete sampler.name;
@@ -570,7 +570,7 @@ function removeAnimationSamplerNames(gltf) {
   });
 }
 
-function removeEmptyArrays(gltf) {
+function removeEmptyArrays(gltf: any) {
   for (const topLevelId in gltf) {
     if (Object.prototype.hasOwnProperty.call(gltf, topLevelId)) {
       const array = gltf[topLevelId];
@@ -586,7 +586,7 @@ function removeEmptyArrays(gltf) {
   });
 }
 
-function stripAsset(gltf) {
+function stripAsset(gltf: any) {
   const asset = gltf.asset;
   delete asset.profile;
   delete asset.premultipliedAlpha;
@@ -597,7 +597,7 @@ const knownExtensions = {
   KHR_materials_common: true,
   WEB3D_quantized_attributes: true,
 };
-function requireKnownExtensions(gltf) {
+function requireKnownExtensions(gltf: any) {
   const extensionsUsed = gltf.extensionsUsed;
   gltf.extensionsRequired = gltf.extensionsRequired ?? [];
   if (defined(extensionsUsed)) {
@@ -611,13 +611,13 @@ function requireKnownExtensions(gltf) {
   }
 }
 
-function removeBufferType(gltf) {
+function removeBufferType(gltf: any) {
   ForEach.buffer(gltf, function (buffer) {
     delete buffer.type;
   });
 }
 
-function removeTextureProperties(gltf) {
+function removeTextureProperties(gltf: any) {
   ForEach.texture(gltf, function (texture) {
     delete texture.format;
     delete texture.internalFormat;
@@ -626,7 +626,7 @@ function removeTextureProperties(gltf) {
   });
 }
 
-function requireAttributeSetIndex(gltf) {
+function requireAttributeSetIndex(gltf: any) {
   ForEach.mesh(gltf, function (mesh) {
     ForEach.meshPrimitive(mesh, function (primitive) {
       ForEach.meshPrimitiveAttribute(
@@ -670,7 +670,7 @@ const indexedSemantics = {
   WEIGHT: "WEIGHTS",
   WEIGHTS: "WEIGHTS",
 };
-function underscoreApplicationSpecificSemantics(gltf) {
+function underscoreApplicationSpecificSemantics(gltf: any) {
   const mappedSemantics = {};
   ForEach.mesh(gltf, function (mesh) {
     ForEach.meshPrimitive(mesh, function (primitive) {
@@ -720,7 +720,7 @@ function underscoreApplicationSpecificSemantics(gltf) {
   });
 }
 
-function clampCameraParameters(gltf) {
+function clampCameraParameters(gltf: any) {
   ForEach.camera(gltf, function (camera) {
     const perspective = camera.perspective;
     if (defined(perspective)) {
@@ -736,13 +736,13 @@ function clampCameraParameters(gltf) {
   });
 }
 
-function computeAccessorByteStride(gltf, accessor) {
+function computeAccessorByteStride(gltf: any, accessor: any) {
   return defined(accessor.byteStride) && accessor.byteStride !== 0
     ? accessor.byteStride
     : getAccessorByteStride(gltf, accessor);
 }
 
-function requireByteLength(gltf) {
+function requireByteLength(gltf: any) {
   ForEach.buffer(gltf, function (buffer) {
     if (!defined(buffer.byteLength)) {
       buffer.byteLength = buffer.extras._pipeline.source.length;
@@ -763,7 +763,7 @@ function requireByteLength(gltf) {
   });
 }
 
-function moveByteStrideToBufferView(gltf) {
+function moveByteStrideToBufferView(gltf: any) {
   let i;
   let j;
   let bufferView;
@@ -837,7 +837,7 @@ function moveByteStrideToBufferView(gltf) {
   removeUnusedElements(gltf, ["accessor", "bufferView", "buffer"]);
 }
 
-function requirePositionAccessorMinMax(gltf) {
+function requirePositionAccessorMinMax(gltf: any) {
   ForEach.accessorWithSemantic(gltf, "POSITION", function (accessorId) {
     const accessor = gltf.accessors[accessorId];
     if (!defined(accessor.min) || !defined(accessor.max)) {
@@ -848,7 +848,7 @@ function requirePositionAccessorMinMax(gltf) {
   });
 }
 
-function isNodeEmpty(node) {
+function isNodeEmpty(node: any) {
   return (
     (!defined(node.children) || node.children.length === 0) &&
     (!defined(node.meshes) || node.meshes.length === 0) &&
@@ -871,7 +871,7 @@ function isNodeEmpty(node) {
   );
 }
 
-function deleteNode(gltf, nodeId) {
+function deleteNode(gltf: any, nodeId: any) {
   // Remove from list of nodes in scene
   ForEach.scene(gltf, function (scene) {
     const sceneNodes = scene.nodes;
@@ -903,7 +903,7 @@ function deleteNode(gltf, nodeId) {
   delete gltf.nodes[nodeId];
 }
 
-function removeEmptyNodes(gltf) {
+function removeEmptyNodes(gltf: any) {
   ForEach.node(gltf, function (node, nodeId) {
     if (isNodeEmpty(node)) {
       deleteNode(gltf, nodeId);
@@ -913,7 +913,7 @@ function removeEmptyNodes(gltf) {
   return gltf;
 }
 
-function requireAnimationAccessorMinMax(gltf) {
+function requireAnimationAccessorMinMax(gltf: any) {
   ForEach.animation(gltf, function (animation) {
     ForEach.animationSampler(animation, function (sampler) {
       const accessor = gltf.accessors[sampler.input];
@@ -926,7 +926,7 @@ function requireAnimationAccessorMinMax(gltf) {
   });
 }
 
-function validatePresentAccessorMinMax(gltf) {
+function validatePresentAccessorMinMax(gltf: any) {
   ForEach.accessor(gltf, function (accessor) {
     if (defined(accessor.min) || defined(accessor.max)) {
       const minMax = findAccessorMinMax(gltf, accessor);
@@ -940,7 +940,7 @@ function validatePresentAccessorMinMax(gltf) {
   });
 }
 
-function glTF10to20(gltf) {
+function glTF10to20(gltf: any) {
   gltf.asset = gltf.asset ?? {};
   gltf.asset.version = "2.0";
   // material.instanceTechnique properties should be directly on the material. instanceTechnique is a gltf 0.8 property but is seen in some 1.0 models.
@@ -999,7 +999,7 @@ const defaultBaseColorTextureNames = [
 ];
 const defaultBaseColorFactorNames = ["u_diffuse", "u_diffuse_mat"];
 
-function initializePbrMaterial(material) {
+function initializePbrMaterial(material: any) {
   material.pbrMetallicRoughness = defined(material.pbrMetallicRoughness)
     ? material.pbrMetallicRoughness
     : {};
@@ -1008,15 +1008,15 @@ function initializePbrMaterial(material) {
   material.pbrMetallicRoughness.metallicFactor = 0.0;
 }
 
-function isTexture(value) {
+function isTexture(value: any) {
   return defined(value.index);
 }
 
-function isVec4(value) {
+function isVec4(value: any) {
   return Array.isArray(value) && value.length === 4;
 }
 
-function srgbToLinear(srgb) {
+function srgbToLinear(srgb: any) {
   const linear = new Array(4);
   linear[3] = srgb[3];
 
@@ -1037,7 +1037,7 @@ function srgbToLinear(srgb) {
   return linear;
 }
 
-function convertTechniquesToPbr(gltf, options) {
+function convertTechniquesToPbr(gltf: any, options: any) {
   options = options ?? {};
   const baseColorTextureNames =
     options.baseColorTextureNames ?? defaultBaseColorTextureNames;
@@ -1061,7 +1061,7 @@ function convertTechniquesToPbr(gltf, options) {
   removeExtension(gltf, "KHR_blend");
 }
 
-function assignAsBaseColor(material, baseColor) {
+function assignAsBaseColor(material: any, baseColor: any) {
   if (defined(baseColor)) {
     if (isVec4(baseColor)) {
       material.pbrMetallicRoughness.baseColorFactor = srgbToLinear(baseColor);
@@ -1071,7 +1071,7 @@ function assignAsBaseColor(material, baseColor) {
   }
 }
 
-function assignAsEmissive(material, emissive) {
+function assignAsEmissive(material: any, emissive: any) {
   if (defined(emissive)) {
     if (isVec4(emissive)) {
       material.emissiveFactor = emissive.slice(0, 3);
@@ -1081,7 +1081,7 @@ function assignAsEmissive(material, emissive) {
   }
 }
 
-function convertMaterialsCommonToPbr(gltf) {
+function convertMaterialsCommonToPbr(gltf: any) {
   // Future work: convert KHR_materials_common lights to KHR_lights_punctual
   ForEach.material(gltf, function (material) {
     const materialsCommon = (material.extensions ?? {}).KHR_materials_common;
@@ -1145,5 +1145,4 @@ function convertMaterialsCommonToPbr(gltf) {
   removeExtension(gltf, "KHR_materials_common");
 }
 
-export { updateVersion };
 export default updateVersion;

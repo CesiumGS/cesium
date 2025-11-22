@@ -12,7 +12,7 @@ import parseResponseHeaders from "./parseResponseHeaders.js";
  * @param {string|object} [responseHeaders] The response headers, represented either as an object literal or as a
  *                        string in the format returned by XMLHttpRequest's getAllResponseHeaders() function.
  */
-function RequestErrorEvent(statusCode, response, responseHeaders) {
+function RequestErrorEvent(statusCode: any, response: any, responseHeaders: any) {
   /**
    * The HTTP error status code, such as 404.  If the error does not have a particular
    * HTTP code, this property will be undefined.
@@ -55,5 +55,4 @@ RequestErrorEvent.prototype.toString = function () {
   }
   return str;
 };
-export { RequestErrorEvent };
 export default RequestErrorEvent;

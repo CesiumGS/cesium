@@ -19,7 +19,7 @@ function getBaseUrlFromCesiumScript() {
 }
 
 let a;
-function tryMakeAbsolute(url) {
+function tryMakeAbsolute(url: any) {
   if (typeof document === "undefined") {
     // Node.js and Web Workers. In both cases, the URL will already be absolute.
     return url;
@@ -60,7 +60,13 @@ function getCesiumBaseUrl() {
     baseUrlString = getBaseUrlFromCesiumScript();
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(baseUrlString)) {
+    throw new DeveloperError(
+      "Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL.",
+    );
+  }
+  //>>includeEnd('debug');
 
   baseResource = new Resource({
     url: tryMakeAbsolute(baseUrlString),
@@ -70,12 +76,12 @@ function getCesiumBaseUrl() {
   return baseResource;
 }
 
-function buildModuleUrlFromRequireToUrl(moduleID) {
+function buildModuleUrlFromRequireToUrl(moduleID: any) {
   //moduleID will be non-relative, so require it relative to this module, in Core.
   return tryMakeAbsolute(require.toUrl(`../${moduleID}`));
 }
 
-function buildModuleUrlFromBaseUrl(moduleID) {
+function buildModuleUrlFromBaseUrl(moduleID: any) {
   const resource = getCesiumBaseUrl().getDerivedResource({
     url: moduleID,
   });
@@ -100,7 +106,7 @@ let implementation;
  *   baseLayerPicker: false,
  * });
  */
-function buildModuleUrl(relativeUrl) {
+function buildModuleUrl(relativeUrl: any) {
   if (!defined(implementation)) {
     //select implementation
     if (
@@ -144,5 +150,4 @@ buildModuleUrl.setBaseUrl = function (value) {
  */
 buildModuleUrl.getCesiumBaseUrl = getCesiumBaseUrl;
 
-export { buildModuleUrl };
 export default buildModuleUrl;

@@ -31,7 +31,7 @@ import DeveloperError from "./DeveloperError.js";
  * @see GeometryInstance
  * @see GeometryInstanceAttribute
  */
-function ColorGeometryInstanceAttribute(red, green, blue, alpha) {
+function ColorGeometryInstanceAttribute(red: any, green: any, blue: any, alpha: any) {
   red = red ?? 1.0;
   green = green ?? 1.0;
   blue = blue ?? 1.0;
@@ -120,7 +120,11 @@ Object.defineProperties(ColorGeometryInstanceAttribute.prototype, {
  * });
  */
 ColorGeometryInstanceAttribute.fromColor = function (color) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(color)) {
+    throw new DeveloperError("color is required.");
+  }
+  //>>includeEnd('debug');
 
   return new ColorGeometryInstanceAttribute(
     color.red,
@@ -143,7 +147,11 @@ ColorGeometryInstanceAttribute.fromColor = function (color) {
  * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA, attributes.color);
  */
 ColorGeometryInstanceAttribute.toValue = function (color, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(color)) {
+    throw new DeveloperError("color is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Uint8Array(color.toBytes());
@@ -170,5 +178,4 @@ ColorGeometryInstanceAttribute.equals = function (left, right) {
       left.value[3] === right.value[3])
   );
 };
-export { ColorGeometryInstanceAttribute };
 export default ColorGeometryInstanceAttribute;

@@ -24,7 +24,7 @@ import Rectangle from "./Rectangle.js";
  * @param {number} [options.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
  * the tile tree.
  */
-function GeographicTilingScheme(options) {
+function GeographicTilingScheme(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
@@ -103,7 +103,9 @@ GeographicTilingScheme.prototype.rectangleToNativeRectangle = function (
   rectangle,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("rectangle", rectangle);
+  //>>includeEnd('debug');
 
   const west = CesiumMath.toDegrees(rectangle.west);
   const south = CesiumMath.toDegrees(rectangle.south);
@@ -240,5 +242,4 @@ GeographicTilingScheme.prototype.positionToTileXY = function (
   result.y = yTileCoordinate;
   return result;
 };
-export { GeographicTilingScheme };
 export default GeographicTilingScheme;

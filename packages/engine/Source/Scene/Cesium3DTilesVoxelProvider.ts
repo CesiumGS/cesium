@@ -68,7 +68,7 @@ import Quaternion from "../Core/Quaternion.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function Cesium3DTilesVoxelProvider(options) {
+function Cesium3DTilesVoxelProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const {
@@ -89,7 +89,14 @@ function Cesium3DTilesVoxelProvider(options) {
     maximumTileCount,
   } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("className", className);
+  Check.typeOf.object("names", names);
+  Check.typeOf.object("types", types);
+  Check.typeOf.object("componentTypes", componentTypes);
+  Check.typeOf.string("shape", shape);
+  Check.typeOf.object("dimensions", dimensions);
+  //>>includeEnd('debug');
 
   this._shapeTransform = shapeTransform;
   this._globalTransform = globalTransform;
@@ -376,7 +383,9 @@ Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
  * @see {@link VoxelPrimitive}
  */
 Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   const resource = Resource.createIfNeeded(url);
   const tilesetJson = await resource.fetchJson();
@@ -431,7 +440,7 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
   return provider;
 };
 
-function getTileCount(metadata) {
+function getTileCount(metadata: any) {
   if (!defined(metadata.tileset)) {
     return undefined;
   }
@@ -441,7 +450,7 @@ function getTileCount(metadata) {
   );
 }
 
-function validate(tileset) {
+function validate(tileset: any) {
   const root = tileset.root;
 
   if (!defined(root.content)) {
@@ -470,7 +479,7 @@ function validate(tileset) {
   }
 }
 
-function getShape(tile) {
+function getShape(tile: any) {
   const boundingVolume = tile.boundingVolume;
 
   if (defined(boundingVolume.box)) {
@@ -488,7 +497,7 @@ function getShape(tile) {
   );
 }
 
-function getEllipsoidShape(region) {
+function getEllipsoidShape(region: any) {
   const west = region[0];
   const south = region[1];
   const east = region[2];
@@ -512,7 +521,7 @@ function getEllipsoidShape(region) {
 const scratchScale = new Cartesian3();
 const scratchRotation = new Matrix3();
 
-function getBoxShape(box) {
+function getBoxShape(box: any) {
   const obb = OrientedBoundingBox.unpack(box);
   const scale = Matrix3.getScale(obb.halfAxes, scratchScale);
   const rotation = Matrix3.getRotation(obb.halfAxes, scratchRotation);
@@ -525,7 +534,7 @@ function getBoxShape(box) {
   };
 }
 
-function getCylinderShape(cylinder) {
+function getCylinderShape(cylinder: any) {
   const {
     minRadius,
     maxRadius,
@@ -536,7 +545,15 @@ function getCylinderShape(cylinder) {
     rotation = [0, 0, 0, 1],
   } = cylinder;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("minRadius", minRadius);
+  Check.typeOf.number("maxRadius", maxRadius);
+  Check.typeOf.number("height", height);
+  Check.typeOf.number("minAngle", minAngle);
+  Check.typeOf.number("maxAngle", maxAngle);
+  Check.typeOf.object("translation", translation);
+  Check.typeOf.object("rotation", rotation);
+  //>>includeEnd('debug');
 
   const minHeight = -0.5 * height + translation[2];
   const maxHeight = 0.5 * height + translation[2];
@@ -555,7 +572,7 @@ function getCylinderShape(cylinder) {
   };
 }
 
-function getMetadataSchemaLoader(tilesetJson, resource) {
+function getMetadataSchemaLoader(tilesetJson: any, resource: any) {
   const { schemaUri, schema } = tilesetJson;
   if (!defined(schemaUri)) {
     return ResourceCache.getSchemaLoader({ schema });
@@ -567,7 +584,7 @@ function getMetadataSchemaLoader(tilesetJson, resource) {
   });
 }
 
-function getAttributeInfo(metadata, className) {
+function getAttributeInfo(metadata: any, className: any) {
   const { schema, statistics } = metadata;
   const classStatistics = statistics?.classes[className];
   const properties = schema.classes[className].properties;
@@ -583,12 +600,12 @@ function getAttributeInfo(metadata, className) {
     return { id, type, componentType, minValue, maxValue };
   });
 
-  const names = propertyInfo.map((info) => info.id);
-  const types = propertyInfo.map((info) => info.type);
-  const componentTypes = propertyInfo.map((info) => info.componentType);
+  const names = propertyInfo.map((info: any) => info.id);
+  const types = propertyInfo.map((info: any) => info.type);
+  const componentTypes = propertyInfo.map((info: any) => info.componentType);
 
-  const minimumValues = propertyInfo.map((info) => info.minValue);
-  const maximumValues = propertyInfo.map((info) => info.maxValue);
+  const minimumValues = propertyInfo.map((info: any) => info.minValue);
+  const maximumValues = propertyInfo.map((info: any) => info.maxValue);
   const hasMinimumValues = minimumValues.some(defined);
 
   return {
@@ -601,7 +618,7 @@ function getAttributeInfo(metadata, className) {
   };
 }
 
-function copyArray(values, length) {
+function copyArray(values: any, length: any) {
   // Copy input values into a new array of a specified length.
   // If the input is not an array, its value will be copied into the first element
   // of the returned array. If the input is an array shorter than the returned
@@ -611,7 +628,7 @@ function copyArray(values, length) {
     return;
   }
   const valuesArray = Array.isArray(values) ? values : [values];
-  return Array.from({ length }, (v, i) => valuesArray[i]);
+  return Array.from({ length }, (v: any, i: any) => valuesArray[i]);
 }
 
 /**
@@ -621,7 +638,7 @@ function copyArray(values, length) {
  * @returns {Promise<ImplicitSubtree>} The subtree at the given coordinate
  * @private
  */
-async function getSubtree(provider, subtreeCoord) {
+async function getSubtree(provider: any, subtreeCoord: any) {
   const implicitTileset = provider._implicitTileset;
   const subtreeCache = provider._subtreeCache;
 
@@ -740,5 +757,4 @@ Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
   return VoxelContent.fromGltf(gltfResource);
 };
 
-export { Cesium3DTilesVoxelProvider };
 export default Cesium3DTilesVoxelProvider;

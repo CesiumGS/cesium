@@ -91,7 +91,7 @@ Cesium3DTilesetSkipTraversal.selectTiles = function (tileset, frameState) {
  * @param {Cesium3DTile} root
  * @param {FrameState} frameState
  */
-function selectDescendants(root, frameState) {
+function selectDescendants(root: any, frameState: any) {
   const { updateTile, touchTile, selectTile } = Cesium3DTilesetTraversal;
   const stack = descendantTraversal.stack;
   stack.push(root);
@@ -127,7 +127,7 @@ function selectDescendants(root, frameState) {
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
  */
-function selectDesiredTile(tile, frameState) {
+function selectDesiredTile(tile: any, frameState: any) {
   // If this tile is not loaded attempt to select its ancestor instead
   const loadedTile = tile.contentAvailable
     ? tile
@@ -149,7 +149,7 @@ function selectDesiredTile(tile, frameState) {
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
  */
-function updateTileAncestorContentLinks(tile, frameState) {
+function updateTileAncestorContentLinks(tile: any, frameState: any) {
   tile._ancestorWithContent = undefined;
   tile._ancestorWithContentAvailable = undefined;
 
@@ -182,7 +182,7 @@ function updateTileAncestorContentLinks(tile, frameState) {
  * @param {Cesium3DTile} tile
  * @returns {boolean} true if this tile should not be skipped
  */
-function reachedSkippingThreshold(tileset, tile) {
+function reachedSkippingThreshold(tileset: any, tile: any) {
   const ancestor = tile._ancestorWithContent;
   return (
     !tileset.immediatelyLoadDesiredLevelOfDetail &&
@@ -201,7 +201,7 @@ function reachedSkippingThreshold(tileset, tile) {
  * @param {FrameState} frameState
  * @returns {boolean}
  */
-function updateAndPushChildren(tile, stack, frameState) {
+function updateAndPushChildren(tile: any, stack: any, frameState: any) {
   const { tileset, children } = tile;
   const { updateTile, loadTile, touchTile } = Cesium3DTilesetTraversal;
 
@@ -237,7 +237,7 @@ function updateAndPushChildren(tile, stack, frameState) {
  * @param {number} baseScreenSpaceError
  * @returns {boolean}
  */
-function inBaseTraversal(tile, baseScreenSpaceError) {
+function inBaseTraversal(tile: any, baseScreenSpaceError: any) {
   const { tileset } = tile;
   if (tileset.immediatelyLoadDesiredLevelOfDetail) {
     return false;
@@ -263,7 +263,7 @@ function inBaseTraversal(tile, baseScreenSpaceError) {
  * @param {Cesium3DTile} root
  * @param {FrameState} frameState
  */
-function executeTraversal(root, frameState) {
+function executeTraversal(root: any, frameState: any) {
   const { tileset } = root;
   const baseScreenSpaceError = tileset.immediatelyLoadDesiredLevelOfDetail
     ? Number.MAX_VALUE
@@ -350,7 +350,7 @@ function executeTraversal(root, frameState) {
  * @param {Cesium3DTile} root
  * @param {FrameState} frameState
  */
-function traverseAndSelect(root, frameState) {
+function traverseAndSelect(root: any, frameState: any) {
   const { selectTile, canTraverse } = Cesium3DTilesetTraversal;
   const { stack, ancestorStack } = selectionTraversal;
   let lastAncestor;
@@ -417,5 +417,4 @@ function traverseAndSelect(root, frameState) {
   }
 }
 
-export { Cesium3DTilesetSkipTraversal };
 export default Cesium3DTilesetSkipTraversal;

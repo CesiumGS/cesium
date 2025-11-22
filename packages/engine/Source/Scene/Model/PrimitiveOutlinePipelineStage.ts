@@ -96,5 +96,4 @@ PrimitiveOutlinePipelineStage.process = function (
   shaderBuilder.addFragmentLines(PrimitiveOutlineStageFS);
 };
 
-export { PrimitiveOutlinePipelineStage };
 export default PrimitiveOutlinePipelineStage;

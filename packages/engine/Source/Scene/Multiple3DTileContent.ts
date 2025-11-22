@@ -32,7 +32,7 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function Multiple3DTileContent(tileset, tile, tilesetResource, contentsJson) {
+function Multiple3DTileContent(tileset: any, tile: any, tilesetResource: any, contentsJson: any) {
   this._tileset = tileset;
   this._tile = tile;
   this._tilesetResource = tilesetResource;
@@ -274,7 +274,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
       return undefined;
     },
     set: function () {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError("Multiple3DTileContent cannot have metadata");
+      //>>includeEnd('debug');
     },
   },
 
@@ -301,7 +303,11 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
       return undefined;
     },
     set: function () {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError(
+        "Multiple3DTileContent cannot have group metadata",
+      );
+      //>>includeEnd('debug');
     },
   },
 
@@ -324,13 +330,13 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 });
 
-function updatePendingRequests(multipleContents, deltaRequestCount) {
+function updatePendingRequests(multipleContents: any, deltaRequestCount: any) {
   multipleContents._requestsInFlight += deltaRequestCount;
   multipleContents.tileset.statistics.numberOfPendingRequests +=
     deltaRequestCount;
 }
 
-function cancelPendingRequests(multipleContents, originalContentState) {
+function cancelPendingRequests(multipleContents: any, originalContentState: any) {
   multipleContents._cancelCount++;
 
   // reset the tile's content state to try again later.
@@ -394,7 +400,7 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
  * @return {boolean} True if the request scheduler has enough open slots for all inner contents
  * @private
  */
-function canScheduleAllRequests(serverKeys) {
+function canScheduleAllRequests(serverKeys: any) {
   const requestCountsByServer = {};
   for (let i = 0; i < serverKeys.length; i++) {
     const serverKey = serverKeys[i];
@@ -416,12 +422,7 @@ function canScheduleAllRequests(serverKeys) {
   return RequestScheduler.heapHasOpenSlots(serverKeys.length);
 }
 
-function requestInnerContent(
-  multipleContents,
-  index,
-  originalCancelCount,
-  originalContentState,
-) {
+function requestInnerContent(multipleContents: any, index: any, originalCancelCount: any, originalContentState: any, ) {
   // it is important to clone here. The fetchArrayBuffer() below here uses
   // throttling, but other uses of the resources do not.
   const contentResource =
@@ -486,7 +487,7 @@ function requestInnerContent(
     });
 }
 
-async function createInnerContents(multipleContents) {
+async function createInnerContents(multipleContents: any) {
   const originalCancelCount = multipleContents._cancelCount;
   const arrayBuffers = await Promise.all(multipleContents._arrayFetchPromises);
   // Request have been cancelled
@@ -494,7 +495,7 @@ async function createInnerContents(multipleContents) {
     return;
   }
 
-  const promises = arrayBuffers.map((arrayBuffer, i) =>
+  const promises = arrayBuffers.map((arrayBuffer: any, i: any) =>
     createInnerContent(multipleContents, arrayBuffer, i),
   );
 
@@ -516,7 +517,7 @@ async function createInnerContents(multipleContents) {
   return contents;
 }
 
-async function createInnerContent(multipleContents, arrayBuffer, index) {
+async function createInnerContent(multipleContents: any, arrayBuffer: any, index: any) {
   if (!defined(arrayBuffer)) {
     // Content was not fetched. The error was handled in
     // the fetch promise. Return undefined to indicate partial failure.
@@ -581,7 +582,7 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
   }
 }
 
-function handleInnerContentFailed(multipleContents, index, error) {
+function handleInnerContentFailed(multipleContents: any, index: any, error: any) {
   const tileset = multipleContents._tileset;
   const url = multipleContents._innerContentResources[index].url;
   const message = defined(error.message) ? error.message : error.toString();
@@ -713,5 +714,4 @@ Multiple3DTileContent.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { Multiple3DTileContent };
 export default Multiple3DTileContent;

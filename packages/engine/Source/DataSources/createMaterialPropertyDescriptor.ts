@@ -5,7 +5,7 @@ import ColorMaterialProperty from "./ColorMaterialProperty.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import ImageMaterialProperty from "./ImageMaterialProperty.js";
 
-function createMaterialProperty(value) {
+function createMaterialProperty(value: any) {
   if (value instanceof Color) {
     return new ColorMaterialProperty(value);
   }
@@ -21,14 +21,15 @@ function createMaterialProperty(value) {
     return result;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(`Unable to infer material type: ${value}`);
+  //>>includeEnd('debug');
 }
 
 /**
  * @private
  */
-function createMaterialPropertyDescriptor(name, configurable) {
+function createMaterialPropertyDescriptor(name: any, configurable: any) {
   return createPropertyDescriptor(name, configurable, createMaterialProperty);
 }
-export { createMaterialPropertyDescriptor };
 export default createMaterialPropertyDescriptor;

@@ -19,8 +19,12 @@ import createCommand from "../createCommand.js";
  *        message to display when a low frame rate is detected.  The message is interpeted as HTML, so make sure
  *        it comes from a trusted source so that your application is not vulnerable to cross-site scripting attacks.
  */
-function PerformanceWatchdogViewModel(options) {
-  ;
+function PerformanceWatchdogViewModel(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options) || !defined(options.scene)) {
+    throw new DeveloperError("options.scene is required.");
+  }
+  //>>includeEnd('debug');
 
   this._scene = options.scene;
 
@@ -105,5 +109,4 @@ PerformanceWatchdogViewModel.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { PerformanceWatchdogViewModel };
 export default PerformanceWatchdogViewModel;

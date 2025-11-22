@@ -44,8 +44,15 @@ const columbusViewPath =
  *
  * const sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
  */
-function SceneModePicker(container, scene, duration) {
-  ;
+function SceneModePicker(container: any, scene: any, duration: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -198,5 +205,4 @@ SceneModePicker.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { SceneModePicker };
 export default SceneModePicker;

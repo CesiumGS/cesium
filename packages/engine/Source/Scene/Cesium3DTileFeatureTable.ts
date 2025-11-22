@@ -4,21 +4,14 @@ import defined from "../Core/defined.js";
 /**
  * @private
  */
-function Cesium3DTileFeatureTable(featureTableJson, featureTableBinary) {
+function Cesium3DTileFeatureTable(featureTableJson: any, featureTableBinary: any) {
   this.json = featureTableJson;
   this.buffer = featureTableBinary;
   this._cachedTypedArrays = {};
   this.featuresLength = 0;
 }
 
-function getTypedArrayFromBinary(
-  featureTable,
-  semantic,
-  componentType,
-  componentLength,
-  count,
-  byteOffset,
-) {
+function getTypedArrayFromBinary(featureTable: any, semantic: any, componentType: any, componentLength: any, count: any, byteOffset: any, ) {
   const cachedTypedArrays = featureTable._cachedTypedArrays;
   let typedArray = cachedTypedArrays[semantic];
   if (!defined(typedArray)) {
@@ -33,7 +26,7 @@ function getTypedArrayFromBinary(
   return typedArray;
 }
 
-function getTypedArrayFromArray(featureTable, semantic, componentType, array) {
+function getTypedArrayFromArray(featureTable: any, semantic: any, componentType: any, array: any) {
   const cachedTypedArrays = featureTable._cachedTypedArrays;
   let typedArray = cachedTypedArrays[semantic];
   if (!defined(typedArray)) {
@@ -128,5 +121,4 @@ Cesium3DTileFeatureTable.prototype.getProperty = function (
 
   return result;
 };
-export { Cesium3DTileFeatureTable };
 export default Cesium3DTileFeatureTable;

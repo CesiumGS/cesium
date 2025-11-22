@@ -151,7 +151,7 @@ import ShadowMode from "./ShadowMode.js";
  * @see ClassificationPrimitive
  * @see GroundPrimitive
  */
-function Primitive(options) {
+function Primitive(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -272,7 +272,18 @@ function Primitive(options) {
    */
   this.rtcCenter = options.rtcCenter;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    defined(this.rtcCenter) &&
+    (!defined(this.geometryInstances) ||
+      (Array.isArray(this.geometryInstances) &&
+        this.geometryInstances.length !== 1))
+  ) {
+    throw new DeveloperError(
+      "Relative-to-center rendering only supports one geometry instance.",
+    );
+  }
+  //>>includeEnd('debug');
 
   /**
    * Determines whether this primitive casts or receives shadows from light sources.
@@ -470,7 +481,7 @@ Object.defineProperties(Primitive.prototype, {
   },
 });
 
-function getCommonPerInstanceAttributeNames(instances) {
+function getCommonPerInstanceAttributeNames(instances: any) {
   const length = instances.length;
 
   const attributesInAllInstances = [];
@@ -511,7 +522,7 @@ const scratchGetAttributeCartesian2 = new Cartesian2();
 const scratchGetAttributeCartesian3 = new Cartesian3();
 const scratchGetAttributeCartesian4 = new Cartesian4();
 
-function getAttributeValue(value) {
+function getAttributeValue(value: any) {
   const componentsPerAttribute = value.length;
   if (componentsPerAttribute === 1) {
     return value[0];
@@ -524,7 +535,7 @@ function getAttributeValue(value) {
   }
 }
 
-function createBatchTable(primitive, context) {
+function createBatchTable(primitive: any, context: any) {
   const geometryInstances = primitive.geometryInstances;
   const instances = Array.isArray(geometryInstances)
     ? geometryInstances
@@ -656,7 +667,7 @@ function createBatchTable(primitive, context) {
   primitive._batchTableOffsetAttribute2DIndex = offset2DIndex;
 }
 
-function cloneAttribute(attribute) {
+function cloneAttribute(attribute: any) {
   let clonedValues;
   if (Array.isArray(attribute.values)) {
     clonedValues = attribute.values.slice(0);
@@ -671,7 +682,7 @@ function cloneAttribute(attribute) {
   });
 }
 
-function cloneGeometry(geometry) {
+function cloneGeometry(geometry: any) {
   const attributes = geometry.attributes;
   const newAttributes = new GeometryAttributes();
   for (const property in attributes) {
@@ -698,7 +709,7 @@ function cloneGeometry(geometry) {
   });
 }
 
-function cloneInstance(instance, geometry) {
+function cloneInstance(instance: any, geometry: any) {
   return {
     geometry: geometry,
     attributes: instance.attributes,
@@ -839,7 +850,16 @@ Primitive._updateColorAttribute = function (
     return vertexShaderSource;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    isDepthFail &&
+    !defined(primitive._batchTableAttributeIndices.depthFailColor)
+  ) {
+    throw new DeveloperError(
+      "A depthFailColor per-instance attribute is required when using a depth fail appearance that uses a color attribute.",
+    );
+  }
+  //>>includeEnd('debug');
 
   let modifiedVS = vertexShaderSource;
   modifiedVS = modifiedVS.replace(/in\s+vec4\s+color;/g, "");
@@ -857,7 +877,7 @@ Primitive._updateColorAttribute = function (
   return modifiedVS;
 };
 
-function appendPickToVertexShader(source) {
+function appendPickToVertexShader(source: any) {
   const renamedVS = ShaderSource.replaceMain(source, "czm_non_pick_main");
   const pickMain =
     "out vec4 v_pickColor; \n" +
@@ -870,7 +890,7 @@ function appendPickToVertexShader(source) {
   return `${renamedVS}\n${pickMain}`;
 }
 
-function appendPickToFragmentShader(source) {
+function appendPickToFragmentShader(source: any) {
   return `in vec4 v_pickColor;\n${source}`;
 }
 
@@ -982,7 +1002,7 @@ Primitive._appendDistanceDisplayConditionToShader = function (
   return `${renamedVS}\n${distanceDisplayConditionMain}`;
 };
 
-function modifyForEncodedNormals(primitive, vertexShaderSource) {
+function modifyForEncodedNormals(primitive: any, vertexShaderSource: any) {
   if (!primitive.compressVertices) {
     return vertexShaderSource;
   }
@@ -1058,7 +1078,7 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   return [attributeDecl, globalDecl, modifiedVS, compressedMain].join("\n");
 }
 
-function depthClampVS(vertexShaderSource) {
+function depthClampVS(vertexShaderSource: any) {
   let modifiedVS = ShaderSource.replaceMain(
     vertexShaderSource,
     "czm_non_depth_clamp_main",
@@ -1071,7 +1091,7 @@ function depthClampVS(vertexShaderSource) {
   return modifiedVS;
 }
 
-function depthClampFS(fragmentShaderSource) {
+function depthClampFS(fragmentShaderSource: any) {
   let modifiedFS = ShaderSource.replaceMain(
     fragmentShaderSource,
     "czm_non_depth_clamp_main",
@@ -1088,7 +1108,7 @@ function depthClampFS(fragmentShaderSource) {
   return modifiedFS;
 }
 
-function validateShaderMatching(shaderProgram, attributeLocations) {
+function validateShaderMatching(shaderProgram: any, attributeLocations: any) {
   // For a VAO and shader program to be compatible, the VAO must have
   // all active attribute in the shader program.  The VAO may have
   // extra attributes with the only concern being a potential
@@ -1100,10 +1120,20 @@ function validateShaderMatching(shaderProgram, attributeLocations) {
   // to match the shader program.
   const shaderAttributes = shaderProgram.vertexAttributes;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  for (const name in shaderAttributes) {
+    if (shaderAttributes.hasOwnProperty(name)) {
+      if (!defined(attributeLocations[name])) {
+        throw new DeveloperError(
+          `Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input '${name}', which was not computed as part of the Geometry.  Use the appearance's vertexFormat property when constructing the geometry.`,
+        );
+      }
+    }
+  }
+  //>>includeEnd('debug');
 }
 
-function getUniformFunction(uniforms, name) {
+function getUniformFunction(uniforms: any, name: any) {
   return function () {
     return uniforms[name];
   };
@@ -1116,7 +1146,7 @@ const numberOfCreationWorkers = Math.max(
 let createGeometryTaskProcessors;
 const combineGeometryTaskProcessor = new TaskProcessor("combineGeometry");
 
-function loadAsynchronous(primitive, frameState) {
+function loadAsynchronous(primitive: any, frameState: any) {
   let instances;
   let geometry;
   let i;
@@ -1136,7 +1166,16 @@ function loadAsynchronous(primitive, frameState) {
       geometry = instances[i].geometry;
       instanceIds.push(instances[i].id);
 
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (
+        (defined(geometry._workerName) && defined(geometry._workerPath)) ||
+        (!defined(geometry._workerName) && !defined(geometry._workerPath))
+      ) {
+        throw new DeveloperError(
+          "Must define either _workerName or _workerPath for asynchronous geometry.",
+        );
+      }
+      //>>includeEnd('debug');
 
       subTasks.push({
         moduleName: geometry._workerName,
@@ -1267,7 +1306,7 @@ function loadAsynchronous(primitive, frameState) {
   }
 }
 
-function loadSynchronous(primitive, frameState) {
+function loadSynchronous(primitive: any, frameState: any) {
   const instances = Array.isArray(primitive.geometryInstances)
     ? primitive.geometryInstances
     : [primitive.geometryInstances];
@@ -1330,7 +1369,7 @@ function loadSynchronous(primitive, frameState) {
   }
 }
 
-function recomputeBoundingSpheres(primitive, frameState) {
+function recomputeBoundingSpheres(primitive: any, frameState: any) {
   const offsetIndex = primitive._batchTableAttributeIndices.offset;
   if (!primitive._recomputeBoundingSpheres || !defined(offsetIndex)) {
     primitive._recomputeBoundingSpheres = false;
@@ -1427,7 +1466,7 @@ const scratchBoundingSphereCartographic = new Cartographic();
 const scratchBoundingSphereCenter2D = new Cartesian3();
 const scratchBoundingSphere = new BoundingSphere();
 
-function updateBatchTableBoundingSpheres(primitive, frameState) {
+function updateBatchTableBoundingSpheres(primitive: any, frameState: any) {
   const hasDistanceDisplayCondition = defined(
     primitive._batchTableAttributeIndices.distanceDisplayCondition,
   );
@@ -1502,7 +1541,7 @@ function updateBatchTableBoundingSpheres(primitive, frameState) {
 
 const offsetScratchCartesian = new Cartesian3();
 const offsetCenterScratch = new Cartesian3();
-function updateBatchTableOffsets(primitive, frameState) {
+function updateBatchTableOffsets(primitive: any, frameState: any) {
   const hasOffset = defined(primitive._batchTableAttributeIndices.offset);
   if (
     !hasOffset ||
@@ -1580,7 +1619,7 @@ function updateBatchTableOffsets(primitive, frameState) {
   primitive._batchTableOffsetsUpdated = true;
 }
 
-function createVertexArray(primitive, frameState) {
+function createVertexArray(primitive: any, frameState: any) {
   const attributeLocations = primitive._attributeLocations;
   const geometries = primitive._geometries;
   const scene3DOnly = frameState.scene3DOnly;
@@ -1638,7 +1677,7 @@ function createVertexArray(primitive, frameState) {
   setReady(primitive, frameState, PrimitiveState.COMPLETE, undefined);
 }
 
-function createRenderStates(primitive, context, appearance, twoPasses) {
+function createRenderStates(primitive: any, context: any, appearance: any, twoPasses: any) {
   let renderState = appearance.getRenderState();
   let rs;
 
@@ -1682,7 +1721,7 @@ function createRenderStates(primitive, context, appearance, twoPasses) {
   }
 }
 
-function createShaderProgram(primitive, frameState, appearance) {
+function createShaderProgram(primitive: any, frameState: any, appearance: any) {
   const context = frameState.context;
 
   const attributeLocations = primitive._attributeLocations;
@@ -1747,7 +1786,7 @@ function createShaderProgram(primitive, frameState, appearance) {
 const modifiedModelViewScratch = new Matrix4();
 const rtcScratch = new Cartesian3();
 
-function getUniforms(primitive, appearance, material, frameState) {
+function getUniforms(primitive: any, appearance: any, material: any, frameState: any) {
   // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
   const materialUniformMap = defined(material) ? material._uniforms : undefined;
   const appearanceUniformMap = {};
@@ -1756,7 +1795,14 @@ function getUniforms(primitive, appearance, material, frameState) {
     // Convert to uniform map of functions for the renderer
     for (const name in appearanceUniforms) {
       if (appearanceUniforms.hasOwnProperty(name)) {
-        ;
+        //>>includeStart('debug', pragmas.debug);
+        if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
+          // Later, we could rename uniforms behind-the-scenes if needed.
+          throw new DeveloperError(
+            `Appearance and material have a uniform with the same name: ${name}`,
+          );
+        }
+        //>>includeEnd('debug');
 
         appearanceUniformMap[name] = getUniformFunction(
           appearanceUniforms,
@@ -1793,16 +1839,7 @@ function getUniforms(primitive, appearance, material, frameState) {
   return uniforms;
 }
 
-function createCommands(
-  primitive,
-  appearance,
-  material,
-  translucent,
-  twoPasses,
-  colorCommands,
-  pickCommands,
-  frameState,
-) {
+function createCommands(primitive: any, appearance: any, material: any, translucent: any, twoPasses: any, colorCommands: any, pickCommands: any, frameState: any, ) {
   const uniforms = getUniforms(primitive, appearance, material, frameState);
 
   let depthFailUniforms;
@@ -1948,17 +1985,17 @@ Primitive._updateBoundingVolumes = function (
   }
 };
 
-function updateAndQueueCommands(
-  primitive,
-  frameState,
-  colorCommands,
-  pickCommands,
-  modelMatrix,
-  cull,
-  debugShowBoundingVolume,
-  twoPasses,
-) {
-  ;
+function updateAndQueueCommands(primitive: any, frameState: any, colorCommands: any, pickCommands: any, modelMatrix: any, cull: any, debugShowBoundingVolume: any, twoPasses: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    frameState.mode !== SceneMode.SCENE3D &&
+    !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)
+  ) {
+    throw new DeveloperError(
+      "Primitive.modelMatrix is only supported in 3D mode.",
+    );
+  }
+  //>>includeEnd('debug');
 
   Primitive._updateBoundingVolumes(primitive, frameState, modelMatrix);
 
@@ -2038,7 +2075,13 @@ Primitive.prototype.update = function (frameState) {
     throw this._error;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
+    throw new DeveloperError(
+      "RTC rendering is only available for 3D only scenes.",
+    );
+  }
+  //>>includeEnd('debug');
 
   if (this._state === PrimitiveState.FAILED) {
     return;
@@ -2168,7 +2211,7 @@ Primitive.prototype.update = function (frameState) {
 
 const offsetBoundingSphereScratch1 = new BoundingSphere();
 const offsetBoundingSphereScratch2 = new BoundingSphere();
-function transformBoundingSphere(boundingSphere, offset, offsetAttribute) {
+function transformBoundingSphere(boundingSphere: any, offset: any, offsetAttribute: any) {
   if (offsetAttribute === GeometryOffsetAttribute.TOP) {
     const origBS = BoundingSphere.clone(
       boundingSphere,
@@ -2191,7 +2234,7 @@ function transformBoundingSphere(boundingSphere, offset, offsetAttribute) {
   return boundingSphere;
 }
 
-function createGetFunction(batchTable, instanceIndex, attributeIndex) {
+function createGetFunction(batchTable: any, instanceIndex: any, attributeIndex: any) {
   return function () {
     const attributeValue = batchTable.getBatchedAttribute(
       instanceIndex,
@@ -2212,15 +2255,20 @@ function createGetFunction(batchTable, instanceIndex, attributeIndex) {
   };
 }
 
-function createSetFunction(
-  batchTable,
-  instanceIndex,
-  attributeIndex,
-  primitive,
-  name,
-) {
+function createSetFunction(batchTable: any, instanceIndex: any, attributeIndex: any, primitive: any, name: any, ) {
   return function (value) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (
+      !defined(value) ||
+      !defined(value.length) ||
+      value.length < 1 ||
+      value.length > 4
+    ) {
+      throw new DeveloperError(
+        "value must be and array with length between 1 and 4.",
+      );
+    }
+    //>>includeEnd('debug');
     const attributeValue = getAttributeValue(value);
     batchTable.setBatchedAttribute(
       instanceIndex,
@@ -2236,7 +2284,7 @@ function createSetFunction(
 
 const offsetScratch = new Cartesian3();
 
-function createBoundingSphereProperties(primitive, properties, index) {
+function createBoundingSphereProperties(primitive: any, properties: any, index: any) {
   properties.boundingSphere = {
     get: function () {
       let boundingSphere = primitive._instanceBoundingSpheres[index];
@@ -2269,7 +2317,7 @@ function createBoundingSphereProperties(primitive, properties, index) {
   };
 }
 
-function createPickIdProperty(primitive, properties, index) {
+function createPickIdProperty(primitive: any, properties: any, index: any) {
   properties.pickId = {
     get: function () {
       return primitive._pickIds[index];
@@ -2293,7 +2341,16 @@ function createPickIdProperty(primitive, properties, index) {
  * attributes.offset = Cesium.OffsetGeometryInstanceAttribute.toValue(Cartesian3.IDENTITY);
  */
 Primitive.prototype.getGeometryInstanceAttributes = function (id) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(id)) {
+    throw new DeveloperError("id is required");
+  }
+  if (!defined(this._batchTable)) {
+    throw new DeveloperError(
+      "must call update before calling getGeometryInstanceAttributes",
+    );
+  }
+  //>>includeEnd('debug');
 
   let attributes = this._perInstanceAttributeCache.get(id);
   if (defined(attributes)) {
@@ -2405,7 +2462,7 @@ Primitive.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-function setReady(primitive, frameState, state, error) {
+function setReady(primitive: any, frameState: any, state: any, error: any) {
   primitive._error = error;
   primitive._state = state;
 
@@ -2420,5 +2477,4 @@ function setReady(primitive, frameState, state, error) {
     return true;
   });
 }
-export { Primitive };
 export default Primitive;

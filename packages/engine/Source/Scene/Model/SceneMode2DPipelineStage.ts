@@ -137,7 +137,7 @@ SceneMode2DPipelineStage.process = function (
 const scratchProjectedMin = new Cartesian3();
 const scratchProjectedMax = new Cartesian3();
 
-function computeBoundingSphere2D(renderResources, modelMatrix, frameState) {
+function computeBoundingSphere2D(renderResources: any, modelMatrix: any, frameState: any) {
   // Compute the bounding sphere in 2D.
   const transformedPositionMin = Matrix4.multiplyByPoint(
     modelMatrix,
@@ -172,7 +172,7 @@ function computeBoundingSphere2D(renderResources, modelMatrix, frameState) {
 
 const scratchPosition = new Cartesian3();
 
-function dequantizePositionsTypedArray(typedArray, quantization) {
+function dequantizePositionsTypedArray(typedArray: any, quantization: any) {
   // Draco compression is normally handled in the dequantization stage
   // in the shader, but it must be decoded here in order to project
   // the positions to 2D / CV.
@@ -205,12 +205,7 @@ function dequantizePositionsTypedArray(typedArray, quantization) {
   return dequantizedArray;
 }
 
-function createPositionsTypedArrayFor2D(
-  attribute,
-  modelMatrix,
-  referencePoint,
-  frameState,
-) {
+function createPositionsTypedArrayFor2D(attribute: any, modelMatrix: any, referencePoint: any, frameState: any, ) {
   let result;
   if (defined(attribute.quantization)) {
     // Dequantize the positions if necessary.
@@ -264,12 +259,7 @@ function createPositionsTypedArrayFor2D(
   return result;
 }
 
-function createPositionBufferFor2D(
-  positionAttribute,
-  modelMatrix,
-  boundingSphere2D,
-  frameState,
-) {
+function createPositionBufferFor2D(positionAttribute: any, modelMatrix: any, boundingSphere2D: any, frameState: any, ) {
   // Force the scene mode to be CV. In 2D, projected positions will have
   // an x-coordinate of 0, which eliminates the height data that is
   // necessary for rendering in CV mode.
@@ -298,5 +288,4 @@ function createPositionBufferFor2D(
   return buffer;
 }
 
-export { SceneMode2DPipelineStage };
 export default SceneMode2DPipelineStage;

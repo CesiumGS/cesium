@@ -51,7 +51,7 @@ import SceneMode from "./SceneMode.js";
  * @see Scene#skyBox
  * @see Transforms.computeTemeToPseudoFixedMatrix
  */
-function SkyBox(options) {
+function SkyBox(options: any) {
   /**
    * The sources used to create the cube map faces: an object
    * with <code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>,
@@ -125,7 +125,29 @@ SkyBox.prototype.update = function (frameState, useHdr) {
     this._sources = this.sources;
     const sources = this.sources;
 
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("this.sources", sources);
+    if (
+      Object.values(CubeMap.FaceName).some(
+        (faceName: any) => !defined(sources[faceName]),
+      )
+    ) {
+      throw new DeveloperError(
+        "this.sources must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.",
+      );
+    }
+
+    const sourceType = typeof sources.positiveX;
+    if (
+      Object.values(CubeMap.FaceName).some(
+        (faceName: any) => typeof sources[faceName] !== sourceType,
+      )
+    ) {
+      throw new DeveloperError(
+        "this.sources properties must all be the same type.",
+      );
+    }
+    //>>includeEnd('debug');
 
     if (typeof sources.positiveX === "string") {
       // Given urls for cube-map images.  Load them.
@@ -134,7 +156,7 @@ SkyBox.prototype.update = function (frameState, useHdr) {
           that._cubeMap = that._cubeMap && that._cubeMap.destroy();
           that._cubeMap = cubeMap;
         })
-        .catch((error) => {
+        .catch((error: any) => {
           // Defer throwing the error until the next call to update to prevent
           // test from failing in `afterAll` if this is rejected after the test
           // using the Skybox ends.  See https://github.com/CesiumGS/cesium/pull/12307
@@ -240,7 +262,7 @@ SkyBox.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-function getDefaultSkyBoxUrl(suffix) {
+function getDefaultSkyBoxUrl(suffix: any) {
   return buildModuleUrl(`Assets/Textures/SkyBox/tycho2t3_80_${suffix}.jpg`);
 }
 
@@ -264,5 +286,4 @@ SkyBox.createEarthSkyBox = function () {
   });
 };
 
-export { SkyBox };
 export default SkyBox;

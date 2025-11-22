@@ -107,12 +107,7 @@ const scratchAttributeInfo = {
   functionId: undefined,
 };
 
-function processMorphTargetAttribute(
-  renderResources,
-  attribute,
-  attributeIndex,
-  morphTargetIndex,
-) {
+function processMorphTargetAttribute(renderResources: any, attribute: any, attributeIndex: any, morphTargetIndex: any, ) {
   const shaderBuilder = renderResources.shaderBuilder;
 
   addMorphTargetAttributeToRenderResources(
@@ -133,11 +128,7 @@ function processMorphTargetAttribute(
   );
 }
 
-function addMorphTargetAttributeToRenderResources(
-  renderResources,
-  attribute,
-  attributeIndex,
-) {
+function addMorphTargetAttributeToRenderResources(renderResources: any, attribute: any, attributeIndex: any, ) {
   const vertexAttribute = {
     index: attributeIndex,
     value: defined(attribute.buffer) ? undefined : attribute.constant,
@@ -152,7 +143,7 @@ function addMorphTargetAttributeToRenderResources(
   renderResources.attributes.push(vertexAttribute);
 }
 
-function getMorphTargetAttributeInfo(attribute, result) {
+function getMorphTargetAttributeInfo(attribute: any, result: any) {
   const semantic = attribute.semantic;
   switch (semantic) {
     case VertexAttributeSemantic.POSITION:
@@ -176,11 +167,7 @@ function getMorphTargetAttributeInfo(attribute, result) {
   return result;
 }
 
-function addMorphTargetAttributeDeclarationAndFunctionLine(
-  shaderBuilder,
-  attributeInfo,
-  morphTargetIndex,
-) {
+function addMorphTargetAttributeDeclarationAndFunctionLine(shaderBuilder: any, attributeInfo: any, morphTargetIndex: any, ) {
   const attributeString = attributeInfo.attributeString;
   const attributeName = `a_target${attributeString}_${morphTargetIndex}`;
   const line = `morphed${attributeString} += u_morphWeights[${morphTargetIndex}] * a_target${attributeString}_${morphTargetIndex};`;
@@ -188,7 +175,7 @@ function addMorphTargetAttributeDeclarationAndFunctionLine(
   shaderBuilder.addFunctionLines(attributeInfo.functionId, [line]);
 }
 
-function addGetMorphedAttributeFunctionDeclarations(shaderBuilder) {
+function addGetMorphedAttributeFunctionDeclarations(shaderBuilder: any) {
   shaderBuilder.addFunction(
     MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_POSITION,
     MorphTargetsPipelineStage.FUNCTION_SIGNATURE_GET_MORPHED_POSITION,
@@ -226,7 +213,7 @@ function addGetMorphedAttributeFunctionDeclarations(shaderBuilder) {
   );
 }
 
-function addGetMorphedAttributeFunctionReturns(shaderBuilder) {
+function addGetMorphedAttributeFunctionReturns(shaderBuilder: any) {
   const positionLine = "return morphedPosition;";
   shaderBuilder.addFunctionLines(
     MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_POSITION,
@@ -246,5 +233,4 @@ function addGetMorphedAttributeFunctionReturns(shaderBuilder) {
   );
 }
 
-export { MorphTargetsPipelineStage };
 export default MorphTargetsPipelineStage;

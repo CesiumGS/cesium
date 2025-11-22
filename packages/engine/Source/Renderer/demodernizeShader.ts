@@ -12,7 +12,7 @@
  *
  * @return {string}
  */
-function demodernizeShader(input, isFragmentShader) {
+function demodernizeShader(input: any, isFragmentShader: any) {
   let output = input;
 
   // Remove version string got GLSL 3.00.
@@ -81,5 +81,4 @@ function demodernizeShader(input, isFragmentShader) {
   return output;
 }
 
-export { demodernizeShader };
 export default demodernizeShader;

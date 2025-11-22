@@ -377,5 +377,4 @@ of the world.\nhttp://www.openstreetmap.org",
 
   return providerViewModels;
 }
-export { createDefaultImageryProviderViewModels };
 export default createDefaultImageryProviderViewModels;

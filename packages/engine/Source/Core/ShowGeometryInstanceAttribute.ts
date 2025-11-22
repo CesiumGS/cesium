@@ -29,7 +29,7 @@ import DeveloperError from "./DeveloperError.js";
  * @see GeometryInstance
  * @see GeometryInstanceAttribute
  */
-function ShowGeometryInstanceAttribute(show) {
+function ShowGeometryInstanceAttribute(show: any) {
   show = show ?? true;
 
   /**
@@ -107,7 +107,11 @@ Object.defineProperties(ShowGeometryInstanceAttribute.prototype, {
  * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);
  */
 ShowGeometryInstanceAttribute.toValue = function (show, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(show)) {
+    throw new DeveloperError("show is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Uint8Array([show]);
@@ -115,5 +119,4 @@ ShowGeometryInstanceAttribute.toValue = function (show, result) {
   result[0] = show;
   return result;
 };
-export { ShowGeometryInstanceAttribute };
 export default ShowGeometryInstanceAttribute;

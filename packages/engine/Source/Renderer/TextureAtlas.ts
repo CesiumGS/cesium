@@ -36,14 +36,22 @@ const defaultInitialDimensions = 16;
  *
  * @private
  */
-function TextureAtlas(options) {
+function TextureAtlas(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const borderWidthInPixels = options.borderWidthInPixels ?? 1.0;
   const initialSize =
     options.initialSize ??
     new Cartesian2(defaultInitialDimensions, defaultInitialDimensions);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals(
+    "options.borderWidthInPixels",
+    borderWidthInPixels,
+    0,
+  );
+  Check.typeOf.number.greaterThan("options.initialSize.x", initialSize.x, 0);
+  Check.typeOf.number.greaterThan("options.initialSize.y", initialSize.y, 0);
+  //>>includeEnd('debug');
 
   this._pixelFormat = options.pixelFormat ?? PixelFormat.RGBA;
   this._sampler = options.sampler;
@@ -196,7 +204,9 @@ Object.defineProperties(TextureAtlas.prototype, {
  * BoundingRectangle.pack(rectangle, bufferView);
  */
 TextureAtlas.prototype.computeTextureCoordinates = function (index, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("index", index, 0);
+  //>>includeEnd('debug');
 
   const texture = this._texture;
   const rectangle = this._rectangles[index];
@@ -334,11 +344,11 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
   // ignoring the subregions, which don't get packed
   const subRegions = this._subRegions;
   const toPack = oldRectangles
-    .map((image, index) => {
+    .map((image: any, index: any) => {
       return new AddImageRequest({ index, image });
     })
     .filter(
-      (request, index) =>
+      (request: any, index: any) =>
         defined(request.image) && !defined(subRegions.get(index)),
     );
 
@@ -440,7 +450,9 @@ TextureAtlas.prototype._resize = function (context, queueOffset = 0) {
  * @private
  */
 TextureAtlas.prototype.getImageIndex = function (id) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("id", id);
+  //>>includeEnd('debug');
 
   return this._indexById.get(id);
 };
@@ -505,9 +517,12 @@ function AddImageRequest({ index, image, resolve, reject }) {
  * @returns {Promise<number>} Promise which resolves to the image index once the image has been added, or rejects if there was an error. The promise resolves to <code>-1</code> if the texture atlas is destoyed in the interim.
  */
 TextureAtlas.prototype._addImage = function (index, image) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("index", index, 0);
+  Check.defined("image", image);
+  //>>includeEnd('debug');
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve: any, reject: any) => {
     this._imagesToAddQueue.push(
       new AddImageRequest({
         index,
@@ -612,7 +627,7 @@ TextureAtlas.prototype.update = function (context) {
   return this._processImageQueue(context);
 };
 
-async function resolveImage(image, id) {
+async function resolveImage(image: any, id: any) {
   if (typeof image === "function") {
     image = image(id);
   }
@@ -638,7 +653,10 @@ async function resolveImage(image, id) {
  * @returns {Promise<number>} A Promise that resolves to the image region index, or -1 if resources are in the process of being destroyed.
  */
 TextureAtlas.prototype.addImage = function (id, image, width, height) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("id", id);
+  Check.defined("image", image);
+  //>>includeEnd('debug');
 
   let promise = this._indexPromiseById.get(id);
   let index = this._indexById.get(id);
@@ -656,7 +674,9 @@ TextureAtlas.prototype.addImage = function (id, image, width, height) {
 
   const resolveAndAddImage = async () => {
     const resolvedImage = await resolveImage(image, id);
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("image", resolvedImage);
+    //>>includeEnd('debug');
 
     if (this.isDestroyed() || !defined(resolvedImage)) {
       this._indexPromiseById.delete(id);
@@ -700,7 +720,7 @@ TextureAtlas.prototype.getCachedImageSubRegion = function (
       if (boundingRegion.equals(subRegion)) {
         // The subregion is already being tracked
         if (imagePromise) {
-          return imagePromise.then((resolvedImageIndex) =>
+          return imagePromise.then((resolvedImageIndex: any) =>
             resolvedImageIndex === -1 ? -1 : index,
           );
         }
@@ -718,7 +738,10 @@ TextureAtlas.prototype.getCachedImageSubRegion = function (
  * @returns {number | Promise<number>} The resolved image region index, or a Promise that resolves to it. -1 is returned if resources are in the process of being destroyed.
  */
 TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("id", id);
+  Check.defined("subRegion", subRegion);
+  //>>includeEnd('debug');
   const imageIndex = this._indexById.get(id);
   if (!defined(imageIndex)) {
     throw new RuntimeError(`image with id "${id}" not found in the atlas.`);
@@ -736,7 +759,7 @@ TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
   const indexPromise =
     this._indexPromiseById.get(id) ?? Promise.resolve(imageIndex);
 
-  return indexPromise.then((imageIndex) => {
+  return indexPromise.then((imageIndex: any) => {
     if (imageIndex === -1) {
       // The atlas has been destroyed
       return -1;
@@ -744,7 +767,28 @@ TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
 
     const rectangle = this._rectangles[imageIndex];
 
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.lessThanOrEquals(
+      "subRegion.x",
+      subRegion.x,
+      rectangle.width,
+    );
+    Check.typeOf.number.lessThanOrEquals(
+      "subRegion.x + subRegion.width",
+      subRegion.x + subRegion.width,
+      rectangle.width,
+    );
+    Check.typeOf.number.lessThanOrEquals(
+      "subRegion.y",
+      subRegion.y,
+      rectangle.height,
+    );
+    Check.typeOf.number.lessThanOrEquals(
+      "subRegion.y + subRegion.height",
+      subRegion.y + subRegion.height,
+      rectangle.height,
+    );
+    //>>includeEnd('debug');
 
     return index;
   });
@@ -795,5 +839,4 @@ TextureAtlas.prototype.destroy = function () {
  * @returns {HTMLImageElement|Promise<HTMLImageElement>} The image, or a promise that will resolve to an image.
  */
 
-export { TextureAtlas };
 export default TextureAtlas;

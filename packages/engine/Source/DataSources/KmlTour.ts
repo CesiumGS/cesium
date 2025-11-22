@@ -16,7 +16,7 @@ import Event from "../Core/Event.js";
  *
  * @demo {@link https://sandcastle.cesium.com/?src=KML%20Tours.html|KML Tours}
  */
-function KmlTour(name, id) {
+function KmlTour(name: any, id: any) {
   /**
    * Id of kml gx:Tour entry
    * @type {string}
@@ -110,7 +110,7 @@ KmlTour.prototype.stop = function () {
 };
 
 // Stop all activeEntries.
-function cancelAllEntries(activeEntries) {
+function cancelAllEntries(activeEntries: any) {
   for (
     let entry = activeEntries.pop();
     entry !== undefined;
@@ -122,7 +122,7 @@ function cancelAllEntries(activeEntries) {
 
 // Play playlist entry.
 // This function is called recursevly with playNext and iterates over all entries from playlist.
-function playEntry(widget, cameraOptions, allDone) {
+function playEntry(widget: any, cameraOptions: any, allDone: any) {
   const entry = this.playlist[this.playlistIndex];
   if (entry) {
     const _playNext = playNext.bind(this, widget, cameraOptions, allDone);
@@ -147,7 +147,7 @@ function playEntry(widget, cameraOptions, allDone) {
 }
 
 // Increment playlistIndex and call playEntry if terminated isn't true.
-function playNext(widget, cameraOptions, allDone, terminated) {
+function playNext(widget: any, cameraOptions: any, allDone: any, terminated: any) {
   const entry = this.playlist[this.playlistIndex];
   this.entryEnd.raiseEvent(entry, terminated);
 
@@ -162,5 +162,4 @@ function playNext(widget, cameraOptions, allDone, terminated) {
     playEntry.call(this, widget, cameraOptions, allDone);
   }
 }
-export { KmlTour };
 export default KmlTour;

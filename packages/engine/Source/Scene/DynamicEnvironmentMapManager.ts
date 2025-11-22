@@ -66,7 +66,7 @@ import ConvolveSpecularMapVS from "../Shaders/ConvolveSpecularMapVS.js";
  * const environmentMapManager = model.environmentMapManager;
  * environmentMapManager.groundColor = Cesium.Color.fromCssColorString("#203b34");
  */
-function DynamicEnvironmentMapManager(options) {
+function DynamicEnvironmentMapManager(options: any) {
   this._position = undefined;
 
   this._radianceMapDirty = false;
@@ -303,7 +303,7 @@ DynamicEnvironmentMapManager._nextFrameCommandQueue = [];
  * @param {ComputeCommand} command The created command
  * @param {FrameState} frameState The current frame state
  */
-DynamicEnvironmentMapManager._queueCommand = (command, frameState) => {
+DynamicEnvironmentMapManager._queueCommand = (command: any, frameState: any) => {
   if (
     DynamicEnvironmentMapManager._activeComputeCommandCount >=
     DynamicEnvironmentMapManager._maximumComputeCommandCount
@@ -321,7 +321,7 @@ DynamicEnvironmentMapManager._queueCommand = (command, frameState) => {
  * @private
  * @param {FrameState} frameState The current frame state
  */
-DynamicEnvironmentMapManager._updateCommandQueue = (frameState) => {
+DynamicEnvironmentMapManager._updateCommandQueue = (frameState: any) => {
   DynamicEnvironmentMapManager._maximumComputeCommandCount = Math.log2(
     ContextLimits.maximumCubeMapSize,
   ); // Scale relative to GPU resources available
@@ -373,7 +373,13 @@ DynamicEnvironmentMapManager.setOwner = function (
   // Destroy the existing DynamicEnvironmentMapManager, if any
   owner[key] = owner[key] && owner[key].destroy();
   if (defined(environmentMapManager)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(environmentMapManager._owner)) {
+      throw new DeveloperError(
+        "DynamicEnvironmentMapManager should only be assigned to one object",
+      );
+    }
+    //>>includeEnd('debug');
     environmentMapManager._owner = owner;
     owner[key] = environmentMapManager;
   }
@@ -421,7 +427,7 @@ const scratchSurfacePosition = new Cartesian3();
  * @returns {boolean} true if the environment map needs to be regenerated.
  * @private
  */
-function atmosphereNeedsUpdate(manager, frameState) {
+function atmosphereNeedsUpdate(manager: any, frameState: any) {
   const position = manager._position;
   const atmosphere = frameState.atmosphere;
 
@@ -472,7 +478,7 @@ const scratchColor = new Color();
  * @param {FrameState} frameState the current frameState
  * @private
  */
-function updateRadianceMap(manager, frameState) {
+function updateRadianceMap(manager: any, frameState: any) {
   const context = frameState.context;
   const textureDimensions = manager._textureDimensions;
 
@@ -604,7 +610,7 @@ function updateRadianceMap(manager, frameState) {
  * @param {FrameState} frameState the current frameState
  * @private
  */
-function updateSpecularMaps(manager, frameState) {
+function updateSpecularMaps(manager: any, frameState: any) {
   const radianceCubeMap = manager._radianceCubeMap;
   radianceCubeMap.generateMipmap();
 
@@ -615,7 +621,7 @@ function updateSpecularMaps(manager, frameState) {
   const context = frameState.context;
 
   let facesCopied = 0;
-  const getPostExecute = (command, index, texture, face, level) => () => {
+  const getPostExecute = (command: any, index: any, texture: any, face: any, level: any) => () => {
     if (manager.isDestroyed() || command.canceled) {
       DynamicEnvironmentMapManager._activeComputeCommandCount--;
       return;
@@ -725,7 +731,7 @@ const irradianceTextureDimensions = new Cartesian2(3, 3); // 9 coefficients
  * @param {FrameState} frameState the current frameState
  * @private
  */
-function updateIrradianceResources(manager, frameState) {
+function updateIrradianceResources(manager: any, frameState: any) {
   const context = frameState.context;
   const dimensions = irradianceTextureDimensions;
 
@@ -784,7 +790,7 @@ function updateIrradianceResources(manager, frameState) {
  * @param {FrameState} frameState the current frameState
  * @private
  */
-function updateSphericalHarmonicCoefficients(manager, frameState) {
+function updateSphericalHarmonicCoefficients(manager: any, frameState: any) {
   const context = frameState.context;
 
   if (!defined(manager._irradianceMapTexture)) {
@@ -1013,5 +1019,4 @@ DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS =
     Cartesian3.ZERO,
   ]);
 
-export { DynamicEnvironmentMapManager };
 export default DynamicEnvironmentMapManager;

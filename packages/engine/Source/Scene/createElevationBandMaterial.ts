@@ -22,7 +22,7 @@ const scratchColorBlend = new Color();
 const scratchPackedFloat = new Cartesian4();
 const scratchColorBytes = new Uint8Array(4);
 
-function lerpEntryColor(height, entryBefore, entryAfter, result) {
+function lerpEntryColor(height: any, entryBefore: any, entryAfter: any, result: any) {
   const lerpFactor =
     entryBefore.height === entryAfter.height
       ? 0.0
@@ -31,14 +31,14 @@ function lerpEntryColor(height, entryBefore, entryAfter, result) {
   return Color.lerp(entryBefore.color, entryAfter.color, lerpFactor, result);
 }
 
-function createNewEntry(height, color) {
+function createNewEntry(height: any, color: any) {
   return {
     height: height,
     color: Color.clone(color),
   };
 }
 
-function removeDuplicates(entries) {
+function removeDuplicates(entries: any) {
   // This function expects entries to be sorted from lowest to highest.
 
   // Remove entries that have the same height as before and after.
@@ -92,7 +92,7 @@ function removeDuplicates(entries) {
   return entries;
 }
 
-function preprocess(layers) {
+function preprocess(layers: any) {
   let i, j;
 
   const layeredEntries = [];
@@ -103,14 +103,25 @@ function preprocess(layers) {
     const entriesOrig = layer.entries;
     const entriesLength = entriesOrig.length;
 
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!Array.isArray(entriesOrig) || entriesLength === 0) {
+      throw new DeveloperError("entries must be an array with size > 0.");
+    }
+    //>>includeEnd('debug');
 
     let entries = [];
 
     for (j = 0; j < entriesLength; j++) {
       const entryOrig = entriesOrig[j];
 
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(entryOrig.height)) {
+        throw new DeveloperError("entry requires a height.");
+      }
+      if (!defined(entryOrig.color)) {
+        throw new DeveloperError("entry requires a color.");
+      }
+      //>>includeEnd('debug');
 
       const height = CesiumMath.clamp(
         entryOrig.height,
@@ -186,7 +197,7 @@ function preprocess(layers) {
   return layeredEntries;
 }
 
-function createLayeredEntries(layers) {
+function createLayeredEntries(layers: any) {
   // clean up the input data and check for errors
   const layeredEntries = preprocess(layers);
 
@@ -194,10 +205,10 @@ function createLayeredEntries(layers) {
   let entriesAccumCurr = [];
   let i;
 
-  function addEntry(height, color) {
+  function addEntry(height: any, color: any) {
     entriesAccumNext.push(createNewEntry(height, color));
   }
-  function addBlendEntry(height, a, b) {
+  function addBlendEntry(height: any, a: any, b: any) {
     let result = Color.multiplyByScalar(b, 1.0 - a.alpha, scratchColorBlend);
     result = Color.add(result, a, result);
     addEntry(height, result);
@@ -450,10 +461,14 @@ function createLayeredEntries(layers) {
  *     }]
  * });
  */
-function createElevationBandMaterial(options) {
+function createElevationBandMaterial(options: any) {
   const { scene, layers } = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.scene", scene);
+  Check.defined("options.layers", layers);
+  Check.typeOf.number.greaterThan("options.layers.length", layers.length, 0);
+  //>>includeEnd('debug');
 
   const { context } = scene;
   const entries = createLayeredEntries(layers);
@@ -562,5 +577,4 @@ createElevationBandMaterial._minimumHeight = -5906376425472;
  */
 createElevationBandMaterial._emptyColor = new Color(0.0, 0.0, 0.0, 0.0);
 
-export { createElevationBandMaterial };
 export default createElevationBandMaterial;

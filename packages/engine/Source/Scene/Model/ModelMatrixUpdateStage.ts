@@ -53,7 +53,7 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
  *
  * @private
  */
-function updateDrawCommand(drawCommand, modelMatrix, transformToRoot) {
+function updateDrawCommand(drawCommand: any, modelMatrix: any, transformToRoot: any) {
   drawCommand.modelMatrix = Matrix4.multiplyTransformation(
     modelMatrix,
     transformToRoot,
@@ -70,12 +70,7 @@ function updateDrawCommand(drawCommand, modelMatrix, transformToRoot) {
  *
  * @private
  */
-function updateRuntimeNode(
-  runtimeNode,
-  sceneGraph,
-  modelMatrix,
-  transformToRoot,
-) {
+function updateRuntimeNode(runtimeNode: any, sceneGraph: any, modelMatrix: any, transformToRoot: any, ) {
   let i;
 
   // Apply the current node's transform to the end of the chain
@@ -117,5 +112,4 @@ function updateRuntimeNode(
   }
 }
 
-export { ModelMatrixUpdateStage };
 export default ModelMatrixUpdateStage;

@@ -11,13 +11,7 @@ import defined from "./defined.js";
  * @param {number} height The height of the texture.
  * @param {Uint8Array} buffer The compressed texture buffer.
  */
-function CompressedTextureBuffer(
-  internalFormat,
-  pixelDatatype,
-  width,
-  height,
-  buffer,
-) {
+function CompressedTextureBuffer(internalFormat: any, pixelDatatype: any, width: any, height: any, buffer: any, ) {
   this._format = internalFormat;
   this._datatype = pixelDatatype;
   this._width = width;
@@ -122,5 +116,4 @@ CompressedTextureBuffer.clone = function (object) {
 CompressedTextureBuffer.prototype.clone = function () {
   return CompressedTextureBuffer.clone(this);
 };
-export { CompressedTextureBuffer };
 export default CompressedTextureBuffer;

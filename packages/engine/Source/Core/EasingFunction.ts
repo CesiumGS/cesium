@@ -244,12 +244,12 @@ const EasingFunction = {
  * @returns {number} The value of the function at the given time.
  *
  * @example
- * function quadraticIn(time) {
+ * function quadraticIn(time: any) {
  *     return time * time;
  * }
  *
  * @example
- * function quadraticOut(time) {
+ * function quadraticOut(time: any) {
  *     return time * (2.0 - time);
  * }
  */

@@ -13,11 +13,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 
-function transformToWorldCoordinates(
-  instances,
-  primitiveModelMatrix,
-  scene3DOnly,
-) {
+function transformToWorldCoordinates(instances: any, primitiveModelMatrix: any, scene3DOnly: any, ) {
   let toWorld = !scene3DOnly;
   const length = instances.length;
   let i;
@@ -49,7 +45,7 @@ function transformToWorldCoordinates(
   }
 }
 
-function addGeometryBatchId(geometry, batchId) {
+function addGeometryBatchId(geometry: any, batchId: any) {
   const attributes = geometry.attributes;
   const positionAttr = attributes.position;
   const numberOfComponents =
@@ -67,7 +63,7 @@ function addGeometryBatchId(geometry, batchId) {
   }
 }
 
-function addBatchIds(instances) {
+function addBatchIds(instances: any) {
   const length = instances.length;
 
   for (let i = 0; i < length; ++i) {
@@ -84,7 +80,7 @@ function addBatchIds(instances) {
   }
 }
 
-function geometryPipeline(parameters) {
+function geometryPipeline(parameters: any) {
   const instances = parameters.instances;
   const projection = parameters.projection;
   const uintIndexSupport = parameters.elementIndexUintSupported;
@@ -105,7 +101,18 @@ function geometryPipeline(parameters) {
     }
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  for (i = 1; i < length; ++i) {
+    if (
+      defined(instances[i].geometry) &&
+      instances[i].geometry.primitiveType !== primitiveType
+    ) {
+      throw new DeveloperError(
+        "All instance geometries must have the same primitiveType.",
+      );
+    }
+  }
+  //>>includeEnd('debug');
 
   // Unify to world coordinates before combining.
   transformToWorldCoordinates(instances, modelMatrix, scene3DOnly);
@@ -234,7 +241,7 @@ function geometryPipeline(parameters) {
   return geometries;
 }
 
-function createPickOffsets(instances, geometryName, geometries, pickOffsets) {
+function createPickOffsets(instances: any, geometryName: any, geometries: any, pickOffsets: any) {
   let offset;
   let indexCount;
   let geometryIndex;
@@ -275,7 +282,7 @@ function createPickOffsets(instances, geometryName, geometries, pickOffsets) {
   }
 }
 
-function createInstancePickOffsets(instances, geometries) {
+function createInstancePickOffsets(instances: any, geometries: any) {
   const pickOffsets = [];
   createPickOffsets(instances, "geometry", geometries, pickOffsets);
   createPickOffsets(
@@ -377,7 +384,7 @@ PrimitivePipeline.combineGeometry = function (parameters) {
   };
 };
 
-function transferGeometry(geometry, transferableObjects) {
+function transferGeometry(geometry: any, transferableObjects: any) {
   const attributes = geometry.attributes;
   for (const name in attributes) {
     if (attributes.hasOwnProperty(name)) {
@@ -394,7 +401,7 @@ function transferGeometry(geometry, transferableObjects) {
   }
 }
 
-function transferGeometries(geometries, transferableObjects) {
+function transferGeometries(geometries: any, transferableObjects: any) {
   const length = geometries.length;
   for (let i = 0; i < length; ++i) {
     transferGeometry(geometries[i], transferableObjects);
@@ -402,7 +409,7 @@ function transferGeometries(geometries, transferableObjects) {
 }
 
 // This function was created by simplifying packCreateGeometryResults into a count-only operation.
-function countCreateGeometryResults(items) {
+function countCreateGeometryResults(items: any) {
   let count = 1;
   const length = items.length;
   for (let i = 0; i < length; i++) {
@@ -628,7 +635,7 @@ PrimitivePipeline.unpackCreateGeometryResults = function (
   return result;
 };
 
-function packInstancesForCombine(instances, transferableObjects) {
+function packInstancesForCombine(instances: any, transferableObjects: any) {
   const length = instances.length;
   const packedData = new Float64Array(1 + length * 19);
   let count = 0;
@@ -650,7 +657,7 @@ function packInstancesForCombine(instances, transferableObjects) {
   return packedData;
 }
 
-function unpackInstancesForCombine(data) {
+function unpackInstancesForCombine(data: any) {
   const packedInstances = data;
   const result = new Array(packedInstances[0]);
   let count = 0;
@@ -757,7 +764,7 @@ PrimitivePipeline.unpackCombineGeometryParameters = function (
   };
 };
 
-function packBoundingSpheres(boundingSpheres) {
+function packBoundingSpheres(boundingSpheres: any) {
   const length = boundingSpheres.length;
   const bufferLength = 1 + (BoundingSphere.packedLength + 1) * length;
   const buffer = new Float32Array(bufferLength);
@@ -779,7 +786,7 @@ function packBoundingSpheres(boundingSpheres) {
   return buffer;
 }
 
-function unpackBoundingSpheres(buffer) {
+function unpackBoundingSpheres(buffer: any) {
   const result = new Array(buffer[0]);
   let count = 0;
 
@@ -840,5 +847,4 @@ PrimitivePipeline.unpackCombineGeometryResults = function (packedResult) {
     boundingSpheresCV: unpackBoundingSpheres(packedResult.boundingSpheresCV),
   };
 };
-export { PrimitivePipeline };
 export default PrimitivePipeline;

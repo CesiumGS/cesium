@@ -8,7 +8,7 @@ import ScreenSpaceEventHandler from "../Core/ScreenSpaceEventHandler.js";
 import ScreenSpaceEventType from "../Core/ScreenSpaceEventType.js";
 import CameraEventType from "./CameraEventType.js";
 
-function getKey(type, modifier) {
+function getKey(type: any, modifier: any) {
   let key = `${type}`;
   if (defined(modifier)) {
     key += `+${modifier}`;
@@ -16,7 +16,7 @@ function getKey(type, modifier) {
   return key;
 }
 
-function clonePinchMovement(pinchMovement, result) {
+function clonePinchMovement(pinchMovement: any, result: any) {
   Cartesian2.clone(
     pinchMovement.distance.startPosition,
     result.distance.startPosition,
@@ -36,7 +36,7 @@ function clonePinchMovement(pinchMovement, result) {
   );
 }
 
-function listenToPinch(aggregator, modifier, canvas) {
+function listenToPinch(aggregator: any, modifier: any, canvas: any) {
   const key = getKey(CameraEventType.PINCH, modifier);
 
   const update = aggregator._update;
@@ -130,7 +130,7 @@ function listenToPinch(aggregator, modifier, canvas) {
   );
 }
 
-function listenToWheel(aggregator, modifier) {
+function listenToWheel(aggregator: any, modifier: any) {
   const key = getKey(CameraEventType.WHEEL, modifier);
 
   const pressTime = aggregator._pressTime;
@@ -172,7 +172,7 @@ function listenToWheel(aggregator, modifier) {
   );
 }
 
-function listenMouseButtonDownUp(aggregator, modifier, type) {
+function listenMouseButtonDownUp(aggregator: any, modifier: any, type: any) {
   const key = getKey(type, modifier);
 
   const isDown = aggregator._isDown;
@@ -229,7 +229,7 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
   );
 }
 
-function cancelMouseDownAction(cancelKey, aggregator) {
+function cancelMouseDownAction(cancelKey: any, aggregator: any) {
   const releaseTime = aggregator._releaseTime;
   const isDown = aggregator._isDown;
   if (isDown[cancelKey]) {
@@ -239,12 +239,12 @@ function cancelMouseDownAction(cancelKey, aggregator) {
   releaseTime[cancelKey] = new Date();
 }
 
-function cloneMouseMovement(mouseMovement, result) {
+function cloneMouseMovement(mouseMovement: any, result: any) {
   Cartesian2.clone(mouseMovement.startPosition, result.startPosition);
   Cartesian2.clone(mouseMovement.endPosition, result.endPosition);
 }
 
-function refreshMouseDownStatus(type, modifier, aggregator) {
+function refreshMouseDownStatus(type: any, modifier: any, aggregator: any) {
   // first: Judge if the mouse is pressed
   const isDown = aggregator._isDown;
   let anyButtonIsDown = false;
@@ -276,7 +276,7 @@ function refreshMouseDownStatus(type, modifier, aggregator) {
   pressTime[currentKey] = new Date();
 }
 
-function listenMouseMove(aggregator, modifier) {
+function listenMouseMove(aggregator: any, modifier: any) {
   const update = aggregator._update;
   const movement = aggregator._movement;
   const lastMovement = aggregator._lastMovement;
@@ -354,8 +354,12 @@ function listenMouseMove(aggregator, modifier) {
  *
  * @see ScreenSpaceEventHandler
  */
-function CameraEventAggregator(canvas) {
-  ;
+function CameraEventAggregator(canvas: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(canvas)) {
+    throw new DeveloperError("canvas is required.");
+  }
+  //>>includeEnd('debug');
 
   this._eventHandler = new ScreenSpaceEventHandler(canvas);
 
@@ -434,7 +438,11 @@ Object.defineProperties(CameraEventAggregator.prototype, {
  * @returns {boolean} Returns <code>true</code> if a mouse button down or touch has started and has been moved; otherwise, <code>false</code>
  */
 CameraEventAggregator.prototype.isMoving = function (type, modifier) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(type)) {
+    throw new DeveloperError("type is required.");
+  }
+  //>>includeEnd('debug');
 
   const key = getKey(type, modifier);
   return !this._update[key];
@@ -448,7 +456,11 @@ CameraEventAggregator.prototype.isMoving = function (type, modifier) {
  * @returns {object} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code>.
  */
 CameraEventAggregator.prototype.getMovement = function (type, modifier) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(type)) {
+    throw new DeveloperError("type is required.");
+  }
+  //>>includeEnd('debug');
 
   const key = getKey(type, modifier);
   const movement = this._movement[key];
@@ -463,7 +475,11 @@ CameraEventAggregator.prototype.getMovement = function (type, modifier) {
  * @returns {object|undefined} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code> or <code>undefined</code>.
  */
 CameraEventAggregator.prototype.getLastMovement = function (type, modifier) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(type)) {
+    throw new DeveloperError("type is required.");
+  }
+  //>>includeEnd('debug');
 
   const key = getKey(type, modifier);
   const lastMovement = this._lastMovement[key];
@@ -482,7 +498,11 @@ CameraEventAggregator.prototype.getLastMovement = function (type, modifier) {
  * @returns {boolean} Whether the mouse button is down or a touch has started.
  */
 CameraEventAggregator.prototype.isButtonDown = function (type, modifier) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(type)) {
+    throw new DeveloperError("type is required.");
+  }
+  //>>includeEnd('debug');
 
   const key = getKey(type, modifier);
   return this._isDown[key];
@@ -499,7 +519,11 @@ CameraEventAggregator.prototype.getStartMousePosition = function (
   type,
   modifier,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(type)) {
+    throw new DeveloperError("type is required.");
+  }
+  //>>includeEnd('debug');
 
   if (type === CameraEventType.WHEEL) {
     return this._currentMousePosition;
@@ -517,7 +541,11 @@ CameraEventAggregator.prototype.getStartMousePosition = function (
  * @returns {Date} The time the button was pressed or the touch was started.
  */
 CameraEventAggregator.prototype.getButtonPressTime = function (type, modifier) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(type)) {
+    throw new DeveloperError("type is required.");
+  }
+  //>>includeEnd('debug');
 
   const key = getKey(type, modifier);
   return this._pressTime[key];
@@ -534,7 +562,11 @@ CameraEventAggregator.prototype.getButtonReleaseTime = function (
   type,
   modifier,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(type)) {
+    throw new DeveloperError("type is required.");
+  }
+  //>>includeEnd('debug');
 
   const key = getKey(type, modifier);
   return this._releaseTime[key];
@@ -584,5 +616,4 @@ CameraEventAggregator.prototype.destroy = function () {
   this._eventHandler = this._eventHandler && this._eventHandler.destroy();
   return destroyObject(this);
 };
-export { CameraEventAggregator };
 export default CameraEventAggregator;

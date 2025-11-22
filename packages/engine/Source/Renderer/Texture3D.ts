@@ -51,10 +51,12 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @param {Texture3D.ConstructorOptions} options
  * @private
  */
-function Texture3D(options) {
+function Texture3D(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.context", options.context);
+  //>>includeEnd('debug');
 
   const {
     context,
@@ -102,7 +104,99 @@ function Texture3D(options) {
 
   const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(width) || !defined(height) || !defined(depth)) {
+    throw new DeveloperError(
+      "options requires a source field to create an initialized texture3D or width, height and depth fields to create a blank texture3D.",
+    );
+  }
+
+  Check.typeOf.number.greaterThan("width", width, 0);
+
+  if (width > ContextLimits.maximumTextureSize) {
+    throw new DeveloperError(
+      `Width must be less than or equal to the maximum texture3D size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`,
+    );
+  }
+
+  Check.typeOf.number.greaterThan("height", height, 0);
+
+  if (height > ContextLimits.maximumTextureSize) {
+    throw new DeveloperError(
+      `Height must be less than or equal to the maximum texture3D size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`,
+    );
+  }
+
+  Check.typeOf.number.greaterThan("depth", depth, 0);
+
+  if (depth > ContextLimits.maximumTextureSize) {
+    throw new DeveloperError(
+      `Depth must be less than or equal to the maximum texture3D size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`,
+    );
+  }
+
+  if (!PixelFormat.validate(pixelFormat)) {
+    throw new DeveloperError("Invalid options.pixelFormat.");
+  }
+
+  if (!isCompressed && !PixelDatatype.validate(pixelDatatype)) {
+    throw new DeveloperError("Invalid options.pixelDatatype.");
+  }
+
+  if (
+    pixelFormat === PixelFormat.DEPTH_COMPONENT &&
+    pixelDatatype !== PixelDatatype.UNSIGNED_SHORT &&
+    pixelDatatype !== PixelDatatype.UNSIGNED_INT
+  ) {
+    throw new DeveloperError(
+      "When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.",
+    );
+  }
+
+  if (
+    pixelFormat === PixelFormat.DEPTH_STENCIL &&
+    pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8
+  ) {
+    throw new DeveloperError(
+      "When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8.",
+    );
+  }
+
+  if (pixelDatatype === PixelDatatype.FLOAT && !context.floatingPointTexture) {
+    throw new DeveloperError(
+      "When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.",
+    );
+  }
+
+  if (
+    pixelDatatype === PixelDatatype.HALF_FLOAT &&
+    !context.halfFloatingPointTexture
+  ) {
+    throw new DeveloperError(
+      "When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension. Check context.halfFloatingPointTexture.",
+    );
+  }
+
+  if (PixelFormat.isDepthFormat(pixelFormat)) {
+    if (defined(source)) {
+      throw new DeveloperError(
+        "When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.",
+      );
+    }
+
+    if (!context.depthTexture) {
+      throw new DeveloperError(
+        "When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.",
+      );
+    }
+  }
+
+  if (isCompressed) {
+    throw new DeveloperError(
+      "Texture3D does not currently support compressed formats.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const gl = context._gl;
 
@@ -172,7 +266,7 @@ function Texture3D(options) {
  *
  * @private
  */
-function loadBufferSource(texture3D, source) {
+function loadBufferSource(texture3D: any, source: any) {
   const context = texture3D._context;
   const gl = context._gl;
   const textureTarget = texture3D._textureTarget;
@@ -247,7 +341,7 @@ function loadBufferSource(texture3D, source) {
  *
  * @private
  */
-function nextMipSize(currentSize) {
+function nextMipSize(currentSize: any) {
   const nextSize = Math.floor(currentSize / 2) | 0;
   return Math.max(nextSize, 1);
 }
@@ -259,7 +353,7 @@ function nextMipSize(currentSize) {
  *
  * @private
  */
-function loadNull(texture3D) {
+function loadNull(texture3D: any) {
   const context = texture3D._context;
 
   context._gl.texImage3D(
@@ -378,7 +472,7 @@ Object.defineProperties(Texture3D.prototype, {
  * @param {Sampler} sampler Information about how to sample the texture3D
  * @private
  */
-function setupSampler(texture3D, sampler) {
+function setupSampler(texture3D: any, sampler: any) {
   let { minificationFilter, magnificationFilter } = sampler;
 
   const mipmap = [
@@ -444,7 +538,22 @@ function setupSampler(texture3D, sampler) {
 Texture3D.prototype.generateMipmap = function (hint) {
   hint = hint ?? MipmapHint.DONT_CARE;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (PixelFormat.isDepthFormat(this._pixelFormat)) {
+    throw new DeveloperError(
+      "Cannot call generateMipmap when the texture3D pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.",
+    );
+  }
+  if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
+    throw new DeveloperError(
+      "Cannot call generateMipmap with a compressed pixel format.",
+    );
+  }
+
+  if (!MipmapHint.validate(hint)) {
+    throw new DeveloperError("hint is invalid.");
+  }
+  //>>includeEnd('debug');
 
   this._hasMipmap = true;
 
@@ -466,5 +575,4 @@ Texture3D.prototype.destroy = function () {
   this._context._gl.deleteTexture(this._texture);
   return destroyObject(this);
 };
-export { Texture3D };
 export default Texture3D;

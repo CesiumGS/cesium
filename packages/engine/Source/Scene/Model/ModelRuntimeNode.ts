@@ -25,7 +25,7 @@ import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
  *
  * @private
  */
-function ModelRuntimeNode(options) {
+function ModelRuntimeNode(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const node = options.node;
@@ -34,7 +34,13 @@ function ModelRuntimeNode(options) {
   const sceneGraph = options.sceneGraph;
   const children = options.children;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.node", node);
+  Check.typeOf.object("options.transform", transform);
+  Check.typeOf.object("options.transformToRoot", transformToRoot);
+  Check.typeOf.object("options.sceneGraph", sceneGraph);
+  Check.typeOf.object("options.children", children);
+  //>>includeEnd('debug');
 
   this._node = node;
   this._name = node.name;
@@ -319,7 +325,13 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
     },
     set: function (value) {
       const transformParameters = this._transformParameters;
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(transformParameters)) {
+        throw new DeveloperError(
+          "The translation of a node cannot be set if it was defined using a matrix in the model.",
+        );
+      }
+      //>>includeEnd('debug');
 
       const currentTranslation = transformParameters.translation;
       if (Cartesian3.equals(currentTranslation, value)) {
@@ -357,7 +369,13 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
     },
     set: function (value) {
       const transformParameters = this._transformParameters;
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(transformParameters)) {
+        throw new DeveloperError(
+          "The rotation of a node cannot be set if it was defined using a matrix in the model.",
+        );
+      }
+      //>>includeEnd('debug');
 
       const currentRotation = transformParameters.rotation;
       if (Quaternion.equals(currentRotation, value)) {
@@ -394,7 +412,13 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
     },
     set: function (value) {
       const transformParameters = this._transformParameters;
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(transformParameters)) {
+        throw new DeveloperError(
+          "The scale of a node cannot be set if it was defined using a matrix in the model.",
+        );
+      }
+      //>>includeEnd('debug');
       const currentScale = transformParameters.scale;
       if (Cartesian3.equals(currentScale, value)) {
         return;
@@ -424,7 +448,13 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
     },
     set: function (value) {
       const valueLength = value.length;
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (this._morphWeights.length !== valueLength) {
+        throw new DeveloperError(
+          "value must have the same length as the original weights array.",
+        );
+      }
+      //>>includeEnd('debug');
       for (let i = 0; i < valueLength; i++) {
         this._morphWeights[i] = value[i];
       }
@@ -462,7 +492,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
   },
 });
 
-function initialize(runtimeNode) {
+function initialize(runtimeNode: any) {
   const transform = runtimeNode.transform;
   const transformToRoot = runtimeNode.transformToRoot;
   const computedTransform = runtimeNode._computedTransform;
@@ -499,7 +529,7 @@ function initialize(runtimeNode) {
   }
 }
 
-function updateTransformFromParameters(runtimeNode, transformParameters) {
+function updateTransformFromParameters(runtimeNode: any, transformParameters: any) {
   runtimeNode._transformDirty = true;
 
   runtimeNode._transform = Matrix4.fromTranslationRotationScale(
@@ -525,7 +555,14 @@ function updateTransformFromParameters(runtimeNode, transformParameters) {
  * @private
  */
 ModelRuntimeNode.prototype.getChild = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  if (index < 0 || index >= this.children.length) {
+    throw new DeveloperError(
+      "index must be greater than or equal to 0 and less than the number of children.",
+    );
+  }
+  //>>includeEnd('debug');
 
   return this.sceneGraph._runtimeNodes[this.children[index]];
 };
@@ -608,5 +645,4 @@ ModelRuntimeNode.prototype.updateJointMatrices = function () {
   }
 };
 
-export { ModelRuntimeNode };
 export default ModelRuntimeNode;

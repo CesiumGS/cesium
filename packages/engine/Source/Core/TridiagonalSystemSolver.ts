@@ -41,7 +41,30 @@ const TridiagonalSystemSolver = {};
  * @returns {Cartesian3[]} An array of Cartesians with length <code>n</code> that is the solution to the tridiagonal system of equations.
  */
 TridiagonalSystemSolver.solve = function (lower, diagonal, upper, right) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(lower) || !(lower instanceof Array)) {
+    throw new DeveloperError("The array lower is required.");
+  }
+  if (!defined(diagonal) || !(diagonal instanceof Array)) {
+    throw new DeveloperError("The array diagonal is required.");
+  }
+  if (!defined(upper) || !(upper instanceof Array)) {
+    throw new DeveloperError("The array upper is required.");
+  }
+  if (!defined(right) || !(right instanceof Array)) {
+    throw new DeveloperError("The array right is required.");
+  }
+  if (diagonal.length !== right.length) {
+    throw new DeveloperError("diagonal and right must have the same lengths.");
+  }
+  if (lower.length !== upper.length) {
+    throw new DeveloperError("lower and upper must have the same lengths.");
+  } else if (lower.length !== diagonal.length - 1) {
+    throw new DeveloperError(
+      "lower and upper must be one less than the length of diagonal.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const c = new Array(upper.length);
   const d = new Array(right.length);
@@ -87,5 +110,4 @@ TridiagonalSystemSolver.solve = function (lower, diagonal, upper, right) {
 
   return x;
 };
-export { TridiagonalSystemSolver };
 export default TridiagonalSystemSolver;

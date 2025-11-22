@@ -5,7 +5,7 @@ import JulianDate from "../Core/JulianDate.js";
 import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
 import Property from "./Property.js";
 
-function subscribeAll(property, eventHelper, definitionChanged, intervals) {
+function subscribeAll(property: any, eventHelper: any, definitionChanged: any, intervals: any) {
   function callback() {
     definitionChanged.raiseEvent(property);
   }
@@ -151,5 +151,4 @@ CompositeProperty.prototype._intervalsChanged = function () {
   );
   this._definitionChanged.raiseEvent(this);
 };
-export { CompositeProperty };
 export default CompositeProperty;

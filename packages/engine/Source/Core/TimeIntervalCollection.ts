@@ -9,7 +9,7 @@ import Iso8601 from "./Iso8601.js";
 import JulianDate from "./JulianDate.js";
 import TimeInterval from "./TimeInterval.js";
 
-function compareIntervalStartTimes(left, right) {
+function compareIntervalStartTimes(left: any, right: any) {
   return JulianDate.compare(left.start, right.start);
 }
 
@@ -20,7 +20,7 @@ function compareIntervalStartTimes(left, right) {
  *
  * @param {TimeInterval[]} [intervals] An array of intervals to add to the collection.
  */
-function TimeIntervalCollection(intervals) {
+function TimeIntervalCollection(intervals: any) {
   this._intervals = [];
   this._changedEvent = new Event();
 
@@ -160,7 +160,11 @@ TimeIntervalCollection.prototype.equals = function (right, dataComparer) {
  * @returns {TimeInterval|undefined} The interval at the specified index, or <code>undefined</code> if no interval exists as that index.
  */
 TimeIntervalCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.");
+  }
+  //>>includeEnd('debug');
 
   return this._intervals[index];
 };
@@ -221,7 +225,11 @@ const indexOfScratch = new TimeInterval();
  * the length of the collection.
  */
 TimeIntervalCollection.prototype.indexOf = function (date) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(date)) {
+    throw new DeveloperError("date is required");
+  }
+  //>>includeEnd('debug');
 
   const intervals = this._intervals;
   indexOfScratch.start = date;
@@ -303,7 +311,11 @@ TimeIntervalCollection.prototype.addInterval = function (
   interval,
   dataComparer,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(interval)) {
+    throw new DeveloperError("interval is required");
+  }
+  //>>includeEnd('debug');
 
   if (interval.isEmpty) {
     return;
@@ -496,7 +508,11 @@ TimeIntervalCollection.prototype.addInterval = function (
  * @returns {boolean} <code>true</code> if the interval was removed, <code>false</code> if no part of the interval was in the collection.
  */
 TimeIntervalCollection.prototype.removeInterval = function (interval) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(interval)) {
+    throw new DeveloperError("interval is required");
+  }
+  //>>includeEnd('debug');
 
   if (interval.isEmpty) {
     return false;
@@ -657,7 +673,11 @@ TimeIntervalCollection.prototype.intersect = function (
   dataComparer,
   mergeCallback,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(other)) {
+    throw new DeveloperError("other is required.");
+  }
+  //>>includeEnd('debug');
 
   const result = new TimeIntervalCollection();
   let left = 0;
@@ -722,7 +742,14 @@ TimeIntervalCollection.prototype.intersect = function (
  * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
  */
 TimeIntervalCollection.fromJulianDateArray = function (options, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options)) {
+    throw new DeveloperError("options is required.");
+  }
+  if (!defined(options.julianDates)) {
+    throw new DeveloperError("options.iso8601Array is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new TimeIntervalCollection();
@@ -801,7 +828,7 @@ const monthLengths = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
  *
  * @private
  */
-function addToDate(julianDate, duration, result) {
+function addToDate(julianDate: any, duration: any, result: any) {
   if (!defined(result)) {
     result = new JulianDate();
   }
@@ -878,7 +905,7 @@ const durationRegex =
  *
  * @private
  */
-function parseDuration(iso8601, result) {
+function parseDuration(iso8601: any, result: any) {
   if (!defined(iso8601) || iso8601.length === 0) {
     return false;
   }
@@ -966,7 +993,14 @@ const scratchDuration = new GregorianDate();
  * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
  */
 TimeIntervalCollection.fromIso8601 = function (options, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options)) {
+    throw new DeveloperError("options is required.");
+  }
+  if (!defined(options.iso8601)) {
+    throw new DeveloperError("options.iso8601 is required.");
+  }
+  //>>includeEnd('debug');
 
   const dates = options.iso8601.split("/");
   const start = JulianDate.fromIso8601(dates[0]);
@@ -1016,7 +1050,14 @@ TimeIntervalCollection.fromIso8601 = function (options, result) {
  * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
  */
 TimeIntervalCollection.fromIso8601DateArray = function (options, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options)) {
+    throw new DeveloperError("options is required.");
+  }
+  if (!defined(options.iso8601Dates)) {
+    throw new DeveloperError("options.iso8601Dates is required.");
+  }
+  //>>includeEnd('debug');
 
   return TimeIntervalCollection.fromJulianDateArray(
     {
@@ -1049,7 +1090,17 @@ TimeIntervalCollection.fromIso8601DateArray = function (options, result) {
  * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
  */
 TimeIntervalCollection.fromIso8601DurationArray = function (options, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options)) {
+    throw new DeveloperError("options is required.");
+  }
+  if (!defined(options.epoch)) {
+    throw new DeveloperError("options.epoch is required.");
+  }
+  if (!defined(options.iso8601Durations)) {
+    throw new DeveloperError("options.iso8601Durations is required.");
+  }
+  //>>includeEnd('debug');
 
   const epoch = options.epoch;
   const iso8601Durations = options.iso8601Durations;
@@ -1083,5 +1134,4 @@ TimeIntervalCollection.fromIso8601DurationArray = function (options, result) {
     result,
   );
 };
-export { TimeIntervalCollection };
 export default TimeIntervalCollection;

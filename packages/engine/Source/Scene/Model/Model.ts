@@ -177,9 +177,12 @@ import ModelImagery from "./ModelImagery.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
  */
-function Model(options) {
+function Model(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.loader", options.loader);
+  Check.typeOf.object("options.resource", options.resource);
+  //>>includeEnd('debug');
 
   /**
    * The loader used to load resources for this model.
@@ -497,7 +500,7 @@ function Model(options) {
   this.pickObject = options.pickObject;
 }
 
-function handleError(model, error) {
+function handleError(model: any, error: any) {
   if (model._errorEvent.numberOfListeners > 0) {
     model._errorEvent.raiseEvent(error);
     return;
@@ -506,7 +509,7 @@ function handleError(model, error) {
   console.log(error);
 }
 
-function createModelFeatureTables(model, structuralMetadata) {
+function createModelFeatureTables(model: any, structuralMetadata: any) {
   const featureTables = model._featureTables;
 
   const propertyTables = structuralMetadata.propertyTables;
@@ -524,7 +527,7 @@ function createModelFeatureTables(model, structuralMetadata) {
   return featureTables;
 }
 
-function selectFeatureTableId(components, model) {
+function selectFeatureTableId(components: any, model: any) {
   const featureIdLabel = model._featureIdLabel;
   const instanceFeatureIdLabel = model._instanceFeatureIdLabel;
 
@@ -580,7 +583,7 @@ function selectFeatureTableId(components, model) {
  *
  *  @private
  */
-function isColorAlphaDirty(currentColor, previousColor) {
+function isColorAlphaDirty(currentColor: any, previousColor: any) {
   if (!defined(currentColor) && !defined(previousColor)) {
     return false;
   }
@@ -781,7 +784,9 @@ Object.defineProperties(Model.prototype, {
       return this._pointCloudShading;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("pointCloudShading", value);
+      //>>includeEnd('debug');
       if (value !== this._pointCloudShading) {
         this.resetDrawCommands();
       }
@@ -878,7 +883,11 @@ Object.defineProperties(Model.prototype, {
       return this._distanceDisplayCondition;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far <= value.near) {
+        throw new DeveloperError("far must be greater than near");
+      }
+      //>>includeEnd('debug');
       this._distanceDisplayCondition = DistanceDisplayCondition.clone(
         value,
         this._distanceDisplayCondition,
@@ -1118,7 +1127,13 @@ Object.defineProperties(Model.prototype, {
    */
   boundingSphere: {
     get: function () {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!this._ready) {
+        throw new DeveloperError(
+          "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+        );
+      }
+      //>>includeEnd('debug');
 
       const modelMatrix = defined(this._clampedModelMatrix)
         ? this._clampedModelMatrix
@@ -1239,7 +1254,9 @@ Object.defineProperties(Model.prototype, {
         value = `featureId_${value}`;
       }
 
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.string("value", value);
+      //>>includeEnd('debug');
 
       if (value !== this._featureIdLabel) {
         this._featureTableIdDirty = true;
@@ -1273,7 +1290,9 @@ Object.defineProperties(Model.prototype, {
         value = `instanceFeatureId_${value}`;
       }
 
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.string("value", value);
+      //>>includeEnd('debug');
 
       if (value !== this._instanceFeatureIdLabel) {
         this._featureTableIdDirty = true;
@@ -1422,7 +1441,9 @@ Object.defineProperties(Model.prototype, {
       return this._imageBasedLighting;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("imageBasedLighting", value);
+      //>>includeEnd('debug');
 
       if (value !== this._imageBasedLighting) {
         if (
@@ -1455,7 +1476,9 @@ Object.defineProperties(Model.prototype, {
       return this._environmentMapManager;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("environmentMapManager", value);
+      //>>includeEnd('debug');
 
       if (value !== this.environmentMapManager) {
         DynamicEnvironmentMapManager.setOwner(
@@ -1741,7 +1764,14 @@ Object.defineProperties(Model.prototype, {
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
  */
 Model.prototype.getNode = function (name) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  Check.typeOf.string("name", name);
+  //>>includeEnd('debug');
 
   return this._nodesByName[name];
 };
@@ -1763,7 +1793,14 @@ Model.prototype.getNode = function (name) {
  * model.setArticulationStage("SampleArticulation MoveX", 50.0);
  */
 Model.prototype.setArticulationStage = function (articulationStageKey, value) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("value", value);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._sceneGraph.setArticulationStage(articulationStageKey, value);
 };
@@ -1776,7 +1813,13 @@ Model.prototype.setArticulationStage = function (articulationStageKey, value) {
  * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
  */
 Model.prototype.applyArticulations = function () {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._sceneGraph.applyArticulations();
 };
@@ -1796,7 +1839,14 @@ Model.prototype.applyArticulations = function () {
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Model.prototype.getExtension = function (extensionName) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("extensionName", extensionName);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
   const components = this._loader.components;
   return components.extensions[extensionName];
 };
@@ -1979,7 +2029,7 @@ Model.prototype.update = function (frameState) {
   submitDrawCommands(this, frameState);
 };
 
-function processLoader(model, frameState) {
+function processLoader(model: any, frameState: any) {
   if (
     !model._resourcesLoaded ||
     (model._loader.incrementallyLoadTextures && !model._texturesLoaded)
@@ -1992,13 +2042,13 @@ function processLoader(model, frameState) {
   return true;
 }
 
-function updateCustomShader(model, frameState) {
+function updateCustomShader(model: any, frameState: any) {
   if (defined(model._customShader)) {
     model._customShader.update(frameState);
   }
 }
 
-function updateEnvironmentMap(model, frameState) {
+function updateEnvironmentMap(model: any, frameState: any) {
   const environmentMapManager = model._environmentMapManager;
   const picking = frameState.passes.pick || frameState.passes.pickVoxel;
   if (model._ready && environmentMapManager.owner === model && !picking) {
@@ -2015,14 +2065,14 @@ function updateEnvironmentMap(model, frameState) {
   }
 }
 
-function updateImageBasedLighting(model, frameState) {
+function updateImageBasedLighting(model: any, frameState: any) {
   model._imageBasedLighting.update(frameState);
   if (model._imageBasedLighting.shouldRegenerateShaders) {
     model.resetDrawCommands();
   }
 }
 
-function updateFeatureTableId(model) {
+function updateFeatureTableId(model: any) {
   if (!model._featureTableIdDirty) {
     return;
   }
@@ -2045,14 +2095,14 @@ function updateFeatureTableId(model) {
   }
 }
 
-function updateStyle(model) {
+function updateStyle(model: any) {
   if (model._styleDirty) {
     model.applyStyle(model._style);
     model._styleDirty = false;
   }
 }
 
-function updateFeatureTables(model, frameState) {
+function updateFeatureTables(model: any, frameState: any) {
   const featureTables = model._featureTables;
   const length = featureTables.length;
 
@@ -2071,7 +2121,7 @@ function updateFeatureTables(model, frameState) {
   }
 }
 
-function updateStyleCommandsNeeded(model) {
+function updateStyleCommandsNeeded(model: any) {
   const featureTable = model.featureTables[model.featureTableId];
   model._styleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
     featureTable.featuresLength,
@@ -2079,7 +2129,7 @@ function updateStyleCommandsNeeded(model) {
   );
 }
 
-function updatePointCloudShading(model) {
+function updatePointCloudShading(model: any) {
   const pointCloudShading = model.pointCloudShading;
 
   // Check if the shader needs to be updated for point cloud attenuation
@@ -2095,7 +2145,7 @@ function updatePointCloudShading(model) {
   }
 }
 
-function updateSilhouette(model, frameState) {
+function updateSilhouette(model: any, frameState: any) {
   if (model._silhouetteDirty) {
     // Only rebuild draw commands if silhouettes are supported in the first place.
     if (supportsSilhouettes(frameState)) {
@@ -2106,7 +2156,7 @@ function updateSilhouette(model, frameState) {
   }
 }
 
-function updateSkipLevelOfDetail(model, frameState) {
+function updateSkipLevelOfDetail(model: any, frameState: any) {
   const skipLevelOfDetail = model.hasSkipLevelOfDetail(frameState);
   if (skipLevelOfDetail !== model._skipLevelOfDetail) {
     model.resetDrawCommands();
@@ -2114,7 +2164,7 @@ function updateSkipLevelOfDetail(model, frameState) {
   }
 }
 
-function updateClippingPlanes(model, frameState) {
+function updateClippingPlanes(model: any, frameState: any) {
   // Update the clipping planes collection / state for this model to detect any changes.
   let currentClippingPlanesState = 0;
   if (model.isClippingEnabled()) {
@@ -2130,7 +2180,7 @@ function updateClippingPlanes(model, frameState) {
   }
 }
 
-function updateClippingPolygons(model, frameState) {
+function updateClippingPolygons(model: any, frameState: any) {
   // Update the clipping polygon collection / state for this model to detect any changes.
   let currentClippingPolygonsState = 0;
   if (model.isClippingPolygonsEnabled()) {
@@ -2148,7 +2198,7 @@ function updateClippingPolygons(model, frameState) {
   }
 }
 
-function updateSceneMode(model, frameState) {
+function updateSceneMode(model: any, frameState: any) {
   if (frameState.mode !== model._sceneMode) {
     if (model._projectTo2D) {
       model.resetDrawCommands();
@@ -2159,7 +2209,7 @@ function updateSceneMode(model, frameState) {
   }
 }
 
-function updateFog(model, frameState) {
+function updateFog(model: any, frameState: any) {
   const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
   if (fogRenderable !== model._fogRenderable) {
     model.resetDrawCommands();
@@ -2167,7 +2217,7 @@ function updateFog(model, frameState) {
   }
 }
 
-function updateVerticalExaggeration(model, frameState) {
+function updateVerticalExaggeration(model: any, frameState: any) {
   if (model.enableVerticalExaggeration) {
     const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
     if (model.hasVerticalExaggeration !== verticalExaggerationNeeded) {
@@ -2180,7 +2230,7 @@ function updateVerticalExaggeration(model, frameState) {
   }
 }
 
-function buildDrawCommands(model, frameState) {
+function buildDrawCommands(model: any, frameState: any) {
   if (!model._drawCommandsBuilt) {
     model.destroyPipelineResources();
     model._sceneGraph.buildDrawCommands(frameState);
@@ -2188,11 +2238,17 @@ function buildDrawCommands(model, frameState) {
   }
 }
 
-function updateModelMatrix(model, frameState) {
+function updateModelMatrix(model: any, frameState: any) {
   // This is done without a dirty flag so that the model matrix can be updated in-place
   // without needing to use a setter.
   if (!Matrix4.equals(model.modelMatrix, model._modelMatrix)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (frameState.mode !== SceneMode.SCENE3D && model._projectTo2D) {
+      throw new DeveloperError(
+        "Model.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true.",
+      );
+    }
+    //>>includeEnd('debug');
     model._updateModelMatrix = true;
     model._modelMatrix = Matrix4.clone(model.modelMatrix, model._modelMatrix);
   }
@@ -2201,7 +2257,7 @@ function updateModelMatrix(model, frameState) {
 const scratchPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
 
-function updateClamping(model) {
+function updateClamping(model: any) {
   if (
     !model._updateModelMatrix &&
     !model._heightDirty &&
@@ -2217,7 +2273,13 @@ function updateClamping(model) {
 
   const scene = model._scene;
   if (!defined(scene) || model.heightReference === HeightReference.NONE) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (model.heightReference !== HeightReference.NONE) {
+      throw new DeveloperError(
+        "Height reference is not supported without a scene.",
+      );
+    }
+    //>>includeEnd('debug');
     model._clampedModelMatrix = undefined;
     return;
   }
@@ -2258,7 +2320,7 @@ function updateClamping(model) {
   model._updateModelMatrix = true;
 }
 
-function updateBoundingSphereAndScale(model, frameState) {
+function updateBoundingSphereAndScale(model: any, frameState: any) {
   if (!model._updateModelMatrix && model._minimumPixelSize === 0.0) {
     return;
   }
@@ -2271,7 +2333,7 @@ function updateBoundingSphereAndScale(model, frameState) {
   updateComputedScale(model, modelMatrix, frameState);
 }
 
-function updateBoundingSphere(model, modelMatrix) {
+function updateBoundingSphere(model: any, modelMatrix: any) {
   model._clampedScale = defined(model._maximumScale)
     ? Math.min(model._scale, model._maximumScale)
     : model._scale;
@@ -2290,7 +2352,7 @@ function updateBoundingSphere(model, modelMatrix) {
   );
 }
 
-function updateComputedScale(model, modelMatrix, frameState) {
+function updateComputedScale(model: any, modelMatrix: any, frameState: any) {
   let scale = model.scale;
 
   if (model.minimumPixelSize !== 0.0 && !model._projectTo2D) {
@@ -2334,7 +2396,7 @@ function updateComputedScale(model, modelMatrix, frameState) {
     : scale;
 }
 
-function updatePickIds(model) {
+function updatePickIds(model: any) {
   if (!model._idDirty) {
     return;
   }
@@ -2352,7 +2414,7 @@ function updatePickIds(model) {
 // The same constructor in GLSL will produce the transpose of this.
 const yUpToZUp = new Matrix3(1, 0, 0, 0, 0, 1, 0, -1, 0);
 
-function updateReferenceMatrices(model, frameState) {
+function updateReferenceMatrices(model: any, frameState: any) {
   const modelMatrix = defined(model._clampedModelMatrix)
     ? model._clampedModelMatrix
     : model.modelMatrix;
@@ -2400,7 +2462,7 @@ function updateReferenceMatrices(model, frameState) {
   }
 }
 
-function updateSceneGraph(model, frameState) {
+function updateSceneGraph(model: any, frameState: any) {
   const sceneGraph = model._sceneGraph;
   if (model._updateModelMatrix || model._minimumPixelSize !== 0.0) {
     const modelMatrix = defined(model._clampedModelMatrix)
@@ -2435,7 +2497,7 @@ function updateSceneGraph(model, frameState) {
   model._userAnimationDirty = false;
 }
 
-function updateShowCreditsOnScreen(model) {
+function updateShowCreditsOnScreen(model: any) {
   if (!model._showCreditsOnScreenDirty) {
     return;
   }
@@ -2466,7 +2528,7 @@ function updateShowCreditsOnScreen(model) {
   }
 }
 
-function submitDrawCommands(model, frameState) {
+function submitDrawCommands(model: any, frameState: any) {
   // Check that show is true after draw commands are built;
   // we want the user to be able to instantly see the model
   // when show is set to true.
@@ -2500,7 +2562,7 @@ function submitDrawCommands(model, frameState) {
 
 const scratchBoundingSphere = new BoundingSphere();
 
-function scaleInPixels(positionWC, radius, frameState) {
+function scaleInPixels(positionWC: any, radius: any, frameState: any) {
   scratchBoundingSphere.center = positionWC;
   scratchBoundingSphere.radius = radius;
   return frameState.camera.getPixelSize(
@@ -2511,7 +2573,7 @@ function scaleInPixels(positionWC, radius, frameState) {
 }
 
 const scratchUpdateHeightCartesian = new Cartesian3();
-function getUpdateHeightCallback(model, ellipsoid, originalPostition) {
+function getUpdateHeightCallback(model: any, ellipsoid: any, originalPostition: any) {
   return function (clampedPosition) {
     if (isHeightReferenceRelative(model.heightReference)) {
       clampedPosition.height += originalPostition.height;
@@ -2536,7 +2598,7 @@ function getUpdateHeightCallback(model, ellipsoid, originalPostition) {
 
 const scratchDisplayConditionCartesian = new Cartesian3();
 
-function passesDistanceDisplayCondition(model, frameState) {
+function passesDistanceDisplayCondition(model: any, frameState: any) {
   const condition = model.distanceDisplayCondition;
   if (!defined(condition)) {
     return true;
@@ -2575,7 +2637,7 @@ function passesDistanceDisplayCondition(model, frameState) {
   return distanceSquared >= nearSquared && distanceSquared <= farSquared;
 }
 
-function addCreditsToCreditDisplay(model, frameState) {
+function addCreditsToCreditDisplay(model: any, frameState: any) {
   const creditDisplay = frameState.creditDisplay;
   const credits = model._credits;
   const creditsLength = credits.length;
@@ -2609,7 +2671,7 @@ Model.prototype.isInvisible = function () {
   return defined(color) && color.alpha === 0.0;
 };
 
-function supportsSilhouettes(frameState) {
+function supportsSilhouettes(frameState: any) {
   return frameState.context.stencilBuffer;
 }
 
@@ -2971,7 +3033,11 @@ Model.prototype.destroyModelResources = function () {
 Model.fromGltfAsync = async function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.url) && !defined(options.gltf)) {
+    throw new DeveloperError("options.url is required.");
+  }
+  //>>includeEnd('debug');
 
   // options.gltf is used internally for 3D Tiles. It can be a Resource, a URL
   // to a glTF/glb file, a binary glTF buffer, or a JSON object containing the
@@ -3029,7 +3095,9 @@ Model.fromGltfAsync = async function (options) {
 
   const gltfCallback = options.gltfCallback;
   if (defined(gltfCallback)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.func("options.gltfCallback", gltfCallback);
+    //>>includeEnd('debug');
 
     gltfCallback(loader.gltfJson);
   }
@@ -3211,7 +3279,7 @@ Model.prototype.applyStyle = function (style) {
   }
 };
 
-function makeModelOptions(loader, modelType, options) {
+function makeModelOptions(loader: any, modelType: any, options: any) {
   return {
     loader: loader,
     type: modelType,
@@ -3269,5 +3337,4 @@ function makeModelOptions(loader, modelType, options) {
  * @param {object} gltf The gltf object
  */
 
-export { Model };
 export default Model;

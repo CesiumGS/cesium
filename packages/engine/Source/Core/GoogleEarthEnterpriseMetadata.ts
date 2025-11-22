@@ -12,7 +12,7 @@ import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
 import TaskProcessor from "./TaskProcessor.js";
 
-function stringToBuffer(str) {
+function stringToBuffer(str: any) {
   const len = str.length;
   const buffer = new ArrayBuffer(len);
   const ui8 = new Uint8Array(buffer);
@@ -43,7 +43,7 @@ const defaultKey = stringToBuffer(
  * @see GoogleEarthEnterpriseTerrainProvider
  *
  */
-function GoogleEarthEnterpriseMetadata(resourceOrUrl) {
+function GoogleEarthEnterpriseMetadata(resourceOrUrl: any) {
   /**
    * True if imagery is available.
    * @type {boolean}
@@ -145,11 +145,15 @@ Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
  * @returns {Promise<GoogleEarthEnterpriseMetadata>} A promise which resolves to the created GoogleEarthEnterpriseMetadata instance/
  */
 GoogleEarthEnterpriseMetadata.fromUrl = async function (resourceOrUrl) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("resourceOrUrl", resourceOrUrl);
+  //>>includeEnd('debug');
   let url = resourceOrUrl;
 
   if (typeof url !== "string" && !(url instanceof Resource)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("resourceOrUrl.url", resourceOrUrl.url);
+    //>>includeEnd('debug');
 
     url = resourceOrUrl.url;
   }
@@ -386,7 +390,7 @@ GoogleEarthEnterpriseMetadata.prototype.populateSubtree = function (
   return populateSubtree(this, quadkey, request);
 };
 
-function populateSubtree(that, quadKey, request) {
+function populateSubtree(that: any, quadKey: any, request: any) {
   const tileInfo = that._tileInfo;
   let q = quadKey;
   let t = tileInfo[q];
@@ -483,7 +487,7 @@ GoogleEarthEnterpriseMetadata.prototype.getTileInformationFromQuadKey =
     return this._tileInfo[quadkey];
   };
 
-function getMetadataResource(that, quadKey, version, request) {
+function getMetadataResource(that: any, quadKey: any, version: any, request: any) {
   return that._resource.getDerivedResource({
     url: `flatfile?q2-0${quadKey}-q.${version.toString()}`,
     request: request,
@@ -492,7 +496,7 @@ function getMetadataResource(that, quadKey, version, request) {
 
 let dbrootParser;
 let dbrootParserPromise;
-function requestDbRoot(that) {
+function requestDbRoot(that: any) {
   const resource = that._resource.getDerivedResource({
     url: "dbRoot.v5",
     queryParameters: {
@@ -577,5 +581,4 @@ function requestDbRoot(that) {
       that.key = defaultKey;
     });
 }
-export { GoogleEarthEnterpriseMetadata };
 export default GoogleEarthEnterpriseMetadata;

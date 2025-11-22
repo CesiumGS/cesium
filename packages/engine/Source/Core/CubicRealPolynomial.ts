@@ -18,7 +18,20 @@ const CubicRealPolynomial = {};
  * @returns {number} The value of the discriminant.
  */
 CubicRealPolynomial.computeDiscriminant = function (a, b, c, d) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof a !== "number") {
+    throw new DeveloperError("a is a required number.");
+  }
+  if (typeof b !== "number") {
+    throw new DeveloperError("b is a required number.");
+  }
+  if (typeof c !== "number") {
+    throw new DeveloperError("c is a required number.");
+  }
+  if (typeof d !== "number") {
+    throw new DeveloperError("d is a required number.");
+  }
+  //>>includeEnd('debug');
 
   const a2 = a * a;
   const b2 = b * b;
@@ -33,7 +46,7 @@ CubicRealPolynomial.computeDiscriminant = function (a, b, c, d) {
   return discriminant;
 };
 
-function computeRealRoots(a, b, c, d) {
+function computeRealRoots(a: any, b: any, c: any, d: any) {
   const A = a;
   const B = b / 3.0;
   const C = c / 3.0;
@@ -149,7 +162,20 @@ function computeRealRoots(a, b, c, d) {
  * @returns {number[]} The real valued roots.
  */
 CubicRealPolynomial.computeRealRoots = function (a, b, c, d) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof a !== "number") {
+    throw new DeveloperError("a is a required number.");
+  }
+  if (typeof b !== "number") {
+    throw new DeveloperError("b is a required number.");
+  }
+  if (typeof c !== "number") {
+    throw new DeveloperError("c is a required number.");
+  }
+  if (typeof d !== "number") {
+    throw new DeveloperError("d is a required number.");
+  }
+  //>>includeEnd('debug');
 
   let roots;
   let ratio;
@@ -209,5 +235,4 @@ CubicRealPolynomial.computeRealRoots = function (a, b, c, d) {
 
   return computeRealRoots(a, b, c, d);
 };
-export { CubicRealPolynomial };
 export default CubicRealPolynomial;

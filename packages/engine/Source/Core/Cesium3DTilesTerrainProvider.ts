@@ -65,7 +65,7 @@ import TerrainProvider from "./TerrainProvider.js";
  *   console.log(error);
  * }
  */
-function Cesium3DTilesTerrainProvider(options) {
+function Cesium3DTilesTerrainProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   let credit = options.credit;
@@ -136,7 +136,9 @@ function Cesium3DTilesTerrainProvider(options) {
  * }
  */
 Cesium3DTilesTerrainProvider.fromUrl = async function (url, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -205,7 +207,9 @@ Cesium3DTilesTerrainProvider.fromIonAssetId = async function (
   assetId,
   options,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("assetId", assetId);
+  //>>includeEnd('debug');
 
   const resource = await IonResource.fromAssetId(assetId);
   return Cesium3DTilesTerrainProvider.fromUrl(resource, options);
@@ -299,7 +303,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = async function (
     return undefined;
   }
 
-  const gltfPromise = glbPromise.then((glbBuffer) =>
+  const gltfPromise = glbPromise.then((glbBuffer: any) =>
     parseGlb(new Uint8Array(glbBuffer)),
   );
 
@@ -307,7 +311,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = async function (
   promises[0] = subtreePromise;
   promises[1] = gltfPromise;
   promises[2] = requestWaterMask
-    ? gltfPromise.then((gltf) => loadWaterMask(gltf, glbResource))
+    ? gltfPromise.then((gltf: any) => loadWaterMask(gltf, glbResource))
     : undefined;
 
   try {
@@ -466,8 +470,11 @@ Cesium3DTilesTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {number} x The x coordinate of the tile
  * @returns {number} The root tile ID (0 or 1)
  */
-function getRootIdFromGeographic(level, x) {
-  ;
+function getRootIdFromGeographic(level: any, x: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  //>>includeEnd('debug');
 
   const numberOfYTilesAtLevel = 1 << level;
   const rootId = (x / numberOfYTilesAtLevel) | 0;
@@ -483,13 +490,13 @@ function getRootIdFromGeographic(level, x) {
  * @param {number} y The y coordinate of the tile
  * @returns {ImplicitTileCoordinates} The implicit tile coordinates
  */
-function getImplicitTileCoordinatesFromGeographicCoordinates(
-  implicitTileset,
-  level,
-  x,
-  y,
-) {
-  ;
+function getImplicitTileCoordinatesFromGeographicCoordinates(implicitTileset: any, level: any, x: any, y: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  //>>includeEnd('debug');
 
   const numberOfYTilesAtLevel = 1 << level;
   const implicitLevel = level;
@@ -513,7 +520,7 @@ function getImplicitTileCoordinatesFromGeographicCoordinates(
  * @param {Resource} gltfResource The resource pointing to the glTF.
  * @returns {Promise<HTMLImageElement|HTMLCanvasElement|ImageBitmap>|undefined} A promise that resolves to the loaded image. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
-async function loadWaterMask(gltf, gltfResource) {
+async function loadWaterMask(gltf: any, gltfResource: any) {
   const extension = gltf.extensions?.["EXT_structural_metadata"];
   if (!defined(extension) || !defined(extension.propertyTextures)) {
     return;
@@ -544,7 +551,7 @@ async function loadWaterMask(gltf, gltfResource) {
   }
 
   const propertyTextureData = extension.propertyTextures.find(
-    (data) => data.class === metadataClass.id,
+    (data: any) => data.class === metadataClass.id,
   );
   if (!defined(propertyTextureData)) {
     throw new DeveloperError(
@@ -584,8 +591,14 @@ async function loadWaterMask(gltf, gltfResource) {
  * @param {number} y The y coordinate of the child tile
  * @returns {boolean} <code>true</code> if the child tile is available. <code>false</code> otherwise.
  */
-function isChildAvailable(implicitTileset, subtree, coord, x, y) {
-  ;
+function isChildAvailable(implicitTileset: any, subtree: any, coord: any, x: any, y: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("subtree", subtree);
+  Check.typeOf.object("coord", coord);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  //>>includeEnd('debug');
 
   // For terrain it's required that the root tile of any available subtree is also available, so
   // when the child tile belongs to a child subtree, we only need to check if the child subtree itself is available.
@@ -611,8 +624,13 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
  * @param {number} y The y coordinate of the tile
  * @returns {ImplicitTileCoordinates}
  */
-function getImplicitTileCoordinates(implicitTileset, level, x, y) {
-  ;
+function getImplicitTileCoordinates(implicitTileset: any, level: any, x: any, y: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  //>>includeEnd('debug');
 
   const { subdivisionScheme, subtreeLevels } = implicitTileset;
 
@@ -741,7 +759,7 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
  * @param {ImplicitSubtree} subtree The subtree
  * @param {number} stamp The timestamp used for priority ordering
  */
-function ImplicitSubtreeCacheNode(rootId, subtree, stamp) {
+function ImplicitSubtreeCacheNode(rootId: any, subtree: any, stamp: any) {
   this.rootId = rootId;
   this.subtree = subtree;
   this.stamp = stamp;
@@ -755,7 +773,7 @@ function ImplicitSubtreeCacheNode(rootId, subtree, stamp) {
  * @param {Cesium3DTilesTerrainProvider} options.provider
  * @param {number} [options.maximumSubtreeCount=0] The total number of subtrees this cache can store. If adding a new subtree would exceed this limit, the lowest priority subtrees will be removed until there is room, unless the subtree that is going to be removed is the parent of the new subtree, in which case it will not be removed and the new subtree will still be added, exceeding the memory limit.
  */
-function ImplicitSubtreeCache(options) {
+function ImplicitSubtreeCache(options: any) {
   this._maximumSubtreeCount = options.maximumSubtreeCount ?? 0;
   this._subtreeRequestCounter = 0;
 
@@ -805,7 +823,11 @@ ImplicitSubtreeCache.prototype.addSubtree = function (rootId, subtree) {
     const parentCoord = subtreeCoord.getParentSubtreeCoordinates();
     const parentNode = this.find(rootId, parentCoord);
 
-    ;
+    //>>includeStart('debug', pragmas.debug)
+    if (parentNode === undefined) {
+      throw new DeveloperError("parent node needs to exist");
+    }
+    //>>includeEnd('debug');
   }
 
   if (this._maximumSubtreeCount > 0) {
@@ -973,14 +995,14 @@ ImplicitSubtreeCache.prototype._computeMaximumImplicitTileCoordinatesAtPosition 
  * @param {number} levelOffset
  * @returns {ImplicitTileCoordinates} The parent subtree coordinate
  */
-function computeDescendantCoordinatesAtUv(
-  implicitTileset,
-  subtreeCoord,
-  u,
-  v,
-  levelOffset,
-) {
-  ;
+function computeDescendantCoordinatesAtUv(implicitTileset: any, subtreeCoord: any, u: any, v: any, levelOffset: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("subtreeCoord", subtreeCoord);
+  Check.typeOf.number("u", u);
+  Check.typeOf.number("v", v);
+  Check.typeOf.number("levelOffset", levelOffset);
+  //>>includeEnd('debug');
 
   const dimension = 1 << levelOffset;
   const localX = CesiumMath.clamp((u * dimension) | 0, 0, dimension - 1);
@@ -1016,5 +1038,4 @@ ImplicitSubtreeCache.prototype.computeMaximumLevelAtPosition = function (
   return tileCoordinates.level;
 };
 
-export { Cesium3DTilesTerrainProvider };
 export default Cesium3DTilesTerrainProvider;

@@ -238,7 +238,11 @@ VoxelEllipsoidShape.prototype.update = function (
   const { DefaultMinBounds, DefaultMaxBounds } = VoxelEllipsoidShape;
   clipMinBounds = clipMinBounds ?? DefaultMinBounds;
   clipMaxBounds = clipMaxBounds ?? DefaultMaxBounds;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("modelMatrix", modelMatrix);
+  Check.typeOf.object("minBounds", minBounds);
+  Check.typeOf.object("maxBounds", maxBounds);
+  //>>includeEnd('debug');
 
   const epsilonZeroScale = CesiumMath.EPSILON10;
   const epsilonLongitudeDiscontinuity = CesiumMath.EPSILON3; // 0.001 radians = 0.05729578 degrees
@@ -782,7 +786,13 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForTile = function (
   tileZ,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("tileLevel", tileLevel);
+  Check.typeOf.number("tileX", tileX);
+  Check.typeOf.number("tileY", tileY);
+  Check.typeOf.number("tileZ", tileZ);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const sizeAtLevel = 1.0 / Math.pow(2.0, tileLevel);
   const minLongitudeLerp = tileX * sizeAtLevel;
@@ -840,7 +850,7 @@ const scratchQ = new Cartesian2();
  * @returns {Cartesian3} The nearest point on the ellipse and its radius.
  * @private
  */
-function nearestPointAndRadiusOnEllipse(position, radii, evoluteScale, result) {
+function nearestPointAndRadiusOnEllipse(position: any, radii: any, evoluteScale: any, result: any) {
   // Map to the first quadrant
   const p = Cartesian2.abs(position, scratchQuadrantPosition);
   const inverseRadii = Cartesian2.fromElements(
@@ -922,7 +932,10 @@ VoxelEllipsoidShape.prototype.convertLocalToShapeUvSpace = function (
   positionLocal,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("positionLocal", positionLocal);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   let longitude = Math.atan2(positionLocal.y, positionLocal.x);
 
@@ -1022,7 +1035,12 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForSample = function (
   tileUv,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("spatialNode", spatialNode);
+  Check.typeOf.object("tileDimensions", tileDimensions);
+  Check.typeOf.object("tileUv", tileUv);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const tileSizeAtLevel = 1.0 / Math.pow(2.0, spatialNode.level);
   const sampleSize = Cartesian3.divideComponents(
@@ -1098,15 +1116,7 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForSample = function (
  *
  * @private
  */
-function getEllipsoidChunkObb(
-  rectangle,
-  minHeight,
-  maxHeight,
-  ellipsoid,
-  translation,
-  rotation,
-  result,
-) {
+function getEllipsoidChunkObb(rectangle: any, minHeight: any, maxHeight: any, ellipsoid: any, translation: any, rotation: any, result: any, ) {
   result = OrientedBoundingBox.fromRectangle(
     rectangle,
     minHeight,
@@ -1153,5 +1163,4 @@ VoxelEllipsoidShape.DefaultMaxBounds = Object.freeze(
   ),
 );
 
-export { VoxelEllipsoidShape };
 export default VoxelEllipsoidShape;

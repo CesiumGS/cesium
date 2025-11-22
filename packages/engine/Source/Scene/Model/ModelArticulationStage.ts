@@ -21,12 +21,15 @@ const articulationEpsilon = CesiumMath.EPSILON16;
  *
  * @private
  */
-function ModelArticulationStage(options) {
+function ModelArticulationStage(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const stage = options.stage;
   const runtimeArticulation = options.runtimeArticulation;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.stage", stage);
+  Check.typeOf.object("options.runtimeArticulation", runtimeArticulation);
+  //>>includeEnd('debug');
 
   this._stage = stage;
   this._runtimeArticulation = runtimeArticulation;
@@ -143,7 +146,9 @@ Object.defineProperties(ModelArticulationStage.prototype, {
       return this._currentValue;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
 
       value = CesiumMath.clamp(value, this.minimumValue, this.maximumValue);
       if (
@@ -177,7 +182,9 @@ const scratchArticulationRotation = new Matrix3();
  * @private
  */
 ModelArticulationStage.prototype.applyStageToMatrix = function (result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const type = this.type;
   const value = this.currentValue;
@@ -251,5 +258,4 @@ ModelArticulationStage.prototype.applyStageToMatrix = function (result) {
   return result;
 };
 
-export { ModelArticulationStage };
 export default ModelArticulationStage;

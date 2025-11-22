@@ -122,7 +122,14 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
     resultat = localFrameToFixedFrameCache[hashAxis];
   } else {
     resultat = function (origin, ellipsoid, result) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(origin)) {
+        throw new DeveloperError("origin is required.");
+      }
+      if (isNaN(origin.x) || isNaN(origin.y) || isNaN(origin.z)) {
+        throw new DeveloperError("origin has a NaN component");
+      }
+      //>>includeEnd('debug');
       if (!defined(result)) {
         result = new Matrix4();
       }
@@ -381,7 +388,9 @@ Transforms.headingPitchRollToFixedFrame = function (
   fixedFrameTransform,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("HeadingPitchRoll", headingPitchRoll);
+  //>>includeEnd('debug');
 
   fixedFrameTransform =
     fixedFrameTransform ?? Transforms.eastNorthUpToFixedFrame;
@@ -432,7 +441,9 @@ Transforms.headingPitchRollQuaternion = function (
   fixedFrameTransform,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("HeadingPitchRoll", headingPitchRoll);
+  //>>includeEnd('debug');
 
   const transform = Transforms.headingPitchRollToFixedFrame(
     origin,
@@ -469,7 +480,9 @@ Transforms.fixedFrameToHeadingPitchRoll = function (
   fixedFrameTransform,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("transform", transform);
+  //>>includeEnd('debug');
 
   ellipsoid = ellipsoid ?? Ellipsoid.default;
   fixedFrameTransform =
@@ -567,7 +580,11 @@ Transforms.computeIcrfToCentralBodyFixedMatrix = function (date, result) {
  * });
  */
 Transforms.computeTemeToPseudoFixedMatrix = function (date, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(date)) {
+    throw new DeveloperError("date is required.");
+  }
+  //>>includeEnd('debug');
 
   // GMST is actually computed using UT1.  We're using UTC as an approximation of UT1.
   // We do not want to use the function like convertTaiToUtc in JulianDate because
@@ -714,7 +731,11 @@ Transforms.preloadIcrfFixed = function (timeInterval) {
  * @see Transforms.preloadIcrfFixed
  */
 Transforms.computeIcrfToFixedMatrix = function (date, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(date)) {
+    throw new DeveloperError("date is required.");
+  }
+  //>>includeEnd('debug');
   if (!defined(result)) {
     result = new Matrix3();
   }
@@ -754,7 +775,11 @@ const dateScratch = new JulianDate();
  * }
  */
 Transforms.computeMoonFixedToIcrfMatrix = function (date, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(date)) {
+    throw new DeveloperError("date is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Matrix3();
@@ -812,7 +837,11 @@ Transforms.computeMoonFixedToIcrfMatrix = function (date, result) {
  * Cesium.Transforms.computeIcrfToCentralBodyFixedMatrix = Cesium.Transforms.computeIcrfToMoonFixedMatrix;
  */
 Transforms.computeIcrfToMoonFixedMatrix = function (date, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(date)) {
+    throw new DeveloperError("date is required.");
+  }
+  //>>includeEnd('debug');
   if (!defined(result)) {
     result = new Matrix3();
   }
@@ -863,7 +892,11 @@ const rotation2Scratch = new Matrix3();
  * @see Transforms.preloadIcrfFixed
  */
 Transforms.computeFixedToIcrfMatrix = function (date, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(date)) {
+    throw new DeveloperError("date is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Matrix3();
@@ -1006,7 +1039,19 @@ Transforms.pointToGLWindowCoordinates = function (
   point,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(modelViewProjectionMatrix)) {
+    throw new DeveloperError("modelViewProjectionMatrix is required.");
+  }
+
+  if (!defined(viewportTransformation)) {
+    throw new DeveloperError("viewportTransformation is required.");
+  }
+
+  if (!defined(point)) {
+    throw new DeveloperError("point is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian2();
@@ -1043,7 +1088,15 @@ Transforms.rotationMatrixFromPositionVelocity = function (
   ellipsoid,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(position)) {
+    throw new DeveloperError("position is required.");
+  }
+
+  if (!defined(velocity)) {
+    throw new DeveloperError("velocity is required.");
+  }
+  //>>includeEnd('debug');
 
   const normal = (ellipsoid ?? Ellipsoid.default).geodeticSurfaceNormal(
     position,
@@ -1117,7 +1170,17 @@ const scratchToENU = new Matrix4();
  * @private
  */
 Transforms.basisTo2D = function (projection, matrix, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(projection)) {
+    throw new DeveloperError("projection is required.");
+  }
+  if (!defined(matrix)) {
+    throw new DeveloperError("matrix is required.");
+  }
+  if (!defined(result)) {
+    throw new DeveloperError("result is required.");
+  }
+  //>>includeEnd('debug');
 
   const rtcCenter = Matrix4.getTranslation(matrix, scratchCenter);
   const ellipsoid = projection.ellipsoid;
@@ -1166,7 +1229,17 @@ Transforms.basisTo2D = function (projection, matrix, result) {
  * @private
  */
 Transforms.ellipsoidTo2DModelMatrix = function (projection, center, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(projection)) {
+    throw new DeveloperError("projection is required.");
+  }
+  if (!defined(center)) {
+    throw new DeveloperError("center is required.");
+  }
+  if (!defined(result)) {
+    throw new DeveloperError("result is required.");
+  }
+  //>>includeEnd('debug');
 
   const ellipsoid = projection.ellipsoid;
 
@@ -1201,5 +1274,4 @@ Transforms.ellipsoidTo2DModelMatrix = function (projection, center, result) {
 
   return result;
 };
-export { Transforms };
 export default Transforms;

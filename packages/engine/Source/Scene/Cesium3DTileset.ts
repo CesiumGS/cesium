@@ -200,7 +200,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * scene.primitives.add(tileset);
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles specification}
  */
-function Cesium3DTileset(options) {
+function Cesium3DTileset(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._url = undefined;
@@ -244,11 +244,19 @@ function Cesium3DTileset(options) {
   this._memoryAdjustedScreenSpaceError = this._maximumScreenSpaceError;
 
   this._cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("cacheBytes", this._cacheBytes, 0);
+  //>>includeEnd('debug');
 
   const maximumCacheOverflowBytes =
     options.maximumCacheOverflowBytes ?? 512 * 1024 * 1024;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals(
+    "maximumCacheOverflowBytes",
+    maximumCacheOverflowBytes,
+    0,
+  );
+  //>>includeEnd('debug');
   this._maximumCacheOverflowBytes = maximumCacheOverflowBytes;
 
   this._styleEngine = new Cesium3DTileStyleEngine();
@@ -1378,7 +1386,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._hasMixedContent;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("value", value);
+      //>>includeEnd('debug');
 
       this._hasMixedContent = value;
     },
@@ -1492,7 +1502,13 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._maximumScreenSpaceError;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals(
+        "maximumScreenSpaceError",
+        value,
+        0,
+      );
+      //>>includeEnd('debug');
 
       this._maximumScreenSpaceError = value;
       this._memoryAdjustedScreenSpaceError = value;
@@ -1533,7 +1549,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._cacheBytes;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0);
+      //>>includeEnd('debug');
 
       this._cacheBytes = value;
     },
@@ -1563,7 +1581,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._maximumCacheOverflowBytes;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0);
+      //>>includeEnd('debug');
 
       this._maximumCacheOverflowBytes = value;
     },
@@ -1601,7 +1621,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._pointCloudShading;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("pointCloudShading", value);
+      //>>includeEnd('debug');
       this._pointCloudShading = value;
     },
   },
@@ -1855,7 +1877,10 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._foveatedConeSize;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("foveatedConeSize", value, 0.0);
+      Check.typeOf.number.lessThanOrEquals("foveatedConeSize", value, 1.0);
+      //>>includeEnd('debug');
 
       this._foveatedConeSize = value;
     },
@@ -1875,7 +1900,18 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._foveatedMinimumScreenSpaceErrorRelaxation;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals(
+        "foveatedMinimumScreenSpaceErrorRelaxation",
+        value,
+        0.0,
+      );
+      Check.typeOf.number.lessThanOrEquals(
+        "foveatedMinimumScreenSpaceErrorRelaxation",
+        value,
+        this.maximumScreenSpaceError,
+      );
+      //>>includeEnd('debug');
 
       this._foveatedMinimumScreenSpaceErrorRelaxation = value;
     },
@@ -1910,7 +1946,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._imageBasedLighting;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("imageBasedLighting", this._imageBasedLighting);
+      //>>includeEnd('debug');
       if (value !== this._imageBasedLighting) {
         if (
           this._shouldDestroyImageBasedLighting &&
@@ -2026,7 +2064,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
         value = `featureId_${value}`;
       }
 
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.string("value", value);
+      //>>includeEnd('debug');
 
       this._featureIdLabel = value;
     },
@@ -2056,7 +2096,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
         value = `instanceFeatureId_${value}`;
       }
 
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.string("value", value);
+      //>>includeEnd('debug');
 
       this._instanceFeatureIdLabel = value;
     },
@@ -2086,7 +2128,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
  * }
  */
 Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("assetId", assetId);
+  //>>includeEnd('debug');
 
   const resource = await IonResource.fromAssetId(assetId);
   return Cesium3DTileset.fromUrl(resource, options);
@@ -2141,7 +2185,9 @@ Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
  * scene.primitives.add(tileset);
  */
 Cesium3DTileset.fromUrl = async function (url, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -2329,7 +2375,7 @@ Cesium3DTileset.prototype.loadTileset = function (
  *
  * @private
  */
-function makeTile(tileset, baseResource, tileHeader, parentTile) {
+function makeTile(tileset: any, baseResource: any, tileHeader: any, parentTile: any) {
   const hasImplicitTiling =
     defined(tileHeader.implicitTiling) ||
     hasExtension(tileHeader, "3DTILES_implicit_tiling");
@@ -2392,7 +2438,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
  * @return {Promise<Cesium3DTilesetMetadata>} The loaded Cesium3DTilesetMetadata
  * @private
  */
-async function processMetadataExtension(resource, tilesetJson) {
+async function processMetadataExtension(resource: any, tilesetJson: any) {
   const metadataJson = hasExtension(tilesetJson, "3DTILES_metadata")
     ? tilesetJson.extensions["3DTILES_metadata"]
     : tilesetJson;
@@ -2438,7 +2484,7 @@ const scratchHalfHeight = new Cartesian3();
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
  */
-function updateDynamicScreenSpaceError(tileset, frameState) {
+function updateDynamicScreenSpaceError(tileset: any, frameState: any) {
   let up;
   let direction;
   let height;
@@ -2542,7 +2588,7 @@ function updateDynamicScreenSpaceError(tileset, frameState) {
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
  */
-function requestContent(tileset, tile) {
+function requestContent(tileset: any, tile: any) {
   if (tile.hasEmptyContent) {
     return;
   }
@@ -2556,7 +2602,7 @@ function requestContent(tileset, tile) {
   }
 
   promise
-    .then((content) => {
+    .then((content: any) => {
       if (!defined(content) || tile.isDestroyed() || tileset.isDestroyed()) {
         return;
       }
@@ -2564,7 +2610,7 @@ function requestContent(tileset, tile) {
       tileset._processingQueue.push(tile);
       ++statistics.numberOfTilesProcessing;
     })
-    .catch((error) => {
+    .catch((error: any) => {
       handleTileFailure(error, tileset, tile);
     });
 
@@ -2580,7 +2626,7 @@ function requestContent(tileset, tile) {
   tileset._requestedTilesInFlight.push(tile);
 }
 
-function sortTilesByPriority(a, b) {
+function sortTilesByPriority(a: any, b: any) {
   return a._priority - b._priority;
 }
 
@@ -2654,7 +2700,7 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
  */
-function cancelOutOfViewRequests(tileset, frameState) {
+function cancelOutOfViewRequests(tileset: any, frameState: any) {
   const requestedTilesInFlight = tileset._requestedTilesInFlight;
   let removeCount = 0;
   for (let i = 0; i < requestedTilesInFlight.length; ++i) {
@@ -2687,7 +2733,7 @@ function cancelOutOfViewRequests(tileset, frameState) {
  * @private
  * @param {Cesium3DTileset} tileset
  */
-function requestTiles(tileset) {
+function requestTiles(tileset: any) {
   const requestedTiles = tileset._requestedTiles;
   requestedTiles.sort(sortTilesByPriority);
   for (let i = 0; i < requestedTiles.length; ++i) {
@@ -2701,7 +2747,7 @@ function requestTiles(tileset) {
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
  */
-function handleTileFailure(error, tileset, tile) {
+function handleTileFailure(error: any, tileset: any, tile: any) {
   if (tileset.isDestroyed()) {
     return;
   }
@@ -2728,7 +2774,7 @@ function handleTileFailure(error, tileset, tile) {
  * @private
  * @param {Cesium3DTileset} tileset
  */
-function filterProcessingQueue(tileset) {
+function filterProcessingQueue(tileset: any) {
   const tiles = tileset._processingQueue;
 
   let removeCount = 0;
@@ -2752,7 +2798,7 @@ const scratchUpdateHeightCartographic = new Cartographic();
 const scratchUpdateHeightCartographic2 = new Cartographic();
 const scratchUpdateHeightCartesian = new Cartesian3();
 
-function processUpdateHeight(tileset, tile, frameState) {
+function processUpdateHeight(tileset: any, tile: any, frameState: any) {
   if (!tileset.enableCollision || !tileset.show) {
     return;
   }
@@ -2809,7 +2855,7 @@ function processUpdateHeight(tileset, tile, frameState) {
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
  */
-function processTiles(tileset, frameState) {
+function processTiles(tileset: any, frameState: any) {
   filterProcessingQueue(tileset);
   const tiles = tileset._processingQueue;
 
@@ -2844,8 +2890,15 @@ function processTiles(tileset, frameState) {
   }
 }
 
-function increaseScreenSpaceError(tileset) {
-  ;
+function increaseScreenSpaceError(tileset: any) {
+  //>>includeStart('debug', pragmas.debug);
+  oneTimeWarning(
+    "increase-screenSpaceError",
+    `The tiles needed to meet maximumScreenSpaceError would use more memory than allocated for this tileset.
+    The tileset will be rendered with a larger screen space error (see memoryAdjustedScreenSpaceError).
+    Consider using larger values for cacheBytes and maximumCacheOverflowBytes.`,
+  );
+  //>>includeEnd('debug');
 
   tileset._memoryAdjustedScreenSpaceError *= 1.02;
   const tiles = tileset._processingQueue;
@@ -2855,7 +2908,7 @@ function increaseScreenSpaceError(tileset) {
   tiles.sort(sortTilesByPriority);
 }
 
-function decreaseScreenSpaceError(tileset) {
+function decreaseScreenSpaceError(tileset: any) {
   tileset._memoryAdjustedScreenSpaceError = Math.max(
     tileset.memoryAdjustedScreenSpaceError / 1.02,
     tileset.maximumScreenSpaceError,
@@ -2873,7 +2926,7 @@ const stringOptions = {
  * @param {number} memorySizeInBytes
  * @returns {string}
  */
-function formatMemoryString(memorySizeInBytes) {
+function formatMemoryString(memorySizeInBytes: any) {
   const memoryInMegabytes = memorySizeInBytes / 1048576;
   if (memoryInMegabytes < 1.0) {
     return memoryInMegabytes.toLocaleString(undefined, stringOptions);
@@ -2886,7 +2939,7 @@ function formatMemoryString(memorySizeInBytes) {
  * @param {Cesium3DTile} tile
  * @returns {Cartesian3}
  */
-function computeTileLabelPosition(tile) {
+function computeTileLabelPosition(tile: any) {
   const { halfAxes, radius, center } = tile.boundingVolume.boundingVolume;
 
   let position = Cartesian3.clone(center, scratchCartesian);
@@ -2913,7 +2966,7 @@ function computeTileLabelPosition(tile) {
  * @param {Cartesian3} position
  * @returns {Label}
  */
-function addTileDebugLabel(tile, tileset, position) {
+function addTileDebugLabel(tile: any, tileset: any, position: any) {
   let labelString = "";
   let attributes = 0;
 
@@ -2983,7 +3036,7 @@ function addTileDebugLabel(tile, tileset, position) {
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
  */
-function updateTileDebugLabels(tileset, frameState) {
+function updateTileDebugLabels(tileset: any, frameState: any) {
   const selectedTiles = tileset._selectedTiles;
   const selectedLength = selectedTiles.length;
   const emptyTiles = tileset._emptyTiles;
@@ -3023,7 +3076,7 @@ function updateTileDebugLabels(tileset, frameState) {
  * @param {FrameState} frameState
  * @param {object} passOptions
  */
-function updateTiles(tileset, frameState, passOptions) {
+function updateTiles(tileset: any, frameState: any, passOptions: any) {
   tileset._styleEngine.applyStyle(tileset);
   tileset._styleApplied = true;
 
@@ -3165,7 +3218,7 @@ const scratchStack = [];
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
  */
-function destroySubtree(tileset, tile) {
+function destroySubtree(tileset: any, tile: any) {
   const root = tile;
   const stack = scratchStack;
   stack.push(tile);
@@ -3188,7 +3241,7 @@ function destroySubtree(tileset, tile) {
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
  */
-function unloadTile(tileset, tile) {
+function unloadTile(tileset: any, tile: any) {
   tileset.tileUnload.raiseEvent(tile);
   tileset._statistics.decrementLoadCounts(tile.content);
   --tileset._statistics.numberOfTilesWithContentReady;
@@ -3200,7 +3253,7 @@ function unloadTile(tileset, tile) {
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
  */
-function destroyTile(tileset, tile) {
+function destroyTile(tileset: any, tile: any) {
   tileset._cache.unloadTile(tileset, tile, unloadTile);
   tile.destroy();
 }
@@ -3223,7 +3276,7 @@ Cesium3DTileset.prototype.trimLoadedTiles = function () {
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
  */
-function raiseLoadProgressEvent(tileset, frameState) {
+function raiseLoadProgressEvent(tileset: any, frameState: any) {
   const statistics = tileset._statistics;
   const statisticsLast = tileset._statisticsLast;
 
@@ -3276,7 +3329,7 @@ function raiseLoadProgressEvent(tileset, frameState) {
  * @private
  * @param {Cesium3DTileset} tileset
  */
-function resetMinimumMaximum(tileset) {
+function resetMinimumMaximum(tileset: any) {
   tileset._heatmap.resetMinimumMaximum();
   tileset._minimumPriority.depth = Number.MAX_VALUE;
   tileset._maximumPriority.depth = -Number.MAX_VALUE;
@@ -3293,7 +3346,7 @@ function resetMinimumMaximum(tileset) {
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
  */
-function detectModelMatrixChanged(tileset, frameState) {
+function detectModelMatrixChanged(tileset: any, frameState: any) {
   if (
     frameState.frameNumber === tileset._updatedModelMatrixFrame &&
     defined(tileset._previousModelMatrix)
@@ -3322,7 +3375,7 @@ function detectModelMatrixChanged(tileset, frameState) {
  * @param {object} passOptions
  * @returns {boolean}
  */
-function update(tileset, frameState, passStatistics, passOptions) {
+function update(tileset: any, frameState: any, passStatistics: any, passOptions: any) {
   if (frameState.mode === SceneMode.MORPHING) {
     return false;
   }
@@ -3370,7 +3423,7 @@ function update(tileset, frameState, passStatistics, passOptions) {
   return ready;
 }
 
-function createCredits(tileset) {
+function createCredits(tileset: any) {
   let credits = tileset._credits;
   if (!defined(credits)) {
     credits = [];
@@ -3378,7 +3431,7 @@ function createCredits(tileset) {
   credits.length = 0;
 
   if (defined(tileset.resource.credits)) {
-    tileset.resource.credits.forEach((credit) => {
+    tileset.resource.credits.forEach((credit: any) => {
       credits.push(Credit.clone(credit));
     });
   }
@@ -3397,7 +3450,7 @@ function createCredits(tileset) {
   }
 
   credits.forEach(
-    (credit) =>
+    (credit: any) =>
       (credit.showOnScreen =
         credit.showOnScreen || tileset._showCreditsOnScreen),
   );
@@ -3440,7 +3493,10 @@ Cesium3DTileset.prototype.updateForPass = function (
   frameState,
   tilesetPassState,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  Check.typeOf.object("tilesetPassState", tilesetPassState);
+  //>>includeEnd('debug');
 
   this.imageryLayers._update();
 
@@ -3657,7 +3713,10 @@ const scratchGetHeightCartographic = new Cartographic();
  * const height = tileset.getHeight(scene.camera.positionCartographic, scene);
  */
 Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartographic", cartographic);
+  Check.typeOf.object("scene", scene);
+  //>>includeEnd('debug');
 
   let ellipsoid = scene.ellipsoid;
   if (!defined(ellipsoid)) {
@@ -3772,7 +3831,7 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
   }
 
   const length = candidates.length;
-  candidates.sort((a, b) => {
+  candidates.sort((a: any, b: any) => {
     const aDist = BoundingSphere.distanceSquaredTo(
       a.contentBoundingVolume.boundingSphere,
       ray.origin,
@@ -3870,5 +3929,4 @@ Cesium3DTileset.prototype.isGltfExtensionRequired = function (
  * @param {number} time The time of interpolation generally in the range <code>[0.0, 1.0]</code>.
  * @returns {number} The interpolated value.
  */
-export { Cesium3DTileset };
 export default Cesium3DTileset;

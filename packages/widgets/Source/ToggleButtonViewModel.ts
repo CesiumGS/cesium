@@ -11,8 +11,12 @@ import knockout from "./ThirdParty/knockout.js";
  * @param {boolean} [options.toggled=false] A boolean indicating whether the button should be initially toggled.
  * @param {string} [options.tooltip=''] A string containing the button's tooltip.
  */
-function ToggleButtonViewModel(command, options) {
-  ;
+function ToggleButtonViewModel(command: any, options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(command)) {
+    throw new DeveloperError("command is required.");
+  }
+  //>>includeEnd('debug');
 
   this._command = command;
 
@@ -47,5 +51,4 @@ Object.defineProperties(ToggleButtonViewModel.prototype, {
     },
   },
 });
-export { ToggleButtonViewModel };
 export default ToggleButtonViewModel;

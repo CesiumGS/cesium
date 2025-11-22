@@ -10,7 +10,7 @@ import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
  *
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that potentially occludes tiles.
  */
-function QuadtreeOccluders(options) {
+function QuadtreeOccluders(options: any) {
   this._ellipsoid = new EllipsoidalOccluder(options.ellipsoid, Cartesian3.ZERO);
 }
 
@@ -27,5 +27,4 @@ Object.defineProperties(QuadtreeOccluders.prototype, {
     },
   },
 });
-export { QuadtreeOccluders };
 export default QuadtreeOccluders;

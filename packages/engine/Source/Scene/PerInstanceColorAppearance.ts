@@ -67,7 +67,7 @@ import Appearance from "./Appearance.js";
  *   appearance : new Cesium.PerInstanceColorAppearance()
  * });
  */
-function PerInstanceColorAppearance(options) {
+function PerInstanceColorAppearance(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const translucent = options.translucent ?? true;
@@ -293,5 +293,4 @@ PerInstanceColorAppearance.prototype.isTranslucent =
  */
 PerInstanceColorAppearance.prototype.getRenderState =
   Appearance.prototype.getRenderState;
-export { PerInstanceColorAppearance };
 export default PerInstanceColorAppearance;

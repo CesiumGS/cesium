@@ -61,7 +61,7 @@ const whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
  * @param {LabelCollection} labelCollection
  * @returns {Billboard}
  */
-function getWhitePixelBillboard(billboardCollection, labelCollection) {
+function getWhitePixelBillboard(billboardCollection: any, labelCollection: any) {
   const billboardTexture = labelCollection._backgroundBillboardTexture;
   if (!billboardTexture.hasImage) {
     const canvas = document.createElement("canvas");
@@ -90,14 +90,7 @@ function getWhitePixelBillboard(billboardCollection, labelCollection) {
 
 // reusable object for calling writeTextToCanvas
 const writeTextToCanvasParameters = {};
-function createGlyphCanvas(
-  character,
-  font,
-  fillColor,
-  outlineColor,
-  outlineWidth,
-  style,
-) {
+function createGlyphCanvas(character: any, font: any, fillColor: any, outlineColor: any, outlineWidth: any, style: any, ) {
   writeTextToCanvasParameters.font = font;
   writeTextToCanvasParameters.fillColor = fillColor;
   writeTextToCanvasParameters.strokeColor = outlineColor;
@@ -114,7 +107,7 @@ function createGlyphCanvas(
   return writeTextToCanvas(character, writeTextToCanvasParameters);
 }
 
-function unbindGlyphBillboard(labelCollection, glyph) {
+function unbindGlyphBillboard(labelCollection: any, glyph: any) {
   const billboard = glyph.billboard;
   if (defined(billboard)) {
     billboard.show = false;
@@ -130,7 +123,7 @@ function unbindGlyphBillboard(labelCollection, glyph) {
 const splitter = new GraphemeSplitter();
 const whitespaceRegex = /\s/;
 
-function rebindAllGlyphs(labelCollection, label) {
+function rebindAllGlyphs(labelCollection: any, label: any) {
   const text = label._renderedText;
   const graphemes = splitter.splitGraphemes(text);
   const textLength = graphemes.length;
@@ -313,11 +306,7 @@ function rebindAllGlyphs(labelCollection, label) {
   label._repositionAllGlyphs = true;
 }
 
-function updateBackgroundBillboard(
-  backgroundBillboardCollection,
-  label,
-  backgroundBillboard,
-) {
+function updateBackgroundBillboard(backgroundBillboardCollection: any, label: any, backgroundBillboard: any, ) {
   if (!defined(backgroundBillboard)) {
     return;
   }
@@ -354,7 +343,7 @@ function updateBackgroundBillboard(
   backgroundBillboard.clusterShow = label.clusterShow;
 }
 
-function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding) {
+function calculateWidthOffset(lineWidth: any, horizontalOrigin: any, backgroundPadding: any) {
   if (horizontalOrigin === HorizontalOrigin.CENTER) {
     return -lineWidth / 2;
   } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
@@ -367,7 +356,7 @@ function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding) {
 const glyphPixelOffset = new Cartesian2();
 const scratchBackgroundPadding = new Cartesian2();
 
-function repositionAllGlyphs(label) {
+function repositionAllGlyphs(label: any) {
   const glyphs = label._glyphs;
   const text = label._renderedText;
   let lastLineWidth = 0;
@@ -549,7 +538,7 @@ function repositionAllGlyphs(label) {
   }
 }
 
-function destroyLabel(labelCollection, label) {
+function destroyLabel(labelCollection: any, label: any) {
   const glyphs = label._glyphs;
   for (let i = 0, len = glyphs.length; i < len; ++i) {
     unbindGlyphBillboard(labelCollection, glyphs[i]);
@@ -617,7 +606,7 @@ function destroyLabel(labelCollection, label) {
  *   text : 'Another label'
  * });
  */
-function LabelCollection(options) {
+function LabelCollection(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._scene = options.scene;
@@ -925,7 +914,11 @@ LabelCollection.prototype.contains = function (label) {
  * @see LabelCollection#length
  */
 LabelCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.");
+  }
+  //>>includeEnd('debug');
 
   return this._labels[index];
 };
@@ -1024,5 +1017,4 @@ LabelCollection.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { LabelCollection };
 export default LabelCollection;

@@ -5,7 +5,7 @@ import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
 
-function setConstants(ellipsoidGeodesic) {
+function setConstants(ellipsoidGeodesic: any) {
   const uSquared = ellipsoidGeodesic._uSquared;
   const a = ellipsoidGeodesic._ellipsoid.maximumRadius;
   const b = ellipsoidGeodesic._ellipsoid.minimumRadius;
@@ -75,22 +75,14 @@ function setConstants(ellipsoidGeodesic) {
   constants.distanceRatio = distanceRatio;
 }
 
-function computeC(f, cosineSquaredAlpha) {
+function computeC(f: any, cosineSquaredAlpha: any) {
   return (
     (f * cosineSquaredAlpha * (4.0 + f * (4.0 - 3.0 * cosineSquaredAlpha))) /
     16.0
   );
 }
 
-function computeDeltaLambda(
-  f,
-  sineAlpha,
-  cosineSquaredAlpha,
-  sigma,
-  sineSigma,
-  cosineSigma,
-  cosineTwiceSigmaMidpoint,
-) {
+function computeDeltaLambda(f: any, sineAlpha: any, cosineSquaredAlpha: any, sigma: any, sineSigma: any, cosineSigma: any, cosineTwiceSigmaMidpoint: any, ) {
   const C = computeC(f, cosineSquaredAlpha);
 
   return (
@@ -107,15 +99,7 @@ function computeDeltaLambda(
   );
 }
 
-function vincentyInverseFormula(
-  ellipsoidGeodesic,
-  major,
-  minor,
-  firstLongitude,
-  firstLatitude,
-  secondLongitude,
-  secondLatitude,
-) {
+function vincentyInverseFormula(ellipsoidGeodesic: any, major: any, minor: any, firstLongitude: any, firstLatitude: any, secondLongitude: any, secondLatitude: any, ) {
   const eff = (major - minor) / major;
   const l = secondLongitude - firstLongitude;
 
@@ -230,7 +214,7 @@ function vincentyInverseFormula(
 
 const scratchCart1 = new Cartesian3();
 const scratchCart2 = new Cartesian3();
-function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
+function computeProperties(ellipsoidGeodesic: any, start: any, end: any, ellipsoid: any) {
   const firstCartesian = Cartesian3.normalize(
     ellipsoid.cartographicToCartesian(start, scratchCart2),
     scratchCart1,
@@ -240,7 +224,16 @@ function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
     scratchCart2,
   );
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals(
+    "value",
+    Math.abs(
+      Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) -
+        Math.PI,
+    ),
+    0.0125,
+  );
+  //>>includeEnd('debug');
 
   vincentyInverseFormula(
     ellipsoidGeodesic,
@@ -273,7 +266,7 @@ function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
  * @param {Cartographic} [end] The final planetodetic point on the path.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the geodesic lies.
  */
-function EllipsoidGeodesic(start, end, ellipsoid) {
+function EllipsoidGeodesic(start: any, end: any, ellipsoid: any) {
   const e = ellipsoid ?? Ellipsoid.default;
   this._ellipsoid = e;
   this._start = new Cartographic();
@@ -311,7 +304,9 @@ Object.defineProperties(EllipsoidGeodesic.prototype, {
    */
   surfaceDistance: {
     get: function () {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("distance", this._distance);
+      //>>includeEnd('debug');
 
       return this._distance;
     },
@@ -349,7 +344,9 @@ Object.defineProperties(EllipsoidGeodesic.prototype, {
    */
   startHeading: {
     get: function () {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("distance", this._distance);
+      //>>includeEnd('debug');
 
       return this._startHeading;
     },
@@ -363,7 +360,9 @@ Object.defineProperties(EllipsoidGeodesic.prototype, {
    */
   endHeading: {
     get: function () {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("distance", this._distance);
+      //>>includeEnd('debug');
 
       return this._endHeading;
     },
@@ -377,7 +376,10 @@ Object.defineProperties(EllipsoidGeodesic.prototype, {
  * @param {Cartographic} end The final planetodetic point on the path.
  */
 EllipsoidGeodesic.prototype.setEndPoints = function (start, end) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("start", start);
+  Check.defined("end", end);
+  //>>includeEnd('debug');
 
   computeProperties(this, start, end, this._ellipsoid);
 };
@@ -412,7 +414,9 @@ EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function (
   distance,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("distance", this._distance);
+  //>>includeEnd('debug');
 
   const constants = this._constants;
 
@@ -500,5 +504,4 @@ EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function (
 
   return new Cartographic(this._start.longitude + l, latitude, 0.0);
 };
-export { EllipsoidGeodesic };
 export default EllipsoidGeodesic;

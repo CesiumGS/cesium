@@ -153,7 +153,13 @@ GeometryPipelineStage.process = function (
       attribute.type,
     );
 
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(attribute.buffer) && !defined(attribute.constant)) {
+      throw new DeveloperError(
+        "Attributes must be provided as a Buffer or constant value",
+      );
+    }
+    //>>includeEnd('debug');
 
     const isPositionAttribute =
       attribute.semantic === VertexAttributeSemantic.POSITION;
@@ -188,14 +194,7 @@ GeometryPipelineStage.process = function (
   shaderBuilder.addFragmentLines(GeometryStageFS);
 };
 
-function processAttribute(
-  renderResources,
-  attribute,
-  attributeIndex,
-  attributeLocationCount,
-  use2D,
-  instanced,
-) {
+function processAttribute(renderResources: any, attribute: any, attributeIndex: any, attributeLocationCount: any, use2D: any, instanced: any, ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const attributeInfo = ModelUtility.getAttributeInfo(attribute);
 
@@ -237,7 +236,7 @@ function processAttribute(
   updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo);
 }
 
-function addSemanticDefine(shaderBuilder, attribute) {
+function addSemanticDefine(shaderBuilder: any, attribute: any) {
   const { semantic, setIndex } = attribute;
   switch (semantic) {
     case VertexAttributeSemantic.NORMAL:
@@ -257,12 +256,7 @@ function addSemanticDefine(shaderBuilder, attribute) {
   }
 }
 
-function addAttributeToRenderResources(
-  renderResources,
-  attribute,
-  attributeIndex,
-  modifyFor2D,
-) {
+function addAttributeToRenderResources(renderResources: any, attribute: any, attributeIndex: any, modifyFor2D: any, ) {
   const { quantization, semantic, setIndex } = attribute;
   const { type, componentDatatype } = defined(quantization)
     ? quantization
@@ -314,12 +308,7 @@ function addAttributeToRenderResources(
   renderResources.attributes.push(positionAttribute2D);
 }
 
-function addMatrixAttributeToRenderResources(
-  renderResources,
-  attribute,
-  attributeIndex,
-  columnCount,
-) {
+function addMatrixAttributeToRenderResources(renderResources: any, attribute: any, attributeIndex: any, columnCount: any, ) {
   const { quantization, normalized } = attribute;
   const { type, componentDatatype } = defined(quantization)
     ? quantization
@@ -357,7 +346,7 @@ function addMatrixAttributeToRenderResources(
   }
 }
 
-function addVaryingDeclaration(shaderBuilder, attributeInfo) {
+function addVaryingDeclaration(shaderBuilder: any, attributeInfo: any) {
   const variableName = attributeInfo.variableName;
   let varyingName = `v_${variableName}`;
 
@@ -380,7 +369,7 @@ function addVaryingDeclaration(shaderBuilder, attributeInfo) {
   shaderBuilder.addVarying(glslType, varyingName);
 }
 
-function addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D) {
+function addAttributeDeclaration(shaderBuilder: any, attributeInfo: any, modifyFor2D: any) {
   const semantic = attributeInfo.attribute.semantic;
   const variableName = attributeInfo.variableName;
 
@@ -406,7 +395,7 @@ function addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D) {
   }
 }
 
-function updateAttributesStruct(shaderBuilder, attributeInfo, use2D) {
+function updateAttributesStruct(shaderBuilder: any, attributeInfo: any, use2D: any) {
   const vsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS;
   const fsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS;
   const { variableName, glslType } = attributeInfo;
@@ -434,11 +423,7 @@ function updateAttributesStruct(shaderBuilder, attributeInfo, use2D) {
   }
 }
 
-function updateInitializeAttributesFunction(
-  shaderBuilder,
-  attributeInfo,
-  use2D,
-) {
+function updateInitializeAttributesFunction(shaderBuilder: any, attributeInfo: any, use2D: any, ) {
   const functionId = GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES;
   const variableName = attributeInfo.variableName;
 
@@ -466,7 +451,7 @@ function updateInitializeAttributesFunction(
   shaderBuilder.addFunctionLines(functionId, lines);
 }
 
-function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
+function updateSetDynamicVaryingsFunction(shaderBuilder: any, attributeInfo: any) {
   const { semantic, setIndex } = attributeInfo.attribute;
   if (defined(semantic) && !defined(setIndex)) {
     // positions, normals, and tangents are handled statically in
@@ -488,7 +473,7 @@ function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
   shaderBuilder.addFunctionLines(functionId, [line]);
 }
 
-function handleBitangents(shaderBuilder, attributes) {
+function handleBitangents(shaderBuilder: any, attributes: any) {
   let hasNormals = false;
   let hasTangents = false;
   for (let i = 0; i < attributes.length; i++) {
@@ -520,5 +505,4 @@ function handleBitangents(shaderBuilder, attributes) {
   );
 }
 
-export { GeometryPipelineStage };
 export default GeometryPipelineStage;

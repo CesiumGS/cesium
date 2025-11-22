@@ -9,7 +9,7 @@ import defined from "./defined.js";
  * @param {Cartesian3[]} [positions] A linear ring defining the outer boundary of the polygon or hole.
  * @param {PolygonHierarchy[]} [holes] An array of polygon hierarchies defining holes in the polygon.
  */
-function PolygonHierarchy(positions, holes) {
+function PolygonHierarchy(positions: any, holes: any) {
   /**
    * A linear ring defining the outer boundary of the polygon or hole.
    * @type {Cartesian3[]}
@@ -22,5 +22,4 @@ function PolygonHierarchy(positions, holes) {
    */
   this.holes = defined(holes) ? holes : [];
 }
-export { PolygonHierarchy };
 export default PolygonHierarchy;

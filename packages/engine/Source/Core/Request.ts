@@ -20,7 +20,7 @@ import RequestType from "./RequestType.js";
  * @param {RequestType} [options.type=RequestType.OTHER] The type of request.
  * @param {string} [options.serverKey] A key used to identify the server that a request is going to.
  */
-function Request(options) {
+function Request(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const throttleByServer = options.throttleByServer ?? false;
@@ -190,5 +190,4 @@ Request.prototype.clone = function (result) {
  * @callback Request.PriorityCallback
  * @returns {number} The updated priority value.
  */
-export { Request };
 export default Request;

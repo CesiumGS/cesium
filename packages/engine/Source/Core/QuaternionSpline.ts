@@ -4,7 +4,7 @@ import DeveloperError from "./DeveloperError.js";
 import Quaternion from "./Quaternion.js";
 import Spline from "./Spline.js";
 
-function createEvaluateFunction(spline) {
+function createEvaluateFunction(spline: any) {
   const points = spline.points;
   const times = spline.times;
 
@@ -49,13 +49,25 @@ function createEvaluateFunction(spline) {
  * @see LinearSpline
  * @see MorphWeightSpline
  */
-function QuaternionSpline(options) {
+function QuaternionSpline(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const points = options.points;
   const times = options.times;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(points) || !defined(times)) {
+    throw new DeveloperError("points and times are required.");
+  }
+  if (points.length < 2) {
+    throw new DeveloperError(
+      "points.length must be greater than or equal to 2.",
+    );
+  }
+  if (times.length !== points.length) {
+    throw new DeveloperError("times.length must be equal to points.length.");
+  }
+  //>>includeEnd('debug');
 
   this._times = times;
   this._points = points;
@@ -140,5 +152,4 @@ QuaternionSpline.prototype.clampTime = Spline.prototype.clampTime;
 QuaternionSpline.prototype.evaluate = function (time, result) {
   return this._evaluateFunction(time, result);
 };
-export { QuaternionSpline };
 export default QuaternionSpline;

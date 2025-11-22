@@ -28,7 +28,7 @@ import WebMercatorProjection from "./WebMercatorProjection.js";
  *        globe is covered in the longitude direction and an equal distance is covered in the latitude
  *        direction, resulting in a square projection.
  */
-function WebMercatorTilingScheme(options) {
+function WebMercatorTilingScheme(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
@@ -288,5 +288,4 @@ WebMercatorTilingScheme.prototype.positionToTileXY = function (
   result.y = yTileCoordinate;
   return result;
 };
-export { WebMercatorTilingScheme };
 export default WebMercatorTilingScheme;

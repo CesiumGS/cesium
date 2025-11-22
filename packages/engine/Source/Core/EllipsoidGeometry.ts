@@ -54,7 +54,7 @@ const sin = Math.sin;
  * });
  * const geometry = Cesium.EllipsoidGeometry.createGeometry(ellipsoid);
  */
-function EllipsoidGeometry(options) {
+function EllipsoidGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const radii = options.radii ?? defaultRadii;
@@ -67,7 +67,18 @@ function EllipsoidGeometry(options) {
   const slicePartitions = Math.round(options.slicePartitions ?? 64);
   const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (slicePartitions < 3) {
+    throw new DeveloperError(
+      "options.slicePartitions cannot be less than three.",
+    );
+  }
+  if (stackPartitions < 3) {
+    throw new DeveloperError(
+      "options.stackPartitions cannot be less than three.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._radii = Cartesian3.clone(radii);
   this._innerRadii = Cartesian3.clone(innerRadii);
@@ -99,7 +110,14 @@ EllipsoidGeometry.packedLength =
  * @returns {number[]} The array that was packed into
  */
 EllipsoidGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -148,7 +166,11 @@ const scratchOptions = {
  * @returns {EllipsoidGeometry} The modified result parameter or a new EllipsoidGeometry instance if one was not provided.
  */
 EllipsoidGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -625,5 +647,4 @@ EllipsoidGeometry.getUnitEllipsoid = function () {
   }
   return unitEllipsoidGeometry;
 };
-export { EllipsoidGeometry };
 export default EllipsoidGeometry;

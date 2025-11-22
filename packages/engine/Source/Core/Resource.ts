@@ -61,7 +61,7 @@ const xhrBlobSupported = (function () {
  * @param {string|Resource.ConstructorOptions} options A url or an object describing initialization options
  *
  * @example
- * function refreshTokenRetryCallback(resource, error) {
+ * function refreshTokenRetryCallback(resource: any, error: any) {
  *   if (error.statusCode === 403) {
  *     // 403 status code means a new token should be generated
  *     return getNewAccessToken()
@@ -90,7 +90,7 @@ const xhrBlobSupported = (function () {
  *    retryAttempts: 1
  * });
  */
-function Resource(options) {
+function Resource(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   if (typeof options === "string") {
     options = {
@@ -98,7 +98,9 @@ function Resource(options) {
     };
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.url", options.url);
+  //>>includeEnd('debug');
 
   this._url = undefined;
   this._templateValues = defaultClone(options.templateValues, {});
@@ -160,7 +162,7 @@ function Resource(options) {
  *
  * @private
  */
-function defaultClone(value, defaultValue) {
+function defaultClone(value: any, defaultValue: any) {
   return defined(value) ? clone(value) : defaultValue;
 }
 
@@ -433,7 +435,7 @@ Resource.prototype.parseUrl = function (url, merge, preserveQuery, baseUrl) {
  *
  * @private
  */
-function parseQueryString(queryString) {
+function parseQueryString(queryString: any) {
   if (queryString.length === 0) {
     return {};
   }
@@ -503,7 +505,7 @@ function parseQueryString(queryString) {
  *
  * @private
  */
-function combineQueryParameters(q1, q2, preserveQueryParameters) {
+function combineQueryParameters(q1: any, q2: any, preserveQueryParameters: any) {
   if (!preserveQueryParameters) {
     return combine(q1, q2);
   }
@@ -577,7 +579,7 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
  *
  * @private
  */
-function stringifyQuery(queryObject) {
+function stringifyQuery(queryObject: any) {
   const keys = Object.keys(queryObject);
 
   if (keys.length === 0) {
@@ -1279,7 +1281,7 @@ Resource.prototype.fetchJsonp = function (callbackParameterName) {
   return fetchJsonp(this, callbackParameterName, functionName);
 };
 
-function fetchJsonp(resource, callbackParameterName, functionName) {
+function fetchJsonp(resource: any, callbackParameterName: any, functionName: any) {
   const callbackQuery = {};
   callbackQuery[callbackParameterName] = functionName;
   resource.setQueryParameters(callbackQuery);
@@ -1422,7 +1424,7 @@ Resource.prototype._makeRequest = function (options) {
  *
  * @private
  */
-function checkAndResetRequest(request) {
+function checkAndResetRequest(request: any) {
   if (
     request.state === RequestState.ISSUED ||
     request.state === RequestState.ACTIVE
@@ -1436,7 +1438,7 @@ function checkAndResetRequest(request) {
 
 const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
 
-function decodeDataUriText(isBase64, data) {
+function decodeDataUriText(isBase64: any, data: any) {
   const result = decodeURIComponent(data);
   if (isBase64) {
     return atob(result);
@@ -1444,7 +1446,7 @@ function decodeDataUriText(isBase64, data) {
   return result;
 }
 
-function decodeDataUriArrayBuffer(isBase64, data) {
+function decodeDataUriArrayBuffer(isBase64: any, data: any) {
   const byteString = decodeDataUriText(isBase64, data);
   const buffer = new ArrayBuffer(byteString.length);
   const view = new Uint8Array(buffer);
@@ -1454,7 +1456,7 @@ function decodeDataUriArrayBuffer(isBase64, data) {
   return buffer;
 }
 
-function decodeDataUri(dataUriRegexResult, responseType) {
+function decodeDataUri(dataUriRegexResult: any, responseType: any) {
   responseType = responseType ?? "";
   const mimeType = dataUriRegexResult[1];
   const isBase64 = !!dataUriRegexResult[2];
@@ -1482,7 +1484,9 @@ function decodeDataUri(dataUriRegexResult, responseType) {
     case "json":
       return JSON.parse(decodeDataUriText(isBase64, data));
     default:
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError(`Unhandled responseType: ${responseType}`);
+    //>>includeEnd('debug');
   }
 }
 
@@ -2046,24 +2050,16 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
   });
 };
 
-function loadWithHttpRequest(
-  url,
-  responseType,
-  method,
-  data,
-  headers,
-  deferred,
-  overrideMimeType,
-) {
+function loadWithHttpRequest(url: any, responseType: any, method: any, data: any, headers: any, deferred: any, overrideMimeType: any, ) {
   // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
   fetch(url, {
     method,
     headers,
   })
-    .then(async (response) => {
+    .then(async (response: any) => {
       if (!response.ok) {
         const responseHeaders = {};
-        response.headers.forEach((value, key) => {
+        response.headers.forEach((value: any, key: any) => {
           responseHeaders[key] = value;
         });
         deferred.reject(
@@ -2273,5 +2269,4 @@ Resource.DEFAULT = Object.freeze(
  * @param {RequestErrorEvent} [error] The error that occurred during the loading of the resource.
  * @returns {boolean|Promise<boolean>} If true or a promise that resolved to true, the resource will be retried. Otherwise the failure will be returned.
  */
-export { Resource };
 export default Resource;

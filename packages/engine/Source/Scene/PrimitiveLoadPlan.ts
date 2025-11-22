@@ -19,8 +19,10 @@ import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
  *
  * @private
  */
-function AttributeLoadPlan(attribute) {
-  ;
+function AttributeLoadPlan(attribute: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("attribute", attribute);
+  //>>includeEnd('debug');
 
   /**
    * The attribute to track.
@@ -61,8 +63,10 @@ function AttributeLoadPlan(attribute) {
  *
  * @private
  */
-function IndicesLoadPlan(indices) {
-  ;
+function IndicesLoadPlan(indices: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("indices", indices);
+  //>>includeEnd('debug');
 
   /**
    * The indices to track.
@@ -105,8 +109,10 @@ function IndicesLoadPlan(indices) {
  *
  * @private
  */
-function PrimitiveLoadPlan(primitive) {
-  ;
+function PrimitiveLoadPlan(primitive: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("primitive", primitive);
+  //>>includeEnd('debug');
 
   /**
    * The primitive to track.
@@ -183,7 +189,7 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
   }
 };
 
-function generateOutlines(loadPlan) {
+function generateOutlines(loadPlan: any) {
   const primitive = loadPlan.primitive;
   const indices = primitive.indices;
 
@@ -221,7 +227,7 @@ function generateOutlines(loadPlan) {
   }
 }
 
-function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
+function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray: any) {
   const attribute = new ModelComponents.Attribute();
   attribute.name = "_OUTLINE_COORDINATES";
   attribute.typedArray = outlineCoordinatesTypedArray;
@@ -233,7 +239,7 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   return attribute;
 }
 
-function setupGaussianSplatBuffers(loadPlan, context) {
+function setupGaussianSplatBuffers(loadPlan: any, context: any) {
   const attributePlans = loadPlan.attributePlans;
   const attrLen = attributePlans.length;
   for (let i = 0; i < attrLen; i++) {
@@ -243,7 +249,7 @@ function setupGaussianSplatBuffers(loadPlan, context) {
   }
 }
 
-function generateBuffers(loadPlan, context) {
+function generateBuffers(loadPlan: any, context: any) {
   generateAttributeBuffers(loadPlan.attributePlans, context);
 
   if (defined(loadPlan.indicesPlan)) {
@@ -251,7 +257,7 @@ function generateBuffers(loadPlan, context) {
   }
 }
 
-function generateAttributeBuffers(attributePlans, context) {
+function generateAttributeBuffers(attributePlans: any, context: any) {
   const attributesLength = attributePlans.length;
   for (let i = 0; i < attributesLength; i++) {
     const attributePlan = attributePlans[i];
@@ -274,7 +280,7 @@ function generateAttributeBuffers(attributePlans, context) {
   }
 }
 
-function generateIndexBuffers(indicesPlan, context) {
+function generateIndexBuffers(indicesPlan: any, context: any) {
   const indices = indicesPlan.indices;
   if (indicesPlan.loadBuffer) {
     const buffer = Buffer.createIndexBuffer({
@@ -294,5 +300,4 @@ function generateIndexBuffers(indicesPlan, context) {
 
 PrimitiveLoadPlan.AttributeLoadPlan = AttributeLoadPlan;
 PrimitiveLoadPlan.IndicesLoadPlan = IndicesLoadPlan;
-export { PrimitiveLoadPlan };
 export default PrimitiveLoadPlan;

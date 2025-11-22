@@ -7,19 +7,7 @@ import PixelDatatype from "./PixelDatatype.js";
 /**
  * @private
  */
-function CubeMapFace(
-  context,
-  texture,
-  textureTarget,
-  targetFace,
-  internalFormat,
-  pixelFormat,
-  pixelDatatype,
-  size,
-  preMultiplyAlpha,
-  flipY,
-  initialized,
-) {
+function CubeMapFace(context: any, texture: any, textureTarget: any, targetFace: any, internalFormat: any, pixelFormat: any, pixelDatatype: any, size: any, preMultiplyAlpha: any, flipY: any, initialized: any, ) {
   this._context = context;
   this._texture = texture;
   this._textureTarget = textureTarget;
@@ -81,7 +69,9 @@ Object.defineProperties(CubeMapFace.prototype, {
  * });
  */
 CubeMapFace.prototype.copyFrom = function (options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options", options);
+  //>>includeEnd('debug');
 
   const {
     xOffset = 0,
@@ -90,7 +80,21 @@ CubeMapFace.prototype.copyFrom = function (options) {
     skipColorSpaceConversion = false,
   } = options;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.source", source);
+  Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
+  Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
+  if (xOffset + source.width > this._size) {
+    throw new DeveloperError(
+      "xOffset + options.source.width must be less than or equal to width.",
+    );
+  }
+  if (yOffset + source.height > this._size) {
+    throw new DeveloperError(
+      "yOffset + options.source.height must be less than or equal to height.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const { width, height } = source;
 
@@ -263,7 +267,40 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
   width = width ?? this._size;
   height = height ?? this._size;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
+  Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
+  Check.typeOf.number.greaterThanOrEquals(
+    "framebufferXOffset",
+    framebufferXOffset,
+    0,
+  );
+  Check.typeOf.number.greaterThanOrEquals(
+    "framebufferYOffset",
+    framebufferYOffset,
+    0,
+  );
+  if (xOffset + width > this._size) {
+    throw new DeveloperError(
+      "xOffset + source.width must be less than or equal to width.",
+    );
+  }
+  if (yOffset + height > this._size) {
+    throw new DeveloperError(
+      "yOffset + source.height must be less than or equal to height.",
+    );
+  }
+  if (this._pixelDatatype === PixelDatatype.FLOAT) {
+    throw new DeveloperError(
+      "Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.",
+    );
+  }
+  if (this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
+    throw new DeveloperError(
+      "Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const gl = this._context._gl;
   const target = this._textureTarget;
@@ -319,7 +356,31 @@ CubeMapFace.prototype.copyMipmapFromFramebuffer = function (
   height = height ?? this._size;
   level = level ?? 0;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
+  Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
+
+  if (xOffset + width > this._size) {
+    throw new DeveloperError(
+      "xOffset + source.width must be less than or equal to width.",
+    );
+  }
+  if (yOffset + height > this._size) {
+    throw new DeveloperError(
+      "yOffset + source.height must be less than or equal to height.",
+    );
+  }
+  if (this._pixelDatatype === PixelDatatype.FLOAT) {
+    throw new DeveloperError(
+      "Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.",
+    );
+  }
+  if (this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
+    throw new DeveloperError(
+      "Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const gl = this._context._gl;
   const target = this._textureTarget;
@@ -339,5 +400,4 @@ CubeMapFace.prototype.copyMipmapFromFramebuffer = function (
   gl.bindTexture(target, null);
   this._initialized = true;
 };
-export { CubeMapFace };
 export default CubeMapFace;

@@ -14,7 +14,7 @@ import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TileProviderError from "./TileProviderError.js";
 
-function DataRectangle(rectangle, maxLevel) {
+function DataRectangle(rectangle: any, maxLevel: any) {
   this.rectangle = rectangle;
   this.maxLevel = maxLevel;
 }
@@ -36,7 +36,7 @@ function DataRectangle(rectangle, maxLevel) {
  *
  * @param {VRTheWorldTerrainProvider.ConstructorOptions} options An object describing initialization options
  */
-function TerrainProviderBuilder(options) {
+function TerrainProviderBuilder(options: any) {
   this.ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this.tilingScheme = undefined;
   this.heightmapWidth = undefined;
@@ -54,7 +54,7 @@ TerrainProviderBuilder.prototype.build = function (provider) {
   provider._rectangles = this.rectangles;
 };
 
-function metadataSuccess(terrainProviderBuilder, xml) {
+function metadataSuccess(terrainProviderBuilder: any, xml: any) {
   const srs = xml.getElementsByTagName("SRS")[0].textContent;
   if (srs === "EPSG:4326") {
     terrainProviderBuilder.tilingScheme = new GeographicTilingScheme({
@@ -108,7 +108,7 @@ function metadataSuccess(terrainProviderBuilder, xml) {
   }
 }
 
-function metadataFailure(resource, error, provider) {
+function metadataFailure(resource: any, error: any, provider: any) {
   let message = `An error occurred while accessing ${resource.url}`;
 
   if (defined(error) && defined(error.message)) {
@@ -125,7 +125,7 @@ function metadataFailure(resource, error, provider) {
   throw new RuntimeError(message);
 }
 
-async function requestMetadata(terrainProviderBuilder, resource, provider) {
+async function requestMetadata(terrainProviderBuilder: any, resource: any, provider: any) {
   try {
     const xml = await resource.fetchXML();
     metadataSuccess(terrainProviderBuilder, xml);
@@ -155,7 +155,7 @@ async function requestMetadata(terrainProviderBuilder, resource, provider) {
  *
  * @see TerrainProvider
  */
-function VRTheWorldTerrainProvider(options) {
+function VRTheWorldTerrainProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._errorEvent = new Event();
@@ -278,7 +278,9 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
  * @exception {RuntimeError} metadata specifies and unknown SRS
  */
 VRTheWorldTerrainProvider.fromUrl = async function (url, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -353,7 +355,7 @@ VRTheWorldTerrainProvider.prototype.getLevelMaximumGeometricError = function (
 
 const rectangleScratch = new Rectangle();
 
-function getChildMask(provider, x, y, level) {
+function getChildMask(provider: any, x: any, y: any, level: any) {
   const tilingScheme = provider._tilingScheme;
   const rectangles = provider._rectangles;
   const parentRectangle = tilingScheme.tileXYToRectangle(x, y, level);
@@ -419,7 +421,7 @@ function getChildMask(provider, x, y, level) {
   return childMask;
 }
 
-function isTileInRectangle(tilingScheme, rectangle, x, y, level) {
+function isTileInRectangle(tilingScheme: any, rectangle: any, x: any, y: any, level: any) {
   const tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
   return defined(
     Rectangle.intersection(tileRectangle, rectangle, rectangleScratch),
@@ -457,5 +459,4 @@ VRTheWorldTerrainProvider.prototype.loadTileDataAvailability = function (
 ) {
   return undefined;
 };
-export { VRTheWorldTerrainProvider };
 export default VRTheWorldTerrainProvider;

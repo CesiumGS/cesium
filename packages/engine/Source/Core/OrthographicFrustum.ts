@@ -27,7 +27,7 @@ import OrthographicOffCenterFrustum from "./OrthographicOffCenterFrustum.js";
  * frustum.near = 0.01 * maxRadii;
  * frustum.far = 50.0 * maxRadii;
  */
-function OrthographicFrustum(options) {
+function OrthographicFrustum(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._offCenterFrustum = new OrthographicOffCenterFrustum();
@@ -81,7 +81,10 @@ OrthographicFrustum.packedLength = 4;
  * @returns {number[]} The array that was packed into
  */
 OrthographicFrustum.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -102,7 +105,9 @@ OrthographicFrustum.pack = function (value, array, startingIndex) {
  * @returns {OrthographicFrustum} The modified result parameter or a new OrthographicFrustum instance if one was not provided.
  */
 OrthographicFrustum.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -118,8 +123,19 @@ OrthographicFrustum.unpack = function (array, startingIndex, result) {
   return result;
 };
 
-function update(frustum) {
-  ;
+function update(frustum: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    !defined(frustum.width) ||
+    !defined(frustum.aspectRatio) ||
+    !defined(frustum.near) ||
+    !defined(frustum.far)
+  ) {
+    throw new DeveloperError(
+      "width, aspectRatio, near, or far parameters are not set.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const f = frustum._offCenterFrustum;
 
@@ -129,7 +145,16 @@ function update(frustum) {
     frustum.near !== frustum._near ||
     frustum.far !== frustum._far
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (frustum.aspectRatio < 0) {
+      throw new DeveloperError("aspectRatio must be positive.");
+    }
+    if (frustum.near < 0 || frustum.near > frustum.far) {
+      throw new DeveloperError(
+        "near must be greater than zero and less than far.",
+      );
+    }
+    //>>includeEnd('debug');
 
     frustum._aspectRatio = frustum.aspectRatio;
     frustum._width = frustum.width;
@@ -323,5 +348,4 @@ OrthographicFrustum.prototype.equalsEpsilon = function (
     )
   );
 };
-export { OrthographicFrustum };
 export default OrthographicFrustum;

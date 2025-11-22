@@ -12,7 +12,7 @@ import Rectangle from "./Rectangle.js";
  * @param {TilingScheme} tilingScheme The tiling scheme in which to report availability.
  * @param {number} maximumLevel The maximum tile level that is potentially available.
  */
-function TileAvailability(tilingScheme, maximumLevel) {
+function TileAvailability(tilingScheme: any, maximumLevel: any) {
   this._tilingScheme = tilingScheme;
   this._maximumLevel = maximumLevel;
 
@@ -21,7 +21,7 @@ function TileAvailability(tilingScheme, maximumLevel) {
 
 const rectangleScratch = new Rectangle();
 
-function findNode(level, x, y, nodes) {
+function findNode(level: any, x: any, y: any, nodes: any) {
   const count = nodes.length;
   for (let i = 0; i < count; ++i) {
     const node = nodes[i];
@@ -241,7 +241,7 @@ TileAvailability.prototype.computeChildMaskForTile = function (level, x, y) {
   return mask;
 };
 
-function QuadtreeNode(tilingScheme, parent, level, x, y) {
+function QuadtreeNode(tilingScheme: any, parent: any, level: any, x: any, y: any) {
   this.tilingScheme = tilingScheme;
   this.parent = parent;
   this.level = level;
@@ -318,7 +318,7 @@ Object.defineProperties(QuadtreeNode.prototype, {
   },
 });
 
-function RectangleWithLevel(level, west, south, east, north) {
+function RectangleWithLevel(level: any, west: any, south: any, east: any, north: any) {
   this.level = level;
   this.west = west;
   this.south = south;
@@ -326,7 +326,7 @@ function RectangleWithLevel(level, west, south, east, north) {
   this.north = north;
 }
 
-function rectanglesOverlap(rectangle1, rectangle2) {
+function rectanglesOverlap(rectangle1: any, rectangle2: any) {
   const west = Math.max(rectangle1.west, rectangle2.west);
   const south = Math.max(rectangle1.south, rectangle2.south);
   const east = Math.min(rectangle1.east, rectangle2.east);
@@ -334,7 +334,7 @@ function rectanglesOverlap(rectangle1, rectangle2) {
   return south < north && west < east;
 }
 
-function putRectangleInQuadtree(maxDepth, node, rectangle) {
+function putRectangleInQuadtree(maxDepth: any, node: any, rectangle: any) {
   while (node.level < maxDepth) {
     if (rectangleFullyContainsRectangle(node.nw.extent, rectangle)) {
       node = node.nw;
@@ -368,11 +368,11 @@ function putRectangleInQuadtree(maxDepth, node, rectangle) {
   }
 }
 
-function rectangleLevelComparator(a, b) {
+function rectangleLevelComparator(a: any, b: any) {
   return a.level - b;
 }
 
-function rectangleFullyContainsRectangle(potentialContainer, rectangleToTest) {
+function rectangleFullyContainsRectangle(potentialContainer: any, rectangleToTest: any) {
   return (
     rectangleToTest.west >= potentialContainer.west &&
     rectangleToTest.east <= potentialContainer.east &&
@@ -381,7 +381,7 @@ function rectangleFullyContainsRectangle(potentialContainer, rectangleToTest) {
   );
 }
 
-function rectangleContainsPosition(potentialContainer, positionToTest) {
+function rectangleContainsPosition(potentialContainer: any, positionToTest: any) {
   return (
     positionToTest.longitude >= potentialContainer.west &&
     positionToTest.longitude <= potentialContainer.east &&
@@ -390,7 +390,7 @@ function rectangleContainsPosition(potentialContainer, positionToTest) {
   );
 }
 
-function findMaxLevelFromNode(stopNode, node, position) {
+function findMaxLevelFromNode(stopNode: any, node: any, position: any) {
   let maxLevel = 0;
 
   // Find the deepest quadtree node containing this point.
@@ -465,11 +465,7 @@ function findMaxLevelFromNode(stopNode, node, position) {
   return maxLevel;
 }
 
-function updateCoverageWithNode(
-  remainingToCoverByLevel,
-  node,
-  rectanglesToCover,
-) {
+function updateCoverageWithNode(remainingToCoverByLevel: any, node: any, rectanglesToCover: any, ) {
   if (!node) {
     return;
   }
@@ -507,7 +503,7 @@ function updateCoverageWithNode(
   updateCoverageWithNode(remainingToCoverByLevel, node._se, rectanglesToCover);
 }
 
-function subtractRectangle(rectangleList, rectangleToSubtract) {
+function subtractRectangle(rectangleList: any, rectangleToSubtract: any) {
   const result = [];
   for (let i = 0; i < rectangleList.length; ++i) {
     const rectangle = rectangleList[i];
@@ -561,5 +557,4 @@ function subtractRectangle(rectangleList, rectangleToSubtract) {
 
   return result;
 }
-export { TileAvailability };
 export default TileAvailability;

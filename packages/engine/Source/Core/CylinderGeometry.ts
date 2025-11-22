@@ -47,7 +47,7 @@ const positionScratch = new Cartesian3();
  * });
  * const geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
  */
-function CylinderGeometry(options) {
+function CylinderGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const length = options.length;
@@ -56,7 +56,30 @@ function CylinderGeometry(options) {
   const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
   const slices = options.slices ?? 128;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(length)) {
+    throw new DeveloperError("options.length must be defined.");
+  }
+  if (!defined(topRadius)) {
+    throw new DeveloperError("options.topRadius must be defined.");
+  }
+  if (!defined(bottomRadius)) {
+    throw new DeveloperError("options.bottomRadius must be defined.");
+  }
+  if (slices < 3) {
+    throw new DeveloperError(
+      "options.slices must be greater than or equal to 3.",
+    );
+  }
+  if (
+    defined(options.offsetAttribute) &&
+    options.offsetAttribute === GeometryOffsetAttribute.TOP
+  ) {
+    throw new DeveloperError(
+      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._length = length;
   this._topRadius = topRadius;
@@ -83,7 +106,14 @@ CylinderGeometry.packedLength = VertexFormat.packedLength + 5;
  * @returns {number[]} The array that was packed into
  */
 CylinderGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -118,7 +148,11 @@ const scratchOptions = {
  * @returns {CylinderGeometry} The modified result parameter or a new CylinderGeometry instance if one was not provided.
  */
 CylinderGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -442,5 +476,4 @@ CylinderGeometry.getUnitCylinder = function () {
   }
   return unitCylinderGeometry;
 };
-export { CylinderGeometry };
 export default CylinderGeometry;

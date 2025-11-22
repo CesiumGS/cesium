@@ -21,7 +21,7 @@ import Model from "./Model.js";
  * @constructor
  * @private
  */
-function Model3DTileContent(tileset, tile, resource) {
+function Model3DTileContent(tileset: any, tile: any, resource: any) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -197,13 +197,34 @@ Model3DTileContent.prototype.getFeature = function (featureId) {
   const model = this._model;
   const featureTableId = model.featureTableId;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(featureTableId)) {
+    throw new DeveloperError(
+      "No feature ID set is selected. Make sure Cesium3DTileset.featureIdLabel or Cesium3DTileset.instanceFeatureIdLabel is defined",
+    );
+  }
+  //>>includeEnd('debug');
 
   const featureTable = model.featureTables[featureTableId];
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(featureTable)) {
+    throw new DeveloperError(
+      "No feature table found for the selected feature ID set",
+    );
+  }
+  //>>includeEnd('debug');
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  const featuresLength = featureTable.featuresLength;
+  if (!defined(featureId) || featureId < 0 || featureId >= featuresLength) {
+    throw new DeveloperError(
+      `featureId is required and must be between 0 and featuresLength - 1 (${
+        featuresLength - 1
+      }).`,
+    );
+  }
+  //>>includeEnd('debug');
   return featureTable.getFeature(featureId);
 };
 
@@ -492,7 +513,7 @@ Model3DTileContent.prototype.pick = function (ray, frameState, result) {
   );
 };
 
-function makeModelOptions(tileset, tile, content, additionalOptions) {
+function makeModelOptions(tileset: any, tile: any, content: any, additionalOptions: any) {
   const mainOptions = {
     cull: false, // The model is already culled by 3D Tiles
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
@@ -527,5 +548,4 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
   return combine(additionalOptions, mainOptions);
 }
 
-export { Model3DTileContent };
 export default Model3DTileContent;

@@ -48,10 +48,14 @@ import Matrix4 from "./Matrix4.js";
  *
  * @see Geometry
  */
-function GeometryInstance(options) {
+function GeometryInstance(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.geometry)) {
+    throw new DeveloperError("options.geometry is required.");
+  }
+  //>>includeEnd('debug');
 
   /**
    * The geometry being instanced.
@@ -111,5 +115,4 @@ function GeometryInstance(options) {
    */
   this.eastHemisphereGeometry = undefined;
 }
-export { GeometryInstance };
 export default GeometryInstance;

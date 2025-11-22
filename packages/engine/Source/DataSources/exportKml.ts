@@ -43,7 +43,7 @@ const xmlnsNamespace = "http://www.w3.org/2000/xmlns/";
 //
 // Handles files external to the KML (eg. textures and models)
 //
-function ExternalFileHandler(modelCallback) {
+function ExternalFileHandler(modelCallback: any) {
   this._files = {};
   this._promises = [];
   this._count = 0;
@@ -79,7 +79,7 @@ ExternalFileHandler.prototype.texture = function (texture) {
 
   if (texture instanceof HTMLCanvasElement) {
     filename = `texture_${++this._count}.png`;
-    const promise = new Promise((resolve) => {
+    const promise = new Promise((resolve: any) => {
       texture.toBlob(function (blob) {
         that._files[filename] = blob;
         resolve();
@@ -93,7 +93,7 @@ ExternalFileHandler.prototype.texture = function (texture) {
   return "";
 };
 
-function getModelBlobHander(that, filename) {
+function getModelBlobHander(that: any, filename: any) {
   return function (blob) {
     that._files[filename] = blob;
   };
@@ -139,7 +139,7 @@ Object.defineProperties(ExternalFileHandler.prototype, {
 //
 // Handles getting values from properties taking the desired time and default values into account
 //
-function ValueGetter(time) {
+function ValueGetter(time: any) {
   this._time = time;
 }
 
@@ -279,12 +279,16 @@ IdManager.prototype.get = function (id) {
  *   });
  *
  */
-function exportKml(options) {
+function exportKml(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const entities = options.entities;
   const kmz = options.kmz ?? false;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(entities)) {
+    throw new DeveloperError("entities is required.");
+  }
+  //>>includeEnd('debug');
 
   // Get the state that is passed around during the recursion
   // This is separated out for testing.
@@ -324,7 +328,7 @@ function exportKml(options) {
   });
 }
 
-async function createKmz(kmlString, externalFiles) {
+async function createKmz(kmlString: any, externalFiles: any) {
   const zWorkerUri = buildModuleUrl("ThirdParty/Workers/zip-web-worker.js");
   const zWasmUri = buildModuleUrl("ThirdParty/zip-module.wasm");
   configure({
@@ -345,7 +349,7 @@ async function createKmz(kmlString, externalFiles) {
   };
 }
 
-async function addExternalFilesToZip(writer, keys, externalFiles, index) {
+async function addExternalFilesToZip(writer: any, keys: any, externalFiles: any, index: any) {
   if (keys.length === index) {
     return;
   }
@@ -407,7 +411,7 @@ exportKml._createState = function (options) {
   };
 };
 
-function recurseEntities(state, parentNode, entities) {
+function recurseEntities(state: any, parentNode: any, entities: any) {
   const kmlDoc = state.kmlDoc;
   const styleCache = state.styleCache;
   const valueGetter = state.valueGetter;
@@ -576,7 +580,7 @@ const scratchCartesian3 = new Cartesian3();
 const scratchCartographic = new Cartographic();
 const scratchJulianDate = new JulianDate();
 
-function createPoint(state, entity, geometries, styles) {
+function createPoint(state: any, entity: any, geometries: any, styles: any) {
   const kmlDoc = state.kmlDoc;
   const ellipsoid = state.ellipsoid;
   const valueGetter = state.valueGetter;
@@ -620,7 +624,7 @@ function createPoint(state, entity, geometries, styles) {
   styles.push(iconStyle);
 }
 
-function createTracks(state, entity, pointGraphics, geometries, styles) {
+function createTracks(state: any, entity: any, pointGraphics: any, geometries: any, styles: any) {
   const kmlDoc = state.kmlDoc;
   const ellipsoid = state.ellipsoid;
   const valueGetter = state.valueGetter;
@@ -796,7 +800,7 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
   }
 }
 
-function createIconStyleFromPoint(state, pointGraphics) {
+function createIconStyleFromPoint(state: any, pointGraphics: any) {
   const kmlDoc = state.kmlDoc;
   const valueGetter = state.valueGetter;
 
@@ -820,7 +824,7 @@ function createIconStyleFromPoint(state, pointGraphics) {
   return iconStyle;
 }
 
-function createIconStyleFromBillboard(state, billboardGraphics) {
+function createIconStyleFromBillboard(state: any, billboardGraphics: any) {
   const kmlDoc = state.kmlDoc;
   const valueGetter = state.valueGetter;
   const externalFileHandler = state.externalFileHandler;
@@ -936,7 +940,7 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
   return iconStyle;
 }
 
-function createLineString(state, polylineGraphics, geometries, styles) {
+function createLineString(state: any, polylineGraphics: any, geometries: any, styles: any) {
   const kmlDoc = state.kmlDoc;
   const ellipsoid = state.ellipsoid;
   const valueGetter = state.valueGetter;
@@ -995,7 +999,7 @@ function createLineString(state, polylineGraphics, geometries, styles) {
   styles.push(lineStyle);
 }
 
-function getRectangleBoundaries(state, rectangleGraphics, extrudedHeight) {
+function getRectangleBoundaries(state: any, rectangleGraphics: any, extrudedHeight: any) {
   const kmlDoc = state.kmlDoc;
   const valueGetter = state.valueGetter;
 
@@ -1041,7 +1045,7 @@ function getRectangleBoundaries(state, rectangleGraphics, extrudedHeight) {
   return [outerBoundaryIs];
 }
 
-function getLinearRing(state, positions, height, perPositionHeight) {
+function getLinearRing(state: any, positions: any, height: any, perPositionHeight: any) {
   const kmlDoc = state.kmlDoc;
   const ellipsoid = state.ellipsoid;
 
@@ -1069,7 +1073,7 @@ function getLinearRing(state, positions, height, perPositionHeight) {
   return linearRing;
 }
 
-function getPolygonBoundaries(state, polygonGraphics, extrudedHeight) {
+function getPolygonBoundaries(state: any, polygonGraphics: any, extrudedHeight: any) {
   const kmlDoc = state.kmlDoc;
   const valueGetter = state.valueGetter;
 
@@ -1115,7 +1119,7 @@ function getPolygonBoundaries(state, polygonGraphics, extrudedHeight) {
   return boundaries;
 }
 
-function createPolygon(state, geometry, geometries, styles, overlays) {
+function createPolygon(state: any, geometry: any, geometries: any, styles: any, overlays: any) {
   const kmlDoc = state.kmlDoc;
   const valueGetter = state.valueGetter;
 
@@ -1200,7 +1204,7 @@ function createPolygon(state, geometry, geometries, styles, overlays) {
   styles.push(polyStyle);
 }
 
-function createGroundOverlay(state, rectangleGraphics, overlays) {
+function createGroundOverlay(state: any, rectangleGraphics: any, overlays: any) {
   const kmlDoc = state.kmlDoc;
   const valueGetter = state.valueGetter;
   const externalFileHandler = state.externalFileHandler;
@@ -1274,7 +1278,7 @@ function createGroundOverlay(state, rectangleGraphics, overlays) {
   overlays.push(groundOverlay);
 }
 
-function createModelGeometry(state, modelGraphics) {
+function createModelGeometry(state: any, modelGraphics: any) {
   const kmlDoc = state.kmlDoc;
   const valueGetter = state.valueGetter;
   const externalFileHandler = state.externalFileHandler;
@@ -1299,7 +1303,7 @@ function createModelGeometry(state, modelGraphics) {
   return modelGeometry;
 }
 
-function createModel(state, entity, modelGraphics, geometries, styles) {
+function createModel(state: any, entity: any, modelGraphics: any, geometries: any, styles: any) {
   const kmlDoc = state.kmlDoc;
   const ellipsoid = state.ellipsoid;
   const valueGetter = state.valueGetter;
@@ -1349,7 +1353,7 @@ function createModel(state, entity, modelGraphics, geometries, styles) {
   geometries.push(modelGeometry);
 }
 
-function processMaterial(state, materialProperty, style) {
+function processMaterial(state: any, materialProperty: any, style: any) {
   const kmlDoc = state.kmlDoc;
   const valueGetter = state.valueGetter;
 
@@ -1414,7 +1418,7 @@ function processMaterial(state, materialProperty, style) {
   }
 }
 
-function getAltitudeMode(state, heightReferenceProperty) {
+function getAltitudeMode(state: any, heightReferenceProperty: any) {
   const kmlDoc = state.kmlDoc;
   const valueGetter = state.valueGetter;
 
@@ -1438,7 +1442,7 @@ function getAltitudeMode(state, heightReferenceProperty) {
   return altitudeModeText;
 }
 
-function getCoordinates(coordinates, ellipsoid) {
+function getCoordinates(coordinates: any, ellipsoid: any) {
   if (!Array.isArray(coordinates)) {
     coordinates = [coordinates];
   }
@@ -1459,12 +1463,7 @@ function getCoordinates(coordinates, ellipsoid) {
   return coordinateStrings.join(" ");
 }
 
-function createBasicElementWithText(
-  kmlDoc,
-  elementName,
-  elementValue,
-  namespace,
-) {
+function createBasicElementWithText(kmlDoc: any, elementName: any, elementValue: any, namespace: any, ) {
   elementValue = elementValue ?? "";
 
   if (typeof elementValue === "boolean") {
@@ -1487,7 +1486,7 @@ function createBasicElementWithText(
   return element;
 }
 
-function colorToString(color) {
+function colorToString(color: any) {
   let result = "";
   const bytes = color.toBytes();
   for (let i = 3; i >= 0; --i) {
@@ -1510,5 +1509,4 @@ function colorToString(color) {
  * @param {object} externalFiles An object that maps a filename to a Blob or a Promise that resolves to a Blob.
  * @returns {string} The URL to use for the href in the KML document.
  */
-export { exportKml };
 export default exportKml;

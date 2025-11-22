@@ -35,7 +35,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  */
 const PostProcessStageLibrary = {};
 
-function createBlur(name) {
+function createBlur(name: any) {
   const delta = 1.0;
   const sigma = 2.0;
   const stepSize = 1.0;
@@ -267,7 +267,7 @@ PostProcessStageLibrary.isEdgeDetectionSupported = function (scene) {
   return scene.context.depthTexture;
 };
 
-function getSilhouetteEdgeDetection(edgeDetectionStages) {
+function getSilhouetteEdgeDetection(edgeDetectionStages: any) {
   if (!defined(edgeDetectionStages)) {
     return PostProcessStageLibrary.createEdgeDetectionStage();
   }
@@ -823,5 +823,4 @@ PostProcessStageLibrary.createLensFlareStage = function () {
     },
   });
 };
-export { PostProcessStageLibrary };
 export default PostProcessStageLibrary;

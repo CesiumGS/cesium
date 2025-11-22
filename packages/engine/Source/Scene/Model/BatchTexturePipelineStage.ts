@@ -68,5 +68,4 @@ BatchTexturePipelineStage.process = function (
   );
 };
 
-export { BatchTexturePipelineStage };
 export default BatchTexturePipelineStage;

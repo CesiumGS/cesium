@@ -10,7 +10,7 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-function addExtensionsUsed(gltf, extension) {
+function addExtensionsUsed(gltf: any, extension: any) {
   let extensionsUsed = gltf.extensionsUsed;
   if (!defined(extensionsUsed)) {
     extensionsUsed = [];
@@ -19,5 +19,4 @@ function addExtensionsUsed(gltf, extension) {
   addToArray(extensionsUsed, extension, true);
 }
 
-export { addExtensionsUsed };
 export default addExtensionsUsed;

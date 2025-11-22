@@ -77,7 +77,7 @@ MetadataEntity.prototype.getPropertyIds = function (results) {
  * </p>
  *
  * @param {string} propertyId The case-sensitive ID of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the entity does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  * @private
  */
 MetadataEntity.prototype.getProperty = function (propertyId) {
@@ -103,7 +103,7 @@ MetadataEntity.prototype.setProperty = function (propertyId, value) {
  * Returns a copy of the value of the property with the given semantic.
  *
  * @param {string} semantic The case-sensitive semantic of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the entity does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  * @private
  */
 MetadataEntity.prototype.getPropertyBySemantic = function (semantic) {
@@ -137,7 +137,11 @@ MetadataEntity.hasProperty = function (
   properties,
   classDefinition,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
+  //>>includeEnd('debug');
 
   if (defined(properties[propertyId])) {
     return true;
@@ -171,7 +175,11 @@ MetadataEntity.hasPropertyBySemantic = function (
   properties,
   classDefinition,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
+  //>>includeEnd('debug');
 
   const propertiesBySemantic = classDefinition.propertiesBySemantic;
   if (!defined(propertiesBySemantic)) {
@@ -197,7 +205,10 @@ MetadataEntity.getPropertyIds = function (
   classDefinition,
   results,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
+  //>>includeEnd('debug');
 
   results = defined(results) ? results : [];
   results.length = 0;
@@ -238,7 +249,7 @@ MetadataEntity.getPropertyIds = function (
  * @param {string} propertyId The case-sensitive ID of the property.
  * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
- * @returns {any} The value of the property or <code>undefined</code> if the entity does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  *
  * @private
  */
@@ -247,7 +258,15 @@ MetadataEntity.getProperty = function (
   properties,
   classDefinition,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
+
+  if (!defined(classDefinition.properties[propertyId])) {
+    throw new DeveloperError(`Class definition missing property ${propertyId}`);
+  }
+  //>>includeEnd('debug');
 
   const classProperty = classDefinition.properties[propertyId];
   let value = properties[propertyId];
@@ -296,7 +315,12 @@ MetadataEntity.setProperty = function (
   properties,
   classDefinition,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  Check.defined("value", value);
+  Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
+  //>>includeEnd('debug');
 
   if (!defined(properties[propertyId])) {
     return false;
@@ -330,7 +354,7 @@ MetadataEntity.setProperty = function (
  * @param {string} semantic The case-sensitive semantic of the property.
  * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
- * @returns {any} The value of the property or <code>undefined</code> if the entity does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  *
  * @private
  */
@@ -339,7 +363,11 @@ MetadataEntity.getPropertyBySemantic = function (
   properties,
   classDefinition,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
+  //>>includeEnd('debug');
 
   const propertiesBySemantic = classDefinition.propertiesBySemantic;
   if (!defined(propertiesBySemantic)) {
@@ -369,7 +397,12 @@ MetadataEntity.setPropertyBySemantic = function (
   properties,
   classDefinition,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  Check.defined("value", value);
+  Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
+  //>>includeEnd('debug');
 
   const propertiesBySemantic = classDefinition.propertiesBySemantic;
   if (!defined(propertiesBySemantic)) {
@@ -389,5 +422,4 @@ MetadataEntity.setPropertyBySemantic = function (
   return false;
 };
 
-export { MetadataEntity };
 export default MetadataEntity;

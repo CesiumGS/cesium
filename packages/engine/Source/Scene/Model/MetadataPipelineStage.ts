@@ -125,11 +125,11 @@ MetadataPipelineStage.process = function (
  * @returns {object[]} An array of objects containing information about each PropertyAttributeProperty
  * @private
  */
-function getPropertyAttributesInfo(propertyAttributes, primitive, statistics) {
+function getPropertyAttributesInfo(propertyAttributes: any, primitive: any, statistics: any) {
   if (!defined(propertyAttributes)) {
     return [];
   }
-  return propertyAttributes.flatMap((propertyAttribute) =>
+  return propertyAttributes.flatMap((propertyAttribute: any) =>
     getPropertyAttributeInfo(propertyAttribute, primitive, statistics),
   );
 }
@@ -142,7 +142,7 @@ function getPropertyAttributesInfo(propertyAttributes, primitive, statistics) {
  * @returns {object[]} An array of objects containing information about each PropertyAttributeProperty
  * @private
  */
-function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
+function getPropertyAttributeInfo(propertyAttribute: any, primitive: any, statistics: any) {
   const { getAttributeByName, getAttributeInfo, sanitizeGlslIdentifier } =
     ModelUtility;
 
@@ -179,11 +179,11 @@ function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
  * @returns {object[]} An array of objects containing information about each PropertyTextureProperty
  * @private
  */
-function getPropertyTexturesInfo(propertyTextures, statistics) {
+function getPropertyTexturesInfo(propertyTextures: any, statistics: any) {
   if (!defined(propertyTextures)) {
     return [];
   }
-  return propertyTextures.flatMap((propertyTexture) =>
+  return propertyTextures.flatMap((propertyTexture: any) =>
     getPropertyTextureInfo(propertyTexture, statistics),
   );
 }
@@ -195,7 +195,7 @@ function getPropertyTexturesInfo(propertyTextures, statistics) {
  * @returns {object[]} An array of objects containing information about each PropertyTextureProperty
  * @private
  */
-function getPropertyTextureInfo(propertyTexture, statistics) {
+function getPropertyTextureInfo(propertyTexture: any, statistics: any) {
   const { sanitizeGlslIdentifier } = ModelUtility;
 
   const classId = propertyTexture.class.id;
@@ -228,7 +228,7 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
  * @param {object[]} propertyInfos Information about the PropertyAttributeProperties and PropertyTextureProperties
  * @private
  */
-function declareMetadataTypeStructs(shaderBuilder, propertyInfos) {
+function declareMetadataTypeStructs(shaderBuilder: any, propertyInfos: any) {
   const classTypes = new Set();
   const statisticsTypes = new Set();
 
@@ -255,7 +255,7 @@ function declareMetadataTypeStructs(shaderBuilder, propertyInfos) {
     declareTypeStruct(statisticsStructName, metadataType, statisticsFields);
   }
 
-  function declareTypeStruct(structName, type, fields) {
+  function declareTypeStruct(structName: any, type: any, fields: any) {
     shaderBuilder.addStruct(structName, structName, ShaderDestination.BOTH);
 
     for (let i = 0; i < fields.length; i++) {
@@ -280,7 +280,7 @@ const floatConversions = {
  * @returns {string} The name of a GLSL type of the same dimension with float components, if available; otherwise the input type
  * @private
  */
-function convertToFloatComponents(type) {
+function convertToFloatComponents(type: any) {
   const converted = floatConversions[type];
   return defined(converted) ? converted : type;
 }
@@ -291,7 +291,7 @@ function convertToFloatComponents(type) {
  * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
  * @private
  */
-function declareStructsAndFunctions(shaderBuilder) {
+function declareStructsAndFunctions(shaderBuilder: any) {
   // Declare the Metadata struct.
   shaderBuilder.addStruct(
     MetadataPipelineStage.STRUCT_ID_METADATA_VS,
@@ -355,7 +355,7 @@ function declareStructsAndFunctions(shaderBuilder) {
  * @param {object} propertyInfo Info about the PropertyAttributeProperty
  * @private
  */
-function processPropertyAttributeProperty(renderResources, propertyInfo) {
+function processPropertyAttributeProperty(renderResources: any, propertyInfo: any) {
   addPropertyAttributePropertyMetadata(renderResources, propertyInfo);
   addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
   addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
@@ -368,7 +368,7 @@ function processPropertyAttributeProperty(renderResources, propertyInfo) {
  * @param {object} propertyInfo Info about the PropertyAttributeProperty
  * @private
  */
-function addPropertyAttributePropertyMetadata(renderResources, propertyInfo) {
+function addPropertyAttributePropertyMetadata(renderResources: any, propertyInfo: any) {
   const { shaderBuilder } = renderResources;
   const { metadataVariable, property, glslType } = propertyInfo;
 
@@ -411,7 +411,7 @@ function addPropertyAttributePropertyMetadata(renderResources, propertyInfo) {
  * @param {object[]} propertyInfo Info about the PropertyTextureProperty
  * @private
  */
-function processPropertyTextureProperty(renderResources, propertyInfo) {
+function processPropertyTextureProperty(renderResources: any, propertyInfo: any) {
   addPropertyTexturePropertyMetadata(renderResources, propertyInfo);
   addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
   addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
@@ -424,7 +424,7 @@ function processPropertyTextureProperty(renderResources, propertyInfo) {
  * @param {object} propertyInfo Info about the PropertyTextureProperty
  * @private
  */
-function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
+function addPropertyTexturePropertyMetadata(renderResources: any, propertyInfo: any) {
   const { shaderBuilder, uniformMap } = renderResources;
   const { metadataVariable, glslType, property } = propertyInfo;
 
@@ -503,7 +503,7 @@ function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
  * @param {object} propertyInfo Info about the PropertyAttributeProperty or PropertyTextureProperty
  * @private
  */
-function addPropertyMetadataClass(shaderBuilder, propertyInfo) {
+function addPropertyMetadataClass(shaderBuilder: any, propertyInfo: any) {
   const { classProperty } = propertyInfo.property;
   const { metadataVariable, glslType, shaderDestination } = propertyInfo;
 
@@ -548,7 +548,7 @@ function addPropertyMetadataClass(shaderBuilder, propertyInfo) {
  * @param {object} propertyInfo Info about the PropertyAttributeProperty or PropertyTextureProperty
  * @private
  */
-function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
+function addPropertyMetadataStatistics(shaderBuilder: any, propertyInfo: any) {
   const { propertyStatistics } = propertyInfo;
   if (!defined(propertyStatistics)) {
     return;
@@ -605,8 +605,8 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
  * @returns {Array<{name: string, value: any}>} Objects containing the property name (in the shader) and a GLSL assignment statement for the property value
  * @private
  */
-function getStructAssignments(fieldNames, values, struct, type) {
-  function constructAssignment(field) {
+function getStructAssignments(fieldNames: any, values: any, struct: any, type: any) {
+  function constructAssignment(field: any) {
     const value = values[field.specName];
     if (defined(value)) {
       return `${struct}.${field.shaderName} = ${type}(${value});`;
@@ -631,7 +631,7 @@ function getStructAssignments(fieldNames, values, struct, type) {
  * @returns {string} A wrapped GLSL value expression
  * @private
  */
-function addValueTransformUniforms(options) {
+function addValueTransformUniforms(options: any) {
   const { valueExpression, property } = options;
 
   if (!property.hasValueTransform) {
@@ -654,5 +654,4 @@ function addValueTransformUniforms(options) {
   return `czm_valueTransform(${offsetUniformName}, ${scaleUniformName}, ${valueExpression})`;
 }
 
-export { MetadataPipelineStage };
 export default MetadataPipelineStage;

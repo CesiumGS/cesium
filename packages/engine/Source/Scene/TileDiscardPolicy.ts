@@ -10,7 +10,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @see DiscardMissingTileImagePolicy
  * @see NeverTileDiscardPolicy
  */
-function TileDiscardPolicy(options) {
+function TileDiscardPolicy(options: any) {
   DeveloperError.throwInstantiationError();
 }
 
@@ -31,5 +31,4 @@ TileDiscardPolicy.prototype.isReady = DeveloperError.throwInstantiationError;
  */
 TileDiscardPolicy.prototype.shouldDiscardImage =
   DeveloperError.throwInstantiationError;
-export { TileDiscardPolicy };
 export default TileDiscardPolicy;

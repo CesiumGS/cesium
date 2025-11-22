@@ -10,7 +10,7 @@ import defined from "./defined.js";
  * @param {Cartesian3} [origin=Cartesian3.ZERO] The origin of the ray.
  * @param {Cartesian3} [direction=Cartesian3.ZERO] The direction of the ray.
  */
-function Ray(origin, direction) {
+function Ray(origin: any, direction: any) {
   direction = Cartesian3.clone(direction ?? Cartesian3.ZERO);
   if (!Cartesian3.equals(direction, Cartesian3.ZERO)) {
     Cartesian3.normalize(direction, direction);
@@ -64,7 +64,10 @@ Ray.clone = function (ray, result) {
  * const point = Cesium.Ray.getPoint(ray, intersection.start);
  */
 Ray.getPoint = function (ray, t, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("ray", ray);
+  Check.typeOf.number("t", t);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -73,5 +76,4 @@ Ray.getPoint = function (ray, t, result) {
   result = Cartesian3.multiplyByScalar(ray.direction, t, result);
   return Cartesian3.add(ray.origin, result, result);
 };
-export { Ray };
 export default Ray;

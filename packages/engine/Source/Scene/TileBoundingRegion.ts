@@ -32,8 +32,11 @@ import SceneMode from "./SceneMode.js";
  *
  * @private
  */
-function TileBoundingRegion(options) {
-  ;
+function TileBoundingRegion(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.object("options.rectangle", options.rectangle);
+  //>>includeEnd('debug');
 
   this.rectangle = Rectangle.clone(options.rectangle);
   this.minimumHeight = options.minimumHeight ?? 0.0;
@@ -160,7 +163,7 @@ const cartographicScratch = new Cartographic();
 const planeScratch = new Plane(Cartesian3.UNIT_X, 0.0);
 const rayScratch = new Ray();
 
-function computeBox(tileBB, rectangle, ellipsoid) {
+function computeBox(tileBB: any, rectangle: any, ellipsoid: any) {
   ellipsoid.cartographicToCartesian(
     Rectangle.southwest(rectangle),
     tileBB.southwestCornerCartesian,
@@ -306,7 +309,7 @@ const negativeUnitY = new Cartesian3(0.0, -1.0, 0.0);
 const negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
 const vectorScratch = new Cartesian3();
 
-function distanceToCameraRegion(tileBB, frameState) {
+function distanceToCameraRegion(tileBB: any, frameState: any) {
   const camera = frameState.camera;
   const cameraCartesianPosition = camera.positionWC;
   const cameraCartographicPosition = camera.positionCartographic;
@@ -413,7 +416,9 @@ function distanceToCameraRegion(tileBB, frameState) {
  * @returns {number} The distance from the camera to the closest point on the tile, in meters.
  */
 TileBoundingRegion.prototype.distanceToCamera = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("frameState", frameState);
+  //>>includeEnd('debug');
 
   const regionResult = distanceToCameraRegion(this, frameState);
   if (
@@ -438,7 +443,9 @@ TileBoundingRegion.prototype.distanceToCamera = function (frameState) {
  *                      intersects the plane.
  */
 TileBoundingRegion.prototype.intersectPlane = function (plane) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("plane", plane);
+  //>>includeEnd('debug');
   return this._orientedBoundingBox.intersectPlane(plane);
 };
 
@@ -451,7 +458,9 @@ TileBoundingRegion.prototype.intersectPlane = function (plane) {
  * @private
  */
 TileBoundingRegion.prototype.createDebugVolume = function (color) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("color", color);
+  //>>includeEnd('debug');
 
   const modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
   const geometry = new RectangleOutlineGeometry({
@@ -477,5 +486,4 @@ TileBoundingRegion.prototype.createDebugVolume = function (color) {
     asynchronous: false,
   });
 };
-export { TileBoundingRegion };
 export default TileBoundingRegion;

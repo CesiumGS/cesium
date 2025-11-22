@@ -106,7 +106,9 @@ Axis.Y_UP_TO_X_UP = Matrix4.fromRotationTranslation(
  * @returns {number} The axis enum.
  */
 Axis.fromName = function (name) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("name", name);
+  //>>includeEnd('debug');
 
   return Axis[name];
 };

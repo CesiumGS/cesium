@@ -4,7 +4,7 @@ import defined from "./defined.js";
 import FeatureDetection from "./FeatureDetection.js";
 import CesiumMath from "./Math.js";
 
-function hue2rgb(m1, m2, h) {
+function hue2rgb(m1: any, m2: any, h: any) {
   if (h < 0) {
     h += 1;
   }
@@ -36,7 +36,7 @@ function hue2rgb(m1, m2, h) {
  *
  * @see Packable
  */
-function Color(red, green, blue, alpha) {
+function Color(red: any, green: any, blue: any, alpha: any) {
   /**
    * The red component.
    * @type {number}
@@ -72,7 +72,9 @@ function Color(red, green, blue, alpha) {
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
  */
 Color.fromCartesian4 = function (cartesian, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Color(cartesian.x, cartesian.y, cartesian.z, cartesian.w);
@@ -125,7 +127,10 @@ Color.fromBytes = function (red, green, blue, alpha, result) {
  * @example const translucentRed = Cesium.Color.fromAlpha(Cesium.Color.RED, 0.9);
  */
 Color.fromAlpha = function (color, alpha, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("color", color);
+  Check.typeOf.number("alpha", alpha);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Color(color.red, color.green, color.blue, alpha);
@@ -271,7 +276,9 @@ Color.fromRandom = function (options, result) {
     const minimumRed = options.minimumRed ?? 0;
     const maximumRed = options.maximumRed ?? 1.0;
 
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.lessThanOrEquals("minimumRed", minimumRed, maximumRed);
+    //>>includeEnd('debug');
 
     red =
       minimumRed + CesiumMath.nextRandomNumber() * (maximumRed - minimumRed);
@@ -282,7 +289,13 @@ Color.fromRandom = function (options, result) {
     const minimumGreen = options.minimumGreen ?? 0;
     const maximumGreen = options.maximumGreen ?? 1.0;
 
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.lessThanOrEquals(
+      "minimumGreen",
+      minimumGreen,
+      maximumGreen,
+    );
+    //>>includeEnd('debug');
     green =
       minimumGreen +
       CesiumMath.nextRandomNumber() * (maximumGreen - minimumGreen);
@@ -293,7 +306,13 @@ Color.fromRandom = function (options, result) {
     const minimumBlue = options.minimumBlue ?? 0;
     const maximumBlue = options.maximumBlue ?? 1.0;
 
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.lessThanOrEquals(
+      "minimumBlue",
+      minimumBlue,
+      maximumBlue,
+    );
+    //>>includeEnd('debug');
 
     blue =
       minimumBlue + CesiumMath.nextRandomNumber() * (maximumBlue - minimumBlue);
@@ -304,7 +323,13 @@ Color.fromRandom = function (options, result) {
     const minimumAlpha = options.minimumAlpha ?? 0;
     const maximumAlpha = options.maximumAlpha ?? 1.0;
 
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.lessThanOrEquals(
+      "minimumAlpha",
+      minimumAlpha,
+      maximumAlpha,
+    );
+    //>>includeEnd('debug');
 
     alpha =
       minimumAlpha +
@@ -349,7 +374,9 @@ const hslParenthesesMatcher =
  * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
  */
 Color.fromCssColorString = function (color, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("color", color);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Color();
@@ -425,7 +452,10 @@ Color.packedLength = 4;
  * @returns {number[]} The array that was packed into
  */
 Color.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
   array[startingIndex++] = value.red;
@@ -445,7 +475,9 @@ Color.pack = function (value, array, startingIndex) {
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
  */
 Color.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
   if (!defined(result)) {
@@ -696,7 +728,11 @@ Color.prototype.toRgba = function () {
  * const brightBlue = Cesium.Color.BLUE.brighten(0.5, new Cesium.Color());
  */
 Color.prototype.brighten = function (magnitude, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("magnitude", magnitude);
+  Check.typeOf.number.greaterThanOrEquals("magnitude", magnitude, 0.0);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   magnitude = 1.0 - magnitude;
   result.red = 1.0 - (1.0 - this.red) * magnitude;
@@ -717,7 +753,11 @@ Color.prototype.brighten = function (magnitude, result) {
  * const darkBlue = Cesium.Color.BLUE.darken(0.5, new Cesium.Color());
  */
 Color.prototype.darken = function (magnitude, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("magnitude", magnitude);
+  Check.typeOf.number.greaterThanOrEquals("magnitude", magnitude, 0.0);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   magnitude = 1.0 - magnitude;
   result.red = this.red * magnitude;
@@ -750,7 +790,11 @@ Color.prototype.withAlpha = function (alpha, result) {
  * @returns {Color} The modified result parameter.
  */
 Color.add = function (left, right, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.red = left.red + right.red;
   result.green = left.green + right.green;
@@ -768,7 +812,11 @@ Color.add = function (left, right, result) {
  * @returns {Color} The modified result parameter.
  */
 Color.subtract = function (left, right, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.red = left.red - right.red;
   result.green = left.green - right.green;
@@ -786,7 +834,11 @@ Color.subtract = function (left, right, result) {
  * @returns {Color} The modified result parameter.
  */
 Color.multiply = function (left, right, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.red = left.red * right.red;
   result.green = left.green * right.green;
@@ -804,7 +856,11 @@ Color.multiply = function (left, right, result) {
  * @returns {Color} The modified result parameter.
  */
 Color.divide = function (left, right, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.red = left.red / right.red;
   result.green = left.green / right.green;
@@ -822,7 +878,11 @@ Color.divide = function (left, right, result) {
  * @returns {Color} The modified result parameter.
  */
 Color.mod = function (left, right, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.red = left.red % right.red;
   result.green = left.green % right.green;
@@ -841,7 +901,12 @@ Color.mod = function (left, right, result) {
  * @returns {Color} The modified result parameter.
  */
 Color.lerp = function (start, end, t, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("start", start);
+  Check.typeOf.object("end", end);
+  Check.typeOf.number("t", t);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.red = CesiumMath.lerp(start.red, end.red, t);
   result.green = CesiumMath.lerp(start.green, end.green, t);
@@ -859,7 +924,11 @@ Color.lerp = function (start, end, t, result) {
  * @returns {Color} The modified result parameter.
  */
 Color.multiplyByScalar = function (color, scalar, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("color", color);
+  Check.typeOf.number("scalar", scalar);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.red = color.red * scalar;
   result.green = color.green * scalar;
@@ -877,7 +946,11 @@ Color.multiplyByScalar = function (color, scalar, result) {
  * @returns {Color} The modified result parameter.
  */
 Color.divideByScalar = function (color, scalar, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("color", color);
+  Check.typeOf.number("scalar", scalar);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   result.red = color.red / scalar;
   result.green = color.green / scalar;
@@ -2207,5 +2280,4 @@ Color.YELLOWGREEN = Object.freeze(Color.fromCssColorString("#9ACD32"));
  * @type {Color}
  */
 Color.TRANSPARENT = Object.freeze(new Color(0, 0, 0, 0));
-export { Color };
 export default Color;

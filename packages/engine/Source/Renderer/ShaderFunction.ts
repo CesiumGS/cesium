@@ -24,7 +24,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  *
  * @private
  */
-function ShaderFunction(signature) {
+function ShaderFunction(signature: any) {
   this.signature = signature;
   this.body = [];
 }
@@ -34,7 +34,13 @@ function ShaderFunction(signature) {
  * @param {string|string[]} lines One or more lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
  */
 ShaderFunction.prototype.addLines = function (lines) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof lines !== "string" && !Array.isArray(lines)) {
+    throw new DeveloperError(
+      `Expected lines to be a string or an array of strings, actual value was ${lines}`,
+    );
+  }
+  //>>includeEnd('debug');
   const body = this.body;
 
   // Indent the body of the function by 4 spaces
@@ -57,5 +63,4 @@ ShaderFunction.prototype.generateGlslLines = function () {
   return [].concat(this.signature, "{", this.body, "}");
 };
 
-export { ShaderFunction };
 export default ShaderFunction;

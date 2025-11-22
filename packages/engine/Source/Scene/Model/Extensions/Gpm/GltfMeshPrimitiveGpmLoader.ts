@@ -38,7 +38,7 @@ import MeshPrimitiveGpmLocal from "./MeshPrimitiveGpmLocal.js";
  *
  * @private
  */
-function GltfMeshPrimitiveGpmLoader(options) {
+function GltfMeshPrimitiveGpmLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const gltf = options.gltf;
   const extension = options.extension;
@@ -49,7 +49,14 @@ function GltfMeshPrimitiveGpmLoader(options) {
   const cacheKey = options.cacheKey;
   const asynchronous = options.asynchronous ?? true;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.extension", extension);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
+  Check.typeOf.object("options.frameState", frameState);
+  //>>includeEnd('debug');
 
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
@@ -164,7 +171,7 @@ GltfMeshPrimitiveGpmLoader.prototype.load = function () {
   return this._promise;
 };
 
-function gatherUsedTextureIds(gpmExtension) {
+function gatherUsedTextureIds(gpmExtension: any) {
   // Gather the used textures
   const textureIds = {};
   const ppeTextures = gpmExtension.ppeTextures;
@@ -436,7 +443,9 @@ GltfMeshPrimitiveGpmLoader._convertToStructuralMetadata = function (
  * @private
  */
 GltfMeshPrimitiveGpmLoader.prototype.process = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
 
   if (this._state === ResourceLoaderState.READY) {
     return true;
@@ -531,5 +540,4 @@ GltfMeshPrimitiveGpmLoader.prototype.unload = function () {
   this._structuralMetadata = undefined;
 };
 
-export { GltfMeshPrimitiveGpmLoader };
 export default GltfMeshPrimitiveGpmLoader;

@@ -16,7 +16,7 @@ import Property from "./Property.js";
  * @param {Property[]} [value] An array of Property instances.
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  */
-function PositionPropertyArray(value, referenceFrame) {
+function PositionPropertyArray(value: any, referenceFrame: any) {
   this._value = undefined;
   this._definitionChanged = new Event();
   this._eventHelper = new EventHelper();
@@ -105,7 +105,14 @@ PositionPropertyArray.prototype.getValueInReferenceFrame = function (
   referenceFrame,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  if (!defined(referenceFrame)) {
+    throw new DeveloperError("referenceFrame is required.");
+  }
+  //>>includeEnd('debug');
 
   const value = this._value;
   if (!defined(value)) {
@@ -182,5 +189,4 @@ PositionPropertyArray.prototype.equals = function (other) {
 PositionPropertyArray.prototype._raiseDefinitionChanged = function () {
   this._definitionChanged.raiseEvent(this);
 };
-export { PositionPropertyArray };
 export default PositionPropertyArray;

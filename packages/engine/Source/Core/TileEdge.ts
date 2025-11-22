@@ -11,5 +11,4 @@ const TileEdge = {
   SOUTHWEST: 6,
   SOUTHEAST: 7,
 };
-export { TileEdge };
 export default TileEdge;

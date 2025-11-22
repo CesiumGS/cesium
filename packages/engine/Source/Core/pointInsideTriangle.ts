@@ -23,7 +23,7 @@ const scratchBarycentricCoords = new Cartesian3();
  *   new Cesium.Cartesian2(1.0, 0.0),
  *   new Cesium.Cartesian2(0.0, 1.0));
  */
-function pointInsideTriangle(point, p0, p1, p2) {
+function pointInsideTriangle(point: any, p0: any, p1: any, p2: any) {
   const coords = barycentricCoordinates(
     point,
     p0,
@@ -36,5 +36,4 @@ function pointInsideTriangle(point, p0, p1, p2) {
   }
   return coords.x > 0.0 && coords.y > 0.0 && coords.z > 0;
 }
-export { pointInsideTriangle };
 export default pointInsideTriangle;

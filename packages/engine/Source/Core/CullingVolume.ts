@@ -13,7 +13,7 @@ import Plane from "./Plane.js";
  *
  * @param {Cartesian4[]} [planes] An array of clipping planes.
  */
-function CullingVolume(planes) {
+function CullingVolume(planes: any) {
   /**
    * Each plane is represented by a Cartesian4 object, where the x, y, and z components
    * define the unit vector normal to the plane, and the w component is the distance of the
@@ -42,7 +42,11 @@ const scratchPlane = new Plane(new Cartesian3(1.0, 0.0, 0.0), 0.0);
  * @returns {CullingVolume} The culling volume created from the bounding sphere.
  */
 CullingVolume.fromBoundingSphere = function (boundingSphere, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(boundingSphere)) {
+    throw new DeveloperError("boundingSphere is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new CullingVolume();
@@ -102,7 +106,11 @@ CullingVolume.fromBoundingSphere = function (boundingSphere, result) {
  * @returns {Intersect}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
  */
 CullingVolume.prototype.computeVisibility = function (boundingVolume) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(boundingVolume)) {
+    throw new DeveloperError("boundingVolume is required.");
+  }
+  //>>includeEnd('debug');
 
   const planes = this.planes;
   let intersecting = false;
@@ -136,7 +144,14 @@ CullingVolume.prototype.computeVisibilityWithPlaneMask = function (
   boundingVolume,
   parentPlaneMask,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(boundingVolume)) {
+    throw new DeveloperError("boundingVolume is required.");
+  }
+  if (!defined(parentPlaneMask)) {
+    throw new DeveloperError("parentPlaneMask is required.");
+  }
+  //>>includeEnd('debug');
 
   if (
     parentPlaneMask === CullingVolume.MASK_OUTSIDE ||
@@ -198,5 +213,4 @@ CullingVolume.MASK_INSIDE = 0x00000000;
  * @private
  */
 CullingVolume.MASK_INDETERMINATE = 0x7fffffff;
-export { CullingVolume };
 export default CullingVolume;

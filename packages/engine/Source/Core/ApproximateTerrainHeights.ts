@@ -62,7 +62,14 @@ ApproximateTerrainHeights.getMinimumMaximumHeights = function (
   rectangle,
   ellipsoid,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("rectangle", rectangle);
+  if (!defined(ApproximateTerrainHeights._terrainHeights)) {
+    throw new DeveloperError(
+      "You must call ApproximateTerrainHeights.initialize and wait for the promise to resolve before using this function",
+    );
+  }
+  //>>includeEnd('debug');
   ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   const xyLevel = getTileXYLevel(rectangle);
@@ -126,7 +133,14 @@ ApproximateTerrainHeights.getMinimumMaximumHeights = function (
  * @return {BoundingSphere} The result bounding sphere
  */
 ApproximateTerrainHeights.getBoundingSphere = function (rectangle, ellipsoid) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("rectangle", rectangle);
+  if (!defined(ApproximateTerrainHeights._terrainHeights)) {
+    throw new DeveloperError(
+      "You must call ApproximateTerrainHeights.initialize and wait for the promise to resolve before using this function",
+    );
+  }
+  //>>includeEnd('debug');
   ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   const xyLevel = getTileXYLevel(rectangle);
@@ -152,7 +166,7 @@ ApproximateTerrainHeights.getBoundingSphere = function (rectangle, ellipsoid) {
   return BoundingSphere.union(result, scratchBoundingSphere, result);
 };
 
-function getTileXYLevel(rectangle) {
+function getTileXYLevel(rectangle: any) {
   Cartographic.fromRadians(
     rectangle.east,
     rectangle.north,
@@ -238,5 +252,4 @@ Object.defineProperties(ApproximateTerrainHeights, {
     },
   },
 });
-export { ApproximateTerrainHeights };
 export default ApproximateTerrainHeights;

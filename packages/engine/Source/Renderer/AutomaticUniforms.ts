@@ -4,7 +4,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 
 const viewerPositionWCScratch = new Cartesian3();
 
-function AutomaticUniform(options) {
+function AutomaticUniform(options: any) {
   this._size = options.size;
   this._datatype = options.datatype;
   this.getValue = options.getValue;
@@ -1854,5 +1854,4 @@ const AutomaticUniforms = {
     },
   }),
 };
-export { AutomaticUniforms };
 export default AutomaticUniforms;

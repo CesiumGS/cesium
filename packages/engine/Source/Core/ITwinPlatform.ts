@@ -84,7 +84,16 @@ ITwinPlatform.defaultShareKey = undefined;
  * @returns {string} full auth header with basic/bearer method
  */
 ITwinPlatform._getAuthorizationHeader = function () {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
+  }
+  //>>includeEnd('debug');
 
   if (defined(ITwinPlatform.defaultShareKey)) {
     return `Basic ${ITwinPlatform.defaultShareKey}`;
@@ -150,7 +159,20 @@ ITwinPlatform.apiEndpoint = new Resource({
  * @throws {RuntimeError} If the iTwin API request is not successful
  */
 ITwinPlatform.getExports = async function (iModelId, changesetId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iModelId", iModelId);
+  if (defined(changesetId)) {
+    Check.typeOf.string("changesetId", changesetId);
+  }
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
+  }
+  //>>includeEnd('debug');
 
   const resource = new Resource({
     url: `${ITwinPlatform.apiEndpoint}mesh-export`,
@@ -240,7 +262,18 @@ ITwinPlatform.getExports = async function (iModelId, changesetId) {
  * @returns {Promise<RealityDataRepresentation>}
  */
 ITwinPlatform.getRealityDataMetadata = async function (iTwinId, realityDataId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("realityDataId", realityDataId);
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
+  }
+  //>>includeEnd('debug');
 
   const resource = new Resource({
     url: `${ITwinPlatform.apiEndpoint}reality-management/reality-data/${realityDataId}`,
@@ -296,7 +329,19 @@ ITwinPlatform.getRealityDataURL = async function (
   realityDataId,
   rootDocument,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("realityDataId", realityDataId);
+  Check.typeOf.string("rootDocument", rootDocument);
+  if (
+    !defined(ITwinPlatform.defaultAccessToken) &&
+    !defined(ITwinPlatform.defaultShareKey)
+  ) {
+    throw new DeveloperError(
+      "Must set ITwinPlatform.defaultAccessToken or ITwinPlatform.defaultShareKey first",
+    );
+  }
+  //>>includeEnd('debug');
 
   const resource = new Resource({
     url: `${ITwinPlatform.apiEndpoint}reality-management/reality-data/${realityDataId}/readaccess`,
@@ -340,5 +385,4 @@ ITwinPlatform.getRealityDataURL = async function (
   }
 };
 
-export { ITwinPlatform };
 export default ITwinPlatform;

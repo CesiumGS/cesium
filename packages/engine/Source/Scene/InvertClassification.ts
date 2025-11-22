@@ -378,5 +378,4 @@ InvertClassification.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { InvertClassification };
 export default InvertClassification;

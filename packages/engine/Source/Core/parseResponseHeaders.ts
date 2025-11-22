@@ -11,7 +11,7 @@
  *
  * @private
  */
-function parseResponseHeaders(headerString) {
+function parseResponseHeaders(headerString: any) {
   const headers = {};
 
   if (!headerString) {
@@ -34,5 +34,4 @@ function parseResponseHeaders(headerString) {
 
   return headers;
 }
-export { parseResponseHeaders };
 export default parseResponseHeaders;

@@ -86,7 +86,7 @@ Object.defineProperties(GlobeDepth.prototype, {
   },
 });
 
-function updateCopyCommands(globeDepth, context, width, height, passState) {
+function updateCopyCommands(globeDepth: any, context: any, width: any, height: any, passState: any) {
   const viewport = globeDepth._viewport;
   viewport.width = width;
   viewport.height = height;
@@ -404,5 +404,4 @@ GlobeDepth.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { GlobeDepth };
 export default GlobeDepth;

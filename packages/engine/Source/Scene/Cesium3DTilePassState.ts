@@ -6,8 +6,11 @@ import Check from "../Core/Check.js";
  * @private
  * @constructor
  */
-function Cesium3DTilePassState(options) {
-  ;
+function Cesium3DTilePassState(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.number("options.pass", options.pass);
+  //>>includeEnd('debug');
 
   /**
    * The pass.
@@ -46,5 +49,4 @@ function Cesium3DTilePassState(options) {
    */
   this.ready = false;
 }
-export { Cesium3DTilePassState };
 export default Cesium3DTilePassState;

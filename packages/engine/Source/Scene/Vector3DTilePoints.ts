@@ -35,7 +35,7 @@ import HeightReference from "./HeightReference.js";
  *
  * @private
  */
-function Vector3DTilePoints(options) {
+function Vector3DTilePoints(options: any) {
   // released after the first update
   this._positions = options.positions;
 
@@ -114,7 +114,7 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
   },
 });
 
-function packBuffer(points, ellipsoid) {
+function packBuffer(points: any, ellipsoid: any) {
   const rectangle = points._rectangle;
   const minimumHeight = points._minHeight;
   const maximumHeight = points._maxHeight;
@@ -140,7 +140,7 @@ const createVerticesTaskProcessor = new TaskProcessor(
 );
 const scratchPosition = new Cartesian3();
 
-function createPoints(points, ellipsoid) {
+function createPoints(points: any, ellipsoid: any) {
   let positions = points._positions;
   let packedBuffer = points._packedBuffer;
 
@@ -168,7 +168,7 @@ function createPoints(points, ellipsoid) {
   }
 
   return verticesPromise
-    .then((result) => {
+    .then((result: any) => {
       if (points.isDestroyed()) {
         return;
       }
@@ -207,7 +207,7 @@ function createPoints(points, ellipsoid) {
       points._packedBuffer = undefined;
       points._ready = true;
     })
-    .catch((error) => {
+    .catch((error: any) => {
       if (points.isDestroyed()) {
         return;
       }
@@ -265,7 +265,7 @@ Vector3DTilePoints.prototype.applyDebugSettings = function (enabled, color) {
   }
 };
 
-function clearStyle(polygons, features) {
+function clearStyle(polygons: any, features: any) {
   const batchIds = polygons._batchIds;
   const length = batchIds.length;
   for (let i = 0; i < length; ++i) {
@@ -545,5 +545,4 @@ Vector3DTilePoints.prototype.destroy = function () {
     this._polylineCollection && this._polylineCollection.destroy();
   return destroyObject(this);
 };
-export { Vector3DTilePoints };
 export default Vector3DTilePoints;

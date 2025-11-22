@@ -43,7 +43,7 @@ import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
  *
  * @private
  */
-function Vector3DTilePolylines(options) {
+function Vector3DTilePolylines(options: any) {
   // these arrays are all released after the first update.
   this._positions = options.positions;
   this._widths = options.widths;
@@ -135,7 +135,7 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
   },
 });
 
-function packBuffer(polylines) {
+function packBuffer(polylines: any) {
   const rectangle = polylines._rectangle;
   const minimumHeight = polylines._minimumHeight;
   const maximumHeight = polylines._maximumHeight;
@@ -176,7 +176,7 @@ const attributeLocations = {
   a_batchId: 4,
 };
 
-function createVertexArray(polylines, context) {
+function createVertexArray(polylines: any, context: any) {
   if (defined(polylines._va)) {
     return;
   }
@@ -253,7 +253,7 @@ function createVertexArray(polylines, context) {
 
       polylines._ready = true;
     })
-    .catch((error) => {
+    .catch((error: any) => {
       if (polylines.isDestroyed()) {
         return;
       }
@@ -263,7 +263,7 @@ function createVertexArray(polylines, context) {
     });
 }
 
-function finishVertexArray(polylines, context) {
+function finishVertexArray(polylines: any, context: any) {
   if (!defined(polylines._va)) {
     const curPositions = polylines._currentPositions;
     const prevPositions = polylines._previousPositions;
@@ -382,7 +382,7 @@ function finishVertexArray(polylines, context) {
 const modifiedModelViewScratch = new Matrix4();
 const rtcScratch = new Cartesian3();
 
-function createUniformMap(primitive, context) {
+function createUniformMap(primitive: any, context: any) {
   if (defined(primitive._uniformMap)) {
     return;
   }
@@ -409,7 +409,7 @@ function createUniformMap(primitive, context) {
   };
 }
 
-function createRenderStates(primitive) {
+function createRenderStates(primitive: any) {
   if (defined(primitive._rs)) {
     return;
   }
@@ -437,7 +437,7 @@ const PolylineFS =
   "    out_FragColor = u_highlightColor;\n" +
   "}\n";
 
-function createShaders(primitive, context) {
+function createShaders(primitive: any, context: any) {
   if (defined(primitive._sp)) {
     return;
   }
@@ -475,7 +475,7 @@ function createShaders(primitive, context) {
   });
 }
 
-function queueCommands(primitive, frameState) {
+function queueCommands(primitive: any, frameState: any) {
   if (!defined(primitive._command)) {
     const uniformMap = primitive._batchTable.getUniformMapCallback()(
       primitive._uniformMap,
@@ -572,7 +572,7 @@ Vector3DTilePolylines.prototype.applyDebugSettings = function (enabled, color) {
   this._highlightColor = enabled ? color : this._constantColor;
 };
 
-function clearStyle(polygons, features) {
+function clearStyle(polygons: any, features: any) {
   const batchIds = polygons._batchIds;
   const length = batchIds.length;
   for (let i = 0; i < length; ++i) {
@@ -676,5 +676,4 @@ Vector3DTilePolylines.prototype.destroy = function () {
   this._sp = this._sp && this._sp.destroy();
   return destroyObject(this);
 };
-export { Vector3DTilePolylines };
 export default Vector3DTilePolylines;

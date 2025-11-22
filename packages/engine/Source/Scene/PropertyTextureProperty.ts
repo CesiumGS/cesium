@@ -25,13 +25,17 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function PropertyTextureProperty(options) {
+function PropertyTextureProperty(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const property = options.property;
   const classProperty = options.classProperty;
   const textures = options.textures;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.property", property);
+  Check.typeOf.object("options.classProperty", classProperty);
+  Check.typeOf.object("options.textures", textures);
+  //>>includeEnd('debug');
 
   // in EXT_structural_metadata, the property is a valid glTF textureInfo
   const channels = defined(property.channels) ? property.channels : [0];
@@ -289,7 +293,7 @@ PropertyTextureProperty.prototype.unpackInShader = function (packedValueGlsl) {
  * @return {string} The channels as a string of "r", "g", "b" or "a" characters.
  * @private
  */
-function reformatChannels(channels) {
+function reformatChannels(channels: any) {
   return channels
     .map(function (channelIndex) {
       return "rgba".charAt(channelIndex);
@@ -297,5 +301,4 @@ function reformatChannels(channels) {
     .join("");
 }
 
-export { PropertyTextureProperty };
 export default PropertyTextureProperty;

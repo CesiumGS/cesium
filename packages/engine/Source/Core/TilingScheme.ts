@@ -13,8 +13,12 @@ import DeveloperError from "./DeveloperError.js";
  * @see WebMercatorTilingScheme
  * @see GeographicTilingScheme
  */
-function TilingScheme(options) {
-  ;
+function TilingScheme(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.",
+  );
+  //>>includeEnd('debug');
 }
 
 Object.defineProperties(TilingScheme.prototype, {
@@ -125,5 +129,4 @@ TilingScheme.prototype.tileXYToRectangle =
  */
 TilingScheme.prototype.positionToTileXY =
   DeveloperError.throwInstantiationError;
-export { TilingScheme };
 export default TilingScheme;

@@ -27,7 +27,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-function GltfImageLoader(options) {
+function GltfImageLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -36,7 +36,13 @@ function GltfImageLoader(options) {
   const baseResource = options.baseResource;
   const cacheKey = options.cacheKey;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("options.resourceCache", resourceCache);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.number("options.imageId", imageId);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
 
   const image = gltf.images[imageId];
   const bufferViewId = image.bufferView;
@@ -125,7 +131,7 @@ GltfImageLoader.prototype.load = function () {
   return this._promise;
 };
 
-function getImageAndMipLevels(image) {
+function getImageAndMipLevels(image: any) {
   // Images transcoded from KTX2 can contain multiple mip levels:
   // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
   let mipLevels;
@@ -142,7 +148,7 @@ function getImageAndMipLevels(image) {
   };
 }
 
-async function loadFromBufferView(imageLoader) {
+async function loadFromBufferView(imageLoader: any) {
   imageLoader._state = ResourceLoaderState.LOADING;
   const resourceCache = imageLoader._resourceCache;
   try {
@@ -184,7 +190,7 @@ async function loadFromBufferView(imageLoader) {
   }
 }
 
-async function loadFromUri(imageLoader) {
+async function loadFromUri(imageLoader: any) {
   imageLoader._state = ResourceLoaderState.LOADING;
   const baseResource = imageLoader._baseResource;
   const uri = imageLoader._uri;
@@ -216,13 +222,13 @@ async function loadFromUri(imageLoader) {
   }
 }
 
-function handleError(imageLoader, error, errorMessage) {
+function handleError(imageLoader: any, error: any, errorMessage: any) {
   imageLoader.unload();
   imageLoader._state = ResourceLoaderState.FAILED;
   return Promise.reject(imageLoader.getError(errorMessage, error));
 }
 
-function getMimeTypeFromTypedArray(typedArray) {
+function getMimeTypeFromTypedArray(typedArray: any) {
   const header = typedArray.subarray(0, 2);
   const webpHeaderRIFFChars = typedArray.subarray(0, 4);
   const webpHeaderWEBPChars = typedArray.subarray(8, 12);
@@ -253,7 +259,7 @@ function getMimeTypeFromTypedArray(typedArray) {
   throw new RuntimeError("Image format is not recognized");
 }
 
-async function loadImageFromBufferTypedArray(typedArray) {
+async function loadImageFromBufferTypedArray(typedArray: any) {
   const mimeType = getMimeTypeFromTypedArray(typedArray);
   if (mimeType === "image/ktx2") {
     // Need to make a copy of the embedded KTX2 buffer otherwise the underlying
@@ -276,7 +282,7 @@ async function loadImageFromBufferTypedArray(typedArray) {
 
 const ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 
-function loadImageFromUri(resource) {
+function loadImageFromUri(resource: any) {
   const uri = resource.getUrlComponent(false, true);
   if (ktx2Regex.test(uri)) {
     // Resolves to a CompressedTextureBuffer
@@ -311,5 +317,4 @@ GltfImageLoader.prototype.unload = function () {
 // Exposed for testing
 GltfImageLoader._loadImageFromTypedArray = loadImageFromTypedArray;
 
-export { GltfImageLoader };
 export default GltfImageLoader;

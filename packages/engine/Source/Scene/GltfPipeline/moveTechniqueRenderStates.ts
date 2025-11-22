@@ -12,7 +12,7 @@ const defaultBlendFactors = [
   WebGLConstants.ZERO,
 ];
 
-function isStateEnabled(renderStates, state) {
+function isStateEnabled(renderStates: any, state: any) {
   const enabled = renderStates.enable;
   if (!defined(enabled)) {
     return false;
@@ -35,7 +35,7 @@ const supportedBlendFactors = [
 ];
 
 // If any of the blend factors are not supported, return the default
-function getSupportedBlendFactors(value, defaultValue) {
+function getSupportedBlendFactors(value: any, defaultValue: any) {
   if (!defined(value)) {
     return defaultValue;
   }
@@ -57,7 +57,7 @@ function getSupportedBlendFactors(value, defaultValue) {
  *
  * @private
  */
-function moveTechniqueRenderStates(gltf) {
+function moveTechniqueRenderStates(gltf: any) {
   const blendingForTechnique = {};
   const materialPropertiesForTechnique = {};
   const techniquesLegacy = gltf.techniques;
@@ -132,5 +132,4 @@ function moveTechniqueRenderStates(gltf) {
   return gltf;
 }
 
-export { moveTechniqueRenderStates };
 export default moveTechniqueRenderStates;

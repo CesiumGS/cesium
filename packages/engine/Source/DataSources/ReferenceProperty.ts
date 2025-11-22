@@ -4,7 +4,7 @@ import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 import Property from "./Property.js";
 
-function resolve(that) {
+function resolve(that: any) {
   let targetProperty = that._targetProperty;
 
   if (!defined(targetProperty)) {
@@ -87,8 +87,24 @@ function resolve(that) {
  * object5.billboard.scale = Cesium.ReferenceProperty.fromString(collection, '\\#object\\.4#billboard.scale');
  * collection.add(object5);
  */
-function ReferenceProperty(targetCollection, targetId, targetPropertyNames) {
-  ;
+function ReferenceProperty(targetCollection: any, targetId: any, targetPropertyNames: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(targetCollection)) {
+    throw new DeveloperError("targetCollection is required.");
+  }
+  if (!defined(targetId) || targetId === "") {
+    throw new DeveloperError("targetId is required.");
+  }
+  if (!defined(targetPropertyNames) || targetPropertyNames.length === 0) {
+    throw new DeveloperError("targetPropertyNames is required.");
+  }
+  for (let i = 0; i < targetPropertyNames.length; i++) {
+    const item = targetPropertyNames[i];
+    if (!defined(item) || item === "") {
+      throw new DeveloperError("reference contains invalid properties.");
+    }
+  }
+  //>>includeEnd('debug');
 
   this._targetCollection = targetCollection;
   this._targetId = targetId;
@@ -200,7 +216,14 @@ Object.defineProperties(ReferenceProperty.prototype, {
  * @exception {DeveloperError} invalid referenceString.
  */
 ReferenceProperty.fromString = function (targetCollection, referenceString) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(targetCollection)) {
+    throw new DeveloperError("targetCollection is required.");
+  }
+  if (!defined(referenceString)) {
+    throw new DeveloperError("referenceString is required.");
+  }
+  //>>includeEnd('debug');
 
   let identifier;
   const values = [];
@@ -345,5 +368,4 @@ ReferenceProperty.prototype._onCollectionChanged = function (
     }
   }
 };
-export { ReferenceProperty };
 export default ReferenceProperty;

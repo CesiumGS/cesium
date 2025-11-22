@@ -53,7 +53,7 @@ TileReplacementQueue.prototype.trimTiles = function (maximumTiles) {
   }
 };
 
-function remove(tileReplacementQueue, item) {
+function remove(tileReplacementQueue: any, item: any) {
   const previous = item.replacementPrevious;
   const next = item.replacementNext;
 
@@ -116,5 +116,4 @@ TileReplacementQueue.prototype.markTileRendered = function (item) {
 
   this.head = item;
 };
-export { TileReplacementQueue };
 export default TileReplacementQueue;

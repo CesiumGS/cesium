@@ -17,13 +17,11 @@ const scratchPosition = new Cartesian3();
 /**
  * @private
  */
-function TerrainOffsetProperty(
-  scene,
-  positionProperty,
-  heightReferenceProperty,
-  extrudedHeightReferenceProperty,
-) {
-  ;
+function TerrainOffsetProperty(scene: any, positionProperty: any, heightReferenceProperty: any, extrudedHeightReferenceProperty: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("scene", scene);
+  Check.defined("positionProperty", positionProperty);
+  //>>includeEnd('debug');
 
   this._scene = scene;
   this._heightReference = heightReferenceProperty;
@@ -132,7 +130,7 @@ TerrainOffsetProperty.prototype._updateClamping = function () {
     this._terrainHeight = 0;
   }
 
-  const updateFunction = (clampedPosition) => {
+  const updateFunction = (clampedPosition: any) => {
     this._terrainHeight = clampedPosition.height;
     this.definitionChanged.raiseEvent();
   };
@@ -237,5 +235,4 @@ TerrainOffsetProperty.prototype.destroy = function () {
  * @param {Cartesian3} result The result position
  * @returns {Cartesian3} The position at which to do the terrain height check
  */
-export { TerrainOffsetProperty };
 export default TerrainOffsetProperty;

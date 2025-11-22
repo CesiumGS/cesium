@@ -34,13 +34,24 @@ const diffScratch = new Cartesian3();
  * });
  * const geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
  */
-function BoxOutlineGeometry(options) {
+function BoxOutlineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const min = options.minimum;
   const max = options.maximum;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("min", min);
+  Check.typeOf.object("max", max);
+  if (
+    defined(options.offsetAttribute) &&
+    options.offsetAttribute === GeometryOffsetAttribute.TOP
+  ) {
+    throw new DeveloperError(
+      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._min = Cartesian3.clone(min);
   this._max = Cartesian3.clone(max);
@@ -70,7 +81,12 @@ BoxOutlineGeometry.fromDimensions = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const dimensions = options.dimensions;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("dimensions", dimensions);
+  Check.typeOf.number.greaterThanOrEquals("dimensions.x", dimensions.x, 0);
+  Check.typeOf.number.greaterThanOrEquals("dimensions.y", dimensions.y, 0);
+  Check.typeOf.number.greaterThanOrEquals("dimensions.z", dimensions.z, 0);
+  //>>includeEnd('debug');
 
   const corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
 
@@ -102,7 +118,9 @@ BoxOutlineGeometry.fromDimensions = function (options) {
  *  @see BoxOutlineGeometry.createGeometry
  */
 BoxOutlineGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("boundindBox", boundingBox);
+  //>>includeEnd('debug');
 
   return new BoxOutlineGeometry({
     minimum: boundingBox.minimum,
@@ -126,7 +144,10 @@ BoxOutlineGeometry.packedLength = 2 * Cartesian3.packedLength + 1;
  * @returns {number[]} The array that was packed into
  */
 BoxOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -155,7 +176,9 @@ const scratchOptions = {
  * @returns {BoxOutlineGeometry} The modified result parameter or a new BoxOutlineGeometry instance if one was not provided.
  */
 BoxOutlineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -286,5 +309,4 @@ BoxOutlineGeometry.createGeometry = function (boxGeometry) {
     offsetAttribute: boxGeometry._offsetAttribute,
   });
 };
-export { BoxOutlineGeometry };
 export default BoxOutlineGeometry;

@@ -209,5 +209,4 @@ QuadtreeTileProvider.prototype.isDestroyed =
  * @see QuadtreeTileProvider#isDestroyed
  */
 QuadtreeTileProvider.prototype.destroy = DeveloperError.throwInstantiationError;
-export { QuadtreeTileProvider };
 export default QuadtreeTileProvider;

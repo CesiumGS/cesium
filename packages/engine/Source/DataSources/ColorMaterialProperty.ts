@@ -13,7 +13,7 @@ import Property from "./Property.js";
  * @alias ColorMaterialProperty
  * @constructor
  */
-function ColorMaterialProperty(color) {
+function ColorMaterialProperty(color: any) {
   this._definitionChanged = new Event();
   this._color = undefined;
   this._colorSubscription = undefined;
@@ -109,5 +109,4 @@ ColorMaterialProperty.prototype.equals = function (other) {
       Property.equals(this._color, other._color))
   );
 };
-export { ColorMaterialProperty };
 export default ColorMaterialProperty;

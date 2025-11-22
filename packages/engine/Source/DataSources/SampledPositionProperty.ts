@@ -18,7 +18,7 @@ import SampledProperty from "./SampledProperty.js";
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  * @param {number} [numberOfDerivatives=0] The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...
  */
-function SampledPositionProperty(referenceFrame, numberOfDerivatives) {
+function SampledPositionProperty(referenceFrame: any, numberOfDerivatives: any) {
   numberOfDerivatives = numberOfDerivatives ?? 0;
 
   let derivativeTypes;
@@ -207,7 +207,10 @@ SampledPositionProperty.prototype.getValueInReferenceFrame = function (
   referenceFrame,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+  Check.defined("referenceFrame", referenceFrame);
+  //>>includeEnd('debug');
 
   result = this._property.getValue(time, result);
   if (defined(result)) {
@@ -246,7 +249,16 @@ SampledPositionProperty.prototype.addSample = function (
   derivatives,
 ) {
   const numberOfDerivatives = this._numberOfDerivatives;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    numberOfDerivatives > 0 &&
+    (!defined(derivatives) || derivatives.length !== numberOfDerivatives)
+  ) {
+    throw new DeveloperError(
+      "derivatives length must be equal to the number of derivatives.",
+    );
+  }
+  //>>includeEnd('debug');
   this._property.addSample(time, position, derivatives);
 };
 
@@ -315,5 +327,4 @@ SampledPositionProperty.prototype.equals = function (other) {
       this._referenceFrame === other._referenceFrame)
   );
 };
-export { SampledPositionProperty };
 export default SampledPositionProperty;

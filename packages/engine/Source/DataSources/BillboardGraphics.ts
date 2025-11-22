@@ -48,7 +48,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
  */
-function BillboardGraphics(options) {
+function BillboardGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -384,7 +384,11 @@ BillboardGraphics.prototype.clone = function (result) {
  * @param {BillboardGraphics} source The object to be merged into this object.
  */
 BillboardGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this._show ?? source.show;
   this.image = this._image ?? source.image;
@@ -412,5 +416,4 @@ BillboardGraphics.prototype.merge = function (source) {
     this._disableDepthTestDistance ?? source.disableDepthTestDistance;
   this.splitDirection = this.splitDirection ?? source.splitDirection;
 };
-export { BillboardGraphics };
 export default BillboardGraphics;

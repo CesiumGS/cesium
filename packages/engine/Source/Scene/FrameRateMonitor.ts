@@ -28,8 +28,12 @@ import TimeConstants from "../Core/TimeConstants.js";
  *        the end of the warmup period.  If the frame rate averages less than this during any samplingWindow after the warmupPeriod, the
  *        lowFrameRate event will be raised and the page will redirect to the redirectOnLowFrameRateUrl, if any.
  */
-function FrameRateMonitor(options) {
-  ;
+function FrameRateMonitor(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options) || !defined(options.scene)) {
+    throw new DeveloperError("options.scene is required.");
+  }
+  //>>includeEnd('debug');
 
   this._scene = options.scene;
 
@@ -162,7 +166,11 @@ FrameRateMonitor.defaultSettings = {
  * @returns {FrameRateMonitor} The scene's {@link FrameRateMonitor}.
  */
 FrameRateMonitor.fromScene = function (scene) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   if (
     !defined(scene._frameRateMonitor) ||
@@ -292,7 +300,7 @@ FrameRateMonitor.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-function update(monitor, time) {
+function update(monitor: any, time: any) {
   if (monitor._pauseCount > 0) {
     return;
   }
@@ -357,12 +365,11 @@ function update(monitor, time) {
   }
 }
 
-function visibilityChanged(monitor) {
+function visibilityChanged(monitor: any) {
   if (document[monitor._hiddenPropertyName]) {
     monitor.pause();
   } else {
     monitor.unpause();
   }
 }
-export { FrameRateMonitor };
 export default FrameRateMonitor;

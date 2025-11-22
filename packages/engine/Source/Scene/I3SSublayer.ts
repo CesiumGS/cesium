@@ -12,7 +12,7 @@ import Resource from "../Core/Resource.js";
  * @alias I3SSublayer
  * @internalConstructor
  */
-function I3SSublayer(dataProvider, parent, sublayerData) {
+function I3SSublayer(dataProvider: any, parent: any, sublayerData: any) {
   this._dataProvider = dataProvider;
   this._parent = parent;
   this._data = sublayerData;
@@ -95,7 +95,9 @@ Object.defineProperties(I3SSublayer.prototype, {
       return this._visibility;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      //>>includeEnd('debug');
 
       if (this._visibility !== value) {
         this._visibility = value;
@@ -170,5 +172,4 @@ I3SSublayer._fromData = async function (
   return sublayer;
 };
 
-export { I3SSublayer };
 export default I3SSublayer;

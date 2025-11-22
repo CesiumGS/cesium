@@ -18,12 +18,15 @@ import MetadataEntity from "./MetadataEntity.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function TileMetadata(options) {
+function TileMetadata(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const tile = options.tile;
   const metadataClass = options.class;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.tile", tile);
+  Check.typeOf.object("options.class", metadataClass);
+  //>>includeEnd('debug');
 
   this._class = metadataClass;
   this._properties = tile.properties;
@@ -119,7 +122,7 @@ TileMetadata.prototype.getPropertyIds = function (results) {
  * </p>
  *
  * @param {string} propertyId The case-sensitive ID of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the tile does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this property.
  * @private
  */
 TileMetadata.prototype.getProperty = function (propertyId) {
@@ -150,7 +153,7 @@ TileMetadata.prototype.setProperty = function (propertyId, value) {
  * Returns a copy of the value of the property with the given semantic.
  *
  * @param {string} semantic The case-sensitive semantic of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the tile does not have this semantic.
+ * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this semantic.
  * @private
  */
 TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
@@ -178,5 +181,4 @@ TileMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
   );
 };
 
-export { TileMetadata };
 export default TileMetadata;

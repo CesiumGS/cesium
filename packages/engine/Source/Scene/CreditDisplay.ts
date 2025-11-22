@@ -20,12 +20,12 @@ const highlightColor = "#48b";
  *
  * @private
  */
-function CreditDisplayElement(credit, count) {
+function CreditDisplayElement(credit: any, count: any) {
   this.credit = credit;
   this.count = count ?? 1;
 }
 
-function contains(credits, credit) {
+function contains(credits: any, credit: any) {
   const len = credits.length;
   for (let i = 0; i < len; i++) {
     const existingCredit = credits[i];
@@ -36,7 +36,7 @@ function contains(credits, credit) {
   return false;
 }
 
-function swapCesiumCredit(creditDisplay) {
+function swapCesiumCredit(creditDisplay: any) {
   // We don't want to clutter the screen with the Cesium logo and the Cesium ion
   // logo at the same time. Since the ion logo is required, we just replace the
   // Cesium logo or add the logo if the Cesium one was removed.
@@ -58,14 +58,14 @@ function swapCesiumCredit(creditDisplay) {
 
 const delimiterClassName = "cesium-credit-delimiter";
 
-function createDelimiterElement(delimiter) {
+function createDelimiterElement(delimiter: any) {
   const delimiterElement = document.createElement("span");
   delimiterElement.textContent = delimiter;
   delimiterElement.className = delimiterClassName;
   return delimiterElement;
 }
 
-function createCreditElement(element, elementWrapperTagName) {
+function createCreditElement(element: any, elementWrapperTagName: any) {
   // may need to wrap the credit in another element
   if (defined(elementWrapperTagName)) {
     const wrapper = document.createElement(elementWrapperTagName);
@@ -76,7 +76,7 @@ function createCreditElement(element, elementWrapperTagName) {
   return element;
 }
 
-function displayCredits(container, credits, delimiter, elementWrapperTagName) {
+function displayCredits(container: any, credits: any, delimiter: any, elementWrapperTagName: any) {
   const childNodes = container.childNodes;
   let domIndex = -1;
 
@@ -135,7 +135,7 @@ function displayCredits(container, credits, delimiter, elementWrapperTagName) {
   }
 }
 
-function styleLightboxContainer(that) {
+function styleLightboxContainer(that: any) {
   const lightboxCredits = that._lightboxCredits;
   const width = that.viewport.clientWidth;
   const height = that.viewport.clientHeight;
@@ -162,7 +162,7 @@ function styleLightboxContainer(that) {
   }
 }
 
-function appendCss(container) {
+function appendCss(container: any) {
   const style = /*css*/ `
 .cesium-credit-lightbox-overlay {
   display: none;
@@ -259,7 +259,7 @@ function appendCss(container) {
 }
 `;
 
-  function getShadowRoot(container) {
+  function getShadowRoot(container: any) {
     if (container.shadowRoot) {
       return container.shadowRoot;
     }
@@ -298,8 +298,10 @@ function appendCss(container) {
  * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank">Cesium</a>');
  * viewer.creditDisplay.addStaticCredit(credit);
  */
-function CreditDisplay(container, delimiter, viewport) {
-  ;
+function CreditDisplay(container: any, delimiter: any, viewport: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("container", container);
+  //>>includeEnd('debug');
   const that = this;
 
   viewport = viewport ?? document.body;
@@ -312,7 +314,7 @@ function CreditDisplay(container, delimiter, viewport) {
   lightboxCredits.className = "cesium-credit-lightbox";
   lightbox.appendChild(lightboxCredits);
 
-  function hideLightbox(event) {
+  function hideLightbox(event: any) {
     if (lightboxCredits.contains(event.target)) {
       return;
     }
@@ -387,7 +389,7 @@ function CreditDisplay(container, delimiter, viewport) {
   this.container = container;
 }
 
-function setCredit(creditDisplay, credits, credit, count) {
+function setCredit(creditDisplay: any, credits: any, credit: any, count: any) {
   count = count ?? 1;
   let creditDisplayElement = credits.get(credit.id);
   if (!defined(creditDisplayElement)) {
@@ -417,7 +419,9 @@ function setCredit(creditDisplay, credits, credit, count) {
  * @param {Credit} credit The credit to display in the next frame.
  */
 CreditDisplay.prototype.addCreditToNextFrame = function (credit) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("credit", credit);
+  //>>includeEnd('debug');
 
   if (credit.isIon()) {
     // If this is the an ion logo credit from the ion server
@@ -455,7 +459,9 @@ CreditDisplay.prototype.addCreditToNextFrame = function (credit) {
  * viewer.creditDisplay.addStaticCredit(credit);
  */
 CreditDisplay.prototype.addStaticCredit = function (credit) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("credit", credit);
+  //>>includeEnd('debug');
 
   const staticCredits = this._staticCredits;
   if (!contains(staticCredits, credit)) {
@@ -469,7 +475,9 @@ CreditDisplay.prototype.addStaticCredit = function (credit) {
  * @param {Credit} credit The credit to be removed.
  */
 CreditDisplay.prototype.removeStaticCredit = function (credit) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("credit", credit);
+  //>>includeEnd('debug');
 
   const staticCredits = this._staticCredits;
   const index = staticCredits.indexOf(credit);
@@ -643,5 +651,4 @@ Object.defineProperties(CreditDisplay, {
 });
 
 CreditDisplay.CreditDisplayElement = CreditDisplayElement;
-export { CreditDisplay };
 export default CreditDisplay;

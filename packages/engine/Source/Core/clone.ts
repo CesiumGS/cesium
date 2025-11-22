@@ -7,7 +7,7 @@
  * @param {boolean} [deep=false] If true, all properties will be deep cloned recursively.
  * @returns {object} The cloned object.
  */
-function clone(object, deep) {
+function clone(object: any, deep: any) {
   if (object === null || typeof object !== "object") {
     return object;
   }
@@ -27,5 +27,4 @@ function clone(object, deep) {
 
   return result;
 }
-export { clone };
 export default clone;

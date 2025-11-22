@@ -75,5 +75,4 @@ Cesium3DTileStyleEngine.prototype.applyStyle = function (tileset) {
     }
   }
 };
-export { Cesium3DTileStyleEngine };
 export default Cesium3DTileStyleEngine;

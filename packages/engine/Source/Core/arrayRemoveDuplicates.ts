@@ -46,13 +46,10 @@ const removeDuplicatesEpsilon = CesiumMath.EPSILON10;
  * const nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
  * @private
  */
-function arrayRemoveDuplicates(
-  values,
-  equalsEpsilon,
-  wrapAround,
-  removedIndices,
-) {
-  ;
+function arrayRemoveDuplicates(values: any, equalsEpsilon: any, wrapAround: any, removedIndices: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("equalsEpsilon", equalsEpsilon);
+  //>>includeEnd('debug');
 
   if (!defined(values)) {
     return undefined;
@@ -124,5 +121,4 @@ function arrayRemoveDuplicates(
   return defined(cleanedValues) ? cleanedValues : values;
 }
 
-export { arrayRemoveDuplicates };
 export default arrayRemoveDuplicates;

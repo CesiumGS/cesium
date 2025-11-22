@@ -7,12 +7,16 @@ import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
 
-function initialize(ellipsoid, x, y, z) {
+function initialize(ellipsoid: any, x: any, y: any, z: any) {
   x = x ?? 0.0;
   y = y ?? 0.0;
   z = z ?? 0.0;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("x", x, 0.0);
+  Check.typeOf.number.greaterThanOrEquals("y", y, 0.0);
+  Check.typeOf.number.greaterThanOrEquals("z", z, 0.0);
+  //>>includeEnd('debug');
 
   ellipsoid._radii = new Cartesian3(x, y, z);
 
@@ -68,7 +72,7 @@ function initialize(ellipsoid, x, y, z) {
  * @see Ellipsoid.WGS84
  * @see Ellipsoid.UNIT_SPHERE
  */
-function Ellipsoid(x, y, z) {
+function Ellipsoid(x: any, y: any, z: any) {
   this._radii = undefined;
   this._radiiSquared = undefined;
   this._radiiToTheFourth = undefined;
@@ -279,7 +283,9 @@ Object.defineProperties(Ellipsoid, {
       return Ellipsoid._default;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
 
       Ellipsoid._default = value;
       Cartesian3._ellipsoidRadiiSquared = value.radiiSquared;
@@ -318,7 +324,10 @@ Ellipsoid.packedLength = Cartesian3.packedLength;
  * @returns {number[]} The array that was packed into
  */
 Ellipsoid.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -336,7 +345,9 @@ Ellipsoid.pack = function (value, array, startingIndex) {
  * @returns {Ellipsoid} The modified result parameter or a new Ellipsoid instance if one was not provided.
  */
 Ellipsoid.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -365,7 +376,9 @@ Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function (
   cartographic,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartographic", cartographic);
+  //>>includeEnd('debug');
 
   const longitude = cartographic.longitude;
   const latitude = cartographic.latitude;
@@ -392,7 +405,12 @@ Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function (
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided, or undefined if a normal cannot be found.
  */
 Ellipsoid.prototype.geodeticSurfaceNormal = function (cartesian, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  if (isNaN(cartesian.x) || isNaN(cartesian.y) || isNaN(cartesian.z)) {
+    throw new DeveloperError("cartesian has a NaN component");
+  }
+  //>>includeEnd('debug');
   if (
     Cartesian3.equalsEpsilon(cartesian, Cartesian3.ZERO, CesiumMath.EPSILON14)
   ) {
@@ -458,7 +476,9 @@ Ellipsoid.prototype.cartographicArrayToCartesianArray = function (
   cartographics,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartographics", cartographics);
+  //>>includeEnd('debug');
 
   const length = cartographics.length;
   if (!defined(result)) {
@@ -532,7 +552,9 @@ Ellipsoid.prototype.cartesianArrayToCartographicArray = function (
   cartesians,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesians", cartesians);
+  //>>includeEnd('debug');
 
   const length = cartesians.length;
   if (!defined(result)) {
@@ -574,7 +596,9 @@ Ellipsoid.prototype.scaleToGeodeticSurface = function (cartesian, result) {
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
  */
 Ellipsoid.prototype.scaleToGeocentricSurface = function (cartesian, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -682,7 +706,23 @@ Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function (
   buffer,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("position", position);
+
+  if (
+    !CesiumMath.equalsEpsilon(
+      this._radii.x,
+      this._radii.y,
+      CesiumMath.EPSILON15,
+    )
+  ) {
+    throw new DeveloperError(
+      "Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)",
+    );
+  }
+
+  Check.typeOf.number.greaterThan("Ellipsoid.radii.z", this._radii.z, 0);
+  //>>includeEnd('debug');
 
   buffer = buffer ?? 0.0;
 
@@ -715,7 +755,9 @@ const scratchEndpoint = new Cartesian3();
  * @exception {DeveloperError} position is required.
  */
 Ellipsoid.prototype.getLocalCurvature = function (surfacePosition, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("surfacePosition", surfacePosition);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian2();
@@ -764,8 +806,12 @@ const weights = [
  *
  * @private
  */
-function gaussLegendreQuadrature(a, b, func) {
-  ;
+function gaussLegendreQuadrature(a: any, b: any, func: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("a", a);
+  Check.typeOf.number("b", b);
+  Check.typeOf.func("func", func);
+  //>>includeEnd('debug');
 
   // The range is half of the normal range since the five weights add to one (ten weights add to two).
   // The values of the abscissas are multiplied by two to account for this.
@@ -801,7 +847,9 @@ function gaussLegendreQuadrature(a, b, func) {
  * @returns {number} The approximate area of the rectangle on the surface of this ellipsoid.
  */
 Ellipsoid.prototype.surfaceArea = function (rectangle) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
   const minLongitude = rectangle.west;
   let maxLongitude = rectangle.east;
   const minLatitude = rectangle.south;
@@ -838,5 +886,4 @@ Ellipsoid.prototype.surfaceArea = function (rectangle) {
   });
 };
 
-export { Ellipsoid };
 export default Ellipsoid;

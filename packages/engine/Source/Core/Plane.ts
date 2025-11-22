@@ -31,8 +31,20 @@ import Matrix4 from "./Matrix4.js";
  *
  * @exception {DeveloperError} Normal must be normalized
  */
-function Plane(normal, distance) {
-  ;
+function Plane(normal: any, distance: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("normal", normal);
+  if (
+    !CesiumMath.equalsEpsilon(
+      Cartesian3.magnitude(normal),
+      1.0,
+      CesiumMath.EPSILON6,
+    )
+  ) {
+    throw new DeveloperError("normal must be normalized.");
+  }
+  Check.typeOf.number("distance", distance);
+  //>>includeEnd('debug');
 
   /**
    * The plane's normal.
@@ -69,7 +81,19 @@ function Plane(normal, distance) {
  * @exception {DeveloperError} Normal must be normalized
  */
 Plane.fromPointNormal = function (point, normal, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("point", point);
+  Check.typeOf.object("normal", normal);
+  if (
+    !CesiumMath.equalsEpsilon(
+      Cartesian3.magnitude(normal),
+      1.0,
+      CesiumMath.EPSILON6,
+    )
+  ) {
+    throw new DeveloperError("normal must be normalized.");
+  }
+  //>>includeEnd('debug');
 
   const distance = -Cartesian3.dot(normal, point);
 
@@ -93,12 +117,24 @@ const scratchNormal = new Cartesian3();
  * @exception {DeveloperError} Normal must be normalized
  */
 Plane.fromCartesian4 = function (coefficients, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("coefficients", coefficients);
+  //>>includeEnd('debug');
 
   const normal = Cartesian3.fromCartesian4(coefficients, scratchNormal);
   const distance = coefficients.w;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    !CesiumMath.equalsEpsilon(
+      Cartesian3.magnitude(normal),
+      1.0,
+      CesiumMath.EPSILON6,
+    )
+  ) {
+    throw new DeveloperError("normal must be normalized.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Plane(normal, distance);
@@ -120,7 +156,10 @@ Plane.fromCartesian4 = function (coefficients, result) {
  * @returns {number} The signed shortest distance of the point to the plane.
  */
 Plane.getPointDistance = function (plane, point) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("plane", plane);
+  Check.typeOf.object("point", point);
+  //>>includeEnd('debug');
 
   return Cartesian3.dot(plane.normal, point) + plane.distance;
 };
@@ -134,7 +173,10 @@ const scratchCartesian = new Cartesian3();
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
  */
 Plane.projectPointOntoPlane = function (plane, point, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("plane", plane);
+  Check.typeOf.object("point", point);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -163,7 +205,10 @@ const scratchTransformNormal = new Cartesian3();
  * @returns {Plane} The plane transformed by the given transformation matrix.
  */
 Plane.transform = function (plane, transform, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("plane", plane);
+  Check.typeOf.object("transform", transform);
+  //>>includeEnd('debug');
 
   const normal = plane.normal;
   const distance = plane.distance;
@@ -207,7 +252,9 @@ Plane.transform = function (plane, transform, result) {
  * @returns {Plane} The modified result parameter or a new Plane instance if one was not provided.
  */
 Plane.clone = function (plane, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("plane", plane);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Plane(plane.normal, plane.distance);
@@ -228,7 +275,10 @@ Plane.clone = function (plane, result) {
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 Plane.equals = function (left, right) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
 
   return (
     left.distance === right.distance &&
@@ -259,5 +309,4 @@ Plane.ORIGIN_YZ_PLANE = Object.freeze(new Plane(Cartesian3.UNIT_X, 0.0));
  * @constant
  */
 Plane.ORIGIN_ZX_PLANE = Object.freeze(new Plane(Cartesian3.UNIT_Y, 0.0));
-export { Plane };
 export default Plane;

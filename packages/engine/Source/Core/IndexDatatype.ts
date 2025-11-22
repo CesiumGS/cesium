@@ -58,7 +58,11 @@ IndexDatatype.getSizeInBytes = function (indexDatatype) {
       return Uint32Array.BYTES_PER_ELEMENT;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "indexDatatype is required and must be a valid IndexDatatype constant.",
+  );
+  //>>includeEnd('debug');
 };
 
 /**
@@ -75,7 +79,12 @@ IndexDatatype.fromSizeInBytes = function (sizeInBytes) {
       return IndexDatatype.UNSIGNED_INT;
     case 1:
       return IndexDatatype.UNSIGNED_BYTE;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(
+        "Size in bytes cannot be mapped to an IndexDatatype",
+      );
+    //>>includeEnd('debug');
   }
 };
 
@@ -114,7 +123,11 @@ IndexDatatype.createTypedArray = function (
   numberOfVertices,
   indicesLengthOrArray,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(numberOfVertices)) {
+    throw new DeveloperError("numberOfVertices is required.");
+  }
+  //>>includeEnd('debug');
 
   if (numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES) {
     return new Uint32Array(indicesLengthOrArray);
@@ -140,7 +153,17 @@ IndexDatatype.createTypedArrayFromArrayBuffer = function (
   byteOffset,
   length,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(numberOfVertices)) {
+    throw new DeveloperError("numberOfVertices is required.");
+  }
+  if (!defined(sourceArray)) {
+    throw new DeveloperError("sourceArray is required.");
+  }
+  if (!defined(byteOffset)) {
+    throw new DeveloperError("byteOffset is required.");
+  }
+  //>>includeEnd('debug');
 
   if (numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES) {
     return new Uint32Array(sourceArray, byteOffset, length);
@@ -166,7 +189,11 @@ IndexDatatype.fromTypedArray = function (array) {
     return IndexDatatype.UNSIGNED_INT;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "array must be a Uint8Array, Uint16Array, or Uint32Array.",
+  );
+  //>>includeEnd('debug');
 };
 
 export default Object.freeze(IndexDatatype);

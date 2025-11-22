@@ -13,7 +13,7 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-function findAccessorMinMax(gltf, accessor) {
+function findAccessorMinMax(gltf: any, accessor: any) {
   const bufferViews = gltf.bufferViews;
   const buffers = gltf.buffers;
   const bufferViewId = accessor.bufferView;
@@ -68,5 +68,4 @@ function findAccessorMinMax(gltf, accessor) {
   };
 }
 
-export { findAccessorMinMax };
 export default findAccessorMinMax;

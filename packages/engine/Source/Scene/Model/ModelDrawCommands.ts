@@ -70,11 +70,7 @@ ModelDrawCommands.buildModelDrawCommand = function (
 /**
  * @private
  */
-function createShaderProgram(
-  primitiveRenderResources,
-  shaderBuilder,
-  frameState,
-) {
+function createShaderProgram(primitiveRenderResources: any, shaderBuilder: any, frameState: any, ) {
   shaderBuilder.addVertexLines(ModelVS);
   shaderBuilder.addFragmentLines(ModelFS);
 
@@ -97,11 +93,7 @@ function createShaderProgram(
  *
  * @private
  */
-function buildDrawCommandForModel(
-  primitiveRenderResources,
-  shaderProgram,
-  frameState,
-) {
+function buildDrawCommandForModel(primitiveRenderResources: any, shaderProgram: any, frameState: any, ) {
   const indexBuffer = getIndexBuffer(primitiveRenderResources);
 
   const vertexArray = new VertexArray({
@@ -195,7 +187,7 @@ function buildDrawCommandForModel(
 /**
  * @private
  */
-function getIndexBuffer(primitiveRenderResources) {
+function getIndexBuffer(primitiveRenderResources: any) {
   const wireframeIndexBuffer = primitiveRenderResources.wireframeIndexBuffer;
   if (defined(wireframeIndexBuffer)) {
     return wireframeIndexBuffer;
@@ -206,10 +198,13 @@ function getIndexBuffer(primitiveRenderResources) {
     return undefined;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(indices.buffer)) {
+    throw new DeveloperError("Indices must be provided as a Buffer");
+  }
+  //>>includeEnd('debug');
 
   return indices.buffer;
 }
 
-export { ModelDrawCommands };
 export default ModelDrawCommands;

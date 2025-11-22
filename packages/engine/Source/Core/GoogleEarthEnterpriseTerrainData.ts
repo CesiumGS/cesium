@@ -54,9 +54,19 @@ import TerrainMesh from "./TerrainMesh.js";
  * @see HeightmapTerrainData
  * @see QuantizedMeshTerrainData
  */
-function GoogleEarthEnterpriseTerrainData(options) {
+function GoogleEarthEnterpriseTerrainData(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.buffer", options.buffer);
+  Check.typeOf.number(
+    "options.negativeAltitudeExponentBias",
+    options.negativeAltitudeExponentBias,
+  );
+  Check.typeOf.number(
+    "options.negativeElevationThreshold",
+    options.negativeElevationThreshold,
+  );
+  //>>includeEnd('debug');
 
   this._buffer = options.buffer;
   this._credits = options.credits;
@@ -137,7 +147,12 @@ const rectangleScratch = new Rectangle();
 GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+  Check.typeOf.number("options.x", options.x);
+  Check.typeOf.number("options.y", options.y);
+  Check.typeOf.number("options.level", options.level);
+  //>>includeEnd('debug');
 
   const tilingScheme = options.tilingScheme;
   const x = options.x;
@@ -278,7 +293,21 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
   descendantY,
   descendantLevel,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("tilingScheme", tilingScheme);
+  Check.typeOf.number("thisX", thisX);
+  Check.typeOf.number("thisY", thisY);
+  Check.typeOf.number("thisLevel", thisLevel);
+  Check.typeOf.number("descendantX", descendantX);
+  Check.typeOf.number("descendantY", descendantY);
+  Check.typeOf.number("descendantLevel", descendantLevel);
+  const levelDifference = descendantLevel - thisLevel;
+  if (levelDifference > 1) {
+    throw new DeveloperError(
+      "Upsampling through more than one level at a time is not currently supported.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const mesh = this._mesh;
   if (!defined(this._mesh)) {
@@ -368,7 +397,12 @@ GoogleEarthEnterpriseTerrainData.prototype.isChildAvailable = function (
   childX,
   childY,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("thisX", thisX);
+  Check.typeOf.number("thisY", thisY);
+  Check.typeOf.number("childX", childX);
+  Check.typeOf.number("childY", childY);
+  //>>includeEnd('debug');
 
   let bitNumber = 2; // northwest child
   if (childX !== thisX * 2) {
@@ -399,7 +433,7 @@ const texCoordScratch1 = new Cartesian2();
 const texCoordScratch2 = new Cartesian2();
 const barycentricCoordinateScratch = new Cartesian3();
 
-function interpolateMeshHeight(terrainData, u, v) {
+function interpolateMeshHeight(terrainData: any, u: any, v: any) {
   const mesh = terrainData._mesh;
   const vertices = mesh.vertices;
   const encoding = mesh.encoding;
@@ -459,7 +493,7 @@ const sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
 const sizeOfFloat = Float32Array.BYTES_PER_ELEMENT;
 const sizeOfDouble = Float64Array.BYTES_PER_ELEMENT;
 
-function interpolateHeight(terrainData, u, v, rectangle) {
+function interpolateHeight(terrainData: any, u: any, v: any, rectangle: any) {
   const buffer = terrainData._buffer;
   let quad = 0; // SW
   let uStart = 0.0;
@@ -569,5 +603,4 @@ function interpolateHeight(terrainData, u, v, rectangle) {
   // Position does not lie in any triangle in this mesh.
   return undefined;
 }
-export { GoogleEarthEnterpriseTerrainData };
 export default GoogleEarthEnterpriseTerrainData;

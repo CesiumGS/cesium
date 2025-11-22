@@ -22,6 +22,6 @@ const BoundingSphereState = Object.freeze({
    * @constant
    */
   FAILED: 2,
-});
-export { BoundingSphereState };
+} as const);
+export type BoundingSphereState = typeof BoundingSphereState[keyof typeof BoundingSphereState];
 export default BoundingSphereState;

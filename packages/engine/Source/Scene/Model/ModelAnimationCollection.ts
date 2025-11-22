@@ -21,7 +21,7 @@ import ModelAnimationState from ".././ModelAnimationState.js";
  *
  * @see Model#activeAnimations
  */
-function ModelAnimationCollection(model) {
+function ModelAnimationCollection(model: any) {
   /**
    * The event fired when an animation is added to the collection.  This can be used, for
    * example, to keep a UI in sync.
@@ -96,7 +96,7 @@ Object.defineProperties(ModelAnimationCollection.prototype, {
   },
 });
 
-function addAnimation(collection, animation, options) {
+function addAnimation(collection: any, animation: any, options: any) {
   const model = collection._model;
   const runtimeAnimation = new ModelAnimation(model, animation, options);
   collection._runtimeAnimations.push(runtimeAnimation);
@@ -171,11 +171,34 @@ ModelAnimationCollection.prototype.add = function (options) {
 
   const model = this._model;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!model.ready) {
+    throw new DeveloperError(
+      "Animations are not loaded.  Wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const animations = model.sceneGraph.components.animations;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.name) && !defined(options.index)) {
+    throw new DeveloperError(
+      "Either options.name or options.index must be defined.",
+    );
+  }
+
+  if (defined(options.multiplier) && options.multiplier <= 0.0) {
+    throw new DeveloperError("options.multiplier must be greater than zero.");
+  }
+
+  if (
+    defined(options.index) &&
+    (options.index >= animations.length || options.index < 0)
+  ) {
+    throw new DeveloperError("options.index must be a valid animation index.");
+  }
+  //>>includeEnd('debug');
 
   let index = options.index;
   if (defined(index)) {
@@ -191,7 +214,11 @@ ModelAnimationCollection.prototype.add = function (options) {
     }
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("options.name must be a valid animation name.");
+  }
+  //>>includeEnd('debug');
 
   return addAnimation(this, animations[index], options);
 };
@@ -228,7 +255,17 @@ ModelAnimationCollection.prototype.addAll = function (options) {
 
   const model = this._model;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!model.ready) {
+    throw new DeveloperError(
+      "Animations are not loaded.  Wait for Model.ready to be true.",
+    );
+  }
+
+  if (defined(options.multiplier) && options.multiplier <= 0.0) {
+    throw new DeveloperError("options.multiplier must be greater than zero.");
+  }
+  //>>includeEnd('debug');
 
   const animations = model.sceneGraph.components.animations;
 
@@ -327,18 +364,24 @@ ModelAnimationCollection.prototype.contains = function (runtimeAnimation) {
  * }
  */
 ModelAnimationCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.");
+  }
+
+  if (index >= this._runtimeAnimations.length || index < 0) {
+    throw new DeveloperError(
+      "index must be valid within the range of the collection",
+    );
+  }
+  //>>includeEnd('debug');
 
   return this._runtimeAnimations[index];
 };
 
 const animationsToRemove = [];
 
-function createAnimationRemovedFunction(
-  modelAnimationCollection,
-  model,
-  animation,
-) {
+function createAnimationRemovedFunction(modelAnimationCollection: any, model: any, animation: any, ) {
   return function () {
     modelAnimationCollection.animationRemoved.raiseEvent(model, animation);
   };
@@ -503,5 +546,4 @@ ModelAnimationCollection.prototype.update = function (frameState) {
   return animationOccurred;
 };
 
-export { ModelAnimationCollection };
 export default ModelAnimationCollection;

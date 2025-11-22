@@ -40,7 +40,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
  */
-function EllipsoidGraphics(options) {
+function EllipsoidGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -283,7 +283,11 @@ EllipsoidGraphics.prototype.clone = function (result) {
  * @param {EllipsoidGraphics} source The object to be merged into this object.
  */
 EllipsoidGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.radii = this.radii ?? source.radii;
@@ -305,5 +309,4 @@ EllipsoidGraphics.prototype.merge = function (source) {
   this.distanceDisplayCondition =
     this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
-export { EllipsoidGraphics };
 export default EllipsoidGraphics;

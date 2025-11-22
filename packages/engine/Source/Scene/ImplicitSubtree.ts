@@ -36,8 +36,12 @@ import ResourceCache from "./ResourceCache.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function ImplicitSubtree(resource, implicitTileset, implicitCoordinates) {
-  ;
+function ImplicitSubtree(resource: any, implicitTileset: any, implicitCoordinates: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("resource", resource);
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("implicitCoordinates", implicitCoordinates);
+  //>>includeEnd('debug');
 
   this._resource = resource;
   this._subtreeJson = undefined;
@@ -204,7 +208,14 @@ ImplicitSubtree.prototype.contentIsAvailableAtIndex = function (
   contentIndex,
 ) {
   contentIndex = contentIndex ?? 0;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    contentIndex < 0 ||
+    contentIndex >= this._contentAvailabilityBitstreams.length
+  ) {
+    throw new DeveloperError("contentIndex out of bounds.");
+  }
+  //>>includeEnd('debug');
 
   return this._contentAvailabilityBitstreams[contentIndex].getBit(index);
 };
@@ -308,7 +319,14 @@ ImplicitSubtree.fromSubtreeJson = async function (
   implicitTileset,
   implicitCoordinates,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("resource", resource);
+  if (defined(json) === defined(subtreeView)) {
+    throw new DeveloperError("One of json and subtreeView must be defined.");
+  }
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("implicitCoordinates", implicitCoordinates);
+  //>>includeEnd('debug');
 
   const subtree = new ImplicitSubtree(
     resource,
@@ -442,7 +460,7 @@ ImplicitSubtree.fromSubtreeJson = async function (
  * @returns {SubtreeChunks} An object containing the JSON and binary chunks.
  * @private
  */
-function parseSubtreeChunks(subtreeView) {
+function parseSubtreeChunks(subtreeView: any) {
   // Parse the header
   const littleEndian = true;
   const subtreeReader = new DataView(
@@ -501,7 +519,7 @@ function parseSubtreeChunks(subtreeView) {
  * @returns {BufferHeader[]} The same array of headers with additional fields.
  * @private
  */
-function preprocessBuffers(bufferHeaders) {
+function preprocessBuffers(bufferHeaders: any) {
   bufferHeaders = defined(bufferHeaders) ? bufferHeaders : [];
   for (let i = 0; i < bufferHeaders.length; i++) {
     const bufferHeader = bufferHeaders[i];
@@ -534,7 +552,7 @@ function preprocessBuffers(bufferHeaders) {
  * @returns {BufferViewHeader[]} The same array of bufferView headers with additional fields
  * @private
  */
-function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
+function preprocessBufferViews(bufferViewHeaders: any, bufferHeaders: any) {
   bufferViewHeaders = defined(bufferViewHeaders) ? bufferViewHeaders : [];
   for (let i = 0; i < bufferViewHeaders.length; i++) {
     const bufferViewHeader = bufferViewHeaders[i];
@@ -562,7 +580,7 @@ function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
  * @param {BufferViewHeader[]} bufferViewHeaders The preprocessed buffer view headers
  * @private
  */
-function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
+function markActiveBufferViews(subtreeJson: any, bufferViewHeaders: any) {
   let header;
   const tileAvailabilityHeader = subtreeJson.tileAvailability;
 
@@ -619,7 +637,7 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
  * @param {BufferViewHeader[]} bufferViewHeaders The preprocessed buffer view headers
  * @private
  */
-function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
+function markActiveMetadataBufferViews(propertyTableJson: any, bufferViewHeaders: any) {
   const properties = propertyTableJson.properties;
   let header;
   for (const key in properties) {
@@ -673,7 +691,7 @@ function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
  * @returns {Promise<object>} A promise resolving to the dictionary of active buffers
  * @private
  */
-function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
+function requestActiveBuffers(subtree: any, bufferHeaders: any, internalBuffer: any) {
   const promises = [];
   for (let i = 0; i < bufferHeaders.length; i++) {
     const bufferHeader = bufferHeaders[i];
@@ -698,7 +716,7 @@ function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
   });
 }
 
-async function requestExternalBuffer(subtree, bufferHeader) {
+async function requestExternalBuffer(subtree: any, bufferHeader: any) {
   const baseResource = subtree._resource;
   const bufferResource = baseResource.getDerivedResource({
     url: bufferHeader.uri,
@@ -731,7 +749,7 @@ async function requestExternalBuffer(subtree, bufferHeader) {
  * @returns {object} A dictionary of buffer view index to a Uint8Array of its contents.
  * @private
  */
-function parseActiveBufferViews(bufferViewHeaders, buffersU8) {
+function parseActiveBufferViews(bufferViewHeaders: any, buffersU8: any) {
   const bufferViewsU8 = {};
   for (let i = 0; i < bufferViewHeaders.length; i++) {
     const bufferViewHeader = bufferViewHeaders[i];
@@ -758,12 +776,7 @@ function parseActiveBufferViews(bufferViewHeaders, buffersU8) {
  * @param {object} bufferViewsU8 A dictionary of buffer view index to a Uint8Array of its contents.
  * @private
  */
-function parseAvailability(
-  subtree,
-  subtreeJson,
-  implicitTileset,
-  bufferViewsU8,
-) {
+function parseAvailability(subtree: any, subtreeJson: any, implicitTileset: any, bufferViewsU8: any, ) {
   const branchingFactor = implicitTileset.branchingFactor;
   const subtreeLevels = implicitTileset.subtreeLevels;
   const tileAvailabilityBits =
@@ -817,12 +830,7 @@ function parseAvailability(
  * @returns {ImplicitAvailabilityBitstream} The parsed bitstream object
  * @private
  */
-function parseAvailabilityBitstream(
-  availabilityJson,
-  bufferViewsU8,
-  lengthBits,
-  computeAvailableCountEnabled,
-) {
+function parseAvailabilityBitstream(availabilityJson: any, bufferViewsU8: any, lengthBits: any, computeAvailableCountEnabled: any, ) {
   if (defined(availabilityJson.constant)) {
     return new ImplicitAvailabilityBitstream({
       constant: Boolean(availabilityJson.constant),
@@ -858,7 +866,7 @@ function parseAvailabilityBitstream(
  * @param {object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @private
  */
-function parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8) {
+function parseTileMetadataTable(subtree: any, implicitTileset: any, bufferViewsU8: any) {
   const tilePropertyTableJson = subtree._tilePropertyTableJson;
   const tileCount = subtree._tileAvailability.availableCount;
   const metadataSchema = implicitTileset.metadataSchema;
@@ -883,7 +891,7 @@ function parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8) {
  * @param {object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @private
  */
-function parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8) {
+function parseContentMetadataTables(subtree: any, implicitTileset: any, bufferViewsU8: any) {
   const contentPropertyTableJsons = subtree._contentPropertyTableJsons;
   const contentAvailabilityBitstreams = subtree._contentAvailabilityBitstreams;
   const metadataSchema = implicitTileset.metadataSchema;
@@ -920,7 +928,7 @@ function parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8) {
  * @returns {Array} The resulting jump buffer.
  * @private
  */
-function makeJumpBuffer(availability) {
+function makeJumpBuffer(availability: any) {
   let entityId = 0;
   const bufferLength = availability.lengthBits;
   const availableCount = availability.availableCount;
@@ -951,7 +959,7 @@ function makeJumpBuffer(availability) {
  * @param {ImplicitSubtree} subtree The subtree
  * @private
  */
-function makeTileJumpBuffer(subtree) {
+function makeTileJumpBuffer(subtree: any) {
   const tileJumpBuffer = makeJumpBuffer(subtree._tileAvailability);
   subtree._tileJumpBuffer = tileJumpBuffer;
 }
@@ -963,7 +971,7 @@ function makeTileJumpBuffer(subtree) {
  * @param {ImplicitSubtree} subtree The subtree
  * @private
  */
-function makeContentJumpBuffers(subtree) {
+function makeContentJumpBuffers(subtree: any) {
   const contentJumpBuffers = subtree._contentJumpBuffers;
   const contentAvailabilityBitstreams = subtree._contentAvailabilityBitstreams;
   for (let i = 0; i < contentAvailabilityBitstreams.length; i++) {
@@ -1029,7 +1037,7 @@ ImplicitSubtree.prototype.getChildSubtreeIndex = function (
  *
  * @private
  */
-function getTileEntityId(subtree, implicitCoordinates) {
+function getTileEntityId(subtree: any, implicitCoordinates: any) {
   if (!defined(subtree._tileMetadataTable)) {
     return undefined;
   }
@@ -1051,7 +1059,7 @@ function getTileEntityId(subtree, implicitCoordinates) {
  *
  * @private
  */
-function getContentEntityId(subtree, implicitCoordinates, contentIndex) {
+function getContentEntityId(subtree: any, implicitCoordinates: any, contentIndex: any) {
   const metadataTables = subtree._contentMetadataTables;
   if (!defined(metadataTables)) {
     return undefined;
@@ -1140,5 +1148,4 @@ ImplicitSubtree.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { ImplicitSubtree };
 export default ImplicitSubtree;

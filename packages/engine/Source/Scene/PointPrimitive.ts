@@ -41,24 +41,51 @@ import SplitDirection from "./SplitDirection.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Points.html|Cesium Sandcastle Points Demo}
  */
-function PointPrimitive(options, pointPrimitiveCollection) {
+function PointPrimitive(options: any, pointPrimitiveCollection: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    defined(options.disableDepthTestDistance) &&
+    options.disableDepthTestDistance < 0.0
+  ) {
+    throw new DeveloperError(
+      "disableDepthTestDistance must be greater than or equal to 0.0.",
+    );
+  }
+  //>>includeEnd('debug');
 
   let translucencyByDistance = options.translucencyByDistance;
   let scaleByDistance = options.scaleByDistance;
   let distanceDisplayCondition = options.distanceDisplayCondition;
   if (defined(translucencyByDistance)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (translucencyByDistance.far <= translucencyByDistance.near) {
+      throw new DeveloperError(
+        "translucencyByDistance.far must be greater than translucencyByDistance.near.",
+      );
+    }
+    //>>includeEnd('debug');
     translucencyByDistance = NearFarScalar.clone(translucencyByDistance);
   }
   if (defined(scaleByDistance)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (scaleByDistance.far <= scaleByDistance.near) {
+      throw new DeveloperError(
+        "scaleByDistance.far must be greater than scaleByDistance.near.",
+      );
+    }
+    //>>includeEnd('debug');
     scaleByDistance = NearFarScalar.clone(scaleByDistance);
   }
   if (defined(distanceDisplayCondition)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+      throw new DeveloperError(
+        "distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.",
+      );
+    }
+    //>>includeEnd('debug');
     distanceDisplayCondition = DistanceDisplayCondition.clone(
       distanceDisplayCondition,
     );
@@ -104,7 +131,7 @@ const DISABLE_DEPTH_DISTANCE_INDEX =
 const SPLIT_DIRECTION_INDEX = (PointPrimitive.SPLIT_DIRECTION_INDEX = 10);
 PointPrimitive.NUMBER_OF_PROPERTIES = 11;
 
-function makeDirty(pointPrimitive, propertyChanged) {
+function makeDirty(pointPrimitive: any, propertyChanged: any) {
   const pointPrimitiveCollection = pointPrimitive._pointPrimitiveCollection;
   if (defined(pointPrimitiveCollection)) {
     pointPrimitiveCollection._updatePointPrimitive(
@@ -127,7 +154,11 @@ Object.defineProperties(PointPrimitive.prototype, {
       return this._show;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._show !== value) {
         this._show = value;
@@ -146,7 +177,11 @@ Object.defineProperties(PointPrimitive.prototype, {
       return this._position;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug)
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const position = this._position;
       if (!Cartesian3.equals(position, value)) {
@@ -186,7 +221,13 @@ Object.defineProperties(PointPrimitive.prototype, {
       return this._scaleByDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far <= value.near) {
+        throw new DeveloperError(
+          "far distance must be greater than near distance.",
+        );
+      }
+      //>>includeEnd('debug');
 
       const scaleByDistance = this._scaleByDistance;
       if (!NearFarScalar.equals(scaleByDistance, value)) {
@@ -223,7 +264,13 @@ Object.defineProperties(PointPrimitive.prototype, {
       return this._translucencyByDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far <= value.near) {
+        throw new DeveloperError(
+          "far distance must be greater than near distance.",
+        );
+      }
+      //>>includeEnd('debug');
 
       const translucencyByDistance = this._translucencyByDistance;
       if (!NearFarScalar.equals(translucencyByDistance, value)) {
@@ -246,7 +293,11 @@ Object.defineProperties(PointPrimitive.prototype, {
       return this._pixelSize;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._pixelSize !== value) {
         this._pixelSize = value;
@@ -276,7 +327,11 @@ Object.defineProperties(PointPrimitive.prototype, {
       return this._color;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const color = this._color;
       if (!Color.equals(color, value)) {
@@ -296,7 +351,11 @@ Object.defineProperties(PointPrimitive.prototype, {
       return this._outlineColor;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const outlineColor = this._outlineColor;
       if (!Color.equals(outlineColor, value)) {
@@ -317,7 +376,11 @@ Object.defineProperties(PointPrimitive.prototype, {
       return this._outlineWidth;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._outlineWidth !== value) {
         this._outlineWidth = value;
@@ -337,7 +400,11 @@ Object.defineProperties(PointPrimitive.prototype, {
       return this._distanceDisplayCondition;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far <= value.near) {
+        throw new DeveloperError("far must be greater than near");
+      }
+      //>>includeEnd('debug');
       if (
         !DistanceDisplayCondition.equals(this._distanceDisplayCondition, value)
       ) {
@@ -363,7 +430,13 @@ Object.defineProperties(PointPrimitive.prototype, {
     },
     set: function (value) {
       if (this._disableDepthTestDistance !== value) {
-        ;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value) || value < 0.0) {
+          throw new DeveloperError(
+            "disableDepthTestDistance must be greater than or equal to 0.0.",
+          );
+        }
+        //>>includeEnd('debug');
         this._disableDepthTestDistance = value;
         makeDirty(this, DISABLE_DEPTH_DISTANCE_INDEX);
       }
@@ -520,7 +593,14 @@ PointPrimitive.prototype.computeScreenSpacePosition = function (scene, result) {
     result = new Cartesian2();
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(pointPrimitiveCollection)) {
+    throw new DeveloperError("PointPrimitive must be in a collection.");
+  }
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   const modelMatrix = pointPrimitiveCollection.modelMatrix;
   const windowCoordinates = PointPrimitive._computeScreenSpacePosition(
@@ -607,5 +687,4 @@ PointPrimitive.prototype._destroy = function () {
   this._pickId = this._pickId && this._pickId.destroy();
   this._pointPrimitiveCollection = undefined;
 };
-export { PointPrimitive };
 export default PointPrimitive;

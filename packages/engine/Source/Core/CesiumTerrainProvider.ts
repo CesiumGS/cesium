@@ -23,7 +23,7 @@ import TerrainProvider from "./TerrainProvider.js";
 import TileAvailability from "./TileAvailability.js";
 import TileProviderError from "./TileProviderError.js";
 
-function LayerInformation(layer) {
+function LayerInformation(layer: any) {
   this.resource = layer.resource;
   this.version = layer.version;
   this.isHeightmap = layer.isHeightmap;
@@ -58,7 +58,7 @@ function LayerInformation(layer) {
  *
  * @param {CesiumTerrainProvider.ConstructorOptions} options An object describing initialization options
  */
-function TerrainProviderBuilder(options) {
+function TerrainProviderBuilder(options: any) {
   this.requestVertexNormals = options.requestVertexNormals ?? false;
   this.requestWaterMask = options.requestWaterMask ?? false;
   this.requestMetadata = options.requestMetadata ?? true;
@@ -114,7 +114,7 @@ TerrainProviderBuilder.prototype.build = function (provider) {
   provider._hasMetadata = this.hasMetadata;
 };
 
-async function parseMetadataSuccess(terrainProviderBuilder, data, provider) {
+async function parseMetadataSuccess(terrainProviderBuilder: any, data: any, provider: any) {
   if (!data.format) {
     const message = "The tile format is not specified in the layer.json file.";
     terrainProviderBuilder.previousError = TileProviderError.reportError(
@@ -360,7 +360,7 @@ async function parseMetadataSuccess(terrainProviderBuilder, data, provider) {
   return true;
 }
 
-function parseMetadataFailure(terrainProviderBuilder, error, provider) {
+function parseMetadataFailure(terrainProviderBuilder: any, error: any, provider: any) {
   let message = `An error occurred while accessing ${terrainProviderBuilder.layerJsonResource.url}.`;
   if (defined(error)) {
     message += `\n${error.message}`;
@@ -381,7 +381,7 @@ function parseMetadataFailure(terrainProviderBuilder, error, provider) {
   throw new RuntimeError(message);
 }
 
-async function metadataSuccess(terrainProviderBuilder, data, provider) {
+async function metadataSuccess(terrainProviderBuilder: any, data: any, provider: any) {
   await parseMetadataSuccess(terrainProviderBuilder, data, provider);
 
   const length = terrainProviderBuilder.overallAvailability.length;
@@ -414,7 +414,7 @@ async function metadataSuccess(terrainProviderBuilder, data, provider) {
   return true;
 }
 
-async function requestLayerJson(terrainProviderBuilder, provider) {
+async function requestLayerJson(terrainProviderBuilder: any, provider: any) {
   try {
     const data = await terrainProviderBuilder.layerJsonResource.fetchJson();
     return metadataSuccess(terrainProviderBuilder, data, provider);
@@ -474,7 +474,7 @@ async function requestLayerJson(terrainProviderBuilder, provider) {
  * @see CesiumTerrainProvider.fromIonAssetId
  * @see TerrainProvider
  */
-function CesiumTerrainProvider(options) {
+function CesiumTerrainProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._heightmapWidth = undefined;
@@ -559,7 +559,7 @@ const QuantizedMeshExtensionIds = {
   METADATA: 4,
 };
 
-function getRequestHeader(extensionsList) {
+function getRequestHeader(extensionsList: any) {
   if (!defined(extensionsList) || extensionsList.length === 0) {
     return {
       Accept:
@@ -572,7 +572,7 @@ function getRequestHeader(extensionsList) {
   };
 }
 
-function createHeightmapTerrainData(provider, buffer, level, x, y) {
+function createHeightmapTerrainData(provider: any, buffer: any, level: any, x: any, y: any) {
   const heightBuffer = new Uint16Array(
     buffer,
     0,
@@ -593,7 +593,7 @@ function createHeightmapTerrainData(provider, buffer, level, x, y) {
   });
 }
 
-function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
+function createQuantizedMeshTerrainData(provider: any, buffer: any, level: any, x: any, y: any, layer: any) {
   const littleEndianExtensionSize = layer.littleEndianExtensionSize;
   let pos = 0;
   const cartesian3Elements = 3;
@@ -896,7 +896,7 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
     // Try again when availability data is ready– Otherwise the tile will be marked as failed and never re-requested
     return availabilityPromise.then(() => {
       // handle promise or undefined return
-      return new Promise((resolve) => {
+      return new Promise((resolve: any) => {
         // defer execution to the next event loop
         setTimeout(() => {
           const promise = this.requestTileGeometry(x, y, level, request);
@@ -909,7 +909,7 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
   return requestTileGeometry(this, x, y, level, layerToUse, request);
 };
 
-function requestTileGeometry(provider, x, y, level, layerToUse, request) {
+function requestTileGeometry(provider: any, x: any, y: any, level: any, layerToUse: any, request: any) {
   if (!defined(layerToUse)) {
     return Promise.reject(new RuntimeError("Terrain tile doesn't exist"));
   }
@@ -1182,7 +1182,9 @@ CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function (
  * @exception {RuntimeError} layer.json does not specify any tile URL templates
  */
 CesiumTerrainProvider.fromIonAssetId = async function (assetId, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("assetId", assetId);
+  //>>includeEnd('debug');
 
   const resource = await IonResource.fromAssetId(assetId);
   return CesiumTerrainProvider.fromUrl(resource, options);
@@ -1220,7 +1222,9 @@ CesiumTerrainProvider.fromIonAssetId = async function (assetId, options) {
  * @exception {RuntimeError} layer.json does not specify any tile URL templates
  */
 CesiumTerrainProvider.fromUrl = async function (url, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -1314,7 +1318,7 @@ CesiumTerrainProvider.prototype.loadTileDataAvailability = function (
   }
 };
 
-function getAvailabilityTile(layer, x, y, level) {
+function getAvailabilityTile(layer: any, x: any, y: any, level: any) {
   if (level === 0) {
     return;
   }
@@ -1335,7 +1339,7 @@ function getAvailabilityTile(layer, x, y, level) {
   };
 }
 
-function checkLayer(provider, x, y, level, layer, topLayer) {
+function checkLayer(provider: any, x: any, y: any, level: any, layer: any, topLayer: any) {
   if (!defined(layer.availabilityLevels)) {
     // It's definitely not in this layer
     return {
@@ -1401,5 +1405,4 @@ function checkLayer(provider, x, y, level, layer, topLayer) {
 
 // Used for testing
 CesiumTerrainProvider._getAvailabilityTile = getAvailabilityTile;
-export { CesiumTerrainProvider };
 export default CesiumTerrainProvider;

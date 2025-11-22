@@ -12,7 +12,7 @@ import JulianDate from "../Core/JulianDate.js";
  * @param {CallbackProperty.Callback} callback The function to be called when the property is evaluated.
  * @param {boolean} isConstant <code>true</code> when the callback function returns the same value every time, <code>false</code> if the value will change.
  */
-function CallbackProperty(callback, isConstant) {
+function CallbackProperty(callback: any, isConstant: any) {
   this._callback = undefined;
   this._isConstant = undefined;
   this._definitionChanged = new Event();
@@ -70,7 +70,14 @@ CallbackProperty.prototype.getValue = function (time, result) {
  * @param {boolean} isConstant <code>true</code> when the callback function returns the same value every time, <code>false</code> if the value will change.
  */
 CallbackProperty.prototype.setCallback = function (callback, isConstant) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(callback)) {
+    throw new DeveloperError("callback is required.");
+  }
+  if (!defined(isConstant)) {
+    throw new DeveloperError("isConstant is required.");
+  }
+  //>>includeEnd('debug');
 
   const changed =
     this._callback !== callback || this._isConstant !== isConstant;
@@ -107,5 +114,4 @@ CallbackProperty.prototype.equals = function (other) {
  * @param {object} [result] The object to store the value into. If omitted, the function must create and return a new instance.
  * @returns {object} The modified result parameter, or a new instance if the result parameter was not supplied or is unsupported.
  */
-export { CallbackProperty };
 export default CallbackProperty;

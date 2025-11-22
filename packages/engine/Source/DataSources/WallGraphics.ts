@@ -36,7 +36,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
  */
-function WallGraphics(options) {
+function WallGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -213,7 +213,11 @@ WallGraphics.prototype.clone = function (result) {
  * @param {WallGraphics} source The object to be merged into this object.
  */
 WallGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.positions = this.positions ?? source.positions;
@@ -229,5 +233,4 @@ WallGraphics.prototype.merge = function (source) {
   this.distanceDisplayCondition =
     this.distanceDisplayCondition ?? source.distanceDisplayCondition;
 };
-export { WallGraphics };
 export default WallGraphics;

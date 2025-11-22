@@ -9,7 +9,7 @@
  *
  * @private
  */
-function addToArray(array, element, checkDuplicates) {
+function addToArray(array: any, element: any, checkDuplicates: any) {
   checkDuplicates = checkDuplicates ?? false;
   if (checkDuplicates) {
     const index = array.indexOf(element);
@@ -22,5 +22,4 @@ function addToArray(array, element, checkDuplicates) {
   return array.length - 1;
 }
 
-export { addToArray };
 export default addToArray;

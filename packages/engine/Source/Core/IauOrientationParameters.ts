@@ -10,12 +10,7 @@
  *
  * @private
  */
-function IauOrientationParameters(
-  rightAscension,
-  declination,
-  rotation,
-  rotationRate,
-) {
+function IauOrientationParameters(rightAscension: any, declination: any, rotation: any, rotationRate: any, ) {
   /**
    * The right ascension of the north pole of the body with respect to
    * the International Celestial Reference Frame, in radians.
@@ -51,5 +46,4 @@ function IauOrientationParameters(
    */
   this.rotationRate = rotationRate;
 }
-export { IauOrientationParameters };
 export default IauOrientationParameters;

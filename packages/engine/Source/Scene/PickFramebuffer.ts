@@ -12,7 +12,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 /**
  * @private
  */
-function PickFramebuffer(context) {
+function PickFramebuffer(context: any) {
   // Override per-command states
   const passState = new PassState(context);
   passState.blendingEnabled = false;
@@ -42,7 +42,7 @@ function PickFramebuffer(context) {
  * @param {number} [limit=1] If supplied, stop iterating after collecting this many objects.
  * @returns {object[]} A list of rendered objects, ordered by distance to the middle of the rectangle.
  */
-function pickObjectsFromPixels(context, pixels, width, height, limit = 1) {
+function pickObjectsFromPixels(context: any, pixels: any, width: any, height: any, limit: any = 1) {
   const max = Math.max(width, height);
   const length = max * max;
   const halfWidth = Math.floor(width * 0.5);
@@ -164,7 +164,7 @@ PickFramebuffer.prototype.endAsync = async function (
 
   // Wait for the GPU to signal that it is ready to readback the PBO data
   try {
-    await sync.waitForSignal((next) => frameState.afterRender.push(next));
+    await sync.waitForSignal((next: any) => frameState.afterRender.push(next));
     const pixels = PixelFormat.createTypedArray(
       pixelFormat,
       pixelDatatype,
@@ -252,5 +252,4 @@ PickFramebuffer.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { PickFramebuffer };
 export default PickFramebuffer;

@@ -37,10 +37,14 @@ import Primitive from "./Primitive.js";
  *   color : Cesium.Color.YELLOW
  * }));
  */
-function DebugCameraPrimitive(options) {
+function DebugCameraPrimitive(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.camera)) {
+    throw new DeveloperError("options.camera is required.");
+  }
+  //>>includeEnd('debug');
 
   this._camera = options.camera;
   this._frustumSplits = options.frustumSplits;
@@ -250,5 +254,4 @@ DebugCameraPrimitive.prototype.destroy = function () {
   }
   return destroyObject(this);
 };
-export { DebugCameraPrimitive };
 export default DebugCameraPrimitive;

@@ -12,7 +12,7 @@ import WebGLConstants from "../../Core/WebGLConstants.js";
  *
  * @private
  */
-function addDefaults(gltf) {
+function addDefaults(gltf: any) {
   ForEach.accessor(gltf, function (accessor) {
     if (defined(accessor.bufferView)) {
       accessor.byteOffset = accessor.byteOffset ?? 0;
@@ -183,7 +183,7 @@ function addDefaults(gltf) {
   return gltf;
 }
 
-function getAnimatedNodes(gltf) {
+function getAnimatedNodes(gltf: any) {
   const nodes = {};
   ForEach.animation(gltf, function (animation) {
     ForEach.animationChannel(animation, function (channel) {
@@ -199,11 +199,10 @@ function getAnimatedNodes(gltf) {
   return nodes;
 }
 
-function addTextureDefaults(texture) {
+function addTextureDefaults(texture: any) {
   if (defined(texture)) {
     texture.texCoord = texture.texCoord ?? 0;
   }
 }
 
-export { addDefaults };
 export default addDefaults;

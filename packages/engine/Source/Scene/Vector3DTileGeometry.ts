@@ -31,7 +31,7 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  *
  * @private
  */
-function Vector3DTileGeometry(options) {
+function Vector3DTileGeometry(options: any) {
   // these will all be released after the primitive is created
   this._boxes = options.boxes;
   this._boxBatchIds = options.boxBatchIds;
@@ -157,7 +157,7 @@ Vector3DTileGeometry.packedEllipsoidLength =
   Matrix4.packedLength + Cartesian3.packedLength;
 Vector3DTileGeometry.packedSphereLength = Cartesian3.packedLength + 1;
 
-function packBuffer(geometries) {
+function packBuffer(geometries: any) {
   const packedBuffer = new Float64Array(
     Matrix4.packedLength + Cartesian3.packedLength,
   );
@@ -170,7 +170,7 @@ function packBuffer(geometries) {
   return packedBuffer;
 }
 
-function unpackBuffer(geometries, packedBuffer) {
+function unpackBuffer(geometries: any, packedBuffer: any) {
   let offset = 0;
 
   const indicesBytesPerElement = packedBuffer[offset++];
@@ -216,7 +216,7 @@ const createVerticesTaskProcessor = new TaskProcessor(
 );
 const scratchColor = new Color();
 
-function createPrimitive(geometries) {
+function createPrimitive(geometries: any) {
   if (defined(geometries._primitive)) {
     return;
   }
@@ -340,7 +340,7 @@ function createPrimitive(geometries) {
 
         geometries._ready = true;
       })
-      .catch((error) => {
+      .catch((error: any) => {
         if (geometries.isDestroyed()) {
           return;
         }
@@ -350,7 +350,7 @@ function createPrimitive(geometries) {
   }
 }
 
-function finishPrimitive(geometries) {
+function finishPrimitive(geometries: any) {
   if (!defined(geometries._primitive)) {
     geometries._primitive = new Vector3DTilePrimitive({
       batchTable: geometries._batchTable,
@@ -494,5 +494,4 @@ Vector3DTileGeometry.prototype.destroy = function () {
   this._primitive = this._primitive && this._primitive.destroy();
   return destroyObject(this);
 };
-export { Vector3DTileGeometry };
 export default Vector3DTileGeometry;

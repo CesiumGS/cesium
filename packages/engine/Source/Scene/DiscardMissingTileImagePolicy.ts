@@ -19,10 +19,18 @@ import Resource from "../Core/Resource.js";
  *                  if all of the pixelsToCheck in the missingImageUrl have an alpha value of 0.  If false, the
  *                  discard check will proceed no matter the values of the pixelsToCheck.
  */
-function DiscardMissingTileImagePolicy(options) {
+function DiscardMissingTileImagePolicy(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.missingImageUrl)) {
+    throw new DeveloperError("options.missingImageUrl is required.");
+  }
+
+  if (!defined(options.pixelsToCheck)) {
+    throw new DeveloperError("options.pixelsToCheck is required.");
+  }
+  //>>includeEnd('debug');
 
   this._pixelsToCheck = options.pixelsToCheck;
   this._missingImagePixels = undefined;
@@ -33,7 +41,7 @@ function DiscardMissingTileImagePolicy(options) {
 
   const that = this;
 
-  function success(image) {
+  function success(image: any) {
     if (defined(image.blob)) {
       that._missingImageByteLength = image.blob.size;
     }
@@ -102,7 +110,13 @@ DiscardMissingTileImagePolicy.prototype.isReady = function () {
  * @exception {DeveloperError} <code>shouldDiscardImage</code> must not be called before the discard policy is ready.
  */
 DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function (image) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._isReady) {
+    throw new DeveloperError(
+      "shouldDiscardImage must not be called before the discard policy is ready.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const pixelsToCheck = this._pixelsToCheck;
   const missingImagePixels = this._missingImagePixels;
@@ -131,5 +145,4 @@ DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function (image) {
   }
   return true;
 };
-export { DiscardMissingTileImagePolicy };
 export default DiscardMissingTileImagePolicy;

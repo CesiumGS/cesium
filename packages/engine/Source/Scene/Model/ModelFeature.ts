@@ -30,7 +30,7 @@ import defined from "../../Core/defined.js";
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  *
  */
-function ModelFeature(options) {
+function ModelFeature(options: any) {
   this._model = options.model;
 
   // This ModelFeatureTable is not documented as an option since it is
@@ -149,7 +149,7 @@ ModelFeature.prototype.hasProperty = function (name) {
  * Returns a copy of the value of the feature's property with the given name.
  *
  * @param {string} name The case-sensitive name of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @example
  * // Display all the properties for a feature in the console log.
@@ -226,5 +226,4 @@ ModelFeature.prototype.setProperty = function (name, value) {
   return this._featureTable.setProperty(this._featureId, name, value);
 };
 
-export { ModelFeature };
 export default ModelFeature;

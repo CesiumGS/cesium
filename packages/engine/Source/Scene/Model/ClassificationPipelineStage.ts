@@ -54,7 +54,7 @@ ClassificationPipelineStage.process = function (
   }
 };
 
-function createClassificationBatches(primitive, runtimePrimitive) {
+function createClassificationBatches(primitive: any, runtimePrimitive: any) {
   const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.POSITION,
@@ -129,5 +129,4 @@ function createClassificationBatches(primitive, runtimePrimitive) {
   runtimePrimitive.batchOffsets = batchOffsets;
 }
 
-export { ClassificationPipelineStage };
 export default ClassificationPipelineStage;

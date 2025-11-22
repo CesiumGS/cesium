@@ -50,7 +50,10 @@ VoxelShapeType.getMinBounds = function (shapeType) {
       return VoxelEllipsoidShape.DefaultMinBounds;
     case VoxelShapeType.CYLINDER:
       return VoxelCylinderShape.DefaultMinBounds;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(`Invalid shape type ${shapeType}`);
+    //>>includeEnd('debug');
   }
 };
 
@@ -67,7 +70,10 @@ VoxelShapeType.getMaxBounds = function (shapeType) {
       return VoxelEllipsoidShape.DefaultMaxBounds;
     case VoxelShapeType.CYLINDER:
       return VoxelCylinderShape.DefaultMaxBounds;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(`Invalid shape type ${shapeType}`);
+    //>>includeEnd('debug');
   }
 };
 
@@ -89,7 +95,10 @@ VoxelShapeType.getShapeConstructor = function (shapeType) {
       return VoxelEllipsoidShape;
     case VoxelShapeType.CYLINDER:
       return VoxelCylinderShape;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(`Invalid shape type ${shapeType}`);
+    //>>includeEnd('debug');
   }
 };
 

@@ -78,5 +78,4 @@ TextureCache.prototype.destroy = function () {
   }
   return destroyObject(this);
 };
-export { TextureCache };
 export default TextureCache;

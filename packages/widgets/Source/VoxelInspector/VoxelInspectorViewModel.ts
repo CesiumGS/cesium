@@ -12,7 +12,7 @@ import {
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 
-function formatShaderString(str) {
+function formatShaderString(str: any) {
   // This function:
   // A) removes whitespace lines at the beginning of the string
   // B) removes unnecessary spaces from the beginning of each line
@@ -52,8 +52,10 @@ function formatShaderString(str) {
  *
  * @param {Scene} scene The scene instance to use.
  */
-function VoxelInspectorViewModel(scene) {
-  ;
+function VoxelInspectorViewModel(scene: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("scene", scene);
+  //>>includeEnd('debug');
 
   this._scene = scene;
   this._voxelPrimitive = undefined;
@@ -64,7 +66,7 @@ function VoxelInspectorViewModel(scene) {
   this._modelMatrixReady = false;
 
   const that = this;
-  function addProperty(options) {
+  function addProperty(options: any) {
     const { name, initialValue } = options;
 
     that._definedProperties.push(name);
@@ -115,7 +117,7 @@ function VoxelInspectorViewModel(scene) {
     return knock;
   }
 
-  function getBoundSetter(boundKey, component) {
+  function getBoundSetter(boundKey: any, component: any) {
     return function (value) {
       const bound = that._voxelPrimitive[boundKey].clone();
       bound[component] = value;
@@ -763,7 +765,7 @@ const scratchScale = new Cartesian3();
 const scratchHeadingPitchRoll = new HeadingPitchRoll();
 const scratchRotation = new Matrix3();
 
-function setModelMatrix(viewModel) {
+function setModelMatrix(viewModel: any) {
   const translation = Cartesian3.fromElements(
     viewModel.translationX,
     viewModel.translationY,
@@ -972,5 +974,4 @@ VoxelInspectorViewModel.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { VoxelInspectorViewModel };
 export default VoxelInspectorViewModel;

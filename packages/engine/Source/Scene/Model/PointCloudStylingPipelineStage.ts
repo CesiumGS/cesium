@@ -201,12 +201,7 @@ PointCloudStylingPipelineStage.process = function (
 };
 
 const scratchDimensions = new Cartesian3();
-function getGeometricError(
-  renderResources,
-  primitive,
-  pointCloudShading,
-  content,
-) {
+function getGeometricError(renderResources: any, primitive: any, pointCloudShading: any, content: any, ) {
   if (defined(content)) {
     const geometricError = content.tile.geometricError;
 
@@ -257,7 +252,7 @@ const builtinVariableSubstitutionMap = {
   NORMAL: "attributes.normalMC",
 };
 
-function getVariableSubstitutionMap(propertyAttributes) {
+function getVariableSubstitutionMap(propertyAttributes: any) {
   const variableSubstitutionMap = clone(builtinVariableSubstitutionMap);
 
   if (!defined(propertyAttributes)) {
@@ -282,7 +277,7 @@ const parameterList =
   "Metadata metadata, " +
   "float tiles3d_tileset_time";
 
-function getStyleShaderFunctionInfo(style, variableSubstitutionMap) {
+function getStyleShaderFunctionInfo(style: any, variableSubstitutionMap: any) {
   const info = scratchShaderFunctionInfo;
   const shaderState = {
     translucent: false,
@@ -309,7 +304,7 @@ function getStyleShaderFunctionInfo(style, variableSubstitutionMap) {
   return info;
 }
 
-function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
+function addShaderFunctionsAndDefines(shaderBuilder: any, shaderFunctionInfo: any) {
   const colorStyleFunction = shaderFunctionInfo.colorStyleFunction;
   if (defined(colorStyleFunction)) {
     shaderBuilder.addDefine(
@@ -355,7 +350,7 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
  *
  * @private
  */
-function getBuiltinPropertyNames(source, propertyNames) {
+function getBuiltinPropertyNames(source: any, propertyNames: any) {
   const regex = /attributes\.(\w+)/g;
   let matches = regex.exec(source);
   while (matches !== null) {
@@ -368,7 +363,7 @@ function getBuiltinPropertyNames(source, propertyNames) {
   }
 }
 
-function getPropertyNames(shaderFunctionInfo) {
+function getPropertyNames(shaderFunctionInfo: any) {
   const colorStyleFunction = shaderFunctionInfo.colorStyleFunction;
   const showStyleFunction = shaderFunctionInfo.showStyleFunction;
   const pointSizeStyleFunction = shaderFunctionInfo.pointSizeStyleFunction;
@@ -389,5 +384,4 @@ function getPropertyNames(shaderFunctionInfo) {
   return builtinPropertyNames;
 }
 
-export { PointCloudStylingPipelineStage };
 export default PointCloudStylingPipelineStage;

@@ -28,7 +28,15 @@ class MappedPositions {
     cartographicBoundingRectangle,
     ellipsoid,
   ) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("cartographicPositions", cartographicPositions);
+    Check.typeOf.number.greaterThanOrEquals("numPositions", numPositions, 0);
+    Check.defined(
+      "cartographicBoundingRectangle",
+      cartographicBoundingRectangle,
+    );
+    Check.defined("ellipsoid", ellipsoid);
+    //>>includeEnd('debug');
 
     this._cartographicPositions = cartographicPositions;
     this._numPositions = numPositions;
@@ -73,5 +81,4 @@ class MappedPositions {
   }
 }
 
-export { MappedPositions };
 export default MappedPositions;

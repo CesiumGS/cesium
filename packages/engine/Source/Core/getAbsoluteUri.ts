@@ -14,7 +14,7 @@ import DeveloperError from "./DeveloperError.js";
  * //absolute Uri will be "https://test.com/awesome.png";
  * const absoluteUri = Cesium.getAbsoluteUri('awesome.png', 'https://test.com');
  */
-function getAbsoluteUri(relative, base) {
+function getAbsoluteUri(relative: any, base: any) {
   let documentObject;
   if (typeof document !== "undefined") {
     documentObject = document;
@@ -24,7 +24,11 @@ function getAbsoluteUri(relative, base) {
 }
 
 getAbsoluteUri._implementation = function (relative, base, documentObject) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(relative)) {
+    throw new DeveloperError("relative uri is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(base)) {
     if (typeof documentObject === "undefined") {
@@ -39,5 +43,4 @@ getAbsoluteUri._implementation = function (relative, base, documentObject) {
   }
   return relativeUri.absoluteTo(base).toString();
 };
-export { getAbsoluteUri };
 export default getAbsoluteUri;

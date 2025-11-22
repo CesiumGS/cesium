@@ -15,14 +15,7 @@ const distanceDisplayConditionScratch = new DistanceDisplayCondition();
 const defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
 // Encapsulates a Primitive and all the entities that it represents.
-function Batch(
-  primitives,
-  classificationType,
-  appearanceType,
-  materialProperty,
-  usingSphericalTextureCoordinates,
-  zIndex,
-) {
+function Batch(primitives: any, classificationType: any, appearanceType: any, materialProperty: any, usingSphericalTextureCoordinates: any, zIndex: any, ) {
   this.primitives = primitives; // scene level primitive collection (each Batch manages its own Primitive from this collection)
   this.classificationType = classificationType;
   this.appearanceType = appearanceType;
@@ -327,11 +320,7 @@ Batch.prototype.destroy = function () {
  * texture coordinate type, and spatial overlap.
  * @private
  */
-function StaticGroundGeometryPerMaterialBatch(
-  primitives,
-  classificationType,
-  appearanceType,
-) {
+function StaticGroundGeometryPerMaterialBatch(primitives: any, classificationType: any, appearanceType: any, ) {
   this._items = []; // array of Batch objects, each containing representing a primitive and a set of updaters that manage the visual representation of the primitive.
   this._primitives = primitives; // scene level primitive collection
   this._classificationType = classificationType;
@@ -453,5 +442,4 @@ StaticGroundGeometryPerMaterialBatch.prototype.removeAllPrimitives =
     }
     this._items.length = 0;
   };
-export { StaticGroundGeometryPerMaterialBatch };
 export default StaticGroundGeometryPerMaterialBatch;

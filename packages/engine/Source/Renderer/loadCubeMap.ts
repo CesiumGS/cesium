@@ -38,8 +38,18 @@ import CubeMap from "./CubeMap.js";
  *
  * @private
  */
-function loadCubeMap(context, urls, skipColorSpaceConversion) {
-  ;
+function loadCubeMap(context: any, urls: any, skipColorSpaceConversion: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("context", context);
+  Check.defined("urls", urls);
+  if (
+    Object.values(CubeMap.FaceName).some((faceName: any) => !defined(urls[faceName]))
+  ) {
+    throw new DeveloperError(
+      "urls must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.",
+    );
+  }
+  //>>includeEnd('debug');
 
   // PERFORMANCE_IDEA: Given the size of some cube maps, we should consider tiling them, which
   // would prevent hiccups when uploading, for example, six 4096x4096 textures to the GPU.
@@ -75,5 +85,4 @@ function loadCubeMap(context, urls, skipColorSpaceConversion) {
     });
   });
 }
-export { loadCubeMap };
 export default loadCubeMap;

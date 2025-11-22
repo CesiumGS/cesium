@@ -25,8 +25,12 @@ const warnings = {};
  *
  * @private
  */
-function oneTimeWarning(identifier, message) {
-  ;
+function oneTimeWarning(identifier: any, message: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(identifier)) {
+    throw new DeveloperError("identifier is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(warnings[identifier])) {
     warnings[identifier] = true;
@@ -44,5 +48,4 @@ oneTimeWarning.geometryHeightReference =
   "Entity corridor, ellipse, polygon or rectangle with heightReference must also have a defined height.  heightReference will be ignored";
 oneTimeWarning.geometryExtrudedHeightReference =
   "Entity corridor, ellipse, polygon or rectangle with extrudedHeightReference must also have a defined extrudedHeight.  extrudedHeightReference will be ignored";
-export { oneTimeWarning };
 export default oneTimeWarning;

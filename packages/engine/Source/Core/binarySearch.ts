@@ -15,14 +15,18 @@ import Check from "./Check.js";
  *
  * @example
  * // Create a comparator function to search through an array of numbers.
- * function comparator(a, b) {
+ * function comparator(a: any, b: any) {
  *     return a - b;
  * };
  * const numbers = [0, 2, 4, 6, 8];
  * const index = Cesium.binarySearch(numbers, 6, comparator); // 3
  */
-function binarySearch(array, itemToFind, comparator) {
-  ;
+function binarySearch(array: any, itemToFind: any, comparator: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  Check.defined("itemToFind", itemToFind);
+  Check.defined("comparator", comparator);
+  //>>includeEnd('debug');
 
   let low = 0;
   let high = array.length - 1;
@@ -56,9 +60,8 @@ function binarySearch(array, itemToFind, comparator) {
  *          0 if <code>a</code> is equal to <code>b</code>.
  *
  * @example
- * function compareNumbers(a, b) {
+ * function compareNumbers(a: any, b: any) {
  *     return a - b;
  * }
  */
-export { binarySearch };
 export default binarySearch;

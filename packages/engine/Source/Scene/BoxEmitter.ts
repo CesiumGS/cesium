@@ -13,10 +13,15 @@ const defaultDimensions = new Cartesian3(1.0, 1.0, 1.0);
  *
  * @param {Cartesian3} dimensions The width, height and depth dimensions of the box.
  */
-function BoxEmitter(dimensions) {
+function BoxEmitter(dimensions: any) {
   dimensions = dimensions ?? defaultDimensions;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("dimensions", dimensions);
+  Check.typeOf.number.greaterThanOrEquals("dimensions.x", dimensions.x, 0.0);
+  Check.typeOf.number.greaterThanOrEquals("dimensions.y", dimensions.y, 0.0);
+  Check.typeOf.number.greaterThanOrEquals("dimensions.z", dimensions.z, 0.0);
+  //>>includeEnd('debug');
 
   this._dimensions = Cartesian3.clone(dimensions);
 }
@@ -33,7 +38,12 @@ Object.defineProperties(BoxEmitter.prototype, {
       return this._dimensions;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      Check.typeOf.number.greaterThanOrEquals("value.x", value.x, 0.0);
+      Check.typeOf.number.greaterThanOrEquals("value.y", value.y, 0.0);
+      Check.typeOf.number.greaterThanOrEquals("value.z", value.z, 0.0);
+      //>>includeEnd('debug');
       Cartesian3.clone(value, this._dimensions);
     },
   },
@@ -61,5 +71,4 @@ BoxEmitter.prototype.emit = function (particle) {
     particle.velocity,
   );
 };
-export { BoxEmitter };
 export default BoxEmitter;

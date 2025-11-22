@@ -28,7 +28,7 @@ import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
  *
  * @param {TileCoordinatesImageryProvider.ConstructorOptions} [options] Object describing initialization options
  */
-function TileCoordinatesImageryProvider(options) {
+function TileCoordinatesImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._tilingScheme = defined(options.tilingScheme)
@@ -266,5 +266,4 @@ TileCoordinatesImageryProvider.prototype.pickFeatures = function (
 ) {
   return undefined;
 };
-export { TileCoordinatesImageryProvider };
 export default TileCoordinatesImageryProvider;

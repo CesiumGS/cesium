@@ -142,7 +142,7 @@ const sunPositionWCScratch = new Cartesian2();
 const sizeScratch = new Cartesian2();
 const postProcessMatrix4Scratch = new Matrix4();
 
-function updateSunPosition(postProcess, context, viewport) {
+function updateSunPosition(postProcess: any, context: any, viewport: any) {
   const us = context.uniformState;
   const sunPosition = us.sunPositionWC;
   const viewMatrix = us.view;
@@ -285,5 +285,4 @@ SunPostProcess.prototype.destroy = function () {
   this._stages.destroy();
   return destroyObject(this);
 };
-export { SunPostProcess };
 export default SunPostProcess;

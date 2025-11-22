@@ -53,5 +53,4 @@ Ion.getDefaultTokenCredit = function (providedKey) {
 
   return defaultTokenCredit;
 };
-export { Ion };
 export default Ion;

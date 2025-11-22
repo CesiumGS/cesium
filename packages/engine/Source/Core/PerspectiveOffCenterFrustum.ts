@@ -36,7 +36,7 @@ import Matrix4 from "./Matrix4.js";
  *
  * @see PerspectiveFrustum
  */
-function PerspectiveOffCenterFrustum(options) {
+function PerspectiveOffCenterFrustum(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -92,8 +92,21 @@ function PerspectiveOffCenterFrustum(options) {
   this._infinitePerspective = new Matrix4();
 }
 
-function update(frustum) {
-  ;
+function update(frustum: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    !defined(frustum.right) ||
+    !defined(frustum.left) ||
+    !defined(frustum.top) ||
+    !defined(frustum.bottom) ||
+    !defined(frustum.near) ||
+    !defined(frustum.far)
+  ) {
+    throw new DeveloperError(
+      "right, left, top, bottom, near, or far parameters are not set.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const { top, bottom, right, left, near, far } = frustum;
 
@@ -108,7 +121,13 @@ function update(frustum) {
     return;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (frustum.near <= 0 || frustum.near > frustum.far) {
+    throw new DeveloperError(
+      "near must be greater than zero and less than far.",
+    );
+  }
+  //>>includeEnd('debug');
 
   frustum._left = left;
   frustum._right = right;
@@ -191,7 +210,19 @@ PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function (
   direction,
   up,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(position)) {
+    throw new DeveloperError("position is required.");
+  }
+
+  if (!defined(direction)) {
+    throw new DeveloperError("direction is required.");
+  }
+
+  if (!defined(up)) {
+    throw new DeveloperError("up is required.");
+  }
+  //>>includeEnd('debug');
 
   const planes = this._cullingVolume.planes;
 
@@ -343,7 +374,31 @@ PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function (
 ) {
   update(this);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
+    throw new DeveloperError(
+      "Both drawingBufferWidth and drawingBufferHeight are required.",
+    );
+  }
+  if (drawingBufferWidth <= 0) {
+    throw new DeveloperError("drawingBufferWidth must be greater than zero.");
+  }
+  if (drawingBufferHeight <= 0) {
+    throw new DeveloperError("drawingBufferHeight must be greater than zero.");
+  }
+  if (!defined(distance)) {
+    throw new DeveloperError("distance is required.");
+  }
+  if (!defined(pixelRatio)) {
+    throw new DeveloperError("pixelRatio is required");
+  }
+  if (pixelRatio <= 0) {
+    throw new DeveloperError("pixelRatio must be greater than zero.");
+  }
+  if (!defined(result)) {
+    throw new DeveloperError("A result object is required.");
+  }
+  //>>includeEnd('debug');
 
   const inverseNear = 1.0 / this.near;
   let tanTheta = this.top * inverseNear;
@@ -464,5 +519,4 @@ PerspectiveOffCenterFrustum.prototype.equalsEpsilon = function (
       ))
   );
 };
-export { PerspectiveOffCenterFrustum };
 export default PerspectiveOffCenterFrustum;

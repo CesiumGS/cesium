@@ -118,5 +118,4 @@ DataSource.setLoading = function (dataSource, isLoading) {
     dataSource._loading.raiseEvent(dataSource, isLoading);
   }
 };
-export { DataSource };
 export default DataSource;

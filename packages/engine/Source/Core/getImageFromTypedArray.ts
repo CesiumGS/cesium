@@ -8,7 +8,7 @@
  *
  * @private
  */
-function getImageFromTypedArray(typedArray, width, height) {
+function getImageFromTypedArray(typedArray: any, width: any, height: any) {
   // Input typedArray is Uint8Array, ImageData needs Uint8ClampedArray
   // To avoid copying, make a new DataView of the same buffer
   const dataArray = new Uint8ClampedArray(typedArray.buffer);
@@ -21,5 +21,4 @@ function getImageFromTypedArray(typedArray, width, height) {
 
   return canvas;
 }
-export { getImageFromTypedArray };
 export default getImageFromTypedArray;

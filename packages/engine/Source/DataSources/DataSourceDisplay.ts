@@ -31,8 +31,15 @@ import PolylineVisualizer from "./PolylineVisualizer.js";
  *        A function which creates an array of visualizers used for visualization.
  *        If undefined, all standard visualizers are used.
  */
-function DataSourceDisplay(options) {
-  ;
+function DataSourceDisplay(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.object("options.scene", options.scene);
+  Check.typeOf.object(
+    "options.dataSourceCollection",
+    options.dataSourceCollection,
+  );
+  //>>includeEnd('debug');
 
   GroundPrimitive.initializeTerrainHeights();
   GroundPolylinePrimitive.initializeTerrainHeights();
@@ -166,7 +173,7 @@ DataSourceDisplay.defaultVisualizersCallback = function (
       dataSource._groundPrimitives,
     ),
     ...ExtraVisualizers.map(
-      (VisualizerClass) => new VisualizerClass(scene, entities),
+      (VisualizerClass: any) => new VisualizerClass(scene, entities),
     ),
   ];
 };
@@ -279,7 +286,9 @@ DataSourceDisplay.prototype.destroy = function () {
  * @returns {boolean} True if all data sources are ready to be displayed, false otherwise.
  */
 DataSourceDisplay.prototype.update = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+  //>>includeEnd('debug');
 
   if (!ApproximateTerrainHeights.initialized) {
     this._ready = false;
@@ -371,7 +380,11 @@ DataSourceDisplay.prototype.getBoundingSphere = function (
   allowPartial,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("entity", entity);
+  Check.typeOf.bool("allowPartial", allowPartial);
+  Check.defined("result", result);
+  //>>includeEnd('debug');
 
   if (!this._ready) {
     return BoundingSphereState.PENDING;
@@ -523,9 +536,8 @@ DataSourceDisplay.prototype._onDataSourceMoved = function (
  * @returns {Visualizer[]} An array of visualizers used for visualization.
  *
  * @example
- * function createVisualizers(scene, entityCluster, dataSource) {
+ * function createVisualizers(scene: any, entityCluster: any, dataSource: any) {
  *     return [new Cesium.BillboardVisualizer(entityCluster, dataSource.entities)];
  * }
  */
-export { DataSourceDisplay };
 export default DataSourceDisplay;

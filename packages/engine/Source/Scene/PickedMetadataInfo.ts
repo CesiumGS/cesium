@@ -10,13 +10,7 @@
  *
  * @private
  */
-function PickedMetadataInfo(
-  schemaId,
-  className,
-  propertyName,
-  classProperty,
-  metadataProperty,
-) {
+function PickedMetadataInfo(schemaId: any, className: any, propertyName: any, classProperty: any, metadataProperty: any, ) {
   /**
    * The optional ID of the metadata schema
    *
@@ -54,5 +48,4 @@ function PickedMetadataInfo(
    */
   this.metadataProperty = metadataProperty;
 }
-export { PickedMetadataInfo };
 export default PickedMetadataInfo;

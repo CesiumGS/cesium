@@ -41,10 +41,13 @@ import oneTimeWarning from "./oneTimeWarning.js";
  *
  * @private
  */
-function deprecationWarning(identifier, message) {
-  ;
+function deprecationWarning(identifier: any, message: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(identifier) || !defined(message)) {
+    throw new DeveloperError("identifier and message are required.");
+  }
+  //>>includeEnd('debug');
 
   oneTimeWarning(identifier, message);
 }
-export { deprecationWarning };
 export default deprecationWarning;

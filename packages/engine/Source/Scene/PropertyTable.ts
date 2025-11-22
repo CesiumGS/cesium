@@ -38,10 +38,12 @@ import addAllToArray from "../Core/addAllToArray.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function PropertyTable(options) {
+function PropertyTable(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("options.count", options.count);
+  //>>includeEnd('debug');
 
   this._name = options.name;
   this._id = options.id;
@@ -173,7 +175,10 @@ Object.defineProperties(PropertyTable.prototype, {
  * @private
  */
 PropertyTable.prototype.hasProperty = function (index, propertyId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
 
   if (
     defined(this._metadataTable) &&
@@ -207,7 +212,10 @@ PropertyTable.prototype.hasProperty = function (index, propertyId) {
  * @private
  */
 PropertyTable.prototype.hasPropertyBySemantic = function (index, semantic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
 
   if (defined(this._metadataTable)) {
     return this._metadataTable.hasPropertyBySemantic(semantic);
@@ -226,7 +234,9 @@ PropertyTable.prototype.hasPropertyBySemantic = function (index, semantic) {
  * @private
  */
 PropertyTable.prototype.propertyExists = function (propertyId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
 
   if (
     defined(this._metadataTable) &&
@@ -260,7 +270,9 @@ PropertyTable.prototype.propertyExists = function (propertyId) {
  * @private
  */
 PropertyTable.prototype.propertyExistsBySemantic = function (semantic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
 
   if (defined(this._metadataTable)) {
     return this._metadataTable.hasPropertyBySemantic(semantic);
@@ -310,7 +322,7 @@ PropertyTable.prototype.getPropertyIds = function (index, results) {
  *
  * @param {number} index The index of the feature.
  * @param {string} propertyId The case-sensitive ID of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  */
 PropertyTable.prototype.getProperty = function (index, propertyId) {
@@ -389,7 +401,7 @@ PropertyTable.prototype.setProperty = function (index, propertyId, value) {
  *
  * @param {number} index The index of the feature.
  * @param {string} semantic The case-sensitive semantic of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the feature does not have this semantic.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this semantic.
  * @private
  */
 PropertyTable.prototype.getPropertyBySemantic = function (index, semantic) {
@@ -435,12 +447,14 @@ PropertyTable.prototype.setPropertyBySemantic = function (
  * </p>
  *
  * @param {string} propertyId The case-sensitive ID of the property.
- * @returns {any} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
  *
  * @private
  */
 PropertyTable.prototype.getPropertyTypedArray = function (propertyId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
 
   if (defined(this._metadataTable)) {
     return this._metadataTable.getPropertyTypedArray(propertyId);
@@ -458,12 +472,14 @@ PropertyTable.prototype.getPropertyTypedArray = function (propertyId) {
  * </p>
  *
  * @param {string} semantic The case-sensitive semantic of the property.
- * @returns {any} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
  *
  * @private
  */
 PropertyTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
 
   if (defined(this._metadataTable)) {
     return this._metadataTable.getPropertyTypedArrayBySemantic(semantic);
@@ -472,7 +488,7 @@ PropertyTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
   return undefined;
 };
 
-function checkFeatureId(featureId, featuresLength) {
+function checkFeatureId(featureId: any, featuresLength: any) {
   if (!defined(featureId) || featureId < 0 || featureId >= featuresLength) {
     throw new DeveloperError(
       `featureId is required and must be between zero and featuresLength - 1 (${featuresLength}` -
@@ -482,7 +498,10 @@ function checkFeatureId(featureId, featuresLength) {
 }
 
 PropertyTable.prototype.isClass = function (featureId, className) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  checkFeatureId(featureId, this.count);
+  Check.typeOf.string("className", className);
+  //>>includeEnd('debug');
 
   const hierarchy = this._batchTableHierarchy;
   if (!defined(hierarchy)) {
@@ -493,13 +512,18 @@ PropertyTable.prototype.isClass = function (featureId, className) {
 };
 
 PropertyTable.prototype.isExactClass = function (featureId, className) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  checkFeatureId(featureId, this.count);
+  Check.typeOf.string("className", className);
+  //>>includeEnd('debug');
 
   return this.getExactClassName(featureId) === className;
 };
 
 PropertyTable.prototype.getExactClassName = function (featureId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  checkFeatureId(featureId, this.count);
+  //>>includeEnd('debug');
 
   const hierarchy = this._batchTableHierarchy;
   if (!defined(hierarchy)) {
@@ -509,5 +533,4 @@ PropertyTable.prototype.getExactClassName = function (featureId) {
   return hierarchy.getClassName(featureId);
 };
 
-export { PropertyTable };
 export default PropertyTable;

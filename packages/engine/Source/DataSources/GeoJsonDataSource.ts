@@ -26,7 +26,7 @@ import EntityCollection from "./EntityCollection.js";
 import PolygonGraphics from "./PolygonGraphics.js";
 import PolylineGraphics from "./PolylineGraphics.js";
 
-function defaultCrsFunction(coordinates) {
+function defaultCrsFunction(coordinates: any) {
   return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
 }
 
@@ -65,7 +65,7 @@ const simpleStyleIdentifiers = [
   "fill-opacity",
 ];
 
-function defaultDescribe(properties, nameProperty) {
+function defaultDescribe(properties: any, nameProperty: any) {
   let html = "";
   for (const key in properties) {
     if (properties.hasOwnProperty(key)) {
@@ -90,7 +90,7 @@ function defaultDescribe(properties, nameProperty) {
   return html;
 }
 
-function createDescriptionCallback(describe, properties, nameProperty) {
+function createDescriptionCallback(describe: any, properties: any, nameProperty: any) {
   let description;
   return function (time, result) {
     if (!defined(description)) {
@@ -100,7 +100,7 @@ function createDescriptionCallback(describe, properties, nameProperty) {
   };
 }
 
-function defaultDescribeProperty(properties, nameProperty) {
+function defaultDescribeProperty(properties: any, nameProperty: any) {
   return new CallbackProperty(
     createDescriptionCallback(defaultDescribe, properties, nameProperty),
     true,
@@ -110,7 +110,7 @@ function defaultDescribeProperty(properties, nameProperty) {
 //GeoJSON specifies only the Feature object has a usable id property
 //But since "multi" geometries create multiple entity,
 //we can't use it for them either.
-function createObject(geoJson, entityCollection, describe) {
+function createObject(geoJson: any, entityCollection: any, describe: any) {
   let id = geoJson.id;
   if (!defined(id) || geoJson.type !== "Feature") {
     id = createGuid();
@@ -179,7 +179,7 @@ function createObject(geoJson, entityCollection, describe) {
   return entity;
 }
 
-function coordinatesArrayToCartesianArray(coordinates, crsFunction) {
+function coordinatesArrayToCartesianArray(coordinates: any, crsFunction: any) {
   const positions = new Array(coordinates.length);
   for (let i = 0; i < coordinates.length; i++) {
     positions[i] = crsFunction(coordinates[i]);
@@ -212,7 +212,7 @@ const geometryTypes = {
 };
 
 // GeoJSON processing functions
-function processFeature(dataSource, feature, notUsed, crsFunction, options) {
+function processFeature(dataSource: any, feature: any, notUsed: any, crsFunction: any, options: any) {
   if (feature.geometry === null) {
     //Null geometry is allowed, so just create an empty entity instance for it.
     createObject(feature, dataSource._entityCollection, options.describe);
@@ -231,26 +231,14 @@ function processFeature(dataSource, feature, notUsed, crsFunction, options) {
   geometryHandler(dataSource, feature, feature.geometry, crsFunction, options);
 }
 
-function processFeatureCollection(
-  dataSource,
-  featureCollection,
-  notUsed,
-  crsFunction,
-  options,
-) {
+function processFeatureCollection(dataSource: any, featureCollection: any, notUsed: any, crsFunction: any, options: any, ) {
   const features = featureCollection.features;
   for (let i = 0, len = features.length; i < len; i++) {
     processFeature(dataSource, features[i], undefined, crsFunction, options);
   }
 }
 
-function processGeometryCollection(
-  dataSource,
-  geoJson,
-  geometryCollection,
-  crsFunction,
-  options,
-) {
+function processGeometryCollection(dataSource: any, geoJson: any, geometryCollection: any, crsFunction: any, options: any, ) {
   const geometries = geometryCollection.geometries;
   for (let i = 0, len = geometries.length; i < len; i++) {
     const geometry = geometries[i];
@@ -263,7 +251,7 @@ function processGeometryCollection(
   }
 }
 
-function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
+function createPoint(dataSource: any, geoJson: any, crsFunction: any, coordinates: any, options: any) {
   let symbol = options.markerSymbol;
   let color = options.markerColor;
   let size = options.markerSize;
@@ -330,30 +318,18 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
   dataSource._promises.push(promise);
 }
 
-function processPoint(dataSource, geoJson, geometry, crsFunction, options) {
+function processPoint(dataSource: any, geoJson: any, geometry: any, crsFunction: any, options: any) {
   createPoint(dataSource, geoJson, crsFunction, geometry.coordinates, options);
 }
 
-function processMultiPoint(
-  dataSource,
-  geoJson,
-  geometry,
-  crsFunction,
-  options,
-) {
+function processMultiPoint(dataSource: any, geoJson: any, geometry: any, crsFunction: any, options: any, ) {
   const coordinates = geometry.coordinates;
   for (let i = 0; i < coordinates.length; i++) {
     createPoint(dataSource, geoJson, crsFunction, coordinates[i], options);
   }
 }
 
-function createLineString(
-  dataSource,
-  geoJson,
-  crsFunction,
-  coordinates,
-  options,
-) {
+function createLineString(dataSource: any, geoJson: any, crsFunction: any, coordinates: any, options: any, ) {
   let material = options.strokeMaterialProperty;
   let widthProperty = options.strokeWidthProperty;
 
@@ -398,13 +374,7 @@ function createLineString(
   polylineGraphics.arcType = ArcType.RHUMB;
 }
 
-function processLineString(
-  dataSource,
-  geoJson,
-  geometry,
-  crsFunction,
-  options,
-) {
+function processLineString(dataSource: any, geoJson: any, geometry: any, crsFunction: any, options: any, ) {
   createLineString(
     dataSource,
     geoJson,
@@ -414,20 +384,14 @@ function processLineString(
   );
 }
 
-function processMultiLineString(
-  dataSource,
-  geoJson,
-  geometry,
-  crsFunction,
-  options,
-) {
+function processMultiLineString(dataSource: any, geoJson: any, geometry: any, crsFunction: any, options: any, ) {
   const lineStrings = geometry.coordinates;
   for (let i = 0; i < lineStrings.length; i++) {
     createLineString(dataSource, geoJson, crsFunction, lineStrings[i], options);
   }
 }
 
-function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
+function createPolygon(dataSource: any, geoJson: any, crsFunction: any, coordinates: any, options: any) {
   if (coordinates.length === 0 || coordinates[0].length === 0) {
     return;
   }
@@ -516,7 +480,7 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
   entity.polygon = polygon;
 }
 
-function processPolygon(dataSource, geoJson, geometry, crsFunction, options) {
+function processPolygon(dataSource: any, geoJson: any, geometry: any, crsFunction: any, options: any) {
   createPolygon(
     dataSource,
     geoJson,
@@ -526,20 +490,14 @@ function processPolygon(dataSource, geoJson, geometry, crsFunction, options) {
   );
 }
 
-function processMultiPolygon(
-  dataSource,
-  geoJson,
-  geometry,
-  crsFunction,
-  options,
-) {
+function processMultiPolygon(dataSource: any, geoJson: any, geometry: any, crsFunction: any, options: any, ) {
   const polygons = geometry.coordinates;
   for (let i = 0; i < polygons.length; i++) {
     createPolygon(dataSource, geoJson, crsFunction, polygons[i], options);
   }
 }
 
-function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
+function processTopology(dataSource: any, geoJson: any, geometry: any, crsFunction: any, options: any) {
   for (const property in geometry.objects) {
     if (geometry.objects.hasOwnProperty(property)) {
       const feature = topojson.feature(geometry, geometry.objects[property]);
@@ -590,7 +548,7 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  *   markerSymbol: '?'
  * }));
  */
-function GeoJsonDataSource(name) {
+function GeoJsonDataSource(name: any) {
   this._name = name;
   this._changed = new Event();
   this._error = new Event();
@@ -862,7 +820,11 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
       return this._entityCluster;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value must be defined.");
+      }
+      //>>includeEnd('debug');
       this._entityCluster = value;
     },
   },
@@ -902,8 +864,12 @@ GeoJsonDataSource.prototype.process = function (data, options) {
   return preload(this, data, options, false);
 };
 
-function preload(that, data, options, clear) {
-  ;
+function preload(that: any, data: any, options: any, clear: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(data)) {
+    throw new DeveloperError("data is required.");
+  }
+  //>>includeEnd('debug');
 
   DataSource.setLoading(that, true);
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -974,7 +940,7 @@ GeoJsonDataSource.prototype.update = function (time) {
   return true;
 };
 
-function load(that, geoJson, options, sourceUri, clear) {
+function load(that: any, geoJson: any, options: any, sourceUri: any, clear: any) {
   let name;
   if (defined(sourceUri)) {
     name = getFilenameFromUri(sourceUri);
@@ -1053,5 +1019,4 @@ function load(that, geoJson, options, sourceUri, clear) {
  * @param {object} properties The properties of the feature.
  * @param {string} nameProperty The property key that Cesium estimates to have the name of the feature.
  */
-export { GeoJsonDataSource };
 export default GeoJsonDataSource;

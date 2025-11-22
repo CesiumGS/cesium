@@ -34,7 +34,7 @@ import Sun from "../Scene/Sun.js";
 import TimeDynamicPointCloud from "../Scene/TimeDynamicPointCloud.js";
 import VoxelPrimitive from "../Scene/VoxelPrimitive.js";
 
-function trackDataSourceClock(clock, dataSource) {
+function trackDataSourceClock(clock: any, dataSource: any) {
   if (defined(dataSource)) {
     const dataSourceClock = dataSource.clock;
     if (defined(dataSourceClock)) {
@@ -43,11 +43,11 @@ function trackDataSourceClock(clock, dataSource) {
   }
 }
 
-function startRenderLoop(widget) {
+function startRenderLoop(widget: any) {
   widget._renderLoopRunning = true;
 
   let lastFrameTime = 0;
-  function render(frameTime) {
+  function render(frameTime: any) {
     if (widget.isDestroyed()) {
       return;
     }
@@ -87,7 +87,7 @@ function startRenderLoop(widget) {
   requestAnimationFrame(render);
 }
 
-function configurePixelRatio(widget) {
+function configurePixelRatio(widget: any) {
   let pixelRatio = widget._useBrowserRecommendedResolution
     ? 1.0
     : window.devicePixelRatio;
@@ -99,7 +99,7 @@ function configurePixelRatio(widget) {
   return pixelRatio;
 }
 
-function configureCanvasSize(widget) {
+function configureCanvasSize(widget: any) {
   const canvas = widget._canvas;
   let width = canvas.clientWidth;
   let height = canvas.clientHeight;
@@ -118,7 +118,7 @@ function configureCanvasSize(widget) {
   widget._lastDevicePixelRatio = window.devicePixelRatio;
 }
 
-function configureCameraFrustum(widget) {
+function configureCameraFrustum(widget: any) {
   const canvas = widget._canvas;
   const width = canvas.width;
   const height = canvas.height;
@@ -203,8 +203,12 @@ function configureCameraFrustum(widget) {
  *     mapProjection: new Cesium.WebMercatorProjection()
  * });
  */
-function CesiumWidget(container, options) {
-  ;
+function CesiumWidget(container: any, options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -378,7 +382,13 @@ function CesiumWidget(container, options) {
     }
 
     if (defined(options.terrain) && options.globe !== false) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(options.terrainProvider)) {
+        throw new DeveloperError(
+          "Specify either options.terrainProvider or options.terrain.",
+        );
+      }
+      //>>includeEnd('debug');
 
       scene.setTerrain(options.terrain);
     }
@@ -696,7 +706,13 @@ Object.defineProperties(CesiumWidget.prototype, {
       return this._targetFrameRate;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (value <= 0) {
+        throw new DeveloperError(
+          "targetFrameRate must be greater than 0, or undefined.",
+        );
+      }
+      //>>includeEnd('debug');
       this._targetFrameRate = value;
     },
   },
@@ -746,7 +762,11 @@ Object.defineProperties(CesiumWidget.prototype, {
       return this._resolutionScale;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (value <= 0) {
+        throw new DeveloperError("resolutionScale must be greater than 0.");
+      }
+      //>>includeEnd('debug');
       if (this._resolutionScale !== value) {
         this._resolutionScale = value;
         this._forceResize = true;
@@ -1258,8 +1278,12 @@ CesiumWidget.prototype.flyTo = function (target, options) {
   return zoomToOrFly(this, target, options, true);
 };
 
-function zoomToOrFly(that, zoomTarget, options, isFlight) {
-  ;
+function zoomToOrFly(that: any, zoomTarget: any, options: any, isFlight: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(zoomTarget)) {
+    throw new DeveloperError("zoomTarget is required.");
+  }
+  //>>includeEnd('debug');
 
   cancelZoom(that);
 
@@ -1267,7 +1291,7 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
   //bounding spheres have been computed.  Therefore we create and return
   //a deferred which will be resolved as part of the post-render step in the
   //frame that actually performs the zoom.
-  const zoomPromise = new Promise((resolve) => {
+  const zoomPromise = new Promise((resolve: any) => {
     that._completeZoom = function (value) {
       resolve(value);
     };
@@ -1289,7 +1313,7 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
       if (defined(zoomTarget.imageryProvider)) {
         rectanglePromise = Promise.resolve(zoomTarget.getImageryRectangle());
       } else {
-        rectanglePromise = new Promise((resolve) => {
+        rectanglePromise = new Promise((resolve: any) => {
           const removeListener = zoomTarget.readyEvent.addEventListener(() => {
             removeListener();
             resolve(zoomTarget.getImageryRectangle());
@@ -1358,13 +1382,13 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
   return zoomPromise;
 }
 
-function clearZoom(widget) {
+function clearZoom(widget: any) {
   widget._zoomPromise = undefined;
   widget._zoomTarget = undefined;
   widget._zoomOptions = undefined;
 }
 
-function cancelZoom(widget) {
+function cancelZoom(widget: any) {
   const zoomPromise = widget._zoomPromise;
   if (defined(zoomPromise)) {
     clearZoom(widget);
@@ -1382,7 +1406,7 @@ CesiumWidget.prototype._postRender = function () {
 
 const zoomTargetBoundingSphereScratch = new BoundingSphere();
 
-function updateZoomTarget(widget) {
+function updateZoomTarget(widget: any) {
   const target = widget._zoomTarget;
   if (!defined(target) || widget.scene.mode === SceneMode.MORPHING) {
     return;
@@ -1392,7 +1416,7 @@ function updateZoomTarget(widget) {
   const camera = scene.camera;
   const zoomOptions = widget._zoomOptions ?? {};
   let options;
-  function zoomToBoundingSphere(boundingSphere) {
+  function zoomToBoundingSphere(boundingSphere: any) {
     // If offset was originally undefined then give it base value instead of empty object
     if (!defined(zoomOptions.offset)) {
       zoomOptions.offset = new HeadingPitchRange(
@@ -1524,7 +1548,7 @@ function updateZoomTarget(widget) {
 
 const trackedEntityBoundingSphereScratch = new BoundingSphere();
 
-function updateTrackedEntity(widget) {
+function updateTrackedEntity(widget: any) {
   if (!widget._needTrackedEntityUpdate) {
     return;
   }
@@ -1579,5 +1603,4 @@ function updateTrackedEntity(widget) {
   widget._needTrackedEntityUpdate = false;
 }
 
-export { CesiumWidget };
 export default CesiumWidget;

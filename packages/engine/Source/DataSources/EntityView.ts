@@ -29,18 +29,7 @@ const rotationScratch = new Matrix3();
 const deltaTime = new JulianDate();
 const northUpAxisFactor = 1.25; // times ellipsoid's maximum radius
 
-function updateTransform(
-  that,
-  camera,
-  updateLookAt,
-  saveCamera,
-  positionProperty,
-  velocityProperty,
-  orientationProperty,
-  trackingReferenceFrame,
-  time,
-  ellipsoid,
-) {
+function updateTransform(that: any, camera: any, updateLookAt: any, saveCamera: any, positionProperty: any, velocityProperty: any, orientationProperty: any, trackingReferenceFrame: any, time: any, ellipsoid: any, ) {
   const mode = that.scene.mode;
   let cartesian = positionProperty.getValue(time, that._lastCartesian);
   if (defined(cartesian)) {
@@ -321,8 +310,11 @@ function updateTransform(
  * @param {Scene} scene The scene to use.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to use for orienting the camera.
  */
-function EntityView(entity, scene, ellipsoid) {
-  ;
+function EntityView(entity: any, scene: any, ellipsoid: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("entity", entity);
+  Check.defined("scene", scene);
+  //>>includeEnd('debug');
 
   /**
    * The entity to track with the camera.
@@ -391,7 +383,9 @@ const scratchCartesian = new Cartesian3();
  * @param {BoundingSphere} [boundingSphere] bounding sphere of the object.
  */
 EntityView.prototype.update = function (time, boundingSphere) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+  //>>includeEnd('debug');
 
   const scene = this.scene;
   const ellipsoid = this.ellipsoid;
@@ -468,5 +462,4 @@ EntityView.prototype.update = function (time, boundingSphere) {
     ellipsoid,
   );
 };
-export { EntityView };
 export default EntityView;

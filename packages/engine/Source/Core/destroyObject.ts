@@ -31,11 +31,13 @@ function returnTrue() {
  *
  * @see DeveloperError
  */
-function destroyObject(object, message) {
+function destroyObject(object: any, message: any) {
   message = message ?? "This object was destroyed, i.e., destroy() was called.";
 
   function throwOnDestroyed() {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    throw new DeveloperError(message);
+    //>>includeEnd('debug');
   }
 
   for (const key in object) {
@@ -48,5 +50,4 @@ function destroyObject(object, message) {
 
   return undefined;
 }
-export { destroyObject };
 export default destroyObject;

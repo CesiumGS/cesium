@@ -37,7 +37,9 @@ class ModelImagery {
    * @throws {DeveloperError} If the model is not defined
    */
   constructor(model) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("model", model);
+    //>>includeEnd('debug');
 
     /**
      * The model that this instance was created for.
@@ -93,7 +95,9 @@ class ModelImagery {
    * @param {FrameState} frameState The frame state
    */
   update(frameState) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("frameState", frameState);
+    //>>includeEnd('debug');
 
     if (!this._hasImagery) {
       // When there is no imagery, make sure to delete any model primitive
@@ -181,7 +185,9 @@ class ModelImagery {
    * @private
    */
   _updateModelPrimitiveImageries(frameState) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("frameState", frameState);
+    //>>includeEnd('debug');
 
     if (!defined(this._modelPrimitiveImageries)) {
       throw new DeveloperError(
@@ -401,5 +407,4 @@ class ModelImagery {
   }
 }
 
-export { ModelImagery };
 export default ModelImagery;

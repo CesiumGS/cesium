@@ -26,12 +26,12 @@ import Property from "./Property.js";
  * @private
  * @abstract
  */
-function DynamicGeometryUpdater(
-  geometryUpdater,
-  primitives,
-  orderedGroundPrimitives,
-) {
-  ;
+function DynamicGeometryUpdater(geometryUpdater: any, primitives: any, orderedGroundPrimitives: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("geometryUpdater", geometryUpdater);
+  Check.defined("primitives", primitives);
+  Check.defined("orderedGroundPrimitives", orderedGroundPrimitives);
+  //>>includeEnd('debug');
 
   this._primitives = primitives;
   this._orderedGroundPrimitives = orderedGroundPrimitives;
@@ -62,7 +62,9 @@ DynamicGeometryUpdater.prototype._setOptions =
  * @param {JulianDate} time The current time.
  */
 DynamicGeometryUpdater.prototype.update = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+  //>>includeEnd('debug');
 
   const geometryUpdater = this._geometryUpdater;
   const onTerrain = geometryUpdater._onTerrain;
@@ -190,7 +192,11 @@ DynamicGeometryUpdater.prototype.update = function (time) {
  * @private
  */
 DynamicGeometryUpdater.prototype.getBoundingSphere = function (result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(result)) {
+    throw new DeveloperError("result is required.");
+  }
+  //>>includeEnd('debug');
   const entity = this._entity;
   const primitive = this._primitive;
   const outlinePrimitive = this._outlinePrimitive;
@@ -257,5 +263,4 @@ DynamicGeometryUpdater.prototype.destroy = function () {
   primitives.removeAndDestroy(this._outlinePrimitive);
   destroyObject(this);
 };
-export { DynamicGeometryUpdater };
 export default DynamicGeometryUpdater;

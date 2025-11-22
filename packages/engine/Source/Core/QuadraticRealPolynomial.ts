@@ -17,13 +17,23 @@ const QuadraticRealPolynomial = {};
  * @returns {number} The value of the discriminant.
  */
 QuadraticRealPolynomial.computeDiscriminant = function (a, b, c) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof a !== "number") {
+    throw new DeveloperError("a is a required number.");
+  }
+  if (typeof b !== "number") {
+    throw new DeveloperError("b is a required number.");
+  }
+  if (typeof c !== "number") {
+    throw new DeveloperError("c is a required number.");
+  }
+  //>>includeEnd('debug');
 
   const discriminant = b * b - 4.0 * a * c;
   return discriminant;
 };
 
-function addWithCancellationCheck(left, right, tolerance) {
+function addWithCancellationCheck(left: any, right: any, tolerance: any) {
   const difference = left + right;
   if (
     CesiumMath.sign(left) !== CesiumMath.sign(right) &&
@@ -44,7 +54,17 @@ function addWithCancellationCheck(left, right, tolerance) {
  * @returns {number[]} The real valued roots.
  */
 QuadraticRealPolynomial.computeRealRoots = function (a, b, c) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof a !== "number") {
+    throw new DeveloperError("a is a required number.");
+  }
+  if (typeof b !== "number") {
+    throw new DeveloperError("b is a required number.");
+  }
+  if (typeof c !== "number") {
+    throw new DeveloperError("c is a required number.");
+  }
+  //>>includeEnd('debug');
 
   let ratio;
   if (a === 0.0) {
@@ -124,5 +144,4 @@ QuadraticRealPolynomial.computeRealRoots = function (a, b, c) {
 
   return [c / q, q / a];
 };
-export { QuadraticRealPolynomial };
 export default QuadraticRealPolynomial;

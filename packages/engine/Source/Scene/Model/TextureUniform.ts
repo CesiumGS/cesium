@@ -28,9 +28,22 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function TextureUniform(options) {
+function TextureUniform(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  const hasTypedArray = defined(options.typedArray);
+  const hasUrl = defined(options.url);
+  if (hasTypedArray === hasUrl) {
+    throw new DeveloperError(
+      "exactly one of options.typedArray, options.url must be defined",
+    );
+  }
+  if (hasTypedArray && (!defined(options.width) || !defined(options.height))) {
+    throw new DeveloperError(
+      "options.width and options.height are required when options.typedArray is defined",
+    );
+  }
+  //>>includeEnd('debug');
 
   this.typedArray = options.typedArray;
   this.width = options.width;
@@ -55,5 +68,4 @@ function TextureUniform(options) {
   });
 }
 
-export { TextureUniform };
 export default TextureUniform;

@@ -40,11 +40,14 @@ import addAllToArray from "../../Core/addAllToArray.js";
  *
  * @private
  */
-function ModelSceneGraph(options) {
+function ModelSceneGraph(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const components = options.modelComponents;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.model", options.model);
+  Check.typeOf.object("options.modelComponents", components);
+  //>>includeEnd('debug');
 
   /**
    * A reference to the {@link Model} that owns this scene graph.
@@ -226,7 +229,7 @@ Object.defineProperties(ModelSceneGraph.prototype, {
   },
 });
 
-function initialize(sceneGraph) {
+function initialize(sceneGraph: any) {
   const components = sceneGraph._components;
   const scene = components.scene;
   const model = sceneGraph._model;
@@ -309,7 +312,7 @@ function initialize(sceneGraph) {
   sceneGraph.applyArticulations();
 }
 
-function computeModelMatrix(sceneGraph, modelMatrix) {
+function computeModelMatrix(sceneGraph: any, modelMatrix: any) {
   const components = sceneGraph._components;
   const model = sceneGraph._model;
 
@@ -334,7 +337,7 @@ function computeModelMatrix(sceneGraph, modelMatrix) {
 
 const scratchComputedTranslation = new Cartesian3();
 
-function computeModelMatrix2D(sceneGraph, frameState) {
+function computeModelMatrix2D(sceneGraph: any, frameState: any) {
   const computedModelMatrix = sceneGraph._computedModelMatrix;
   const translation = Matrix4.getTranslation(
     computedModelMatrix,
@@ -379,7 +382,7 @@ function computeModelMatrix2D(sceneGraph, frameState) {
  *
  * @private
  */
-function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
+function traverseAndCreateSceneGraph(sceneGraph: any, node: any, transformToRoot: any) {
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
   const transform = ModelUtility.getNodeTransform(node);
@@ -847,13 +850,7 @@ ModelSceneGraph.prototype.updateJointMatrices = function () {
  *
  * @private
  */
-function traverseSceneGraph(
-  sceneGraph,
-  runtimeNode,
-  visibleNodesOnly,
-  callback,
-  callbackOptions,
-) {
+function traverseSceneGraph(sceneGraph: any, runtimeNode: any, visibleNodesOnly: any, callback: any, callbackOptions: any, ) {
   if (visibleNodesOnly && !runtimeNode.show) {
     return;
   }
@@ -878,12 +875,7 @@ function traverseSceneGraph(
   }
 }
 
-function forEachRuntimePrimitive(
-  sceneGraph,
-  visibleNodesOnly,
-  callback,
-  callbackOptions,
-) {
+function forEachRuntimePrimitive(sceneGraph: any, visibleNodesOnly: any, callback: any, callbackOptions: any, ) {
   const rootNodes = sceneGraph._rootNodes;
   const rootNodesLength = rootNodes.length;
   for (let i = 0; i < rootNodesLength; i++) {
@@ -922,7 +914,7 @@ ModelSceneGraph.prototype.updateBackFaceCulling = function (backFaceCulling) {
 };
 
 // Callback is defined here to avoid allocating a closure in the render loop
-function updatePrimitiveBackFaceCulling(runtimePrimitive, options) {
+function updatePrimitiveBackFaceCulling(runtimePrimitive: any, options: any) {
   const drawCommand = runtimePrimitive.drawCommand;
   drawCommand.backFaceCulling = options.backFaceCulling;
 }
@@ -945,7 +937,7 @@ ModelSceneGraph.prototype.updateShadows = function (shadowMode) {
 };
 
 // Callback is defined here to avoid allocating a closure in the render loop
-function updatePrimitiveShadows(runtimePrimitive, options) {
+function updatePrimitiveShadows(runtimePrimitive: any, options: any) {
   const drawCommand = runtimePrimitive.drawCommand;
   drawCommand.shadows = options.shadowMode;
 }
@@ -976,7 +968,7 @@ ModelSceneGraph.prototype.updateShowBoundingVolume = function (
 };
 
 // Callback is defined here to avoid allocating a closure in the render loop
-function updatePrimitiveShowBoundingVolume(runtimePrimitive, options) {
+function updatePrimitiveShowBoundingVolume(runtimePrimitive: any, options: any) {
   const drawCommand = runtimePrimitive.drawCommand;
   drawCommand.debugShowBoundingVolume = options.debugShowBoundingVolume;
 }
@@ -1026,7 +1018,7 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
 };
 
 // Callback is defined here to avoid allocating a closure in the render loop
-function pushPrimitiveDrawCommands(runtimePrimitive, options) {
+function pushPrimitiveDrawCommands(runtimePrimitive: any, options: any) {
   const frameState = options.frameState;
   const hasSilhouette = options.hasSilhouette;
 
@@ -1092,5 +1084,4 @@ ModelSceneGraph.prototype.applyArticulations = function () {
   }
 };
 
-export { ModelSceneGraph };
 export default ModelSceneGraph;

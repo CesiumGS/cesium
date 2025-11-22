@@ -13,10 +13,13 @@ import I3SBuildingSceneLayerExplorerViewModel from "./I3SBuildingSceneLayerExplo
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=I3S%20Building%20Scene%20Layer.html|I3S Building Scene Layer}
  */
-function I3SBuildingSceneLayerExplorer(containerId, i3sProvider) {
+function I3SBuildingSceneLayerExplorer(containerId: any, i3sProvider: any) {
   const container = document.getElementById(containerId);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("container", container);
+  Check.defined("i3sProvider", i3sProvider);
+  //>>includeEnd('debug');
 
   const htmlWrapper = document.createElement("div");
   htmlWrapper.classList.add("cesium-viewer-i3s-explorer");
@@ -75,5 +78,4 @@ function I3SBuildingSceneLayerExplorer(containerId, i3sProvider) {
     viewModel.currentLayer = viewModel.defaultLayer;
   }
 }
-export { I3SBuildingSceneLayerExplorer };
 export default I3SBuildingSceneLayerExplorer;

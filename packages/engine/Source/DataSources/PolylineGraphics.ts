@@ -37,7 +37,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
  */
-function PolylineGraphics(options) {
+function PolylineGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -217,7 +217,11 @@ PolylineGraphics.prototype.clone = function (result) {
  * @param {PolylineGraphics} source The object to be merged into this object.
  */
 PolylineGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.positions = this.positions ?? source.positions;
@@ -234,5 +238,4 @@ PolylineGraphics.prototype.merge = function (source) {
     this.classificationType ?? source.classificationType;
   this.zIndex = this.zIndex ?? source.zIndex;
 };
-export { PolylineGraphics };
 export default PolylineGraphics;

@@ -167,7 +167,7 @@ GlobeTranslucencyState.prototype.update = function (scene) {
   gatherDerivedCommandRequirements(this, scene);
 };
 
-function updateAlphaByDistance(enabled, alpha, alphaByDistance, result) {
+function updateAlphaByDistance(enabled: any, alpha: any, alphaByDistance: any, result: any) {
   if (!enabled) {
     result.nearValue = 1.0;
     result.farValue = 1.0;
@@ -186,7 +186,7 @@ function updateAlphaByDistance(enabled, alpha, alphaByDistance, result) {
   return result;
 }
 
-function isFaceTranslucent(translucencyEnabled, alphaByDistance, globe) {
+function isFaceTranslucent(translucencyEnabled: any, alphaByDistance: any, globe: any) {
   return (
     translucencyEnabled &&
     (globe.baseColor.alpha < 1.0 ||
@@ -195,7 +195,7 @@ function isFaceTranslucent(translucencyEnabled, alphaByDistance, globe) {
   );
 }
 
-function isSunVisibleThroughGlobe(state, scene) {
+function isSunVisibleThroughGlobe(state: any, scene: any) {
   // The sun is visible through the globe if the front and back faces are translucent when above ground
   // or if front faces are translucent when below ground
   const frontTranslucent = state._frontFaceTranslucent;
@@ -203,17 +203,17 @@ function isSunVisibleThroughGlobe(state, scene) {
   return frontTranslucent && (scene.cameraUnderground || backTranslucent);
 }
 
-function isEnvironmentVisible(state, scene) {
+function isEnvironmentVisible(state: any, scene: any) {
   // The environment is visible if the camera is above ground or underground with translucency
   return !scene.cameraUnderground || state._frontFaceTranslucent;
 }
 
-function useDepthPlane(state, scene) {
+function useDepthPlane(state: any, scene: any) {
   // Use the depth plane when the camera is above ground and the globe is opaque
   return !scene.cameraUnderground && !state._frontFaceTranslucent;
 }
 
-function requiresManualDepthTest(state, scene, globe) {
+function requiresManualDepthTest(state: any, scene: any, globe: any) {
   return (
     state._frontFaceTranslucent &&
     !state._backFaceTranslucent &&
@@ -223,7 +223,7 @@ function requiresManualDepthTest(state, scene, globe) {
   );
 }
 
-function getNumberOfTextureUniforms(state) {
+function getNumberOfTextureUniforms(state: any) {
   let numberOfTextureUniforms = 0;
 
   if (state._frontFaceTranslucent) {
@@ -237,7 +237,7 @@ function getNumberOfTextureUniforms(state) {
   return numberOfTextureUniforms;
 }
 
-function gatherDerivedCommandRequirements(state, scene) {
+function gatherDerivedCommandRequirements(state: any, scene: any) {
   state._derivedCommandsLength = getDerivedCommandTypes(
     state,
     scene,
@@ -292,13 +292,7 @@ function gatherDerivedCommandRequirements(state, scene) {
   }
 }
 
-function getDerivedCommandTypes(
-  state,
-  scene,
-  isBlendCommand,
-  isPickCommand,
-  types,
-) {
+function getDerivedCommandTypes(state: any, scene: any, isBlendCommand: any, isPickCommand: any, types: any, ) {
   let length = 0;
 
   const frontTranslucent = state._frontFaceTranslucent;
@@ -365,23 +359,23 @@ function getDerivedCommandTypes(
   return length;
 }
 
-function removeDefine(defines, defineToRemove) {
+function removeDefine(defines: any, defineToRemove: any) {
   const index = defines.indexOf(defineToRemove);
   if (index > -1) {
     defines.splice(index, 1);
   }
 }
 
-function hasDefine(defines, define) {
+function hasDefine(defines: any, define: any) {
   return defines.indexOf(define) > -1;
 }
 
-function getOpaqueFrontFaceShaderProgram(vs, fs) {
+function getOpaqueFrontFaceShaderProgram(vs: any, fs: any) {
   removeDefine(vs.defines, "TRANSLUCENT");
   removeDefine(fs.defines, "TRANSLUCENT");
 }
 
-function getOpaqueBackFaceShaderProgram(vs, fs) {
+function getOpaqueBackFaceShaderProgram(vs: any, fs: any) {
   removeDefine(vs.defines, "GROUND_ATMOSPHERE");
   removeDefine(fs.defines, "GROUND_ATMOSPHERE");
   removeDefine(vs.defines, "FOG");
@@ -390,7 +384,7 @@ function getOpaqueBackFaceShaderProgram(vs, fs) {
   removeDefine(fs.defines, "TRANSLUCENT");
 }
 
-function getDepthOnlyShaderProgram(vs, fs) {
+function getDepthOnlyShaderProgram(vs: any, fs: any) {
   if (
     hasDefine(fs.defines, "TILE_LIMIT_RECTANGLE") ||
     hasDefine(fs.defines, "ENABLE_CLIPPING_PLANES")
@@ -405,7 +399,7 @@ function getDepthOnlyShaderProgram(vs, fs) {
   fs.sources = [depthOnlyShader];
 }
 
-function getTranslucentShaderProgram(vs, fs) {
+function getTranslucentShaderProgram(vs: any, fs: any) {
   const sources = fs.sources;
   const length = sources.length;
   for (let i = 0; i < length; ++i) {
@@ -446,7 +440,7 @@ function getTranslucentShaderProgram(vs, fs) {
   sources.push(globeTranslucencyMain);
 }
 
-function getTranslucentBackFaceShaderProgram(vs, fs) {
+function getTranslucentBackFaceShaderProgram(vs: any, fs: any) {
   getTranslucentShaderProgram(vs, fs);
   removeDefine(vs.defines, "GROUND_ATMOSPHERE");
   removeDefine(fs.defines, "GROUND_ATMOSPHERE");
@@ -454,19 +448,19 @@ function getTranslucentBackFaceShaderProgram(vs, fs) {
   removeDefine(fs.defines, "FOG");
 }
 
-function getTranslucentFrontFaceManualDepthTestShaderProgram(vs, fs) {
+function getTranslucentFrontFaceManualDepthTestShaderProgram(vs: any, fs: any) {
   getTranslucentShaderProgram(vs, fs);
   vs.defines.push("GENERATE_POSITION");
   fs.defines.push("MANUAL_DEPTH_TEST");
 }
 
-function getTranslucentBackFaceManualDepthTestShaderProgram(vs, fs) {
+function getTranslucentBackFaceManualDepthTestShaderProgram(vs: any, fs: any) {
   getTranslucentBackFaceShaderProgram(vs, fs);
   vs.defines.push("GENERATE_POSITION");
   fs.defines.push("MANUAL_DEPTH_TEST");
 }
 
-function getPickShaderProgram(vs, fs) {
+function getPickShaderProgram(vs: any, fs: any) {
   const pickShader =
     "uniform sampler2D u_classificationTexture; \n" +
     "void main() \n" +
@@ -483,14 +477,7 @@ function getPickShaderProgram(vs, fs) {
   fs.sources = [pickShader];
 }
 
-function getDerivedShaderProgram(
-  context,
-  shaderProgram,
-  derivedShaderProgram,
-  shaderProgramDirty,
-  getShaderProgramFunction,
-  cacheName,
-) {
+function getDerivedShaderProgram(context: any, shaderProgram: any, derivedShaderProgram: any, shaderProgramDirty: any, getShaderProgramFunction: any, cacheName: any, ) {
   if (!defined(getShaderProgramFunction)) {
     return shaderProgram;
   }
@@ -526,17 +513,17 @@ function getDerivedShaderProgram(
   return shader;
 }
 
-function getOpaqueFrontFaceRenderState(renderState) {
+function getOpaqueFrontFaceRenderState(renderState: any) {
   renderState.cull.face = CullFace.BACK;
   renderState.cull.enabled = true;
 }
 
-function getOpaqueBackFaceRenderState(renderState) {
+function getOpaqueBackFaceRenderState(renderState: any) {
   renderState.cull.face = CullFace.FRONT;
   renderState.cull.enabled = true;
 }
 
-function getDepthOnlyFrontFaceRenderState(renderState) {
+function getDepthOnlyFrontFaceRenderState(renderState: any) {
   renderState.cull.face = CullFace.BACK;
   renderState.cull.enabled = true;
   renderState.colorMask = {
@@ -547,7 +534,7 @@ function getDepthOnlyFrontFaceRenderState(renderState) {
   };
 }
 
-function getDepthOnlyBackFaceRenderState(renderState) {
+function getDepthOnlyBackFaceRenderState(renderState: any) {
   renderState.cull.face = CullFace.FRONT;
   renderState.cull.enabled = true;
   renderState.colorMask = {
@@ -558,7 +545,7 @@ function getDepthOnlyBackFaceRenderState(renderState) {
   };
 }
 
-function getDepthOnlyFrontAndBackFaceRenderState(renderState) {
+function getDepthOnlyFrontAndBackFaceRenderState(renderState: any) {
   renderState.cull.enabled = false;
   renderState.colorMask = {
     red: false,
@@ -568,39 +555,33 @@ function getDepthOnlyFrontAndBackFaceRenderState(renderState) {
   };
 }
 
-function getTranslucentFrontFaceRenderState(renderState) {
+function getTranslucentFrontFaceRenderState(renderState: any) {
   renderState.cull.face = CullFace.BACK;
   renderState.cull.enabled = true;
   renderState.depthMask = false;
   renderState.blending = BlendingState.ALPHA_BLEND;
 }
 
-function getTranslucentBackFaceRenderState(renderState) {
+function getTranslucentBackFaceRenderState(renderState: any) {
   renderState.cull.face = CullFace.FRONT;
   renderState.cull.enabled = true;
   renderState.depthMask = false;
   renderState.blending = BlendingState.ALPHA_BLEND;
 }
 
-function getPickFrontFaceRenderState(renderState) {
+function getPickFrontFaceRenderState(renderState: any) {
   renderState.cull.face = CullFace.BACK;
   renderState.cull.enabled = true;
   renderState.blending.enabled = false;
 }
 
-function getPickBackFaceRenderState(renderState) {
+function getPickBackFaceRenderState(renderState: any) {
   renderState.cull.face = CullFace.FRONT;
   renderState.cull.enabled = true;
   renderState.blending.enabled = false;
 }
 
-function getDerivedRenderState(
-  renderState,
-  derivedRenderState,
-  renderStateDirty,
-  getRenderStateFunction,
-  cache,
-) {
+function getDerivedRenderState(renderState: any, derivedRenderState: any, renderStateDirty: any, getRenderStateFunction: any, cache: any, ) {
   if (!defined(getRenderStateFunction)) {
     return renderState;
   }
@@ -620,7 +601,7 @@ function getDerivedRenderState(
   return cachedRenderState;
 }
 
-function getTranslucencyUniformMap(state) {
+function getTranslucencyUniformMap(state: any) {
   return {
     u_classificationTexture: function () {
       return state._globeTranslucencyFramebuffer.classificationTexture;
@@ -628,13 +609,7 @@ function getTranslucencyUniformMap(state) {
   };
 }
 
-function getDerivedUniformMap(
-  state,
-  uniformMap,
-  derivedUniformMap,
-  uniformMapDirty,
-  getDerivedUniformMapFunction,
-) {
+function getDerivedUniformMap(state: any, uniformMap: any, derivedUniformMap: any, uniformMapDirty: any, getDerivedUniformMapFunction: any, ) {
   if (!defined(getDerivedUniformMapFunction)) {
     return uniformMap;
   }
@@ -646,7 +621,7 @@ function getDerivedUniformMap(
   return combine(uniformMap, getDerivedUniformMapFunction(state), false);
 }
 
-function DerivedCommandPack(options) {
+function DerivedCommandPack(options: any) {
   this.pass = options.pass;
   this.pickOnly = options.pickOnly;
   this.getShaderProgramFunction = options.getShaderProgramFunction;
@@ -780,15 +755,7 @@ GlobeTranslucencyState.prototype.updateDerivedCommands = function (
   );
 };
 
-function updateDerivedCommands(
-  state,
-  command,
-  derivedCommandsLength,
-  derivedCommandTypes,
-  derivedCommandNames,
-  derivedCommandPacks,
-  frameState,
-) {
+function updateDerivedCommands(state: any, command: any, derivedCommandsLength: any, derivedCommandTypes: any, derivedCommandNames: any, derivedCommandPacks: any, frameState: any, ) {
   let derivedCommandsObject = command.derivedCommands.globeTranslucency;
   const derivedCommandsDirty = state._derivedCommandsDirty;
 
@@ -950,14 +917,7 @@ GlobeTranslucencyState.prototype.pushDerivedCommands = function (
   }
 };
 
-function executeCommandsMatchingType(
-  commands,
-  commandsLength,
-  executeCommandFunction,
-  scene,
-  passState,
-  types,
-) {
+function executeCommandsMatchingType(commands: any, commandsLength: any, executeCommandFunction: any, scene: any, passState: any, types: any, ) {
   for (let i = 0; i < commandsLength; ++i) {
     const command = commands[i];
     const type = command.derivedCommands.type;
@@ -967,13 +927,7 @@ function executeCommandsMatchingType(
   }
 }
 
-function executeCommands(
-  commands,
-  commandsLength,
-  executeCommandFunction,
-  scene,
-  passState,
-) {
+function executeCommands(commands: any, commandsLength: any, executeCommandFunction: any, scene: any, passState: any, ) {
   for (let i = 0; i < commandsLength; ++i) {
     executeCommandFunction(commands[i], scene, passState);
   }
@@ -1099,5 +1053,4 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
   passState.framebuffer = originalFramebuffer;
 };
 
-export { GlobeTranslucencyState };
 export default GlobeTranslucencyState;

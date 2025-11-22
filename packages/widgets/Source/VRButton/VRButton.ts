@@ -24,8 +24,15 @@ const exitVRPath =
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  */
-function VRButton(container, scene, vrElement) {
-  ;
+function VRButton(container: any, scene: any, vrElement: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -101,5 +108,4 @@ VRButton.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { VRButton };
 export default VRButton;

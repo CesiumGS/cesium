@@ -7,7 +7,7 @@ import ConstantProperty from "./ConstantProperty.js";
 import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
-function createPolygonHierarchyProperty(value) {
+function createPolygonHierarchyProperty(value: any) {
   if (Array.isArray(value)) {
     // convert array of positions to PolygonHierarchy object
     value = new PolygonHierarchy(value);
@@ -57,7 +57,7 @@ function createPolygonHierarchyProperty(value) {
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
  */
-function PolygonGraphics(options) {
+function PolygonGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -347,7 +347,11 @@ PolygonGraphics.prototype.clone = function (result) {
  * @param {PolygonGraphics} source The object to be merged into this object.
  */
 PolygonGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.hierarchy = this.hierarchy ?? source.hierarchy;
@@ -376,5 +380,4 @@ PolygonGraphics.prototype.merge = function (source) {
   this.textureCoordinates =
     this.textureCoordinates ?? source.textureCoordinates;
 };
-export { PolygonGraphics };
 export default PolygonGraphics;

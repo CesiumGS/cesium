@@ -46,13 +46,21 @@ const defaultCredit = new Credit(
  * @see {@link https://docs.mapbox.com/api/maps/raster-tiles/}
  * @see {@link https://docs.mapbox.com/api/accounts/tokens/}
  */
-function MapboxImageryProvider(options) {
+function MapboxImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const mapId = options.mapId;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(mapId)) {
+    throw new DeveloperError("options.mapId is required.");
+  }
+  //>>includeEnd('debug');
 
   const accessToken = options.accessToken;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(accessToken)) {
+    throw new DeveloperError("options.accessToken is required.");
+  }
+  //>>includeEnd('debug');
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -321,5 +329,4 @@ MapboxImageryProvider.prototype.pickFeatures = function (
 
 // Exposed for tests
 MapboxImageryProvider._defaultCredit = defaultCredit;
-export { MapboxImageryProvider };
 export default MapboxImageryProvider;

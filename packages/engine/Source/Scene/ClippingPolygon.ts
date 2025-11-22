@@ -34,8 +34,16 @@ import Rectangle from "../Core/Rectangle.js";
  *     positions: positions
  * });
  */
-function ClippingPolygon(options) {
-  ;
+function ClippingPolygon(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.object("options.positions", options.positions);
+  Check.typeOf.number.greaterThanOrEquals(
+    "options.positions.length",
+    options.positions.length,
+    3,
+  );
+  //>>includeEnd('debug');
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._positions = copyArrayCartesian3(options.positions);
@@ -77,7 +85,7 @@ function ClippingPolygon(options) {
  * @param {Cartesian3[]|undefined} input The input array
  * @returns {Cartesian3[]|undefined} The copy
  */
-function copyArrayCartesian3(input) {
+function copyArrayCartesian3(input: any) {
   if (!defined(input)) {
     return undefined;
   }
@@ -103,7 +111,7 @@ function copyArrayCartesian3(input) {
  * @param {Cartesian3[]|undefined} b The second array
  * @returns {boolean} Whether the arrays are equal
  */
-function equalsArrayCartesian3(a, b) {
+function equalsArrayCartesian3(a: any, b: any) {
   if (!defined(a) && !defined(b)) {
     return true;
   }
@@ -170,7 +178,9 @@ Object.defineProperties(ClippingPolygon.prototype, {
  * @returns {ClippingPolygon} a clone of the input ClippingPolygon
  */
 ClippingPolygon.clone = function (polygon, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("polygon", polygon);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new ClippingPolygon({
@@ -194,7 +204,10 @@ ClippingPolygon.clone = function (polygon, result) {
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 ClippingPolygon.equals = function (left, right) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
 
   return (
     left.ellipsoid.equals(right.ellipsoid) && left.positions === right.positions
@@ -284,5 +297,4 @@ ClippingPolygon.prototype.computeSphericalExtents = function (result) {
   return result;
 };
 
-export { ClippingPolygon };
 export default ClippingPolygon;

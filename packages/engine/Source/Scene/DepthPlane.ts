@@ -22,7 +22,7 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 /**
  * @private
  */
-function DepthPlane(depthPlaneEllipsoidOffset) {
+function DepthPlane(depthPlaneEllipsoidOffset: any) {
   this._rs = undefined;
   this._sp = undefined;
   this._va = undefined;
@@ -41,7 +41,7 @@ const scratchCartesian3 = new Cartesian3();
 const scratchCartesian4 = new Cartesian3();
 const scratchCartesian5 = new Cartesian3();
 
-function computeDepthQuad(ellipsoid, frameState) {
+function computeDepthQuad(ellipsoid: any, frameState: any) {
   const radii = ellipsoid.radii;
   const camera = frameState.camera;
   let center, eastOffset, northOffset;
@@ -235,5 +235,4 @@ DepthPlane.prototype.destroy = function () {
   this._sp = this._sp && this._sp.destroy();
   this._va = this._va && this._va.destroy();
 };
-export { DepthPlane };
 export default DepthPlane;

@@ -39,7 +39,7 @@ Queue.prototype.enqueue = function (item) {
 /**
  * Dequeues an item.  Returns undefined if the queue is empty.
  *
- * @returns {any} The the dequeued item.
+ * @returns {*} The the dequeued item.
  */
 Queue.prototype.dequeue = function () {
   if (this._length === 0) {
@@ -67,7 +67,7 @@ Queue.prototype.dequeue = function () {
 /**
  * Returns the item at the front of the queue.  Returns undefined if the queue is empty.
  *
- * @returns {any} The item at the front of the queue.
+ * @returns {*} The item at the front of the queue.
  */
 Queue.prototype.peek = function () {
   if (this._length === 0) {
@@ -119,9 +119,8 @@ Queue.prototype.sort = function (compareFunction) {
  *          0 if <code>a</code> is equal to <code>b</code>.
  *
  * @example
- * function compareNumbers(a, b) {
+ * function compareNumbers(a: any, b: any) {
  *     return a - b;
  * }
  */
-export { Queue };
 export default Queue;

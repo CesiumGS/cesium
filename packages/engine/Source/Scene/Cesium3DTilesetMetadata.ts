@@ -23,7 +23,7 @@ import TilesetMetadata from "./TilesetMetadata.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function Cesium3DTilesetMetadata(options) {
+function Cesium3DTilesetMetadata(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const metadataJson = options.metadataJson;
 
@@ -31,7 +31,10 @@ function Cesium3DTilesetMetadata(options) {
   // This keeps metadata parsing synchronous.
   const schema = options.schema;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.metadataJson", metadataJson);
+  Check.typeOf.object("options.schema", schema);
+  //>>includeEnd('debug');
 
   // An older schema stored the tileset metadata in the "tileset" property.
   const metadata = metadataJson.metadata ?? metadataJson.tileset;
@@ -193,5 +196,4 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
   },
 });
 
-export { Cesium3DTilesetMetadata };
 export default Cesium3DTilesetMetadata;

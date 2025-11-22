@@ -8,7 +8,7 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
  *
  * @private
  */
-function getComponentReader(componentType) {
+function getComponentReader(componentType: any) {
   switch (componentType) {
     case ComponentDatatype.BYTE:
       return function (
@@ -144,5 +144,4 @@ function getComponentReader(componentType) {
  * @private
  */
 
-export { getComponentReader };
 export default getComponentReader;

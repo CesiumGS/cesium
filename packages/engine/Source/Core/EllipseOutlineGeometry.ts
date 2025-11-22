@@ -17,7 +17,7 @@ import PrimitiveType from "./PrimitiveType.js";
 const scratchCartesian1 = new Cartesian3();
 let boundingSphereCenter = new Cartesian3();
 
-function computeEllipse(options) {
+function computeEllipse(options: any) {
   const center = options.center;
   boundingSphereCenter = Cartesian3.multiplyByScalar(
     options.ellipsoid.geodeticSurfaceNormal(center, boundingSphereCenter),
@@ -68,7 +68,7 @@ function computeEllipse(options) {
 
 const topBoundingSphere = new BoundingSphere();
 const bottomBoundingSphere = new BoundingSphere();
-function computeExtrudedEllipse(options) {
+function computeExtrudedEllipse(options: any) {
   const center = options.center;
   const ellipsoid = options.ellipsoid;
   const semiMajorAxis = options.semiMajorAxis;
@@ -210,7 +210,7 @@ function computeExtrudedEllipse(options) {
  * });
  * const geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
  */
-function EllipseOutlineGeometry(options) {
+function EllipseOutlineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const center = options.center;
@@ -219,7 +219,25 @@ function EllipseOutlineGeometry(options) {
   const semiMinorAxis = options.semiMinorAxis;
   const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(center)) {
+    throw new DeveloperError("center is required.");
+  }
+  if (!defined(semiMajorAxis)) {
+    throw new DeveloperError("semiMajorAxis is required.");
+  }
+  if (!defined(semiMinorAxis)) {
+    throw new DeveloperError("semiMinorAxis is required.");
+  }
+  if (semiMajorAxis < semiMinorAxis) {
+    throw new DeveloperError(
+      "semiMajorAxis must be greater than or equal to the semiMinorAxis.",
+    );
+  }
+  if (granularity <= 0.0) {
+    throw new DeveloperError("granularity must be greater than zero.");
+  }
+  //>>includeEnd('debug');
 
   const height = options.height ?? 0.0;
   const extrudedHeight = options.extrudedHeight ?? height;
@@ -257,7 +275,14 @@ EllipseOutlineGeometry.packedLength =
  * @returns {number[]} The array that was packed into
  */
 EllipseOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -303,7 +328,11 @@ const scratchOptions = {
  * @returns {EllipseOutlineGeometry} The modified result parameter or a new EllipseOutlineGeometry instance if one was not provided.
  */
 EllipseOutlineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -419,5 +448,4 @@ EllipseOutlineGeometry.createGeometry = function (ellipseGeometry) {
     offsetAttribute: ellipseGeometry._offsetAttribute,
   });
 };
-export { EllipseOutlineGeometry };
 export default EllipseOutlineGeometry;

@@ -25,8 +25,15 @@ import Visibility from "./Visibility.js";
  * const occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 1);
  * const occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
  */
-function Occluder(occluderBoundingSphere, cameraPosition) {
-  ;
+function Occluder(occluderBoundingSphere: any, cameraPosition: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(occluderBoundingSphere)) {
+    throw new DeveloperError("occluderBoundingSphere is required.");
+  }
+  if (!defined(cameraPosition)) {
+    throw new DeveloperError("camera position is required.");
+  }
+  //>>includeEnd('debug');
 
   this._occluderPosition = Cartesian3.clone(occluderBoundingSphere.center);
   this._occluderRadius = occluderBoundingSphere.radius;
@@ -72,7 +79,11 @@ Object.defineProperties(Occluder.prototype, {
    */
   cameraPosition: {
     set: function (cameraPosition) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(cameraPosition)) {
+        throw new DeveloperError("cameraPosition is required.");
+      }
+      //>>includeEnd('debug');
 
       cameraPosition = Cartesian3.clone(cameraPosition, this._cameraPosition);
 
@@ -135,7 +146,15 @@ Occluder.fromBoundingSphere = function (
   cameraPosition,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(occluderBoundingSphere)) {
+    throw new DeveloperError("occluderBoundingSphere is required.");
+  }
+
+  if (!defined(cameraPosition)) {
+    throw new DeveloperError("camera position is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Occluder(occluderBoundingSphere, cameraPosition);
@@ -282,7 +301,11 @@ const tempScratch = new Cartesian3();
  * occluder.computeVisibility(sphere2); //returns Visibility.NONE
  */
 Occluder.prototype.computeVisibility = function (occludeeBS) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(occludeeBS)) {
+    throw new DeveloperError("occludeeBS is required.");
+  }
+  //>>includeEnd('debug');
 
   // If the occludee radius is larger than the occluders, this will return that
   // the entire ocludee is visible, even though that may not be the case, though this should
@@ -382,14 +405,30 @@ Occluder.computeOccludeePoint = function (
   occludeePosition,
   positions,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(occluderBoundingSphere)) {
+    throw new DeveloperError("occluderBoundingSphere is required.");
+  }
+  if (!defined(positions)) {
+    throw new DeveloperError("positions is required.");
+  }
+  if (positions.length === 0) {
+    throw new DeveloperError("positions must contain at least one element");
+  }
+  //>>includeEnd('debug');
 
   const occludeePos = Cartesian3.clone(occludeePosition);
   const occluderPosition = Cartesian3.clone(occluderBoundingSphere.center);
   const occluderRadius = occluderBoundingSphere.radius;
   const numPositions = positions.length;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (Cartesian3.equals(occluderPosition, occludeePosition)) {
+    throw new DeveloperError(
+      "occludeePosition must be different than occluderBoundingSphere.center",
+    );
+  }
+  //>>includeEnd('debug');
 
   // Compute a plane with a normal from the occluder to the occludee position.
   const occluderPlaneNormal = Cartesian3.normalize(
@@ -461,7 +500,11 @@ const computeOccludeePointFromRectangleScratch = [];
  * which is a boolean value.
  */
 Occluder.computeOccludeePointFromRectangle = function (rectangle, ellipsoid) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(rectangle)) {
+    throw new DeveloperError("rectangle is required.");
+  }
+  //>>includeEnd('debug');
 
   ellipsoid = ellipsoid ?? Ellipsoid.default;
   const positions = Rectangle.subsample(
@@ -681,5 +724,4 @@ Occluder._horizonToPlaneNormalDotProduct = function (
   const dot1 = Cartesian3.dot(occluderPlaneNormal, tempVec);
   return dot0 < dot1 ? dot0 : dot1;
 };
-export { Occluder };
 export default Occluder;

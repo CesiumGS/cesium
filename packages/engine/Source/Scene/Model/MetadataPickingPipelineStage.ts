@@ -93,5 +93,4 @@ MetadataPickingPipelineStage.process = function (
   );
 };
 
-export { MetadataPickingPipelineStage };
 export default MetadataPickingPipelineStage;

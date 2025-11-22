@@ -18,13 +18,7 @@ import Vector3DTileGeometry from "./Vector3DTileGeometry.js";
  *
  * @private
  */
-function Geometry3DTileContent(
-  tileset,
-  tile,
-  resource,
-  arrayBuffer,
-  byteOffset,
-) {
+function Geometry3DTileContent(tileset: any, tile: any, resource: any, arrayBuffer: any, byteOffset: any, ) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -155,7 +149,7 @@ Object.defineProperties(Geometry3DTileContent.prototype, {
   },
 });
 
-function createColorChangedCallback(content) {
+function createColorChangedCallback(content: any) {
   return function (batchId, color) {
     if (defined(content._geometries)) {
       content._geometries.updateCommands(batchId, color);
@@ -163,7 +157,7 @@ function createColorChangedCallback(content) {
   };
 }
 
-function getBatchIds(featureTableJson, featureTableBinary) {
+function getBatchIds(featureTableJson: any, featureTableBinary: any) {
   let boxBatchIds;
   let cylinderBatchIds;
   let ellipsoidBatchIds;
@@ -278,7 +272,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 
 const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-function initialize(content, arrayBuffer, byteOffset) {
+function initialize(content: any, arrayBuffer: any, byteOffset: any) {
   byteOffset = byteOffset ?? 0;
 
   const uint8Array = new Uint8Array(arrayBuffer);
@@ -461,7 +455,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   return Promise.resolve(content);
 }
 
-function createFeatures(content) {
+function createFeatures(content: any) {
   const featuresLength = content.featuresLength;
   if (!defined(content._features) && featuresLength > 0) {
     const features = new Array(featuresLength);
@@ -477,7 +471,16 @@ Geometry3DTileContent.prototype.hasProperty = function (batchId, name) {
 };
 
 Geometry3DTileContent.prototype.getFeature = function (batchId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  const featuresLength = this.featuresLength;
+  if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
+    throw new DeveloperError(
+      `batchId is required and between zero and featuresLength - 1 (${
+        featuresLength - 1
+      }).`,
+    );
+  }
+  //>>includeEnd('debug');
 
   createFeatures(this);
   return this._features[batchId];
@@ -522,5 +525,4 @@ Geometry3DTileContent.prototype.destroy = function () {
   this._batchTable = this._batchTable && this._batchTable.destroy();
   return destroyObject(this);
 };
-export { Geometry3DTileContent };
 export default Geometry3DTileContent;

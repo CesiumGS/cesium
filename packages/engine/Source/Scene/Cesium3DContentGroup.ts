@@ -15,9 +15,11 @@ import Frozen from "../Core/Frozen.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function Cesium3DContentGroup(options) {
+function Cesium3DContentGroup(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.metadata", options.metadata);
+  //>>includeEnd('debug');
 
   this._metadata = options.metadata;
 }
@@ -39,5 +41,4 @@ Object.defineProperties(Cesium3DContentGroup.prototype, {
   },
 });
 
-export { Cesium3DContentGroup };
 export default Cesium3DContentGroup;

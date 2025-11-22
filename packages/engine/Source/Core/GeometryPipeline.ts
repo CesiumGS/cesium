@@ -32,7 +32,7 @@ import Tipsify from "./Tipsify.js";
  */
 const GeometryPipeline = {};
 
-function addTriangle(lines, index, i0, i1, i2) {
+function addTriangle(lines: any, index: any, i0: any, i1: any, i2: any) {
   lines[index++] = i0;
   lines[index++] = i1;
 
@@ -43,7 +43,7 @@ function addTriangle(lines, index, i0, i1, i2) {
   lines[index] = i0;
 }
 
-function trianglesToLines(triangles) {
+function trianglesToLines(triangles: any) {
   const count = triangles.length;
   const size = (count / 3) * 6;
   const lines = IndexDatatype.createTypedArray(count, size);
@@ -56,7 +56,7 @@ function trianglesToLines(triangles) {
   return lines;
 }
 
-function triangleStripToLines(triangles) {
+function triangleStripToLines(triangles: any) {
   const count = triangles.length;
   if (count >= 3) {
     const size = (count - 2) * 6;
@@ -81,7 +81,7 @@ function triangleStripToLines(triangles) {
   return new Uint16Array();
 }
 
-function triangleFanToLines(triangles) {
+function triangleFanToLines(triangles: any) {
   if (triangles.length > 0) {
     const count = triangles.length - 1;
     const size = (count - 1) * 6;
@@ -116,7 +116,11 @@ function triangleFanToLines(triangles) {
  * geometry = Cesium.GeometryPipeline.toWireframe(geometry);
  */
 GeometryPipeline.toWireframe = function (geometry) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("geometry is required.");
+  }
+  //>>includeEnd('debug');
 
   const indices = geometry.indices;
   if (defined(indices)) {
@@ -130,7 +134,12 @@ GeometryPipeline.toWireframe = function (geometry) {
       case PrimitiveType.TRIANGLE_FAN:
         geometry.indices = triangleFanToLines(indices);
         break;
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      default:
+        throw new DeveloperError(
+          "geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.",
+        );
+      //>>includeEnd('debug');
     }
 
     geometry.primitiveType = PrimitiveType.LINES;
@@ -161,7 +170,19 @@ GeometryPipeline.createLineSegmentsForVectors = function (
 ) {
   attributeName = attributeName ?? "normal";
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("geometry is required.");
+  }
+  if (!defined(geometry.attributes.position)) {
+    throw new DeveloperError("geometry.attributes.position is required.");
+  }
+  if (!defined(geometry.attributes[attributeName])) {
+    throw new DeveloperError(
+      `geometry.attributes must have an attribute with the same name as the attributeName parameter, ${attributeName}.`,
+    );
+  }
+  //>>includeEnd('debug');
 
   length = length ?? 10000.0;
 
@@ -217,7 +238,11 @@ GeometryPipeline.createLineSegmentsForVectors = function (
  * // }
  */
 GeometryPipeline.createAttributeLocations = function (geometry) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("geometry is required.");
+  }
+  //>>includeEnd('debug');
 
   // There can be a WebGL performance hit when attribute 0 is disabled, so
   // assign attribute locations to well-known attributes.
@@ -288,7 +313,11 @@ GeometryPipeline.createAttributeLocations = function (geometry) {
  * @see GeometryPipeline.reorderForPostVertexCache
  */
 GeometryPipeline.reorderForPreVertexCache = function (geometry) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("geometry is required.");
+  }
+  //>>includeEnd('debug');
 
   const numVertices = Geometry.computeNumberOfVertices(geometry);
 
@@ -381,7 +410,11 @@ GeometryPipeline.reorderForPostVertexCache = function (
   geometry,
   cacheCapacity,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("geometry is required.");
+  }
+  //>>includeEnd('debug');
 
   const indices = geometry.indices;
   if (geometry.primitiveType === PrimitiveType.TRIANGLES && defined(indices)) {
@@ -402,7 +435,7 @@ GeometryPipeline.reorderForPostVertexCache = function (
   return geometry;
 };
 
-function copyAttributesDescriptions(attributes) {
+function copyAttributesDescriptions(attributes: any) {
   const newAttributes = {};
 
   for (const attribute in attributes) {
@@ -424,7 +457,7 @@ function copyAttributesDescriptions(attributes) {
   return newAttributes;
 }
 
-function copyVertex(destinationAttributes, sourceAttributes, index) {
+function copyVertex(destinationAttributes: any, sourceAttributes: any, index: any) {
   for (const attribute in sourceAttributes) {
     if (
       sourceAttributes.hasOwnProperty(attribute) &&
@@ -460,7 +493,21 @@ function copyVertex(destinationAttributes, sourceAttributes, index) {
  * const geometries = Cesium.GeometryPipeline.fitToUnsignedShortIndices(geometry);
  */
 GeometryPipeline.fitToUnsignedShortIndices = function (geometry) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("geometry is required.");
+  }
+  if (
+    defined(geometry.indices) &&
+    geometry.primitiveType !== PrimitiveType.TRIANGLES &&
+    geometry.primitiveType !== PrimitiveType.LINES &&
+    geometry.primitiveType !== PrimitiveType.POINTS
+  ) {
+    throw new DeveloperError(
+      "geometry.primitiveType must equal to PrimitiveType.TRIANGLES, PrimitiveType.LINES, or PrimitiveType.POINTS.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const geometries = [];
 
@@ -573,7 +620,33 @@ GeometryPipeline.projectTo2D = function (
   attributeName2D,
   projection,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("geometry is required.");
+  }
+  if (!defined(attributeName)) {
+    throw new DeveloperError("attributeName is required.");
+  }
+  if (!defined(attributeName3D)) {
+    throw new DeveloperError("attributeName3D is required.");
+  }
+  if (!defined(attributeName2D)) {
+    throw new DeveloperError("attributeName2D is required.");
+  }
+  if (!defined(geometry.attributes[attributeName])) {
+    throw new DeveloperError(
+      `geometry must have attribute matching the attributeName argument: ${attributeName}.`,
+    );
+  }
+  if (
+    geometry.attributes[attributeName].componentDatatype !==
+    ComponentDatatype.DOUBLE
+  ) {
+    throw new DeveloperError(
+      "The attribute componentDatatype must be ComponentDatatype.DOUBLE.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const attribute = geometry.attributes[attributeName];
   projection = defined(projection) ? projection : new GeographicProjection();
@@ -595,7 +668,13 @@ GeometryPipeline.projectTo2D = function (
       value,
       scratchProjectTo2DCartographic,
     );
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(lonLat)) {
+      throw new DeveloperError(
+        `Could not project point (${value.x}, ${value.y}, ${value.z}) to 2D.`,
+      );
+    }
+    //>>includeEnd('debug');
 
     const projectedLonLat = projection.project(
       lonLat,
@@ -651,7 +730,33 @@ GeometryPipeline.encodeAttribute = function (
   attributeHighName,
   attributeLowName,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("geometry is required.");
+  }
+  if (!defined(attributeName)) {
+    throw new DeveloperError("attributeName is required.");
+  }
+  if (!defined(attributeHighName)) {
+    throw new DeveloperError("attributeHighName is required.");
+  }
+  if (!defined(attributeLowName)) {
+    throw new DeveloperError("attributeLowName is required.");
+  }
+  if (!defined(geometry.attributes[attributeName])) {
+    throw new DeveloperError(
+      `geometry must have attribute matching the attributeName argument: ${attributeName}.`,
+    );
+  }
+  if (
+    geometry.attributes[attributeName].componentDatatype !==
+    ComponentDatatype.DOUBLE
+  ) {
+    throw new DeveloperError(
+      "The attribute componentDatatype must be ComponentDatatype.DOUBLE.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const attribute = geometry.attributes[attributeName];
   const values = attribute.values;
@@ -684,7 +789,7 @@ GeometryPipeline.encodeAttribute = function (
 
 let scratchCartesian3 = new Cartesian3();
 
-function transformPoint(matrix, attribute) {
+function transformPoint(matrix: any, attribute: any) {
   if (defined(attribute)) {
     const values = attribute.values;
     const length = values.length;
@@ -696,7 +801,7 @@ function transformPoint(matrix, attribute) {
   }
 }
 
-function transformVector(matrix, attribute) {
+function transformVector(matrix: any, attribute: any) {
   if (defined(attribute)) {
     const values = attribute.values;
     const length = values.length;
@@ -728,7 +833,11 @@ const normalMatrix = new Matrix3();
  * Cesium.GeometryPipeline.transformToWorldCoordinates(instance);
  */
 GeometryPipeline.transformToWorldCoordinates = function (instance) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(instance)) {
+    throw new DeveloperError("instance is required.");
+  }
+  //>>includeEnd('debug');
 
   const modelMatrix = instance.modelMatrix;
 
@@ -772,7 +881,7 @@ GeometryPipeline.transformToWorldCoordinates = function (instance) {
   return instance;
 };
 
-function findAttributesInAllGeometries(instances, propertyName) {
+function findAttributesInAllGeometries(instances: any, propertyName: any) {
   const length = instances.length;
 
   const attributesInAllGeometries = {};
@@ -827,7 +936,7 @@ function findAttributesInAllGeometries(instances, propertyName) {
 
 const tempScratch = new Cartesian3();
 
-function combineGeometries(instances, propertyName) {
+function combineGeometries(instances: any, propertyName: any) {
   const length = instances.length;
 
   let name;
@@ -839,7 +948,23 @@ function combineGeometries(instances, propertyName) {
   const haveIndices = defined(instances[0][propertyName].indices);
   const primitiveType = instances[0][propertyName].primitiveType;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  for (i = 1; i < length; ++i) {
+    if (!Matrix4.equals(instances[i].modelMatrix, m)) {
+      throw new DeveloperError("All instances must have the same modelMatrix.");
+    }
+    if (defined(instances[i][propertyName].indices) !== haveIndices) {
+      throw new DeveloperError(
+        "All instance geometries must have an indices or not have one.",
+      );
+    }
+    if (instances[i][propertyName].primitiveType !== primitiveType) {
+      throw new DeveloperError(
+        "All instance geometries must have the same primitiveType.",
+      );
+    }
+  }
+  //>>includeEnd('debug');
 
   // Find subset of attributes in all geometries
   const attributes = findAttributesInAllGeometries(instances, propertyName);
@@ -974,7 +1099,13 @@ function combineGeometries(instances, propertyName) {
  * @see GeometryPipeline.transformToWorldCoordinates
  */
 GeometryPipeline.combineInstances = function (instances) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(instances) || instances.length < 1) {
+    throw new DeveloperError(
+      "instances is required and must have length greater than zero.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const instanceGeometry = [];
   const instanceSplitGeometry = [];
@@ -1029,7 +1160,32 @@ const v2 = new Cartesian3();
  * Cesium.GeometryPipeline.computeNormal(geometry);
  */
 GeometryPipeline.computeNormal = function (geometry) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("geometry is required.");
+  }
+  if (
+    !defined(geometry.attributes.position) ||
+    !defined(geometry.attributes.position.values)
+  ) {
+    throw new DeveloperError(
+      "geometry.attributes.position.values is required.",
+    );
+  }
+  if (!defined(geometry.indices)) {
+    throw new DeveloperError("geometry.indices is required.");
+  }
+  if (geometry.indices.length < 2 || geometry.indices.length % 3 !== 0) {
+    throw new DeveloperError(
+      "geometry.indices length must be greater than 0 and be a multiple of 3.",
+    );
+  }
+  if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
+    throw new DeveloperError(
+      "geometry.primitiveType must be PrimitiveType.TRIANGLES.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const indices = geometry.indices;
   const attributes = geometry.attributes;
@@ -1175,12 +1331,41 @@ const tScratch = new Cartesian3();
  * Cesium.GeometryPipeline.computeTangentAndBiTangent(geometry);
  */
 GeometryPipeline.computeTangentAndBitangent = function (geometry) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("geometry is required.");
+  }
+  //>>includeEnd('debug');
 
   const attributes = geometry.attributes;
   const indices = geometry.indices;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(attributes.position) || !defined(attributes.position.values)) {
+    throw new DeveloperError(
+      "geometry.attributes.position.values is required.",
+    );
+  }
+  if (!defined(attributes.normal) || !defined(attributes.normal.values)) {
+    throw new DeveloperError("geometry.attributes.normal.values is required.");
+  }
+  if (!defined(attributes.st) || !defined(attributes.st.values)) {
+    throw new DeveloperError("geometry.attributes.st.values is required.");
+  }
+  if (!defined(indices)) {
+    throw new DeveloperError("geometry.indices is required.");
+  }
+  if (indices.length < 2 || indices.length % 3 !== 0) {
+    throw new DeveloperError(
+      "geometry.indices length must be greater than 0 and be a multiple of 3.",
+    );
+  }
+  if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
+    throw new DeveloperError(
+      "geometry.primitiveType must be PrimitiveType.TRIANGLES.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const vertices = geometry.attributes.position.values;
   const normals = geometry.attributes.normal.values;
@@ -1293,7 +1478,11 @@ let encodeResult2 = new Cartesian2();
  * geometry = Cesium.GeometryPipeline.compressVertices(geometry);
  */
 GeometryPipeline.compressVertices = function (geometry) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(geometry)) {
+    throw new DeveloperError("geometry is required.");
+  }
+  //>>includeEnd('debug');
 
   const extrudeAttribute = geometry.attributes.extrudeDirection;
   let i;
@@ -1438,13 +1627,22 @@ GeometryPipeline.compressVertices = function (geometry) {
   return geometry;
 };
 
-function indexTriangles(geometry) {
+function indexTriangles(geometry: any) {
   if (defined(geometry.indices)) {
     return geometry;
   }
   const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (numberOfVertices < 3) {
+    throw new DeveloperError("The number of vertices must be at least three.");
+  }
+  if (numberOfVertices % 3 !== 0) {
+    throw new DeveloperError(
+      "The number of vertices must be a multiple of three.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
@@ -1458,10 +1656,14 @@ function indexTriangles(geometry) {
   return geometry;
 }
 
-function indexTriangleFan(geometry) {
+function indexTriangleFan(geometry: any) {
   const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (numberOfVertices < 3) {
+    throw new DeveloperError("The number of vertices must be at least three.");
+  }
+  //>>includeEnd('debug');
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
@@ -1483,10 +1685,14 @@ function indexTriangleFan(geometry) {
   return geometry;
 }
 
-function indexTriangleStrip(geometry) {
+function indexTriangleStrip(geometry: any) {
   const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (numberOfVertices < 3) {
+    throw new DeveloperError("The number of vertices must be at least 3.");
+  }
+  //>>includeEnd('debug');
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
@@ -1520,13 +1726,20 @@ function indexTriangleStrip(geometry) {
   return geometry;
 }
 
-function indexLines(geometry) {
+function indexLines(geometry: any) {
   if (defined(geometry.indices)) {
     return geometry;
   }
   const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (numberOfVertices < 2) {
+    throw new DeveloperError("The number of vertices must be at least two.");
+  }
+  if (numberOfVertices % 2 !== 0) {
+    throw new DeveloperError("The number of vertices must be a multiple of 2.");
+  }
+  //>>includeEnd('debug');
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
@@ -1540,10 +1753,14 @@ function indexLines(geometry) {
   return geometry;
 }
 
-function indexLineStrip(geometry) {
+function indexLineStrip(geometry: any) {
   const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (numberOfVertices < 2) {
+    throw new DeveloperError("The number of vertices must be at least two.");
+  }
+  //>>includeEnd('debug');
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
@@ -1562,10 +1779,14 @@ function indexLineStrip(geometry) {
   return geometry;
 }
 
-function indexLineLoop(geometry) {
+function indexLineLoop(geometry: any) {
   const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (numberOfVertices < 2) {
+    throw new DeveloperError("The number of vertices must be at least two.");
+  }
+  //>>includeEnd('debug');
 
   const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
@@ -1589,7 +1810,7 @@ function indexLineLoop(geometry) {
   return geometry;
 }
 
-function indexPrimitive(geometry) {
+function indexPrimitive(geometry: any) {
   switch (geometry.primitiveType) {
     case PrimitiveType.TRIANGLE_FAN:
       return indexTriangleFan(geometry);
@@ -1608,7 +1829,7 @@ function indexPrimitive(geometry) {
   return geometry;
 }
 
-function offsetPointFromXZPlane(p, isBehind) {
+function offsetPointFromXZPlane(p: any, isBehind: any) {
   if (Math.abs(p.y) < CesiumMath.EPSILON6) {
     if (isBehind) {
       p.y = -CesiumMath.EPSILON6;
@@ -1618,7 +1839,7 @@ function offsetPointFromXZPlane(p, isBehind) {
   }
 }
 
-function offsetTriangleFromXZPlane(p0, p1, p2) {
+function offsetTriangleFromXZPlane(p0: any, p1: any, p2: any) {
   if (p0.y !== 0.0 && p1.y !== 0.0 && p2.y !== 0.0) {
     offsetPointFromXZPlane(p0, p0.y < 0.0);
     offsetPointFromXZPlane(p1, p1.y < 0.0);
@@ -1650,7 +1871,7 @@ function offsetTriangleFromXZPlane(p0, p1, p2) {
 }
 
 const c3 = new Cartesian3();
-function getXZIntersectionOffsetPoints(p, p1, u1, v1) {
+function getXZIntersectionOffsetPoints(p: any, p1: any, u1: any, v1: any) {
   Cartesian3.add(
     p,
     Cartesian3.multiplyByScalar(
@@ -1675,7 +1896,7 @@ const splitTriangleResult = {
   indices: new Array(3 * 3),
 };
 
-function splitTriangle(p0, p1, p2) {
+function splitTriangle(p0: any, p1: any, p2: any) {
   // In ellipsoid coordinates, for a triangle approximately on the
   // ellipsoid to cross the IDL, first it needs to be on the
   // negative side of the plane x = 0.
@@ -1779,7 +2000,7 @@ function splitTriangle(p0, p1, p2) {
   return splitTriangleResult;
 }
 
-function updateGeometryAfterSplit(geometry, computeBoundingSphere) {
+function updateGeometryAfterSplit(geometry: any, computeBoundingSphere: any) {
   const attributes = geometry.attributes;
 
   if (attributes.position.values.length === 0) {
@@ -1815,7 +2036,7 @@ function updateGeometryAfterSplit(geometry, computeBoundingSphere) {
   return geometry;
 }
 
-function copyGeometryForSplit(geometry) {
+function copyGeometryForSplit(geometry: any) {
   const attributes = geometry.attributes;
   const copiedAttributes = {};
 
@@ -1842,7 +2063,7 @@ function copyGeometryForSplit(geometry) {
   });
 }
 
-function updateInstanceAfterSplit(instance, westGeometry, eastGeometry) {
+function updateInstanceAfterSplit(instance: any, westGeometry: any, eastGeometry: any) {
   const computeBoundingSphere = defined(instance.geometry.boundingSphere);
 
   westGeometry = updateGeometryAfterSplit(westGeometry, computeBoundingSphere);
@@ -1859,10 +2080,7 @@ function updateInstanceAfterSplit(instance, westGeometry, eastGeometry) {
   }
 }
 
-function generateBarycentricInterpolateFunction(
-  CartesianType,
-  numberOfComponents,
-) {
+function generateBarycentricInterpolateFunction(CartesianType: any, numberOfComponents: any, ) {
   const v0Scratch = new CartesianType();
   const v1Scratch = new CartesianType();
   const v2Scratch = new CartesianType();
@@ -1944,24 +2162,7 @@ const p1Scratch = new Cartesian3();
 const p2Scratch = new Cartesian3();
 const barycentricScratch = new Cartesian3();
 
-function computeTriangleAttributes(
-  i0,
-  i1,
-  i2,
-  point,
-  positions,
-  normals,
-  tangents,
-  bitangents,
-  texCoords,
-  extrudeDirections,
-  applyOffset,
-  currentAttributes,
-  customAttributeNames,
-  customAttributesLength,
-  allAttributes,
-  insertedIndex,
-) {
+function computeTriangleAttributes(i0: any, i1: any, i2: any, point: any, positions: any, normals: any, tangents: any, bitangents: any, texCoords: any, extrudeDirections: any, applyOffset: any, currentAttributes: any, customAttributeNames: any, customAttributesLength: any, allAttributes: any, insertedIndex: any, ) {
   if (
     !defined(normals) &&
     !defined(tangents) &&
@@ -2091,15 +2292,7 @@ function computeTriangleAttributes(
   }
 }
 
-function genericInterpolate(
-  i0,
-  i1,
-  i2,
-  coords,
-  insertedIndex,
-  sourceAttribute,
-  currentAttribute,
-) {
+function genericInterpolate(i0: any, i1: any, i2: any, coords: any, insertedIndex: any, sourceAttribute: any, currentAttribute: any, ) {
   const componentsPerAttribute = sourceAttribute.componentsPerAttribute;
   const sourceValues = sourceAttribute.values;
   const currentValues = currentAttribute.values;
@@ -2148,14 +2341,7 @@ function genericInterpolate(
   }
 }
 
-function insertSplitPoint(
-  currentAttributes,
-  currentIndices,
-  currentIndexMap,
-  indices,
-  currentIndex,
-  point,
-) {
+function insertSplitPoint(currentAttributes: any, currentIndices: any, currentIndexMap: any, indices: any, currentIndex: any, point: any, ) {
   const insertIndex = currentAttributes.position.values.length / 3;
 
   if (currentIndex !== -1) {
@@ -2187,7 +2373,7 @@ const NAMED_ATTRIBUTES = {
   extrudeDirection: true,
   applyOffset: true,
 };
-function splitLongitudeTriangles(instance) {
+function splitLongitudeTriangles(instance: any) {
   const geometry = instance.geometry;
   const attributes = geometry.attributes;
   const positions = attributes.position.values;
@@ -2406,15 +2592,7 @@ const xzPlane = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);
 const offsetScratch = new Cartesian3();
 const offsetPointScratch = new Cartesian3();
 
-function computeLineAttributes(
-  i0,
-  i1,
-  point,
-  positions,
-  insertIndex,
-  currentAttributes,
-  applyOffset,
-) {
+function computeLineAttributes(i0: any, i1: any, point: any, positions: any, insertIndex: any, currentAttributes: any, applyOffset: any, ) {
   if (!defined(applyOffset)) {
     return;
   }
@@ -2427,7 +2605,7 @@ function computeLineAttributes(
   }
 }
 
-function splitLongitudeLines(instance) {
+function splitLongitudeLines(instance: any) {
   const geometry = instance.geometry;
   const attributes = geometry.attributes;
   const positions = attributes.position.values;
@@ -2655,7 +2833,7 @@ const cartesian3Scratch6 = new Cartesian3();
 
 const cartesian4Scratch0 = new Cartesian4();
 
-function updateAdjacencyAfterSplit(geometry) {
+function updateAdjacencyAfterSplit(geometry: any) {
   const attributes = geometry.attributes;
   const positions = attributes.position.values;
   const prevPositions = attributes.prevPosition.values;
@@ -2709,7 +2887,7 @@ function updateAdjacencyAfterSplit(geometry) {
 const offsetScalar = 5.0 * CesiumMath.EPSILON9;
 const coplanarOffset = CesiumMath.EPSILON6;
 
-function splitLongitudePolyline(instance) {
+function splitLongitudePolyline(instance: any) {
   const geometry = instance.geometry;
   const attributes = geometry.attributes;
   const positions = attributes.position.values;
@@ -3025,7 +3203,11 @@ function splitLongitudePolyline(instance) {
  * instance = Cesium.GeometryPipeline.splitLongitude(instance);
  */
 GeometryPipeline.splitLongitude = function (instance) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(instance)) {
+    throw new DeveloperError("instance is required.");
+  }
+  //>>includeEnd('debug');
 
   const geometry = instance.geometry;
   const boundingSphere = geometry.boundingSphere;
@@ -3063,5 +3245,4 @@ GeometryPipeline.splitLongitude = function (instance) {
 
   return instance;
 };
-export { GeometryPipeline };
 export default GeometryPipeline;

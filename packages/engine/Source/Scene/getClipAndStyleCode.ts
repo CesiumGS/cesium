@@ -9,12 +9,12 @@ import Check from "../Core/Check.js";
  * @returns {string} A string containing GLSL that clips and styles the current fragment.
  * @private
  */
-function getClipAndStyleCode(
-  samplerUniformName,
-  matrixUniformName,
-  styleUniformName,
-) {
-  ;
+function getClipAndStyleCode(samplerUniformName: any, matrixUniformName: any, styleUniformName: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("samplerUniformName", samplerUniformName);
+  Check.typeOf.string("matrixUniformName", matrixUniformName);
+  Check.typeOf.string("styleUniformName", styleUniformName);
+  //>>includeEnd('debug');
 
   const shaderCode =
     `    float clipDistance = clip(gl_FragCoord, ${samplerUniformName}, ${matrixUniformName}); \n` +
@@ -27,5 +27,4 @@ function getClipAndStyleCode(
     `    } \n`;
   return shaderCode;
 }
-export { getClipAndStyleCode };
 export default getClipAndStyleCode;

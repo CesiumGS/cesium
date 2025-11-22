@@ -30,7 +30,7 @@ import Event from "../Core/Event.js";
  * scene.primitives.add(collection);  // Add collection
  * scene.primitives.add(labels);      // Add regular primitive
  */
-function PrimitiveCollection(options) {
+function PrimitiveCollection(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._primitives = [];
@@ -138,7 +138,20 @@ Object.defineProperties(PrimitiveCollection.prototype, {
 PrimitiveCollection.prototype.add = function (primitive, index) {
   const hasIndex = defined(index);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(primitive)) {
+    throw new DeveloperError("primitive is required.");
+  }
+  if (hasIndex) {
+    if (index < 0) {
+      throw new DeveloperError("index must be greater than or equal to zero.");
+    } else if (index > this._primitives.length) {
+      throw new DeveloperError(
+        "index must be less than or equal to the number of primitives.",
+      );
+    }
+  }
+  //>>includeEnd('debug');
 
   const external = (primitive._external = primitive._external || {});
   const composites = (external._composites = external._composites || {});
@@ -269,8 +282,12 @@ PrimitiveCollection.prototype.contains = function (primitive) {
   );
 };
 
-function getPrimitiveIndex(compositePrimitive, primitive) {
-  ;
+function getPrimitiveIndex(compositePrimitive: any, primitive: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!compositePrimitive.contains(primitive)) {
+    throw new DeveloperError("primitive is not in this collection.");
+  }
+  //>>includeEnd('debug');
 
   return compositePrimitive._primitives.indexOf(primitive);
 }
@@ -400,7 +417,11 @@ PrimitiveCollection.prototype.lowerToBottom = function (primitive) {
  * @see PrimitiveCollection#length
  */
 PrimitiveCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.");
+  }
+  //>>includeEnd('debug');
 
   return this._primitives[index];
 };
@@ -508,5 +529,4 @@ PrimitiveCollection.prototype.destroy = function () {
   this.removeAll();
   return destroyObject(this);
 };
-export { PrimitiveCollection };
 export default PrimitiveCollection;

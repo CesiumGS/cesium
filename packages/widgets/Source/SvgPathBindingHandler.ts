@@ -75,5 +75,4 @@ const SvgPathBindingHandler = {
     knockout.virtualElements.allowedBindings.cesiumSvgPath = true;
   },
 };
-export { SvgPathBindingHandler };
 export default SvgPathBindingHandler;

@@ -14,7 +14,7 @@ import Property from "./Property.js";
  *
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  */
-function CompositePositionProperty(referenceFrame) {
+function CompositePositionProperty(referenceFrame: any) {
   this._referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
   this._definitionChanged = new Event();
   this._composite = new CompositeProperty();
@@ -111,7 +111,14 @@ CompositePositionProperty.prototype.getValueInReferenceFrame = function (
   referenceFrame,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  if (!defined(referenceFrame)) {
+    throw new DeveloperError("referenceFrame is required.");
+  }
+  //>>includeEnd('debug');
 
   const innerProperty =
     this._composite._intervals.findDataForIntervalContainingDate(time);
@@ -143,5 +150,4 @@ CompositePositionProperty.prototype.equals = function (other) {
 CompositePositionProperty.prototype._raiseDefinitionChanged = function () {
   this._definitionChanged.raiseEvent(this);
 };
-export { CompositePositionProperty };
 export default CompositePositionProperty;

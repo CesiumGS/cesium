@@ -18,7 +18,7 @@ import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
  * @alias PointCloudShading
  * @constructor
  */
-function PointCloudShading(options) {
+function PointCloudShading(options: any) {
   const pointCloudShading = options ?? {};
 
   /**
@@ -101,5 +101,4 @@ function PointCloudShading(options) {
 PointCloudShading.isSupported = function (scene) {
   return PointCloudEyeDomeLighting.isSupported(scene.context);
 };
-export { PointCloudShading };
 export default PointCloudShading;

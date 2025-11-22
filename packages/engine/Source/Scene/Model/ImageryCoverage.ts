@@ -171,7 +171,7 @@ class ImageryCoverage {
     // A function that returns an imagery rectangle, based on (x, y, level),
     // clipped to the imagery bounds (or undefined if there is no intersection
     // between the imagery rectangle and the bounds)
-    const computeClippedImageryRectangle = (x, y, level) => {
+    const computeClippedImageryRectangle = (x: any, y: any, level: any) => {
       const localImageryRectangle = imageryTilingScheme.tileXYToRectangle(
         x,
         y,
@@ -485,5 +485,4 @@ class ImageryCoverage {
   }
 }
 
-export { ImageryCoverage };
 export default ImageryCoverage;

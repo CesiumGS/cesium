@@ -111,7 +111,7 @@ const GroundPrimitiveUniformMap = {
  * @see GeometryInstance
  * @see Appearance
  */
-function GroundPrimitive(options) {
+function GroundPrimitive(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   let appearance = options.appearance;
@@ -359,7 +359,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
  */
 GroundPrimitive.isSupported = ClassificationPrimitive.isSupported;
 
-function getComputeMaximumHeightFunction(primitive) {
+function getComputeMaximumHeightFunction(primitive: any) {
   return function (granularity, ellipsoid) {
     const r = ellipsoid.maximumRadius;
     const delta = r / Math.cos(granularity * 0.5) - r;
@@ -367,7 +367,7 @@ function getComputeMaximumHeightFunction(primitive) {
   };
 }
 
-function getComputeMinimumHeightFunction(primitive) {
+function getComputeMinimumHeightFunction(primitive: any) {
   return function (granularity, ellipsoid) {
     return primitive._minHeight;
   };
@@ -379,7 +379,7 @@ const scratchBVCartesian = new Cartesian3();
 const scratchBVCartographic = new Cartographic();
 const scratchBVRectangle = new Rectangle();
 
-function getRectangle(frameState, geometry) {
+function getRectangle(frameState: any, geometry: any) {
   const ellipsoid = frameState.mapProjection.ellipsoid;
 
   if (
@@ -442,7 +442,7 @@ function getRectangle(frameState, geometry) {
   return rectangle;
 }
 
-function setMinMaxTerrainHeights(primitive, rectangle, ellipsoid) {
+function setMinMaxTerrainHeights(primitive: any, rectangle: any, ellipsoid: any) {
   const result = ApproximateTerrainHeights.getMinimumMaximumHeights(
     rectangle,
     ellipsoid,
@@ -452,7 +452,7 @@ function setMinMaxTerrainHeights(primitive, rectangle, ellipsoid) {
   primitive._maxTerrainHeight = result.maximumTerrainHeight;
 }
 
-function createBoundingVolume(groundPrimitive, frameState, geometry) {
+function createBoundingVolume(groundPrimitive: any, frameState: any, geometry: any) {
   const ellipsoid = frameState.mapProjection.ellipsoid;
   const rectangle = getRectangle(frameState, geometry);
 
@@ -483,19 +483,11 @@ function createBoundingVolume(groundPrimitive, frameState, geometry) {
   }
 }
 
-function boundingVolumeIndex(commandIndex, length) {
+function boundingVolumeIndex(commandIndex: any, length: any) {
   return Math.floor((commandIndex % length) / 2);
 }
 
-function updateAndQueueRenderCommand(
-  groundPrimitive,
-  command,
-  frameState,
-  modelMatrix,
-  cull,
-  boundingVolume,
-  debugShowBoundingVolume,
-) {
+function updateAndQueueRenderCommand(groundPrimitive: any, command: any, frameState: any, modelMatrix: any, cull: any, boundingVolume: any, debugShowBoundingVolume: any, ) {
   // Use derived appearance command for 2D if needed
   const classificationPrimitive = groundPrimitive._primitive;
   if (
@@ -515,14 +507,7 @@ function updateAndQueueRenderCommand(
   frameState.commandList.push(command);
 }
 
-function updateAndQueuePickCommand(
-  groundPrimitive,
-  command,
-  frameState,
-  modelMatrix,
-  cull,
-  boundingVolume,
-) {
+function updateAndQueuePickCommand(groundPrimitive: any, command: any, frameState: any, modelMatrix: any, cull: any, boundingVolume: any, ) {
   // Use derived pick command for 2D if needed
   const classificationPrimitive = groundPrimitive._primitive;
   if (
@@ -541,16 +526,7 @@ function updateAndQueuePickCommand(
   frameState.commandList.push(command);
 }
 
-function updateAndQueueCommands(
-  groundPrimitive,
-  frameState,
-  colorCommands,
-  pickCommands,
-  modelMatrix,
-  cull,
-  debugShowBoundingVolume,
-  twoPasses,
-) {
+function updateAndQueueCommands(groundPrimitive: any, frameState: any, colorCommands: any, pickCommands: any, modelMatrix: any, cull: any, debugShowBoundingVolume: any, twoPasses: any, ) {
   let boundingVolumes;
   if (frameState.mode === SceneMode.SCENE3D) {
     boundingVolumes = groundPrimitive._boundingVolumes;
@@ -690,7 +666,13 @@ GroundPrimitive.prototype.update = function (frameState) {
   }
 
   if (!ApproximateTerrainHeights.initialized) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!this.asynchronous) {
+      throw new DeveloperError(
+        "For synchronous GroundPrimitives, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.",
+      );
+    }
+    //>>includeEnd('debug');
 
     GroundPrimitive.initializeTerrainHeights();
     return;
@@ -736,7 +718,11 @@ GroundPrimitive.prototype.update = function (frameState) {
 
       instanceType = geometry.constructor;
       if (!defined(instanceType) || !defined(instanceType.createShadowVolume)) {
-        ;
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError(
+          "Not all of the geometry instances have GroundPrimitive support.",
+        );
+        //>>includeEnd('debug');
       }
     }
 
@@ -916,7 +902,13 @@ GroundPrimitive.prototype.getBoundingSphere = function (id) {
  * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
  */
 GroundPrimitive.prototype.getGeometryInstanceAttributes = function (id) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(this._primitive)) {
+    throw new DeveloperError(
+      "must call update before calling getGeometryInstanceAttributes",
+    );
+  }
+  //>>includeEnd('debug');
   return this._primitive.getGeometryInstanceAttributes(id);
 };
 
@@ -975,9 +967,10 @@ GroundPrimitive._supportsMaterials = function (context) {
  * @returns {boolean} Whether or not the current scene supports materials on GroundPrimitives.
  */
 GroundPrimitive.supportsMaterials = function (scene) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("scene", scene);
+  //>>includeEnd('debug');
 
   return GroundPrimitive._supportsMaterials(scene.frameState.context);
 };
-export { GroundPrimitive };
 export default GroundPrimitive;

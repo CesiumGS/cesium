@@ -21,7 +21,23 @@ const QuarticRealPolynomial = {};
  * @returns {number} The value of the discriminant.
  */
 QuarticRealPolynomial.computeDiscriminant = function (a, b, c, d, e) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof a !== "number") {
+    throw new DeveloperError("a is a required number.");
+  }
+  if (typeof b !== "number") {
+    throw new DeveloperError("b is a required number.");
+  }
+  if (typeof c !== "number") {
+    throw new DeveloperError("c is a required number.");
+  }
+  if (typeof d !== "number") {
+    throw new DeveloperError("d is a required number.");
+  }
+  if (typeof e !== "number") {
+    throw new DeveloperError("e is a required number.");
+  }
+  //>>includeEnd('debug');
 
   const a2 = a * a;
   const a3 = a2 * a;
@@ -56,7 +72,7 @@ QuarticRealPolynomial.computeDiscriminant = function (a, b, c, d, e) {
   return discriminant;
 };
 
-function original(a3, a2, a1, a0) {
+function original(a3: any, a2: any, a1: any, a0: any) {
   const a3Squared = a3 * a3;
 
   const p = a2 - (3.0 * a3Squared) / 8.0;
@@ -150,7 +166,7 @@ function original(a3, a2, a1, a0) {
   return [];
 }
 
-function neumark(a3, a2, a1, a0) {
+function neumark(a3: any, a2: any, a1: any, a0: any) {
   const a1Squared = a1 * a1;
   const a2Squared = a2 * a2;
   const a3Squared = a3 * a3;
@@ -255,7 +271,23 @@ function neumark(a3, a2, a1, a0) {
  * @returns {number[]} The real valued roots.
  */
 QuarticRealPolynomial.computeRealRoots = function (a, b, c, d, e) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof a !== "number") {
+    throw new DeveloperError("a is a required number.");
+  }
+  if (typeof b !== "number") {
+    throw new DeveloperError("b is a required number.");
+  }
+  if (typeof c !== "number") {
+    throw new DeveloperError("c is a required number.");
+  }
+  if (typeof d !== "number") {
+    throw new DeveloperError("d is a required number.");
+  }
+  if (typeof e !== "number") {
+    throw new DeveloperError("e is a required number.");
+  }
+  //>>includeEnd('debug');
 
   if (Math.abs(a) < CesiumMath.EPSILON15) {
     return CubicRealPolynomial.computeRealRoots(b, c, d, e);
@@ -307,5 +339,4 @@ QuarticRealPolynomial.computeRealRoots = function (a, b, c, d, e) {
       return undefined;
   }
 };
-export { QuarticRealPolynomial };
 export default QuarticRealPolynomial;

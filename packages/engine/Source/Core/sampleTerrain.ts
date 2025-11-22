@@ -43,16 +43,16 @@ import defined from "./defined.js";
  *   // A tile request error occurred.
  * }
  */
-async function sampleTerrain(
-  terrainProvider,
-  level,
-  positions,
-  rejectOnTileFail,
-) {
+async function sampleTerrain(terrainProvider: any, level: any, positions: any, rejectOnTileFail: any, ) {
   if (!defined(rejectOnTileFail)) {
     rejectOnTileFail = false;
   }
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("terrainProvider", terrainProvider);
+  Check.typeOf.number("level", level);
+  Check.typeOf.bool("rejectOnTileFail", rejectOnTileFail);
+  Check.defined("positions", positions);
+  //>>includeEnd('debug');
 
   return doSampling(terrainProvider, level, positions, rejectOnTileFail);
 }
@@ -66,7 +66,7 @@ async function sampleTerrain(
  *
  * @private
  */
-function attemptConsumeNextQueueItem(tileRequests, results, rejectOnTileFail) {
+function attemptConsumeNextQueueItem(tileRequests: any, results: any, rejectOnTileFail: any) {
   const tileRequest = tileRequests[0];
   const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
     tileRequest.x,
@@ -103,7 +103,7 @@ function attemptConsumeNextQueueItem(tileRequests, results, rejectOnTileFail) {
  * @param {number} ms
  * @private
  */
-function delay(ms) {
+function delay(ms: any) {
   return new Promise(function (res) {
     setTimeout(res, ms);
   });
@@ -119,7 +119,7 @@ function delay(ms) {
  *
  * @private
  */
-function drainTileRequestQueue(tileRequests, results, rejectOnTileFail) {
+function drainTileRequestQueue(tileRequests: any, results: any, rejectOnTileFail: any) {
   // nothing left to do
   if (!tileRequests.length) {
     return Promise.resolve();
@@ -143,7 +143,7 @@ function drainTileRequestQueue(tileRequests, results, rejectOnTileFail) {
   });
 }
 
-function doSampling(terrainProvider, level, positions, rejectOnTileFail) {
+function doSampling(terrainProvider: any, level: any, positions: any, rejectOnTileFail: any) {
   const tilingScheme = terrainProvider.tilingScheme;
 
   let i;
@@ -203,7 +203,7 @@ function doSampling(terrainProvider, level, positions, rejectOnTileFail) {
  * @returns {boolean} If the height was actually interpolated and assigned
  * @private
  */
-function interpolateAndAssignHeight(position, terrainData, rectangle) {
+function interpolateAndAssignHeight(position: any, terrainData: any, rectangle: any) {
   const height = terrainData.interpolateHeight(
     rectangle,
     position.longitude,
@@ -219,7 +219,7 @@ function interpolateAndAssignHeight(position, terrainData, rectangle) {
   return true;
 }
 
-function createInterpolateFunction(tileRequest) {
+function createInterpolateFunction(tileRequest: any) {
   const tilePositions = tileRequest.positions;
   const rectangle = tileRequest.tilingScheme.tileXYToRectangle(
     tileRequest.x,
@@ -273,7 +273,7 @@ function createInterpolateFunction(tileRequest) {
   };
 }
 
-function createMarkFailedFunction(tileRequest) {
+function createMarkFailedFunction(tileRequest: any) {
   const tilePositions = tileRequest.positions;
   return function () {
     for (let i = 0; i < tilePositions.length; ++i) {
@@ -283,5 +283,4 @@ function createMarkFailedFunction(tileRequest) {
   };
 }
 
-export { sampleTerrain };
 export default sampleTerrain;

@@ -46,7 +46,7 @@ const sin = Math.sin;
  * });
  * const geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
  */
-function EllipsoidOutlineGeometry(options) {
+function EllipsoidOutlineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const radii = options.radii ?? defaultRadii;
@@ -59,7 +59,27 @@ function EllipsoidOutlineGeometry(options) {
   const slicePartitions = Math.round(options.slicePartitions ?? 8);
   const subdivisions = Math.round(options.subdivisions ?? 128);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (stackPartitions < 1) {
+    throw new DeveloperError("options.stackPartitions cannot be less than 1");
+  }
+  if (slicePartitions < 0) {
+    throw new DeveloperError("options.slicePartitions cannot be less than 0");
+  }
+  if (subdivisions < 0) {
+    throw new DeveloperError(
+      "options.subdivisions must be greater than or equal to zero.",
+    );
+  }
+  if (
+    defined(options.offsetAttribute) &&
+    options.offsetAttribute === GeometryOffsetAttribute.TOP
+  ) {
+    throw new DeveloperError(
+      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._radii = Cartesian3.clone(radii);
   this._innerRadii = Cartesian3.clone(innerRadii);
@@ -90,7 +110,14 @@ EllipsoidOutlineGeometry.packedLength = 2 * Cartesian3.packedLength + 8;
  * @returns {number[]} The array that was packed into
  */
 EllipsoidOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required");
+  }
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -136,7 +163,11 @@ const scratchOptions = {
  * @returns {EllipsoidOutlineGeometry} The modified result parameter or a new EllipsoidOutlineGeometry instance if one was not provided.
  */
 EllipsoidOutlineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(array)) {
+    throw new DeveloperError("array is required");
+  }
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -430,5 +461,4 @@ EllipsoidOutlineGeometry.createGeometry = function (ellipsoidGeometry) {
     offsetAttribute: ellipsoidGeometry._offsetAttribute,
   });
 };
-export { EllipsoidOutlineGeometry };
 export default EllipsoidOutlineGeometry;

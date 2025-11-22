@@ -36,7 +36,7 @@ const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
  * @param {GridImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  */
-function GridImageryProvider(options) {
+function GridImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
@@ -319,5 +319,4 @@ GridImageryProvider.prototype.pickFeatures = function (
 ) {
   return undefined;
 };
-export { GridImageryProvider };
 export default GridImageryProvider;

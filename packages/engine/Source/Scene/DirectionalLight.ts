@@ -16,8 +16,14 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @alias DirectionalLight
  * @constructor
  */
-function DirectionalLight(options) {
-  ;
+function DirectionalLight(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.object("options.direction", options.direction);
+  if (Cartesian3.equals(options.direction, Cartesian3.ZERO)) {
+    throw new DeveloperError("options.direction cannot be zero-length");
+  }
+  //>>includeEnd('debug');
 
   /**
    * The direction in which light gets emitted.
@@ -40,5 +46,4 @@ function DirectionalLight(options) {
   this.intensity = options.intensity ?? 1.0;
 }
 
-export { DirectionalLight };
 export default DirectionalLight;

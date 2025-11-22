@@ -16,8 +16,12 @@ import createCommand from "../createCommand.js";
  *
  * @param {Scene} scene The Scene to switch projections.
  */
-function ProjectionPickerViewModel(scene) {
-  ;
+function ProjectionPickerViewModel(scene: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   this._scene = scene;
   this._orthographic = scene.camera.frustum instanceof OrthographicFrustum;
@@ -194,5 +198,4 @@ ProjectionPickerViewModel.prototype.destroy = function () {
   this._eventHelper.removeAll();
   destroyObject(this);
 };
-export { ProjectionPickerViewModel };
 export default ProjectionPickerViewModel;

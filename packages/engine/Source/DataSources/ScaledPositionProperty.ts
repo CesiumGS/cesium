@@ -11,7 +11,7 @@ import Property from "./Property.js";
  * It will go away or be refactored to support data with arbitrary height references.
  * @private
  */
-function ScaledPositionProperty(value) {
+function ScaledPositionProperty(value: any) {
   this._definitionChanged = new Event();
   this._value = undefined;
   this._removeSubscription = undefined;
@@ -71,7 +71,14 @@ ScaledPositionProperty.prototype.getValueInReferenceFrame = function (
   referenceFrame,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  if (!defined(referenceFrame)) {
+    throw new DeveloperError("referenceFrame is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(this._value)) {
     return undefined;
@@ -93,5 +100,4 @@ ScaledPositionProperty.prototype.equals = function (other) {
 ScaledPositionProperty.prototype._raiseDefinitionChanged = function () {
   this._definitionChanged.raiseEvent(this);
 };
-export { ScaledPositionProperty };
 export default ScaledPositionProperty;

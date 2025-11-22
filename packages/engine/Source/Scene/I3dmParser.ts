@@ -24,7 +24,9 @@ const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
  * @returns {object} Returns an object with the glTF format, feature table (binary and json), batch table (binary and json) and glTF parts of the i3dm.
  */
 I3dmParser.parse = function (arrayBuffer, byteOffset) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("arrayBuffer", arrayBuffer);
+  //>>includeEnd('debug');
 
   const byteStart = byteOffset ?? 0;
   byteOffset = byteStart;
@@ -135,5 +137,4 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   };
 };
 
-export { I3dmParser };
 export default I3dmParser;

@@ -10,13 +10,7 @@
  *
  * @private
  */
-function createBillboardPointCallback(
-  centerAlpha,
-  cssColor,
-  cssOutlineColor,
-  cssOutlineWidth,
-  pixelSize,
-) {
+function createBillboardPointCallback(centerAlpha: any, cssColor: any, cssOutlineColor: any, cssOutlineWidth: any, pixelSize: any, ) {
   return function () {
     const canvas = document.createElement("canvas");
 
@@ -67,5 +61,4 @@ function createBillboardPointCallback(
  * @callback createBillboardPointCallback.CanvasFunction
  * @returns {HTMLCanvasElement} The result of the calculation.
  */
-export { createBillboardPointCallback };
 export default createBillboardPointCallback;

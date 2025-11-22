@@ -55,7 +55,7 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
  * */
-function B3dmLoader(options) {
+function B3dmLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const b3dmResource = options.b3dmResource;
@@ -75,7 +75,10 @@ function B3dmLoader(options) {
   const loadPrimitiveOutline = options.loadPrimitiveOutline ?? true;
   const loadForClassification = options.loadForClassification ?? false;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.b3dmResource", b3dmResource);
+  Check.typeOf.object("options.arrayBuffer", arrayBuffer);
+  //>>includeEnd('debug');
 
   baseResource = defined(baseResource) ? baseResource : b3dmResource.clone();
 
@@ -244,7 +247,7 @@ B3dmLoader.prototype.load = function () {
   return this._promise;
 };
 
-function handleError(b3dmLoader, error) {
+function handleError(b3dmLoader: any, error: any) {
   b3dmLoader.unload();
   b3dmLoader._state = B3dmLoaderState.FAILED;
   const errorMessage = "Failed to load b3dm";
@@ -253,7 +256,9 @@ function handleError(b3dmLoader, error) {
 }
 
 B3dmLoader.prototype.process = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
 
   if (this._state === B3dmLoaderState.READY) {
     return true;
@@ -289,7 +294,7 @@ B3dmLoader.prototype.process = function (frameState) {
   return true;
 };
 
-function createStructuralMetadata(loader, components) {
+function createStructuralMetadata(loader: any, components: any) {
   const batchTable = loader._batchTable;
   const batchLength = loader._batchLength;
 
@@ -327,7 +332,7 @@ function createStructuralMetadata(loader, components) {
 }
 
 // Recursive function to add the feature ID attribute to all primitives that have a feature ID vertex attribute.
-function processNode(node) {
+function processNode(node: any) {
   const childrenLength = node.children.length;
   for (let i = 0; i < childrenLength; i++) {
     processNode(node.children[i]);
@@ -360,5 +365,4 @@ B3dmLoader.prototype.unload = function () {
   this._arrayBuffer = undefined;
 };
 
-export { B3dmLoader };
 export default B3dmLoader;

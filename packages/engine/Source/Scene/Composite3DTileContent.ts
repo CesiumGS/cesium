@@ -17,7 +17,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  *
  * @private
  */
-function Composite3DTileContent(tileset, tile, resource, contents) {
+function Composite3DTileContent(tileset: any, tile: any, resource: any, contents: any) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -400,5 +400,4 @@ Composite3DTileContent.prototype.destroy = function () {
   }
   return destroyObject(this);
 };
-export { Composite3DTileContent };
 export default Composite3DTileContent;

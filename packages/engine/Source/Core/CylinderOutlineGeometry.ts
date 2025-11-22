@@ -46,7 +46,7 @@ const radiusScratch = new Cartesian2();
  * });
  * const geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
  */
-function CylinderOutlineGeometry(options) {
+function CylinderOutlineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const length = options.length;
@@ -58,7 +58,20 @@ function CylinderOutlineGeometry(options) {
     0,
   );
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("options.positions", length);
+  Check.typeOf.number("options.topRadius", topRadius);
+  Check.typeOf.number("options.bottomRadius", bottomRadius);
+  Check.typeOf.number.greaterThanOrEquals("options.slices", slices, 3);
+  if (
+    defined(options.offsetAttribute) &&
+    options.offsetAttribute === GeometryOffsetAttribute.TOP
+  ) {
+    throw new DeveloperError(
+      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._length = length;
   this._topRadius = topRadius;
@@ -85,7 +98,10 @@ CylinderOutlineGeometry.packedLength = 6;
  * @returns {number[]} The array that was packed into
  */
 CylinderOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -117,7 +133,9 @@ const scratchOptions = {
  * @returns {CylinderOutlineGeometry} The modified result parameter or a new CylinderOutlineGeometry instance if one was not provided.
  */
 CylinderOutlineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -248,5 +266,4 @@ CylinderOutlineGeometry.createGeometry = function (cylinderGeometry) {
     offsetAttribute: cylinderGeometry._offsetAttribute,
   });
 };
-export { CylinderOutlineGeometry };
 export default CylinderOutlineGeometry;

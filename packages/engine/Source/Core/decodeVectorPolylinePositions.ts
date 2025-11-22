@@ -8,13 +8,7 @@ const maxShort = 32767;
 const scratchBVCartographic = new Cartographic();
 const scratchEncodedPosition = new Cartesian3();
 
-function decodeVectorPolylinePositions(
-  positions,
-  rectangle,
-  minimumHeight,
-  maximumHeight,
-  ellipsoid,
-) {
+function decodeVectorPolylinePositions(positions: any, rectangle: any, minimumHeight: any, maximumHeight: any, ellipsoid: any, ) {
   const positionsLength = positions.length / 3;
   const uBuffer = positions.subarray(0, positionsLength);
   const vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
@@ -48,5 +42,4 @@ function decodeVectorPolylinePositions(
   }
   return decoded;
 }
-export { decodeVectorPolylinePositions };
 export default decodeVectorPolylinePositions;

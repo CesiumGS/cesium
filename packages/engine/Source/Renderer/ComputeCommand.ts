@@ -7,7 +7,7 @@ import Pass from "./Pass.js";
  * @private
  * @constructor
  */
-function ComputeCommand(options) {
+function ComputeCommand(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -116,5 +116,4 @@ function ComputeCommand(options) {
 ComputeCommand.prototype.execute = function (computeEngine) {
   computeEngine.execute(this);
 };
-export { ComputeCommand };
 export default ComputeCommand;

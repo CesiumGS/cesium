@@ -45,7 +45,23 @@ Intersections2D.clipTriangleAtAxisAlignedThreshold = function (
   u2,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(threshold)) {
+    throw new DeveloperError("threshold is required.");
+  }
+  if (!defined(keepAbove)) {
+    throw new DeveloperError("keepAbove is required.");
+  }
+  if (!defined(u0)) {
+    throw new DeveloperError("u0 is required.");
+  }
+  if (!defined(u1)) {
+    throw new DeveloperError("u1 is required.");
+  }
+  if (!defined(u2)) {
+    throw new DeveloperError("u2 is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = [];
@@ -228,7 +244,32 @@ Intersections2D.computeBarycentricCoordinates = function (
   y3,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(x)) {
+    throw new DeveloperError("x is required.");
+  }
+  if (!defined(y)) {
+    throw new DeveloperError("y is required.");
+  }
+  if (!defined(x1)) {
+    throw new DeveloperError("x1 is required.");
+  }
+  if (!defined(y1)) {
+    throw new DeveloperError("y1 is required.");
+  }
+  if (!defined(x2)) {
+    throw new DeveloperError("x2 is required.");
+  }
+  if (!defined(y2)) {
+    throw new DeveloperError("y2 is required.");
+  }
+  if (!defined(x3)) {
+    throw new DeveloperError("x3 is required.");
+  }
+  if (!defined(y3)) {
+    throw new DeveloperError("y3 is required.");
+  }
+  //>>includeEnd('debug');
 
   const x1mx3 = x1 - x3;
   const x3mx2 = x3 - x2;
@@ -280,7 +321,16 @@ Intersections2D.computeLineSegmentLineSegmentIntersection = function (
   y11,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("x00", x00);
+  Check.typeOf.number("y00", y00);
+  Check.typeOf.number("x01", x01);
+  Check.typeOf.number("y01", y01);
+  Check.typeOf.number("x10", x10);
+  Check.typeOf.number("y10", y10);
+  Check.typeOf.number("x11", x11);
+  Check.typeOf.number("y11", y11);
+  //>>includeEnd('debug');
 
   const numerator1A = (x11 - x10) * (y00 - y10) - (y11 - y10) * (x00 - x10);
   const numerator1B = (x01 - x00) * (y00 - y10) - (y01 - y00) * (x00 - x10);
@@ -305,5 +355,4 @@ Intersections2D.computeLineSegmentLineSegmentIntersection = function (
     return result;
   }
 };
-export { Intersections2D };
 export default Intersections2D;

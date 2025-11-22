@@ -3,12 +3,7 @@ import CallbackProperty from "./CallbackProperty.js";
 import GeometryUpdater from "./GeometryUpdater.js";
 import TerrainOffsetProperty from "./TerrainOffsetProperty.js";
 
-function heightReferenceOnEntityPropertyChanged(
-  entity,
-  propertyName,
-  newValue,
-  oldValue,
-) {
+function heightReferenceOnEntityPropertyChanged(entity: any, propertyName: any, newValue: any, oldValue: any, ) {
   GeometryUpdater.prototype._onEntityPropertyChanged.call(
     this,
     entity,
@@ -44,5 +39,4 @@ function heightReferenceOnEntityPropertyChanged(
     );
   }
 }
-export { heightReferenceOnEntityPropertyChanged };
 export default heightReferenceOnEntityPropertyChanged;

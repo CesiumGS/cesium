@@ -24,9 +24,11 @@ import defined from "../Core/defined.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function StructuralMetadata(options) {
+function StructuralMetadata(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.schema", options.schema);
+  //>>includeEnd('debug');
 
   this._schema = options.schema;
   const propertyTables = options.propertyTables;
@@ -194,7 +196,9 @@ Object.defineProperties(StructuralMetadata.prototype, {
  * @private
  */
 StructuralMetadata.prototype.getPropertyTable = function (propertyTableId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("propertyTableId", propertyTableId);
+  //>>includeEnd('debug');
 
   return this._propertyTables[propertyTableId];
 };
@@ -211,7 +215,9 @@ StructuralMetadata.prototype.getPropertyTable = function (propertyTableId) {
  * @private
  */
 StructuralMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("propertyTextureId", propertyTextureId);
+  //>>includeEnd('debug');
 
   return this._propertyTextures[propertyTextureId];
 };
@@ -227,10 +233,11 @@ StructuralMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
 StructuralMetadata.prototype.getPropertyAttribute = function (
   propertyAttributeId,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("propertyAttributeId", propertyAttributeId);
+  //>>includeEnd('debug');
 
   return this._propertyAttributes[propertyAttributeId];
 };
 
-export { StructuralMetadata };
 export default StructuralMetadata;

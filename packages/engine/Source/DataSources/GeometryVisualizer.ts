@@ -30,13 +30,11 @@ const emptyArray = [];
  * @param {PrimitiveCollection} [primitives=scene.primitives] A collection to add primitives related to the entities
  * @param {PrimitiveCollection} [groundPrimitives=scene.groundPrimitives] A collection to add ground primitives related to the entities
  */
-function GeometryVisualizer(
-  scene,
-  entityCollection,
-  primitives,
-  groundPrimitives,
-) {
-  ;
+function GeometryVisualizer(scene: any, entityCollection: any, primitives: any, groundPrimitives: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("scene", scene);
+  Check.defined("entityCollection", entityCollection);
+  //>>includeEnd('debug');
 
   primitives = primitives ?? scene.primitives;
   groundPrimitives = groundPrimitives ?? scene.groundPrimitives;
@@ -229,7 +227,9 @@ GeometryVisualizer.unregisterUpdater = function (updater) {
  * false if the visualizer is waiting for asynchronous primitives to be created.
  */
 GeometryVisualizer.prototype.update = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+  //>>includeEnd('debug');
 
   const addedObjects = this._addedObjects;
   const added = addedObjects.values;
@@ -322,7 +322,10 @@ const getBoundingSphereBoundingSphereScratch = new BoundingSphere();
  * @private
  */
 GeometryVisualizer.prototype.getBoundingSphere = function (entity, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("entity", entity);
+  Check.defined("result", result);
+  //>>includeEnd('debug');
 
   const boundingSpheres = getBoundingSphereArrayScratch;
   const tmp = getBoundingSphereBoundingSphereScratch;
@@ -538,5 +541,4 @@ GeometryVisualizer.prototype._onCollectionChanged = function (
     }
   }
 };
-export { GeometryVisualizer };
 export default GeometryVisualizer;

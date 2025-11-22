@@ -24,7 +24,7 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
  * @return {PreprocessedContent}
  * @private
  */
-function preprocess3DTileContent(arrayBuffer) {
+function preprocess3DTileContent(arrayBuffer: any) {
   const uint8Array = new Uint8Array(arrayBuffer);
   let contentType = getMagic(uint8Array);
 
@@ -87,7 +87,7 @@ function preprocess3DTileContent(arrayBuffer) {
   throw new RuntimeError("Invalid tile content.");
 }
 
-function getJsonContent(uint8Array) {
+function getJsonContent(uint8Array: any) {
   let json;
 
   try {
@@ -99,5 +99,4 @@ function getJsonContent(uint8Array) {
   return json;
 }
 
-export { preprocess3DTileContent };
 export default preprocess3DTileContent;

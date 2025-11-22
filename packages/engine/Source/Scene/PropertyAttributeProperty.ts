@@ -19,12 +19,15 @@ import defined from "../Core/defined.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function PropertyAttributeProperty(options) {
+function PropertyAttributeProperty(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const property = options.property;
   const classProperty = options.classProperty;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.property", property);
+  Check.typeOf.object("options.classProperty", classProperty);
+  //>>includeEnd('debug');
 
   this._attribute = property.attribute;
   this._classProperty = classProperty;
@@ -171,5 +174,4 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
   },
 });
 
-export { PropertyAttributeProperty };
 export default PropertyAttributeProperty;

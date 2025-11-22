@@ -69,7 +69,9 @@ Object.defineProperties(Event.prototype, {
  * @see Event#removeEventListener
  */
 Event.prototype.addEventListener = function (listener, scope) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("listener", listener);
+  //>>includeEnd('debug');
   const event = this;
 
   const listenerMap = event._invokingListeners
@@ -85,7 +87,7 @@ Event.prototype.addEventListener = function (listener, scope) {
   };
 };
 
-function addEventListener(event, listenerMap, listener, scope) {
+function addEventListener(event: any, listenerMap: any, listener: any, scope: any) {
   if (!listenerMap.has(listener)) {
     listenerMap.set(listener, new Set());
   }
@@ -109,7 +111,9 @@ function addEventListener(event, listenerMap, listener, scope) {
  * @see Event#raiseEvent
  */
 Event.prototype.removeEventListener = function (listener, scope) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("listener", listener);
+  //>>includeEnd('debug');
 
   const removedFromListeners = removeEventListener(
     this,
@@ -132,7 +136,7 @@ Event.prototype.removeEventListener = function (listener, scope) {
   return removed;
 };
 
-function removeEventListener(event, listenerMap, listener, scope) {
+function removeEventListener(event: any, listenerMap: any, listener: any, scope: any) {
   const scopes = listenerMap.get(listener);
   if (!scopes || !scopes.has(scope)) {
     return false;
@@ -198,5 +202,4 @@ Event.prototype.raiseEvent = function () {
  * @callback Event.RemoveCallback
  */
 
-export { Event };
 export default Event;

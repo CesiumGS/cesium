@@ -6,7 +6,7 @@ import ShaderSource from "./ShaderSource.js";
 /**
  * @private
  */
-function ShaderCache(context) {
+function ShaderCache(context: any) {
   this._context = context;
   this._shaders = {};
   this._numberOfShaders = 0;
@@ -56,7 +56,7 @@ ShaderCache.prototype.replaceShaderProgram = function (options) {
   return this.getShaderProgram(options);
 };
 
-function toSortedJson(dictionary) {
+function toSortedJson(dictionary: any) {
   const sortedKeys = Object.keys(dictionary).sort();
   return JSON.stringify(dictionary, sortedKeys);
 }
@@ -235,7 +235,7 @@ ShaderCache.prototype.createDerivedShaderProgram = function (
   return derivedShaderProgram;
 };
 
-function destroyShader(cache, cachedShader) {
+function destroyShader(cache: any, cachedShader: any) {
   const derivedKeywords = cachedShader.derivedKeywords;
   const length = derivedKeywords.length;
   for (let i = 0; i < length; ++i) {
@@ -284,5 +284,4 @@ ShaderCache.prototype.destroy = function () {
   }
   return destroyObject(this);
 };
-export { ShaderCache };
 export default ShaderCache;

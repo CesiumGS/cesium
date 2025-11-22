@@ -38,8 +38,10 @@ import VertexArray from "./VertexArray.js";
  * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
  * @param {ContextOptions} [options] Options to control WebGL settings for the context
  */
-function Context(canvas, options) {
-  ;
+function Context(canvas: any, options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("canvas", canvas);
+  //>>includeEnd('debug');
 
   const {
     getWebGLStub,
@@ -408,7 +410,7 @@ function Context(canvas, options) {
  * @param {boolean} requestWebgl1 Whether to request a WebGLRenderingContext or a WebGL2RenderingContext.
  * @returns {WebGLRenderingContext|WebGL2RenderingContext}
  */
-function getWebGLContext(canvas, webglOptions, requestWebgl1) {
+function getWebGLContext(canvas: any, webglOptions: any, requestWebgl1: any) {
   if (typeof WebGLRenderingContext === "undefined") {
     throw new RuntimeError(
       "The browser does not support WebGL.  Visit http://get.webgl.org.",
@@ -457,7 +459,7 @@ function getWebGLContext(canvas, webglOptions, requestWebgl1) {
  * @property {boolean} [failIfMajorPerformanceCaveat=false]
  */
 
-function errorToString(gl, error) {
+function errorToString(gl: any, error: any) {
   let message = "WebGL Error:  ";
   switch (error) {
     case gl.INVALID_ENUM:
@@ -482,7 +484,7 @@ function errorToString(gl, error) {
   return message;
 }
 
-function createErrorMessage(gl, glFunc, glFuncArguments, error) {
+function createErrorMessage(gl: any, glFunc: any, glFuncArguments: any, error: any) {
   let message = `${errorToString(gl, error)}: ${glFunc.name}(`;
 
   for (let i = 0; i < glFuncArguments.length; ++i) {
@@ -496,7 +498,7 @@ function createErrorMessage(gl, glFunc, glFuncArguments, error) {
   return message;
 }
 
-function throwOnError(gl, glFunc, glFuncArguments) {
+function throwOnError(gl: any, glFunc: any, glFuncArguments: any) {
   const error = gl.getError();
   if (error !== gl.NO_ERROR) {
     throw new RuntimeError(
@@ -505,7 +507,7 @@ function throwOnError(gl, glFunc, glFuncArguments) {
   }
 }
 
-function makeGetterSetter(gl, propertyName, logFunction) {
+function makeGetterSetter(gl: any, propertyName: any, logFunction: any) {
   return {
     get: function () {
       const value = gl[propertyName];
@@ -519,12 +521,12 @@ function makeGetterSetter(gl, propertyName, logFunction) {
   };
 }
 
-function wrapGL(gl, logFunction) {
+function wrapGL(gl: any, logFunction: any) {
   if (!defined(logFunction)) {
     return gl;
   }
 
-  function wrapFunction(property) {
+  function wrapFunction(property: any) {
     return function () {
       const result = property.apply(gl, arguments);
       logFunction(gl, property, arguments);
@@ -557,7 +559,7 @@ function wrapGL(gl, logFunction) {
   return glWrapper;
 }
 
-function getExtension(gl, names) {
+function getExtension(gl: any, names: any) {
   const length = names.length;
   for (let i = 0; i < length; ++i) {
     const extension = gl.getExtension(names[i]);
@@ -1157,11 +1159,41 @@ Object.defineProperties(Context.prototype, {
  * Available in debug builds only.
  * @private
  */
-function validateFramebuffer(context) {
-  ;
+function validateFramebuffer(context: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (context.validateFramebuffer) {
+    const gl = context._gl;
+    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+
+    if (status !== gl.FRAMEBUFFER_COMPLETE) {
+      let message;
+
+      switch (status) {
+        case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+          message =
+            "Framebuffer is not complete.  Incomplete attachment: at least one attachment point with a renderbuffer or texture attached has its attached object no longer in existence or has an attached image with a width or height of zero, or the color attachment point has a non-color-renderable image attached, or the depth attachment point has a non-depth-renderable image attached, or the stencil attachment point has a non-stencil-renderable image attached.  Color-renderable formats include GL_RGBA4, GL_RGB5_A1, and GL_RGB565. GL_DEPTH_COMPONENT16 is the only depth-renderable format. GL_STENCIL_INDEX8 is the only stencil-renderable format.";
+          break;
+        case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+          message =
+            "Framebuffer is not complete.  Incomplete dimensions: not all attached images have the same width and height.";
+          break;
+        case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+          message =
+            "Framebuffer is not complete.  Missing attachment: no images are attached to the framebuffer.";
+          break;
+        case gl.FRAMEBUFFER_UNSUPPORTED:
+          message =
+            "Framebuffer is not complete.  Unsupported: the combination of internal formats of the attached images violates an implementation-dependent set of restrictions.";
+          break;
+      }
+
+      throw new DeveloperError(message);
+    }
+  }
+  //>>includeEnd('debug');
 }
 
-function applyRenderState(context, renderState, passState, clear) {
+function applyRenderState(context: any, renderState: any, passState: any, clear: any) {
   const previousRenderState = context._currentRenderState;
   const previousPassState = context._currentPassState;
   context._currentRenderState = renderState;
@@ -1182,7 +1214,7 @@ if (typeof WebGLRenderingContext !== "undefined") {
   scratchBackBufferArray = [WebGLConstants.BACK];
 }
 
-function bindFramebuffer(context, framebuffer) {
+function bindFramebuffer(context: any, framebuffer: any) {
   if (framebuffer !== context._currentFramebuffer) {
     context._currentFramebuffer = framebuffer;
     let buffers = scratchBackBufferArray;
@@ -1251,14 +1283,16 @@ Context.prototype.clear = function (clearCommand, passState) {
   gl.clear(bitmask);
 };
 
-function beginDraw(
-  context,
-  framebuffer,
-  passState,
-  shaderProgram,
-  renderState,
-) {
-  ;
+function beginDraw(context: any, framebuffer: any, passState: any, shaderProgram: any, renderState: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  if (defined(framebuffer) && renderState.depthTest) {
+    if (renderState.depthTest.enabled && !framebuffer.hasDepthAttachment) {
+      throw new DeveloperError(
+        "The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer.",
+      );
+    }
+  }
+  //>>includeEnd('debug');
 
   bindFramebuffer(context, framebuffer);
   applyRenderState(context, renderState, passState, false);
@@ -1270,14 +1304,34 @@ function beginDraw(
   );
 }
 
-function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
+function continueDraw(context: any, drawCommand: any, shaderProgram: any, uniformMap: any) {
   const primitiveType = drawCommand._primitiveType;
   const va = drawCommand._vertexArray;
   let offset = drawCommand._offset;
   let count = drawCommand._count;
   const instanceCount = drawCommand.instanceCount;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!PrimitiveType.validate(primitiveType)) {
+    throw new DeveloperError(
+      "drawCommand.primitiveType is required and must be valid.",
+    );
+  }
+
+  Check.defined("drawCommand.vertexArray", va);
+  Check.typeOf.number.greaterThanOrEquals("drawCommand.offset", offset, 0);
+  if (defined(count)) {
+    Check.typeOf.number.greaterThanOrEquals("drawCommand.count", count, 0);
+  }
+  Check.typeOf.number.greaterThanOrEquals(
+    "drawCommand.instanceCount",
+    instanceCount,
+    0,
+  );
+  if (instanceCount > 0 && !context.instancedArrays) {
+    throw new DeveloperError("Instanced arrays extension is not supported");
+  }
+  //>>includeEnd('debug');
 
   context._us.model = drawCommand._modelMatrix ?? Matrix4.IDENTITY;
   shaderProgram._setUniforms(
@@ -1340,7 +1394,10 @@ Context.prototype.draw = function (
   shaderProgram,
   uniformMap,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("drawCommand", drawCommand);
+  Check.defined("drawCommand.shaderProgram", drawCommand._shaderProgram);
+  //>>includeEnd('debug');
 
   passState = passState ?? this._defaultPassState;
   // The command's framebuffer takes precedence over the pass' framebuffer, e.g., for off-screen rendering.
@@ -1417,7 +1474,10 @@ Context.prototype.readPixelsToPBO = function (readState) {
     );
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThan("readState.width", width, 0);
+  Check.typeOf.number.greaterThan("readState.height", height, 0);
+  //>>includeEnd('debug');
 
   let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
   let pixelFormat = PixelFormat.RGBA;
@@ -1471,7 +1531,10 @@ Context.prototype.readPixels = function (readState) {
   const height = readState.height ?? this.drawingBufferHeight;
   const framebuffer = readState.framebuffer;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThan("readState.width", width, 0);
+  Check.typeOf.number.greaterThan("readState.height", height, 0);
+  //>>includeEnd('debug');
 
   let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
   let pixelFormat = PixelFormat.RGBA;
@@ -1580,7 +1643,9 @@ Context.prototype.createViewportQuadCommand = function (
  * @see Context#createPickId
  */
 Context.prototype.getObjectByPickColor = function (pickColor) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("pickColor", pickColor);
+  //>>includeEnd('debug');
 
   return this._pickObjects.get(pickColor);
 };
@@ -1591,7 +1656,7 @@ Context.prototype.getObjectByPickColor = function (pickColor) {
  * @param {number} key
  * @param {Color} color
  */
-function PickId(pickObjects, key, color) {
+function PickId(pickObjects: any, key: any, color: any) {
   this._pickObjects = pickObjects;
   this.key = key;
   this.color = color;
@@ -1633,7 +1698,9 @@ PickId.prototype.destroy = function () {
  * @see Context#getObjectByPickColor
  */
 Context.prototype.createPickId = function (object) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("object", object);
+  //>>includeEnd('debug');
 
   // the increment and assignment have to be separate statements to
   // actually detect overflow in the Uint32 value
@@ -1676,5 +1743,4 @@ Context.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { Context };
 export default Context;

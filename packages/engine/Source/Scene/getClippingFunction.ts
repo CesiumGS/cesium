@@ -11,8 +11,11 @@ const textureResolutionScratch = new Cartesian2();
  * @returns {string} A string containing GLSL functions for retrieving clipping planes.
  * @private
  */
-function getClippingFunction(clippingPlaneCollection, context) {
-  ;
+function getClippingFunction(clippingPlaneCollection: any, context: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("clippingPlaneCollection", clippingPlaneCollection);
+  Check.typeOf.object("context", context);
+  //>>includeEnd('debug');
   const unionClippingRegions = clippingPlaneCollection.unionClippingRegions;
   const clippingPlanesLength = clippingPlaneCollection.length;
   const usingFloatTexture = ClippingPlaneCollection.useFloatTexture(context);
@@ -34,7 +37,7 @@ function getClippingFunction(clippingPlaneCollection, context) {
   return functions;
 }
 
-function clippingFunctionUnion(clippingPlanesLength) {
+function clippingFunctionUnion(clippingPlanesLength: any) {
   return `float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)
 {
     vec4 position = czm_windowToEyeCoordinates(fragCoord);
@@ -65,7 +68,7 @@ function clippingFunctionUnion(clippingPlanesLength) {
 `;
 }
 
-function clippingFunctionIntersect(clippingPlanesLength) {
+function clippingFunctionIntersect(clippingPlanesLength: any) {
   return `float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)
 {
     bool clipped = true;
@@ -92,7 +95,7 @@ function clippingFunctionIntersect(clippingPlanesLength) {
 `;
 }
 
-function getClippingPlaneFloat(width, height) {
+function getClippingPlaneFloat(width: any, height: any) {
   const pixelWidth = 1.0 / width;
   const pixelHeight = 1.0 / height;
 
@@ -118,7 +121,7 @@ function getClippingPlaneFloat(width, height) {
 `;
 }
 
-function getClippingPlaneUint8(width, height) {
+function getClippingPlaneUint8(width: any, height: any) {
   const pixelWidth = 1.0 / width;
   const pixelHeight = 1.0 / height;
 
@@ -148,5 +151,4 @@ function getClippingPlaneUint8(width, height) {
 }
 `;
 }
-export { getClippingFunction };
 export default getClippingFunction;

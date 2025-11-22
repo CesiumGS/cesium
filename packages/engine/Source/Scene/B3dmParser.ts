@@ -25,7 +25,9 @@ const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
  */
 B3dmParser.parse = function (arrayBuffer, byteOffset) {
   const byteStart = byteOffset ?? 0;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("arrayBuffer", arrayBuffer);
+  //>>includeEnd('debug');
 
   byteOffset = byteStart;
 
@@ -168,5 +170,4 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
   };
 };
 
-export { B3dmParser };
 export default B3dmParser;

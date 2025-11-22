@@ -49,7 +49,7 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function VoxelPrimitive(options) {
+function VoxelPrimitive(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -575,7 +575,7 @@ function VoxelPrimitive(options) {
   initialize(this, provider);
 }
 
-function initialize(primitive, provider) {
+function initialize(primitive: any, provider: any) {
   // Set the bounds
   const {
     shape: shapeType,
@@ -661,7 +661,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._modelMatrix;
     },
     set: function (modelMatrix) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("modelMatrix", modelMatrix);
+      //>>includeEnd('debug');
 
       this._modelMatrix = Matrix4.clone(modelMatrix, this._modelMatrix);
     },
@@ -770,7 +772,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return !this._disableRender;
     },
     set: function (show) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("show", show);
+      //>>includeEnd('debug');
 
       this._disableRender = !show;
     },
@@ -787,7 +791,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._disableUpdate;
     },
     set: function (disableUpdate) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("disableUpdate", disableUpdate);
+      //>>includeEnd('debug');
 
       this._disableUpdate = disableUpdate;
     },
@@ -804,7 +810,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._debugDraw;
     },
     set: function (debugDraw) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("debugDraw", debugDraw);
+      //>>includeEnd('debug');
 
       this._debugDraw = debugDraw;
     },
@@ -821,7 +829,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._depthTest;
     },
     set: function (depthTest) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("depthTest", depthTest);
+      //>>includeEnd('debug');
 
       if (this._depthTest !== depthTest) {
         this._depthTest = depthTest;
@@ -841,7 +851,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._nearestSampling;
     },
     set: function (nearestSampling) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("nearestSampling", nearestSampling);
+      //>>includeEnd('debug');
 
       if (this._nearestSampling !== nearestSampling) {
         this._nearestSampling = nearestSampling;
@@ -864,7 +876,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._levelBlendFactor;
     },
     set: function (levelBlendFactor) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("levelBlendFactor", levelBlendFactor);
+      //>>includeEnd('debug');
 
       this._levelBlendFactor = CesiumMath.clamp(levelBlendFactor, 0.0, 1.0);
     },
@@ -884,7 +898,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._screenSpaceError;
     },
     set: function (screenSpaceError) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("screenSpaceError", screenSpaceError);
+      //>>includeEnd('debug');
 
       this._screenSpaceError = screenSpaceError;
     },
@@ -903,7 +919,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._stepSizeMultiplier;
     },
     set: function (stepSize) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("stepSize", stepSize);
+      //>>includeEnd('debug');
 
       this._stepSizeMultiplier = stepSize;
     },
@@ -921,7 +939,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._minBounds;
     },
     set: function (minBounds) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("minBounds", minBounds);
+      //>>includeEnd('debug');
 
       this._minBounds = Cartesian3.clone(minBounds, this._minBounds);
     },
@@ -939,7 +959,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._maxBounds;
     },
     set: function (maxBounds) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("maxBounds", maxBounds);
+      //>>includeEnd('debug');
 
       this._maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
     },
@@ -957,7 +979,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._minClippingBounds;
     },
     set: function (minClippingBounds) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("minClippingBounds", minClippingBounds);
+      //>>includeEnd('debug');
 
       this._minClippingBounds = Cartesian3.clone(
         minClippingBounds,
@@ -978,7 +1002,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._maxClippingBounds;
     },
     set: function (maxClippingBounds) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("maxClippingBounds", maxClippingBounds);
+      //>>includeEnd('debug');
 
       this._maxClippingBounds = Cartesian3.clone(
         maxClippingBounds,
@@ -1268,7 +1294,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
   frameState.commandList.push(command);
 };
 
-function updateRenderBoundPlanes(primitive, frameState) {
+function updateRenderBoundPlanes(primitive: any, frameState: any) {
   const uniforms = primitive._uniforms;
   const { renderBoundPlanes } = primitive._shape;
   if (!defined(renderBoundPlanes)) {
@@ -1287,7 +1313,7 @@ function updateRenderBoundPlanes(primitive, frameState) {
  * @returns {Cartesian4} The tile coordinates of the supplied position.
  * @private
  */
-function getTileCoordinates(primitive, positionLocal, result) {
+function getTileCoordinates(primitive: any, positionLocal: any, result: any) {
   const shapeUv = primitive._shape.convertLocalToShapeUvSpace(
     positionLocal,
     scratchCameraPositionShapeUv,
@@ -1316,7 +1342,7 @@ const scratchCartographicCenter = new Cartographic();
  * @returns {boolean} <code>true</code> if the exaggeration was changed
  * @private
  */
-function updateVerticalExaggeration(primitive, frameState) {
+function updateVerticalExaggeration(primitive: any, frameState: any) {
   const { verticalExaggeration, verticalExaggerationRelativeHeight } =
     frameState;
 
@@ -1341,7 +1367,7 @@ function updateVerticalExaggeration(primitive, frameState) {
  * @param {Context} context
  * @private
  */
-function initFromProvider(primitive, provider, context) {
+function initFromProvider(primitive: any, provider: any, context: any) {
   const uniforms = primitive._uniforms;
 
   primitive._pickId = context.createPickId({ primitive });
@@ -1356,7 +1382,13 @@ function initFromProvider(primitive, provider, context) {
     if (shapeUniforms.hasOwnProperty(key)) {
       const name = `u_${key}`;
 
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(uniformMap[name])) {
+        oneTimeWarning(
+          `VoxelPrimitive: Uniform name "${name}" is already defined`,
+        );
+      }
+      //>>includeEnd('debug');
 
       uniformMap[name] = function () {
         return shapeUniforms[key];
@@ -1425,7 +1457,7 @@ function initFromProvider(primitive, provider, context) {
  * @returns {boolean} Whether any of the transform or bounds changed
  * @private
  */
-function checkTransformAndBounds(primitive) {
+function checkTransformAndBounds(primitive: any) {
   const numChanges =
     updateBound(primitive, "_modelMatrix", "_modelMatrixOld") +
     updateBound(primitive, "_minBounds", "_minBoundsOld") +
@@ -1444,7 +1476,7 @@ function checkTransformAndBounds(primitive) {
  *
  * @private
  */
-function updateBound(primitive, newBoundKey, oldBoundKey) {
+function updateBound(primitive: any, newBoundKey: any, oldBoundKey: any) {
   const newBound = primitive[newBoundKey];
   const oldBound = primitive[oldBoundKey];
 
@@ -1468,7 +1500,7 @@ const scratchCompoundModelMatrix = new Matrix4();
  * @returns {boolean} True if the shape is visible
  * @private
  */
-function updateShapeAndTransforms(primitive) {
+function updateShapeAndTransforms(primitive: any) {
   const verticalExaggeration = primitive._verticalExaggeration;
   const verticalExaggerationRelativeHeight =
     primitive._verticalExaggerationRelativeHeight;
@@ -1588,7 +1620,7 @@ const scratchExaggerationTranslation = new Cartesian3();
  * @returns {Cartesian3} The translation to apply to the box to account for vertical exaggeration
  * @private
  */
-function computeBoxExaggerationTranslation(primitive) {
+function computeBoxExaggerationTranslation(primitive: any) {
   const verticalExaggeration = primitive._verticalExaggeration;
   const verticalExaggerationRelativeHeight =
     primitive._verticalExaggerationRelativeHeight;
@@ -1649,7 +1681,7 @@ function computeBoxExaggerationTranslation(primitive) {
  * @param {object} uniforms
  * @private
  */
-function setTraversalUniforms(traversal, uniforms) {
+function setTraversalUniforms(traversal: any, uniforms: any) {
   uniforms.octreeInternalNodeTexture = traversal.internalNodeTexture;
   uniforms.octreeInternalNodeTexelSizeUv = Cartesian2.clone(
     traversal.internalNodeTexelSizeUv,
@@ -1693,10 +1725,10 @@ function setTraversalUniforms(traversal, uniforms) {
  * @returns {boolean} True if any of the shape defines changed, requiring a shader rebuild
  * @private
  */
-function checkShapeDefines(primitive) {
+function checkShapeDefines(primitive: any) {
   const { shaderDefines } = primitive._shape;
   const shapeDefinesChanged = Object.keys(shaderDefines).some(
-    (key) => shaderDefines[key] !== primitive._shapeDefinesOld[key],
+    (key: any) => shaderDefines[key] !== primitive._shapeDefinesOld[key],
   );
   if (shapeDefinesChanged) {
     primitive._shapeDefinesOld = clone(shaderDefines, true);
@@ -1712,7 +1744,7 @@ function checkShapeDefines(primitive) {
  *
  * @private
  */
-function getKeyframeLocation(timeIntervalCollection, clock) {
+function getKeyframeLocation(timeIntervalCollection: any, clock: any) {
   if (!defined(timeIntervalCollection) || !defined(clock)) {
     return 0.0;
   }
@@ -1757,7 +1789,7 @@ function getKeyframeLocation(timeIntervalCollection, clock) {
  * @returns {boolean} Whether the clipping planes changed, requiring a shader rebuild
  * @private
  */
-function updateClippingPlanes(primitive, frameState) {
+function updateClippingPlanes(primitive: any, frameState: any) {
   const clippingPlanes = primitive.clippingPlanes;
   if (!defined(clippingPlanes)) {
     return false;
@@ -1916,11 +1948,7 @@ const scratchCornersClipSpace = new Array(
  *
  * @private
  */
-function orientedBoundingBoxToNdcAabb(
-  orientedBoundingBox,
-  worldToProjection,
-  result,
-) {
+function orientedBoundingBoxToNdcAabb(orientedBoundingBox: any, worldToProjection: any, result: any, ) {
   const transformPositionLocalToWorld = Matrix4.fromRotationTranslation(
     orientedBoundingBox.halfAxes,
     orientedBoundingBox.center,
@@ -2015,12 +2043,12 @@ const polylineZAxis = new Cartesian3(0.0, 0.0, polylineAxisDistance);
  *
  * @private
  */
-function debugDraw(that, frameState) {
+function debugDraw(that: any, frameState: any) {
   const traversal = that._traversal;
   const polylines = that._debugPolylines;
   polylines.removeAll();
 
-  function makePolylineLineSegment(startPos, endPos, color, thickness) {
+  function makePolylineLineSegment(startPos: any, endPos: any, color: any, thickness: any) {
     polylines.add({
       positions: [startPos, endPos],
       width: thickness,
@@ -2030,7 +2058,7 @@ function debugDraw(that, frameState) {
     });
   }
 
-  function makePolylineBox(orientedBoundingBox, color, thickness) {
+  function makePolylineBox(orientedBoundingBox: any, color: any, thickness: any) {
     // Normally would want to use a scratch variable to store the corners, but
     // polylines don't clone the positions.
     const corners = orientedBoundingBox.computeCorners();
@@ -2048,7 +2076,7 @@ function debugDraw(that, frameState) {
     makePolylineLineSegment(corners[3], corners[7], color, thickness);
   }
 
-  function drawTile(tile) {
+  function drawTile(tile: any) {
     if (!traversal.isRenderable(tile)) {
       return;
     }
@@ -2134,5 +2162,4 @@ DefaultVoxelProvider.prototype.requestData = function (options) {
 
 VoxelPrimitive.DefaultProvider = new DefaultVoxelProvider();
 
-export { VoxelPrimitive };
 export default VoxelPrimitive;

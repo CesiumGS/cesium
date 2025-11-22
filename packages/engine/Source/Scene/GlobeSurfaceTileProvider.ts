@@ -65,8 +65,19 @@ import TileSelectionResult from "./TileSelectionResult.js";
  *
  * @private
  */
-function GlobeSurfaceTileProvider(options) {
-  ;
+function GlobeSurfaceTileProvider(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options)) {
+    throw new DeveloperError("options is required.");
+  }
+  if (!defined(options.terrainProvider)) {
+    throw new DeveloperError("options.terrainProvider is required.");
+  } else if (!defined(options.imageryLayers)) {
+    throw new DeveloperError("options.imageryLayers is required.");
+  } else if (!defined(options.surfaceShaderSet)) {
+    throw new DeveloperError("options.surfaceShaderSet is required.");
+  }
+  //>>includeEnd('debug');
 
   this.lightingFadeOutDistance = 6500000.0;
   this.lightingFadeInDistance = 9000000.0;
@@ -196,7 +207,11 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
       return this._baseColor;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       this._baseColor = value;
       this._firstPassInitialColor = Cartesian4.fromColor(
@@ -217,7 +232,11 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
       return this._quadtree;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       this._quadtree = value;
     },
@@ -316,7 +335,7 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
   },
 });
 
-function sortTileImageryByLayerIndex(a, b) {
+function sortTileImageryByLayerIndex(a: any, b: any) {
   let aImagery = a.loadingImagery;
   if (!defined(aImagery)) {
     aImagery = a.readyImagery;
@@ -338,7 +357,7 @@ GlobeSurfaceTileProvider.prototype.update = function (frameState) {
   this._imageryLayers._update();
 };
 
-function updateCredits(surface, frameState) {
+function updateCredits(surface: any, frameState: any) {
   const creditDisplay = frameState.creditDisplay;
   const terrainProvider = surface._terrainProvider;
   if (defined(terrainProvider) && defined(terrainProvider.credit)) {
@@ -535,7 +554,7 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
   }
 };
 
-function pushCommand(command, frameState) {
+function pushCommand(command: any, frameState: any) {
   const globeTranslucencyState = frameState.globeTranslucencyState;
   if (globeTranslucencyState.translucent) {
     const isBlendCommand = command.renderState.blending.enabled;
@@ -650,7 +669,7 @@ const splitCartographicLimitRectangleScratch = new Rectangle();
 const rectangleCenterScratch = new Cartographic();
 
 // cartographicLimitRectangle may span the IDL, but tiles never will.
-function clipRectangleAntimeridian(tileRectangle, cartographicLimitRectangle) {
+function clipRectangleAntimeridian(tileRectangle: any, cartographicLimitRectangle: any) {
   if (cartographicLimitRectangle.west < cartographicLimitRectangle.east) {
     return cartographicLimitRectangle;
   }
@@ -667,7 +686,7 @@ function clipRectangleAntimeridian(tileRectangle, cartographicLimitRectangle) {
   return splitRectangle;
 }
 
-function isUndergroundVisible(tileProvider, frameState) {
+function isUndergroundVisible(tileProvider: any, frameState: any) {
   if (frameState.cameraUnderground) {
     return true;
   }
@@ -1110,14 +1129,7 @@ const cornerPositionsScratch = [
   new Cartesian3(),
 ];
 
-function computeOccludeePoint(
-  tileProvider,
-  center,
-  rectangle,
-  minimumHeight,
-  maximumHeight,
-  result,
-) {
+function computeOccludeePoint(tileProvider: any, center: any, rectangle: any, minimumHeight: any, maximumHeight: any, result: any, ) {
   const ellipsoidalOccluder = tileProvider.quadtree._occluders.ellipsoid;
   const ellipsoid = ellipsoidalOccluder.ellipsoid;
 
@@ -1221,7 +1233,7 @@ GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function (
   return result;
 };
 
-function updateTileBoundingRegion(tile, tileProvider, frameState) {
+function updateTileBoundingRegion(tile: any, tileProvider: any, frameState: any) {
   let surfaceTile = tile.data;
   if (surfaceTile === undefined) {
     surfaceTile = tile.data = new GlobeSurfaceTile();
@@ -1421,7 +1433,7 @@ GlobeSurfaceTileProvider.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-function getTileReadyCallback(tileImageriesToFree, layer, terrainProvider) {
+function getTileReadyCallback(tileImageriesToFree: any, layer: any, terrainProvider: any) {
   return function (tile) {
     let tileImagery;
     let imagery;
@@ -1624,7 +1636,7 @@ GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function (
 
 const scratchClippingPlanesMatrix = new Matrix4();
 const scratchInverseTransposeClippingPlanesMatrix = new Matrix4();
-function createTileUniformMap(frameState, globeSurfaceTileProvider) {
+function createTileUniformMap(frameState: any, globeSurfaceTileProvider: any) {
   const uniformMap = {
     u_initialColor: function () {
       return this.properties.initialColor;
@@ -1912,7 +1924,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
   return uniformMap;
 }
 
-function createWireframeVertexArrayIfNecessary(context, provider, tile) {
+function createWireframeVertexArrayIfNecessary(context: any, provider: any, tile: any) {
   const surfaceTile = tile.data;
 
   let mesh;
@@ -1961,7 +1973,7 @@ function createWireframeVertexArrayIfNecessary(context, provider, tile) {
  * @param {TerrainMesh} terrainMesh The terrain mesh containing non-wireframe indices.
  * @returns {VertexArray} The vertex array for wireframe rendering.
  */
-function createWireframeVertexArray(context, vertexArray, terrainMesh) {
+function createWireframeVertexArray(context: any, vertexArray: any, terrainMesh: any) {
   const indices = terrainMesh.indices;
 
   const geometry = {
@@ -2004,7 +2016,7 @@ let debugDestroyPrimitive;
   let previousVolume;
   let primitive;
 
-  function createDebugPrimitive(instance) {
+  function createDebugPrimitive(instance: any) {
     return new Primitive({
       geometryInstances: instance,
       appearance: new PerInstanceColorAppearance({
@@ -2105,7 +2117,7 @@ const surfaceShaderSetOptionsScratch = {
 const defaultUndergroundColor = Color.TRANSPARENT;
 const defaultUndergroundColorAlphaByDistance = new NearFarScalar();
 
-function addDrawCommandsForTile(tileProvider, tile, frameState) {
+function addDrawCommandsForTile(tileProvider: any, tile: any, frameState: any) {
   const surfaceTile = tile.data;
 
   if (!defined(surfaceTile.vertexArray)) {
@@ -2599,7 +2611,21 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
         ? imagery.textureWebMercator
         : imagery.texture;
 
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(texture)) {
+        // Our "ready" texture isn't actually ready.  This should never happen.
+        //
+        // Side note: It IS possible for it to not be in the READY ImageryState, though.
+        // This can happen when a single imagery tile is shared by two terrain tiles (common)
+        // and one of them (A) needs a geographic version of the tile because it is near the poles,
+        // and the other (B) does not.  B can and will transition the imagery tile to the READY state
+        // without reprojecting to geographic.  Then, later, A will deem that same tile not-ready-yet
+        // because it only has the Web Mercator texture, and flip it back to the TRANSITIONING state.
+        // The imagery tile won't be in the READY state anymore, but it's still READY enough for B's
+        // purposes.
+        throw new DeveloperError("readyImagery is not actually ready!");
+      }
+      //>>includeEnd('debug');
 
       const imageryLayer = imagery.imageryLayer;
 
@@ -2874,5 +2900,4 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     initialColor = otherPassesInitialColor;
   } while (imageryIndex < imageryLen);
 }
-export { GlobeSurfaceTileProvider };
 export default GlobeSurfaceTileProvider;

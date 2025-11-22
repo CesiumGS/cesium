@@ -25,7 +25,7 @@ import EntityCollection from "./EntityCollection.js";
  *
  * viewer.dataSources.add(dataSource);
  */
-function CustomDataSource(name) {
+function CustomDataSource(name: any) {
   this._name = name;
   this._clock = undefined;
   this._changed = new Event();
@@ -147,7 +147,11 @@ Object.defineProperties(CustomDataSource.prototype, {
       return this._entityCluster;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value must be defined.");
+      }
+      //>>includeEnd('debug');
       this._entityCluster = value;
     },
   },
@@ -166,5 +170,4 @@ CustomDataSource.prototype.update = function (time) {
   return true;
 };
 
-export { CustomDataSource };
 export default CustomDataSource;

@@ -51,5 +51,4 @@ const Iso8601 = {
    */
   MAXIMUM_INTERVAL: MAXIMUM_INTERVAL,
 };
-export { Iso8601 };
 export default Iso8601;

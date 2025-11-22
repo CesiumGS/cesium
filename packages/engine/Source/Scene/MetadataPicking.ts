@@ -259,7 +259,7 @@ MetadataPicking.convertToObjectType = function (type, value) {
   ) {
     return value;
   }
-  const numbers = value.map((n) => Number(n));
+  const numbers = value.map((n: any) => Number(n));
   switch (type) {
     case MetadataType.VEC2:
       return Cartesian2.unpack(numbers, 0, new Cartesian2());

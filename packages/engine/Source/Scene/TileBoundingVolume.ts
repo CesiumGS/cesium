@@ -65,5 +65,4 @@ TileBoundingVolume.prototype.intersectPlane = function (plane) {
 TileBoundingVolume.prototype.createDebugVolume = function (color) {
   DeveloperError.throwInstantiationError();
 };
-export { TileBoundingVolume };
 export default TileBoundingVolume;

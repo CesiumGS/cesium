@@ -39,7 +39,7 @@ const trailingSlashRegex = /\/$/;
  *     tilesetId: "microsoft.base.road"
  * });
  */
-function Azure2DImageryProvider(options) {
+function Azure2DImageryProvider(options: any) {
   options = options ?? {};
   const maximumLevel = options.maximumLevel ?? 22;
   const minimumLevel = options.minimumLevel ?? 0;
@@ -47,7 +47,9 @@ function Azure2DImageryProvider(options) {
 
   const subscriptionKey =
     options.subscriptionKey ?? options["subscription-key"];
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.subscriptionKey", subscriptionKey);
+  //>>includeEnd('debug');
 
   const resource =
     options.url instanceof IonResource
@@ -305,5 +307,4 @@ Azure2DImageryProvider.prototype.pickFeatures = function (
 };
 
 // Exposed for tests
-export { Azure2DImageryProvider };
 export default Azure2DImageryProvider;

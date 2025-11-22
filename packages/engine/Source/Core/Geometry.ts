@@ -64,10 +64,12 @@ import Transforms from "./Transforms.js";
  *   boundingSphere : Cesium.BoundingSphere.fromVertices(positions)
  * });
  */
-function Geometry(options) {
+function Geometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.attributes", options.attributes);
+  //>>includeEnd('debug');
 
   /**
    * Attributes, which make up the geometry's vertices.  Each property in this object corresponds to a
@@ -173,7 +175,9 @@ function Geometry(options) {
  * const numVertices = Cesium.Geometry.computeNumberOfVertices(geometry);
  */
 Geometry.computeNumberOfVertices = function (geometry) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("geometry", geometry);
+  //>>includeEnd('debug');
 
   let numberOfVertices = -1;
   for (const property in geometry.attributes) {
@@ -184,7 +188,13 @@ Geometry.computeNumberOfVertices = function (geometry) {
     ) {
       const attribute = geometry.attributes[property];
       const num = attribute.values.length / attribute.componentsPerAttribute;
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (numberOfVertices !== num && numberOfVertices !== -1) {
+        throw new DeveloperError(
+          "All attribute lists must have the same number of attributes.",
+        );
+      }
+      //>>includeEnd('debug');
       numberOfVertices = num;
     }
   }
@@ -358,5 +368,4 @@ Geometry._textureCoordinateRotationPoints = function (
 
   return result;
 };
-export { Geometry };
 export default Geometry;

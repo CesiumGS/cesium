@@ -18,7 +18,7 @@ const defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 const defaultOffset = Cartesian3.ZERO;
 const offsetScratch = new Cartesian3();
 
-function Batch(primitives, translucent, width, shadows) {
+function Batch(primitives: any, translucent: any, width: any, shadows: any) {
   this.translucent = translucent;
   this.width = width;
   this.shadows = shadows;
@@ -313,7 +313,7 @@ Batch.prototype.removeAllPrimitives = function () {
 /**
  * @private
  */
-function StaticOutlineGeometryBatch(primitives, scene, shadows) {
+function StaticOutlineGeometryBatch(primitives: any, scene: any, shadows: any) {
   this._primitives = primitives;
   this._scene = scene;
   this._shadows = shadows;
@@ -462,5 +462,4 @@ StaticOutlineGeometryBatch.prototype.removeAllPrimitives = function () {
     translucentBatches[i].removeAllPrimitives();
   }
 };
-export { StaticOutlineGeometryBatch };
 export default StaticOutlineGeometryBatch;

@@ -34,11 +34,13 @@ import Ellipsoid from "./Ellipsoid.js";
  * });
  * const geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
  */
-function CircleOutlineGeometry(options) {
+function CircleOutlineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const radius = options.radius;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("radius", radius);
+  //>>includeEnd('debug');
 
   const ellipseGeometryOptions = {
     center: options.center,
@@ -70,7 +72,9 @@ CircleOutlineGeometry.packedLength = EllipseOutlineGeometry.packedLength;
  * @returns {number[]} The array that was packed into
  */
 CircleOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  //>>includeEnd('debug');
   return EllipseOutlineGeometry.pack(
     value._ellipseGeometry,
     array,
@@ -142,5 +146,4 @@ CircleOutlineGeometry.unpack = function (array, startingIndex, result) {
 CircleOutlineGeometry.createGeometry = function (circleGeometry) {
   return EllipseOutlineGeometry.createGeometry(circleGeometry._ellipseGeometry);
 };
-export { CircleOutlineGeometry };
 export default CircleOutlineGeometry;

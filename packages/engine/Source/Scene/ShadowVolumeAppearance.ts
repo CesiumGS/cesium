@@ -22,8 +22,12 @@ import ShadowVolumeAppearanceFS from "../Shaders/ShadowVolumeAppearanceFS.js";
  * @param {Appearance} appearance An Appearance to be used with a ClassificationPrimitive via GroundPrimitive.
  * @private
  */
-function ShadowVolumeAppearance(extentsCulling, planarExtents, appearance) {
-  ;
+function ShadowVolumeAppearance(extentsCulling: any, planarExtents: any, appearance: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.bool("extentsCulling", extentsCulling);
+  Check.typeOf.bool("planarExtents", planarExtents);
+  Check.typeOf.object("appearance", appearance);
+  //>>includeEnd('debug');
 
   this._projectionExtentDefines = {
     eastMostYhighDefine: "",
@@ -74,7 +78,9 @@ function ShadowVolumeAppearance(extentsCulling, planarExtents, appearance) {
 ShadowVolumeAppearance.prototype.createFragmentShader = function (
   columbusView2D,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.bool("columbusView2D", columbusView2D);
+  //>>includeEnd('debug');
 
   const appearance = this._appearance;
   const dependencies = this._colorShaderDependencies;
@@ -136,7 +142,9 @@ ShadowVolumeAppearance.prototype.createFragmentShader = function (
 ShadowVolumeAppearance.prototype.createPickFragmentShader = function (
   columbusView2D,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.bool("columbusView2D", columbusView2D);
+  //>>includeEnd('debug');
 
   const dependencies = this._pickShaderDependencies;
 
@@ -178,7 +186,12 @@ ShadowVolumeAppearance.prototype.createVertexShader = function (
   columbusView2D,
   mapProjection,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("defines", defines);
+  Check.typeOf.string("vertexShaderSource", vertexShaderSource);
+  Check.typeOf.bool("columbusView2D", columbusView2D);
+  Check.defined("mapProjection", mapProjection);
+  //>>includeEnd('debug');
   return createShadowVolumeAppearanceVS(
     this._colorShaderDependencies,
     this._planarExtents,
@@ -206,7 +219,12 @@ ShadowVolumeAppearance.prototype.createPickVertexShader = function (
   columbusView2D,
   mapProjection,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("defines", defines);
+  Check.typeOf.string("vertexShaderSource", vertexShaderSource);
+  Check.typeOf.bool("columbusView2D", columbusView2D);
+  Check.defined("mapProjection", mapProjection);
+  //>>includeEnd('debug');
   return createShadowVolumeAppearanceVS(
     this._pickShaderDependencies,
     this._planarExtents,
@@ -225,16 +243,7 @@ const longitudeExtentsEncodeScratch = {
   high: 0.0,
   low: 0.0,
 };
-function createShadowVolumeAppearanceVS(
-  shaderDependencies,
-  planarExtents,
-  columbusView2D,
-  defines,
-  vertexShaderSource,
-  appearance,
-  mapProjection,
-  projectionExtentDefines,
-) {
+function createShadowVolumeAppearanceVS(shaderDependencies: any, planarExtents: any, columbusView2D: any, defines: any, vertexShaderSource: any, appearance: any, mapProjection: any, projectionExtentDefines: any, ) {
   const allDefines = defines.slice();
 
   if (projectionExtentDefines.eastMostYhighDefine === "") {
@@ -397,7 +406,7 @@ Object.defineProperties(ShaderDependencies.prototype, {
   },
 });
 
-function pointLineDistance(point1, point2, point) {
+function pointLineDistance(point1: any, point2: any, point: any) {
   return (
     Math.abs(
       (point2.y - point1.y) * point.x -
@@ -417,10 +426,7 @@ const points2DScratch = [
 
 // textureCoordinateRotationPoints form 2 lines in the computed UV space that remap to desired texture coordinates.
 // This allows simulation of baked texture coordinates for EllipseGeometry, RectangleGeometry, and PolygonGeometry.
-function addTextureCoordinateRotationAttributes(
-  attributes,
-  textureCoordinateRotationPoints,
-) {
+function addTextureCoordinateRotationAttributes(attributes: any, textureCoordinateRotationPoints: any, ) {
   const points2D = points2DScratch;
 
   const minXYCorner = Cartesian2.unpack(
@@ -464,7 +470,7 @@ const cornerScratch = new Cartesian3();
 const northWestScratch = new Cartesian3();
 const southEastScratch = new Cartesian3();
 const highLowScratch = { high: 0.0, low: 0.0 };
-function add2DTextureCoordinateAttributes(rectangle, projection, attributes) {
+function add2DTextureCoordinateAttributes(rectangle: any, projection: any, attributes: any) {
   // Compute corner positions in double precision
   const carto = cartographicScratch;
   carto.height = 0.0;
@@ -545,14 +551,7 @@ const pointsCartographicScratch = [
  *
  * @private
  */
-function computeRectangleBounds(
-  rectangle,
-  ellipsoid,
-  height,
-  southWestCornerResult,
-  eastVectorResult,
-  northVectorResult,
-) {
+function computeRectangleBounds(rectangle: any, ellipsoid: any, height: any, southWestCornerResult: any, eastVectorResult: any, northVectorResult: any, ) {
   // Compute center of rectangle
   const centerCartographic = Rectangle.center(
     rectangle,
@@ -669,7 +668,15 @@ ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function (
   projection,
   height,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("boundingRectangle", boundingRectangle);
+  Check.defined(
+    "textureCoordinateRotationPoints",
+    textureCoordinateRotationPoints,
+  );
+  Check.typeOf.object("ellipsoid", ellipsoid);
+  Check.typeOf.object("projection", projection);
+  //>>includeEnd('debug');
 
   const corner = cornerScratch;
   const eastward = eastwardScratch;
@@ -721,7 +728,7 @@ ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function (
 };
 
 const spherePointScratch = new Cartesian3();
-function latLongToSpherical(latitude, longitude, ellipsoid, result) {
+function latLongToSpherical(latitude: any, longitude: any, ellipsoid: any, result: any) {
   const cartographic = cartographicScratch;
   cartographic.latitude = latitude;
   cartographic.longitude = longitude;
@@ -777,7 +784,15 @@ ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function (
   ellipsoid,
   projection,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("boundingRectangle", boundingRectangle);
+  Check.defined(
+    "textureCoordinateRotationPoints",
+    textureCoordinateRotationPoints,
+  );
+  Check.typeOf.object("ellipsoid", ellipsoid);
+  Check.typeOf.object("projection", projection);
+  //>>includeEnd('debug');
 
   // rectangle cartographic coords !== spherical because it's on an ellipsoid
   const southWestExtents = latLongToSpherical(
@@ -868,7 +883,7 @@ ShadowVolumeAppearance.hasAttributesForSphericalExtents = function (
   );
 };
 
-function shouldUseSpherical(rectangle) {
+function shouldUseSpherical(rectangle: any) {
   return (
     Math.max(rectangle.width, rectangle.height) >
     ShadowVolumeAppearance.MAX_WIDTH_FOR_PLANAR_EXTENTS
@@ -883,7 +898,9 @@ function shouldUseSpherical(rectangle) {
  * @private
  */
 ShadowVolumeAppearance.shouldUseSphericalCoordinates = function (rectangle) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
 
   return shouldUseSpherical(rectangle);
 };
@@ -897,5 +914,4 @@ ShadowVolumeAppearance.shouldUseSphericalCoordinates = function (rectangle) {
  * @private
  */
 ShadowVolumeAppearance.MAX_WIDTH_FOR_PLANAR_EXTENTS = CesiumMath.toRadians(1.0);
-export { ShadowVolumeAppearance };
 export default ShadowVolumeAppearance;

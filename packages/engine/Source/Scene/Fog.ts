@@ -102,7 +102,11 @@ Object.defineProperties(Fog.prototype, {
       return this._heightFalloff;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value < 0) {
+        throw new DeveloperError("value must be positive.");
+      }
+      //>>includeEnd('debug');
 
       this._heightFalloff = value;
     },
@@ -159,5 +163,4 @@ Fog.prototype.update = function (frameState) {
   frameState.fog.sse = this.screenSpaceErrorFactor;
   frameState.fog.minimumBrightness = this.minimumBrightness;
 };
-export { Fog };
 export default Fog;

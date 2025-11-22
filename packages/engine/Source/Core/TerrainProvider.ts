@@ -104,7 +104,13 @@ const regularGridIndicesCache = [];
  * @returns {Uint16Array|Uint32Array} The list of indices. Uint16Array gets returned for 64KB or less and Uint32Array for 4GB or less.
  */
 TerrainProvider.getRegularGridIndices = function (width, height) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (width * height >= CesiumMath.FOUR_GIGABYTES) {
+    throw new DeveloperError(
+      "The total number of vertices (width * height) must be less than 4,294,967,296.",
+    );
+  }
+  //>>includeEnd('debug');
 
   let byWidth = regularGridIndicesCache[width];
   if (!defined(byWidth)) {
@@ -134,7 +140,13 @@ const regularGridAndEdgeIndicesCache = [];
  * @private
  */
 TerrainProvider.getRegularGridIndicesAndEdgeIndices = function (width, height) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (width * height >= CesiumMath.FOUR_GIGABYTES) {
+    throw new DeveloperError(
+      "The total number of vertices (width * height) must be less than 4,294,967,296.",
+    );
+  }
+  //>>includeEnd('debug');
 
   let byWidth = regularGridAndEdgeIndicesCache[width];
   if (!defined(byWidth)) {
@@ -172,7 +184,13 @@ TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function (
   width,
   height,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (width * height >= CesiumMath.FOUR_GIGABYTES) {
+    throw new DeveloperError(
+      "The total number of vertices (width * height) must be less than 4,294,967,296.",
+    );
+  }
+  //>>includeEnd('debug');
 
   let byWidth = regularGridAndSkirtAndEdgeIndicesCache[width];
   if (!defined(byWidth)) {
@@ -405,7 +423,7 @@ TerrainProvider.addSkirtIndicesWithFilledCorners = function (
   indices[cornerStartIdx + 11] = westNorthIndex;
 };
 
-function getEdgeIndices(width, height) {
+function getEdgeIndices(width: any, height: any) {
   const westIndicesSouthToNorth = new Array(height);
   const southIndicesEastToWest = new Array(width);
   const eastIndicesNorthToSouth = new Array(height);
@@ -430,7 +448,7 @@ function getEdgeIndices(width, height) {
   };
 }
 
-function addRegularGridIndices(width, height, indices, offset) {
+function addRegularGridIndices(width: any, height: any, indices: any, offset: any) {
   let index = 0;
   for (let j = 0; j < height - 1; ++j) {
     for (let i = 0; i < width - 1; ++i) {
@@ -452,7 +470,7 @@ function addRegularGridIndices(width, height, indices, offset) {
   }
 }
 
-function addSkirtIndices(edgeIndices, vertexIndex, indices, offset) {
+function addSkirtIndices(edgeIndices: any, vertexIndex: any, indices: any, offset: any) {
   let previousIndex = edgeIndices[0];
 
   const length = edgeIndices.length;
@@ -556,7 +574,6 @@ TerrainProvider.prototype.getTileDataAvailable =
  */
 TerrainProvider.prototype.loadTileDataAvailability =
   DeveloperError.throwInstantiationError;
-export { TerrainProvider };
 export default TerrainProvider;
 
 /**

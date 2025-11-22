@@ -20,10 +20,14 @@ const CREDIT_HTML = `<img alt="Google" src="https://assets.ion.cesium.com/google
  * @param {object} options Object with the following properties:
  * @param {string} options.key An API key to use with the Google geocoding service
  */
-function GoogleGeocoderService(options) {
+function GoogleGeocoderService(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const key = options.key;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(key)) {
+    throw new DeveloperError("options.key is required.");
+  }
+  //>>includeEnd('debug');
 
   this._resource = new Resource({
     url: API_URL,
@@ -60,7 +64,9 @@ Object.defineProperties(GoogleGeocoderService.prototype, {
 GoogleGeocoderService.prototype.geocode = async function (query) {
   // See API documentation at https://developers.google.com/maps/documentation/geocoding/requests-geocoding
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("query", query);
+  //>>includeEnd('debug');
 
   const resource = this._resource.getDerivedResource({
     queryParameters: {
@@ -80,7 +86,7 @@ GoogleGeocoderService.prototype.geocode = async function (query) {
     );
   }
 
-  const results = response.results.map((result) => {
+  const results = response.results.map((result: any) => {
     const southWest = result.geometry.viewport.southwest;
     const northEast = result.geometry.viewport.northeast;
     return {
@@ -101,5 +107,4 @@ GoogleGeocoderService.prototype.geocode = async function (query) {
   return results;
 };
 
-export { GoogleGeocoderService };
 export default GoogleGeocoderService;

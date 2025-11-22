@@ -27,7 +27,7 @@ const offsetScratch = new Cartesian3();
 const positionScratch = new Cartesian3();
 const scratchColor = new Color();
 
-function BoxGeometryOptions(entity) {
+function BoxGeometryOptions(entity: any) {
   this.id = entity;
   this.vertexFormat = undefined;
   this.dimensions = undefined;
@@ -43,7 +43,7 @@ function BoxGeometryOptions(entity) {
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
-function BoxGeometryUpdater(entity, scene) {
+function BoxGeometryUpdater(entity: any, scene: any) {
   GeometryUpdater.call(this, {
     entity: entity,
     scene: scene,
@@ -84,7 +84,15 @@ Object.defineProperties(BoxGeometryUpdater.prototype, {
  * @exception {DeveloperError} This instance does not represent a filled geometry.
  */
 BoxGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._fillEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent a filled geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -154,7 +162,15 @@ BoxGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
  * @exception {DeveloperError} This instance does not represent an outlined geometry.
  */
 BoxGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._outlineEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent an outlined geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -256,11 +272,7 @@ BoxGeometryUpdater.DynamicGeometryUpdater = DynamicBoxGeometryUpdater;
 /**
  * @private
  */
-function DynamicBoxGeometryUpdater(
-  geometryUpdater,
-  primitives,
-  groundPrimitives,
-) {
+function DynamicBoxGeometryUpdater(geometryUpdater: any, primitives: any, groundPrimitives: any, ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
@@ -307,5 +319,4 @@ DynamicBoxGeometryUpdater.prototype._setOptions = function (entity, box, time) {
       ? GeometryOffsetAttribute.ALL
       : undefined;
 };
-export { BoxGeometryUpdater };
 export default BoxGeometryUpdater;

@@ -25,7 +25,14 @@ const PolygonPipeline = {};
  * @exception {DeveloperError} At least three positions are required.
  */
 PolygonPipeline.computeArea2D = function (positions) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("positions", positions);
+  Check.typeOf.number.greaterThanOrEquals(
+    "positions.length",
+    positions.length,
+    3,
+  );
+  //>>includeEnd('debug');
 
   const length = positions.length;
   let area = 0.0;
@@ -58,7 +65,9 @@ PolygonPipeline.computeWindingOrder2D = function (positions) {
  * @returns {number[]} Index array representing triangles that fill the polygon
  */
 PolygonPipeline.triangulate = function (positions, holes) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("positions", positions);
+  //>>includeEnd('debug');
 
   const flattenedPositions = Cartesian2.packArray(positions);
   return earcut(flattenedPositions, holes, 2);
@@ -100,7 +109,14 @@ PolygonPipeline.computeSubdivision = function (
 
   const hasTexcoords = defined(texcoords);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("ellipsoid", ellipsoid);
+  Check.defined("positions", positions);
+  Check.defined("indices", indices);
+  Check.typeOf.number.greaterThanOrEquals("indices.length", indices.length, 3);
+  Check.typeOf.number.equals("indices.length % 3", "0", indices.length % 3, 0);
+  Check.typeOf.number.greaterThan("granularity", granularity, 0.0);
+  //>>includeEnd('debug');
 
   // triangles that need (or might need) to be subdivided.
   const triangles = indices.slice(0);
@@ -328,7 +344,14 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
 
   const hasTexcoords = defined(texcoords);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("ellipsoid", ellipsoid);
+  Check.defined("positions", positions);
+  Check.defined("indices", indices);
+  Check.typeOf.number.greaterThanOrEquals("indices.length", indices.length, 3);
+  Check.typeOf.number.equals("indices.length % 3", "0", indices.length % 3, 0);
+  Check.typeOf.number.greaterThan("granularity", granularity, 0.0);
+  //>>includeEnd('debug');
 
   // triangles that need (or might need) to be subdivided.
   const triangles = indices.slice(0);
@@ -606,5 +629,4 @@ PolygonPipeline.scaleToGeodeticHeight = function (
 
   return positions;
 };
-export { PolygonPipeline };
 export default PolygonPipeline;

@@ -38,7 +38,10 @@ ImplicitSubdivisionScheme.getBranchingFactor = function (subdivisionScheme) {
       return 8;
     case ImplicitSubdivisionScheme.QUADTREE:
       return 4;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("subdivisionScheme is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 

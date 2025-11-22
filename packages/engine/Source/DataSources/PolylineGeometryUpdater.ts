@@ -67,8 +67,15 @@ function GroundGeometryOptions() {
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
-function PolylineGeometryUpdater(entity, scene) {
-  ;
+function PolylineGeometryUpdater(entity: any, scene: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(entity)) {
+    throw new DeveloperError("entity is required");
+  }
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required");
+  }
+  //>>includeEnd('debug');
 
   this._entity = entity;
   this._scene = scene;
@@ -351,7 +358,17 @@ PolylineGeometryUpdater.prototype.isFilled = function (time) {
  * @exception {DeveloperError} This instance does not represent a filled geometry.
  */
 PolylineGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+
+  if (!this._fillEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent a filled geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -430,7 +447,11 @@ PolylineGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 PolylineGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   time,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "This instance does not represent an outlined geometry.",
+  );
+  //>>includeEnd('debug');
 };
 
 /**
@@ -594,7 +615,16 @@ PolylineGeometryUpdater.prototype.createDynamicUpdater = function (
   primitives,
   groundPrimitives,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("primitives", primitives);
+  Check.defined("groundPrimitives", groundPrimitives);
+
+  if (!this._dynamic) {
+    throw new DeveloperError(
+      "This instance does not represent dynamic geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   return new DynamicGeometryUpdater(primitives, groundPrimitives, this);
 };
@@ -609,7 +639,7 @@ const generateCartesianArcOptions = {
   ellipsoid: undefined,
 };
 
-function DynamicGeometryUpdater(primitives, groundPrimitives, geometryUpdater) {
+function DynamicGeometryUpdater(primitives: any, groundPrimitives: any, geometryUpdater: any) {
   this._line = undefined;
   this._primitives = primitives;
   this._groundPrimitives = groundPrimitives;
@@ -619,7 +649,7 @@ function DynamicGeometryUpdater(primitives, groundPrimitives, geometryUpdater) {
   this._positions = [];
 }
 
-function getLine(dynamicGeometryUpdater) {
+function getLine(dynamicGeometryUpdater: any) {
   if (defined(dynamicGeometryUpdater._line)) {
     return dynamicGeometryUpdater._line;
   }
@@ -788,7 +818,9 @@ DynamicGeometryUpdater.prototype.update = function (time) {
 };
 
 DynamicGeometryUpdater.prototype.getBoundingSphere = function (result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("result", result);
+  //>>includeEnd('debug');
 
   if (!this._geometryUpdater.clampToGround) {
     const line = getLine(this);
@@ -843,5 +875,4 @@ DynamicGeometryUpdater.prototype.destroy = function () {
   }
   destroyObject(this);
 };
-export { PolylineGeometryUpdater };
 export default PolylineGeometryUpdater;

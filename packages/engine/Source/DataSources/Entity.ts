@@ -44,11 +44,11 @@ const cartoScratch = new Cartographic();
 
 const ExtraPropertyNames = [];
 
-function createConstantPositionProperty(value) {
+function createConstantPositionProperty(value: any) {
   return new ConstantPositionProperty(value);
 }
 
-function createPositionPropertyDescriptor(name) {
+function createPositionPropertyDescriptor(name: any) {
   return createPropertyDescriptor(
     name,
     undefined,
@@ -56,7 +56,7 @@ function createPositionPropertyDescriptor(name) {
   );
 }
 
-function createPropertyTypeDescriptor(name, Type) {
+function createPropertyTypeDescriptor(name: any, Type: any) {
   return createPropertyDescriptor(name, undefined, function (value) {
     if (value instanceof Type) {
       return value;
@@ -111,7 +111,7 @@ function createPropertyTypeDescriptor(name, Type) {
  *
  * @see {@link https://cesium.com/learn/cesiumjs-learn/cesiumjs-creating-entities/|Creating Entities}
  */
-function Entity(options) {
+function Entity(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   let id = options.id;
@@ -209,7 +209,7 @@ function Entity(options) {
   this.merge(options);
 }
 
-function updateShow(entity, children, isShowing) {
+function updateShow(entity: any, children: any, isShowing: any) {
   const length = children.length;
   for (let i = 0; i < length; i++) {
     const child = children[i];
@@ -279,7 +279,11 @@ Object.defineProperties(Entity.prototype, {
       return this._show;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (value === this._show) {
         return;
@@ -527,7 +531,11 @@ Entity.registerEntityType = function (propertyName, Type) {
  * @returns {boolean} true if the object should have data during the provided time, false otherwise.
  */
 Entity.prototype.isAvailable = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  //>>includeEnd('debug');
 
   const availability = this._availability;
   return !defined(availability) || availability.contains(time);
@@ -546,7 +554,19 @@ Entity.prototype.isAvailable = function (time) {
 Entity.prototype.addProperty = function (propertyName) {
   const propertyNames = this._propertyNames;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(propertyName)) {
+    throw new DeveloperError("propertyName is required.");
+  }
+  if (propertyNames.indexOf(propertyName) !== -1) {
+    throw new DeveloperError(
+      `${propertyName} is already a registered property.`,
+    );
+  }
+  if (propertyName in this) {
+    throw new DeveloperError(`${propertyName} is a reserved property name.`);
+  }
+  //>>includeEnd('debug');
 
   propertyNames.push(propertyName);
   Object.defineProperty(
@@ -568,7 +588,14 @@ Entity.prototype.removeProperty = function (propertyName) {
   const propertyNames = this._propertyNames;
   const index = propertyNames.indexOf(propertyName);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(propertyName)) {
+    throw new DeveloperError("propertyName is required.");
+  }
+  if (index === -1) {
+    throw new DeveloperError(`${propertyName} is not a registered property.`);
+  }
+  //>>includeEnd('debug');
 
   this._propertyNames.splice(index, 1);
   delete this[propertyName];
@@ -581,7 +608,11 @@ Entity.prototype.removeProperty = function (propertyName) {
  * @param {Entity} source The object to be merged into this object.
  */
 Entity.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   //Name, show, and availability are not Property objects and are currently handled differently.
   //source.show is intentionally ignored because this.show always has a value.
@@ -647,7 +678,9 @@ const orientationScratch = new Quaternion();
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. Result is undefined if position is undefined.
  */
 Entity.prototype.computeModelMatrix = function (time, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("time", time);
+  //>>includeEnd('debug');
   const position = Property.getValueOrUndefined(
     this._position,
     time,
@@ -684,7 +717,9 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   ellipsoid,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("time", time);
+  //>>includeEnd('debug');
   const heightReference = Property.getValueOrDefault(
     heightReferenceProperty,
     time,
@@ -751,5 +786,4 @@ Entity.supportsMaterialsforEntitiesOnTerrain = function (scene) {
 Entity.supportsPolylinesOnTerrain = function (scene) {
   return GroundPolylinePrimitive.isSupported(scene);
 };
-export { Entity };
 export default Entity;

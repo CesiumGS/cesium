@@ -20,8 +20,10 @@ import InfoBoxViewModel from "./InfoBoxViewModel.js";
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  */
-function InfoBox(container) {
-  ;
+function InfoBox(container: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("container", container);
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -204,5 +206,4 @@ InfoBox.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { InfoBox };
 export default InfoBox;

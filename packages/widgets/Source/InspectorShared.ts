@@ -18,7 +18,10 @@ InspectorShared.createCheckbox = function (
   checkedBinding,
   enableBinding,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("labelText", labelText);
+  Check.typeOf.string("checkedBinding", checkedBinding);
+  //>>includeEnd('debug');
   const checkboxContainer = document.createElement("div");
   const checkboxLabel = document.createElement("label");
   const checkboxInput = document.createElement("input");
@@ -49,7 +52,15 @@ InspectorShared.createSection = function (
   sectionVisibleBinding,
   toggleSectionVisibilityBinding,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("panel", panel);
+  Check.typeOf.string("headerText", headerText);
+  Check.typeOf.string("sectionVisibleBinding", sectionVisibleBinding);
+  Check.typeOf.string(
+    "toggleSectionVisibilityBinding",
+    toggleSectionVisibilityBinding,
+  );
+  //>>includeEnd('debug');
   const section = document.createElement("div");
   section.className = "cesium-cesiumInspector-section";
   section.setAttribute(
@@ -91,7 +102,12 @@ InspectorShared.createRangeInput = function (
   step,
   inputValueBinding,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("rangeText", rangeText);
+  Check.typeOf.string("sliderValueBinding", sliderValueBinding);
+  Check.typeOf.number("min", min);
+  Check.typeOf.number("max", max);
+  //>>includeEnd('debug');
 
   inputValueBinding = inputValueBinding ?? sliderValueBinding;
   const input = document.createElement("input");
@@ -134,7 +150,10 @@ InspectorShared.createRangeInputWithDynamicMinMax = function (
   step,
   inputValueBinding,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("rangeText", rangeText);
+  Check.typeOf.string("sliderValueBinding", sliderValueBinding);
+  //>>includeEnd('debug');
 
   inputValueBinding = inputValueBinding ?? sliderValueBinding;
   const input = document.createElement("input");
@@ -173,7 +192,10 @@ InspectorShared.createButton = function (
   clickedBinding,
   activeBinding,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("buttonText", buttonText);
+  Check.typeOf.string("clickedBinding", clickedBinding);
+  //>>includeEnd('debug');
 
   const button = document.createElement("button");
   button.type = "button";
@@ -188,5 +210,4 @@ InspectorShared.createButton = function (
   return button;
 };
 
-export { InspectorShared };
 export default InspectorShared;

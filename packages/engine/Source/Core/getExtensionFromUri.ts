@@ -13,8 +13,12 @@ import DeveloperError from "./DeveloperError.js";
  * //extension will be "czml";
  * const extension = Cesium.getExtensionFromUri('/Gallery/simple.czml?value=true&example=false');
  */
-function getExtensionFromUri(uri) {
-  ;
+function getExtensionFromUri(uri: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(uri)) {
+    throw new DeveloperError("uri is required.");
+  }
+  //>>includeEnd('debug');
 
   const uriObject = new Uri(uri);
   uriObject.normalize();
@@ -31,5 +35,4 @@ function getExtensionFromUri(uri) {
   }
   return path;
 }
-export { getExtensionFromUri };
 export default getExtensionFromUri;

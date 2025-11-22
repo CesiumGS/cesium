@@ -127,13 +127,17 @@ const requestRenderAfterFrame = function (scene) {
  *   }
  * });
  */
-function Scene(options) {
+function Scene(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const canvas = options.canvas;
   let creditContainer = options.creditContainer;
   let creditViewport = options.creditViewport;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(canvas)) {
+    throw new DeveloperError("options and options.canvas are required.");
+  }
+  //>>includeEnd('debug');
 
   const countReferences = options.contextOptions instanceof SharedContext;
   if (countReferences) {
@@ -514,7 +518,7 @@ function Scene(options) {
    *
    * @example
    * // picking the position of a translucent primitive
-   * viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
+   * viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement: any) {
    *      const pickedFeature = viewer.scene.pick(movement.position);
    *      if (!Cesium.defined(pickedFeature)) {
    *          // nothing picked
@@ -778,7 +782,7 @@ function Scene(options) {
  */
 Scene.defaultLogDepthBuffer = true;
 
-function updateGlobeListeners(scene, globe) {
+function updateGlobeListeners(scene: any, globe: any) {
   for (let i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
     scene._removeGlobeCallbacks[i]();
   }
@@ -1415,14 +1419,25 @@ Object.defineProperties(Scene.prototype, {
       return this._mode;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (this.scene3DOnly && value !== SceneMode.SCENE3D) {
+        throw new DeveloperError(
+          "Only SceneMode.SCENE3D is valid when scene3DOnly is true.",
+        );
+      }
+      //>>includeEnd('debug');
       if (value === SceneMode.SCENE2D) {
         this.morphTo2D(0);
       } else if (value === SceneMode.SCENE3D) {
         this.morphTo3D(0);
       } else if (value === SceneMode.COLUMBUS_VIEW) {
         this.morphToColumbusView(0);
-        ;
+        //>>includeStart('debug', pragmas.debug);
+      } else {
+        throw new DeveloperError(
+          "value must be a valid SceneMode enumeration.",
+        );
+        //>>includeEnd('debug');
       }
       this._mode = value;
     },
@@ -1466,7 +1481,13 @@ Object.defineProperties(Scene.prototype, {
       return this._useWebVR;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (this.camera.frustum instanceof OrthographicFrustum) {
+        throw new DeveloperError(
+          "VR is unsupported with an orthographic projection.",
+        );
+      }
+      //>>includeEnd('debug');
       this._useWebVR = value;
       if (this._useWebVR) {
         this._frameState.creditDisplay.container.style.visibility = "hidden";
@@ -1532,7 +1553,13 @@ Object.defineProperties(Scene.prototype, {
       return this._minimumDisableDepthTestDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value) || value < 0.0) {
+        throw new DeveloperError(
+          "minimumDisableDepthTestDistance must be greater than or equal to 0.0.",
+        );
+      }
+      //>>includeEnd('debug');
       this._minimumDisableDepthTestDistance = value;
     },
   },
@@ -1710,7 +1737,7 @@ Scene.prototype.getCompressedTextureFormatSupported = function (format) {
   );
 };
 
-function pickedMetadataInfoChanged(command, frameState) {
+function pickedMetadataInfoChanged(command: any, frameState: any) {
   const oldPickedMetadataInfo = command.pickedMetadataInfo;
   const newPickedMetadataInfo = frameState.pickedMetadataInfo;
   if (oldPickedMetadataInfo?.schemaId !== newPickedMetadataInfo?.schemaId) {
@@ -1727,7 +1754,7 @@ function pickedMetadataInfoChanged(command, frameState) {
   return false;
 }
 
-function updateDerivedCommands(scene, command, shadowsDirty) {
+function updateDerivedCommands(scene: any, command: any, shadowsDirty: any) {
   const frameState = scene._frameState;
   const context = scene._context;
   const oit = scene._view.oit;
@@ -1904,7 +1931,7 @@ let scratchOccluder;
  *
  * @private
  */
-function getOccluder(scene) {
+function getOccluder(scene: any) {
   if (
     scene._mode !== SceneMode.SCENE3D ||
     !scene.globe?.show ||
@@ -1938,7 +1965,7 @@ Scene.prototype.clearPasses = function (passes) {
   passes.offscreen = false;
 };
 
-function updateFrameNumber(scene, frameNumber, time) {
+function updateFrameNumber(scene: any, frameNumber: any, time: any) {
   const frameState = scene._frameState;
   frameState.frameNumber = frameNumber;
   frameState.time = JulianDate.clone(time, frameState.time);
@@ -2091,7 +2118,7 @@ transformFrom2D = Matrix4.inverseTransformation(
  *
  * @private
  */
-function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
+function debugShowBoundingVolume(command: any, scene: any, passState: any, debugFramebuffer: any) {
   const frameState = scene._frameState;
   const context = frameState.context;
   const boundingVolume = command.boundingVolume;
@@ -2183,7 +2210,7 @@ function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
  *
  * @private
  */
-function executeCommand(command, scene, passState, debugFramebuffer) {
+function executeCommand(command: any, scene: any, passState: any, debugFramebuffer: any) {
   const frameState = scene._frameState;
   const context = scene._context;
 
@@ -2273,7 +2300,7 @@ function executeCommand(command, scene, passState, debugFramebuffer) {
  *
  * @private
  */
-function executeIdCommand(command, scene, passState) {
+function executeIdCommand(command: any, scene: any, passState: any) {
   const { derivedCommands } = command;
   if (!defined(derivedCommands)) {
     return;
@@ -2300,7 +2327,7 @@ function executeIdCommand(command, scene, passState) {
   }
 }
 
-function backToFront(a, b, position) {
+function backToFront(a: any, b: any, position: any) {
   return (
     b.boundingVolume.distanceSquaredTo(position) -
     a.boundingVolume.distanceSquaredTo(position)
@@ -2308,13 +2335,13 @@ function backToFront(a, b, position) {
 }
 
 const scratchCart3 = new Cartesian3();
-function distanceSquaredToCenter(center, position) {
+function distanceSquaredToCenter(center: any, position: any) {
   const diff = Cartesian3.subtract(center, position, scratchCart3);
   const distance = Math.max(0.0, Cartesian3.magnitude(diff));
   return distance * distance;
 }
 
-function backToFrontSplats(a, b, position) {
+function backToFrontSplats(a: any, b: any, position: any) {
   const boxA = a.boundingVolume;
   const boxB = b.boundingVolume;
 
@@ -2324,7 +2351,7 @@ function backToFrontSplats(a, b, position) {
   );
 }
 
-function frontToBack(a, b, position) {
+function frontToBack(a: any, b: any, position: any) {
   // When distances are equal equal favor sorting b before a. This gives render priority to commands later in the list.
   return (
     a.boundingVolume.distanceSquaredTo(position) -
@@ -2333,13 +2360,7 @@ function frontToBack(a, b, position) {
   );
 }
 
-function executeTranslucentCommandsBackToFront(
-  scene,
-  executeFunction,
-  passState,
-  commands,
-  invertClassification,
-) {
+function executeTranslucentCommandsBackToFront(scene: any, executeFunction: any, passState: any, commands: any, invertClassification: any, ) {
   mergeSort(commands, backToFront, scene.camera.positionWC);
 
   if (defined(invertClassification)) {
@@ -2351,13 +2372,7 @@ function executeTranslucentCommandsBackToFront(
   }
 }
 
-function executeTranslucentCommandsFrontToBack(
-  scene,
-  executeFunction,
-  passState,
-  commands,
-  invertClassification,
-) {
+function executeTranslucentCommandsFrontToBack(scene: any, executeFunction: any, passState: any, commands: any, invertClassification: any, ) {
   mergeSort(commands, frontToBack, scene.camera.positionWC);
 
   if (defined(invertClassification)) {
@@ -2377,7 +2392,7 @@ function executeTranslucentCommandsFrontToBack(
  *
  * @private
  */
-function performVoxelsPass(scene, passState, frustumCommands) {
+function performVoxelsPass(scene: any, passState: any, frustumCommands: any) {
   scene.context.uniformState.updatePass(Pass.VOXELS);
 
   const commands = frustumCommands.commands[Pass.VOXELS];
@@ -2390,7 +2405,7 @@ function performVoxelsPass(scene, passState, frustumCommands) {
   }
 }
 
-function performGaussianSplatPass(scene, passState, frustumCommands) {
+function performGaussianSplatPass(scene: any, passState: any, frustumCommands: any) {
   scene.context.uniformState.updatePass(Pass.GAUSSIAN_SPLATS);
 
   const commands = frustumCommands.commands[Pass.GAUSSIAN_SPLATS];
@@ -2415,7 +2430,7 @@ const scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
  *
  * @private
  */
-function createWorkingFrustum(camera) {
+function createWorkingFrustum(camera: any) {
   const { frustum } = camera;
   if (defined(frustum.fov)) {
     return frustum.clone(scratchPerspectiveFrustum);
@@ -2440,7 +2455,7 @@ function createWorkingFrustum(camera) {
  * @param {Scene} scene The scene.
  * @returns {Function} A function to execute translucent commands.
  */
-function obtainTranslucentCommandExecutionFunction(scene) {
+function obtainTranslucentCommandExecutionFunction(scene: any) {
   if (scene._environmentState.useOIT) {
     if (!defined(scene._executeOITFunction)) {
       const { view, context } = scene;
@@ -2478,7 +2493,7 @@ function obtainTranslucentCommandExecutionFunction(scene) {
  *
  * @private
  */
-function performTranslucentPass(scene, passState, frustumCommands) {
+function performTranslucentPass(scene: any, passState: any, frustumCommands: any) {
   const { frameState, context } = scene;
   const { pick, pickVoxel } = frameState.passes;
   const picking = pick || pickVoxel;
@@ -2518,11 +2533,7 @@ function performTranslucentPass(scene, passState, frustumCommands) {
  *
  * @private
  */
-function performTranslucent3DTilesClassification(
-  scene,
-  passState,
-  frustumCommands,
-) {
+function performTranslucent3DTilesClassification(scene: any, passState: any, frustumCommands: any, ) {
   const { translucentTileClassification, globeDepth } = scene._view;
   const has3DTilesClassificationCommands =
     frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION] > 0;
@@ -2549,7 +2560,7 @@ function performTranslucent3DTilesClassification(
   );
 }
 
-function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
+function performCesium3DTileEdgesPass(scene: any, passState: any, frustumCommands: any) {
   scene.context.uniformState.updatePass(Pass.CESIUM_3D_TILE_EDGES);
 
   const originalFramebuffer = passState.framebuffer;
@@ -2599,7 +2610,7 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
  *
  * @private
  */
-function executeCommands(scene, passState) {
+function executeCommands(scene: any, passState: any) {
   const { camera, context, frameState } = scene;
   const { uniformState } = context;
 
@@ -2644,7 +2655,7 @@ function executeCommands(scene, passState) {
 
   const height2D = camera.position.z;
 
-  function performPass(frustumCommands, passId) {
+  function performPass(frustumCommands: any, passId: any) {
     uniformState.updatePass(passId);
     const commands = frustumCommands.commands[passId];
     const commandCount = frustumCommands.indices[passId];
@@ -2654,7 +2665,7 @@ function executeCommands(scene, passState) {
     return commandCount;
   }
 
-  function performIdPass(frustumCommands, passId) {
+  function performIdPass(frustumCommands: any, passId: any) {
     uniformState.updatePass(passId);
     const commands = frustumCommands.commands[passId];
     const commandCount = frustumCommands.indices[passId];
@@ -2961,7 +2972,7 @@ function executeCommands(scene, passState) {
  *
  * @private
  */
-function renderEnvironment(scene, passState) {
+function renderEnvironment(scene: any, passState: any) {
   const { context, environmentState, view } = scene;
 
   context.uniformState.updatePass(Pass.ENVIRONMENT);
@@ -3004,7 +3015,7 @@ function renderEnvironment(scene, passState) {
  *
  * @private
  */
-function executeComputeCommands(scene) {
+function executeComputeCommands(scene: any) {
   scene.context.uniformState.updatePass(Pass.COMPUTE);
 
   const sunComputeCommand = scene._environmentState.sunComputeCommand;
@@ -3026,7 +3037,7 @@ function executeComputeCommands(scene) {
  *
  * @private
  */
-function executeOverlayCommands(scene, passState) {
+function executeOverlayCommands(scene: any, passState: any) {
   scene.context.uniformState.updatePass(Pass.OVERLAY);
 
   const context = scene.context;
@@ -3045,7 +3056,7 @@ function executeOverlayCommands(scene, passState) {
  *
  * @private
  */
-function insertShadowCastCommands(scene, commandList, shadowMap) {
+function insertShadowCastCommands(scene: any, commandList: any, shadowMap: any) {
   const { shadowMapCullingVolume, isPointLight, passes } = shadowMap;
   const numberOfPasses = passes.length;
 
@@ -3099,7 +3110,7 @@ function insertShadowCastCommands(scene, commandList, shadowMap) {
  *
  * @private
  */
-function executeShadowMapCastCommands(scene) {
+function executeShadowMapCastCommands(scene: any) {
   const { shadowState, commandList } = scene.frameState;
   const { shadowsEnabled, shadowMaps } = shadowState;
 
@@ -3178,7 +3189,7 @@ Scene.prototype.updateAndExecuteCommands = function (
  *
  * @private
  */
-function executeWebVRCommands(scene, passState) {
+function executeWebVRCommands(scene: any, passState: any) {
   const view = scene._view;
   const camera = view.camera;
   const environmentState = scene._environmentState;
@@ -3253,7 +3264,7 @@ const scratch2DViewport = new BoundingRectangle();
  *
  * @private
  */
-function execute2DViewportCommands(scene, passState) {
+function execute2DViewportCommands(scene: any, passState: any) {
   const { frameState, camera } = scene;
   const { uniformState } = scene.context;
 
@@ -3426,7 +3437,7 @@ function execute2DViewportCommands(scene, passState) {
  *
  * @private
  */
-function executeCommandsInViewport(firstViewport, scene, passState) {
+function executeCommandsInViewport(firstViewport: any, scene: any, passState: any) {
   const view = scene._view;
   const { renderTranslucentDepthForPick } = scene._environmentState;
 
@@ -3585,7 +3596,7 @@ Scene.prototype.updateEnvironment = function () {
   }
 };
 
-function updateDebugFrustumPlanes(scene) {
+function updateDebugFrustumPlanes(scene: any) {
   const frameState = scene._frameState;
   if (scene.debugShowFrustumPlanes !== scene._debugShowFrustumPlanes) {
     if (scene.debugShowFrustumPlanes) {
@@ -3606,7 +3617,7 @@ function updateDebugFrustumPlanes(scene) {
   }
 }
 
-function updateShadowMaps(scene) {
+function updateShadowMaps(scene: any) {
   const frameState = scene._frameState;
   const { passes, shadowState, shadowMaps } = frameState;
   const length = shadowMaps.length;
@@ -3658,7 +3669,7 @@ function updateShadowMaps(scene) {
   }
 }
 
-function updateAndRenderPrimitives(scene) {
+function updateAndRenderPrimitives(scene: any) {
   const frameState = scene._frameState;
 
   // Reset per-frame edge visibility request flag before primitives update
@@ -3683,7 +3694,7 @@ function updateAndRenderPrimitives(scene) {
   }
 }
 
-function updateAndClearFramebuffers(scene, passState, clearColor) {
+function updateAndClearFramebuffers(scene: any, passState: any, clearColor: any) {
   const context = scene._context;
   const frameState = scene._frameState;
   const environmentState = scene._environmentState;
@@ -3901,7 +3912,7 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   }
 };
 
-function callAfterRenderFunctions(scene) {
+function callAfterRenderFunctions(scene: any) {
   // Functions are queued up during primitive update and executed here in case
   // the function modifies scene state that should remain constant over the frame.
   const functions = scene._frameState.afterRender;
@@ -3916,7 +3927,7 @@ function callAfterRenderFunctions(scene) {
   }
 }
 
-function getGlobeHeight(scene) {
+function getGlobeHeight(scene: any) {
   if (scene.mode === SceneMode.MORPHING) {
     return;
   }
@@ -3924,7 +3935,7 @@ function getGlobeHeight(scene) {
   return scene.getHeight(cartographic);
 }
 
-function getMaxPrimitiveHeight(primitive, cartographic, scene) {
+function getMaxPrimitiveHeight(primitive: any, cartographic: any, scene: any) {
   let maxHeight = Number.NEGATIVE_INFINITY;
 
   if (primitive instanceof PrimitiveCollection) {
@@ -4024,10 +4035,12 @@ Scene.prototype.updateHeight = function (
   callback,
   heightReference,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("callback", callback);
+  //>>includeEnd('debug');
 
   const ellipsoid = this._ellipsoid;
-  const callbackWrapper = (clampedCartographic) => {
+  const callbackWrapper = (clampedCartographic: any) => {
     Cartographic.clone(cartographic, updateHeightScratchCartographic);
 
     let height;
@@ -4060,7 +4073,7 @@ Scene.prototype.updateHeight = function (
   }
 
   let tilesetRemoveCallbacks = {};
-  const createPrimitiveEventListener = (primitive) => {
+  const createPrimitiveEventListener = (primitive: any) => {
     if (
       ignore3dTiles ||
       primitive.isDestroyed() ||
@@ -4089,7 +4102,7 @@ Scene.prototype.updateHeight = function (
     createPrimitiveEventListener,
   );
   const removeRemovedListener =
-    this.primitives.primitiveRemoved.addEventListener((primitive) => {
+    this.primitives.primitiveRemoved.addEventListener((primitive: any) => {
       if (primitive.isDestroyed() || !primitive.isCesium3DTileset) {
         return;
       }
@@ -4101,7 +4114,7 @@ Scene.prototype.updateHeight = function (
 
   const removeCallback = () => {
     terrainRemoveCallback = terrainRemoveCallback && terrainRemoveCallback();
-    Object.values(tilesetRemoveCallbacks).forEach((tilesetRemoveCallback) =>
+    Object.values(tilesetRemoveCallbacks).forEach((tilesetRemoveCallback: any) =>
       tilesetRemoveCallback(),
     );
     tilesetRemoveCallbacks = {};
@@ -4112,7 +4125,7 @@ Scene.prototype.updateHeight = function (
   return removeCallback;
 };
 
-function isCameraUnderground(scene) {
+function isCameraUnderground(scene: any) {
   const camera = scene.camera;
   const mode = scene._mode;
   const cameraController = scene._screenSpaceCameraController;
@@ -4161,7 +4174,7 @@ Scene.prototype.initializeFrame = function () {
     const cartographic = this.camera.positionCartographic;
     this._removeUpdateHeightCallback = this.updateHeight(
       cartographic,
-      (updatedCartographic) => {
+      (updatedCartographic: any) => {
         if (this.isDestroyed()) {
           return;
         }
@@ -4182,7 +4195,7 @@ Scene.prototype.initializeFrame = function () {
   this.camera._updateCameraChanged();
 };
 
-function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {
+function updateDebugShowFramesPerSecond(scene: any, renderedThisFrame: any) {
   if (scene.debugShowFramesPerSecond) {
     if (!defined(scene._performanceDisplay)) {
       const performanceContainer = document.createElement("div");
@@ -4208,7 +4221,7 @@ function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {
   }
 }
 
-function prePassesUpdate(scene) {
+function prePassesUpdate(scene: any) {
   scene._jobScheduler.resetBudgets();
 
   const frameState = scene._frameState;
@@ -4222,7 +4235,7 @@ function prePassesUpdate(scene) {
   frameState.creditDisplay.update();
 }
 
-function postPassesUpdate(scene) {
+function postPassesUpdate(scene: any) {
   scene.primitives.postPassesUpdate(scene._frameState);
   RequestScheduler.update();
 }
@@ -4235,7 +4248,7 @@ const scratchBackgroundColor = new Color();
  * @param {Scene} scene
  * @private
  */
-function render(scene) {
+function render(scene: any) {
   const frameState = scene._frameState;
 
   const context = scene.context;
@@ -4316,7 +4329,7 @@ function render(scene) {
   context.endFrame();
 }
 
-function tryAndCatchError(scene, functionToExecute) {
+function tryAndCatchError(scene: any, functionToExecute: any) {
   try {
     functionToExecute(scene);
   } catch (error) {
@@ -4328,7 +4341,7 @@ function tryAndCatchError(scene, functionToExecute) {
   }
 }
 
-function updateMostDetailedRayPicks(scene) {
+function updateMostDetailedRayPicks(scene: any) {
   return scene._picking.updateMostDetailedRayPicks(scene);
 }
 
@@ -4506,7 +4519,7 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {Promise<object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
+ * @returns {Promise<Object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
  *
  * @see Scene#pick
  */
@@ -4595,7 +4608,11 @@ Scene.prototype.pickMetadata = function (
   className,
   propertyName,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("windowPosition", windowPosition);
+  Check.typeOf.string("className", className);
+  Check.typeOf.string("propertyName", propertyName);
+  //>>includeEnd('debug');
 
   const pickedObject = this.pick(windowPosition);
   if (!defined(pickedObject)) {
@@ -4655,7 +4672,9 @@ Scene.prototype.pickMetadata = function (
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Scene.prototype.pickMetadataSchema = function (windowPosition) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("windowPosition", windowPosition);
+  //>>includeEnd('debug');
 
   const pickedObject = this.pick(windowPosition);
   if (!defined(pickedObject)) {
@@ -4738,7 +4757,7 @@ Scene.prototype.drillPick = function (windowPosition, limit, width, height) {
   return this._picking.drillPick(this, windowPosition, limit, width, height);
 };
 
-function updatePreloadPass(scene) {
+function updatePreloadPass(scene: any) {
   const frameState = scene._frameState;
   preloadTilesetPassState.camera = frameState.camera;
   preloadTilesetPassState.cullingVolume = frameState.cullingVolume;
@@ -4747,7 +4766,7 @@ function updatePreloadPass(scene) {
   primitives.updateForPass(frameState, preloadTilesetPassState);
 }
 
-function updatePreloadFlightPass(scene) {
+function updatePreloadFlightPass(scene: any) {
   const frameState = scene._frameState;
   const camera = frameState.camera;
   if (!camera.canPreloadFlight()) {
@@ -4762,7 +4781,7 @@ function updatePreloadFlightPass(scene) {
   primitives.updateForPass(frameState, preloadFlightTilesetPassState);
 }
 
-function updateRequestRenderModeDeferCheckPass(scene) {
+function updateRequestRenderModeDeferCheckPass(scene: any) {
   // Check if any ignored requests are ready to go (to wake rendering up again)
   scene.primitives.updateForPass(
     scene._frameState,
@@ -4865,7 +4884,7 @@ Scene.prototype.pickFromRayMostDetailed = function (
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
  * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise<object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
+ * @returns {Promise<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */
@@ -5092,7 +5111,7 @@ Scene.prototype.morphTo3D = function (duration) {
   this._transitioner.morphTo3D(duration, this._ellipsoid);
 };
 
-function setTerrain(scene, terrain) {
+function setTerrain(scene: any, terrain: any) {
   // Cancel any in-progress terrain update
   scene._removeTerrainProviderReadyListener =
     scene._removeTerrainProviderReadyListener &&
@@ -5108,7 +5127,7 @@ function setTerrain(scene, terrain) {
   // Otherwise, set a placeholder
   scene.globe.terrainProvider = undefined;
   scene._removeTerrainProviderReadyListener =
-    terrain.readyEvent.addEventListener((provider) => {
+    terrain.readyEvent.addEventListener((provider: any) => {
       if (defined(scene) && defined(scene.globe)) {
         scene.globe.terrainProvider = provider;
       }
@@ -5137,7 +5156,9 @@ function setTerrain(scene, terrain) {
  * });
  */
 Scene.prototype.setTerrain = function (terrain) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("terrain", terrain);
+  //>>includeEnd('debug');
 
   setTerrain(this, terrain);
 
@@ -5240,5 +5261,4 @@ Scene.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { Scene };
 export default Scene;

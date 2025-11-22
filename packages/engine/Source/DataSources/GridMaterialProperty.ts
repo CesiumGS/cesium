@@ -26,7 +26,7 @@ const defaultLineThickness = new Cartesian2(1, 1);
  *
  * @constructor
  */
-function GridMaterialProperty(options) {
+function GridMaterialProperty(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
@@ -201,5 +201,4 @@ GridMaterialProperty.prototype.equals = function (other) {
       Property.equals(this._lineOffset, other._lineOffset))
   );
 };
-export { GridMaterialProperty };
 export default GridMaterialProperty;

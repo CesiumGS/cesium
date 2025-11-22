@@ -19,11 +19,13 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function ImplicitAvailabilityBitstream(options) {
+function ImplicitAvailabilityBitstream(options: any) {
   const lengthBits = options.lengthBits;
   let availableCount = options.availableCount;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("options.lengthBits", lengthBits);
+  //>>includeEnd('debug');
 
   const constant = options.constant;
   const bitstream = options.bitstream;
@@ -62,7 +64,7 @@ function ImplicitAvailabilityBitstream(options) {
  * @param {number} lengthBits How many bits are in the bitstream
  * @private
  */
-function count1Bits(bitstream, lengthBits) {
+function count1Bits(bitstream: any, lengthBits: any) {
   let count = 0;
   for (let i = 0; i < lengthBits; i++) {
     const byteIndex = i >> 3;
@@ -112,7 +114,11 @@ Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
  * @private
  */
 ImplicitAvailabilityBitstream.prototype.getBit = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (index < 0 || index >= this._lengthBits) {
+    throw new DeveloperError("Bit index out of bounds.");
+  }
+  //>>includeEnd('debug');
 
   if (defined(this._constant)) {
     return this._constant;
@@ -125,5 +131,4 @@ ImplicitAvailabilityBitstream.prototype.getBit = function (index) {
   return ((this._bitstream[byteIndex] >> bitIndex) & 1) === 1;
 };
 
-export { ImplicitAvailabilityBitstream };
 export default ImplicitAvailabilityBitstream;

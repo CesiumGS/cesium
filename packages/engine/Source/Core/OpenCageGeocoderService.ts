@@ -34,8 +34,14 @@ import Resource from "./Resource.js";
  *   geocoder: new Cesium.OpenCageGeocoderService('https://api.opencagedata.com/geocode/v1/', '<API key>')
  * });
  */
-function OpenCageGeocoderService(url, apiKey, params) {
-  ;
+function OpenCageGeocoderService(url: any, apiKey: any, params: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  Check.defined("apiKey", apiKey);
+  if (defined(params)) {
+    Check.typeOf.object("params", params);
+  }
+  //>>includeEnd('debug');
 
   url = Resource.createIfNeeded(url);
   url.appendForwardSlash();
@@ -92,7 +98,9 @@ Object.defineProperties(OpenCageGeocoderService.prototype, {
  * @returns {Promise<GeocoderService.Result[]>}
  */
 OpenCageGeocoderService.prototype.geocode = async function (query) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("query", query);
+  //>>includeEnd('debug');
 
   const resource = this._url.getDerivedResource({
     url: "json",
@@ -123,5 +131,4 @@ OpenCageGeocoderService.prototype.geocode = async function (query) {
     });
   });
 };
-export { OpenCageGeocoderService };
 export default OpenCageGeocoderService;

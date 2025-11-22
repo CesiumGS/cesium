@@ -18,7 +18,7 @@ const defaultNodeTransformation = new TranslationRotationScale();
  * @param {Property|Quaternion} [options.rotation=Quaternion.IDENTITY] A {@link Quaternion} Property specifying the (x, y, z, w) rotation to apply to the node.
  * @param {Property|Cartesian3} [options.scale=new Cartesian3(1.0, 1.0, 1.0)] A {@link Cartesian3} Property specifying the (x, y, z) scaling to apply to the node.
  */
-function NodeTransformationProperty(options) {
+function NodeTransformationProperty(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
@@ -147,5 +147,4 @@ NodeTransformationProperty.prototype.equals = function (other) {
       Property.equals(this._scale, other._scale))
   );
 };
-export { NodeTransformationProperty };
 export default NodeTransformationProperty;

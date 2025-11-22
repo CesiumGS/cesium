@@ -6,7 +6,7 @@ import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
 
-function calculateM(ellipticity, major, latitude) {
+function calculateM(ellipticity: any, major: any, latitude: any) {
   if (ellipticity === 0.0) {
     // sphere
     return major * latitude;
@@ -61,7 +61,7 @@ function calculateM(ellipticity, major, latitude) {
   );
 }
 
-function calculateInverseM(M, ellipticity, major) {
+function calculateInverseM(M: any, ellipticity: any, major: any) {
   const d = M / major;
 
   if (ellipticity === 0.0) {
@@ -157,7 +157,7 @@ function calculateInverseM(M, ellipticity, major) {
   );
 }
 
-function calculateSigma(ellipticity, latitude) {
+function calculateSigma(ellipticity: any, latitude: any) {
   if (ellipticity === 0.0) {
     // sphere
     return Math.log(Math.tan(0.5 * (CesiumMath.PI_OVER_TWO + latitude)));
@@ -170,13 +170,7 @@ function calculateSigma(ellipticity, latitude) {
   );
 }
 
-function calculateHeading(
-  ellipsoidRhumbLine,
-  firstLongitude,
-  firstLatitude,
-  secondLongitude,
-  secondLatitude,
-) {
+function calculateHeading(ellipsoidRhumbLine: any, firstLongitude: any, firstLatitude: any, secondLongitude: any, secondLatitude: any, ) {
   const sigma1 = calculateSigma(ellipsoidRhumbLine._ellipticity, firstLatitude);
   const sigma2 = calculateSigma(
     ellipsoidRhumbLine._ellipticity,
@@ -188,15 +182,7 @@ function calculateHeading(
   );
 }
 
-function calculateArcLength(
-  ellipsoidRhumbLine,
-  major,
-  minor,
-  firstLongitude,
-  firstLatitude,
-  secondLongitude,
-  secondLatitude,
-) {
+function calculateArcLength(ellipsoidRhumbLine: any, major: any, minor: any, firstLongitude: any, firstLatitude: any, secondLongitude: any, secondLatitude: any, ) {
   const heading = ellipsoidRhumbLine._heading;
   const deltaLongitude = secondLongitude - firstLongitude;
 
@@ -245,7 +231,7 @@ function calculateArcLength(
 const scratchCart1 = new Cartesian3();
 const scratchCart2 = new Cartesian3();
 
-function computeProperties(ellipsoidRhumbLine, start, end, ellipsoid) {
+function computeProperties(ellipsoidRhumbLine: any, start: any, end: any, ellipsoid: any) {
   const firstCartesian = Cartesian3.normalize(
     ellipsoid.cartographicToCartesian(start, scratchCart2),
     scratchCart1,
@@ -255,7 +241,16 @@ function computeProperties(ellipsoidRhumbLine, start, end, ellipsoid) {
     scratchCart2,
   );
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals(
+    "value",
+    Math.abs(
+      Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) -
+        Math.PI,
+    ),
+    0.0125,
+  );
+  //>>includeEnd('debug');
 
   const major = ellipsoid.maximumRadius;
   const minor = ellipsoid.minimumRadius;
@@ -294,14 +289,7 @@ function computeProperties(ellipsoidRhumbLine, start, end, ellipsoid) {
   );
 }
 
-function interpolateUsingSurfaceDistance(
-  start,
-  heading,
-  distance,
-  major,
-  ellipticity,
-  result,
-) {
+function interpolateUsingSurfaceDistance(start: any, heading: any, distance: any, major: any, ellipticity: any, result: any, ) {
   if (distance === 0.0) {
     return Cartographic.clone(start, result);
   }
@@ -380,7 +368,7 @@ function interpolateUsingSurfaceDistance(
  *
  * @exception {DeveloperError} angle between start and end must be at least 0.0125 radians.
  */
-function EllipsoidRhumbLine(start, end, ellipsoid) {
+function EllipsoidRhumbLine(start: any, end: any, ellipsoid: any) {
   const e = ellipsoid ?? Ellipsoid.default;
   this._ellipsoid = e;
   this._start = new Cartographic();
@@ -417,7 +405,9 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
    */
   surfaceDistance: {
     get: function () {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("distance", this._distance);
+      //>>includeEnd('debug');
 
       return this._distance;
     },
@@ -455,7 +445,9 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
    */
   heading: {
     get: function () {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("distance", this._distance);
+      //>>includeEnd('debug');
 
       return this._heading;
     },
@@ -479,7 +471,12 @@ EllipsoidRhumbLine.fromStartHeadingDistance = function (
   ellipsoid,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("start", start);
+  Check.defined("heading", heading);
+  Check.defined("distance", distance);
+  Check.typeOf.number.greaterThan("distance", distance, 0.0);
+  //>>includeEnd('debug');
 
   const e = ellipsoid ?? Ellipsoid.default;
   const major = e.maximumRadius;
@@ -515,7 +512,10 @@ EllipsoidRhumbLine.fromStartHeadingDistance = function (
  * @param {Cartographic} end The final planetodetic point on the path.
  */
 EllipsoidRhumbLine.prototype.setEndPoints = function (start, end) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("start", start);
+  Check.defined("end", end);
+  //>>includeEnd('debug');
 
   computeProperties(this, start, end, this._ellipsoid);
 };
@@ -550,7 +550,14 @@ EllipsoidRhumbLine.prototype.interpolateUsingSurfaceDistance = function (
   distance,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("distance", distance);
+  if (!defined(this._distance) || this._distance === 0.0) {
+    throw new DeveloperError(
+      "EllipsoidRhumbLine must have distinct start and end set.",
+    );
+  }
+  //>>includeEnd('debug');
 
   return interpolateUsingSurfaceDistance(
     this._start,
@@ -576,7 +583,14 @@ EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function (
   intersectionLongitude,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("intersectionLongitude", intersectionLongitude);
+  if (!defined(this._distance) || this._distance === 0.0) {
+    throw new DeveloperError(
+      "EllipsoidRhumbLine must have distinct start and end set.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const ellipticity = this._ellipticity;
   const heading = this._heading;
@@ -673,7 +687,14 @@ EllipsoidRhumbLine.prototype.findIntersectionWithLatitude = function (
   intersectionLatitude,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("intersectionLatitude", intersectionLatitude);
+  if (!defined(this._distance) || this._distance === 0.0) {
+    throw new DeveloperError(
+      "EllipsoidRhumbLine must have distinct start and end set.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const ellipticity = this._ellipticity;
   const heading = this._heading;
@@ -706,5 +727,4 @@ EllipsoidRhumbLine.prototype.findIntersectionWithLatitude = function (
 
   return new Cartographic(longitude, intersectionLatitude, 0);
 };
-export { EllipsoidRhumbLine };
 export default EllipsoidRhumbLine;

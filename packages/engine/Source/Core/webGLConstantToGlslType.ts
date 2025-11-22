@@ -1,6 +1,6 @@
 import WebGLConstants from "./WebGLConstants.js";
 
-function webGLConstantToGlslType(webGLValue) {
+function webGLConstantToGlslType(webGLValue: any) {
   switch (webGLValue) {
     case WebGLConstants.FLOAT:
       return "float";
@@ -22,5 +22,4 @@ function webGLConstantToGlslType(webGLValue) {
       return "bool";
   }
 }
-export { webGLConstantToGlslType };
 export default webGLConstantToGlslType;

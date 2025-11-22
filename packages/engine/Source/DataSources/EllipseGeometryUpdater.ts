@@ -27,7 +27,7 @@ const defaultOffset = Cartesian3.ZERO;
 const offsetScratch = new Cartesian3();
 const scratchRectangle = new Rectangle();
 
-function EllipseGeometryOptions(entity) {
+function EllipseGeometryOptions(entity: any) {
   this.id = entity;
   this.vertexFormat = undefined;
   this.center = undefined;
@@ -51,7 +51,7 @@ function EllipseGeometryOptions(entity) {
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
-function EllipseGeometryUpdater(entity, scene) {
+function EllipseGeometryUpdater(entity: any, scene: any) {
   GroundGeometryUpdater.call(this, {
     entity: entity,
     scene: scene,
@@ -79,7 +79,15 @@ if (defined(Object.create)) {
  * @exception {DeveloperError} This instance does not represent a filled geometry.
  */
 EllipseGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._fillEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent a filled geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -142,7 +150,15 @@ EllipseGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 EllipseGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   time,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._outlineEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent an outlined geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -311,11 +327,7 @@ EllipseGeometryUpdater.DynamicGeometryUpdater = DynamicEllipseGeometryUpdater;
 /**
  * @private
  */
-function DynamicEllipseGeometryUpdater(
-  geometryUpdater,
-  primitives,
-  groundPrimitives,
-) {
+function DynamicEllipseGeometryUpdater(geometryUpdater: any, primitives: any, groundPrimitives: any, ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
@@ -415,5 +427,4 @@ DynamicEllipseGeometryUpdater.prototype._setOptions = function (
 
   options.extrudedHeight = extrudedHeightValue;
 };
-export { EllipseGeometryUpdater };
 export default EllipseGeometryUpdater;

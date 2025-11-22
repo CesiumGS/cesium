@@ -11,7 +11,7 @@ import Frozen from "../Core/Frozen.js";
  * @param {number} [options.minimum=0.0] The minimum number of particles emmitted in the burst.
  * @param {number} [options.maximum=50.0] The maximum number of particles emitted in the burst.
  */
-function ParticleBurst(options) {
+function ParticleBurst(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -48,5 +48,4 @@ Object.defineProperties(ParticleBurst.prototype, {
     },
   },
 });
-export { ParticleBurst };
 export default ParticleBurst;

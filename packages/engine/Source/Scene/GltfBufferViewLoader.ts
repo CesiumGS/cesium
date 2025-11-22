@@ -26,7 +26,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-function GltfBufferViewLoader(options) {
+function GltfBufferViewLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -35,7 +35,13 @@ function GltfBufferViewLoader(options) {
   const baseResource = options.baseResource;
   const cacheKey = options.cacheKey;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("options.resourceCache", resourceCache);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.number("options.bufferViewId", bufferViewId);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
 
   const bufferView = gltf.bufferViews[bufferViewId];
   let bufferId = bufferView.buffer;
@@ -125,7 +131,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
  * @param {GltfBufferViewLoader} loader
  * @returns {Promise<GltfBufferViewLoader>}
  */
-async function loadResources(loader) {
+async function loadResources(loader: any) {
   try {
     const bufferLoader = getBufferLoader(loader);
     loader._bufferLoader = bufferLoader;
@@ -198,7 +204,7 @@ GltfBufferViewLoader.prototype.load = async function () {
  * @param {GltfBufferViewLoader} bufferViewLoader The loader.
  * @returns {BufferLoader} The buffer loader.
  */
-function getBufferLoader(bufferViewLoader) {
+function getBufferLoader(bufferViewLoader: any) {
   const resourceCache = bufferViewLoader._resourceCache;
   const buffer = bufferViewLoader._buffer;
 
@@ -233,5 +239,4 @@ GltfBufferViewLoader.prototype.unload = function () {
   this._typedArray = undefined;
 };
 
-export { GltfBufferViewLoader };
 export default GltfBufferViewLoader;

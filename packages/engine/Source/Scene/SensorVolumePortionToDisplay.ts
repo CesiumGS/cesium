@@ -66,5 +66,4 @@ SensorVolumePortionToDisplay.toString = function (portionToDisplay) {
   }
 };
 
-export { SensorVolumePortionToDisplay };
 export default SensorVolumePortionToDisplay;

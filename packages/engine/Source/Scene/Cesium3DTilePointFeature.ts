@@ -40,13 +40,7 @@ import createBillboardPointCallback from "./createBillboardPointCallback.js";
  *     }
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
-function Cesium3DTilePointFeature(
-  content,
-  batchId,
-  billboard,
-  label,
-  polyline,
-) {
+function Cesium3DTilePointFeature(content: any, batchId: any, billboard: any, label: any, polyline: any, ) {
   this._content = content;
   this._billboard = billboard;
   this._label = label;
@@ -640,7 +634,7 @@ Cesium3DTilePointFeature.defaultPointOutlineColor = Color.BLACK;
 Cesium3DTilePointFeature.defaultPointOutlineWidth = 0.0;
 Cesium3DTilePointFeature.defaultPointSize = 8.0;
 
-function setBillboardImage(feature) {
+function setBillboardImage(feature: any) {
   const b = feature._billboard;
   if (defined(feature._billboardImage) && feature._billboardImage !== b.image) {
     b.image = feature._billboardImage;
@@ -738,7 +732,7 @@ Cesium3DTilePointFeature.prototype.getPropertyIds = function (results) {
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {string} name The case-sensitive name of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @example
  * // Display all the properties for a feature in the console log.
@@ -765,7 +759,7 @@ Cesium3DTilePointFeature.prototype.getProperty = function (name) {
  * properties.
  * </p>
  * @param {string} name The case-sensitive name of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -853,5 +847,4 @@ Cesium3DTilePointFeature.prototype.isClass = function (className) {
 Cesium3DTilePointFeature.prototype.getExactClassName = function () {
   return this._content.batchTable.getExactClassName(this._batchId);
 };
-export { Cesium3DTilePointFeature };
 export default Cesium3DTilePointFeature;

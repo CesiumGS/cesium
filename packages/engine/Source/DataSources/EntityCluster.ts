@@ -32,7 +32,7 @@ import KDBush from "kdbush";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
  */
-function EntityCluster(options) {
+function EntityCluster(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._enabled = options.enabled ?? false;
@@ -76,7 +76,7 @@ function EntityCluster(options) {
   this.show = options.show ?? true;
 }
 
-function expandBoundingBox(bbox, pixelRange) {
+function expandBoundingBox(bbox: any, pixelRange: any) {
   bbox.x -= pixelRange;
   bbox.y -= pixelRange;
   bbox.width += pixelRange * 2.0;
@@ -85,7 +85,7 @@ function expandBoundingBox(bbox, pixelRange) {
 
 const labelBoundingBoxScratch = new BoundingRectangle();
 
-function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
+function getBoundingBox(item: any, coord: any, pixelRange: any, entityCluster: any, result: any) {
   if (defined(item._labelCollection) && entityCluster._clusterLabels) {
     result = Label.getScreenSpaceBoundingBox(item, coord, result);
   } else if (
@@ -124,7 +124,7 @@ function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
   return result;
 }
 
-function addNonClusteredItem(item, entityCluster) {
+function addNonClusteredItem(item: any, entityCluster: any) {
   item.clusterShow = true;
 
   if (
@@ -140,7 +140,7 @@ function addNonClusteredItem(item, entityCluster) {
   }
 }
 
-function addCluster(position, numPoints, ids, entityCluster) {
+function addCluster(position: any, numPoints: any, ids: any, entityCluster: any) {
   const cluster = {
     billboard: entityCluster._clusterBillboardCollection.add(),
     label: entityCluster._clusterLabelCollection.add(),
@@ -160,7 +160,7 @@ function addCluster(position, numPoints, ids, entityCluster) {
   entityCluster._clusterEvent.raiseEvent(ids, cluster);
 }
 
-function hasLabelIndex(entityCluster, entityId) {
+function hasLabelIndex(entityCluster: any, entityId: any) {
   return (
     defined(entityCluster) &&
     defined(entityCluster._collectionIndicesByEntity[entityId]) &&
@@ -168,13 +168,7 @@ function hasLabelIndex(entityCluster, entityId) {
   );
 }
 
-function getScreenSpacePositions(
-  collection,
-  points,
-  scene,
-  occluder,
-  entityCluster,
-) {
+function getScreenSpacePositions(collection: any, points: any, scene: any, occluder: any, entityCluster: any, ) {
   if (!defined(collection)) {
     return;
   }
@@ -220,7 +214,7 @@ const pointBoundinRectangleScratch = new BoundingRectangle();
 const totalBoundingRectangleScratch = new BoundingRectangle();
 const neighborBoundingRectangleScratch = new BoundingRectangle();
 
-function createDeclutterCallback(entityCluster) {
+function createDeclutterCallback(entityCluster: any) {
   return function (amount) {
     if ((defined(amount) && amount < 0.05) || !entityCluster.enabled) {
       return;
@@ -631,12 +625,7 @@ Object.defineProperties(EntityCluster.prototype, {
   },
 });
 
-function createGetEntity(
-  collectionProperty,
-  CollectionConstructor,
-  unusedIndicesProperty,
-  entityIndexProperty,
-) {
+function createGetEntity(collectionProperty: any, CollectionConstructor: any, unusedIndicesProperty: any, entityIndexProperty: any, ) {
   return function (entity) {
     let collection = this[collectionProperty];
 
@@ -687,7 +676,7 @@ function createGetEntity(
   };
 }
 
-function removeEntityIndicesIfUnused(entityCluster, entityId) {
+function removeEntityIndicesIfUnused(entityCluster: any, entityId: any) {
   const indices = entityCluster._collectionIndicesByEntity[entityId];
 
   if (
@@ -836,7 +825,7 @@ EntityCluster.prototype.removePoint = function (entity) {
   this._clusterDirty = true;
 };
 
-function disableCollectionClustering(collection) {
+function disableCollectionClustering(collection: any) {
   if (!defined(collection)) {
     return;
   }
@@ -847,7 +836,7 @@ function disableCollectionClustering(collection) {
   }
 }
 
-function updateEnable(entityCluster) {
+function updateEnable(entityCluster: any) {
   if (entityCluster.enabled) {
     return;
   }
@@ -1019,5 +1008,4 @@ EntityCluster.prototype.destroy = function () {
  *     cluster.label.text = entities.length.toLocaleString();
  * });
  */
-export { EntityCluster };
 export default EntityCluster;

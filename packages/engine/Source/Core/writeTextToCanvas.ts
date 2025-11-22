@@ -3,7 +3,7 @@ import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
-function measureText(context2D, textString, font, stroke, fill) {
+function measureText(context2D: any, textString: any, font: any, stroke: any, fill: any) {
   const metrics = context2D.measureText(textString);
   const isSpace = !/\S/.test(textString);
 
@@ -116,8 +116,12 @@ let imageSmoothingEnabledName;
  *                   blank, returns undefined.
  * @function writeTextToCanvas
  */
-function writeTextToCanvas(text, options) {
-  ;
+function writeTextToCanvas(text: any, options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(text)) {
+    throw new DeveloperError("text is required.");
+  }
+  //>>includeEnd('debug');
   if (text === "") {
     return undefined;
   }
@@ -212,5 +216,4 @@ function writeTextToCanvas(text, options) {
 
   return canvas;
 }
-export { writeTextToCanvas };
 export default writeTextToCanvas;

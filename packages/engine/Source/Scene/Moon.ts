@@ -29,7 +29,7 @@ import Material from "./Material.js";
  *
  * @see Scene#moon
  */
-function Moon(options) {
+function Moon(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   let url = options.textureUrl;
@@ -172,5 +172,4 @@ Moon.prototype.destroy = function () {
     this._ellipsoidPrimitive && this._ellipsoidPrimitive.destroy();
   return destroyObject(this);
 };
-export { Moon };
 export default Moon;

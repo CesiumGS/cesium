@@ -115,5 +115,4 @@ const Cesium3DTileContentFactory = {
     return Model3DTileContent.fromGeoJson(tileset, tile, resource, json);
   },
 };
-export { Cesium3DTileContentFactory };
 export default Cesium3DTileContentFactory;

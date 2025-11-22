@@ -28,8 +28,13 @@ const scratchCartesian3 = new Cartesian3();
  *   new Cesium.Cartesian3( 1.0, 0.0, 0.0),
  *   new Cesium.Cartesian3( 0.0, 1.0, 1.0));
  */
-function barycentricCoordinates(point, p0, p1, p2, result) {
-  ;
+function barycentricCoordinates(point: any, p0: any, p1: any, p2: any, result: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("point", point);
+  Check.defined("p0", p0);
+  Check.defined("p1", p1);
+  Check.defined("p2", p2);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -101,5 +106,4 @@ function barycentricCoordinates(point, p0, p1, p2, result) {
   result.x = 1.0 - result.y - result.z;
   return result;
 }
-export { barycentricCoordinates };
 export default barycentricCoordinates;

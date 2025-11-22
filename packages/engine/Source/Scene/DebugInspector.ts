@@ -11,7 +11,7 @@ function DebugInspector() {
   this._cachedShowFrustumsShaders = {};
 }
 
-function getAttributeLocations(shaderProgram) {
+function getAttributeLocations(shaderProgram: any) {
   const attributeLocations = {};
   const attributes = shaderProgram.vertexAttributes;
   for (const a in attributes) {
@@ -23,7 +23,7 @@ function getAttributeLocations(shaderProgram) {
   return attributeLocations;
 }
 
-function createDebugShowFrustumsShaderProgram(scene, shaderProgram) {
+function createDebugShowFrustumsShaderProgram(scene: any, shaderProgram: any) {
   const context = scene.context;
   const sp = shaderProgram;
   const fs = sp.fragmentShaderSource.clone();
@@ -74,7 +74,7 @@ function createDebugShowFrustumsShaderProgram(scene, shaderProgram) {
 }
 
 const scratchFrustumColor = new Color();
-function createDebugShowFrustumsUniformMap(scene, command) {
+function createDebugShowFrustumsUniformMap(scene: any, command: any) {
   // setup uniform for the shader
   let debugUniformMap;
   if (!defined(command.uniformMap)) {
@@ -148,5 +148,4 @@ DebugInspector.prototype.executeDebugShowFrustumsCommand = function (
   debugCommand.uniformMap = createDebugShowFrustumsUniformMap(scene, command);
   debugCommand.execute(scene.context, passState);
 };
-export { DebugInspector };
 export default DebugInspector;

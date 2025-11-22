@@ -34,22 +34,31 @@ const scratchCartesian2 = new Cartesian2();
  *   // A tile request error occurred.
  * }
  */
-async function sampleTerrainMostDetailed(
-  terrainProvider,
-  positions,
-  rejectOnTileFail,
-) {
+async function sampleTerrainMostDetailed(terrainProvider: any, positions: any, rejectOnTileFail: any, ) {
   if (!defined(rejectOnTileFail)) {
     rejectOnTileFail = false;
   }
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(terrainProvider)) {
+    throw new DeveloperError("terrainProvider is required.");
+  }
+  if (!defined(positions)) {
+    throw new DeveloperError("positions is required.");
+  }
+  //>>includeEnd('debug');
 
   const byLevel = [];
   const maxLevels = [];
 
   const availability = terrainProvider.availability;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(availability)) {
+    throw new DeveloperError(
+      "sampleTerrainMostDetailed requires a terrain provider that has tile availability.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const promises = [];
   for (let i = 0; i < positions.length; ++i) {
@@ -116,5 +125,4 @@ async function sampleTerrainMostDetailed(
 
   return positions;
 }
-export { sampleTerrainMostDetailed };
 export default sampleTerrainMostDetailed;

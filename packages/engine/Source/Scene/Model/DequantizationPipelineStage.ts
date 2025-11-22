@@ -79,7 +79,7 @@ DequantizationPipelineStage.process = function (
   }
 };
 
-function addDequantizationUniforms(renderResources, attributeInfo) {
+function addDequantizationUniforms(renderResources: any, attributeInfo: any) {
   const shaderBuilder = renderResources.shaderBuilder;
   const uniformMap = renderResources.uniformMap;
   const variableName = attributeInfo.variableName;
@@ -124,7 +124,7 @@ function addDequantizationUniforms(renderResources, attributeInfo) {
   }
 }
 
-function promoteToVec4(value, defaultAlpha) {
+function promoteToVec4(value: any, defaultAlpha: any) {
   if (value instanceof Cartesian4) {
     return value;
   }
@@ -132,7 +132,7 @@ function promoteToVec4(value, defaultAlpha) {
   return new Cartesian4(value.x, value.y, value.z, defaultAlpha);
 }
 
-function updateDequantizationFunction(shaderBuilder, attributeInfo) {
+function updateDequantizationFunction(shaderBuilder: any, attributeInfo: any) {
   const variableName = attributeInfo.variableName;
   const quantization = attributeInfo.attribute.quantization;
 
@@ -149,7 +149,7 @@ function updateDequantizationFunction(shaderBuilder, attributeInfo) {
   );
 }
 
-function generateOctDecodeLine(variableName, quantization) {
+function generateOctDecodeLine(variableName: any, quantization: any) {
   const structField = `attributes.${variableName}`;
 
   const quantizedAttribute = `a_quantized_${variableName}`;
@@ -164,7 +164,7 @@ function generateOctDecodeLine(variableName, quantization) {
   return `${structField} = czm_octDecode(${quantizedAttribute}, ${normalizationRange})${swizzle};`;
 }
 
-function generateDequantizeLine(variableName) {
+function generateDequantizeLine(variableName: any) {
   const structField = `attributes.${variableName}`;
   const quantizedAttribute = `a_quantized_${variableName}`;
   const offset = `model_quantizedVolumeOffset_${variableName}`;
@@ -175,5 +175,4 @@ function generateDequantizeLine(variableName) {
   return `${structField} = ${offset} + ${quantizedAttribute} * ${stepSize};`;
 }
 
-export { DequantizationPipelineStage };
 export default DequantizationPipelineStage;

@@ -19,10 +19,14 @@ const url = "https://dev.virtualearth.net/REST/v1/Locations";
  * @param {string} options.key A key to use with the Bing Maps geocoding service
  * @param {string} [options.culture] A Bing Maps {@link https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes|Culture Code} to return results in a specific culture and language.
  */
-function BingMapsGeocoderService(options) {
+function BingMapsGeocoderService(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const key = options.key;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(key)) {
+    throw new DeveloperError("options.key is required.");
+  }
+  //>>includeEnd('debug');
 
   this._key = key;
 
@@ -90,7 +94,9 @@ Object.defineProperties(BingMapsGeocoderService.prototype, {
  * @returns {Promise<GeocoderService.Result[]>}
  */
 BingMapsGeocoderService.prototype.geocode = async function (query) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("query", query);
+  //>>includeEnd('debug');
 
   const resource = this._resource.getDerivedResource({
     queryParameters: {
@@ -118,5 +124,4 @@ BingMapsGeocoderService.prototype.geocode = async function (query) {
     });
   });
 };
-export { BingMapsGeocoderService };
 export default BingMapsGeocoderService;

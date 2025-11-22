@@ -20,14 +20,7 @@ const terrainBitmask = 0x80;
  *
  * @private
  */
-function GoogleEarthEnterpriseTileInformation(
-  bits,
-  cnodeVersion,
-  imageryVersion,
-  terrainVersion,
-  imageryProvider,
-  terrainProvider,
-) {
+function GoogleEarthEnterpriseTileInformation(bits: any, cnodeVersion: any, imageryVersion: any, terrainVersion: any, imageryProvider: any, terrainProvider: any, ) {
   this._bits = bits;
   this.cnodeVersion = cnodeVersion;
   this.imageryVersion = imageryVersion;
@@ -133,5 +126,4 @@ GoogleEarthEnterpriseTileInformation.prototype.hasChild = function (index) {
 GoogleEarthEnterpriseTileInformation.prototype.getChildBitmask = function () {
   return this._bits & anyChildBitmask;
 };
-export { GoogleEarthEnterpriseTileInformation };
 export default GoogleEarthEnterpriseTileInformation;

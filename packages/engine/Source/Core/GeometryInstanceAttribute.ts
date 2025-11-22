@@ -39,10 +39,28 @@ import DeveloperError from "./DeveloperError.js";
  * @see ShowGeometryInstanceAttribute
  * @see DistanceDisplayConditionGeometryInstanceAttribute
  */
-function GeometryInstanceAttribute(options) {
+function GeometryInstanceAttribute(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.componentDatatype)) {
+    throw new DeveloperError("options.componentDatatype is required.");
+  }
+  if (!defined(options.componentsPerAttribute)) {
+    throw new DeveloperError("options.componentsPerAttribute is required.");
+  }
+  if (
+    options.componentsPerAttribute < 1 ||
+    options.componentsPerAttribute > 4
+  ) {
+    throw new DeveloperError(
+      "options.componentsPerAttribute must be between 1 and 4.",
+    );
+  }
+  if (!defined(options.value)) {
+    throw new DeveloperError("options.value is required.");
+  }
+  //>>includeEnd('debug');
 
   /**
    * The datatype of each component in the attribute, e.g., individual elements in
@@ -112,5 +130,4 @@ function GeometryInstanceAttribute(options) {
    */
   this.value = options.value;
 }
-export { GeometryInstanceAttribute };
 export default GeometryInstanceAttribute;

@@ -25,12 +25,15 @@ import MetadataTableProperty from "./MetadataTableProperty.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function MetadataTable(options) {
+function MetadataTable(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const count = options.count;
   const metadataClass = options.class;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThan("options.count", count, 0);
+  Check.typeOf.object("options.class", metadataClass);
+  //>>includeEnd('debug');
 
   let byteLength = 0;
   const properties = {};
@@ -156,13 +159,15 @@ MetadataTable.prototype.getPropertyIds = function (results) {
  *
  * @param {number} index The index of the entity.
  * @param {string} propertyId The case-sensitive ID of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the entity does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
  * @private
  */
 MetadataTable.prototype.getProperty = function (index, propertyId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
 
   const property = this._properties[propertyId];
 
@@ -207,7 +212,9 @@ MetadataTable.prototype.getProperty = function (index, propertyId) {
  * @private
  */
 MetadataTable.prototype.setProperty = function (index, propertyId, value) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
 
   const property = this._properties[propertyId];
   if (defined(property)) {
@@ -223,13 +230,15 @@ MetadataTable.prototype.setProperty = function (index, propertyId, value) {
  *
  * @param {number} index The index of the entity.
  * @param {string} semantic The case-sensitive semantic of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the entity does not have this semantic.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this semantic.
  *
  * @exception {DeveloperError} index is required and between zero and count - 1
  * @private
  */
 MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
 
   let property;
   const propertiesBySemantic = this._class.propertiesBySemantic;
@@ -263,7 +272,9 @@ MetadataTable.prototype.setPropertyBySemantic = function (
   semantic,
   value,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
 
   let property;
   const propertiesBySemantic = this._class.propertiesBySemantic;
@@ -282,12 +293,14 @@ MetadataTable.prototype.setPropertyBySemantic = function (
  * Returns a typed array containing the property values for a given propertyId.
  *
  * @param {string} propertyId The case-sensitive ID of the property.
- * @returns {any} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
  *
  * @private
  */
 MetadataTable.prototype.getPropertyTypedArray = function (propertyId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
 
   const property = this._properties[propertyId];
 
@@ -302,12 +315,14 @@ MetadataTable.prototype.getPropertyTypedArray = function (propertyId) {
  * Returns a typed array containing the property values for the property with the given semantic.
  *
  * @param {string} semantic The case-sensitive semantic of the property.
- * @returns {any} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
  *
  * @private
  */
 MetadataTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
 
   let property;
   const propertiesBySemantic = this._class.propertiesBySemantic;
@@ -322,7 +337,7 @@ MetadataTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
   return undefined;
 };
 
-function getDefault(classDefinition, propertyId) {
+function getDefault(classDefinition: any, propertyId: any) {
   const classProperties = classDefinition.properties;
   if (!defined(classProperties)) {
     return undefined;
@@ -339,5 +354,4 @@ function getDefault(classDefinition, propertyId) {
   }
 }
 
-export { MetadataTable };
 export default MetadataTable;

@@ -35,8 +35,11 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function parseBatchTable(options) {
-  ;
+function parseBatchTable(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("options.count", options.count);
+  Check.typeOf.object("options.batchTable", options.batchTable);
+  //>>includeEnd('debug');
 
   const featureCount = options.count;
   const batchTable = options.batchTable;
@@ -44,7 +47,13 @@ function parseBatchTable(options) {
   const parseAsPropertyAttributes = options.parseAsPropertyAttributes ?? false;
   const customAttributeOutput = options.customAttributeOutput;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (parseAsPropertyAttributes && !defined(customAttributeOutput)) {
+    throw new DeveloperError(
+      "customAttributeOutput is required when parsing batch table as property attributes",
+    );
+  }
+  //>>includeEnd('debug');
 
   // divide properties into binary, json and hierarchy
   const partitionResults = partitionProperties(batchTable);
@@ -141,7 +150,7 @@ function parseBatchTable(options) {
  *
  * @private
  */
-function partitionProperties(batchTable) {
+function partitionProperties(batchTable: any) {
   const legacyHierarchy = batchTable.HIERARCHY;
   const extras = batchTable.extras;
   const extensions = batchTable.extensions;
@@ -203,12 +212,7 @@ function partitionProperties(batchTable) {
  *
  * @private
  */
-function transcodeBinaryProperties(
-  featureCount,
-  className,
-  binaryProperties,
-  binaryBody,
-) {
+function transcodeBinaryProperties(featureCount: any, className: any, binaryProperties: any, binaryBody: any, ) {
   const classProperties = {};
   const featureTableProperties = {};
   const bufferViewsTypedArrays = {};
@@ -266,13 +270,7 @@ function transcodeBinaryProperties(
   };
 }
 
-function transcodeBinaryPropertiesAsPropertyAttributes(
-  featureCount,
-  className,
-  binaryProperties,
-  binaryBody,
-  customAttributeOutput,
-) {
+function transcodeBinaryPropertiesAsPropertyAttributes(featureCount: any, className: any, binaryProperties: any, binaryBody: any, customAttributeOutput: any, ) {
   const classProperties = {};
   const propertyAttributeProperties = {};
   let nextPlaceholderId = 0;
@@ -393,7 +391,7 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
  * @return {object} The corresponding structural metadata property definition
  * @private
  */
-function transcodePropertyType(property) {
+function transcodePropertyType(property: any) {
   const componentType = transcodeComponentType(property.componentType);
 
   return {
@@ -411,7 +409,7 @@ function transcodePropertyType(property) {
  *
  * @private
  */
-function transcodeComponentType(componentType) {
+function transcodeComponentType(componentType: any) {
   switch (componentType) {
     case "BYTE":
       return "INT8";
@@ -436,5 +434,4 @@ function transcodeComponentType(componentType) {
 parseBatchTable._deprecationWarning = deprecationWarning;
 parseBatchTable._oneTimeWarning = oneTimeWarning;
 
-export { parseBatchTable };
 export default parseBatchTable;

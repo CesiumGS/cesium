@@ -12,12 +12,15 @@ const compressedMagicSwap = 0xadde6874;
  *
  * @private
  */
-function decodeGoogleEarthEnterpriseData(key, data) {
+function decodeGoogleEarthEnterpriseData(key: any, data: any) {
   if (decodeGoogleEarthEnterpriseData.passThroughDataForTesting) {
     return data;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("key", key);
+  Check.typeOf.object("data", data);
+  //>>includeEnd('debug');
 
   const keyLength = key.byteLength;
   if (keyLength === 0 || keyLength % 4 !== 0) {
@@ -87,5 +90,4 @@ function decodeGoogleEarthEnterpriseData(key, data) {
 }
 
 decodeGoogleEarthEnterpriseData.passThroughDataForTesting = false;
-export { decodeGoogleEarthEnterpriseData };
 export default decodeGoogleEarthEnterpriseData;

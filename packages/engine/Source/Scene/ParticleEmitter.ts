@@ -16,8 +16,12 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @see ConeEmitter
  * @see SphereEmitter
  */
-function ParticleEmitter(options) {
-  ;
+function ParticleEmitter(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "This type should not be instantiated directly.  Instead, use BoxEmitter, CircleEmitter, ConeEmitter or SphereEmitter.",
+  );
+  //>>includeEnd('debug');
 }
 
 /**
@@ -29,5 +33,4 @@ function ParticleEmitter(options) {
 ParticleEmitter.prototype.emit = function (particle) {
   DeveloperError.throwInstantiationError();
 };
-export { ParticleEmitter };
 export default ParticleEmitter;

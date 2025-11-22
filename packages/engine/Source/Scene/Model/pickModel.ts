@@ -40,16 +40,12 @@ const scratchBoundingSphere = new BoundingSphere();
  *
  * @private
  */
-export default function pickModel(
-  model,
-  ray,
-  frameState,
-  verticalExaggeration,
-  relativeHeight,
-  ellipsoid,
-  result,
-) {
-  ;
+export default function pickModel(model: any, ray: any, frameState: any, verticalExaggeration: any, relativeHeight: any, ellipsoid: any, result: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("model", model);
+  Check.typeOf.object("ray", ray);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
 
   if (!model._ready || frameState.mode === SceneMode.MORPHING) {
     return;
@@ -359,18 +355,7 @@ export default function pickModel(
   return result;
 }
 
-function getVertexPosition(
-  vertices,
-  index,
-  offset,
-  numElements,
-  quantization,
-  instanceTransform,
-  verticalExaggeration,
-  relativeHeight,
-  ellipsoid,
-  result,
-) {
+function getVertexPosition(vertices: any, index: any, offset: any, numElements: any, quantization: any, instanceTransform: any, verticalExaggeration: any, relativeHeight: any, ellipsoid: any, result: any, ) {
   const i = offset + index * numElements;
   result.x = vertices[i];
   result.y = vertices[i + 1];

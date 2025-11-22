@@ -24,7 +24,7 @@ import { loadSpz } from "@spz-loader/core";
  *
  * @private
  */
-function GltfSpzLoader(options) {
+function GltfSpzLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -34,7 +34,14 @@ function GltfSpzLoader(options) {
   const baseResource = options.baseResource;
   const cacheKey = options.cacheKey;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("options.resourceCache", resourceCache);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.object("options.spz", spz);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
 
   this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
@@ -84,7 +91,7 @@ Object.defineProperties(GltfSpzLoader.prototype, {
   },
 });
 
-async function loadResources(loader) {
+async function loadResources(loader: any) {
   const resourceCache = loader._resourceCache;
   try {
     const bufferViewLoader = resourceCache.getBufferViewLoader({
@@ -127,14 +134,14 @@ GltfSpzLoader.prototype.load = async function () {
   return this._promise;
 };
 
-function handleError(spzLoader, error) {
+function handleError(spzLoader: any, error: any) {
   spzLoader.unload();
   spzLoader._state = ResourceLoaderState.FAILED;
   const errorMessage = "Failed to load SPZ";
   throw spzLoader.getError(errorMessage, error);
 }
 
-async function processDecode(loader, decodePromise) {
+async function processDecode(loader: any, decodePromise: any) {
   try {
     const gcloud = await decodePromise;
     if (loader.isDestroyed()) {
@@ -163,7 +170,9 @@ async function processDecode(loader, decodePromise) {
  * @private
  */
 GltfSpzLoader.prototype.process = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
 
   if (this._state === ResourceLoaderState.READY) {
     return true;
@@ -212,5 +221,4 @@ GltfSpzLoader.prototype.unload = function () {
   this._primitive = undefined;
 };
 
-export { GltfSpzLoader };
 export default GltfSpzLoader;

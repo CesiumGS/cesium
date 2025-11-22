@@ -13,8 +13,10 @@ import DepthFunction from "../DepthFunction.js";
  *
  * @private
  */
-function ModelRenderResources(model) {
-  ;
+function ModelRenderResources(model: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("model", model);
+  //>>includeEnd('debug');
 
   /**
    * An object used to build a shader incrementally. Each pipeline stage
@@ -114,5 +116,4 @@ function ModelRenderResources(model) {
   this.nodeRenderResources = [];
 }
 
-export { ModelRenderResources };
 export default ModelRenderResources;

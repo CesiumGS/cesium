@@ -11,7 +11,7 @@ const scratchTimeVec = new Cartesian4();
 const scratchTemp0 = new Cartesian3();
 const scratchTemp1 = new Cartesian3();
 
-function createEvaluateFunction(spline) {
+function createEvaluateFunction(spline: any) {
   const points = spline.points;
   const times = spline.times;
 
@@ -147,7 +147,7 @@ const lastTangentScratch = new Cartesian3();
  * @see QuaternionSpline
  * @see MorphWeightSpline
  */
-function CatmullRomSpline(options) {
+function CatmullRomSpline(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const points = options.points;
@@ -155,7 +155,17 @@ function CatmullRomSpline(options) {
   let firstTangent = options.firstTangent;
   let lastTangent = options.lastTangent;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("points", points);
+  Check.defined("times", times);
+  Check.typeOf.number.greaterThanOrEquals("points.length", points.length, 2);
+  Check.typeOf.number.equals(
+    "times.length",
+    "points.length",
+    times.length,
+    points.length,
+  );
+  //>>includeEnd('debug');
 
   if (points.length > 2) {
     if (!defined(firstTangent)) {
@@ -311,5 +321,4 @@ CatmullRomSpline.prototype.clampTime = Spline.prototype.clampTime;
 CatmullRomSpline.prototype.evaluate = function (time, result) {
   return this._evaluateFunction(time, result);
 };
-export { CatmullRomSpline };
 export default CatmullRomSpline;

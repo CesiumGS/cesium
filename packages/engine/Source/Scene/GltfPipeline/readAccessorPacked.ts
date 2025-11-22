@@ -13,7 +13,7 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-function readAccessorPacked(gltf, accessor) {
+function readAccessorPacked(gltf: any, accessor: any) {
   const byteStride = getAccessorByteStride(gltf, accessor);
   const componentTypeByteLength = ComponentDatatype.getSizeInBytes(
     accessor.componentType,
@@ -51,5 +51,4 @@ function readAccessorPacked(gltf, accessor) {
   return values;
 }
 
-export { readAccessorPacked };
 export default readAccessorPacked;

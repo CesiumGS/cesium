@@ -46,7 +46,11 @@ Object.defineProperties(AssociativeArray.prototype, {
  * @returns {boolean} <code>true</code> if the key is in the array, <code>false</code> otherwise.
  */
 AssociativeArray.prototype.contains = function (key) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof key !== "string" && typeof key !== "number") {
+    throw new DeveloperError("key is required to be a string or number.");
+  }
+  //>>includeEnd('debug');
   return defined(this._hash[key]);
 };
 
@@ -58,7 +62,11 @@ AssociativeArray.prototype.contains = function (key) {
  * @param {*} value The value to associate with the provided key.
  */
 AssociativeArray.prototype.set = function (key, value) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof key !== "string" && typeof key !== "number") {
+    throw new DeveloperError("key is required to be a string or number.");
+  }
+  //>>includeEnd('debug');
 
   const oldValue = this._hash[key];
   if (value !== oldValue) {
@@ -72,10 +80,14 @@ AssociativeArray.prototype.set = function (key, value) {
  * Retrieves the value associated with the provided key.
  *
  * @param {string|number} key The key whose value is to be retrieved.
- * @returns {any} The associated value, or undefined if the key does not exist in the collection.
+ * @returns {*} The associated value, or undefined if the key does not exist in the collection.
  */
 AssociativeArray.prototype.get = function (key) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof key !== "string" && typeof key !== "number") {
+    throw new DeveloperError("key is required to be a string or number.");
+  }
+  //>>includeEnd('debug');
   return this._hash[key];
 };
 
@@ -86,7 +98,11 @@ AssociativeArray.prototype.get = function (key) {
  * @returns {boolean} True if it was removed, false if the key was not in the collection.
  */
 AssociativeArray.prototype.remove = function (key) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (defined(key) && typeof key !== "string" && typeof key !== "number") {
+    throw new DeveloperError("key is required to be a string or number.");
+  }
+  //>>includeEnd('debug');
 
   const value = this._hash[key];
   const hasValue = defined(value);
@@ -108,5 +124,4 @@ AssociativeArray.prototype.removeAll = function () {
     array.length = 0;
   }
 };
-export { AssociativeArray };
 export default AssociativeArray;

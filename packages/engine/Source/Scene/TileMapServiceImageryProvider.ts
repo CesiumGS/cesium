@@ -73,7 +73,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  *        Cesium.Math.toRadians(40.0))
  * });
  */
-function TileMapServiceImageryProvider(options) {
+function TileMapServiceImageryProvider(options: any) {
   UrlTemplateImageryProvider.call(this, options);
 }
 
@@ -127,7 +127,9 @@ TileMapServiceImageryProvider._requestMetadata = async function (
  * @exception {RuntimeError} tilemapresource.xml specifies an unsupported profile attribute
  */
 TileMapServiceImageryProvider.fromUrl = async function (url, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   const resource = Resource.createIfNeeded(url);
   resource.appendForwardSlash();
@@ -159,7 +161,7 @@ if (defined(Object.create)) {
  * Mutates the properties of a given rectangle so it does not extend outside of the given tiling scheme's rectangle
  * @private
  */
-function confineRectangleToTilingScheme(rectangle, tilingScheme) {
+function confineRectangleToTilingScheme(rectangle: any, tilingScheme: any) {
   if (rectangle.west < tilingScheme.rectangle.west) {
     rectangle.west = tilingScheme.rectangle.west;
   }
@@ -175,11 +177,7 @@ function confineRectangleToTilingScheme(rectangle, tilingScheme) {
   return rectangle;
 }
 
-function calculateSafeMinimumDetailLevel(
-  tilingScheme,
-  rectangle,
-  minimumLevel,
-) {
+function calculateSafeMinimumDetailLevel(tilingScheme: any, rectangle: any, minimumLevel: any, ) {
   // Check the number of tiles at the minimum level.  If it's more than four,
   // try requesting the lower levels anyway, because starting at the higher minimum
   // level will cause too many tiles to be downloaded and rendered.
@@ -437,5 +435,4 @@ TileMapServiceImageryProvider._metadataFailure = function (
   };
 };
 
-export { TileMapServiceImageryProvider };
 export default TileMapServiceImageryProvider;

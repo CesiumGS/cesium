@@ -31,5 +31,4 @@ Object.defineProperties(Light.prototype, {
   },
 });
 
-export { Light };
 export default Light;

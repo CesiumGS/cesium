@@ -59,5 +59,4 @@ MapProjection.prototype.project = DeveloperError.throwInstantiationError;
  *          created and returned.
  */
 MapProjection.prototype.unproject = DeveloperError.throwInstantiationError;
-export { MapProjection };
 export default MapProjection;

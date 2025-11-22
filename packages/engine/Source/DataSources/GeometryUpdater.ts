@@ -37,8 +37,14 @@ const defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
  * @param {string} options.geometryPropertyName The geometry property name
  * @param {string[]} options.observedPropertyNames The entity properties this geometry cares about
  */
-function GeometryUpdater(options) {
-  ;
+function GeometryUpdater(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.entity", options.entity);
+  Check.defined("options.scene", options.scene);
+  Check.defined("options.geometryOptions", options.geometryOptions);
+  Check.defined("options.geometryPropertyName", options.geometryPropertyName);
+  Check.defined("options.observedPropertyNames", options.observedPropertyNames);
+  //>>includeEnd('debug');
 
   const entity = options.entity;
   const geometryPropertyName = options.geometryPropertyName;
@@ -512,7 +518,16 @@ GeometryUpdater.prototype.createDynamicUpdater = function (
   primitives,
   groundPrimitives,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("primitives", primitives);
+  Check.defined("groundPrimitives", groundPrimitives);
+
+  if (!this._dynamic) {
+    throw new DeveloperError(
+      "This instance does not represent dynamic geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   return new this.constructor.DynamicGeometryUpdater(
     this,
@@ -520,5 +535,4 @@ GeometryUpdater.prototype.createDynamicUpdater = function (
     groundPrimitives,
   );
 };
-export { GeometryUpdater };
 export default GeometryUpdater;

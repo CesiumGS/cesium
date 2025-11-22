@@ -176,5 +176,4 @@ VoxelShape.DefaultMinBounds = DeveloperError.throwInstantiationError;
  */
 VoxelShape.DefaultMaxBounds = DeveloperError.throwInstantiationError;
 
-export { VoxelShape };
 export default VoxelShape;

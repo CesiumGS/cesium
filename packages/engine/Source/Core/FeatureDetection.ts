@@ -10,7 +10,7 @@ if (typeof navigator !== "undefined") {
   theNavigator = {};
 }
 
-function extractVersion(versionString) {
+function extractVersion(versionString: any) {
   const parts = versionString.split(".");
   for (let i = 0, len = parts.length; i < len; ++i) {
     parts[i] = parseInt(parts[i], 10);
@@ -218,7 +218,13 @@ function imageRenderingValue() {
 }
 
 function supportsWebP() {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!supportsWebP.initialized) {
+    throw new DeveloperError(
+      "You must call FeatureDetection.supportsWebP.initialize and wait for the promise to resolve before calling FeatureDetection.supportsWebP",
+    );
+  }
+  //>>includeEnd('debug');
   return supportsWebP._result;
 }
 supportsWebP._promise = undefined;
@@ -229,7 +235,7 @@ supportsWebP.initialize = function () {
     return supportsWebP._promise;
   }
 
-  supportsWebP._promise = new Promise((resolve) => {
+  supportsWebP._promise = new Promise((resolve: any) => {
     const image = new Image();
     image.onload = function () {
       supportsWebP._result = image.width > 0 && image.height > 0;
@@ -410,7 +416,9 @@ FeatureDetection.supportsWebAssembly = function () {
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext|WebGL2RenderingContext}
  */
 FeatureDetection.supportsWebgl2 = function (scene) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("scene", scene);
+  //>>includeEnd('debug');
 
   return scene.context.webgl2;
 };
@@ -424,5 +432,4 @@ FeatureDetection.supportsEsmWebWorkers = function () {
   return !isFirefox() || parseInt(firefoxVersionResult) >= 114;
 };
 
-export { FeatureDetection };
 export default FeatureDetection;

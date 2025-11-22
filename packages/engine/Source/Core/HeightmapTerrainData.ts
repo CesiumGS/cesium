@@ -93,10 +93,14 @@ import TerrainProvider from "./TerrainProvider.js";
  * @see QuantizedMeshTerrainData
  * @see GoogleEarthEnterpriseTerrainData
  */
-function HeightmapTerrainData(options) {
+function HeightmapTerrainData(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.buffer", options.buffer);
+  Check.typeOf.number("options.width", options.width);
+  Check.typeOf.number("options.height", options.height);
+  //>>includeEnd('debug');
 
   this._buffer = options.buffer;
   this._width = options.width;
@@ -192,7 +196,12 @@ const createMeshTaskProcessorThrottle = new TaskProcessor(
 HeightmapTerrainData.prototype.createMesh = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+  Check.typeOf.number("options.x", options.x);
+  Check.typeOf.number("options.y", options.y);
+  Check.typeOf.number("options.level", options.level);
+  //>>includeEnd('debug');
 
   const tilingScheme = options.tilingScheme;
   const x = options.x;
@@ -304,7 +313,12 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
  * @private
  */
 HeightmapTerrainData.prototype._createMeshSync = function (options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+  Check.typeOf.number("options.x", options.x);
+  Check.typeOf.number("options.y", options.y);
+  Check.typeOf.number("options.level", options.level);
+  //>>includeEnd('debug');
 
   const tilingScheme = options.tilingScheme;
   const x = options.x;
@@ -484,7 +498,35 @@ HeightmapTerrainData.prototype.upsample = function (
   descendantY,
   descendantLevel,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(tilingScheme)) {
+    throw new DeveloperError("tilingScheme is required.");
+  }
+  if (!defined(thisX)) {
+    throw new DeveloperError("thisX is required.");
+  }
+  if (!defined(thisY)) {
+    throw new DeveloperError("thisY is required.");
+  }
+  if (!defined(thisLevel)) {
+    throw new DeveloperError("thisLevel is required.");
+  }
+  if (!defined(descendantX)) {
+    throw new DeveloperError("descendantX is required.");
+  }
+  if (!defined(descendantY)) {
+    throw new DeveloperError("descendantY is required.");
+  }
+  if (!defined(descendantLevel)) {
+    throw new DeveloperError("descendantLevel is required.");
+  }
+  const levelDifference = descendantLevel - thisLevel;
+  if (levelDifference > 1) {
+    throw new DeveloperError(
+      "Upsampling through more than one level at a time is not currently supported.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const meshData = this._mesh;
   if (!defined(meshData)) {
@@ -600,7 +642,12 @@ HeightmapTerrainData.prototype.isChildAvailable = function (
   childX,
   childY,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("thisX", thisX);
+  Check.typeOf.number("thisY", thisY);
+  Check.typeOf.number("childX", childX);
+  Check.typeOf.number("childY", childY);
+  //>>includeEnd('debug');
 
   let bitNumber = 2; // northwest child
   if (childX !== thisX * 2) {
@@ -625,18 +672,7 @@ HeightmapTerrainData.prototype.wasCreatedByUpsampling = function () {
   return this._createdByUpsampling;
 };
 
-function interpolateHeight(
-  sourceHeights,
-  elementsPerHeight,
-  elementMultiplier,
-  stride,
-  isBigEndian,
-  sourceRectangle,
-  width,
-  height,
-  longitude,
-  latitude,
-) {
+function interpolateHeight(sourceHeights: any, elementsPerHeight: any, elementMultiplier: any, stride: any, isBigEndian: any, sourceRectangle: any, width: any, height: any, longitude: any, latitude: any, ) {
   const fromWest =
     ((longitude - sourceRectangle.west) * (width - 1)) /
     (sourceRectangle.east - sourceRectangle.west);
@@ -707,17 +743,7 @@ function interpolateHeight(
   );
 }
 
-function interpolateMeshHeight(
-  buffer,
-  encoding,
-  heightOffset,
-  heightScale,
-  sourceRectangle,
-  width,
-  height,
-  longitude,
-  latitude,
-) {
+function interpolateMeshHeight(buffer: any, encoding: any, heightOffset: any, heightScale: any, sourceRectangle: any, width: any, height: any, longitude: any, latitude: any, ) {
   // returns a height encoded according to the structure's heightScale and heightOffset.
   const fromWest =
     ((longitude - sourceRectangle.west) * (width - 1)) /
@@ -773,14 +799,7 @@ function interpolateMeshHeight(
   );
 }
 
-function triangleInterpolateHeight(
-  dX,
-  dY,
-  southwestHeight,
-  southeastHeight,
-  northwestHeight,
-  northeastHeight,
-) {
+function triangleInterpolateHeight(dX: any, dY: any, southwestHeight: any, southeastHeight: any, northwestHeight: any, northeastHeight: any, ) {
   // The HeightmapTessellator bisects the quad from southwest to northeast.
   if (dY < dX) {
     // Lower right triangle
@@ -799,14 +818,7 @@ function triangleInterpolateHeight(
   );
 }
 
-function getHeight(
-  heights,
-  elementsPerHeight,
-  elementMultiplier,
-  stride,
-  isBigEndian,
-  index,
-) {
+function getHeight(heights: any, elementsPerHeight: any, elementMultiplier: any, stride: any, isBigEndian: any, index: any, ) {
   index *= stride;
 
   let height = 0;
@@ -825,16 +837,7 @@ function getHeight(
   return height;
 }
 
-function setHeight(
-  heights,
-  elementsPerHeight,
-  elementMultiplier,
-  divisor,
-  stride,
-  isBigEndian,
-  index,
-  height,
-) {
+function setHeight(heights: any, elementsPerHeight: any, elementMultiplier: any, divisor: any, stride: any, isBigEndian: any, index: any, height: any, ) {
   index *= stride;
 
   let i;
@@ -853,5 +856,4 @@ function setHeight(
   }
   heights[index + i] = height;
 }
-export { HeightmapTerrainData };
 export default HeightmapTerrainData;

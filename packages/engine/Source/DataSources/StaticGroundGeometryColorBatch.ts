@@ -14,7 +14,7 @@ const colorScratch = new Color();
 const distanceDisplayConditionScratch = new DistanceDisplayCondition();
 const defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
-function Batch(primitives, classificationType, color, zIndex) {
+function Batch(primitives: any, classificationType: any, color: any, zIndex: any) {
   this.primitives = primitives;
   this.zIndex = zIndex;
   this.classificationType = classificationType;
@@ -281,7 +281,7 @@ Batch.prototype.removeAllPrimitives = function () {
 /**
  * @private
  */
-function StaticGroundGeometryColorBatch(primitives, classificationType) {
+function StaticGroundGeometryColorBatch(primitives: any, classificationType: any) {
   this._batches = [];
   this._primitives = primitives;
   this._classificationType = classificationType;
@@ -391,5 +391,4 @@ StaticGroundGeometryColorBatch.prototype.removeAllPrimitives = function () {
     batches[i].removeAllPrimitives();
   }
 };
-export { StaticGroundGeometryColorBatch };
 export default StaticGroundGeometryColorBatch;

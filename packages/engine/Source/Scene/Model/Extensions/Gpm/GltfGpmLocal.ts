@@ -49,8 +49,10 @@ import StorageType from "./StorageType.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function GltfGpmLocal(options) {
-  ;
+function GltfGpmLocal(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.storageType", options.storageType);
+  //>>includeEnd('debug');
 
   this._storageType = options.storageType;
   this._anchorPointsIndirect = options.anchorPointsIndirect;
@@ -58,7 +60,52 @@ function GltfGpmLocal(options) {
   this._intraTileCorrelationGroups = options.intraTileCorrelationGroups;
   this._covarianceDirect = options.covarianceDirect;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (this.storageType === StorageType.Indirect) {
+    if (!defined(this.anchorPointsIndirect)) {
+      throw new RuntimeError(
+        "The anchorPointsIndirect are required for 'Indirect' storage",
+      );
+    }
+    if (!defined(this.intraTileCorrelationGroups)) {
+      throw new RuntimeError(
+        "The intraTileCorrelationGroups are required for 'Indirect' storage",
+      );
+    }
+    if (defined(this.anchorPointsDirect)) {
+      throw new RuntimeError(
+        "The anchorPointsDirect must be omitted for 'Indirect' storage",
+      );
+    }
+    if (defined(this.covarianceDirect)) {
+      throw new RuntimeError(
+        "The covarianceDirect must be omitted for 'Indirect' storage",
+      );
+    }
+  } else {
+    // Direct storage
+    if (!defined(this.anchorPointsDirect)) {
+      throw new RuntimeError(
+        "The anchorPointsDirect are required for 'Direct' storage",
+      );
+    }
+    if (!defined(this.covarianceDirect)) {
+      throw new RuntimeError(
+        "The covarianceDirect is required for 'Direct' storage",
+      );
+    }
+    if (defined(this.anchorPointsIndirect)) {
+      throw new RuntimeError(
+        "The anchorPointsIndirect must be omitted for 'Direct' storage",
+      );
+    }
+    if (defined(this.intraTileCorrelationGroups)) {
+      throw new RuntimeError(
+        "The intraTileCorrelationGroups must be omitted for 'Direct' storage",
+      );
+    }
+  }
+  //>>includeEnd('debug');
 }
 
 Object.defineProperties(GltfGpmLocal.prototype, {
@@ -129,5 +176,4 @@ Object.defineProperties(GltfGpmLocal.prototype, {
   },
 });
 
-export { GltfGpmLocal };
 export default GltfGpmLocal;

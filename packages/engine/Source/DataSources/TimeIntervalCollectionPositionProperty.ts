@@ -15,7 +15,7 @@ import Property from "./Property.js";
  *
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  */
-function TimeIntervalCollectionPositionProperty(referenceFrame) {
+function TimeIntervalCollectionPositionProperty(referenceFrame: any) {
   this._definitionChanged = new Event();
   this._intervals = new TimeIntervalCollection();
   this._intervals.changedEvent.addEventListener(
@@ -107,7 +107,14 @@ TimeIntervalCollectionPositionProperty.prototype.getValue = function (
  */
 TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame =
   function (time, referenceFrame, result) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(time)) {
+      throw new DeveloperError("time is required.");
+    }
+    if (!defined(referenceFrame)) {
+      throw new DeveloperError("referenceFrame is required.");
+    }
+    //>>includeEnd('debug');
 
     const position = this._intervals.findDataForIntervalContainingDate(time);
     if (defined(position)) {
@@ -145,5 +152,4 @@ TimeIntervalCollectionPositionProperty.prototype._intervalsChanged =
   function () {
     this._definitionChanged.raiseEvent(this);
   };
-export { TimeIntervalCollectionPositionProperty };
 export default TimeIntervalCollectionPositionProperty;

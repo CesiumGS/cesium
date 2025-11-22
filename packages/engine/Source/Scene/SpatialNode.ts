@@ -21,7 +21,7 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  *
  * @private
  */
-function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
+function SpatialNode(level: any, x: any, y: any, z: any, parent: any, shape: any, voxelDimensions: any) {
   /**
    * @type {SpatialNode[]}
    */
@@ -159,7 +159,7 @@ const scratchBinarySearchKeyframeNode = {
  * @returns {number}
  * @private
  */
-function findKeyframeIndex(keyframe, keyframeNodes) {
+function findKeyframeIndex(keyframe: any, keyframeNodes: any) {
   scratchBinarySearchKeyframeNode.keyframe = keyframe;
   return binarySearch(
     keyframeNodes,
@@ -253,14 +253,14 @@ SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
         );
 };
 
-function getKeyframeIndexPrev(targetKeyframe, keyframeNodes) {
+function getKeyframeIndexPrev(targetKeyframe: any, keyframeNodes: any) {
   const keyframeIndex = findKeyframeIndex(targetKeyframe, keyframeNodes);
   return keyframeIndex < 0
     ? CesiumMath.clamp(~keyframeIndex - 1, 0, keyframeNodes.length - 1)
     : keyframeIndex;
 }
 
-function getWeightedKeyframeDistance(levelDistance, keyframeDistance) {
+function getWeightedKeyframeDistance(levelDistance: any, keyframeDistance: any) {
   // Balance quality between visual (levelDistance) and temporal (keyframeDistance)
   const levelWeight = Math.exp(levelDistance * 4.0);
   // Keyframes on the opposite of the desired direction are deprioritized.
@@ -374,5 +374,4 @@ SpatialNode.prototype.isRenderable = function (frameNumber) {
   );
 };
 
-export { SpatialNode };
 export default SpatialNode;

@@ -40,7 +40,7 @@ function Spline() {
  * and return its values.
  *
  * @param {number|Cartesian3|Quaternion} point
- * @returns {any} The type of the point.
+ * @returns {*} The type of the point.
  *
  * @exception {DeveloperError} value must be a Cartesian3, Quaternion, or number.
  *
@@ -57,7 +57,11 @@ Spline.getPointType = function (point) {
     return Quaternion;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "point must be a Cartesian3, Quaternion, or number.",
+  );
+  //>>includeEnd('debug');
 };
 
 /**
@@ -90,7 +94,12 @@ Spline.prototype.findTimeInterval = function (time, startIndex) {
   const times = this.times;
   const length = times.length;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("time", time);
+  if (time < times[0] || time > times[length - 1]) {
+    throw new DeveloperError("time is out of range.");
+  }
+  //>>includeEnd('debug');
 
   // Take advantage of temporal coherence by checking current, next and previous intervals
   // for containment of time.
@@ -140,7 +149,9 @@ Spline.prototype.findTimeInterval = function (time, startIndex) {
  * @return {number} The time, wrapped around the animation period.
  */
 Spline.prototype.wrapTime = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("time", time);
+  //>>includeEnd('debug');
 
   const times = this.times;
   const timeEnd = times[times.length - 1];
@@ -166,11 +177,12 @@ Spline.prototype.wrapTime = function (time) {
  * @return {number} The time, clamped to the animation period.
  */
 Spline.prototype.clampTime = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("time", time);
+  //>>includeEnd('debug');
 
   const times = this.times;
   return CesiumMath.clamp(time, times[0], times[times.length - 1]);
 };
 
-export { Spline };
 export default Spline;

@@ -16,8 +16,11 @@ import defined from "../Core/defined.js";
  * in the direction of the normal; if negative, the origin is in the half-space
  * opposite to the normal; if zero, the plane passes through the origin.
  */
-function ClippingPlane(normal, distance) {
-  ;
+function ClippingPlane(normal: any, distance: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("normal", normal);
+  Check.typeOf.number("distance", distance);
+  //>>includeEnd('debug');
 
   this._distance = distance;
   this._normal = new UpdateChangedCartesian3(normal, this);
@@ -41,7 +44,9 @@ Object.defineProperties(ClippingPlane.prototype, {
       return this._distance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
       if (defined(this.onChangeCallback) && value !== this._distance) {
         this.onChangeCallback(this.index);
       }
@@ -59,7 +64,9 @@ Object.defineProperties(ClippingPlane.prototype, {
       return this._normal;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
       if (
         defined(this.onChangeCallback) &&
         !Cartesian3.equals(this._normal._cartesian3, value)
@@ -80,7 +87,9 @@ Object.defineProperties(ClippingPlane.prototype, {
  * @returns {ClippingPlane} The ClippingPlane generated from the plane's parameters.
  */
 ClippingPlane.fromPlane = function (plane, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("plane", plane);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new ClippingPlane(plane.normal, plane.distance);
@@ -114,7 +123,7 @@ ClippingPlane.clone = function (clippingPlane, result) {
  *
  * @private
  */
-function UpdateChangedCartesian3(normal, clippingPlane) {
+function UpdateChangedCartesian3(normal: any, clippingPlane: any) {
   this._clippingPlane = clippingPlane;
   this._cartesian3 = Cartesian3.clone(normal);
 }
@@ -125,7 +134,9 @@ Object.defineProperties(UpdateChangedCartesian3.prototype, {
       return this._cartesian3.x;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
       if (
         defined(this._clippingPlane.onChangeCallback) &&
         value !== this._cartesian3.x
@@ -140,7 +151,9 @@ Object.defineProperties(UpdateChangedCartesian3.prototype, {
       return this._cartesian3.y;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
       if (
         defined(this._clippingPlane.onChangeCallback) &&
         value !== this._cartesian3.y
@@ -155,7 +168,9 @@ Object.defineProperties(UpdateChangedCartesian3.prototype, {
       return this._cartesian3.z;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
       if (
         defined(this._clippingPlane.onChangeCallback) &&
         value !== this._cartesian3.z
@@ -166,5 +181,4 @@ Object.defineProperties(UpdateChangedCartesian3.prototype, {
     },
   },
 });
-export { ClippingPlane };
 export default ClippingPlane;

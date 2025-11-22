@@ -31,7 +31,7 @@ const scratchRectangle = new Rectangle();
 const scratchCenterRect = new Rectangle();
 const scratchCarto = new Cartographic();
 
-function RectangleGeometryOptions(entity) {
+function RectangleGeometryOptions(entity: any) {
   this.id = entity;
   this.vertexFormat = undefined;
   this.rectangle = undefined;
@@ -52,7 +52,7 @@ function RectangleGeometryOptions(entity) {
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
-function RectangleGeometryUpdater(entity, scene) {
+function RectangleGeometryUpdater(entity: any, scene: any) {
   GroundGeometryUpdater.call(this, {
     entity: entity,
     scene: scene,
@@ -87,7 +87,15 @@ if (defined(Object.create)) {
 RectangleGeometryUpdater.prototype.createFillGeometryInstance = function (
   time,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._fillEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent a filled geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -149,7 +157,15 @@ RectangleGeometryUpdater.prototype.createFillGeometryInstance = function (
 RectangleGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   time,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._outlineEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent an outlined geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -311,11 +327,7 @@ RectangleGeometryUpdater.DynamicGeometryUpdater =
 /**
  * @private
  */
-function DynamicRectangleGeometryUpdater(
-  geometryUpdater,
-  primitives,
-  groundPrimitives,
-) {
+function DynamicRectangleGeometryUpdater(geometryUpdater: any, primitives: any, groundPrimitives: any, ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
@@ -408,5 +420,4 @@ DynamicRectangleGeometryUpdater.prototype._setOptions = function (
 
   options.extrudedHeight = extrudedHeightValue;
 };
-export { RectangleGeometryUpdater };
 export default RectangleGeometryUpdater;

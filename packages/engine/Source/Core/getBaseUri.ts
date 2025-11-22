@@ -17,8 +17,12 @@ import DeveloperError from "./DeveloperError.js";
  * // basePath will be "/Gallery/?value=true&example=false";
  * const basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false', true);
  */
-function getBaseUri(uri, includeQuery) {
-  ;
+function getBaseUri(uri: any, includeQuery: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(uri)) {
+    throw new DeveloperError("uri is required.");
+  }
+  //>>includeEnd('debug');
 
   let basePath = "";
   const i = uri.lastIndexOf("/");
@@ -40,5 +44,4 @@ function getBaseUri(uri, includeQuery) {
 
   return basePath;
 }
-export { getBaseUri };
 export default getBaseUri;

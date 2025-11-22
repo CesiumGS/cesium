@@ -1659,5 +1659,4 @@ ModelComponents.Anisotropy = Anisotropy;
 ModelComponents.Clearcoat = Clearcoat;
 ModelComponents.Material = Material;
 
-export { ModelComponents };
 export default ModelComponents;

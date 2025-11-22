@@ -40,7 +40,12 @@ Object.defineProperties(OrderedGroundPrimitiveCollection.prototype, {
  * @returns {GroundPrimitive} The primitive added to the collection.
  */
 OrderedGroundPrimitiveCollection.prototype.add = function (primitive, zIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("primitive", primitive);
+  if (defined(zIndex)) {
+    Check.typeOf.number("zIndex", zIndex);
+  }
+  //>>includeEnd('debug');
 
   zIndex = zIndex ?? 0;
   let collection = this._collections[zIndex];
@@ -69,7 +74,10 @@ OrderedGroundPrimitiveCollection.prototype.add = function (primitive, zIndex) {
  * @param {number} zIndex
  */
 OrderedGroundPrimitiveCollection.prototype.set = function (primitive, zIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("primitive", primitive);
+  Check.typeOf.number("zIndex", zIndex);
+  //>>includeEnd('debug');
 
   if (zIndex === primitive._zIndex) {
     return primitive;
@@ -207,5 +215,4 @@ OrderedGroundPrimitiveCollection.prototype.destroy = function () {
   this.removeAll();
   return destroyObject(this);
 };
-export { OrderedGroundPrimitiveCollection };
 export default OrderedGroundPrimitiveCollection;

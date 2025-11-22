@@ -70,5 +70,4 @@ LightingPipelineStage.process = function (renderResources, primitive) {
   shaderBuilder.addFragmentLines(LightingStageFS);
 };
 
-export { LightingPipelineStage };
 export default LightingPipelineStage;

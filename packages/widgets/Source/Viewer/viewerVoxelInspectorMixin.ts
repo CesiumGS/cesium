@@ -13,8 +13,10 @@ import VoxelInspector from "../VoxelInspector/VoxelInspector.js";
  * var viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerVoxelInspectorMixin);
  */
-function viewerVoxelInspectorMixin(viewer) {
-  ;
+function viewerVoxelInspectorMixin(viewer: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("viewer", viewer);
+  //>>includeEnd('debug');
 
   const container = document.createElement("div");
   container.className = "cesium-viewer-voxelInspectorContainer";
@@ -29,5 +31,4 @@ function viewerVoxelInspectorMixin(viewer) {
     },
   });
 }
-export { viewerVoxelInspectorMixin };
 export default viewerVoxelInspectorMixin;

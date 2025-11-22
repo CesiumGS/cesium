@@ -29,8 +29,16 @@ import Check from "../../../../Core/Check.js";
  * @param {Spdcf.ConstructorOptions} options An object describing initialization options
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function Spdcf(options) {
-  ;
+function Spdcf(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThan("options.A", options.A, 0.0);
+  Check.typeOf.number.lessThanOrEquals("options.A", options.A, 1.0);
+  Check.typeOf.number.greaterThanOrEquals("options.alpha", options.alpha, 0.0);
+  Check.typeOf.number.lessThan("options.alpha", options.alpha, 1.0);
+  Check.typeOf.number.greaterThanOrEquals("options.beta", options.beta, 0.0);
+  Check.typeOf.number.lessThanOrEquals("options.beta", options.beta, 10.0);
+  Check.typeOf.number.greaterThan("options.T", options.T, 0.0);
+  //>>includeEnd('debug');
 
   this._A = options.A;
   this._alpha = options.alpha;
@@ -92,5 +100,4 @@ Object.defineProperties(Spdcf.prototype, {
   },
 });
 
-export { Spdcf };
 export default Spdcf;

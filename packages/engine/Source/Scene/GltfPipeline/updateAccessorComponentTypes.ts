@@ -12,7 +12,7 @@ import WebGLConstants from "../../Core/WebGLConstants.js";
  *
  * @private
  */
-function updateAccessorComponentTypes(gltf) {
+function updateAccessorComponentTypes(gltf: any) {
   let componentType;
   ForEach.accessorWithSemantic(gltf, "JOINTS_0", function (accessorId) {
     const accessor = gltf.accessors[accessorId];
@@ -39,7 +39,7 @@ function updateAccessorComponentTypes(gltf) {
   return gltf;
 }
 
-function convertType(gltf, accessor, updatedComponentType) {
+function convertType(gltf: any, accessor: any, updatedComponentType: any) {
   const typedArray = ComponentDatatype.createTypedArray(
     updatedComponentType,
     readAccessorPacked(gltf, accessor),
@@ -50,5 +50,4 @@ function convertType(gltf, accessor, updatedComponentType) {
   accessor.byteOffset = 0;
 }
 
-export { updateAccessorComponentTypes };
 export default updateAccessorComponentTypes;

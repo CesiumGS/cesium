@@ -40,13 +40,13 @@ import VRButton from "../VRButton/VRButton.js";
 
 const boundingSphereScratch = new BoundingSphere();
 
-function onTimelineScrubfunction(e) {
+function onTimelineScrubfunction(e: any) {
   const clock = e.clock;
   clock.currentTime = e.timeJulian;
   clock.shouldAnimate = false;
 }
 
-function getCesium3DTileFeatureDescription(feature) {
+function getCesium3DTileFeatureDescription(feature: any) {
   const propertyIds = feature.getPropertyIds();
 
   let html = "";
@@ -64,7 +64,7 @@ function getCesium3DTileFeatureDescription(feature) {
   return html;
 }
 
-function getCesium3DTileFeatureName(feature) {
+function getCesium3DTileFeatureName(feature: any) {
   // We need to iterate all property IDs to find potential
   // candidates, but since we prefer some property IDs
   // over others, we store them in an indexed array
@@ -101,7 +101,7 @@ function getCesium3DTileFeatureName(feature) {
   return "Unnamed Feature";
 }
 
-function pickEntity(viewer, e) {
+function pickEntity(viewer: any, e: any) {
   const picked = viewer.scene.pick(e.position);
   if (defined(picked)) {
     const id = picked.id ?? picked.primitive.id;
@@ -126,7 +126,7 @@ function pickEntity(viewer, e) {
 
 const scratchStopTime = new JulianDate();
 
-function linkTimelineToDataSourceClock(timeline, dataSource) {
+function linkTimelineToDataSourceClock(timeline: any, dataSource: any) {
   if (defined(dataSource)) {
     const dataSourceClock = dataSource.clock;
     if (defined(dataSourceClock) && defined(timeline)) {
@@ -149,7 +149,7 @@ function linkTimelineToDataSourceClock(timeline, dataSource) {
 
 const cartesian3Scratch = new Cartesian3();
 
-function pickImageryLayerFeature(viewer, windowPosition) {
+function pickImageryLayerFeature(viewer: any, windowPosition: any) {
   const scene = viewer.scene;
   const pickRay = scene.camera.getPickRay(windowPosition);
   const imageryLayerFeaturePromise =
@@ -213,7 +213,7 @@ function createNoFeaturesEntity() {
   });
 }
 
-function enableVRUI(viewer, enabled) {
+function enableVRUI(viewer: any, enabled: any) {
   const geocoder = viewer._geocoder;
   const homeButton = viewer._homeButton;
   const sceneModePicker = viewer._sceneModePicker;
@@ -393,19 +393,53 @@ function enableVRUI(viewer, enabled) {
  *   window.alert(error);
  * });
  */
-function Viewer(container, options) {
-  ;
+function Viewer(container: any, options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    options.globe === false &&
+    defined(options.baseLayer) &&
+    options.baseLayer !== false
+  ) {
+    throw new DeveloperError("Cannot use baseLayer when globe is disabled.");
+  }
+  //>>includeEnd('debug');
 
   const createBaseLayerPicker =
     (!defined(options.globe) || options.globe !== false) &&
     (!defined(options.baseLayerPicker) || options.baseLayerPicker !== false);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  // If not using BaseLayerPicker, selectedImageryProviderViewModel is an invalid option
+  if (
+    !createBaseLayerPicker &&
+    defined(options.selectedImageryProviderViewModel)
+  ) {
+    throw new DeveloperError(
+      "options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget. \
+Either specify options.baseLayer instead or set options.baseLayerPicker to true.",
+    );
+  }
+
+  // If not using BaseLayerPicker, selectedTerrainProviderViewModel is an invalid option
+  if (
+    !createBaseLayerPicker &&
+    defined(options.selectedTerrainProviderViewModel)
+  ) {
+    throw new DeveloperError(
+      "options.selectedTerrainProviderViewModel is not available when not using the BaseLayerPicker widget. \
+Either specify options.terrainProvider instead or set options.baseLayerPicker to true.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const that = this;
 
@@ -586,7 +620,13 @@ function Viewer(container, options) {
   // SceneModePicker
   // By default, we silently disable the scene mode picker if scene3DOnly is true,
   // but if sceneModePicker is explicitly set to true, throw an error.
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (options.sceneModePicker === true && scene3DOnly) {
+    throw new DeveloperError(
+      "options.sceneModePicker is not available when options.scene3DOnly is set to true.",
+    );
+  }
+  //>>includeEnd('debug');
 
   let sceneModePicker;
   if (
@@ -646,7 +686,13 @@ function Viewer(container, options) {
   }
 
   if (defined(options.terrain)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(options.terrainProvider)) {
+      throw new DeveloperError(
+        "Specify either options.terrainProvider or options.terrain.",
+      );
+    }
+    //>>includeEnd('debug');
 
     if (createBaseLayerPicker) {
       // Required as this is otherwise set by the baseLayerPicker
@@ -849,7 +895,7 @@ function Viewer(container, options) {
   );
 
   // Subscribe to left clicks and zoom to the picked object.
-  function pickAndTrackObject(e) {
+  function pickAndTrackObject(e: any) {
     const entity = pickEntity(that, e);
     if (defined(entity)) {
       //Only track the entity if it has a valid position at the current time.
@@ -865,7 +911,7 @@ function Viewer(container, options) {
     }
   }
 
-  function pickAndSelectObject(e) {
+  function pickAndSelectObject(e: any) {
     that.selectedEntity = pickEntity(that, e);
   }
 
@@ -1479,7 +1525,11 @@ Object.defineProperties(Viewer.prototype, {
  * @see viewerDragDropMixin
  */
 Viewer.prototype.extend = function (mixin, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(mixin)) {
+    throw new DeveloperError("mixin is required.");
+  }
+  //>>includeEnd('debug');
 
   mixin(this, options);
 };
@@ -1976,5 +2026,4 @@ Viewer.prototype.flyTo = function (target, options) {
  *
  * @see Viewer#extend
  */
-export { Viewer };
 export default Viewer;

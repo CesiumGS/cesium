@@ -325,12 +325,7 @@ GlobeSurfaceTile.prototype.processImagery = function (
   return isDoneLoading;
 };
 
-function toggleGeodeticSurfaceNormals(
-  surfaceTile,
-  enabled,
-  ellipsoid,
-  frameState,
-) {
+function toggleGeodeticSurfaceNormals(surfaceTile: any, enabled: any, ellipsoid: any, frameState: any, ) {
   const renderedMesh = surfaceTile.renderedMesh;
   const vertexBuffer = renderedMesh.vertices;
   const encoding = renderedMesh.encoding;
@@ -453,7 +448,7 @@ GlobeSurfaceTile.prototype.updateSceneMode = function (mode) {
   mesh.updateSceneMode(mode);
 };
 
-function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
+function prepareNewTile(tile: any, terrainProvider: any, imageryLayerCollection: any) {
   let available = terrainProvider.getTileDataAvailable(
     tile.x,
     tile.y,
@@ -488,14 +483,7 @@ function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
   }
 }
 
-function processTerrainStateMachine(
-  tile,
-  frameState,
-  terrainProvider,
-  imageryLayerCollection,
-  quadtree,
-  vertexArraysToDestroy,
-) {
+function processTerrainStateMachine(tile: any, frameState: any, terrainProvider: any, imageryLayerCollection: any, quadtree: any, vertexArraysToDestroy: any, ) {
   const surfaceTile = tile.data;
 
   // If this tile is FAILED, we'll need to upsample from the parent. If the parent isn't
@@ -593,7 +581,7 @@ function processTerrainStateMachine(
   }
 }
 
-function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
+function upsample(surfaceTile: any, tile: any, frameState: any, terrainProvider: any, x: any, y: any, level: any) {
   const parent = tile.parent;
   if (!parent) {
     // Trying to upsample from a root tile. No can do. This tile is a failure.
@@ -642,8 +630,8 @@ function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
     });
 }
 
-function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
-  function success(terrainData) {
+function requestTileGeometry(surfaceTile: any, terrainProvider: any, x: any, y: any, level: any) {
+  function success(terrainData: any) {
     if (!defined(terrainData)) {
       // Throttled due to low priority - try again later.
       surfaceTile.terrainState = TerrainState.UNLOADED;
@@ -656,7 +644,7 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
     surfaceTile.request = undefined;
   }
 
-  function failure(error) {
+  function failure(error: any) {
     if (surfaceTile.request.state === RequestState.CANCELLED) {
       // Cancelled due to low priority - try again later.
       surfaceTile.terrainData = undefined;
@@ -732,7 +720,7 @@ const scratchCreateMeshOptions = {
   throttle: true,
 };
 
-function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
+function transform(surfaceTile: any, frameState: any, terrainProvider: any, x: any, y: any, level: any) {
   const tilingScheme = terrainProvider.tilingScheme;
 
   const createMeshOptions = scratchCreateMeshOptions;
@@ -820,15 +808,7 @@ GlobeSurfaceTile._freeVertexArray = function (vertexArray) {
   }
 };
 
-function createResources(
-  surfaceTile,
-  context,
-  terrainProvider,
-  x,
-  y,
-  level,
-  vertexArraysToDestroy,
-) {
+function createResources(surfaceTile: any, context: any, terrainProvider: any, x: any, y: any, level: any, vertexArraysToDestroy: any, ) {
   surfaceTile.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(
     context,
     surfaceTile.mesh,
@@ -838,7 +818,7 @@ function createResources(
     surfaceTile.fill && surfaceTile.fill.destroy(vertexArraysToDestroy);
 }
 
-function getContextWaterMaskData(context) {
+function getContextWaterMaskData(context: any) {
   let data = context.cache.tile_waterMaskData;
 
   if (!defined(data)) {
@@ -875,7 +855,7 @@ function getContextWaterMaskData(context) {
   return data;
 }
 
-function createWaterMaskTextureIfNeeded(context, surfaceTile) {
+function createWaterMaskTextureIfNeeded(context: any, surfaceTile: any) {
   const waterMask = surfaceTile.terrainData.waterMask;
   const waterMaskData = getContextWaterMaskData(context);
   let texture;
@@ -964,5 +944,4 @@ GlobeSurfaceTile.prototype._computeWaterMaskTranslationAndScale = function (
 
   return result;
 };
-export { GlobeSurfaceTile };
 export default GlobeSurfaceTile;

@@ -29,16 +29,16 @@ const monthNames = [
 const realtimeShuttleRingAngle = 15;
 const maxShuttleRingAngle = 105;
 
-function numberComparator(left, right) {
+function numberComparator(left: any, right: any) {
   return left - right;
 }
 
-function getTypicalMultiplierIndex(multiplier, shuttleRingTicks) {
+function getTypicalMultiplierIndex(multiplier: any, shuttleRingTicks: any) {
   const index = binarySearch(shuttleRingTicks, multiplier, numberComparator);
   return index < 0 ? ~index : index;
 }
 
-function angleToMultiplier(angle, shuttleRingTicks) {
+function angleToMultiplier(angle: any, shuttleRingTicks: any) {
   //Use a linear scale for -1 to 1 between -15 < angle < 15 degrees
   if (Math.abs(angle) <= realtimeShuttleRingAngle) {
     return angle / realtimeShuttleRingAngle;
@@ -60,7 +60,7 @@ function angleToMultiplier(angle, shuttleRingTicks) {
   return -Math.exp(minv + scale * (Math.abs(angle) - minp));
 }
 
-function multiplierToAngle(multiplier, shuttleRingTicks, clockViewModel) {
+function multiplierToAngle(multiplier: any, shuttleRingTicks: any, clockViewModel: any) {
   if (clockViewModel.clockStep === ClockStep.SYSTEM_CLOCK) {
     return realtimeShuttleRingAngle;
   }
@@ -102,8 +102,12 @@ function multiplierToAngle(multiplier, shuttleRingTicks, clockViewModel) {
  *
  * @see Animation
  */
-function AnimationViewModel(clockViewModel) {
-  ;
+function AnimationViewModel(clockViewModel: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(clockViewModel)) {
+    throw new DeveloperError("clockViewModel is required.");
+  }
+  //>>includeEnd('debug');
 
   const that = this;
   this._clockViewModel = clockViewModel;
@@ -473,7 +477,11 @@ AnimationViewModel.prototype.getShuttleRingTicks = function () {
  * @param {number[]} positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
  */
 AnimationViewModel.prototype.setShuttleRingTicks = function (positiveTicks) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(positiveTicks)) {
+    throw new DeveloperError("positiveTicks is required.");
+  }
+  //>>includeEnd('debug');
 
   let i;
   let len;
@@ -600,7 +608,11 @@ Object.defineProperties(AnimationViewModel.prototype, {
       return this._dateFormatter;
     },
     set: function (dateFormatter) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (typeof dateFormatter !== "function") {
+        throw new DeveloperError("dateFormatter must be a function");
+      }
+      //>>includeEnd('debug');
 
       this._dateFormatter = dateFormatter;
     },
@@ -619,7 +631,11 @@ Object.defineProperties(AnimationViewModel.prototype, {
       return this._timeFormatter;
     },
     set: function (timeFormatter) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (typeof timeFormatter !== "function") {
+        throw new DeveloperError("timeFormatter must be a function");
+      }
+      //>>includeEnd('debug');
 
       this._timeFormatter = timeFormatter;
     },
@@ -647,5 +663,4 @@ AnimationViewModel._realtimeShuttleRingAngle = realtimeShuttleRingAngle;
  * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
  * @returns {string} The string representation of the time portion of the provided date.
  */
-export { AnimationViewModel };
 export default AnimationViewModel;

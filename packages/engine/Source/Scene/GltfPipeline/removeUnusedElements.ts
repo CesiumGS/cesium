@@ -23,7 +23,7 @@ const allElementTypes = [
  *
  * @private
  */
-function removeUnusedElements(gltf, elementTypes) {
+function removeUnusedElements(gltf: any, elementTypes: any) {
   elementTypes = elementTypes ?? allElementTypes;
   allElementTypes.forEach(function (type) {
     if (elementTypes.indexOf(type) > -1) {
@@ -45,7 +45,7 @@ const TypeToGltfElementName = {
   texture: "textures",
 };
 
-function removeUnusedElementsByType(gltf, type) {
+function removeUnusedElementsByType(gltf: any, type: any) {
   const name = TypeToGltfElementName[type];
   const arrayOfObjects = gltf[name];
 
@@ -731,7 +731,7 @@ getListOfElementsIdsInUse.mesh = function (gltf) {
 
 // Check if node is empty. It is considered empty if neither referencing
 // mesh, camera, extensions and has no children
-function nodeIsEmpty(gltf, nodeId, usedNodeIds) {
+function nodeIsEmpty(gltf: any, nodeId: any, usedNodeIds: any) {
   const node = gltf.nodes[nodeId];
   if (
     defined(node.mesh) ||
@@ -903,5 +903,4 @@ getListOfElementsIdsInUse.sampler = function (gltf) {
   return usedSamplerIds;
 };
 
-export { removeUnusedElements };
 export default removeUnusedElements;

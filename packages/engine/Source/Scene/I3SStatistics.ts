@@ -10,7 +10,7 @@ import Resource from "../Core/Resource.js";
  * @alias I3SStatistics
  * @internalConstructor
  */
-function I3SStatistics(dataProvider, uri) {
+function I3SStatistics(dataProvider: any, uri: any) {
   this._dataProvider = dataProvider;
 
   this._resource = new Resource({ url: uri });
@@ -91,5 +91,4 @@ I3SStatistics.prototype._getValues = function (attributeName) {
   }
 };
 
-export { I3SStatistics };
 export default I3SStatistics;

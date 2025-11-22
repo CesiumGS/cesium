@@ -101,10 +101,17 @@ const excludesReverseAxis = [
  * const imageryLayer = new Cesium.ImageryLayer(provider);
  * viewer.imageryLayers.add(imageryLayer);
  */
-function WebMapServiceImageryProvider(options) {
+function WebMapServiceImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.url)) {
+    throw new DeveloperError("options.url is required.");
+  }
+  if (!defined(options.layers)) {
+    throw new DeveloperError("options.layers is required.");
+  }
+  //>>includeEnd('debug');
 
   if (defined(options.times) && !defined(options.clock)) {
     throw new DeveloperError(
@@ -254,7 +261,7 @@ function WebMapServiceImageryProvider(options) {
   });
 }
 
-function requestImage(imageryProvider, col, row, level, request, interval) {
+function requestImage(imageryProvider: any, col: any, row: any, level: any, request: any, interval: any) {
   const dynamicIntervalData = defined(interval) ? interval.data : undefined;
   const tileProvider = imageryProvider._tileProvider;
 
@@ -265,15 +272,7 @@ function requestImage(imageryProvider, col, row, level, request, interval) {
   return tileProvider.requestImage(col, row, level, request);
 }
 
-function pickFeatures(
-  imageryProvider,
-  x,
-  y,
-  level,
-  longitude,
-  latitude,
-  interval,
-) {
+function pickFeatures(imageryProvider: any, x: any, y: any, level: any, longitude: any, latitude: any, interval: any, ) {
   const dynamicIntervalData = defined(interval) ? interval.data : undefined;
   const tileProvider = imageryProvider._tileProvider;
 
@@ -630,7 +629,7 @@ WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats = Object.freeze([
   Object.freeze(new GetFeatureInfoFormat("text", "text/html")),
 ]);
 
-function objectToLowercase(obj) {
+function objectToLowercase(obj: any) {
   const result = {};
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
@@ -639,5 +638,4 @@ function objectToLowercase(obj) {
   }
   return result;
 }
-export { WebMapServiceImageryProvider };
 export default WebMapServiceImageryProvider;

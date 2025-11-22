@@ -22,14 +22,21 @@ const scaleToGeodeticSurfaceGradient = new Cartesian3();
  *
  * @private
  */
-function scaleToGeodeticSurface(
-  cartesian,
-  oneOverRadii,
-  oneOverRadiiSquared,
-  centerToleranceSquared,
-  result,
-) {
-  ;
+function scaleToGeodeticSurface(cartesian: any, oneOverRadii: any, oneOverRadiiSquared: any, centerToleranceSquared: any, result: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(cartesian)) {
+    throw new DeveloperError("cartesian is required.");
+  }
+  if (!defined(oneOverRadii)) {
+    throw new DeveloperError("oneOverRadii is required.");
+  }
+  if (!defined(oneOverRadiiSquared)) {
+    throw new DeveloperError("oneOverRadiiSquared is required.");
+  }
+  if (!defined(centerToleranceSquared)) {
+    throw new DeveloperError("centerToleranceSquared is required.");
+  }
+  //>>includeEnd('debug');
 
   const positionX = cartesian.x;
   const positionY = cartesian.y;
@@ -131,5 +138,4 @@ function scaleToGeodeticSurface(
   result.z = positionZ * zMultiplier;
   return result;
 }
-export { scaleToGeodeticSurface };
 export default scaleToGeodeticSurface;

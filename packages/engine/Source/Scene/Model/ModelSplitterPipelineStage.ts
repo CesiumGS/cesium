@@ -62,5 +62,4 @@ ModelSplitterPipelineStage.process = function (
   );
 };
 
-export { ModelSplitterPipelineStage };
 export default ModelSplitterPipelineStage;

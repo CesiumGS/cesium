@@ -5,7 +5,7 @@ import BoundingSphereState from "./BoundingSphereState.js";
 /**
  * @private
  */
-function DynamicGeometryBatch(primitives, orderedGroundPrimitives) {
+function DynamicGeometryBatch(primitives: any, orderedGroundPrimitives: any) {
   this._primitives = primitives;
   this._orderedGroundPrimitives = orderedGroundPrimitives;
   this._dynamicUpdaters = new AssociativeArray();
@@ -53,5 +53,4 @@ DynamicGeometryBatch.prototype.getBoundingSphere = function (updater, result) {
   }
   return BoundingSphereState.FAILED;
 };
-export { DynamicGeometryBatch };
 export default DynamicGeometryBatch;

@@ -17,7 +17,7 @@ const sizeOfUint32 = 4;
  *
  * @private
  */
-function parseGlb(glb) {
+function parseGlb(glb: any) {
   // Check that the magic string is present
   const magic = getMagic(glb);
   if (magic !== "glTF") {
@@ -37,7 +37,7 @@ function parseGlb(glb) {
   return parseGlbVersion2(glb, header);
 }
 
-function readHeader(glb, byteOffset, count) {
+function readHeader(glb: any, byteOffset: any, count: any) {
   const dataView = new DataView(glb.buffer);
   const header = new Array(count);
   for (let i = 0; i < count; ++i) {
@@ -49,7 +49,7 @@ function readHeader(glb, byteOffset, count) {
   return header;
 }
 
-function parseGlbVersion1(glb, header) {
+function parseGlbVersion1(glb: any, header: any) {
   const length = header[2];
   const contentLength = header[3];
   const contentFormat = header[4];
@@ -82,7 +82,7 @@ function parseGlbVersion1(glb, header) {
   return gltf;
 }
 
-function parseGlbVersion2(glb, header) {
+function parseGlbVersion2(glb: any, header: any) {
   const length = header[2];
   let byteOffset = 12;
   let gltf;
@@ -115,5 +115,4 @@ function parseGlbVersion2(glb, header) {
   return gltf;
 }
 
-export { parseGlb };
 export default parseGlb;

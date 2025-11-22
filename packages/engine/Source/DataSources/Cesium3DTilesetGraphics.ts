@@ -24,7 +24,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {Cesium3DTilesetGraphics.ConstructorOptions} [options] Object describing initialization options
  */
-function Cesium3DTilesetGraphics(options) {
+function Cesium3DTilesetGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -96,7 +96,11 @@ Cesium3DTilesetGraphics.prototype.clone = function (result) {
  * @param {Cesium3DTilesetGraphics} source The object to be merged into this object.
  */
 Cesium3DTilesetGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.uri = this.uri ?? source.uri;
@@ -104,5 +108,4 @@ Cesium3DTilesetGraphics.prototype.merge = function (source) {
     this.maximumScreenSpaceError ?? source.maximumScreenSpaceError;
 };
 
-export { Cesium3DTilesetGraphics };
 export default Cesium3DTilesetGraphics;

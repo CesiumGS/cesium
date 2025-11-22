@@ -8,7 +8,7 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-function removeExtensionsRequired(gltf, extension) {
+function removeExtensionsRequired(gltf: any, extension: any) {
   const extensionsRequired = gltf.extensionsRequired;
   if (defined(extensionsRequired)) {
     const index = extensionsRequired.indexOf(extension);
@@ -21,5 +21,4 @@ function removeExtensionsRequired(gltf, extension) {
   }
 }
 
-export { removeExtensionsRequired };
 export default removeExtensionsRequired;

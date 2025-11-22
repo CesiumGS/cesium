@@ -100,7 +100,9 @@ const MetadataComponentType = {
  * @private
  */
 MetadataComponentType.getMinimum = function (type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
 
   switch (type) {
     case MetadataComponentType.INT8:
@@ -146,7 +148,9 @@ MetadataComponentType.getMinimum = function (type) {
  * @private
  */
 MetadataComponentType.getMaximum = function (type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
 
   switch (type) {
     case MetadataComponentType.INT8:
@@ -190,7 +194,9 @@ MetadataComponentType.getMaximum = function (type) {
  * @private
  */
 MetadataComponentType.isIntegerType = function (type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
 
   switch (type) {
     case MetadataComponentType.INT8:
@@ -216,7 +222,9 @@ MetadataComponentType.isIntegerType = function (type) {
  * @private
  */
 MetadataComponentType.isUnsignedIntegerType = function (type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
 
   switch (type) {
     case MetadataComponentType.UINT8:
@@ -238,7 +246,9 @@ MetadataComponentType.isUnsignedIntegerType = function (type) {
  * @private
  */
 MetadataComponentType.isVectorCompatible = function (type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
 
   switch (type) {
     case MetadataComponentType.INT8:
@@ -274,7 +284,14 @@ MetadataComponentType.isVectorCompatible = function (type) {
  * @private
  */
 MetadataComponentType.normalize = function (value, type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof value !== "number" && typeof value !== "bigint") {
+    throw new DeveloperError("value must be a number or a BigInt");
+  }
+  if (!MetadataComponentType.isIntegerType(type)) {
+    throw new DeveloperError("type must be an integer type");
+  }
+  //>>includeEnd('debug');
 
   return Math.max(
     Number(value) / Number(MetadataComponentType.getMaximum(type)),
@@ -299,7 +316,12 @@ MetadataComponentType.normalize = function (value, type) {
  * @private
  */
 MetadataComponentType.unnormalize = function (value, type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("value", value);
+  if (!MetadataComponentType.isIntegerType(type)) {
+    throw new DeveloperError("type must be an integer type");
+  }
+  //>>includeEnd('debug');
 
   const max = MetadataComponentType.getMaximum(type);
   const min = MetadataComponentType.isUnsignedIntegerType(type) ? 0 : -max;
@@ -354,7 +376,9 @@ MetadataComponentType.unapplyValueTransform = function (value, offset, scale) {
  * @private
  */
 MetadataComponentType.getSizeInBytes = function (type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
 
   switch (type) {
     case MetadataComponentType.INT8:
@@ -385,7 +409,9 @@ MetadataComponentType.getSizeInBytes = function (type) {
  * @private
  */
 MetadataComponentType.fromComponentDatatype = function (componentDatatype) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("componentDatatype", componentDatatype);
+  //>>includeEnd('debug');
 
   switch (componentDatatype) {
     case ComponentDatatype.BYTE:
@@ -416,7 +442,9 @@ MetadataComponentType.fromComponentDatatype = function (componentDatatype) {
  * @private
  */
 MetadataComponentType.toComponentDatatype = function (type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
 
   switch (type) {
     case MetadataComponentType.INT8:

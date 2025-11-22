@@ -19,7 +19,17 @@ const HilbertOrder = {};
  */
 HilbertOrder.encode2D = function (level, x, y) {
   const n = Math.pow(2, level);
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  if (level < 1) {
+    throw new DeveloperError("Hilbert level cannot be less than 1.");
+  }
+  if (x < 0 || x >= n || y < 0 || y >= n) {
+    throw new DeveloperError("Invalid coordinates for given level.");
+  }
+  //>>includeEnd('debug');
 
   const p = {
     x: x,
@@ -49,7 +59,18 @@ HilbertOrder.encode2D = function (level, x, y) {
  * @private
  */
 HilbertOrder.decode2D = function (level, index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("level", level);
+  Check.typeOf.bigint("index", index);
+  if (level < 1) {
+    throw new DeveloperError("Hilbert level cannot be less than 1.");
+  }
+  if (index < BigInt(0) || index >= BigInt(Math.pow(4, level))) {
+    throw new DeveloperError(
+      "Hilbert index exceeds valid maximum for given level.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const n = Math.pow(2, level);
   const p = {
@@ -73,7 +94,7 @@ HilbertOrder.decode2D = function (level, index) {
 /**
  * @private
  */
-function rotate(n, p, rx, ry) {
+function rotate(n: any, p: any, rx: any, ry: any) {
   if (ry !== 0) {
     return;
   }
@@ -88,5 +109,4 @@ function rotate(n, p, rx, ry) {
   p.y = t;
 }
 
-export { HilbertOrder };
 export default HilbertOrder;

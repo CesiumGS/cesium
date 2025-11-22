@@ -23,11 +23,13 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  * @constructor
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function MetadataClass(options) {
+function MetadataClass(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const id = options.id;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.id", id);
+  //>>includeEnd('debug');
 
   const properties = options.properties ?? {};
   const propertiesBySemantic = {};
@@ -67,7 +69,10 @@ MetadataClass.fromJson = function (options) {
   const id = options.id;
   const classDefinition = options.class;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.id", id);
+  Check.typeOf.object("options.class", classDefinition);
+  //>>includeEnd('debug');
 
   const properties = {};
   for (const propertyId in classDefinition.properties) {
@@ -194,5 +199,4 @@ Object.defineProperties(MetadataClass.prototype, {
  */
 MetadataClass.BATCH_TABLE_CLASS_NAME = "_batchTable";
 
-export { MetadataClass };
 export default MetadataClass;

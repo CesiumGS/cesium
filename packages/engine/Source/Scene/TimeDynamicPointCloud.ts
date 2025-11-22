@@ -38,10 +38,13 @@ import ShadowMode from "./ShadowMode.js";
  * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
  */
-function TimeDynamicPointCloud(options) {
+function TimeDynamicPointCloud(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.clock", options.clock);
+  Check.typeOf.object("options.intervals", options.intervals);
+  //>>includeEnd('debug');
 
   /**
    * Determines if the point cloud will be shown.
@@ -236,11 +239,11 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
   },
 });
 
-function getFragmentShaderLoaded(fs) {
+function getFragmentShaderLoaded(fs: any) {
   return `uniform vec4 czm_pickColor;\n${fs}`;
 }
 
-function getUniformMapLoaded(stream) {
+function getUniformMapLoaded(stream: any) {
   return function (uniformMap) {
     return combine(uniformMap, {
       czm_pickColor: function () {
@@ -277,18 +280,18 @@ TimeDynamicPointCloud.prototype._getAverageLoadTime = function () {
 
 const scratchDate = new JulianDate();
 
-function getClockMultiplier(that) {
+function getClockMultiplier(that: any) {
   const clock = that._clock;
   const isAnimating = clock.canAnimate && clock.shouldAnimate;
   const multiplier = clock.multiplier;
   return isAnimating ? multiplier : 0.0;
 }
 
-function getIntervalIndex(that, interval) {
+function getIntervalIndex(that: any, interval: any) {
   return that._intervals.indexOf(interval.start);
 }
 
-function getNextInterval(that, currentInterval) {
+function getNextInterval(that: any, currentInterval: any) {
   const intervals = that._intervals;
   const clock = that._clock;
   const multiplier = getClockMultiplier(that);
@@ -318,7 +321,7 @@ function getNextInterval(that, currentInterval) {
   return intervals.get(index);
 }
 
-function getCurrentInterval(that) {
+function getCurrentInterval(that: any) {
   const intervals = that._intervals;
   const clock = that._clock;
   const time = clock.currentTime;
@@ -328,7 +331,7 @@ function getCurrentInterval(that) {
   return intervals.get(index);
 }
 
-function reachedInterval(that, currentInterval, nextInterval) {
+function reachedInterval(that: any, currentInterval: any, nextInterval: any) {
   const multiplier = getClockMultiplier(that);
   const currentIndex = getIntervalIndex(that, currentInterval);
   const nextIndex = getIntervalIndex(that, nextInterval);
@@ -339,7 +342,7 @@ function reachedInterval(that, currentInterval, nextInterval) {
   return currentIndex <= nextIndex;
 }
 
-function handleFrameFailure(that, uri) {
+function handleFrameFailure(that: any, uri: any) {
   return function (error) {
     const message = defined(error.message) ? error.message : error.toString();
     if (that.frameFailed.numberOfListeners > 0) {
@@ -354,7 +357,7 @@ function handleFrameFailure(that, uri) {
   };
 }
 
-function requestFrame(that, interval, frameState) {
+function requestFrame(that: any, interval: any, frameState: any) {
   const index = getIntervalIndex(that, interval);
   const frames = that._frames;
   let frame = frames[index];
@@ -393,7 +396,7 @@ function requestFrame(that, interval, frameState) {
   return frame;
 }
 
-function updateAverageLoadTime(that, loadTime) {
+function updateAverageLoadTime(that: any, loadTime: any) {
   that._runningSum += loadTime;
   that._runningSum -= that._runningSamples[that._runningIndex];
   that._runningSamples[that._runningIndex] = loadTime;
@@ -405,7 +408,7 @@ function updateAverageLoadTime(that, loadTime) {
   that._runningAverage = that._runningSum / that._runningLength;
 }
 
-function prepareFrame(that, frame, updateState, frameState) {
+function prepareFrame(that: any, frame: any, updateState: any, frameState: any) {
   if (frame.touchedFrameNumber < frameState.frameNumber - 1) {
     // If this frame was not loaded in sequential updates then it can't be used it for calculating the average load time.
     // For example: selecting a frame on the timeline, selecting another frame before the request finishes, then selecting this frame later.
@@ -438,7 +441,7 @@ function prepareFrame(that, frame, updateState, frameState) {
 
 const scratchModelMatrix = new Matrix4();
 
-function getGeometricError(that, pointCloud) {
+function getGeometricError(that: any, pointCloud: any) {
   const shading = that.shading;
   if (defined(shading) && defined(shading.baseResolution)) {
     return shading.baseResolution;
@@ -450,7 +453,7 @@ function getGeometricError(that, pointCloud) {
   return 0.0;
 }
 
-function getMaximumAttenuation(that) {
+function getMaximumAttenuation(that: any) {
   const shading = that.shading;
   if (defined(shading) && defined(shading.maximumAttenuation)) {
     return shading.maximumAttenuation;
@@ -462,7 +465,7 @@ function getMaximumAttenuation(that) {
 
 const defaultShading = new PointCloudShading();
 
-function renderFrame(that, frame, updateState, frameState) {
+function renderFrame(that: any, frame: any, updateState: any, frameState: any) {
   const shading = that.shading ?? defaultShading;
   const pointCloud = frame.pointCloud;
   const transform = frame.transform ?? Matrix4.IDENTITY;
@@ -492,19 +495,19 @@ function renderFrame(that, frame, updateState, frameState) {
   frame.touchedFrameNumber = frameState.frameNumber;
 }
 
-function loadFrame(that, interval, updateState, frameState) {
+function loadFrame(that: any, interval: any, updateState: any, frameState: any) {
   const frame = requestFrame(that, interval, frameState);
   prepareFrame(that, frame, updateState, frameState);
 }
 
-function getUnloadCondition(frameState) {
+function getUnloadCondition(frameState: any) {
   return function (frame) {
     // Unload all frames that aren't currently being loaded or rendered
     return frame.touchedFrameNumber < frameState.frameNumber;
   };
 }
 
-function unloadFrames(that, unloadCondition) {
+function unloadFrames(that: any, unloadCondition: any) {
   const frames = that._frames;
   const length = frames.length;
   for (let i = 0; i < length; ++i) {
@@ -527,7 +530,7 @@ function unloadFrames(that, unloadCondition) {
   }
 }
 
-function getFrame(that, interval) {
+function getFrame(that: any, interval: any) {
   const index = getIntervalIndex(that, interval);
   const frame = that._frames[index];
   if (defined(frame) && frame.ready) {
@@ -535,7 +538,7 @@ function getFrame(that, interval) {
   }
 }
 
-function updateInterval(that, interval, frame, updateState, frameState) {
+function updateInterval(that: any, interval: any, frame: any, updateState: any, frameState: any) {
   if (defined(frame)) {
     if (frame.ready) {
       return true;
@@ -546,13 +549,7 @@ function updateInterval(that, interval, frame, updateState, frameState) {
   return false;
 }
 
-function getNearestReadyInterval(
-  that,
-  previousInterval,
-  currentInterval,
-  updateState,
-  frameState,
-) {
+function getNearestReadyInterval(that: any, previousInterval: any, currentInterval: any, updateState: any, frameState: any, ) {
   let i;
   let interval;
   let frame;
@@ -585,7 +582,7 @@ function getNearestReadyInterval(
   return previousInterval;
 }
 
-function setFramesDirty(that, clippingPlanesDirty, styleDirty) {
+function setFramesDirty(that: any, clippingPlanesDirty: any, styleDirty: any) {
   const frames = that._frames;
   const framesLength = frames.length;
   for (let i = 0; i < framesLength; ++i) {
@@ -796,5 +793,4 @@ TimeDynamicPointCloud.prototype.destroy = function () {
   this._pickId = this._pickId && this._pickId.destroy();
   return destroyObject(this);
 };
-export { TimeDynamicPointCloud };
 export default TimeDynamicPointCloud;

@@ -57,7 +57,7 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  *   console.log(`Error creating tileset: ${error}`);
  * }
  */
-async function createGooglePhotorealistic3DTileset(apiOptions, tilesetOptions) {
+async function createGooglePhotorealistic3DTileset(apiOptions: any, tilesetOptions: any) {
   tilesetOptions = tilesetOptions ?? {};
   tilesetOptions.cacheBytes = tilesetOptions.cacheBytes ?? 1536 * 1024 * 1024;
   tilesetOptions.maximumCacheOverflowBytes =
@@ -65,7 +65,9 @@ async function createGooglePhotorealistic3DTileset(apiOptions, tilesetOptions) {
   tilesetOptions.enableCollision = tilesetOptions.enableCollision ?? true;
 
   apiOptions = apiOptions ?? Frozen.EMPTY_OBJECT;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("apiOptions", apiOptions);
+  //>>includeEnd('debug');
 
   if (!apiOptions.onlyUsingWithGoogleGeocoder) {
     oneTimeWarning(
@@ -97,7 +99,7 @@ async function createGooglePhotorealistic3DTileset(apiOptions, tilesetOptions) {
 }
 
 const metadataCache = {};
-async function requestCachedIonTileset(options) {
+async function requestCachedIonTileset(options: any) {
   const ionAssetId = 2275207;
   const cacheKey = ionAssetId;
 
@@ -111,5 +113,4 @@ async function requestCachedIonTileset(options) {
   return Cesium3DTileset.fromUrl(resource, options);
 }
 
-export { createGooglePhotorealistic3DTileset };
 export default createGooglePhotorealistic3DTileset;

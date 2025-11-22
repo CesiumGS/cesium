@@ -91,10 +91,28 @@ import TerrainMesh from "./TerrainMesh.js";
  * @see HeightmapTerrainData
  * @see GoogleEarthEnterpriseTerrainData
  */
-function QuantizedMeshTerrainData(options) {
+function QuantizedMeshTerrainData(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug)
+  Check.typeOf.object("options.quantizedVertices", options.quantizedVertices);
+  Check.typeOf.object("options.indices", options.indices);
+  Check.typeOf.number("options.minimumHeight", options.minimumHeight);
+  Check.typeOf.number("options.maximumHeight", options.maximumHeight);
+  Check.typeOf.object("options.boundingSphere", options.boundingSphere);
+  Check.typeOf.object(
+    "options.horizonOcclusionPoint",
+    options.horizonOcclusionPoint,
+  );
+  Check.typeOf.object("options.westIndices", options.westIndices);
+  Check.typeOf.object("options.southIndices", options.southIndices);
+  Check.typeOf.object("options.eastIndices", options.eastIndices);
+  Check.typeOf.object("options.northIndices", options.northIndices);
+  Check.typeOf.number("options.westSkirtHeight", options.westSkirtHeight);
+  Check.typeOf.number("options.southSkirtHeight", options.southSkirtHeight);
+  Check.typeOf.number("options.eastSkirtHeight", options.eastSkirtHeight);
+  Check.typeOf.number("options.northSkirtHeight", options.northSkirtHeight);
+  //>>includeEnd('debug');
 
   this._quantizedVertices = options.quantizedVertices;
   this._encodedNormals = options.encodedNormals;
@@ -121,11 +139,11 @@ function QuantizedMeshTerrainData(options) {
   );
 
   // We don't assume that we can count on the edge vertices being sorted by u or v.
-  function sortByV(a, b) {
+  function sortByV(a: any, b: any) {
     return vValues[a] - vValues[b];
   }
 
-  function sortByU(a, b) {
+  function sortByU(a: any, b: any) {
     return uValues[a] - uValues[b];
   }
 
@@ -202,7 +220,7 @@ Object.defineProperties(QuantizedMeshTerrainData.prototype, {
 
 const arrayScratch = [];
 
-function sortIndicesIfNecessary(indices, sortFunction, vertexCount) {
+function sortIndicesIfNecessary(indices: any, sortFunction: any, vertexCount: any) {
   arrayScratch.length = indices.length;
 
   let needsSort = false;
@@ -246,7 +264,12 @@ const createMeshTaskProcessorThrottle = new TaskProcessor(
 QuantizedMeshTerrainData.prototype.createMesh = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+  Check.typeOf.number("options.x", options.x);
+  Check.typeOf.number("options.y", options.y);
+  Check.typeOf.number("options.level", options.level);
+  //>>includeEnd('debug');
 
   const tilingScheme = options.tilingScheme;
   const x = options.x;
@@ -385,7 +408,35 @@ QuantizedMeshTerrainData.prototype.upsample = function (
   descendantY,
   descendantLevel,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(tilingScheme)) {
+    throw new DeveloperError("tilingScheme is required.");
+  }
+  if (!defined(thisX)) {
+    throw new DeveloperError("thisX is required.");
+  }
+  if (!defined(thisY)) {
+    throw new DeveloperError("thisY is required.");
+  }
+  if (!defined(thisLevel)) {
+    throw new DeveloperError("thisLevel is required.");
+  }
+  if (!defined(descendantX)) {
+    throw new DeveloperError("descendantX is required.");
+  }
+  if (!defined(descendantY)) {
+    throw new DeveloperError("descendantY is required.");
+  }
+  if (!defined(descendantLevel)) {
+    throw new DeveloperError("descendantLevel is required.");
+  }
+  const levelDifference = descendantLevel - thisLevel;
+  if (levelDifference > 1) {
+    throw new DeveloperError(
+      "Upsampling through more than one level at a time is not currently supported.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const mesh = this._mesh;
   if (!defined(this._mesh)) {
@@ -513,7 +564,7 @@ QuantizedMeshTerrainData.prototype.interpolateHeight = function (
   return interpolateMeshHeight(this, u, v);
 };
 
-function pointInBoundingBox(u, v, u0, v0, u1, v1, u2, v2) {
+function pointInBoundingBox(u: any, v: any, u0: any, v0: any, u1: any, v1: any, u2: any, v2: any) {
   const minU = Math.min(u0, u1, u2);
   const maxU = Math.max(u0, u1, u2);
   const minV = Math.min(v0, v1, v2);
@@ -525,7 +576,7 @@ const texCoordScratch0 = new Cartesian2();
 const texCoordScratch1 = new Cartesian2();
 const texCoordScratch2 = new Cartesian2();
 
-function interpolateMeshHeight(terrainData, u, v) {
+function interpolateMeshHeight(terrainData: any, u: any, v: any) {
   const mesh = terrainData._mesh;
   const vertices = mesh.vertices;
   const encoding = mesh.encoding;
@@ -581,7 +632,7 @@ function interpolateMeshHeight(terrainData, u, v) {
   return undefined;
 }
 
-function interpolateHeight(terrainData, u, v) {
+function interpolateHeight(terrainData: any, u: any, v: any) {
   const uBuffer = terrainData._uValues;
   const vBuffer = terrainData._vValues;
   const heightBuffer = terrainData._heightValues;
@@ -652,7 +703,12 @@ QuantizedMeshTerrainData.prototype.isChildAvailable = function (
   childX,
   childY,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("thisX", thisX);
+  Check.typeOf.number("thisY", thisY);
+  Check.typeOf.number("childX", childX);
+  Check.typeOf.number("childY", childY);
+  //>>includeEnd('debug');
 
   let bitNumber = 2; // northwest child
   if (childX !== thisX * 2) {
@@ -676,5 +732,4 @@ QuantizedMeshTerrainData.prototype.isChildAvailable = function (
 QuantizedMeshTerrainData.prototype.wasCreatedByUpsampling = function () {
   return this._createdByUpsampling;
 };
-export { QuantizedMeshTerrainData };
 export default QuantizedMeshTerrainData;

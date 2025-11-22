@@ -24,7 +24,7 @@ import VertexFormat from "./VertexFormat.js";
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY
  * });
  */
-function PlaneGeometry(options) {
+function PlaneGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
@@ -49,7 +49,10 @@ PlaneGeometry.packedLength = VertexFormat.packedLength;
  * @returns {number[]} The array that was packed into
  */
 PlaneGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -72,7 +75,9 @@ const scratchOptions = {
  * @returns {PlaneGeometry} The modified result parameter or a new PlaneGeometry instance if one was not provided.
  */
 PlaneGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -242,5 +247,4 @@ PlaneGeometry.createGeometry = function (planeGeometry) {
     boundingSphere: new BoundingSphere(Cartesian3.ZERO, Math.sqrt(2.0)),
   });
 };
-export { PlaneGeometry };
 export default PlaneGeometry;

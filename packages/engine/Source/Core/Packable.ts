@@ -37,5 +37,4 @@ const Packable = {
    */
   unpack: DeveloperError.throwInstantiationError,
 };
-export { Packable };
 export default Packable;

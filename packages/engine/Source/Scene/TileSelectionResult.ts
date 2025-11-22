@@ -77,5 +77,4 @@ const TileSelectionResult = {
     return value | 4;
   },
 };
-export { TileSelectionResult };
 export default TileSelectionResult;

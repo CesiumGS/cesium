@@ -32,12 +32,7 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  *
  * @private
  */
-function VoxelTraversal(
-  primitive,
-  context,
-  keyframeCount,
-  maximumTextureMemoryByteLength,
-) {
+function VoxelTraversal(primitive: any, context: any, keyframeCount: any, maximumTextureMemoryByteLength: any, ) {
   const { provider, dimensions, paddingBefore, paddingAfter } = primitive;
   const { types, componentTypes, metadataOrder } = provider;
 
@@ -278,7 +273,7 @@ VoxelTraversal.prototype.findKeyframeNode = function (megatextureIndex) {
   });
 };
 
-function binaryTreeWeightingRecursive(arr, start, end, depth) {
+function binaryTreeWeightingRecursive(arr: any, start: any, end: any, depth: any) {
   if (start > end) {
     return;
   }
@@ -449,7 +444,7 @@ VoxelTraversal.prototype.destroy = function () {
  *
  * @private
  */
-function recomputeBoundingVolumesRecursive(that, node) {
+function recomputeBoundingVolumesRecursive(that: any, node: any) {
   node.computeBoundingVolumes(that._primitive._shape);
   if (defined(node.children)) {
     for (let i = 0; i < 8; i++) {
@@ -467,7 +462,7 @@ function recomputeBoundingVolumesRecursive(that, node) {
  *
  * @private
  */
-function requestData(that, keyframeNode) {
+function requestData(that: any, keyframeNode: any) {
   if (
     that._simultaneousRequestCount >=
     VoxelTraversal.simultaneousRequestCountMaximum
@@ -485,7 +480,7 @@ function requestData(that, keyframeNode) {
     return;
   }
 
-  function postRequestSuccess(result) {
+  function postRequestSuccess(result: any) {
     that._simultaneousRequestCount--;
     keyframeNode.content = result;
     keyframeNode.state = defined(result)
@@ -493,7 +488,7 @@ function requestData(that, keyframeNode) {
       : KeyframeNode.LoadState.UNAVAILABLE;
   }
 
-  function postRequestFailure(error) {
+  function postRequestFailure(error: any) {
     that._simultaneousRequestCount--;
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
     that._primitive.tileFailed.raiseEvent();
@@ -523,7 +518,7 @@ function requestData(that, keyframeNode) {
  *
  * @private
  */
-function mapInfiniteRangeToZeroOne(x) {
+function mapInfiniteRangeToZeroOne(x: any) {
   return x / (1.0 + x);
 }
 
@@ -533,7 +528,7 @@ function mapInfiniteRangeToZeroOne(x) {
  *
  * @private
  */
-function selectKeyframeNodes(that, frameState) {
+function selectKeyframeNodes(that: any, frameState: any) {
   const frameNumber = that._frameNumber;
   const priorityQueue = that._priorityQueue;
 
@@ -566,7 +561,7 @@ function selectKeyframeNodes(that, frameState) {
  *
  * @private
  */
-function updateKeyframeNodes(that, frameState) {
+function updateKeyframeNodes(that: any, frameState: any) {
   const megatexture = that.megatextures[0];
   const keyframeNodesInMegatextureCount = megatexture.occupiedCount;
 
@@ -641,7 +636,7 @@ function updateKeyframeNodes(that, frameState) {
   }
 }
 
-function keyframeNodeSort(a, b) {
+function keyframeNodeSort(a: any, b: any) {
   if (a.highPriorityFrameNumber === b.highPriorityFrameNumber) {
     return b.priority - a.priority;
   }
@@ -657,7 +652,7 @@ function keyframeNodeSort(a, b) {
  *
  * @private
  */
-function validateMetadata(metadata, traversal) {
+function validateMetadata(metadata: any, traversal: any) {
   const length = traversal._primitive.provider.types.length;
   if (!Array.isArray(metadata) || metadata.length !== length) {
     return false;
@@ -685,12 +680,7 @@ function validateMetadata(metadata, traversal) {
  *
  * @private
  */
-function addToQueueRecursive(
-  spatialNode,
-  visibilityPlaneMask,
-  that,
-  frameState,
-) {
+function addToQueueRecursive(spatialNode: any, visibilityPlaneMask: any, that: any, frameState: any, ) {
   const { camera, context, pixelRatio, frameNumber } = frameState;
   const { positionWC, frustum } = camera;
   const screenHeight = context.drawingBufferHeight / pixelRatio;
@@ -778,7 +768,7 @@ function addToQueueRecursive(
  * @param {VoxelTraversal} traversal
  * @returns {number} The computed priority
  */
-function keyframePriority(previousKeyframe, keyframe, nextKeyframe, traversal) {
+function keyframePriority(previousKeyframe: any, keyframe: any, nextKeyframe: any, traversal: any) {
   const keyframeDifference = Math.min(
     Math.abs(keyframe - previousKeyframe),
     Math.abs(keyframe - nextKeyframe),
@@ -809,13 +799,7 @@ function keyframePriority(previousKeyframe, keyframe, nextKeyframe, traversal) {
  *
  * @private
  */
-function postPassesUpdate(
-  that,
-  frameState,
-  loadAndUnloadTimeMs,
-  generateOctreeTimeMs,
-  totalTimeMs,
-) {
+function postPassesUpdate(that: any, frameState: any, loadAndUnloadTimeMs: any, generateOctreeTimeMs: any, totalTimeMs: any, ) {
   const keyframeCount = that._keyframeCount;
   const rootNode = that.rootNode;
 
@@ -837,7 +821,7 @@ function postPassesUpdate(
   /**
    * @param {SpatialNode} node
    */
-  function traverseRecursive(node) {
+  function traverseRecursive(node: any) {
     const keyframeNodes = node.keyframeNodes;
     for (
       let keyframeIndex = 0;
@@ -985,7 +969,7 @@ const GpuOctreeFlag = {
  * @param {number} levelBlendFactor
  * @private
  */
-function generateOctree(that, sampleCount, levelBlendFactor) {
+function generateOctree(that: any, sampleCount: any, levelBlendFactor: any) {
   const targetSse = that._primitive._screenSpaceError;
   const keyframeLocation = that._keyframeLocation;
   const frameNumber = that._frameNumber;
@@ -1003,13 +987,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
    * @param {number} parentOctreeIndex
    * @param {number} parentEntryIndex
    */
-  function buildOctree(
-    node,
-    childOctreeIndex,
-    childEntryIndex,
-    parentOctreeIndex,
-    parentEntryIndex,
-  ) {
+  function buildOctree(node: any, childOctreeIndex: any, childEntryIndex: any, parentOctreeIndex: any, parentEntryIndex: any, ) {
     let hasRenderableChildren = false;
     if (defined(node.children)) {
       for (let c = 0; c < 8; c++) {
@@ -1115,7 +1093,7 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
  * @returns {number}
  * @private
  */
-function getLodLerp(node, targetSse, levelBlendFactor) {
+function getLodLerp(node: any, targetSse: any, levelBlendFactor: any) {
   if (node.parent === undefined) {
     return 0.0;
   }
@@ -1135,7 +1113,7 @@ function getLodLerp(node, targetSse, levelBlendFactor) {
  * @param {Texture} texture
  * @private
  */
-function copyToInternalNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
+function copyToInternalNodeTexture(data: any, texelsPerTile: any, tilesPerRow: any, texture: any) {
   const channelCount = PixelFormat.componentsLength(texture.pixelFormat);
   const tileCount = Math.ceil(data.length / texelsPerTile);
   const copyWidth = Math.max(
@@ -1176,7 +1154,7 @@ function copyToInternalNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
  * @param {Texture} texture
  * @private
  */
-function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
+function copyToLeafNodeTexture(data: any, texelsPerTile: any, tilesPerRow: any, texture: any) {
   const channelCount = PixelFormat.componentsLength(texture.pixelFormat);
   const datasPerTile = 5;
   const tileCount = Math.ceil(data.length / datasPerTile);
@@ -1235,12 +1213,7 @@ function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
  * @param {MetadataComponentType[]} componentTypes
  * @private
  */
-function getApproximateTextureMemoryByteLength(
-  tileCount,
-  dimensions,
-  types,
-  componentTypes,
-) {
+function getApproximateTextureMemoryByteLength(tileCount: any, dimensions: any, types: any, componentTypes: any, ) {
   let textureMemoryByteLength = 0;
 
   const length = types.length;
@@ -1261,5 +1234,4 @@ function getApproximateTextureMemoryByteLength(
   return textureMemoryByteLength;
 }
 
-export { VoxelTraversal };
 export default VoxelTraversal;

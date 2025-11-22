@@ -46,13 +46,17 @@ import oneTimeWarning from "../../Core/oneTimeWarning.js";
  *
  * @private
  */
-function ModelRuntimePrimitive(options) {
+function ModelRuntimePrimitive(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const primitive = options.primitive;
   const node = options.node;
   const model = options.model;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.object("options.node", node);
+  Check.typeOf.object("options.model", model);
+  //>>includeEnd('debug');
 
   /**
    * The primitive component associated with this primitive.
@@ -338,7 +342,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   return;
 };
 
-function inspectFeatureIds(model, node, primitive) {
+function inspectFeatureIds(model: any, node: any, primitive: any) {
   let featureIds;
   // Check instances first, as this is the most specific type of
   // feature ID
@@ -373,5 +377,4 @@ function inspectFeatureIds(model, node, primitive) {
   };
 }
 
-export { ModelRuntimePrimitive };
 export default ModelRuntimePrimitive;

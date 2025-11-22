@@ -10,7 +10,7 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-function addPipelineExtras(gltf) {
+function addPipelineExtras(gltf: any) {
   ForEach.shader(gltf, function (shader) {
     addExtras(shader);
   });
@@ -26,12 +26,11 @@ function addPipelineExtras(gltf) {
   return gltf;
 }
 
-function addExtras(object) {
+function addExtras(object: any) {
   object.extras = defined(object.extras) ? object.extras : {};
   object.extras._pipeline = defined(object.extras._pipeline)
     ? object.extras._pipeline
     : {};
 }
 
-export { addPipelineExtras };
 export default addPipelineExtras;

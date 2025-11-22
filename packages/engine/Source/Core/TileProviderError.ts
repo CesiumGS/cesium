@@ -18,15 +18,7 @@ import formatError from "./formatError.js";
  * @param {number} [timesRetried=0] The number of times this operation has been retried.
  * @param {Error} [error] The error or exception that occurred, if any.
  */
-function TileProviderError(
-  provider,
-  message,
-  x,
-  y,
-  level,
-  timesRetried,
-  error,
-) {
+function TileProviderError(provider: any, message: any, x: any, y: any, level: any, timesRetried: any, error: any, ) {
   /**
    * The {@link ImageryProvider} or {@link TerrainProvider} that experienced the error.
    * @type {ImageryProvider|TerrainProvider}
@@ -167,5 +159,4 @@ TileProviderError.reportSuccess = function (previousError) {
  * A function that will be called to retry the operation.
  * @callback TileProviderError.RetryFunction
  */
-export { TileProviderError };
 export default TileProviderError;

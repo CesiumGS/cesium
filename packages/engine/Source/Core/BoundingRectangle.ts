@@ -20,7 +20,7 @@ import Rectangle from "./Rectangle.js";
  * @see BoundingSphere
  * @see Packable
  */
-function BoundingRectangle(x, y, width, height) {
+function BoundingRectangle(x: any, y: any, width: any, height: any) {
   /**
    * The x coordinate of the rectangle.
    * @type {number}
@@ -66,7 +66,10 @@ BoundingRectangle.packedLength = 4;
  * @returns {number[]} The array that was packed into
  */
 BoundingRectangle.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -87,7 +90,9 @@ BoundingRectangle.pack = function (value, array, startingIndex) {
  * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
  */
 BoundingRectangle.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -228,7 +233,10 @@ BoundingRectangle.clone = function (rectangle, result) {
  * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
  */
 BoundingRectangle.union = function (left, right, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new BoundingRectangle();
@@ -255,7 +263,10 @@ BoundingRectangle.union = function (left, right, result) {
  * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
  */
 BoundingRectangle.expand = function (rectangle, point, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  Check.typeOf.object("point", point);
+  //>>includeEnd('debug');
 
   result = BoundingRectangle.clone(rectangle, result);
 
@@ -287,7 +298,10 @@ BoundingRectangle.expand = function (rectangle, point, result) {
  * @returns {Intersect} <code>Intersect.INTERSECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
  */
 BoundingRectangle.intersect = function (left, right) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
 
   const leftX = left.x;
   const leftY = left.y;
@@ -357,5 +371,4 @@ BoundingRectangle.prototype.intersect = function (right) {
 BoundingRectangle.prototype.equals = function (right) {
   return BoundingRectangle.equals(this, right);
 };
-export { BoundingRectangle };
 export default BoundingRectangle;

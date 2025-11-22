@@ -32,12 +32,16 @@ import Appearance from "./Appearance.js";
  *   })
  * });
  */
-function DebugAppearance(options) {
+function DebugAppearance(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const attributeName = options.attributeName;
   let perInstanceAttribute = options.perInstanceAttribute;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(attributeName)) {
+    throw new DeveloperError("options.attributeName is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(perInstanceAttribute)) {
     perInstanceAttribute = false;
@@ -73,7 +77,12 @@ function DebugAppearance(options) {
       case "vec4":
         getColor = `vec4 getColor() { return ${varyingName}; }\n`;
         break;
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      default:
+        throw new DeveloperError(
+          "options.glslDatatype must be float, vec2, vec3, or vec4.",
+        );
+      //>>includeEnd('debug');
     }
   }
 
@@ -254,5 +263,4 @@ DebugAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
  * @returns {object} The render state.
  */
 DebugAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
-export { DebugAppearance };
 export default DebugAppearance;

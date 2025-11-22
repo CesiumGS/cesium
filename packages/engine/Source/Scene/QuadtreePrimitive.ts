@@ -39,8 +39,17 @@ import TileSelectionResult from "./TileSelectionResult.js";
  *        frame, so the actual number of resident tiles may be higher.  The value of
  *        this property will not affect visual quality.
  */
-function QuadtreePrimitive(options) {
-  ;
+function QuadtreePrimitive(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options) || !defined(options.tileProvider)) {
+    throw new DeveloperError("options.tileProvider is required.");
+  }
+  if (defined(options.tileProvider.quadtree)) {
+    throw new DeveloperError(
+      "A QuadtreeTileProvider can only be used with a single QuadtreePrimitive",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._tileProvider = options.tileProvider;
   this._tileProvider.quadtree = this;
@@ -192,7 +201,7 @@ QuadtreePrimitive.prototype.invalidateAllTiles = function () {
   this._tilesInvalidated = true;
 };
 
-function invalidateAllTiles(primitive) {
+function invalidateAllTiles(primitive: any) {
   // Clear the replacement queue
   const replacementQueue = primitive._tileReplacementQueue;
   replacementQueue.head = undefined;
@@ -299,7 +308,7 @@ QuadtreePrimitive.prototype.update = function (frameState) {
   }
 };
 
-function clearTileLoadQueue(primitive) {
+function clearTileLoadQueue(primitive: any) {
   const debug = primitive._debug;
   debug.maxDepth = 0;
   debug.maxDepthVisited = 0;
@@ -367,7 +376,7 @@ QuadtreePrimitive.prototype.render = function (frameState) {
  * a new change event at the end of the render cycle.
  * @private
  */
-function updateTileLoadProgress(primitive, frameState) {
+function updateTileLoadProgress(primitive: any, frameState: any) {
   const currentLoadQueueLength =
     primitive._tileLoadQueueHigh.length +
     primitive._tileLoadQueueMedium.length +
@@ -475,7 +484,7 @@ QuadtreePrimitive.prototype.destroy = function () {
 
 let comparisonPoint;
 const centerScratch = new Cartographic();
-function compareDistanceToPoint(a, b) {
+function compareDistanceToPoint(a: any, b: any) {
   let center = Rectangle.center(a.rectangle, centerScratch);
   const alon = center.longitude - comparisonPoint.longitude;
   const alat = center.latitude - comparisonPoint.latitude;
@@ -490,7 +499,7 @@ function compareDistanceToPoint(a, b) {
 const cameraOriginScratch = new Cartesian3();
 let rootTraversalDetails = [];
 
-function selectTilesForRendering(primitive, frameState) {
+function selectTilesForRendering(primitive: any, frameState: any) {
   const debug = primitive._debug;
   if (debug.suspendLodUpdate) {
     return;
@@ -537,8 +546,8 @@ function selectTilesForRendering(primitive, frameState) {
   const customDataAdded = primitive._addHeightCallbacks;
   const customDataRemoved = primitive._removeHeightCallbacks;
 
-  customDataAdded.forEach((data) => {
-    const tile = levelZeroTiles.find((tile) =>
+  customDataAdded.forEach((data: any) => {
+    const tile = levelZeroTiles.find((tile: any) =>
       Rectangle.contains(tile.rectangle, data.positionCartographic),
     );
     if (tile) {
@@ -546,8 +555,8 @@ function selectTilesForRendering(primitive, frameState) {
     }
   });
 
-  customDataRemoved.forEach((data) => {
-    const tile = levelZeroTiles.find((tile) =>
+  customDataRemoved.forEach((data: any) => {
+    const tile = levelZeroTiles.find((tile: any) =>
       Rectangle.contains(tile.rectangle, data.positionCartographic),
     );
     if (tile) {
@@ -555,7 +564,7 @@ function selectTilesForRendering(primitive, frameState) {
     }
   });
 
-  levelZeroTiles.forEach((tile) => tile.updateCustomData());
+  levelZeroTiles.forEach((tile: any) => tile.updateCustomData());
   customDataAdded.length = 0;
   customDataRemoved.length = 0;
 
@@ -595,7 +604,7 @@ function selectTilesForRendering(primitive, frameState) {
   primitive._lastSelectionFrameNumber = frameState.frameNumber;
 }
 
-function queueTileLoad(primitive, queue, tile, frameState) {
+function queueTileLoad(primitive: any, queue: any, tile: any, frameState: any) {
   if (!tile.needsLoading) {
     return;
   }
@@ -700,13 +709,7 @@ for (let i = 0; i < traversalQuadsByLevel.length; ++i) {
  *                  to maintain detail while that higher tile loads.
  * @param {TraversalDetails} traveralDetails On return, populated with details of how the traversal of this tile went.
  */
-function visitTile(
-  primitive,
-  frameState,
-  tile,
-  ancestorMeetsSse,
-  traversalDetails,
-) {
+function visitTile(primitive: any, frameState: any, tile: any, ancestorMeetsSse: any, traversalDetails: any, ) {
   const debug = primitive._debug;
 
   ++debug.tilesVisited;
@@ -975,16 +978,7 @@ function visitTile(
   traversalDetails.notYetRenderableCount = tile.renderable ? 0 : 1;
 }
 
-function visitVisibleChildrenNearToFar(
-  primitive,
-  southwest,
-  southeast,
-  northwest,
-  northeast,
-  frameState,
-  ancestorMeetsSse,
-  traversalDetails,
-) {
+function visitVisibleChildrenNearToFar(primitive: any, southwest: any, southeast: any, northwest: any, northeast: any, frameState: any, ancestorMeetsSse: any, traversalDetails: any, ) {
   const cameraPosition = frameState.camera.positionCartographic;
   const tileProvider = primitive._tileProvider;
   const occluders = primitive._occluders;
@@ -1154,7 +1148,7 @@ function visitVisibleChildrenNearToFar(
   quadDetails.combine(traversalDetails);
 }
 
-function containsNeededPosition(primitive, tile) {
+function containsNeededPosition(primitive: any, tile: any) {
   const rectangle = tile.rectangle;
   return (
     (defined(primitive._cameraPositionCartographic) &&
@@ -1167,15 +1161,7 @@ function containsNeededPosition(primitive, tile) {
   );
 }
 
-function visitIfVisible(
-  primitive,
-  tile,
-  tileProvider,
-  frameState,
-  occluders,
-  ancestorMeetsSse,
-  traversalDetails,
-) {
+function visitIfVisible(primitive: any, tile: any, tileProvider: any, frameState: any, occluders: any, ancestorMeetsSse: any, traversalDetails: any, ) {
   if (
     tileProvider.computeTileVisibility(tile, frameState, occluders) !==
     Visibility.NONE
@@ -1234,7 +1220,7 @@ function visitIfVisible(
   tile._lastSelectionResultFrame = frameState.frameNumber;
 }
 
-function screenSpaceError(primitive, frameState, tile) {
+function screenSpaceError(primitive: any, frameState: any, tile: any) {
   if (
     frameState.mode === SceneMode.SCENE2D ||
     frameState.camera.frustum instanceof OrthographicFrustum ||
@@ -1262,7 +1248,7 @@ function screenSpaceError(primitive, frameState, tile) {
   return error;
 }
 
-function screenSpaceError2D(primitive, frameState, tile) {
+function screenSpaceError2D(primitive: any, frameState: any, tile: any) {
   const camera = frameState.camera;
   let frustum = camera.frustum;
   const offCenterFrustum = frustum.offCenterFrustum;
@@ -1292,11 +1278,11 @@ function screenSpaceError2D(primitive, frameState, tile) {
   return error;
 }
 
-function addTileToRenderList(primitive, tile) {
+function addTileToRenderList(primitive: any, tile: any) {
   primitive._tilesToRender.push(tile);
 }
 
-function processTileLoadQueue(primitive, frameState) {
+function processTileLoadQueue(primitive: any, frameState: any) {
   const tileLoadQueueHigh = primitive._tileLoadQueueHigh;
   const tileLoadQueueMedium = primitive._tileLoadQueueMedium;
   const tileLoadQueueLow = primitive._tileLoadQueueLow;
@@ -1342,18 +1328,11 @@ function processTileLoadQueue(primitive, frameState) {
   );
 }
 
-function sortByLoadPriority(a, b) {
+function sortByLoadPriority(a: any, b: any) {
   return a._loadPriority - b._loadPriority;
 }
 
-function processSinglePriorityLoadQueue(
-  primitive,
-  frameState,
-  tileProvider,
-  endTime,
-  loadQueue,
-  didSomeLoading,
-) {
+function processSinglePriorityLoadQueue(primitive: any, frameState: any, tileProvider: any, endTime: any, loadQueue: any, didSomeLoading: any, ) {
   if (tileProvider.computeTileLoadPriority !== undefined) {
     loadQueue.sort(sortByLoadPriority);
   }
@@ -1377,7 +1356,7 @@ const scratchCartographic = new Cartographic();
 const scratchPosition = new Cartesian3();
 const scratchArray = [];
 
-function updateHeights(primitive, frameState) {
+function updateHeights(primitive: any, frameState: any) {
   if (!defined(primitive.tileProvider.tilingScheme)) {
     return;
   }
@@ -1554,7 +1533,7 @@ function updateHeights(primitive, frameState) {
   }
 }
 
-function createRenderCommandsForSelectedTiles(primitive, frameState) {
+function createRenderCommandsForSelectedTiles(primitive: any, frameState: any) {
   const tileProvider = primitive._tileProvider;
   const tilesToRender = primitive._tilesToRender;
 
@@ -1563,5 +1542,4 @@ function createRenderCommandsForSelectedTiles(primitive, frameState) {
     tileProvider.showTileThisFrame(tile, frameState);
   }
 }
-export { QuadtreePrimitive };
 export default QuadtreePrimitive;

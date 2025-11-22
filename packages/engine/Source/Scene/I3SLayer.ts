@@ -20,7 +20,7 @@ import I3SSymbology from "./I3SSymbology.js";
  * @privateParam {object} layerData The layer data that is loaded from the scene layer
  * @privateParam {I3SDataProvider|I3SSublayer} parent The parent of that layer
  */
-function I3SLayer(dataProvider, layerData, parent) {
+function I3SLayer(dataProvider: any, layerData: any, parent: any) {
   this._dataProvider = dataProvider;
   this._parent = parent;
 
@@ -457,5 +457,4 @@ I3SLayer.prototype.filterByAttributes = function (filters) {
   return Promise.resolve();
 };
 
-export { I3SLayer };
 export default I3SLayer;

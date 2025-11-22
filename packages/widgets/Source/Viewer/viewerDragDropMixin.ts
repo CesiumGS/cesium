@@ -38,8 +38,33 @@ import {
  *     window.alert('Error processing ' + source + ':' + error);
  * });
  */
-function viewerDragDropMixin(viewer, options) {
-  ;
+function viewerDragDropMixin(viewer: any, options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(viewer)) {
+    throw new DeveloperError("viewer is required.");
+  }
+  if (viewer.hasOwnProperty("dropTarget")) {
+    throw new DeveloperError("dropTarget is already defined by another mixin.");
+  }
+  if (viewer.hasOwnProperty("dropEnabled")) {
+    throw new DeveloperError(
+      "dropEnabled is already defined by another mixin.",
+    );
+  }
+  if (viewer.hasOwnProperty("dropError")) {
+    throw new DeveloperError("dropError is already defined by another mixin.");
+  }
+  if (viewer.hasOwnProperty("clearOnDrop")) {
+    throw new DeveloperError(
+      "clearOnDrop is already defined by another mixin.",
+    );
+  }
+  if (viewer.hasOwnProperty("flyToOnDrop")) {
+    throw new DeveloperError(
+      "flyToOnDrop is already defined by another mixin.",
+    );
+  }
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -66,7 +91,11 @@ function viewerDragDropMixin(viewer, options) {
         return dropTarget;
       },
       set: function (value) {
-        ;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+          throw new DeveloperError("value is required.");
+        }
+        //>>includeEnd('debug');
 
         unsubscribe(dropTarget, handleDrop);
         dropTarget = value;
@@ -163,7 +192,7 @@ function viewerDragDropMixin(viewer, options) {
     },
   });
 
-  function handleDrop(event) {
+  function handleDrop(event: any) {
     stop(event);
 
     if (clearOnDrop) {
@@ -194,12 +223,12 @@ function viewerDragDropMixin(viewer, options) {
   viewer._handleDrop = handleDrop;
 }
 
-function stop(event) {
+function stop(event: any) {
   event.stopPropagation();
   event.preventDefault();
 }
 
-function unsubscribe(dropTarget, handleDrop) {
+function unsubscribe(dropTarget: any, handleDrop: any) {
   const currentTarget = dropTarget;
   if (defined(currentTarget)) {
     currentTarget.removeEventListener("drop", handleDrop, false);
@@ -209,14 +238,14 @@ function unsubscribe(dropTarget, handleDrop) {
   }
 }
 
-function subscribe(dropTarget, handleDrop) {
+function subscribe(dropTarget: any, handleDrop: any) {
   dropTarget.addEventListener("drop", handleDrop, false);
   dropTarget.addEventListener("dragenter", stop, false);
   dropTarget.addEventListener("dragover", stop, false);
   dropTarget.addEventListener("dragexit", stop, false);
 }
 
-function createOnLoadCallback(viewer, file, proxy, clampToGround) {
+function createOnLoadCallback(viewer: any, file: any, proxy: any, clampToGround: any) {
   const scene = viewer.scene;
   return function (evt) {
     const fileName = file.name;
@@ -277,10 +306,9 @@ function createOnLoadCallback(viewer, file, proxy, clampToGround) {
   };
 }
 
-function createDropErrorCallback(viewer, file) {
+function createDropErrorCallback(viewer: any, file: any) {
   return function (evt) {
     viewer.dropError.raiseEvent(viewer, file.name, evt.target.error);
   };
 }
-export { viewerDragDropMixin };
 export default viewerDragDropMixin;

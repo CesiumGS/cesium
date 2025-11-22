@@ -19,8 +19,10 @@ import SceneMode from "./SceneMode.js";
 /**
  * @private
  */
-function SceneTransitioner(scene) {
-  ;
+function SceneTransitioner(scene: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("scene", scene);
+  //>>includeEnd('debug');
 
   this._scene = scene;
   this._currentTweens = [];
@@ -318,7 +320,7 @@ SceneTransitioner.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-function createMorphHandler(transitioner, completeMorphFunction) {
+function createMorphHandler(transitioner: any, completeMorphFunction: any) {
   if (transitioner._scene.completeMorphOnUserInput) {
     transitioner._morphHandler = new ScreenSpaceEventHandler(
       transitioner._scene.canvas,
@@ -349,7 +351,7 @@ function createMorphHandler(transitioner, completeMorphFunction) {
   }
 }
 
-function destroyMorphHandler(transitioner) {
+function destroyMorphHandler(transitioner: any) {
   const tweens = transitioner._currentTweens;
   for (let i = 0; i < tweens.length; ++i) {
     tweens[i].cancelTween();
@@ -363,7 +365,7 @@ const scratchCVTo3DCartographic = new Cartographic();
 const scratchCVTo3DSurfacePoint = new Cartesian3();
 const scratchCVTo3DFromENU = new Matrix4();
 
-function getColumbusViewTo3DCamera(transitioner, ellipsoid) {
+function getColumbusViewTo3DCamera(transitioner: any, ellipsoid: any) {
   const scene = transitioner._scene;
   const camera = scene.camera;
 
@@ -401,12 +403,7 @@ const scratchCVTo3DEndPos = new Cartesian3();
 const scratchCVTo3DEndDir = new Cartesian3();
 const scratchCVTo3DEndUp = new Cartesian3();
 
-function morphFromColumbusViewTo3D(
-  transitioner,
-  duration,
-  endCamera,
-  complete,
-) {
+function morphFromColumbusViewTo3D(transitioner: any, duration: any, endCamera: any, complete: any, ) {
   duration *= 0.5;
 
   const scene = transitioner._scene;
@@ -432,7 +429,7 @@ function morphFromColumbusViewTo3D(
     scratchCVTo3DEndUp,
   );
 
-  function update(value) {
+  function update(value: any) {
     columbusViewMorph(startPos, endPos, value.time, camera.position);
     columbusViewMorph(startDir, endDir, value.time, camera.direction);
     columbusViewMorph(startUp, endUp, value.time, camera.up);
@@ -465,7 +462,7 @@ const scratch3DToCVEndPos = new Cartesian3();
 const scratch3DToCVEndDir = new Cartesian3();
 const scratch3DToCVEndUp = new Cartesian3();
 
-function morphFrom2DTo3D(transitioner, duration, ellipsoid) {
+function morphFrom2DTo3D(transitioner: any, duration: any, ellipsoid: any) {
   duration /= 3.0;
 
   const scene = transitioner._scene;
@@ -545,18 +542,12 @@ function morphFrom2DTo3D(transitioner, duration, ellipsoid) {
   }
 }
 
-function columbusViewMorph(startPosition, endPosition, time, result) {
+function columbusViewMorph(startPosition: any, endPosition: any, time: any, result: any) {
   // Just linear for now.
   return Cartesian3.lerp(startPosition, endPosition, time, result);
 }
 
-function morphPerspectiveToOrthographic(
-  transitioner,
-  duration,
-  endCamera,
-  updateHeight,
-  complete,
-) {
+function morphPerspectiveToOrthographic(transitioner: any, duration: any, endCamera: any, updateHeight: any, complete: any, ) {
   const scene = transitioner._scene;
   const camera = scene.camera;
 
@@ -569,7 +560,7 @@ function morphPerspectiveToOrthographic(
   const d = endCamera.position.z * Math.tan(startFOV * 0.5);
   camera.frustum.far = d / Math.tan(endFOV * 0.5) + 10000000.0;
 
-  function update(value) {
+  function update(value: any) {
     camera.frustum.fov = CesiumMath.lerp(startFOV, endFOV, value.time);
     const height = d / Math.tan(camera.frustum.fov * 0.5);
     updateHeight(camera, height);
@@ -608,7 +599,7 @@ const scratchCVTo2DCamera = {
   frustum: undefined,
 };
 
-function morphFromColumbusViewTo2D(transitioner, duration) {
+function morphFromColumbusViewTo2D(transitioner: any, duration: any) {
   duration *= 0.5;
 
   const scene = transitioner._scene;
@@ -668,7 +659,7 @@ function morphFromColumbusViewTo2D(transitioner, duration) {
   const complete = complete2DCallback(camera2D);
   createMorphHandler(transitioner, complete);
 
-  function updateCV(value) {
+  function updateCV(value: any) {
     columbusViewMorph(startPos, endPos, value.time, camera.position);
     columbusViewMorph(startDir, endDir, value.time, camera.direction);
     columbusViewMorph(startUp, endUp, value.time, camera.up);
@@ -677,7 +668,7 @@ function morphFromColumbusViewTo2D(transitioner, duration) {
     camera._adjustOrthographicFrustum(true);
   }
 
-  function updateHeight(camera, height) {
+  function updateHeight(camera: any, height: any) {
     camera.position.z = height;
   }
 
@@ -725,7 +716,7 @@ const scratch3DTo2DRay = new Ray();
 const scratch3DTo2DToENU = new Matrix4();
 const scratch3DTo2DSurfacePoint = new Cartesian3();
 
-function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
+function morphFrom3DTo2D(transitioner: any, duration: any, ellipsoid: any) {
   duration *= 0.5;
 
   const scene = transitioner._scene;
@@ -783,7 +774,7 @@ function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
     }
   }
 
-  function updateHeight(camera, height) {
+  function updateHeight(camera: any, height: any) {
     camera.position.x = height;
   }
 
@@ -835,12 +826,7 @@ function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
   morphFrom3DToColumbusView(transitioner, duration, camera2D, completeCallback);
 }
 
-function morphOrthographicToPerspective(
-  transitioner,
-  duration,
-  cameraCV,
-  complete,
-) {
+function morphOrthographicToPerspective(transitioner: any, duration: any, cameraCV: any, complete: any, ) {
   const scene = transitioner._scene;
   const camera = scene.camera;
 
@@ -853,7 +839,7 @@ function morphOrthographicToPerspective(
   camera.frustum.far = d / Math.tan(startFOV * 0.5) + 10000000.0;
   camera.frustum.fov = startFOV;
 
-  function update(value) {
+  function update(value: any) {
     camera.frustum.fov = CesiumMath.lerp(startFOV, endFOV, value.time);
     camera.position.z = d / Math.tan(camera.frustum.fov * 0.5);
   }
@@ -874,7 +860,7 @@ function morphOrthographicToPerspective(
   transitioner._currentTweens.push(tween);
 }
 
-function morphFrom2DToColumbusView(transitioner, duration, cameraCV, complete) {
+function morphFrom2DToColumbusView(transitioner: any, duration: any, cameraCV: any, complete: any) {
   duration *= 0.5;
 
   const scene = transitioner._scene;
@@ -894,7 +880,7 @@ function morphFrom2DToColumbusView(transitioner, duration, cameraCV, complete) {
     const startUp = Cartesian3.clone(camera.up, scratch3DToCVStartUp);
     startPos.z = endPos.z;
 
-    function update(value) {
+    function update(value: any) {
       columbusViewMorph(startPos, endPos, value.time, camera.position);
       columbusViewMorph(startDir, endDir, value.time, camera.direction);
       columbusViewMorph(startUp, endUp, value.time, camera.up);
@@ -925,12 +911,7 @@ function morphFrom2DToColumbusView(transitioner, duration, cameraCV, complete) {
   }
 }
 
-function morphFrom3DToColumbusView(
-  transitioner,
-  duration,
-  endCamera,
-  complete,
-) {
+function morphFrom3DToColumbusView(transitioner: any, duration: any, endCamera: any, complete: any, ) {
   const scene = transitioner._scene;
   const camera = scene.camera;
 
@@ -942,7 +923,7 @@ function morphFrom3DToColumbusView(
   const endDir = Cartesian3.clone(endCamera.direction2D, scratch3DToCVEndDir);
   const endUp = Cartesian3.clone(endCamera.up2D, scratch3DToCVEndUp);
 
-  function update(value) {
+  function update(value: any) {
     columbusViewMorph(startPos, endPos, value.time, camera.position);
     columbusViewMorph(startDir, endDir, value.time, camera.direction);
     columbusViewMorph(startUp, endUp, value.time, camera.up);
@@ -967,14 +948,7 @@ function morphFrom3DToColumbusView(
   transitioner._currentTweens.push(tween);
 }
 
-function addMorphTimeAnimations(
-  transitioner,
-  scene,
-  start,
-  stop,
-  duration,
-  complete,
-) {
+function addMorphTimeAnimations(transitioner: any, scene: any, start: any, stop: any, duration: any, complete: any, ) {
   // Later, this will be linear and each object will adjust, if desired, in its vertex shader.
   const options = {
     object: scene,
@@ -995,7 +969,7 @@ function addMorphTimeAnimations(
   transitioner._currentTweens.push(tween);
 }
 
-function complete3DCallback(camera3D) {
+function complete3DCallback(camera3D: any) {
   return function (transitioner) {
     const scene = transitioner._scene;
     scene._mode = SceneMode.SCENE3D;
@@ -1037,7 +1011,7 @@ function complete3DCallback(camera3D) {
   };
 }
 
-function complete2DCallback(camera2D) {
+function complete2DCallback(camera2D: any) {
   return function (transitioner) {
     const scene = transitioner._scene;
 
@@ -1067,7 +1041,7 @@ function complete2DCallback(camera2D) {
   };
 }
 
-function completeColumbusViewCallback(cameraCV) {
+function completeColumbusViewCallback(cameraCV: any) {
   return function (transitioner) {
     const scene = transitioner._scene;
     scene._mode = SceneMode.COLUMBUS_VIEW;
@@ -1106,5 +1080,4 @@ function completeColumbusViewCallback(cameraCV) {
     );
   };
 }
-export { SceneTransitioner };
 export default SceneTransitioner;

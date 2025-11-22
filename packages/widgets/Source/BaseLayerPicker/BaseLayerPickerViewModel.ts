@@ -24,7 +24,7 @@ import createCommand from "../createCommand.js";
  * @exception {DeveloperError} imageryProviderViewModels must be an array.
  * @exception {DeveloperError} terrainProviderViewModels must be an array.
  */
-function BaseLayerPickerViewModel(options) {
+function BaseLayerPickerViewModel(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const globe = options.globe;
@@ -33,7 +33,11 @@ function BaseLayerPickerViewModel(options) {
   const terrainProviderViewModels =
     options.terrainProviderViewModels ?? Frozen.EMPTY_ARRAY;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(globe)) {
+    throw new DeveloperError("globe is required");
+  }
+  //>>includeEnd('debug');
 
   this._globe = globe;
 
@@ -269,7 +273,7 @@ function BaseLayerPickerViewModel(options) {
 
         const terrain = new Terrain(newProvider);
         const removeEventListener = terrain.readyEvent.addEventListener(
-          (terrainProvider) => {
+          (terrainProvider: any) => {
             if (cancelUpdate) {
               // Early return in case something has changed outside of the picker.
               return;
@@ -324,5 +328,4 @@ Object.defineProperties(BaseLayerPickerViewModel.prototype, {
     },
   },
 });
-export { BaseLayerPickerViewModel };
 export default BaseLayerPickerViewModel;

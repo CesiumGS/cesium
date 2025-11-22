@@ -10,7 +10,7 @@ const entityOptionsScratch = {
 };
 const entityIdScratch = new Array(2);
 
-function clean(entity) {
+function clean(entity: any) {
   const propertyNames = entity.propertyNames;
   const propertyNamesLength = propertyNames.length;
   for (let i = 0; i < propertyNamesLength; i++) {
@@ -20,7 +20,7 @@ function clean(entity) {
   entity._availability = undefined;
 }
 
-function subscribeToEntity(that, eventHash, collectionId, entity) {
+function subscribeToEntity(that: any, eventHash: any, collectionId: any, entity: any) {
   entityIdScratch[0] = collectionId;
   entityIdScratch[1] = entity.id;
   eventHash[JSON.stringify(entityIdScratch)] =
@@ -30,7 +30,7 @@ function subscribeToEntity(that, eventHash, collectionId, entity) {
     );
 }
 
-function unsubscribeFromEntity(that, eventHash, collectionId, entity) {
+function unsubscribeFromEntity(that: any, eventHash: any, collectionId: any, entity: any) {
   entityIdScratch[0] = collectionId;
   entityIdScratch[1] = entity.id;
   const id = JSON.stringify(entityIdScratch);
@@ -38,7 +38,7 @@ function unsubscribeFromEntity(that, eventHash, collectionId, entity) {
   eventHash[id] = undefined;
 }
 
-function recomposite(that) {
+function recomposite(that: any) {
   that._shouldRecomposite = true;
   if (that._suspendCount !== 0) {
     return;
@@ -127,7 +127,7 @@ function recomposite(that) {
  * @param {EntityCollection[]} [collections] The initial list of EntityCollection instances to merge.
  * @param {DataSource|CompositeEntityCollection} [owner] The data source (or composite entity collection) which created this collection.
  */
-function CompositeEntityCollection(collections, owner) {
+function CompositeEntityCollection(collections: any, owner: any) {
   this._owner = owner;
   this._composite = new EntityCollection(this);
   this._suspendCount = 0;
@@ -202,7 +202,20 @@ CompositeEntityCollection.prototype.addCollection = function (
   index,
 ) {
   const hasIndex = defined(index);
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(collection)) {
+    throw new DeveloperError("collection is required.");
+  }
+  if (hasIndex) {
+    if (index < 0) {
+      throw new DeveloperError("index must be greater than or equal to zero.");
+    } else if (index > this._collections.length) {
+      throw new DeveloperError(
+        "index must be less than or equal to the number of collections.",
+      );
+    }
+  }
+  //>>includeEnd('debug');
 
   if (!hasIndex) {
     index = this._collections.length;
@@ -275,7 +288,11 @@ CompositeEntityCollection.prototype.indexOfCollection = function (collection) {
  * @param {number} index the index to retrieve.
  */
 CompositeEntityCollection.prototype.getCollection = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.", "index");
+  }
+  //>>includeEnd('debug');
 
   return this._collections[index];
 };
@@ -287,17 +304,25 @@ CompositeEntityCollection.prototype.getCollectionsLength = function () {
   return this._collections.length;
 };
 
-function getCollectionIndex(collections, collection) {
-  ;
+function getCollectionIndex(collections: any, collection: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(collection)) {
+    throw new DeveloperError("collection is required.");
+  }
+  //>>includeEnd('debug');
 
   const index = collections.indexOf(collection);
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (index === -1) {
+    throw new DeveloperError("collection is not in this composite.");
+  }
+  //>>includeEnd('debug');
 
   return index;
 }
 
-function swapCollections(composite, i, j) {
+function swapCollections(composite: any, i: any, j: any) {
   const arr = composite._collections;
   i = CesiumMath.clamp(i, 0, arr.length - 1);
   j = CesiumMath.clamp(j, 0, arr.length - 1);
@@ -403,7 +428,13 @@ CompositeEntityCollection.prototype.suspendEvents = function () {
  * @exception {DeveloperError} resumeEvents can not be called before suspendEvents.
  */
 CompositeEntityCollection.prototype.resumeEvents = function () {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (this._suspendCount === 0) {
+    throw new DeveloperError(
+      "resumeEvents can not be called before suspendEvents.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._suspendCount--;
   // recomposite before triggering events (but only if required for performance) that might depend on a composited collection
@@ -557,5 +588,4 @@ CompositeEntityCollection.prototype._onDefinitionChanged = function (
 
   compositeEntity[propertyName] = compositeProperty;
 };
-export { CompositeEntityCollection };
 export default CompositeEntityCollection;

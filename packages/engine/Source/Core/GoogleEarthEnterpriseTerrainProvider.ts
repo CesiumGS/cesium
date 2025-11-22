@@ -96,7 +96,7 @@ TerrainCache.prototype.tidy = function () {
  *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
-function GoogleEarthEnterpriseTerrainProvider(options) {
+function GoogleEarthEnterpriseTerrainProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._tilingScheme = new GeographicTilingScheme({
@@ -251,7 +251,9 @@ GoogleEarthEnterpriseTerrainProvider.fromMetadata = function (
   metadata,
   options,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("metadata", metadata);
+  //>>includeEnd('debug');
 
   if (!metadata.terrainPresent) {
     throw new RuntimeError(`The server ${metadata.url} doesn't have terrain`);
@@ -267,7 +269,7 @@ const taskProcessor = new TaskProcessor("decodeGoogleEarthEnterprisePacket");
 
 // If the tile has its own terrain, then you can just use its child bitmask. If it was requested using it's parent
 //  then you need to check all of its children to see if they have terrain.
-function computeChildMask(quadKey, info, metadata) {
+function computeChildMask(quadKey: any, info: any, metadata: any) {
   let childMask = info.getChildBitmask();
   if (info.terrainState === TerrainState.PARENT) {
     childMask = 0;
@@ -562,12 +564,11 @@ GoogleEarthEnterpriseTerrainProvider.prototype.loadTileDataAvailability =
 //
 // Functions to handle imagery packets
 //
-function buildTerrainResource(terrainProvider, quadKey, version, request) {
+function buildTerrainResource(terrainProvider: any, quadKey: any, version: any, request: any) {
   version = defined(version) && version > 0 ? version : 1;
   return terrainProvider._metadata.resource.getDerivedResource({
     url: `flatfile?f1c-0${quadKey}-t.${version.toString()}`,
     request: request,
   });
 }
-export { GoogleEarthEnterpriseTerrainProvider };
 export default GoogleEarthEnterpriseTerrainProvider;

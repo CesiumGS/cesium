@@ -95,31 +95,64 @@ import isDataUri from "../Core/isDataUri.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
  */
-function Billboard(options, billboardCollection) {
+function Billboard(options: any, billboardCollection: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    defined(options.disableDepthTestDistance) &&
+    options.disableDepthTestDistance < 0.0
+  ) {
+    throw new DeveloperError(
+      "disableDepthTestDistance must be greater than or equal to 0.0.",
+    );
+  }
+  //>>includeEnd('debug');
 
   let translucencyByDistance = options.translucencyByDistance;
   let pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
   let scaleByDistance = options.scaleByDistance;
   let distanceDisplayCondition = options.distanceDisplayCondition;
   if (defined(translucencyByDistance)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (translucencyByDistance.far <= translucencyByDistance.near) {
+      throw new DeveloperError(
+        "translucencyByDistance.far must be greater than translucencyByDistance.near.",
+      );
+    }
+    //>>includeEnd('debug');
     translucencyByDistance = NearFarScalar.clone(translucencyByDistance);
   }
   if (defined(pixelOffsetScaleByDistance)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (pixelOffsetScaleByDistance.far <= pixelOffsetScaleByDistance.near) {
+      throw new DeveloperError(
+        "pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.",
+      );
+    }
+    //>>includeEnd('debug');
     pixelOffsetScaleByDistance = NearFarScalar.clone(
       pixelOffsetScaleByDistance,
     );
   }
   if (defined(scaleByDistance)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (scaleByDistance.far <= scaleByDistance.near) {
+      throw new DeveloperError(
+        "scaleByDistance.far must be greater than scaleByDistance.near.",
+      );
+    }
+    //>>includeEnd('debug');
     scaleByDistance = NearFarScalar.clone(scaleByDistance);
   }
   if (defined(distanceDisplayCondition)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+      throw new DeveloperError(
+        "distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.",
+      );
+    }
+    //>>includeEnd('debug');
     distanceDisplayCondition = DistanceDisplayCondition.clone(
       distanceDisplayCondition,
     );
@@ -220,7 +253,7 @@ const SDF_INDEX = (Billboard.SDF_INDEX = 17);
 const SPLIT_DIRECTION_INDEX = (Billboard.SPLIT_DIRECTION_INDEX = 18);
 Billboard.NUMBER_OF_PROPERTIES = 19;
 
-function makeDirty(billboard, propertyChanged) {
+function makeDirty(billboard: any, propertyChanged: any) {
   const billboardCollection = billboard._billboardCollection;
   if (defined(billboardCollection)) {
     billboardCollection._updateBillboard(billboard, propertyChanged);
@@ -241,7 +274,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._show;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("value", value);
+      //>>includeEnd('debug');
 
       if (this._show !== value) {
         this._show = value;
@@ -260,7 +295,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._position;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug)
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
 
       const position = this._position;
       if (!Cartesian3.equals(position, value)) {
@@ -283,7 +320,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._heightReference;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug)
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
 
       const heightReference = this._heightReference;
       if (value !== heightReference) {
@@ -315,7 +354,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._pixelOffset;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
 
       const pixelOffset = this._pixelOffset;
       if (!Cartesian2.equals(pixelOffset, value)) {
@@ -352,7 +393,16 @@ Object.defineProperties(Billboard.prototype, {
       return this._scaleByDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
+        Check.typeOf.object("value", value);
+        if (value.far <= value.near) {
+          throw new DeveloperError(
+            "far distance must be greater than near distance.",
+          );
+        }
+      }
+      //>>includeEnd('debug');
 
       const scaleByDistance = this._scaleByDistance;
       if (!NearFarScalar.equals(scaleByDistance, value)) {
@@ -389,7 +439,16 @@ Object.defineProperties(Billboard.prototype, {
       return this._translucencyByDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
+        Check.typeOf.object("value", value);
+        if (value.far <= value.near) {
+          throw new DeveloperError(
+            "far distance must be greater than near distance.",
+          );
+        }
+      }
+      //>>includeEnd('debug');
 
       const translucencyByDistance = this._translucencyByDistance;
       if (!NearFarScalar.equals(translucencyByDistance, value)) {
@@ -430,7 +489,16 @@ Object.defineProperties(Billboard.prototype, {
       return this._pixelOffsetScaleByDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
+        Check.typeOf.object("value", value);
+        if (value.far <= value.near) {
+          throw new DeveloperError(
+            "far distance must be greater than near distance.",
+          );
+        }
+      }
+      //>>includeEnd('debug');
 
       const pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
       if (!NearFarScalar.equals(pixelOffsetScaleByDistance, value)) {
@@ -470,7 +538,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._eyeOffset;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
 
       const eyeOffset = this._eyeOffset;
       if (!Cartesian3.equals(eyeOffset, value)) {
@@ -499,7 +569,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._horizontalOrigin;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
 
       if (this._horizontalOrigin !== value) {
         this._horizontalOrigin = value;
@@ -527,7 +599,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._verticalOrigin;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
 
       if (this._verticalOrigin !== value) {
         this._verticalOrigin = value;
@@ -555,7 +629,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._scale;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
 
       if (this._scale !== value) {
         this._scale = value;
@@ -596,7 +672,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._color;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
 
       const color = this._color;
       if (!Color.equals(color, value)) {
@@ -616,7 +694,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._rotation;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("value", value);
+      //>>includeEnd('debug');
 
       if (this._rotation !== value) {
         this._rotation = value;
@@ -651,7 +731,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._alignedAxis;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
 
       const alignedAxis = this._alignedAxis;
       if (!Cartesian3.equals(alignedAxis, value)) {
@@ -671,7 +753,11 @@ Object.defineProperties(Billboard.prototype, {
       return this._width ?? this._imageTexture.width;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
+        Check.typeOf.number("width", value);
+      }
+      //>>includeEnd('debug');
 
       if (this._width !== value) {
         this._width = value;
@@ -690,7 +776,11 @@ Object.defineProperties(Billboard.prototype, {
       return this._height ?? this._imageTexture.height;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
+        Check.typeOf.number("height", value);
+      }
+      //>>includeEnd('debug');
 
       if (this._height !== value) {
         this._height = value;
@@ -711,7 +801,9 @@ Object.defineProperties(Billboard.prototype, {
       return this._sizeInMeters;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("value", value);
+      //>>includeEnd('debug');
       if (this._sizeInMeters !== value) {
         this._sizeInMeters = value;
         makeDirty(this, COLOR_INDEX);
@@ -733,7 +825,16 @@ Object.defineProperties(Billboard.prototype, {
       if (
         !DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)
       ) {
-        ;
+        //>>includeStart('debug', pragmas.debug);
+        if (defined(value)) {
+          Check.typeOf.object("value", value);
+          if (value.far <= value.near) {
+            throw new DeveloperError(
+              "far distance must be greater than near distance.",
+            );
+          }
+        }
+        //>>includeEnd('debug');
         this._distanceDisplayCondition = DistanceDisplayCondition.clone(
           value,
           this._distanceDisplayCondition,
@@ -754,7 +855,16 @@ Object.defineProperties(Billboard.prototype, {
       return this._disableDepthTestDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value)) {
+        Check.typeOf.number("value", value);
+        if (value < 0.0) {
+          throw new DeveloperError(
+            "disableDepthTestDistance must be greater than or equal to 0.0.",
+          );
+        }
+      }
+      //>>includeEnd('debug');
       if (this._disableDepthTestDistance !== value) {
         this._disableDepthTestDistance = value;
         makeDirty(this, DISABLE_DEPTH_DISTANCE);
@@ -936,7 +1046,11 @@ Object.defineProperties(Billboard.prototype, {
       return this._outlineColor;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const outlineColor = this._outlineColor;
       if (!Color.equals(outlineColor, value)) {
@@ -1002,7 +1116,13 @@ Billboard.prototype._updateClamping = function () {
 const scratchCartographic = new Cartographic();
 Billboard._updateClamping = function (collection, owner) {
   if (!defined(collection) || !defined(collection._scene)) {
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (owner._heightReference !== HeightReference.NONE) {
+      throw new DeveloperError(
+        "Height reference is not supported without a scene.",
+      );
+    }
+    //>>includeEnd('debug');
     return;
   }
   const scene = collection._scene;
@@ -1039,7 +1159,7 @@ Billboard._updateClamping = function (collection, owner) {
     return;
   }
 
-  function updateFunction(clampedPosition) {
+  function updateFunction(clampedPosition: any) {
     const updatedClampedPosition = ellipsoid.cartographicToCartesian(
       clampedPosition,
       owner._clampedPosition,
@@ -1105,7 +1225,7 @@ Billboard.prototype.computeTextureCoordinates = function (result) {
  *        or a function which will be called to create the image if it hasn't been loaded already.
  * @example
  * // create a billboard image dynamically
- * function drawImage(id) {
+ * function drawImage(id: any) {
  *   // create and draw an image using a canvas
  *   const canvas = document.createElement('canvas');
  *   const context2D = canvas.getContext('2d');
@@ -1120,7 +1240,10 @@ Billboard.prototype.computeTextureCoordinates = function (result) {
  * b2.setImage('myImage', drawImage);
  */
 Billboard.prototype.setImage = function (id, image) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("id", id);
+  Check.defined("image", image);
+  //>>includeEnd('debug');
 
   this._computeImageTextureProperties(id, image);
   this._imageTexture.loadImage(
@@ -1137,7 +1260,9 @@ Billboard.prototype.setImage = function (id, image) {
  * @param {BillboardTexture} billboardTexture
  */
 Billboard.prototype.setImageTexture = function (billboardTexture) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("billboardTexture", billboardTexture);
+  //>>includeEnd('debug');
 
   BillboardTexture.clone(billboardTexture, this._imageTexture);
 };
@@ -1181,7 +1306,7 @@ Billboard.prototype._computeImageTextureProperties = function (id, image) {
   }
 };
 
-function isSvgUri(uri) {
+function isSvgUri(uri: any) {
   if (!defined(uri)) {
     return false;
   }
@@ -1200,13 +1325,20 @@ function isSvgUri(uri) {
  * @exception {RuntimeError} image with id must be in the atlas
  */
 Billboard.prototype.setImageSubRegion = function (id, subRegion) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("id", id);
+  Check.defined("subRegion", subRegion);
+  //>>includeEnd('debug');
 
   this._imageTexture.addImageSubRegion(id, subRegion);
 };
 
 Billboard.prototype._setTranslate = function (value) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(value)) {
+    throw new DeveloperError("value is required.");
+  }
+  //>>includeEnd('debug');
 
   const translate = this._translate;
   if (!Cartesian2.equals(translate, value)) {
@@ -1311,7 +1443,16 @@ Billboard.prototype.computeScreenSpacePosition = function (scene, result) {
     result = new Cartesian2();
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(billboardCollection)) {
+    throw new DeveloperError(
+      "Billboard must be in a collection.  Was it removed?",
+    );
+  }
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   // pixel offset for screen space computation is the pixelOffset + screen space translate
   Cartesian2.clone(this._pixelOffset, scratchPixelOffset);
@@ -1457,5 +1598,4 @@ Billboard.prototype._destroy = function () {
  * @param {string} id The identifier of the image to load.
  * @returns {HTMLImageElement|HTMLCanvasElement|Promise<HTMLImageElement|HTMLCanvasElement>} The image, or a promise that will resolve to an image.
  */
-export { Billboard };
 export default Billboard;

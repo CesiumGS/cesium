@@ -27,7 +27,7 @@ import Azure2DImageryProvider from "./Azure2DImageryProvider.js";
  * @private
  * @type {IonImageryProviderFactoryCallback<TileMapServiceImageryProvider>}
  */
-export const defaultFactoryCallback = async (url, endpoint, endpointResource) =>
+export const defaultFactoryCallback = async (url: any, endpoint: any, endpointResource: any) =>
   TileMapServiceImageryProvider.fromUrl(
     new IonResource(endpoint, endpointResource),
   );
@@ -119,13 +119,13 @@ export const WMTS = async (url, { options }) => {
  * @private
  * @type {IonImageryProviderFactoryCallback<Google2DImageryProvider>}
  */
-export const GOOGLE_2D_MAPS = async (url, endpoint, endpointResource) => {
+export const GOOGLE_2D_MAPS = async (url: any, endpoint: any, endpointResource: any) => {
   delete endpoint.externalType;
   endpoint.url = url;
 
   const ionResource = new IonResource(endpoint, endpointResource);
 
-  const callback = (ionRoot, endpoint) => {
+  const callback = (ionRoot: any, endpoint: any) => {
     delete endpoint.externalType;
     endpoint.url = url;
 
@@ -147,13 +147,13 @@ export const GOOGLE_2D_MAPS = async (url, endpoint, endpointResource) => {
  * @private
  * @type {IonImageryProviderFactoryCallback<Azure2DImageryProvider>}
  */
-export const AZURE_MAPS = async (url, endpoint, endpointResource) => {
+export const AZURE_MAPS = async (url: any, endpoint: any, endpointResource: any) => {
   delete endpoint.externalType;
   endpoint.url = url;
 
   const ionResource = new IonResource(endpoint, endpointResource);
 
-  const callback = (ionRoot, endpoint) => {
+  const callback = (ionRoot: any, endpoint: any) => {
     delete endpoint.externalType;
     endpoint.url = url;
 

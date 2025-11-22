@@ -9,7 +9,7 @@ import defined from "./defined.js";
  * @param {*} object The item to find in the array.
  * @returns {string} A string containing the formatted error.
  */
-function formatError(object) {
+function formatError(object: any) {
   let result;
 
   const name = object.name;
@@ -27,5 +27,4 @@ function formatError(object) {
 
   return result;
 }
-export { formatError };
 export default formatError;

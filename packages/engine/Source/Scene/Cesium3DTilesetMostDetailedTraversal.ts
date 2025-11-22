@@ -82,7 +82,7 @@ Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
   return ready;
 };
 
-function canTraverse(tile) {
+function canTraverse(tile: any) {
   if (tile.children.length === 0) {
     return false;
   }
@@ -100,7 +100,7 @@ function canTraverse(tile) {
   return true; // Keep traversing until a leaf is hit
 }
 
-function updateAndPushChildren(tile, stack, frameState) {
+function updateAndPushChildren(tile: any, stack: any, frameState: any) {
   const { children } = tile;
 
   for (let i = 0; i < children.length; ++i) {
@@ -112,14 +112,14 @@ function updateAndPushChildren(tile, stack, frameState) {
   }
 }
 
-function loadTile(tileset, tile) {
+function loadTile(tileset: any, tile: any) {
   if (tile.hasUnloadedRenderableContent || tile.contentExpired) {
     tile._priority = 0.0; // Highest priority
     tileset._requestedTiles.push(tile);
   }
 }
 
-function selectDesiredTile(tile, frameState) {
+function selectDesiredTile(tile: any, frameState: any) {
   if (
     tile.contentAvailable &&
     tile.contentVisibility(frameState) !== Intersect.OUTSIDE
@@ -128,5 +128,4 @@ function selectDesiredTile(tile, frameState) {
   }
 }
 
-export { Cesium3DTilesetMostDetailedTraversal };
 export default Cesium3DTilesetMostDetailedTraversal;

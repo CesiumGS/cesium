@@ -21,5 +21,4 @@ Frozen.EMPTY_OBJECT = Object.freeze({});
  */
 Frozen.EMPTY_ARRAY = Object.freeze([]);
 
-export { Frozen };
 export default Frozen;

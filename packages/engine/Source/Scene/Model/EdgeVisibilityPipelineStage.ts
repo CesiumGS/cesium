@@ -189,7 +189,7 @@ EdgeVisibilityPipelineStage.process = function (
  * @returns {{edgeMap:Map<string, number[]>, faceNormals:Float32Array, triangleCount:number}}
  * @private
  */
-function buildTriangleAdjacency(primitive) {
+function buildTriangleAdjacency(primitive: any) {
   const indices = primitive.indices;
   if (!defined(indices)) {
     return {
@@ -243,7 +243,7 @@ function buildTriangleAdjacency(primitive) {
   const scratchE2 = new Cartesian3();
   const scratchCross = new Cartesian3();
 
-  function processEdge(a, b, triIndex) {
+  function processEdge(a: any, b: any, triIndex: any) {
     const edgeKey = `${a < b ? a : b},${a < b ? b : a}`;
     let list = edgeMap.get(edgeKey);
     if (!defined(list)) {
@@ -303,7 +303,7 @@ function buildTriangleAdjacency(primitive) {
  * @returns {Float32Array} Packed array: 6 floats per edge (normalA.xyz, normalB.xyz)
  * @private
  */
-function generateEdgeFaceNormals(adjacencyData, edgeIndices) {
+function generateEdgeFaceNormals(adjacencyData: any, edgeIndices: any) {
   const { edgeMap, faceNormals } = adjacencyData;
   const numEdges = edgeIndices.length / 2;
 
@@ -367,10 +367,10 @@ function generateEdgeFaceNormals(adjacencyData, edgeIndices) {
  * Deduplicates edges shared by adjacent triangles and records per-edge metadata.
  *
  * @param {ModelComponents.Primitive} primitive The primitive with EXT_mesh_primitive_edge_visibility data
- * @returns {{edgeIndices:number[], edgeData:object[], silhouetteEdgeCount:number}} Edge extraction result
+ * @returns {{edgeIndices:number[], edgeData:Object[], silhouetteEdgeCount:number}} Edge extraction result
  * @private
  */
-function extractVisibleEdges(primitive) {
+function extractVisibleEdges(primitive: any) {
   const edgeVisibility = primitive.edgeVisibility;
   const visibility = edgeVisibility.visibility;
   const indices = primitive.indices;
@@ -480,22 +480,10 @@ function extractVisibleEdges(primitive) {
  * @param {number} edgeFeatureIdLocation Shader attribute location for optional edge feature ID
  * @param {Object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals[])
  * @param {Float32Array} edgeFaceNormals Packed face normals (6 floats per edge)
- * @returns {object|undefined} Object with {vertexArray, indexBuffer, indexCount} or undefined on failure
+ * @returns {Object|undefined} Object with {vertexArray, indexBuffer, indexCount} or undefined on failure
  * @private
  */
-function createCPULineEdgeGeometry(
-  edgeIndices,
-  edgeData,
-  renderResources,
-  context,
-  edgeTypeLocation,
-  silhouetteNormalLocation,
-  faceNormalALocation,
-  faceNormalBLocation,
-  edgeFeatureIdLocation,
-  edgeVisibility,
-  edgeFaceNormals,
-) {
+function createCPULineEdgeGeometry(edgeIndices: any, edgeData: any, renderResources: any, context: any, edgeTypeLocation: any, silhouetteNormalLocation: any, faceNormalALocation: any, faceNormalBLocation: any, edgeFeatureIdLocation: any, edgeVisibility: any, edgeFaceNormals: any, ) {
   if (!defined(edgeIndices) || edgeIndices.length === 0) {
     return undefined;
   }
@@ -737,7 +725,7 @@ function createCPULineEdgeGeometry(
       // Handle FeatureIdAttribute objects directly using setIndex
       if (defined(firstFeatureIdSet.setIndex)) {
         const featureIdAttribute = primitive.attributes.find(
-          (attr) =>
+          (attr: any) =>
             attr.semantic === VertexAttributeSemantic.FEATURE_ID &&
             attr.setIndex === firstFeatureIdSet.setIndex,
         );
@@ -797,5 +785,4 @@ function createCPULineEdgeGeometry(
   };
 }
 
-export { EdgeVisibilityPipelineStage };
 export default EdgeVisibilityPipelineStage;

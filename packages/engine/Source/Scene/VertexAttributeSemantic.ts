@@ -89,7 +89,7 @@ const VertexAttributeSemantic = {
   ROTATION: "KHR_gaussian_splatting:ROTATION",
 };
 
-function semanticToVariableName(semantic) {
+function semanticToVariableName(semantic: any) {
   switch (semantic) {
     case VertexAttributeSemantic.POSITION:
       return "positionMC";
@@ -111,7 +111,10 @@ function semanticToVariableName(semantic) {
       return "scale";
     case VertexAttributeSemantic.ROTATION:
       return "rotation";
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("semantic is not a valid value.");
+    //>>includeEnd('debug');
   }
 }
 
@@ -125,7 +128,9 @@ function semanticToVariableName(semantic) {
  * @private
  */
 VertexAttributeSemantic.hasSetIndex = function (semantic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
 
   switch (semantic) {
     case VertexAttributeSemantic.POSITION:
@@ -140,7 +145,10 @@ VertexAttributeSemantic.hasSetIndex = function (semantic) {
     case VertexAttributeSemantic.SCALE:
     case VertexAttributeSemantic.ROTATION:
       return true;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("semantic is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 
@@ -154,7 +162,9 @@ VertexAttributeSemantic.hasSetIndex = function (semantic) {
  * @private
  */
 VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("gltfSemantic", gltfSemantic);
+  //>>includeEnd('debug');
 
   let semantic = gltfSemantic;
 
@@ -203,7 +213,9 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
  * @private
  */
 VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("pntsSemantic", pntsSemantic);
+  //>>includeEnd('debug');
 
   switch (pntsSemantic) {
     case "POSITION":
@@ -218,7 +230,10 @@ VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
       return VertexAttributeSemantic.NORMAL;
     case "BATCH_ID":
       return VertexAttributeSemantic.FEATURE_ID;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("pntsSemantic is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 
@@ -233,7 +248,9 @@ VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
  * @private
  */
 VertexAttributeSemantic.getGlslType = function (semantic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
 
   switch (semantic) {
     case VertexAttributeSemantic.POSITION:
@@ -256,7 +273,10 @@ VertexAttributeSemantic.getGlslType = function (semantic) {
       return "vec4";
     case VertexAttributeSemantic.OPACITY:
       return "float";
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("semantic is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 
@@ -271,7 +291,9 @@ VertexAttributeSemantic.getGlslType = function (semantic) {
  * @private
  */
 VertexAttributeSemantic.getVariableName = function (semantic, setIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
 
   let variableName = semanticToVariableName(semantic);
   if (defined(setIndex)) {

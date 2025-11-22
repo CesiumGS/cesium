@@ -56,7 +56,7 @@ const defaultCredit = new Credit(
  * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
-function OpenStreetMapImageryProvider(options) {
+function OpenStreetMapImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(
@@ -92,7 +92,13 @@ function OpenStreetMapImageryProvider(options) {
   );
   const tileCount =
     (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (tileCount > 4) {
+    throw new DeveloperError(
+      `The rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`,
+    );
+  }
+  //>>includeEnd('debug');
 
   let credit = options.credit ?? defaultCredit;
   if (typeof credit === "string") {
@@ -119,5 +125,4 @@ if (defined(Object.create)) {
     OpenStreetMapImageryProvider;
 }
 
-export { OpenStreetMapImageryProvider };
 export default OpenStreetMapImageryProvider;

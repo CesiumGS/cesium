@@ -68,5 +68,4 @@ LagrangePolynomialApproximation.interpolateOrderZero = function (
 
   return result;
 };
-export { LagrangePolynomialApproximation };
 export default LagrangePolynomialApproximation;

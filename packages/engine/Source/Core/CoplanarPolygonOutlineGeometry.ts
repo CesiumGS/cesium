@@ -15,7 +15,7 @@ import IndexDatatype from "./IndexDatatype.js";
 import PolygonGeometryLibrary from "./PolygonGeometryLibrary.js";
 import PrimitiveType from "./PrimitiveType.js";
 
-function createGeometryFromPositions(positions) {
+function createGeometryFromPositions(positions: any) {
   const length = positions.length;
   const flatPositions = new Float64Array(length * 3);
   const indices = IndexDatatype.createTypedArray(length, length * 2);
@@ -70,10 +70,12 @@ function createGeometryFromPositions(positions) {
  * });
  * const geometry = Cesium.CoplanarPolygonOutlineGeometry.createGeometry(polygonOutline);
  */
-function CoplanarPolygonOutlineGeometry(options) {
+function CoplanarPolygonOutlineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const polygonHierarchy = options.polygonHierarchy;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.polygonHierarchy", polygonHierarchy);
+  //>>includeEnd('debug');
 
   this._polygonHierarchy = polygonHierarchy;
   this._workerName = "createCoplanarPolygonOutlineGeometry";
@@ -99,7 +101,9 @@ function CoplanarPolygonOutlineGeometry(options) {
 CoplanarPolygonOutlineGeometry.fromPositions = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.positions", options.positions);
+  //>>includeEnd('debug');
 
   const newOptions = {
     polygonHierarchy: {
@@ -119,7 +123,10 @@ CoplanarPolygonOutlineGeometry.fromPositions = function (options) {
  * @returns {number[]} The array that was packed into
  */
 CoplanarPolygonOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -151,7 +158,9 @@ CoplanarPolygonOutlineGeometry.unpack = function (
   startingIndex,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -225,5 +234,4 @@ CoplanarPolygonOutlineGeometry.createGeometry = function (polygonGeometry) {
     boundingSphere: boundingSphere,
   });
 };
-export { CoplanarPolygonOutlineGeometry };
 export default CoplanarPolygonOutlineGeometry;

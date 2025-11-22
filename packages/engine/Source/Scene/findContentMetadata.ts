@@ -17,7 +17,7 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function findContentMetadata(tileset, contentHeader) {
+function findContentMetadata(tileset: any, contentHeader: any) {
   const metadataJson = hasExtension(contentHeader, "3DTILES_metadata")
     ? contentHeader.extensions["3DTILES_metadata"]
     : contentHeader.metadata;
@@ -48,5 +48,4 @@ function findContentMetadata(tileset, contentHeader) {
 
 // Exposed for testing
 findContentMetadata._oneTimeWarning = oneTimeWarning;
-export { findContentMetadata };
 export default findContentMetadata;

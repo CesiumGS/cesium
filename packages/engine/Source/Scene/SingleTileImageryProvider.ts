@@ -42,7 +42,7 @@ import ImageryProvider from "./ImageryProvider.js";
  * @see WebMapTileServiceImageryProvider
  * @see UrlTemplateImageryProvider
  */
-function SingleTileImageryProvider(options) {
+function SingleTileImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
@@ -76,12 +76,17 @@ function SingleTileImageryProvider(options) {
   }
   this._credit = credit;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.url", options.url);
+  //>>includeEnd('debug');
 
   const resource = Resource.createIfNeeded(options.url);
   this._resource = resource;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("options.tileWidth", options.tileWidth);
+  Check.typeOf.number("options.tileHeight", options.tileHeight);
+  //>>includeEnd('debug');
 
   this._tileWidth = options.tileWidth;
   this._tileHeight = options.tileHeight;
@@ -242,7 +247,7 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
   },
 });
 
-function failure(resource, error, provider, previousError) {
+function failure(resource: any, error: any, provider: any, previousError: any) {
   let message = `Failed to load image ${resource.url}`;
   if (defined(error) && defined(error.message)) {
     message += `: ${error.message}`;
@@ -268,7 +273,7 @@ function failure(resource, error, provider, previousError) {
   throw new RuntimeError(message);
 }
 
-async function doRequest(resource, provider, previousError) {
+async function doRequest(resource: any, provider: any, previousError: any) {
   try {
     const image = await ImageryProvider.loadImage(null, resource);
     return image;
@@ -297,7 +302,9 @@ async function doRequest(resource, provider, previousError) {
  * const provider = await SingleTileImageryProvider.fromUrl("https://yoururl.com/image.png");
  */
 SingleTileImageryProvider.fromUrl = async function (url, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   const resource = Resource.createIfNeeded(url);
   const image = await doRequest(resource);
@@ -370,5 +377,4 @@ SingleTileImageryProvider.prototype.pickFeatures = function (
 ) {
   return undefined;
 };
-export { SingleTileImageryProvider };
 export default SingleTileImageryProvider;

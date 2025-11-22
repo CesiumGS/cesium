@@ -77,5 +77,4 @@ Cesium3DTilesetCache.prototype.unloadTiles = function (
 Cesium3DTilesetCache.prototype.trim = function () {
   this._trimTiles = true;
 };
-export { Cesium3DTilesetCache };
 export default Cesium3DTilesetCache;

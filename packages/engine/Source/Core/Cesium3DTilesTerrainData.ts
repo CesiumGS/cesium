@@ -52,10 +52,24 @@ import TerrainMesh from "./TerrainMesh.js";
  * @see HeightmapTerrainData
  * @see GoogleEarthEnterpriseTerrainData
  */
-function Cesium3DTilesTerrainData(options) {
+function Cesium3DTilesTerrainData(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug)
+  Check.defined("options.gltf", options.gltf);
+  Check.typeOf.number("options.minimumHeight", options.minimumHeight);
+  Check.typeOf.number("options.maximumHeight", options.maximumHeight);
+  Check.typeOf.object("options.boundingSphere", options.boundingSphere);
+  Check.typeOf.object(
+    "option.orientedBoundingBox",
+    options.orientedBoundingBox,
+  );
+  Check.typeOf.object(
+    "options.horizonOcclusionPoint",
+    options.horizonOcclusionPoint,
+  );
+  Check.typeOf.number("options.skirtHeight", options.skirtHeight);
+  //>>includeEnd('debug');
 
   this._minimumHeight = options.minimumHeight;
   this._maximumHeight = options.maximumHeight;
@@ -155,7 +169,12 @@ Cesium3DTilesTerrainData.prototype.isChildAvailable = function (
   childX,
   childY,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("thisX", thisX);
+  Check.typeOf.number("thisY", thisY);
+  Check.typeOf.number("childX", childX);
+  Check.typeOf.number("childY", childY);
+  //>>includeEnd('debug');
 
   let bitNumber = 2; // northwest child
   if (childX !== thisX * 2) {
@@ -195,7 +214,12 @@ const createMeshTaskProcessorThrottle = new TaskProcessor(
 Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug)
+  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+  Check.typeOf.number("options.x", options.x);
+  Check.typeOf.number("options.y", options.y);
+  Check.typeOf.number("options.level", options.level);
+  //>>includeEnd('debug');
 
   const throttle = options.throttle ?? true;
   const createMeshTaskProcessor = throttle
@@ -316,7 +340,12 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
 Cesium3DTilesTerrainData.prototype._createMeshSync = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug)
+  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+  Check.typeOf.number("options.x", options.x);
+  Check.typeOf.number("options.y", options.y);
+  Check.typeOf.number("options.level", options.level);
+  //>>includeEnd('debug');
 
   const tilingScheme = options.tilingScheme;
   const ellipsoid = tilingScheme.ellipsoid;
@@ -464,10 +493,13 @@ Cesium3DTilesTerrainData.prototype.wasCreatedByUpsampling = function () {
  * @param {number} options.skirtHeight The height of the skirt to add on the edges of the tile.
  * @param {Credit[]} [options.credits] Array of credits for this tile.
  */
-function Cesium3DTilesUpsampleTerrainData(options) {
+function Cesium3DTilesUpsampleTerrainData(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug)
+  Check.defined("options.terrainMesh", options.terrainMesh);
+  Check.defined("options.skirtHeight", options.skirtHeight);
+  //>>includeEnd('debug');
 
   this._mesh = options.terrainMesh;
   this._skirtHeight = options.skirtHeight;
@@ -492,7 +524,12 @@ function Cesium3DTilesUpsampleTerrainData(options) {
 Cesium3DTilesUpsampleTerrainData.prototype.createMesh = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+  Check.typeOf.number("options.x", options.x);
+  Check.typeOf.number("options.y", options.y);
+  Check.typeOf.number("options.level", options.level);
+  //>>includeEnd('debug');
 
   return Promise.resolve(this._mesh);
 };
@@ -674,20 +711,19 @@ const upsampleTaskProcessor = new TaskProcessor(
  * @param {number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
  * @returns {Promise.<TerrainData>|undefined} A promise for upsampled terrain data for the descendant tile, or undefined if too many asynchronous upsample operations are in progress and the request has been deferred.
  */
-function upsampleMesh(
-  synchronous,
-  thisMesh,
-  thisSkirtHeight,
-  credits,
-  tilingScheme,
-  thisX,
-  thisY,
-  thisLevel,
-  descendantX,
-  descendantY,
-  descendantLevel,
-) {
-  ;
+function upsampleMesh(synchronous: any, thisMesh: any, thisSkirtHeight: any, credits: any, tilingScheme: any, thisX: any, thisY: any, thisLevel: any, descendantX: any, descendantY: any, descendantLevel: any, ) {
+  //>>includeStart('debug', pragmas.debug)
+  Check.typeOf.bool("synchronous", synchronous);
+  Check.typeOf.object("thisMesh", thisMesh);
+  Check.typeOf.number("thisSkirtHeight", thisSkirtHeight);
+  Check.typeOf.object("tilingScheme", tilingScheme);
+  Check.typeOf.number("thisX", thisX);
+  Check.typeOf.number("thisY", thisY);
+  Check.typeOf.number("thisLevel", thisLevel);
+  Check.typeOf.number("descendantX", descendantX);
+  Check.typeOf.number("descendantY", descendantY);
+  Check.typeOf.number("descendantLevel", descendantLevel);
+  //>>includeEnd('debug');
 
   const levelDifference = descendantLevel - thisLevel;
   if (levelDifference > 1) {
@@ -820,7 +856,7 @@ const scratchBary = new Cartesian3();
  * @param {number} latitude The latitude in radians.
  * @returns {number} The terrain height at the specified position. If the position is outside the rectangle, this method will extrapolate the height, which is likely to be wildly incorrect for positions far outside the rectangle.
  */
-function interpolateMeshHeight(mesh, rectangle, longitude, latitude) {
+function interpolateMeshHeight(mesh: any, rectangle: any, longitude: any, latitude: any) {
   const u = CesiumMath.clamp(
     (longitude - rectangle.west) / rectangle.width,
     0.0,
@@ -881,5 +917,4 @@ function interpolateMeshHeight(mesh, rectangle, longitude, latitude) {
   return 0.0;
 }
 
-export { Cesium3DTilesTerrainData };
 export default Cesium3DTilesTerrainData;

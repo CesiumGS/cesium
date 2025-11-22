@@ -53,7 +53,7 @@ import Vector3DTilePolylines from "./Vector3DTilePolylines.js";
  *
  * @private
  */
-function Vector3DTileClampedPolylines(options) {
+function Vector3DTileClampedPolylines(options: any) {
   // these arrays hold data from the tile payload
   // and are all released after the first update.
   this._positions = options.positions;
@@ -157,7 +157,7 @@ Object.defineProperties(Vector3DTileClampedPolylines.prototype, {
   },
 });
 
-function updateMinimumMaximumHeights(polylines, rectangle, ellipsoid) {
+function updateMinimumMaximumHeights(polylines: any, rectangle: any, ellipsoid: any) {
   const result = ApproximateTerrainHeights.getMinimumMaximumHeights(
     rectangle,
     ellipsoid,
@@ -173,7 +173,7 @@ function updateMinimumMaximumHeights(polylines, rectangle, ellipsoid) {
   OrientedBoundingBox.fromRectangle(rect, min, max, ellipsoid, obb);
 }
 
-function packBuffer(polylines) {
+function packBuffer(polylines: any) {
   const rectangle = polylines._rectangle;
   const minimumHeight = polylines._minimumHeight;
   const maximumHeight = polylines._maximumHeight;
@@ -215,7 +215,7 @@ const attributeLocations = {
   a_batchId: 6,
 };
 
-function createVertexArray(polylines, context) {
+function createVertexArray(polylines: any, context: any) {
   if (defined(polylines._va)) {
     return;
   }
@@ -305,7 +305,7 @@ function createVertexArray(polylines, context) {
       finishVertexArray(polylines, context);
       polylines._ready = true;
     })
-    .catch((error) => {
+    .catch((error: any) => {
       if (polylines.isDestroyed()) {
         return;
       }
@@ -315,7 +315,7 @@ function createVertexArray(polylines, context) {
     });
 }
 
-function finishVertexArray(polylines, context) {
+function finishVertexArray(polylines: any, context: any) {
   if (!defined(polylines._va)) {
     const startEllipsoidNormals = polylines._startEllipsoidNormals;
     const endEllipsoidNormals = polylines._endEllipsoidNormals;
@@ -464,7 +464,7 @@ function finishVertexArray(polylines, context) {
 const modifiedModelViewScratch = new Matrix4();
 const rtcScratch = new Cartesian3();
 
-function createUniformMap(primitive, context) {
+function createUniformMap(primitive: any, context: any) {
   if (defined(primitive._uniformMap)) {
     return;
   }
@@ -494,7 +494,7 @@ function createUniformMap(primitive, context) {
   };
 }
 
-function getRenderState(mask3DTiles) {
+function getRenderState(mask3DTiles: any) {
   /**
    * Cull front faces of each volume (relative to camera) to prevent
    * classification drawing from both the front and back faces, double-draw.
@@ -529,7 +529,7 @@ function getRenderState(mask3DTiles) {
   });
 }
 
-function createRenderStates(primitive) {
+function createRenderStates(primitive: any) {
   if (defined(primitive._rs)) {
     return;
   }
@@ -538,7 +538,7 @@ function createRenderStates(primitive) {
   primitive._rs3DTiles = getRenderState(true);
 }
 
-function createShaders(primitive, context) {
+function createShaders(primitive: any, context: any) {
   if (defined(primitive._sp)) {
     return;
   }
@@ -576,7 +576,7 @@ function createShaders(primitive, context) {
   });
 }
 
-function queueCommands(primitive, frameState) {
+function queueCommands(primitive: any, frameState: any) {
   let command = primitive._command;
   if (!defined(primitive._command)) {
     const uniformMap = primitive._batchTable.getUniformMapCallback()(
@@ -657,7 +657,7 @@ Vector3DTileClampedPolylines.prototype.applyDebugSettings = function (
   this._highlightColor = enabled ? color : this._constantColor;
 };
 
-function clearStyle(polygons, features) {
+function clearStyle(polygons: any, features: any) {
   const batchIds = polygons._batchIds;
   const length = batchIds.length;
   for (let i = 0; i < length; ++i) {
@@ -701,7 +701,7 @@ Vector3DTileClampedPolylines.prototype.applyStyle = function (style, features) {
   }
 };
 
-function initialize(polylines) {
+function initialize(polylines: any) {
   return ApproximateTerrainHeights.initialize()
     .then(function () {
       updateMinimumMaximumHeights(
@@ -710,7 +710,7 @@ function initialize(polylines) {
         polylines._ellipsoid,
       );
     })
-    .catch((error) => {
+    .catch((error: any) => {
       if (polylines.isDestroyed()) {
         return;
       }
@@ -780,5 +780,4 @@ Vector3DTileClampedPolylines.prototype.destroy = function () {
   this._sp = this._sp && this._sp.destroy();
   return destroyObject(this);
 };
-export { Vector3DTileClampedPolylines };
 export default Vector3DTileClampedPolylines;

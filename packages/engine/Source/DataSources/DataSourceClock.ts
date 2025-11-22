@@ -130,7 +130,11 @@ DataSourceClock.prototype.equals = function (other) {
  * @param {DataSourceClock} source The object to be merged into this object.
  */
 DataSourceClock.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.startTime = this.startTime ?? source.startTime;
   this.stopTime = this.stopTime ?? source.stopTime;
@@ -157,5 +161,4 @@ DataSourceClock.prototype.getValue = function (result) {
   result.clockStep = this.clockStep ?? result.clockStep;
   return result;
 };
-export { DataSourceClock };
 export default DataSourceClock;

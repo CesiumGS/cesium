@@ -23,7 +23,7 @@ import Material from "./Material.js";
  * const viewportQuad = new Cesium.ViewportQuad(new Cesium.BoundingRectangle(0, 0, 80, 40));
  * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 1.0);
  */
-function ViewportQuad(rectangle, material) {
+function ViewportQuad(rectangle: any, material: any) {
   /**
    * Determines if the viewport quad primitive will be shown.
    *
@@ -93,7 +93,14 @@ ViewportQuad.prototype.update = function (frameState) {
     return;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(this.material)) {
+    throw new DeveloperError("this.material must be defined.");
+  }
+  if (!defined(this.rectangle)) {
+    throw new DeveloperError("this.rectangle must be defined.");
+  }
+  //>>includeEnd('debug');
 
   const rs = this._rs;
   if (!defined(rs) || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
@@ -172,5 +179,4 @@ ViewportQuad.prototype.destroy = function () {
   }
   return destroyObject(this);
 };
-export { ViewportQuad };
 export default ViewportQuad;

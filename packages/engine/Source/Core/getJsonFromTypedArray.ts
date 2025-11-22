@@ -12,11 +12,10 @@ import getStringFromTypedArray from "./getStringFromTypedArray.js";
  *
  * @private
  */
-function getJsonFromTypedArray(uint8Array, byteOffset, byteLength) {
+function getJsonFromTypedArray(uint8Array: any, byteOffset: any, byteLength: any) {
   return JSON.parse(
     getStringFromTypedArray(uint8Array, byteOffset, byteLength),
   );
 }
 
-export { getJsonFromTypedArray };
 export default getJsonFromTypedArray;

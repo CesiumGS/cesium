@@ -15,7 +15,7 @@ import srgbToLinear from "../Core/srgbToLinear.js";
  * @privateParam {I3SNode} parent The parent of that geometry
  * @privateParam {string} uri The uri to load the data from
  */
-function I3SGeometry(parent, uri) {
+function I3SGeometry(parent: any, uri: any) {
   const dataProvider = parent._dataProvider;
   const layer = parent._layer;
 
@@ -93,7 +93,7 @@ const scratchAp2 = new Cartesian3();
 const scratchCp1 = new Cartesian3();
 const scratchCp2 = new Cartesian3();
 
-function sameSide(p1, p2, a, b) {
+function sameSide(p1: any, p2: any, a: any, b: any) {
   const ab = Cartesian3.subtract(b, a, scratchAb);
   const cp1 = Cartesian3.cross(
     ab,
@@ -269,7 +269,7 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
   };
 };
 
-function convertColorFactor(factor) {
+function convertColorFactor(factor: any) {
   const convertedFactor = [];
   const length = factor.length;
   for (let i = 0; i < length; i++) {
@@ -474,5 +474,4 @@ I3SGeometry.prototype._generateGltf = function (
   return gltfData;
 };
 
-export { I3SGeometry };
 export default I3SGeometry;

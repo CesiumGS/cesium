@@ -28,13 +28,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
  *
  * @private
  */
-function Megatexture(
-  context,
-  dimensions,
-  channelCount,
-  componentType,
-  availableTextureMemoryBytes,
-) {
+function Megatexture(context: any, dimensions: any, channelCount: any, componentType: any, availableTextureMemoryBytes: any, ) {
   const maximumTextureMemoryByteLength = 512 * 1024 * 1024;
   availableTextureMemoryBytes = Math.min(
     availableTextureMemoryBytes ?? 128 * 1024 * 1024,
@@ -240,7 +234,7 @@ function Megatexture(
  *
  * @private
  */
-function getPixelDataType(componentType) {
+function getPixelDataType(componentType: any) {
   if (
     componentType === MetadataComponentType.FLOAT32 ||
     componentType === MetadataComponentType.FLOAT64
@@ -260,7 +254,7 @@ function getPixelDataType(componentType) {
  *
  * @private
  */
-function getPixelFormat(channelCount, webgl2) {
+function getPixelFormat(channelCount: any, webgl2: any) {
   if (channelCount === 1) {
     return webgl2 ? PixelFormat.RED : PixelFormat.LUMINANCE;
   } else if (channelCount === 2) {
@@ -282,11 +276,7 @@ function getPixelFormat(channelCount, webgl2) {
  *
  * @private
  */
-function getTextureDimension(
-  availableTextureMemoryBytes,
-  channelCount,
-  componentByteLength,
-) {
+function getTextureDimension(availableTextureMemoryBytes: any, channelCount: any, componentByteLength: any, ) {
   // Compute how many texels will fit in the available memory
   const texelCount = Math.floor(
     availableTextureMemoryBytes / (channelCount * componentByteLength),
@@ -306,7 +296,7 @@ function getTextureDimension(
  *
  * @private
  */
-function MegatextureNode(index) {
+function MegatextureNode(index: any) {
   /**
    * @type {number}
    */
@@ -506,7 +496,7 @@ Megatexture.prototype.writeDataToTexture = function (index, data) {
  * @returns {number} The offset into the data array
  * @private
  */
-function getReadOffset(dimensions, y, z) {
+function getReadOffset(dimensions: any, y: any, z: any) {
   const voxelsPerInputSlice = dimensions.y * dimensions.x;
   const sliceIndex = z;
   const rowIndex = y;
@@ -547,5 +537,4 @@ Megatexture.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { Megatexture };
 export default Megatexture;

@@ -18,7 +18,7 @@ import deprecationWarning from "../Core/deprecationWarning.js";
  * @alias GaussianSplat3DTileContent
  * @constructor
  */
-function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
+function GaussianSplat3DTileContent(loader: any, tileset: any, tile: any, resource: any) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -199,7 +199,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    */
   geometryByteLength: {
     get: function () {
-      return this.gltfPrimitive.attributes.reduce((totalLength, attribute) => {
+      return this.gltfPrimitive.attributes.reduce((totalLength: any, attribute: any) => {
         return totalLength + attribute.byteLength;
       }, 0);
     },
@@ -445,7 +445,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
   },
 });
 
-function getShAttributePrefix(attribute) {
+function getShAttributePrefix(attribute: any) {
   const prefix = attribute.startsWith("KHR_gaussian_splatting:")
     ? "KHR_gaussian_splatting:"
     : "_";
@@ -458,8 +458,8 @@ function getShAttributePrefix(attribute) {
  * @returns {object} An object containing the degree (l) and coefficient (n).
  * @private
  */
-function degreeAndCoefFromAttributes(attributes) {
-  const shAttributes = attributes.filter((attr) =>
+function degreeAndCoefFromAttributes(attributes: any) {
+  const shAttributes = attributes.filter((attr: any) =>
     attr.name.includes("SH_DEGREE_"),
   );
 
@@ -486,7 +486,7 @@ const buffer = new ArrayBuffer(4);
 const floatView = new Float32Array(buffer);
 const intView = new Uint32Array(buffer);
 
-function float32ToFloat16(float32) {
+function float32ToFloat16(float32: any) {
   floatView[0] = float32;
   const bits = intView[0];
 
@@ -520,7 +520,7 @@ function float32ToFloat16(float32) {
  * @returns {object} An object containing the degree (l) and coefficient (n).
  * @private
  */
-function extractSHDegreeAndCoef(attribute) {
+function extractSHDegreeAndCoef(attribute: any) {
   const prefix = getShAttributePrefix(attribute);
   const separator = "_COEF_";
 
@@ -539,13 +539,13 @@ function extractSHDegreeAndCoef(attribute) {
  * @returns {Uint32Array} - The Float16 packed spherical harmonic data.
  * @private
  */
-function packSphericalHarmonicsData(tileContent) {
+function packSphericalHarmonicsData(tileContent: any) {
   const degree = tileContent.sphericalHarmonicsDegree;
   const coefs = tileContent.sphericalHarmonicsCoefficientCount;
   const totalLength = tileContent.pointsLength * (coefs * (2 / 3)); //3 packs into 2
   const packedData = new Uint32Array(totalLength);
 
-  const shAttributes = tileContent.gltfPrimitive.attributes.filter((attr) =>
+  const shAttributes = tileContent.gltfPrimitive.attributes.filter((attr: any) =>
     attr.name.includes("SH_DEGREE_"),
   );
   let stride = 0;
@@ -561,7 +561,7 @@ function packSphericalHarmonicsData(tileContent) {
       stride = 45;
       break;
   }
-  shAttributes.sort((a, b) => {
+  shAttributes.sort((a: any, b: any) => {
     if (a.name < b.name) {
       return -1;
     }
@@ -823,5 +823,4 @@ GaussianSplat3DTileContent.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { GaussianSplat3DTileContent };
 export default GaussianSplat3DTileContent;

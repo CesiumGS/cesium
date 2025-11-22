@@ -27,7 +27,7 @@ const MortonOrder = {};
  * @see {@link https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/}
  * @private
  */
-function insertOneSpacing(v) {
+function insertOneSpacing(v: any) {
   v = (v ^ (v << 8)) & 0x00ff00ff;
   v = (v ^ (v << 4)) & 0x0f0f0f0f;
   v = (v ^ (v << 2)) & 0x33333333;
@@ -50,7 +50,7 @@ function insertOneSpacing(v) {
  * @returns {number} A 30-bit unsigned integer.
  * @see {@link https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/}
  */
-function insertTwoSpacing(v) {
+function insertTwoSpacing(v: any) {
   v = (v ^ (v << 16)) & 0x030000ff;
   v = (v ^ (v << 8)) & 0x0300f00f;
   v = (v ^ (v << 4)) & 0x030c30c3;
@@ -73,7 +73,7 @@ function insertTwoSpacing(v) {
  * @returns {number} A 16-bit unsigned integer.
  * @see {@link https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/}
  */
-function removeOneSpacing(v) {
+function removeOneSpacing(v: any) {
   v &= 0x55555555;
   v = (v ^ (v >> 1)) & 0x33333333;
   v = (v ^ (v >> 2)) & 0x0f0f0f0f;
@@ -97,7 +97,7 @@ function removeOneSpacing(v) {
  * @returns {number} A 10-bit unsigned integer.
  * @see {@link https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/}
  */
-function removeTwoSpacing(v) {
+function removeTwoSpacing(v: any) {
   v &= 0x09249249;
   v = (v ^ (v >> 2)) & 0x030c30c3;
   v = (v ^ (v >> 4)) & 0x0300f00f;
@@ -116,7 +116,13 @@ function removeTwoSpacing(v) {
  * @private
  */
 MortonOrder.encode2D = function (x, y) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  if (x < 0 || x > 65535 || y < 0 || y > 65535) {
+    throw new DeveloperError("inputs must be 16-bit unsigned integers");
+  }
+  //>>includeEnd('debug');
 
   // Note: JavaScript bitwise operations return signed 32-bit integers, so the
   // final result needs to be reintepreted as an unsigned integer using >>> 0.
@@ -135,7 +141,12 @@ MortonOrder.encode2D = function (x, y) {
  * @private
  */
 MortonOrder.decode2D = function (mortonIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("mortonIndex", mortonIndex);
+  if (mortonIndex < 0 || mortonIndex > 4294967295) {
+    throw new DeveloperError("input must be a 32-bit unsigned integer");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Array(2);
@@ -157,7 +168,14 @@ MortonOrder.decode2D = function (mortonIndex, result) {
  * @private
  */
 MortonOrder.encode3D = function (x, y, z) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  Check.typeOf.number("z", z);
+  if (x < 0 || x > 1023 || y < 0 || y > 1023 || z < 0 || z > 1023) {
+    throw new DeveloperError("inputs must be 10-bit unsigned integers");
+  }
+  //>>includeEnd('debug');
 
   return (
     insertTwoSpacing(x) |
@@ -176,7 +194,12 @@ MortonOrder.encode3D = function (x, y, z) {
  * @private
  */
 MortonOrder.decode3D = function (mortonIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("mortonIndex", mortonIndex);
+  if (mortonIndex < 0 || mortonIndex > 1073741823) {
+    throw new DeveloperError("input must be a 30-bit unsigned integer");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Array(3);
@@ -188,5 +211,4 @@ MortonOrder.decode3D = function (mortonIndex, result) {
   return result;
 };
 
-export { MortonOrder };
 export default MortonOrder;

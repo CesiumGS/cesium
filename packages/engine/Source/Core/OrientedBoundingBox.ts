@@ -37,7 +37,7 @@ import Rectangle from "./Rectangle.js";
  * @see BoundingSphere
  * @see BoundingRectangle
  */
-function OrientedBoundingBox(center, halfAxes) {
+function OrientedBoundingBox(center: any, halfAxes: any) {
   /**
    * The center of the box.
    * @type {Cartesian3}
@@ -71,7 +71,10 @@ OrientedBoundingBox.packedLength =
  * @returns {number[]} The array that was packed into
  */
 OrientedBoundingBox.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -90,7 +93,9 @@ OrientedBoundingBox.pack = function (value, array, startingIndex) {
  * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
  */
 OrientedBoundingBox.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -236,20 +241,21 @@ OrientedBoundingBox.fromPoints = function (positions, result) {
 
 const scratchOffset = new Cartesian3();
 const scratchScale = new Cartesian3();
-function fromPlaneExtents(
-  planeOrigin,
-  planeXAxis,
-  planeYAxis,
-  planeZAxis,
-  minimumX,
-  maximumX,
-  minimumY,
-  maximumY,
-  minimumZ,
-  maximumZ,
-  result,
-) {
-  ;
+function fromPlaneExtents(planeOrigin: any, planeXAxis: any, planeYAxis: any, planeZAxis: any, minimumX: any, maximumX: any, minimumY: any, maximumY: any, minimumZ: any, maximumZ: any, result: any, ) {
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    !defined(minimumX) ||
+    !defined(maximumX) ||
+    !defined(minimumY) ||
+    !defined(maximumY) ||
+    !defined(minimumZ) ||
+    !defined(maximumZ)
+  ) {
+    throw new DeveloperError(
+      "all extents (minimum/maximum X/Y/Z) are required.",
+    );
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new OrientedBoundingBox();
@@ -328,7 +334,29 @@ OrientedBoundingBox.fromRectangle = function (
   ellipsoid,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(rectangle)) {
+    throw new DeveloperError("rectangle is required");
+  }
+  if (rectangle.width < 0.0 || rectangle.width > CesiumMath.TWO_PI) {
+    throw new DeveloperError("Rectangle width must be between 0 and 2 * pi");
+  }
+  if (rectangle.height < 0.0 || rectangle.height > CesiumMath.PI) {
+    throw new DeveloperError("Rectangle height must be between 0 and pi");
+  }
+  if (
+    defined(ellipsoid) &&
+    !CesiumMath.equalsEpsilon(
+      ellipsoid.radii.x,
+      ellipsoid.radii.y,
+      CesiumMath.EPSILON15,
+    )
+  ) {
+    throw new DeveloperError(
+      "Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)",
+    );
+  }
+  //>>includeEnd('debug');
 
   minimumHeight = minimumHeight ?? 0.0;
   maximumHeight = maximumHeight ?? 0.0;
@@ -578,7 +606,9 @@ OrientedBoundingBox.fromRectangle = function (
  * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if none was provided.
  */
 OrientedBoundingBox.fromTransformation = function (transformation, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("transformation", transformation);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new OrientedBoundingBox();
@@ -627,7 +657,15 @@ OrientedBoundingBox.clone = function (box, result) {
  *                      intersects the plane.
  */
 OrientedBoundingBox.intersectPlane = function (box, plane) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(box)) {
+    throw new DeveloperError("box is required.");
+  }
+
+  if (!defined(plane)) {
+    throw new DeveloperError("plane is required.");
+  }
+  //>>includeEnd('debug');
 
   const center = box.center;
   const normal = plane.normal;
@@ -687,7 +725,14 @@ const scratchPPrime = new Cartesian3();
 OrientedBoundingBox.distanceSquaredTo = function (box, cartesian) {
   // See Geometric Tools for Computer Graphics 10.4.2
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(box)) {
+    throw new DeveloperError("box is required.");
+  }
+  if (!defined(cartesian)) {
+    throw new DeveloperError("cartesian is required.");
+  }
+  //>>includeEnd('debug');
 
   const offset = Cartesian3.subtract(cartesian, box.center, scratchOffset);
 
@@ -838,7 +883,19 @@ OrientedBoundingBox.computePlaneDistances = function (
   direction,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(box)) {
+    throw new DeveloperError("box is required.");
+  }
+
+  if (!defined(position)) {
+    throw new DeveloperError("position is required.");
+  }
+
+  if (!defined(direction)) {
+    throw new DeveloperError("direction is required.");
+  }
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Interval();
@@ -959,7 +1016,9 @@ const scratchZAxis = new Cartesian3();
  * @returns {Cartesian3[]} The modified result parameter or a new array if none was provided.
  */
 OrientedBoundingBox.computeCorners = function (box, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("box", box);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = [
@@ -1033,7 +1092,9 @@ const scratchRotationScale = new Matrix3();
  * @returns {Matrix4} The modified result parameter or a new {@link Matrix4} instance if none was provided.
  */
 OrientedBoundingBox.computeTransformation = function (box, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("box", box);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Matrix4();
@@ -1058,7 +1119,14 @@ const scratchBoundingSphere = new BoundingSphere();
  * @returns {boolean} <code>true</code> if the box is not visible; otherwise <code>false</code>.
  */
 OrientedBoundingBox.isOccluded = function (box, occluder) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(box)) {
+    throw new DeveloperError("box is required.");
+  }
+  if (!defined(occluder)) {
+    throw new DeveloperError("occluder is required.");
+  }
+  //>>includeEnd('debug');
 
   const sphere = BoundingSphere.fromOrientedBoundingBox(
     box,
@@ -1189,5 +1257,4 @@ OrientedBoundingBox.prototype.clone = function (result) {
 OrientedBoundingBox.prototype.equals = function (right) {
   return OrientedBoundingBox.equals(this, right);
 };
-export { OrientedBoundingBox };
 export default OrientedBoundingBox;

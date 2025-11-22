@@ -23,5 +23,4 @@ function ModelAlphaOptions() {
   this.alphaCutoff = undefined;
 }
 
-export { ModelAlphaOptions };
 export default ModelAlphaOptions;

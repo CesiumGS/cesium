@@ -36,11 +36,13 @@ import VertexFormat from "./VertexFormat.js";
  * });
  * const geometry = Cesium.CircleGeometry.createGeometry(circle);
  */
-function CircleGeometry(options) {
+function CircleGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const radius = options.radius;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("radius", radius);
+  //>>includeEnd('debug');
 
   const ellipseGeometryOptions = {
     center: options.center,
@@ -74,7 +76,9 @@ CircleGeometry.packedLength = EllipseGeometry.packedLength;
  * @returns {number[]} The array that was packed into
  */
 CircleGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  //>>includeEnd('debug');
   return EllipseGeometry.pack(value._ellipseGeometry, array, startingIndex);
 };
 
@@ -200,5 +204,4 @@ Object.defineProperties(CircleGeometry.prototype, {
     },
   },
 });
-export { CircleGeometry };
 export default CircleGeometry;

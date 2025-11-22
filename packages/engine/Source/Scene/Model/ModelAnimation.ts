@@ -22,7 +22,7 @@ import ModelAnimationChannel from "./ModelAnimationChannel.js";
  *
  * @see ModelAnimationCollection#add
  */
-function ModelAnimation(model, animation, options) {
+function ModelAnimation(model: any, animation: any, options: any) {
   this._animation = animation;
   this._name = animation.name;
   this._runtimeChannels = undefined;
@@ -342,7 +342,7 @@ Object.defineProperties(ModelAnimation.prototype, {
   },
 });
 
-function initialize(runtimeAnimation) {
+function initialize(runtimeAnimation: any) {
   let localStartTime = Number.MAX_VALUE;
   let localStopTime = -Number.MAX_VALUE;
 
@@ -408,15 +408,14 @@ ModelAnimation.prototype.animate = function (time) {
  *
  * @example
  * // Use real time for model animation (assuming animateWhilePaused was set to true)
- * function animationTime(duration) {
+ * function animationTime(duration: any) {
  *     return Date.now() / 1000 / duration;
  * }
  *
  * @example
  * // Offset the phase of the animation, so it starts halfway through its cycle.
- * function animationTime(duration, seconds) {
+ * function animationTime(duration: any, seconds: any) {
  *     return seconds / duration + 0.5;
  * }
  */
-export { ModelAnimation };
 export default ModelAnimation;

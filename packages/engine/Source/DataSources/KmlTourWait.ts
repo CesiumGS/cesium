@@ -10,7 +10,7 @@ import defined from "../Core/defined.js";
  * @see KmlTour
  * @see KmlTourFlyTo
  */
-function KmlTourWait(duration) {
+function KmlTourWait(duration: any) {
   this.type = "KmlTourWait";
   this.blocking = true;
   this.duration = duration;
@@ -49,5 +49,4 @@ KmlTourWait.prototype.stop = function () {
  * @param {boolean} terminated true if {@link KmlTourWait#stop} was
  * called before entry done playback.
  */
-export { KmlTourWait };
 export default KmlTourWait;

@@ -57,7 +57,7 @@ import JulianDate from "./JulianDate.js";
  * const dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
  * const containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
  */
-function TimeInterval(options) {
+function TimeInterval(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   /**
    * Gets or sets the start time of this interval.
@@ -137,7 +137,10 @@ const scratchInterval = {
  * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
  */
 TimeInterval.fromIso8601 = function (options, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.string("options.iso8601", options.iso8601);
+  //>>includeEnd('debug');
 
   const dates = options.iso8601.split("/");
   if (dates.length !== 2) {
@@ -176,7 +179,9 @@ TimeInterval.fromIso8601 = function (options, result) {
  * @returns {string} The ISO8601 representation of the provided interval.
  */
 TimeInterval.toIso8601 = function (timeInterval, precision) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("timeInterval", timeInterval);
+  //>>includeEnd('debug');
 
   return `${JulianDate.toIso8601(
     timeInterval.start,
@@ -268,7 +273,9 @@ TimeInterval.equalsEpsilon = function (left, right, epsilon, dataComparer) {
  * @returns {TimeInterval} The modified result parameter.
  */
 TimeInterval.intersect = function (left, right, result, mergeCallback) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  //>>includeEnd('debug');
 
   if (!defined(right)) {
     return TimeInterval.clone(TimeInterval.EMPTY, result);
@@ -327,7 +334,10 @@ TimeInterval.intersect = function (left, right, result, mergeCallback) {
  * @returns {boolean} <code>true</code> if the interval contains the specified date, <code>false</code> otherwise.
  */
 TimeInterval.contains = function (timeInterval, julianDate) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("timeInterval", timeInterval);
+  Check.typeOf.object("julianDate", julianDate);
+  //>>includeEnd('debug');
 
   if (timeInterval.isEmpty) {
     return false;
@@ -415,7 +425,7 @@ TimeInterval.EMPTY = Object.freeze(
  *
  * @param {*} leftData The first data instance.
  * @param {*} rightData The second data instance.
- * @returns {any} The result of merging the two data instances.
+ * @returns {*} The result of merging the two data instances.
  */
 
 /**
@@ -425,5 +435,4 @@ TimeInterval.EMPTY = Object.freeze(
  * @param {*} rightData The second data instance.
  * @returns {boolean} <code>true</code> if the provided instances are equal, <code>false</code> otherwise.
  */
-export { TimeInterval };
 export default TimeInterval;

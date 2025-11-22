@@ -30,8 +30,13 @@ const ORTHOGRAPHIC = 1;
  * @param {Quaternion} options.orientation The orientation of the frustum.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  */
-function FrustumGeometry(options) {
-  ;
+function FrustumGeometry(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  Check.typeOf.object("options.frustum", options.frustum);
+  Check.typeOf.object("options.origin", options.origin);
+  Check.typeOf.object("options.orientation", options.orientation);
+  //>>includeEnd('debug');
 
   const frustum = options.frustum;
   const orientation = options.orientation;
@@ -83,7 +88,10 @@ function FrustumGeometry(options) {
  * @returns {number[]} The array that was packed into
  */
 FrustumGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -125,7 +133,9 @@ const scratchVertexFormat = new VertexFormat();
  * @param {FrustumGeometry} [result] The object into which to store the result.
  */
 FrustumGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -187,16 +197,7 @@ FrustumGeometry.unpack = function (array, startingIndex, result) {
   return result;
 };
 
-function getAttributes(
-  offset,
-  normals,
-  tangents,
-  bitangents,
-  st,
-  normal,
-  tangent,
-  bitangent,
-) {
+function getAttributes(offset: any, normals: any, tangents: any, bitangents: any, st: any, normal: any, tangent: any, bitangent: any, ) {
   const stOffset = (offset / 3) * 2;
 
   for (let i = 0; i < 4; ++i) {
@@ -570,5 +571,4 @@ FrustumGeometry.createGeometry = function (frustumGeometry) {
     boundingSphere: BoundingSphere.fromVertices(positions),
   });
 };
-export { FrustumGeometry };
 export default FrustumGeometry;

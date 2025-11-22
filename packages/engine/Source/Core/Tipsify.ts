@@ -44,11 +44,25 @@ Tipsify.calculateACMR = function (options) {
   let maximumIndex = options.maximumIndex;
   const cacheSize = options.cacheSize ?? 24;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(indices)) {
+    throw new DeveloperError("indices is required.");
+  }
+  //>>includeEnd('debug');
 
   const numIndices = indices.length;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (numIndices < 3 || numIndices % 3 !== 0) {
+    throw new DeveloperError("indices length must be a multiple of three.");
+  }
+  if (maximumIndex <= 0) {
+    throw new DeveloperError("maximumIndex must be greater than zero.");
+  }
+  if (cacheSize < 3) {
+    throw new DeveloperError("cacheSize must be greater than two.");
+  }
+  //>>includeEnd('debug');
 
   // Compute the maximumIndex if not given
   if (!defined(maximumIndex)) {
@@ -110,7 +124,7 @@ Tipsify.tipsify = function (options) {
 
   let cursor;
 
-  function skipDeadEnd(vertices, deadEnd, indices, maximumIndexPlusOne) {
+  function skipDeadEnd(vertices: any, deadEnd: any, indices: any, maximumIndexPlusOne: any) {
     while (deadEnd.length >= 1) {
       // while the stack is not empty
       const d = deadEnd[deadEnd.length - 1]; // top of the stack
@@ -131,15 +145,7 @@ Tipsify.tipsify = function (options) {
     return -1;
   }
 
-  function getNextVertex(
-    indices,
-    cacheSize,
-    oneRing,
-    vertices,
-    s,
-    deadEnd,
-    maximumIndexPlusOne,
-  ) {
+  function getNextVertex(indices: any, cacheSize: any, oneRing: any, vertices: any, s: any, deadEnd: any, maximumIndexPlusOne: any, ) {
     let n = -1;
     let p;
     let m = -1;
@@ -169,11 +175,25 @@ Tipsify.tipsify = function (options) {
     return n;
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(indices)) {
+    throw new DeveloperError("indices is required.");
+  }
+  //>>includeEnd('debug');
 
   const numIndices = indices.length;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (numIndices < 3 || numIndices % 3 !== 0) {
+    throw new DeveloperError("indices length must be a multiple of three.");
+  }
+  if (maximumIndex <= 0) {
+    throw new DeveloperError("maximumIndex must be greater than zero.");
+  }
+  if (cacheSize < 3) {
+    throw new DeveloperError("cacheSize must be greater than two.");
+  }
+  //>>includeEnd('debug');
 
   // Determine maximum index
   let maximumIndexPlusOne = 0;
@@ -283,5 +303,4 @@ Tipsify.tipsify = function (options) {
 
   return outputIndices;
 };
-export { Tipsify };
 export default Tipsify;

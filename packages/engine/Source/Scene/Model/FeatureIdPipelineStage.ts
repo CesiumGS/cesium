@@ -67,7 +67,7 @@ FeatureIdPipelineStage.process = function (
   shaderBuilder.addFragmentLines(FeatureIdStageFS);
 };
 
-function declareStructsAndFunctions(shaderBuilder) {
+function declareStructsAndFunctions(shaderBuilder: any) {
   // Declare the FeatureIds struct. The vertex shader will only use
   // feature ID attributes, while the fragment shader will also use
   // feature ID textures.
@@ -116,7 +116,7 @@ function declareStructsAndFunctions(shaderBuilder) {
   );
 }
 
-function processInstanceFeatureIds(renderResources, instances, frameState) {
+function processInstanceFeatureIds(renderResources: any, instances: any, frameState: any) {
   const featureIdsArray = instances.featureIds;
   const count = instances.attributes[0].count;
 
@@ -145,7 +145,7 @@ function processInstanceFeatureIds(renderResources, instances, frameState) {
   }
 }
 
-function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
+function processPrimitiveFeatureIds(renderResources: any, primitive: any, frameState: any) {
   const featureIdsArray = primitive.featureIds;
   const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
@@ -181,11 +181,7 @@ function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
   }
 }
 
-function processInstanceAttribute(
-  renderResources,
-  featureIdAttribute,
-  variableName,
-) {
+function processInstanceAttribute(renderResources: any, featureIdAttribute: any, variableName: any, ) {
   // Add a field to the FeatureIds struct.
   // Example:
   // struct FeatureIds {
@@ -236,7 +232,7 @@ function processInstanceAttribute(
   );
 }
 
-function processAttribute(renderResources, featureIdAttribute, variableName) {
+function processAttribute(renderResources: any, featureIdAttribute: any, variableName: any) {
   // Add a field to the FeatureIds struct.
   // Example:
   // struct FeatureIds {
@@ -276,14 +272,7 @@ function processAttribute(renderResources, featureIdAttribute, variableName) {
   );
 }
 
-function processImplicitRange(
-  renderResources,
-  implicitFeatureIds,
-  variableName,
-  count,
-  instanceDivisor,
-  frameState,
-) {
+function processImplicitRange(renderResources: any, implicitFeatureIds: any, variableName: any, count: any, instanceDivisor: any, frameState: any, ) {
   // Generate a vertex attribute for the implicit IDs since WebGL 1 does not
   // support gl_VertexID
   generateImplicitFeatureIdAttribute(
@@ -345,13 +334,7 @@ function processImplicitRange(
   );
 }
 
-function processTexture(
-  renderResources,
-  featureIdTexture,
-  variableName,
-  index,
-  frameState,
-) {
+function processTexture(renderResources: any, featureIdTexture: any, variableName: any, index: any, frameState: any, ) {
   // Create the feature ID texture uniform. The index matches the index from
   // the featureIds array, even if this is not consecutive.
   const uniformName = `u_featureIdTexture_${index}`;
@@ -421,7 +404,7 @@ function processTexture(
   );
 }
 
-function addAlias(renderResources, variableName, alias, shaderDestination) {
+function addAlias(renderResources: any, variableName: any, alias: any, shaderDestination: any) {
   // Add a field to the FeatureIds struct.
   // Example:
   // struct FeatureIds {
@@ -461,13 +444,7 @@ function addAlias(renderResources, variableName, alias, shaderDestination) {
   );
 }
 
-function generateImplicitFeatureIdAttribute(
-  renderResources,
-  implicitFeatureIds,
-  count,
-  instanceDivisor,
-  frameState,
-) {
+function generateImplicitFeatureIdAttribute(renderResources: any, implicitFeatureIds: any, count: any, instanceDivisor: any, frameState: any, ) {
   const model = renderResources.model;
   let vertexBuffer;
   let value;
@@ -508,7 +485,7 @@ function generateImplicitFeatureIdAttribute(
  * Generates a typed array for implicit feature IDs
  * @private
  */
-function generateImplicitFeatureIdTypedArray(implicitFeatureIds, count) {
+function generateImplicitFeatureIdTypedArray(implicitFeatureIds: any, count: any) {
   const offset = implicitFeatureIds.offset;
   const repeat = implicitFeatureIds.repeat;
 
@@ -520,5 +497,4 @@ function generateImplicitFeatureIdTypedArray(implicitFeatureIds, count) {
   return typedArray;
 }
 
-export { FeatureIdPipelineStage };
 export default FeatureIdPipelineStage;

@@ -14,8 +14,10 @@ import Check from "./Check.js";
  *     return Cesium.srgbToLinear(c);
  * });
  */
-function srgbToLinear(value) {
-  ;
+function srgbToLinear(value: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("value", value);
+  //>>includeEnd('debug');
 
   if (value <= 0.04045) {
     // eslint-disable-next-line no-loss-of-precision
@@ -27,5 +29,4 @@ function srgbToLinear(value) {
     2.4,
   );
 }
-export { srgbToLinear };
 export default srgbToLinear;

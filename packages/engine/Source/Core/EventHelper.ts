@@ -37,7 +37,11 @@ function EventHelper() {
  * @see Event#addEventListener
  */
 EventHelper.prototype.add = function (event, listener, scope) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(event)) {
+    throw new DeveloperError("event is required");
+  }
+  //>>includeEnd('debug');
 
   const removalFunction = event.addEventListener(listener, scope);
   this._removalFunctions.push(removalFunction);
@@ -67,5 +71,4 @@ EventHelper.prototype.removeAll = function () {
  * A function that removes a listener.
  * @callback EventHelper.RemoveCallback
  */
-export { EventHelper };
 export default EventHelper;

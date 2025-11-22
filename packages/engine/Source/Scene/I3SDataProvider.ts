@@ -138,7 +138,7 @@ import Rectangle from "../Core/Rectangle.js";
  *   console.log(`There was an error creating the I3S Data Provider: ${error}`);
  * }
  */
-function I3SDataProvider(options) {
+function I3SDataProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   // All public configuration is defined as ES5 properties
@@ -189,7 +189,9 @@ Object.defineProperties(I3SDataProvider.prototype, {
       return this._show;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      //>>includeEnd('debug');
 
       if (this._show !== value) {
         this._show = value;
@@ -403,7 +405,7 @@ I3SDataProvider.prototype.updateForPass = function (frameState, passState) {
   }
 };
 
-function buildLayerUrl(provider, layerId) {
+function buildLayerUrl(provider: any, layerId: any) {
   const dataProviderUrl = provider.resource.getUrlComponent();
 
   let layerUrl = "";
@@ -418,7 +420,7 @@ function buildLayerUrl(provider, layerId) {
   return layerUrl;
 }
 
-async function addLayers(provider, data, options) {
+async function addLayers(provider: any, data: any, options: any) {
   if (data.layerType === "Building") {
     if (!defined(options.showFeatures)) {
       // The Building Scene Layer requires features to be shown to support filtering
@@ -531,7 +533,9 @@ async function addLayers(provider, data, options) {
  * }
  */
 I3SDataProvider.fromUrl = async function (url, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   options = options ?? Frozen.EMPTY_OBJECT;
 
@@ -657,7 +661,7 @@ I3SDataProvider.prototype._binarizeGltf = function (rawGltf) {
 
 const scratchCartesian2 = new Cartesian2();
 
-function getCoveredTiles(terrainProvider, extent) {
+function getCoveredTiles(terrainProvider: any, extent: any) {
   const tilingScheme = terrainProvider.tilingScheme;
 
   // Sort points into a set of tiles
@@ -752,7 +756,7 @@ function getCoveredTiles(terrainProvider, extent) {
   });
 }
 
-async function loadGeoidData(provider) {
+async function loadGeoidData(provider: any) {
   // Load tiles from arcgis
   const geoidTerrainProvider = provider._geoidTiledTerrainProvider;
 
@@ -826,7 +830,9 @@ I3SDataProvider.prototype.getAttributeNames = function () {
  * @returns {string[]} The collection of attribute values
  */
 I3SDataProvider.prototype.getAttributeValues = function (name) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("name", name);
+  //>>includeEnd('debug');
 
   for (let i = 0; i < this._attributeStatistics.length; ++i) {
     const values = this._attributeStatistics[i]._getValues(name);
@@ -851,5 +857,4 @@ I3SDataProvider.prototype.filterByAttributes = function (filters) {
   return Promise.all(promises);
 };
 
-export { I3SDataProvider };
 export default I3SDataProvider;

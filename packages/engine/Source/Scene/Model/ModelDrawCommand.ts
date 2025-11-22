@@ -33,13 +33,16 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  *
  * @private
  */
-function ModelDrawCommand(options) {
+function ModelDrawCommand(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const command = options.command;
   const renderResources = options.primitiveRenderResources;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.command", command);
+  Check.typeOf.object("options.primitiveRenderResources", renderResources);
+  //>>includeEnd('debug');
 
   const model = renderResources.model;
   this._model = model;
@@ -116,7 +119,7 @@ function ModelDrawCommand(options) {
   initialize(this);
 }
 
-function ModelDerivedCommand(options) {
+function ModelDerivedCommand(options: any) {
   // The DrawCommand managed by this derived command.
   this.command = options.command;
 
@@ -146,7 +149,7 @@ ModelDerivedCommand.clone = function (derivedCommand) {
   });
 };
 
-function initialize(drawCommand) {
+function initialize(drawCommand: any) {
   const command = drawCommand._command;
   command.modelMatrix = drawCommand._modelMatrix;
   command.boundingVolume = drawCommand._boundingVolume;
@@ -426,7 +429,7 @@ Object.defineProperties(ModelDrawCommand.prototype, {
   },
 });
 
-function updateModelMatrix2D(drawCommand, frameState) {
+function updateModelMatrix2D(drawCommand: any, frameState: any) {
   const modelMatrix = drawCommand._modelMatrix;
   drawCommand._modelMatrix2D = Matrix4.clone(
     modelMatrix,
@@ -448,7 +451,7 @@ function updateModelMatrix2D(drawCommand, frameState) {
   );
 }
 
-function updateShadows(drawCommand) {
+function updateShadows(drawCommand: any) {
   const shadows = drawCommand.shadows;
   const castShadows = ShadowMode.castShadows(shadows);
   const receiveShadows = ShadowMode.receiveShadows(shadows);
@@ -465,7 +468,7 @@ function updateShadows(drawCommand) {
   }
 }
 
-function updateBackFaceCulling(drawCommand) {
+function updateBackFaceCulling(drawCommand: any) {
   const backFaceCulling = drawCommand.backFaceCulling;
   const derivedCommands = drawCommand._derivedCommands;
 
@@ -480,7 +483,7 @@ function updateBackFaceCulling(drawCommand) {
   }
 }
 
-function updateCullFace(drawCommand) {
+function updateCullFace(drawCommand: any) {
   const cullFace = drawCommand.cullFace;
   const derivedCommands = drawCommand._derivedCommands;
 
@@ -495,7 +498,7 @@ function updateCullFace(drawCommand) {
   }
 }
 
-function updateDebugShowBoundingVolume(drawCommand) {
+function updateDebugShowBoundingVolume(drawCommand: any) {
   const debugShowBoundingVolume = drawCommand.debugShowBoundingVolume;
   const derivedCommands = drawCommand._derivedCommands;
 
@@ -621,14 +624,14 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
   return result;
 };
 
-function pushCommand(commandList, derivedCommand, use2D) {
+function pushCommand(commandList: any, derivedCommand: any, use2D: any) {
   commandList.push(derivedCommand.command);
   if (use2D) {
     commandList.push(derivedCommand.derivedCommand2D.command);
   }
 }
 
-function shouldUse2DCommands(drawCommand, frameState) {
+function shouldUse2DCommands(drawCommand: any, frameState: any) {
   if (frameState.mode !== SceneMode.SCENE2D || drawCommand.model._projectTo2D) {
     return false;
   }
@@ -647,7 +650,7 @@ function shouldUse2DCommands(drawCommand, frameState) {
   return (left < idl2D && right > idl2D) || (left < -idl2D && right > -idl2D);
 }
 
-function derive2DCommand(drawCommand, derivedCommand) {
+function derive2DCommand(drawCommand: any, derivedCommand: any) {
   if (!defined(derivedCommand)) {
     return;
   }
@@ -672,7 +675,7 @@ function derive2DCommand(drawCommand, derivedCommand) {
   return derivedCommand2D;
 }
 
-function derive2DCommands(drawCommand) {
+function derive2DCommands(drawCommand: any) {
   derive2DCommand(drawCommand, drawCommand._originalCommand);
   derive2DCommand(drawCommand, drawCommand._translucentCommand);
   derive2DCommand(drawCommand, drawCommand._skipLodBackfaceCommand);
@@ -682,7 +685,7 @@ function derive2DCommands(drawCommand) {
   derive2DCommand(drawCommand, drawCommand._edgeCommand);
 }
 
-function deriveTranslucentCommand(command) {
+function deriveTranslucentCommand(command: any) {
   const derivedCommand = DrawCommand.shallowClone(command);
   derivedCommand.pass = Pass.TRANSLUCENT;
   const rs = clone(command.renderState, true);
@@ -694,7 +697,7 @@ function deriveTranslucentCommand(command) {
   return derivedCommand;
 }
 
-function deriveSilhouetteModelCommand(command, model) {
+function deriveSilhouetteModelCommand(command: any, model: any) {
   // Wrap around after exceeding the 8-bit stencil limit.
   // The reference is unique to each model until this point.
   const stencilReference = model._silhouetteId % 255;
@@ -734,7 +737,7 @@ function deriveSilhouetteModelCommand(command, model) {
   return silhouetteModelCommand;
 }
 
-function deriveSilhouetteColorCommand(command, model) {
+function deriveSilhouetteColorCommand(command: any, model: any) {
   // Wrap around after exceeding the 8-bit stencil limit.
   // The reference is unique to each model until this point.
   const stencilReference = model._silhouetteId % 255;
@@ -788,7 +791,7 @@ function deriveSilhouetteColorCommand(command, model) {
   return silhouetteColorCommand;
 }
 
-function deriveEdgeCommand(command, renderResources) {
+function deriveEdgeCommand(command: any, renderResources: any) {
   const edgeGeometry = renderResources.edgeGeometry;
   const edgeCommand = DrawCommand.shallowClone(command);
 
@@ -818,7 +821,7 @@ function deriveEdgeCommand(command, renderResources) {
   return edgeCommand;
 }
 
-function updateSkipLodStencilCommand(drawCommand, tile, use2D) {
+function updateSkipLodStencilCommand(drawCommand: any, tile: any, use2D: any) {
   const stencilDerivedComand = drawCommand._skipLodStencilCommand;
   const stencilCommand = stencilDerivedComand.command;
 
@@ -837,7 +840,7 @@ function updateSkipLodStencilCommand(drawCommand, tile, use2D) {
   }
 }
 
-function getLastSelectionDepth(stencilCommand) {
+function getLastSelectionDepth(stencilCommand: any) {
   // Isolate the selection depth from the stencil reference.
   const reference = stencilCommand.renderState.stencilTest.reference;
   return (
@@ -846,7 +849,7 @@ function getLastSelectionDepth(stencilCommand) {
   );
 }
 
-function getStencilReference(selectionDepth) {
+function getStencilReference(selectionDepth: any) {
   // Stencil test is masked to the most significant 3 bits so the reference is shifted.
   // Writes 0 for the terrain bit.
   return (
@@ -855,7 +858,7 @@ function getStencilReference(selectionDepth) {
   );
 }
 
-function deriveSkipLodBackfaceCommand(command) {
+function deriveSkipLodBackfaceCommand(command: any) {
   // Write just backface depth of unresolved tiles so resolved stenciled tiles
   // do not appear in front.
   const backfaceCommand = DrawCommand.shallowClone(command);
@@ -894,7 +897,7 @@ function deriveSkipLodBackfaceCommand(command) {
   return backfaceCommand;
 }
 
-function deriveSkipLodStencilCommand(command) {
+function deriveSkipLodStencilCommand(command: any) {
   // Tiles only draw if their selection depth is >= the tile drawn already. They write their
   // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
   const stencilCommand = DrawCommand.shallowClone(command);
@@ -916,5 +919,4 @@ function deriveSkipLodStencilCommand(command) {
   return stencilCommand;
 }
 
-export { ModelDrawCommand };
 export default ModelDrawCommand;

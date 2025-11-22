@@ -22,5 +22,4 @@ GeometryFactory.createGeometry = function (geometryFactory) {
   DeveloperError.throwInstantiationError();
 };
 
-export { GeometryFactory };
 export default GeometryFactory;

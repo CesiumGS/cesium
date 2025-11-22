@@ -12,7 +12,7 @@ import ImageryState from "./ImageryState.js";
  *        by the imagery, where X=west, Y=south, Z=east, W=north.
  * @param {boolean} useWebMercatorT true to use the Web Mercator texture coordinates for this imagery tile.
  */
-function TileImagery(imagery, textureCoordinateRectangle, useWebMercatorT) {
+function TileImagery(imagery: any, textureCoordinateRectangle: any, useWebMercatorT: any) {
   this.readyImagery = undefined;
   this.loadingImagery = imagery;
   this.textureCoordinateRectangle = textureCoordinateRectangle;
@@ -123,5 +123,4 @@ TileImagery.prototype.processStateMachine = function (
 
   return false; // not done loading
 };
-export { TileImagery };
 export default TileImagery;

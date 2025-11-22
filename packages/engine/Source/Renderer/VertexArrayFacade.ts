@@ -11,8 +11,13 @@ import VertexArray from "./VertexArray.js";
 /**
  * @private
  */
-function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
-  ;
+function VertexArrayFacade(context: any, attributes: any, sizeInVertices: any, instanced: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("context", context);
+  if (!attributes || attributes.length === 0) {
+    throw new DeveloperError("At least one attribute is required.");
+  }
+  //>>includeEnd('debug');
 
   const attrs = VertexArrayFacade._verifyAttributes(attributes);
   sizeInVertices = sizeInVertices ?? 0;
@@ -44,7 +49,7 @@ function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
 
   // A function to sort attributes by the size of their components.  From left to right, a vertex
   // stores floats, shorts, and then bytes.
-  function compare(left, right) {
+  function compare(left: any, right: any) {
     return (
       ComponentDatatype.getSizeInBytes(right.componentDatatype) -
       ComponentDatatype.getSizeInBytes(left.componentDatatype)
@@ -109,7 +114,31 @@ VertexArrayFacade._verifyAttributes = function (attributes) {
     };
     attrs.push(attr);
 
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (
+      attr.componentsPerAttribute !== 1 &&
+      attr.componentsPerAttribute !== 2 &&
+      attr.componentsPerAttribute !== 3 &&
+      attr.componentsPerAttribute !== 4
+    ) {
+      throw new DeveloperError(
+        "attribute.componentsPerAttribute must be in the range [1, 4].",
+      );
+    }
+
+    const datatype = attr.componentDatatype;
+    if (!ComponentDatatype.validate(datatype)) {
+      throw new DeveloperError(
+        "Attribute must have a valid componentDatatype or not specify it.",
+      );
+    }
+
+    if (!BufferUsage.validate(attr.usage)) {
+      throw new DeveloperError(
+        "Attribute must have a valid usage or not specify it.",
+      );
+    }
+    //>>includeEnd('debug');
   }
 
   // Verify all attribute names are unique.
@@ -117,7 +146,13 @@ VertexArrayFacade._verifyAttributes = function (attributes) {
   for (let j = 0; j < attrs.length; ++j) {
     const currentAttr = attrs[j];
     const index = currentAttr.index;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    if (uniqueIndices[index]) {
+      throw new DeveloperError(
+        `Index ${index} is used by more than one attribute.`,
+      );
+    }
+    //>>includeEnd('debug');
     uniqueIndices[index] = true;
   }
 
@@ -339,7 +374,7 @@ VertexArrayFacade.prototype.commit = function (indexBuffer) {
   }
 };
 
-function commit(vertexArrayFacade, buffer) {
+function commit(vertexArrayFacade: any, buffer: any) {
   if (buffer.needsCommit && buffer.vertexSizeInBytes > 0) {
     buffer.needsCommit = false;
 
@@ -399,7 +434,18 @@ VertexArrayFacade.prototype.subCommit = function (
   offsetInVertices,
   lengthInVertices,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (offsetInVertices < 0 || offsetInVertices >= this._size) {
+    throw new DeveloperError(
+      "offsetInVertices must be greater than or equal to zero and less than the vertex array size.",
+    );
+  }
+  if (offsetInVertices + lengthInVertices > this._size) {
+    throw new DeveloperError(
+      "offsetInVertices + lengthInVertices cannot exceed the vertex array size.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const allBuffers = this._allBuffers;
   for (let i = 0, len = allBuffers.length; i < len; ++i) {
@@ -407,7 +453,7 @@ VertexArrayFacade.prototype.subCommit = function (
   }
 };
 
-function subCommit(buffer, offsetInVertices, lengthInVertices) {
+function subCommit(buffer: any, offsetInVertices: any, lengthInVertices: any) {
   if (buffer.needsCommit && buffer.vertexSizeInBytes > 0) {
     const byteOffset = buffer.vertexSizeInBytes * offsetInVertices;
     const byteLength = buffer.vertexSizeInBytes * lengthInVertices;
@@ -431,7 +477,7 @@ VertexArrayFacade.prototype.endSubCommits = function () {
   }
 };
 
-function destroyVA(vertexArrayFacade) {
+function destroyVA(vertexArrayFacade: any) {
   const va = vertexArrayFacade.va;
   if (!defined(va)) {
     return;
@@ -460,5 +506,4 @@ VertexArrayFacade.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { VertexArrayFacade };
 export default VertexArrayFacade;

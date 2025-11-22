@@ -138,7 +138,7 @@ PolygonGeometryLibrary.unpackPolygonHierarchy = function (
 };
 
 const distance2DScratch = new Cartesian2();
-function getPointAtDistance2D(p0, p1, distance, length) {
+function getPointAtDistance2D(p0: any, p1: any, distance: any, length: any) {
   Cartesian2.subtract(p1, p0, distance2DScratch);
   Cartesian2.multiplyByScalar(
     distance2DScratch,
@@ -150,7 +150,7 @@ function getPointAtDistance2D(p0, p1, distance, length) {
 }
 
 const distanceScratch = new Cartesian3();
-function getPointAtDistance(p0, p1, distance, length) {
+function getPointAtDistance(p0: any, p1: any, distance: any, length: any) {
   Cartesian3.subtract(p1, p0, distanceScratch);
   Cartesian3.multiplyByScalar(
     distanceScratch,
@@ -491,7 +491,7 @@ PolygonGeometryLibrary.polygonOutlinesFromHierarchy = function (
 };
 
 const scratchRhumbIntersection = new Cartographic();
-function computeEquatorIntersectionRhumb(start, end, ellipsoid) {
+function computeEquatorIntersectionRhumb(start: any, end: any, ellipsoid: any) {
   const c0 = ellipsoid.cartesianToCartographic(start, scratchCartographic0);
   const c1 = ellipsoid.cartesianToCartographic(end, scratchCartographic1);
 
@@ -530,7 +530,7 @@ function computeEquatorIntersectionRhumb(start, end, ellipsoid) {
   return ellipsoid.cartographicToCartesian(intersection);
 }
 
-function computeEquatorIntersection(start, end, ellipsoid, arcType) {
+function computeEquatorIntersection(start: any, end: any, ellipsoid: any, arcType: any) {
   if (arcType === ArcType.RHUMB) {
     return computeEquatorIntersectionRhumb(start, end, ellipsoid);
   }
@@ -549,7 +549,7 @@ function computeEquatorIntersection(start, end, ellipsoid, arcType) {
 }
 
 const scratchCartographic = new Cartographic();
-function computeEdgesOnPlane(positions, ellipsoid, arcType) {
+function computeEdgesOnPlane(positions: any, ellipsoid: any, arcType: any) {
   const edgesOnPlane = [];
   let startPoint,
     endPoint,
@@ -564,7 +564,7 @@ function computeEdgesOnPlane(positions, ellipsoid, arcType) {
     type = CesiumMath.sign(startPoint.z);
     next = CesiumMath.sign(endPoint.z);
 
-    const getLongitude = (position) => {
+    const getLongitude = (position: any) => {
       const cartographic = ellipsoid.cartesianToCartographic(
         position,
         scratchCartographic,
@@ -612,18 +612,10 @@ function computeEdgesOnPlane(positions, ellipsoid, arcType) {
   return edgesOnPlane;
 }
 
-function wirePolygon(
-  polygons,
-  polygonIndex,
-  positions,
-  edgesOnPlane,
-  toDelete,
-  startIndex,
-  abovePlane,
-) {
+function wirePolygon(polygons: any, polygonIndex: any, positions: any, edgesOnPlane: any, toDelete: any, startIndex: any, abovePlane: any, ) {
   const polygon = [];
   let i = startIndex;
-  const getMatchingEdge = (i) => (edge) => edge.position === i;
+  const getMatchingEdge = (i: any) => (edge: any) => edge.position === i;
   const polygonsToWire = [];
   do {
     const position = positions[i];
@@ -751,7 +743,7 @@ PolygonGeometryLibrary.splitPolygonsOnEquator = function (
     }
 
     // Step 2: Sort the edges along the split line by the distance between their starting points and the starting point of the split line.
-    edgesOnPlane.sort((a, b) => {
+    edgesOnPlane.sort((a: any, b: any) => {
       return a.theta - b.theta;
     });
 
@@ -1298,5 +1290,4 @@ PolygonGeometryLibrary.computeWallGeometry = function (
 
   return geometry;
 };
-export { PolygonGeometryLibrary };
 export default PolygonGeometryLibrary;

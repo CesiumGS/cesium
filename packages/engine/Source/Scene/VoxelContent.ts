@@ -25,8 +25,18 @@ import MetadataType from "./MetadataType.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function VoxelContent(options) {
-  ;
+function VoxelContent(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options", options);
+  if (!defined(options.loader)) {
+    if (!defined(options.metadata)) {
+      throw new DeveloperError("One of loader and metadata must be defined.");
+    }
+    if (!Array.isArray(options.metadata)) {
+      throw new DeveloperError("metadata must be an array of TypedArrays.");
+    }
+  }
+  //>>includeEnd('debug');
 
   const { loader, metadata } = options;
 
@@ -73,7 +83,12 @@ Object.defineProperties(VoxelContent.prototype, {
  * @returns {VoxelContent} A VoxelContent containing the specified metadata.
  */
 VoxelContent.fromMetadataArray = function (metadata) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("metadata", metadata);
+  if (!Array.isArray(metadata)) {
+    throw new DeveloperError("metadata must be an array of TypedArrays.");
+  }
+  //>>includeEnd('debug');
 
   return new VoxelContent({ metadata });
 };
@@ -87,7 +102,9 @@ VoxelContent.fromMetadataArray = function (metadata) {
  * @private
  */
 VoxelContent.fromGltf = async function (resource) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("resource", resource);
+  //>>includeEnd('debug');
 
   // Construct the glTF loader
   const loader = new GltfLoader({
@@ -154,10 +171,10 @@ VoxelContent.prototype.update = function (primitive, frameState) {
  * @returns {Int8Array[]|Uint8Array[]|Int16Array[]|Uint16Array[]|Int32Array[]|Uint32Array[]|Float32Array[]|Float64Array[]} An array of typed arrays containing the attribute values
  * @private
  */
-function processAttributes(attributes, structuralMetadata, primitive) {
+function processAttributes(attributes: any, structuralMetadata: any, primitive: any) {
   const { className, names, types, componentTypes } = primitive.provider;
   const propertyAttribute = structuralMetadata.propertyAttributes.find(
-    (p) => p.class.id === className,
+    (p: any) => p.class.id === className,
   );
   const { properties } = propertyAttribute;
   const data = new Array(names.length);
@@ -165,7 +182,7 @@ function processAttributes(attributes, structuralMetadata, primitive) {
   for (let i = 0; i < attributes.length; i++) {
     // Find the appropriate glTF attribute based on its name.
     const name = properties[names[i]].attribute;
-    const attribute = attributes.find((a) => a.name === name);
+    const attribute = attributes.find((a: any) => a.name === name);
     if (!defined(attribute)) {
       continue;
     }
@@ -211,5 +228,4 @@ VoxelContent.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export { VoxelContent };
 export default VoxelContent;

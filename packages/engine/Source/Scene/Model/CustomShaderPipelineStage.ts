@@ -162,9 +162,9 @@ CustomShaderPipelineStage.process = function (
 /**
  * @private
  * @param {ModelComponents.Attribute[]} attributes
- * @returns {object<string, ModelComponents.Attribute>}
+ * @returns {Object<string, ModelComponents.Attribute>}
  */
-function getAttributesByName(attributes) {
+function getAttributesByName(attributes: any) {
   const names = {};
   for (let i = 0; i < attributes.length; i++) {
     const attributeInfo = ModelUtility.getAttributeInfo(attributes[i]);
@@ -197,7 +197,7 @@ const attributeDefaultValueLUT = {
   weights: "vec4(0.0)",
 };
 
-function inferAttributeDefaults(attributeName) {
+function inferAttributeDefaults(attributeName: any) {
   // remove trailing set indices. E.g. "texCoord_0" -> "texCoord"
   let trimmed = attributeName.replace(/_[0-9]+$/, "");
   // also remove the MC/EC since they will have the same default value
@@ -223,7 +223,7 @@ function inferAttributeDefaults(attributeName) {
  * @param {Object<string, ModelComponents.Attribute>} attributesByName
  * @returns {object}
  */
-function generateVertexShaderLines(customShader, attributesByName) {
+function generateVertexShaderLines(customShader: any, attributesByName: any) {
   if (!defined(customShader.vertexShaderText)) {
     return { enabled: false };
   }
@@ -283,7 +283,7 @@ function generateVertexShaderLines(customShader, attributesByName) {
   };
 }
 
-function generatePositionBuiltins(customShader) {
+function generatePositionBuiltins(customShader: any) {
   const attributeFields = [];
   const initializationLines = [];
   const usedVariables = customShader.usedVariablesFragment.attributeSet;
@@ -320,7 +320,7 @@ function generatePositionBuiltins(customShader) {
  * @param {Object<string, ModelComponents.Attribute>} attributesByName
  * @returns {object}
  */
-function generateFragmentShaderLines(customShader, attributesByName) {
+function generateFragmentShaderLines(customShader: any, attributesByName: any) {
   if (!defined(customShader.fragmentShaderText)) {
     return { enabled: false };
   }
@@ -400,13 +400,9 @@ const builtinAttributes = {
  * @param {Object<string, ModelComponents.Attribute>} primitiveAttributes set of all the primitive's attributes
  * @param {Object<string, ModelComponents.Attribute>} shaderAttributeSet set of all attributes used in the shader
  * @param {boolean} isFragmentShader
- * @returns {object<string, ModelComponents.Attribute>} A dictionary of the primitive attributes used in the shader
+ * @returns {Object<string, ModelComponents.Attribute>} A dictionary of the primitive attributes used in the shader
  */
-function getPrimitiveAttributesUsedInShader(
-  primitiveAttributes,
-  shaderAttributeSet,
-  isFragmentShader,
-) {
+function getPrimitiveAttributesUsedInShader(primitiveAttributes: any, shaderAttributeSet: any, isFragmentShader: any, ) {
   const addToShader = {};
   for (const attributeName in primitiveAttributes) {
     if (!primitiveAttributes.hasOwnProperty(attributeName)) {
@@ -442,11 +438,7 @@ function getPrimitiveAttributesUsedInShader(
  * @param {boolean} isFragmentShader
  * @returns {string[]} The names of the attributes needing defaults
  */
-function getAttributesNeedingDefaults(
-  primitiveAttributes,
-  shaderAttributeSet,
-  isFragmentShader,
-) {
+function getAttributesNeedingDefaults(primitiveAttributes: any, shaderAttributeSet: any, isFragmentShader: any, ) {
   const needDefaults = [];
   for (const attributeName in shaderAttributeSet) {
     if (!shaderAttributeSet.hasOwnProperty(attributeName)) {
@@ -479,7 +471,7 @@ function getAttributesNeedingDefaults(
  * @param {ModelComponents.Primitive} primitive
  * @returns {object}
  */
-function generateShaderLines(customShader, primitive) {
+function generateShaderLines(customShader: any, primitive: any) {
   // Attempt to generate vertex and fragment shader lines before adding any
   // code to the shader.
   const attributesByName = getAttributesByName(primitive.attributes);
@@ -507,7 +499,7 @@ function generateShaderLines(customShader, primitive) {
   };
 }
 
-function addVertexLinesToShader(shaderBuilder, vertexLines) {
+function addVertexLinesToShader(shaderBuilder: any, vertexLines: any) {
   let structId = CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_VS;
   shaderBuilder.addStruct(
     structId,
@@ -570,7 +562,7 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
   shaderBuilder.addFunctionLines(functionId, initializationLines);
 }
 
-function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
+function addFragmentLinesToShader(shaderBuilder: any, fragmentLines: any) {
   let structId = CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS;
   shaderBuilder.addStruct(
     structId,
@@ -633,7 +625,7 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
 
 const scratchShaderLines = [];
 
-function addLinesToShader(shaderBuilder, customShader, generatedCode) {
+function addLinesToShader(shaderBuilder: any, customShader: any, generatedCode: any) {
   const { vertexLines, fragmentLines } = generatedCode;
   const shaderLines = scratchShaderLines;
 
@@ -664,5 +656,4 @@ function addLinesToShader(shaderBuilder, customShader, generatedCode) {
   }
 }
 
-export { CustomShaderPipelineStage };
 export default CustomShaderPipelineStage;

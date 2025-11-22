@@ -16,18 +16,7 @@ import { Tween as TweenJS } from "@tweenjs/tween.js";
  *
  * @private
  */
-function Tween(
-  tweens,
-  tweenjs,
-  startObject,
-  stopObject,
-  duration,
-  delay,
-  easingFunction,
-  update,
-  complete,
-  cancel,
-) {
+function Tween(tweens: any, tweenjs: any, startObject: any, stopObject: any, duration: any, delay: any, easingFunction: any, update: any, complete: any, cancel: any, ) {
   this._tweens = tweens;
   this._tweenjs = tweenjs;
 
@@ -214,7 +203,19 @@ Object.defineProperties(TweenCollection.prototype, {
 TweenCollection.prototype.add = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.startObject) || !defined(options.stopObject)) {
+    throw new DeveloperError(
+      "options.startObject and options.stopObject are required.",
+    );
+  }
+
+  if (!defined(options.duration) || options.duration < 0.0) {
+    throw new DeveloperError(
+      "options.duration is required and must be positive.",
+    );
+  }
+  //>>includeEnd('debug');
 
   if (options.duration === 0.0) {
     if (defined(options.complete)) {
@@ -285,9 +286,25 @@ TweenCollection.prototype.addProperty = function (options) {
   const startValue = options.startValue;
   const stopValue = options.stopValue;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(object) || !defined(options.property)) {
+    throw new DeveloperError(
+      "options.object and options.property are required.",
+    );
+  }
+  if (!defined(object[property])) {
+    throw new DeveloperError(
+      "options.object must have the specified property.",
+    );
+  }
+  if (!defined(startValue) || !defined(stopValue)) {
+    throw new DeveloperError(
+      "options.startValue and options.stopValue are required.",
+    );
+  }
+  //>>includeEnd('debug');
 
-  function update(value) {
+  function update(value: any) {
     object[property] = value.value;
   }
 
@@ -332,7 +349,11 @@ TweenCollection.prototype.addAlpha = function (options) {
 
   const material = options.material;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(material)) {
+    throw new DeveloperError("options.material is required.");
+  }
+  //>>includeEnd('debug');
 
   const properties = [];
 
@@ -346,9 +367,15 @@ TweenCollection.prototype.addAlpha = function (options) {
     }
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (properties.length === 0) {
+    throw new DeveloperError(
+      "material has no properties with alpha components.",
+    );
+  }
+  //>>includeEnd('debug');
 
-  function update(value) {
+  function update(value: any) {
     const length = properties.length;
     for (let i = 0; i < length; ++i) {
       material.uniforms[properties[i]].alpha = value.alpha;
@@ -394,7 +421,14 @@ TweenCollection.prototype.addOffsetIncrement = function (options) {
 
   const material = options.material;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(material)) {
+    throw new DeveloperError("material is required.");
+  }
+  if (!defined(material.uniforms.offset)) {
+    throw new DeveloperError("material.uniforms must have an offset property.");
+  }
+  //>>includeEnd('debug');
 
   const uniforms = material.uniforms;
   return this.addProperty({
@@ -485,7 +519,11 @@ TweenCollection.prototype.contains = function (tween) {
  * }
  */
 TweenCollection.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(index)) {
+    throw new DeveloperError("index is required.");
+  }
+  //>>includeEnd('debug');
 
   return this._tweens[index];
 };
@@ -533,5 +571,4 @@ TweenCollection.prototype.update = function (time) {
  * A function that will execute when a tween is cancelled.
  * @callback TweenCollection.TweenCancelledCallback
  */
-export { TweenCollection };
 export default TweenCollection;

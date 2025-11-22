@@ -12,7 +12,7 @@
  *
  * @private
  */
-function Vector3DTileBatch(options) {
+function Vector3DTileBatch(options: any) {
   /**
    * The offset of the batch into the indices buffer.
    * @type {number}
@@ -34,5 +34,4 @@ function Vector3DTileBatch(options) {
    */
   this.batchIds = options.batchIds;
 }
-export { Vector3DTileBatch };
 export default Vector3DTileBatch;

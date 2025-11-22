@@ -20,8 +20,11 @@ import MetadataEntity from "./MetadataEntity.js";
 // that does not have a class definition.
 const emptyClass = {};
 
-function JsonMetadataTable(options) {
-  ;
+function JsonMetadataTable(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThan("options.count", options.count, 0);
+  Check.typeOf.object("options.properties", options.properties);
+  //>>includeEnd('debug');
 
   this._count = options.count;
   this._properties = clone(options.properties, true);
@@ -54,13 +57,20 @@ JsonMetadataTable.prototype.getPropertyIds = function (results) {
  *
  * @param {number} index The index of the entity.
  * @param {string} propertyId The case-sensitive ID of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the entity does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  *
  * @exception {DeveloperError} index is out of bounds
  * @private
  */
 JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  Check.typeOf.string("propertyId", propertyId);
+
+  if (index < 0 || index >= this._count) {
+    throw new DeveloperError(`index must be in the range [0, ${this._count})`);
+  }
+  //>>includeEnd('debug');
 
   const property = this._properties[propertyId];
   if (defined(property)) {
@@ -82,7 +92,14 @@ JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
  * @private
  */
 JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  Check.typeOf.string("propertyId", propertyId);
+
+  if (index < 0 || index >= this._count) {
+    throw new DeveloperError(`index must be in the range [0, ${this._count})`);
+  }
+  //>>includeEnd('debug');
 
   let property = this._properties[propertyId];
   if (!defined(property)) {
@@ -94,5 +111,4 @@ JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
   property[index] = clone(value, true);
 };
 
-export { JsonMetadataTable };
 export default JsonMetadataTable;

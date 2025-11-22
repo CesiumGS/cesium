@@ -58,8 +58,8 @@ const namespaces = {
   gpx: gpxNamespaces,
 };
 
-function readBlobAsText(blob) {
-  return new Promise((resolve, reject) => {
+function readBlobAsText(blob: any) {
+  return new Promise((resolve: any, reject: any) => {
     const reader = new FileReader();
     reader.addEventListener("load", function () {
       resolve(reader.result);
@@ -71,21 +71,21 @@ function readBlobAsText(blob) {
   });
 }
 
-function getOrCreateEntity(node, entityCollection) {
+function getOrCreateEntity(node: any, entityCollection: any) {
   let id = queryStringAttribute(node, "id");
   id = defined(id) ? id : createGuid();
   const entity = entityCollection.getOrCreateEntity(id);
   return entity;
 }
 
-function readCoordinateFromNode(node) {
+function readCoordinateFromNode(node: any) {
   const longitude = queryNumericAttribute(node, "lon");
   const latitude = queryNumericAttribute(node, "lat");
   const elevation = queryNumericValue(node, "ele", namespaces.gpx);
   return Cartesian3.fromDegrees(longitude, latitude, elevation);
 }
 
-function queryNumericAttribute(node, attributeName) {
+function queryNumericAttribute(node: any, attributeName: any) {
   if (!defined(node)) {
     return undefined;
   }
@@ -98,7 +98,7 @@ function queryNumericAttribute(node, attributeName) {
   return undefined;
 }
 
-function queryStringAttribute(node, attributeName) {
+function queryStringAttribute(node: any, attributeName: any) {
   if (!defined(node)) {
     return undefined;
   }
@@ -106,7 +106,7 @@ function queryStringAttribute(node, attributeName) {
   return value !== null ? value : undefined;
 }
 
-function queryFirstNode(node, tagName, namespace) {
+function queryFirstNode(node: any, tagName: any, namespace: any) {
   if (!defined(node)) {
     return undefined;
   }
@@ -124,7 +124,7 @@ function queryFirstNode(node, tagName, namespace) {
   return undefined;
 }
 
-function queryNodes(node, tagName, namespace) {
+function queryNodes(node: any, tagName: any, namespace: any) {
   if (!defined(node)) {
     return undefined;
   }
@@ -143,7 +143,7 @@ function queryNodes(node, tagName, namespace) {
   return result;
 }
 
-function queryNumericValue(node, tagName, namespace) {
+function queryNumericValue(node: any, tagName: any, namespace: any) {
   const resultNode = queryFirstNode(node, tagName, namespace);
   if (defined(resultNode)) {
     const result = parseFloat(resultNode.textContent);
@@ -152,7 +152,7 @@ function queryNumericValue(node, tagName, namespace) {
   return undefined;
 }
 
-function queryStringValue(node, tagName, namespace) {
+function queryStringValue(node: any, tagName: any, namespace: any) {
   const result = queryFirstNode(node, tagName, namespace);
   if (defined(result)) {
     return result.textContent.trim();
@@ -160,7 +160,7 @@ function queryStringValue(node, tagName, namespace) {
   return undefined;
 }
 
-function createDefaultBillboard(image) {
+function createDefaultBillboard(image: any) {
   const billboard = new BillboardGraphics();
   billboard.width = BILLBOARD_SIZE;
   billboard.height = BILLBOARD_SIZE;
@@ -191,7 +191,7 @@ function createDefaultLabel() {
   return label;
 }
 
-function createDefaultPolyline(color) {
+function createDefaultPolyline(color: any) {
   const polyline = new PolylineGraphics();
   polyline.width = 4;
   polyline.material = new PolylineOutlineMaterialProperty();
@@ -237,7 +237,7 @@ let scratchDiv;
 if (typeof document !== "undefined") {
   scratchDiv = document.createElement("div");
 }
-function processDescription(node, entity) {
+function processDescription(node: any, entity: any) {
   let i;
 
   let text = "";
@@ -284,7 +284,7 @@ function processDescription(node, entity) {
   return tmp;
 }
 
-function processWpt(dataSource, geometryNode, entityCollection, options) {
+function processWpt(dataSource: any, geometryNode: any, entityCollection: any, options: any) {
   const position = readCoordinateFromNode(geometryNode);
 
   const entity = getOrCreateEntity(geometryNode, entityCollection);
@@ -313,7 +313,7 @@ function processWpt(dataSource, geometryNode, entityCollection, options) {
 }
 
 // rte represents route - an ordered list of waypoints representing a series of turn points leading to a destination
-function processRte(dataSource, geometryNode, entityCollection, options) {
+function processRte(dataSource: any, geometryNode: any, entityCollection: any, options: any) {
   const entity = getOrCreateEntity(geometryNode, entityCollection);
   entity.description = processDescription(geometryNode, entity);
 
@@ -332,7 +332,7 @@ function processRte(dataSource, geometryNode, entityCollection, options) {
 }
 
 // trk represents a track - an ordered list of points describing a path.
-function processTrk(dataSource, geometryNode, entityCollection, options) {
+function processTrk(dataSource: any, geometryNode: any, entityCollection: any, options: any) {
   const entity = getOrCreateEntity(geometryNode, entityCollection);
   entity.description = processDescription(geometryNode, entity);
 
@@ -383,7 +383,7 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
   }
 }
 
-function processTrkSeg(node) {
+function processTrkSeg(node: any) {
   const result = {
     positions: [],
     times: [],
@@ -404,7 +404,7 @@ function processTrkSeg(node) {
 
 // Processes a metadataType node and returns a metadata object
 // {@link http://www.topografix.com/gpx/1/1/#type_metadataType|GPX Schema}
-function processMetadata(node) {
+function processMetadata(node: any) {
   const metadataNode = queryFirstNode(node, "metadata", namespaces.gpx);
   if (defined(metadataNode)) {
     const metadata = {
@@ -435,7 +435,7 @@ function processMetadata(node) {
 
 // Receives a XML node and returns a personType object, refer to
 // {@link http://www.topografix.com/gpx/1/1/#type_personType|GPX Schema}
-function getPerson(node) {
+function getPerson(node: any) {
   const personNode = queryFirstNode(node, "author", namespaces.gpx);
   if (defined(personNode)) {
     const person = {
@@ -452,7 +452,7 @@ function getPerson(node) {
 
 // Receives a XML node and returns an email address (from emailType), refer to
 // {@link http://www.topografix.com/gpx/1/1/#type_emailType|GPX Schema}
-function getEmail(node) {
+function getEmail(node: any) {
   const emailNode = queryFirstNode(node, "email", namespaces.gpx);
   if (defined(emailNode)) {
     const id = queryStringValue(emailNode, "id", namespaces.gpx);
@@ -464,7 +464,7 @@ function getEmail(node) {
 
 // Receives a XML node and returns a linkType object, refer to
 // {@link http://www.topografix.com/gpx/1/1/#type_linkType|GPX Schema}
-function getLink(node) {
+function getLink(node: any) {
   const linkNode = queryFirstNode(node, "link", namespaces.gpx);
   if (defined(linkNode)) {
     const link = {
@@ -481,7 +481,7 @@ function getLink(node) {
 
 // Receives a XML node and returns a copyrightType object, refer to
 // {@link http://www.topografix.com/gpx/1/1/#type_copyrightType|GPX Schema}
-function getCopyright(node) {
+function getCopyright(node: any) {
   const copyrightNode = queryFirstNode(node, "copyright", namespaces.gpx);
   if (defined(copyrightNode)) {
     const copyright = {
@@ -502,7 +502,7 @@ function getCopyright(node) {
 
 // Receives a XML node and returns a boundsType object, refer to
 // {@link http://www.topografix.com/gpx/1/1/#type_boundsType|GPX Schema}
-function getBounds(node) {
+function getBounds(node: any) {
   const boundsNode = queryFirstNode(node, "bounds", namespaces.gpx);
   if (defined(boundsNode)) {
     const bounds = {
@@ -529,7 +529,7 @@ const complexTypes = {
   trk: processTrk,
 };
 
-function processGpx(dataSource, node, entityCollection, options) {
+function processGpx(dataSource: any, node: any, entityCollection: any, options: any) {
   const complexTypeNames = Object.keys(complexTypes);
   const complexTypeNamesLength = complexTypeNames.length;
 
@@ -551,7 +551,7 @@ function processGpx(dataSource, node, entityCollection, options) {
   }
 }
 
-function loadGpx(dataSource, gpx, options) {
+function loadGpx(dataSource: any, gpx: any, options: any) {
   const entityCollection = dataSource._entityCollection;
 
   entityCollection.removeAll();
@@ -643,7 +643,7 @@ function loadGpx(dataSource, gpx, options) {
   return dataSource;
 }
 
-function metadataChanged(old, current) {
+function metadataChanged(old: any, current: any) {
   if (!defined(old) && !defined(current)) {
     return false;
   } else if (defined(old) && defined(current)) {
@@ -664,7 +664,7 @@ function metadataChanged(old, current) {
   return true;
 }
 
-function load(dataSource, entityCollection, data, options) {
+function load(dataSource: any, entityCollection: any, data: any, options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   let promise = data;
   if (typeof data === "string" || data instanceof Resource) {
@@ -904,7 +904,11 @@ Object.defineProperties(GpxDataSource.prototype, {
       return this._entityCluster;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value must be defined.");
+      }
+      //>>includeEnd('debug');
       this._entityCluster = value;
     },
   },
@@ -1011,5 +1015,4 @@ GpxDataSource.prototype.load = function (data, options) {
     });
 };
 
-export { GpxDataSource };
 export default GpxDataSource;

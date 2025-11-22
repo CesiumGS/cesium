@@ -12,7 +12,7 @@ import LightingModel from "./LightingModel.js";
  *
  * @private
  */
-function ModelLightingOptions(options) {
+function ModelLightingOptions(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -26,5 +26,4 @@ function ModelLightingOptions(options) {
   this.lightingModel = options.lightingModel ?? LightingModel.UNLIT;
 }
 
-export { ModelLightingOptions };
 export default ModelLightingOptions;

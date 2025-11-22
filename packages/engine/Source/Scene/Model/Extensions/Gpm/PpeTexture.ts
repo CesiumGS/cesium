@@ -28,8 +28,11 @@ import Check from "../../../../Core/Check.js";
  *
  * @private
  */
-function PpeTexture(options) {
-  ;
+function PpeTexture(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.traits", options.traits);
+  Check.typeOf.number.greaterThanOrEquals("options.index", options.index, 0);
+  //>>includeEnd('debug');
 
   this._traits = options.traits;
   this._noData = options.noData;
@@ -121,5 +124,4 @@ Object.defineProperties(PpeTexture.prototype, {
   },
 });
 
-export { PpeTexture };
 export default PpeTexture;

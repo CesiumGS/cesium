@@ -171,7 +171,7 @@ import TileImagery from "./TileImagery.js";
  * const imageryLayer = new ImageryLayer(imageryProvider);
  * tileset.imageryLayers.add(imageryLayer);
  */
-function ImageryLayer(imageryProvider, options) {
+function ImageryLayer(imageryProvider: any, options: any) {
   this._imageryProvider = imageryProvider;
 
   this._readyEvent = new Event();
@@ -533,7 +533,9 @@ ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
  * @see ImageryLayer.fromWorldImagery
  */
 ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("imageryProviderPromise", imageryProviderPromise);
+  //>>includeEnd('debug');
 
   const layer = new ImageryLayer(undefined, options);
 
@@ -1103,7 +1105,7 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
 
   const that = this;
 
-  function success(image) {
+  function success(image: any) {
     if (!defined(image)) {
       return failure();
     }
@@ -1115,7 +1117,7 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
     TileProviderError.reportSuccess(that._requestImageError);
   }
 
-  function failure(e) {
+  function failure(e: any) {
     if (imagery.request.state === RequestState.CANCELLED) {
       // Cancelled due to low priority - try again later.
       imagery.state = ImageryState.UNLOADED;
@@ -1248,7 +1250,16 @@ ImageryLayer.prototype._createTexture = function (context, imagery) {
     }
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    this.minificationFilter !== TextureMinificationFilter.NEAREST &&
+    this.minificationFilter !== TextureMinificationFilter.LINEAR
+  ) {
+    throw new DeveloperError(
+      "ImageryLayer minification filter must be NEAREST or LINEAR",
+    );
+  }
+  //>>includeEnd('debug');
 
   // Imagery does not need to be discarded, so upload it to WebGL.
   const texture = this._createTextureWebGL(context, imagery);
@@ -1264,11 +1275,7 @@ ImageryLayer.prototype._createTexture = function (context, imagery) {
   imagery.state = ImageryState.TEXTURE_LOADED;
 };
 
-function getSamplerKey(
-  minificationFilter,
-  magnificationFilter,
-  maximumAnisotropy,
-) {
+function getSamplerKey(minificationFilter: any, magnificationFilter: any, maximumAnisotropy: any, ) {
   return `${minificationFilter}:${magnificationFilter}:${maximumAnisotropy}`;
 }
 
@@ -1456,7 +1463,7 @@ ImageryLayer.prototype.removeImageryFromCache = function (imagery) {
   delete this._imageryCache[cacheKey];
 };
 
-function getImageryCacheKey(x, y, level) {
+function getImageryCacheKey(x: any, y: any, level: any) {
   return JSON.stringify([x, y, level]);
 }
 
@@ -1476,7 +1483,7 @@ const float32ArrayScratch = FeatureDetection.supportsTypedArrays()
   ? new Float32Array(2 * 64)
   : undefined;
 
-function reprojectToGeographic(command, context, texture, rectangle) {
+function reprojectToGeographic(command: any, context: any, texture: any, rectangle: any) {
   // This function has gone through a number of iterations, because GPUs are awesome.
   //
   // Originally, we had a very simple vertex shader and computed the Web Mercator texture coordinates
@@ -1668,11 +1675,7 @@ function reprojectToGeographic(command, context, texture, rectangle) {
  * @returns {number} The level with the specified texel spacing or less.
  * @private
  */
-function getLevelWithMaximumTexelSpacing(
-  layer,
-  texelSpacing,
-  latitudeClosestToEquator,
-) {
+function getLevelWithMaximumTexelSpacing(layer: any, texelSpacing: any, latitudeClosestToEquator: any, ) {
   // PERFORMANCE_IDEA: factor out the stuff that doesn't change.
   const imageryProvider = layer._imageryProvider;
   const tilingScheme = imageryProvider.tilingScheme;
@@ -1694,7 +1697,7 @@ function getLevelWithMaximumTexelSpacing(
   return rounded | 0;
 }
 
-function handleError(errorEvent, error) {
+function handleError(errorEvent: any, error: any) {
   if (errorEvent.numberOfListeners > 0) {
     errorEvent.raiseEvent(error);
   } else {
@@ -1703,7 +1706,7 @@ function handleError(errorEvent, error) {
   }
 }
 
-async function handlePromise(instance, promise) {
+async function handlePromise(instance: any, promise: any) {
   let provider;
   try {
     provider = await Promise.resolve(promise);
@@ -1717,7 +1720,6 @@ async function handlePromise(instance, promise) {
   }
 }
 
-export { ImageryLayer };
 export default ImageryLayer;
 
 /**

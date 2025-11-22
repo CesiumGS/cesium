@@ -392,5 +392,4 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
     sources: sources,
   });
 };
-export { ShadowMapShader };
 export default ShadowMapShader;

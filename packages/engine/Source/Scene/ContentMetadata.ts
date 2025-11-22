@@ -18,12 +18,15 @@ import MetadataEntity from "./MetadataEntity.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function ContentMetadata(options) {
+function ContentMetadata(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const content = options.content;
   const metadataClass = options.class;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.content", content);
+  Check.typeOf.object("options.class", metadataClass);
+  //>>includeEnd('debug');
 
   this._class = metadataClass;
   this._properties = content.properties;
@@ -119,7 +122,7 @@ ContentMetadata.prototype.getPropertyIds = function (results) {
  * </p>
  *
  * @param {string} propertyId The case-sensitive ID of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the content does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the content does not have this property.
  * @private
  */
 ContentMetadata.prototype.getProperty = function (propertyId) {
@@ -150,7 +153,7 @@ ContentMetadata.prototype.setProperty = function (propertyId, value) {
  * Returns a copy of the value of the property with the given semantic.
  *
  * @param {string} semantic The case-sensitive semantic of the property.
- * @returns {any} The value of the property or <code>undefined</code> if the content does not have this semantic.
+ * @returns {*} The value of the property or <code>undefined</code> if the content does not have this semantic.
  * @private
  */
 ContentMetadata.prototype.getPropertyBySemantic = function (semantic) {
@@ -178,5 +181,4 @@ ContentMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
   );
 };
 
-export { ContentMetadata };
 export default ContentMetadata;

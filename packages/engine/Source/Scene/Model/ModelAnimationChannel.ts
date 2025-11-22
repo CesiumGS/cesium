@@ -28,13 +28,17 @@ const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
  *
  * @private
  */
-function ModelAnimationChannel(options) {
+function ModelAnimationChannel(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const channel = options.channel;
   const runtimeAnimation = options.runtimeAnimation;
   const runtimeNode = options.runtimeNode;
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.channel", channel);
+  Check.typeOf.object("options.runtimeAnimation", runtimeAnimation);
+  Check.typeOf.object("options.runtimeNode", runtimeNode);
+  //>>includeEnd('debug');
 
   this._channel = channel;
   this._runtimeAnimation = runtimeAnimation;
@@ -114,7 +118,7 @@ Object.defineProperties(ModelAnimationChannel.prototype, {
   },
 });
 
-function createCubicSpline(times, points) {
+function createCubicSpline(times: any, points: any) {
   const cubicPoints = [];
   const inTangents = [];
   const outTangents = [];
@@ -139,7 +143,7 @@ function createCubicSpline(times, points) {
   });
 }
 
-function createSpline(times, points, interpolation, path) {
+function createSpline(times: any, points: any, interpolation: any, path: any) {
   if (times.length === 1 && points.length === 1) {
     return new ConstantSpline(points[0]);
   }
@@ -166,7 +170,7 @@ function createSpline(times, points, interpolation, path) {
   }
 }
 
-function createSplines(times, points, interpolation, path, count) {
+function createSplines(times: any, points: any, interpolation: any, path: any, count: any) {
   const splines = [];
   if (path === AnimatedPropertyType.WEIGHTS) {
     const pointsLength = points.length;
@@ -214,7 +218,7 @@ function createSplines(times, points, interpolation, path, count) {
 const scratchCartesian3 = new Cartesian3();
 const scratchQuaternion = new Quaternion();
 
-function initialize(runtimeChannel) {
+function initialize(runtimeChannel: any) {
   const channel = runtimeChannel._channel;
 
   const sampler = channel.sampler;
@@ -287,5 +291,4 @@ ModelAnimationChannel.prototype.animate = function (time) {
   }
 };
 
-export { ModelAnimationChannel };
 export default ModelAnimationChannel;

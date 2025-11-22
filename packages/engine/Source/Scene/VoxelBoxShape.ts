@@ -220,7 +220,11 @@ VoxelBoxShape.prototype.update = function (
   clipMinBounds,
   clipMaxBounds,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("modelMatrix", modelMatrix);
+  Check.typeOf.object("minBounds", minBounds);
+  Check.typeOf.object("maxBounds", maxBounds);
+  //>>includeEnd('debug');
 
   clipMinBounds = clipMinBounds ?? minBounds.clone(scratchClipMinBounds);
   clipMaxBounds = clipMaxBounds ?? maxBounds.clone(scratchClipMaxBounds);
@@ -331,7 +335,7 @@ VoxelBoxShape.prototype.update = function (
   return true;
 };
 
-function boundScale(minBound, maxBound) {
+function boundScale(minBound: any, maxBound: any) {
   return CesiumMath.equalsEpsilon(minBound, maxBound, CesiumMath.EPSILON7)
     ? 1.0
     : 1.0 / (maxBound - minBound);
@@ -372,7 +376,10 @@ VoxelBoxShape.prototype.convertLocalToShapeUvSpace = function (
   positionLocal,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("positionLocal", positionLocal);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const { boxLocalToShapeUvScale, boxLocalToShapeUvTranslate } =
     this._shaderUniforms;
@@ -408,7 +415,13 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForTile = function (
   tileZ,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("tileLevel", tileLevel);
+  Check.typeOf.number("tileX", tileX);
+  Check.typeOf.number("tileY", tileY);
+  Check.typeOf.number("tileZ", tileZ);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const minBounds = this._minBounds;
   const maxBounds = this._maxBounds;
@@ -453,7 +466,12 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForSample = function (
   tileUv,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("spatialNode", spatialNode);
+  Check.typeOf.object("tileDimensions", tileDimensions);
+  Check.typeOf.object("tileUv", tileUv);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
 
   const tileSizeAtLevel = 1.0 / Math.pow(2, spatialNode.level);
   const sampleSize = Cartesian3.divideComponents(
@@ -542,7 +560,7 @@ const scratchBoxScale = new Cartesian3();
  *
  * @private
  */
-function getBoxChunkObb(minimumBounds, maximumBounds, matrix, result) {
+function getBoxChunkObb(minimumBounds: any, maximumBounds: any, matrix: any, result: any) {
   const defaultMinBounds = VoxelBoxShape.DefaultMinBounds;
   const defaultMaxBounds = VoxelBoxShape.DefaultMaxBounds;
 
@@ -574,5 +592,4 @@ function getBoxChunkObb(minimumBounds, maximumBounds, matrix, result) {
   return result;
 }
 
-export { VoxelBoxShape };
 export default VoxelBoxShape;

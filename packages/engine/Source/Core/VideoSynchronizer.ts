@@ -18,7 +18,7 @@ import JulianDate from "./JulianDate.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Video.html|Video Material Demo}
  */
-function VideoSynchronizer(options) {
+function VideoSynchronizer(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._clock = undefined;
@@ -213,11 +213,10 @@ VideoSynchronizer.prototype._onTick = function (clock) {
   }
 };
 
-function createSeekFunction(that) {
+function createSeekFunction(that: any) {
   return function () {
     that._seeking = false;
     that._firstTickAfterSeek = true;
   };
 }
-export { VideoSynchronizer };
 export default VideoSynchronizer;

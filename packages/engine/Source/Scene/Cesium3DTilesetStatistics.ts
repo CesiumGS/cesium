@@ -192,5 +192,4 @@ Cesium3DTilesetStatistics.clone = function (statistics, result) {
   };
   result.batchTableByteLength = statistics.batchTableByteLength;
 };
-export { Cesium3DTilesetStatistics };
 export default Cesium3DTilesetStatistics;

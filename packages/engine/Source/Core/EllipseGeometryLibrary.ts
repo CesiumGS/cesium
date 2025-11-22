@@ -10,18 +10,7 @@ const tempVec = new Cartesian3();
 const unitQuat = new Quaternion();
 const rotMtx = new Matrix3();
 
-function pointOnEllipsoid(
-  theta,
-  rotation,
-  northVec,
-  eastVec,
-  aSqr,
-  ab,
-  bSqr,
-  mag,
-  unitPos,
-  result,
-) {
+function pointOnEllipsoid(theta: any, rotation: any, northVec: any, eastVec: any, aSqr: any, ab: any, bSqr: any, mag: any, unitPos: any, result: any, ) {
   const azimuth = theta + rotation;
 
   Cartesian3.multiplyByScalar(eastVec, Math.cos(azimuth), rotAxis);
@@ -362,5 +351,4 @@ EllipseGeometryLibrary.computeEllipsePositions = function (
 
   return r;
 };
-export { EllipseGeometryLibrary };
 export default EllipseGeometryLibrary;

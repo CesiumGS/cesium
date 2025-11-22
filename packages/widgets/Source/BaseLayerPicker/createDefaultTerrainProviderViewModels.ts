@@ -43,5 +43,4 @@ function createDefaultTerrainProviderViewModels() {
 
   return providerViewModels;
 }
-export { createDefaultTerrainProviderViewModels };
 export default createDefaultTerrainProviderViewModels;

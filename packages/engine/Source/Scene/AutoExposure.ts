@@ -108,7 +108,7 @@ Object.defineProperties(AutoExposure.prototype, {
   },
 });
 
-function destroyFramebuffers(autoexposure) {
+function destroyFramebuffers(autoexposure: any) {
   const framebuffers = autoexposure._framebuffers;
   if (!defined(framebuffers)) {
     return;
@@ -124,7 +124,7 @@ function destroyFramebuffers(autoexposure) {
   autoexposure._previousLuminance = undefined;
 }
 
-function createFramebuffers(autoexposure, context) {
+function createFramebuffers(autoexposure: any, context: any) {
   destroyFramebuffers(autoexposure);
 
   let width = autoexposure._width;
@@ -154,7 +154,7 @@ function createFramebuffers(autoexposure, context) {
   autoexposure._framebuffers = framebuffers;
 }
 
-function destroyCommands(autoexposure) {
+function destroyCommands(autoexposure: any) {
   const commands = autoexposure._commands;
   if (!defined(commands)) {
     return;
@@ -167,7 +167,7 @@ function destroyCommands(autoexposure) {
   autoexposure._commands = undefined;
 }
 
-function createUniformMap(autoexposure, index) {
+function createUniformMap(autoexposure: any, index: any) {
   let uniforms;
   if (index === 0) {
     uniforms = {
@@ -200,7 +200,7 @@ function createUniformMap(autoexposure, index) {
   return uniforms;
 }
 
-function getShaderSource(index, length) {
+function getShaderSource(index: any, length: any) {
   let source =
     "uniform sampler2D colorTexture; \n" +
     "in vec2 v_textureCoordinates; \n" +
@@ -254,7 +254,7 @@ function getShaderSource(index, length) {
   return source;
 }
 
-function createCommands(autoexposure, context) {
+function createCommands(autoexposure: any, context: any) {
   destroyCommands(autoexposure);
   const framebuffers = autoexposure._framebuffers;
   const length = framebuffers.length;
@@ -383,5 +383,4 @@ AutoExposure.prototype.destroy = function () {
   destroyCommands(this);
   return destroyObject(this);
 };
-export { AutoExposure };
 export default AutoExposure;

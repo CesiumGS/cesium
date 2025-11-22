@@ -41,5 +41,4 @@ function defer() {
   };
 }
 
-export { defer };
 export default defer;

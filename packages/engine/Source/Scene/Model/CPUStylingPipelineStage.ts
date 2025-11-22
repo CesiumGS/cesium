@@ -74,5 +74,4 @@ CPUStylingPipelineStage.process = function (
   };
 };
 
-export { CPUStylingPipelineStage };
 export default CPUStylingPipelineStage;

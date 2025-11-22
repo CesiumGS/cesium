@@ -38,7 +38,7 @@ import Primitive from "./Primitive.js";
  *   width : 10.0
  * }));
  */
-function DebugModelMatrixPrimitive(options) {
+function DebugModelMatrixPrimitive(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   /**
@@ -217,5 +217,4 @@ DebugModelMatrixPrimitive.prototype.destroy = function () {
   this._primitive = this._primitive && this._primitive.destroy();
   return destroyObject(this);
 };
-export { DebugModelMatrixPrimitive };
 export default DebugModelMatrixPrimitive;

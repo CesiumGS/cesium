@@ -40,7 +40,7 @@ import JulianDate from "./JulianDate.js";
  * @see ClockRange
  * @see JulianDate
  */
-function Clock(options) {
+function Clock(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   let currentTime = options.currentTime;
@@ -78,7 +78,11 @@ function Clock(options) {
     stopTime = JulianDate.clone(stopTime);
   }
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (JulianDate.greaterThan(startTime, stopTime)) {
+    throw new DeveloperError("startTime must come before stopTime.");
+  }
+  //>>includeEnd('debug');
 
   /**
    * The start time of the clock.
@@ -309,5 +313,4 @@ Clock.prototype.tick = function () {
   this.onTick.raiseEvent(this);
   return currentTime;
 };
-export { Clock };
 export default Clock;

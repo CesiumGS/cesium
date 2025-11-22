@@ -47,13 +47,15 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
  * @param {number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
  * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
-function PntsLoader(options) {
+function PntsLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   const arrayBuffer = options.arrayBuffer;
   const byteOffset = options.byteOffset ?? 0;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.arrayBuffer", arrayBuffer);
+  //>>includeEnd('debug');
 
   this._arrayBuffer = arrayBuffer;
   this._byteOffset = byteOffset;
@@ -164,7 +166,7 @@ PntsLoader.prototype.process = function (frameState) {
   return false;
 };
 
-function decodeDraco(loader, context) {
+function decodeDraco(loader: any, context: any) {
   const parsedContent = loader._parsedContent;
   const draco = parsedContent.draco;
 
@@ -204,7 +206,7 @@ function decodeDraco(loader, context) {
     });
 }
 
-function processDracoAttributes(loader, draco, result) {
+function processDracoAttributes(loader: any, draco: any, result: any) {
   loader._state = ResourceLoaderState.READY;
   const parsedContent = loader._parsedContent;
 
@@ -335,7 +337,7 @@ function processDracoAttributes(loader, draco, result) {
   parsedContent.batchTableJson = batchTableJson;
 }
 
-function transcodeAttributeType(componentsPerAttribute) {
+function transcodeAttributeType(componentsPerAttribute: any) {
   switch (componentsPerAttribute) {
     case 1:
       return "SCALAR";
@@ -345,11 +347,16 @@ function transcodeAttributeType(componentsPerAttribute) {
       return "VEC3";
     case 4:
       return "VEC4";
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(
+        "componentsPerAttribute must be a number from 1-4",
+      );
+    //>>includeEnd('debug');
   }
 }
 
-function transcodeComponentType(value) {
+function transcodeComponentType(value: any) {
   switch (value) {
     case WebGLConstants.BYTE:
       return "BYTE";
@@ -367,11 +374,14 @@ function transcodeComponentType(value) {
       return "DOUBLE";
     case WebGLConstants.FLOAT:
       return "FLOAT";
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("value is not a valid WebGL constant");
+    //>>includeEnd('debug');
   }
 }
 
-function makeAttribute(loader, attributeInfo, context) {
+function makeAttribute(loader: any, attributeInfo: any, context: any) {
   let typedArray = attributeInfo.typedArray;
   let quantization;
   if (attributeInfo.octEncoded) {
@@ -443,7 +453,7 @@ function makeAttribute(loader, attributeInfo, context) {
 let randomNumberGenerator;
 let randomValues;
 
-function getRandomValues(samplesLength) {
+function getRandomValues(samplesLength: any) {
   // Use same random values across all runs
   if (!defined(randomValues)) {
     // Use MersenneTwister directly to avoid interfering with CesiumMath.nextRandomNumber()
@@ -460,7 +470,7 @@ function getRandomValues(samplesLength) {
 const scratchMin = new Cartesian3();
 const scratchMax = new Cartesian3();
 const scratchPosition = new Cartesian3();
-function computeApproximateExtrema(positions) {
+function computeApproximateExtrema(positions: any) {
   const positionsArray = positions.typedArray;
   const maximumSamplesLength = 20;
   const pointsLength = positionsArray.length / 3;
@@ -504,7 +514,7 @@ const defaultColorAttribute = {
   isTranslucent: false,
 };
 
-function makeAttributes(loader, parsedContent, context) {
+function makeAttributes(loader: any, parsedContent: any, context: any) {
   const attributes = [];
   let attribute;
   const positions = parsedContent.positions;
@@ -536,7 +546,7 @@ function makeAttributes(loader, parsedContent, context) {
   return attributes;
 }
 
-function makeStructuralMetadata(parsedContent, customAttributeOutput) {
+function makeStructuralMetadata(parsedContent: any, customAttributeOutput: any) {
   const batchLength = parsedContent.batchLength;
   const pointsLength = parsedContent.pointsLength;
   const batchTableJson = parsedContent.batchTableJson;
@@ -566,7 +576,7 @@ function makeStructuralMetadata(parsedContent, customAttributeOutput) {
   });
 }
 
-function makeComponents(loader, context) {
+function makeComponents(loader: any, context: any) {
   const parsedContent = loader._parsedContent;
 
   const metallicRoughness = new MetallicRoughness();
@@ -660,12 +670,7 @@ function makeComponents(loader, context) {
   loader._arrayBuffer = undefined;
 }
 
-function addPropertyAttributesToPrimitive(
-  loader,
-  primitive,
-  customAttributes,
-  context,
-) {
+function addPropertyAttributesToPrimitive(loader: any, primitive: any, customAttributes: any, context: any, ) {
   const attributes = primitive.attributes;
 
   const length = customAttributes.length;
@@ -703,5 +708,4 @@ PntsLoader.prototype.unload = function () {
   this._arrayBuffer = undefined;
 };
 
-export { PntsLoader };
 export default PntsLoader;

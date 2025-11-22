@@ -8,7 +8,7 @@ import isBlobUri from "./isBlobUri.js";
 import isDataUri from "./isDataUri.js";
 import RequestState from "./RequestState.js";
 
-function sortRequests(a, b) {
+function sortRequests(a: any, b: any) {
   return a.priority - b.priority;
 }
 
@@ -149,7 +149,7 @@ Object.defineProperties(RequestScheduler, {
   },
 });
 
-function updatePriority(request) {
+function updatePriority(request: any) {
   if (defined(request.priorityFunction)) {
     request.priority = request.priorityFunction();
   }
@@ -189,7 +189,7 @@ RequestScheduler.heapHasOpenSlots = function (desiredRequests) {
   return hasOpenSlotsHeap;
 };
 
-function issueRequest(request) {
+function issueRequest(request: any) {
   if (request.state === RequestState.UNISSUED) {
     request.state = RequestState.ISSUED;
     request.deferred = defer();
@@ -197,7 +197,7 @@ function issueRequest(request) {
   return request.deferred.promise;
 }
 
-function getRequestReceivedFunction(request) {
+function getRequestReceivedFunction(request: any) {
   return function (results) {
     if (request.state === RequestState.CANCELLED) {
       // If the data request comes back but the request is cancelled, ignore it.
@@ -216,7 +216,7 @@ function getRequestReceivedFunction(request) {
   };
 }
 
-function getRequestFailedFunction(request) {
+function getRequestFailedFunction(request: any) {
   return function (error) {
     if (request.state === RequestState.CANCELLED) {
       // If the data request comes back but the request is cancelled, ignore it.
@@ -231,7 +231,7 @@ function getRequestFailedFunction(request) {
   };
 }
 
-function startRequest(request) {
+function startRequest(request: any) {
   const promise = issueRequest(request);
   request.state = RequestState.ACTIVE;
   activeRequests.push(request);
@@ -245,7 +245,7 @@ function startRequest(request) {
   return promise;
 }
 
-function cancelRequest(request) {
+function cancelRequest(request: any) {
   const active = request.state === RequestState.ACTIVE;
   request.state = RequestState.CANCELLED;
   ++statistics.numberOfCancelledRequests;
@@ -345,7 +345,9 @@ RequestScheduler.update = function () {
  * @private
  */
 RequestScheduler.getServerKey = function (url) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("url", url);
+  //>>includeEnd('debug');
 
   let uri = new Uri(url);
   if (uri.scheme() === "") {
@@ -378,7 +380,11 @@ RequestScheduler.getServerKey = function (url) {
  * @private
  */
 RequestScheduler.request = function (request) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("request", request);
+  Check.typeOf.string("request.url", request.url);
+  Check.typeOf.func("request.requestFunction", request.requestFunction);
+  //>>includeEnd('debug');
 
   if (isDataUri(request.url) || isBlobUri(request.url)) {
     requestCompletedEvent.raiseEvent();
@@ -510,5 +516,4 @@ RequestScheduler.numberOfActiveRequestsByServer = function (serverKey) {
  * @private
  */
 RequestScheduler.requestHeap = requestHeap;
-export { RequestScheduler };
 export default RequestScheduler;

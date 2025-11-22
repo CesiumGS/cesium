@@ -9,7 +9,7 @@ import defined from "../../Core/defined.js";
  *
  * @private
  */
-function removeExtensionsUsed(gltf, extension) {
+function removeExtensionsUsed(gltf: any, extension: any) {
   const extensionsUsed = gltf.extensionsUsed;
   if (defined(extensionsUsed)) {
     const index = extensionsUsed.indexOf(extension);
@@ -23,5 +23,4 @@ function removeExtensionsUsed(gltf, extension) {
   }
 }
 
-export { removeExtensionsUsed };
 export default removeExtensionsUsed;

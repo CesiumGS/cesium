@@ -17,8 +17,12 @@ import HomeButtonViewModel from "./HomeButtonViewModel.js";
  * @param {Scene} scene The Scene instance to use.
  * @param {number} [duration] The time, in seconds, it takes to complete the camera flight home.
  */
-function HomeButton(container, scene, duration) {
-  ;
+function HomeButton(container: any, scene: any, duration: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -90,5 +94,4 @@ HomeButton.prototype.destroy = function () {
 
   return destroyObject(this);
 };
-export { HomeButton };
 export default HomeButton;

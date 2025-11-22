@@ -39,5 +39,4 @@ EdgeDetectionPipelineStage.process = function (renderResources) {
   shaderBuilder.addFragmentLines([EdgeDetectionStageFS]);
 };
 
-export { EdgeDetectionPipelineStage };
 export default EdgeDetectionPipelineStage;

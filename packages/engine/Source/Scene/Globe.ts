@@ -39,7 +39,7 @@ import CesiumMath from "../Core/Math.js";
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] Determines the size and shape of the
  * globe.
  */
-function Globe(ellipsoid) {
+function Globe(ellipsoid: any) {
   ellipsoid = ellipsoid ?? Ellipsoid.default;
   const terrainProvider = new EllipsoidTerrainProvider({
     ellipsoid: ellipsoid,
@@ -608,7 +608,13 @@ Object.defineProperties(Globe.prototype, {
       return this._undergroundColorAlphaByDistance;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far < value.near) {
+        throw new DeveloperError(
+          "far distance must be greater than near distance.",
+        );
+      }
+      //>>includeEnd('debug');
       this._undergroundColorAlphaByDistance = NearFarScalar.clone(
         value,
         this._undergroundColorAlphaByDistance,
@@ -629,7 +635,7 @@ Object.defineProperties(Globe.prototype, {
   },
 });
 
-function makeShadersDirty(globe) {
+function makeShadersDirty(globe: any) {
   const defines = [];
 
   const requireNormals =
@@ -662,7 +668,7 @@ function makeShadersDirty(globe) {
   globe._surfaceShaderSet.material = globe._material;
 }
 
-function createComparePickTileFunction(rayOrigin) {
+function createComparePickTileFunction(rayOrigin: any) {
   return function (a, b) {
     const aDist = BoundingSphere.distanceSquaredTo(
       a.pickBoundingSphere,
@@ -700,7 +706,14 @@ Globe.prototype.pickWorldCoordinates = function (
   cullBackFaces,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(ray)) {
+    throw new DeveloperError("ray is required");
+  }
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required");
+  }
+  //>>includeEnd('debug');
 
   cullBackFaces = cullBackFaces ?? true;
 
@@ -810,7 +823,7 @@ const scratchGetHeightIntersection = new Cartesian3();
 const scratchGetHeightCartographic = new Cartographic();
 const scratchGetHeightRay = new Ray();
 
-function tileIfContainsCartographic(tile, cartographic) {
+function tileIfContainsCartographic(tile: any, cartographic: any) {
   return defined(tile) && Rectangle.contains(tile.rectangle, cartographic)
     ? tile
     : undefined;
@@ -823,7 +836,11 @@ function tileIfContainsCartographic(tile, cartographic) {
  * @returns {number|undefined} The height of the cartographic or undefined if it could not be found.
  */
 Globe.prototype.getHeight = function (cartographic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(cartographic)) {
+    throw new DeveloperError("cartographic is required");
+  }
+  //>>includeEnd('debug');
 
   const levelZeroTiles = this._surface._levelZeroTiles;
   if (!defined(levelZeroTiles)) {
@@ -1115,5 +1132,4 @@ Globe.prototype.destroy = function () {
   this._oceanNormalMap = this._oceanNormalMap && this._oceanNormalMap.destroy();
   return destroyObject(this);
 };
-export { Globe };
 export default Globe;

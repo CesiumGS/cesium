@@ -34,7 +34,7 @@ import Material from "./Material.js";
  * @see PolylineCollection
  *
  */
-function Polyline(options, polylineCollection) {
+function Polyline(options: any, polylineCollection: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._show = options.show ?? true;
@@ -104,7 +104,7 @@ const POSITION_SIZE_INDEX = (Polyline.POSITION_SIZE_INDEX = 4);
 const DISTANCE_DISPLAY_CONDITION = (Polyline.DISTANCE_DISPLAY_CONDITION = 5);
 const NUMBER_OF_PROPERTIES = (Polyline.NUMBER_OF_PROPERTIES = 6);
 
-function makeDirty(polyline, propertyChanged) {
+function makeDirty(polyline: any, propertyChanged: any) {
   ++polyline._propertiesChanged[propertyChanged];
   const polylineCollection = polyline._polylineCollection;
   if (defined(polylineCollection)) {
@@ -125,7 +125,11 @@ Object.defineProperties(Polyline.prototype, {
       return this._show;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (value !== this._show) {
         this._show = value;
@@ -150,7 +154,11 @@ Object.defineProperties(Polyline.prototype, {
       return this._positions;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       let positions = arrayRemoveDuplicates(value, Cartesian3.equalsEpsilon);
 
@@ -197,7 +205,11 @@ Object.defineProperties(Polyline.prototype, {
       return this._material;
     },
     set: function (material) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(material)) {
+        throw new DeveloperError("material is required.");
+      }
+      //>>includeEnd('debug');
 
       if (this._material !== material) {
         this._material = material;
@@ -216,7 +228,11 @@ Object.defineProperties(Polyline.prototype, {
       return this._width;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug)
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       const width = this._width;
       if (value !== width) {
@@ -236,7 +252,11 @@ Object.defineProperties(Polyline.prototype, {
       return this._loop;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug)
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
 
       if (value !== this._loop) {
         let positions = this._actualPositions;
@@ -317,7 +337,13 @@ Object.defineProperties(Polyline.prototype, {
       return this._distanceDisplayCondition;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far <= value.near) {
+        throw new DeveloperError(
+          "far distance must be greater than near distance.",
+        );
+      }
+      //>>includeEnd('debug');
       if (
         !DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)
       ) {
@@ -402,5 +428,4 @@ Polyline.prototype._destroy = function () {
   this._material = this._material && this._material.destroy();
   this._polylineCollection = undefined;
 };
-export { Polyline };
 export default Polyline;

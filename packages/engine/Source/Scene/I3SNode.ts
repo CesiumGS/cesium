@@ -33,7 +33,7 @@ import I3SGeometry from "./I3SGeometry.js";
  * @alias I3SNode
  * @internalConstructor
  */
-function I3SNode(parent, ref, isRoot) {
+function I3SNode(parent: any, ref: any, isRoot: any) {
   let level;
   let layer;
   let nodeIndex;
@@ -225,7 +225,7 @@ I3SNode.prototype.load = async function () {
   processData();
 };
 
-function createAndLoadField(node, storageInfo) {
+function createAndLoadField(node: any, storageInfo: any) {
   const newField = new I3SField(node, storageInfo);
   node._fields[storageInfo.name] = newField;
   return newField.load();
@@ -261,7 +261,9 @@ I3SNode.prototype.loadFields = function () {
  * @returns {Promise<void>} A promise that is resolved when the I3S Node field is loaded
  */
 I3SNode.prototype.loadField = function (name) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("name", name);
+  //>>includeEnd('debug');
 
   const field = this._fields[name];
   if (defined(field)) {
@@ -730,7 +732,7 @@ I3SNode.prototype._createContentURL = async function () {
   return URL.createObjectURL(glbDataBlob);
 };
 
-async function loadFilters(node) {
+async function loadFilters(node: any) {
   const filters = node._layer._filters;
   const promises = [];
   for (let i = 0; i < filters.length; i++) {
@@ -741,7 +743,7 @@ async function loadFilters(node) {
   return filters;
 }
 
-function checkFeatureValue(featureIndex, field, filter) {
+function checkFeatureValue(featureIndex: any, field: any, filter: any) {
   if (!defined(filter.values) || filter.values.length === 0) {
     return false;
   }
@@ -761,7 +763,7 @@ function checkFeatureValue(featureIndex, field, filter) {
   return matches;
 }
 
-async function filterFeatures(node, contentModel) {
+async function filterFeatures(node: any, contentModel: any) {
   const batchTable = node._tile.content.batchTable;
   if (defined(batchTable) && batchTable.featuresLength > 0) {
     batchTable.setAllShow(true);
@@ -839,7 +841,7 @@ Cesium3DTile.prototype.requestContent = function () {
     const that = this;
     return this._i3sNode
       ._createContentURL()
-      .then((url) => {
+      .then((url: any) => {
         if (!defined(url)) {
           that._isLoading = false;
           return;
@@ -848,7 +850,7 @@ Cesium3DTile.prototype.requestContent = function () {
         that._contentResource = new Resource({ url: url });
         return that._hookedRequestContent();
       })
-      .then((content) => {
+      .then((content: any) => {
         // Filters are applied for nodes with geometry data only
         const contentModel = content?._model;
         if (
@@ -868,18 +870,18 @@ Cesium3DTile.prototype.requestContent = function () {
   }
 };
 
-function bilinearInterpolate(tx, ty, h00, h10, h01, h11) {
+function bilinearInterpolate(tx: any, ty: any, h00: any, h10: any, h01: any, h11: any) {
   const a = h00 * (1 - tx) + h10 * tx;
   const b = h01 * (1 - tx) + h11 * tx;
   return a * (1 - ty) + b * ty;
 }
 
-function sampleMap(u, v, width, data) {
+function sampleMap(u: any, v: any, width: any, data: any) {
   const address = u + v * width;
   return data[address];
 }
 
-function sampleGeoid(sampleX, sampleY, geoidData) {
+function sampleGeoid(sampleX: any, sampleY: any, geoidData: any) {
   const extent = geoidData.nativeExtent;
   let x =
     ((sampleX - extent.west) / (extent.east - extent.west)) *
@@ -922,5 +924,4 @@ Object.defineProperties(Cesium3DTile.prototype, {
   },
 });
 
-export { I3SNode };
 export default I3SNode;

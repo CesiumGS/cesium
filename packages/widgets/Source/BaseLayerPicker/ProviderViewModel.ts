@@ -20,8 +20,21 @@ import createCommand from "../createCommand.js";
  * @see ImageryProvider
  * @see TerrainProvider
  */
-function ProviderViewModel(options) {
-  ;
+function ProviderViewModel(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.name)) {
+    throw new DeveloperError("options.name is required.");
+  }
+  if (!defined(options.tooltip)) {
+    throw new DeveloperError("options.tooltip is required.");
+  }
+  if (!defined(options.iconUrl)) {
+    throw new DeveloperError("options.iconUrl is required.");
+  }
+  if (typeof options.creationFunction !== "function") {
+    throw new DeveloperError("options.creationFunction is required.");
+  }
+  //>>includeEnd('debug');
 
   let creationCommand = options.creationFunction;
   if (!defined(creationCommand.canExecute)) {
@@ -88,5 +101,4 @@ Object.defineProperties(ProviderViewModel.prototype, {
  *          The ImageryProvider or TerrainProvider, or array of providers, to be added
  *          to the globe.
  */
-export { ProviderViewModel };
 export default ProviderViewModel;

@@ -20,7 +20,7 @@ import Matrix4 from "./Matrix4.js";
  *
  * @see Packable
  */
-function Rectangle(west, south, east, north) {
+function Rectangle(west: any, south: any, east: any, north: any) {
   /**
    * The westernmost longitude in radians in the range [-Pi, Pi].
    *
@@ -96,7 +96,10 @@ Rectangle.packedLength = 4;
  * @returns {number[]} The array that was packed into
  */
 Rectangle.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -117,7 +120,9 @@ Rectangle.pack = function (value, array, startingIndex) {
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if one was not provided.
  */
 Rectangle.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -138,7 +143,9 @@ Rectangle.unpack = function (array, startingIndex, result) {
  * @returns {number} The width.
  */
 Rectangle.computeWidth = function (rectangle) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
   let east = rectangle.east;
   const west = rectangle.west;
   if (east < west) {
@@ -153,7 +160,9 @@ Rectangle.computeWidth = function (rectangle) {
  * @returns {number} The height.
  */
 Rectangle.computeHeight = function (rectangle) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
   return rectangle.north - rectangle.south;
 };
 
@@ -222,7 +231,9 @@ Rectangle.fromRadians = function (west, south, east, north, result) {
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
  */
 Rectangle.fromCartographicArray = function (cartographics, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartographics", cartographics);
+  //>>includeEnd('debug');
 
   let west = Number.MAX_VALUE;
   let east = -Number.MAX_VALUE;
@@ -278,7 +289,9 @@ Rectangle.fromCartographicArray = function (cartographics, result) {
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
  */
 Rectangle.fromCartesianArray = function (cartesians, ellipsoid, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesians", cartesians);
+  //>>includeEnd('debug');
   ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   let west = Number.MAX_VALUE;
@@ -345,7 +358,9 @@ for (let n = 0; n < fromBoundingSpherePositionsScratch.length; ++n) {
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
  */
 Rectangle.fromBoundingSphere = function (boundingSphere, ellipsoid, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("boundingSphere", boundingSphere);
+  //>>includeEnd('debug');
 
   const center = boundingSphere.center;
   const radius = boundingSphere.radius;
@@ -528,7 +543,33 @@ Rectangle.prototype.equalsEpsilon = function (other, epsilon) {
  * @private
  */
 Rectangle._validate = function (rectangle) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+
+  const north = rectangle.north;
+  Check.typeOf.number.greaterThanOrEquals(
+    "north",
+    north,
+    -CesiumMath.PI_OVER_TWO,
+  );
+  Check.typeOf.number.lessThanOrEquals("north", north, CesiumMath.PI_OVER_TWO);
+
+  const south = rectangle.south;
+  Check.typeOf.number.greaterThanOrEquals(
+    "south",
+    south,
+    -CesiumMath.PI_OVER_TWO,
+  );
+  Check.typeOf.number.lessThanOrEquals("south", south, CesiumMath.PI_OVER_TWO);
+
+  const west = rectangle.west;
+  Check.typeOf.number.greaterThanOrEquals("west", west, -Math.PI);
+  Check.typeOf.number.lessThanOrEquals("west", west, Math.PI);
+
+  const east = rectangle.east;
+  Check.typeOf.number.greaterThanOrEquals("east", east, -Math.PI);
+  Check.typeOf.number.lessThanOrEquals("east", east, Math.PI);
+  //>>includeEnd('debug');
 };
 
 /**
@@ -539,7 +580,9 @@ Rectangle._validate = function (rectangle) {
  * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
  */
 Rectangle.southwest = function (rectangle, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Cartographic(rectangle.west, rectangle.south);
@@ -558,7 +601,9 @@ Rectangle.southwest = function (rectangle, result) {
  * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
  */
 Rectangle.northwest = function (rectangle, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Cartographic(rectangle.west, rectangle.north);
@@ -577,7 +622,9 @@ Rectangle.northwest = function (rectangle, result) {
  * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
  */
 Rectangle.northeast = function (rectangle, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Cartographic(rectangle.east, rectangle.north);
@@ -596,7 +643,9 @@ Rectangle.northeast = function (rectangle, result) {
  * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
  */
 Rectangle.southeast = function (rectangle, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     return new Cartographic(rectangle.east, rectangle.south);
@@ -615,7 +664,9 @@ Rectangle.southeast = function (rectangle, result) {
  * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
  */
 Rectangle.center = function (rectangle, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
 
   let east = rectangle.east;
   const west = rectangle.west;
@@ -650,7 +701,10 @@ Rectangle.center = function (rectangle, result) {
  * @returns {Rectangle|undefined} The modified result parameter, a new Rectangle instance if none was provided or undefined if there is no intersection.
  */
 Rectangle.intersection = function (rectangle, otherRectangle, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  Check.typeOf.object("otherRectangle", otherRectangle);
+  //>>includeEnd('debug');
 
   let rectangleEast = rectangle.east;
   let rectangleWest = rectangle.west;
@@ -714,7 +768,10 @@ Rectangle.intersection = function (rectangle, otherRectangle, result) {
  * @returns {Rectangle|undefined} The modified result parameter, a new Rectangle instance if none was provided or undefined if there is no intersection.
  */
 Rectangle.simpleIntersection = function (rectangle, otherRectangle, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  Check.typeOf.object("otherRectangle", otherRectangle);
+  //>>includeEnd('debug');
 
   const west = Math.max(rectangle.west, otherRectangle.west);
   const south = Math.max(rectangle.south, otherRectangle.south);
@@ -745,7 +802,10 @@ Rectangle.simpleIntersection = function (rectangle, otherRectangle, result) {
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
  */
 Rectangle.union = function (rectangle, otherRectangle, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  Check.typeOf.object("otherRectangle", otherRectangle);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Rectangle();
@@ -793,7 +853,10 @@ Rectangle.union = function (rectangle, otherRectangle, result) {
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if one was not provided.
  */
 Rectangle.expand = function (rectangle, cartographic, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  Check.typeOf.object("cartographic", cartographic);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Rectangle();
@@ -815,7 +878,10 @@ Rectangle.expand = function (rectangle, cartographic, result) {
  * @returns {boolean} true if the provided cartographic is inside the rectangle, false otherwise.
  */
 Rectangle.contains = function (rectangle, cartographic) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  Check.typeOf.object("cartographic", cartographic);
+  //>>includeEnd('debug');
 
   let longitude = cartographic.longitude;
   const latitude = cartographic.latitude;
@@ -852,7 +918,9 @@ const subsampleLlaScratch = new Cartographic();
  * @returns {Cartesian3[]} The modified result parameter or a new Array of Cartesians instances if none was provided.
  */
 Rectangle.subsample = function (rectangle, ellipsoid, surfaceHeight, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
 
   ellipsoid = ellipsoid ?? Ellipsoid.default;
   surfaceHeight = surfaceHeight ?? 0.0;
@@ -934,7 +1002,20 @@ Rectangle.subsection = function (
   northLerp,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  Check.typeOf.number.greaterThanOrEquals("westLerp", westLerp, 0.0);
+  Check.typeOf.number.lessThanOrEquals("westLerp", westLerp, 1.0);
+  Check.typeOf.number.greaterThanOrEquals("southLerp", southLerp, 0.0);
+  Check.typeOf.number.lessThanOrEquals("southLerp", southLerp, 1.0);
+  Check.typeOf.number.greaterThanOrEquals("eastLerp", eastLerp, 0.0);
+  Check.typeOf.number.lessThanOrEquals("eastLerp", eastLerp, 1.0);
+  Check.typeOf.number.greaterThanOrEquals("northLerp", northLerp, 0.0);
+  Check.typeOf.number.lessThanOrEquals("northLerp", northLerp, 1.0);
+
+  Check.typeOf.number.lessThanOrEquals("westLerp", westLerp, eastLerp);
+  Check.typeOf.number.lessThanOrEquals("southLerp", southLerp, northLerp);
+  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = new Rectangle();
@@ -987,5 +1068,4 @@ Rectangle.MAX_VALUE = Object.freeze(
     CesiumMath.PI_OVER_TWO,
   ),
 );
-export { Rectangle };
 export default Rectangle;

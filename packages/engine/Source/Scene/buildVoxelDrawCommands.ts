@@ -22,7 +22,7 @@ const textureResolutionScratch = new Cartesian2();
  *
  * @private
  */
-function buildVoxelDrawCommands(primitive, context) {
+function buildVoxelDrawCommands(primitive: any, context: any) {
   const renderResources = new VoxelRenderResources(primitive);
 
   processVoxelProperties(renderResources, primitive);
@@ -150,7 +150,7 @@ function buildVoxelDrawCommands(primitive, context) {
   primitive._drawCommandPickVoxel = drawCommandPickVoxel;
 }
 
-function getPlaneFunctionBody(textureResolution) {
+function getPlaneFunctionBody(textureResolution: any) {
   const width = textureResolution.x;
   const height = textureResolution.y;
 
@@ -174,5 +174,4 @@ function getPlaneFunctionBody(textureResolution) {
     return texture(packedPlanes, vec2(u, v));`;
 }
 
-export { buildVoxelDrawCommands };
 export default buildVoxelDrawCommands;

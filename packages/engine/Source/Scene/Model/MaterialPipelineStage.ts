@@ -189,13 +189,7 @@ MaterialPipelineStage.process = function (
  *
  * @private
  */
-function processTextureTransform(
-  shaderBuilder,
-  uniformMap,
-  textureReader,
-  uniformName,
-  defineName,
-) {
+function processTextureTransform(shaderBuilder: any, uniformMap: any, textureReader: any, uniformName: any, defineName: any, ) {
   // Add a define to enable the texture transformation code in the shader.
   const transformDefine = `HAS_${defineName}_TEXTURE_TRANSFORM`;
   shaderBuilder.addDefine(
@@ -227,13 +221,7 @@ function processTextureTransform(
  *
  * @private
  */
-function processTextureScale(
-  shaderBuilder,
-  uniformMap,
-  textureReader,
-  uniformName,
-  defineName,
-) {
+function processTextureScale(shaderBuilder: any, uniformMap: any, textureReader: any, uniformName: any, defineName: any, ) {
   // Add a define to enable the texture transformation code in the shader.
   const transformDefine = `HAS_${defineName}_TEXTURE_SCALE`;
   shaderBuilder.addDefine(
@@ -265,14 +253,7 @@ function processTextureScale(
  *
  * @private
  */
-function processTexture(
-  shaderBuilder,
-  uniformMap,
-  textureReader,
-  uniformName,
-  defineName,
-  defaultTexture,
-) {
+function processTexture(shaderBuilder: any, uniformMap: any, textureReader: any, uniformName: any, defineName: any, defaultTexture: any, ) {
   // Add a uniform for the texture itself
   shaderBuilder.addUniform(
     "sampler2D",
@@ -325,15 +306,7 @@ function processTexture(
   }
 }
 
-function processMaterialUniforms(
-  material,
-  uniformMap,
-  shaderBuilder,
-  defaultTexture,
-  defaultNormalTexture,
-  defaultEmissiveTexture,
-  disableTextures,
-) {
+function processMaterialUniforms(material: any, uniformMap: any, shaderBuilder: any, defaultTexture: any, defaultNormalTexture: any, defaultEmissiveTexture: any, disableTextures: any, ) {
   const { emissiveFactor, emissiveTexture, normalTexture, occlusionTexture } =
     material;
 
@@ -400,13 +373,7 @@ function processMaterialUniforms(
  * @param {boolean} disableTextures
  * @private
  */
-function processSpecularGlossinessUniforms(
-  specularGlossiness,
-  uniformMap,
-  shaderBuilder,
-  defaultTexture,
-  disableTextures,
-) {
+function processSpecularGlossinessUniforms(specularGlossiness: any, uniformMap: any, shaderBuilder: any, defaultTexture: any, disableTextures: any, ) {
   const {
     diffuseTexture,
     diffuseFactor,
@@ -514,13 +481,7 @@ function processSpecularGlossinessUniforms(
  * @param {boolean} disableTextures
  * @private
  */
-function processSpecularUniforms(
-  specular,
-  uniformMap,
-  shaderBuilder,
-  defaultTexture,
-  disableTextures,
-) {
+function processSpecularUniforms(specular: any, uniformMap: any, shaderBuilder: any, defaultTexture: any, disableTextures: any, ) {
   const {
     specularTexture,
     specularFactor,
@@ -610,13 +571,7 @@ const scratchAnisotropy = new Cartesian3();
  * @param {boolean} disableTextures
  * @private
  */
-function processAnisotropyUniforms(
-  anisotropy,
-  uniformMap,
-  shaderBuilder,
-  defaultTexture,
-  disableTextures,
-) {
+function processAnisotropyUniforms(anisotropy: any, uniformMap: any, shaderBuilder: any, defaultTexture: any, disableTextures: any, ) {
   const { anisotropyStrength, anisotropyRotation, anisotropyTexture } =
     anisotropy;
 
@@ -662,13 +617,7 @@ function processAnisotropyUniforms(
  * @param {boolean} disableTextures
  * @private
  */
-function processClearcoatUniforms(
-  clearcoat,
-  uniformMap,
-  shaderBuilder,
-  defaultTexture,
-  disableTextures,
-) {
+function processClearcoatUniforms(clearcoat: any, uniformMap: any, shaderBuilder: any, defaultTexture: any, disableTextures: any, ) {
   const {
     clearcoatFactor,
     clearcoatTexture,
@@ -765,13 +714,7 @@ function processClearcoatUniforms(
  * @param {boolean} disableTextures
  * @private
  */
-function processMetallicRoughnessUniforms(
-  metallicRoughness,
-  uniformMap,
-  shaderBuilder,
-  defaultTexture,
-  disableTextures,
-) {
+function processMetallicRoughnessUniforms(metallicRoughness: any, uniformMap: any, shaderBuilder: any, defaultTexture: any, disableTextures: any, ) {
   shaderBuilder.addDefine(
     "USE_METALLIC_ROUGHNESS",
     undefined,
@@ -866,5 +809,4 @@ function processMetallicRoughnessUniforms(
   }
 }
 
-export { MaterialPipelineStage };
 export default MaterialPipelineStage;

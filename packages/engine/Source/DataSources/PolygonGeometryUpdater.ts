@@ -40,7 +40,7 @@ const scratchRectangle = new Rectangle();
 const scratch2DPositions = [];
 const cart2Scratch = new Cartesian2();
 
-function PolygonGeometryOptions(entity) {
+function PolygonGeometryOptions(entity: any) {
   this.id = entity;
   this.vertexFormat = undefined;
   this.polygonHierarchy = undefined;
@@ -65,7 +65,7 @@ function PolygonGeometryOptions(entity) {
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
-function PolygonGeometryUpdater(entity, scene) {
+function PolygonGeometryUpdater(entity: any, scene: any) {
   GroundGeometryUpdater.call(this, {
     entity: entity,
     scene: scene,
@@ -93,7 +93,15 @@ if (defined(Object.create)) {
  * @exception {DeveloperError} This instance does not represent a filled geometry.
  */
 PolygonGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._fillEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent a filled geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -163,7 +171,15 @@ PolygonGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 PolygonGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   time,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("time", time);
+
+  if (!this._outlineEnabled) {
+    throw new DeveloperError(
+      "This instance does not represent an outlined geometry.",
+    );
+  }
+  //>>includeEnd('debug');
 
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
@@ -434,11 +450,7 @@ PolygonGeometryUpdater.DynamicGeometryUpdater = DyanmicPolygonGeometryUpdater;
 /**
  * @private
  */
-function DyanmicPolygonGeometryUpdater(
-  geometryUpdater,
-  primitives,
-  groundPrimitives,
-) {
+function DyanmicPolygonGeometryUpdater(geometryUpdater: any, primitives: any, groundPrimitives: any, ) {
   DynamicGeometryUpdater.call(
     this,
     geometryUpdater,
@@ -572,5 +584,4 @@ DyanmicPolygonGeometryUpdater.prototype._setOptions = function (
 
   options.extrudedHeight = extrudedHeightValue;
 };
-export { PolygonGeometryUpdater };
 export default PolygonGeometryUpdater;

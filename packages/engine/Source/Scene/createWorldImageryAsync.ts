@@ -31,10 +31,9 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  *   console.log(`There was an error creating world imagery: ${error}`);
  * }
  */
-function createWorldImageryAsync(options) {
+function createWorldImageryAsync(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const style = options.style ?? IonWorldImageryStyle.AERIAL;
   return IonImageryProvider.fromAssetId(style);
 }
-export { createWorldImageryAsync };
 export default createWorldImageryAsync;

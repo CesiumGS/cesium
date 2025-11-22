@@ -74,5 +74,4 @@ Object.defineProperties(NavigationHelpButtonViewModel.prototype, {
     },
   },
 });
-export { NavigationHelpButtonViewModel };
 export default NavigationHelpButtonViewModel;

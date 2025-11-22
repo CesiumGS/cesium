@@ -17,7 +17,7 @@ import PositionProperty from "./PositionProperty.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Callback%20Position%20Property.html|Cesium Sandcastle Callback Position Property Demo}
  */
-function CallbackPositionProperty(callback, isConstant, referenceFrame) {
+function CallbackPositionProperty(callback: any, isConstant: any, referenceFrame: any) {
   this._callback = undefined;
   this._isConstant = undefined;
   this._referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
@@ -91,7 +91,14 @@ CallbackPositionProperty.prototype.setCallback = function (
   callback,
   isConstant,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(callback)) {
+    throw new DeveloperError("callback is required.");
+  }
+  if (!defined(isConstant)) {
+    throw new DeveloperError("isConstant is required.");
+  }
+  //>>includeEnd('debug');
 
   const changed =
     this._callback !== callback || this._isConstant !== isConstant;
@@ -117,7 +124,14 @@ CallbackPositionProperty.prototype.getValueInReferenceFrame = function (
   referenceFrame,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  if (!defined(referenceFrame)) {
+    throw new DeveloperError("referenceFrame is required.");
+  }
+  //>>includeEnd('debug');
 
   const value = this._callback(time, result);
 
@@ -155,5 +169,4 @@ CallbackPositionProperty.prototype.equals = function (other) {
  * @param {Cartesian3} [result] The object to store the value into. If omitted, the function must create and return a new instance.
  * @returns {Cartesian3 | undefined} The modified result parameter, or a new instance if the result parameter was not supplied or is unsupported.
  */
-export { CallbackPositionProperty };
 export default CallbackPositionProperty;

@@ -12,7 +12,7 @@ import defined from "./defined.js";
  * @param {number} [pitch=0.0] The pitch angle in radians.
  * @param {number} [range=0.0] The distance from the center in meters.
  */
-function HeadingPitchRange(heading, pitch, range) {
+function HeadingPitchRange(heading: any, pitch: any, range: any) {
   /**
    * Heading is the rotation from the local east direction where a positive angle is increasing southward.
    * @type {number}
@@ -56,5 +56,4 @@ HeadingPitchRange.clone = function (hpr, result) {
   result.range = hpr.range;
   return result;
 };
-export { HeadingPitchRange };
 export default HeadingPitchRange;

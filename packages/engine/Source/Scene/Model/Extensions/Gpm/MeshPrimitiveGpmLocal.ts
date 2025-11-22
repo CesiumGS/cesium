@@ -6,7 +6,7 @@
  * @constructor
  * @private
  */
-function MeshPrimitiveGpmLocal(ppeTextures) {
+function MeshPrimitiveGpmLocal(ppeTextures: any) {
   this._ppeTextures = ppeTextures;
 }
 
@@ -25,5 +25,4 @@ Object.defineProperties(MeshPrimitiveGpmLocal.prototype, {
   },
 });
 
-export { MeshPrimitiveGpmLocal };
 export default MeshPrimitiveGpmLocal;

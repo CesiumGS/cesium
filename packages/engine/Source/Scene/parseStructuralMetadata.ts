@@ -20,7 +20,7 @@ import MetadataTable from "./MetadataTable.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function parseStructuralMetadata(options) {
+function parseStructuralMetadata(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const extension = options.extension;
 
@@ -28,7 +28,10 @@ function parseStructuralMetadata(options) {
   // This keeps metadata parsing synchronous.
   const schema = options.schema;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.extension", extension);
+  Check.typeOf.object("options.schema", schema);
+  //>>includeEnd('debug');
 
   const propertyTables = [];
   if (defined(extension.propertyTables)) {
@@ -96,5 +99,4 @@ function parseStructuralMetadata(options) {
   });
 }
 
-export { parseStructuralMetadata };
 export default parseStructuralMetadata;

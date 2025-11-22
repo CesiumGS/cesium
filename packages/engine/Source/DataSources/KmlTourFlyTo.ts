@@ -16,7 +16,7 @@ import EasingFunction from "../Core/EasingFunction.js";
  * @see KmlTour
  * @see KmlTourWait
  */
-function KmlTourFlyTo(duration, flyToMode, view) {
+function KmlTourFlyTo(duration: any, flyToMode: any, view: any) {
   this.type = "KmlTourFlyTo";
   this.blocking = true;
   this.activeCamera = null;
@@ -106,5 +106,4 @@ KmlTourFlyTo.prototype.getCameraOptions = function (cameraOptions) {
  * @param {boolean} terminated true if {@link KmlTourFlyTo#stop} was
  * called before entry done playback.
  */
-export { KmlTourFlyTo };
 export default KmlTourFlyTo;

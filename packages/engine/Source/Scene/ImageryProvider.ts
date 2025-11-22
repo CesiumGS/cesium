@@ -238,7 +238,9 @@ const ktx2Regex = /\.ktx2$/i;
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  */
 ImageryProvider.loadImage = function (imageryProvider, url) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   const resource = Resource.createIfNeeded(url);
 
@@ -262,5 +264,4 @@ ImageryProvider.loadImage = function (imageryProvider, url) {
     flipY: true,
   });
 };
-export { ImageryProvider };
 export default ImageryProvider;

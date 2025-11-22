@@ -19,8 +19,11 @@ import Check from "../../../../Core/Check.js";
  * @param {AnchorPointDirect.ConstructorOptions} options An object describing initialization options
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function AnchorPointDirect(options) {
-  ;
+function AnchorPointDirect(options: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.position", options.position);
+  Check.typeOf.object("options.adjustmentParams", options.adjustmentParams);
+  //>>includeEnd('debug');
 
   this._position = options.position;
   this._adjustmentParams = options.adjustmentParams;
@@ -55,5 +58,4 @@ Object.defineProperties(AnchorPointDirect.prototype, {
   },
 });
 
-export { AnchorPointDirect };
 export default AnchorPointDirect;

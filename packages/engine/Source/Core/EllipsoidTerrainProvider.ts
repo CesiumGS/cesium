@@ -23,7 +23,7 @@ import TerrainProvider from "./TerrainProvider.js";
  *
  * @see TerrainProvider
  */
-function EllipsoidTerrainProvider(options) {
+function EllipsoidTerrainProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._tilingScheme = options.tilingScheme;
@@ -198,5 +198,4 @@ EllipsoidTerrainProvider.prototype.loadTileDataAvailability = function (
 ) {
   return undefined;
 };
-export { EllipsoidTerrainProvider };
 export default EllipsoidTerrainProvider;

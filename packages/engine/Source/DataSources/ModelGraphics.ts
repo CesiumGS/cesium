@@ -6,19 +6,19 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import NodeTransformationProperty from "./NodeTransformationProperty.js";
 import PropertyBag from "./PropertyBag.js";
 
-function createNodeTransformationProperty(value) {
+function createNodeTransformationProperty(value: any) {
   return new NodeTransformationProperty(value);
 }
 
-function createNodeTransformationPropertyBag(value) {
+function createNodeTransformationPropertyBag(value: any) {
   return new PropertyBag(value, createNodeTransformationProperty);
 }
 
-function createArticulationStagePropertyBag(value) {
+function createArticulationStagePropertyBag(value: any) {
   return new PropertyBag(value);
 }
 
-function createEnvironmentMapPropertyBag(value) {
+function createEnvironmentMapPropertyBag(value: any) {
   return new PropertyBag(value);
 }
 
@@ -68,7 +68,7 @@ function createEnvironmentMapPropertyBag(value) {
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
  */
-function ModelGraphics(options) {
+function ModelGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -396,7 +396,11 @@ ModelGraphics.prototype.clone = function (result) {
  * @param {ModelGraphics} source The object to be merged into this object.
  */
 ModelGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.uri = this.uri ?? source.uri;
@@ -449,5 +453,4 @@ ModelGraphics.prototype.merge = function (source) {
     }
   }
 };
-export { ModelGraphics };
 export default ModelGraphics;

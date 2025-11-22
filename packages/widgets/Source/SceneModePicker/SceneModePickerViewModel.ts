@@ -16,8 +16,12 @@ import createCommand from "../createCommand.js";
  * @param {Scene} scene The Scene to morph
  * @param {number} [duration=2.0] The duration of scene morph animations, in seconds
  */
-function SceneModePickerViewModel(scene, duration) {
-  ;
+function SceneModePickerViewModel(scene: any, duration: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  //>>includeEnd('debug');
 
   this._scene = scene;
 
@@ -134,7 +138,11 @@ Object.defineProperties(SceneModePickerViewModel.prototype, {
       return this._duration;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      if (value < 0.0) {
+        throw new DeveloperError("duration value must be positive.");
+      }
+      //>>includeEnd('debug');
 
       this._duration = value;
     },
@@ -204,5 +212,4 @@ SceneModePickerViewModel.prototype.destroy = function () {
 
   destroyObject(this);
 };
-export { SceneModePickerViewModel };
 export default SceneModePickerViewModel;

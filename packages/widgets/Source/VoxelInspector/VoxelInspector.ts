@@ -17,8 +17,11 @@ import VoxelInspectorViewModel from "./VoxelInspectorViewModel.js";
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene the Scene instance to use.
  */
-function VoxelInspector(container, scene) {
-  ;
+function VoxelInspector(container: any, scene: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("container", container);
+  Check.typeOf.object("scene", scene);
+  //>>includeEnd('debug');
 
   container = getElement(container);
   const element = document.createElement("div");
@@ -253,22 +256,7 @@ VoxelInspector.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-function makeCoordinateRangeWithDynamicMinMax(
-  maxXTitle,
-  minXTitle,
-  maxYTitle,
-  minYTitle,
-  maxZTitle,
-  minZTitle,
-  maxXVar,
-  minXVar,
-  maxYVar,
-  minYVar,
-  maxZVar,
-  minZVar,
-  allowedShape,
-  parentContainer,
-) {
+function makeCoordinateRangeWithDynamicMinMax(maxXTitle: any, minXTitle: any, maxYTitle: any, minYTitle: any, maxZTitle: any, minZTitle: any, maxXVar: any, minXVar: any, maxYVar: any, minYVar: any, maxZVar: any, minZVar: any, allowedShape: any, parentContainer: any, ) {
   const createRangeInput = InspectorShared.createRangeInputWithDynamicMinMax;
 
   const boundsElement = parentContainer.appendChild(
@@ -283,5 +271,4 @@ function makeCoordinateRangeWithDynamicMinMax(
   boundsElement.appendChild(createRangeInput(minZTitle, minZVar));
 }
 
-export { VoxelInspector };
 export default VoxelInspector;

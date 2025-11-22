@@ -165,5 +165,4 @@ ImageBasedLightingPipelineStage.process = function (
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
 
-export { ImageBasedLightingPipelineStage };
 export default ImageBasedLightingPipelineStage;

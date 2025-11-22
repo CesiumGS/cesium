@@ -85,7 +85,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
-function GoogleEarthEnterpriseImageryProvider(options) {
+function GoogleEarthEnterpriseImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -301,7 +301,9 @@ GoogleEarthEnterpriseImageryProvider.fromMetadata = function (
   metadata,
   options,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("metadata", metadata);
+  //>>includeEnd('debug');
 
   if (!metadata.imageryPresent) {
     throw new RuntimeError(`The server ${metadata.url} doesn't have imagery`);
@@ -439,7 +441,7 @@ GoogleEarthEnterpriseImageryProvider.prototype.pickFeatures = function (
 //
 // Functions to handle imagery packets
 //
-function buildImageResource(imageryProvider, info, x, y, level, request) {
+function buildImageResource(imageryProvider: any, info: any, x: any, y: any, level: any, request: any) {
   const quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
   let version = info.imageryVersion;
   version = defined(version) && version > 0 ? version : 1;
@@ -451,7 +453,7 @@ function buildImageResource(imageryProvider, info, x, y, level, request) {
 }
 
 // Detects if a Uint8Array is a JPEG or PNG
-function getImageType(image) {
+function getImageType(image: any) {
   const jpeg = "JFIF";
   if (
     image[6] === jpeg.charCodeAt(0) &&
@@ -476,7 +478,7 @@ function getImageType(image) {
 
 // Decodes an Imagery protobuf into the message
 // Partially generated with the help of protobuf.js static generator
-function decodeEarthImageryPacket(data) {
+function decodeEarthImageryPacket(data: any) {
   const reader = protobuf.Reader.create(data);
   const end = reader.len;
   const message = {};
@@ -543,5 +545,4 @@ function decodeEarthImageryPacket(data) {
 
   return message;
 }
-export { GoogleEarthEnterpriseImageryProvider };
 export default GoogleEarthEnterpriseImageryProvider;

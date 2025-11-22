@@ -16,7 +16,7 @@ import PositionProperty from "./PositionProperty.js";
  * @param {Cartesian3} [value] The property value.
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  */
-function ConstantPositionProperty(value, referenceFrame) {
+function ConstantPositionProperty(value: any, referenceFrame: any) {
   this._definitionChanged = new Event();
   this._value = Cartesian3.clone(value);
   this._referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
@@ -115,7 +115,14 @@ ConstantPositionProperty.prototype.getValueInReferenceFrame = function (
   referenceFrame,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  if (!defined(referenceFrame)) {
+    throw new DeveloperError("referenceFrame is required.");
+  }
+  //>>includeEnd('debug');
 
   return PositionProperty.convertToReferenceFrame(
     time,
@@ -141,5 +148,4 @@ ConstantPositionProperty.prototype.equals = function (other) {
       this._referenceFrame === other._referenceFrame)
   );
 };
-export { ConstantPositionProperty };
 export default ConstantPositionProperty;

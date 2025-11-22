@@ -34,7 +34,7 @@ import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js"
  *
  * @private
  */
-function GltfTextureLoader(options) {
+function GltfTextureLoader(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
@@ -45,7 +45,14 @@ function GltfTextureLoader(options) {
   const cacheKey = options.cacheKey;
   const asynchronous = options.asynchronous ?? true;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("options.resourceCache", resourceCache);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.textureInfo", textureInfo);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
+  //>>includeEnd('debug');
 
   const textureId = textureInfo.index;
 
@@ -111,7 +118,7 @@ Object.defineProperties(GltfTextureLoader.prototype, {
 
 const scratchTextureJob = new CreateTextureJob();
 
-async function loadResources(loader) {
+async function loadResources(loader: any) {
   const resourceCache = loader._resourceCache;
   try {
     const imageLoader = resourceCache.getImageLoader({
@@ -196,14 +203,7 @@ CreateTextureJob.prototype.execute = function () {
   );
 };
 
-function createTexture(
-  gltf,
-  textureInfo,
-  textureId,
-  image,
-  mipLevels,
-  context,
-) {
+function createTexture(gltf: any, textureInfo: any, textureId: any, image: any, mipLevels: any, context: any, ) {
   // internalFormat is only defined for CompressedTextureBuffer
   const internalFormat = image.internalFormat;
 
@@ -305,7 +305,9 @@ function createTexture(
  * @private
  */
 GltfTextureLoader.prototype.process = function (frameState) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("frameState", frameState);
+  //>>includeEnd('debug');
 
   if (this._state === ResourceLoaderState.READY) {
     return true;
@@ -387,5 +389,4 @@ GltfTextureLoader.prototype.unload = function () {
   this._gltf = undefined;
 };
 
-export { GltfTextureLoader };
 export default GltfTextureLoader;

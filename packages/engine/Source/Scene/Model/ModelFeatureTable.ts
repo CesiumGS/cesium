@@ -22,11 +22,14 @@ import ModelType from "./ModelType.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function ModelFeatureTable(options) {
+function ModelFeatureTable(options: any) {
   const model = options.model;
   const propertyTable = options.propertyTable;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("propertyTable", propertyTable);
+  Check.typeOf.object("model", model);
+  //>>includeEnd('debug');
 
   this._propertyTable = propertyTable;
   this._model = model;
@@ -113,7 +116,7 @@ Object.defineProperties(ModelFeatureTable.prototype, {
   },
 });
 
-function initialize(modelFeatureTable) {
+function initialize(modelFeatureTable: any) {
   const model = modelFeatureTable._model;
   const is3DTiles = ModelType.is3DTiles(model.type);
 
@@ -310,5 +313,4 @@ ModelFeatureTable.prototype.destroy = function (frameState) {
   destroyObject(this);
 };
 
-export { ModelFeatureTable };
 export default ModelFeatureTable;

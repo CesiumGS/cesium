@@ -31,7 +31,7 @@ import Context from "./Context.js";
  *   contextOptions: context,
  * });
  */
-function SharedContext(options) {
+function SharedContext(options: any) {
   this._autoDestroy = options?.autoDestroy ?? true;
   this._canvas = document.createElement("canvas");
   this._context = new Context(this._canvas, clone(options?.contextOptions));
@@ -47,7 +47,17 @@ function SharedContext(options) {
 SharedContext.prototype.createSceneContext = function (canvas) {
   const context2d = canvas.getContext("2d", { alpha: true });
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!context2d) {
+    throw new DeveloperError(
+      "canvas used with SharedContext must provide a 2d context",
+    );
+  }
+
+  if (this._canvases.includes(canvas)) {
+    throw new DeveloperError("canvas is already associated with a scene");
+  }
+  //>>includeEnd('debug');
 
   const sharedContext = this;
   sharedContext._canvases.push(canvas);
@@ -107,7 +117,11 @@ SharedContext.prototype.createSceneContext = function (canvas) {
           return isDestroyed;
         };
       } else if (isDestroyed) {
-        ;
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError(
+          "This object was destroyed, i.e., destroy() was called.",
+        );
+        //>>includeEnd('debug');
       }
 
       switch (prop) {
@@ -169,5 +183,4 @@ SharedContext.prototype.isDestroyed = function () {
   return false;
 };
 
-export { SharedContext };
 export default SharedContext;

@@ -19,8 +19,15 @@ const modelMatrixScratch = new Matrix4();
  * @param {Scene} scene The scene the primitives will be rendered in.
  * @param {EntityCollection} entityCollection The entityCollection to visualize.
  */
-function Cesium3DTilesetVisualizer(scene, entityCollection) {
-  ;
+function Cesium3DTilesetVisualizer(scene: any, entityCollection: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene)) {
+    throw new DeveloperError("scene is required.");
+  }
+  if (!defined(entityCollection)) {
+    throw new DeveloperError("entityCollection is required.");
+  }
+  //>>includeEnd('debug');
 
   entityCollection.collectionChanged.addEventListener(
     Cesium3DTilesetVisualizer.prototype._onCollectionChanged,
@@ -43,7 +50,11 @@ function Cesium3DTilesetVisualizer(scene, entityCollection) {
  * @returns {boolean} This function always returns true.
  */
 Cesium3DTilesetVisualizer.prototype.update = function (time) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  //>>includeEnd('debug');
 
   const entities = this._entitiesToVisualize.values;
   const tilesetHash = this._tilesetHash;
@@ -148,7 +159,14 @@ Cesium3DTilesetVisualizer.prototype.getBoundingSphere = function (
   entity,
   result,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(entity)) {
+    throw new DeveloperError("entity is required.");
+  }
+  if (!defined(result)) {
+    throw new DeveloperError("result is required.");
+  }
+  //>>includeEnd('debug');
 
   const tilesetData = this._tilesetHash[entity.id];
   if (!defined(tilesetData) || tilesetData.loadFail) {
@@ -208,7 +226,7 @@ Cesium3DTilesetVisualizer.prototype._onCollectionChanged = function (
   }
 };
 
-function removeTileset(visualizer, entity, tilesetHash, primitives) {
+function removeTileset(visualizer: any, entity: any, tilesetHash: any, primitives: any) {
   const tilesetData = tilesetHash[entity.id];
   if (defined(tilesetData)) {
     if (defined(tilesetData.tilesetPrimitive)) {
@@ -218,7 +236,7 @@ function removeTileset(visualizer, entity, tilesetHash, primitives) {
   }
 }
 
-async function createTileset(resource, tilesetHash, entity, primitives) {
+async function createTileset(resource: any, tilesetHash: any, entity: any, primitives: any) {
   tilesetHash[entity.id] = {
     url: resource.url,
     loadFail: false,
@@ -240,5 +258,4 @@ async function createTileset(resource, tilesetHash, entity, primitives) {
   }
 }
 
-export { Cesium3DTilesetVisualizer };
 export default Cesium3DTilesetVisualizer;

@@ -43,7 +43,7 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  * @param {BingMapsImageryProvider.ConstructorOptions} options An object describing initialization options
  */
-function ImageryProviderBuilder(options) {
+function ImageryProviderBuilder(options: any) {
   this.tileWidth = undefined;
   this.tileHeight = undefined;
   this.maximumLevel = undefined;
@@ -107,7 +107,7 @@ ImageryProviderBuilder.prototype.build = function (provider) {
   }
 };
 
-function metadataSuccess(data, imageryProviderBuilder) {
+function metadataSuccess(data: any, imageryProviderBuilder: any) {
   if (data.resourceSets.length !== 1) {
     throw new RuntimeError(
       "metadata does not specify one resource in resourceSets",
@@ -125,14 +125,14 @@ function metadataSuccess(data, imageryProviderBuilder) {
   if (defined(resource.imageryProviders)) {
     // prevent issues with the imagery API from crashing the viewer when the expected properties are not there
     // See https://github.com/CesiumGS/cesium/issues/12088
-    validProviders = resource.imageryProviders.filter((provider) =>
-      provider.coverageAreas?.some((area) => defined(area.bbox)),
+    validProviders = resource.imageryProviders.filter((provider: any) =>
+      provider.coverageAreas?.some((area: any) => defined(area.bbox)),
     );
   }
   imageryProviderBuilder.attributionList = validProviders;
 }
 
-function metadataFailure(metadataResource, error, provider) {
+function metadataFailure(metadataResource: any, error: any, provider: any) {
   let message = `An error occurred while accessing ${metadataResource.url}`;
   if (defined(error) && defined(error.message)) {
     message += `: ${error.message}`;
@@ -152,11 +152,7 @@ function metadataFailure(metadataResource, error, provider) {
   throw new RuntimeError(message);
 }
 
-async function requestMetadata(
-  metadataResource,
-  imageryProviderBuilder,
-  provider,
-) {
+async function requestMetadata(metadataResource: any, imageryProviderBuilder: any, provider: any, ) {
   const cacheKey = metadataResource.url;
   let promise = BingMapsImageryProvider._metadataCache[cacheKey];
   if (!defined(promise)) {
@@ -204,7 +200,7 @@ async function requestMetadata(
  * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
-function BingMapsImageryProvider(options) {
+function BingMapsImageryProvider(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
@@ -473,7 +469,10 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
 BingMapsImageryProvider.fromUrl = async function (url, options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  Check.defined("options.key", options.key);
+  //>>includeEnd('debug');
 
   let tileProtocol = options.tileProtocol;
 
@@ -686,14 +685,16 @@ Object.defineProperties(BingMapsImageryProvider, {
       return BingMapsImageryProvider._logoUrl;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      //>>includeEnd('debug');
 
       BingMapsImageryProvider._logoUrl = value;
     },
   },
 });
 
-function buildImageResource(imageryProvider, x, y, level, request) {
+function buildImageResource(imageryProvider: any, x: any, y: any, level: any, request: any) {
   const imageUrl = imageryProvider._imageUrlTemplate;
 
   const subdomains = imageryProvider._imageUrlSubdomains;
@@ -717,7 +718,7 @@ function buildImageResource(imageryProvider, x, y, level, request) {
 
 const intersectionScratch = new Rectangle();
 
-function getRectangleAttribution(attributionList, level, rectangle) {
+function getRectangleAttribution(attributionList: any, level: any, rectangle: any) {
   // Bing levels start at 1, while ours start at 0.
   ++level;
 
@@ -761,5 +762,4 @@ function getRectangleAttribution(attributionList, level, rectangle) {
 
 // Exposed for testing
 BingMapsImageryProvider._metadataCache = {};
-export { BingMapsImageryProvider };
 export default BingMapsImageryProvider;

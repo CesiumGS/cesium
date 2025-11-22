@@ -5,7 +5,8 @@ const LoadState = Object.freeze({
   LOADED: 3, // Processed data from provider
   FAILED: 4, // Failed to receive data from the provider
   UNAVAILABLE: 5, // No data available for this tile
-});
+} as const);
+export type LoadState = typeof LoadState[keyof typeof LoadState];
 
 /**
  * @alias KeyframeNode
@@ -16,7 +17,7 @@ const LoadState = Object.freeze({
  *
  * @private
  */
-function KeyframeNode(spatialNode, keyframe) {
+function KeyframeNode(spatialNode: any, keyframe: any) {
   this.spatialNode = spatialNode;
   this.keyframe = keyframe;
   this.state = LoadState.UNLOADED;
@@ -58,5 +59,4 @@ KeyframeNode.searchComparator = function (a, b) {
 
 KeyframeNode.LoadState = LoadState;
 
-export { KeyframeNode };
 export default KeyframeNode;

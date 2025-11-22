@@ -15,7 +15,7 @@ import {
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 
-function getPickTileset(viewModel) {
+function getPickTileset(viewModel: any) {
   return function (e) {
     const pick = viewModel._scene.pick(e.position);
     if (defined(pick) && pick.primitive instanceof Cesium3DTileset) {
@@ -25,7 +25,7 @@ function getPickTileset(viewModel) {
   };
 }
 
-function selectTilesetOnHover(viewModel, value) {
+function selectTilesetOnHover(viewModel: any, value: any) {
   if (value) {
     viewModel._eventHandler.setInputAction(function (e) {
       const pick = viewModel._scene.pick(e.endPosition);
@@ -46,7 +46,7 @@ const stringOptions = {
   maximumFractionDigits: 3,
 };
 
-function formatMemoryString(memorySizeInBytes) {
+function formatMemoryString(memorySizeInBytes: any) {
   const memoryInMegabytes = memorySizeInBytes / 1048576;
   if (memoryInMegabytes < 1.0) {
     return memoryInMegabytes.toLocaleString(undefined, stringOptions);
@@ -54,7 +54,7 @@ function formatMemoryString(memorySizeInBytes) {
   return Math.round(memoryInMegabytes).toLocaleString();
 }
 
-function getStatistics(tileset, isPick) {
+function getStatistics(tileset: any, isPick: any) {
   if (!defined(tileset)) {
     return "";
   }
@@ -167,8 +167,11 @@ const oldColor = new Color();
  * @param {Scene} scene The scene instance to use.
  * @param {HTMLElement} performanceContainer The container for the performance display
  */
-function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
-  ;
+function Cesium3DTilesInspectorViewModel(scene: any, performanceContainer: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("scene", scene);
+  Check.typeOf.object("performanceContainer", performanceContainer);
+  //>>includeEnd('debug');
 
   const that = this;
   const canvas = scene.canvas;
@@ -1361,7 +1364,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
   },
 });
 
-function hasFeatures(content) {
+function hasFeatures(content: any) {
   if (!defined(content)) {
     return false;
   }
@@ -1596,5 +1599,4 @@ Cesium3DTilesInspectorViewModel.prototype.destroy = function () {
  * @returns {string} The formatted statistics
  */
 Cesium3DTilesInspectorViewModel.getStatistics = getStatistics;
-export { Cesium3DTilesInspectorViewModel };
 export default Cesium3DTilesInspectorViewModel;

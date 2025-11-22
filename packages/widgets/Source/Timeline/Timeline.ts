@@ -100,8 +100,15 @@ const timelineMonthNames = [
  * @param {Element} container The parent HTML container node for this widget.
  * @param {Clock} clock The clock to use.
  */
-function Timeline(container, clock) {
-  ;
+function Timeline(container: any, clock: any) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(container)) {
+    throw new DeveloperError("container is required.");
+  }
+  if (!defined(clock)) {
+    throw new DeveloperError("clock is required.");
+  }
+  //>>includeEnd('debug');
 
   container = getElement(container);
 
@@ -264,7 +271,17 @@ Timeline.prototype.addTrack = function (
  * @param {JulianDate} stopTime The stop time.
  */
 Timeline.prototype.zoomTo = function (startTime, stopTime) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(startTime)) {
+    throw new DeveloperError("startTime is required.");
+  }
+  if (!defined(stopTime)) {
+    throw new DeveloperError("stopTime is required");
+  }
+  if (JulianDate.lessThanOrEquals(stopTime, startTime)) {
+    throw new DeveloperError("Start time must come before end time.");
+  }
+  //>>includeEnd('debug');
 
   this._startJulian = startTime;
   this._endJulian = stopTime;
@@ -353,7 +370,7 @@ Timeline.prototype.zoomFrom = function (amount) {
   );
 };
 
-function twoDigits(num) {
+function twoDigits(num: any) {
   return num < 10 ? `0${num.toString()}` : num.toString();
 }
 
@@ -476,19 +493,19 @@ Timeline.prototype._makeTics = function () {
   let endTime = startTime + duration;
   this._epochJulian = epochJulian;
 
-  function getStartTic(ticScale) {
+  function getStartTic(ticScale: any) {
     return Math.floor(startTime / ticScale) * ticScale;
   }
 
-  function getNextTic(tic, ticScale) {
+  function getNextTic(tic: any, ticScale: any) {
     return Math.ceil(tic / ticScale + 0.5) * ticScale;
   }
 
-  function getAlpha(time) {
+  function getAlpha(time: any) {
     return (time - startTime) / duration;
   }
 
-  function remainder(x, y) {
+  function remainder(x: any, y: any) {
     //return x % y;
     return x - y * Math.round(x / y);
   }
@@ -746,7 +763,7 @@ Timeline.prototype._setTimeBarTime = function (xPos, seconds) {
   this._topDiv.dispatchEvent(evt);
 };
 
-function createMouseDownCallback(timeline) {
+function createMouseDownCallback(timeline: any) {
   return function (e) {
     if (timeline._mouseMode !== timelineMouseMode.touchOnly) {
       if (e.button === 0) {
@@ -768,7 +785,7 @@ function createMouseDownCallback(timeline) {
   };
 }
 
-function createMouseUpCallback(timeline) {
+function createMouseUpCallback(timeline: any) {
   return function (e) {
     timeline._mouseMode = timelineMouseMode.none;
     if (timeline._scrubElement) {
@@ -779,7 +796,7 @@ function createMouseUpCallback(timeline) {
   };
 }
 
-function createMouseMoveCallback(timeline) {
+function createMouseMoveCallback(timeline: any) {
   return function (e) {
     let dx;
     if (timeline._mouseMode === timelineMouseMode.scrub) {
@@ -820,7 +837,7 @@ function createMouseMoveCallback(timeline) {
   };
 }
 
-function createMouseWheelCallback(timeline) {
+function createMouseWheelCallback(timeline: any) {
   return function (e) {
     let dy = e.wheelDeltaY || e.wheelDelta || -e.detail;
     timelineWheelDelta = Math.max(
@@ -832,7 +849,7 @@ function createMouseWheelCallback(timeline) {
   };
 }
 
-function createTouchStartCallback(timeline) {
+function createTouchStartCallback(timeline: any) {
   return function (e) {
     const len = e.touches.length;
     let seconds, xPos;
@@ -872,7 +889,7 @@ function createTouchStartCallback(timeline) {
   };
 }
 
-function createTouchEndCallback(timeline) {
+function createTouchEndCallback(timeline: any) {
   return function (e) {
     const len = e.touches.length,
       leftX = timeline._topDiv.getBoundingClientRect().left;
@@ -895,7 +912,7 @@ function createTouchEndCallback(timeline) {
   };
 }
 
-function createTouchMoveCallback(timeline) {
+function createTouchMoveCallback(timeline: any) {
   return function (e) {
     let dx,
       x,
@@ -992,5 +1009,4 @@ Timeline.prototype.resize = function () {
   this._lastWidth = width;
   this._lastHeight = height;
 };
-export { Timeline };
 export default Timeline;

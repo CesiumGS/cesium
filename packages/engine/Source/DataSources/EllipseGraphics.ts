@@ -45,7 +45,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
  */
-function EllipseGraphics(options) {
+function EllipseGraphics(options: any) {
   this._definitionChanged = new Event();
   this._show = undefined;
   this._showSubscription = undefined;
@@ -309,7 +309,11 @@ EllipseGraphics.prototype.clone = function (result) {
  * @param {EllipseGraphics} source The object to be merged into this object.
  */
 EllipseGraphics.prototype.merge = function (source) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(source)) {
+    throw new DeveloperError("source is required.");
+  }
+  //>>includeEnd('debug');
 
   this.show = this.show ?? source.show;
   this.semiMajorAxis = this.semiMajorAxis ?? source.semiMajorAxis;
@@ -336,5 +340,4 @@ EllipseGraphics.prototype.merge = function (source) {
     this.classificationType ?? source.classificationType;
   this.zIndex = this.zIndex ?? source.zIndex;
 };
-export { EllipseGraphics };
 export default EllipseGraphics;

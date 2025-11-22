@@ -23,8 +23,10 @@ import Resource from "./Resource.js";
  *   }))
  * });
  */
-function PeliasGeocoderService(url) {
-  ;
+function PeliasGeocoderService(url: any) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
   this._url = Resource.createIfNeeded(url);
   this._url.appendForwardSlash();
@@ -64,7 +66,9 @@ Object.defineProperties(PeliasGeocoderService.prototype, {
  * @returns {Promise<GeocoderService.Result[]>}
  */
 PeliasGeocoderService.prototype.geocode = async function (query, type) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("query", query);
+  //>>includeEnd('debug');
 
   const resource = this._url.getDerivedResource({
     url: type === GeocodeType.AUTOCOMPLETE ? "autocomplete" : "search",
@@ -99,5 +103,4 @@ PeliasGeocoderService.prototype.geocode = async function (query, type) {
     });
   });
 };
-export { PeliasGeocoderService };
 export default PeliasGeocoderService;

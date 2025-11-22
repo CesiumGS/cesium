@@ -51,7 +51,7 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  * @param {GoogleEarthEnterpriseMapsProvider.ConstructorOptions} options An object describing initialization options
  */
-function ImageryProviderBuilder(options) {
+function ImageryProviderBuilder(options: any) {
   this.channel = options.channel;
   this.ellipsoid = options.ellipsoid;
   this.tilingScheme = undefined;
@@ -71,7 +71,7 @@ ImageryProviderBuilder.prototype.build = function (provider) {
   provider._tilingScheme = this.tilingScheme;
 };
 
-function metadataSuccess(text, imageryProviderBuilder) {
+function metadataSuccess(text: any, imageryProviderBuilder: any) {
   let data;
 
   // The Google Earth server sends malformed JSON data currently...
@@ -127,7 +127,7 @@ function metadataSuccess(text, imageryProviderBuilder) {
   return true;
 }
 
-function metadataFailure(error, metadataResource, provider) {
+function metadataFailure(error: any, metadataResource: any, provider: any) {
   let message = `An error occurred while accessing ${metadataResource.url}.`;
   if (defined(error) && defined(error.message)) {
     message += `: ${error.message}`;
@@ -143,11 +143,7 @@ function metadataFailure(error, metadataResource, provider) {
   throw new RuntimeError(message);
 }
 
-async function requestMetadata(
-  metadataResource,
-  imageryProviderBuilder,
-  provider,
-) {
+async function requestMetadata(metadataResource: any, imageryProviderBuilder: any, provider: any, ) {
   try {
     const text = await metadataResource.fetchText();
     metadataSuccess(text, imageryProviderBuilder);
@@ -199,7 +195,7 @@ async function requestMetadata(
  *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
-function GoogleEarthEnterpriseMapsProvider(options) {
+function GoogleEarthEnterpriseMapsProvider(options: any) {
   options = options ?? {};
 
   this._defaultAlpha = undefined;
@@ -452,7 +448,10 @@ GoogleEarthEnterpriseMapsProvider.fromUrl = async function (
   channel,
   options,
 ) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  Check.defined("channel", channel);
+  //>>includeEnd('debug');
 
   options = options ?? {};
 
@@ -575,11 +574,12 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider, {
       return GoogleEarthEnterpriseMapsProvider._logoUrl;
     },
     set: function (value) {
-      ;
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("value", value);
+      //>>includeEnd('debug');
 
       GoogleEarthEnterpriseMapsProvider._logoUrl = value;
     },
   },
 });
-export { GoogleEarthEnterpriseMapsProvider };
 export default GoogleEarthEnterpriseMapsProvider;

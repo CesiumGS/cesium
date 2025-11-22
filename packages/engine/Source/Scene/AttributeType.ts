@@ -76,7 +76,7 @@ const AttributeType = {
  * Gets the scalar, vector, or matrix type for the attribute type.
  *
  * @param {AttributeType} attributeType The attribute type.
- * @returns {any} The math type.
+ * @returns {*} The math type.
  *
  * @private
  */
@@ -96,7 +96,10 @@ AttributeType.getMathType = function (attributeType) {
       return Matrix3;
     case AttributeType.MAT4:
       return Matrix4;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("attributeType is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 
@@ -123,7 +126,10 @@ AttributeType.getNumberOfComponents = function (attributeType) {
       return 9;
     case AttributeType.MAT4:
       return 16;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("attributeType is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 
@@ -149,7 +155,10 @@ AttributeType.getAttributeLocationCount = function (attributeType) {
       return 3;
     case AttributeType.MAT4:
       return 4;
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("attributeType is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 
@@ -162,7 +171,9 @@ AttributeType.getAttributeLocationCount = function (attributeType) {
  * @private
  */
 AttributeType.getGlslType = function (attributeType) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("attributeType", attributeType);
+  //>>includeEnd('debug');
 
   switch (attributeType) {
     case AttributeType.SCALAR:
@@ -179,7 +190,10 @@ AttributeType.getGlslType = function (attributeType) {
       return "mat3";
     case AttributeType.MAT4:
       return "mat4";
-    ;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("attributeType is not a valid value.");
+    //>>includeEnd('debug');
   }
 };
 

@@ -73,10 +73,17 @@ import destroyObject from "../Core/destroyObject.js";
  *     uniforms : uniforms
  * }));
  */
-function PostProcessStageComposite(options) {
+function PostProcessStageComposite(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.stages", options.stages);
+  Check.typeOf.number.greaterThan(
+    "options.stages.length",
+    options.stages.length,
+    0,
+  );
+  //>>includeEnd('debug');
 
   this._stages = options.stages;
   this._inputPreviousStageTexture = options.inputPreviousStageTexture ?? true;
@@ -242,11 +249,14 @@ PostProcessStageComposite.prototype._isSupported = function (context) {
  * @exception {DeveloperError} index must be less than {@link PostProcessStageComposite#length}.
  */
 PostProcessStageComposite.prototype.get = function (index) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("index", index, 0);
+  Check.typeOf.number.lessThan("index", index, this.length);
+  //>>includeEnd('debug');
   return this._stages[index];
 };
 
-function isSelectedTextureDirty(stage) {
+function isSelectedTextureDirty(stage: any) {
   let length = defined(stage._selected) ? stage._selected.length : 0;
   const parentLength = defined(stage._parentSelected)
     ? stage._parentSelected
@@ -346,5 +356,4 @@ PostProcessStageComposite.prototype.destroy = function () {
   }
   return destroyObject(this);
 };
-export { PostProcessStageComposite };
 export default PostProcessStageComposite;

@@ -21,14 +21,14 @@ const cartesian1 = new Cartesian3();
 const cartesian2 = new Cartesian3();
 const cartesian3 = new Cartesian3();
 
-function scaleToSurface(positions, ellipsoid) {
+function scaleToSurface(positions: any, ellipsoid: any) {
   for (let i = 0; i < positions.length; i++) {
     positions[i] = ellipsoid.scaleToGeodeticSurface(positions[i], positions[i]);
   }
   return positions;
 }
 
-function combine(computedPositions, cornerType) {
+function combine(computedPositions: any, cornerType: any) {
   const wallIndices = [];
   const positions = computedPositions.positions;
   const corners = computedPositions.corners;
@@ -274,7 +274,7 @@ function combine(computedPositions, cornerType) {
   };
 }
 
-function computePositionsExtruded(params) {
+function computePositionsExtruded(params: any) {
   const ellipsoid = params.ellipsoid;
   const computedPositions = CorridorGeometryLibrary.computePositions(params);
   const attr = combine(computedPositions, params.cornerType);
@@ -375,12 +375,15 @@ function computePositionsExtruded(params) {
  *   width : 100000
  * });
  */
-function CorridorOutlineGeometry(options) {
+function CorridorOutlineGeometry(options: any) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const positions = options.positions;
   const width = options.width;
 
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.positions", positions);
+  Check.typeOf.number("options.width", width);
+  //>>includeEnd('debug');
 
   const height = options.height ?? 0.0;
   const extrudedHeight = options.extrudedHeight ?? height;
@@ -413,7 +416,10 @@ function CorridorOutlineGeometry(options) {
  * @returns {number[]} The array that was packed into
  */
 CorridorOutlineGeometry.pack = function (value, array, startingIndex) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.typeOf.object("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -459,7 +465,9 @@ const scratchOptions = {
  * @returns {CorridorOutlineGeometry} The modified result parameter or a new CorridorOutlineGeometry instance if one was not provided.
  */
 CorridorOutlineGeometry.unpack = function (array, startingIndex, result) {
-  ;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("array", array);
+  //>>includeEnd('debug');
 
   startingIndex = startingIndex ?? 0;
 
@@ -588,5 +596,4 @@ CorridorOutlineGeometry.createGeometry = function (corridorOutlineGeometry) {
     offsetAttribute: corridorOutlineGeometry._offsetAttribute,
   });
 };
-export { CorridorOutlineGeometry };
 export default CorridorOutlineGeometry;
