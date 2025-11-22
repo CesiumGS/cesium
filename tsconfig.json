@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "outDir": "./Build/TypeScript",
+    "paths": {
+      "@cesium/engine": ["./packages/engine/Source/index.ts"],
+      "@cesium/engine/*": ["./packages/engine/Source/*"],
+      "@cesium/widgets": ["./packages/widgets/Source/index.ts"],
+      "@cesium/widgets/*": ["./packages/widgets/Source/*"]
+    }
+  },
+  "references": [
+    { "path": "./packages/engine" },
+    { "path": "./packages/widgets" }
+  ],
+  "include": [
+    "scripts/**/*.ts",
+    "types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "Build",
+    "Source",
+    "Specs",
+    "Documentation",
+    "packages/*/node_modules"
+  ]
+}
