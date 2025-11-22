@@ -3,22 +3,23 @@
  *
  * @namespace Frozen
  */
-const Frozen = {};
+interface FrozenInterface {
+  /**
+   * A frozen empty object that can be used as the default value for options passed as
+   * an object literal.
+   */
+  EMPTY_OBJECT: Readonly<Record<string, never>>;
 
-/**
- * A frozen empty object that can be used as the default value for options passed as
- * an object literal.
- * @type {object}
- * @memberof Frozen
- */
-Frozen.EMPTY_OBJECT = Object.freeze({});
+  /**
+   * A frozen empty array that can be used as the default value for options passed as
+   * an array literal.
+   */
+  EMPTY_ARRAY: readonly never[];
+}
 
-/**
- * A frozen empty array that can be used as the default value for options passed as
- * an array literal.
- * @type {array}
- * @memberof Frozen
- */
-Frozen.EMPTY_ARRAY = Object.freeze([]);
+const Frozen: FrozenInterface = {
+  EMPTY_OBJECT: Object.freeze({}) as Readonly<Record<string, never>>,
+  EMPTY_ARRAY: Object.freeze([]) as readonly never[],
+};
 
 export default Frozen;

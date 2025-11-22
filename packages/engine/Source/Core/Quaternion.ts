@@ -37,21 +37,21 @@ const fromRotationMatrixQuat = new Array<number>(3);
 
 const sampledQuaternionAxis = new Cartesian3();
 const sampledQuaternionRotation = new Cartesian3();
-const sampledQuaternionTempQuaternion = new Quaternion();
-const sampledQuaternionQuaternion0 = new Quaternion();
-const sampledQuaternionQuaternion0Conjugate = new Quaternion();
-
-let lerpScratch = new Quaternion();
-let slerpEndNegated = new Quaternion();
-let slerpScaledP = new Quaternion();
-let slerpScaledR = new Quaternion();
 
 const squadScratchCartesian0 = new Cartesian3();
 const squadScratchCartesian1 = new Cartesian3();
-const squadScratchQuaternion0 = new Quaternion();
-const squadScratchQuaternion1 = new Quaternion();
 
-const fastSlerpScratchQuaternion = new Quaternion();
+// Quaternion scratch variables - lazily initialized after class definition
+let sampledQuaternionTempQuaternion: any;
+let sampledQuaternionQuaternion0: any;
+let sampledQuaternionQuaternion0Conjugate: any;
+let lerpScratch: any;
+let slerpEndNegated: any;
+let slerpScaledP: any;
+let slerpScaledR: any;
+let squadScratchQuaternion0: any;
+let squadScratchQuaternion1: any;
+let fastSlerpScratchQuaternion: any;
 // eslint-disable-next-line no-loss-of-precision
 const opmu = 1.90110745351730037;
 const u = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [] as number[];
@@ -1252,5 +1252,17 @@ class Quaternion {
     return `(${this.x}, ${this.y}, ${this.z}, ${this.w})`;
   }
 }
+
+// Initialize Quaternion scratch variables now that the class is defined
+sampledQuaternionTempQuaternion = new Quaternion();
+sampledQuaternionQuaternion0 = new Quaternion();
+sampledQuaternionQuaternion0Conjugate = new Quaternion();
+lerpScratch = new Quaternion();
+slerpEndNegated = new Quaternion();
+slerpScaledP = new Quaternion();
+slerpScaledR = new Quaternion();
+squadScratchQuaternion0 = new Quaternion();
+squadScratchQuaternion1 = new Quaternion();
+fastSlerpScratchQuaternion = new Quaternion();
 
 export default Quaternion;
