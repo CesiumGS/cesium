@@ -50,7 +50,6 @@ class EmbeddingSearch {
   private tokenizer: any = null;
   private model: any = null;
   private modelId: string = 'avsolatorio/GIST-small-Embedding-v0';
-  private queryPrefix: string = 'task: search result | query: ';
   private loadingPromise: Promise<void> | null = null;
 
   /**
@@ -211,7 +210,6 @@ class EmbeddingSearch {
   }
 }
 
-// Export singleton instance
 const embeddingSearch = new EmbeddingSearch();
 
 // Pre-load the model and gallery list at application startup
