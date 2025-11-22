@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
+    "rootDir": "./Source",
+    "outDir": "./Build/TypeScript",
+    "declarationDir": "./Build/Types",
+    "paths": {
+      "@cesium/engine": ["../engine/Source/index.ts"],
+      "@cesium/engine/*": ["../engine/Source/*"],
+      "@cesium/widgets": ["./Source/index.ts"],
+      "@cesium/widgets/*": ["./Source/*"]
+    },
+    "types": ["bun-types"]
+  },
+  "references": [
+    { "path": "../engine" }
+  ],
+  "include": [
+    "Source/**/*.ts",
+    "Source/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "Build",
+    "Specs",
+    "Source/ThirdParty"
+  ]
+}

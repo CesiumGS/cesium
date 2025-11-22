@@ -1,0 +1,44 @@
+import Cartesian3 from "../Core/Cartesian3.js";
+import Check from "../Core/Check.js";
+import Color from "../Core/Color.js";
+import DeveloperError from "../Core/DeveloperError.js";
+
+/**
+ * A light that gets emitted in a single direction from infinitely far away.
+ *
+ * @param {object} options Object with the following properties:
+ * @param {Cartesian3} options.direction The direction in which light gets emitted.
+ * @param {Color} [options.color=Color.WHITE] The color of the light.
+ * @param {number} [options.intensity=1.0] The intensity of the light.
+ *
+ * @exception {DeveloperError} options.direction cannot be zero-length
+ *
+ * @alias DirectionalLight
+ * @constructor
+ */
+function DirectionalLight(options) {
+  ;
+
+  /**
+   * The direction in which light gets emitted.
+   * @type {Cartesian3}
+   */
+  this.direction = Cartesian3.clone(options.direction);
+
+  /**
+   * The color of the light.
+   * @type {Color}
+   * @default Color.WHITE
+   */
+  this.color = Color.clone(options.color ?? Color.WHITE);
+
+  /**
+   * The intensity of the light.
+   * @type {number}
+   * @default 1.0
+   */
+  this.intensity = options.intensity ?? 1.0;
+}
+
+export { DirectionalLight };
+export default DirectionalLight;

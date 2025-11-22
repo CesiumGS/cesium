@@ -57,6 +57,11 @@
   "devDependencies": {
     "@cesium/eslint-config": "^12.0.0",
     "@playwright/test": "^1.41.1",
+    "@types/dompurify": "^3.0.0",
+    "@types/earcut": "^2.1.0",
+    "@types/pako": "^2.0.0",
+    "@types/urijs": "^1.19.0",
+    "bun-types": "^1.3.3",
     "chokidar": "^4.0.1",
     "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
@@ -108,6 +113,10 @@
   "scripts": {
     "prepare": "gulp prepare && husky && node scripts/isCI.js || playwright install --with-deps",
     "start": "node server.js",
+    "bun:build": "bun run scripts/build-bun.ts",
+    "bun:dev": "bun run scripts/build-bun.ts --watch",
+    "bun:typecheck": "bun x tsc --noEmit",
+    "bun:test": "bun test",
     "start-public": "node server.js --public",
     "build": "gulp build",
     "build-release": "gulp buildRelease",
