@@ -60,6 +60,7 @@
         "prismjs": "^1.28.0",
         "rimraf": "^6.0.1",
         "tsd-jsdoc": "^2.5.0",
+        "tsx": "^4.20.6",
         "typescript": "^5.9.3",
         "typescript-eslint": "^8.30.1",
         "yargs": "^18.0.0",
@@ -1603,6 +1604,8 @@
     "tsd-jsdoc": ["tsd-jsdoc@2.5.0", "", { "dependencies": { "typescript": "^3.2.1" }, "peerDependencies": { "jsdoc": "^3.6.3" } }, "sha512-80fcJLAiUeerg4xPftp+iEEKWUjJjHk9AvcHwJqA8Zw0R4oASdu3kT/plE/Zj19QUTz8KupyOX25zStlNJjS9g=="],
 
     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
+
+    "tsx": ["tsx@4.20.6", "", { "dependencies": { "esbuild": "~0.25.0", "get-tsconfig": "^4.7.5" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "bin": { "tsx": "dist/cli.mjs" } }, "sha512-ytQKuwgmrrkDTFP4LjR0ToE2nqgy886GpvRSpU0JAnrdBYppuY5rLkRUYPU1yCryb24SsKBTL/hlDQAEFVwtZg=="],
 
     "type-check": ["type-check@0.4.0", "", { "dependencies": { "prelude-ls": "^1.2.1" } }, "sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew=="],
 
