@@ -155,35 +155,20 @@ class EmbeddingSearch {
       return [];
     }
 
-    const totalStartTime = performance.now();
-    let initTime = 0;
-
     try {
-      // Ensure everything is loaded (will be near-instant after first load)
-      const wasAlreadyInitialized = this.galleryList && this.model && this.tokenizer;
-      if (!wasAlreadyInitialized) {
-        const initStartTime = performance.now();
+      if (!this.galleryList || !this.model || !this.tokenizer) {
         await this.initialize();
-        initTime = performance.now() - initStartTime;
       }
 
       if (!this.galleryList || !this.model || !this.tokenizer) {
         throw new Error('Vector search not properly initialized');
       }
 
-      // Add query prefix and generate embedding
-      const prefixedQuery = this.queryPrefix + query.trim();
-      const tokenizeStartTime = performance.now();
-      const inputs = await this.tokenizer([prefixedQuery], { padding: true, truncation: true });
-      const tokenizeTime = performance.now() - tokenizeStartTime;
+      const inputs = await this.tokenizer([query.trim()], { padding: true, truncation: true });
 
-      const modelStartTime = performance.now();
       const { sentence_embedding } = await this.model(inputs);
       const queryEmbedding = sentence_embedding.tolist()[0];
-      const modelTime = performance.now() - modelStartTime;
 
-      // Calculate similarities with all documents that have embeddings
-      const similarityStartTime = performance.now();
       const itemsWithEmbeddings = this.galleryList.entries.filter(item => item.embedding);
       const results = itemsWithEmbeddings.map((item) => {
         const score = this.cosineSimilarity(queryEmbedding, item.embedding!);
@@ -193,16 +178,11 @@ class EmbeddingSearch {
           distance: 1 - score, // Convert similarity to distance
         };
       });
-      const similarityTime = performance.now() - similarityStartTime;
 
-      // Sort by score (descending) and take top K
-      const sortStartTime = performance.now();
       results.sort((a, b) => b.score - a.score);
       const topResults = results.slice(0, limit);
-      const sortTime = performance.now() - sortStartTime;
 
       // Format results to match expected interface
-      const formatStartTime = performance.now();
       const formattedResults = topResults.map((result, index) => ({
         rank: index + 1,
         id: result.id,
@@ -214,23 +194,6 @@ class EmbeddingSearch {
         score: result.score,
         url: result.url,
       }));
-      const formatTime = performance.now() - formatStartTime;
-
-      const totalTime = performance.now() - totalStartTime;
-
-      console.log('[EmbeddingSearch] Timing breakdown:', {
-        model: this.modelId,
-        query,
-        total: `${totalTime.toFixed(2)}ms`,
-        initialization: `${initTime.toFixed(2)}ms`,
-        tokenization: `${tokenizeTime.toFixed(2)}ms`,
-        modelInference: `${modelTime.toFixed(2)}ms`,
-        similarityCalc: `${similarityTime.toFixed(2)}ms`,
-        sorting: `${sortTime.toFixed(2)}ms`,
-        formatting: `${formatTime.toFixed(2)}ms`,
-        itemsSearched: itemsWithEmbeddings.length,
-        resultsReturned: formattedResults.length,
-      });
 
       return formattedResults;
     } catch (error) {
@@ -245,37 +208,6 @@ class EmbeddingSearch {
    */
   isReady(): boolean {
     return this.galleryList !== null && this.model !== null && this.tokenizer !== null;
-  }
-
-  /**
-   * Clear the cached model files to force a fresh download on next load
-   * Useful for testing cold-start performance
-   */
-  async clearModelCache(): Promise<void> {
-    try {
-      // Clear the transformers.js cache
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        const transformerCaches = cacheNames.filter(name => 
-          name.includes('transformers') || name.includes('huggingface')
-        );
-        
-        for (const cacheName of transformerCaches) {
-          await caches.delete(cacheName);
-          console.log(`Cleared cache: ${cacheName}`);
-        }
-      }
-
-      // Reset the model and tokenizer instances
-      this.model = null;
-      this.tokenizer = null;
-      this.loadingPromise = null;
-
-      console.log('[EmbeddingSearch] Model cache cleared. Next search will download fresh model.');
-    } catch (error) {
-      console.error('[EmbeddingSearch] Failed to clear model cache:', error);
-      throw error;
-    }
   }
 }
 

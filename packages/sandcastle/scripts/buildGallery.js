@@ -23,7 +23,6 @@ const galleryItemConfig = /sandcastle\.(yml|yaml)/;
 
 // Embedding configuration
 const MODEL_ID = "avsolatorio/GIST-small-Embedding-v0";
-const DOCUMENT_PREFIX = "title: none | text: ";
 
 /**
  * Initialize the embedding model (singleton pattern)
@@ -41,22 +40,18 @@ async function initEmbeddingModel() {
 
   embeddingTokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
   embeddingModel = await AutoModel.from_pretrained(MODEL_ID, {
-    dtype: "fp32", // Options: "fp32" | "q8" | "q4"
+    dtype: "fp32",
   });
 
-  console.log("Embedding model loaded successfully!");
   return { model: embeddingModel, tokenizer: embeddingTokenizer };
 }
 
-/**
- * Convert a gallery item to text for embedding
- */
 function itemToText(title, description, labels) {
   const text = `Title: ${title}
 Description: ${description}
 Labels: ${labels.join(", ")}`;
 
-  return DOCUMENT_PREFIX + text;
+  return text;
 }
 
 /**
@@ -67,27 +62,17 @@ async function generateEmbeddings(items) {
 
   console.log(`\nGenerating embeddings for ${items.length} gallery items...`);
 
+  const texts = items.map((item) =>
+    itemToText(item.title, item.description, item.labels),
+  );
+
   const embeddings = [];
-  const batchSize = 10;
 
-  for (let i = 0; i < items.length; i += batchSize) {
-    const batch = items.slice(i, i + batchSize);
-    const batchEnd = Math.min(i + batchSize, items.length);
+  const inputs = await tokenizer(texts, { padding: true, truncation: true });
+  const { sentence_embedding } = await model(inputs);
 
-    console.log(
-      `Processing embeddings ${i + 1} to ${batchEnd} of ${items.length}...`,
-    );
-
-    const texts = batch.map((item) =>
-      itemToText(item.title, item.description, item.labels),
-    );
-
-    const inputs = await tokenizer(texts, { padding: true, truncation: true });
-    const { sentence_embedding } = await model(inputs);
-
-    const batchEmbeddings = sentence_embedding.tolist();
-    embeddings.push(...batchEmbeddings);
-  }
+  const batchEmbeddings = sentence_embedding.tolist();
+  embeddings.push(...batchEmbeddings);
 
   console.log(`Generated ${embeddings.length} embeddings`);
   return embeddings;
