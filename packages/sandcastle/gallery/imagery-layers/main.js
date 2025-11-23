@@ -1,9 +1,9 @@
 import * as Cesium from "cesium";
 
 const viewer = new Cesium.Viewer("cesiumContainer", {
-  baseLayer: Cesium.ImageryLayer.fromWorldImagery({
-    style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS,
-  }),
+  baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+    Cesium.IonImageryProvider.fromAssetId(3830183),
+  ),
   baseLayerPicker: false,
 });
 const layers = viewer.scene.imageryLayers;

@@ -347,21 +347,6 @@ of the world.\nhttp://www.openstreetmap.org",
 
   providerViewModels.push(
     new ProviderViewModel({
-      name: "Google Maps Labels Only",
-      iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/googleLabels.png",
-      ),
-      tooltip:
-        "Place labels from Google Maps to combine with other imagery such as Sentinel-2",
-      category: "Cesium ion",
-      creationFunction: function () {
-        return IonImageryProvider.fromAssetId(3830185);
-      },
-    }),
-  );
-
-  providerViewModels.push(
-    new ProviderViewModel({
       name: "Google Maps Contour",
       iconUrl: buildModuleUrl(
         "Widgets/Images/ImageryProviders/googleContour.png",
@@ -371,6 +356,33 @@ of the world.\nhttp://www.openstreetmap.org",
       category: "Cesium ion",
       creationFunction: function () {
         return IonImageryProvider.fromAssetId(3830186);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Azure Maps Aerial",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/azureAerial.png",
+      ),
+      tooltip: "Imagery from Azure Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3891168);
+      },
+    }),
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Azure Maps Roads",
+      iconUrl: buildModuleUrl("Widgets/Images/ImageryProviders/azureRoads.png"),
+      tooltip:
+        "Labeled roads and other features on a base landscape from Azure Maps",
+      category: "Cesium ion",
+      creationFunction: function () {
+        return IonImageryProvider.fromAssetId(3891169);
       },
     }),
   );
