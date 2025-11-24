@@ -1,7 +1,5 @@
 uniform float u_threePointDepthTestDistance;
-#ifdef INSTANCED
 in vec2 direction;
-#endif
 in vec4 positionHighAndScale;
 in vec4 positionLowAndRotation;
 in vec4 compressedAttribute0;                       // pixel offset, translate, horizontal origin, vertical origin, show, direction, texture coordinates (texture offset)
@@ -146,17 +144,9 @@ void main()
     float show = floor(compressed * SHIFT_RIGHT2);
     compressed -= show * SHIFT_LEFT2;
 
-#ifdef INSTANCED
     vec2 textureCoordinatesBottomLeft = czm_decompressTextureCoordinates(compressedAttribute0.w);
     vec2 textureCoordinatesRange = czm_decompressTextureCoordinates(eyeOffset.w);
     vec2 textureCoordinates = textureCoordinatesBottomLeft + direction * textureCoordinatesRange;
-#else
-    vec2 direction;
-    direction.x = floor(compressed * SHIFT_RIGHT1);
-    direction.y = compressed - direction.x * SHIFT_LEFT1;
-
-    vec2 textureCoordinates = czm_decompressTextureCoordinates(compressedAttribute0.w);
-#endif
 
     float temp = compressedAttribute0.y  * SHIFT_RIGHT8;
     pixelOffset.y = -(floor(temp) - UPPER_BOUND);
@@ -328,7 +318,7 @@ void main()
 if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) && (enableDepthCheck == 1.0)) {
     float depthsilon = 10.0;
     vec2 depthOrigin;
-    // Horizontal origin for labels comes from a special attribute. If that value is 0, this is a billboard - use the regular origin. 
+    // Horizontal origin for labels comes from a special attribute. If that value is 0, this is a billboard - use the regular origin.
     // Otherwise, transform the label origin to -1, 0, 1 (right, center, left).
     depthOrigin.x = floor(compressedAttribute2.w - (temp2 * SHIFT_LEFT2));
     depthOrigin.x = czm_branchFreeTernary(depthOrigin.x == 0.0, origin.x, depthOrigin.x - 2.0);
