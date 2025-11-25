@@ -48,8 +48,22 @@ class NDMap {
    * this constructor.
    *
    * @param {string[]} dimensionNames
+   * @throws {DeveloperError} If the given array has length 0 or
+   * contains duplicate elements
    */
   constructor(dimensionNames) {
+    if (dimensionNames.length === 0) {
+      throw new DeveloperError(
+        "The dimensionNames array may not have length 0",
+      );
+    } else {
+      const s = new Set(dimensionNames);
+      if (s.size !== dimensionNames.length) {
+        throw new DeveloperError(
+          `The dimensionNames array may not contain duplicate elements, but is ${dimensionNames}`,
+        );
+      }
+    }
     this._dimensionNames = dimensionNames;
 
     /**
@@ -75,7 +89,7 @@ class NDMap {
    * @returns {number} The size
    */
   get size() {
-    return this._lookup.size();
+    return this._lookup.size;
   }
 
   /**
@@ -198,7 +212,7 @@ class NDMap {
    * @param {any} thisArg A value to use as this when executing the callback
    */
   forEach(callback, thisArg) {
-    this._entries().forEach(callback, thisArg);
+    this.entries().forEach(callback, thisArg);
   }
 
   /**
@@ -247,12 +261,18 @@ class LRUCache {
   /**
    * Creates a new instance with the given maximum size.
    *
-   * @param {number} maxSize The maximum size
+   * @param {number} maximumSize The maximum size
    * @param {Function|undefined} evictionCallback The callback that will
    * receive the key and value of all evicted entries.
+   * @throws {DeveloperError} If the maximum size is not positive
    */
-  constructor(maxSize, evictionCallback) {
-    this._maxSize = maxSize;
+  constructor(maximumSize, evictionCallback) {
+    if (maximumSize <= 0) {
+      throw new DeveloperError(
+        `The maximumSize must be positive, but is ${maximumSize}`,
+      );
+    }
+    this._maximumSize = maximumSize;
     this._evictionCallback = evictionCallback;
 
     /**
@@ -271,11 +291,17 @@ class LRUCache {
    * of this cache, then the least recently used elements will
    * be evicted until the size matches the maximum size.
    *
-   * @param {number} maxSize The maximum size
+   * @param {number} maximumSize The maximum size
+   * @throws {DeveloperError} If the maximum size is not positive
    */
-  setMaximumSize(maxSize) {
-    this._maxSize = maxSize;
-    this._ensureMaxSize();
+  setMaximumSize(maximumSize) {
+    if (maximumSize <= 0) {
+      throw new DeveloperError(
+        `The maximumSize must be positive, but is ${maximumSize}`,
+      );
+    }
+    this._maximumSize = maximumSize;
+    this._ensureMaximumSize();
   }
 
   /**
@@ -296,7 +322,7 @@ class LRUCache {
   set(key, value) {
     this._map.delete(key);
     this._map.set(key, value);
-    this._ensureMaxSize();
+    this._ensureMaximumSize();
   }
 
   /**
@@ -326,8 +352,8 @@ class LRUCache {
    * This will evict as many entries as necessary, in the
    * order of their least recent usage.
    */
-  _ensureMaxSize() {
-    this.trimToSize(this._maxSize);
+  _ensureMaximumSize() {
+    this.trimToSize(this._maximumSize);
   }
 
   /**
@@ -489,6 +515,18 @@ class LoggingRequestListener extends RequestListener {
     console.log(`requestFailed    for ${request.url}`);
   }
 }
+
+// TODO If something like the RequestHandle and RequestListener
+// had to be designed from scratch, then it could be possible
+// to come up with something that makes sense. Now, there's the
+// question about how to align the sought-for "nice" solution
+// with what is already there. A specific example is that
+// the "requestAttempted" function does not really make sense,
+// but has to be there, because this was once tracked in some
+// tileset statistics. (Otherwise, VERY roughly, there could
+// be the invariant of "cancelled+failed==attempted", but
+// "attempted" can also mean that nothing really happened
+// due to throttling, soooo... here we are...)
 
 /**
  * A class serving as a convenience wrapper around a request for
@@ -686,7 +724,7 @@ class RequestHandle {
     const request = new Request({
       throttle: true,
       throttleByServer: true,
-      type: RequestType.TILES3D,
+      type: RequestType.TILES3D, // XXX_DYNAMIC TODO Seems to be unused...
       priorityFunction: priorityFunction,
     });
     return request;
@@ -708,6 +746,8 @@ class RequestHandle {
     const rejectionError = new Error("Request was cancelled");
     rejectionError.code = RequestState.CANCELLED;
     this._deferred.reject(rejectionError);
+    this._fireRequestCancelled();
+    this._fireRequestAttempted();
   }
 
   /**
@@ -1361,7 +1401,7 @@ class Dynamic3DTileContent {
      *
      * @type {number}
      */
-    this._loadedContentHandlesMaxSize = 10;
+    this._loadedContentHandlesMaximumSize = 10;
 
     /**
      * The mapping from "keys" to arrays(!) of URIs for the dynamic content.
@@ -1397,7 +1437,7 @@ class Dynamic3DTileContent {
    * evicted from the '_loadedContentHandles'.
    *
    * This will be called when the size of the '_loadedContentHandles'
-   * is trimmed to the '_loadedContentHandlesMaxSize', and receive
+   * is trimmed to the '_loadedContentHandlesMaximumSize', and receive
    * the least recently used content handles.
    *
    * It will call 'reset()' on the content handle, cancelling all
@@ -1998,15 +2038,15 @@ class Dynamic3DTileContent {
     // Ensure that at least the number of active contents
     // is retained
     const numActiveContents = activeContentUris.length;
-    this._loadedContentHandlesMaxSize = Math.max(
-      this._loadedContentHandlesMaxSize,
+    this._loadedContentHandlesMaximumSize = Math.max(
+      this._loadedContentHandlesMaximumSize,
       numActiveContents,
     );
 
     // Trim the LRU cache to the target size, calling the
     // '_loadedContentHandleEvicted' for the least recently
     // used content handles.
-    loadedContentHandles.trimToSize(this._loadedContentHandlesMaxSize);
+    loadedContentHandles.trimToSize(this._loadedContentHandlesMaximumSize);
   }
 
   /**
