@@ -193,22 +193,21 @@ Object.defineProperties(TextureAtlas.prototype, {
 });
 
 /**
- * Get the texture coordinates for reading the associated image in shaders.
+ * TODO
  * @param {number} index The index of the image region.
  * @param {BoundingRectangle} [result] The object into which to store the result.
  * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
  * @private
  * @example
  * const index = await atlas.addImage("myImage", image);
- * const rectangle = atlas.computeTextureCoordinates(index);
+ * const rectangle = atlas.computeImageCoordinates(index);
  * BoundingRectangle.pack(rectangle, bufferView);
  */
-TextureAtlas.prototype.computeTextureCoordinates = function (index, result) {
+TextureAtlas.prototype.computeImageCoordinates = function (index, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals("index", index, 0);
   //>>includeEnd('debug');
 
-  const texture = this._texture;
   const rectangle = this._rectangles[index];
 
   if (!defined(result)) {
@@ -224,11 +223,6 @@ TextureAtlas.prototype.computeTextureCoordinates = function (index, result) {
     return result;
   }
 
-  const atlasWidth = texture.width;
-  const atlasHeight = texture.height;
-
-  const width = rectangle.width;
-  const height = rectangle.height;
   let x = rectangle.x;
   let y = rectangle.y;
 
@@ -240,10 +234,36 @@ TextureAtlas.prototype.computeTextureCoordinates = function (index, result) {
     y += parentRectangle.y;
   }
 
-  result.x = x / atlasWidth;
-  result.y = y / atlasHeight;
-  result.width = width / atlasWidth;
-  result.height = height / atlasHeight;
+  result.x = x;
+  result.y = y;
+  result.width = rectangle.width;
+  result.height = rectangle.height;
+
+  return result;
+};
+
+/**
+ * Get the texture coordinates for reading the associated image in shaders.
+ * @param {number} index The index of the image region.
+ * @param {BoundingRectangle} [result] The object into which to store the result.
+ * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
+ * @private
+ * @example
+ * const index = await atlas.addImage("myImage", image);
+ * const rectangle = atlas.computeTextureCoordinates(index);
+ * BoundingRectangle.pack(rectangle, bufferView);
+ */
+TextureAtlas.prototype.computeTextureCoordinates = function (index, result) {
+  result = this.computeImageCoordinates(index, result);
+
+  const texture = this._texture;
+  const atlasWidth = texture.width;
+  const atlasHeight = texture.height;
+
+  result.x /= atlasWidth;
+  result.y /= atlasHeight;
+  result.width /= atlasWidth;
+  result.height /= atlasHeight;
 
   return result;
 };

@@ -168,17 +168,17 @@ void main()
     translate.y -= UPPER_BOUND;
     translate.y *= SHIFT_RIGHT2;
 
-    temp = compressedAttribute1.x * SHIFT_RIGHT8;
-    float temp2 = floor(compressedAttribute2.w * SHIFT_RIGHT2);
+    // TODO(donmccurdy): This is billboard size (px) on screen, not image size (px) in atlas?
+    float imageWidth = floor(compressedAttribute1.x * SHIFT_RIGHT8);
+    float imageHeight = floor(compressedAttribute2.w * SHIFT_RIGHT2);
+    vec2 imageSize = vec2(imageWidth, imageHeight);
 
-    vec2 imageSize = vec2(floor(temp), temp2);
-
-    float imageOffsetX = floor(compressedAttribute0.w * SHIFT_RIGHT16);
-    float imageOffsetY = compressedAttribute0.w - (imageOffsetX * SHIFT_LEFT16);
-    vec2 textureCoordinates = vec2(imageOffsetX, imageOffsetY) / u_atlasSize.xy;
+    float imageOffsetX = floor(compressedAttribute0.w * SHIFT_RIGHT12);
+    float imageOffsetY = compressedAttribute0.w - (imageOffsetX * SHIFT_LEFT12);
+    vec2 textureCoordinates = vec2(imageOffsetX + 0.5, imageOffsetY + 0.5) / u_atlasSize.xy;
 
 #ifdef INSTANCED
-    vec2 textureCoordinatesRange = imageSize.xy / u_atlasSize.xy;
+    vec2 textureCoordinatesRange = imageSize.xy / u_atlasSize.xy; // TODO(donmccurdy): Needs -1.0 offset?
     textureCoordinates += direction * textureCoordinatesRange;
 #endif
 
