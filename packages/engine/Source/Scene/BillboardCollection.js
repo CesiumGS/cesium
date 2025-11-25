@@ -58,12 +58,14 @@ const SDF_INDEX = Billboard.SDF_INDEX;
 const SPLIT_DIRECTION_INDEX = Billboard.SPLIT_DIRECTION_INDEX;
 const NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
+const scratchTextureSize = new Cartesian2();
+
 let attributeLocations;
 
 const attributeLocationsBatched = {
   positionHighAndScale: 0,
   positionLowAndRotation: 1,
-  compressedAttribute0: 2, // pixel offset, translate, horizontal origin, vertical origin, show, direction, texture coordinates
+  compressedAttribute0: 2, // pixel offset, translate, horizontal origin, vertical origin, show, direction, image coordinates (px)
   compressedAttribute1: 3, // aligned axis, translucency by distance, image width
   compressedAttribute2: 4, // image height, color, pick color, size in meters, valid aligned axis, 13 bits free
   eyeOffset: 5, // 4 bytes free
@@ -79,11 +81,11 @@ const attributeLocationsBatched = {
 const attributeLocationsInstanced = {
   direction: 0,
   positionHighAndScale: 1,
-  positionLowAndRotation: 2, // texture offset in w
-  compressedAttribute0: 3,
+  positionLowAndRotation: 2,
+  compressedAttribute0: 3, // image lower-left coordinates (px) in w
   compressedAttribute1: 4,
   compressedAttribute2: 5,
-  eyeOffset: 6, // texture range in w
+  eyeOffset: 6,
   scaleByDistance: 7,
   pixelOffsetScaleByDistance: 8,
   compressedAttribute3: 9,
@@ -322,6 +324,10 @@ function BillboardCollection(options) {
   this._uniforms = {
     u_atlas: () => {
       return this.textureAtlas.texture;
+    },
+    u_atlasSize: () => {
+      const { width, height } = this.textureAtlas.texture;
+      return Cartesian2.fromElements(width, height, scratchTextureSize);
     },
     u_highlightColor: () => {
       return this._highlightColor;
@@ -939,8 +945,6 @@ function writePositionScaleAndRotation(
   }
 }
 
-const scratchCartesian2 = new Cartesian2();
-
 const UPPER_BOUND = 32768.0; // 2^15
 
 const LEFT_SHIFT16 = 65536.0; // 2^16
@@ -1004,22 +1008,22 @@ function writeCompressedAttrib0(
     billboardCollection._allVerticalCenter &&
     verticalOrigin === VerticalOrigin.CENTER;
 
-  let bottomLeftX = 0;
-  let bottomLeftY = 0;
-  let width = 0;
-  let height = 0;
+  // Compute image coordinates and size, in pixels. Coordinates are from lower-left of texture atlas.Z
+  let imageX = 0;
+  let imageY = 0;
+  let imageWidth = 0;
+  let imageHeight = 0;
   if (billboard.ready) {
     const imageRectangle = billboard.computeTextureCoordinates(
       scratchBoundingRectangle,
     );
-
-    bottomLeftX = imageRectangle.x;
-    bottomLeftY = imageRectangle.y;
-    width = imageRectangle.width;
-    height = imageRectangle.height;
+    const { width: atlasWidth, height: atlasHeight } =
+      billboardCollection.textureAtlas.texture;
+    imageX = imageRectangle.x * atlasWidth;
+    imageY = imageRectangle.y * atlasHeight;
+    imageWidth = imageRectangle.width * atlasWidth;
+    imageHeight = imageRectangle.height * atlasHeight;
   }
-  const topRightX = bottomLeftX + width;
-  const topRightY = bottomLeftY + height;
 
   let compressed0 =
     Math.floor(
@@ -1056,23 +1060,15 @@ function writeCompressedAttrib0(
   compressed1 += upperTranslateY;
   compressed2 += lowerTranslateY;
 
-  scratchCartesian2.x = bottomLeftX;
-  scratchCartesian2.y = bottomLeftY;
-  const compressedTexCoordsLL =
-    AttributeCompression.compressTextureCoordinates(scratchCartesian2);
-  scratchCartesian2.x = topRightX;
-  const compressedTexCoordsLR =
-    AttributeCompression.compressTextureCoordinates(scratchCartesian2);
-  scratchCartesian2.y = topRightY;
-  const compressedTexCoordsUR =
-    AttributeCompression.compressTextureCoordinates(scratchCartesian2);
-  scratchCartesian2.x = bottomLeftX;
-  const compressedTexCoordsUL =
-    AttributeCompression.compressTextureCoordinates(scratchCartesian2);
+  const compressedImageLL = imageX * LEFT_SHIFT16 + imageY;
+  const compressedImageLR = (imageX + imageWidth) * LEFT_SHIFT16 + imageY;
+  const compressedImageUR =
+    (imageX + imageWidth) * LEFT_SHIFT16 + imageY + imageHeight;
+  const compressedImageUL = imageX * LEFT_SHIFT16 + imageY + imageHeight;
 
   if (billboardCollection._instanced) {
     i = billboard._index;
-    writer(i, compressed0, compressed1, compressed2, compressedTexCoordsLL);
+    writer(i, compressed0, compressed1, compressed2, compressedImageLL);
   } else {
     i = billboard._index * 4;
     writer(
@@ -1080,28 +1076,28 @@ function writeCompressedAttrib0(
       compressed0 + LOWER_LEFT,
       compressed1,
       compressed2,
-      compressedTexCoordsLL,
+      compressedImageLL,
     );
     writer(
       i + 1,
       compressed0 + LOWER_RIGHT,
       compressed1,
       compressed2,
-      compressedTexCoordsLR,
+      compressedImageLR,
     );
     writer(
       i + 2,
       compressed0 + UPPER_RIGHT,
       compressed1,
       compressed2,
-      compressedTexCoordsUR,
+      compressedImageUR,
     );
     writer(
       i + 3,
       compressed0 + UPPER_LEFT,
       compressed1,
       compressed2,
-      compressedTexCoordsUL,
+      compressedImageUL,
     );
   }
 }
@@ -1255,23 +1251,8 @@ function writeEyeOffset(
   );
 
   if (billboardCollection._instanced) {
-    scratchCartesian2.x = 0;
-    scratchCartesian2.y = 0;
-
-    if (billboard.ready) {
-      const imageRectangle = billboard.computeTextureCoordinates(
-        scratchBoundingRectangle,
-      );
-
-      scratchCartesian2.x = imageRectangle.width;
-      scratchCartesian2.y = imageRectangle.height;
-    }
-
-    const compressedTexCoordsRange =
-      AttributeCompression.compressTextureCoordinates(scratchCartesian2);
-
     i = billboard._index;
-    writer(i, eyeOffset.x, eyeOffset.y, eyeOffsetZ, compressedTexCoordsRange);
+    writer(i, eyeOffset.x, eyeOffset.y, eyeOffsetZ, 0.0);
   } else {
     i = billboard._index * 4;
     writer(i + 0, eyeOffset.x, eyeOffset.y, eyeOffsetZ, 0.0);
