@@ -1196,6 +1196,16 @@ Billboard._updateClamping = function (collection, owner) {
 };
 
 /**
+ * Get the image coordinates for reading the loaded texture in shaders.
+ * @param {BoundingRectangle} [result] The modified result parameter or a new BoundingRectangle instance if one was not provided.
+ * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
+ * @private
+ */
+Billboard.prototype.computeImageCoordinates = function (result) {
+  return this._imageTexture.computeImageCoordinates(result);
+};
+
+/**
  * Get the texture coordinates for reading the loaded texture in shaders.
  * @param {BoundingRectangle} [result] The modified result parameter or a new BoundingRectangle instance if one was not provided.
  * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.

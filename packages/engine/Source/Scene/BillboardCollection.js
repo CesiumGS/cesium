@@ -1014,15 +1014,11 @@ function writeCompressedAttrib0(
   let imageWidth = 0;
   let imageHeight = 0;
   if (billboard.ready) {
-    const imageRectangle = billboard.computeTextureCoordinates(
-      scratchBoundingRectangle,
-    );
-    const { width: atlasWidth, height: atlasHeight } =
-      billboardCollection.textureAtlas.texture;
-    imageX = imageRectangle.x * atlasWidth;
-    imageY = imageRectangle.y * atlasHeight;
-    imageWidth = imageRectangle.width * atlasWidth;
-    imageHeight = imageRectangle.height * atlasHeight;
+    billboard.computeImageCoordinates(scratchBoundingRectangle);
+    imageX = scratchBoundingRectangle.x;
+    imageY = scratchBoundingRectangle.y;
+    imageWidth = scratchBoundingRectangle.width;
+    imageHeight = scratchBoundingRectangle.height;
   }
 
   let compressed0 =
@@ -1060,13 +1056,13 @@ function writeCompressedAttrib0(
   compressed1 += upperTranslateY;
   compressed2 += lowerTranslateY;
 
-  // Compress image coordinates (px), integers 0-2^16 from lower-left of atlas. Avoid
+  // Compress image coordinates (px), integers 0-2^12 from lower-left of atlas. Avoid
   // `AttributeCompression.compressTextureCoordinates` for lossless pixel values.
-  const compressedImageLL = imageX * LEFT_SHIFT16 + imageY;
-  const compressedImageLR = (imageX + imageWidth) * LEFT_SHIFT16 + imageY;
+  const compressedImageLL = imageX * LEFT_SHIFT12 + imageY;
+  const compressedImageLR = (imageX + imageWidth) * LEFT_SHIFT12 + imageY;
   const compressedImageUR =
-    (imageX + imageWidth) * LEFT_SHIFT16 + imageY + imageHeight;
-  const compressedImageUL = imageX * LEFT_SHIFT16 + imageY + imageHeight;
+    (imageX + imageWidth) * LEFT_SHIFT12 + imageY + imageHeight;
+  const compressedImageUL = imageX * LEFT_SHIFT12 + imageY + imageHeight;
 
   if (billboardCollection._instanced) {
     i = billboard._index;
