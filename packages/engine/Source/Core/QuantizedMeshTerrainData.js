@@ -349,6 +349,7 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
       vertexCountWithoutSkirts,
       minimumHeight,
       maximumHeight,
+      rectangle,
       boundingSphere,
       occludeePointInScaledSpace,
       stride,

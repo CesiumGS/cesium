@@ -5,6 +5,7 @@ import { ConsoleMessageType } from "./ConsoleMirror";
 
 type SandcastleMessage =
   | { type: "reload" }
+  | { type: "consoleClear" }
   | { type: "consoleLog"; log: string }
   | { type: "consoleWarn"; warn: string }
   | { type: "consoleError"; error: string; lineNumber?: number; url?: string }
@@ -30,7 +31,7 @@ function Bucket({
    */
   highlightLine: (lineNumber: number) => void;
   appendConsole: (type: ConsoleMessageType, message: string) => void;
-  resetConsole: () => void;
+  resetConsole: (options?: { showMessage?: boolean | undefined }) => void;
 }) {
   const bucket = useRef<HTMLIFrameElement>(null);
   const lastRunNumber = useRef<number>(Number.NEGATIVE_INFINITY);
@@ -150,11 +151,6 @@ function Bucket({
     lastRunNumber.current = runNumber;
   }, [code, html, runNumber]);
 
-  function scriptLineToEditorLine(line: number) {
-    // editor lines are zero-indexed, plus 3 lines of boilerplate
-    return line - 1;
-  }
-
   useEffect(() => {
     const messageHandler = function (e: MessageEvent<SandcastleMessage>) {
       // The iframe (bucket.html) sends this message on load.
@@ -172,22 +168,22 @@ function Bucket({
           // into the iframe, causing the demo to run there.
           activateBucketScripts(bucket.current, code, html);
         }
+      } else if (e.data.type === "consoleClear") {
+        resetConsole({ showMessage: true });
       } else if (e.data.type === "consoleLog") {
         // Console log messages from the iframe display in Sandcastle.
         appendConsole("log", e.data.log);
       } else if (e.data.type === "consoleError") {
         // Console error messages from the iframe display in Sandcastle
         let errorMsg = e.data.error;
-        let lineNumber = e.data.lineNumber;
+        const lineNumber = e.data.lineNumber;
         if (lineNumber) {
-          errorMsg += " (on line ";
+          errorMsg += ` (on line ${lineNumber}`;
 
           if (e.data.url) {
-            errorMsg += `${lineNumber} of ${e.data.url})`;
-          } else {
-            lineNumber = scriptLineToEditorLine(lineNumber);
-            errorMsg += `${lineNumber + 1})`;
+            errorMsg += ` of ${e.data.url}`;
           }
+          errorMsg += ")";
         }
         appendConsole("error", errorMsg);
       } else if (e.data.type === "consoleWarn") {
