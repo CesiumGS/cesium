@@ -1060,6 +1060,8 @@ function writeCompressedAttrib0(
   compressed1 += upperTranslateY;
   compressed2 += lowerTranslateY;
 
+  // Compress image coordinates (px), integers 0-2^16 from lower-left of atlas. Avoid
+  // `AttributeCompression.compressTextureCoordinates` for lossless pixel values.
   const compressedImageLL = imageX * LEFT_SHIFT16 + imageY;
   const compressedImageLR = (imageX + imageWidth) * LEFT_SHIFT16 + imageY;
   const compressedImageUR =
