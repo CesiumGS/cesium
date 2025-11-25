@@ -138,6 +138,7 @@ export function Bucket({
   );
 
   useEffect(() => {
+    console.log("bucket updated", { code, html, runNumber });
     if (
       runNumber !== lastRunNumber.current &&
       bucket.current &&
