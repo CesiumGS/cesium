@@ -1,0 +1,183 @@
+{
+  "name": "cesium-sandcastle-extension",
+  "displayName": "Cesium Sandcastle",
+  "description": "Access Cesium Sandcastle tutorials and visualize the globe directly in VS Code",
+  "version": "0.0.1",
+  "publisher": "cesium",
+  "author": {
+    "name": "Cesium"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CesiumGS/cesium"
+  },
+  "bugs": {
+    "url": "https://github.com/CesiumGS/cesium/issues"
+  },
+  "keywords": [
+    "cesium",
+    "3d",
+    "globe",
+    "maps",
+    "geospatial",
+    "gis",
+    "sandcastle",
+    "tutorials"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Education",
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cesium-explorer",
+          "title": "Cesium Sandcastle",
+          "icon": "resources/cesium-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "cesium-explorer": [
+        {
+          "id": "cesiumTutorials",
+          "name": "Tutorials"
+        },
+        {
+          "id": "cesiumApiReference",
+          "name": "API Reference"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "cesium.openTutorial",
+        "title": "Open Tutorial",
+        "category": "Cesium"
+      },
+      {
+        "command": "cesium.openTutorialInExplorer",
+        "title": "Export Tutorial to Workspace",
+        "category": "Cesium",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "cesium.showGlobe",
+        "title": "Show Cesium Globe",
+        "category": "Cesium",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "cesium.refreshTutorials",
+        "title": "Refresh Tutorials",
+        "category": "Cesium",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cesium.openApiDoc",
+        "title": "Open API Documentation",
+        "category": "Cesium"
+      },
+      {
+        "command": "cesium.searchApi",
+        "title": "Search Cesium API",
+        "category": "Cesium",
+        "icon": "$(search)"
+      },
+      {
+        "command": "cesium.searchTutorials",
+        "title": "Search Tutorials",
+        "category": "Cesium",
+        "icon": "$(search)"
+      },
+      {
+        "command": "cesium.clearTutorialSearch",
+        "title": "Clear Tutorial Search",
+        "category": "Cesium",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "cesium.renderTutorialFromWorkspace",
+        "title": "Render Tutorial in Cesium Globe",
+        "category": "Cesium",
+        "icon": "$(play)"
+      },
+      {
+        "command": "cesium.setCesiumToken",
+        "title": "Set Cesium Ion Access Token",
+        "category": "Cesium",
+        "icon": "$(key)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "cesium.searchTutorials",
+          "when": "view == cesiumTutorials",
+          "group": "navigation"
+        },
+        {
+          "command": "cesium.refreshTutorials",
+          "when": "view == cesiumTutorials",
+          "group": "navigation"
+        },
+        {
+          "command": "cesium.showGlobe",
+          "when": "view == cesiumTutorials",
+          "group": "navigation"
+        },
+        {
+          "command": "cesium.searchApi",
+          "when": "view == cesiumApiReference",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "cesium.openTutorialInExplorer",
+          "when": "view == cesiumTutorials && viewItem == tutorial",
+          "group": "inline"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "cesium.renderTutorialFromWorkspace",
+          "when": "resourcePath =~ /cesium-tutorials/ && (resourceFilename == main.js || resourceFilename == index.html || resourceFilename == styles.css)",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./ && npm run copy-resources",
+    "copy-resources": "pwsh -Command \"New-Item -ItemType Directory -Force -Path out/data, out/templates | Out-Null; Copy-Item -Path src/data/* -Destination out/data/ -Recurse -Force; Copy-Item -Path src/templates/* -Destination out/templates/ -Recurse -Force\"",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "lint:fix": "eslint src --ext ts --fix",
+    "test": "node ./out/test/runTest.js",
+    "clean": "rimraf out",
+    "package": "vsce package",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "dotenv": "^17.2.3",
+    "eslint": "^8.54.0",
+    "js-yaml": "^4.1.1",
+    "typescript": "^5.3.0"
+  }
+}
