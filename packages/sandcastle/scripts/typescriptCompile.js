@@ -12,7 +12,7 @@ export default async function typescriptCompile(configPath) {
   const tsPath = fileURLToPath(import.meta.resolve("typescript"));
   const binPath = join(tsPath, "../../bin/tsc");
   return new Promise((resolve, reject) => {
-    const ls = spawn(binPath, ["-p", configPath]);
+    const ls = spawn(process.execPath, [binPath, "-p", configPath]);
 
     ls.stdout.on("data", (data) => {
       console.log(`stdout: ${data}`);
