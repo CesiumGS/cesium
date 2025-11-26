@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ApiDocumentationPanel } from '../apiDocumentationPanel';
+import { ApiDocumentationPanel } from '../panels/apiDocumentationPanel';
 import { ApiReferenceProvider } from '../providers/apiReferenceProvider';
 import { Logger } from '../utils/logger';
 import * as constants from '../utils/constants';

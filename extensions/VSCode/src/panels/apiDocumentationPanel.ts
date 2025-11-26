@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import * as https from 'https';
-import { Logger } from './utils/logger';
-import { TemplateLoader } from './utils/templateLoader';
-import { ApiItem } from './models/apiItem';
-import * as constants from './utils/constants';
+import { Logger } from '../utils/logger';
+import { TemplateLoader } from '../utils/templateLoader';
+import { ApiItem } from '../models/apiItem';
+import * as constants from '../utils/constants';
 
 
 export class ApiDocumentationPanel {

@@ -1,0 +1,7 @@
+import * as Cesium from 'cesium';
+import 'cesium/Build/Cesium/Widgets/widgets.css';
+
+// Set your Cesium Ion access token
+Cesium.Ion.defaultAccessToken = '{{CESIUM_TOKEN}}';
+
+{{TUTORIAL_CODE}}

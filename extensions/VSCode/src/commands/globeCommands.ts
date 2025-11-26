@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { CesiumGlobePanel } from '../cesiumGlobePanel';
+import { CesiumGlobePanel } from '../panels/cesiumGlobePanel';
 import { Logger } from '../utils/logger';
 import * as constants from '../utils/constants';
 

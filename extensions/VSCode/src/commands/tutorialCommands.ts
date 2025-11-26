@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
-import { CesiumGlobePanel } from '../cesiumGlobePanel';
+import { CesiumGlobePanel } from '../panels/cesiumGlobePanel';
 import { TutorialsProvider } from '../providers/tutorialsProvider';
 import { Logger } from '../utils/logger';
 import { FileSystemHelper } from '../utils/fileSystem';
-import { TemplateLoader } from '../utils/templateLoader';
+import { TokenManager } from '../utils/managers/tokenManager';
+import { FormatConverter } from '../utils/managers/formatConverter';
+import { TutorialFileManager } from '../utils/managers/tutorialFileManager';
+import { NpmProjectManager } from '../utils/managers/npmProjectManager';
 import * as constants from '../utils/constants';
 import { Tutorial } from '../models/tutorial';
 
@@ -13,10 +14,20 @@ import { Tutorial } from '../models/tutorial';
  * Handles all commands related to tutorials
  */
 export class TutorialCommandHandler {
+    private readonly tokenManager: TokenManager;
+    private readonly formatConverter: FormatConverter;
+    private readonly fileManager: TutorialFileManager;
+    private readonly npmManager: NpmProjectManager;
+
     constructor(
         private readonly context: vscode.ExtensionContext,
         private readonly tutorialsProvider: TutorialsProvider
-    ) {}
+    ) {
+        this.tokenManager = new TokenManager(context);
+        this.formatConverter = new FormatConverter(context.extensionUri);
+        this.fileManager = new TutorialFileManager(context.extensionUri);
+        this.npmManager = new NpmProjectManager();
+    }
 
     /**
      * Register all tutorial-related commands
@@ -44,7 +55,7 @@ export class TutorialCommandHandler {
         
         if (tutorial && tutorial.code) {
             // Inject access token from .env file or prompt user
-            const jsCode = await this.injectAccessToken(tutorial.code.javascript);
+            const jsCode = await this.tokenManager.injectAccessToken(tutorial.code.javascript);
             
             CesiumGlobePanel.createOrShow(
                 this.context.extensionUri,
@@ -55,124 +66,6 @@ export class TutorialCommandHandler {
         } else {
             Logger.error('Tutorial code not found', tutorial);
             vscode.window.showErrorMessage(constants.MSG_TUTORIAL_CODE_NOT_FOUND);
-        }
-    }
-
-    private async injectAccessToken(jsCode: string): Promise<string> {
-        if (!jsCode.includes('YOUR_CESIUM_ION_ACCESS_TOKEN')) {
-            return jsCode;
-        }
-
-        // Load .env file from extension root
-        const envPath = path.join(this.context.extensionPath, '.env');
-        dotenv.config({ path: envPath });
-
-        let token = process.env.CESIUM_ION_ACCESS_TOKEN;
-        
-        // If no token in .env, check global state (stored from previous prompts)
-        if (!token) {
-            token = this.context.globalState.get<string>('cesiumIonAccessToken');
-        }
-
-        // If still no token, prompt user to enter it
-        if (!token) {
-            token = await this.promptForAccessToken();
-        }
-        
-        if (token) {
-            Logger.info('Injecting Cesium Ion access token');
-            return jsCode.replace(/YOUR_CESIUM_ION_ACCESS_TOKEN/g, token);
-        }
-        
-        Logger.warn('No Cesium Ion access token available');
-        return jsCode;
-    }
-
-    private async promptForAccessToken(): Promise<string | undefined> {
-        const action = await vscode.window.showWarningMessage(
-            'Cesium Ion access token not found. Tutorials may not work without it.',
-            'Enter Token',
-            'Get Token from Cesium.com',
-            'Skip'
-        );
-
-        if (action === 'Enter Token') {
-            const token = await vscode.window.showInputBox({
-                prompt: 'Enter your Cesium Ion access token',
-                placeHolder: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-                password: true,
-                ignoreFocusOut: true,
-                validateInput: (value) => {
-                    if (!value || value.trim().length === 0) {
-                        return 'Token cannot be empty';
-                    }
-                    if (!value.startsWith('eyJ')) {
-                        return 'Invalid token format';
-                    }
-                    return null;
-                }
-            });
-
-            if (token) {
-                // Save token to global state
-                await this.context.globalState.update('cesiumIonAccessToken', token);
-                
-                // Ask if user wants to save to .env file
-                const saveToEnv = await vscode.window.showInformationMessage(
-                    'Token saved for this session. Would you like to save it to .env file for future use?',
-                    'Yes',
-                    'No'
-                );
-
-                if (saveToEnv === 'Yes') {
-                    await this.saveTokenToEnvFile(token);
-                }
-
-                Logger.info('Cesium Ion access token saved');
-                return token;
-            }
-        } else if (action === 'Get Token from Cesium.com') {
-            await vscode.env.openExternal(vscode.Uri.parse('https://ion.cesium.com/tokens'));
-            // Recursively prompt again after opening the website
-            return await this.promptForAccessToken();
-        }
-
-        return undefined;
-    }
-
-    private async saveTokenToEnvFile(token: string): Promise<void> {
-        try {
-            const envPath = path.join(this.context.extensionPath, '.env');
-            let envContent = '';
-
-            // Read existing .env file if it exists
-            try {
-                const envUri = vscode.Uri.file(envPath);
-                envContent = await FileSystemHelper.readFile(envUri);
-            } catch {
-                // File doesn't exist, start with template
-                envContent = '# Cesium Ion Access Token\n# Get your token from: https://ion.cesium.com/tokens\n';
-            }
-
-            // Update or add token
-            if (envContent.includes('CESIUM_ION_ACCESS_TOKEN=')) {
-                envContent = envContent.replace(
-                    /CESIUM_ION_ACCESS_TOKEN=.*/,
-                    `CESIUM_ION_ACCESS_TOKEN=${token}`
-                );
-            } else {
-                envContent += `\nCESIUM_ION_ACCESS_TOKEN=${token}\n`;
-            }
-
-            // Write back to file
-            const envUri = vscode.Uri.file(envPath);
-            await FileSystemHelper.writeFile(envUri, envContent);
-
-            vscode.window.showInformationMessage('Token saved to .env file');
-            Logger.info('Token saved to .env file');
-        } catch (error) {
-            Logger.error('Failed to save token to .env file', error);
-            vscode.window.showErrorMessage(`Failed to save token to .env file: ${error}`);
         }
     }
 
@@ -204,7 +97,7 @@ export class TutorialCommandHandler {
     }
 
     private async setCesiumToken(): Promise<void> {
-        const token = await this.promptForAccessToken();
+        const token = await this.tokenManager.promptForAccessToken();
         if (token) {
             vscode.window.showInformationMessage('Cesium Ion access token has been set successfully');
         }
@@ -232,6 +125,9 @@ export class TutorialCommandHandler {
             
             const tutorialDir = FileSystemHelper.dirname(uri.fsPath);
 
+            // Check if this is an npm project
+            const isNpmProject = await this.npmManager.isNpmProject(tutorialDir);
+
             // Read tutorial files
             const jsPath = vscode.Uri.file(FileSystemHelper.join(tutorialDir, constants.FILE_MAIN_JS));
             const htmlPath = vscode.Uri.file(FileSystemHelper.join(tutorialDir, constants.FILE_INDEX_HTML));
@@ -253,10 +149,15 @@ export class TutorialCommandHandler {
                 cssCode = await FileSystemHelper.readFile(cssPath);
             }
 
-            // Inject access token from .env file or prompt user
-            jsCode = await this.injectAccessToken(jsCode);
+            // For npm projects, start dev server
+            if (isNpmProject) {
+                const tutorialName = FileSystemHelper.basename(tutorialDir);
+                await this.npmManager.startDevServer(tutorialDir, tutorialName);
+                return;
+            }
 
-            // Update the Cesium globe view
+            // For CDN projects, inject token and render in globe view
+            jsCode = await this.tokenManager.injectAccessToken(jsCode);
             CesiumGlobePanel.createOrShow(this.context.extensionUri, jsCode, htmlCode, cssCode);
 
             // Show notification for manual renders
@@ -292,10 +193,36 @@ export class TutorialCommandHandler {
                 return;
             }
 
-            Logger.info('Exporting tutorial files', tutorial.name);
+            // Ask user to select export format
+            const format = await vscode.window.showQuickPick(
+                [
+                    {
+                        label: 'Modern npm Project',
+                        description: 'Vite + @cesium/engine with ES6 imports (recommended)',
+                        detail: 'Full IntelliSense support, modern dev workflow with HMR',
+                        value: 'npm'
+                    },
+                    {
+                        label: 'Legacy CDN',
+                        description: 'Simple HTML with Cesium CDN',
+                        detail: 'Traditional format with global Cesium object',
+                        value: 'cdn'
+                    }
+                ],
+                {
+                    placeHolder: 'Choose export format',
+                    ignoreFocusOut: true
+                }
+            );
+
+            if (!format) {
+                return; // User cancelled
+            }
+
+            Logger.info('Exporting tutorial files', tutorial.name, format.value);
 
             // Create tutorial folder directly in workspace
-            const tutorialSlug = tutorial.slug || this.createSlugFromName(tutorial.name);
+            const tutorialSlug = tutorial.slug || this.fileManager.createSlugFromName(tutorial.name);
             const tutorialPath = vscode.Uri.joinPath(workspaceFolder.uri, tutorialSlug);
 
             // Create directory
@@ -310,17 +237,38 @@ export class TutorialCommandHandler {
 
             if (await FileSystemHelper.exists(extensionTutorialPath)) {
                 // Copy all files from the tutorial folder
-                await this.copyTutorialFolder(extensionTutorialPath, tutorialPath);
+                await this.fileManager.copyTutorialFolder(extensionTutorialPath, tutorialPath);
+                
+                // If user chose npm format and copied tutorial has package.json, it's already npm format
+                // If user chose npm but copied tutorial is CDN format, convert it
+                const copiedPackageJson = vscode.Uri.joinPath(tutorialPath, 'package.json');
+                const isNpmFormat = await FileSystemHelper.exists(copiedPackageJson);
+                
+                if (format.value === 'npm' && !isNpmFormat) {
+                    // Convert copied CDN files to npm format
+                    const token = await this.tokenManager.getAccessToken();
+                    await this.formatConverter.convertCdnToNpm(tutorialPath, tutorialSlug, token);
+                } else if (format.value === 'cdn' && isNpmFormat) {
+                    // Convert copied npm files to CDN format
+                    await this.formatConverter.convertNpmToCdn(tutorialPath);
+                }
             } else {
-                // Create files from tutorial code object
-                await this.createTutorialFiles(tutorial, tutorialPath, tutorialSlug);
+                // Create files based on selected format
+                if (format.value === 'npm') {
+                    const token = await this.tokenManager.getAccessToken();
+                    const convertedCode = this.formatConverter.convertToES6Imports(tutorial.code.javascript || '');
+                    await this.fileManager.createNpmProjectFiles(tutorial, tutorialPath, tutorialSlug, token, convertedCode);
+                } else {
+                    const jsCode = await this.tokenManager.injectAccessToken(tutorial.code.javascript || '');
+                    await this.fileManager.createLegacyCdnFiles(tutorial, tutorialPath, jsCode);
+                }
             }
 
             // Create README
-            await this.createTutorialReadme(tutorial, tutorialPath, tutorialSlug);
+            await this.fileManager.createTutorialReadme(tutorial, tutorialPath, format.value === 'npm');
 
             // Open files in editor
-            await this.openTutorialFilesInEditor(tutorialPath);
+            await this.fileManager.openTutorialFilesInEditor(tutorialPath);
 
             // Reveal in file explorer
             await vscode.commands.executeCommand('revealInExplorer', tutorialPath);
@@ -331,84 +279,5 @@ export class TutorialCommandHandler {
             Logger.error('Failed to export tutorial', error);
             vscode.window.showErrorMessage(`Failed to export tutorial: ${error}`);
         }
-    }
-
-    private async copyTutorialFolder(source: vscode.Uri, destination: vscode.Uri): Promise<void> {
-        const entries = await FileSystemHelper.readDirectory(source);
-
-        for (const [name, type] of entries) {
-            if (type === vscode.FileType.File) {
-                const srcPath = vscode.Uri.joinPath(source, name);
-                const destPath = vscode.Uri.joinPath(destination, name);
-                await FileSystemHelper.copyFile(srcPath, destPath);
-            }
-        }
-    }
-
-    private async createTutorialFiles(tutorial: Tutorial, tutorialPath: vscode.Uri, tutorialSlug: string): Promise<void> {
-        // Save HTML
-        const htmlPath = vscode.Uri.joinPath(tutorialPath, constants.FILE_INDEX_HTML);
-        await FileSystemHelper.writeFile(htmlPath, tutorial.code.html || '');
-
-        // Save JavaScript
-        const jsPath = vscode.Uri.joinPath(tutorialPath, constants.FILE_MAIN_JS);
-        await FileSystemHelper.writeFile(jsPath, tutorial.code.javascript || '');
-
-        // Save CSS if available
-        if (tutorial.code.css) {
-            const cssPath = vscode.Uri.joinPath(tutorialPath, constants.FILE_STYLES_CSS);
-            await FileSystemHelper.writeFile(cssPath, tutorial.code.css);
-        }
-
-        // Create metadata.json
-        const metadataPath = vscode.Uri.joinPath(tutorialPath, constants.FILE_METADATA_JSON);
-        const metadata = {
-            name: tutorial.name,
-            slug: tutorialSlug,
-            category: tutorial.category || 'Uncategorized',
-            description: tutorial.description || ''
-        };
-        await FileSystemHelper.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
-    }
-
-    private async createTutorialReadme(tutorial: Tutorial, tutorialPath: vscode.Uri, tutorialSlug: string): Promise<void> {
-        try {
-            const readmeContent = await TemplateLoader.loadAndReplace(
-                this.context.extensionUri,
-                'tutorialReadme.md',
-                {
-                    'TUTORIAL_NAME': tutorial.name,
-                    'TUTORIAL_DESCRIPTION': tutorial.description || '',
-                    'FILE_INDEX_HTML': constants.FILE_INDEX_HTML,
-                    'FILE_MAIN_JS': constants.FILE_MAIN_JS,
-                    'FILE_METADATA_JSON': constants.FILE_METADATA_JSON,
-                    'CSS_FILE_LINE': tutorial.code.css ? `\n- **${constants.FILE_STYLES_CSS}** - CSS styles for the tutorial` : '',
-                    'FOLDER_CESIUM_TUTORIALS': tutorialSlug,
-                    'TUTORIAL_SLUG': tutorialSlug,
-                    'CSS_FILE_TREE_LINE': tutorial.code.css ? `\n    ├── ${constants.FILE_STYLES_CSS}` : '',
-                    'FILE_README_MD': constants.FILE_README_MD
-                }
-            );
-
-            const readmePath = vscode.Uri.joinPath(tutorialPath, constants.FILE_README_MD);
-            await FileSystemHelper.writeFile(readmePath, readmeContent);
-        } catch (error) {
-            Logger.error('Failed to create tutorial README from template', error);
-        }
-    }
-
-    private async openTutorialFilesInEditor(tutorialPath: vscode.Uri): Promise<void> {
-        const htmlUri = vscode.Uri.joinPath(tutorialPath, constants.FILE_INDEX_HTML);
-        const jsUri = vscode.Uri.joinPath(tutorialPath, constants.FILE_MAIN_JS);
-
-        const htmlDoc = await vscode.workspace.openTextDocument(htmlUri);
-        await vscode.window.showTextDocument(htmlDoc, { preview: false });
-
-        const jsDoc = await vscode.workspace.openTextDocument(jsUri);
-        await vscode.window.showTextDocument(jsDoc, { viewColumn: vscode.ViewColumn.Beside });
-    }
-
-    private createSlugFromName(name: string): string {
-        return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     }
 }
