@@ -40,7 +40,7 @@
         {
           "id": "cesium-explorer",
           "title": "Cesium Sandcastle",
-          "icon": "resources/cesium-icon.svg"
+          "icon": "resources/cesium.svg"
         }
       ]
     },
@@ -48,11 +48,13 @@
       "cesium-explorer": [
         {
           "id": "cesiumTutorials",
-          "name": "Tutorials"
+          "name": "Tutorials",
+          "icon": "$(book)"
         },
         {
           "id": "cesiumApiReference",
-          "name": "API Reference"
+          "name": "API Reference",
+          "icon": "$(book)"
         }
       ]
     },
@@ -149,7 +151,7 @@
       "editor/title": [
         {
           "command": "cesium.renderTutorialFromWorkspace",
-          "when": "resourcePath =~ /cesium-tutorials/ && (resourceFilename == main.js || resourceFilename == index.html || resourceFilename == styles.css)",
+          "when": "resourceFilename == main.js || resourceFilename == index.html || resourceFilename == styles.css",
           "group": "navigation"
         }
       ]
@@ -158,7 +160,7 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./ && npm run copy-resources",
-    "copy-resources": "pwsh -Command \"New-Item -ItemType Directory -Force -Path out/data, out/templates | Out-Null; Copy-Item -Path src/data/* -Destination out/data/ -Recurse -Force; Copy-Item -Path src/templates/* -Destination out/templates/ -Recurse -Force\"",
+    "copy-resources": "pwsh -Command \"New-Item -ItemType Directory -Force -Path out/data, out/templates, out/tutorials, out/resources | Out-Null; Copy-Item -Path src/data/* -Destination out/data/ -Recurse -Force; Copy-Item -Path src/templates/* -Destination out/templates/ -Recurse -Force; Copy-Item -Path tutorials/* -Destination out/tutorials/ -Recurse -Force; Copy-Item -Path resources/* -Destination out/resources/ -Recurse -Force\"",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",

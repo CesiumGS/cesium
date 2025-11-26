@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { TutorialsProvider } from './providers/tutorialsProvider';
 import { ApiReferenceProvider } from './providers/apiReferenceProvider';
 import { TutorialCommandHandler } from './commands/tutorialCommands';
@@ -16,6 +17,11 @@ export function activate(context: vscode.ExtensionContext): void {
     Logger.info(constants.MSG_EXTENSION_ACTIVATED);
 
     try {
+        // In development, the compiled code runs from 'out', but context.extensionPath points to root
+        // Check if tutorials exist relative to __dirname (where this compiled file is)
+        const compiledDir = path.dirname(__filename);
+        Logger.info(`Compiled code directory: ${compiledDir}`);
+        
         // Register tree view providers
         const tutorialsProvider = new TutorialsProvider(context.extensionPath);
         const apiReferenceProvider = new ApiReferenceProvider(context.extensionUri);

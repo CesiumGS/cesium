@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { Logger } from '../utils/logger';
 import { FileSystemHelper } from '../utils/fileSystem';
 import * as constants from '../utils/constants';
@@ -11,17 +12,17 @@ export class TutorialsProvider implements vscode.TreeDataProvider<TutorialItem> 
     readonly onDidChangeTreeData: vscode.Event<TutorialItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
     private tutorials: Tutorial[] = [];
-    private extensionPath: string;
+    private tutorialsPath: string;
     private searchQuery: string = '';
 
     constructor(extensionPath: string) {
-        this.extensionPath = extensionPath;
+        // Tutorials are copied to the out directory during build
+        this.tutorialsPath = path.join(extensionPath, constants.FOLDER_TUTORIALS);
         this.loadTutorials();
     }
 
     refresh(): void {
         this.loadTutorials();
-        this._onDidChangeTreeData.fire();
     }
 
     setSearchQuery(query: string): void {
@@ -98,25 +99,35 @@ export class TutorialsProvider implements vscode.TreeDataProvider<TutorialItem> 
 
     private async loadTutorials(): Promise<void> {
         this.tutorials = [];
-        const tutorialsDir = vscode.Uri.file(FileSystemHelper.join(this.extensionPath, constants.FOLDER_TUTORIALS));
+        const tutorialsDir = vscode.Uri.file(this.tutorialsPath);
 
         if (!(await FileSystemHelper.exists(tutorialsDir))) {
-            Logger.warn(constants.MSG_TUTORIALS_DIR_NOT_FOUND);
-            vscode.window.showErrorMessage(constants.MSG_TUTORIALS_DIR_NOT_FOUND);
+            Logger.warn(`${constants.MSG_TUTORIALS_DIR_NOT_FOUND}: ${this.tutorialsPath}`);
+            vscode.window.showErrorMessage(`${constants.MSG_TUTORIALS_DIR_NOT_FOUND}: ${this.tutorialsPath}`);
             return;
         }
 
         try {
             const entries = await FileSystemHelper.readDirectory(tutorialsDir);
+            
             const folders = entries
                 .filter(([_, type]) => type === vscode.FileType.Directory)
                 .map(([name, _]) => name);
 
-            for (const folder of folders) {
-                await this.loadTutorial(tutorialsDir, folder);
-            }
+            Logger.info(`Found ${folders.length} tutorial folders: ${folders.join(', ')}`);
 
-            Logger.info(`Loaded ${this.tutorials.length} tutorials`);
+            // Load all tutorials in parallel for better performance
+            const loadPromises = folders.map(folder => this.loadTutorial(tutorialsDir, folder));
+            await Promise.all(loadPromises);
+
+            Logger.info(`Successfully loaded ${this.tutorials.length} tutorials`);
+            
+            if (this.tutorials.length === 0) {
+                Logger.warn('No tutorials were loaded successfully');
+            }
+            
+            // Notify the tree view that data has changed
+            this._onDidChangeTreeData.fire();
         } catch (error) {
             Logger.error('Failed to load tutorials', error);
             vscode.window.showErrorMessage(`Failed to load tutorials: ${error}`);
@@ -137,8 +148,10 @@ export class TutorialsProvider implements vscode.TreeDataProvider<TutorialItem> 
                 FileSystemHelper.exists(jsPath)
             ]);
 
+            Logger.debug(`Tutorial ${folder} - metadata: ${hasRequiredFiles[0]}, html: ${hasRequiredFiles[1]}, js: ${hasRequiredFiles[2]}`);
+
             if (!hasRequiredFiles.every(exists => exists)) {
-                Logger.debug(`Skipping incomplete tutorial: ${folder}`);
+                Logger.warn(`Skipping incomplete tutorial: ${folder} - missing required files`);
                 return;
             }
 
@@ -164,8 +177,10 @@ export class TutorialsProvider implements vscode.TreeDataProvider<TutorialItem> 
                     css
                 }
             });
+            
+            Logger.info(`Successfully loaded tutorial: ${metadata.name}`);
         } catch (error) {
-            Logger.warn(`Failed to load tutorial "${folder}"`, error);
+            Logger.error(`Failed to load tutorial "${folder}"`, error);
         }
     }
 }

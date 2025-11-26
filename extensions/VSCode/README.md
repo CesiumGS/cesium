@@ -19,11 +19,26 @@ A Visual Studio Code extension that provides access to Cesium Sandcastle tutoria
 
 - Visual Studio Code 1.85.0 or higher
 
-## Extension Settings
+## Configuration
 
-This extension contributes the following settings:
+### Setting Up Cesium Ion Access Token
 
-* `cesium.sandcastle.apiKey`: Your Cesium ion API key (optional)
+Tutorials require a Cesium Ion access token to work properly. You have two options:
+
+1. **Automatic Prompt** (Recommended)
+   - Open any tutorial - you'll be prompted to enter your token
+   - Token is saved for future use
+
+2. **Manual Setup via .env File**
+   - Copy `.env.example` to `.env` in the extension directory
+   - Add your token: `CESIUM_ION_ACCESS_TOKEN=your_token_here`
+   - Get your token from: [https://ion.cesium.com/tokens](https://ion.cesium.com/tokens)
+
+3. **Command Palette**
+   - Run `Cesium: Set Cesium Ion Access Token` from Command Palette
+   - Enter your token when prompted
+
+See [ENV_SETUP.md](ENV_SETUP.md) for detailed instructions.
 
 ## Known Issues
 

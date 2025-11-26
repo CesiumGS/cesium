@@ -36,10 +36,9 @@ export const FILE_README_MD = 'README.md';
 
 // Folder names
 export const FOLDER_TUTORIALS = 'tutorials';
-export const FOLDER_CESIUM_TUTORIALS = 'cesium-tutorials';
 
 // File patterns
-export const TUTORIAL_FILE_PATTERN = '**/cesium-tutorials/**/*.{js,html,css}';
+export const TUTORIAL_FILE_PATTERN = '**/{main.js,index.html,styles.css}';
 export const TUTORIAL_FILES = [FILE_MAIN_JS, FILE_INDEX_HTML, FILE_STYLES_CSS];
 
 // URLs
@@ -50,7 +49,7 @@ export const MSG_EXTENSION_ACTIVATED = 'Cesium Sandcastle extension is now activ
 export const MSG_TUTORIALS_REFRESHED = 'Cesium tutorials refreshed!';
 export const MSG_TUTORIAL_CODE_NOT_FOUND = 'Tutorial code not found';
 export const MSG_NO_FILE_OPEN = 'No file is currently open';
-export const MSG_NOT_TUTORIAL_FILE = 'This file is not in a cesium-tutorials folder';
+export const MSG_NOT_TUTORIAL_FILE = 'This file is not a tutorial file (main.js, index.html, or styles.css)';
 export const MSG_OPEN_WORKSPACE_FOLDER = 'Please open a workspace folder to save tutorial files';
 export const MSG_API_SEARCH_CLEARED = 'API search cleared';
 export const MSG_TUTORIAL_SEARCH_CLEARED = 'Tutorial search cleared';

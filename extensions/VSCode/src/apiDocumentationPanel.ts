@@ -3,8 +3,8 @@ import * as https from 'https';
 import { Logger } from './utils/logger';
 import { TemplateLoader } from './utils/templateLoader';
 import { ApiItem } from './models/apiItem';
+import * as constants from './utils/constants';
 
-const BASE_CESIUM_DOC_URL = 'https://cesium.com/learn/cesiumjs/ref-doc/';
 
 export class ApiDocumentationPanel {
     public static currentPanel: ApiDocumentationPanel | undefined;
@@ -108,12 +108,11 @@ export class ApiDocumentationPanel {
             let headContent = headMatch ? headMatch[1] : '';
 
             // Clean up relative URLs to make them absolute
-            bodyContent = bodyContent.replace(/href="(?!http|#)([^"]*)"/g, `href="${BASE_CESIUM_DOC_URL}$1"`);
-            bodyContent = bodyContent.replace(/src="(?!http)([^"]*)"/g, `src="${BASE_CESIUM_DOC_URL}$1"`);
+            bodyContent = bodyContent.replace(/href="(?!http|#)([^"]*)"/g, `href="${constants.CESIUM_API_BASE_URL}$1"`);
+            bodyContent = bodyContent.replace(/src="(?!http)([^"]*)"/g, `src="${constants.CESIUM_API_BASE_URL}$1"`);
             
-            headContent = headContent.replace(/href="(?!http)([^"]*\.css)"/g, `href="${BASE_CESIUM_DOC_URL}$1"`);
-            headContent = headContent.replace(/src="(?!http)([^"]*\.js)"/g, `src="${BASE_CESIUM_DOC_URL}$1"`);
-
+            headContent = headContent.replace(/href="(?!http)([^"]*\.css)"/g, `href="${constants.CESIUM_API_BASE_URL}$1"`);
+            headContent = headContent.replace(/src="(?!http)([^"]*\.js)"/g, `src="${constants.CESIUM_API_BASE_URL}$1"`);
             const html = await TemplateLoader.loadAndReplace(
                 this._extensionUri,
                 'apiDocumentation.html',

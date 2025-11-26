@@ -39,6 +39,18 @@
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run", "test", "--", "--includeName", "${fileDirnameBasename}${/}${fileBasenameNoExtension}", "--debug"],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Run VS Code Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/extensions/VSCode"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/extensions/VSCode/out/**/*.js"
+            ],
+            "preLaunchTask": "npm: compile - extensions/VSCode"
         }
     ],
     "compounds": [

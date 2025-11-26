@@ -222,13 +222,15 @@ export class TutorialCommandHandler {
 
     async renderTutorialFromFile(uri: vscode.Uri): Promise<void> {
         try {
-            const tutorialDir = FileSystemHelper.dirname(uri.fsPath);
-
+            const fileName = FileSystemHelper.basename(uri.fsPath);
+            
             // Check if this is a tutorial file
-            if (!uri.fsPath.includes(constants.FOLDER_CESIUM_TUTORIALS)) {
+            if (!constants.TUTORIAL_FILES.includes(fileName)) {
                 vscode.window.showWarningMessage(constants.MSG_NOT_TUTORIAL_FILE);
                 return;
             }
+            
+            const tutorialDir = FileSystemHelper.dirname(uri.fsPath);
 
             // Read tutorial files
             const jsPath = vscode.Uri.file(FileSystemHelper.join(tutorialDir, constants.FILE_MAIN_JS));
@@ -292,13 +294,11 @@ export class TutorialCommandHandler {
 
             Logger.info('Exporting tutorial files', tutorial.name);
 
-            // Create tutorial folder structure
+            // Create tutorial folder directly in workspace
             const tutorialSlug = tutorial.slug || this.createSlugFromName(tutorial.name);
-            const tutorialsBasePath = vscode.Uri.joinPath(workspaceFolder.uri, constants.FOLDER_CESIUM_TUTORIALS);
-            const tutorialPath = vscode.Uri.joinPath(tutorialsBasePath, tutorialSlug);
+            const tutorialPath = vscode.Uri.joinPath(workspaceFolder.uri, tutorialSlug);
 
-            // Create directories
-            await FileSystemHelper.createDirectory(tutorialsBasePath);
+            // Create directory
             await FileSystemHelper.createDirectory(tutorialPath);
 
             // Check if tutorial exists in extension's tutorials folder
@@ -325,7 +325,7 @@ export class TutorialCommandHandler {
             // Reveal in file explorer
             await vscode.commands.executeCommand('revealInExplorer', tutorialPath);
 
-            vscode.window.showInformationMessage(`Tutorial exported to: ${constants.FOLDER_CESIUM_TUTORIALS}/${tutorialSlug}/`);
+            vscode.window.showInformationMessage(`Tutorial exported to: ${tutorialSlug}/`);
             Logger.info('Tutorial exported successfully', tutorial.name);
         } catch (error) {
             Logger.error('Failed to export tutorial', error);
@@ -383,7 +383,7 @@ export class TutorialCommandHandler {
                     'FILE_MAIN_JS': constants.FILE_MAIN_JS,
                     'FILE_METADATA_JSON': constants.FILE_METADATA_JSON,
                     'CSS_FILE_LINE': tutorial.code.css ? `\n- **${constants.FILE_STYLES_CSS}** - CSS styles for the tutorial` : '',
-                    'FOLDER_CESIUM_TUTORIALS': constants.FOLDER_CESIUM_TUTORIALS,
+                    'FOLDER_CESIUM_TUTORIALS': tutorialSlug,
                     'TUTORIAL_SLUG': tutorialSlug,
                     'CSS_FILE_TREE_LINE': tutorial.code.css ? `\n    ├── ${constants.FILE_STYLES_CSS}` : '',
                     'FILE_README_MD': constants.FILE_README_MD
