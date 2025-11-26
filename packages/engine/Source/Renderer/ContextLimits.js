@@ -117,7 +117,7 @@ Object.defineProperties(ContextLimits, {
    */
   maximum3DTextureSize: {
     get: function () {
-      return ContextLimits._maximumTextureSize;
+      return ContextLimits._maximum3DTextureSize;
     },
   },
 

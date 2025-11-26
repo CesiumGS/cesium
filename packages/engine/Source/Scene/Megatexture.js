@@ -432,18 +432,17 @@ Megatexture.prototype.writeDataToTexture = function (index, tileData) {
   };
 
   const tilesPerZ = tileCounts.x * tileCounts.y;
-  const tileIndexZ = Math.floor(index / tilesPerZ);
-  const tileIndexXY = index - tileIndexZ * tilesPerZ;
-  const tileIndexY = Math.floor(tileIndexXY / tileCounts.x);
-  const tileIndexX = tileIndexXY - tileIndexY * tileCounts.x;
+  const iz = Math.floor(index / tilesPerZ);
+  const remainder = index - iz * tilesPerZ;
+  const iy = Math.floor(remainder / tileCounts.x);
+  const ix = remainder - iy * tileCounts.x;
 
   const copyOptions = {
     source: source,
-    xOffset: tileIndexX * voxelCountPerTile.x,
-    yOffset: tileIndexY * voxelCountPerTile.y,
-    zOffset: tileIndexZ * voxelCountPerTile.z,
+    xOffset: ix * voxelCountPerTile.x,
+    yOffset: iy * voxelCountPerTile.y,
+    zOffset: iz * voxelCountPerTile.z,
   };
-  console.log(`writeDataToTexture copyOptions: ${JSON.stringify(copyOptions)}`);
 
   this.texture.copyFrom(copyOptions);
 };
