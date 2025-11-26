@@ -308,7 +308,7 @@ Azure2DImageryProvider.prototype.requestImage = function (
   }
 
   // Asynchronously request and populate _attributionsByLevel if it hasn't been already. We do this here so that the promise can be properly awaited.
-  if (promise && !defined(this._attributionsByLevel)) {
+  if (!defined(this._attributionsByLevel)) {
     return Promise.all([promise, this.getViewportCredits()]).then(
       (results) => results[0],
     );
