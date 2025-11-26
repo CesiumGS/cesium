@@ -7,6 +7,7 @@ import { TokenManager } from '../utils/managers/tokenManager';
 import { FormatConverter } from '../utils/managers/formatConverter';
 import { TutorialFileManager } from '../utils/managers/tutorialFileManager';
 import { NpmProjectManager } from '../utils/managers/npmProjectManager';
+import { CesiumProjectDetector } from '../utils/cesiumProjectDetector';
 import * as constants from '../utils/constants';
 import { Tutorial } from '../models/tutorial';
 
@@ -18,6 +19,9 @@ export class TutorialCommandHandler {
     private readonly formatConverter: FormatConverter;
     private readonly fileManager: TutorialFileManager;
     private readonly npmManager: NpmProjectManager;
+
+    private cesiumProjectCache = new Map<string, boolean>();
+
 
     constructor(
         private readonly context: vscode.ExtensionContext,
@@ -115,38 +119,45 @@ export class TutorialCommandHandler {
 
     async renderTutorialFromFile(uri: vscode.Uri): Promise<void> {
         try {
-            const fileName = FileSystemHelper.basename(uri.fsPath);
+            const filePath = uri.fsPath;
+            const tutorialDir = FileSystemHelper.dirname(filePath);
             
-            // Check if this is a tutorial file
-            if (!constants.TUTORIAL_FILES.includes(fileName)) {
-                vscode.window.showWarningMessage(constants.MSG_NOT_TUTORIAL_FILE);
+            // Check if this file is part of a Cesium project
+            const isCesiumProject = await CesiumProjectDetector.isPartOfCesiumProject(filePath);
+            if (!isCesiumProject) {
+                vscode.window.showWarningMessage(
+                    'This file does not appear to be part of a Cesium project. ' +
+                    'Make sure your code contains Cesium references (e.g., Cesium.Viewer, import from cesium).'
+                );
                 return;
             }
+
+            // Find all relevant Cesium files in the directory
+            const cesiumFiles = await CesiumProjectDetector.findCesiumFiles(tutorialDir);
             
-            const tutorialDir = FileSystemHelper.dirname(uri.fsPath);
+            if (!cesiumFiles.jsFile && !cesiumFiles.htmlFile) {
+                vscode.window.showWarningMessage('Could not find JavaScript or HTML files in this directory.');
+                return;
+            }
 
             // Check if this is an npm project
             const isNpmProject = await this.npmManager.isNpmProject(tutorialDir);
 
-            // Read tutorial files
-            const jsPath = vscode.Uri.file(FileSystemHelper.join(tutorialDir, constants.FILE_MAIN_JS));
-            const htmlPath = vscode.Uri.file(FileSystemHelper.join(tutorialDir, constants.FILE_INDEX_HTML));
-            const cssPath = vscode.Uri.file(FileSystemHelper.join(tutorialDir, constants.FILE_STYLES_CSS));
-
+            // Read project files
             let jsCode = '';
             let htmlCode = '';
             let cssCode = '';
 
-            if (await FileSystemHelper.exists(jsPath)) {
-                jsCode = await FileSystemHelper.readFile(jsPath);
+            if (cesiumFiles.jsFile) {
+                jsCode = await FileSystemHelper.readFile(cesiumFiles.jsFile);
             }
 
-            if (await FileSystemHelper.exists(htmlPath)) {
-                htmlCode = await FileSystemHelper.readFile(htmlPath);
+            if (cesiumFiles.htmlFile) {
+                htmlCode = await FileSystemHelper.readFile(cesiumFiles.htmlFile);
             }
 
-            if (await FileSystemHelper.exists(cssPath)) {
-                cssCode = await FileSystemHelper.readFile(cssPath);
+            if (cesiumFiles.cssFile) {
+                cssCode = await FileSystemHelper.readFile(cesiumFiles.cssFile);
             }
 
             // For npm projects, start dev server
@@ -170,17 +181,32 @@ export class TutorialCommandHandler {
         }
     }
 
+    /**
+     * Clear the Cesium project cache for a specific directory
+     */
+    private clearProjectCache(directoryPath?: string): void {
+        if (directoryPath) {
+            this.cesiumProjectCache.delete(directoryPath);
+        } else {
+            this.cesiumProjectCache.clear();
+        }
+    }
+
     async handleTutorialFileChange(uri: vscode.Uri): Promise<void> {
         // Only rerender if the Cesium Globe panel is already visible
         if (!CesiumGlobePanel.currentPanel) {
             return;
         }
 
-        const fileName = FileSystemHelper.basename(uri.fsPath);
-
-        // If it's a main tutorial file, reload the tutorial
-        if (constants.TUTORIAL_FILES.includes(fileName)) {
-            await this.renderTutorialFromFile(uri);
+        const directory = FileSystemHelper.dirname(uri.fsPath);
+        
+        // Check cache first to avoid expensive directory scans
+        let isCesiumProject = this.cesiumProjectCache.get(directory);
+        
+        if (isCesiumProject === undefined) {
+            // Not in cache, do the expensive check
+            isCesiumProject = await CesiumProjectDetector.isPartOfCesiumProject(uri.fsPath);
+            this.cesiumProjectCache.set(directory, isCesiumProject);
         }
     }
 
@@ -272,6 +298,9 @@ export class TutorialCommandHandler {
 
             // Reveal in file explorer
             await vscode.commands.executeCommand('revealInExplorer', tutorialPath);
+
+            // Clear cache for the new tutorial directory so it gets detected immediately
+            this.clearProjectCache(tutorialPath.fsPath);
 
             vscode.window.showInformationMessage(`Tutorial exported to: ${tutorialSlug}/`);
             Logger.info('Tutorial exported successfully', tutorial.name);

@@ -151,7 +151,7 @@
       "editor/title": [
         {
           "command": "cesium.renderTutorialFromWorkspace",
-          "when": "resourceFilename == main.js || resourceFilename == index.html || resourceFilename == styles.css",
+          "when": "resourceExtname == .js || resourceExtname == .mjs || resourceExtname == .jsx || resourceExtname == .html || resourceExtname == .css",
           "group": "navigation"
         }
       ]

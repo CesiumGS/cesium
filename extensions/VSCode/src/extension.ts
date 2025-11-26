@@ -5,6 +5,7 @@ import { TutorialCommandHandler } from './commands/tutorialCommands';
 import { ApiCommandHandler } from './commands/apiCommands';
 import { GlobeCommandHandler } from './commands/globeCommands';
 import { Logger } from './utils/logger';
+import { CesiumProjectDetector } from './utils/cesiumProjectDetector';
 import * as constants from './utils/constants';
 
 /**
@@ -52,18 +53,46 @@ function setupFileWatcher(
     context: vscode.ExtensionContext,
     tutorialCommandHandler: TutorialCommandHandler
 ): void {
-    const tutorialWatcher = vscode.workspace.createFileSystemWatcher(constants.TUTORIAL_FILE_PATTERN);
+    // Use dynamic pattern that includes all common Cesium file names
+    // Exclude node_modules, dist, build, and other common build directories
+    const filePattern = new vscode.RelativePattern(
+        vscode.workspace.workspaceFolders?.[0] || '',
+        CesiumProjectDetector.getAllFilePatterns()
+    );
+    
+    const tutorialWatcher = vscode.workspace.createFileSystemWatcher(
+        filePattern,
+        false, // ignoreCreateEvents
+        false, // ignoreChangeEvents
+        true   // ignoreDeleteEvents
+    );
 
     tutorialWatcher.onDidChange(async (uri: vscode.Uri) => {
+        // Quick path filtering to avoid expensive checks
+        const path = uri.fsPath;
+        if (path.includes('node_modules') || path.includes('dist') || 
+            path.includes('build') || path.includes('.git') ||
+            path.includes('out') || path.includes('.next') ||
+            path.includes('.vscode') || path.includes('coverage')) {
+            return;
+        }
         await tutorialCommandHandler.handleTutorialFileChange(uri);
     });
 
     tutorialWatcher.onDidCreate(async (uri: vscode.Uri) => {
+        // Quick path filtering to avoid expensive checks
+        const path = uri.fsPath;
+        if (path.includes('node_modules') || path.includes('dist') || 
+            path.includes('build') || path.includes('.git') ||
+            path.includes('out') || path.includes('.next') ||
+            path.includes('.vscode') || path.includes('coverage')) {
+            return;
+        }
         await tutorialCommandHandler.handleTutorialFileChange(uri);
     });
 
     context.subscriptions.push(tutorialWatcher);
-    Logger.info('File watcher initialized');
+    Logger.info('File watcher initialized for Cesium files');
 }
 
 /**

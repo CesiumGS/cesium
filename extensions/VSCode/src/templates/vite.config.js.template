@@ -3,4 +3,14 @@ import cesium from 'vite-plugin-cesium';
 
 export default defineConfig({
   plugins: [cesium()],
+  build: {
+    rollupOptions: {
+      input: {
+        main: './index.html'
+      }
+    }
+  },
+  optimizeDeps: {
+    include: ['cesium']
+  }
 });

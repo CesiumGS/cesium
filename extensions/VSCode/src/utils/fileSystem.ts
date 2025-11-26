@@ -57,6 +57,18 @@ export class FileSystemHelper {
     }
 
     /**
+     * Check if a path is a file (not a directory)
+     */
+    static async isFile(uri: vscode.Uri): Promise<boolean> {
+        try {
+            const stat = await vscode.workspace.fs.stat(uri);
+            return stat.type === vscode.FileType.File;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
      * Read a directory and return entries
      */
     static async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
