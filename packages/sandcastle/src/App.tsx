@@ -5,9 +5,9 @@ import {
   RefObject,
   useCallback,
   useContext,
-  useDeferredValue,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useReducer,
   useRef,
   useState,
@@ -29,7 +29,7 @@ import {
 } from "./Gallery/GalleryItemStore.ts";
 import Gallery from "./Gallery/Gallery.js";
 
-import Bucket from "./Bucket.tsx";
+import { Bucket, BucketPlaceholder } from "./Bucket.tsx";
 import SandcastleEditor from "./SandcastleEditor.tsx";
 import {
   add,
@@ -51,6 +51,7 @@ import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
 import { MetadataPopover } from "./MetadataPopover.tsx";
 import { SharePopover } from "./SharePopover.tsx";
 import { SandcastlePopover } from "./SandcastlePopover.tsx";
+import { urlSpecifiesSandcastle } from "./Gallery/loadFromUrl.ts";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -199,7 +200,7 @@ function App() {
   const consoleCollapsedHeight = 33;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
 
-  const isStartingWithCode = !!(window.location.search || window.location.hash);
+  const isStartingWithCode = useMemo(() => urlSpecifiesSandcastle(), []);
   const startOnEditor =
     isStartingWithCode || settings.defaultPanel === "editor";
   const [leftPanel, setLeftPanel] = useState<LeftPanel>(
@@ -385,7 +386,6 @@ function App() {
 
   const [initialized, setInitialized] = useState(false);
   const [isLoadPending, startLoadPending] = useTransition();
-  const deferredIsLoading = useDeferredValue(isLoadPending);
   const { useLoadFromUrl } = galleryItemStore;
   const loadFromUrl = useLoadFromUrl();
   useEffect(() => {
@@ -607,9 +607,16 @@ function App() {
                 dispatch({ type: "setHtml", html: value })
               }
               onRun={() => runSandcastle()}
-              js={codeState.code}
-              html={codeState.html}
+              js={
+                !initialized || isLoadPending ? "// Loading..." : codeState.code
+              }
+              html={
+                !initialized || isLoadPending
+                  ? "<!-- Loading... -->"
+                  : codeState.html
+              }
               setJs={(newCode) => dispatch({ type: "setCode", code: newCode })}
+              readOnly={!initialized}
             />
           )}
           <StoreContext value={galleryItemStore}>
@@ -628,7 +635,9 @@ function App() {
             setConsoleExpanded={setConsoleExpanded}
           >
             <Allotment.Pane minSize={200}>
-              {!deferredIsLoading && (
+              {!initialized || isLoadPending ? (
+                <BucketPlaceholder />
+              ) : (
                 <Bucket
                   code={codeState.committedCode}
                   html={codeState.committedHtml}

@@ -11,7 +11,7 @@ type SandcastleMessage =
   | { type: "consoleError"; error: string; lineNumber?: number; url?: string }
   | { type: "highlight"; highlight: number };
 
-function Bucket({
+export function Bucket({
   code,
   html,
   runNumber,
@@ -218,4 +218,10 @@ function Bucket({
   );
 }
 
-export default Bucket;
+export function BucketPlaceholder() {
+  return (
+    <div className="bucket-container">
+      <div className="fullFrame">Loading...</div>
+    </div>
+  );
+}
