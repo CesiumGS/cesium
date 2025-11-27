@@ -114,14 +114,13 @@ describe("Scene/TextureAtlas", function () {
     }).toThrowDeveloperError();
   });
 
-  it("add image returns -1 if a promise returns undefined", async function () {
+  it("add image throws if a promise returns undefined", async function () {
     atlas = new TextureAtlas();
 
     const promise = atlas.addImage(greenGuid, Promise.resolve());
 
     expect(atlas.numberOfImages).toEqual(1);
-    const index = await promise;
-    expect(index).toEqual(-1);
+    await expectAsync(promise).toBeRejectedWithDeveloperError();
   });
 
   it("add image rejects if a promised image rejects", async function () {
