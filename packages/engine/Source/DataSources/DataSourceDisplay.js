@@ -115,6 +115,7 @@ function DataSourceDisplay(options) {
   this._removeDataSourceCollectionListener = removeDataSourceCollectionListener;
 
   this._ready = false;
+  this._prevUpdateResult = this._ready;
 }
 
 const ExtraVisualizers = [];
@@ -295,7 +296,7 @@ DataSourceDisplay.prototype.update = function (time) {
     return false;
   }
 
-  let result = true;
+  let updateResult = true;
 
   let i;
   let x;
@@ -306,33 +307,33 @@ DataSourceDisplay.prototype.update = function (time) {
   for (i = 0; i < length; i++) {
     const dataSource = dataSources.get(i);
     if (defined(dataSource.update)) {
-      result = dataSource.update(time) && result;
+      updateResult = dataSource.update(time) && updateResult;
     }
 
     visualizers = dataSource._visualizers;
     vLength = visualizers.length;
     for (x = 0; x < vLength; x++) {
-      result = visualizers[x].update(time) && result;
+      updateResult = visualizers[x].update(time) && updateResult;
     }
   }
 
   visualizers = this._defaultDataSource._visualizers;
   vLength = visualizers.length;
   for (x = 0; x < vLength; x++) {
-    result = visualizers[x].update(time) && result;
+    updateResult = visualizers[x].update(time) && updateResult;
   }
 
-  // Request a rendering of the scene when the data source
-  // becomes 'ready' for the first time
-  if (!this._ready && result) {
+  // Trigger an event when all of the data sources finish updating
+  if (!this._prevUpdateResult && updateResult) {
     this._scene.requestRender();
   }
+  this._prevUpdateResult = updateResult;
 
   // once the DataSourceDisplay is ready it should stay ready to prevent
   // entities from breaking updates when they become "un-ready"
-  this._ready = this._ready || result;
+  this._ready = this._ready || updateResult;
 
-  return result;
+  return updateResult;
 };
 
 DataSourceDisplay.prototype._postRender = function () {
