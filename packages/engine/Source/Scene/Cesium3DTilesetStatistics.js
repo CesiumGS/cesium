@@ -1,3 +1,4 @@
+import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import Model3DTileContent from "./Model/Model3DTileContent.js";
 
@@ -59,6 +60,10 @@ Cesium3DTilesetStatistics.prototype.clear = function () {
 Cesium3DTilesetStatistics.prototype.incrementSelectionCounts = function (
   content,
 ) {
+  Check.defined(
+    "texturesReferenceCounterById",
+    this.texturesReferenceCounterById,
+  );
   this.numberOfFeaturesSelected += content.featuresLength;
   this.numberOfPointsSelected += content.pointsLength;
   this.numberOfTrianglesSelected += content.trianglesLength;
@@ -84,6 +89,10 @@ Cesium3DTilesetStatistics.prototype.incrementSelectionCounts = function (
  * @param {Cesium3DTileContent} content
  */
 Cesium3DTilesetStatistics.prototype.incrementLoadCounts = function (content) {
+  Check.defined(
+    "texturesReferenceCounterById",
+    this.texturesReferenceCounterById,
+  );
   this.numberOfFeaturesLoaded += content.featuresLength;
   this.numberOfPointsLoaded += content.pointsLength;
   this.geometryByteLength += content.geometryByteLength;
@@ -130,6 +139,10 @@ Cesium3DTilesetStatistics.prototype.incrementLoadCounts = function (content) {
  * @param {Cesium3DTileContent} content
  */
 Cesium3DTilesetStatistics.prototype.decrementLoadCounts = function (content) {
+  Check.defined(
+    "texturesReferenceCounterById",
+    this.texturesReferenceCounterById,
+  );
   this.numberOfFeaturesLoaded -= content.featuresLength;
   this.numberOfPointsLoaded -= content.pointsLength;
   this.geometryByteLength -= content.geometryByteLength;
@@ -166,7 +179,12 @@ Cesium3DTilesetStatistics.prototype.decrementLoadCounts = function (content) {
   }
 };
 
-Cesium3DTilesetStatistics.clone = function (statistics, result) {
+/**
+ * Shallow copies the given statistics object into the resulting statistics object.
+ *
+ * The result cannot be used to increment/decrement load counts.
+ */
+Cesium3DTilesetStatistics.shallowClone = function (statistics, result) {
   result.selected = statistics.selected;
   result.visited = statistics.visited;
   result.numberOfCommands = statistics.numberOfCommands;
@@ -187,7 +205,7 @@ Cesium3DTilesetStatistics.clone = function (statistics, result) {
     statistics.numberOfTilesCulledWithChildrenUnion;
   result.geometryByteLength = statistics.geometryByteLength;
   result.texturesByteLength = statistics.texturesByteLength;
-  result.texturesReferenceCounterById = statistics.texturesReferenceCounterById;
   result.batchTableByteLength = statistics.batchTableByteLength;
+  result.texturesReferenceCounterById = undefined;
 };
 export default Cesium3DTilesetStatistics;

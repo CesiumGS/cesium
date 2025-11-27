@@ -3285,7 +3285,7 @@ function raiseLoadProgressEvent(tileset, frameState) {
   const lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
   const lastNumberOfTilesProcessing = statisticsLast.numberOfTilesProcessing;
 
-  Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
+  Cesium3DTilesetStatistics.shallowClone(statistics, statisticsLast);
 
   const progressChanged =
     numberOfPendingRequests !== lastNumberOfPendingRequest ||
@@ -3408,7 +3408,7 @@ function update(tileset, frameState, passStatistics, passOptions) {
   updateTiles(tileset, frameState, passOptions);
 
   // Update pass statistics
-  Cesium3DTilesetStatistics.clone(statistics, passStatistics);
+  Cesium3DTilesetStatistics.shallowClone(statistics, passStatistics);
 
   if (passOptions.isRender) {
     const credits = tileset._credits;
