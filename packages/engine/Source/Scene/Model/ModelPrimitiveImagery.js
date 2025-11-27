@@ -707,10 +707,16 @@ class ModelPrimitiveImagery {
     );
 
     // Clamp the level to a valid range, and an integer value
-    const imageryLevel = ImageryCoverage._clampImageryLevel(
+    let imageryLevel = ImageryCoverage._clampImageryLevel(
       imageryProvider,
       desiredLevel,
     );
+    // XXX_DRAPING Using fixed imagery level for debugging
+    imageryLevel = -1; // Comment this out to use the fixed level
+    if (imageryLevel < 0) {
+      imageryLevel = 12;
+      console.log(`XXX_DRAPING: Using fixed imagery level ${imageryLevel}`);
+    }
     return imageryLevel;
   }
 
