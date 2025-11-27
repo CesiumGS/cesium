@@ -630,6 +630,14 @@ function Primitive() {
    * @private
    */
   this.modelPrimitiveImagery = undefined;
+
+  /**
+   * Data loaded from the EXT_mesh_primitive_edge_visibility extension.
+   *
+   * @type {Object}
+   * @private
+   */
+  this.edgeVisibility = undefined;
 }
 
 /**
