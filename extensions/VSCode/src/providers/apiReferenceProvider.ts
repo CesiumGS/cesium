@@ -113,11 +113,9 @@ export class ApiReferenceProvider implements vscode.TreeDataProvider<ApiReferenc
                 this._onDidChangeTreeData.fire();
             } else {
                 Logger.error('Invalid YAML format: expected array of items');
-                this._onDidChangeTreeData.fire();
             }
         } catch (error) {
             Logger.error('Failed to load API reference from YAML, using fallback', error);
-            this._onDidChangeTreeData.fire();
         }
     }
 }

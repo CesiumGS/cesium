@@ -4,6 +4,7 @@ import * as path from 'path';
 import { Logger } from '../logger';
 import { FileSystemHelper } from '../fileSystem';
 import * as patterns from '../codePatterns';
+import * as constants from '../constants';
 
 /**
  * Manages Cesium Ion access tokens for the extension
@@ -12,27 +13,9 @@ export class TokenManager {
     constructor(private readonly context: vscode.ExtensionContext) {}
 
     /**
-     * Get the access token from various sources (env, global state, or prompt)
-     */
-    async getAccessToken(): Promise<string | undefined> {
-        // Load .env file from extension root
-        const envPath = path.join(this.context.extensionPath, '.env');
-        dotenv.config({ path: envPath });
-
-        let token = process.env.CESIUM_ION_ACCESS_TOKEN;
-        
-        // If no token in .env, check global state
-        if (!token) {
-            token = this.context.globalState.get<string>('cesiumIonAccessToken');
-        }
-
-        return token;
-    }
-
-    /**
      * Inject the access token into JavaScript code that contains a placeholder
      */
-    async injectAccessToken(jsCode: string): Promise<string> {
+    public async injectAccessToken(jsCode: string): Promise<string> {
         if (!jsCode.includes(patterns.TOKEN_PLACEHOLDER)) {
             return jsCode;
         }
@@ -56,26 +39,26 @@ export class TokenManager {
     /**
      * Prompt the user to enter their Cesium Ion access token
      */
-    async promptForAccessToken(): Promise<string | undefined> {
+    public async promptForAccessToken(): Promise<string | undefined> {
         const action = await vscode.window.showWarningMessage(
-            'Cesium Ion access token not found. Tutorials may not work without it.',
-            'Enter Token',
-            'Get Token from Cesium.com',
-            'Skip'
+            constants.MSG_TOKEN_NOT_FOUND,
+            constants.MSG_TOKEN_ACTION_ENTER,
+            constants.MSG_TOKEN_ACTION_GET,
+            constants.MSG_TOKEN_ACTION_SKIP
         );
 
-        if (action === 'Enter Token') {
+        if (action === constants.MSG_TOKEN_ACTION_ENTER) {
             const token = await vscode.window.showInputBox({
-                prompt: 'Enter your Cesium Ion access token',
-                placeHolder: 'eyJhbGciOiJI...',
+                prompt: constants.MSG_TOKEN_PROMPT,
+                placeHolder: constants.MSG_TOKEN_PLACEHOLDER,
                 password: true,
                 ignoreFocusOut: true,
                 validateInput: (value) => {
                     if (!value || value.trim().length === 0) {
-                        return 'Token cannot be empty';
+                        return constants.MSG_TOKEN_EMPTY_ERROR;
                     }
                     if (!value.startsWith('eyJ')) {
-                        return 'Invalid token format';
+                        return constants.MSG_TOKEN_INVALID_FORMAT;
                     }
                     return null;
                 }
@@ -87,19 +70,19 @@ export class TokenManager {
                 
                 // Ask if user wants to save to .env file
                 const saveToEnv = await vscode.window.showInformationMessage(
-                    'Token saved for this session. Would you like to save it to .env file for future use?',
-                    'Yes',
-                    'No'
+                    constants.MSG_TOKEN_SAVE_TO_ENV,
+                    constants.MSG_TOKEN_ACTION_YES,
+                    constants.MSG_TOKEN_ACTION_NO
                 );
 
-                if (saveToEnv === 'Yes') {
+                if (saveToEnv === constants.MSG_TOKEN_ACTION_YES) {
                     await this.saveTokenToEnvFile(token);
                 }
 
                 Logger.info('Cesium Ion access token saved');
                 return token;
             }
-        } else if (action === 'Get Token from Cesium.com') {
+        } else if (action === constants.MSG_TOKEN_ACTION_GET) {
             await vscode.env.openExternal(vscode.Uri.parse('https://ion.cesium.com/tokens'));
             // Recursively prompt again after opening the website
             return await this.promptForAccessToken();
@@ -109,9 +92,27 @@ export class TokenManager {
     }
 
     /**
+     * Get the access token from various sources (env, global state, or prompt)
+     */
+    public async getAccessToken(): Promise<string | undefined> {
+        // Load .env file from extension root
+        const envPath = path.join(this.context.extensionPath, '.env');
+        dotenv.config({ path: envPath });
+
+        let token = process.env.CESIUM_ION_ACCESS_TOKEN;
+        
+        // If no token in .env, check global state
+        if (!token) {
+            token = this.context.globalState.get<string>('cesiumIonAccessToken');
+        }
+
+        return token;
+    }
+
+    /**
      * Save the access token to the .env file in the extension root
      */
-    async saveTokenToEnvFile(token: string): Promise<void> {
+    private async saveTokenToEnvFile(token: string): Promise<void> {
         try {
             const envPath = path.join(this.context.extensionPath, '.env');
             let envContent = '';
@@ -140,8 +141,8 @@ export class TokenManager {
             const envUri = vscode.Uri.file(envPath);
             await FileSystemHelper.writeFile(envUri, envContent);
 
-            vscode.window.showInformationMessage('Token saved to .env file');
-            Logger.info('Token saved to .env file');
+            vscode.window.showInformationMessage(constants.MSG_TOKEN_SAVED_TO_ENV);
+            Logger.info(constants.MSG_TOKEN_SAVED_TO_ENV);
         } catch (error) {
             Logger.error('Failed to save token to .env file', error);
             vscode.window.showErrorMessage(`Failed to save token to .env file: ${error}`);

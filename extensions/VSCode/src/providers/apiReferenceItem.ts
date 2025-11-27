@@ -13,7 +13,7 @@ export class ApiReferenceItem extends vscode.TreeItem {
 
         if (contextValue === constants.CONTEXT_VALUE_API_ITEM && apiItem) {
             this.tooltip = `${apiItem.name} (${apiItem.type})\n${apiItem.description}`;
-            this.description = apiItem.type;
+            this.description = apiItem.description;
             this.command = {
                 command: constants.COMMAND_OPEN_API_DOC,
                 title: 'Open API Documentation',

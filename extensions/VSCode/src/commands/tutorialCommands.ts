@@ -282,7 +282,7 @@ export class TutorialCommandHandler {
                 // Create files based on selected format
                 if (format.value === 'npm') {
                     const token = await this.tokenManager.getAccessToken();
-                    const convertedCode = this.formatConverter.convertToES6Imports(tutorial.code.javascript || '');
+                    const convertedCode = this.formatConverter.removeTokenAssignments(tutorial.code.javascript || '');
                     await this.fileManager.createNpmProjectFiles(tutorial, tutorialPath, tutorialSlug, token, convertedCode);
                 } else {
                     const jsCode = await this.tokenManager.injectAccessToken(tutorial.code.javascript || '');

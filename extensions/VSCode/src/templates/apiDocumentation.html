@@ -52,6 +52,8 @@
             cursor: pointer;
             border-radius: 3px;
             font-size: 12px;
+            position: relative;
+            z-index: 1000;
         }
         .open-external:hover {
             background-color: var(--vscode-button-hoverBackground);
@@ -78,7 +80,7 @@
 </head>
 <body>
     <div class="header-banner">
-        <button class="open-external" onclick="openExternal('{{API_URL}}')">
+        <button class="open-external" data-url="{{API_URL}}">
             Open in Browser ↗
         </button>
         <h1>
@@ -89,29 +91,47 @@
     </div>
     {{BODY_CONTENT}}
     <script>
+        /* global acquireVsCodeApi */
         const vscode = acquireVsCodeApi();
-        
-        function openExternal(url) {
-            vscode.postMessage({
-                command: 'openExternal',
-                url: url
+
+        // Handle "Open in Browser" button
+        const openExternalBtn = document.querySelector('.open-external');
+        if (openExternalBtn) {
+            openExternalBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = openExternalBtn.getAttribute('data-url');
+                console.log('Button clicked, URL:', url);
+                if (url) {
+                    vscode.postMessage({
+                        command: 'openExternal',
+                        url: url
+                    });
+                }
             });
         }
 
         // Intercept clicks on internal links to handle them properly
         document.addEventListener('click', (e) => {
+            // Skip if already handled
+            if (e.defaultPrevented) {
+                return;
+            }
+            
             const target = e.target.closest('a');
             if (target && target.href) {
                 const href = target.getAttribute('href');
                 if (href && !href.startsWith('#')) {
                     e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Link clicked, URL:', target.href);
                     vscode.postMessage({
                         command: 'openExternal',
                         url: target.href
                     });
                 }
             }
-        });
+        }, true);
     </script>
 </body>
 </html>

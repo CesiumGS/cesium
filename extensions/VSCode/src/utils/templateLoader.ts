@@ -10,7 +10,7 @@ export class TemplateLoader {
     /**
      * Load an HTML template from the templates directory
      */
-    static async loadTemplate(
+    public static async loadTemplate(
         extensionUri: vscode.Uri,
         templateName: string
     ): Promise<string> {
@@ -38,7 +38,7 @@ export class TemplateLoader {
     /**
      * Replace placeholders in template with values
      */
-    static replacePlaceholders(
+    private static replacePlaceholders(
         template: string,
         replacements: Record<string, string>
     ): string {
@@ -55,19 +55,12 @@ export class TemplateLoader {
     /**
      * Load template and replace placeholders in one call
      */
-    static async loadAndReplace(
+    public static async loadAndReplace(
         extensionUri: vscode.Uri,
         templateName: string,
         replacements: Record<string, string>
     ): Promise<string> {
         const template = await this.loadTemplate(extensionUri, templateName);
         return this.replacePlaceholders(template, replacements);
-    }
-
-    /**
-     * Clear the template cache
-     */
-    static clearCache(): void {
-        this.cache.clear();
     }
 }

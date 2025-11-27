@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { FileSystemHelper } from '../fileSystem';
 import { PortDetector } from '../portDetector';
 import { Logger } from '../logger';
+import * as constants from '../constants';
 
 /**
  * Manages npm project operations like dev server, installations, etc.
@@ -10,7 +11,7 @@ export class NpmProjectManager {
     /**
      * Check if node_modules exists in a directory
      */
-    async hasNodeModules(tutorialDir: string): Promise<boolean> {
+    private async hasNodeModules(tutorialDir: string): Promise<boolean> {
         const nodeModulesPath = FileSystemHelper.join(tutorialDir, 'node_modules');
         const nodeModulesUri = vscode.Uri.file(nodeModulesPath);
         return await FileSystemHelper.exists(nodeModulesUri);
@@ -19,7 +20,7 @@ export class NpmProjectManager {
     /**
      * Install npm dependencies in a tutorial directory
      */
-    async installDependencies(tutorialDir: string, tutorialName: string): Promise<vscode.Terminal> {
+    private async installDependencies(tutorialDir: string, tutorialName: string): Promise<vscode.Terminal> {
         const terminal = vscode.window.createTerminal({
             name: `npm install - ${tutorialName}`,
             cwd: tutorialDir
@@ -33,18 +34,18 @@ export class NpmProjectManager {
     /**
      * Start the npm dev server for a tutorial
      */
-    async startDevServer(tutorialDir: string, tutorialName: string): Promise<void> {
+    public async startDevServer(tutorialDir: string, tutorialName: string): Promise<void> {
         // Check if dependencies are installed
         const hasModules = await this.hasNodeModules(tutorialDir);
         
         if (!hasModules) {
             const install = await vscode.window.showInformationMessage(
-                `Dependencies not installed for "${tutorialName}". Install now?`,
-                'Yes, Install',
-                'Cancel'
+                constants.MSG_NPM_DEPS_NOT_INSTALLED.replace('{0}', tutorialName),
+                constants.MSG_NPM_ACTION_YES_INSTALL,
+                constants.MSG_NPM_ACTION_CANCEL
             );
             
-            if (install !== 'Yes, Install') {
+            if (install !== constants.MSG_NPM_ACTION_YES_INSTALL) {
                 return;
             }
             
@@ -52,13 +53,13 @@ export class NpmProjectManager {
             await this.installDependencies(tutorialDir, tutorialName);
             
             vscode.window.showInformationMessage(
-                `Installing dependencies... Run "npm run dev" when complete, or click Play again.`
+                constants.MSG_NPM_INSTALLING_DEPS
             );
             return;
         }
         
         // Find available port
-        const port = await PortDetector.findDefaultAvailablePort();
+        const port = await PortDetector.findAvailablePort();
         Logger.info(`Found available port: ${port}`);
         
         // Start dev server with custom port
@@ -79,7 +80,7 @@ export class NpmProjectManager {
     /**
      * Check if a directory is an npm project
      */
-    async isNpmProject(tutorialDir: string): Promise<boolean> {
+    public async isNpmProject(tutorialDir: string): Promise<boolean> {
         const packageJsonPath = vscode.Uri.file(FileSystemHelper.join(tutorialDir, 'package.json'));
         return await FileSystemHelper.exists(packageJsonPath);
     }
@@ -89,7 +90,7 @@ export class NpmProjectManager {
      */
     private async waitAndOpenBrowser(port: number, tutorialName: string): Promise<void> {
         vscode.window.showInformationMessage(
-            `Starting dev server on port ${port}...`
+            constants.MSG_NPM_STARTING_SERVER.replace('{0}', port.toString())
         );
         
         // Wait up to 60 seconds for server to start (increased for Vite + dependency bundling)
@@ -102,7 +103,7 @@ export class NpmProjectManager {
             // Try to open in Simple Browser
             try {
                 await vscode.commands.executeCommand('simpleBrowser.show', url);
-                vscode.window.showInformationMessage(`Dev server ready: ${tutorialName}`);
+                vscode.window.showInformationMessage(constants.MSG_NPM_SERVER_READY.replace('{0}', tutorialName));
             } catch (error) {
                 Logger.error('Failed to open Simple Browser', error);
                 // Fallback to external browser
@@ -111,7 +112,7 @@ export class NpmProjectManager {
         } else {
             Logger.warn(`Server did not start within timeout on port ${port}`);
             vscode.window.showWarningMessage(
-                `Dev server for "${tutorialName}" is taking longer than expected. Check the terminal for details.`
+                constants.MSG_NPM_SERVER_TIMEOUT.replace('{0}', tutorialName)
             );
         }
     }

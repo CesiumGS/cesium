@@ -65,7 +65,7 @@ export class CesiumProjectDetector {
     /**
      * Detect if a directory contains a Cesium project
      */
-    static async isCesiumProject(directoryPath: string): Promise<boolean> {
+    public static async isCesiumProject(directoryPath: string): Promise<boolean> {
         try {
             const dirUri = vscode.Uri.file(directoryPath);
             const entries = await FileSystemHelper.readDirectory(dirUri);

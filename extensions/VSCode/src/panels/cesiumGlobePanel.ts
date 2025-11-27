@@ -11,7 +11,6 @@ export class CesiumGlobePanel {
     private _tutorialCode?: string;
     private _tutorialHtml?: string;
     private _tutorialCss?: string;
-    private _tutorialDir?: vscode.Uri;
 
 
     private constructor(
@@ -75,7 +74,6 @@ export class CesiumGlobePanel {
             CesiumGlobePanel.currentPanel._tutorialCode = tutorialCode;
             CesiumGlobePanel.currentPanel._tutorialHtml = tutorialHtml;
             CesiumGlobePanel.currentPanel._tutorialCss = tutorialCss;
-            CesiumGlobePanel.currentPanel._tutorialDir = undefined; // Clear npm instructions
             CesiumGlobePanel.currentPanel._update();
             CesiumGlobePanel.currentPanel._panel.reveal(column);
             return;
@@ -103,54 +101,6 @@ export class CesiumGlobePanel {
         );
     }
 
-    public static showNpmInstructions(extensionUri: vscode.Uri): void {
-        const column = vscode.window.activeTextEditor?.viewColumn;
-
-        // If we already have a panel, show npm instructions
-        if (CesiumGlobePanel.currentPanel) {
-            Logger.info('Showing npm instructions in existing panel');
-            CesiumGlobePanel.currentPanel._tutorialDir = vscode.Uri.file(''); // Flag for npm mode
-            CesiumGlobePanel.currentPanel._update();
-            CesiumGlobePanel.currentPanel._panel.reveal(column);
-            return;
-        }
-
-        // Create new panel with npm instructions
-        Logger.info('Creating new panel with npm instructions');
-        const panel = vscode.window.createWebviewPanel(
-            'cesiumGlobe',
-            'Cesium Globe',
-            column || vscode.ViewColumn.One,
-            {
-                enableScripts: true,
-                retainContextWhenHidden: true,
-                localResourceRoots: [extensionUri]
-            }
-        );
-
-        const npmPanel = new CesiumGlobePanel(panel, extensionUri);
-        npmPanel._tutorialDir = vscode.Uri.file(''); // Flag for npm mode
-        CesiumGlobePanel.currentPanel = npmPanel;
-    }
-
-    public static updateCode(
-        tutorialCode: string,
-        tutorialHtml?: string,
-        tutorialCss?: string
-    ): void {
-        if (CesiumGlobePanel.currentPanel) {
-            Logger.info('Updating tutorial code in panel');
-            CesiumGlobePanel.currentPanel._tutorialCode = tutorialCode;
-            if (tutorialHtml) {
-                CesiumGlobePanel.currentPanel._tutorialHtml = tutorialHtml;
-            }
-            if (tutorialCss) {
-                CesiumGlobePanel.currentPanel._tutorialCss = tutorialCss;
-            }
-            CesiumGlobePanel.currentPanel._update();
-        }
-    }
-
     public dispose(): void {
         CesiumGlobePanel.currentPanel = undefined;
 
@@ -173,12 +123,6 @@ export class CesiumGlobePanel {
 
     private _getHtmlForWebview(): string {
         try {
-            // If tutorialDir is provided, show instructions for npm projects
-            if (this._tutorialDir) {
-                const templatePath = path.join(this._extensionUri.fsPath, 'out', 'templates', 'globeNpmInstructions.html');
-                return fs.readFileSync(templatePath, 'utf8');
-            }
-            
             // Use tutorial HTML and inject JavaScript (for CDN projects)
             if (this._tutorialHtml) {
                 return this._injectCodeIntoHtml(this._tutorialHtml, this._tutorialCode, this._tutorialCss);
@@ -197,21 +141,24 @@ export class CesiumGlobePanel {
         let result = html;
         
         // Replace script tags with inline JavaScript
+        // Match local .js files but not CDN URLs (no http/https)
         if (jsCode) {
             result = result.replace(
-                /<script\s+src=["']main\.js["']\s*><\/script>/gi,
+                /<script\s+src=["'](?!https?:)([^"']+\.js)["']\s*><\/script>/gi,
                 `<script>${jsCode}</script>`
             );
+
             result = result.replace(
-                /<script\s+type=["']module["']\s+src=["']main\.js["']\s*><\/script>/gi,
+                /<script\s+type=["']module["']\s+src=["'](?!https?:)([^"']+\.js)["']\s*><\/script>/gi,
                 `<script>${jsCode}</script>`
             );
         }
         
         // Replace link tags with inline CSS
+        // Match local .css files but not CDN URLs (no http/https)
         if (cssCode) {
             result = result.replace(
-                /<link\s+href=["']styles\.css["']\s+rel=["']stylesheet["']\s*\/?>/gi,
+                /<link\s+href=["'](?!https?:)([^"']+\.css)["']\s+rel=["']stylesheet["']\s*\/?>/gi,
                 `<style>${cssCode}</style>`
             );
         }

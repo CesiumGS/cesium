@@ -44,19 +44,14 @@
         <h2>Failed to Load Documentation</h2>
         <p class="error-message">{{ERROR_MESSAGE}}</p>
         <p>The documentation for <strong>{{API_NAME}}</strong> could not be loaded.</p>
-        <button class="open-external-btn" onclick="openExternal('{{API_URL}}')">
+        <button class="open-external-btn" onclick="vscode.postMessage({command: 'openExternal', url: '{{API_URL}}'})">
             Open in Browser Instead ↗
         </button>
     </div>
     <script>
+        /* global acquireVsCodeApi */
+        // eslint-disable-next-line no-unused-vars
         const vscode = acquireVsCodeApi();
-        
-        function openExternal(url) {
-            vscode.postMessage({
-                command: 'openExternal',
-                url: url
-            });
-        }
     </script>
 </body>
 </html>

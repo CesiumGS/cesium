@@ -9,7 +9,7 @@ export class FileSystemHelper {
     /**
      * Read a file as UTF-8 text
      */
-    static async readFile(uri: vscode.Uri): Promise<string> {
+    public static async readFile(uri: vscode.Uri): Promise<string> {
         try {
             const content = await vscode.workspace.fs.readFile(uri);
             return Buffer.from(content).toString('utf8');
@@ -22,7 +22,7 @@ export class FileSystemHelper {
     /**
      * Write text content to a file
      */
-    static async writeFile(uri: vscode.Uri, content: string): Promise<void> {
+    public static async writeFile(uri: vscode.Uri, content: string): Promise<void> {
         try {
             const buffer = Buffer.from(content, 'utf8');
             await vscode.workspace.fs.writeFile(uri, buffer);
@@ -35,7 +35,7 @@ export class FileSystemHelper {
     /**
      * Create a directory recursively
      */
-    static async createDirectory(uri: vscode.Uri): Promise<void> {
+    public static async createDirectory(uri: vscode.Uri): Promise<void> {
         try {
             await vscode.workspace.fs.createDirectory(uri);
         } catch (error) {
@@ -47,7 +47,7 @@ export class FileSystemHelper {
     /**
      * Check if a file or directory exists
      */
-    static async exists(uri: vscode.Uri): Promise<boolean> {
+    public static async exists(uri: vscode.Uri): Promise<boolean> {
         try {
             await vscode.workspace.fs.stat(uri);
             return true;
@@ -59,7 +59,7 @@ export class FileSystemHelper {
     /**
      * Check if a path is a file (not a directory)
      */
-    static async isFile(uri: vscode.Uri): Promise<boolean> {
+    public static async isFile(uri: vscode.Uri): Promise<boolean> {
         try {
             const stat = await vscode.workspace.fs.stat(uri);
             return stat.type === vscode.FileType.File;
@@ -71,7 +71,7 @@ export class FileSystemHelper {
     /**
      * Read a directory and return entries
      */
-    static async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+    public static async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         try {
             return await vscode.workspace.fs.readDirectory(uri);
         } catch (error) {
@@ -83,7 +83,7 @@ export class FileSystemHelper {
     /**
      * Copy a file from source to destination
      */
-    static async copyFile(source: vscode.Uri, destination: vscode.Uri): Promise<void> {
+    public static async copyFile(source: vscode.Uri, destination: vscode.Uri): Promise<void> {
         try {
             await vscode.workspace.fs.copy(source, destination, { overwrite: true });
         } catch (error) {
@@ -95,21 +95,21 @@ export class FileSystemHelper {
     /**
      * Get the basename of a path
      */
-    static basename(filePath: string, ext?: string): string {
+    public static basename(filePath: string, ext?: string): string {
         return path.basename(filePath, ext);
     }
 
     /**
      * Get the dirname of a path
      */
-    static dirname(filePath: string): string {
+    public static dirname(filePath: string): string {
         return path.dirname(filePath);
     }
 
     /**
      * Join path segments
      */
-    static join(...paths: string[]): string {
+    public static join(...paths: string[]): string {
         return path.join(...paths);
     }
 }

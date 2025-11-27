@@ -14,7 +14,7 @@ export class TutorialFileManager {
     /**
      * Copy all files from a tutorial folder to a destination
      */
-    async copyTutorialFolder(source: vscode.Uri, destination: vscode.Uri): Promise<void> {
+    public async copyTutorialFolder(source: vscode.Uri, destination: vscode.Uri): Promise<void> {
         const entries = await FileSystemHelper.readDirectory(source);
 
         for (const [name, type] of entries) {
@@ -29,104 +29,44 @@ export class TutorialFileManager {
     /**
      * Create npm project files for a tutorial
      */
-    async createNpmProjectFiles(tutorial: Tutorial, tutorialPath: vscode.Uri, tutorialSlug: string, token: string | undefined, convertedCode: string): Promise<void> {
-        // Create package.json
-        const packageJsonContent = await TemplateLoader.loadAndReplace(
-            this.extensionUri,
-            'package.json.template',
-            {
-                'TUTORIAL_SLUG': tutorialSlug,
-                'TUTORIAL_DESCRIPTION': tutorial.description || tutorial.name
-            }
-        );
-        await FileSystemHelper.writeFile(
-            vscode.Uri.joinPath(tutorialPath, 'package.json'),
-            packageJsonContent
-        );
+    public async createNpmProjectFiles(tutorial: Tutorial, tutorialPath: vscode.Uri, tutorialSlug: string, token: string | undefined, convertedCode: string): Promise<void> {
+        await this.createFileFromTemplate(tutorialPath, 'package.json', 'package.json.template', {
+            'TUTORIAL_SLUG': tutorialSlug,
+            'TUTORIAL_DESCRIPTION': tutorial.description || tutorial.name
+        });
 
-        // Create vite.config.js
-        const viteConfigContent = await TemplateLoader.loadTemplate(
-            this.extensionUri,
-            'vite.config.js.template'
-        );
-        await FileSystemHelper.writeFile(
-            vscode.Uri.joinPath(tutorialPath, 'vite.config.js'),
-            viteConfigContent
-        );
+        await this.createFileFromTemplate(tutorialPath, 'vite.config.js', 'vite.config.js.template');
 
-        // Create index.html
-        const htmlContent = await TemplateLoader.loadAndReplace(
-            this.extensionUri,
-            'index.html.template',
-            {
-                'TUTORIAL_NAME': tutorial.name
-            }
-        );
-        await FileSystemHelper.writeFile(
-            vscode.Uri.joinPath(tutorialPath, constants.FILE_INDEX_HTML),
-            htmlContent
-        );
+        await this.createFileFromTemplate(tutorialPath, constants.FILE_INDEX_HTML, 'index.html.template', {
+            'TUTORIAL_NAME': tutorial.name
+        });
 
-        // Create main.js with ES6 imports (token loaded from .env)
-        const mainJsContent = await TemplateLoader.loadAndReplace(
-            this.extensionUri,
-            'main.js.template',
-            {
-                'TUTORIAL_CODE': convertedCode
-            }
-        );
-        await FileSystemHelper.writeFile(
-            vscode.Uri.joinPath(tutorialPath, constants.FILE_MAIN_JS),
-            mainJsContent
-        );
+        await this.createFileFromTemplate(tutorialPath, constants.FILE_MAIN_JS, 'main.js.template', {
+            'TUTORIAL_CODE': convertedCode
+        });
 
-        // Create .env file with token (if provided)
-        if (token) {
-            const envContent = `# Cesium Ion Access Token\n# Get your token at: https://ion.cesium.com/tokens\nVITE_CESIUM_TOKEN=${token}\n`;
-            await FileSystemHelper.writeFile(
-                vscode.Uri.joinPath(tutorialPath, '.env'),
-                envContent
-            );
-        }
+        // Always create .env file (with placeholder if no token available)
+        await this.createEnvFile(tutorialPath, token || 'YOUR_CESIUM_ION_ACCESS_TOKEN');
 
-        // Create .gitignore
-        const gitignoreContent = 'node_modules/\ndist/\n.env\n';
-        await FileSystemHelper.writeFile(
-            vscode.Uri.joinPath(tutorialPath, '.gitignore'),
-            gitignoreContent
-        );
+        await this.createGitignoreFile(tutorialPath);
     }
 
     /**
      * Create legacy CDN-based files for a tutorial
      */
-    async createLegacyCdnFiles(tutorial: Tutorial, tutorialPath: vscode.Uri, jsCode: string): Promise<void> {
-        // Create index.html with embedded Cesium CDN
-        const htmlContent = tutorial.code.html || '';
-        await FileSystemHelper.writeFile(
-            vscode.Uri.joinPath(tutorialPath, constants.FILE_INDEX_HTML),
-            htmlContent
-        );
+    public async createLegacyCdnFiles(tutorial: Tutorial, tutorialPath: vscode.Uri, jsCode: string): Promise<void> {
+        await this.writeFile(tutorialPath, constants.FILE_INDEX_HTML, tutorial.code.html || '');
+        await this.writeFile(tutorialPath, constants.FILE_MAIN_JS, jsCode);
 
-        // Create main.js
-        await FileSystemHelper.writeFile(
-            vscode.Uri.joinPath(tutorialPath, constants.FILE_MAIN_JS),
-            jsCode
-        );
-
-        // Create styles.css if exists
         if (tutorial.code.css) {
-            await FileSystemHelper.writeFile(
-                vscode.Uri.joinPath(tutorialPath, constants.FILE_STYLES_CSS),
-                tutorial.code.css
-            );
+            await this.writeFile(tutorialPath, constants.FILE_STYLES_CSS, tutorial.code.css);
         }
     }
 
     /**
      * Create a README file for the tutorial
      */
-    async createTutorialReadme(tutorial: Tutorial, tutorialPath: vscode.Uri, isNpmProject: boolean = true): Promise<void> {
+    public async createTutorialReadme(tutorial: Tutorial, tutorialPath: vscode.Uri, isNpmProject: boolean = true): Promise<void> {
         try {
             const templateName = isNpmProject ? 'tutorialProjectReadme.md' : 'tutorialReadme.md';
             const tutorialSlug = tutorial.slug || this.createSlugFromName(tutorial.name);
@@ -161,7 +101,7 @@ export class TutorialFileManager {
     /**
      * Open tutorial files in the VS Code editor
      */
-    async openTutorialFilesInEditor(tutorialPath: vscode.Uri): Promise<void> {
+    public async openTutorialFilesInEditor(tutorialPath: vscode.Uri): Promise<void> {
         const readmeUri = vscode.Uri.joinPath(tutorialPath, 'README.md');
         const jsUri = vscode.Uri.joinPath(tutorialPath, constants.FILE_MAIN_JS);
 
@@ -175,7 +115,46 @@ export class TutorialFileManager {
     /**
      * Create a slug from a tutorial name
      */
-    createSlugFromName(name: string): string {
+    public createSlugFromName(name: string): string {
         return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    }
+
+    /**
+     * Helper: Create a file from a template
+     */
+    private async createFileFromTemplate(
+        basePath: vscode.Uri,
+        fileName: string,
+        templateName: string,
+        replacements?: Record<string, string>
+    ): Promise<void> {
+        const content = replacements
+            ? await TemplateLoader.loadAndReplace(this.extensionUri, templateName, replacements)
+            : await TemplateLoader.loadTemplate(this.extensionUri, templateName);
+        
+        await FileSystemHelper.writeFile(vscode.Uri.joinPath(basePath, fileName), content);
+    }
+
+    /**
+     * Helper: Write a file with content
+     */
+    private async writeFile(basePath: vscode.Uri, fileName: string, content: string): Promise<void> {
+        await FileSystemHelper.writeFile(vscode.Uri.joinPath(basePath, fileName), content);
+    }
+
+    /**
+     * Helper: Create .env file with token
+     */
+    private async createEnvFile(tutorialPath: vscode.Uri, token: string): Promise<void> {
+        const envContent = `# Cesium Ion Access Token\n# Get your token at: https://ion.cesium.com/tokens\nVITE_CESIUM_TOKEN=${token}\n`;
+        await this.writeFile(tutorialPath, '.env', envContent);
+    }
+
+    /**
+     * Helper: Create .gitignore file
+     */
+    private async createGitignoreFile(tutorialPath: vscode.Uri): Promise<void> {
+        const gitignoreContent = 'node_modules/\ndist/\n.env\n';
+        await this.writeFile(tutorialPath, '.gitignore', gitignoreContent);
     }
 }

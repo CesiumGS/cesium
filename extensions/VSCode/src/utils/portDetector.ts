@@ -5,14 +5,13 @@ import * as net from 'net';
  */
 export class PortDetector {
     private static readonly DEFAULT_PORT = 5173;
-    private static readonly PORT_RANGE_START = 5173;
     private static readonly PORT_RANGE_END = 5273; // Check 100 ports
     private static readonly TIMEOUT_MS = 2000  // Increased timeout to 2 seconds
 
     /**
      * Check if a specific port is available
      */
-    static async isPortAvailable(port: number): Promise<boolean> {
+    private static async isPortAvailable(port: number): Promise<boolean> {
         return new Promise((resolve) => {
             const server = net.createServer();
             
@@ -36,7 +35,7 @@ export class PortDetector {
     /**
      * Find the next available port starting from a given port
      */
-    static async findAvailablePort(startPort: number = this.DEFAULT_PORT): Promise<number> {
+    public static async findAvailablePort(startPort: number = this.DEFAULT_PORT): Promise<number> {
         const endPort = Math.max(startPort + 100, this.PORT_RANGE_END);
         
         for (let port = startPort; port <= endPort; port++) {
@@ -47,19 +46,12 @@ export class PortDetector {
 
         // If no port found in range, throw error
         throw new Error('Could not find an available port in the specified range');
-    }
-
-    /**
-     * Find an available port in the default range
-     */
-    static async findDefaultAvailablePort(): Promise<number> {
-        return await this.findAvailablePort(this.PORT_RANGE_START);
-    }
+    }  
 
     /**
      * Check if a port is in use by attempting to connect to it
      */
-    static async isPortInUse(port: number, host: string = 'localhost'): Promise<boolean> {
+    private static async isPortInUse(port: number, host: string = 'localhost'): Promise<boolean> {
         return new Promise((resolve) => {
             const socket = new net.Socket();
             
@@ -87,7 +79,7 @@ export class PortDetector {
     /**
      * Wait for a port to become available (server to start)
      */
-    static async waitForPort(
+    public static async waitForPort(
         port: number, 
         maxWaitMs: number = 30000, 
         intervalMs: number = 500

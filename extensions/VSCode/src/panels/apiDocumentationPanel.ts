@@ -120,7 +120,7 @@ export class ApiDocumentationPanel {
                     'API_NAME': this.escapeHtml(apiItem.name),
                     'API_TYPE': this.escapeHtml(apiItem.type),
                     'API_DESCRIPTION': this.escapeHtml(apiItem.description),
-                    'API_URL': this.escapeHtml(apiItem.url),
+                    'API_URL': apiItem.url,
                     'HEAD_CONTENT': headContent,
                     'BODY_CONTENT': bodyContent
                 }
@@ -140,31 +140,13 @@ export class ApiDocumentationPanel {
                 'apiError.html',
                 {
                     'API_NAME': this.escapeHtml(apiItem.name),
-                    'API_URL': this.escapeHtml(apiItem.url),
+                    'API_URL': apiItem.url,
                     'ERROR_MESSAGE': this.escapeHtml(error.message)
                 }
             );
             this._panel.webview.html = html;
         } catch (loadError) {
-            Logger.error('Failed to load error template, trying fallback', loadError);
-            await this._showFallbackError(apiItem, error);
-        }
-    }
-
-    private async _showFallbackError(apiItem: ApiItem, error: Error): Promise<void> {
-        try {
-            const html = await TemplateLoader.loadAndReplace(
-                this._extensionUri,
-                'apiFallbackError.html',
-                {
-                    'API_NAME': this.escapeHtml(apiItem.name),
-                    'API_URL': this.escapeHtml(apiItem.url),
-                    'ERROR_MESSAGE': this.escapeHtml(error.message)
-                }
-            );
-            this._panel.webview.html = html;
-        } catch (fallbackError) {
-            Logger.error('Failed to load fallback error template', fallbackError);
+            Logger.error('Failed to load error template', loadError);
         }
     }
 

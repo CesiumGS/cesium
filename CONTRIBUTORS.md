@@ -175,6 +175,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Luke McKinstry](https://github.com/lukemckinstry)
   - [Ryan Veenstra](https://github.com/r-veenstra)
   - [Jason Sobotka](https://github.com/keyboardspecialist)
+  - [Margarita Kartaviciute](https://github.com/MKartaviciute)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)

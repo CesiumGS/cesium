@@ -14,64 +14,54 @@ export class FormatConverter {
     /**
      * Convert a CDN-based tutorial to npm format
      */
-    async convertCdnToNpm(tutorialPath: vscode.Uri, tutorialSlug: string, token: string | undefined): Promise<void> {
+    public async convertCdnToNpm(tutorialPath: vscode.Uri, tutorialSlug: string, token: string | undefined): Promise<void> {
         // Read existing main.js
         const mainJsPath = vscode.Uri.joinPath(tutorialPath, constants.FILE_MAIN_JS);
         const jsCode = await FileSystemHelper.readFile(mainJsPath);
         
         // Convert to ES6 imports
-        const convertedCode = this.convertToES6Imports(jsCode);
+        const convertedCode = this.removeTokenAssignments(jsCode);
         
         // Create package.json
-        const packageJsonContent = await TemplateLoader.loadAndReplace(
-            this.extensionUri,
+        await this.createFileFromTemplate(
+            tutorialPath,
+            'package.json',
             'package.json.template',
             {
                 'TUTORIAL_SLUG': tutorialSlug,
                 'TUTORIAL_DESCRIPTION': tutorialSlug
             }
         );
-        await FileSystemHelper.writeFile(
-            vscode.Uri.joinPath(tutorialPath, 'package.json'),
-            packageJsonContent
-        );
 
         // Create vite.config.js
-        const viteConfigContent = await TemplateLoader.loadTemplate(
-            this.extensionUri,
+        await this.createFileFromTemplate(
+            tutorialPath,
+            'vite.config.js',
             'vite.config.js.template'
-        );
-        await FileSystemHelper.writeFile(
-            vscode.Uri.joinPath(tutorialPath, 'vite.config.js'),
-            viteConfigContent
         );
 
         // Update index.html to use module script
         await this.updateHtmlForNpm(tutorialPath);
 
         // Update main.js with converted code
-        const mainJsContent = await TemplateLoader.loadAndReplace(
-            this.extensionUri,
+        await this.createFileFromTemplate(
+            tutorialPath,
+            constants.FILE_MAIN_JS,
             'main.js.template',
             {
                 'CESIUM_TOKEN': token || 'YOUR_CESIUM_ION_ACCESS_TOKEN',
                 'TUTORIAL_CODE': convertedCode
             }
         );
-        await FileSystemHelper.writeFile(mainJsPath, mainJsContent);
 
         // Create .gitignore
-        const gitignoreContent = 'node_modules/\ndist/\n.env\n';
-        await FileSystemHelper.writeFile(
-            vscode.Uri.joinPath(tutorialPath, '.gitignore'),
-            gitignoreContent
-        );
+        await this.writeFile(tutorialPath, '.gitignore', 'node_modules/\ndist/\n.env\n');
     }
 
     /**
      * Convert an npm-based tutorial to CDN format
      */
-    async convertNpmToCdn(tutorialPath: vscode.Uri): Promise<void> {
+    public async convertNpmToCdn(tutorialPath: vscode.Uri): Promise<void> {
         // Read existing main.js
         const mainJsPath = vscode.Uri.joinPath(tutorialPath, constants.FILE_MAIN_JS);
         let jsCode = await FileSystemHelper.readFile(mainJsPath);
@@ -90,9 +80,9 @@ export class FormatConverter {
     }
 
     /**
-     * Convert tutorial code to use ES6 imports (remove Cesium global references)
+     * Remove token assignmentsd
      */
-    convertToES6Imports(code: string): string {
+    public removeTokenAssignments(code: string): string {
         // Remove Cesium.Ion.defaultAccessToken line (we handle it in template)
         let converted = code.replace(patterns.TOKEN_ASSIGNMENT_REGEX, '');
         
@@ -106,75 +96,111 @@ export class FormatConverter {
     }
 
     /**
+     * Apply multiple string replacements to code
+     */
+    private applyReplacements(code: string, replacements: Array<[string | RegExp, string]>): string {
+        return replacements.reduce((result, [pattern, replacement]) => 
+            result.replace(pattern, replacement), code
+        );
+    }
+
+    /**
      * Convert ES6 imports back to global Cesium references
      */
     private convertToCdnFormat(jsCode: string): string {
-        let converted = jsCode;
-        
-        // Remove ES6 import statements
-        converted = converted.replace(patterns.CESIUM_ENGINE_IMPORT_NAMED_REGEX, '');
-        converted = converted.replace(patterns.CESIUM_ENGINE_IMPORT_NAMESPACE_REGEX, '');
-        
-        // Convert token assignment back to global Cesium
-        converted = converted.replace(new RegExp(patterns.ION_TOKEN_ASSIGNMENT, 'g'), patterns.CESIUM_ION_TOKEN_ASSIGNMENT);
-        
-        // Convert class references back to Cesium namespace
-        converted = converted.replace(/new Viewer\(/g, patterns.CESIUM_VIEWER_PATTERN);
-        converted = converted.replace(/\bCesiumMath\./g, patterns.CESIUM_MATH_PATTERN);
-        converted = converted.replace(/\bCartesian3\./g, patterns.CESIUM_CARTESIAN3_PATTERN);
-        converted = converted.replace(/\bColor\./g, patterns.CESIUM_COLOR_PATTERN);
-        converted = converted.replace(/\bRectangle\./g, patterns.CESIUM_RECTANGLE_PATTERN);
-        converted = converted.replace(/\bEntity\(/g, patterns.CESIUM_ENTITY_PATTERN);
-        
-        return converted;
+        return this.applyReplacements(jsCode, [
+            // Remove ES6 import statements
+            [patterns.CESIUM_ENGINE_IMPORT_NAMED_REGEX, ''],
+            [patterns.CESIUM_ENGINE_IMPORT_NAMESPACE_REGEX, ''],
+            // Convert token assignment back to global Cesium
+            [new RegExp(patterns.ION_TOKEN_ASSIGNMENT, 'g'), patterns.CESIUM_ION_TOKEN_ASSIGNMENT],
+            // Convert class references back to Cesium namespace
+            [/new Viewer\(/g, patterns.CESIUM_VIEWER_PATTERN],
+            [/\bCesiumMath\./g, patterns.CESIUM_MATH_PATTERN],
+            [/\bCartesian3\./g, patterns.CESIUM_CARTESIAN3_PATTERN],
+            [/\bColor\./g, patterns.CESIUM_COLOR_PATTERN],
+            [/\bRectangle\./g, patterns.CESIUM_RECTANGLE_PATTERN],
+            [/\bEntity\(/g, patterns.CESIUM_ENTITY_PATTERN]
+        ]);
+    }
+
+    /**
+     * Create a file from template with optional replacements
+     */
+    private async createFileFromTemplate(
+        basePath: vscode.Uri,
+        fileName: string,
+        templateName: string,
+        replacements?: Record<string, string>
+    ): Promise<void> {
+        const content = replacements
+            ? await TemplateLoader.loadAndReplace(this.extensionUri, templateName, replacements)
+            : await TemplateLoader.loadTemplate(this.extensionUri, templateName);
+        await FileSystemHelper.writeFile(vscode.Uri.joinPath(basePath, fileName), content);
+    }
+
+    /**
+     * Write content to a file
+     */
+    private async writeFile(basePath: vscode.Uri, fileName: string, content: string): Promise<void> {
+        await FileSystemHelper.writeFile(vscode.Uri.joinPath(basePath, fileName), content);
+    }
+
+    /**
+     * Read, transform, and write HTML file
+     */
+    private async transformHtmlFile(
+        tutorialPath: vscode.Uri,
+        transformer: (content: string) => string
+    ): Promise<void> {
+        const htmlPath = vscode.Uri.joinPath(tutorialPath, constants.FILE_INDEX_HTML);
+        if (await FileSystemHelper.exists(htmlPath)) {
+            const htmlContent = await FileSystemHelper.readFile(htmlPath);
+            const transformed = transformer(htmlContent);
+            await FileSystemHelper.writeFile(htmlPath, transformed);
+        }
     }
 
     /**
      * Update HTML file to use ES6 modules and remove CDN links
      */
     private async updateHtmlForNpm(tutorialPath: vscode.Uri): Promise<void> {
-        const htmlPath = vscode.Uri.joinPath(tutorialPath, constants.FILE_INDEX_HTML);
-        if (await FileSystemHelper.exists(htmlPath)) {
-            let htmlContent = await FileSystemHelper.readFile(htmlPath);
-            
+        await this.transformHtmlFile(tutorialPath, (htmlContent) => {
             // Remove CDN script tags
-            htmlContent = htmlContent.replace(patterns.CESIUM_CDN_SCRIPT_REGEX, '');
-            htmlContent = htmlContent.replace(patterns.CESIUM_CDN_LINK_REGEX, '');
+            let content = htmlContent.replace(patterns.CESIUM_CDN_SCRIPT_REGEX, '');
+            content = content.replace(patterns.CESIUM_CDN_LINK_REGEX, '');
             
             // Ensure script tag has type="module"
-            if (!htmlContent.includes('type="module"')) {
-                htmlContent = htmlContent.replace(patterns.MAIN_JS_SCRIPT_REGEX, '<script type="module" src="main.js">');
+            if (!content.includes('type="module"')) {
+                content = content.replace(patterns.MAIN_JS_SCRIPT_REGEX, '<script type="module" src="main.js">');
             } else {
                 // Ensure path is correct (no ./)
-                htmlContent = htmlContent.replace(patterns.MAIN_JS_SRC_REGEX, 'src="main.js"');
+                content = content.replace(patterns.MAIN_JS_SRC_REGEX, 'src="main.js"');
             }
             
-            await FileSystemHelper.writeFile(htmlPath, htmlContent);
-        }
+            return content;
+        });
     }
 
     /**
      * Update HTML file to use CDN links and remove module type
      */
     private async updateHtmlForCdn(tutorialPath: vscode.Uri): Promise<void> {
-        const htmlPath = vscode.Uri.joinPath(tutorialPath, constants.FILE_INDEX_HTML);
-        if (await FileSystemHelper.exists(htmlPath)) {
-            let htmlContent = await FileSystemHelper.readFile(htmlPath);
-            
+        await this.transformHtmlFile(tutorialPath, (htmlContent) => {
             // Remove module type
-            htmlContent = htmlContent.replace(/type=["']module["']\s*/gi, '');
+            let content = htmlContent.replace(/type=["']module["']\s*/gi, '');
             
             // Add CDN links if not present
-            if (!htmlContent.includes('cesium.com/downloads')) {
-                const head = htmlContent.indexOf('</head>');
+            if (!content.includes('cesium.com/downloads')) {
+                const head = content.indexOf('</head>');
                 if (head !== -1) {
                     const cdnLinks = `    <script src="https://cesium.com/downloads/cesiumjs/releases/1.118/Build/Cesium/Cesium.js"></script>\n    <link href="https://cesium.com/downloads/cesiumjs/releases/1.118/Build/Cesium/Widgets/widgets.css" rel="stylesheet">\n`;
-                    htmlContent = htmlContent.slice(0, head) + cdnLinks + htmlContent.slice(head);
+                    content = content.slice(0, head) + cdnLinks + content.slice(head);
                 }
             }
             
-            await FileSystemHelper.writeFile(htmlPath, htmlContent);
-        }
+            return content;
+        });
     }
 
     /**

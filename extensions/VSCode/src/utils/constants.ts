@@ -54,3 +54,26 @@ export const MSG_OPEN_WORKSPACE_FOLDER = 'Please open a workspace folder to save
 export const MSG_API_SEARCH_CLEARED = 'API search cleared';
 export const MSG_TUTORIAL_SEARCH_CLEARED = 'Tutorial search cleared';
 export const MSG_TUTORIALS_DIR_NOT_FOUND = 'Tutorials directory not found';
+
+// Token messages
+export const MSG_TOKEN_NOT_FOUND = 'Cesium Ion access token not found. Tutorials may not work without it.';
+export const MSG_TOKEN_ACTION_ENTER = 'Enter Token';
+export const MSG_TOKEN_ACTION_GET = 'Get Token from Cesium.com';
+export const MSG_TOKEN_ACTION_SKIP = 'Skip';
+export const MSG_TOKEN_SAVE_TO_ENV = 'Token saved for this session. Would you like to save it to .env file for future use?';
+export const MSG_TOKEN_ACTION_YES = 'Yes';
+export const MSG_TOKEN_ACTION_NO = 'No';
+export const MSG_TOKEN_PROMPT = 'Enter your Cesium Ion access token';
+export const MSG_TOKEN_PLACEHOLDER = 'eyJhbGciOiJI...';
+export const MSG_TOKEN_EMPTY_ERROR = 'Token cannot be empty';
+export const MSG_TOKEN_INVALID_FORMAT = 'Invalid token format';
+export const MSG_TOKEN_SAVED_TO_ENV = 'Token saved to .env file';
+
+// NPM project messages
+export const MSG_NPM_DEPS_NOT_INSTALLED = 'Dependencies not installed for "{0}". Install now?';
+export const MSG_NPM_ACTION_YES_INSTALL = 'Yes, Install';
+export const MSG_NPM_ACTION_CANCEL = 'Cancel';
+export const MSG_NPM_INSTALLING_DEPS = 'Installing dependencies... Run "npm run dev" when complete, or click Play again.';
+export const MSG_NPM_STARTING_SERVER = 'Starting dev server on port {0}...';
+export const MSG_NPM_SERVER_READY = 'Dev server ready: {0}';
+export const MSG_NPM_SERVER_TIMEOUT = 'Dev server for "{0}" is taking longer than expected. Check the terminal for details.';

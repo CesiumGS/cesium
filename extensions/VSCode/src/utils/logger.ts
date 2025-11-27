@@ -8,21 +8,21 @@ export class Logger {
 
     private constructor() {}
 
-    static initialize(name: string): void {
+    public static initialize(name: string): void {
         this.outputChannel = vscode.window.createOutputChannel(name);
     }
 
-    static info(message: string, ...args: any[]): void {
+    public static info(message: string, ...args: any[]): void {
         const formattedMessage = this.formatMessage('INFO', message, args);
         this.outputChannel.appendLine(formattedMessage);
     }
 
-    static warn(message: string, ...args: any[]): void {
+    public static warn(message: string, ...args: any[]): void {
         const formattedMessage = this.formatMessage('WARN', message, args);
         this.outputChannel.appendLine(formattedMessage);
     }
 
-    static error(message: string, error?: Error | unknown, ...args: any[]): void {
+    public static error(message: string, error?: Error | unknown, ...args: any[]): void {
         const formattedMessage = this.formatMessage('ERROR', message, args);
         this.outputChannel.appendLine(formattedMessage);
         
@@ -33,16 +33,16 @@ export class Logger {
         }
     }
 
-    static debug(message: string, ...args: any[]): void {
+    public static debug(message: string, ...args: any[]): void {
         const formattedMessage = this.formatMessage('DEBUG', message, args);
         this.outputChannel.appendLine(formattedMessage);
     }
 
-    static show(): void {
+    public static show(): void {
         this.outputChannel.show();
     }
 
-    static dispose(): void {
+    public static dispose(): void {
         if (this.outputChannel) {
             this.outputChannel.dispose();
         }
