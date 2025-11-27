@@ -133,10 +133,6 @@ BillboardVisualizer.prototype.update = function (time) {
     }
 
     billboard.show = show;
-    if (item.textureValue !== textureValue) {
-      billboard.image = textureValue;
-      item.textureValue = textureValue;
-    }
     billboard.position = position;
     billboard.color = Property.getValueOrDefault(
       billboardGraphics._color,
@@ -229,6 +225,13 @@ BillboardVisualizer.prototype.update = function (time) {
       defaultSplitDirection,
     );
     isUpdated = billboard.ready && isUpdated;
+
+    // Apply .image last, so any necessary property values are available
+    // in Billboard#_computeImageTextureSize before adding to the atlas.
+    if (item.textureValue !== textureValue) {
+      billboard.image = textureValue;
+      item.textureValue = textureValue;
+    }
 
     const subRegion = Property.getValueOrUndefined(
       billboardGraphics._imageSubRegion,

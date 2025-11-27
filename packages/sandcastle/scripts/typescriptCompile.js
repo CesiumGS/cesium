@@ -9,10 +9,10 @@ import { fileURLToPath } from "node:url";
  * @returns {number} exit code from the tsc command
  */
 export default async function typescriptCompile(configPath) {
-  const tsPath = import.meta.resolve("typescript");
-  const binPath = fileURLToPath(join(tsPath, "../../bin/tsc"));
+  const tsPath = fileURLToPath(import.meta.resolve("typescript"));
+  const binPath = join(tsPath, "../../bin/tsc");
   return new Promise((resolve, reject) => {
-    const ls = spawn(binPath, ["-p", configPath]);
+    const ls = spawn(process.execPath, [binPath, "-p", configPath]);
 
     ls.stdout.on("data", (data) => {
       console.log(`stdout: ${data}`);

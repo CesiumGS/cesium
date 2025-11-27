@@ -146,7 +146,6 @@ export const makeZip = gulp.series(
         gulp.src(
           [
             "Apps/**",
-            "Apps/Sandcastle/.jshintrc",
             "packages/engine/index.js",
             "packages/engine/index.d.ts",
             "packages/engine/LICENSE.md",
@@ -171,6 +170,7 @@ export const makeZip = gulp.series(
             "CHANGES.md",
             "README.md",
             "web.config",
+            "!Apps/Sandcastle/**",
             "!scripts/buildSandcastle.js",
             "!**/*.gitignore",
             "!Specs/e2e/*-snapshots/**",

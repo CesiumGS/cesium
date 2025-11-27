@@ -655,9 +655,11 @@ function getImage(image, id) {
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas,
  *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
+ * @param {number} width A number specifying the width of the texture. If undefined, the image width will be used.
+ * @param {number} height A number specifying the height of the texture. If undefined, the image height will be used.
  * @returns {Promise<number>} A Promise that resolves to the image region index, or -1 if resources are in the process of being destroyed.
  */
-TextureAtlas.prototype.addImage = function (id, image) {
+TextureAtlas.prototype.addImage = function (id, image, width, height) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("id", id);
   Check.defined("image", image);
@@ -676,6 +678,7 @@ TextureAtlas.prototype.addImage = function (id, image) {
 
   index = this._nextIndex++;
   this._indexById.set(id, index);
+
   image = getImage(image, id);
 
   const resolveAndAddImage = async (index, image) => {
@@ -685,8 +688,20 @@ TextureAtlas.prototype.addImage = function (id, image) {
       // Effectively return a promise chain. The image promise will resolve and be processed on a later frame
       image = await image;
     }
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("image", image);
+    //>>includeEnd('debug');
+
     if (this.isDestroyed() || !defined(image)) {
+      this._indexPromiseById.delete(id);
       return -1;
+    }
+
+    if (defined(width)) {
+      image.width = width;
+    }
+    if (defined(height)) {
+      image.height = height;
     }
 
     return this._addImage(index, image);

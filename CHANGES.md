@@ -1,17 +1,21 @@
 # Change Log
 
-## 1.136
+## 1.136 - 2025-12-01
 
 ### @cesium/engine
 
 #### Fixes :wrench:
 
+- Fixed depth testing bug with billboards and labels clipping through models [#13012](https://github.com/CesiumGS/cesium/issues/13012)
 - Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
 - Fix render issues when updating Billboards with syncronous textures with `requestRenderMode=true`. [#12543](https://github.com/CesiumGS/cesium/issues/12543)
+- Improved scaling of SVGs in billboards [#13020](https://github.com/CesiumGS/cesium/issues/13020)
+- Fixed unexpected outline artifacts around billboards [#13038](https://github.com/CesiumGS/cesium/issues/13038)
 
 #### Additions :tada:
 
 - Added `scene.pickAsync` for non GPU blocking picking using WebGL2 [#12983](https://github.com/CesiumGS/cesium/pull/12983)
+- Improves performance of terrain picks via new terrain picking quadtrees [#8481](https://github.com/CesiumGS/cesium/issues/8481)
 
 ## 1.135 - 2025-11-03
 
