@@ -26,13 +26,15 @@ A Visual Studio Code extension that provides access to Cesium Sandcastle tutoria
 When exporting a tutorial, choose your preferred format:
 
 **Modern npm Project** (Recommended)
+
 - Full Vite + Cesium ES modules setup
 - IntelliSense and TypeScript support
 - Hot Module Replacement (HMR)
 - Run with `npm install` then `npm run dev`
 - Token stored securely in `.env` file
 
-**CDN**
+#### CDN
+
 - Simple HTML with Cesium CDN links
 - No build step required
 - Open `index.html` directly in browser
@@ -41,20 +43,24 @@ When exporting a tutorial, choose your preferred format:
 ### Rendering Cesium Views
 
 **From Tutorials Panel:**
+
 - Click any tutorial to open it in the Cesium Globe viewer
 
 **From Workspace Files:**
+
 - Right-click on any `.js`, `.html`, or `.css` file
 - Select **"Render Cesium View"**
 - Works with both npm and CDN projects
 - Auto-detects Cesium code and project type
 
 **For npm Projects:**
+
 - Dev server starts automatically on available port
 - Opens in VS Code Simple Browser
 - Live reload on file changes
 
 **For CDN Projects:**
+
 - Renders directly in Cesium Globe panel
 - Live updates when you save files
 

@@ -1,5 +1,8 @@
 /node_modules
 packages/sandcastle/node_modules
+extensions/VSCode/node_modules
+extensions/VSCode/out
+extensions/VSCode/src/templates
 /ThirdParty
 /Tools/**
 

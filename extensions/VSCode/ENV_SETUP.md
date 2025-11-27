@@ -10,7 +10,7 @@ This extension uses environment variables for sensitive configuration values lik
    ```
 
 2. Edit `.env` and add your actual values:
-   ```
+   ```bash
    CESIUM_ION_ACCESS_TOKEN=your_actual_token_here
    ```
 
@@ -26,6 +26,7 @@ This extension uses environment variables for sensitive configuration values lik
 ## Automatic Token Injection
 
 The extension **automatically loads** the `CESIUM_ION_ACCESS_TOKEN` from your `.env` file when:
+
 - Opening tutorials from the Cesium Tutorials panel
 - Rendering tutorials from workspace files (with auto-reload on file changes)
 
@@ -42,6 +43,7 @@ Tutorial files use the placeholder `YOUR_CESIUM_ION_ACCESS_TOKEN`, which is auto
 ## Exported Tutorial Files
 
 When you export tutorials to your workspace, the files will still contain the `YOUR_CESIUM_ION_ACCESS_TOKEN` placeholder. This is intentional for security:
+
 - The extension automatically replaces it when rendering
 - You can manually replace it if you want to run tutorials outside VS Code
 - Or use your own build process to inject tokens from environment variables
