@@ -22,10 +22,9 @@ const dropdownOptions = [
   { label: "Google Maps 2D Roadmap", assetId: 3830184 },
   { label: "Google Maps 2D Satellite", assetId: 3830182 },
   { label: "Google Maps 2D Satellite with Labels", assetId: 3830183 },
-  { label: "Bing Maps Aerial", assetId: 2 },
-  { label: "Bing Maps Aerial with Labels", assetId: 3 },
-  { label: "Bing Maps Road", assetId: 4 },
-  { label: "Bing Maps Labels Only", assetId: 2411391 },
+  { label: "Azure Maps Aerial", assetId: 3891168 },
+  { label: "Azure Maps Roads", assetId: 3891169 },
+  { label: "Azure Maps Labels Only", assetId: 3891170 },
   { label: "Sentinel-2", assetId: 3954 },
 ];
 

@@ -4,7 +4,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { EOL } from "node:os";
 import path from "node:path";
 import { finished } from "node:stream/promises";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 import esbuild from "esbuild";
 import { globby } from "globby";
@@ -22,7 +22,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, "..");
 const packageJsonPath = path.join(projectRoot, "package.json");
 
-async function getVersion() {
+export async function getVersion() {
   const data = await readFile(packageJsonPath, "utf8");
   const { version } = JSON.parse(data);
   return version;
@@ -305,6 +305,54 @@ export async function createCesiumJs() {
   await writeFile("Source/Cesium.js", contents, { encoding: "utf-8" });
 
   return contents;
+}
+
+/**
+ * Bundles all individual modules, optionally minifying and stripping out debug pragmas.
+ * @param {object} options
+ * @param {string} options.outputDirectory Directory where build artifacts are output
+ * @param {string} options.entryPoint script to bundle
+ * @param {boolean} [options.minify=false] true if the output should be minified
+ * @param {boolean} [options.removePragmas=false] true if the output should have debug pragmas stripped out
+ * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
+ * @param {boolean} [options.incremental=false] true if build output should be cached for repeated builds
+ * @param {boolean} [options.write=true] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
+ */
+export async function bundleIndexJs(options) {
+  const buildConfig = {
+    ...defaultESBuildOptions(),
+    entryPoints: [options.entryPoint],
+    minify: options.minify,
+    sourcemap: options.sourcemap,
+    plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
+    write: options.write,
+    banner: {
+      js: await getCopyrightHeader(),
+    },
+    // print errors immediately, and collect warnings so we can filter out known ones
+    logLevel: "info",
+  };
+
+  const contexts = {};
+  const incremental = options.incremental ?? false;
+  const build = incremental ? esbuild.context : esbuild.build;
+
+  // Build ESM
+  const esm = await build({
+    ...buildConfig,
+    format: "esm",
+    outfile: path.join(options.outputDirectory, "index.js"),
+    // NOTE: doing this requires an importmap defined in the browser but avoids multiple CesiumJS instances
+    external: options.entryPoint.includes("engine") ? [] : ["@cesium/engine"],
+  });
+
+  if (incremental) {
+    contexts.esm = esm;
+  } else {
+    handleBuildWarnings(esm);
+  }
+
+  return contexts;
 }
 
 const workspaceSpecFiles = {
@@ -613,71 +661,11 @@ const externalResolvePlugin = {
 };
 
 /**
- * Parses Sandcastle config file and returns its values.
- * @returns {Promise<Record<string,any>>} A promise that resolves to the config values.
- */
-export async function getSandcastleConfig() {
-  const configPath = "packages/sandcastle/sandcastle.config.js";
-  const configImportPath = path.join(projectRoot, configPath);
-  const config = await import(pathToFileURL(configImportPath).href);
-  const options = config.default;
-  return {
-    ...options,
-    configPath,
-  };
-}
-
-/**
- * Indexes Sandcastle gallery files and writes gallery files to the configured Sandcastle output directory.
- * @param {boolean} [includeDevelopment=true] true if gallery items flagged as development should be included.
- * @returns {Promise<void>} A promise that resolves once the gallery files have been indexed and written.
- */
-export async function buildSandcastleGallery(includeDevelopment) {
-  const { configPath, root, gallery, sourceUrl } = await getSandcastleConfig();
-
-  // Use an absolute path to avoid any descrepency between working directories
-  // All other directories will be relative to the specified root directory
-  const rootDirectory = path.join(path.dirname(configPath), root);
-
-  // Paths are specified relative to the config file
-  const {
-    files: galleryFiles,
-    defaultThumbnail,
-    searchOptions,
-    defaultFilters,
-    metadata,
-  } = gallery ?? {};
-
-  // Import asynchronously, for now, because this following script is not included in the release zip; However, this script will not be run from the release zip
-  const buildGalleryScriptPath = path.join(
-    __dirname,
-    "../packages/sandcastle/scripts/buildGallery.js",
-  );
-  const { buildGalleryList } = await import(
-    pathToFileURL(buildGalleryScriptPath).href
-  );
-
-  await buildGalleryList({
-    rootDirectory,
-    publicDirectory: "../../Apps/Sandcastle2",
-    galleryFiles,
-    sourceUrl,
-    defaultThumbnail,
-    searchOptions,
-    defaultFilters,
-    metadata,
-    includeDevelopment,
-  });
-}
-
-/**
  * Creates a template html file in the Sandcastle app listing the gallery of demos
  * @param {boolean} [noDevelopmentGallery=false] true if the development gallery should not be included in the list
  * @returns {Promise<any>}
  */
 export async function createGalleryList(noDevelopmentGallery) {
-  await buildSandcastleGallery(!noDevelopmentGallery);
-
   const demoObjects = [];
   const demoJSONs = [];
   const output = path.join("Apps", "Sandcastle", "gallery", "gallery-index.js");
@@ -1079,6 +1067,19 @@ export const buildEngine = async (options) => {
   // Create index.js
   await createIndexJs("engine");
 
+  const contexts = await bundleIndexJs({
+    minify: minify,
+    incremental: incremental,
+    sourcemap: true,
+    removePragmas: false,
+    outputDirectory: path.join(
+      `packages/engine/Build`,
+      `${!minify ? "Unminified" : "Minified"}`,
+    ),
+    write: write,
+    entryPoint: `packages/engine/index.js`,
+  });
+
   // Build workers.
   await bundleWorkers({
     ...options,
@@ -1098,6 +1099,8 @@ export const buildEngine = async (options) => {
     specListFile: specListFile,
     write: write,
   });
+
+  return contexts;
 };
 
 /**
@@ -1105,12 +1108,14 @@ export const buildEngine = async (options) => {
  *
  * @param {object} options
  * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {boolean} [options.minify=false] True if bundles should be minified.
  * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  */
 export const buildWidgets = async (options) => {
   options = options || {};
 
   const incremental = options.incremental ?? false;
+  const minify = options.minify ?? false;
   const write = options.write ?? true;
 
   // Generate Build folder to place build artifacts.
@@ -1118,6 +1123,19 @@ export const buildWidgets = async (options) => {
 
   // Create index.js
   await createIndexJs("widgets");
+
+  const contexts = await bundleIndexJs({
+    minify: minify,
+    incremental: incremental,
+    sourcemap: true,
+    removePragmas: false,
+    outputDirectory: path.join(
+      `packages/widgets/Build`,
+      `${!minify ? "Unminified" : "Minified"}`,
+    ),
+    write: write,
+    entryPoint: `packages/widgets/index.js`,
+  });
 
   // Create SpecList.js
   const specFiles = await globby(workspaceSpecFiles["widgets"]);
@@ -1131,6 +1149,8 @@ export const buildWidgets = async (options) => {
     specListFile: specListFile,
     write: write,
   });
+
+  return contexts;
 };
 
 /**

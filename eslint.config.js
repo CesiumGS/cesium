@@ -31,6 +31,9 @@ export default [
   },
   {
     ...configCesium.configs.recommended,
+    linterOptions: {
+      reportUnusedDisableDirectives: "error",
+    },
     languageOptions: {
       sourceType: "module",
     },
@@ -45,6 +48,8 @@ export default [
       "scripts/**/*.js",
       "packages/sandcastle/scripts/**/*.js",
       "gulpfile.js",
+      "gulpfile.apps.js",
+      "gulpfile.makezip.js",
       "server.js",
     ],
     ...configCesium.configs.node,

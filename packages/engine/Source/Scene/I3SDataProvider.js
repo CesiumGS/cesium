@@ -63,7 +63,7 @@ import Lerc from "lerc";
 import Rectangle from "../Core/Rectangle.js";
 
 /**
- * @typedef {Object} I3SDataProvider.ConstructorOptions
+ * @typedef {object} I3SDataProvider.ConstructorOptions
  *
  * Initialization options for the I3SDataProvider constructor
  *
