@@ -67,12 +67,11 @@ export class TutorialFileManager {
             htmlContent
         );
 
-        // Create main.js with ES6 imports
+        // Create main.js with ES6 imports (token loaded from .env)
         const mainJsContent = await TemplateLoader.loadAndReplace(
             this.extensionUri,
             'main.js.template',
             {
-                'CESIUM_TOKEN': token || 'YOUR_CESIUM_ION_ACCESS_TOKEN',
                 'TUTORIAL_CODE': convertedCode
             }
         );
@@ -80,6 +79,15 @@ export class TutorialFileManager {
             vscode.Uri.joinPath(tutorialPath, constants.FILE_MAIN_JS),
             mainJsContent
         );
+
+        // Create .env file with token (if provided)
+        if (token) {
+            const envContent = `# Cesium Ion Access Token\n# Get your token at: https://ion.cesium.com/tokens\nVITE_CESIUM_TOKEN=${token}\n`;
+            await FileSystemHelper.writeFile(
+                vscode.Uri.joinPath(tutorialPath, '.env'),
+                envContent
+            );
+        }
 
         // Create .gitignore
         const gitignoreContent = 'node_modules/\ndist/\n.env\n';
@@ -121,12 +129,25 @@ export class TutorialFileManager {
     async createTutorialReadme(tutorial: Tutorial, tutorialPath: vscode.Uri, isNpmProject: boolean = true): Promise<void> {
         try {
             const templateName = isNpmProject ? 'tutorialProjectReadme.md' : 'tutorialReadme.md';
+            const tutorialSlug = tutorial.slug || this.createSlugFromName(tutorial.name);
+            const cssFileLine = tutorial.code?.css ? '\n- **' + constants.FILE_STYLES_CSS + '**' : '';
+            const cssFileTreeLine = tutorial.code?.css ? '\n    ├── ' + constants.FILE_STYLES_CSS : '';
+            
             const readmeContent = await TemplateLoader.loadAndReplace(
                 this.extensionUri,
                 templateName,
                 {
                     'TUTORIAL_NAME': tutorial.name,
-                    'TUTORIAL_DESCRIPTION': tutorial.description || ''
+                    'TUTORIAL_DESCRIPTION': tutorial.description || '',
+                    'TUTORIAL_SLUG': tutorialSlug,
+                    'FOLDER_CESIUM_TUTORIALS': constants.FOLDER_CESIUM_TUTORIALS,
+                    'FILE_INDEX_HTML': constants.FILE_INDEX_HTML,
+                    'FILE_MAIN_JS': constants.FILE_MAIN_JS,
+                    'FILE_METADATA_JSON': constants.FILE_METADATA_JSON,
+                    'FILE_STYLES_CSS': constants.FILE_STYLES_CSS,
+                    'FILE_README_MD': constants.FILE_README_MD,
+                    'CSS_FILE_LINE': cssFileLine,
+                    'CSS_FILE_TREE_LINE': cssFileTreeLine
                 }
             );
 

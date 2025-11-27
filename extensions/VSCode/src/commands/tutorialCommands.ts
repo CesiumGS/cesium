@@ -224,12 +224,12 @@ export class TutorialCommandHandler {
                 [
                     {
                         label: 'Modern npm Project',
-                        description: 'Vite + @cesium/engine with ES6 imports (recommended)',
+                        description: 'Vite + cesium with ES6 imports (recommended)',
                         detail: 'Full IntelliSense support, modern dev workflow with HMR',
                         value: 'npm'
                     },
                     {
-                        label: 'Legacy CDN',
+                        label: 'CDN',
                         description: 'Simple HTML with Cesium CDN',
                         detail: 'Traditional format with global Cesium object',
                         value: 'cdn'
@@ -257,7 +257,7 @@ export class TutorialCommandHandler {
             // Check if tutorial exists in extension's tutorials folder
             const extensionTutorialPath = vscode.Uri.joinPath(
                 this.context.extensionUri,
-                constants.FOLDER_TUTORIALS,
+                constants.FOLDER_CESIUM_TUTORIALS,
                 tutorialSlug
             );
 

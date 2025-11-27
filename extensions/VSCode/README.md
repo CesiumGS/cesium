@@ -4,16 +4,59 @@ A Visual Studio Code extension that provides access to Cesium Sandcastle tutoria
 
 ## Features
 
-- **Tutorials Browser**: Browse and access Cesium Sandcastle tutorials organized by category
-- **Quick Access**: Open tutorial code directly in VS Code
-- **Cesium Globe Viewer**: Visualize Cesium globe with tutorial examples in a webview panel
+- **📚 Tutorials Browser**: Browse Cesium Sandcastle tutorials organized by category
+- **🔍 Tutorial Search**: Quick filtering by name or keyword
+- **📦 Tutorial Export**: Export tutorials as modern npm projects or legacy CDN format
+- **🌍 Cesium Globe Viewer**: Render and preview Cesium scenes inside VS Code
+- **⚡ Live Reload**: Auto-refresh on file changes for both npm and CDN projects
+- **🎯 Smart Project Detection**: Automatically detects Cesium code in any workspace file
+- **🚀 Dev Server Integration**: Automatic Vite dev server with dynamic port detection
 
 ## Usage
 
-1. Click on the Cesium icon in the Activity Bar to open the Tutorials panel
-2. Browse through the available tutorials
-3. Click on a tutorial to open its code in the editor
-4. Click the globe icon to view the Cesium globe with your code
+### Browsing Tutorials
+
+1. Click on the **Cesium icon** in the Activity Bar to open the Tutorials panel
+2. Browse tutorials organized by category
+3. Use the **search icon** to filter tutorials by name or keyword
+4. Click **"Export Tutorial to Workspace"** button to export a tutorial to your workspace
+
+### Exporting Tutorials
+
+When exporting a tutorial, choose your preferred format:
+
+**Modern npm Project** (Recommended)
+- Full Vite + Cesium ES modules setup
+- IntelliSense and TypeScript support
+- Hot Module Replacement (HMR)
+- Run with `npm install` then `npm run dev`
+- Token stored securely in `.env` file
+
+**CDN**
+- Simple HTML with Cesium CDN links
+- No build step required
+- Open `index.html` directly in browser
+- Token hardcoded in `main.js`
+
+### Rendering Cesium Views
+
+**From Tutorials Panel:**
+- Click any tutorial to open it in the Cesium Globe viewer
+
+**From Workspace Files:**
+- Right-click on any `.js`, `.html`, or `.css` file
+- Select **"Render Cesium View"**
+- Works with both npm and CDN projects
+- Auto-detects Cesium code and project type
+
+**For npm Projects:**
+- Dev server starts automatically on available port
+- Opens in VS Code Simple Browser
+- Live reload on file changes
+
+**For CDN Projects:**
+- Renders directly in Cesium Globe panel
+- Live updates when you save files
 
 ## Requirements
 

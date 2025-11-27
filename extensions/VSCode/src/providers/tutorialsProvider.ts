@@ -17,7 +17,7 @@ export class TutorialsProvider implements vscode.TreeDataProvider<TutorialItem> 
 
     constructor(extensionPath: string) {
         // Tutorials are copied to the out directory during build
-        this.tutorialsPath = path.join(extensionPath, constants.FOLDER_TUTORIALS);
+        this.tutorialsPath = path.join(extensionPath, constants.FOLDER_CESIUM_TUTORIALS);
         this.loadTutorials();
     }
 

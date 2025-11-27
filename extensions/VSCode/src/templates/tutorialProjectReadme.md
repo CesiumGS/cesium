@@ -17,9 +17,9 @@
 3. **Open in browser:**
    Navigate to `http://localhost:5173`
 
-## What''s Included
+## What's Included
 
--  **@cesium/engine** - Modern Cesium ES modules with full TypeScript support
+-  **cesium** - Modern Cesium ES modules with full TypeScript support
 -  **Vite** - Fast development server with Hot Module Replacement (HMR)
 -  **IntelliSense** - Full autocomplete and type checking
 -  **Production build** - Optimized bundle with `npm run build`
@@ -29,7 +29,7 @@
 - `index.html` - Entry HTML file
 - `main.js` - Tutorial JavaScript code with ES6 imports
 - `package.json` - Project configuration and dependencies
-- `vite.config.js` - Vite build configuration
+- `vite.config.js` - Vite build configuration{{CSS_FILE_LINE}}
 
 ## Cesium Ion Token
 

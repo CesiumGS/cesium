@@ -35,7 +35,7 @@ export const FILE_METADATA_JSON = 'metadata.json';
 export const FILE_README_MD = 'README.md';
 
 // Folder names
-export const FOLDER_TUTORIALS = 'tutorials';
+export const FOLDER_CESIUM_TUTORIALS = 'tutorials';
 
 // File patterns
 export const TUTORIAL_FILE_PATTERN = '**/{main.js,index.html,styles.css}';

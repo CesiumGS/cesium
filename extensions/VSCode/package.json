@@ -107,7 +107,7 @@
       },
       {
         "command": "cesium.renderTutorialFromWorkspace",
-        "title": "Render Tutorial in Cesium Globe",
+        "title": "Render Cesium View",
         "category": "Cesium",
         "icon": "$(play)"
       },
