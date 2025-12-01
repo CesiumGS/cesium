@@ -23,6 +23,7 @@ There is no one release manager; instead, [our community shares the responsibili
 4. Check the [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release). If there are any outstanding items, post a message to the `CesiumJS` channel in Teams to figure out what needs to be addressed before we can release.
 5. Check the [`remove in [this version number]` issues](https://github.com/CesiumGS/cesium/labels?q=remove) and open PRs to address any deprecations.
 6. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
+7. Start thinking ahead for a good image for the release blog post in case you need to prepare any data, assets or examples.
 
 ## Release testing and packaging
 
