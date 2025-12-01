@@ -10,6 +10,7 @@
 - Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
 - Fixed depth testing bug with billboards and labels clipping through models [#13012](https://github.com/CesiumGS/cesium/issues/13012)
 - Fixed unexpected outline artifacts around billboards [#13038](https://github.com/CesiumGS/cesium/issues/13038)
+- Improved rendering performance when a 3D tileset is loaded [#12974](https://github.com/CesiumGS/cesium/pull/12974)
 
 #### Additions :tada:
 
