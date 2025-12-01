@@ -335,6 +335,17 @@ BillboardTexture.prototype.setImageSubRegion = function (index, subRegion) {
 };
 
 /**
+ * Get the image coordinates for reading the loaded texture in shaders.
+ * @private
+ * @param {BoundingRectangle} [result] The modified result parameter or a new BoundingRectangle instance if one was not provided.
+ * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
+ */
+BillboardTexture.prototype.computeImageCoordinates = function (result) {
+  const atlas = this._billboardCollection.textureAtlas;
+  return atlas.computeImageCoordinates(this._index, result);
+};
+
+/**
  * Get the texture coordinates for reading the loaded texture in shaders.
  * @private
  * @param {BoundingRectangle} [result] The modified result parameter or a new BoundingRectangle instance if one was not provided.
