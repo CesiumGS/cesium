@@ -176,12 +176,9 @@ export async function buildGalleryList(options = {}) {
     return condition;
   };
 
-  // globby requires forward slashes in glob patterns, even on Windows.
-  // path.join() uses backslashes on Windows, so convert them to forward slashes.
+
   const galleryFiles = await globby(
-    galleryFilesPattern.map((pattern) => 
-      join(rootDirectory, pattern, "**/*").replace(/\\/g, "/")
-    ),
+    galleryFilesPattern.map((pattern) => join(rootDirectory, pattern, "**/*")),
   );
   const yamlFiles = galleryFiles.filter((path) =>
     basename(path).match(galleryItemConfig),

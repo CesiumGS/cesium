@@ -1,20 +1,3 @@
-/**
- * Embedding Search
- * 
- * Provides semantic search for Sandcastle gallery items using embeddings.
- * 
- * This service:
- * 1. Loads pre-generated embeddings from the gallery list
- * 2. Generates embeddings for search queries using embedding-gemma model in the browser
- * 3. Computes cosine similarity against indexed gallery items
- * 4. Returns ranked search results
- * 
- * Benefits:
- * - Runs entirely in the browser (no backend needed)
- * - Uses local embedding model (privacy-friendly)
- * - Fast search after initial model load
- */
-
 import { AutoModel, AutoTokenizer } from '@huggingface/transformers';
 
 export interface VectorSearchResult {
