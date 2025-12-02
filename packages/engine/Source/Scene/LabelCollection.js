@@ -138,8 +138,14 @@ function rebindAllGlyphs(labelCollection, label) {
   const glyphs = label._glyphs;
   const glyphsLength = glyphs.length;
 
+  // Compute SDF size based on largest label font size.
+  const sdfSize = labelCollection._labels.reduce(
+    (maxSize, label) => Math.max(maxSize, Number(label._fontSize)),
+    SDFSettings.FONT_SIZE,
+  );
+
   // Compute a font size scale relative to the sdf font generated size.
-  label._relativeSize = label._fontSize / SDFSettings.FONT_SIZE;
+  label._relativeSize = label._fontSize / sdfSize;
 
   // if we have more glyphs than needed, unbind the extras.
   if (textLength < glyphsLength) {
@@ -184,6 +190,7 @@ function rebindAllGlyphs(labelCollection, label) {
       character,
       label._fontFamily,
       label._fontStyle,
+      label._fontSize,
       label._fontWeight,
       +verticalOrigin,
     ]);
@@ -194,7 +201,7 @@ function rebindAllGlyphs(labelCollection, label) {
       glyphBillboardTexture = new BillboardTexture(glyphBillboardCollection);
       glyphTextureCache.set(id, glyphBillboardTexture);
 
-      const glyphFont = `${label._fontStyle} ${label._fontWeight} ${SDFSettings.FONT_SIZE}px ${label._fontFamily}`;
+      const glyphFont = `${label._fontStyle} ${label._fontWeight} ${sdfSize}px ${label._fontFamily}`;
 
       const canvas = createGlyphCanvas(
         character,
