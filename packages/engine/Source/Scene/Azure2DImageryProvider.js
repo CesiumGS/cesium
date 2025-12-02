@@ -13,16 +13,15 @@ const trailingSlashRegex = /\/$/;
  *
  * Initialization options for the Azure2DImageryProvider constructor
  *
- * @property {object} options Object with the following properties:
- * @property {string} [options.url="https://atlas.microsoft.com/"] The Azure server url.
- * @property {string} options.tilesetId="microsoft.imagery" The Azure tileset ID. Valid options are {@link microsoft.imagery}, {@link microsoft.base.road}, and {@link microsoft.base.labels.road}
- * @property {string} options.subscriptionKey The public subscription key for the imagery.
- * @property {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
- * @property {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ * @property {string} [url="https://atlas.microsoft.com/"] The Azure server url.
+ * @property {string} tilesetId="microsoft.imagery" The Azure tileset ID. Valid options are {@link microsoft.imagery}, {@link microsoft.base.road}, and {@link microsoft.base.labels.road}
+ * @property {string} subscriptionKey The public subscription key for the imagery.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @property {number} [options.maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
- * @property {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @property {number} [maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  */
 
 /**
