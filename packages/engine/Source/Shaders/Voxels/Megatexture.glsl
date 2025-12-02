@@ -2,7 +2,6 @@
 
 /* Megatexture defines (set in Scene/VoxelRenderResources.js)
 #define SAMPLE_COUNT ###
-#define NEAREST_SAMPLING
 #define PADDING
 */
 

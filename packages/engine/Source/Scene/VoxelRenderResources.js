@@ -241,13 +241,6 @@ function VoxelRenderResources(primitive) {
       ShaderDestination.FRAGMENT,
     );
   }
-  if (primitive._nearestSampling) {
-    shaderBuilder.addDefine(
-      "NEAREST_SAMPLING",
-      undefined,
-      ShaderDestination.FRAGMENT,
-    );
-  }
   const traversal = primitive._traversal;
   shaderBuilder.addDefine(
     "SAMPLE_COUNT",

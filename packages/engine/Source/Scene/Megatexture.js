@@ -1,4 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
+import Check from "../Core/Check.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -108,6 +109,7 @@ function Megatexture(
     height: textureDimension.y,
     depth: textureDimension.z,
     sampler: new Sampler({
+      wrapR: TextureWrap.CLAMP_TO_EDGE,
       wrapS: TextureWrap.CLAMP_TO_EDGE,
       wrapT: TextureWrap.CLAMP_TO_EDGE,
       minificationFilter: TextureMinificationFilter.LINEAR,
@@ -149,7 +151,41 @@ function Megatexture(
    * @readonly
    */
   this.occupiedCount = 0;
+
+  this._nearestSampling = false;
 }
+
+Object.defineProperties(Megatexture.prototype, {
+  /**
+   * Gets or sets the nearest sampling flag.
+   * @type {boolean}
+   */
+  nearestSampling: {
+    get: function () {
+      return this._nearestSampling;
+    },
+    set: function (nearestSampling) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("nearestSampling", nearestSampling);
+      //>>includeEnd('debug');
+      if (this._nearestSampling === nearestSampling) {
+        return;
+      }
+      if (nearestSampling) {
+        this.texture.sampler = Sampler.NEAREST;
+      } else {
+        this.texture.sampler = new Sampler({
+          wrapR: TextureWrap.CLAMP_TO_EDGE,
+          wrapS: TextureWrap.CLAMP_TO_EDGE,
+          wrapT: TextureWrap.CLAMP_TO_EDGE,
+          minificationFilter: TextureMinificationFilter.LINEAR,
+          magnificationFilter: TextureMagnificationFilter.LINEAR,
+        });
+      }
+      this._nearestSampling = nearestSampling;
+    },
+  },
+});
 
 /**
  * Get the pixel data type to use in a megatexture.

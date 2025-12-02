@@ -851,10 +851,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       Check.typeOf.bool("nearestSampling", nearestSampling);
       //>>includeEnd('debug');
 
-      if (this._nearestSampling !== nearestSampling) {
-        this._nearestSampling = nearestSampling;
-        this._shaderDirty = true;
-      }
+      this._nearestSampling = nearestSampling;
     },
   },
 
@@ -1278,6 +1275,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
   );
   uniforms.stepSize = this._stepSizeMultiplier;
 
+  updateNearestSampling(this);
   updateRenderBoundPlanes(this, frameState);
 
   // Render the primitive
@@ -1289,6 +1287,13 @@ VoxelPrimitive.prototype.update = function (frameState) {
   command.boundingVolume = this._shape.boundingSphere;
   frameState.commandList.push(command);
 };
+
+function updateNearestSampling(primitive) {
+  const { megatextures } = primitive._traversal;
+  for (let i = 0; i < megatextures.length; ++i) {
+    megatextures[i].nearestSampling = primitive._nearestSampling;
+  }
+}
 
 function updateRenderBoundPlanes(primitive, frameState) {
   const uniforms = primitive._uniforms;
