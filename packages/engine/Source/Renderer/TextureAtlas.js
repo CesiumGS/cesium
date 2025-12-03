@@ -735,7 +735,7 @@ TextureAtlas.prototype.getCachedImageSubRegion = function (
  * @private
  * @param {string} id The identifier of the existing image.
  * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} defining a region of an existing image, measured in pixels from the bottom-left of the image.
- * @returns {number | Promise<number>} The resolved image region index, or a Promise that resolves to it. -1 is returned if resources are in the process of being destroyed.
+ * @returns {Promise<number>} A promise of the image region index. Resolves to -1 is returned if resources are in the process of being destroyed.
  */
 TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
   //>>includeStart('debug', pragmas.debug);
@@ -749,7 +749,7 @@ TextureAtlas.prototype.addImageSubRegion = function (id, subRegion) {
 
   let index = this.getCachedImageSubRegion(id, subRegion, imageIndex);
   if (defined(index)) {
-    return index;
+    return Promise.resolve(index);
   }
 
   index = this._nextIndex++;
