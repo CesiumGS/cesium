@@ -650,7 +650,7 @@ async function resolveImage(image, id) {
  *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
  * @param {number} width A number specifying the width of the texture. If undefined, the image width will be used.
  * @param {number} height A number specifying the height of the texture. If undefined, the image height will be used.
- * @returns {Promise<number>} A Promise that resolves to the image region index, or -1 if resources are in the process of being destroyed.
+ * @returns {Promise<number> | number} The image region index or a promise that resolves to it. -1 is returned if resources are in the process of being destroyed.
  */
 TextureAtlas.prototype.addImage = function (id, image, width, height) {
   //>>includeStart('debug', pragmas.debug);
@@ -666,7 +666,7 @@ TextureAtlas.prototype.addImage = function (id, image, width, height) {
   }
   if (defined(index)) {
     // This image has already been added and resolved
-    return Promise.resolve(index);
+    return index;
   }
 
   index = this._nextIndex++;
