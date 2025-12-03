@@ -11,6 +11,12 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 
 /**
+ * A compile time flag for excessive logging, as long as there is
+ * active development and testing.
+ */
+const DYNAMIC_CONTENT_LOGGING = true;
+
+/**
  * A generic N-dimensional map, used internally for content lookups.
  *
  * <code>
@@ -32,9 +38,6 @@ import DeveloperError from "../Core/DeveloperError.js";
  *
  * All functions that receive a "key" assume that the key contains properties
  * that have the dimension names that have been given in the constructor.
- *
- * TODO This should to be tested EXTENSIVELY.
- * Or let's just add the "@private" tag.
  */
 class NDMap {
   /**
@@ -649,9 +652,11 @@ class RequestHandle {
     // the next call to 'ensureRequested'.
     const requestPromise = resource.fetchArrayBuffer();
     if (!defined(requestPromise)) {
-      console.log(
-        `RequestHandle: Could not schedule request for ${request.url}, probably throttling`,
-      );
+      if (DYNAMIC_CONTENT_LOGGING) {
+        console.log(
+          `RequestHandle: Could not schedule request for ${request.url}, probably throttling`,
+        );
+      }
       this._fireRequestAttempted();
       return;
     }
@@ -666,9 +671,11 @@ class RequestHandle {
     // with the CANCELLED state.
     const onFulfilled = (arrayBuffer) => {
       if (request.state === RequestState.CANCELLED) {
-        console.log(
-          `RequestHandle: Resource promise fulfilled but cancelled for ${request.url}`,
-        );
+        if (DYNAMIC_CONTENT_LOGGING) {
+          console.log(
+            `RequestHandle: Resource promise fulfilled but cancelled for ${request.url}`,
+          );
+        }
         this._requestPromise = undefined;
         const rejectionError = new Error("Request was cancelled");
         rejectionError.code = RequestState.CANCELLED;
@@ -677,9 +684,11 @@ class RequestHandle {
         this._fireRequestAttempted();
         return;
       }
-      console.log(
-        `RequestHandle: Resource promise fulfilled for ${request.url}`,
-      );
+      if (DYNAMIC_CONTENT_LOGGING) {
+        console.log(
+          `RequestHandle: Resource promise fulfilled for ${request.url}`,
+        );
+      }
       this._deferred.resolve(arrayBuffer);
       this._fireRequestCompleted();
     };
@@ -687,13 +696,17 @@ class RequestHandle {
     // Only when there is a real error, reject the result promise with
     // this exact error. Otherwise, do that CANCELLED handling.
     const onRejected = (error) => {
-      console.log(
-        `RequestHandle: Request promise rejected for ${request.url} with error ${error}, checking for cancellation....`,
-      );
-      if (request.state === RequestState.CANCELLED) {
+      if (DYNAMIC_CONTENT_LOGGING) {
         console.log(
-          `RequestHandle: Request promise rejected but actually only cancelled for ${request.url} - better luck next time!`,
+          `RequestHandle: Request promise rejected for ${request.url} with error ${error}, checking for cancellation....`,
         );
+      }
+      if (request.state === RequestState.CANCELLED) {
+        if (DYNAMIC_CONTENT_LOGGING) {
+          console.log(
+            `RequestHandle: Request promise rejected but actually only cancelled for ${request.url} - better luck next time!`,
+          );
+        }
         this._requestPromise = undefined;
         const rejectionError = new Error("Request was cancelled");
         rejectionError.code = RequestState.CANCELLED;
@@ -733,7 +746,11 @@ class RequestHandle {
   /**
    * Cancel any pending request.
    *
-   * This will cause a rejection
+   * This will cause a rejection of the result promise, regardless of
+   * whether there actually was a pending CesiumJS Request or not.
+   *
+   * Listeners will only be informed about a cancelled/attempted
+   * request if there was a pending request. Don't blame me.
    */
   cancel() {
     if (defined(this._request)) {
@@ -741,13 +758,15 @@ class RequestHandle {
       // marked as "private". So there is no valid
       // way to cancel a request after all.
       this._request.cancel();
-      this._request = undefined;
     }
     const rejectionError = new Error("Request was cancelled");
     rejectionError.code = RequestState.CANCELLED;
     this._deferred.reject(rejectionError);
-    this._fireRequestCancelled();
-    this._fireRequestAttempted();
+    if (defined(this._request)) {
+      this._fireRequestCancelled();
+      this._fireRequestAttempted();
+      this._request = undefined;
+    }
   }
 
   /**
@@ -1120,17 +1139,23 @@ class ContentHandle {
     // and store it as 'this._content'. If the content
     // creation fails, store this as 'this._failed'.
     const onRequestFulfilled = async (arrayBuffer) => {
-      console.log(`ContentHandle: Request was fulfilled for ${uri}`);
+      if (DYNAMIC_CONTENT_LOGGING) {
+        console.log(`ContentHandle: Request was fulfilled for ${uri}`);
+      }
       try {
         const content = await this._createContent(resource, arrayBuffer);
-        console.log(`ContentHandle: Content was created for ${uri}`);
+        if (DYNAMIC_CONTENT_LOGGING) {
+          console.log(`ContentHandle: Content was created for ${uri}`);
+        }
         this._content = content;
         this._deferred.resolve(content);
       } catch (error) {
-        console.log(
-          `ContentHandle: Content creation for ${uri} caused error ${error}`,
-        );
-        this._failed = true;
+        if (DYNAMIC_CONTENT_LOGGING) {
+          console.log(
+            `ContentHandle: Content creation for ${uri} caused error ${error}`,
+          );
+          this._failed = true;
+        }
 
         // The promise is only intended for testign, and may not be awaited,
         // so it cannot be rejected without causing an uncaught error.
@@ -1143,18 +1168,22 @@ class ContentHandle {
     // cancelled. It may count as cancelled because it was
     // not scheduled at all. Try to handle each case here:
     const onRequestRejected = (error) => {
-      console.log(
-        `ContentHandle: Request was rejected for ${uri} with error ${error}`,
-      );
+      if (DYNAMIC_CONTENT_LOGGING) {
+        console.log(
+          `ContentHandle: Request was rejected for ${uri} with error ${error}`,
+        );
+      }
       // Apparently, cancelling causes a rejection.
       // This should not count as "failed". Instead,
       // the request handle is discarded, so that it
       // will be re-created during the next call to
       // _ensureRequestPending
       if (defined(error) && error.code === RequestState.CANCELLED) {
-        console.log(
-          `ContentHandle: Request was rejected for ${uri}, but actually only cancelled. Better luck next time!`,
-        );
+        if (DYNAMIC_CONTENT_LOGGING) {
+          console.log(
+            `ContentHandle: Request was rejected for ${uri}, but actually only cancelled. Better luck next time!`,
+          );
+        }
         this._requestHandle = undefined;
 
         // The promise is only intended for testing, and may not be awaited,
@@ -1201,9 +1230,11 @@ class ContentHandle {
    */
   reset() {
     if (defined(this._requestHandle)) {
-      console.log(
-        `ContentHandle: Cancelling request for ${this._contentHeader.uri}`,
-      );
+      if (DYNAMIC_CONTENT_LOGGING) {
+        console.log(
+          `ContentHandle: Cancelling request for ${this._contentHeader.uri}`,
+        );
+      }
       this._requestHandle.cancel();
     }
     this._requestHandle = undefined;
@@ -1271,17 +1302,70 @@ const DYNAMIC_CONTENT_SHOW_STYLE = new Cesium3DTileStyle({
 });
 
 /**
- * XXX_DYNAMIC Comments!
+ * XXX_DYNAMIC
  *
- * NOTE: Some of the more obscure request handling has been taken from
- * Multiple3DTileContent.
+ * A compile-time flag to govern the behavior of the implementation of the
+ * Cesium3DTileContent interface, by the Dynamic3DTileContent class.
  *
+ * This flag determines whether the
+ *
+ * - featuresLength
+ * - pointsLength
+ * - trianglesLength
+ * - geometryByteLength
+ * - texturesByteLength
+ * - batchTableByteLength
+ *
+ * getters return an aggregated value from all the inner contents, or
+ * a constant 0 (requiring the caller to iterate over the inner contents
+ * and aggregate the value).
+ *
+ * The Cesium3DTileContent interface does not really make sense.
+ * It is underspecified, the functions/properties that it contains have no
+ * coherence, and most of them do not make sense for most implementations.
+ * The way how that interface and its functions are used shows that
+ * ambiguity and vagueness, even without the corner case of dynamic
+ * content. For example, the "tile debug labels" show a geometry- and
+ * memory size of 0 for composite content, because the function that
+ * creates these labels is not aware that Composite3DTileContent and
+ * Multiple3DTileContent require it to iterate over the "innerContents".
+ *
+ * Some of the functions are called at places where the state of
+ * the content is not clear, including Cesium3DTile.process, in the
+ * block with that "if (...!this.contentReady && this._content.ready)"
+ * statement that does not make sense for dynamic content (this could
+ * be avoided by proper state management).
+ *
+ * At the time of writing this, it seems that the main use of these
+ * properties is in the Cesium3DTilesetStatistics, which does iterate
+ * over the inner contents, so this flag is "false" right now.
+ *
+ * Note that a content could have the respective property AND innerContents.
+ * In this case, the getters should return the value from the content itself,
+ * AND ADD the values from the inner contents. But if, at any point in time,
+ * the implementation of the composite- and multiple content are fixed by
+ * computing this sum on their own, such an implementation would break.
+ */
+const DYNAMIC_CONTENT_AGGREGATE_VALUES = false;
+
+/**
+ * A class that represents 3D Tile content that may change dynamically.
+ *
+ * It implements the Cesium3DTileContent interface, as far as reasonably
+ * possible, with some caveats.
+ *
+ * Each time the "update" function of this content is called, the
+ * 'tileset.dynamicContentPropertyProvider' of the tileset that this
+ * content belongs to provides a set of properties. Based on these
+ * properties, some of the inner/dynamic contents that are maintained
+ * by this class will become "active", meaning that these contents
+ * are supposed to be rendered, and available for picking. This class
+ * will manage the process of loading and unloading the required
+ * subsets of all possible contents.
  *
  * @extends Cesium3DTileContent
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
- *
- * Yup. It's a class. Sanity is spreading. Get used to it.
  */
 class Dynamic3DTileContent {
   /**
@@ -1447,7 +1531,9 @@ class Dynamic3DTileContent {
    * @param {ContentHandle} contentHandle The ContentHandle
    */
   loadedContentHandleEvicted(uri, contentHandle) {
-    console.log(`_loadedContentHandleEvicted with ${uri}`);
+    if (DYNAMIC_CONTENT_LOGGING) {
+      console.log(`_loadedContentHandleEvicted with ${uri}`);
+    }
     contentHandle.reset();
   }
 
@@ -1487,9 +1573,10 @@ class Dynamic3DTileContent {
    * @param {ContentHandle} contentHandle The content handle
    */
   _attachTilesetStatisticsTracker(contentHandle) {
-    // XXX_DYNAMIC Debug logs...
-    contentHandle.addRequestListener(new LoggingRequestListener());
-    contentHandle.addContentListener(new LoggingContentListener());
+    if (DYNAMIC_CONTENT_LOGGING) {
+      contentHandle.addRequestListener(new LoggingRequestListener());
+      contentHandle.addContentListener(new LoggingContentListener());
+    }
 
     const tileset = this._tile.tileset;
     contentHandle.addRequestListener({
@@ -1512,17 +1599,21 @@ class Dynamic3DTileContent {
 
     contentHandle.addContentListener({
       contentLoadedAndReady(content) {
-        console.log(
-          "Dynamic3DTileContent content handle listener contentLoadedAndReady - update statistics for   loaded content: ",
-          content,
-        );
+        if (DYNAMIC_CONTENT_LOGGING) {
+          console.log(
+            "Dynamic3DTileContent content handle listener contentLoadedAndReady - update statistics for   loaded content: ",
+            content,
+          );
+        }
         tileset.statistics.incrementLoadCounts(content);
       },
       contentUnloaded(content) {
-        console.log(
-          "Dynamic3DTileContent content handle listener contentUnloaded       - update statistics for unloaded content: ",
-          content,
-        );
+        if (DYNAMIC_CONTENT_LOGGING) {
+          console.log(
+            "Dynamic3DTileContent content handle listener contentUnloaded       - update statistics for unloaded content: ",
+            content,
+          );
+        }
         tileset.statistics.decrementLoadCounts(content);
       },
     });
@@ -1685,11 +1776,9 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get featuresLength() {
-    // XXX_DYNAMIC It's not clear whether this should return
-    // the aggregated value, or whether it is only used for
-    // the statistics, which are now tracked manually in
-    // _attachTilesetStatisticsTracker
-    //return this.getAggregatedLoaded("featuresLength");
+    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
+      return this.getAggregatedLoaded("featuresLength");
+    }
     return 0;
   }
 
@@ -1700,11 +1789,9 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get pointsLength() {
-    // XXX_DYNAMIC It's not clear whether this should return
-    // the aggregated value, or whether it is only used for
-    // the statistics, which are now tracked manually in
-    // _attachTilesetStatisticsTracker
-    //return this.getAggregatedLoaded("pointsLength");
+    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
+      return this.getAggregatedLoaded("pointsLength");
+    }
     return 0;
   }
 
@@ -1715,11 +1802,9 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get trianglesLength() {
-    // XXX_DYNAMIC It's not clear whether this should return
-    // the aggregated value, or whether it is only used for
-    // the statistics, which are now tracked manually in
-    // _attachTilesetStatisticsTracker
-    //return this.getAggregatedLoaded("trianglesLength");
+    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
+      return this.getAggregatedLoaded("trianglesLength");
+    }
     return 0;
   }
 
@@ -1730,11 +1815,9 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get geometryByteLength() {
-    // XXX_DYNAMIC It's not clear whether this should return
-    // the aggregated value, or whether it is only used for
-    // the statistics, which are now tracked manually in
-    // _attachTilesetStatisticsTracker
-    //return this.getAggregatedLoaded("geometryByteLength");
+    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
+      return this.getAggregatedLoaded("geometryByteLength");
+    }
     return 0;
   }
 
@@ -1745,11 +1828,9 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get texturesByteLength() {
-    // XXX_DYNAMIC It's not clear whether this should return
-    // the aggregated value, or whether it is only used for
-    // the statistics, which are now tracked manually in
-    // _attachTilesetStatisticsTracker
-    //return this.getAggregatedLoaded("texturesByteLength");
+    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
+      return this.getAggregatedLoaded("texturesByteLength");
+    }
     return 0;
   }
 
@@ -1760,19 +1841,20 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get batchTableByteLength() {
-    // XXX_DYNAMIC It's not clear whether this should return
-    // the aggregated value, or whether it is only used for
-    // the statistics, which are now tracked manually in
-    // _attachTilesetStatisticsTracker
-    //return this.getAggregatedLoaded("batchTableByteLength");
+    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
+      return this.getAggregatedLoaded("batchTableByteLength");
+    }
     return 0;
   }
 
   /**
-   * Calls getAggregated with each loaded content and the given
-   * property, and returns the sum.
+   * Fetches the value of the specified property of all contents
+   * that are currently loaded (i.e. in memory).
    *
-   * See getAggregated for details.
+   * This will call "getAggregated(content, property)" for each
+   * loaded content, and return the sum of the results.
+   *
+   * See DYNAMIC_CONTENT_AGGREGATE_VALUES for details.
    *
    * @param {string} property The property
    * @returns The result
@@ -1787,35 +1869,12 @@ class Dynamic3DTileContent {
   }
 
   /**
-   * The Cesium3DTileContent interface does not really make sense.
+   * If the given content has inner contents, then this function is
+   * called recursively on all inner contents, accumulating and
+   * returning the result.
    *
-   * It is underspecified, the functions/properties that it contains have no
-   * coherence, and most of them do not make sense for most implementations.
-   * The way how that interface and its functions are used shows that
-   * ambiguity and vagueness, even without the corner case of dynamic
-   * content. For example, the "tile debug labels" show a geometry- and
-   * memory size of 0 for composite content, because the function that
-   * creates these labels is not aware that Composite3DTileContent and
-   * Multiple3DTileContent require it to iterate over the "innerContents".
-   * Some of the functions are called at places where the state of
-   * the content is not clear, including Cesium3DTile.process, in the
-   * block with that "if (...!this.contentReady && this._content.ready)"
-   * statement that does not make sense for dynamic content. (This could
-   * be avoided by proper state management, but let's not get into that).
-   *
-   * So this function tries to squeeze some sense out of what is there:
-   *
-   * It fetches the value of the specified property of the given content,
-   * or the sum of the values from recursing into "innerContents" if
-   * the latter are defined.
-   *
-   * Note that a content could have the specified property AND innerContents.
-   * This function could take the value from the content itself, and ADD the
-   * values from the inner contents. But if, at any point in time, the
-   * implementation of the composite- and multiple content are fixed by
-   * computing this sum on their own, such an implementation would break.
-   *
-   * At some point, we have to shrug this off.
+   * Otherwise, it returns the value of the specified property of the
+   * given content.
    *
    * @param {Cesium3DTileContent} content The content
    * @param {string} property The property
@@ -1826,7 +1885,10 @@ class Dynamic3DTileContent {
     if (defined(innerContents)) {
       let sum = 0;
       for (const innerContent of content.innerContents) {
-        sum += Dynamic3DTileContent.getAggregated(innerContent[property]);
+        sum += Dynamic3DTileContent.getAggregated(
+          innerContent[property],
+          property,
+        );
       }
       return sum;
     }
@@ -1835,25 +1897,24 @@ class Dynamic3DTileContent {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
+   *
+   * Returns all contents that are currently loaded.
    */
   get innerContents() {
-    // XXX_DYNAMIC It's not clear whether this should return
-    // the loaded contents. Most of the tracking that could
-    // require clients to call this function should happen
-    // INSIDE this class, because the "inner contents" can
-    // be loaded and unloaded at any point in time.
-    //return this._allLoadedContents;
-    return [];
+    return this._allLoadedContents;
   }
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
    *
+   * For this class, this always returns "true". The inner contents
+   * may be ready or not, but their lifecycle is supposed to be
+   * managed by this class, when the "update" function is called.
+   *
    * @type {boolean}
    * @readonly
    */
   get ready() {
-    // XXX_DYNAMIC Always true....!?
     return true;
   }
 
@@ -1914,16 +1975,22 @@ class Dynamic3DTileContent {
   }
 
   /**
-   * Cancel all requests for inner contents. This is called by the tile
-   * when a tile goes out of view.
+   * Cancel all pending requests.
    *
-   * XXX_DYNAMIC See checks for "tile.hasMultipleContents"
-   * This comment is WRONG. The conditions under which it is called are
+   * This is "inspired" by the Multiple3DTileContent class, which claimed
+   * that this is called by the tile when a tile goes out of view - but
+   * this statement is wrong (see checks for "tile.hasMultipleContents"
+   * in Cesium3DTile). The conditions under which it is called are
    * completely unclear. They are related to some frame counters and the
    * tile state and some flags of the tile.
+   *
+   * This is a best (but "little") effort implementation: It simply
+   * cancels ALL requests that are currently pending from this class.
    */
   cancelRequests() {
-    console.log("Cancelling requests for Dynamic3DTileContent");
+    if (DYNAMIC_CONTENT_LOGGING) {
+      console.log("Cancelling requests for Dynamic3DTileContent");
+    }
     for (const contentHandle of this._contentHandles.values()) {
       contentHandle.reset();
     }
@@ -1932,22 +1999,24 @@ class Dynamic3DTileContent {
   /**
    * Part of the {@link Cesium3DTileContent} interface.
    *
-   * Always returns <code>false</code>.  Instead call <code>hasProperty</code> for a specific inner content
+   * Implemented following the Multiple3DTileContent approach:
+   *
+   * Always returns <code>false</code>. Instead call <code>hasProperty</code>
+   * for a specific inner content
    */
   hasProperty(batchId, name) {
-    // XXX_DYNAMIC Does it make sense to just iterate over
-    // the activeContents and check them...?
     return false;
   }
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
    *
-   * Always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a specific inner content
+   * Implemented following the Multiple3DTileContent approach:
+   *
+   * Always returns <code>undefined</code>. Instead call <code>getFeature</code>
+   * for a specific inner content
    */
   getFeature(batchId) {
-    // XXX_DYNAMIC Does it make sense to just iterate over
-    // the activeContents and check them...?
     return undefined;
   }
 
@@ -1975,7 +2044,7 @@ class Dynamic3DTileContent {
       contentHandle.updateContent(tileset, frameState);
     }
 
-    // XXX_DYNAMIC There is no way to show or hide contents.
+    // There is no way to show or hide contents.
     // Whether something is shown or not eventually depends
     // on whether draw commands are scheduled. This happens
     // as part of the "update" call. The "update" does not
@@ -2011,6 +2080,14 @@ class Dynamic3DTileContent {
 
   /**
    * Unload the least-recently used content.
+   *
+   * This is called at the end of the "update" function.
+   *
+   * It will ensure that the "_loadedContentHandlesMaximumSize" is
+   * at least as large as the number of contents that are currently
+   * "active". And it will trim the size of the "_loadedContentHandles"
+   * to this size, evicting (i.e. unloading the content of) the entries
+   * that have been least recently used.
    */
   _unloadOldContent() {
     // Iterate over all content handles. If the content of a certain handle
@@ -2052,8 +2129,10 @@ class Dynamic3DTileContent {
   /**
    * Part of the {@link Cesium3DTileContent} interface.
    *
-   * Find an intersection between a ray and the tile content surface that was
-   * rendered. The ray must be given in world coordinates.
+   * Find an intersection between a ray and the tile content surface of
+   * a content  that is currently "active".
+   *
+   * The ray must be given in world coordinates.
    *
    * @param {Ray} ray The ray to test for intersection.
    * @param {FrameState} frameState The frame state.

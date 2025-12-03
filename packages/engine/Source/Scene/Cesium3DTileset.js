@@ -2189,7 +2189,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * The function that provides the properties based on which inner
    * contents of a dynamic content should be active.
    *
-   * This is a function that returns a JSON plain object. This object corresponds
+   * This is a function that returns a plain JSON object. This object corresponds
    * to one 'key' of a dynamic content definition. It will cause the content
    * with this key to be the currently active content, namely, when the
    * "update" function of that content is called.
@@ -2373,7 +2373,9 @@ Cesium3DTileset.fromUrl = async function (url, options) {
   // Extract the information about the "dimensions" of the dynamic contents,
   // if present.
   // XXX_DYNAMIC This should probably not be done here, but ...
-  // maybe in the constructor or so...? The lifecycle, though...
+  // maybe in the constructor or so...? The lifecycle, though:
+  // The JSON is essentially "lost" after this function returns,
+  // because it is not passed to the constructor for some reason.
   const hasDynamicContents = hasExtension(tilesetJson, "3DTILES_dynamic");
   if (hasDynamicContents) {
     const dynamicContentsExtension = tilesetJson.extensions["3DTILES_dynamic"];

@@ -1,24 +1,35 @@
-// TODO These should be imported from index.js. Probably.
-import Dynamic3DTileContent, {
+import {
+  Clock,
+  JulianDate,
+  ClockRange,
+  ClockStep,
+  Buffer as CesiumBuffer,
+  ImageBasedLighting,
+  defined,
+  Matrix4,
+  Cesium3DTileset,
+  Resource,
+  ShaderProgram,
+  Dynamic3DTileContent,
+  RequestScheduler,
+  ResourceCache,
+  destroyObject,
+} from "../../index.js";
+
+// These are not written into the index.js. See "build.js".
+import {
   ContentHandle,
   LRUCache,
   NDMap,
   RequestHandle,
 } from "../../Source/Scene/Dynamic3DTileContent.js";
-import Clock from "../../Source/Core/Clock.js";
-import JulianDate from "../../Source/Core/JulianDate.js";
-import ClockRange from "../../Source/Core/ClockRange.js";
-import ClockStep from "../../Source/Core/ClockStep.js";
-import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
+
+// This has to be imported from the source, and not
+// from index.js.
 import ContextLimits from "../../Source/Renderer/ContextLimits.js";
-import { default as CesiumBuffer } from "../../Source/Renderer/Buffer.js";
-import ImageBasedLighting from "../../Source/Scene/ImageBasedLighting.js";
+
+import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-import defined from "../../Source/Core/defined.js";
-import Matrix4 from "../../Source/Core/Matrix4.js";
-import Cesium3DTileset from "../../Source/Scene/Cesium3DTileset.js";
-import Resource from "../../Source/Core/Resource.js";
-import ShaderProgram from "../../Source/Renderer/ShaderProgram.js";
 
 // A basic top-level extension object that will be added to the
 // tileset extensions: It defines the "dimensions" of the
@@ -266,6 +277,17 @@ function createEmbeddedGltf() {
 }
 
 /**
+ * Creates an array buffer containing a simple glTF 2.0 asset
+ * in embedded representation.
+ *
+ * @returns {ArrayBuffer} The array buffer
+ */
+function createSimpleGltfArrayBuffer() {
+  const gltf = createEmbeddedGltf();
+  return generateJsonBuffer(gltf).buffer;
+}
+
+/**
  * A class that tries to provide mocking infrastructure for the
  * obscure Resource.fetchArrayBuffer behavior.
  */
@@ -343,7 +365,7 @@ class ResourceFetchArrayBufferPromiseMock {
    * "resolve" or "reject" on the returned object.
    *
    * @param {string|undefined} mockedUrl The mocked URL
-   * @param {ResourceFetchArrayBufferPromiseMock} resourceFetchArrayBufferPromiseMock The mocking object
+   * @returns {ResourceFetchArrayBufferPromiseMock} resourceFetchArrayBufferPromiseMock The mocking object
    */
   static createSingle(mockedUrl) {
     const resourceFetchArrayBufferPromiseMock =
@@ -370,6 +392,38 @@ class ResourceFetchArrayBufferPromiseMock {
       return originalResult;
     });
     return resourceFetchArrayBufferPromiseMock;
+  }
+
+  /**
+   * Set up the spy for Resource.fetchArrayBuffer to return a
+   * promise that is resolved with the given result, if the
+   * requested URL matches the given URL.
+   * (Otherwise, the original fetchArrayBuffer will be called).
+   *
+   *
+   * @param {string|undefined} mockedUrl The mocked URL
+   * @param {any} result The result for the resolved promise
+   */
+  static createSingleResolved(mockedUrl, result) {
+    const oldFetchArrayBuffer = Resource.prototype.fetchArrayBuffer;
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+      // XXX_DYNAMIC For some reason, fetchArrayBuffer assigns the
+      // url from the resource to the request of the resource.
+      this.request.url = this.url;
+      if (this.url === mockedUrl) {
+        console.log(
+          `Calling fake Resource.fetchArrayBuffer for ${this.url}, returning resolved ${result}`,
+        );
+        return Promise.resolve(result);
+      }
+      const boundFetchArrayBuffer = oldFetchArrayBuffer.bind(this);
+      const originalResult = boundFetchArrayBuffer();
+      console.log(`Calling fake Resource.fetchArrayBuffer for ${this.url}`);
+      console.log(
+        `  (The mocked URL was ${mockedUrl}, returning original result ${originalResult})`,
+      );
+      return originalResult;
+    });
   }
 
   /**
@@ -408,6 +462,13 @@ class ResourceFetchArrayBufferPromiseMock {
 }
 
 /**
+ * A counter for mocked buffer IDs. Should be a static
+ * property of CesiumBufferMocks, but linting complains
+ * about that for whatever reason.
+ */
+let CESIUM_BUFFER_MOCK_ID_COUNTER = 0;
+
+/**
  * A class containing utility functions for mocking aspects that are
  * related to the CesiumJS "Buffer" class.
  */
@@ -439,7 +500,8 @@ class CesiumBufferMocks {
    * Creates a new buffer from the given typed array.
    *
    * The result with be a JavaScript "Buffer" with a dummy "destroy()"
-   * method, to resemble a CesiumJS "Buffer".
+   * method, to resemble a CesiumJS "Buffer", and ... some other
+   * random stuff that is accessed somewhere. Whatever.
    *
    * @param {TypedArray} typedArray The typed array
    * @returns {any} The result
@@ -449,11 +511,13 @@ class CesiumBufferMocks {
       typedArray.byteOffset,
       typedArray.byteOffset + typedArray.byteLength,
     );
+    mockedBuffer.sizeInBytes = typedArray.byteLength;
+    mockedBuffer._id = `MOCKED_BUFFER_ID_${CESIUM_BUFFER_MOCK_ID_COUNTER++}`;
     mockedBuffer.destroy = () => {
-      console.log(
-        "The mockedBuffer.destroy() operation is a no-op for the specs",
-      );
+      destroyObject(mockedBuffer);
+      return undefined;
     };
+
     return mockedBuffer;
   }
 }
@@ -523,13 +587,24 @@ function createMockFrameState() {
     vertexShaderText: "",
     fragmentShaderText: "",
   });
+  mockShaderProgram._cachedShader = {
+    cache: {
+      releaseShaderProgram: () => {},
+    },
+  };
   const mockGl = {
     createTexture: () => {
       return -1;
     },
+    createBuffer: () => {
+      return -1;
+    },
     activeTexture: () => {},
+    bindBuffer: () => {},
+    bufferData: () => {},
     pixelStorei: () => {},
     bindTexture: () => {},
+    deleteTexture: () => {},
     texParameteri: () => {},
     texImage2D: () => {},
   };
@@ -540,7 +615,10 @@ function createMockFrameState() {
         view3D: new Matrix4(),
       },
       createPickId: () => {
-        return "MOCK_PICK_ID";
+        return {
+          name: "MOCK_PICK_ID",
+          destroy: () => {},
+        };
       },
       shaderCache: {
         getShaderProgram: () => {
@@ -596,7 +674,7 @@ class CountingRequestListener {
 /**
  * Wait util the content from the given content handle is "ready".
  *
- * This will poll the content handle util its content is available
+ * This will poll the content handle until its content is available
  * (by the underlying request being resolved), and then poll
  * that content until its "ready" flag turns "true", calling
  * contentHandle.updateContent repeatedly.
@@ -639,8 +717,18 @@ async function waitForContentHandleReady(contentHandle, tileset, frameState) {
 }
 
 describe("Scene/Dynamic3DTileContent", function () {
-  beforeAll(function () {
+  beforeEach(function () {
     initializeMockContextLimits();
+
+    // These two lines missing took me about 5 hours
+    // of pain-in-the-ass debugging for a single
+    // (fairly useless) spec. We're having fun, right?
+    RequestScheduler.clearForSpecs();
+    ResourceCache.clearForSpecs();
+  });
+
+  beforeAll(function () {
+    CesiumBufferMocks.setup();
   });
 
   //========================================================================
@@ -817,25 +905,84 @@ describe("Scene/Dynamic3DTileContent", function () {
     ResourceFetchArrayBufferPromiseMock.setupSequence([undefined]);
 
     // Expect there to be NO active contents
-    // Expect there to be ONE pending request
-    // Expect there to be NO attempted requests
+    // Expect there to be NO pending request
+    // Expect there to be ONE attempted request
     const activeContentsA = content._activeContents;
     expect(activeContentsA).toEqual([]);
-    expect(tileset.statistics.numberOfPendingRequests).toBe(1);
-    expect(tileset.statistics.numberOfAttemptedRequests).toBe(0);
-
-    // Now wait for things to settle. This will involve the
-    // fetchArrayBuffer call returning "undefined", meaning
-    // that the request was not really issued
-    await content.waitForSpecs();
-
-    // Expect there to STILL be NO active contents
-    // Expect there to be NO pending requests
-    // Expect there to be ONE attempted requests
-    const activeContentsB = content._activeContents;
-    expect(activeContentsB.length).toEqual(0);
     expect(tileset.statistics.numberOfPendingRequests).toBe(0);
     expect(tileset.statistics.numberOfAttemptedRequests).toBe(1);
+  });
+
+  it("tracks the number of loaded bytes in the tileset statistics", async function () {
+    // The following highly specific convoluted code that involves
+    // lots of mocks of internal/private functions and brittle
+    // promise handling checks... *drumroll*...
+    // AN ADDITION.
+    // Yes. That obscure statistics update that is done
+    // somewhere, under some conditions, based on something.
+    // We want "good test coverage", right? RIGHT?
+    const tilesetResource = new Resource({ url: "http://example.com" });
+    const tileset = createMockTileset(basicDynamicExampleExtensionObject);
+    const tile = tileset._root;
+
+    const content = new Dynamic3DTileContent(
+      tileset,
+      tile,
+      tilesetResource,
+      basicDynamicExampleContent,
+    );
+
+    const dynamicContentProperties = {
+      exampleTimeStamp: "2025-09-25",
+      exampleRevision: "revision0",
+    };
+    tileset.dynamicContentPropertyProvider = () => {
+      return dynamicContentProperties;
+    };
+
+    // Mock the fetchArrayBuffer call...
+    ResourceFetchArrayBufferPromiseMock.createSingleResolved(
+      "http://example.com/exampleContent-2025-09-25-revision0.glb",
+      createSimpleGltfArrayBuffer(),
+    );
+
+    // Set up the mocking. Try to get the content to ensure that
+    // there is a request that is immediately resolved. Wait
+    // for the "update" calls to create the structures that
+    // the content consists of, using the mocked frame state.
+    // At some point, some functions will be called that should
+    // update the model statistics by executing the
+    // PrimitiveStatisticsPipelineStage. The model statistics
+    // will be returned by the Cesium3DTileContent implementation
+    // of Model3DTileContent. The Dynamic3DTileContent does not
+    // care about all that, but returns the model contents as
+    // the inner contents, meaning that they are taken into account
+    // when passing the Dynamic3DTileContent instances to the
+    // Cesium3DTilesetStatistics.incrementLoadCounts function.
+    // This is a deeeep rabbit hole.
+    console.log(
+      "------------------------------------------------------------- before",
+    );
+    const frameState = createMockFrameState();
+    const contentHandle = content._contentHandles.values().next().value;
+    contentHandle.tryGetContent();
+    await waitForContentHandleReady(contentHandle, tileset, frameState);
+    console.log(
+      "------------------------------------------------------------- after",
+    );
+
+    // Check that the loaded geometry and texture data is properly
+    // reflected in the tileset statistics
+    expect(tileset.statistics.geometryByteLength).toBe(144 + 12);
+    expect(tileset.statistics.texturesByteLength).toBe(1024);
+
+    // Reset the content handle, causing the content to be unloaded
+    contentHandle.reset();
+
+    // Check that the loaded geometry and texture data is properly
+    // reflected in the tileset statistics
+    expect(tileset.statistics.geometryByteLength).toBe(0);
+    expect(tileset.statistics.texturesByteLength).toBe(0);
   });
 
   //========================================================================
@@ -950,10 +1097,6 @@ describe("Scene/Dynamic3DTileContent", function () {
 // RequestHandle:
 
 describe("Scene/Dynamic3DTileContent/RequestHandle", function () {
-  beforeAll(function () {
-    initializeMockContextLimits();
-  });
-
   it("properly resolves the result promise when the resource promise is resolved", async function () {
     const resource = new Resource({ url: "http://example.com/SPEC_DATA.glb" });
     const requestHandle = new RequestHandle(resource);
@@ -1219,9 +1362,7 @@ describe("Scene/Dynamic3DTileContent/RequestHandle", function () {
     expect(countingRequestListener.requestFailedCount).toBe(0);
 
     // Resolve the pending request
-    resourceFetchArrayBufferPromiseMock.mockResolve(
-      createDummyGltfArrayBuffer(),
-    );
+    resourceFetchArrayBufferPromiseMock.resolve(createDummyGltfArrayBuffer());
 
     // Wait for the result promise to be resolved
     try {
@@ -1394,7 +1535,7 @@ describe("Scene/Dynamic3DTileContent/RequestHandle", function () {
 // ContentHandle:
 
 describe("Scene/Dynamic3DTileContent/ContentHandle", function () {
-  beforeAll(function () {
+  beforeEach(function () {
     initializeMockContextLimits();
   });
 
@@ -1436,9 +1577,6 @@ describe("Scene/Dynamic3DTileContent/ContentHandle", function () {
     tileset.dynamicContentPropertyProvider = () => {
       return dynamicContentProperties;
     };
-
-    // XXX_DYNAMIC Experiments..
-    CesiumBufferMocks.setup();
 
     // Create a promise mock to manually resolve the
     // resource request
