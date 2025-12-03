@@ -927,7 +927,7 @@ Resource.prototype.fetchImage = function (options) {
     this.isBlobUri ||
     (!this.hasHeaders && !preferBlob)
   ) {
-    return fetchImage({
+    return this._fetchImage({
       resource: this,
       flipY: flipY,
       skipColorSpaceConversion: skipColorSpaceConversion,
@@ -967,8 +967,7 @@ Resource.prototype.fetchImage = function (options) {
         url: blobUrl,
       });
 
-      return fetchImage({
-        resource: generatedBlobResource,
+      return generatedBlobResource._fetchImage({
         flipY: flipY,
         skipColorSpaceConversion: skipColorSpaceConversion,
         preferImageBitmap: false,
@@ -1007,16 +1006,15 @@ Resource.prototype.fetchImage = function (options) {
 
 /**
  * Fetches an image and returns a promise to it.
- *
  * @param {object} [options] An object with the following properties.
- * @param {Resource} [options.resource] Resource object that points to an image to fetch.
  * @param {boolean} [options.preferImageBitmap] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
  * @param {boolean} [options.flipY] If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
  * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored. Only applies if the browser supports <code>createImageBitmap</code>.
+ * @returns {Promise<ImageBitmap|HTMLImageElement>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if the request has been throttled and cannot be made at this time.
  * @private
  */
-function fetchImage(options) {
-  const resource = options.resource;
+Resource.prototype._fetchImage = function (options) {
+  const resource = this;
   const flipY = options.flipY;
   const skipColorSpaceConversion = options.skipColorSpaceConversion;
   const preferImageBitmap = options.preferImageBitmap;
@@ -1060,8 +1058,7 @@ function fetchImage(options) {
         request.state = RequestState.UNISSUED;
         request.deferred = undefined;
 
-        return fetchImage({
-          resource: resource,
+        return resource._fetchImage({
           flipY: flipY,
           skipColorSpaceConversion: skipColorSpaceConversion,
           preferImageBitmap: preferImageBitmap,
@@ -1070,7 +1067,7 @@ function fetchImage(options) {
       return Promise.reject(e);
     });
   });
-}
+};
 
 /**
  * Creates a Resource and calls fetchImage() on it.
@@ -1972,6 +1969,7 @@ Resource._Implementations.createImage = function (
   flipY,
   skipColorSpaceConversion,
   preferImageBitmap,
+  headers,
 ) {
   const url = request.url;
   // Passing an Image to createImageBitmap will force it to run on the main thread
@@ -1995,7 +1993,7 @@ Resource._Implementations.createImage = function (
         responseType,
         method,
         undefined,
-        undefined,
+        headers,
         xhrDeferred,
         undefined,
         undefined,
@@ -2037,6 +2035,12 @@ Resource._Implementations.createImage = function (
  * Wrapper for createImageBitmap
  *
  * @private
+ * @param {Blob} blob The image blob.
+ * @param {object} options An object containing the following properties:
+ * @param {boolean} options.flipY Whether to flip the image Y axis.
+ * @param {boolean} options.premultiplyAlpha Whether to premultiply the alpha channel.
+ * @param {boolean} options.skipColorSpaceConversion Whether to skip color space conversion.
+ * @returns {Promise<ImageBitmap>} A promise that resolves to the created image bitmap.
  */
 Resource.createImageBitmapFromBlob = function (blob, options) {
   Check.defined("options", options);

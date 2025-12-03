@@ -1,20 +1,56 @@
 # Change Log
 
-## 1.135 - 2025-11-01
+## 1.136 - 2025-12-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Improved scaling of SVGs in billboards [#13020](https://github.com/CesiumGS/cesium/issues/13020)
+- Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
+- Fixed depth testing bug with billboards and labels clipping through models [#13012](https://github.com/CesiumGS/cesium/issues/13012)
+- Fixed unexpected outline artifacts around billboards [#13038](https://github.com/CesiumGS/cesium/issues/13038)
+
+#### Additions :tada:
+
+- Added `scene.pickAsync` for non GPU blocking picking using WebGL2 [#12983](https://github.com/CesiumGS/cesium/pull/12983)
+- Improves performance of terrain picks via new terrain picking quadtrees [#8481](https://github.com/CesiumGS/cesium/issues/8481)
+
+## 1.135 - 2025-11-03
 
 ### @cesium/engine
 
 #### Breaking Changes :mega:
 
-- `scene.drillPick` now uses a breadth-first search strategy instead of depth-first. This may change which entities are picked when
-  using large values of `width` and `height` when providing a `limit`, prioritizing entities closer to the camera.
+- Removed support for the `KHR_spz_gaussian_splats_compression` extension in favor of the latest 3D Gaussian splatting extensions for glTF, `KHR_gaussian_splatting` and `KHR_gaussian_splatting_compression_spz_2`. Please re-tile existing Gaussian splatting 3D Tiles [#12837](https://github.com/CesiumGS/cesium/issues/12837)
+- `scene.drillPick` now uses a breadth-first search strategy instead of depth-first. This may change which entities are picked when using large values of `width` and `height` when providing a `limit`, prioritizing entities closer to the camera. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
+
+#### Additions :tada:
+
+- Added experimental support for loading 3D Tiles as terrain, via `Cesium3DTilesTerrainProvider`. See [the PR](https://github.com/CesiumGS/cesium/pull/12963) for limitations on the types of 3D Tiles that can be used. [#12296](https://github.com/CesiumGS/cesium/issues/12296)
+- Added support for [EXT_mesh_primitive_edge_visibility](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension. [#12765](https://github.com/CesiumGS/cesium/issues/12765)
 
 #### Fixes :wrench:
 
-- Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
-- Fix issues with label background when updating properties while `label.show` is `false`. [#12138](https://github.com/CesiumGS/cesium/issues/12138)
 - Improved performance of `scene.drillPick`. [#12916](https://github.com/CesiumGS/cesium/pull/12916)
 - Improved performance when removing primitives. [#3018](https://github.com/CesiumGS/cesium/pull/3018)
+- Improved performance of terrain Quadtree handling of custom data [#12907](https://github.com/CesiumGS/cesium/pull/12907)
+- Fixed vertical exaggeration of ellipsoid-shaped voxels. [#12811](https://github.com/CesiumGS/cesium/issues/12811)
+- Fixed parsing content bounding volumes contained in 3D Tiles 1.1 subtree files. [#12972](https://github.com/CesiumGS/cesium/pull/12972)
+- Fixes an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
+- Fix issues with label background when updating properties while `label.show` is `false`. [#12138](https://github.com/CesiumGS/cesium/issues/12138)
+- Fixed picking of `GroundPrimitive` with multiple `PolygonGeometry` instances selecting the wrong instance. [#12978](https://github.com/CesiumGS/cesium/pull/12978)
+- Fixed a bug where the removal of draped imagery layers did not update the rendered state [#12923](https://github.com/CesiumGS/cesium/issues/12923)
+- Fixed precision issues with Gaussian splat tilesets where the root tile does not have a world transform. [#12925](https://github.com/CesiumGS/cesium/issues/12925)
+- Fixed infinite recursion that would happen if user append post-render callbacks within existing callbacks [#12983](https://github.com/CesiumGS/cesium/pull/12983)
+
+## 1.134.1 - 2025-10-10
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed an event bug following recent changes, where adding a new listener during an event callback caused an infinite loop. [#12955](https://github.com/CesiumGS/cesium/pull/12955)
 
 ## 1.134 - 2025-10-01
 

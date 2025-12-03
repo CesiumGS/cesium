@@ -347,6 +347,40 @@ describe("Scene/BillboardCollection", function () {
     expect(b.image.length).toBe(guidLength);
   });
 
+  it("image property setter computes SVG width and height", function () {
+    const b = billboards.add();
+
+    // Don't override image size if billboard size is unspecified.
+    b.image = "icon.svg";
+    expect(b.image).toBe("icon.svg");
+    expect(b._imageWidth).toBeUndefined();
+    expect(b._imageHeight).toBeUndefined();
+
+    // Don't override image size for raster images.
+    b.width = b.height = 50;
+    b.image = "icon.png";
+    expect(b._imageWidth).toBeUndefined();
+    expect(b._imageHeight).toBeUndefined();
+
+    // Override image size with billboard size for SVGs.
+    b.width = b.height = 50;
+    b.image = "icon.svg";
+    expect(b._imageWidth).toBe(50);
+    expect(b._imageHeight).toBe(50);
+
+    // Limit billboard-derived SVG size to 512px.
+    b.width = b.height = 10000;
+    b.image = "icon-lg.svg";
+    expect(b._imageWidth).toBe(512);
+    expect(b._imageHeight).toBe(512);
+
+    // Don't override image size if billboard is not sized in pixels.
+    b.sizeInMeters = true;
+    b.image = "icon.svg";
+    expect(b._imageWidth).toBeUndefined();
+    expect(b._imageHeight).toBeUndefined();
+  });
+
   it("is not destroyed", function () {
     expect(billboards.isDestroyed()).toEqual(false);
   });

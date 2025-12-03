@@ -357,7 +357,7 @@ describe("Scene/TextureAtlas", function () {
         expect(coords.height).toEqual(1);
       });
 
-      it("computes texture coordinates", async function () {
+      it("computes image texture coordinates", async function () {
         atlas = new TextureAtlas({
           borderWidthInPixels: 0,
         });
@@ -378,6 +378,69 @@ describe("Scene/TextureAtlas", function () {
         expect(coords.y).toEqual(0.0 / atlasHeight);
         expect(coords.width).toEqual(1.0 / atlasWidth);
         expect(coords.height).toEqual(1.0 / atlasHeight);
+      });
+
+      it("computes subregion texture coordinates", async function () {
+        const atlasWidth = 12;
+        const atlasHeight = 8;
+        const borderPx = 2;
+
+        atlas = new TextureAtlas({
+          borderWidthInPixels: borderPx,
+          initialSize: new Cartesian2(atlasWidth, atlasHeight),
+        });
+
+        const imagePromise0 = atlas.addImage(bigGreenGuid, bigGreenImage);
+        const promise1 = atlas.addImageSubRegion(
+          bigGreenGuid,
+          new BoundingRectangle(0, 0, 2, 2),
+        );
+        const promise2 = atlas.addImageSubRegion(
+          bigGreenGuid,
+          new BoundingRectangle(2, 0, 1, 2),
+        );
+
+        await pollWhilePromise(
+          Promise.all([imagePromise0, promise1, promise2]),
+          () => {
+            atlas.update(scene.frameState.context);
+          },
+        );
+
+        const imageIndex0 = await imagePromise0;
+        const index1 = await promise1;
+        const index2 = await promise2;
+
+        expect(drawAtlas(atlas, [imageIndex0, index1, index2])).toBe(
+          `
+............
+............
+..0000......
+..0000......
+..1120......
+..1120......
+............
+............
+          `.trim(),
+        );
+
+        let coords = atlas.computeTextureCoordinates(imageIndex0);
+        expect(coords.x).toEqual(borderPx / atlasWidth);
+        expect(coords.y).toEqual(borderPx / atlasHeight);
+        expect(coords.width).toEqual(4.0 / atlasWidth);
+        expect(coords.height).toEqual(4.0 / atlasHeight);
+
+        coords = atlas.computeTextureCoordinates(index1);
+        expect(coords.x).toEqual(borderPx / atlasWidth);
+        expect(coords.y).toEqual(borderPx / atlasHeight);
+        expect(coords.width).toEqual(2.0 / atlasWidth);
+        expect(coords.height).toEqual(2.0 / atlasHeight);
+
+        coords = atlas.computeTextureCoordinates(index2);
+        expect(coords.x).toEqual((borderPx + 2.0) / atlasWidth);
+        expect(coords.y).toEqual(borderPx / atlasHeight);
+        expect(coords.width).toEqual(1.0 / atlasWidth);
+        expect(coords.height).toEqual(2.0 / atlasHeight);
       });
 
       it("renders a single image atlas", async function () {
@@ -446,52 +509,34 @@ describe("Scene/TextureAtlas", function () {
           initialSize: new Cartesian2(1, 1),
         });
 
-        const promiseA = atlas.addImage(greenGuid, greenImage);
-        const promiseB = atlas.addImage("Another image", greenImage);
+        const promise0 = atlas.addImage(greenGuid, greenImage);
+        const promise1 = atlas.addImage("Another image", greenImage);
 
         expect(atlas.numberOfImages).toEqual(2);
 
-        await pollWhilePromise(Promise.all([promiseA, promiseB]), () => {
+        await pollWhilePromise(Promise.all([promise0, promise1]), () => {
           atlas.update(scene.frameState.context);
         });
 
-        const indexA = await promiseA;
-        const indexB = await promiseB;
+        const index0 = await promise0;
+        const index1 = await promise1;
 
-        expect(indexA).toEqual(0);
-        expect(indexB).toEqual(1);
+        expect(index0).toEqual(0);
+        expect(index1).toEqual(1);
 
         const texture = atlas.texture;
         expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
         expect(texture.width).toEqual(2);
         expect(texture.height).toEqual(1);
 
-        let coords = atlas.rectangles[indexA];
-        expect(coords.x).toEqual(0);
-        expect(coords.y).toEqual(0);
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(1);
+        expect(drawAtlas(atlas, [index0, index1])).toBe("01");
 
-        let textureCoordinates = atlas.computeTextureCoordinates(indexA);
-        expect(textureCoordinates.x).toEqual(0);
-        expect(textureCoordinates.y).toEqual(0);
-        expect(textureCoordinates.width).toEqual(0.5);
-        expect(textureCoordinates.height).toEqual(1);
+        let textureCoordinates = atlas.computeTextureCoordinates(index0);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 255, 0, 255]);
 
-        coords = atlas.rectangles[indexB];
-        expect(coords.x).toEqual(1);
-        expect(coords.y).toEqual(0);
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(1);
-
-        textureCoordinates = atlas.computeTextureCoordinates(indexB);
-        expect(textureCoordinates.x).toEqual(0.5);
-        expect(textureCoordinates.y).toEqual(0);
-        expect(textureCoordinates.width).toEqual(0.5);
-        expect(textureCoordinates.height).toEqual(1);
+        textureCoordinates = atlas.computeTextureCoordinates(index1);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 255, 0, 255]);
@@ -503,24 +548,26 @@ describe("Scene/TextureAtlas", function () {
           initialSize: new Cartesian2(1, 1),
         });
 
-        const promiseA = atlas.addImage(greenGuid, greenImage);
+        const promise0 = atlas.addImage(greenGuid, greenImage);
 
-        await pollWhilePromise(promiseA, () => {
+        await pollWhilePromise(promise0, () => {
           atlas.update(scene.frameState.context);
         });
 
-        const indexA = await promiseA;
+        const index0 = await promise0;
 
-        const promiseB = atlas.addImage("Another image", greenImage);
+        expect(drawAtlas(atlas, [index0])).toBe("0");
 
-        await pollWhilePromise(promiseB, () => {
+        const promise1 = atlas.addImage("Another image", greenImage);
+
+        await pollWhilePromise(promise1, () => {
           atlas.update(scene.frameState.context);
         });
 
-        const indexB = await promiseB;
+        const index1 = await promise1;
 
-        expect(indexA).toEqual(0);
-        expect(indexB).toEqual(1);
+        expect(index0).toEqual(0);
+        expect(index1).toEqual(1);
 
         expect(atlas.numberOfImages).toEqual(2);
 
@@ -529,32 +576,14 @@ describe("Scene/TextureAtlas", function () {
         expect(texture.width).toEqual(2);
         expect(texture.height).toEqual(1);
 
-        let coords = atlas.rectangles[indexA];
-        expect(coords.x).toEqual(0);
-        expect(coords.y).toEqual(0);
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(1);
+        expect(drawAtlas(atlas, [index0, index1])).toBe("01");
 
-        let textureCoordinates = atlas.computeTextureCoordinates(indexA);
-        expect(textureCoordinates.x).toEqual(0);
-        expect(textureCoordinates.y).toEqual(0);
-        expect(textureCoordinates.width).toEqual(0.5);
-        expect(textureCoordinates.height).toEqual(1);
+        let textureCoordinates = atlas.computeTextureCoordinates(index0);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 255, 0, 255]);
 
-        coords = atlas.rectangles[indexB];
-        expect(coords.x).toEqual(1);
-        expect(coords.y).toEqual(0);
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(1);
-
-        textureCoordinates = atlas.computeTextureCoordinates(indexB);
-        expect(textureCoordinates.x).toEqual(0.5);
-        expect(textureCoordinates.y).toEqual(0);
-        expect(textureCoordinates.width).toEqual(0.5);
-        expect(textureCoordinates.height).toEqual(1);
+        textureCoordinates = atlas.computeTextureCoordinates(index1);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 255, 0, 255]);
@@ -566,91 +595,72 @@ describe("Scene/TextureAtlas", function () {
           initialSize: new Cartesian2(1, 1),
         });
 
-        const greenPromise = atlas.addImage(tallGreenGuid, tallGreenImage);
-        const bluePromise = atlas.addImage(blueGuid, blueImage);
-        const redPromise = atlas.addImage(bigRedGuid, bigRedImage);
-        const bigBluePromise = atlas.addImage(bigBlueGuid, bigBlueImage);
+        const promise0 = atlas.addImage(tallGreenGuid, tallGreenImage);
+        const promise1 = atlas.addImage(blueGuid, blueImage);
+        const promise2 = atlas.addImage(bigRedGuid, bigRedImage);
+        const promise3 = atlas.addImage(bigBlueGuid, bigBlueImage);
 
         expect(atlas.numberOfImages).toEqual(4);
 
         await pollWhilePromise(
-          Promise.all([greenPromise, bluePromise, redPromise, bigBluePromise]),
+          Promise.all([promise0, promise1, promise2, promise3]),
           () => {
             atlas.update(scene.frameState.context);
           },
         );
 
-        const greenIndex = await greenPromise;
-        const blueIndex = await bluePromise;
-        const redIndex = await redPromise;
-        const bigBlueIndex = await bigBluePromise;
+        const index0 = await promise0;
+        const index1 = await promise1;
+        const index2 = await promise2;
+        const index3 = await promise3;
 
-        expect(greenIndex).toEqual(0);
-        expect(blueIndex).toEqual(1);
-        expect(redIndex).toEqual(2);
-        expect(bigBlueIndex).toEqual(3);
+        expect(index0).toEqual(0);
+        expect(index1).toEqual(1);
+        expect(index2).toEqual(2);
+        expect(index3).toEqual(3);
 
         const texture = atlas.texture;
         expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
         expect(texture.width).toEqual(32);
         expect(texture.height).toEqual(16);
 
-        let coords = atlas.rectangles[greenIndex];
-        expect(coords.x).toEqual(26);
-        expect(coords.y).toEqual(0);
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(4);
+        expect(drawAtlas(atlas, [index0, index1, index2, index3])).toBe(
+          `
+2222222222222222................
+2222222222222222................
+2222222222222222................
+2222222222222222................
+2222222222222222................
+2222222222222222................
+22222222222222223333333333......
+22222222222222223333333333......
+22222222222222223333333333......
+22222222222222223333333333......
+22222222222222223333333333......
+22222222222222223333333333......
+222222222222222233333333330.....
+222222222222222233333333330.....
+222222222222222233333333330.....
+2222222222222222333333333301....
+          `.trim(),
+        );
 
-        let textureCoordinates = atlas.computeTextureCoordinates(greenIndex);
-        expect(textureCoordinates.x).toEqual(26 / 32);
-        expect(textureCoordinates.y).toEqual(0);
-        expect(textureCoordinates.width).toEqual(1 / 32);
-        expect(textureCoordinates.height).toEqual(4 / 16);
+        let textureCoordinates = atlas.computeTextureCoordinates(index0);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 255, 0, 255]);
 
-        coords = atlas.rectangles[blueIndex];
-        expect(coords.x).toEqual(27);
-        expect(coords.y).toEqual(0);
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(1);
-
-        textureCoordinates = atlas.computeTextureCoordinates(blueIndex);
-        expect(textureCoordinates.x).toEqual(27 / 32);
-        expect(textureCoordinates.y).toEqual(0);
-        expect(textureCoordinates.width).toEqual(1 / 32);
-        expect(textureCoordinates.height).toEqual(1 / 16);
+        textureCoordinates = atlas.computeTextureCoordinates(index1);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 0, 255, 255]);
 
-        coords = atlas.rectangles[redIndex];
-        expect(coords.x).toEqual(0);
-        expect(coords.y).toEqual(0);
-        expect(coords.width).toEqual(16);
-        expect(coords.height).toEqual(16);
-
-        textureCoordinates = atlas.computeTextureCoordinates(redIndex);
-        expect(textureCoordinates.x).toEqual(0);
-        expect(textureCoordinates.y).toEqual(0);
-        expect(textureCoordinates.width).toEqual(16 / 32);
-        expect(textureCoordinates.height).toEqual(16 / 16);
+        textureCoordinates = atlas.computeTextureCoordinates(index2);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([255, 0, 0, 255]);
 
-        coords = atlas.rectangles[bigBlueIndex];
-        expect(coords.x).toEqual(16);
-        expect(coords.y).toEqual(0);
-        expect(coords.width).toEqual(10);
-        expect(coords.height).toEqual(10);
-
-        textureCoordinates = atlas.computeTextureCoordinates(bigBlueIndex);
-        expect(textureCoordinates.x).toEqual(16 / 32);
-        expect(textureCoordinates.y).toEqual(0);
-        expect(textureCoordinates.width).toEqual(10 / 32);
-        expect(textureCoordinates.height).toEqual(10 / 16);
+        textureCoordinates = atlas.computeTextureCoordinates(index3);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 0, 255, 255]);
@@ -662,87 +672,124 @@ describe("Scene/TextureAtlas", function () {
           initialSize: new Cartesian2(1, 1),
         });
 
-        const greenPromise = atlas.addImage(tallGreenGuid, tallGreenImage);
-        const bluePromise = atlas.addImage(blueGuid, blueImage);
-        const bigBluePromise = atlas.addImage(bigBlueGuid, bigBlueImage);
+        const promise0 = atlas.addImage(tallGreenGuid, tallGreenImage);
+        const promise1 = atlas.addImage(blueGuid, blueImage);
+        const promise2 = atlas.addImage(bigBlueGuid, bigBlueImage);
 
         expect(atlas.numberOfImages).toEqual(3);
 
         await pollWhilePromise(
-          Promise.all([greenPromise, bluePromise, bigBluePromise]),
+          Promise.all([promise0, promise1, promise2]),
           () => {
             atlas.update(scene.frameState.context);
           },
         );
 
-        const greenIndex = await greenPromise;
-        const blueIndex = await bluePromise;
-        const bigBlueIndex = await bigBluePromise;
+        const index0 = await promise0;
+        const index1 = await promise1;
+        const index2 = await promise2;
 
-        const redPromise = atlas.addImage(bigRedGuid, bigRedImage);
+        const promise3 = atlas.addImage(bigRedGuid, bigRedImage);
 
         expect(atlas.numberOfImages).toEqual(4);
 
-        await pollWhilePromise(redPromise, () => {
+        await pollWhilePromise(promise3, () => {
           atlas.update(scene.frameState.context);
         });
 
-        const redIndex = await redPromise;
+        const index3 = await promise3;
 
-        expect(greenIndex).toEqual(0);
-        expect(blueIndex).toEqual(1);
-        expect(bigBlueIndex).toEqual(2);
-        expect(redIndex).toEqual(3);
+        expect(index0).toEqual(0);
+        expect(index1).toEqual(1);
+        expect(index2).toEqual(2);
+        expect(index3).toEqual(3);
 
         // Webgl1 textures should only be powers of 2
-        const textureWidth = scene.frameState.context.webgl2 ? 20 : 32;
-        const textureHeight = scene.frameState.context.webgl2 ? 32 : 16;
+        const isWebGL2 = scene.frameState.context.webgl2;
+        const textureWidth = isWebGL2 ? 20 : 32;
+        const textureHeight = isWebGL2 ? 32 : 16;
 
         const texture = atlas.texture;
         expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
         expect(texture.width).toEqual(textureWidth);
         expect(texture.height).toEqual(textureHeight);
 
-        let coords = atlas.rectangles[greenIndex];
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(4);
+        if (isWebGL2) {
+          expect(drawAtlas(atlas, [index0, index1, index2, index3])).toBe(
+            `
+....................
+....................
+....................
+....................
+....................
+....................
+2222222222..........
+2222222222..........
+2222222222..........
+2222222222..........
+2222222222..........
+2222222222..........
+2222222222..........
+2222222222..........
+2222222222..........
+2222222222..........
+3333333333333333....
+3333333333333333....
+3333333333333333....
+3333333333333333....
+3333333333333333....
+3333333333333333....
+3333333333333333....
+3333333333333333....
+3333333333333333....
+3333333333333333....
+3333333333333333....
+3333333333333333....
+33333333333333330...
+33333333333333330...
+33333333333333330...
+333333333333333301..
+          `.trim(),
+          );
+        } else {
+          expect(drawAtlas(atlas, [index0, index1, index2, index3])).toBe(
+            `
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+33333333333333332222222222......
+33333333333333332222222222......
+33333333333333332222222222......
+33333333333333332222222222......
+33333333333333332222222222......
+33333333333333332222222222......
+333333333333333322222222220.....
+333333333333333322222222220.....
+333333333333333322222222220.....
+3333333333333333222222222201....
+          `.trim(),
+          );
+        }
 
-        let textureCoordinates = atlas.computeTextureCoordinates(greenIndex);
-        expect(textureCoordinates.width).toEqual(1 / textureWidth);
-        expect(textureCoordinates.height).toEqual(4 / textureHeight);
+        let textureCoordinates = atlas.computeTextureCoordinates(index0);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 255, 0, 255]);
 
-        coords = atlas.rectangles[blueIndex];
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(1);
-
-        textureCoordinates = atlas.computeTextureCoordinates(blueIndex);
-        expect(textureCoordinates.width).toEqual(1 / textureWidth);
-        expect(textureCoordinates.height).toEqual(1 / textureHeight);
+        textureCoordinates = atlas.computeTextureCoordinates(index1);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 0, 255, 255]);
 
-        coords = atlas.rectangles[redIndex];
-        expect(coords.width).toEqual(16);
-        expect(coords.height).toEqual(16);
-
-        textureCoordinates = atlas.computeTextureCoordinates(redIndex);
-        expect(textureCoordinates.width).toEqual(16 / textureWidth);
-        expect(textureCoordinates.height).toEqual(16 / textureHeight);
+        textureCoordinates = atlas.computeTextureCoordinates(index3);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([255, 0, 0, 255]);
 
-        coords = atlas.rectangles[bigBlueIndex];
-        expect(coords.width).toEqual(10);
-        expect(coords.height).toEqual(10);
-
-        textureCoordinates = atlas.computeTextureCoordinates(bigBlueIndex);
-        expect(textureCoordinates.width).toEqual(10 / textureWidth);
-        expect(textureCoordinates.height).toEqual(10 / textureHeight);
+        textureCoordinates = atlas.computeTextureCoordinates(index2);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 0, 255, 255]);
@@ -753,91 +800,88 @@ describe("Scene/TextureAtlas", function () {
           borderWidthInPixels: 1,
         });
 
-        const greenPromise = atlas.addImage(greenGuid, greenImage);
-        const bluePromise = atlas.addImage(blueGuid, blueImage);
-        const redPromise = atlas.addImage(bigRedGuid, bigRedImage);
-        const bigBluePromise = atlas.addImage(bigBlueGuid, bigBlueImage);
+        const promise0 = atlas.addImage(greenGuid, greenImage);
+        const promise1 = atlas.addImage(blueGuid, blueImage);
+        const promise2 = atlas.addImage(bigRedGuid, bigRedImage);
+        const promise3 = atlas.addImage(bigBlueGuid, bigBlueImage);
 
         expect(atlas.numberOfImages).toEqual(4);
 
         await pollWhilePromise(
-          Promise.all([greenPromise, bluePromise, redPromise, bigBluePromise]),
+          Promise.all([promise0, promise1, promise2, promise3]),
           () => {
             atlas.update(scene.frameState.context);
           },
         );
 
-        const greenIndex = await greenPromise;
-        const blueIndex = await bluePromise;
-        const redIndex = await redPromise;
-        const bigBlueIndex = await bigBluePromise;
+        const index0 = await promise0;
+        const index1 = await promise1;
+        const index2 = await promise2;
+        const index3 = await promise3;
 
-        expect(greenIndex).toEqual(0);
-        expect(blueIndex).toEqual(1);
-        expect(redIndex).toEqual(2);
-        expect(bigBlueIndex).toEqual(3);
+        expect(index0).toEqual(0);
+        expect(index1).toEqual(1);
+        expect(index2).toEqual(2);
+        expect(index3).toEqual(3);
 
         const texture = atlas.texture;
         expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
         expect(texture.width).toEqual(32);
         expect(texture.height).toEqual(32);
 
-        let coords = atlas.rectangles[greenIndex];
-        expect(coords.x).toEqual(27);
-        expect(coords.y).toEqual(1);
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(1);
+        expect(drawAtlas(atlas, [index0, index1, index2, index3])).toBe(
+          `
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+.2222222222222222...............
+.2222222222222222...............
+.2222222222222222...............
+.2222222222222222...............
+.2222222222222222...............
+.2222222222222222...............
+.2222222222222222.3333333333....
+.2222222222222222.3333333333....
+.2222222222222222.3333333333....
+.2222222222222222.3333333333....
+.2222222222222222.3333333333....
+.2222222222222222.3333333333....
+.2222222222222222.3333333333....
+.2222222222222222.3333333333.1..
+.2222222222222222.3333333333....
+.2222222222222222.3333333333.0..
+................................
+          `.trim(),
+        );
 
-        let textureCoordinates = atlas.computeTextureCoordinates(greenIndex);
-        expect(textureCoordinates.x).toEqual(27 / 32);
-        expect(textureCoordinates.y).toEqual(1 / 32);
-        expect(textureCoordinates.width).toEqual(1 / 32);
-        expect(textureCoordinates.height).toEqual(1 / 32);
+        let textureCoordinates = atlas.computeTextureCoordinates(index0);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 255, 0, 255]);
 
-        coords = atlas.rectangles[blueIndex];
-        expect(coords.x).toEqual(28);
-        expect(coords.y).toEqual(1);
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(1);
-
-        textureCoordinates = atlas.computeTextureCoordinates(blueIndex);
-        expect(textureCoordinates.x).toEqual(28 / 32);
-        expect(textureCoordinates.y).toEqual(1 / 32);
-        expect(textureCoordinates.width).toEqual(1 / 32);
-        expect(textureCoordinates.height).toEqual(1 / 32);
+        textureCoordinates = atlas.computeTextureCoordinates(index1);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 0, 255, 255]);
 
-        coords = atlas.rectangles[redIndex];
-        expect(coords.x).toEqual(1);
-        expect(coords.y).toEqual(1);
-        expect(coords.width).toEqual(16);
-        expect(coords.height).toEqual(16);
-
-        textureCoordinates = atlas.computeTextureCoordinates(redIndex);
-        expect(textureCoordinates.x).toEqual(1 / 32);
-        expect(textureCoordinates.y).toEqual(1 / 32);
-        expect(textureCoordinates.width).toEqual(16 / 32);
-        expect(textureCoordinates.height).toEqual(16 / 32);
+        textureCoordinates = atlas.computeTextureCoordinates(index2);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([255, 0, 0, 255]);
 
-        coords = atlas.rectangles[bigBlueIndex];
-        expect(coords.x).toEqual(17);
-        expect(coords.y).toEqual(1);
-        expect(coords.width).toEqual(10);
-        expect(coords.height).toEqual(10);
-
-        textureCoordinates = atlas.computeTextureCoordinates(bigBlueIndex);
-        expect(textureCoordinates.x).toEqual(17 / 32);
-        expect(textureCoordinates.y).toEqual(1 / 32);
-        expect(textureCoordinates.width).toEqual(10 / 32);
-        expect(textureCoordinates.height).toEqual(10 / 32);
+        textureCoordinates = atlas.computeTextureCoordinates(index3);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 0, 255, 255]);
@@ -849,103 +893,119 @@ describe("Scene/TextureAtlas", function () {
           initialSize: new Cartesian2(14, 14),
         });
 
-        const greenPromise = atlas.addImage(greenGuid, greenImage);
-        const bluePromise = atlas.addImage(blueGuid, blueImage);
-        const bigBluePromise = atlas.addImage(bigBlueGuid, bigBlueImage);
+        const promise0 = atlas.addImage(greenGuid, greenImage);
+        const promise1 = atlas.addImage(blueGuid, blueImage);
+        const promise2 = atlas.addImage(bigBlueGuid, bigBlueImage);
 
         expect(atlas.numberOfImages).toEqual(3);
 
         await pollWhilePromise(
-          Promise.all([greenPromise, bluePromise, bigBluePromise]),
+          Promise.all([promise0, promise1, promise2]),
           () => {
             atlas.update(scene.frameState.context);
           },
         );
 
-        const greenIndex = await greenPromise;
-        const blueIndex = await bluePromise;
-        const bigBlueIndex = await bigBluePromise;
+        const index0 = await promise0;
+        const index1 = await promise1;
+        const index2 = await promise2;
 
-        expect(greenIndex).toEqual(0);
-        expect(blueIndex).toEqual(1);
-        expect(bigBlueIndex).toEqual(2);
+        expect(index0).toEqual(0);
+        expect(index1).toEqual(1);
+        expect(index2).toEqual(2);
 
-        const redPromise = atlas.addImage(bigRedGuid, bigRedImage);
+        expect(drawAtlas(atlas, [index0, index1, index2])).toBe(
+          `
+..............
+..............
+..............
+.2222222222...
+.2222222222...
+.2222222222...
+.2222222222...
+.2222222222...
+.2222222222...
+.2222222222...
+.2222222222.1.
+.2222222222...
+.2222222222.0.
+..............
+          `.trim(),
+        );
 
-        await pollWhilePromise(redPromise, () => {
+        const promise3 = atlas.addImage(bigRedGuid, bigRedImage);
+
+        await pollWhilePromise(promise3, () => {
           atlas.update(scene.frameState.context);
         });
 
         expect(atlas.numberOfImages).toEqual(4);
 
-        const redIndex = await redPromise;
+        const index3 = await promise3;
 
-        expect(greenIndex).toEqual(0);
-        expect(blueIndex).toEqual(1);
-        expect(bigBlueIndex).toEqual(2);
-        expect(redIndex).toEqual(3);
+        expect(index0).toEqual(0);
+        expect(index1).toEqual(1);
+        expect(index2).toEqual(2);
+        expect(index3).toEqual(3);
 
         const texture = atlas.texture;
         expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
         expect(texture.width).toEqual(32);
         expect(texture.height).toEqual(32);
 
-        let coords = atlas.rectangles[greenIndex];
-        expect(coords.x).toEqual(27);
-        expect(coords.y).toEqual(1);
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(1);
+        expect(drawAtlas(atlas, [index0, index1, index2, index3])).toBe(
+          `
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+.3333333333333333...............
+.3333333333333333...............
+.3333333333333333...............
+.3333333333333333...............
+.3333333333333333...............
+.3333333333333333...............
+.3333333333333333.2222222222....
+.3333333333333333.2222222222....
+.3333333333333333.2222222222....
+.3333333333333333.2222222222....
+.3333333333333333.2222222222....
+.3333333333333333.2222222222....
+.3333333333333333.2222222222....
+.3333333333333333.2222222222.1..
+.3333333333333333.2222222222....
+.3333333333333333.2222222222.0..
+................................
+          `.trim(),
+        );
 
-        let textureCoordinates = atlas.computeTextureCoordinates(greenIndex);
-        expect(textureCoordinates.x).toEqual(27 / 32);
-        expect(textureCoordinates.y).toEqual(1 / 32);
-        expect(textureCoordinates.width).toEqual(1 / 32);
-        expect(textureCoordinates.height).toEqual(1 / 32);
+        let textureCoordinates = atlas.computeTextureCoordinates(index0);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 255, 0, 255]);
 
-        coords = atlas.rectangles[blueIndex];
-        expect(coords.x).toEqual(28);
-        expect(coords.y).toEqual(1);
-        expect(coords.width).toEqual(1);
-        expect(coords.height).toEqual(1);
-
-        textureCoordinates = atlas.computeTextureCoordinates(blueIndex);
-        expect(textureCoordinates.x).toEqual(28 / 32);
-        expect(textureCoordinates.y).toEqual(1 / 32);
-        expect(textureCoordinates.width).toEqual(1 / 32);
-        expect(textureCoordinates.height).toEqual(1 / 32);
+        textureCoordinates = atlas.computeTextureCoordinates(index1);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 0, 255, 255]);
 
-        coords = atlas.rectangles[redIndex];
-        expect(coords.x).toEqual(1);
-        expect(coords.y).toEqual(1);
-        expect(coords.width).toEqual(16);
-        expect(coords.height).toEqual(16);
-
-        textureCoordinates = atlas.computeTextureCoordinates(redIndex);
-        expect(textureCoordinates.x).toEqual(1 / 32);
-        expect(textureCoordinates.y).toEqual(1 / 32);
-        expect(textureCoordinates.width).toEqual(16 / 32);
-        expect(textureCoordinates.height).toEqual(16 / 32);
+        textureCoordinates = atlas.computeTextureCoordinates(index3);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([255, 0, 0, 255]);
 
-        coords = atlas.rectangles[bigBlueIndex];
-        expect(coords.x).toEqual(17);
-        expect(coords.y).toEqual(1);
-        expect(coords.width).toEqual(10);
-        expect(coords.height).toEqual(10);
-
-        textureCoordinates = atlas.computeTextureCoordinates(bigBlueIndex);
-        expect(textureCoordinates.x).toEqual(17 / 32);
-        expect(textureCoordinates.y).toEqual(1 / 32);
-        expect(textureCoordinates.width).toEqual(10 / 32);
-        expect(textureCoordinates.height).toEqual(10 / 32);
+        textureCoordinates = atlas.computeTextureCoordinates(index2);
         expect(
           createRenderResources(texture, textureCoordinates),
         ).contextToRender([0, 0, 255, 255]);
@@ -956,21 +1016,21 @@ describe("Scene/TextureAtlas", function () {
           borderWidthInPixels: 0,
         });
 
-        const promise = atlas.addImage(bigRedGuid, bigRedImage);
+        const imagePromise0 = atlas.addImage(bigRedGuid, bigRedImage);
 
-        const promiseA = atlas.addImageSubRegion(
+        const promise1 = atlas.addImageSubRegion(
           bigRedGuid,
           new BoundingRectangle(0, 0, 4, 4),
         );
-        const promiseB = atlas.addImageSubRegion(
+        const promise2 = atlas.addImageSubRegion(
           bigRedGuid,
           new BoundingRectangle(0, 4, 4, 4),
         );
-        const promiseC = atlas.addImageSubRegion(
+        const promise3 = atlas.addImageSubRegion(
           bigRedGuid,
           new BoundingRectangle(4, 0, 4, 4),
         );
-        const promiseD = atlas.addImageSubRegion(
+        const promise4 = atlas.addImageSubRegion(
           bigRedGuid,
           new BoundingRectangle(4, 4, 4, 4),
         );
@@ -978,85 +1038,65 @@ describe("Scene/TextureAtlas", function () {
         expect(atlas.numberOfImages).toEqual(5);
 
         await pollWhilePromise(
-          Promise.all([promise, promiseA, promiseB, promiseC, promiseD]),
+          Promise.all([imagePromise0, promise1, promise2, promise3, promise4]),
           () => {
             atlas.update(scene.frameState.context);
           },
         );
 
-        const index = await promise;
-        const indexA = await promiseA;
-        const indexB = await promiseB;
-        const indexC = await promiseC;
-        const indexD = await promiseD;
+        const imageIndex0 = await imagePromise0;
+        const index1 = await promise1;
+        const index2 = await promise2;
+        const index3 = await promise3;
+        const index4 = await promise4;
 
-        expect(index).toEqual(0);
-        expect(indexA).toEqual(1);
-        expect(indexB).toEqual(2);
-        expect(indexC).toEqual(3);
-        expect(indexD).toEqual(4);
+        expect(imageIndex0).toEqual(0);
+        expect(index1).toEqual(1);
+        expect(index2).toEqual(2);
+        expect(index3).toEqual(3);
+        expect(index4).toEqual(4);
 
-        expect(atlas.getImageIndex(bigRedGuid)).toEqual(index);
+        expect(atlas.getImageIndex(bigRedGuid)).toEqual(imageIndex0);
 
-        const atlasWidth = 16;
-        const atlasHeight = 16;
+        expect(
+          drawAtlas(atlas, [imageIndex0, index1, index2, index3, index4]),
+        ).toBe(
+          `
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+2222444400000000
+2222444400000000
+2222444400000000
+2222444400000000
+1111333300000000
+1111333300000000
+1111333300000000
+1111333300000000
+          `.trim(),
+        );
 
-        let rectangle = atlas.rectangles[indexA];
-        expect(rectangle.x).toEqual(0);
-        expect(rectangle.y).toEqual(0);
-        expect(rectangle.width).toEqual(4);
-        expect(rectangle.height).toEqual(4);
-
-        let coordinates = atlas.computeTextureCoordinates(indexA);
-        expect(coordinates.x).toEqual(0 / atlasWidth);
-        expect(coordinates.y).toEqual(0 / atlasHeight);
-        expect(coordinates.width).toEqual(4 / atlasWidth);
-        expect(coordinates.height).toEqual(4 / atlasHeight);
+        let coordinates = atlas.computeTextureCoordinates(index1);
         expect(
           createRenderResources(atlas.texture, coordinates),
         ).contextToRender([255, 0, 0, 255]);
 
-        rectangle = atlas.rectangles[indexB];
-        expect(rectangle.x).toEqual(0);
-        expect(rectangle.y).toEqual(4);
-        expect(rectangle.width).toEqual(4);
-        expect(rectangle.height).toEqual(4);
-
-        coordinates = atlas.computeTextureCoordinates(indexB);
-        expect(coordinates.x).toEqual(0 / atlasWidth);
-        expect(coordinates.y).toEqual(4 / atlasHeight);
-        expect(coordinates.width).toEqual(4 / atlasWidth);
-        expect(coordinates.height).toEqual(4 / atlasHeight);
+        coordinates = atlas.computeTextureCoordinates(index2);
         expect(
           createRenderResources(atlas.texture, coordinates),
         ).contextToRender([255, 0, 0, 255]);
 
-        rectangle = atlas.rectangles[indexC];
-        expect(rectangle.x).toEqual(4);
-        expect(rectangle.y).toEqual(0);
-        expect(rectangle.width).toEqual(4);
-        expect(rectangle.height).toEqual(4);
-
-        coordinates = atlas.computeTextureCoordinates(indexC);
-        expect(coordinates.x).toEqual(4 / atlasWidth);
-        expect(coordinates.y).toEqual(0 / atlasHeight);
-        expect(coordinates.width).toEqual(4 / atlasWidth);
-        expect(coordinates.height).toEqual(4 / atlasHeight);
+        coordinates = atlas.computeTextureCoordinates(index3);
         expect(
           createRenderResources(atlas.texture, coordinates),
         ).contextToRender([255, 0, 0, 255]);
 
-        rectangle = atlas.rectangles[indexD];
-        expect(rectangle.x).toEqual(4);
-        expect(rectangle.y).toEqual(4);
-        expect(rectangle.width).toEqual(4);
-        expect(rectangle.height).toEqual(4);
-
-        coordinates = atlas.computeTextureCoordinates(indexD);
-        expect(coordinates.x).toEqual(4 / atlasWidth);
-        expect(coordinates.y).toEqual(4 / atlasHeight);
-        expect(coordinates.width).toEqual(4 / atlasWidth);
-        expect(coordinates.height).toEqual(4 / atlasHeight);
+        coordinates = atlas.computeTextureCoordinates(index4);
         expect(
           createRenderResources(atlas.texture, coordinates),
         ).contextToRender([255, 0, 0, 255]);
@@ -1067,133 +1107,150 @@ describe("Scene/TextureAtlas", function () {
           borderWidthInPixels: 0,
         });
 
-        const redPromise = atlas.addImage(bigRedGuid, bigRedImage);
+        const imagePromise0 = atlas.addImage(bigRedGuid, bigRedImage);
 
-        const promiseA = atlas.addImageSubRegion(
+        const promise1 = atlas.addImageSubRegion(
           bigRedGuid,
           new BoundingRectangle(0, 0, 4, 4),
         );
-        const promiseB = atlas.addImageSubRegion(
+        const promise2a = atlas.addImageSubRegion(
           bigRedGuid,
           new BoundingRectangle(0, 4, 4, 4),
         );
-        const promiseC = atlas.addImageSubRegion(
+        const promise2b = atlas.addImageSubRegion(
           bigRedGuid,
           new BoundingRectangle(0, 4, 4, 4),
         );
 
         await pollWhilePromise(
-          Promise.all([redPromise, promiseA, promiseB, promiseC]),
+          Promise.all([imagePromise0, promise1, promise2a, promise2b]),
           () => {
             atlas.update(scene.frameState.context);
           },
         );
 
-        const redIndex = await redPromise;
-        expect(atlas.getImageIndex(bigRedGuid)).toEqual(redIndex);
+        const imageIndex0 = await imagePromise0;
+        expect(atlas.getImageIndex(bigRedGuid)).toEqual(imageIndex0);
 
-        const bluePromise = atlas.addImage(bigBlueGuid, bigBlueImage);
+        const imagePromise3 = atlas.addImage(bigBlueGuid, bigBlueImage);
 
-        const promiseD = atlas.addImageSubRegion(
+        const promise4 = atlas.addImageSubRegion(
           bigBlueGuid,
           new BoundingRectangle(0, 0, 4, 4),
         );
-        const promiseE = atlas.addImageSubRegion(
+        const promise5a = atlas.addImageSubRegion(
           bigBlueGuid,
           new BoundingRectangle(0, 4, 4, 4),
         );
-        const promiseF = atlas.addImageSubRegion(
+        const promise5b = atlas.addImageSubRegion(
           bigBlueGuid,
           new BoundingRectangle(0, 4, 4, 4),
         );
 
         await pollWhilePromise(
-          Promise.all([bluePromise, promiseD, promiseE, promiseF]),
+          Promise.all([imagePromise3, promise4, promise5a, promise5b]),
           () => {
             atlas.update(scene.frameState.context);
           },
         );
 
-        const blueIndex = await bluePromise;
-        expect(atlas.getImageIndex(bigBlueGuid)).toEqual(blueIndex);
+        const imageIndex3 = await imagePromise3;
+        expect(atlas.getImageIndex(bigBlueGuid)).toEqual(imageIndex3);
 
         expect(atlas.numberOfImages).toEqual(6);
 
-        const indexA = await promiseA;
-        const indexB = await promiseB;
-        const indexC = await promiseC;
-        const indexD = await promiseD;
-        const indexE = await promiseE;
-        const indexF = await promiseF;
+        const index1 = await promise1;
+        const index2a = await promise2a;
+        const index2b = await promise2b;
+        const index4 = await promise4;
+        const index5a = await promise5a;
+        const index5b = await promise5b;
 
-        expect(redIndex).toEqual(0);
-        expect(indexA).toEqual(1);
-        expect(indexB).toEqual(2);
-        expect(indexC).toEqual(2);
-        expect(blueIndex).toEqual(3);
-        expect(indexD).toEqual(4);
-        expect(indexE).toEqual(5);
-        expect(indexF).toEqual(5);
+        expect(imageIndex0).toEqual(0);
+        expect(index1).toEqual(1);
+        expect(index2a).toEqual(2);
+        expect(index2b).toEqual(2);
+        expect(imageIndex3).toEqual(3);
+        expect(index4).toEqual(4);
+        expect(index5a).toEqual(5);
+        expect(index5b).toEqual(5);
 
-        const atlasWidth = 32;
-        const atlasHeight = 16;
+        // subregions 1:4 and 2:5 overlap completely; draw and test separately.
 
-        let rectangle = atlas.rectangles[indexB];
-        expect(rectangle.x).toEqual(0);
-        expect(rectangle.y).toEqual(4);
-        expect(rectangle.width).toEqual(4);
-        expect(rectangle.height).toEqual(4);
+        expect(
+          drawAtlas(atlas, [
+            imageIndex0,
+            imageIndex3,
+            index1,
+            index2a,
+            index2b,
+          ]),
+        ).toBe(
+          `
+0000000000000000................
+0000000000000000................
+0000000000000000................
+0000000000000000................
+0000000000000000................
+0000000000000000................
+00000000000000003333333333......
+00000000000000003333333333......
+22220000000000003333333333......
+22220000000000003333333333......
+22220000000000003333333333......
+22220000000000003333333333......
+11110000000000003333333333......
+11110000000000003333333333......
+11110000000000003333333333......
+11110000000000003333333333......
+          `.trim(),
+        );
 
-        let coordinates = atlas.computeTextureCoordinates(indexB);
-        expect(coordinates.x).toEqual(0 / atlasWidth);
-        expect(coordinates.y).toEqual(4 / atlasHeight);
-        expect(coordinates.width).toEqual(4 / atlasWidth);
-        expect(coordinates.height).toEqual(4 / atlasHeight);
+        expect(
+          drawAtlas(atlas, [
+            imageIndex0,
+            imageIndex3,
+            index4,
+            index5a,
+            index5b,
+          ]),
+        ).toBe(
+          `
+0000000000000000................
+0000000000000000................
+0000000000000000................
+0000000000000000................
+0000000000000000................
+0000000000000000................
+00000000000000003333333333......
+00000000000000003333333333......
+00000000000000005555333333......
+00000000000000005555333333......
+00000000000000005555333333......
+00000000000000005555333333......
+00000000000000004444333333......
+00000000000000004444333333......
+00000000000000004444333333......
+00000000000000004444333333......
+          `.trim(),
+        );
+
+        let coordinates = atlas.computeTextureCoordinates(index2a);
         expect(
           createRenderResources(atlas.texture, coordinates),
         ).contextToRender([255, 0, 0, 255]);
 
-        rectangle = atlas.rectangles[indexC];
-        expect(rectangle.x).toEqual(0);
-        expect(rectangle.y).toEqual(4);
-        expect(rectangle.width).toEqual(4);
-        expect(rectangle.height).toEqual(4);
-
-        coordinates = atlas.computeTextureCoordinates(indexC);
-        expect(coordinates.x).toEqual(0 / atlasWidth);
-        expect(coordinates.y).toEqual(4 / atlasHeight);
-        expect(coordinates.width).toEqual(4 / atlasWidth);
-        expect(coordinates.height).toEqual(4 / atlasHeight);
+        coordinates = atlas.computeTextureCoordinates(index2b);
         expect(
           createRenderResources(atlas.texture, coordinates),
         ).contextToRender([255, 0, 0, 255]);
 
-        rectangle = atlas.rectangles[indexE];
-        expect(rectangle.x).toEqual(0);
-        expect(rectangle.y).toEqual(4);
-        expect(rectangle.width).toEqual(4);
-        expect(rectangle.height).toEqual(4);
-
-        coordinates = atlas.computeTextureCoordinates(indexE);
-        expect(coordinates.x).toEqual(16 / atlasWidth);
-        expect(coordinates.y).toEqual(4 / atlasHeight);
-        expect(coordinates.width).toEqual(4 / atlasWidth);
-        expect(coordinates.height).toEqual(4 / atlasHeight);
+        coordinates = atlas.computeTextureCoordinates(index5a);
         expect(
           createRenderResources(atlas.texture, coordinates),
         ).contextToRender([0, 0, 255, 255]);
 
-        rectangle = atlas.rectangles[indexF];
-        expect(rectangle.x).toEqual(0);
-        expect(rectangle.y).toEqual(4);
-        expect(rectangle.width).toEqual(4);
-        expect(rectangle.height).toEqual(4);
-
-        coordinates = atlas.computeTextureCoordinates(indexF);
-        expect(coordinates.x).toEqual(16 / atlasWidth);
-        expect(coordinates.y).toEqual(4 / atlasHeight);
-        expect(coordinates.width).toEqual(4 / atlasWidth);
-        expect(coordinates.height).toEqual(4 / atlasHeight);
+        coordinates = atlas.computeTextureCoordinates(index5b);
         expect(
           createRenderResources(atlas.texture, coordinates),
         ).contextToRender([0, 0, 255, 255]);
@@ -1204,13 +1261,13 @@ describe("Scene/TextureAtlas", function () {
           borderWidthInPixels: 0,
         });
 
-        const greenPromise = atlas.addImage(bigGreenGuid, bigGreenImage);
+        const imagePromise0 = atlas.addImage(bigGreenGuid, bigGreenImage);
 
-        const promiseA = atlas.addImageSubRegion(
+        const promise1 = atlas.addImageSubRegion(
           bigGreenGuid,
           new BoundingRectangle(0, 0, 2, 2),
         );
-        const promiseB = atlas.addImageSubRegion(
+        const promise2 = atlas.addImageSubRegion(
           bigGreenGuid,
           new BoundingRectangle(2, 2, 2, 2),
         );
@@ -1218,66 +1275,168 @@ describe("Scene/TextureAtlas", function () {
         expect(atlas.numberOfImages).toEqual(3);
 
         await pollWhilePromise(
-          Promise.all([greenPromise, promiseA, promiseB]),
+          Promise.all([imagePromise0, promise1, promise2]),
           () => {
             atlas.update(scene.frameState.context);
           },
         );
 
-        const indexGreen = await greenPromise;
-        const indexA = await promiseA;
-        const indexB = await promiseB;
+        const imageIndex0 = await imagePromise0;
+        const index1 = await promise1;
+        const index2 = await promise2;
 
-        const redPromise = atlas.addImage(bigRedGuid, bigRedImage);
+        const imagePromise3 = atlas.addImage(bigRedGuid, bigRedImage);
 
         expect(atlas.numberOfImages).toEqual(4);
 
-        await pollWhilePromise(redPromise, () => {
+        await pollWhilePromise(imagePromise3, () => {
           atlas.update(scene.frameState.context);
         });
 
-        const indexRed = await redPromise;
+        const imageIndex3 = await imagePromise3;
 
-        expect(indexGreen).toEqual(0);
-        expect(indexA).toEqual(1);
-        expect(indexB).toEqual(2);
-        expect(indexRed).toEqual(3);
+        expect(imageIndex0).toEqual(0);
+        expect(index1).toEqual(1);
+        expect(index2).toEqual(2);
+        expect(imageIndex3).toEqual(3);
 
-        expect(atlas.getImageIndex(bigGreenGuid)).toEqual(indexGreen);
-        expect(atlas.getImageIndex(bigRedGuid)).toEqual(indexRed);
+        expect(atlas.getImageIndex(bigGreenGuid)).toEqual(imageIndex0);
+        expect(atlas.getImageIndex(bigRedGuid)).toEqual(imageIndex3);
 
-        const atlasWidth = 32;
-        const atlasHeight = 16;
+        expect(
+          drawAtlas(atlas, [imageIndex0, imageIndex3, index1, index2]),
+        ).toBe(
+          `
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+3333333333333333................
+33333333333333330022............
+33333333333333330022............
+33333333333333331100............
+33333333333333331100............
+          `.trim(),
+        );
 
-        let rectangle = atlas.rectangles[indexA];
-        expect(rectangle.x).toEqual(0);
-        expect(rectangle.y).toEqual(0);
-        expect(rectangle.width).toEqual(2);
-        expect(rectangle.height).toEqual(2);
-
-        let coordinates = atlas.computeTextureCoordinates(indexA);
-        expect(coordinates.x).toEqual(16 / atlasWidth);
-        expect(coordinates.y).toEqual(0 / atlasHeight);
-        expect(coordinates.width).toEqual(2 / atlasWidth);
-        expect(coordinates.height).toEqual(2 / atlasHeight);
+        let coordinates = atlas.computeTextureCoordinates(index1);
         expect(
           createRenderResources(atlas.texture, coordinates),
         ).contextToRender([0, 255, 0, 255]);
 
-        rectangle = atlas.rectangles[indexB];
-        expect(rectangle.x).toEqual(2);
-        expect(rectangle.y).toEqual(2);
-        expect(rectangle.width).toEqual(2);
-        expect(rectangle.height).toEqual(2);
-
-        coordinates = atlas.computeTextureCoordinates(indexB);
-        expect(coordinates.x).toEqual(18 / atlasWidth);
-        expect(coordinates.y).toEqual(2 / atlasHeight);
-        expect(coordinates.width).toEqual(2 / atlasWidth);
-        expect(coordinates.height).toEqual(2 / atlasHeight);
+        coordinates = atlas.computeTextureCoordinates(index2);
         expect(
           createRenderResources(atlas.texture, coordinates),
         ).contextToRender([0, 255, 0, 255]);
+      });
+
+      it("adds custom padding with borderWidthInPixels", async function () {
+        atlas = new TextureAtlas({ borderWidthInPixels: 0 });
+        let indices = await addImages();
+
+        expect(drawAtlas(atlas, indices)).toBe(
+          `
+................
+................
+................
+................
+................
+................
+2222222222......
+2222222222......
+2222222222......
+2222222222......
+2222222222......
+2222222222......
+22222222220.....
+22222222220.....
+22222222220.....
+222222222201....
+          `.trim(),
+        );
+
+        atlas = new TextureAtlas({ borderWidthInPixels: 2 });
+        indices = await addImages();
+
+        expect(drawAtlas(atlas, indices)).toBe(
+          `
+................................
+................................
+................................
+................................
+..2222222222....................
+..2222222222....................
+..2222222222....................
+..2222222222..1.................
+..2222222222....................
+..2222222222....................
+..2222222222..0.................
+..2222222222..0.................
+..2222222222..0.................
+..2222222222..0.................
+................................
+................................
+          `.trim(),
+        );
+
+        atlas = new TextureAtlas({ borderWidthInPixels: 5 });
+        indices = await addImages();
+
+        expect(drawAtlas(atlas, indices)).toBe(
+          `
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+................................
+.....2222222222.................
+.....2222222222.................
+.....2222222222.................
+.....2222222222.................
+.....2222222222.................
+.....2222222222.................
+.....2222222222.....0...........
+.....2222222222.....0...........
+.....2222222222.....0...........
+.....2222222222.....0.....1.....
+................................
+................................
+................................
+................................
+................................
+          `.trim(),
+        );
+
+        async function addImages() {
+          const promise = Promise.all([
+            atlas.addImage(tallGreenGuid, tallGreenImage),
+            atlas.addImage(blueGuid, blueImage),
+            atlas.addImage(bigBlueGuid, bigBlueImage),
+          ]);
+
+          return pollWhilePromise(promise, () => {
+            atlas.update(scene.frameState.context);
+          });
+        }
       });
 
       it("GUID changes when atlas texure is modified", async function () {
@@ -1322,3 +1481,44 @@ describe("Scene/TextureAtlas", function () {
     "WebGL",
   );
 });
+
+/**
+ * Debugging output for a TextureAtlas, drawing image and subregion
+ * rectangles in order of indices passed. When rectangles overlap
+ * (e.g. subregions on images), smaller rectangles should be last.
+ */
+function drawAtlas(atlas, indices) {
+  const { width, height } = atlas.texture;
+
+  // initialize empty 'atlas'.
+  const rows = [];
+  for (let y = 0; y < height; y++) {
+    rows.push(new Array(width).fill("."));
+  }
+
+  const rect = new BoundingRectangle();
+
+  // draw each rectangle, filling with its index.
+  for (const index of indices) {
+    // compute rectangle coordinates in pixels.
+    atlas.computeTextureCoordinates(index, rect);
+    rect.x *= width;
+    rect.y *= height;
+    rect.width *= width;
+    rect.height *= height;
+
+    for (let dx = 0; dx < rect.width; dx++) {
+      const x = rect.x + dx;
+      for (let dy = 0; dy < rect.height; dy++) {
+        const y = rect.y + dy;
+        rows[y][x] = index;
+      }
+    }
+  }
+
+  // print. atlas origin is bottom-left.
+  return rows
+    .reverse()
+    .map((row) => row.join(""))
+    .join("\n");
+}

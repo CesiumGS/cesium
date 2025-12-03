@@ -196,7 +196,7 @@ export type SandcastleAction =
 function App() {
   const { settings, updateSettings } = useContext(SettingsContext);
   const rightSideRef = useRef<RightSideRef>(null);
-  const consoleCollapsedHeight = 26;
+  const consoleCollapsedHeight = 33;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
 
   const isStartingWithCode = !!(window.location.search || window.location.hash);
@@ -319,14 +319,27 @@ function App() {
     [consoleExpanded],
   );
 
-  const resetConsole = useCallback(() => {
-    if (codeState.runNumber > 0) {
-      // the console should only be cleared by the Bucket when the viewer page
-      // has actually reloaded and stopped sending console statements
-      // otherwise some could bleed into the "next run"
-      setConsoleMessages([]);
-    }
-  }, [codeState.runNumber]);
+  const resetConsole = useCallback(
+    ({ showMessage = false } = {}) => {
+      if (codeState.runNumber > 0) {
+        // the console should only be cleared by the Bucket when the viewer page
+        // has actually reloaded and stopped sending console statements
+        // otherwise some could bleed into the "next run"
+        if (showMessage) {
+          setConsoleMessages([
+            {
+              id: crypto.randomUUID(),
+              type: "special",
+              message: "Console was cleared",
+            },
+          ]);
+        } else {
+          setConsoleMessages([]);
+        }
+      }
+    },
+    [codeState.runNumber],
+  );
 
   function runSandcastle() {
     dispatch({ type: "runSandcastle" });
@@ -487,14 +500,6 @@ function App() {
       colorScheme={settings.theme}
       synchronizeColorScheme
     >
-      <div className="banner">
-        <Anchor
-          href="https://cesium.com/downloads/cesiumjs/releases/1.134/Apps/Sandcastle/index.html"
-          tone="accent"
-        >
-          Looking for the old Sandcastle? It's still here (for a little while) →
-        </Anchor>
-      </div>
       <header className="header">
         <a className="logo" href={getBaseUrl()}>
           <img
@@ -642,6 +647,7 @@ function App() {
                 logs={consoleMessages}
                 expanded={consoleExpanded}
                 toggleExpanded={() => rightSideRef.current?.toggleExpanded()}
+                resetConsole={resetConsole}
               />
             </Allotment.Pane>
           </RightSideAllotment>

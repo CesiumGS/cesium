@@ -65,7 +65,7 @@ import DynamicEnvironmentMapManager from "./DynamicEnvironmentMapManager.js";
 import ImageryLayerCollection from "./ImageryLayerCollection.js";
 
 /**
- * @typedef {Object} Cesium3DTileset.ConstructorOptions
+ * @typedef {object} Cesium3DTileset.ConstructorOptions
  *
  * Initialization options for the Cesium3DTileset constructor
  *
