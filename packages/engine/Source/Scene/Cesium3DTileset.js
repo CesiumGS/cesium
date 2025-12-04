@@ -109,6 +109,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {Cartesian3} [lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
  * @property {ImageBasedLighting} [imageBasedLighting] The properties for managing image-based lighting for this tileset.
  * @property {DynamicEnvironmentMapManager.ConstructorOptions} [environmentMapOptions] The properties for managing dynamic environment maps on this tileset.
+ * @property {boolean} [disableDynamicMapManager=false] Whether to disable the creation of the dynamic environment map manager. When true, no environment map manager will be created, which can improve performance for tilesets that don't require dynamic environment mapping.
  * @property {boolean} [backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @property {boolean} [enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
  * @property {boolean} [showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
@@ -846,9 +847,13 @@ function Cesium3DTileset(options) {
     this._shouldDestroyImageBasedLighting = true;
   }
 
-  this._environmentMapManager = new DynamicEnvironmentMapManager(
-    options.environmentMapOptions,
-  );
+  if (!options.disableDynamicMapManager) {
+    this._environmentMapManager = new DynamicEnvironmentMapManager(
+      options.environmentMapOptions,
+    );
+  } else {
+    this._environmentMapManager = undefined;
+  }
 
   /**
    * The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
@@ -1973,7 +1978,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * const environmentMapManager = tileset.environmentMapManager;
    * environmentMapManager.groundColor = Cesium.Color.fromCssColorString("#203b34");
    *
-   * @type {DynamicEnvironmentMapManager}
+   * @type {DynamicEnvironmentMapManager|undefined}
    */
   environmentMapManager: {
     get: function () {
@@ -3533,10 +3538,12 @@ Cesium3DTileset.prototype.updateForPass = function (
 
   if (passOptions.isRender) {
     const environmentMapManager = this._environmentMapManager;
-    if (defined(this._root)) {
+    if (defined(environmentMapManager) && defined(this._root)) {
       environmentMapManager.position = this.boundingSphere.center;
     }
-    environmentMapManager.update(frameState);
+    if (defined(environmentMapManager)) {
+      environmentMapManager.update(frameState);
+    }
   }
 
   // Update clipping polygons
@@ -3641,7 +3648,7 @@ Cesium3DTileset.prototype.destroy = function () {
   }
   this._imageBasedLighting = undefined;
 
-  if (!this._environmentMapManager.isDestroyed()) {
+  if (defined(this._environmentMapManager) && !this._environmentMapManager.isDestroyed()) {
     this._environmentMapManager.destroy();
   }
   this._environmentMapManager = undefined;
