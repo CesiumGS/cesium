@@ -7,6 +7,8 @@ function measureText(context2D, textString, font, stroke, fill) {
   const metrics = context2D.measureText(textString);
   const isSpace = !/\S/.test(textString);
 
+  // Measure text manually, to smooth over browser implementation differences.
+  // TODO: Consider switching to browser API, see: https://github.com/CesiumGS/cesium/issues/9767
   if (!isSpace) {
     const fontSize = document.defaultView
       .getComputedStyle(context2D.canvas)
