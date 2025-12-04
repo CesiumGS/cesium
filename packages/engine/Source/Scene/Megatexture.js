@@ -87,7 +87,6 @@ function Megatexture(
   this.tileCounts = Cartesian3.clone(tileCounts, new Cartesian3());
 
   /**
-   * TODO: duplicates primitive.inputDimensions!
    * @type {Cartesian3}
    * @readonly
    */

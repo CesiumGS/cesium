@@ -38,17 +38,14 @@ function VoxelTraversal(
   keyframeCount,
   maximumTextureMemoryByteLength,
 ) {
-  const { provider, dimensions, paddingBefore, paddingAfter } = primitive;
+  const { provider, dimensions } = primitive;
   const { types, componentTypes, metadataOrder } = provider;
 
-  // TODO: duplicates primitive.inputDimensions!
-  const inputDimensions = Cartesian3.add(
-    dimensions,
-    paddingBefore,
+  // Adjust input tile dimensions for metadata order
+  const inputDimensions = Cartesian3.clone(
+    primitive.inputDimensions,
     new Cartesian3(),
   );
-  Cartesian3.add(inputDimensions, paddingAfter, inputDimensions);
-
   if (metadataOrder === VoxelMetadataOrder.Y_UP) {
     const inputDimensionsY = inputDimensions.y;
     inputDimensions.y = inputDimensions.z;
