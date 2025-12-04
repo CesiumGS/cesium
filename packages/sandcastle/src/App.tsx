@@ -240,9 +240,10 @@ function App() {
       case "reset": {
         if (action.defaultToken) {
           console.log("load with token:", action.defaultToken);
+          // TODO: this is a pretty hacky way to insert this but it "works" for now
           const codeWithToken = defaultJsCode.replace(
             "const viewer",
-            `Cesium.Ion.defaultAccessToken = "${action.defaultToken}";\n\nconst viewer`,
+            `// This is your default ion access token\nCesium.Ion.defaultAccessToken = "${action.defaultToken}";\n\nconst viewer`,
           );
           return {
             ...initialState,
@@ -370,6 +371,7 @@ function App() {
       return;
     }
     dispatch({ type: "reset", defaultToken: token });
+    dispatch({ type: "runSandcastle" });
 
     window.history.pushState({}, "", getBaseUrl());
 

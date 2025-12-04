@@ -1,5 +1,19 @@
 import { IonOAuth } from "./IonOAuth.ts";
 
+export type UserInfo = {
+  id: number;
+  scopes: string[];
+  username?: string;
+  email?: string;
+  emailVerified?: boolean;
+  avatar?: string;
+  storage?: {
+    used: number;
+    available: number;
+    total: number;
+  };
+};
+
 export class IonOAuthClient {
   ionApi: string;
   access_token?: string;

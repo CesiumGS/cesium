@@ -6,17 +6,26 @@ import {
   useRef,
   useState,
 } from "react";
-import { IonOAuthClient } from "./IonOAuthClient";
+import { IonOAuthClient, UserInfo } from "./IonOAuthClient";
+import { Avatar, Button } from "@stratakit/bricks";
+import { SandcastlePopover } from "../SandcastlePopover";
+import "./UserProfile.css";
 
 const ionClient = new IonOAuthClient({
+  // TODO: this needs to be extracted to a config file and/or build level definition
   clientId: "1420",
   callbackUrl: "http://localhost:5173",
 });
 
 export const UserContext = createContext<{
   ionClient: IonOAuthClient;
+  userInfo: UserInfo | undefined;
+  getUserInfo: () => Promise<UserInfo | undefined>;
 }>({
+  // This is a "last resort" default if not inside the context
   ionClient,
+  userInfo: undefined,
+  getUserInfo: () => Promise.resolve(undefined),
 });
 
 export function UserProvider({ children }: { children: ReactNode }) {
@@ -31,25 +40,94 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }, [ionState]);
 
-  return <UserContext value={{ ionClient: ionState }}>{children}</UserContext>;
+  const [userInfo, setUserInfo] = useState<UserInfo | undefined>(undefined);
+  async function getUserInfo() {
+    if (!ionClient.loggedIn) {
+      return;
+    }
+    if (userInfo) {
+      return userInfo;
+    }
+    const resp: UserInfo = await ionClient.fetch("/v1/me");
+    if (!resp.username) {
+      return undefined;
+    }
+    // TODO: remove just testing
+    if (Math.random() * 10 > 5) {
+      resp.avatar = undefined;
+    }
+    setUserInfo(resp);
+    return resp;
+  }
+
+  return (
+    <UserContext value={{ ionClient: ionState, userInfo, getUserInfo }}>
+      {children}
+    </UserContext>
+  );
+}
+
+function UserPopover({
+  username,
+  avatar,
+  logOut,
+}: {
+  username: string;
+  avatar?: string;
+  logOut: () => void;
+}) {
+  return (
+    <SandcastlePopover
+      className="user-popover"
+      disclosure={
+        <div className="user-profile" style={{ cursor: "pointer" }}>
+          <Avatar
+            initials={username[0]}
+            alt={username}
+            image={avatar ? <img src={avatar} /> : undefined}
+          />
+          <span className="username">{username}</span>
+        </div>
+      }
+    >
+      <Button onClick={() => logOut()} tone="accent">
+        Log out
+      </Button>
+    </SandcastlePopover>
+  );
 }
 
 export default function UserProfile() {
-  const userContext = useContext(UserContext);
+  const { ionClient, userInfo, getUserInfo } = useContext(UserContext);
+  console.log("UserProfile render");
 
-  return userContext.ionClient.loggedIn ? (
-    <div
-      onClick={() => userContext.ionClient.signOut()}
-      style={{ cursor: "pointer" }}
-    >
-      {userContext.ionClient.access_token?.slice(0, 10)}...
-    </div>
-  ) : (
-    <div
-      onClick={() => userContext.ionClient.signIn()}
-      style={{ cursor: "pointer" }}
-    >
-      Login
-    </div>
+  useEffect(() => {
+    if (ionClient.loggedIn) {
+      getUserInfo();
+    }
+  }, [ionClient, ionClient.loggedIn, getUserInfo]);
+
+  if (!ionClient.loggedIn) {
+    return (
+      <Button onClick={() => ionClient.signIn()} tone="accent">
+        Login
+      </Button>
+    );
+  }
+
+  if (!userInfo) {
+    return (
+      <div onClick={() => ionClient.signOut()} style={{ cursor: "pointer" }}>
+        Logging in...
+      </div>
+    );
+  }
+
+  return (
+    <UserPopover
+      username={userInfo.username ?? "User"}
+      avatar={userInfo.avatar}
+      logOut={() => ionClient.signOut()}
+    />
   );
 }

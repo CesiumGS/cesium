@@ -5,6 +5,7 @@ export const DEFAULT_APP_SCOPES = [
   "assets:read",
   "geocode",
   "tokens:read",
+  "profile:read",
 ];
 
 export class IonOAuth {
