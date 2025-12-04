@@ -1275,6 +1275,25 @@ describe(
       expect(statistics.numberOfCommands).toEqual(0);
     });
 
+    it("creates environment map manager by default", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrl,
+      );
+      expect(tileset.environmentMapManager).toBeDefined();
+    });
+
+    it("disables environment map manager when option is true", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrl,
+        {
+          disableDynamicMapManager: true,
+        },
+      );
+      expect(tileset.environmentMapManager).toBeUndefined();
+    });
+
     it("additive refinement - selects root when sse is met", function () {
       viewRootOnly();
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(

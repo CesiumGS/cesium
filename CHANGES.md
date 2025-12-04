@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.137 - 2025-12-04
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added `disableDynamicMapManager` option to `Cesium3DTileset` to conditionally disable dynamic environment map creation for allowing cesium tileset to function with an external renderer. This prevents the requirement to use a WebGL context when invoking Cesium3DTileset.
+
 ## 1.136 - 2025-12-01
 
 ### @cesium/engine
