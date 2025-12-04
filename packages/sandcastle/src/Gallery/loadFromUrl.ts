@@ -43,7 +43,6 @@ const fromItem = async ({ getHtmlCode, getJsCode, title }: GalleryItem) => {
  * don't point to a sandcastle like those needed for oauth
  */
 export function urlSpecifiesSandcastle() {
-  console.log("check url", window.location);
   const searchParams = new URLSearchParams(window.location.search);
   return (
     searchParams.has("id") ||

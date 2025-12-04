@@ -10,15 +10,6 @@ import { buildGalleryList } from "../packages/sandcastle/scripts/buildGallery.js
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, "..");
 
-// async function importSandcastleBuildFunctions() {
-//   // Import asynchronously, for now, because this script is not included or run in the release zip;
-//   const buildGalleryScriptPath = join(
-//     __dirname,
-//     "../packages/sandcastle/index.js",
-//   );
-//   return await import(pathToFileURL(buildGalleryScriptPath).href);
-// }
-
 /**
  * Parses Sandcastle config file and returns its values.
  * @returns {Promise<Record<string,any>>} A promise that resolves to the config values.
@@ -52,10 +43,7 @@ export async function buildSandcastleApp({
   outputToBuildDir,
   includeDevelopment,
 }) {
-  // const { join, dirname } = path;
   const __dirname = dirname(fileURLToPath(import.meta.url));
-  // const { createSandcastleConfig, buildStatic } =
-  //   await importSandcastleBuildFunctions();
   const version = await getVersion();
   let config;
   if (outputToBuildDir) {
@@ -167,8 +155,6 @@ export async function buildSandcastleGallery({
     defaultFilters,
     metadata,
   } = gallery ?? {};
-
-  // const { buildGalleryList } = await importSandcastleBuildFunctions();
 
   await buildGalleryList({
     rootDirectory,
