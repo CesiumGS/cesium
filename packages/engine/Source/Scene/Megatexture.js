@@ -7,6 +7,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import PixelFormat from "../Core/PixelFormat.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture3D from "../Renderer/Texture3D.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
@@ -45,9 +46,11 @@ function Megatexture(
     availableTextureMemoryBytes,
     tileCount,
   );
-  console.log(
-    `Megatexture textureDimension: ${JSON.stringify(textureDimension)}`,
-  );
+  if (Cartesian3.equals(textureDimension, Cartesian3.ZERO)) {
+    throw new RuntimeError(
+      "Not enough texture memory available to create a megatexture with the given tile dimensions.",
+    );
+  }
 
   const tileCounts = Cartesian3.divideComponents(
     textureDimension,
@@ -341,6 +344,9 @@ Megatexture.get3DTextureDimension = function (
   const maxTileCount = Math.floor(
     availableTextureMemoryBytes / tileSizeInBytes,
   );
+  if (maxTileCount < 1) {
+    return textureDimension;
+  }
 
   if (defined(tileCount)) {
     tileCount = Math.min(tileCount, maxTileCount);
