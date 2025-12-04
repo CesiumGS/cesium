@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Fixes jitter artifacts on Intel Arc GPUs [#12879](https://github.com/CesiumGS/cesium/issues/12879)
+- Fixed label sizing for some fonts and characters [#9767](https://github.com/CesiumGS/cesium/issues/9767)
 
 ## 1.137 - 2026-01-05
 
