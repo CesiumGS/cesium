@@ -37,6 +37,22 @@ const fromItem = async ({ getHtmlCode, getJsCode, title }: GalleryItem) => {
   }
 };
 
+/**
+ * Check whether the current page's url indicates a specific sandcastle.
+ * This is required in case other search params are included in the url that
+ * don't point to a sandcastle like those needed for oauth
+ */
+export function urlSpecifiesSandcastle() {
+  const searchParams = new URLSearchParams(window.location.search);
+  return (
+    searchParams.has("id") ||
+    (searchParams.has("code") && !searchParams.has("state")) ||
+    window.location.hash.indexOf("#c") === 0 ||
+    searchParams.has("src") ||
+    searchParams.has("gist")
+  );
+}
+
 export function loadFromUrl(
   items: GalleryItem[],
   legacyIds: Record<string, string>,
@@ -46,7 +62,7 @@ export function loadFromUrl(
   const codeParam = searchParams.get("code");
   if (codeParam) {
     // This is a legacy support type url that was used by ion.
-    // Ideally we use the #c= param as that results in shorter urls
+    // Ideally we use the #c= param as that results in slightly shorter urls
     // The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
     const json = JSON.parse(window.atob(codeParam.replaceAll(" ", "+")));
 

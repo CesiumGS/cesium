@@ -1,5 +1,22 @@
 # Change Log
 
+## 1.136 - 2025-12-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Improved scaling of SVGs in billboards [#13020](https://github.com/CesiumGS/cesium/pull/13020)
+- Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
+- Fixed depth testing bug with billboards and labels clipping through models [#13012](https://github.com/CesiumGS/cesium/issues/13012)
+- Fixed unexpected outline artifacts around billboards [#4525](https://github.com/CesiumGS/cesium/issues/4525)
+- Fix texture coordinates in large billboard collections [#13042](https://github.com/CesiumGS/cesium/pull/13042)
+
+#### Additions :tada:
+
+- Added `scene.pickAsync` for non GPU blocking picking using WebGL2 [#12983](https://github.com/CesiumGS/cesium/pull/12983)
+- Improves performance of terrain picks via new terrain picking quadtrees [#8481](https://github.com/CesiumGS/cesium/issues/8481)
+
 ## 1.135 - 2025-11-03
 
 ### @cesium/engine
@@ -26,6 +43,7 @@
 - Fixed picking of `GroundPrimitive` with multiple `PolygonGeometry` instances selecting the wrong instance. [#12978](https://github.com/CesiumGS/cesium/pull/12978)
 - Fixed a bug where the removal of draped imagery layers did not update the rendered state [#12923](https://github.com/CesiumGS/cesium/issues/12923)
 - Fixed precision issues with Gaussian splat tilesets where the root tile does not have a world transform. [#12925](https://github.com/CesiumGS/cesium/issues/12925)
+- Fixed infinite recursion that would happen if user append post-render callbacks within existing callbacks [#12983](https://github.com/CesiumGS/cesium/pull/12983)
 
 ## 1.134.1 - 2025-10-10
 

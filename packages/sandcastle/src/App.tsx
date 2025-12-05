@@ -5,9 +5,9 @@ import {
   RefObject,
   useCallback,
   useContext,
-  useDeferredValue,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useReducer,
   useRef,
   useState,
@@ -29,7 +29,7 @@ import {
 } from "./Gallery/GalleryItemStore.ts";
 import Gallery from "./Gallery/Gallery.js";
 
-import Bucket from "./Bucket.tsx";
+import { Bucket, BucketPlaceholder } from "./Bucket.tsx";
 import SandcastleEditor from "./SandcastleEditor.tsx";
 import {
   add,
@@ -51,6 +51,7 @@ import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
 import { MetadataPopover } from "./MetadataPopover.tsx";
 import { SharePopover } from "./SharePopover.tsx";
 import { SandcastlePopover } from "./SandcastlePopover.tsx";
+import { urlSpecifiesSandcastle } from "./Gallery/loadFromUrl.ts";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -196,10 +197,10 @@ export type SandcastleAction =
 function App() {
   const { settings, updateSettings } = useContext(SettingsContext);
   const rightSideRef = useRef<RightSideRef>(null);
-  const consoleCollapsedHeight = 26;
+  const consoleCollapsedHeight = 33;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
 
-  const isStartingWithCode = !!(window.location.search || window.location.hash);
+  const isStartingWithCode = useMemo(() => urlSpecifiesSandcastle(), []);
   const startOnEditor =
     isStartingWithCode || settings.defaultPanel === "editor";
   const [leftPanel, setLeftPanel] = useState<LeftPanel>(
@@ -319,14 +320,27 @@ function App() {
     [consoleExpanded],
   );
 
-  const resetConsole = useCallback(() => {
-    if (codeState.runNumber > 0) {
-      // the console should only be cleared by the Bucket when the viewer page
-      // has actually reloaded and stopped sending console statements
-      // otherwise some could bleed into the "next run"
-      setConsoleMessages([]);
-    }
-  }, [codeState.runNumber]);
+  const resetConsole = useCallback(
+    ({ showMessage = false } = {}) => {
+      if (codeState.runNumber > 0) {
+        // the console should only be cleared by the Bucket when the viewer page
+        // has actually reloaded and stopped sending console statements
+        // otherwise some could bleed into the "next run"
+        if (showMessage) {
+          setConsoleMessages([
+            {
+              id: crypto.randomUUID(),
+              type: "special",
+              message: "Console was cleared",
+            },
+          ]);
+        } else {
+          setConsoleMessages([]);
+        }
+      }
+    },
+    [codeState.runNumber],
+  );
 
   function runSandcastle() {
     dispatch({ type: "runSandcastle" });
@@ -372,7 +386,6 @@ function App() {
 
   const [initialized, setInitialized] = useState(false);
   const [isLoadPending, startLoadPending] = useTransition();
-  const deferredIsLoading = useDeferredValue(isLoadPending);
   const { useLoadFromUrl } = galleryItemStore;
   const loadFromUrl = useLoadFromUrl();
   useEffect(() => {
@@ -594,9 +607,16 @@ function App() {
                 dispatch({ type: "setHtml", html: value })
               }
               onRun={() => runSandcastle()}
-              js={codeState.code}
-              html={codeState.html}
+              js={
+                !initialized || isLoadPending ? "// Loading..." : codeState.code
+              }
+              html={
+                !initialized || isLoadPending
+                  ? "<!-- Loading... -->"
+                  : codeState.html
+              }
               setJs={(newCode) => dispatch({ type: "setCode", code: newCode })}
+              readOnly={!initialized}
             />
           )}
           <StoreContext value={galleryItemStore}>
@@ -615,7 +635,9 @@ function App() {
             setConsoleExpanded={setConsoleExpanded}
           >
             <Allotment.Pane minSize={200}>
-              {!deferredIsLoading && (
+              {!initialized || isLoadPending ? (
+                <BucketPlaceholder />
+              ) : (
                 <Bucket
                   code={codeState.committedCode}
                   html={codeState.committedHtml}
@@ -634,6 +656,7 @@ function App() {
                 logs={consoleMessages}
                 expanded={consoleExpanded}
                 toggleExpanded={() => rightSideRef.current?.toggleExpanded()}
+                resetConsole={resetConsole}
               />
             </Allotment.Pane>
           </RightSideAllotment>
