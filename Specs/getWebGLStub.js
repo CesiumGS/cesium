@@ -232,6 +232,7 @@ function getParameterStub(options) {
   parameterStubValues[WebGLConstants.MAX_TEXTURE_IMAGE_UNITS] = 16;
   parameterStubValues[WebGLConstants.MAX_RENDERBUFFER_SIZE] = 16384;
   parameterStubValues[WebGLConstants.MAX_TEXTURE_SIZE] = 16384;
+  parameterStubValues[WebGLConstants.MAX_3D_TEXTURE_SIZE] = 2048;
   parameterStubValues[WebGLConstants.MAX_VARYING_VECTORS] = 30;
   parameterStubValues[WebGLConstants.MAX_VERTEX_ATTRIBS] = 16;
   parameterStubValues[WebGLConstants.MAX_VERTEX_TEXTURE_IMAGE_UNITS] = 16;
