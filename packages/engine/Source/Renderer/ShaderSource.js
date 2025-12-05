@@ -153,14 +153,11 @@ function getBuiltinsAndAutomaticUniforms(shaderSource) {
 }
 
 function combineShader(shaderSource, isFragmentShader, context) {
-  let i;
-  let length;
-
   // Combine shader sources, generally for pseudo-polymorphism, e.g., czm_getMaterial.
   let combinedSources = "";
   const sources = shaderSource.sources;
   if (defined(sources)) {
-    for (i = 0, length = sources.length; i < length; ++i) {
+    for (let i = 0; i < sources.length; ++i) {
       // #line needs to be on its own line.
       combinedSources += `\n#line 0\n${sources[i]}`;
     }
@@ -225,33 +222,34 @@ function combineShader(shaderSource, isFragmentShader, context) {
   let result = "";
 
   const extensionsLength = extensions.length;
-  for (i = 0; i < extensionsLength; i++) {
+  for (let i = 0; i < extensionsLength; i++) {
     result += extensions[i];
   }
 
   if (isFragmentShader) {
-    // If high precision isn't support replace occurrences of highp with mediump
-    // The highp keyword is not always available on older mobile devices
+    // If high precision isn't supported, replace occurrences of highp with mediump.
+    // The highp keyword is not always available on older mobile devices.
     // See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#In_WebGL_1_highp_float_support_is_optional_in_fragment_shaders
-    // TODO: only add sampler3D precision if in a WebGL2 context. OR only if sampler3D is used.
-    result +=
-      "\
-#ifdef GL_FRAGMENT_PRECISION_HIGH\n\
-    precision highp float;\n\
-    precision highp int;\n\
-    precision highp sampler3D;\n\
-#else\n\
-    precision mediump float;\n\
-    precision mediump int;\n\
-    precision mediump sampler3D;\n\
-    #define highp mediump\n\
-#endif\n\n";
+    result += `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+    precision highp int;
+#else
+    precision mediump float;
+    precision mediump int;
+    #define highp mediump
+#endif
+`;
+  }
+
+  if (context.webgl2) {
+    result += `precision highp sampler3D;\n\n`;
   }
 
   // Prepend #defines for uber-shaders
   const defines = shaderSource.defines;
   if (defined(defines)) {
-    for (i = 0, length = defines.length; i < length; ++i) {
+    for (let i = 0, length = defines.length; i < length; ++i) {
       const define = defines[i];
       if (define.length !== 0) {
         result += `#define ${define}\n`;
