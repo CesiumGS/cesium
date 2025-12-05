@@ -112,6 +112,9 @@ function getWebGLStub(canvas, options) {
   stub.texParameteri = noop;
   stub.texImage2D = noop;
   stub.texSubImage2D = noop;
+  stub.texStorage3D = noop;
+  stub.texImage3D = noop;
+  stub.texSubImage3D = noop;
   stub.uniform1f = noop;
   stub.uniform1fv = noop;
   stub.uniform1i = noop;

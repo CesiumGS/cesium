@@ -68,7 +68,7 @@ function Texture3D(options) {
     sampler = new Sampler(),
   } = options;
 
-  if (!context.webgl2) {
+  if (!context.webgl2 && !defined(context.options.getWebGLStub)) {
     throw new DeveloperError(
       "WebGL1 does not support texture3D. Please use a WebGL2 context.",
     );
