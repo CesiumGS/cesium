@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.137
+
+### @cesium/engine
+
+#### Deprecated :hourglass_flowing_sand:
+
+- Beginning in CesiumJS 1.140, billboards and labels will require device support for WebGL 2, or WebGL 1 with ANGLE_instanced_arrays and MAX_VERTEX_TEXTURE_IMAGE_UNITS > 0. For more information or to share feedback, please see [#13053](https://github.com/CesiumGS/cesium/issues/13053). [#13067](https://github.com/CesiumGS/cesium/issues/13067)
+
 ## 1.136 - 2025-12-01
 
 ### @cesium/engine
