@@ -118,6 +118,7 @@ function unbindGlyphBillboard(labelCollection, glyph) {
   const billboard = glyph.billboard;
   if (defined(billboard)) {
     billboard.show = false;
+    billboard._clampedPosition = undefined;
     if (defined(billboard._removeCallbackFunc)) {
       billboard._removeCallbackFunc();
       billboard._removeCallbackFunc = undefined;

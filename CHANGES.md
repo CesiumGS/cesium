@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.137 - 2026-01-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixes label positioning in workflows that delete and recreate clamped labels [#12949](https://github.com/CesiumGS/cesium/issues/12949)
+
 ## 1.136 - 2025-12-01
 
 ### @cesium/engine
