@@ -1,5 +1,14 @@
 # Change Log
 
+## 1.137 - 2026-01-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fix texture coordinates in large billboard collections. [#13042](https://github.com/CesiumGS/cesium/pull/13042)
+- Improved voxel memory usage by reworking `Megatexture` to use `Texture3D`. [#12570](https://github.com/CesiumGS/cesium/issues/12570)
+
 ## 1.136 - 2025-12-01
 
 ### @cesium/engine
@@ -10,7 +19,6 @@
 - Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
 - Fixed depth testing bug with billboards and labels clipping through models [#13012](https://github.com/CesiumGS/cesium/issues/13012)
 - Fixed unexpected outline artifacts around billboards [#4525](https://github.com/CesiumGS/cesium/issues/4525)
-- Fix texture coordinates in large billboard collections [#13042](https://github.com/CesiumGS/cesium/pull/13042)
 
 #### Additions :tada:
 

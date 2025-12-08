@@ -101,7 +101,7 @@ describe(
       });
       expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(1);
       expect(primitive.statistics.visited).toEqual(1);
-      expect(primitive.statistics.texturesByteLength).toEqual(67108864);
+      expect(primitive.statistics.texturesByteLength).toEqual(32);
     });
 
     it("statistics are updated when constructor option is true", async function () {
@@ -174,7 +174,6 @@ describe(
       });
 
       toggleOption("depthTest", true, false);
-      toggleOption("nearestSampling", false, true);
     });
 
     it("sets render parameters", async function () {
