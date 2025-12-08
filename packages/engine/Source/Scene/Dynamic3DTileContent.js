@@ -2199,4 +2199,11 @@ class Dynamic3DTileContent {
 export default Dynamic3DTileContent;
 
 // Exposed for testing. They should be individual files, though...
-export { NDMap, LRUCache, RequestHandle, ContentHandle };
+export {
+  NDMap,
+  LRUCache,
+  RequestHandle,
+  ContentHandle,
+  LoggingContentListener,
+  LoggingRequestListener,
+};

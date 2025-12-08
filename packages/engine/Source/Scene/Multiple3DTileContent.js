@@ -2,13 +2,11 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import Request from "../Core/Request.js";
-import RequestScheduler from "../Core/RequestScheduler.js";
-import RequestState from "../Core/RequestState.js";
-import RequestType from "../Core/RequestType.js";
-import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
-import preprocess3DTileContent from "./preprocess3DTileContent.js";
-import finishContent from "./finishContent.js";
+import {
+  ContentHandle,
+  LoggingContentListener,
+  LoggingRequestListener,
+} from "./Dynamic3DTileContent.js";
 
 /**
  * A collection of contents for tiles that have multiple contents, either via the tile JSON (3D Tiles 1.1) or the <code>3DTILES_multiple_contents</code> extension.
@@ -33,51 +31,132 @@ function Multiple3DTileContent(tileset, tile, tilesetResource, contentsJson) {
   this._tileset = tileset;
   this._tile = tile;
 
-  // XXX_DYNAMIC Was unused... ?!
-  // This could be avoided by writing a COMMENT!!!
-  //this._tilesetResource = tilesetResource;
-
-  this._contents = [];
-  this._contentsCreated = false;
-
   // An older version of 3DTILES_multiple_contents used "content" instead of "contents"
   const contentHeaders = defined(contentsJson.contents)
     ? contentsJson.contents
     : contentsJson.content;
 
   this._innerContentHeaders = contentHeaders;
-  this._requestsInFlight = 0;
+  this._contentLoadedAndReadyCount = 0;
 
-  // How many times cancelPendingRequests() has been called. This is
-  // used to help short-circuit computations after a tile was canceled.
-  this._cancelCount = 0;
+  /**
+   * A mapping from URL strings to ContentHandle objects.
+   *
+   * This is initialized with all the content definitions that
+   * are found in the 'dynamicContents' array. It will create
+   * one ContentHandle for each content. This map will never
+   * be modified after it was created.
+   *
+   * @type {Map<string, ContentHandle>}
+   * @readonly
+   */
+  this._contentHandles = this._createContentHandles(tilesetResource);
 
-  // The number of contents that turned out to be external tilesets
-  // in createInnerContent. When all contents are external tilesets,
-  // then tile.hasRenderableContent will become `false`
-  this._externalTilesetCount = 0;
+  this._contents = [];
 
-  const contentCount = this._innerContentHeaders.length;
-  this._arrayFetchPromises = new Array(contentCount);
-  this._requests = new Array(contentCount);
   this._ready = false;
-
-  this._innerContentResources = new Array(contentCount);
-  this._serverKeys = new Array(contentCount);
-
-  for (let i = 0; i < contentCount; i++) {
-    const contentResource = tilesetResource.getDerivedResource({
-      url: contentHeaders[i].uri,
-    });
-
-    const serverKey = RequestScheduler.getServerKey(
-      contentResource.getUrlComponent(),
-    );
-
-    this._innerContentResources[i] = contentResource;
-    this._serverKeys[i] = serverKey;
-  }
 }
+
+/**
+ * Create the mapping from URL strings to ContentHandle objects.
+ *
+ * This is called once from the constructor. The content handles
+ * will be used for tracking the process of requesting and
+ * creating the content objects.
+ *
+ * @param {Resource} baseResource The base resource (from the tileset)
+ * @returns {Map} The content handles
+ */
+Multiple3DTileContent.prototype._createContentHandles = function (
+  baseResource,
+) {
+  const dynamicContents = this._innerContentHeaders;
+
+  const contentHandles = new Map();
+  for (let i = 0; i < dynamicContents.length; i++) {
+    const contentHeader = dynamicContents[i];
+    const contentHandle = new ContentHandle(
+      this.tile,
+      baseResource,
+      contentHeader,
+    );
+    this._attachTilesetStatisticsTracker(contentHandle);
+
+    const uri = contentHeader.uri;
+    contentHandles.set(uri, contentHandle);
+  }
+  return contentHandles;
+};
+
+const DYNAMIC_MULTIPLE_CONTENT_LOGGING = true;
+
+/**
+ * Attach a listener to the given content handle that will update
+ * the tileset statistics based on the request state.
+ *
+ * @param {ContentHandle} contentHandle The content handle
+ */
+Multiple3DTileContent.prototype._attachTilesetStatisticsTracker = function (
+  contentHandle,
+) {
+  if (DYNAMIC_MULTIPLE_CONTENT_LOGGING) {
+    contentHandle.addRequestListener(new LoggingRequestListener());
+    contentHandle.addContentListener(new LoggingContentListener());
+  }
+
+  const tileset = this._tile.tileset;
+  contentHandle.addRequestListener({
+    requestAttempted(request) {
+      tileset.statistics.numberOfAttemptedRequests++;
+    },
+    requestStarted(request) {
+      tileset.statistics.numberOfPendingRequests++;
+    },
+    requestCancelled(request) {
+      tileset.statistics.numberOfPendingRequests--;
+    },
+    requestCompleted(request) {
+      tileset.statistics.numberOfPendingRequests--;
+    },
+    requestFailed(request) {
+      tileset.statistics.numberOfPendingRequests--;
+    },
+  });
+
+  const that = this;
+  contentHandle.addContentListener({
+    contentLoadedAndReady(content) {
+      if (DYNAMIC_MULTIPLE_CONTENT_LOGGING) {
+        console.log(
+          "Multiple3DTileContent content handle listener contentLoadedAndReady - update statistics for   loaded content: ",
+          content,
+        );
+      }
+      tileset.statistics.incrementLoadCounts(content);
+      that._contentLoadedAndReadyCount++;
+      if (
+        that._contentLoadedAndReadyCount === that._innerContentHeaders.length
+      ) {
+        console.log("All loaded, setting ready");
+        that._ready = true;
+        // XXX_DYNAMIC_MULTIPLE Should not be done here. All uses of _contents should
+        // use the content handles!
+        for (const ch of that._contentHandles.values()) {
+          that._contents.push(ch.tryGetContent());
+        }
+      }
+    },
+    contentUnloaded(content) {
+      if (DYNAMIC_MULTIPLE_CONTENT_LOGGING) {
+        console.log(
+          "Multiple3DTileContent content handle listener contentUnloaded       - update statistics for unloaded content: ",
+          content,
+        );
+      }
+      tileset.statistics.decrementLoadCounts(content);
+    },
+  });
+};
 
 Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
@@ -331,243 +410,6 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 });
 
-function updatePendingRequests(multipleContents, deltaRequestCount) {
-  multipleContents._requestsInFlight += deltaRequestCount;
-  multipleContents.tileset.statistics.numberOfPendingRequests +=
-    deltaRequestCount;
-}
-
-function cancelPendingRequests(multipleContents, originalContentState) {
-  multipleContents._cancelCount++;
-
-  // reset the tile's content state to try again later.
-  multipleContents._tile._contentState = originalContentState;
-
-  const statistics = multipleContents.tileset.statistics;
-
-  statistics.numberOfPendingRequests -= multipleContents._requestsInFlight;
-  statistics.numberOfAttemptedRequests += multipleContents._requestsInFlight;
-  multipleContents._requestsInFlight = 0;
-
-  // Discard the request promises.
-  const contentCount = multipleContents._innerContentHeaders.length;
-  multipleContents._arrayFetchPromises = new Array(contentCount);
-}
-
-/**
- * Request the inner contents of this <code>Multiple3DTileContent</code>. This must be called once a frame until
- * {@link Multiple3DTileContent#contentsFetchedPromise} is defined. This promise
- * becomes available as soon as all requests are scheduled.
- * <p>
- * This method also updates the tile statistics' pending request count if the
- * requests are successfully scheduled.
- * </p>
- *
- * @return {Promise<void>|undefined} A promise that resolves when the request completes, or undefined if there is no request needed, or the request cannot be scheduled.
- * @private
- */
-Multiple3DTileContent.prototype.requestInnerContents = function () {
-  // It's possible for these promises to leak content array buffers if the
-  // camera moves before they all are scheduled. To prevent this leak, check
-  // if we can schedule all the requests at once. If not, no requests are
-  // scheduled
-  if (!canScheduleAllRequests(this._serverKeys)) {
-    this.tileset.statistics.numberOfAttemptedRequests +=
-      this._serverKeys.length;
-    return;
-  }
-
-  const contentHeaders = this._innerContentHeaders;
-  updatePendingRequests(this, contentHeaders.length);
-
-  const originalCancelCount = this._cancelCount;
-  for (let i = 0; i < contentHeaders.length; i++) {
-    // The cancel count is needed to avoid a race condition where a content
-    // is canceled multiple times.
-    this._arrayFetchPromises[i] = requestInnerContent(
-      this,
-      i,
-      originalCancelCount,
-      this._tile._contentState,
-    );
-  }
-
-  return createInnerContents(this);
-};
-
-/**
- * Check if all requests for inner contents can be scheduled at once. This is slower, but it avoids a potential memory leak.
- * @param {string[]} serverKeys The server keys for all of the inner contents
- * @return {boolean} True if the request scheduler has enough open slots for all inner contents
- * @private
- */
-function canScheduleAllRequests(serverKeys) {
-  const requestCountsByServer = {};
-  for (let i = 0; i < serverKeys.length; i++) {
-    const serverKey = serverKeys[i];
-    if (defined(requestCountsByServer[serverKey])) {
-      requestCountsByServer[serverKey]++;
-    } else {
-      requestCountsByServer[serverKey] = 1;
-    }
-  }
-
-  for (const key in requestCountsByServer) {
-    if (
-      requestCountsByServer.hasOwnProperty(key) &&
-      !RequestScheduler.serverHasOpenSlots(key, requestCountsByServer[key])
-    ) {
-      return false;
-    }
-  }
-  return RequestScheduler.heapHasOpenSlots(serverKeys.length);
-}
-
-function requestInnerContent(
-  multipleContents,
-  index,
-  originalCancelCount,
-  originalContentState,
-) {
-  // it is important to clone here. The fetchArrayBuffer() below here uses
-  // throttling, but other uses of the resources do not.
-  const contentResource =
-    multipleContents._innerContentResources[index].clone();
-  const tile = multipleContents.tile;
-
-  // Always create a new request. If the tile gets canceled, this
-  // avoids getting stuck in the canceled state.
-  const priorityFunction = function () {
-    return tile._priority;
-  };
-  const serverKey = multipleContents._serverKeys[index];
-  const request = new Request({
-    throttle: true,
-    throttleByServer: true,
-    type: RequestType.TILES3D,
-    priorityFunction: priorityFunction,
-    serverKey: serverKey,
-  });
-  contentResource.request = request;
-  multipleContents._requests[index] = request;
-
-  const promise = contentResource.fetchArrayBuffer();
-  if (!defined(promise)) {
-    return;
-  }
-
-  return promise
-    .then(function (arrayBuffer) {
-      // Pending requests have already been canceled.
-      if (originalCancelCount < multipleContents._cancelCount) {
-        return;
-      }
-
-      if (
-        contentResource.request.cancelled ||
-        contentResource.request.state === RequestState.CANCELLED
-      ) {
-        cancelPendingRequests(multipleContents, originalContentState);
-        return;
-      }
-
-      updatePendingRequests(multipleContents, -1);
-      return arrayBuffer;
-    })
-    .catch(function (error) {
-      // Pending requests have already been canceled.
-      if (originalCancelCount < multipleContents._cancelCount) {
-        return;
-      }
-
-      if (
-        contentResource.request.cancelled ||
-        contentResource.request.state === RequestState.CANCELLED
-      ) {
-        cancelPendingRequests(multipleContents, originalContentState);
-        return;
-      }
-
-      updatePendingRequests(multipleContents, -1);
-      handleInnerContentFailed(multipleContents, index, error);
-    });
-}
-
-async function createInnerContents(multipleContents) {
-  const originalCancelCount = multipleContents._cancelCount;
-  const arrayBuffers = await Promise.all(multipleContents._arrayFetchPromises);
-  // Request have been cancelled
-  if (originalCancelCount < multipleContents._cancelCount) {
-    return;
-  }
-
-  const promises = arrayBuffers.map((arrayBuffer, i) =>
-    createInnerContent(multipleContents, arrayBuffer, i),
-  );
-
-  // Even if we had a partial success (in which case the inner promise will be handled, but the content will not be returned), mark that we finished creating
-  // contents
-  const contents = await Promise.all(promises);
-  multipleContents._contentsCreated = true;
-  multipleContents._contents = contents.filter(defined);
-
-  // If each content is an external tileset, then the tile
-  // itself does not have any renderable content
-  if (
-    multipleContents._externalTilesetCount === multipleContents._contents.length
-  ) {
-    const tile = multipleContents._tile;
-    tile.hasRenderableContent = false;
-  }
-
-  return contents;
-}
-
-async function createInnerContent(multipleContents, arrayBuffer, index) {
-  if (!defined(arrayBuffer)) {
-    // Content was not fetched. The error was handled in
-    // the fetch promise. Return undefined to indicate partial failure.
-    return;
-  }
-
-  try {
-    const preprocessed = preprocess3DTileContent(arrayBuffer);
-
-    const resource = multipleContents._innerContentResources[index];
-    const contentHeader = multipleContents._innerContentHeaders[index];
-    const tile = multipleContents._tile;
-
-    if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
-      multipleContents._externalTilesetCount++;
-      tile.hasTilesetContent = true;
-    }
-
-    multipleContents._disableSkipLevelOfDetail =
-      multipleContents._disableSkipLevelOfDetail ||
-      preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
-      preprocessed.contentType === Cesium3DTileContentType.VECTOR;
-
-    return finishContent(tile, resource, preprocessed, contentHeader, index);
-  } catch (error) {
-    handleInnerContentFailed(multipleContents, index, error);
-  }
-}
-
-function handleInnerContentFailed(multipleContents, index, error) {
-  const tileset = multipleContents._tileset;
-  const url = multipleContents._innerContentResources[index].url;
-  const message = defined(error.message) ? error.message : error.toString();
-  if (tileset.tileFailed.numberOfListeners > 0) {
-    tileset.tileFailed.raiseEvent({
-      url: url,
-      message: message,
-    });
-  } else {
-    console.log(`A content failed to load: ${url}`);
-    console.log(`Error: ${message}`);
-  }
-}
-
 /**
  * Cancel all requests for inner contents. This is called by the tile
  * when a tile goes out of view.
@@ -575,12 +417,15 @@ function handleInnerContentFailed(multipleContents, index, error) {
  * @private
  */
 Multiple3DTileContent.prototype.cancelRequests = function () {
+  // XXX_DYNAMIC_MULTIPLE TODO
+  /*
   for (let i = 0; i < this._requests.length; i++) {
     const request = this._requests[i];
     if (defined(request)) {
       request.cancel();
     }
   }
+  */
 };
 
 /**
@@ -618,16 +463,11 @@ Multiple3DTileContent.prototype.applyStyle = function (style) {
 };
 
 Multiple3DTileContent.prototype.update = function (tileset, frameState) {
-  const contents = this._contents;
-  const length = contents.length;
-  let ready = true;
-  for (let i = 0; i < length; ++i) {
-    contents[i].update(tileset, frameState);
-    ready = ready && contents[i].ready;
-  }
-
-  if (!this._ready && ready) {
-    this._ready = true;
+  // Call update for all contents
+  for (const contentHandle of this._contentHandles.values()) {
+    // XXX_DYNAMIC_MULTIPLE Trigger request...
+    contentHandle.tryGetContent();
+    contentHandle.updateContent(tileset, frameState);
   }
 };
 
