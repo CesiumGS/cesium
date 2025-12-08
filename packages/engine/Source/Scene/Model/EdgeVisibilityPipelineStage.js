@@ -602,16 +602,8 @@ function collectVertexColors(runtimePrimitive) {
     colorData instanceof Float32Array || colorData instanceof Float64Array;
   const isUint8Array = colorData instanceof Uint8Array;
   const isUint16Array = colorData instanceof Uint16Array;
-  const isInt8Array = colorData instanceof Int8Array;
-  const isInt16Array = colorData instanceof Int16Array;
 
-  if (
-    !isFloatArray &&
-    !isUint8Array &&
-    !isUint16Array &&
-    !isInt8Array &&
-    !isInt16Array
-  ) {
+  if (!isFloatArray && !isUint8Array && !isUint16Array) {
     return undefined;
   }
 
@@ -625,10 +617,6 @@ function collectVertexColors(runtimePrimitive) {
       converted = value / 255.0;
     } else if (isUint16Array) {
       converted = value / 65535.0;
-    } else if (isInt8Array) {
-      converted = (value + 128.0) / 255.0;
-    } else {
-      converted = (value + 32768.0) / 65535.0;
     }
     return Math.min(Math.max(converted, 0.0), 1.0);
   };
