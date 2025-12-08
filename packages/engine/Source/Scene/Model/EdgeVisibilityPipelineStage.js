@@ -653,6 +653,12 @@ function collectVertexColors(runtimePrimitive) {
 }
 
 /**
+ * @typedef {object} VertexColorInfo
+ * @property {Float32Array} colors
+ * @property {number} count
+ */
+
+/**
  * Create a derived line list geometry representing edges. A new vertex domain is used so we can pack
  * per-edge attributes (silhouette normal, face normal pair, edge type, optional feature ID) without
  * modifying or duplicating the original triangle mesh. Two vertices are generated per unique edge.
@@ -667,7 +673,7 @@ function collectVertexColors(runtimePrimitive) {
  * @param {number} faceNormalBLocation Shader attribute location for face normal B
  * @param {number} edgeFeatureIdLocation Shader attribute location for optional edge feature ID
  * @param {number} edgeColorLocation Shader attribute location for optional edge color data
- * @param {{colors:Float32Array,count:number}} vertexColorInfo Packed per-vertex colors (optional)
+ * @param {VertexColorInfo} [vertexColorInfo] Packed per-vertex colors (optional)
  * @param {Object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals[])
  * @param {Float32Array} edgeFaceNormals Packed face normals (6 floats per edge)
  * @returns {Object|undefined} Object with {vertexArray, indexBuffer, indexCount} or undefined on failure
