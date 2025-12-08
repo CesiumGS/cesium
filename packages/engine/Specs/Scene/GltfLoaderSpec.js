@@ -252,6 +252,26 @@ describe(
       return gltfLoader;
     }
 
+    async function loadModifiedGlbAndTest(gltfPath, options, modifyFunction) {
+      let gltf = await Resource.fetchJson({
+        url: gltfPath,
+      });
+
+      gltf = modifyFunction(gltf);
+
+      spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
+        Promise.resolve(generateJsonBuffer(gltf).buffer),
+      );
+
+      const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+      gltfLoaders.push(gltfLoader);
+
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, scene);
+
+      return gltfLoader;
+    }
+
     function parseGlb(arrayBuffer) {
       const dataView = new DataView(arrayBuffer);
       if (dataView.byteLength < 12) {
@@ -4486,7 +4506,7 @@ describe(
     });
 
     it("loads edge visibility material color override", async function () {
-      const gltfLoader = await loadModifiedGltfAndTest(
+      const gltfLoader = await loadModifiedGlbAndTest(
         edgeVisibilityMaterialTestData,
         undefined,
         function (gltf) {
@@ -4515,7 +4535,7 @@ describe(
     });
 
     it("loads edge visibility line strings", async function () {
-      const gltfLoader = await loadModifiedGltfAndTest(
+      const gltfLoader = await loadModifiedGlbAndTest(
         edgeVisibilityLineStringTestData,
         undefined,
         function (gltf) {
