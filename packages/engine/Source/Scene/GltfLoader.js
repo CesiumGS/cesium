@@ -1999,11 +1999,6 @@ function fetchSpzExtensionFrom(extensions) {
     return spz;
   }
 
-  const legacySpz = extensions?.KHR_spz_gaussian_splats_compression;
-  if (defined(legacySpz)) {
-    return legacySpz;
-  }
-
   return undefined;
 }
 

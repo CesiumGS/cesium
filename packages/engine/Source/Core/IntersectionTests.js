@@ -495,6 +495,86 @@ IntersectionTests.rayEllipsoid = function (ray, ellipsoid) {
   return undefined;
 };
 
+const scratchRayIntervalX = new Interval();
+const scratchRayIntervalY = new Interval();
+const scratchRayIntervalZ = new Interval();
+
+/**
+ * Computes the intersection points of a ray with an axis-aligned bounding box. (axis-aligned in the same space as the ray)
+ *
+ * @param {Ray} ray The ray.
+ * @param {AxisAlignedBoundingBox} box The axis-aligned bounding box.
+ * @param {Interval | undefined} result The interval containing scalar points along the ray or undefined if there are no intersections.
+ */
+IntersectionTests.rayAxisAlignedBoundingBox = function (ray, box, result) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(ray)) {
+    throw new DeveloperError("ray is required.");
+  }
+  if (!defined(box)) {
+    throw new DeveloperError("box is required.");
+  }
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new Interval();
+  }
+
+  const tx = rayIntervalAlongAABBAxis(
+    ray.origin.x,
+    ray.direction.x,
+    box.minimum.x,
+    box.maximum.x,
+    scratchRayIntervalX,
+  );
+  const ty = rayIntervalAlongAABBAxis(
+    ray.origin.y,
+    ray.direction.y,
+    box.minimum.y,
+    box.maximum.y,
+    scratchRayIntervalY,
+  );
+  const tz = rayIntervalAlongAABBAxis(
+    ray.origin.z,
+    ray.direction.z,
+    box.minimum.z,
+    box.maximum.z,
+    scratchRayIntervalZ,
+  );
+
+  result.start = tx.start > ty.start ? tx.start : ty.start; //Get Greatest Min
+  result.stop = tx.stop < ty.stop ? tx.stop : ty.stop; //Get Smallest Max
+
+  if (tx.start > ty.stop || ty.start > tx.stop) {
+    return undefined;
+  }
+
+  if (result.start > tz.stop || tz.start > result.stop) {
+    return undefined;
+  }
+
+  if (tz.start > result.start) {
+    result.start = tz.start;
+  }
+  if (tz.stop < result.stop) {
+    result.stop = tz.stop;
+  }
+
+  return result;
+};
+
+function rayIntervalAlongAABBAxis(origin, direction, min, max, result) {
+  result.start = (min - origin) / direction;
+  result.stop = (max - origin) / direction;
+  if (result.stop < result.start) {
+    const tmp = result.stop;
+    result.stop = result.start;
+    result.start = tmp;
+  }
+
+  return result;
+}
+
 function addWithCancellationCheck(left, right, tolerance) {
   const difference = left + right;
   if (
