@@ -253,14 +253,16 @@ describe(
     }
 
     async function loadModifiedGlbAndTest(gltfPath, options, modifyFunction) {
-      let gltf = await Resource.fetchJson({
+      const arrayBuffer = await Resource.fetchArrayBuffer({
         url: gltfPath,
       });
 
-      gltf = modifyFunction(gltf);
+      const gltfData = parseGlb(arrayBuffer);
+      const modifiedGltf = modifyFunction(gltfData.gltf) ?? gltfData.gltf;
+      const rebuiltGlb = createGlbBuffer(modifiedGltf, gltfData.binaryChunk);
 
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        Promise.resolve(generateJsonBuffer(gltf).buffer),
+        Promise.resolve(rebuiltGlb),
       );
 
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
