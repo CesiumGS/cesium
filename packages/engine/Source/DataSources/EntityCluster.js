@@ -66,7 +66,7 @@ function EntityCluster(options) {
   this._removeEventListener = undefined;
 
   this._clusterEvent = new Event();
-  this._declusterEvent = new Event();
+  this._allDeclusteredEvent = new Event();
   this._previouslyClusteredEntities = [];
 
   /**
@@ -504,12 +504,24 @@ function createDeclutterCallback(entityCluster) {
 
     const currentlyClusteredIds = [];
 
-    if (newClusters.length > 0 && defined(clusteredLabelCollection)) {
+    if (defined(clusteredLabelCollection)) {
       for (let c = 0; c < clusteredLabelCollection.length; ++c) {
         const clusterLabel = clusteredLabelCollection.get(c);
-        if (defined(clusterLabel) && defined(clusterLabel.id)) {
-          currentlyClusteredIds.push(...clusterLabel.id);
-        }
+        currentlyClusteredIds.push(...clusterLabel.id);
+      }
+    }
+
+    if (defined(clusteredBillboardCollection)) {
+      for (let c = 0; c < clusteredBillboardCollection.length; ++c) {
+        const clusterBillboard = clusteredBillboardCollection.get(c);
+        currentlyClusteredIds.push(...clusterBillboard.id);
+      }
+    }
+
+    if (defined(clusteredPointCollection)) {
+      for (let c = 0; c < clusteredPointCollection.length; ++c) {
+        const clusterPoint = clusteredPointCollection.get(c);
+        currentlyClusteredIds.push(...clusterPoint.id);
       }
     }
 
@@ -518,7 +530,7 @@ function createDeclutterCallback(entityCluster) {
       entityCluster._previouslyClusteredEntities.length > 0;
 
     if (!hasActiveClusters && hadPreviouslyClusters) {
-      entityCluster._declusterEvent.raiseEvent(
+      entityCluster._allDeclusteredEvent.raiseEvent(
         entityCluster._previouslyClusteredEntities,
       );
     }
@@ -594,9 +606,9 @@ Object.defineProperties(EntityCluster.prototype, {
    * @memberof EntityCluster.prototype
    * @type {Event<EntityCluster.declusterCallback>}
    */
-  declusterEvent: {
+  allDeclusteredEvent: {
     get: function () {
-      return this._declusterEvent;
+      return this._allDeclusteredEvent;
     },
   },
   /**
@@ -1035,7 +1047,7 @@ EntityCluster.prototype.destroy = function () {
 };
 
 /**
- * A event listener function used to style clusters.
+ * An event listener function used to style clusters.
  * @callback EntityCluster.newClusterCallback
  *
  * @param {Entity[]} clusteredEntities An array of the entities contained in the cluster.
@@ -1053,7 +1065,7 @@ EntityCluster.prototype.destroy = function () {
  * });
  */
 /**
- * A event listener function used when all entities have been declustered.
+ * An event listener function used when all entities have been declustered.
  * @callback EntityCluster.declusterCallback
  *
  * @param {Entity[]} declusteredEntities An array of the entities that were in the last
