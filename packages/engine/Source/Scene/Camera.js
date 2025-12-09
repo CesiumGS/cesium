@@ -3005,6 +3005,17 @@ function getPickRayOrthographic(camera, windowPosition, result) {
 
   Cartesian3.clone(camera.directionWC, result.direction);
 
+  // Account for wrap-around in 2D infinite scroll mode
+  if (
+    camera._mode === SceneMode.SCENE2D &&
+    camera._scene.mapMode2D === MapMode2D.INFINITE_SCROLL
+  ) {
+    const maxHorizontal = camera._maxCoord.x;
+    origin.y =
+      CesiumMath.mod(origin.y + maxHorizontal, 2.0 * maxHorizontal) -
+      maxHorizontal;
+  }
+
   return result;
 }
 
