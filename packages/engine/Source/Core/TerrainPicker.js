@@ -10,6 +10,7 @@ import SceneMode from "../Scene/SceneMode.js";
 import Interval from "./Interval.js";
 import Check from "./Check.js";
 import DeveloperError from "./DeveloperError.js";
+import CesiumMath from "./Math.js";
 
 // Terrain picker can be 4 levels deep (0-3)
 const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
@@ -434,6 +435,7 @@ function getClosestTriangleInNode(
       encoding,
       mode,
       projection,
+      ray,
       vertices,
       indices[3 * triIndex],
       scratchTrianglePoints[0],
@@ -442,6 +444,7 @@ function getClosestTriangleInNode(
       encoding,
       mode,
       projection,
+      ray,
       vertices,
       indices[3 * triIndex + 1],
       scratchTrianglePoints[1],
@@ -450,6 +453,7 @@ function getClosestTriangleInNode(
       encoding,
       mode,
       projection,
+      ray,
       vertices,
       indices[3 * triIndex + 2],
       scratchTrianglePoints[2],
@@ -502,7 +506,8 @@ const scratchCartographic = new Cartographic();
  * @param {TerrainEncoding} encoding The terrain encoding.
  * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
  * @param {MapProjection} projection The map projection.
- * @param {Float32Array} vertices The vertex buffer of the terrain mesh.
+ * @param {Ray} ray The pick ray being tested (used here as a reference to resolve antimeridian wrapping in 2D/Columbus View).
+ * @param {Float32Array} vertices The terrain mesh's vertex buffer.
  * @param {Number} index The index of the vertex to get.
  * @param {Cartesian3} result The decoded, exaggerated, and possibly projected vertex position.
  * @returns {Cartesian3} The result vertex position.
@@ -512,6 +517,7 @@ function getVertexPosition(
   encoding,
   mode,
   projection,
+  ray,
   vertices,
   index,
   result,
@@ -535,6 +541,11 @@ function getVertexPosition(
     result,
   );
 
+  // Right near the antimeridian, in 2D/CV modes, the vertex positions may correspond to the other side of the world from the ray origin.
+  // Compare to the ray origin and adjust accordingly.
+  const worldWidth = CesiumMath.TWO_PI * projection.ellipsoid.maximumRadius;
+  const k = Math.round((ray.origin.y - position.y) / worldWidth);
+  position.y += k * worldWidth;
   return position;
 }
 
