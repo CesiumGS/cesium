@@ -11,11 +11,23 @@ import { Avatar, Button } from "@stratakit/bricks";
 import { SandcastlePopover } from "../SandcastlePopover";
 import "./UserProfile.css";
 
-const ionClient = new IonOAuthClient({
+let clientSettings = {
   // TODO: this needs to be extracted to a config file and/or build level definition
   clientId: "1420",
   callbackUrl: "http://localhost:5173",
-});
+};
+
+if (window.location.hostname === "ci-builds.cesium.com") {
+  clientSettings = {
+    // TODO: this needs to be extracted to a config file and/or build level definition
+    // it also won't work for dynamic branch names in CI...
+    clientId: "1741",
+    callbackUrl:
+      "https://ci-builds.cesium.com/cesium/sandcastle-login/Apps/Sandcastle2/index.html",
+  };
+}
+
+const ionClient = new IonOAuthClient(clientSettings);
 
 export const UserContext = createContext<{
   ionClient: IonOAuthClient;
@@ -101,8 +113,10 @@ export default function UserProfile() {
   const { ionClient, userInfo, getUserInfo } = useContext(UserContext);
   console.log("UserProfile render");
 
+  const loginStarted = useRef(false);
   useEffect(() => {
-    if (ionClient.loggedIn) {
+    if (!loginStarted.current && ionClient.loggedIn) {
+      loginStarted.current = true;
       getUserInfo();
     }
   }, [ionClient, ionClient.loggedIn, getUserInfo]);
