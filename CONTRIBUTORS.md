@@ -106,6 +106,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Mark Schlosser](https://github.com/markschlosseratbentley)
   - [Adam Larkeryd](https://github.com/alarkbentley)
   - [Don McCurdy](https://github.com/donmccurdy)
+  - [Tom DiCarlo](https://github.com/tomdicarlo)
 - [Flightradar24 AB](https://www.flightradar24.com)
   - [Aleksei Kalmykov](https://github.com/kalmykov)
 - [BIT Systems](http://www.caci.com/bit-systems)
