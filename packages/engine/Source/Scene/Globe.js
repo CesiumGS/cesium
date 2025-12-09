@@ -723,14 +723,14 @@ Globe.prototype.pickWorldCoordinates = function (
   const sphereIntersections = scratchArray;
   sphereIntersections.length = 0;
 
-  const tilesToRender = this._surface._tilesToRender;
-  let length = tilesToRender.length;
+  const _tilesRenderedThisFrame = this._surface._tilesRenderedThisFrame;
+  let length = _tilesRenderedThisFrame.length;
 
   let tile;
   let i;
 
   for (i = 0; i < length; ++i) {
-    tile = tilesToRender[i];
+    tile = _tilesRenderedThisFrame[i];
     const surfaceTile = tile.data;
 
     if (!defined(surfaceTile)) {
