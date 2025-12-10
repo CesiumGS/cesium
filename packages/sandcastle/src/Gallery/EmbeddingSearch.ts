@@ -49,7 +49,7 @@ class EmbeddingSearch {
     }
 
     try {
-      const response = await fetch("/gallery/list.json");
+      const response = await fetch("gallery/list.json");
       if (!response.ok) {
         throw new Error(`Failed to load gallery list: ${response.statusText}`);
       }
