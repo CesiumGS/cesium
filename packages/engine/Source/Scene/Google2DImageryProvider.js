@@ -101,6 +101,8 @@ function Google2DImageryProvider(options) {
     key: encodeURIComponent(options.key),
   });
 
+  this._resource = resource.clone();
+
   let credit;
   if (defined(options.credit)) {
     credit = options.credit;
@@ -312,7 +314,7 @@ Object.defineProperties(Google2DImageryProvider.prototype, {
  * });
  * @example
  * // Google 2D roadmap overlay with custom styles
- * const googleTileProvider = Cesium.Google2DImageryProvider.fromIonAssetId({
+ * const googleTilesProvider = Cesium.Google2DImageryProvider.fromIonAssetId({
  *     assetId: 3830184,
  *     overlayLayerType: "layerRoadmap",
  *     styles: [
@@ -403,7 +405,7 @@ Google2DImageryProvider.fromIonAssetId = async function (options) {
  * // Google 2D roadmap overlay with custom styles
  * Cesium.GoogleMaps.defaultApiKey = "your-api-key";
  *
- * const googleTileProvider = Cesium.Google2DImageryProvider.fromUrl({
+ * const googleTilesProvider = Cesium.Google2DImageryProvider.fromUrl({
  *     overlayLayerType: "layerRoadmap",
  *     styles: [
  *         {
@@ -492,7 +494,7 @@ Google2DImageryProvider.prototype.requestImage = function (
   }
 
   // Asynchronously request and populate _attributionsByLevel if it hasn't been already. We do this here so that the promise can be properly awaited.
-  if (promise && !defined(this._attributionsByLevel)) {
+  if (!defined(this._attributionsByLevel)) {
     return Promise.all([promise, this.getViewportCredits()]).then(
       (results) => results[0],
     );
@@ -533,12 +535,7 @@ Google2DImageryProvider.prototype.getViewportCredits = async function () {
   const promises = [];
   for (let level = 0; level < maximumLevel + 1; level++) {
     promises.push(
-      fetchViewportAttribution(
-        this._viewportUrl,
-        this._key,
-        this._session,
-        level,
-      ),
+      fetchViewportAttribution(this._resource, this._viewportUrl, level),
     );
   }
   const results = await Promise.all(promises);
@@ -559,12 +556,10 @@ Google2DImageryProvider.prototype.getViewportCredits = async function () {
   return attributionsByLevel;
 };
 
-async function fetchViewportAttribution(url, key, session, level) {
-  const viewport = await Resource.fetch({
-    url: url,
+async function fetchViewportAttribution(resource, url, level) {
+  const viewportResource = resource.getDerivedResource({
+    url,
     queryParameters: {
-      key,
-      session,
       zoom: level,
       north: 90,
       south: -90,
@@ -573,7 +568,7 @@ async function fetchViewportAttribution(url, key, session, level) {
     },
     data: JSON.stringify(Frozen.EMPTY_OBJECT),
   });
-  const viewportJson = JSON.parse(viewport);
+  const viewportJson = await viewportResource.fetchJson();
   return viewportJson.copyright;
 }
 
