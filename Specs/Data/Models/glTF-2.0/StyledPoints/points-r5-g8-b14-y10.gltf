@@ -1,0 +1,222 @@
+{
+    "asset": {
+        "version": "2.0"
+    },
+    "extensionsUsed": [
+        "BENTLEY_materials_point_style"
+    ],
+    "accessors": [
+        {
+            "bufferView": 0,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 4,
+            "type": "VEC3",
+            "max": [
+                5.0,
+                5.0,
+                5.0
+            ],
+            "min": [
+                -5.0,
+                -5.0,
+                -5.0
+            ]
+        },
+        {
+            "bufferView": 1,
+            "byteOffset": 0,
+            "componentType": 5125,
+            "count": 1,
+            "type": "SCALAR",
+            "max": [
+                0
+            ],
+            "min": [
+                0
+            ]
+        },
+        {
+            "bufferView": 1,
+            "byteOffset": 4,
+            "componentType": 5125,
+            "count": 1,
+            "type": "SCALAR",
+            "max": [
+                1
+            ],
+            "min": [
+                1
+            ]
+        },
+        {
+            "bufferView": 1,
+            "byteOffset": 8,
+            "componentType": 5125,
+            "count": 1,
+            "type": "SCALAR",
+            "max": [
+                2
+            ],
+            "min": [
+                2
+            ]
+        },
+        {
+            "bufferView": 1,
+            "byteOffset": 12,
+            "componentType": 5125,
+            "count": 1,
+            "type": "SCALAR",
+            "max": [
+                3
+            ],
+            "min": [
+                3
+            ]
+        }
+    ],
+    "buffers": [
+        {
+            "byteLength": 64,
+            "uri": "data:application/octet-stream;base64,AACgwAAAoMAAAKDAAACgQAAAoMAAAKDAAAAAAAAAoEAAAKDAAAAAAAAAAAAAAKBAAAAAAAEAAAACAAAAAwAAAA=="
+        }
+    ],
+    "bufferViews": [
+        {
+            "buffer": 0,
+            "byteOffset": 0,
+            "byteLength": 48,
+            "target": 34962
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 48,
+            "byteLength": 16,
+            "target": 34963
+        }
+    ],
+    "materials": [
+        {
+            "name": "Red",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_point_style": {
+                    "diameter": 5.0
+                }
+            }
+        },
+        {
+            "name": "Green",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_point_style": {
+                    "diameter": 8.0
+                }
+            }
+        },
+        {
+            "name": "Blue",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_point_style": {
+                    "diameter": 14.0
+                }
+            }
+        },
+        {
+            "name": "Yellow",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    1.0,
+                    1.0,
+                    0.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_point_style": {
+                    "diameter": 10.0
+                }
+            }
+        }
+    ],
+    "meshes": [
+        {
+            "name": "PointCloud",
+            "primitives": [
+                {
+                    "mode": 0,
+                    "material": 0,
+                    "indices": 1,
+                    "attributes": {
+                        "POSITION": 0
+                    }
+                },
+                {
+                    "mode": 0,
+                    "material": 1,
+                    "indices": 2,
+                    "attributes": {
+                        "POSITION": 0
+                    }
+                },
+                {
+                    "mode": 0,
+                    "material": 2,
+                    "indices": 3,
+                    "attributes": {
+                        "POSITION": 0
+                    }
+                },
+                {
+                    "mode": 0,
+                    "material": 3,
+                    "indices": 4,
+                    "attributes": {
+                        "POSITION": 0
+                    }
+                }
+            ]
+        }
+    ],
+    "nodes": [
+        {
+            "name": "PointCloudNode",
+            "mesh": 0
+        }
+    ],
+    "scenes": [
+        {
+            "nodes": [
+                0
+            ]
+        }
+    ],
+    "scene": 0
+}
