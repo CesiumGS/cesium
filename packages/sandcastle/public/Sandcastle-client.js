@@ -1,5 +1,24 @@
 (function () {
   "use strict";
+  window.addEventListener("message", (e) => {
+    console.log("Bucket received message", e);
+    if (e.data.type === "reload") {
+      window.location.reload();
+    } else if (e.data.type === "load") {
+      const { code, html } = e.data;
+
+      const div = document.createElement("div");
+      div.innerHTML = html;
+      document.body.append(div);
+
+      const script = document.createElement("script");
+      script.type = "module";
+      script.textContent = code;
+      document.body.append(script);
+
+      document.body.dataset.sandcastleLoaded = "yes";
+    }
+  });
   window.parent.postMessage({ type: "reload" }, "*");
 
   function defined(value) {

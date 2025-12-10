@@ -23,6 +23,7 @@
     "prettier": "^3.7.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-error-boundary": "^6.0.0",
     "react-stay-scrolled": "^9.0.0",
     "react-use": "^17.6.0",
     "typescript": "^5.9.3",

@@ -111,7 +111,6 @@ function UserPopover({
 
 export default function UserProfile() {
   const { ionClient, userInfo, getUserInfo } = useContext(UserContext);
-  console.log("UserProfile render");
 
   const loginStarted = useRef(false);
   useEffect(() => {

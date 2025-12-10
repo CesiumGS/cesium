@@ -235,7 +235,6 @@ function App() {
     state: CodeState,
     action: SandcastleAction,
   ): CodeState {
-    console.log("reducer", { ...state }, { ...action });
     switch (action.type) {
       case "reset": {
         if (action.defaultToken) {
@@ -408,28 +407,21 @@ function App() {
   useEffect(() => {
     const load = () =>
       startLoadPending(async () => {
-        console.log("start load pending");
         try {
           if (isLoadPending || !loadFromUrl) {
-            console.log("isLoadPending early return");
             return;
           }
 
           const data = await loadFromUrl();
           if (!data) {
-            console.log("no loadFromUrl data");
             return;
           }
           const { html, title } = data;
           let code = data.code;
 
           let defaultAccessToken;
-          console.log(ionClient);
-          console.log("wait for login");
           await ionClient.initPromise;
-          console.log("init finished, check logged in");
           if (!code && ionClient.loggedIn) {
-            console.log("get default token");
             defaultAccessToken = await ionClient.getDefaultAccessToken();
             code = defaultJsCode.replace(
               "const viewer",
@@ -439,10 +431,8 @@ function App() {
 
           startLoadPending(() => {
             if (isLoadPending) {
-              console.log("start load pending recurse but loading already");
               return;
             }
-            console.log("start load pending recurse setAndRun");
             setTitle(title);
             dispatch({
               type: "setAndRun",
@@ -453,7 +443,6 @@ function App() {
         } catch (error) {
           const message = (error as Error)?.message;
           appendConsole("error", message);
-          console.error(message);
         }
       });
 
@@ -536,16 +525,6 @@ function App() {
   const onOpenCode = useCallback(() => {
     setLeftPanel("editor");
   }, []);
-
-  console.log(
-    "App render -",
-    "initialized:",
-    initialized,
-    "isLoadPending:",
-    isLoadPending,
-    // "deferredIsLoading:",
-    // deferredIsLoading,
-  );
 
   return (
     <Root
