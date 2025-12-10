@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{{TUTORIAL_NAME}}</title>
+</head>
+<body>
+    <div id="cesiumContainer"></div>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

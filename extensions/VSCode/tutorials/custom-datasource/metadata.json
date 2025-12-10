@@ -1,0 +1,6 @@
+{
+  "name": "Custom DataSource",
+  "slug": "custom-datasource",
+  "category": "Advanced",
+  "description": "Creating a custom DataSource implementation to load and visualize WebGL Globe JSON data"
+}
