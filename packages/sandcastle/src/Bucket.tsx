@@ -4,6 +4,7 @@ import { embedInSandcastleTemplate } from "./Helpers";
 import "./Bucket.css";
 import { ConsoleMessageType } from "./ConsoleMirror";
 import { Button } from "@stratakit/bricks";
+import DOMPurify from "dompurify";
 
 type ReactDevToolsMessage = {
   source: "react-devtools-bridge" | "react-devtools-content-script";
@@ -138,11 +139,19 @@ function InnerBucket({
         // element.textContent = embedInSandcastleTemplate(code, isFirefox);
         // bucketDoc.body.appendChild(element);
 
+        // TODO: this needs more thorough testing to make sure we account for things in all our sandcastles
+        // also potentially may want to remove or adjust allowing style tags
+        const sanitized = DOMPurify.sanitize(html, {
+          ADD_TAGS: ["style"],
+          FORCE_BODY: true,
+        });
+        console.warn({ original: html, sanitized, removed: DOMPurify.removed });
+
         bucket.current?.contentWindow?.postMessage(
           {
             type: "load",
             code: embedInSandcastleTemplate(code, isFirefox),
-            html,
+            html: sanitized,
           },
           "*",
         );
