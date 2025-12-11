@@ -19,6 +19,7 @@
 - Fixed depth testing bug with billboards and labels clipping through models [#13012](https://github.com/CesiumGS/cesium/issues/13012)
 - Fixed unexpected outline artifacts around billboards [#4525](https://github.com/CesiumGS/cesium/issues/4525)
 - Fix texture coordinates in large billboard collections [#13042](https://github.com/CesiumGS/cesium/pull/13042)
+- Fixed label sizing for certain fonts and characters [#9767](https://github.com/CesiumGS/cesium/issues/9767)
 
 #### Additions :tada:
 
