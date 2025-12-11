@@ -8,6 +8,10 @@
 
 - Fixes label positioning in workflows that delete and recreate clamped labels [#12949](https://github.com/CesiumGS/cesium/issues/12949)
 
+#### Additions :tada:
+
+- Added support for the proposed [BENTLEY_materials_point_style](https://github.com/CesiumGS/glTF/pull/91) glTF extension. This allows point primitives to have a diameter property specified and respected when loaded via glTF.
+
 ## 1.136 - 2025-12-01
 
 ### @cesium/engine
