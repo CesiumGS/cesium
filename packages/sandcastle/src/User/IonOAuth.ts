@@ -1,12 +1,6 @@
 import { getVerifier, newPkceState } from "./pkce.js";
 
-export const DEFAULT_APP_SCOPES = [
-  "assets:list",
-  "assets:read",
-  "geocode",
-  "tokens:read",
-  "profile:read",
-];
+export const DEFAULT_APP_SCOPES = ["tokens:read", "profile:read"];
 
 export class IonOAuth {
   config: {
