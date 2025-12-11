@@ -26,7 +26,7 @@
         {
             "bufferView": 1,
             "byteOffset": 0,
-            "componentType": 5125,
+            "componentType": 5123,
             "count": 1,
             "type": "SCALAR",
             "max": [
@@ -39,7 +39,7 @@
         {
             "bufferView": 1,
             "byteOffset": 4,
-            "componentType": 5125,
+            "componentType": 5123,
             "count": 1,
             "type": "SCALAR",
             "max": [
@@ -52,7 +52,7 @@
         {
             "bufferView": 1,
             "byteOffset": 8,
-            "componentType": 5125,
+            "componentType": 5123,
             "count": 1,
             "type": "SCALAR",
             "max": [
@@ -65,7 +65,7 @@
         {
             "bufferView": 1,
             "byteOffset": 12,
-            "componentType": 5125,
+            "componentType": 5123,
             "count": 1,
             "type": "SCALAR",
             "max": [
