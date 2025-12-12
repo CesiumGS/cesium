@@ -693,34 +693,32 @@ describe(
       expect(cluster._billboardCollection.length).toEqual(2);
     });
 
-    it("has declusteredEvent property", function () {
+    it("has allDeclusteredEvent property", function () {
       cluster = new EntityCluster();
-      expect(cluster.declusteredEvent).toBeDefined();
-      expect(typeof cluster.declusteredEvent.addEventListener).toEqual(
+      expect(cluster.allDeclusteredEvent).toBeDefined();
+      expect(typeof cluster.allDeclusteredEvent.addEventListener).toEqual(
         "function",
       );
     });
 
-    it("provides access to clustering data via new API methods", function () {
+    it("tracks previously clustered entities", function () {
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      expect(typeof cluster.getLastClusteredEntities).toEqual("function");
-      expect(typeof cluster.getLastDeclusteredEntities).toEqual("function");
-      expect(typeof cluster.getAllProcessedEntities).toEqual("function");
-
-      expect(cluster.getLastClusteredEntities()).toEqual([]);
-      expect(cluster.getLastDeclusteredEntities()).toEqual([]);
-      expect(cluster.getAllProcessedEntities()).toEqual([]);
+      expect(cluster._previouslyClusteredEntities).toBeDefined();
+      expect(Array.isArray(cluster._previouslyClusteredEntities)).toEqual(true);
+      expect(cluster._previouslyClusteredEntities.length).toEqual(0);
     });
 
-    it("fires declusteredEvent with both clustered and declustered entities", function () {
+    it("fires allDeclusteredEvent when all clusters are removed", function () {
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      let receivedData = null;
-      cluster.declusteredEvent.addEventListener(function (data) {
-        receivedData = data;
+      let receivedEntities = null;
+      let eventFired = false;
+      cluster.allDeclusteredEvent.addEventListener(function (entities) {
+        receivedEntities = entities;
+        eventFired = true;
       });
 
       const entity1 = new Entity();
@@ -743,43 +741,33 @@ describe(
         depth,
       );
 
-      const entity3 = new Entity();
-      const point3 = cluster.getPoint(entity3);
-      point3.id = entity3;
-      point3.pixelSize = 1;
-      point3.position = SceneTransforms.drawingBufferToWorldCoordinates(
-        scene,
-        new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-        farDepth,
-      );
-
       cluster.enabled = true;
       return updateUntilDone(cluster).then(function () {
-        expect(receivedData).toBeDefined();
-        expect(receivedData.clustered).toBeDefined();
-        expect(receivedData.declustered).toBeDefined();
-        expect(Array.isArray(receivedData.clustered)).toEqual(true);
-        expect(Array.isArray(receivedData.declustered)).toEqual(true);
+        expect(eventFired).toEqual(false);
+
+        cluster.enabled = false;
+        cluster.update(scene.frameState);
+
+        expect(eventFired).toEqual(true);
+        expect(receivedEntities).toBeDefined();
+        expect(Array.isArray(receivedEntities)).toEqual(true);
+        expect(receivedEntities.length).toBeGreaterThan(0);
       });
     });
 
-    it("maintains backward compatibility - original clusterEvent still works", function () {
+    it("clusterEvent is fired when clusters are created", function () {
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      let originalEventFired = false;
-      let newEventFired = false;
+      let clusterEventFired = false;
 
       cluster.clusterEvent.addEventListener(function (entities, clusterObj) {
-        originalEventFired = true;
+        clusterEventFired = true;
         expect(Array.isArray(entities)).toEqual(true);
         expect(clusterObj).toBeDefined();
-      });
-
-      cluster.declusteredEvent.addEventListener(function (data) {
-        newEventFired = true;
-        expect(data.clustered).toBeDefined();
-        expect(data.declustered).toBeDefined();
+        expect(clusterObj.billboard).toBeDefined();
+        expect(clusterObj.label).toBeDefined();
+        expect(clusterObj.point).toBeDefined();
       });
 
       const entity1 = new Entity();
@@ -804,12 +792,11 @@ describe(
 
       cluster.enabled = true;
       return updateUntilDone(cluster).then(function () {
-        expect(originalEventFired).toEqual(true);
-        expect(newEventFired).toEqual(true);
+        expect(clusterEventFired).toEqual(true);
       });
     });
 
-    it("tracks processed entities correctly", function () {
+    it("tracks previously clustered entities during clustering", function () {
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
@@ -829,24 +816,21 @@ describe(
       point2.pixelSize = 1;
       point2.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
-        new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
-        farDepth,
+        new Cartesian2(1.0, 1.0),
+        depth,
       );
 
       cluster.enabled = true;
       return updateUntilDone(cluster).then(function () {
-        const clusteredEntities = cluster.getLastClusteredEntities();
-        const declusteredEntities = cluster.getLastDeclusteredEntities();
-        const allProcessed = cluster.getAllProcessedEntities();
+        const previouslyClusteredEntities =
+          cluster._previouslyClusteredEntities;
 
-        expect(allProcessed.length).toBeGreaterThan(0);
-        expect(
-          clusteredEntities.length + declusteredEntities.length,
-        ).toBeLessThanOrEqual(allProcessed.length);
+        expect(Array.isArray(previouslyClusteredEntities)).toEqual(true);
+        expect(previouslyClusteredEntities.length).toBeGreaterThan(0);
       });
     });
 
-    it("cleans up tracking arrays on destroy", function () {
+    it("cleans up previously clustered entities array on destroy", function () {
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
@@ -860,17 +844,26 @@ describe(
         depth,
       );
 
+      const entity2 = new Entity();
+      const point2 = cluster.getPoint(entity2);
+      point2.id = entity2;
+      point2.pixelSize = 1;
+      point2.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(1.0, 1.0),
+        depth,
+      );
+
       cluster.enabled = true;
       return updateUntilDone(cluster).then(function () {
-        expect(cluster._allProcessedEntities).toBeDefined();
-        expect(cluster._lastClusteredEntities).toBeDefined();
-        expect(cluster._lastDeclusteredEntities).toBeDefined();
+        expect(cluster._previouslyClusteredEntities).toBeDefined();
+        expect(Array.isArray(cluster._previouslyClusteredEntities)).toEqual(
+          true,
+        );
 
         cluster.destroy();
 
-        expect(cluster._allProcessedEntities).toEqual([]);
-        expect(cluster._lastClusteredEntities).toEqual([]);
-        expect(cluster._lastDeclusteredEntities).toEqual([]);
+        expect(cluster._previouslyClusteredEntities).toEqual([]);
       });
     });
   },
