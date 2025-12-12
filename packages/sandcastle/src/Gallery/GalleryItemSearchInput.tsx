@@ -8,35 +8,30 @@ export function GalleryItemSearchInput() {
   const store = useGalleryItemContext();
   const inputRef = useRef<HTMLInputElement>(null);
   const { setSearchTerm, items } = store ?? {};
-  const [hasValue, setHasValue] = useState(false);
+  const [inputValue, setInputValue] = useState("");
 
   const clearSearch = useCallback(() => {
-    const input = inputRef.current;
-    if (input) {
-      input.value = "";
-      setHasValue(false);
-      input.focus();
-    }
+    setInputValue("");
 
     if (setSearchTerm) {
       setSearchTerm(null);
     }
+
+    // Focus input after clearing
+    setTimeout(() => inputRef.current?.focus(), 0);
   }, [setSearchTerm]);
 
   const updateSearch = useCallback(
     (e: { target: { value: string | null } }) => {
-      let term = e.target.value;
-      setHasValue(!!term && term !== "");
+      const term = e.target.value || "";
+
+      // Update local state immediately for responsive input
+      setInputValue(term);
+
+      // Update search term in store
       if (setSearchTerm) {
-        if (term) {
-          term = term.trim();
-        }
-
-        if (!term || term === "") {
-          term = null;
-        }
-
-        setSearchTerm(term);
+        const trimmed = term.trim();
+        setSearchTerm(trimmed || null);
       }
     },
     [setSearchTerm],
@@ -50,12 +45,13 @@ export function GalleryItemSearchInput() {
       <TextBox.Input
         disabled={isPending}
         ref={inputRef}
+        value={inputValue}
         onChange={updateSearch}
         placeholder="Search gallery"
       />
       <IconButton
         className="gallery-search-input-clear-btn"
-        hidden={!hasValue}
+        hidden={!inputValue}
         icon={close}
         label="Clear"
         onClick={clearSearch}
