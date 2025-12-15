@@ -11,6 +11,8 @@ const scratchTrianglePoints = [
   new Cartesian3(),
 ];
 const scratchTriangleAABB = new AxisAlignedBoundingBox();
+const scratchClampMax = new Cartesian3(0.5, 0.5, 0.5);
+const scratchClampMin = new Cartesian3(-0.5, -0.5, -0.5);
 
 /**
  * Builds the next layer of the terrain picker's quadtree by determining which triangles intersect
@@ -102,7 +104,23 @@ function createAABBFromTriangle(inverseTransform, trianglePoints) {
     trianglePoints[2],
   );
 
-  return AxisAlignedBoundingBox.fromPoints(trianglePoints, scratchTriangleAABB);
+  const aabb = AxisAlignedBoundingBox.fromPoints(
+    trianglePoints,
+    scratchTriangleAABB,
+  );
+  Cartesian3.clamp(
+    aabb.minimum,
+    scratchClampMin,
+    scratchClampMax,
+    aabb.minimum,
+  );
+  Cartesian3.clamp(
+    aabb.maximum,
+    scratchClampMin,
+    scratchClampMax,
+    aabb.maximum,
+  );
+  return aabb;
 }
 
 export default createTaskProcessorWorker(incrementallyBuildTerrainPicker);

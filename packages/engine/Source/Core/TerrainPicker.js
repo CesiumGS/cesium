@@ -607,7 +607,10 @@ async function addTrianglesToChildrenNodes(
   // Assign these to the child nodes
   const result = await incrementallyBuildTerrainPickerPromise;
   result.intersectingTrianglesArrays.forEach((buffer, index) => {
-    node.children[index].intersectingTriangles = new Uint32Array(buffer);
+    // Guard against case where tree is reset while waiting for worker
+    if (defined(node.children[index])) {
+      node.children[index].intersectingTriangles = new Uint32Array(buffer);
+    }
   });
 
   // The node's triangles have been distributed to its children
