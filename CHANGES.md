@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Fixes label positioning in workflows that delete and recreate clamped labels [#12949](https://github.com/CesiumGS/cesium/issues/12949)
+- Fix scene `sampleHeightMostDetailed` does not work when a tileset is added by primitive collection [#13097](https://github.com/CesiumGS/cesium/issues/13097)
 
 ## 1.136 - 2025-12-01
 
