@@ -21,7 +21,7 @@ const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
  * @alias TerrainPicker
  * @constructor
  *
- * @param {Float32Array} vertices The terrain mesh's vertex buffer.
+ * @param {Float64Array} vertices The terrain mesh's vertex buffer.
  * @param {Uint8Array|Uint16Array|Uint32Array} indices The terrain mesh's index buffer.
  * @param {TerrainEncoding} encoding The terrain mesh's vertex encoding.
  *
@@ -36,7 +36,7 @@ function TerrainPicker(vertices, indices, encoding) {
 
   /**
    * The terrain mesh's vertex buffer.
-   * @type {Float32Array}
+   * @type {Float64Array}
    */
   this._vertices = vertices;
   /**
@@ -269,7 +269,7 @@ function createAABBForNode(x, y, level) {
 /**
  * Packs triangle vertex positions and index into provided buffers, for the worker to process.
  * (The worker does tests to organize triangles into child nodes of the quadtree.)
- * @param {Float32Array} trianglePositionsBuffer The buffer to pack triangle vertex positions into.
+ * @param {Float64Array} trianglePositionsBuffer The buffer to pack triangle vertex positions into.
  * @param {Uint32Array} triangleIndicesBuffer The buffer to pack triangle indices into.
  * @param {Cartesian3[]} trianglePositions The triangle's vertex positions.
  * @param {number} triangleIndex The triangle's index in the overall tile's index buffer.
@@ -425,7 +425,7 @@ function getClosestTriangleInNode(
   let triangleIndices;
   if (shouldBuildChildren) {
     // If the tree can be built deeper, prepare buffers to store triangle data for child nodes
-    trianglePositions = new Float32Array(triangleCount * 9); // 3 vertices per triangle * 3 floats per vertex
+    trianglePositions = new Float64Array(triangleCount * 9); // 3 vertices per triangle * 3 floats per vertex
     triangleIndices = new Uint32Array(triangleCount);
   }
 
@@ -507,7 +507,7 @@ const scratchCartographic = new Cartographic();
  * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
  * @param {MapProjection} projection The map projection.
  * @param {Ray} ray The pick ray being tested (used here as a reference to resolve antimeridian wrapping in 2D/Columbus View).
- * @param {Float32Array} vertices The terrain mesh's vertex buffer.
+ * @param {Float64Array} vertices The terrain mesh's vertex buffer.
  * @param {Number} index The index of the vertex to get.
  * @param {Cartesian3} result The decoded, exaggerated, and possibly projected vertex position.
  * @returns {Cartesian3} The result vertex position.
@@ -555,7 +555,7 @@ function getVertexPosition(
  * @param {Matrix4} inverseTransform
  * @param {TerrainNode} node
  * @param {Uint32Array} triangleIndices
- * @param {Float32Array} trianglePositions
+ * @param {Float64Array} trianglePositions
  * @returns {Promise<void>} A promise that resolves when the triangles have been added to the child nodes.
  * @private
  */

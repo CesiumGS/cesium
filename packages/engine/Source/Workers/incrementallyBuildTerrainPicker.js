@@ -42,7 +42,7 @@ function incrementallyBuildTerrainPicker(parameters, transferableObjects) {
   );
 
   const triangleIndices = new Uint32Array(parameters.triangleIndices);
-  const trianglePositions = new Float32Array(parameters.trianglePositions);
+  const trianglePositions = new Float64Array(parameters.trianglePositions);
   const intersectingTrianglesArrays = Array.from({ length: 4 }, () => []);
 
   for (let j = 0; j < triangleIndices.length; j++) {
