@@ -250,12 +250,14 @@ function InnerBucket({
       <iframe
         ref={bucket}
         id="bucketFrame"
-        src="templates/bucket.html"
+        // src="templates/bucket.html"
+        src="//localhost:8081/templates/bucket.html"
         // src="https://sandcastle.cesium.com/templates/bucket.html"
+        // src="http://localhost:8080/Apps/Sandcastle2/templates/bucket.html"
         className="fullFrame"
         allowFullScreen
-        // sandbox="allow-same-origin allow-scripts"
-        sandbox="allow-scripts"
+        sandbox="allow-same-origin allow-scripts"
+        // sandbox="allow-scripts"
       ></iframe>
     </div>
   );
