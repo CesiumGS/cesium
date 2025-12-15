@@ -179,10 +179,10 @@ function TerrainMesh(
   this._transform = new Matrix4();
 
   /**
-   * True if the transform needs to be recomputed (due to changes in exaggeration or scene mode).
-   * @type {boolean}
+   * The scene mode used the last time a pick was performed on this terrain mesh.
+   * @type {SceneMode}
    */
-  this._recomputeTransform = true;
+  this._lastPickSceneMode = undefined;
 
   /**
    * The terrain picker for this mesh, used for ray intersection tests.
@@ -199,10 +199,11 @@ function TerrainMesh(
  * @private
  */
 TerrainMesh.prototype.getTransform = function (mode, projection) {
-  if (!this._recomputeTransform) {
+  if (this._lastPickSceneMode === mode) {
     return this._transform;
   }
-  this._recomputeTransform = false;
+  this._lastPickSceneMode = mode;
+  this._terrainPicker.needsRebuild = true;
 
   if (!defined(mode) || mode === SceneMode.SCENE3D) {
     return computeTransform(this, this._transform);
@@ -345,7 +346,7 @@ TerrainMesh.prototype.updateExaggeration = function (
   // to trigger a rebuild on the terrain picker.
   this._terrainPicker._vertices = this.vertices;
   this._terrainPicker.needsRebuild = true;
-  this._recomputeTransform = true;
+  this._lastPickSceneMode = undefined;
 };
 
 /**
@@ -355,7 +356,7 @@ TerrainMesh.prototype.updateExaggeration = function (
  */
 TerrainMesh.prototype.updateSceneMode = function (mode) {
   this._terrainPicker.needsRebuild = true;
-  this._recomputeTransform = true;
+  this._lastPickSceneMode = undefined;
 };
 
 export default TerrainMesh;
