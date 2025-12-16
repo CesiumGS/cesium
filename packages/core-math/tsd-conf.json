@@ -1,0 +1,26 @@
+{
+  "tags": {
+    "allowUnknownTags": false
+  },
+  "source": {
+    "include": ["packages/core-math/Source"],
+    "includePattern": ".+\\.js(doc)?$",
+    "excludePattern": "(^|\\/|\\\\)_"
+  },
+  "plugins": [
+    "./Tools/jsdoc/cesiumTags",
+    "tsd-jsdoc/dist/plugin"
+  ],
+  "templates": {
+    "cleverLinks": true,
+    "default": {
+      "outputSourceFiles": false
+    }
+  },
+  "opts": {
+    "destination": "packages/core-math",
+    "template": "tsd-jsdoc/dist",
+    "outFile": "index.d.ts",
+    "recurse": true
+  }
+}
