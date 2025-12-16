@@ -1,5 +1,5 @@
 {
-  "include": ["Source/**/*.js"],
+  "include": ["index.js", "Source/**/*.js"],
   "compilerOptions": {
     // module configuration
     "moduleResolution": "bundler",
