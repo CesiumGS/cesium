@@ -17,7 +17,11 @@ jobs:
       - name: build
         run: npm run build
       - name: install Playwright browsers
-        run: npx playwright install --with-deps --no-shell
+        run: npx playwright install --with-deps --no-shell chromium
+      - name: test log
+        run: |
+          ls -l Build/Specs
+          ls -l Specs/e2e
       - name: run e2e tests
         run: npm run test-e2e -- viewer.spec.js
       - uses: actions/upload-artifact@v4
