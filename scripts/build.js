@@ -253,6 +253,14 @@ function filePathToModuleId(moduleId) {
 }
 
 const workspaceSourceFiles = {
+  "core-utils": [
+    "packages/core-utils/Source/**/*.js",
+    "!packages/core-utils/Source/*.js",
+  ],
+  "core-math": [
+    "packages/core-math/Source/**/*.js",
+    "!packages/core-math/Source/*.js",
+  ],
   engine: [
     "packages/engine/Source/**/*.js",
     "!packages/engine/Source/*.js",
@@ -1058,6 +1066,55 @@ async function bundleSpecs(options) {
 }
 
 /**
+ * Builds the core-utils workspace.
+ *
+ * @param {object} options
+ * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {boolean} [options.minify=false] True if bundles should be minified.
+ * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
+ */
+export const buildCoreUtils = async (options) => {
+  options = options || {};
+
+  const incremental = options.incremental ?? false;
+  const minify = options.minify ?? false;
+  const write = options.write ?? true;
+
+  // Create Build folder to place build artifacts.
+  mkdirp.sync("packages/core-utils/Build");
+
+  // Create index.js
+  await createIndexJs("core-utils");
+
+  const contexts = await bundleIndexJs({
+    minify: minify,
+    incremental: incremental,
+    sourcemap: true,
+    removePragmas: false,
+    outputDirectory: path.join(
+      `packages/core-utils/Build`,
+      `${!minify ? "Unminified" : "Minified"}`,
+    ),
+    write: write,
+    entryPoint: `packages/core-utils/index.js`,
+  });
+
+  // Create SpecList.js
+  const specFiles = await globby(workspaceSpecFiles["core-utils"]);
+  const specListFile = path.join("packages/core-utils/Specs", "SpecList.js");
+  await createSpecListForWorkspace(specFiles, "core-utils", specListFile);
+  await bundleSpecs({
+    incremental: incremental,
+    outbase: "packages/core-utils/Specs",
+    outdir: "packages/core-utils/Build/Specs",
+    specListFile: specListFile,
+    write: write,
+  });
+
+  return contexts;
+};
+
+/**
  * Builds the core-math workspace.
  *
  * @param {object} options
@@ -1069,16 +1126,32 @@ export const buildCoreMath = async (options) => {
   options = options || {};
 
   const incremental = options.incremental ?? false;
+  const minify = options.minify ?? false;
   const write = options.write ?? true;
 
   // Create Build folder to place build artifacts.
   mkdirp.sync("packages/core-math/Build");
 
+  // Create index.js
+  await createIndexJs("core-math");
+
+  const contexts = await bundleIndexJs({
+    minify: minify,
+    incremental: incremental,
+    sourcemap: true,
+    removePragmas: false,
+    outputDirectory: path.join(
+      `packages/core-math/Build`,
+      `${!minify ? "Unminified" : "Minified"}`,
+    ),
+    write: write,
+    entryPoint: `packages/core-math/index.js`,
+  });
+
   // Create SpecList.js
   const specFiles = await globby(workspaceSpecFiles["core-math"]);
   const specListFile = path.join("packages/core-math/Specs", "SpecList.js");
   await createSpecListForWorkspace(specFiles, "core-math", specListFile);
-
   await bundleSpecs({
     incremental: incremental,
     outbase: "packages/core-math/Specs",
@@ -1087,7 +1160,7 @@ export const buildCoreMath = async (options) => {
     write: write,
   });
 
-  return {};
+  return contexts;
 };
 
 /**
