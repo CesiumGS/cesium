@@ -19,12 +19,12 @@
 - Issue the following commands:
 
 ```bash
-cd CESIUM_DIR/packages/engine/Source/Shaders/PostProcessStages
+cd $CESIUM_DIR/packages/engine/Source/Shaders/PostProcessStages
 slangc Brightness.slang -profile spirv_1_5 -o Brightness.spv
 spirv-cross Brightness.spv --es --version 300 --stage frag --output Brightness.frag
-CESIUM_DIR/scripts/postprocess-slang-glsl.sh Brightness.frag
+$CESIUM_DIR/scripts/postprocess-slang-glsl.sh Brightness.frag
 cp Brightness.frag Brightness.glsl
-cd CESIUM_DIR
+cd $CESIUM_DIR
 npm run build && npm run start
 ```
 
@@ -33,4 +33,4 @@ npm run build && npm run start
 
 ## WebGPU
 
-- See `CESIUM_DIR/packages/engine/Source/Shaders/WebGPUTest.slang`
+- `buildGallery.js` will automatically convert from .slang to .wgsl and copy to `SampleData/wgsl`.
