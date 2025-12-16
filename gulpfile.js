@@ -64,9 +64,9 @@ const verbose = argv.verbose;
 
 const sourceFiles = [
   "packages/core-utils/Source/**/*.js",
-  "!packages/core-utils/Source/*.js",
+  "!packages/core-utils/Source/index.js",
   "packages/core-math/Source/**/*.js",
-  "!packages/core-math/Source/*.js",
+  "!packages/core-math/Source/index.js",
   "packages/engine/Source/**/*.js",
   "!packages/engine/Source/*.js",
   "packages/widgets/Source/**/*.js",
@@ -379,7 +379,8 @@ export async function buildDocs() {
   const generatePrivateDocumentation = argv.private ? "--private" : "";
 
   execSync(
-    `npx jsdoc --configure Tools/jsdoc/conf.json --pedantic ${generatePrivateDocumentation}`,
+    // TODO(donmccurdy): Cannot use --pedantic with "/** @ignore @typedef {...} */ hack.
+    `npx jsdoc --configure Tools/jsdoc/conf.json ${generatePrivateDocumentation}`,
     {
       stdio: "inherit",
       env: Object.assign({}, process.env, {
