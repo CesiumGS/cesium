@@ -44,8 +44,6 @@ export default defineConfig({
     toHaveScreenshot: {
       threshold: 0.25,
       maxDiffPixelRatio: 0.02,
-      pathTemplate:
-        "{testDir}/ReferenceSnapshots/{projectName}/{testFilePath}/{arg}{ext}",
     },
   },
   updateSnapshots: updateSnapshots ? "all" : "missing",

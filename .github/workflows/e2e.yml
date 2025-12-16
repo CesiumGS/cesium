@@ -5,6 +5,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   e2e:
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -18,19 +20,32 @@ jobs:
         run: npm run build
       - name: install Playwright browsers
         run: npx playwright install --with-deps --no-shell chromium
-      - name: test log
+      - name: test log 1
         run: |
           ls -l Build/Specs
           ls -l Specs/e2e
+      - name: produce e2e test snapshots
+        run: npm run test-e2e-update -- viewer.spec.js
       - name: run e2e tests
         run: npm run test-e2e -- viewer.spec.js
       - name: test log 2
         run: |
           ls -l Build/Specs
           ls -l Specs/e2e
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: e2e-report
-          path: Build/Specs/e2e/report/
-          retention-days: 30
+      - name: deploy to s3
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: |
+          aws s3 sync . s3://cesium-public-builds/cesium/$BRANCH/ \
+          --cache-control "no-cache" \
+          --exclude ".git/*" \
+          --exclude ".github/*" \
+          --exclude ".husky/*" \
+          --exclude ".vscode/*" \
+          --exclude "Build/Coverage/*" \
+          --exclude "Build/CesiumDev/*" \
+          --exclude "Build/Specs/TestWorkers" \
+          --exclude "Documentation/*" \
+          --exclude "node_modules/*" \
+          --exclude "scripts/*" \
+          --exclude "Tools/*" \
+          --delete
