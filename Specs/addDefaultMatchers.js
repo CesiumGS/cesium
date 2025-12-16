@@ -1,7 +1,6 @@
+import { Cartesian2, Math as CesiumMath } from "@cesium/core-math";
+import { defined, DeveloperError } from "@cesium/core-utils";
 import {
-  Cartesian2,
-  defined,
-  DeveloperError,
   FeatureDetection,
   PrimitiveType,
   Buffer,
@@ -10,7 +9,6 @@ import {
   DrawCommand,
   ShaderProgram,
   VertexArray,
-  Math as CesiumMath,
 } from "@cesium/engine";
 import equals from "./equals.js";
 

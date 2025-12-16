@@ -1,4 +1,4 @@
-import { DeveloperError } from "../../index.js";
+import { DeveloperError } from "../index.js";
 
 describe("Core/DeveloperError", function () {
   const name = "DeveloperError";
