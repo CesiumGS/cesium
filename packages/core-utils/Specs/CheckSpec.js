@@ -1,4 +1,5 @@
-import { Check, FeatureDetection } from "../index.js";
+import { Check } from "@cesium/core-utils";
+import { FeatureDetection } from "@cesium/engine";
 
 describe("Core/Check", function () {
   describe("type checks", function () {
