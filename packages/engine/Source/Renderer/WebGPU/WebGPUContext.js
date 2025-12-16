@@ -45,6 +45,10 @@ WebGPUContext.prototype.createComputePipeline = function (descriptor) {
   return this._device.createComputePipeline(descriptor);
 };
 
+WebGPUContext.prototype.createPipelineLayout = function (descriptor) {
+  return this._device.createPipelineLayout(descriptor);
+};
+
 WebGPUContext.prototype.createBindGroupLayout = function (entries) {
   return this._device.createBindGroupLayout({ entries });
 };

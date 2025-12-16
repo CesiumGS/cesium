@@ -7,19 +7,28 @@ import SceneMode from "./SceneMode.js";
  * @param {Context} context The rendering context
  * @param {CreditDisplay} creditDisplay Handles adding and removing credits from an HTML element
  * @param {JobScheduler} jobScheduler The job scheduler
+ * @param {WebGPUContext} wgpuContext The WebGPU context
  *
  * @alias FrameState
  * @constructor
  *
  * @private
  */
-function FrameState(context, creditDisplay, jobScheduler) {
+function FrameState(context, creditDisplay, jobScheduler, wgpuContext) {
   /**
    * The rendering context.
    *
    * @type {Context}
    */
   this.context = context;
+
+  /**
+   * The WebGPU context.
+   *
+   * @type {WebGPUContext}
+   */
+  this.wgpuContext = wgpuContext;
+  wgpuContext.then((ctx) => (this.wgpuContext = ctx));
 
   /**
    * An array of rendering commands.

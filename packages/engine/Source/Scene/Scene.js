@@ -81,6 +81,7 @@ import VoxelPrimitive from "./VoxelPrimitive.js";
 import getMetadataClassProperty from "./getMetadataClassProperty.js";
 import PickedMetadataInfo from "./PickedMetadataInfo.js";
 import getMetadataProperty from "./getMetadataProperty.js";
+import WebGPUContext from "../Renderer/WebGPU/WebGPUContext.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -145,6 +146,7 @@ function Scene(options) {
   } else {
     const contextOptions = clone(options.contextOptions);
     this._context = new Context(canvas, contextOptions);
+    this._webGPUContext = WebGPUContext.create();
   }
   const context = this._context;
 
@@ -169,6 +171,7 @@ function Scene(options) {
     context,
     new CreditDisplay(creditContainer, "•", creditViewport),
     this._jobScheduler,
+    this._webGPUContext,
   );
   this._frameState.scene3DOnly = options.scene3DOnly ?? false;
   this._removeCreditContainer = !hasCreditContainer;
