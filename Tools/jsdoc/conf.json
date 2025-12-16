@@ -4,6 +4,8 @@
     },
     "source": {
         "include": [
+            "packages/core-math/Source",
+            "packages/core-utils/Source",
             "packages/engine/Source",
             "packages/widgets/Source"
         ],

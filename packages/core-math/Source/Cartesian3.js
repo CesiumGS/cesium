@@ -1,6 +1,10 @@
 import { Check, defined, DeveloperError } from "@cesium/core-utils";
 import CesiumMath from "./Math.js";
 
+/** @ignore @typedef {import('./Cartesian4.js')} Cartesian4 */
+/** @ignore @typedef {import('@cesium/engine').Spherical} Spherical */
+/** @ignore @typedef {import('@cesium/engine').Ellipsoid} Ellipsoid */
+
 /**
  * A 3D Cartesian point.
  * @alias Cartesian3
@@ -325,7 +329,7 @@ Cartesian3.maximumByComponent = function (first, second, result) {
 /**
  * Constrain a value to lie between two values.
  *
- * @param {Cartesian3} cartesian The value to clamp.
+ * @param {Cartesian3} value The value to clamp.
  * @param {Cartesian3} min The minimum bound.
  * @param {Cartesian3} max The maximum bound.
  * @param {Cartesian3} result The object into which to store the result.

@@ -376,7 +376,8 @@ export async function buildDocs() {
   const generatePrivateDocumentation = argv.private ? "--private" : "";
 
   execSync(
-    `npx jsdoc --configure Tools/jsdoc/conf.json --pedantic ${generatePrivateDocumentation}`,
+    // TODO(donmccurdy): Cannot use --pedantic with "/** @ignore @typedef {...} */ hack.
+    `npx jsdoc --configure Tools/jsdoc/conf.json ${generatePrivateDocumentation}`,
     {
       stdio: "inherit",
       env: Object.assign({}, process.env, {

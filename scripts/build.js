@@ -946,6 +946,11 @@ export async function createIndexJs(workspace) {
     }
     assignmentName = assignmentName.replace(/(\.|-)/g, "_");
     contents += `export { default as ${assignmentName} } from './${moduleId}.js';${EOL}`;
+
+    // TODO(donmccurdy): Why is this needed?
+    if (assignmentName === "Math") {
+      contents += `export { default as CesiumMath } from './${moduleId}.js';${EOL}`;
+    }
   });
 
   await writeFile(`packages/${workspace}/index.js`, contents, {
