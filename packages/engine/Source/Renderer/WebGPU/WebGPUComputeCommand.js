@@ -29,9 +29,7 @@ function WebGPUComputeCommand(options) {
   this.debugName = options.debugName;
 
   webGPUContextPromise.then((webGPUContext) => {
-    createWGPUResources.call(this, {
-      webGPUContext,
-    });
+    createWGPUResources.call(this, webGPUContext);
   });
 }
 
