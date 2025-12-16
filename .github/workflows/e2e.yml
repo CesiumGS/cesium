@@ -1,0 +1,20 @@
+name: e2e
+on:
+  push:
+    branches:
+      - main
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: install node 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: npm install
+        run: npm install
+      - name: build
+        run: npm run build
+      - name: run e2e tests
+        run: npm run test-e2e -- viewer.spec.js
