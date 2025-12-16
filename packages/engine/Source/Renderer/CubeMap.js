@@ -1,12 +1,11 @@
+import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import BoxGeometry from "../Core/BoxGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
-import CesiumMath from "../Core/Math.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import BufferUsage from "./BufferUsage.js";

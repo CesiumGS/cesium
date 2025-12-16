@@ -1,6 +1,6 @@
+import { Cartesian3 } from "@cesium/core-math";
 import AttributeCompression from "./AttributeCompression.js";
 import BoundingSphere from "./BoundingSphere.js";
-import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import Frozen from "./Frozen.js";

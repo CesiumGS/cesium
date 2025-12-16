@@ -1,4 +1,4 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Cartesian3 } from "@cesium/core-math";
 import combine from "../Core/combine.js";
 import defined from "../Core/defined.js";
 import ShaderBuilder from "../Renderer/ShaderBuilder.js";

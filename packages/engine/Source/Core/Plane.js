@@ -1,10 +1,7 @@
-import Cartesian3 from "./Cartesian3.js";
-import Cartesian4 from "./Cartesian4.js";
+import { Cartesian3, Cartesian4, CesiumMath, Matrix4 } from "@cesium/core-math";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
-import CesiumMath from "./Math.js";
-import Matrix4 from "./Matrix4.js";
 
 /**
  * A plane in Hessian Normal Form defined by

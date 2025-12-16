@@ -1,10 +1,7 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
-import CesiumMath from "../../Core/Math.js";
+import { Cartesian3, Cartesian4, CesiumMath, Matrix4 } from "@cesium/core-math";
 import Cesium3DTileRefine from "../Cesium3DTileRefine.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";

@@ -18,6 +18,7 @@ import { createInstrumenter } from "istanbul-lib-instrument";
 
 import {
   buildCesium,
+  buildCoreMath,
   buildEngine,
   buildWidgets,
   bundleWorkers,
@@ -104,12 +105,15 @@ export async function build() {
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === `@${scope}/engine`) {
+  if (workspace === `@${scope}/core-math`) {
+    return buildCoreMath(buildOptions);
+  } else if (workspace === `@${scope}/engine`) {
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
   }
 
+  await buildCoreMath(buildOptions);
   await buildEngine(buildOptions);
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);
@@ -812,9 +816,19 @@ export async function test() {
 
   if (!isProduction && !release) {
     console.log("Building specs...");
-    await buildCesium({
-      iife: true,
-    });
+    if (workspace) {
+      if (workspace === "core-math") {
+        await buildCoreMath({});
+      } else if (workspace === "engine") {
+        await buildEngine({});
+      } else if (workspace === "widgets") {
+        await buildWidgets({});
+      }
+    } else {
+      await buildCesium({
+        iife: true,
+      });
+    }
   }
 
   let browsers = debug ? ["ChromeDebugging"] : ["Chrome"];

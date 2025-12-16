@@ -1,7 +1,6 @@
+import { Cartesian2, Cartesian3 } from "@cesium/core-math";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import ArcType from "../Core/ArcType.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";

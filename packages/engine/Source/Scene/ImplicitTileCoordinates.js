@@ -1,4 +1,4 @@
-import CesiumMath from "../Core/Math.js";
+import { CesiumMath } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import MortonOrder from "../Core/MortonOrder.js";

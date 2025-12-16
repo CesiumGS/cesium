@@ -1,5 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
@@ -8,7 +7,6 @@ import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
-import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";

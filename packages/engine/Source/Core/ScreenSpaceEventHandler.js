@@ -1,5 +1,5 @@
+import { Cartesian2 } from "@cesium/core-math";
 import AssociativeArray from "./AssociativeArray.js";
-import Cartesian2 from "./Cartesian2.js";
 import defined from "./defined.js";
 import destroyObject from "./destroyObject.js";
 import DeveloperError from "./DeveloperError.js";

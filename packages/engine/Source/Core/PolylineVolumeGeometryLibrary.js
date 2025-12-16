@@ -1,12 +1,14 @@
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartesian4 from "./Cartesian4.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  CesiumMath,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
 import CornerType from "./CornerType.js";
 import EllipsoidTangentPlane from "./EllipsoidTangentPlane.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
-import Matrix4 from "./Matrix4.js";
 import PolylinePipeline from "./PolylinePipeline.js";
 import Quaternion from "./Quaternion.js";
 import Transforms from "./Transforms.js";

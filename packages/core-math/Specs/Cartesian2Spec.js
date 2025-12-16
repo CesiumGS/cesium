@@ -1,7 +1,7 @@
-import { Cartesian2, Math as CesiumMath } from "../../index.js";
+import { Cartesian2, Math as CesiumMath } from "../index.js";
 
-import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+import createPackableArraySpecs from "../../../Specs/createPackableArraySpecs.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/Cartesian2", function () {
   it("construct with default values", function () {

@@ -1,7 +1,5 @@
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
+import { Cartesian2, Cartesian3, Matrix3 } from "@cesium/core-math";
 import Check from "./Check.js";
-import Matrix3 from "./Matrix3.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 
 /**

@@ -1,5 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Cartesian2, Cartesian3 } from "@cesium/core-math";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";

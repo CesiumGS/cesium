@@ -1,5 +1,5 @@
+import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import BoundingSphere from "./BoundingSphere.js";
-import Cartesian3 from "./Cartesian3.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import Frozen from "./Frozen.js";
 import defined from "./defined.js";
@@ -11,7 +11,6 @@ import GeometryAttribute from "./GeometryAttribute.js";
 import GeometryAttributes from "./GeometryAttributes.js";
 import GeometryOffsetAttribute from "./GeometryOffsetAttribute.js";
 import IndexDatatype from "./IndexDatatype.js";
-import CesiumMath from "./Math.js";
 import PrimitiveType from "./PrimitiveType.js";
 
 const scratchCartesian1 = new Cartesian3();

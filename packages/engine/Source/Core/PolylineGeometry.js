@@ -1,7 +1,7 @@
+import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import ArcType from "./ArcType.js";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import BoundingSphere from "./BoundingSphere.js";
-import Cartesian3 from "./Cartesian3.js";
 import Color from "./Color.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import Frozen from "./Frozen.js";
@@ -13,7 +13,6 @@ import GeometryAttribute from "./GeometryAttribute.js";
 import GeometryAttributes from "./GeometryAttributes.js";
 import GeometryType from "./GeometryType.js";
 import IndexDatatype from "./IndexDatatype.js";
-import CesiumMath from "./Math.js";
 import PolylinePipeline from "./PolylinePipeline.js";
 import PrimitiveType from "./PrimitiveType.js";
 import VertexFormat from "./VertexFormat.js";

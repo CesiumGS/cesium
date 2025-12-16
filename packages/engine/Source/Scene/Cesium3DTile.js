@@ -1,5 +1,5 @@
+import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CullingVolume from "../Core/CullingVolume.js";
@@ -9,9 +9,6 @@ import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Intersect from "../Core/Intersect.js";
 import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import Rectangle from "../Core/Rectangle.js";

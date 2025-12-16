@@ -1,8 +1,8 @@
+import { Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import ApproximateTerrainHeights from "./ApproximateTerrainHeights.js";
 import ArcType from "./ArcType.js";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import BoundingSphere from "./BoundingSphere.js";
-import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
@@ -17,8 +17,6 @@ import GeographicProjection from "./GeographicProjection.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
 import IntersectionTests from "./IntersectionTests.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
 import Plane from "./Plane.js";
 import Quaternion from "./Quaternion.js";
 import Rectangle from "./Rectangle.js";

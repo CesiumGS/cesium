@@ -1,7 +1,6 @@
+import { Cartesian2, Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import ArcType from "./ArcType.js";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import defined from "./defined.js";
@@ -13,8 +12,6 @@ import GeometryAttributes from "./GeometryAttributes.js";
 import GeometryPipeline from "./GeometryPipeline.js";
 import IndexDatatype from "./IndexDatatype.js";
 import IntersectionTests from "./IntersectionTests.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
 import Plane from "./Plane.js";
 import PolygonHierarchy from "./PolygonHierarchy.js";
 import PolygonPipeline from "./PolygonPipeline.js";

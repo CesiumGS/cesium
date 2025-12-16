@@ -1,5 +1,4 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Matrix4 from "../Core/Matrix4.js";
+import { Cartesian3, Matrix4 } from "@cesium/core-math";
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 const viewerPositionWCScratch = new Cartesian3();

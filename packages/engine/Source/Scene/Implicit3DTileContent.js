@@ -1,13 +1,11 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
 import HilbertOrder from "../Core/HilbertOrder.js";
-import Matrix3 from "../Core/Matrix3.js";
 import Rectangle from "../Core/Rectangle.js";
 import S2Cell from "../Core/S2Cell.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";

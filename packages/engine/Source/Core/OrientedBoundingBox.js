@@ -1,6 +1,11 @@
+import {
+  Cartesian2,
+  Cartesian3,
+  CesiumMath,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core-math";
 import BoundingSphere from "./BoundingSphere.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
@@ -9,9 +14,6 @@ import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidTangentPlane from "./EllipsoidTangentPlane.js";
 import Intersect from "./Intersect.js";
 import Interval from "./Interval.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
-import Matrix4 from "./Matrix4.js";
 import Plane from "./Plane.js";
 import Rectangle from "./Rectangle.js";
 

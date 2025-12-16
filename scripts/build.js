@@ -293,6 +293,10 @@ export async function createCesiumJs() {
   const version = await getVersion();
   let contents = `export const VERSION = '${version}';\n`;
 
+  // Re-export core-math types for the main Cesium bundle
+  contents += `${EOL}// Core math types from @cesium/core-math${EOL}`;
+  contents += `export { Cartesian2, Cartesian3, Cartesian4, CesiumMath, CesiumMath as Math, Matrix2, Matrix3, Matrix4 } from '@cesium/core-math';${EOL}${EOL}`;
+
   // Iterate over each workspace and generate declarations for each file.
   for (const workspace of Object.keys(workspaceSourceFiles)) {
     const files = await globby(workspaceSourceFiles[workspace]);
@@ -356,6 +360,7 @@ export async function bundleIndexJs(options) {
 }
 
 const workspaceSpecFiles = {
+  "core-math": ["packages/core-math/Specs/**/*Spec.js"],
   engine: ["packages/engine/Specs/**/*Spec.js"],
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
 };
@@ -913,6 +918,12 @@ export async function createIndexJs(workspace) {
   const version = await getVersion();
   let contents = `globalThis.CESIUM_VERSION = "${version}";\n`;
 
+  // Re-export core-math types for backwards compatibility in engine package
+  if (workspace === "engine") {
+    contents += `${EOL}// Re-export core-math types for backwards compatibility${EOL}`;
+    contents += `export { Cartesian2, Cartesian3, Cartesian4, CesiumMath, CesiumMath as Math, Matrix2, Matrix3, Matrix4 } from '@cesium/core-math';${EOL}${EOL}`;
+  }
+
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
   const workspaceSources = workspaceSourceFiles[workspace];
   if (!workspaceSources) {
@@ -1038,6 +1049,39 @@ async function bundleSpecs(options) {
     outbase: options.outbase,
   });
 }
+
+/**
+ * Builds the core-math workspace.
+ *
+ * @param {object} options
+ * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {boolean} [options.minify=false] True if bundles should be minified.
+ * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
+ */
+export const buildCoreMath = async (options) => {
+  options = options || {};
+
+  const incremental = options.incremental ?? false;
+  const write = options.write ?? true;
+
+  // Create Build folder to place build artifacts.
+  mkdirp.sync("packages/core-math/Build");
+
+  // Create SpecList.js
+  const specFiles = await globby(workspaceSpecFiles["core-math"]);
+  const specListFile = path.join("packages/core-math/Specs", "SpecList.js");
+  await createSpecListForWorkspace(specFiles, "core-math", specListFile);
+
+  await bundleSpecs({
+    incremental: incremental,
+    outbase: "packages/core-math/Specs",
+    outdir: "packages/core-math/Build/Specs",
+    specListFile: specListFile,
+    write: write,
+  });
+
+  return {};
+};
 
 /**
  * Builds the engine workspace.

@@ -1,6 +1,6 @@
+import { Cartesian3 } from "@cesium/core-math";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";

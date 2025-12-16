@@ -1,5 +1,5 @@
+import { Cartesian3 } from "@cesium/core-math";
 import BoundingSphere from "./BoundingSphere.js";
-import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import Frozen from "./Frozen.js";

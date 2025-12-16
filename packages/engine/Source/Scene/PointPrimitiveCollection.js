@@ -1,3 +1,4 @@
+import { CesiumMath, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
@@ -6,8 +7,6 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import BufferUsage from "../Renderer/BufferUsage.js";

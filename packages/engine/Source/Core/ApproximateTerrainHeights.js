@@ -1,7 +1,6 @@
+import { Cartesian2, Cartesian3 } from "@cesium/core-math";
 import BoundingSphere from "./BoundingSphere.js";
 import buildModuleUrl from "./buildModuleUrl.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import defined from "./defined.js";

@@ -1,6 +1,5 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
+import { Cartesian3, Matrix3, Matrix4 } from "@cesium/core-math";
 import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import Quaternion from "../../Core/Quaternion.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Axis from "../Axis.js";
@@ -8,7 +7,6 @@ import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import CullFace from "../CullFace.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
-import Matrix3 from "../../Core/Matrix3.js";
 
 /**
  * Utility functions for {@link Model}.

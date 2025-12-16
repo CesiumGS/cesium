@@ -1,11 +1,8 @@
-import Cartesian3 from "./Cartesian3.js";
-import Cartesian4 from "./Cartesian4.js";
+import { Cartesian3, Cartesian4, CesiumMath, Matrix4 } from "@cesium/core-math";
 import CullingVolume from "./CullingVolume.js";
 import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
-import CesiumMath from "./Math.js";
-import Matrix4 from "./Matrix4.js";
 
 /**
  * The viewing frustum is defined by 6 planes.

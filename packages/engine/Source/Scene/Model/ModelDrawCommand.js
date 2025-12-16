@@ -1,11 +1,9 @@
+import { Cartesian2, CesiumMath, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
-import CesiumMath from "../../Core/Math.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";

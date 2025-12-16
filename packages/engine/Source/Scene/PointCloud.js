@@ -1,6 +1,5 @@
+import { Cartesian3, Cartesian4, CesiumMath, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
@@ -8,8 +7,6 @@ import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import PrimitiveType from "../Core/PrimitiveType.js";

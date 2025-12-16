@@ -1,5 +1,5 @@
+import { Cartesian3, Matrix3, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import Credit from "../../Core/Credit.js";
@@ -11,8 +11,6 @@ import destroyObject from "../../Core/destroyObject.js";
 import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import Event from "../../Core/Event.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import Resource from "../../Core/Resource.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";

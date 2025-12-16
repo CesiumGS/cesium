@@ -1,7 +1,6 @@
+import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
 import ArcType from "../Core/ArcType.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import ClockRange from "../Core/ClockRange.js";
 import ClockStep from "../Core/ClockStep.js";
@@ -22,7 +21,6 @@ import Iso8601 from "../Core/Iso8601.js";
 import JulianDate from "../Core/JulianDate.js";
 import LagrangePolynomialApproximation from "../Core/LagrangePolynomialApproximation.js";
 import LinearApproximation from "../Core/LinearApproximation.js";
-import CesiumMath from "../Core/Math.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import PolygonHierarchy from "../Core/PolygonHierarchy.js";
 import Quaternion from "../Core/Quaternion.js";

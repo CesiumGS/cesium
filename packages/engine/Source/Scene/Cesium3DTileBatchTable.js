@@ -1,4 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
+import { Cartesian2, CesiumMath } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
@@ -7,7 +7,6 @@ import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import DrawCommand from "../Renderer/DrawCommand.js";

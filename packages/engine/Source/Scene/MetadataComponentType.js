@@ -1,4 +1,4 @@
-import CesiumMath from "../Core/Math.js";
+import { CesiumMath } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import DeveloperError from "../Core/DeveloperError.js";

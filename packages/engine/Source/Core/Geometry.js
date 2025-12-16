@@ -1,14 +1,16 @@
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Matrix2,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import GeometryType from "./GeometryType.js";
-import Matrix2 from "./Matrix2.js";
-import Matrix3 from "./Matrix3.js";
-import Matrix4 from "./Matrix4.js";
 import PrimitiveType from "./PrimitiveType.js";
 import Quaternion from "./Quaternion.js";
 import Rectangle from "./Rectangle.js";

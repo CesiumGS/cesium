@@ -1,6 +1,6 @@
+import { CesiumMath } from "@cesium/core-math";
 import BoundingSphere from "./BoundingSphere.js";
 import Cesium3DTilesTerrainData from "./Cesium3DTilesTerrainData.js";
-import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defined from "./defined.js";

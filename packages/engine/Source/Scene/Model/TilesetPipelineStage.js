@@ -1,6 +1,6 @@
+import { Cartesian2 } from "@cesium/core-math";
 import combine from "../../Core/combine.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
 import StencilConstants from "../StencilConstants.js";
 
 /**

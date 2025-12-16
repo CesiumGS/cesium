@@ -1,5 +1,5 @@
+import { CesiumMath } from "@cesium/core-math";
 import Check from "../Core/Check.js";
-import CesiumMath from "../Core/Math.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import PixelFormat from "../Core/PixelFormat.js";

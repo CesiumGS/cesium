@@ -1,6 +1,5 @@
+import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
 import earcut from "earcut";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
@@ -9,7 +8,6 @@ import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidRhumbLine from "./EllipsoidRhumbLine.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
-import CesiumMath from "./Math.js";
 import PrimitiveType from "./PrimitiveType.js";
 import WindingOrder from "./WindingOrder.js";
 

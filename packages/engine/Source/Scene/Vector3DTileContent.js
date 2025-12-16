@@ -1,12 +1,10 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";

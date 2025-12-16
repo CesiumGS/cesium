@@ -1,10 +1,8 @@
-import Cartesian3 from "./Cartesian3.js";
-import Cartesian4 from "./Cartesian4.js";
+import { Cartesian3, Cartesian4, Matrix4 } from "@cesium/core-math";
 import Check from "./Check.js";
 import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import HermiteSpline from "./HermiteSpline.js";
-import Matrix4 from "./Matrix4.js";
 import Spline from "./Spline.js";
 
 const scratchTimeVec = new Cartesian4();

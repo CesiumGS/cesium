@@ -1,4 +1,4 @@
-import Cartesian3 from "./Cartesian3.js";
+import { Cartesian3 } from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
 import DeveloperError from "./DeveloperError.js";
 import defined from "./defined.js";

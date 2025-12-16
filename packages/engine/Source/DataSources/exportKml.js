@@ -1,6 +1,5 @@
+import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
@@ -10,7 +9,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Iso8601 from "../Core/Iso8601.js";
 import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Resource from "../Core/Resource.js";

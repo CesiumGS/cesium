@@ -1,6 +1,6 @@
+import { Matrix4 } from "@cesium/core-math";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import Check from "../../Core/Check.js";
 import destroyObject from "../../Core/destroyObject.js";
 

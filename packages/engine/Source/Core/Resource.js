@@ -1,3 +1,4 @@
+import { CesiumMath } from "@cesium/core-math";
 import Uri from "urijs";
 import appendForwardSlash from "./appendForwardSlash.js";
 import Check from "./Check.js";
@@ -15,7 +16,6 @@ import isBlobUri from "./isBlobUri.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import isDataUri from "./isDataUri.js";
 import loadAndExecuteScript from "./loadAndExecuteScript.js";
-import CesiumMath from "./Math.js";
 import objectToQuery from "./objectToQuery.js";
 import queryToObject from "./queryToObject.js";
 import Request from "./Request.js";

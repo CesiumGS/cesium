@@ -1,4 +1,4 @@
-import Cartesian2 from "./Cartesian2.js";
+import { Cartesian2 } from "@cesium/core-math";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import sampleTerrain from "./sampleTerrain.js";

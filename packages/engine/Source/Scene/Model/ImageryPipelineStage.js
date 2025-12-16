@@ -1,5 +1,5 @@
+import { Cartesian4 } from "@cesium/core-math";
 import defined from "../../Core/defined.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
 import Check from "../../Core/Check.js";
 import Rectangle from "../../Core/Rectangle.js";
 

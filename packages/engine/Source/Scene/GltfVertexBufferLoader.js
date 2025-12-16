@@ -1,3 +1,4 @@
+import { CesiumMath } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
@@ -9,7 +10,6 @@ import JobType from "./JobType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
-import CesiumMath from "../Core/Math.js";
 
 /**
  * Loads a vertex buffer from a glTF buffer view.

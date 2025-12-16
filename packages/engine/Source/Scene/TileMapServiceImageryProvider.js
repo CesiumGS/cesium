@@ -1,4 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
+import { Cartesian2 } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";

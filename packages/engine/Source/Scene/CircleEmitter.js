@@ -1,6 +1,5 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import Check from "../Core/Check.js";
-import CesiumMath from "../Core/Math.js";
 
 /**
  * A ParticleEmitter that emits particles from a circle.

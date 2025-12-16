@@ -1,6 +1,6 @@
+import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
@@ -27,7 +27,6 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
-import CesiumMath from "../Core/Math.js";
 
 /**
  * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})

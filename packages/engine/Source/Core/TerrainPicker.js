@@ -1,8 +1,7 @@
+import { Cartesian3, Matrix4 } from "@cesium/core-math";
 import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox.js";
-import Cartesian3 from "./Cartesian3.js";
 import defined from "./defined.js";
 import IntersectionTests from "./IntersectionTests.js";
-import Matrix4 from "./Matrix4.js";
 import Ray from "./Ray.js";
 import TaskProcessor from "./TaskProcessor.js";
 import Cartographic from "./Cartographic.js";

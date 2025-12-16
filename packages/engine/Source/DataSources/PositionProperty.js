@@ -1,7 +1,6 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Cartesian3, Matrix3 } from "@cesium/core-math";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import Matrix3 from "../Core/Matrix3.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Transforms from "../Core/Transforms.js";
 

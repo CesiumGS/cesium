@@ -1,5 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian4 from "../Core/Cartesian4.js";
+import { Cartesian2, Cartesian4 } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";

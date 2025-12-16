@@ -1,6 +1,6 @@
+import { Cartesian3 } from "@cesium/core-math";
 import BoxGeometry from "../Core/BoxGeometry.js";
 import BoxOutlineGeometry from "../Core/BoxOutlineGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";

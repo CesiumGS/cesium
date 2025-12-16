@@ -1,5 +1,5 @@
+import { Cartesian3 } from "@cesium/core-math";
 import ArcType from "../Core/ArcType.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";

@@ -1,7 +1,7 @@
+import { Cartesian3 } from "@cesium/core-math";
 import BlendingState from "./BlendingState.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";

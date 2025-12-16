@@ -1,4 +1,4 @@
-import CesiumMath from "./Math.js";
+import { CesiumMath } from "@cesium/core-math";
 import Check from "./Check.js";
 import defined from "./defined.js";
 

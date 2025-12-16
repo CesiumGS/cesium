@@ -1,8 +1,7 @@
+import { Cartesian2, Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import ArcType from "./ArcType.js";
 import BoundingRectangle from "./BoundingRectangle.js";
 import BoundingSphere from "./BoundingSphere.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
@@ -17,8 +16,6 @@ import GeometryInstance from "./GeometryInstance.js";
 import GeometryOffsetAttribute from "./GeometryOffsetAttribute.js";
 import GeometryPipeline from "./GeometryPipeline.js";
 import IndexDatatype from "./IndexDatatype.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
 import PolygonGeometryLibrary from "./PolygonGeometryLibrary.js";
 import PolygonPipeline from "./PolygonPipeline.js";
 import Quaternion from "./Quaternion.js";

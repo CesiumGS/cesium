@@ -1,13 +1,10 @@
+import { Cartesian2, Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
 import AxisAlignedBoundingBox from "../Core/AxisAlignedBoundingBox.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import TerrainProvider from "../Core/TerrainProvider.js";

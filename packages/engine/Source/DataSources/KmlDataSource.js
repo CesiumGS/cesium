@@ -1,9 +1,8 @@
+import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
 import ArcType from "../Core/ArcType.js";
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import ClockRange from "../Core/ClockRange.js";
 import ClockStep from "../Core/ClockStep.js";
@@ -24,7 +23,6 @@ import HeadingPitchRange from "../Core/HeadingPitchRange.js";
 import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
 import Iso8601 from "../Core/Iso8601.js";
 import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import objectToQuery from "../Core/objectToQuery.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";

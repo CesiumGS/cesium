@@ -1,4 +1,4 @@
-import Cartesian2 from "./Cartesian2.js";
+import { Cartesian2 } from "@cesium/core-math";
 import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";

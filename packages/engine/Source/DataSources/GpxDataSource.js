@@ -1,5 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Cartesian2, Cartesian3 } from "@cesium/core-math";
 import ClockRange from "../Core/ClockRange.js";
 import ClockStep from "../Core/ClockStep.js";
 import Color from "../Core/Color.js";

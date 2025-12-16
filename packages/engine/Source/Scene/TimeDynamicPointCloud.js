@@ -1,3 +1,4 @@
+import { CesiumMath, Matrix4 } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
 import Frozen from "../Core/Frozen.js";
@@ -6,8 +7,6 @@ import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
 import getTimestamp from "../Core/getTimestamp.js";
 import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import PointCloud from "./PointCloud.js";

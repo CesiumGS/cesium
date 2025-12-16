@@ -1,6 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
+import { Cartesian2, Cartesian3, Cartesian4, Matrix4 } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import ClippingPlane from "./ClippingPlane.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
@@ -9,7 +7,6 @@ import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
 import Frozen from "../Core/Frozen.js";
 import Intersect from "../Core/Intersect.js";
-import Matrix4 from "../Core/Matrix4.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Plane from "../Core/Plane.js";

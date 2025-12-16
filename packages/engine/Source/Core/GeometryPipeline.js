@@ -1,9 +1,14 @@
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  CesiumMath,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core-math";
 import AttributeCompression from "./AttributeCompression.js";
 import barycentricCoordinates from "./barycentricCoordinates.js";
 import BoundingSphere from "./BoundingSphere.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartesian4 from "./Cartesian4.js";
 import Cartographic from "./Cartographic.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import defined from "./defined.js";
@@ -16,9 +21,6 @@ import GeometryType from "./GeometryType.js";
 import IndexDatatype from "./IndexDatatype.js";
 import Intersect from "./Intersect.js";
 import IntersectionTests from "./IntersectionTests.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
-import Matrix4 from "./Matrix4.js";
 import Plane from "./Plane.js";
 import PrimitiveType from "./PrimitiveType.js";
 import Tipsify from "./Tipsify.js";

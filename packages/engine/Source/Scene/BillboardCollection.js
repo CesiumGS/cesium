@@ -1,8 +1,7 @@
+import { Cartesian2, Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
@@ -11,8 +10,6 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ContextLimits from "../Renderer/ContextLimits.js";

@@ -1,7 +1,6 @@
-import Cartesian3 from "./Cartesian3.js";
+import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
-import CesiumMath from "./Math.js";
 
 const scaleToGeodeticSurfaceIntersection = new Cartesian3();
 const scaleToGeodeticSurfaceGradient = new Cartesian3();

@@ -1,4 +1,4 @@
-import Cartesian3 from "./Cartesian3.js";
+import { Cartesian3 } from "@cesium/core-math";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import Intersect from "./Intersect.js";

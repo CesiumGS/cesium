@@ -1,9 +1,8 @@
+import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import Check from "../Core/Check.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import CesiumMath from "../Core/Math.js";
 import PolygonGeometry from "../Core/PolygonGeometry.js";
 import Rectangle from "../Core/Rectangle.js";
 

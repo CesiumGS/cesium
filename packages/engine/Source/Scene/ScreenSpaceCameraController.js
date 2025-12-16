@@ -1,6 +1,11 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  CesiumMath,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -9,9 +14,6 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
 import IntersectionTests from "../Core/IntersectionTests.js";
 import KeyboardEventModifier from "../Core/KeyboardEventModifier.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import Plane from "../Core/Plane.js";
 import Quaternion from "../Core/Quaternion.js";

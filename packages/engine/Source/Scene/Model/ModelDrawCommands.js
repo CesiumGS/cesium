@@ -1,7 +1,7 @@
+import { Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import RenderState from "../../Renderer/RenderState.js";
 import SceneMode from "../SceneMode.js";

@@ -1,8 +1,5 @@
+import { Cartesian3, Cartesian4, Matrix3, Matrix4 } from "@cesium/core-math";
 import AlphaMode from "./AlphaMode.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 
 /**
  * Components for building models.

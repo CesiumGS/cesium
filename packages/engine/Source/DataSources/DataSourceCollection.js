@@ -1,8 +1,8 @@
+import { CesiumMath } from "@cesium/core-math";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
-import CesiumMath from "../Core/Math.js";
 
 /**
  * A collection of {@link DataSource} instances.

@@ -1,4 +1,4 @@
-import Cartesian4 from "../Core/Cartesian4.js";
+import { Cartesian4 } from "@cesium/core-math";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";

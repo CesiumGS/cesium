@@ -1,7 +1,12 @@
+import {
+  Cartesian2,
+  Cartesian3,
+  CesiumMath,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core-math";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
@@ -19,9 +24,6 @@ import IntersectionTests from "../Core/IntersectionTests.js";
 import IonResource from "../Core/IonResource.js";
 import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Transforms from "../Core/Transforms.js";

@@ -1,4 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
+import { Cartesian2 } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 

@@ -1,12 +1,11 @@
+import { Cartesian3, Matrix4 } from "@cesium/core-math";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import BoxGeometry from "../Core/BoxGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
-import Matrix4 from "../Core/Matrix4.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import CubeMap from "../Renderer/CubeMap.js";

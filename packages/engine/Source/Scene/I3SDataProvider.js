@@ -46,7 +46,7 @@
  * to avoid requiring bloated look up files. The source Data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on
  * EGM2008 Gravity Model. The sandcastle examples show how to set the terrain provider service if required.
  */
-import Cartesian2 from "../Core/Cartesian2.js";
+import { Cartesian2 } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";

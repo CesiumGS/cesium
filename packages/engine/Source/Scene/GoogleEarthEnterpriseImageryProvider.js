@@ -1,3 +1,4 @@
+import { CesiumMath } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import decodeGoogleEarthEnterpriseData from "../Core/decodeGoogleEarthEnterpriseData.js";
@@ -7,7 +8,6 @@ import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import GoogleEarthEnterpriseMetadata from "../Core/GoogleEarthEnterpriseMetadata.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
-import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import Request from "../Core/Request.js";
 import RuntimeError from "../Core/RuntimeError.js";

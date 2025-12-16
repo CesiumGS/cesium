@@ -1,9 +1,7 @@
-import Cartesian3 from "./Cartesian3.js";
+import { Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import JulianDate from "./JulianDate.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
 import TimeConstants from "./TimeConstants.js";
 import TimeStandard from "./TimeStandard.js";
 

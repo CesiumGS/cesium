@@ -1,4 +1,4 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Cartesian3, Matrix4 } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
@@ -10,7 +10,6 @@ import EllipsoidOutlineGeometry from "../Core/EllipsoidOutlineGeometry.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryOffsetAttribute from "../Core/GeometryOffsetAttribute.js";
 import Iso8601 from "../Core/Iso8601.js";
-import Matrix4 from "../Core/Matrix4.js";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
 import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import HeightReference from "../Scene/HeightReference.js";

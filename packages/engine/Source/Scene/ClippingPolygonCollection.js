@@ -1,5 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import CesiumMath from "../Core/Math.js";
+import { Cartesian2, CesiumMath } from "@cesium/core-math";
 import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";

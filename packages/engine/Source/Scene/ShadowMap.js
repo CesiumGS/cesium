@@ -1,9 +1,13 @@
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  CesiumMath,
+  Matrix4,
+} from "@cesium/core-math";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import BoxOutlineGeometry from "../Core/BoxOutlineGeometry.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
@@ -17,8 +21,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import Intersect from "../Core/Intersect.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
 import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
 import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
 import PixelFormat from "../Core/PixelFormat.js";

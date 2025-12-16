@@ -1,5 +1,5 @@
+import { Cartesian3, Matrix4 } from "@cesium/core-math";
 import Frozen from "../Core/Frozen.js";
-import Matrix4 from "../Core/Matrix4.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
@@ -27,7 +27,6 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import Axis from "./Axis.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Quaternion from "../Core/Quaternion.js";
 import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";

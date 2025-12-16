@@ -1,11 +1,9 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import EasingFunction from "../Core/EasingFunction.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
 import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";

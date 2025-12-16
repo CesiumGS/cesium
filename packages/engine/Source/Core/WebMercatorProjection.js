@@ -1,9 +1,8 @@
-import Cartesian3 from "./Cartesian3.js";
+import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
-import CesiumMath from "./Math.js";
 
 /**
  * The map projection used by Google Maps, Bing Maps, and most of ArcGIS Online, EPSG:3857.  This

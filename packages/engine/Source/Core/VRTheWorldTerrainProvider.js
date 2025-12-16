@@ -1,3 +1,4 @@
+import { CesiumMath } from "@cesium/core-math";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import Frozen from "./Frozen.js";
@@ -7,7 +8,6 @@ import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import getImagePixels from "./getImagePixels.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
-import CesiumMath from "./Math.js";
 import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";

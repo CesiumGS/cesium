@@ -1,3 +1,4 @@
+import { Matrix4 } from "@cesium/core-math";
 import Buffer from "./Buffer.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
@@ -10,7 +11,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Geometry from "../Core/Geometry.js";
 import GeometryAttribute from "../Core/GeometryAttribute.js";
 import loadKTX2 from "../Core/loadKTX2.js";
-import Matrix4 from "../Core/Matrix4.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import RuntimeError from "../Core/RuntimeError.js";

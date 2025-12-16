@@ -1,6 +1,6 @@
+import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import BoundingSphere from "./BoundingSphere.js";
-import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
@@ -14,7 +14,6 @@ import GeometryAttribute from "./GeometryAttribute.js";
 import GeometryAttributes from "./GeometryAttributes.js";
 import GeometryOffsetAttribute from "./GeometryOffsetAttribute.js";
 import IndexDatatype from "./IndexDatatype.js";
-import CesiumMath from "./Math.js";
 import PolygonPipeline from "./PolygonPipeline.js";
 import PrimitiveType from "./PrimitiveType.js";
 import Rectangle from "./Rectangle.js";

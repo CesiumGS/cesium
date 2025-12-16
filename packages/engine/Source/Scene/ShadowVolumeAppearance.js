@@ -1,13 +1,10 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Cartesian2, Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import GeometryInstanceAttribute from "../Core/GeometryInstanceAttribute.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
 import Transforms from "../Core/Transforms.js";
 import ShaderSource from "../Renderer/ShaderSource.js";

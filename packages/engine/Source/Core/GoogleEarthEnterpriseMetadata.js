@@ -1,3 +1,4 @@
+import { CesiumMath } from "@cesium/core-math";
 import * as protobuf from "protobufjs/dist/minimal/protobuf.js";
 import buildModuleUrl from "./buildModuleUrl.js";
 import Check from "./Check.js";
@@ -6,7 +7,6 @@ import defined from "./defined.js";
 import GoogleEarthEnterpriseTileInformation from "./GoogleEarthEnterpriseTileInformation.js";
 import isBitSet from "./isBitSet.js";
 import loadAndExecuteScript from "./loadAndExecuteScript.js";
-import CesiumMath from "./Math.js";
 import Request from "./Request.js";
 import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";

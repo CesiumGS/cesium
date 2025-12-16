@@ -1,13 +1,11 @@
+import { Cartesian2, Cartesian3, Matrix4 } from "@cesium/core-math";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import Matrix4 from "../Core/Matrix4.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";

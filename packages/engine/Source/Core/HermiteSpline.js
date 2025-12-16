@@ -1,10 +1,8 @@
-import Cartesian3 from "./Cartesian3.js";
-import Cartesian4 from "./Cartesian4.js";
+import { Cartesian3, Cartesian4, Matrix4 } from "@cesium/core-math";
 import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import LinearSpline from "./LinearSpline.js";
-import Matrix4 from "./Matrix4.js";
 import Spline from "./Spline.js";
 import TridiagonalSystemSolver from "./TridiagonalSystemSolver.js";
 

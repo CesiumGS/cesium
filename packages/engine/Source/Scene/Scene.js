@@ -1,7 +1,7 @@
+import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import BoxGeometry from "../Core/BoxGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
@@ -22,8 +22,6 @@ import GeometryPipeline from "../Core/GeometryPipeline.js";
 import HeightReference from "./HeightReference.js";
 import Intersect from "../Core/Intersect.js";
 import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
 import mergeSort from "../Core/mergeSort.js";
 import Occluder from "../Core/Occluder.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
