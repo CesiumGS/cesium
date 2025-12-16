@@ -37,7 +37,7 @@
     "build-ts": "gulp buildTs --workspace @cesium/core-utils",
     "coverage": "gulp coverage --workspace @cesium/core-utils",
     "test": "gulp test --workspace @cesium/core-utils",
-    "postversion": "gulp postversion --workspace @cesium/engine"
+    "postversion": "gulp postversion --workspace @cesium/core-utils"
   },
   "repository": {
     "type": "git",
