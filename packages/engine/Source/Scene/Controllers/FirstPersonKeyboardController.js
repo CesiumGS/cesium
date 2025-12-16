@@ -12,7 +12,7 @@ export const DOWN = "down";
 
 export default class FirstPersonKeyboardController {
   constructor() {
-    this.enabled = true;
+    this._enabled = true;
     this.moveSpeed = 1000000.0;
 
     this._lastUpdateTime = undefined;
@@ -40,6 +40,18 @@ export default class FirstPersonKeyboardController {
     this._isKeyDown.set(RIGHT, false);
     this._isKeyDown.set(UP, false);
     this._isKeyDown.set(DOWN, false);
+  }
+
+  get enabled() {
+    return this._enabled;
+  }
+  
+  set enabled(value) {
+    this._enabled = value;
+
+    if (value) {
+      this._lastUpdateTime = getTimestamp();
+    }
   }
 
   get inputEvents() {
