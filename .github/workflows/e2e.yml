@@ -6,7 +6,15 @@ concurrency:
 jobs:
   e2e:
     env:
+      BUILD_VERSION: ${{ github.ref_name }}.${{ github.run_number }}
       AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: us-east-1
+      BRANCH: ${{ github.ref_name }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPO: ${{ github.repository }}
+      GITHUB_SHA: ${{ github.sha }}
+      DEPLOYED_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
