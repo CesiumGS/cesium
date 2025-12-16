@@ -1,7 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { Check, defined, DeveloperError } from "@cesium/core-utils";
 import CesiumMath from "./Math.js";
 
 /**
