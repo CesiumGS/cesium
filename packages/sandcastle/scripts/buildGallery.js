@@ -11,6 +11,10 @@ import { globby } from "globby";
 import * as pagefind from "pagefind";
 
 import createGalleryRecord from "./createGalleryRecord.js";
+import {
+  convertAllSlangFilesInDirectory,
+  isSlangcAvailable,
+} from "../../../scripts/convertSlangToWgsl.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const defaultRootDirectory = join(__dirname, "..");
@@ -132,6 +136,28 @@ export async function buildGalleryList(options = {}) {
   const yamlFiles = galleryFiles.filter((path) =>
     basename(path).match(galleryItemConfig),
   );
+
+  // Convert any .slang files to .wgsl before processing gallery items
+  const slangAvailable = await isSlangcAvailable();
+  const generatedWgslFiles = [];
+  if (slangAvailable) {
+    console.log("slangc detected - converting .slang files to .wgsl");
+    const galleryDirectories = new Set(yamlFiles.map((path) => dirname(path)));
+    for (const galleryDir of galleryDirectories) {
+      try {
+        const wgslFiles = await convertAllSlangFilesInDirectory(galleryDir);
+        generatedWgslFiles.push(...wgslFiles);
+      } catch (error) {
+        console.warn(
+          `Warning: Could not convert slang files in ${galleryDir}: ${error.message}`,
+        );
+      }
+    }
+  } else {
+    console.warn(
+      "slangc not found - skipping .slang to .wgsl conversion. Install from https://github.com/shader-slang/slang/releases",
+    );
+  }
 
   for (const filePath of yamlFiles) {
     let metadata;
@@ -289,6 +315,7 @@ export async function buildGalleryList(options = {}) {
     (path) => !basename(path).match(galleryItemConfig),
   );
   try {
+    // Copy original static files
     for (const file of staticGalleryFiles) {
       const destination = join(
         rootDirectory,
@@ -296,6 +323,35 @@ export async function buildGalleryList(options = {}) {
         relative(rootDirectory, file),
       );
       await cp(file, destination, { recursive: true });
+    }
+
+    // Copy generated WGSL files to SampleData/wgsl/ directory
+    if (generatedWgslFiles.length > 0) {
+      // Copy to both the build output and the source Apps/SampleData directory
+      const wgslOutputDir = join(
+        rootDirectory,
+        publicDirectory,
+        "SampleData",
+        "wgsl",
+      );
+      const wgslSourceDir = join(rootDirectory, "../../Apps/SampleData/wgsl");
+
+      await mkdir(wgslOutputDir, { recursive: true });
+      await mkdir(wgslSourceDir, { recursive: true });
+
+      for (const wgslFile of generatedWgslFiles) {
+        const fileName = basename(wgslFile);
+
+        // Copy to build output
+        const buildDestination = join(wgslOutputDir, fileName);
+        await cp(wgslFile, buildDestination);
+
+        // Copy to Apps/SampleData
+        const sourceDestination = join(wgslSourceDir, fileName);
+        await cp(wgslFile, sourceDestination);
+
+        console.log(`  Copied ${fileName} to SampleData/wgsl/`);
+      }
     }
   } catch (error) {
     console.error(`Error copying gallery files: ${error.message}`);
