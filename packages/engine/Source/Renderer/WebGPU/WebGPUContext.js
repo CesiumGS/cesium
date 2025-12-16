@@ -72,6 +72,32 @@ WebGPUContext.prototype.writeBuffer = function (buffer, data, offset = 0) {
   this._device.queue.writeBuffer(buffer, offset, data);
 };
 
+WebGPUContext.prototype.readBuffer = async function (buffer, size) {
+  if (size <= 0) {
+    throw new RuntimeError("readBuffer: size must be > 0.");
+  }
+
+  const readback = this._device.createBuffer({
+    size,
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+  });
+
+  const encoder = this._device.createCommandEncoder();
+  encoder.copyBufferToBuffer(buffer, 0, readback, 0, size);
+
+  const cb = encoder.finish();
+  this._device.queue.submit([cb]);
+
+  await this._device.queue.onSubmittedWorkDone();
+  await readback.mapAsync(GPUMapMode.READ);
+  const mapped = readback.getMappedRange(); // ArrayBuffer
+  const copy = new Uint8Array(mapped.slice(0)); // copy out so we can unmap
+  readback.unmap();
+  readback.destroy?.();
+
+  return copy;
+};
+
 WebGPUContext.prototype.createComputePipeline = function (descriptor) {
   return this._device.createComputePipeline(descriptor);
 };

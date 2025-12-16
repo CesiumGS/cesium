@@ -823,7 +823,10 @@ function Scene(options) {
   const paramsBuffer = new WebGPUBuffer({
     webGPUContextPromise: this.frameState.wgpuContextPromise,
     size: paramsData.byteLength,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    usage:
+      GPUBufferUsage.UNIFORM |
+      GPUBufferUsage.COPY_DST |
+      GPUBufferUsage.COPY_SRC,
     data: paramsData,
   });
 
@@ -883,6 +886,8 @@ function Scene(options) {
   this._testWebGPUComputeCommand = new WebGPUComputeCommand({
     shaderSource: shaderSource,
     debugName: "Test WebGPU Compute Command",
+    inputBuffers: [addBufferA, addBufferB],
+    outputBuffers: [addResultBuffer],
     bindGroups: [bindGroup],
     workgroups: { x: Math.ceil(NUM_ELEMENTS / 64), y: 1, z: 1 },
     webGPUContextPromise: this.frameState.wgpuContextPromise,
@@ -3159,7 +3164,7 @@ function executeComputeCommands(scene) {
     sunComputeCommand.execute(scene._computeEngine);
   }
 
-  scene._testWebGPUComputeCommand.execute();
+  scene._testWebGPUComputeCommand.execute(scene.frameState);
 
   const commandList = scene._computeCommandList;
   for (let i = 0; i < commandList.length; ++i) {

@@ -33,6 +33,10 @@ function WebGPUComputeCommand(options) {
 
   this.wgpuContext = undefined;
 
+  this.inputBuffers = options.inputBuffers ?? [];
+
+  this.outputBuffers = options.outputBuffers ?? [];
+
   webGPUContextPromise.then((webGPUContext) => {
     createWGPUResources.call(this, webGPUContext);
   });
@@ -61,7 +65,7 @@ function createWGPUResources(webGPUContext) {
  *
  * @param {WebGPUContext} wgpuContext The context that processes the compute command.
  */
-WebGPUComputeCommand.prototype.execute = function () {
+WebGPUComputeCommand.prototype.execute = function (frameState) {
   if (!defined(this.wgpuContext)) {
     return;
   }
@@ -70,5 +74,23 @@ WebGPUComputeCommand.prototype.execute = function () {
     this.bindGroupsGPU,
     this.workgroups,
   );
+
+  // FOR TESTING:
+  // Read back output buffers to CPU
+  if (frameState.frameNumber <= 2) {
+    const outputBuffer = this.outputBuffers[0].buffer;
+    this.wgpuContext
+      .readBuffer(outputBuffer, outputBuffer.size)
+      .then((data) => {
+        const f32 = new Float32Array(
+          data.buffer,
+          data.byteOffset,
+          data.byteLength / 4,
+        );
+        for (let i = 0; i < f32.length; i++) {
+          console.log(f32[i]);
+        }
+      });
+  }
 };
 export default WebGPUComputeCommand;
