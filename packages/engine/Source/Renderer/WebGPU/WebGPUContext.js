@@ -54,7 +54,10 @@ WebGPUContext.prototype.createBindGroupLayout = function (entries) {
 };
 
 WebGPUContext.prototype.createBindGroup = function (layout, entries) {
-  return this._device.createBindGroup({ layout, entries });
+  return this._device.createBindGroup({
+    layout: layout,
+    entries: entries,
+  });
 };
 
 WebGPUContext.prototype.createBuffer = function (size, usage, mapped = false) {

@@ -1,20 +1,28 @@
-function BindGroup(entries, webgpuContext) {
+function BindGroup(entries, webgpuContextPromise) {
+  this._entries = entries;
+
+  webgpuContextPromise.then((webgpuContext) => {
+    createGPUResources.call(this, webgpuContext);
+  });
+}
+
+function createGPUResources(webgpuContext) {
   const layoutEntries = [];
   const bindgroupEntries = [];
 
-  for (let i = 0; i < entries.length; i++) {
+  for (let i = 0; i < this._entries.length; i++) {
     const layoutEntry = {
       binding: i,
-      visibility: entries[i]._visibility,
+      visibility: this._entries[i]._visibility,
       buffer: {
-        type: entries[i]._bufferType,
+        type: this._entries[i]._bufferType,
       },
     };
 
     const bindgroupEntry = {
       binding: i,
       resource: {
-        buffer: entries[i]._buffer,
+        buffer: this._entries[i]._buffer.buffer,
       },
     };
 

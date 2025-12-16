@@ -5,6 +5,7 @@ function WebGPUBuffer(options) {
   this.usage = options.usage;
   this.mappedAtCreation = options.mappedAtCreation || false;
   this.debugName = options.debugName;
+  this.data = options.data;
 
   wgpuContextPromise.then((webGPUContext) => {
     createWGPUResources.call(this, webGPUContext);
@@ -12,12 +13,15 @@ function WebGPUBuffer(options) {
 }
 
 function createWGPUResources(webGPUContext) {
-  this.buffer = webGPUContext.createBuffer({
-    size: this.size,
-    usage: this.usage,
-    mappedAtCreation: this.mappedAtCreation,
-    label: this.debugName,
-  });
+  this.buffer = webGPUContext.createBuffer(
+    this.size,
+    this.usage,
+    this.mappedAtCreation,
+  );
+
+  if (this.data) {
+    webGPUContext.writeBuffer(this.buffer, this.data);
+  }
 }
 
 export default WebGPUBuffer;

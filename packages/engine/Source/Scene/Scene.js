@@ -83,6 +83,9 @@ import PickedMetadataInfo from "./PickedMetadataInfo.js";
 import getMetadataProperty from "./getMetadataProperty.js";
 import WebGPUContext from "../Renderer/WebGPU/WebGPUContext.js";
 import WebGPUComputeCommand from "../Renderer/WebGPU/WebGPUComputeCommand.js";
+import WebGPUBuffer from "../Renderer/WebGPU/WebGPUBuffer.js";
+import BindGroupEntry from "../Renderer/WebGPU/BindGroupEntry.js";
+import BindGroup from "../Renderer/WebGPU/BindGroup.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -775,18 +778,113 @@ function Scene(options) {
   this._enableEdgeVisibility = false;
 
   // ======== WEBGPU TESTING ======== //
+  const NUM_ELEMENTS = 256;
+  function makeSequence(length, start = 1.0, step = 1.0) {
+    const out = new Float32Array(length);
+    for (let i = 0; i < length; ++i) {
+      out[i] = start + i * step;
+    }
+    return out;
+  }
+
+  const arrayA = makeSequence(NUM_ELEMENTS, 1.0, 1.0);
+  const arrayB = makeSequence(NUM_ELEMENTS, 2.0, 1.0);
+
+  const elementByteSize = Float32Array.BYTES_PER_ELEMENT;
+  const byteLength = NUM_ELEMENTS * elementByteSize;
+
+  const addBufferA = new WebGPUBuffer({
+    webGPUContextPromise: this.frameState.wgpuContextPromise,
+    size: byteLength,
+    usage:
+      GPUBufferUsage.STORAGE |
+      GPUBufferUsage.COPY_SRC |
+      GPUBufferUsage.COPY_DST,
+    data: arrayA,
+  });
+
+  const addBufferB = new WebGPUBuffer({
+    webGPUContextPromise: this.frameState.wgpuContextPromise,
+    size: byteLength,
+    usage:
+      GPUBufferUsage.STORAGE |
+      GPUBufferUsage.COPY_SRC |
+      GPUBufferUsage.COPY_DST,
+    data: arrayB,
+  });
+
+  const addResultBuffer = new WebGPUBuffer({
+    webGPUContextPromise: this.frameState.wgpuContextPromise,
+    size: byteLength,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+  });
+
+  const paramsData = new Uint32Array([NUM_ELEMENTS, 0, 0, 0]); // 16 bytes
+  const paramsBuffer = new WebGPUBuffer({
+    webGPUContextPromise: this.frameState.wgpuContextPromise,
+    size: paramsData.byteLength,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    data: paramsData,
+  });
+
+  const bindgroupEntries = [];
+  bindgroupEntries.push(
+    new BindGroupEntry({
+      bufferType: "read-only-storage",
+      buffer: addBufferA,
+    }),
+  );
+
+  bindgroupEntries.push(
+    new BindGroupEntry({
+      bufferType: "read-only-storage",
+      buffer: addBufferB,
+    }),
+  );
+
+  bindgroupEntries.push(
+    new BindGroupEntry({
+      bufferType: "storage",
+      buffer: addResultBuffer,
+    }),
+  );
+
+  bindgroupEntries.push(
+    new BindGroupEntry({
+      bufferType: "uniform",
+      buffer: paramsBuffer,
+    }),
+  );
+
+  const bindGroup = new BindGroup(
+    bindgroupEntries,
+    this.frameState.wgpuContextPromise,
+  );
 
   const shaderSource = `
-    // Minimal WGSL compute shader (hello world style)
-    @compute @workgroup_size(1)
-    fn main() {
-        // no-op
+    struct Buf { data: array<f32> };
+
+    @group(0) @binding(0) var<storage, read> a : Buf;
+    @group(0) @binding(1) var<storage, read> b : Buf;
+    @group(0) @binding(2) var<storage, read_write> outBuf : Buf;
+
+    struct Params { count: u32 };
+    @group(0) @binding(3) var<uniform> params : Params;
+
+    @compute @workgroup_size(64)
+    fn main(@builtin(global_invocation_id) gid : vec3<u32>) {
+      let i : u32 = gid.x;
+      if (i < params.count) {
+        outBuf.data[i] = a.data[i] + b.data[i];
+      }
     }
   `;
 
   this._testWebGPUComputeCommand = new WebGPUComputeCommand({
     shaderSource: shaderSource,
     debugName: "Test WebGPU Compute Command",
+    bindGroups: [bindGroup],
+    workgroups: { x: Math.ceil(NUM_ELEMENTS / 64), y: 1, z: 1 },
     webGPUContextPromise: this.frameState.wgpuContextPromise,
   });
 
@@ -3061,7 +3159,7 @@ function executeComputeCommands(scene) {
     sunComputeCommand.execute(scene._computeEngine);
   }
 
-  scene._testWebGPUComputeCommand.execute(scene.frameState.wgpuContext);
+  scene._testWebGPUComputeCommand.execute();
 
   const commandList = scene._computeCommandList;
   for (let i = 0; i < commandList.length; ++i) {

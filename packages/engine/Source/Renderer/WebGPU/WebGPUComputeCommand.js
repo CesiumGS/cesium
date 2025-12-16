@@ -1,3 +1,4 @@
+import { defined } from "@cesium/engine";
 import Frozen from "../../Core/Frozen.js";
 import Pass from "../Pass.js";
 
@@ -22,11 +23,15 @@ function WebGPUComputeCommand(options) {
 
   this.bindGroups = options.bindGroups ?? [];
 
+  this.bindGroupsGPU = undefined;
+
   this.workgroups = options.workgroups ?? { x: 1, y: 1, z: 1 };
 
   this.entryPoint = options.entryPoint ?? "main";
 
   this.debugName = options.debugName;
+
+  this.wgpuContext = undefined;
 
   webGPUContextPromise.then((webGPUContext) => {
     createWGPUResources.call(this, webGPUContext);
@@ -46,6 +51,9 @@ function createWGPUResources(webGPUContext) {
       entryPoint: this.entryPoint,
     },
   });
+
+  this.wgpuContext = webGPUContext;
+  this.bindGroupsGPU = this.bindGroups.map((bg) => bg.bindGroup);
 }
 
 /**
@@ -53,10 +61,14 @@ function createWGPUResources(webGPUContext) {
  *
  * @param {WebGPUContext} wgpuContext The context that processes the compute command.
  */
-WebGPUComputeCommand.prototype.execute = function (wgpuContext) {
-  if (!this.pipeline) {
+WebGPUComputeCommand.prototype.execute = function () {
+  if (!defined(this.wgpuContext)) {
     return;
   }
-  wgpuContext.runCompute(this.pipeline, this.bindGroups, this.workgroups);
+  this.wgpuContext.runCompute(
+    this.pipeline,
+    this.bindGroupsGPU,
+    this.workgroups,
+  );
 };
 export default WebGPUComputeCommand;
