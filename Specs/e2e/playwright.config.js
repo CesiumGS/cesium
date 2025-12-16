@@ -13,13 +13,10 @@ const argv = yargs(process.argv).options({
 const baseUrl = `http://localhost:3000`;
 const updateSnapshots = argv["update-snapshots"];
 
-let reporter = "line";
-if (!process.env.CI) {
-  reporter = [
-    ["html", { open: "never", outputFolder: "../../Build/Specs/e2e/report" }],
-    ["list"],
-  ];
-}
+const reporter = [
+  ["html", { open: "never", outputFolder: "../../Build/Specs/e2e/report" }],
+  ["list"],
+];
 
 const defaultViewport = { width: 960, height: 540 };
 
