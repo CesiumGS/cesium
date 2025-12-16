@@ -1,0 +1,5 @@
+# Build artifacts
+Build/
+
+# Generated files
+index.d.ts
