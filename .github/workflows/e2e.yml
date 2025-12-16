@@ -34,7 +34,7 @@ jobs:
           ls -lR Specs/e2e
         continue-on-error: true
       - name: run e2e tests
-        run: npm run test-e2e -- viewer.spec.js
+        run: npm run test-e2e -- sandcastle.spec.js
         env:
           DEBUG: pw:api
         continue-on-error: true
