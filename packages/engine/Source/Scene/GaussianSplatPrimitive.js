@@ -1,5 +1,5 @@
+import { Frozen, defined } from "@cesium/core-utils";
 import { Cartesian3, Matrix4 } from "@cesium/core-math";
-import Frozen from "../Core/Frozen.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
@@ -22,7 +22,6 @@ import VertexArray from "../Renderer/VertexArray.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import RenderState from "../Renderer/RenderState.js";
 import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";

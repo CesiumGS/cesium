@@ -1,7 +1,5 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian3 } from "@cesium/core-math";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Spline from "./Spline.js";
 
 /**

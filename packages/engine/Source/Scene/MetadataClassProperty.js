@@ -1,3 +1,4 @@
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -6,11 +7,7 @@ import {
   Matrix3,
   Matrix4,
 } from "@cesium/core-math";
-import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import MetadataType from "./MetadataType.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 

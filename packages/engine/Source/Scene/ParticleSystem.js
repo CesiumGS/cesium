@@ -1,8 +1,6 @@
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";

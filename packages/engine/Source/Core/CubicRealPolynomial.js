@@ -1,4 +1,4 @@
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError } from "@cesium/core-utils";
 import QuadraticRealPolynomial from "./QuadraticRealPolynomial.js";
 
 /**

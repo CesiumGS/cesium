@@ -1,6 +1,6 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import CornerType from "./CornerType.js";
-import defined from "./defined.js";
 import PolylinePipeline from "./PolylinePipeline.js";
 import PolylineVolumeGeometryLibrary from "./PolylineVolumeGeometryLibrary.js";
 import Quaternion from "./Quaternion.js";

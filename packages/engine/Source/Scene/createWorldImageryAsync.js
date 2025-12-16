@@ -1,4 +1,4 @@
-import Frozen from "../Core/Frozen.js";
+import { Frozen } from "@cesium/core-utils";
 import IonImageryProvider from "./IonImageryProvider.js";
 import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
 

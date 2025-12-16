@@ -1,7 +1,6 @@
+import { Check, defined } from "@cesium/core-utils";
 import { Matrix3, Matrix4 } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
 import Resource from "../Core/Resource.js";

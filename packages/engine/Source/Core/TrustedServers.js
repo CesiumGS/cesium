@@ -1,6 +1,5 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import Uri from "urijs";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * A singleton that contains all of the servers that are trusted. Credentials will be sent with

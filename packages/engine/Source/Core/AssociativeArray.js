@@ -1,5 +1,4 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
 
 /**
  * A collection of key-value pairs that is stored as a hash for easy

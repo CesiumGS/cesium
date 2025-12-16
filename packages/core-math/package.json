@@ -2,27 +2,35 @@
   "name": "@cesium/core-math",
   "version": "1.0.0",
   "description": "Core mathematical primitives for CesiumJS",
-  "type": "module",
-  "main": "index.js",
-  "module": "index.js",
-  "types": "index.d.ts",
+  "main": "./Source/index.js",
+  "module": "./Source/index.js",
+  "types": "./Source/index.d.ts",
   "files": [
     "index.js",
     "index.d.ts",
     "Source",
+    "Build/**",
+    "!Build/Specs/**",
+    "!Build/Unminified/**",
     "README.md",
     "LICENSE.md"
   ],
   "engines": {
     "node": ">=20.19.0"
   },
+  "sideEffects": [
+    "./Source/ThirdParty/**/*",
+    "./Specs/**/*"
+  ],
+  "dependencies": {
+    "mersenne-twister": "^1.1.0",
+    "@cesium/core-utils": "^0.0.0"
+  },
+  "type": "module",
   "scripts": {
     "build": "gulp build --workspace @cesium/core-math",
     "build-ts": "gulp buildTs --workspace @cesium/core-math",
     "test": "gulp test --workspace @cesium/core-math"
-  },
-  "dependencies": {
-    "mersenne-twister": "^1.1.0"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,6 @@
+import { Check } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Check from "../Core/Check.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import VoxelBoundsCollection from "./VoxelBoundsCollection.js";
 import ClippingPlane from "./ClippingPlane.js";

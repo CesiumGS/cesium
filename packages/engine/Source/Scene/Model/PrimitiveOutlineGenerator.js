@@ -1,6 +1,4 @@
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
-import Frozen from "../../Core/Frozen.js";
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import PixelFormat from "../../Core/PixelFormat.js";
 import ContextLimits from "../../Renderer/ContextLimits.js";
 import Sampler from "../../Renderer/Sampler.js";

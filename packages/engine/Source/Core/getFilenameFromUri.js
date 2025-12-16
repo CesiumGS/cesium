@@ -1,6 +1,5 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import Uri from "urijs";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * Given a URI, returns the last segment of the URI, removing any path or query information.

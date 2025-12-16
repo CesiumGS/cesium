@@ -1,4 +1,4 @@
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError } from "@cesium/core-utils";
 
 /**
  * Determines if a given date is a leap year.

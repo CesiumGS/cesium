@@ -1,7 +1,6 @@
+import { Check, DeveloperError } from "@cesium/core-utils";
 import { CesiumMath } from "@cesium/core-math";
-import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 
 /**

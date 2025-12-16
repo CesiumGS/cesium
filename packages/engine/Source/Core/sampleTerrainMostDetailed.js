@@ -1,6 +1,5 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import { Cartesian2 } from "@cesium/core-math";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import sampleTerrain from "./sampleTerrain.js";
 
 const scratchCartesian2 = new Cartesian2();

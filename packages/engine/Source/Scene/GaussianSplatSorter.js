@@ -1,6 +1,5 @@
-import defined from "../Core/defined.js";
+import { RuntimeError, defined } from "@cesium/core-utils";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 
 /** * A sorter for Gaussian splats that uses a task processor to handle sorting in parallel.

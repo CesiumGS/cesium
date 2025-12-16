@@ -293,6 +293,10 @@ export async function createCesiumJs() {
   const version = await getVersion();
   let contents = `export const VERSION = '${version}';\n`;
 
+  // Re-export core-utils types for the main Cesium bundle
+  contents += `${EOL}// Core utilities from @cesium/core-utils${EOL}`;
+  contents += `export { Check, defined, DeveloperError, Frozen, RuntimeError } from '@cesium/core-utils';${EOL}`;
+
   // Re-export core-math types for the main Cesium bundle
   contents += `${EOL}// Core math types from @cesium/core-math${EOL}`;
   contents += `export { Cartesian2, Cartesian3, Cartesian4, CesiumMath, CesiumMath as Math, Matrix2, Matrix3, Matrix4 } from '@cesium/core-math';${EOL}${EOL}`;
@@ -360,6 +364,7 @@ export async function bundleIndexJs(options) {
 }
 
 const workspaceSpecFiles = {
+  "core-utils": ["packages/core-utils/Specs/**/*Spec.js"],
   "core-math": ["packages/core-math/Specs/**/*Spec.js"],
   engine: ["packages/engine/Specs/**/*Spec.js"],
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
@@ -918,8 +923,10 @@ export async function createIndexJs(workspace) {
   const version = await getVersion();
   let contents = `globalThis.CESIUM_VERSION = "${version}";\n`;
 
-  // Re-export core-math types for backwards compatibility in engine package
+  // Re-export core-utils and core-math types for backwards compatibility in engine package
   if (workspace === "engine") {
+    contents += `${EOL}// Re-export core-utils types for backwards compatibility${EOL}`;
+    contents += `export { Check, defined, DeveloperError, Frozen, RuntimeError } from '@cesium/core-utils';${EOL}`;
     contents += `${EOL}// Re-export core-math types for backwards compatibility${EOL}`;
     contents += `export { Cartesian2, Cartesian3, Cartesian4, CesiumMath, CesiumMath as Math, Matrix2, Matrix3, Matrix4 } from '@cesium/core-math';${EOL}${EOL}`;
   }

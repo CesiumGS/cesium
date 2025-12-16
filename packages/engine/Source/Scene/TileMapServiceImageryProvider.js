@@ -1,14 +1,11 @@
+import { Check, Frozen, RuntimeError, defined } from "@cesium/core-utils";
 import { Cartesian2 } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import Rectangle from "../Core/Rectangle.js";
 import RequestErrorEvent from "../Core/RequestErrorEvent.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";

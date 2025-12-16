@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core-utils";
 
 /**
  * Provides voxel data. Intended to be used with {@link VoxelPrimitive}.

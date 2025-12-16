@@ -1,8 +1,5 @@
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import { CesiumMath } from "@cesium/core-math";
-import Check from "./Check.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import PerspectiveOffCenterFrustum from "./PerspectiveOffCenterFrustum.js";
 
 /**

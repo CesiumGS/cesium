@@ -1,6 +1,6 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-import defined from "../Core/defined.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Cartographic from "../Core/Cartographic.js";

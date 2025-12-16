@@ -1,8 +1,6 @@
+import { Check, Frozen, RuntimeError, defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
 import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
@@ -15,7 +13,6 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import Resource from "../Core/Resource.js";
 import ResourceCache from "./ResourceCache.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import VoxelContent from "./VoxelContent.js";
 import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 import VoxelShapeType from "./VoxelShapeType.js";

@@ -1,8 +1,6 @@
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian3 } from "@cesium/core-math";
-import Check from "../../Core/Check.js";
 import ConstantSpline from "../../Core/ConstantSpline.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
 import HermiteSpline from "../../Core/HermiteSpline.js";
 import InterpolationType from "../../Core/InterpolationType.js";
 import LinearSpline from "../../Core/LinearSpline.js";

@@ -1,5 +1,4 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
+import { Check, defined } from "@cesium/core-utils";
 import I3SDataProvider from "./I3SDataProvider.js";
 import I3SLayer from "./I3SLayer.js";
 import Resource from "../Core/Resource.js";

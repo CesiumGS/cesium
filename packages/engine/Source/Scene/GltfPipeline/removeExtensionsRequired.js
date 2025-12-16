@@ -1,4 +1,4 @@
-import defined from "../../Core/defined.js";
+import { defined } from "@cesium/core-utils";
 
 /**
  * Removes an extension from gltf.extensionsRequired if it is present.

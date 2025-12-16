@@ -1,6 +1,5 @@
-import defined from "../Core/defined.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import getTimestamp from "../Core/getTimestamp.js";
 import TimeConstants from "../Core/TimeConstants.js";

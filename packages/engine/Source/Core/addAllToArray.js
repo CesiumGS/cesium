@@ -1,4 +1,4 @@
-import defined from "./defined.js";
+import { defined } from "@cesium/core-utils";
 
 /**
  * Adds all elements from the given source array to the given target array.

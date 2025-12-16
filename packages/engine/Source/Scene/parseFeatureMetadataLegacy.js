@@ -1,7 +1,5 @@
-import Check from "../Core/Check.js";
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import combine from "../Core/combine.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import PropertyTable from "./PropertyTable.js";
 import PropertyTexture from "./PropertyTexture.js";
 import StructuralMetadata from "./StructuralMetadata.js";

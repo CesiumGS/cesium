@@ -1,6 +1,6 @@
+import { defined } from "@cesium/core-utils";
 import { Matrix3 } from "@cesium/core-math";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";

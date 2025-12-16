@@ -1,5 +1,4 @@
-import Check from "./Check.js";
-import defined from "./defined.js";
+import { Check, defined } from "@cesium/core-utils";
 
 /**
  * A set of curvilinear 3-dimensional coordinates.

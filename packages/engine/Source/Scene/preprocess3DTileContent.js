@@ -1,7 +1,6 @@
-import defined from "../Core/defined.js";
+import { RuntimeError, defined } from "@cesium/core-utils";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 
 /**

@@ -1,6 +1,6 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian2 } from "@cesium/core-math";
 import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
 import ImageBasedLightingStageFS from "../../Shaders/Model/ImageBasedLightingStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import SpecularEnvironmentCubeMap from "../SpecularEnvironmentCubeMap.js";

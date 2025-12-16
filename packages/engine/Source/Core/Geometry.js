@@ -1,3 +1,4 @@
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -6,10 +7,6 @@ import {
   Matrix4,
 } from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import GeometryType from "./GeometryType.js";
 import PrimitiveType from "./PrimitiveType.js";
 import Quaternion from "./Quaternion.js";

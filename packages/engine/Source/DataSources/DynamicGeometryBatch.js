@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core-utils";
 import AssociativeArray from "../Core/AssociativeArray.js";
-import defined from "../Core/defined.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 
 /**

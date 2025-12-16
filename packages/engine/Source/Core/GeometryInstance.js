@@ -1,7 +1,5 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import { Matrix4 } from "@cesium/core-math";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * Geometry instancing allows one {@link Geometry} object to be positions in several

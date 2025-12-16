@@ -1,13 +1,11 @@
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import CornerType from "./CornerType.js";
 import CorridorGeometryLibrary from "./CorridorGeometryLibrary.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";

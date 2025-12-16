@@ -1,4 +1,4 @@
-import defined from "../../Core/defined.js";
+import { defined } from "@cesium/core-utils";
 
 /**
  * The node statistics update stage updates memory usage statistics for a Model

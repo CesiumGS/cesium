@@ -1,8 +1,5 @@
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian3, Matrix4 } from "@cesium/core-math";
-import Check from "../../Core/Check.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
 import TranslationRotationScale from "../../Core/TranslationRotationScale.js";
 import Quaternion from "../../Core/Quaternion.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";

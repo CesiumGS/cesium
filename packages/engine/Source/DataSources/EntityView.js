@@ -1,6 +1,5 @@
+import { Check, defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRange from "../Core/HeadingPitchRange.js";
 import JulianDate from "../Core/JulianDate.js";

@@ -1,5 +1,5 @@
+import { Frozen } from "@cesium/core-utils";
 import CesiumTerrainProvider from "./CesiumTerrainProvider.js";
-import Frozen from "./Frozen.js";
 import Ellipsoid from "./Ellipsoid.js";
 
 /**

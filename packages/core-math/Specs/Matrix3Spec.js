@@ -1,4 +1,4 @@
-import { Cartesian3, Math as CesiumMath, Matrix3 } from "../index.js";
+import { Cartesian3, Math as CesiumMath, Matrix3 } from "@cesium/core-math";
 import { HeadingPitchRoll, Quaternion } from "../../engine/index.js";
 
 import createPackableSpecs from "../../../Specs/createPackableSpecs.js";

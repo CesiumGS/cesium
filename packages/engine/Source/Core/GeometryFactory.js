@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core-utils";
 
 /**
  * Base class for all geometry creation utility classes that can be passed to {@link GeometryInstance}

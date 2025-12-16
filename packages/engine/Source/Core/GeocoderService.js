@@ -1,6 +1,5 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import Credit from "./Credit.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * @typedef {object} GeocoderService.Result

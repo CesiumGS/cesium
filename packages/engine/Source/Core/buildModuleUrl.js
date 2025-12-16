@@ -1,5 +1,4 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
 import getAbsoluteUri from "./getAbsoluteUri.js";
 import Resource from "./Resource.js";
 

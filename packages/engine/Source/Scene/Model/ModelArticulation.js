@@ -1,7 +1,5 @@
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import { Matrix4 } from "@cesium/core-math";
-import Check from "../../Core/Check.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
 import ModelArticulationStage from "./ModelArticulationStage.js";
 
 /**

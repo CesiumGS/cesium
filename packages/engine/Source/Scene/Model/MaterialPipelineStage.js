@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3, Cartesian4, Matrix3 } from "@cesium/core-math";
-import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Pass from "../../Renderer/Pass.js";
 import MaterialStageFS from "../../Shaders/Model/MaterialStageFS.js";

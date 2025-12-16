@@ -1,8 +1,8 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian2 } from "@cesium/core-math";
 import BlendingState from "./BlendingState.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import CullFace from "./CullFace.js";
-import defined from "../Core/defined.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";

@@ -1,5 +1,4 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
 
 /**
  * Subdivides an array into a number of smaller, equal sized arrays.

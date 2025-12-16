@@ -1,7 +1,5 @@
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
 
 import ImageryConfiguration from "./ImageryConfiguration.js";
 import ModelPrimitiveImagery from "./ModelPrimitiveImagery.js";

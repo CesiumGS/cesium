@@ -1,6 +1,5 @@
+import { Frozen, defined } from "@cesium/core-utils";
 import addAllToArray from "../Core/addAllToArray.js";
-import defined from "../Core/defined.js";
-import Frozen from "../Core/Frozen.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**

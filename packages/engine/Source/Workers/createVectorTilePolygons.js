@@ -1,8 +1,8 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";

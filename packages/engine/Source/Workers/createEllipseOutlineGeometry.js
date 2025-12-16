@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3 } from "@cesium/core-math";
-import defined from "../Core/defined.js";
 import EllipseOutlineGeometry from "../Core/EllipseOutlineGeometry.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 

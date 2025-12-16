@@ -1,7 +1,5 @@
-import Check from "./Check.js";
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import Credit from "./Credit.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";

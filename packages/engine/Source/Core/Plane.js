@@ -1,7 +1,5 @@
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import { Cartesian3, Cartesian4, CesiumMath, Matrix4 } from "@cesium/core-math";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * A plane in Hessian Normal Form defined by

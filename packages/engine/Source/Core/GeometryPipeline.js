@@ -1,3 +1,4 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -11,8 +12,6 @@ import barycentricCoordinates from "./barycentricCoordinates.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartographic from "./Cartographic.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import EncodedCartesian3 from "./EncodedCartesian3.js";
 import GeographicProjection from "./GeographicProjection.js";
 import Geometry from "./Geometry.js";

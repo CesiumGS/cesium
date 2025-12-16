@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core-utils";
 import { CesiumMath } from "@cesium/core-math";
-import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import getImageFromTypedArray from "../../Core/getImageFromTypedArray.js";
 import resizeImageToNextPowerOfTwo from "../../Core/resizeImageToNextPowerOfTwo.js";

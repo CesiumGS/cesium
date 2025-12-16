@@ -1,10 +1,9 @@
+import { Check, defined } from "@cesium/core-utils";
 import { Cartesian3, Matrix4 } from "@cesium/core-math";
 import AttributeCompression from "../../Core/AttributeCompression.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartographic from "../../Core/Cartographic.js";
-import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import IntersectionTests from "../../Core/IntersectionTests.js";

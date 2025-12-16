@@ -1,3 +1,4 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -7,9 +8,7 @@ import {
   Matrix4,
 } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
 import IntersectionTests from "../Core/IntersectionTests.js";

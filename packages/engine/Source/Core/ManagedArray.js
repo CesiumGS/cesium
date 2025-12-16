@@ -1,4 +1,4 @@
-import Check from "./Check.js";
+import { Check } from "@cesium/core-utils";
 
 /**
  * A wrapper around arrays so that the internal length of the array can be manually managed.

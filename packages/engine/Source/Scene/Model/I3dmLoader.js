@@ -1,15 +1,12 @@
+import { Check, Frozen, RuntimeError, defined } from "@cesium/core-utils";
 import { Cartesian3, Matrix3, Matrix4 } from "@cesium/core-math";
 import AttributeCompression from "../../Core/AttributeCompression.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
-import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
 import Quaternion from "../../Core/Quaternion.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import Transforms from "../../Core/Transforms.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";

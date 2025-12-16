@@ -1,7 +1,5 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import binarySearch from "./binarySearch.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
 import GregorianDate from "./GregorianDate.js";
 import isLeapYear from "./isLeapYear.js";

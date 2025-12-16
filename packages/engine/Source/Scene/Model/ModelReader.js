@@ -1,7 +1,5 @@
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, Cartesian4, Matrix4 } from "@cesium/core-math";
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import AttributeCompression from "../../Core/AttributeCompression.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";

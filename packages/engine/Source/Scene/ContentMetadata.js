@@ -1,5 +1,4 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
+import { Check, Frozen } from "@cesium/core-utils";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**

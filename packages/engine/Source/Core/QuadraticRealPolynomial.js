@@ -1,5 +1,5 @@
+import { DeveloperError } from "@cesium/core-utils";
 import { CesiumMath } from "@cesium/core-math";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * Defines functions for 2nd order polynomial functions of one variable with only real coefficients.

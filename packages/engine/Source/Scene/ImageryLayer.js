@@ -1,10 +1,7 @@
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian4, CesiumMath } from "@cesium/core-math";
-import Check from "../Core/Check.js";
 import createWorldImageryAsync from "../Scene/createWorldImageryAsync.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import GeographicProjection from "../Core/GeographicProjection.js";

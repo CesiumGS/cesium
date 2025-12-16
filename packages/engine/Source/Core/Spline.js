@@ -1,6 +1,5 @@
+import { Check, DeveloperError } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath } from "@cesium/core-math";
-import Check from "./Check.js";
-import DeveloperError from "./DeveloperError.js";
 import Quaternion from "./Quaternion.js";
 
 /**

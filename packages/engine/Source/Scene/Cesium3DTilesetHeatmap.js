@@ -1,6 +1,6 @@
+import { defined } from "@cesium/core-utils";
 import { CesiumMath } from "@cesium/core-math";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 import JulianDate from "../Core/JulianDate.js";
 
 /**

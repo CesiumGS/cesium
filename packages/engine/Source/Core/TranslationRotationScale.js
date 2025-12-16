@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3 } from "@cesium/core-math";
-import defined from "./defined.js";
 import Quaternion from "./Quaternion.js";
 
 const defaultScale = new Cartesian3(1.0, 1.0, 1.0);

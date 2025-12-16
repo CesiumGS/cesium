@@ -1,12 +1,10 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian2, Matrix2, Matrix3, Matrix4 } from "@cesium/core-math";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import loadKTX2 from "../Core/loadKTX2.js";
 import Resource from "../Core/Resource.js";
 import CubeMap from "../Renderer/CubeMap.js";

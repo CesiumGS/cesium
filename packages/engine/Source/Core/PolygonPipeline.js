@@ -1,9 +1,8 @@
+import { Check, defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
 import earcut from "earcut";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidRhumbLine from "./EllipsoidRhumbLine.js";
 import Geometry from "./Geometry.js";

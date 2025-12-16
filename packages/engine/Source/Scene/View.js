@@ -1,7 +1,7 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import defined from "../Core/defined.js";
 import getTimestamp from "../Core/getTimestamp.js";
 import Interval from "../Core/Interval.js";
 import ClearCommand from "../Renderer/ClearCommand.js";

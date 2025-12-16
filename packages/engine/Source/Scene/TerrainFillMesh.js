@@ -1,3 +1,4 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -8,8 +9,6 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import binarySearch from "../Core/binarySearch.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import HeightmapTerrainData from "../Core/HeightmapTerrainData.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Queue from "../Core/Queue.js";

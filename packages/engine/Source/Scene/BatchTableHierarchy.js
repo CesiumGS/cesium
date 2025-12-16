@@ -1,10 +1,8 @@
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import AttributeType from "./AttributeType.js";
-import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import getBinaryAccessor from "./getBinaryAccessor.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 

@@ -1,8 +1,7 @@
+import { Check, defined } from "@cesium/core-utils";
 import { Cartesian3 } from "@cesium/core-math";
-import Check from "./Check.js";
 import combine from "./combine.js";
 import Credit from "./Credit.js";
-import defined from "./defined.js";
 import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
 

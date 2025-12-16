@@ -1,4 +1,4 @@
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError } from "@cesium/core-utils";
 
 /**
  * Static interface for {@link Packable} types which are interpolated in a

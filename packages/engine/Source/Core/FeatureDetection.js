@@ -1,6 +1,4 @@
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import Fullscreen from "./Fullscreen.js";
 
 let theNavigator;

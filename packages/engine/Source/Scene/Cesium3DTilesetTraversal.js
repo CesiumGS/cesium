@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
 import Intersect from "../Core/Intersect.js";
 import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";

@@ -1,8 +1,6 @@
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
 import ComponentDatatype from "./ComponentDatatype.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import AttributeType from "../Scene/AttributeType.js";
 
 const RIGHT_SHIFT = 1.0 / 256.0;

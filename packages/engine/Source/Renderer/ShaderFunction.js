@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core-utils";
 
 /**
  * A utility for dynamically-generating a GLSL function

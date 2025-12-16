@@ -1,3 +1,4 @@
+import { Check, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -5,10 +6,8 @@ import {
   Matrix3,
   Matrix4,
 } from "@cesium/core-math";
-import defined from "../Core/defined.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";

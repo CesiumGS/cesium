@@ -1,10 +1,8 @@
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import { Cartesian3, Matrix4 } from "@cesium/core-math";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import BoxGeometry from "../Core/BoxGeometry.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import BufferUsage from "../Renderer/BufferUsage.js";

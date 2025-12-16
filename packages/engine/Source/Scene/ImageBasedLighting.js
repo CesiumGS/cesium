@@ -1,9 +1,6 @@
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian2 } from "@cesium/core-math";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import Frozen from "../Core/Frozen.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 
 /**

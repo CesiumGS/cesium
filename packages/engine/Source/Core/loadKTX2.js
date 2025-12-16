@@ -1,4 +1,4 @@
-import Check from "./Check.js";
+import { Check } from "@cesium/core-utils";
 import Resource from "./Resource.js";
 import KTX2Transcoder from "./KTX2Transcoder.js";
 

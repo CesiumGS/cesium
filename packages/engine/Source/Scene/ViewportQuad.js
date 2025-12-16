@@ -1,8 +1,7 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";

@@ -1,7 +1,5 @@
 import MersenneTwister from "mersenne-twister";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { Check, defined, DeveloperError } from "@cesium/core-utils";
 
 /**
  * Math functions.

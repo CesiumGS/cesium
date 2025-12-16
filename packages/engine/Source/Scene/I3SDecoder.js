@@ -1,10 +1,8 @@
+import { Check, RuntimeError, defined } from "@cesium/core-utils";
 import { CesiumMath, Matrix3 } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 
 /**

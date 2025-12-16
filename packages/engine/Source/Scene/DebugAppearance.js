@@ -1,6 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import Appearance from "./Appearance.js";
 
 /**

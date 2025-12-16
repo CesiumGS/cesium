@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3 } from "@cesium/core-math";
-import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 import Property from "./Property.js";

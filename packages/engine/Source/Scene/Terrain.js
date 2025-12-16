@@ -1,4 +1,4 @@
-import Check from "../Core/Check.js";
+import { Check } from "@cesium/core-utils";
 import Event from "../Core/Event.js";
 import createWorldBathymetryAsync from "../Core/createWorldBathymetryAsync.js";
 import createWorldTerrainAsync from "../Core/createWorldTerrainAsync.js";

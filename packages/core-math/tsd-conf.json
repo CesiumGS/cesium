@@ -3,7 +3,9 @@
     "allowUnknownTags": false
   },
   "source": {
-    "include": ["packages/core-math/Source"],
+    "include": [
+      "packages/core-math/Source"
+    ],
     "includePattern": ".+\\.js(doc)?$",
     "excludePattern": "(^|\\/|\\\\)_"
   },
@@ -15,7 +17,8 @@
     "cleverLinks": true,
     "default": {
       "outputSourceFiles": false
-    }
+    },
+    "sourceUrl": "https://github.com/CesiumGS/cesium/blob/{version}/Source/{filename}"
   },
   "opts": {
     "destination": "packages/core-math",

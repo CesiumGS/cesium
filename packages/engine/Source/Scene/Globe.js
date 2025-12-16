@@ -1,11 +1,10 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidTerrainProvider from "../Core/EllipsoidTerrainProvider.js";
 import Event from "../Core/Event.js";

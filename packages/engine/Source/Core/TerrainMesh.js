@@ -1,7 +1,7 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3, Matrix4 } from "@cesium/core-math";
 import SceneMode from "../Scene/SceneMode.js";
 import Cartographic from "./Cartographic.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import TerrainPicker from "./TerrainPicker.js";

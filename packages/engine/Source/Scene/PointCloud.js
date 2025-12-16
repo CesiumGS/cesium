@@ -1,16 +1,14 @@
+import { Check, RuntimeError, defined } from "@cesium/core-utils";
 import { Cartesian3, Cartesian4, CesiumMath, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Transforms from "../Core/Transforms.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";

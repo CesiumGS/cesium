@@ -1,13 +1,12 @@
+import { RuntimeError, defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
 import AxisAlignedBoundingBox from "../Core/AxisAlignedBoundingBox.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import Transforms from "../Core/Transforms.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";

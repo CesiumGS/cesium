@@ -1,9 +1,11 @@
-import Check from "../Core/Check.js";
+import {
+  Check,
+  DeveloperError,
+  RuntimeError,
+  defined,
+} from "@cesium/core-utils";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import BatchTableHierarchy from "./BatchTableHierarchy.js";
 import StructuralMetadata from "./StructuralMetadata.js";
 import PropertyAttribute from "./PropertyAttribute.js";

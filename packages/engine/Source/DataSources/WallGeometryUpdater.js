@@ -1,8 +1,6 @@
-import Check from "../Core/Check.js";
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import Iso8601 from "../Core/Iso8601.js";

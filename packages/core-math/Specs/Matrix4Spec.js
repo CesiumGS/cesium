@@ -4,8 +4,8 @@ import {
   Math as CesiumMath,
   Matrix3,
   Matrix4,
-  RuntimeError,
-} from "../index.js";
+} from "@cesium/core-math";
+import { RuntimeError } from "@cesium/core-utils";
 import { Quaternion, TranslationRotationScale } from "../../engine/index.js";
 
 import createPackableSpecs from "../../../Specs/createPackableSpecs.js";

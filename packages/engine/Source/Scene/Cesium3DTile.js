@@ -1,9 +1,9 @@
+import { RuntimeError, defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -17,7 +17,6 @@ import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";

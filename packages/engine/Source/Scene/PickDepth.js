@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian4 } from "@cesium/core-math";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import RenderState from "../Renderer/RenderState.js";

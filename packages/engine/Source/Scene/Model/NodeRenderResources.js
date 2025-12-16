@@ -1,4 +1,4 @@
-import Check from "../../Core/Check.js";
+import { Check } from "@cesium/core-utils";
 import clone from "../../Core/clone.js";
 
 /**

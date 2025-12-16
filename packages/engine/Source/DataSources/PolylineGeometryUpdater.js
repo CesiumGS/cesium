@@ -1,11 +1,9 @@
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import ArcType from "../Core/ArcType.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
 import Event from "../Core/Event.js";

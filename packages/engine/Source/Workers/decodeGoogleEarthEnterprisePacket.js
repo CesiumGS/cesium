@@ -1,6 +1,6 @@
+import { RuntimeError } from "@cesium/core-utils";
 import decodeGoogleEarthEnterpriseData from "../Core/decodeGoogleEarthEnterpriseData.js";
 import GoogleEarthEnterpriseTileInformation from "../Core/GoogleEarthEnterpriseTileInformation.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import pako from "pako/lib/inflate.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 

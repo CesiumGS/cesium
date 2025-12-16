@@ -1,7 +1,6 @@
-import defined from "../Core/defined.js";
+import { RuntimeError, defined } from "@cesium/core-utils";
 import Resource from "../Core/Resource.js";
 import GltfLoader from "./GltfLoader.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Axis from "./Axis.js";
 import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
 import destroyObject from "../Core/destroyObject.js";

@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core-utils";
 import destroyObject from "../Core/destroyObject.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Color from "../Core/Color.js";

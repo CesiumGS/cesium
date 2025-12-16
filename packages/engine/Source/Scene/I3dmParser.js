@@ -1,7 +1,6 @@
-import Check from "../Core/Check.js";
+import { Check, RuntimeError } from "@cesium/core-utils";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * Handles parsing of an Instanced 3D Model.

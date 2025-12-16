@@ -1,6 +1,6 @@
+import { defined } from "@cesium/core-utils";
 import ForEach from "./ForEach.js";
 import removeExtensionsUsed from "./removeExtensionsUsed.js";
-import defined from "../../Core/defined.js";
 
 /**
  * Removes an extension from gltf.extensions, gltf.extensionsUsed, gltf.extensionsRequired, and any other objects in the glTF if it is present.

@@ -1,7 +1,6 @@
+import { Check, defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 
 function setConstants(ellipsoidGeodesic) {

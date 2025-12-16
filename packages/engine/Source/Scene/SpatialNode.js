@@ -1,7 +1,6 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import binarySearch from "../Core/binarySearch.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import KeyframeNode from "./KeyframeNode.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 

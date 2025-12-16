@@ -1,13 +1,10 @@
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import ArcType from "./ArcType.js";
 import BoundingRectangle from "./BoundingRectangle.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidTangentPlane from "./EllipsoidTangentPlane.js";
 import Geometry from "./Geometry.js";

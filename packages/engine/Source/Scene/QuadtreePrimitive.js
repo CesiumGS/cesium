@@ -1,7 +1,6 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import getTimestamp from "../Core/getTimestamp.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";

@@ -1,3 +1,4 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -8,9 +9,6 @@ import {
 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartographic from "../Core/Cartographic.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import EasingFunction from "../Core/EasingFunction.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidGeodesic from "../Core/EllipsoidGeodesic.js";

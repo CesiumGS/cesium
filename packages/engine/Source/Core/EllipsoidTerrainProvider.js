@@ -1,5 +1,4 @@
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
+import { Frozen, defined } from "@cesium/core-utils";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";

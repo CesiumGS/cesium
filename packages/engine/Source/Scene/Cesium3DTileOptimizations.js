@@ -1,5 +1,5 @@
+import { Check } from "@cesium/core-utils";
 import { Cartesian3 } from "@cesium/core-math";
-import Check from "../Core/Check.js";
 import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";

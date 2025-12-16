@@ -1,13 +1,11 @@
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3 } from "@cesium/core-math";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import ArcType from "../Core/ArcType.js";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CoplanarPolygonGeometry from "../Core/CoplanarPolygonGeometry.js";
 import CoplanarPolygonOutlineGeometry from "../Core/CoplanarPolygonOutlineGeometry.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
 import EllipsoidTangentPlane from "../Core/EllipsoidTangentPlane.js";
 import GeometryInstance from "../Core/GeometryInstance.js";

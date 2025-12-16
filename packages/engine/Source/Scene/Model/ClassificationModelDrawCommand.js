@@ -1,8 +1,7 @@
+import { Check, Frozen } from "@cesium/core-utils";
 import { Matrix4 } from "@cesium/core-math";
 import addAllToArray from "../../Core/addAllToArray.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
-import Check from "../../Core/Check.js";
-import Frozen from "../../Core/Frozen.js";
 import DrawCommand from "../../Renderer/DrawCommand.js";
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";

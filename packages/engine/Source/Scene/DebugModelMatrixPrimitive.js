@@ -1,8 +1,7 @@
+import { Frozen, defined } from "@cesium/core-utils";
 import { Cartesian3, Matrix4 } from "@cesium/core-math";
 import ArcType from "../Core/ArcType.js";
 import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import PolylineGeometry from "../Core/PolylineGeometry.js";

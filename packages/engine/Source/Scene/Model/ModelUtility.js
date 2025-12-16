@@ -1,7 +1,6 @@
+import { RuntimeError, defined } from "@cesium/core-utils";
 import { Cartesian3, Matrix3, Matrix4 } from "@cesium/core-math";
-import defined from "../../Core/defined.js";
 import Quaternion from "../../Core/Quaternion.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import Axis from "../Axis.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";

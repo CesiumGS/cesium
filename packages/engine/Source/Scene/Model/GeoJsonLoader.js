@@ -1,12 +1,9 @@
+import { Check, Frozen, RuntimeError, defined } from "@cesium/core-utils";
 import { Cartesian3, Matrix4 } from "@cesium/core-math";
-import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import Transforms from "../../Core/Transforms.js";
 import AttributeType from "../AttributeType.js";
 import JsonMetadataTable from "../JsonMetadataTable.js";

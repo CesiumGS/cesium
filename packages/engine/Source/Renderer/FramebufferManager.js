@@ -1,3 +1,4 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import Framebuffer from "./Framebuffer.js";
 import MultisampleFramebuffer from "./MultisampleFramebuffer.js";
 import PixelDatatype from "./PixelDatatype.js";
@@ -5,9 +6,6 @@ import Renderbuffer from "./Renderbuffer.js";
 import RenderbufferFormat from "./RenderbufferFormat.js";
 import Sampler from "./Sampler.js";
 import Texture from "./Texture.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import PixelFormat from "../Core/PixelFormat.js";
 
 /**

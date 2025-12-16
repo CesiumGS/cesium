@@ -1,6 +1,6 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
 import CullingVolume from "../Core/CullingVolume.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
 import getTimestamp from "../Core/getTimestamp.js";

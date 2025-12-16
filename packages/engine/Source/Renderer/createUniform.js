@@ -1,3 +1,4 @@
+import { DeveloperError, RuntimeError, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -7,9 +8,6 @@ import {
   Matrix4,
 } from "@cesium/core-math";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * @private

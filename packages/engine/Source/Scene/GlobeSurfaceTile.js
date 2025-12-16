@@ -1,6 +1,6 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3, Cartesian4 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Request from "../Core/Request.js";

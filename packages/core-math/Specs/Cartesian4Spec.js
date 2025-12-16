@@ -1,4 +1,4 @@
-import { Cartesian4, Math as CesiumMath } from "../index.js";
+import { Cartesian4, Math as CesiumMath } from "@cesium/core-math";
 // Color is in the engine package, not core-math
 import { Color } from "../../engine/index.js";
 

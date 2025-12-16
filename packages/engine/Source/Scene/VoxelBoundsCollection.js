@@ -1,11 +1,9 @@
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, Cartesian4, Matrix4 } from "@cesium/core-math";
-import Check from "../Core/Check.js";
 import ClippingPlane from "./ClippingPlane.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
-import Frozen from "../Core/Frozen.js";
 import Intersect from "../Core/Intersect.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";

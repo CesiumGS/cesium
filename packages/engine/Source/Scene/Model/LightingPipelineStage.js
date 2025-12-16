@@ -1,4 +1,4 @@
-import defined from "../../Core/defined.js";
+import { defined } from "@cesium/core-utils";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import LightingStageFS from "../../Shaders/Model/LightingStageFS.js";
 import LightingModel from "./LightingModel.js";

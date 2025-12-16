@@ -1,7 +1,5 @@
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import Cesium3DTileset from "./Cesium3DTileset.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import IonResource from "../Core/IonResource.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
 import Resource from "../Core/Resource.js";

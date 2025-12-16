@@ -1,5 +1,5 @@
+import { Check } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath } from "@cesium/core-math";
-import Check from "../Core/Check.js";
 
 /**
  * A ParticleEmitter that emits particles from a circle.

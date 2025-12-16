@@ -1,7 +1,5 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import Color from "./Color.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 function measureText(context2D, textString, font, stroke, fill) {
   const metrics = context2D.measureText(textString);

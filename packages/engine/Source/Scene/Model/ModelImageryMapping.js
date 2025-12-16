@@ -1,10 +1,9 @@
+import { Check, defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, Matrix4 } from "@cesium/core-math";
-import defined from "../../Core/defined.js";
 import Rectangle from "../../Core/Rectangle.js";
 import Cartographic from "../../Core/Cartographic.js";
 import BoundingRectangle from "../../Core/BoundingRectangle.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Check from "../../Core/Check.js";
 
 import AttributeType from "../AttributeType.js";
 import ModelReader from "./ModelReader.js";

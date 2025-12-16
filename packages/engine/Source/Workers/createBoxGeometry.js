@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core-utils";
 import BoxGeometry from "../Core/BoxGeometry.js";
-import defined from "../Core/defined.js";
 
 function createBoxGeometry(boxGeometry, offset) {
   if (defined(offset)) {

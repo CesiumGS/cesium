@@ -1,3 +1,4 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -14,10 +15,7 @@ import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import combine from "../Core/combine.js";
 import CullingVolume from "../Core/CullingVolume.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import Intersect from "../Core/Intersect.js";

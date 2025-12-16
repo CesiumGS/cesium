@@ -1,8 +1,6 @@
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3 } from "@cesium/core-math";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 
 /**
  * <div class="notice">

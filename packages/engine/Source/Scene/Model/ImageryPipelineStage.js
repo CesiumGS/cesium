@@ -1,6 +1,5 @@
+import { Check, defined } from "@cesium/core-utils";
 import { Cartesian4 } from "@cesium/core-math";
-import defined from "../../Core/defined.js";
-import Check from "../../Core/Check.js";
 import Rectangle from "../../Core/Rectangle.js";
 
 import ShaderDestination from "../../Renderer/ShaderDestination.js";

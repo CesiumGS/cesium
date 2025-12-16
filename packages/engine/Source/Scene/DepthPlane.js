@@ -1,7 +1,7 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import Geometry from "../Core/Geometry.js";
 import GeometryAttribute from "../Core/GeometryAttribute.js";

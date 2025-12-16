@@ -1,7 +1,6 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import AssociativeArray from "../Core/AssociativeArray.js";
 import createGuid from "../Core/createGuid.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import Iso8601 from "../Core/Iso8601.js";
 import JulianDate from "../Core/JulianDate.js";

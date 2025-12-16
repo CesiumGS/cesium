@@ -1,5 +1,4 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
 
 /**
  * A convenience object that simplifies the common pattern of attaching event listeners

@@ -1,3 +1,4 @@
+import { Check, Frozen } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
 import { MeshoptDecoder } from "meshoptimizer";
 import AttributeCompression from "./AttributeCompression.js";
@@ -6,11 +7,9 @@ import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox.js";
 import binarySearch from "./binarySearch.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidalOccluder from "./EllipsoidalOccluder.js";
-import Frozen from "./Frozen.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Rectangle from "./Rectangle.js";
 import TerrainEncoding from "./TerrainEncoding.js";

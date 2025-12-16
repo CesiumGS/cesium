@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core-utils";
 
 /**
  * A policy for discarding tile images according to some criteria.  This type describes an

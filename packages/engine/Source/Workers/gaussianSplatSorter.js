@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core-utils";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-import defined from "../Core/defined.js";
 
 import { initSync, radix_sort_gaussians_indexes } from "@cesium/wasm-splats";
 

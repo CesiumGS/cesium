@@ -1,3 +1,4 @@
+import { RuntimeError, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -6,8 +7,6 @@ import {
   Matrix3,
   Matrix4,
 } from "@cesium/core-math";
-import defined from "../Core/defined.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import MetadataClassProperty from "./MetadataClassProperty.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";

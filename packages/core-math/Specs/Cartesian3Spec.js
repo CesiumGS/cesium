@@ -1,4 +1,4 @@
-import { Cartesian3, Math as CesiumMath } from "../index.js";
+import { Cartesian3, Math as CesiumMath } from "@cesium/core-math";
 
 // Cartographic and Ellipsoid are in the engine package, not core-math
 import { Cartographic, Ellipsoid } from "../../engine/index.js";

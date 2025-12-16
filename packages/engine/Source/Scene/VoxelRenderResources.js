@@ -1,6 +1,6 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3 } from "@cesium/core-math";
 import combine from "../Core/combine.js";
-import defined from "../Core/defined.js";
 import ShaderBuilder from "../Renderer/ShaderBuilder.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
 import VoxelUtils from "../Shaders/Voxels/VoxelUtils.js";

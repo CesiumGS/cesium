@@ -1,10 +1,7 @@
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import BoxGeometry from "../Core/BoxGeometry.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import VertexFormat from "../Core/VertexFormat.js";

@@ -1,3 +1,9 @@
+import {
+  DeveloperError,
+  Frozen,
+  RuntimeError,
+  defined,
+} from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
 import ArcType from "../Core/ArcType.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
@@ -8,9 +14,6 @@ import Color from "../Core/Color.js";
 import CornerType from "../Core/CornerType.js";
 import Credit from "../Core/Credit.js";
 import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
@@ -27,7 +30,6 @@ import Quaternion from "../Core/Quaternion.js";
 import Rectangle from "../Core/Rectangle.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Spherical from "../Core/Spherical.js";
 import TimeInterval from "../Core/TimeInterval.js";
 import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";

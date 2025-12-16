@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";

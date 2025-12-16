@@ -1,4 +1,4 @@
-import Check from "../Core/Check.js";
+import { Check } from "@cesium/core-utils";
 
 /**
  * Gets a GLSL snippet that clips a fragment using the `clip` function from {@link getClippingFunction} and styles it.

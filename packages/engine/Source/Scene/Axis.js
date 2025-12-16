@@ -1,5 +1,5 @@
+import { Check } from "@cesium/core-utils";
 import { Matrix3, Matrix4 } from "@cesium/core-math";
-import Check from "../Core/Check.js";
 
 /**
  * An enum describing the x, y, and z axes and helper conversion functions.

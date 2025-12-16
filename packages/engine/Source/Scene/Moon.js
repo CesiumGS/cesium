@@ -1,7 +1,6 @@
+import { Frozen, defined } from "@cesium/core-utils";
 import { Cartesian3, Matrix3, Matrix4 } from "@cesium/core-math";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import IauOrientationAxes from "../Core/IauOrientationAxes.js";

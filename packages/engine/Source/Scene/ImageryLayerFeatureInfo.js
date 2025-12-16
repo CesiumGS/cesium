@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core-utils";
 
 /**
  * Describes a rasterized feature, such as a point, polygon, polyline, etc., in an imagery layer.

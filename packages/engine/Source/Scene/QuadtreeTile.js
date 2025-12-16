@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
 import Rectangle from "../Core/Rectangle.js";
 import Cartographic from "../Core/Cartographic.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";

@@ -1,9 +1,9 @@
+import { defined } from "@cesium/core-utils";
 import { Cartesian2, Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import ArcType from "./ArcType.js";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import Cartographic from "./Cartographic.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidRhumbLine from "./EllipsoidRhumbLine.js";
 import Geometry from "./Geometry.js";

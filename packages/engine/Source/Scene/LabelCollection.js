@@ -1,10 +1,8 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian2, Matrix4 } from "@cesium/core-math";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import writeTextToCanvas from "../Core/writeTextToCanvas.js";
 import bitmapSDF from "bitmap-sdf";
 import BillboardCollection from "./BillboardCollection.js";

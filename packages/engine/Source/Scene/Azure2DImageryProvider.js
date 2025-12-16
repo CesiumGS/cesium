@@ -1,7 +1,5 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import Credit from "../Core/Credit.js";
-import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 import IonResource from "../Core/IonResource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";

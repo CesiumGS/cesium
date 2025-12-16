@@ -1,6 +1,5 @@
+import { Frozen, defined } from "@cesium/core-utils";
 import ContentMetadata from "./ContentMetadata.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 

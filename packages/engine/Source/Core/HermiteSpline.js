@@ -1,7 +1,5 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import { Cartesian3, Cartesian4, Matrix4 } from "@cesium/core-math";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import LinearSpline from "./LinearSpline.js";
 import Spline from "./Spline.js";
 import TridiagonalSystemSolver from "./TridiagonalSystemSolver.js";

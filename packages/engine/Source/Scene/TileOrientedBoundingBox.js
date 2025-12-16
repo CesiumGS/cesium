@@ -1,7 +1,7 @@
+import { Check } from "@cesium/core-utils";
 import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import BoxOutlineGeometry from "../Core/BoxOutlineGeometry.js";
-import Check from "../Core/Check.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";

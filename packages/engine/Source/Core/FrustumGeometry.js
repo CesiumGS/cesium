@@ -1,8 +1,7 @@
+import { Check, defined } from "@cesium/core-utils";
 import { Cartesian3, Cartesian4, Matrix3, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "./BoundingSphere.js";
-import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defined from "./defined.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
 import GeometryAttributes from "./GeometryAttributes.js";

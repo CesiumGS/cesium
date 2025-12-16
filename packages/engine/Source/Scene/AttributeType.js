@@ -1,3 +1,4 @@
+import { Check, DeveloperError } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
@@ -6,8 +7,6 @@ import {
   Matrix3,
   Matrix4,
 } from "@cesium/core-math";
-import Check from "../Core/Check.js";
-import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * An enum describing the attribute type for glTF and 3D Tiles.

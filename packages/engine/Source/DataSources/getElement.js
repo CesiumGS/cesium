@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core-utils";
 
 /**
  * If element is a string, look up the element in the DOM by ID.  Otherwise return element.

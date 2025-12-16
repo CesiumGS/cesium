@@ -1,6 +1,6 @@
+import { defined } from "@cesium/core-utils";
 import addAllToArray from "../Core/addAllToArray.js";
 import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
 import Expression from "./Expression.js";
 
 /**
