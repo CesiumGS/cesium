@@ -28,6 +28,7 @@ Thumbs.db
 # playwright
 /playwright/.cache/
 /Specs/e2e/*-snapshots/
+!Specs/e2e/viewer.spec.js-snapshots/
 
 /Tools/jsdoc/cesium_template/static/javascript/prism.js
 /Tools/jsdoc/cesium_template/static/styles/prism.css
