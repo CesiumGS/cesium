@@ -1,8 +1,8 @@
 name: e2e
-on:
-  push:
-    branches:
-      - main
+on: push
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   e2e:
     runs-on: ubuntu-latest
