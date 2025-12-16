@@ -1,0 +1,8 @@
+legacyId: WebGPU Post Processing.html
+title: WebGPU Post Processing - Dev
+description: Use WebGPU shaders (WGSL) for custom post-processing effects.
+labels:
+  - Development
+  - Post Processing
+thumbnail: thumbnail.jpg
+development: true
