@@ -1048,7 +1048,6 @@ async function bundleSpecs(options) {
   // redirect those imports to the global Cesium object loaded in the browser.
   await build({
     ...buildOptions,
-    plugins: [externalResolvePlugin],
     entryPoints: ["Specs/spec-main.js", "Specs/karma-main.js"],
   });
 
