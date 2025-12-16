@@ -138,7 +138,7 @@
     "test-e2e-release": "release=true playwright test -c Specs/e2e/playwright.config.js --project=chromium",
     "test-e2e-release-all": "release=true playwright test -c Specs/e2e/playwright.config.js",
     "test-e2e-report": "playwright show-report Build/Specs/e2e/report",
-    "test-e2e-update": "playwright test -c Specs/e2e/playwright.config.js --project=chromium -u",
+    "test-e2e-update": "playwright test -u -c Specs/e2e/playwright.config.js --project=chromium",
     "deploy-status": "gulp deployStatus",
     "deploy-set-version": "gulp deploySetVersion",
     "prettier": "prettier --write \"**/*\"",

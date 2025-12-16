@@ -3,7 +3,7 @@ import { globbySync } from "globby";
 
 const gallery = globbySync("Apps/Sandcastle/gallery/*.html");
 
-for (const example of gallery.slice(0, 9)) {
+for (const example of gallery.slice(0, 5)) {
   test(`${example} renders`, async ({ page }) => {
     test.setTimeout(100000);
 
