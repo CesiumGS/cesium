@@ -35,6 +35,7 @@
   "scripts": {
     "build": "gulp build --workspace @cesium/core-utils",
     "build-ts": "gulp buildTs --workspace @cesium/core-utils",
+    "build-docs": "typedoc ./index.js --skipErrorChecking",
     "coverage": "gulp coverage --workspace @cesium/core-utils",
     "test": "gulp test --workspace @cesium/core-utils",
     "postversion": "gulp postversion --workspace @cesium/core-utils"

@@ -39,7 +39,8 @@
     "build-ts": "gulp buildTs --workspace @cesium/core-math",
     "coverage": "gulp coverage --workspace @cesium/core-math",
     "test": "gulp test --workspace @cesium/core-math",
-    "postversion": "gulp postversion --workspace @cesium/core-math"
+    "postversion": "gulp postversion --workspace @cesium/core-math",
+    "build-docs": "typedoc ./index.js --skipErrorChecking"
   },
   "repository": {
     "type": "git",
