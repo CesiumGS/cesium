@@ -1,12 +1,12 @@
 import RuntimeError from "../../Core/RuntimeError";
 
 // TODO: to use WebGPU for rendering, need to provide a canvas to configure.
-function Context(device, adapter) {
+function WebGPUContext(device, adapter) {
   this._device = device;
   this._adapter = adapter;
 }
 
-Context.create = async function () {
+WebGPUContext.create = async function () {
   if (!navigator.gpu) {
     throw new RuntimeError("WebGPU not supported on this browser.");
   }
@@ -17,10 +17,10 @@ Context.create = async function () {
   }
 
   const device = await adapter.requestDevice();
-  return new Context(device, adapter);
+  return new WebGPUContext(device, adapter);
 };
 
-Object.defineProperties(Context.prototype, {
+Object.defineProperties(WebGPUContext.prototype, {
   device: {
     get: function () {
       return this._device;
@@ -28,32 +28,36 @@ Object.defineProperties(Context.prototype, {
   },
 });
 
-Context.prototype.createCommandEncoder = function (descriptor) {
+WebGPUContext.prototype.createCommandEncoder = function (descriptor) {
   return this._device.createCommandEncoder(descriptor);
 };
 
-Context.prototype.submitEncoder = function (encoder) {
+WebGPUContext.prototype.submitEncoder = function (encoder) {
   const cb = encoder.finish();
   this._device.queue.submit([cb]);
 };
 
-Context.prototype.createShaderModule = function (descriptor) {
+WebGPUContext.prototype.createShaderModule = function (descriptor) {
   return this._device.createShaderModule(descriptor);
 };
 
-Context.prototype.createComputePipeline = function (descriptor) {
+WebGPUContext.prototype.createComputePipeline = function (descriptor) {
   return this._device.createComputePipeline(descriptor);
 };
 
-Context.prototype.createBindGroupLayout = function (entries) {
+WebGPUContext.prototype.createBindGroupLayout = function (entries) {
   return this._device.createBindGroupLayout({ entries });
 };
 
-Context.prototype.createBindGroup = function (layout, entries) {
+WebGPUContext.prototype.createBindGroup = function (layout, entries) {
   return this._device.createBindGroup({ layout, entries });
 };
 
-Context.prototype.createBuffer = function ({ size, usage, mapped = false }) {
+WebGPUContext.prototype.createBuffer = function ({
+  size,
+  usage,
+  mapped = false,
+}) {
   return this._device.createBuffer({
     size,
     usage,
@@ -61,15 +65,15 @@ Context.prototype.createBuffer = function ({ size, usage, mapped = false }) {
   });
 };
 
-Context.prototype.writeBuffer = function (buffer, data, offset = 0) {
+WebGPUContext.prototype.writeBuffer = function (buffer, data, offset = 0) {
   this._device.queue.writeBuffer(buffer, offset, data);
 };
 
-Context.prototype.createComputePipeline = function (descriptor) {
+WebGPUContext.prototype.createComputePipeline = function (descriptor) {
   return this._device.createComputePipeline(descriptor);
 };
 
-Context.prototype.runCompute = function ({
+WebGPUContext.prototype.runCompute = function ({
   pipeline,
   bindGroups = [],
   workgroups = { x: 1, y: 1, z: 1 },
@@ -85,4 +89,4 @@ Context.prototype.runCompute = function ({
   this.submitEncoder(commandEncoder);
 };
 
-export default Context;
+export default WebGPUContext;
