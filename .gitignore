@@ -48,3 +48,4 @@ GoogleConfig.json
 
 # Temp documentation
 /temp-docs/
+.vscode/settings.json
