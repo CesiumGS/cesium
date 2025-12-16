@@ -375,7 +375,7 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
   }
 
   vsDefines.push(colorDefine);
-  const fsDefines = groundPolylinePrimitive.debugShowShadowVolume
+  const fsDefines = window.debugShowShadowVolume
     ? ["DEBUG_SHOW_VOLUME", colorDefine]
     : [colorDefine];
 

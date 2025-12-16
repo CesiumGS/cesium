@@ -175,7 +175,10 @@ async function parseMetadataSuccess(terrainProviderBuilder, data, provider) {
 
   const tileUrlTemplates = data.tiles;
 
-  const maxZoom = data.maxzoom;
+  let maxZoom = data.maxzoom;
+
+  maxZoom = window.maximumTerrainLevel;
+
   terrainProviderBuilder.overallMaxZoom = Math.max(
     terrainProviderBuilder.overallMaxZoom,
     maxZoom,
