@@ -1053,15 +1053,19 @@ async function bundleSpecs(options) {
 
   // When bundling specs for a workspace, the spec-main.js and karma-main.js
   // are bundled separately since they use a different outbase than the workspace's SpecList.js.
+  // These files import from @cesium/* packages, so we need the externalResolvePlugin to
+  // redirect those imports to the global Cesium object loaded in the browser.
   await build({
     ...buildOptions,
     entryPoints: ["Specs/spec-main.js", "Specs/karma-main.js"],
+    plugins: [externalResolvePlugin],
   });
 
   return build({
     ...buildOptions,
     entryPoints: [options.specListFile],
     outbase: options.outbase,
+    plugins: [externalResolvePlugin],
   });
 }
 
