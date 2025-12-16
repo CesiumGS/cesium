@@ -1,0 +1,17 @@
+{
+  "include": ["Source/**/*.js"],
+  "compilerOptions": {
+    // module configuration
+    "moduleResolution": "bundler",
+    "module": "ES2022",
+    "target": "ES2022",
+
+    // i/o
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+
+    // TODO(donmccurdy): Explain or remove.
+    "skipLibCheck": true
+  }
+}
