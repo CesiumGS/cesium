@@ -57,11 +57,7 @@ WebGPUContext.prototype.createBindGroup = function (layout, entries) {
   return this._device.createBindGroup({ layout, entries });
 };
 
-WebGPUContext.prototype.createBuffer = function ({
-  size,
-  usage,
-  mapped = false,
-}) {
+WebGPUContext.prototype.createBuffer = function (size, usage, mapped = false) {
   return this._device.createBuffer({
     size,
     usage,
@@ -77,11 +73,11 @@ WebGPUContext.prototype.createComputePipeline = function (descriptor) {
   return this._device.createComputePipeline(descriptor);
 };
 
-WebGPUContext.prototype.runCompute = function ({
+WebGPUContext.prototype.runCompute = function (
   pipeline,
   bindGroups = [],
   workgroups = { x: 1, y: 1, z: 1 },
-}) {
+) {
   const commandEncoder = this.createCommandEncoder();
   const passEncoder = commandEncoder.beginComputePass();
   passEncoder.setPipeline(pipeline);

@@ -82,6 +82,7 @@ import getMetadataClassProperty from "./getMetadataClassProperty.js";
 import PickedMetadataInfo from "./PickedMetadataInfo.js";
 import getMetadataProperty from "./getMetadataProperty.js";
 import WebGPUContext from "../Renderer/WebGPU/WebGPUContext.js";
+import WebGPUComputeCommand from "../Renderer/WebGPU/WebGPUComputeCommand.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -146,7 +147,7 @@ function Scene(options) {
   } else {
     const contextOptions = clone(options.contextOptions);
     this._context = new Context(canvas, contextOptions);
-    this._webGPUContext = WebGPUContext.create();
+    this._webGPUContextPromise = WebGPUContext.create();
   }
   const context = this._context;
 
@@ -171,7 +172,7 @@ function Scene(options) {
     context,
     new CreditDisplay(creditContainer, "•", creditViewport),
     this._jobScheduler,
-    this._webGPUContext,
+    this._webGPUContextPromise,
   );
   this._frameState.scene3DOnly = options.scene3DOnly ?? false;
   this._removeCreditContainer = !hasCreditContainer;
@@ -772,6 +773,24 @@ function Scene(options) {
    * @default false
    */
   this._enableEdgeVisibility = false;
+
+  // ======== WEBGPU TESTING ======== //
+
+  const shaderSource = `
+    // Minimal WGSL compute shader (hello world style)
+    @compute @workgroup_size(1)
+    fn main() {
+        // no-op
+    }
+  `;
+
+  this._testWebGPUComputeCommand = new WebGPUComputeCommand({
+    shaderSource: shaderSource,
+    debugName: "Test WebGPU Compute Command",
+    webGPUContextPromise: this.frameState.wgpuContextPromise,
+  });
+
+  // ======== END WEBGPU TESTING ======== //
 
   // Give frameState, camera, and screen space camera controller initial state before rendering
   updateFrameNumber(this, 0.0, JulianDate.now());
@@ -3041,6 +3060,8 @@ function executeComputeCommands(scene) {
   if (defined(sunComputeCommand)) {
     sunComputeCommand.execute(scene._computeEngine);
   }
+
+  scene._testWebGPUComputeCommand.execute(scene.frameState.wgpuContext);
 
   const commandList = scene._computeCommandList;
   for (let i = 0; i < commandList.length; ++i) {

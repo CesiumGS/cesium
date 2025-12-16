@@ -1,22 +1,9 @@
-import { defined } from "@cesium/engine";
 import Frozen from "../../Core/Frozen.js";
 import Pass from "../Pass.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 
-/**
- * Represents a command to the renderer for GPU Compute (using old-school GPGPU).
- *
- * @private
- * @constructor
- */
-function WebGPUCommand(options) {
+function WebGPUComputeCommand(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  const webGPUContext = options.webGPUContext;
-  if (!defined(webGPUContext)) {
-    throw new RuntimeError(
-      "WebGPUContext is required to create a WebGPUCommand.",
-    );
-  }
+  const webGPUContextPromise = options.webGPUContextPromise;
 
   /**
    * For now, a simple string literal containing the WGSL source code. Later, should be something akin to ShaderSource.
@@ -41,10 +28,18 @@ function WebGPUCommand(options) {
 
   this.debugName = options.debugName;
 
-  this._pipeline = options.webGPUContext.createComputePipeline({
-    layout: webGPUContext.createPipelineLayout(
-      this.bindGroups.map((bg) => bg.layout),
-    ),
+  webGPUContextPromise.then((webGPUContext) => {
+    createWGPUResources.call(this, {
+      webGPUContext,
+    });
+  });
+}
+
+function createWGPUResources(webGPUContext) {
+  this.pipeline = webGPUContext.createComputePipeline({
+    layout: webGPUContext.createPipelineLayout({
+      bindGroupLayouts: this.bindGroups.map((bg) => bg.layout),
+    }),
     compute: {
       module: webGPUContext.createShaderModule({
         code: this.shaderSource,
@@ -60,7 +55,10 @@ function WebGPUCommand(options) {
  *
  * @param {WebGPUContext} wgpuContext The context that processes the compute command.
  */
-WebGPUCommand.prototype.execute = function (wgpuContext) {
-  wgpuContext.runCompute(this._pipeline, this._bindGroups, this._workgroups);
+WebGPUComputeCommand.prototype.execute = function (wgpuContext) {
+  if (!this.pipeline) {
+    return;
+  }
+  wgpuContext.runCompute(this.pipeline, this.bindGroups, this.workgroups);
 };
-export default WebGPUCommand;
+export default WebGPUComputeCommand;
