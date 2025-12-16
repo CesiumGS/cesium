@@ -2,7 +2,7 @@ import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
-  CesiumMath,
+  Math as CesiumMath,
   Matrix2,
   Matrix3,
 } from "@cesium/core-math";

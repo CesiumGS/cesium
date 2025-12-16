@@ -1,5 +1,5 @@
 import { Check, Frozen, defined } from "@cesium/core-utils";
-import { CesiumMath } from "@cesium/core-math";
+import { Math as CesiumMath } from "@cesium/core-math";
 import PixelFormat from "../Core/PixelFormat.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";

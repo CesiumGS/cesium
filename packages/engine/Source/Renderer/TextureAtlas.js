@@ -1,5 +1,5 @@
 import { Check, Frozen, RuntimeError, defined } from "@cesium/core-utils";
-import { Cartesian2, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Math as CesiumMath } from "@cesium/core-math";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import createGuid from "../Core/createGuid.js";
 import destroyObject from "../Core/destroyObject.js";

@@ -4,7 +4,7 @@ import {
   RuntimeError,
   defined,
 } from "@cesium/core-utils";
-import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Cartesian3, Math as CesiumMath } from "@cesium/core-math";
 import ArcType from "../Core/ArcType.js";
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";

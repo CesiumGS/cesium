@@ -3,7 +3,7 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
-  CesiumMath,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
 } from "@cesium/core-math";

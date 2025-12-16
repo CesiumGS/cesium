@@ -1,4 +1,4 @@
-import { Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath, Matrix3 } from "@cesium/core-math";
 import Quaternion from "./Quaternion.js";
 
 const EllipseGeometryLibrary = {};

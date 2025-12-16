@@ -1,5 +1,5 @@
 import { Check, defined } from "@cesium/core-utils";
-import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Cartesian3, Math as CesiumMath } from "@cesium/core-math";
 
 const scratchCartesian1 = new Cartesian3();
 const scratchCartesian2 = new Cartesian3();

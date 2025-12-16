@@ -1,5 +1,5 @@
 import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { CesiumMath } from "@cesium/core-math";
+import { Math as CesiumMath } from "@cesium/core-math";
 import Event from "../../Core/Event.js";
 import JulianDate from "../../Core/JulianDate.js";
 import ModelAnimation from "./ModelAnimation.js";

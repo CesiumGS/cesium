@@ -1,5 +1,5 @@
 import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { CesiumMath } from "@cesium/core-math";
+import { Math as CesiumMath } from "@cesium/core-math";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";

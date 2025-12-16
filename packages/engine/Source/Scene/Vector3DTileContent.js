@@ -1,5 +1,5 @@
 import { DeveloperError, RuntimeError, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath, Matrix4 } from "@cesium/core-math";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";

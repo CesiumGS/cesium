@@ -1,5 +1,10 @@
 import { Check, defined } from "@cesium/core-utils";
-import { Cartesian2, Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
+import {
+  Cartesian2,
+  Cartesian3,
+  Math as CesiumMath,
+  Matrix4,
+} from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";

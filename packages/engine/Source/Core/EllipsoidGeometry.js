@@ -1,5 +1,5 @@
 import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Cartesian3, Math as CesiumMath } from "@cesium/core-math";
 import BoundingSphere from "./BoundingSphere.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import Ellipsoid from "./Ellipsoid.js";

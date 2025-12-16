@@ -1,5 +1,10 @@
 import { defined } from "@cesium/core-utils";
-import { Cartesian2, Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
+import {
+  Cartesian2,
+  Cartesian3,
+  Math as CesiumMath,
+  Matrix4,
+} from "@cesium/core-math";
 import AxisAlignedBoundingBox from "../Core/AxisAlignedBoundingBox.js";
 import Cartographic from "../Core/Cartographic.js";
 import Ellipsoid from "../Core/Ellipsoid.js";

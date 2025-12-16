@@ -63,10 +63,8 @@ const argv = yargs(process.argv).argv;
 const verbose = argv.verbose;
 
 const sourceFiles = [
-  "packages/core-utils/Source/**/*.js",
-  "!packages/core-utils/Source/*.js",
-  "packages/core-math/Source/**/*.js",
-  "!packages/core-math/Source/*.js",
+  "packages/core-utils/Source/*.js",
+  "packages/core-math/Source/*.js",
   "packages/engine/Source/**/*.js",
   "!packages/engine/Source/*.js",
   "packages/widgets/Source/**/*.js",
@@ -78,9 +76,9 @@ const sourceFiles = [
 ];
 
 const watchedSpecFiles = [
-  "packages/core-utils/Specs/**/*Spec.js",
+  "packages/core-utils/Specs/*Spec.js",
   "!packages/core-utils/Specs/SpecList.js",
-  "packages/core-math/Specs/**/*Spec.js",
+  "packages/core-math/Specs/*Spec.js",
   "!packages/core-math/Specs/SpecList.js",
   "packages/engine/Specs/**/*Spec.js",
   "!packages/engine/Specs/SpecList.js",
@@ -121,7 +119,6 @@ export async function build() {
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
   } else if (workspace === `@${scope}/core-utils`) {
-    console.log("Building core-utils...");
     return buildCoreUtils(buildOptions);
   }
 

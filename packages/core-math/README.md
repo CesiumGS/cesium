@@ -23,7 +23,7 @@ npm install @cesium/core-math
 ## Usage
 
 ```javascript
-import { Cartesian3, Matrix4, CesiumMath } from "@cesium/core-math";
+import { Cartesian3, Matrix4, Math as CesiumMath } from "@cesium/core-math";
 
 // Create a 3D point
 const point = new Cartesian3(1.0, 2.0, 3.0);

@@ -1,5 +1,10 @@
 import { defined } from "@cesium/core-utils";
-import { Cartesian2, Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
+import {
+  Cartesian2,
+  Cartesian3,
+  Math as CesiumMath,
+  Matrix3,
+} from "@cesium/core-math";
 import ArcType from "./ArcType.js";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import Cartographic from "./Cartographic.js";

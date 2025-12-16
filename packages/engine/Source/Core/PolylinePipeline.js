@@ -1,5 +1,5 @@
 import { DeveloperError, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath, Matrix4 } from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidGeodesic from "./EllipsoidGeodesic.js";

@@ -1,5 +1,10 @@
 import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
+import {
+  Cartesian3,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
 import createGuid from "../Core/createGuid.js";
 import Event from "../Core/Event.js";

@@ -3,7 +3,7 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
-  CesiumMath,
+  Math as CesiumMath,
 } from "@cesium/core-math";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import binarySearch from "../Core/binarySearch.js";

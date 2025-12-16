@@ -1,5 +1,10 @@
 import { Check, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
+import {
+  Cartesian3,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
 import Ellipsoid from "./Ellipsoid.js";
 import GeographicProjection from "./GeographicProjection.js";

@@ -1,5 +1,5 @@
 import { Check, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian2, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Math as CesiumMath } from "@cesium/core-math";
 import Ellipsoid from "./Ellipsoid.js";
 import GeographicProjection from "./GeographicProjection.js";
 import Rectangle from "./Rectangle.js";

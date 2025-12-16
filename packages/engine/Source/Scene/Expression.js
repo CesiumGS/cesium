@@ -8,7 +8,7 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
-  CesiumMath,
+  Math as CesiumMath,
 } from "@cesium/core-math";
 import Color from "../Core/Color.js";
 import jsep from "jsep";

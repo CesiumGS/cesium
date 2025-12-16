@@ -1,5 +1,10 @@
 import { RuntimeError, defined } from "@cesium/core-utils";
-import { Cartesian3, Cartesian4, CesiumMath, Matrix4 } from "@cesium/core-math";
+import {
+  Cartesian3,
+  Cartesian4,
+  Math as CesiumMath,
+  Matrix4,
+} from "@cesium/core-math";
 import Cesium3DTileRefine from "../Cesium3DTileRefine.js";
 import clone from "../../Core/clone.js";
 import ModelType from "./ModelType.js";

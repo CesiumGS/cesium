@@ -1,5 +1,10 @@
 import { Check, defined } from "@cesium/core-utils";
-import { Cartesian2, Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
+import {
+  Cartesian2,
+  Cartesian3,
+  Math as CesiumMath,
+  Matrix4,
+} from "@cesium/core-math";
 import AttributeCompression from "./AttributeCompression.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import VerticalExaggeration from "./VerticalExaggeration.js";

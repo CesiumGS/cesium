@@ -1,5 +1,5 @@
 import { Check, Frozen, RuntimeError, defined } from "@cesium/core-utils";
-import { CesiumMath } from "@cesium/core-math";
+import { Math as CesiumMath } from "@cesium/core-math";
 import Credit from "./Credit.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";

@@ -1,5 +1,5 @@
 import { DeveloperError, defined } from "@cesium/core-utils";
-import { CesiumMath } from "@cesium/core-math";
+import { Math as CesiumMath } from "@cesium/core-math";
 
 /**
  * Represents a {@link Packable} number that always interpolates values

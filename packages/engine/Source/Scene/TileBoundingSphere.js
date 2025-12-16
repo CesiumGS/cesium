@@ -1,5 +1,5 @@
 import { Check } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import GeometryInstance from "../Core/GeometryInstance.js";

@@ -2,7 +2,7 @@ import { Check, defined } from "@cesium/core-utils";
 import {
   Cartesian2,
   Cartesian3,
-  CesiumMath,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
 } from "@cesium/core-math";

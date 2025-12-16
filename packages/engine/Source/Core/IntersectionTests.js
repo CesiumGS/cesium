@@ -1,5 +1,5 @@
 import { DeveloperError, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath, Matrix3 } from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
 import Interval from "./Interval.js";
 import QuadraticRealPolynomial from "./QuadraticRealPolynomial.js";
