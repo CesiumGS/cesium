@@ -10,6 +10,10 @@ import {
 import CesiumMath from "./Math.js";
 import Matrix3 from "./Matrix3.js";
 
+/** @ignore @typedef {import('@cesium/engine').Camera} Camera */
+/** @ignore @typedef {import('@cesium/engine').TranslationRotationScale} TranslationRotationScale */
+/** @ignore @typedef {import('@cesium/engine').Quaternion} Quaternion */
+
 /**
  * A 4x4 matrix, indexable as a column-major order array.
  * Constructor parameters are in row-major order for code readability.

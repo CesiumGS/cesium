@@ -1,6 +1,9 @@
 import { Check, defined, DeveloperError } from "@cesium/core-utils";
 import CesiumMath from "./Math.js";
 
+/** @ignore @typedef {import('./Cartesian3.js')} Cartesian3 */
+/** @ignore @typedef {import('./Cartesian4.js')} Cartesian4 */
+
 /**
  * A 2D Cartesian point.
  * @alias Cartesian2

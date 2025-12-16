@@ -1,6 +1,8 @@
 import { Check, defined, DeveloperError } from "@cesium/core-utils";
 import CesiumMath from "./Math.js";
 
+/** @ignore @typedef {import('@cesium/engine').Color} Color */
+
 /**
  * A 4D Cartesian point.
  * @alias Cartesian4

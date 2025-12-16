@@ -37,6 +37,7 @@
   "scripts": {
     "build": "gulp build --workspace @cesium/core-math",
     "build-ts": "gulp buildTs --workspace @cesium/core-math",
+    "build-tsc": "tsc --checkJs false",
     "coverage": "gulp coverage --workspace @cesium/core-math",
     "test": "gulp test --workspace @cesium/core-math",
     "postversion": "gulp postversion --workspace @cesium/core-math",

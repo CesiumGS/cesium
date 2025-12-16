@@ -1,5 +1,5 @@
 {
-  "include": ["index.js", "Source/**/*.js"],
+  "include": ["Source/**/*.js"],
   "compilerOptions": {
     // module configuration
     "moduleResolution": "bundler",
@@ -7,8 +7,14 @@
     "target": "ES2022",
 
     // i/o
-    "noEmit": true,
+    "declaration": true,
+    "declarationDir": "Build/Types",
+    "emitDeclarationOnly": true,
     "allowJs": true,
-    "checkJs": true
+    "checkJs": true,
+
+    // ignore type definitions in other modules for now, we need types
+    // to be correct and to resolve imports first.
+    "skipLibCheck": true
   }
 }
