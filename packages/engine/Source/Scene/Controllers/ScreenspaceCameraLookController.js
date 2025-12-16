@@ -99,8 +99,8 @@ export default class ScreenspaceCameraLookController {
           this._ellipsoidRight,
         );
 
-    camera.look(up, x * lookFactor);
-    camera.look(right, y * lookFactor);
+    camera.look(camera.up, x * lookFactor);
+    camera.look(camera.right, y * lookFactor);
 
     // Reset for next frame
     this._lastUpdateTime = getTimestamp();
