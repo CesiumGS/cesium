@@ -1,7 +1,14 @@
 {
   "name": "@cesium/core-math",
-  "version": "1.0.0",
-  "description": "Core mathematical primitives for CesiumJS",
+  "version": "0.0.0",
+  "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
+  "keywords": [
+    "3D",
+    "webgl",
+    "geospatial",
+    "map",
+    "globe"
+  ],
   "main": "./Source/index.js",
   "module": "./Source/index.js",
   "types": "./Source/index.d.ts",

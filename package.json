@@ -51,6 +51,8 @@
     "./Specs/**/*"
   ],
   "dependencies": {
+    "@cesium/core-utils": "^0.0.0",
+    "@cesium/core-math": "^0.0.0",
     "@cesium/engine": "^22.1.0",
     "@cesium/widgets": "^14.1.0"
   },
