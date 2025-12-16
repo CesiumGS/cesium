@@ -159,6 +159,7 @@
     ]
   },
   "workspaces": [
+    "packages/core-*",
     "packages/engine",
     "packages/widgets",
     "packages/sandcastle"

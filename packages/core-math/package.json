@@ -9,9 +9,8 @@
     "map",
     "globe"
   ],
-  "main": "index.js",
-  "module": "index.js",
-  "types": "index.d.ts",
+  "main": "./Source/index.js",
+  "module": "./Source/index.js",
   "files": [
     "index.js",
     "index.d.ts",
