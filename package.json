@@ -161,7 +161,8 @@
   "workspaces": [
     "packages/engine",
     "packages/widgets",
-    "packages/sandcastle"
+    "packages/sandcastle",
+    "packages/core-math"
   ],
   "overrides": {
     "allotment": {

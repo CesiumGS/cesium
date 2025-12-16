@@ -45,3 +45,6 @@ yarn.lock
 
 # Used in the CLA checking GitHub workflow
 GoogleConfig.json
+
+# Temp documentation
+/temp-docs/
