@@ -32,6 +32,7 @@ jobs:
         run: |
           ls -lR Build/Specs/e2e
           ls -lR Specs/e2e
+        continue-on-error: true
       - name: run e2e tests
         run: npm run test-e2e -- viewer.spec.js
         env:
@@ -41,6 +42,7 @@ jobs:
         run: |
           ls -lR Build/Specs/e2e
           ls -lR Specs/e2e
+        continue-on-error: true
       - name: deploy to s3
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: |
