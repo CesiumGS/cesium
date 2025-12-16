@@ -1,5 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import { Frozen, defined } from "@cesium/core-utils";
 import PrimitiveType from "../Core/PrimitiveType.js";
 
 const Flags = {

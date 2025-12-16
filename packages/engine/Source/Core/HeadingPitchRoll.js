@@ -1,6 +1,5 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import CesiumMath from "./Math.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
+import { CesiumMath } from "@cesium/core-math";
 
 /**
  * A rotation expressed as a heading, pitch, and roll. Heading is the rotation about the

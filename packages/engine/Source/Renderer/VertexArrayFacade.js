@@ -1,9 +1,7 @@
-import Check from "../Core/Check.js";
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
+import { CesiumMath } from "@cesium/core-math";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
 import Buffer from "./Buffer.js";
 import BufferUsage from "./BufferUsage.js";
 import VertexArray from "./VertexArray.js";

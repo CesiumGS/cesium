@@ -1,7 +1,5 @@
-import Cartesian3 from "../../../../Core/Cartesian3.js";
-import Check from "../../../../Core/Check.js";
-import Matrix3 from "../../../../Core/Matrix3.js";
-import RuntimeError from "../../../../Core/RuntimeError.js";
+import { Check, RuntimeError } from "@cesium/core-utils";
+import { Cartesian3, Matrix3 } from "@cesium/core-math";
 import AnchorPointDirect from "./AnchorPointDirect.js";
 import AnchorPointIndirect from "./AnchorPointIndirect.js";
 import CorrelationGroup from "./CorrelationGroup.js";

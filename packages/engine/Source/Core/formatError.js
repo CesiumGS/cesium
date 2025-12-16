@@ -1,4 +1,4 @@
-import defined from "./defined.js";
+import { defined } from "@cesium/core-utils";
 
 /**
  * Formats an error object into a String.  If available, uses name, message, and stack

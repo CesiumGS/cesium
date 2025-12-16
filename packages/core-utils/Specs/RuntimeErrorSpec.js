@@ -1,4 +1,4 @@
-import { RuntimeError } from "../../index.js";
+import { RuntimeError } from "@cesium/core-utils";
 
 describe("Core/RuntimeError", function () {
   const name = "RuntimeError";

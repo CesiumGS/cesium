@@ -14,16 +14,16 @@
     "tsd-jsdoc/dist/plugin"
   ],
   "templates": {
-      "cleverLinks": true,
-      "default": {
-          "outputSourceFiles": false
-      },
-      "sourceUrl": "https://github.com/CesiumGS/cesium/blob/{version}/Source/{filename}"
+    "cleverLinks": true,
+    "default": {
+      "outputSourceFiles": false
+    },
+    "sourceUrl": "https://github.com/CesiumGS/cesium/blob/{version}/Source/{filename}"
   },
   "opts": {
-      "destination": "packages/core-math",
-      "template": "tsd-jsdoc/dist",
-      "outFile": "index.d.ts",
-      "recurse": true
+    "destination": "packages/core-math",
+    "template": "tsd-jsdoc/dist",
+    "outFile": "index.d.ts",
+    "recurse": true
   }
 }

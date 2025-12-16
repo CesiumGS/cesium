@@ -1,4 +1,4 @@
-import Cartesian2 from "../../Core/Cartesian2.js";
+import { Cartesian2 } from "@cesium/core-math";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VerticalExaggerationStageVS from "../../Shaders/Model/VerticalExaggerationStageVS.js";
 

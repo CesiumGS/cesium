@@ -1,11 +1,7 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
+import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import EasingFunction from "../Core/EasingFunction.js";
-import CesiumMath from "../Core/Math.js";
 import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
 import PerspectiveOffCenterFrustum from "../Core/PerspectiveOffCenterFrustum.js";
 import SceneMode from "./SceneMode.js";

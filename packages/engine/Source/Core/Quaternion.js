@@ -1,9 +1,6 @@
-import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
+import { Check, defined } from "@cesium/core-utils";
+import { Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import FeatureDetection from "./FeatureDetection.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
 
 /**
  * A set of 4-dimensional coordinates used to represent rotation in 3-dimensional space.

@@ -1,12 +1,10 @@
-import {
-  Cartesian3,
-  Cartographic,
-  Ellipsoid,
-  Math as CesiumMath,
-} from "../../index.js";
+import { Cartesian3, Math as CesiumMath } from "@cesium/core-math";
 
-import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+// Cartographic and Ellipsoid are in the engine package, not core-math
+import { Cartographic, Ellipsoid } from "../../engine/index.js";
+
+import createPackableArraySpecs from "../../../Specs/createPackableArraySpecs.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/Cartesian3", function () {
   afterEach(function () {

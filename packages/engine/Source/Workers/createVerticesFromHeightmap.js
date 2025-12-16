@@ -1,8 +1,8 @@
+import { RuntimeError } from "@cesium/core-utils";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeightmapEncoding from "../Core/HeightmapEncoding.js";
 import HeightmapTessellator from "../Core/HeightmapTessellator.js";
 import Rectangle from "../Core/Rectangle.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Lerc from "lerc";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 

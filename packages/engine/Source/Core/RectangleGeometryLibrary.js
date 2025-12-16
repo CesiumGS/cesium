@@ -1,11 +1,8 @@
-import Cartesian3 from "./Cartesian3.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
+import { Cartesian3, CesiumMath, Matrix2 } from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import GeographicProjection from "./GeographicProjection.js";
-import CesiumMath from "./Math.js";
-import Matrix2 from "./Matrix2.js";
 import Rectangle from "./Rectangle.js";
 
 const cos = Math.cos;

@@ -1,6 +1,5 @@
-import Check from "./Check.js";
+import { Check, defined } from "@cesium/core-utils";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defined from "./defined.js";
 
 /**
  * Value and type information for per-instance geometry attribute that determines the geometry instance offset

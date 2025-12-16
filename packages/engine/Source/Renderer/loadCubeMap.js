@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import Resource from "../Core/Resource.js";
 import CubeMap from "./CubeMap.js";
 

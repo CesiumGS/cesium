@@ -1,5 +1,5 @@
+import { Frozen } from "@cesium/core-utils";
 import CesiumTerrainProvider from "./CesiumTerrainProvider.js";
-import Frozen from "./Frozen.js";
 
 /**
  * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/#cesium-world-bathymetry|Cesium World Bathymetry}.

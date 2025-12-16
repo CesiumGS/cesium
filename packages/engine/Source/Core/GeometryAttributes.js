@@ -1,4 +1,4 @@
-import Frozen from "./Frozen.js";
+import { Frozen } from "@cesium/core-utils";
 
 /**
  * Attributes, which make up a geometry's vertices.  Each property in this object corresponds to a

@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import { Check, Frozen, defined } from "@cesium/core-utils";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import MetadataType from "./MetadataType.js";
 import MetadataComponentType from "./MetadataComponentType.js";

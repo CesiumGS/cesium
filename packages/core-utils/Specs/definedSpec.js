@@ -1,4 +1,4 @@
-import { defined } from "../../index.js";
+import { defined } from "@cesium/core-utils";
 
 describe("Core/defined", function () {
   it("works for defined value", function () {

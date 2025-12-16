@@ -1,5 +1,4 @@
-import Check from "../../Core/Check.js";
-import DeveloperError from "../../Core/DeveloperError.js";
+import { Check, DeveloperError } from "@cesium/core-utils";
 
 /**
  * An enum to distinguish the different uses for {@link Model},

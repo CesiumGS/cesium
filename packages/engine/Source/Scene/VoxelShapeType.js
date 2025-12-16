@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core-utils";
 import VoxelBoxShape from "./VoxelBoxShape.js";
 import VoxelCylinderShape from "./VoxelCylinderShape.js";
 import VoxelEllipsoidShape from "./VoxelEllipsoidShape.js";

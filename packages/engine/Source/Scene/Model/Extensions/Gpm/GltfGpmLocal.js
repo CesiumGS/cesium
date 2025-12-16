@@ -1,6 +1,4 @@
-import defined from "../../../../Core/defined.js";
-import Check from "../../../../Core/Check.js";
-import RuntimeError from "../../../../Core/RuntimeError.js";
+import { Check, RuntimeError, defined } from "@cesium/core-utils";
 import StorageType from "./StorageType.js";
 
 /**

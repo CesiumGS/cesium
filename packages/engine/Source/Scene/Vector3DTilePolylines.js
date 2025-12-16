@@ -1,12 +1,11 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import { defined } from "@cesium/core-utils";
+import { Cartesian3, Matrix4 } from "@cesium/core-math";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import Buffer from "../Renderer/Buffer.js";

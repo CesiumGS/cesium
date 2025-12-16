@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core-utils";
 import PlaneGeometry from "../Core/PlaneGeometry.js";
 
 function createPlaneGeometry(planeGeometry, offset) {

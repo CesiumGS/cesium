@@ -1,5 +1,4 @@
-import Check from "./Check.js";
-import defined from "./defined.js";
+import { Check, defined } from "@cesium/core-utils";
 
 /**
  * A generic utility class for managing subscribers for a particular event.

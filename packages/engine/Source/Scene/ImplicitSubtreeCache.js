@@ -1,5 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError, Frozen } from "@cesium/core-utils";
 import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
 
 /**

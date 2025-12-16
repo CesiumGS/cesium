@@ -1,16 +1,11 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
+import { Cartesian2, Cartesian4, CesiumMath } from "@cesium/core-math";
 import createWorldImageryAsync from "../Scene/createWorldImageryAsync.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import CesiumMath from "../Core/Math.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Rectangle from "../Core/Rectangle.js";
 import Request from "../Core/Request.js";

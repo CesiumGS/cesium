@@ -1,7 +1,7 @@
-import { Cartesian2, Math as CesiumMath, Matrix2 } from "../../index.js";
+import { Cartesian2, Math as CesiumMath, Matrix2 } from "@cesium/core-math";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
-import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
+import createPackableArraySpecs from "../../../Specs/createPackableArraySpecs.js";
 
 describe("Core/Matrix2", function () {
   it("default constructor creates values array with all zeros.", function () {

@@ -1,10 +1,7 @@
-import Check from "../Core/Check.js";
+import { Check, Frozen, RuntimeError, defined } from "@cesium/core-utils";
 import clone from "../Core/clone.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import IonResource from "../Core/IonResource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import IonImageryProviderFactory from "./IonImageryProviderFactory.js";
 
 /**

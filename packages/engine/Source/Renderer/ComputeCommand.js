@@ -1,4 +1,4 @@
-import Frozen from "../Core/Frozen.js";
+import { Frozen } from "@cesium/core-utils";
 import Pass from "./Pass.js";
 
 /**

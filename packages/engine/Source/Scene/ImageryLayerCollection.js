@@ -1,8 +1,7 @@
-import defined from "../Core/defined.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
+import { CesiumMath } from "@cesium/core-math";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
-import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import ImageryLayer from "./ImageryLayer.js";
 

@@ -301,6 +301,14 @@ export async function createCesiumJs() {
   const version = await getVersion();
   let contents = `export const VERSION = '${version}';\n`;
 
+  // Re-export core-utils types for the main Cesium bundle
+  contents += `${EOL}// Core utilities from @cesium/core-utils${EOL}`;
+  contents += `export { Check, defined, DeveloperError, Frozen, RuntimeError } from '@cesium/core-utils';${EOL}`;
+
+  // Re-export core-math types for the main Cesium bundle
+  contents += `${EOL}// Core math types from @cesium/core-math${EOL}`;
+  contents += `export { Cartesian2, Cartesian3, Cartesian4, CesiumMath, CesiumMath as Math, Matrix2, Matrix3, Matrix4 } from '@cesium/core-math';${EOL}${EOL}`;
+
   // Iterate over each workspace and generate declarations for each file.
   for (const workspace of Object.keys(workspaceSourceFiles)) {
     const files = await globby(workspaceSourceFiles[workspace]);
@@ -923,6 +931,14 @@ export async function createIndexJs(workspace) {
   const version = await getVersion();
   let contents = `globalThis.CESIUM_VERSION = "${version}";\n`;
 
+  // Re-export core-utils and core-math types for backwards compatibility in engine package
+  if (workspace === "engine") {
+    contents += `${EOL}// Re-export core-utils types for backwards compatibility${EOL}`;
+    contents += `export { Check, defined, DeveloperError, Frozen, RuntimeError } from '@cesium/core-utils';${EOL}`;
+    contents += `${EOL}// Re-export core-math types for backwards compatibility${EOL}`;
+    contents += `export { Cartesian2, Cartesian3, Cartesian4, CesiumMath, CesiumMath as Math, Matrix2, Matrix3, Matrix4 } from '@cesium/core-math';${EOL}${EOL}`;
+  }
+
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
   const workspaceSources = workspaceSourceFiles[workspace];
   if (!workspaceSources) {
@@ -1037,15 +1053,19 @@ async function bundleSpecs(options) {
 
   // When bundling specs for a workspace, the spec-main.js and karma-main.js
   // are bundled separately since they use a different outbase than the workspace's SpecList.js.
+  // These files import from @cesium/* packages, so we need the externalResolvePlugin to
+  // redirect those imports to the global Cesium object loaded in the browser.
   await build({
     ...buildOptions,
     entryPoints: ["Specs/spec-main.js", "Specs/karma-main.js"],
+    plugins: [externalResolvePlugin],
   });
 
   return build({
     ...buildOptions,
     entryPoints: [options.specListFile],
     outbase: options.outbase,
+    plugins: [externalResolvePlugin],
   });
 }
 

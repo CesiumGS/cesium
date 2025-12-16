@@ -1,14 +1,11 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
+import { Cartesian3, Matrix3 } from "@cesium/core-math";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import FrustumGeometry from "../Core/FrustumGeometry.js";
 import FrustumOutlineGeometry from "../Core/FrustumOutlineGeometry.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
-import Matrix3 from "../Core/Matrix3.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
 import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";

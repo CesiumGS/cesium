@@ -1,13 +1,10 @@
-import Cartesian3 from "./Cartesian3.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
+import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidGeodesic from "./EllipsoidGeodesic.js";
 import EllipsoidRhumbLine from "./EllipsoidRhumbLine.js";
 import IntersectionTests from "./IntersectionTests.js";
-import CesiumMath from "./Math.js";
-import Matrix4 from "./Matrix4.js";
 import Plane from "./Plane.js";
 
 /**

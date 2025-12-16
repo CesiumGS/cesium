@@ -1,7 +1,6 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import { defined } from "@cesium/core-utils";
+import { Cartesian3, Matrix3 } from "@cesium/core-math";
 import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
-import Matrix3 from "../Core/Matrix3.js";
 import srgbToLinear from "../Core/srgbToLinear.js";
 
 /**

@@ -1,8 +1,5 @@
-import Check from "../../Core/Check.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 import UniformType from "./UniformType.js";
 import TextureManager from "./TextureManager.js";

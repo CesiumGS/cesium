@@ -1,12 +1,14 @@
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
+import {
+  Cartesian2,
+  Cartesian3,
+  CesiumMath,
+  Matrix2,
+  Matrix3,
+} from "@cesium/core-math";
 import BoundingSphere from "./BoundingSphere.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
@@ -15,9 +17,6 @@ import GeometryInstance from "./GeometryInstance.js";
 import GeometryOffsetAttribute from "./GeometryOffsetAttribute.js";
 import GeometryPipeline from "./GeometryPipeline.js";
 import IndexDatatype from "./IndexDatatype.js";
-import CesiumMath from "./Math.js";
-import Matrix2 from "./Matrix2.js";
-import Matrix3 from "./Matrix3.js";
 import PolygonPipeline from "./PolygonPipeline.js";
 import PrimitiveType from "./PrimitiveType.js";
 import Quaternion from "./Quaternion.js";

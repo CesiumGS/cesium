@@ -1,6 +1,6 @@
-import Cartesian2 from "../Core/Cartesian2.js";
+import { defined } from "@cesium/core-utils";
+import { Cartesian2 } from "@cesium/core-math";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";

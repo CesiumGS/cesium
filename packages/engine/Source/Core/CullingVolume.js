@@ -1,7 +1,5 @@
-import Cartesian3 from "./Cartesian3.js";
-import Cartesian4 from "./Cartesian4.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
+import { Cartesian3, Cartesian4 } from "@cesium/core-math";
 import Intersect from "./Intersect.js";
 import Plane from "./Plane.js";
 

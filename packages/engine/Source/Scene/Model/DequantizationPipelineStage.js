@@ -1,5 +1,5 @@
-import defined from "../../Core/defined.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
+import { defined } from "@cesium/core-utils";
+import { Cartesian4 } from "@cesium/core-math";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelUtility from "./ModelUtility.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";

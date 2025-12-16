@@ -1,5 +1,4 @@
-import Check from "./Check.js";
-import defined from "./defined.js";
+import { Check, defined } from "@cesium/core-utils";
 
 /**
  * Initiates a terrain height query for an array of {@link Cartographic} positions by

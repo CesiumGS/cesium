@@ -1,5 +1,5 @@
+import { Frozen } from "@cesium/core-utils";
 import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
 
 /**
  * Represents a command to the renderer for clearing a framebuffer.

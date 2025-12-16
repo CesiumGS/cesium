@@ -1,19 +1,16 @@
-import Check from "./Check.js";
+import { Check, Frozen, RuntimeError, defined } from "@cesium/core-utils";
+import { CesiumMath } from "@cesium/core-math";
 import Credit from "./Credit.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import GoogleEarthEnterpriseMetadata from "./GoogleEarthEnterpriseMetadata.js";
 import GoogleEarthEnterpriseTerrainData from "./GoogleEarthEnterpriseTerrainData.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import JulianDate from "./JulianDate.js";
-import CesiumMath from "./Math.js";
 import Rectangle from "./Rectangle.js";
 import Request from "./Request.js";
 import RequestState from "./RequestState.js";
 import RequestType from "./RequestType.js";
-import RuntimeError from "./RuntimeError.js";
 import TaskProcessor from "./TaskProcessor.js";
 
 const TerrainState = {

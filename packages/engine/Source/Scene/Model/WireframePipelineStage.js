@@ -1,6 +1,6 @@
+import { defined } from "@cesium/core-utils";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import ModelUtility from "./ModelUtility.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";

@@ -1,9 +1,7 @@
-import Cartesian3 from "./Cartesian3.js";
-import defined from "./defined.js";
+import { defined } from "@cesium/core-utils";
+import { Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
 import Iau2000Orientation from "./Iau2000Orientation.js";
 import JulianDate from "./JulianDate.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
 import Quaternion from "./Quaternion.js";
 
 /**

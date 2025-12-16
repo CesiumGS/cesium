@@ -1,4 +1,4 @@
-import Frozen from "../Core/Frozen.js";
+import { Frozen } from "@cesium/core-utils";
 
 /**
  * Represents a burst of {@link Particle}s from a {@link ParticleSystem} at a given time in the systems lifetime.

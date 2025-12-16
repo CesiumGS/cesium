@@ -1,6 +1,6 @@
+import { DeveloperError } from "@cesium/core-utils";
 import clone from "../Core/clone.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Context from "./Context.js";
 
 /**

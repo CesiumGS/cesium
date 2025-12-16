@@ -1,4 +1,4 @@
-import Check from "./Check.js";
+import { Check } from "@cesium/core-utils";
 
 const blobUriRegex = /^blob:/i;
 

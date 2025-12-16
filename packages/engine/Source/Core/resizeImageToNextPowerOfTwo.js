@@ -1,4 +1,4 @@
-import CesiumMath from "./Math.js";
+import { CesiumMath } from "@cesium/core-math";
 
 /**
  * Resizes an image to ensure both width and height are powers of 2.

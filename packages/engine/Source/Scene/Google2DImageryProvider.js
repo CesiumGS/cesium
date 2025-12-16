@@ -1,10 +1,7 @@
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import IonResource from "../Core/IonResource.js";
-import Check from "../Core/Check.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
 import { GOOGLE_2D_MAPS as createFromIonEndpoint } from "./IonImageryProviderFactory.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";

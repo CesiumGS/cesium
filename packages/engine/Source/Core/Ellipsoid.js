@@ -1,10 +1,6 @@
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
+import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import CesiumMath from "./Math.js";
 import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
 
 function initialize(ellipsoid, x, y, z) {

@@ -1,12 +1,14 @@
+import {
+  Check,
+  DeveloperError,
+  RuntimeError,
+  defined,
+} from "@cesium/core-utils";
 import Cesium3DTileset from "./Cesium3DTileset.js";
-import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 import ITwinPlatform from "../Core/ITwinPlatform.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import Check from "../Core/Check.js";
 import KmlDataSource from "../DataSources/KmlDataSource.js";
 import GeoJsonDataSource from "../DataSources/GeoJsonDataSource.js";
-import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * Methods for loading iTwin platform data into CesiumJS

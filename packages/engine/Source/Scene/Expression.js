@@ -1,12 +1,16 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
+import {
+  Check,
+  DeveloperError,
+  RuntimeError,
+  defined,
+} from "@cesium/core-utils";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  CesiumMath,
+} from "@cesium/core-math";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import jsep from "jsep";
 import ExpressionNodeType from "./ExpressionNodeType.js";
 

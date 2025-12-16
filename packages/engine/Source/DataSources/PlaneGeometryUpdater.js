@@ -1,15 +1,10 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
+import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import Iso8601 from "../Core/Iso8601.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import PlaneGeometry from "../Core/PlaneGeometry.js";
 import PlaneOutlineGeometry from "../Core/PlaneOutlineGeometry.js";
 import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";

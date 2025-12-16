@@ -1,7 +1,5 @@
-import Check from "../Core/Check.js";
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import clone from "../Core/clone.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**

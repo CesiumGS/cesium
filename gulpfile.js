@@ -114,15 +114,15 @@ export async function build() {
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === `@${scope}/engine`) {
+  if (workspace === `@${scope}/core-math`) {
+    return buildCoreMath(buildOptions);
+  } else if (workspace === `@${scope}/engine`) {
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
   } else if (workspace === `@${scope}/core-utils`) {
     console.log("Building core-utils...");
     return buildCoreUtils(buildOptions);
-  } else if (workspace === `@${scope}/core-math`) {
-    return buildCoreMath(buildOptions);
   }
 
   await buildCoreUtils(buildOptions);
@@ -829,9 +829,19 @@ export async function test() {
 
   if (!isProduction && !release) {
     console.log("Building specs...");
-    await buildCesium({
-      iife: true,
-    });
+    if (workspace) {
+      if (workspace === "core-math") {
+        await buildCoreMath({});
+      } else if (workspace === "engine") {
+        await buildEngine({});
+      } else if (workspace === "widgets") {
+        await buildWidgets({});
+      }
+    } else {
+      await buildCesium({
+        iife: true,
+      });
+    }
   }
 
   let browsers = debug ? ["ChromeDebugging"] : ["Chrome"];
@@ -1020,7 +1030,7 @@ function generateTypeScriptDefinitions(
     // Replace JSDoc generation version of defined with an improved version using TS type predicates
     .replace(
       /\n?export function defined\(value: any\): boolean;/gm,
-      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
+      `\n${readFileSync("./packages/core-utils/Source/defined.d.ts")
         .toString()
         .replace(/\n*\/\*.*?\*\/\n*/gms, "")
         .replace("export default", "export")}`,
@@ -1028,7 +1038,7 @@ function generateTypeScriptDefinitions(
     // Replace JSDoc generation version of Check with one that asserts the type of variables after called
     .replace(
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
+      `\n${readFileSync("./packages/core-utils/Source/Check.d.ts")
         .toString()
         .replace(/export default.*\n?/, "")
         .replace("const Check", "export const Check")}`,
@@ -1234,7 +1244,7 @@ function createTypeScriptDefinitions() {
     // Replace JSDoc generation version of defined with an improved version using TS type predicates
     .replace(
       /\n?export function defined\(value: any\): boolean;/gm,
-      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
+      `\n${readFileSync("./packages/core-utils/Source/defined.d.ts")
         .toString()
         .replace(/\n*\/\*.*?\*\/\n*/gms, "")
         .replace("export default", "export")}`,
@@ -1242,7 +1252,7 @@ function createTypeScriptDefinitions() {
     // Replace JSDoc generation version of Check with one that asserts the type of variables after called
     .replace(
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
+      `\n${readFileSync("./packages/core-utils/Source/Check.d.ts")
         .toString()
         .replace(/export default.*\n?/, "")
         .replace("const Check", "export const Check")}`,
@@ -1253,9 +1263,31 @@ function createTypeScriptDefinitions() {
       "raiseEvent(...arguments: Parameters<Listener>): void;",
     );
 
+  // Read core package type definitions to include in the cesium module
+  const coreMathTypes = readFileSync("./packages/core-math/index.d.ts")
+    .toString()
+    // Extract the content inside the declare module block
+    .replace(/^declare module "@cesium\/core-math" \{\n/, "")
+    .replace(/import \{[^}]+\} from "@cesium\/core-utils";\n/g, "")
+    .replace(/\n\}\s*$/, "");
+
+  const coreUtilsTypes = readFileSync("./packages/core-utils/index.d.ts")
+    .toString()
+    // Extract the content inside the declare module block
+    .replace(/^declare module "@cesium\/core-utils" \{\n/, "")
+    .replace(/\n\}\s*$/, "");
+
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
+  // Include types from core packages that are re-exported by cesium
   source = `declare module "cesium" {
+// Types from @cesium/core-utils
+${coreUtilsTypes}
+
+// Types from @cesium/core-math
+${coreMathTypes}
+
+// Types from @cesium/engine and @cesium/widgets
 ${source}
 }
 

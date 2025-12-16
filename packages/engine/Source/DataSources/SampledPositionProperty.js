@@ -1,7 +1,5 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
+import { Cartesian3 } from "@cesium/core-math";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";

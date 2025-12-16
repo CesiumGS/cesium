@@ -1,14 +1,10 @@
-import Cartesian3 from "./Cartesian3.js";
+import { Check, defined } from "@cesium/core-utils";
+import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import GeographicProjection from "./GeographicProjection.js";
 import Intersect from "./Intersect.js";
 import Interval from "./Interval.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
-import Matrix4 from "./Matrix4.js";
 import Rectangle from "./Rectangle.js";
 
 /**

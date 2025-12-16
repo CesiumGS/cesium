@@ -1,7 +1,7 @@
+import { defined } from "@cesium/core-utils";
 import ColorBlendMode from "../ColorBlendMode.js";
 import CPUStylingStageVS from "../../Shaders/Model/CPUStylingStageVS.js";
 import CPUStylingStageFS from "../../Shaders/Model/CPUStylingStageFS.js";
-import defined from "../../Core/defined.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";

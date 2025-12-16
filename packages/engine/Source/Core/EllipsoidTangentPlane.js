@@ -1,13 +1,8 @@
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
+import { Cartesian2, Cartesian3, Cartesian4, Matrix4 } from "@cesium/core-math";
 import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartesian4 from "./Cartesian4.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import IntersectionTests from "./IntersectionTests.js";
-import Matrix4 from "./Matrix4.js";
 import Plane from "./Plane.js";
 import Ray from "./Ray.js";
 import Transforms from "./Transforms.js";

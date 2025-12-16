@@ -1,11 +1,10 @@
+import { defined } from "@cesium/core-utils";
+import { Cartesian3, Matrix4 } from "@cesium/core-math";
 import addAllToArray from "../../Core/addAllToArray.js";
 import AttributeCompression from "../../Core/AttributeCompression.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
 import clone from "../../Core/clone.js";
 import combine from "../../Core/combine.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import Quaternion from "../../Core/Quaternion.js";
 import Transforms from "../../Core/Transforms.js";
 import Buffer from "../../Renderer/Buffer.js";

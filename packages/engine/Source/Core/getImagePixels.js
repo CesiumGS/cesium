@@ -1,4 +1,4 @@
-import defined from "./defined.js";
+import { defined } from "@cesium/core-utils";
 
 const context2DsByWidthAndHeight = {};
 

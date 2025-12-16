@@ -1,4 +1,4 @@
-import defined from "./defined.js";
+import { defined } from "@cesium/core-utils";
 
 /**
  * Defines a heading angle, pitch angle, and range in a local frame.

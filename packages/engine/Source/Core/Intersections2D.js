@@ -1,8 +1,5 @@
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
+import { Cartesian2, Cartesian3 } from "@cesium/core-math";
 
 /**
  * Contains functions for operating on 2D triangles.

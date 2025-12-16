@@ -1,7 +1,6 @@
+import { Frozen, defined } from "@cesium/core-utils";
 import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import BlendingState from "./BlendingState.js";
 import CullFace from "./CullFace.js";
 

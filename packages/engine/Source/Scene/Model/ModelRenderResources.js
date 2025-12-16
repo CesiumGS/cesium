@@ -1,4 +1,4 @@
-import Check from "../../Core/Check.js";
+import { Check } from "@cesium/core-utils";
 import ModelAlphaOptions from "./ModelAlphaOptions.js";
 import RenderState from "../../Renderer/RenderState.js";
 import ShaderBuilder from "../../Renderer/ShaderBuilder.js";

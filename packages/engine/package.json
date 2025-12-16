@@ -33,6 +33,8 @@
     "./Specs/**/*"
   ],
   "dependencies": {
+    "@cesium/core-utils": "^0.0.0",
+    "@cesium/core-math": "^1.0.0",
     "@cesium/wasm-splats": "^0.1.0-alpha.2",
     "@spz-loader/core": "0.3.0",
     "@tweenjs/tween.js": "^25.0.0",

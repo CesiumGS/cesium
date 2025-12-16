@@ -1,9 +1,7 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryInstanceAttribute from "../Core/GeometryInstanceAttribute.js";
 import GroundPolylineGeometry from "../Core/GroundPolylineGeometry.js";

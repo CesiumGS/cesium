@@ -1,9 +1,8 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core-utils";
+import { Cartesian3, Matrix3 } from "@cesium/core-math";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
-import Matrix3 from "../Core/Matrix3.js";
 import Quaternion from "../Core/Quaternion.js";
 import Transforms from "../Core/Transforms.js";
 import Property from "./Property.js";

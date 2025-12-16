@@ -1,9 +1,8 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
+import { Matrix4 } from "@cesium/core-math";
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import Cesium3DTileset from "../Scene/Cesium3DTileset.js";
 import BoundingSphereState from "./BoundingSphereState.js";

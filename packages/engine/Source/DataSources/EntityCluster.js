@@ -1,11 +1,8 @@
+import { Frozen, defined } from "@cesium/core-utils";
+import { Cartesian2, Cartesian3, Matrix4 } from "@cesium/core-math";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
 import Event from "../Core/Event.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Billboard from "../Scene/Billboard.js";
 import BillboardCollection from "../Scene/BillboardCollection.js";
 import Label from "../Scene/Label.js";

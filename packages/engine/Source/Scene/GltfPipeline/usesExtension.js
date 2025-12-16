@@ -1,4 +1,4 @@
-import defined from "../../Core/defined.js";
+import { defined } from "@cesium/core-utils";
 
 /**
  * Checks whether the glTF uses the given extension.

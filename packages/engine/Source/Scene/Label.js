@@ -1,10 +1,7 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
+import { Cartesian2, Cartesian3 } from "@cesium/core-math";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import Billboard from "./Billboard.js";

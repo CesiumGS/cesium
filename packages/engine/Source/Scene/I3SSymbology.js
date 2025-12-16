@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core-utils";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 import srgbToLinear from "../Core/srgbToLinear.js";
 
 /**

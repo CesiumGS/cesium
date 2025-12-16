@@ -1,3 +1,5 @@
+import { defined } from "@cesium/core-utils";
+import { Cartesian3, Cartesian4, Matrix4 } from "@cesium/core-math";
 import addExtensionsUsed from "./addExtensionsUsed.js";
 import addToArray from "./addToArray.js";
 import findAccessorMinMax from "./findAccessorMinMax.js";
@@ -9,12 +11,8 @@ import moveTechniquesToExtension from "./moveTechniquesToExtension.js";
 import removeUnusedElements from "./removeUnusedElements.js";
 import updateAccessorComponentTypes from "./updateAccessorComponentTypes.js";
 import removeExtension from "./removeExtension.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
 import clone from "../../Core/clone.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import Quaternion from "../../Core/Quaternion.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";
 

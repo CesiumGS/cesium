@@ -1,12 +1,10 @@
-import Cartesian3 from "../Core/Cartesian3.js";
+import { Check, defined } from "@cesium/core-utils";
+import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
 import Iso8601 from "../Core/Iso8601.js";
 import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
 import HeightReference, {
   isHeightReferenceRelative,
 } from "../Scene/HeightReference.js";

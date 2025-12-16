@@ -1,6 +1,5 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import CesiumMath from "./Math.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
+import { CesiumMath } from "@cesium/core-math";
 
 const factorial = CesiumMath.factorial;
 

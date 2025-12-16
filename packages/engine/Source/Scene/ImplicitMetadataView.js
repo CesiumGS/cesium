@@ -1,5 +1,4 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
+import { Check, Frozen } from "@cesium/core-utils";
 
 /**
  * This class represents a single entity in the <code>MetadataTable</code> owned by an implicit subtree. The entity is specified by the entityId.

@@ -1,4 +1,4 @@
-import defined from "../../Core/defined.js";
+import { defined } from "@cesium/core-utils";
 import Rectangle from "../../Core/Rectangle.js";
 
 import CartesianRectangle from "./CartesianRectangle.js";

@@ -1,16 +1,10 @@
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
+import { Cartesian2, Cartesian3, Cartesian4, Matrix4 } from "@cesium/core-math";
 import AttributeCompression from "../Core/AttributeCompression.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import Intersect from "../Core/Intersect.js";
-import Matrix4 from "../Core/Matrix4.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Plane from "../Core/Plane.js";
 import ContextLimits from "../Renderer/ContextLimits.js";

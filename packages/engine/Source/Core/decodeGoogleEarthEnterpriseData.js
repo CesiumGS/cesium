@@ -1,5 +1,4 @@
-import Check from "./Check.js";
-import RuntimeError from "./RuntimeError.js";
+import { Check, RuntimeError } from "@cesium/core-utils";
 
 const compressedMagic = 0x7468dead;
 const compressedMagicSwap = 0xadde6874;

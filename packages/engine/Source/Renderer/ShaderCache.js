@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core-utils";
 import destroyObject from "../Core/destroyObject.js";
 import ShaderProgram from "./ShaderProgram.js";
 import ShaderSource from "./ShaderSource.js";

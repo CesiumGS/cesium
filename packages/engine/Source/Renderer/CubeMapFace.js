@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, DeveloperError, defined } from "@cesium/core-utils";
 import PixelFormat from "../Core/PixelFormat.js";
 import PixelDatatype from "./PixelDatatype.js";
 

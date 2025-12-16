@@ -1,6 +1,5 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import Uri from "urijs";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * Given a relative Uri and a base Uri, returns the absolute Uri of the relative Uri.

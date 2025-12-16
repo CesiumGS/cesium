@@ -1,7 +1,7 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
+import { Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import Geometry from "../Core/Geometry.js";
@@ -9,7 +9,6 @@ import GeometryAttribute from "../Core/GeometryAttribute.js";
 import GeometryAttributes from "../Core/GeometryAttributes.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import Matrix4 from "../Core/Matrix4.js";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 

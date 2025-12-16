@@ -1,7 +1,5 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
+import { Cartesian3, CesiumMath } from "@cesium/core-math";
 import SceneMode from "./SceneMode.js";
 
 /**

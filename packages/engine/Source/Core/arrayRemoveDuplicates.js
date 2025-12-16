@@ -1,6 +1,5 @@
-import Check from "./Check.js";
-import defined from "./defined.js";
-import CesiumMath from "./Math.js";
+import { Check, defined } from "@cesium/core-utils";
+import { CesiumMath } from "@cesium/core-math";
 
 const removeDuplicatesEpsilon = CesiumMath.EPSILON10;
 

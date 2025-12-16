@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core-utils";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import PolylineVolumeOutlineGeometry from "../Core/PolylineVolumeOutlineGeometry.js";
 

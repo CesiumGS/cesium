@@ -1,13 +1,15 @@
-import Check from "../Core/Check.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  RuntimeError,
+  defined,
+} from "@cesium/core-utils";
+import { CesiumMath } from "@cesium/core-math";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Geometry from "../Core/Geometry.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import CesiumMath from "../Core/Math.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Buffer from "./Buffer.js";
 import BufferUsage from "./BufferUsage.js";
 import ContextLimits from "./ContextLimits.js";

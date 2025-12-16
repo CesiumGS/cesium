@@ -1,5 +1,5 @@
+import { Frozen } from "@cesium/core-utils";
 import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
 
 /**
  * A directional light source that originates from the Sun.

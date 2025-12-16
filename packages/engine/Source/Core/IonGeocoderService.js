@@ -1,8 +1,5 @@
-import Check from "./Check.js";
+import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
 import Credit from "./Credit.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ion from "./Ion.js";
 import IonGeocodeProviderType from "./IonGeocodeProviderType.js";
 import PeliasGeocoderService from "./PeliasGeocoderService.js";

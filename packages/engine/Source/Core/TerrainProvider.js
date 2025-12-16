@@ -1,7 +1,6 @@
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError, defined } from "@cesium/core-utils";
+import { CesiumMath } from "@cesium/core-math";
 import IndexDatatype from "./IndexDatatype.js";
-import CesiumMath from "./Math.js";
 
 /**
  * Provides terrain or other geometry for the surface of an ellipsoid.  The surface geometry is

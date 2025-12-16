@@ -1,11 +1,13 @@
-import Cartesian3 from "./Cartesian3.js";
+import {
+  Check,
+  DeveloperError,
+  RuntimeError,
+  defined,
+} from "@cesium/core-utils";
+import { Cartesian3 } from "@cesium/core-math";
 import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import FeatureDetection from "./FeatureDetection.js";
-import RuntimeError from "./RuntimeError.js";
 
 /**
  * S2

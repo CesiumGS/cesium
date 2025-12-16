@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import { RuntimeError, defined } from "@cesium/core-utils";
 
 /**
  * This class implements an I3S Field which is custom data attached

@@ -1,7 +1,6 @@
+import { DeveloperError, defined } from "@cesium/core-utils";
 import Color from "./Color.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 
 /**
  * Value and type information for per-instance geometry color.
