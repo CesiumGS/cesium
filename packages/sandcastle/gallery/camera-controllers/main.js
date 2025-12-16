@@ -26,7 +26,7 @@ viewer.addController(keyboardController);
 // const lookController = new Cesium.ScreenspaceCameraLookController();
 // viewer.addController(lookController);
 
-const panController = new Cesium.ScreenspaceMapCameraController();
+const panController = new Cesium.HybridScreenspacePanCameraController();
 viewer.addController(panController);
 
 // const orbitController = new Cesium.OrbitCameraAnimationController();
