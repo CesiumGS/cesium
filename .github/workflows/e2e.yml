@@ -30,8 +30,8 @@ jobs:
         run: npx playwright install --with-deps --no-shell chromium
       - name: test log 1
         run: |
-          ls -l Build/Specs
-          ls -l Specs/e2e
+          ls -lR Build/Specs/e2e
+          ls -lR Specs/e2e
       - name: run e2e tests
         run: npm run test-e2e -- viewer.spec.js
         env:
@@ -39,8 +39,8 @@ jobs:
         continue-on-error: true
       - name: test log 2
         run: |
-          ls -l Build/Specs
-          ls -l Specs/e2e
+          ls -lR Build/Specs/e2e
+          ls -lR Specs/e2e
       - name: deploy to s3
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: |
@@ -62,5 +62,5 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: e2e-report
-          path: Build/Specs/e2e/artifacts/**/*
+          path: Build/Specs/e2e/**/*
           retention-days: 30
