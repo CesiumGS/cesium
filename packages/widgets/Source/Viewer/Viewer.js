@@ -1970,6 +1970,20 @@ Viewer.prototype._onDataSourceRemoved = function (
 };
 
 /**
+ * TODO
+ */
+Viewer.prototype.addController = function (controller) {
+  return this._cesiumWidget.addController(controller);
+}
+
+/**
+ * TODO
+ */
+Viewer.prototype.removeController = function (controller) {
+  return this._cesiumWidget.removeController(controller);
+}
+
+/**
  * Asynchronously sets the camera to view the provided entity, entities, or data source.
  * If the data source is still in the process of loading or the visualization is otherwise still loading,
  * this method waits for the data to be ready before performing the zoom.
