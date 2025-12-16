@@ -1,3 +1,4 @@
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian2 from "../../Core/Cartesian2.js";
 import defined from "../../Core/defined.js";
 import getTimestamp from "../../Core/getTimestamp.js";
@@ -13,6 +14,9 @@ export default class ScreenspaceCameraLookController {
     this._isLooking = false;
     this._lookDelta = new Cartesian2();
     this._lastUpdateTime = undefined;
+
+        this._ellipsoidNormal = new Cartesian3();
+        this._ellipsoidRight = new Cartesian3();
 
     // TODO: Handle input mapping
     // TODO: Inertia
@@ -84,8 +88,19 @@ export default class ScreenspaceCameraLookController {
     const y = this._lookDelta.y / height;
 
     const camera = scene.camera;
-    camera.lookRight(x * lookFactor);
-    camera.lookUp(y * lookFactor);
+    const ellipsoid = scene.ellipsoid;
+        const up = ellipsoid.geodeticSurfaceNormal(
+          camera.positionWC,
+          this._ellipsoidNormal,
+        );
+        const right = Cartesian3.cross(
+          up,
+          camera.directionWC,
+          this._ellipsoidRight,
+        );
+
+    camera.look(up, x * lookFactor);
+    camera.look(right, y * lookFactor);
 
     // Reset for next frame
     this._lastUpdateTime = getTimestamp();
