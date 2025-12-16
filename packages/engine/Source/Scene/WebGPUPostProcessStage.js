@@ -126,7 +126,7 @@ WebGPUPostProcessStage.prototype._initializeAsync = async function () {
 
   // Check if WebGPU is supported
   if (!navigator.gpu) {
-    console.warn(`❌ WebGPU not supported for "${this._name}"`);
+    console.warn(`WebGPU not supported for "${this._name}"`);
     return;
   }
 
@@ -146,7 +146,7 @@ WebGPUPostProcessStage.prototype._initializeAsync = async function () {
 
     const adapter = await navigator.gpu.requestAdapter();
     if (!adapter) {
-      console.error("❌ No WebGPU adapter available");
+      console.error("No WebGPU adapter available");
       return;
     }
 
@@ -246,10 +246,10 @@ WebGPUPostProcessStage.prototype._initializeAsync = async function () {
     );
 
     this._initialized = true;
-    console.log(`✅ WebGPU post-process stage "${this._name}" initialized`);
+    console.log(`WebGPU post-process stage "${this._name}" initialized`);
   } catch (error) {
     console.error(
-      `❌ Failed to initialize WebGPU post-process stage "${this._name}":`,
+      `Failed to initialize WebGPU post-process stage "${this._name}":`,
       error,
     );
   }
@@ -287,7 +287,7 @@ WebGPUPostProcessStage.prototype._render = function () {
     this._device.queue.submit([commandEncoder.finish()]);
   } catch (error) {
     console.error(
-      `❌ Failed to render WebGPU post-process stage "${this._name}":`,
+      `Failed to render WebGPU post-process stage "${this._name}":`,
       error,
     );
   }
