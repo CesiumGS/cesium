@@ -460,7 +460,7 @@ TileBoundingRegion.prototype.createDebugVolume = function (color) {
   Check.defined("color", color);
   //>>includeEnd('debug');
 
-  const modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
+  const modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
   const geometry = new RectangleOutlineGeometry({
     rectangle: this.rectangle,
     height: this.minimumHeight,

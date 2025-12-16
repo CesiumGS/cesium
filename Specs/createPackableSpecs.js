@@ -1,4 +1,5 @@
-import { defined, Math as CesiumMath } from "@cesium/engine";
+import { defined } from "@cesium/core-utils";
+import { Math as CesiumMath } from "@cesium/core-math";
 
 function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
   namePrefix = namePrefix ?? "";

@@ -402,6 +402,8 @@ export async function buildDocsWatch() {
 }
 
 export const websiteRelease = gulp.series(
+  buildCoreUtils,
+  buildCoreMath,
   buildEngine,
   buildWidgets,
   function websiteReleaseBuild() {
