@@ -624,7 +624,7 @@ TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
   Check.defined("color", color);
   //>>includeEnd('debug');
 
-  const modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
+  const modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
   const topPlanePolygon = new CoplanarPolygonOutlineGeometry({
     polygonHierarchy: {
       positions: this._planeVertices[0],
