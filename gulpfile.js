@@ -18,6 +18,8 @@ import { createInstrumenter } from "istanbul-lib-instrument";
 
 import {
   buildCesium,
+  buildCoreUtils,
+  buildCoreMath,
   buildEngine,
   buildWidgets,
   bundleWorkers,
@@ -61,6 +63,10 @@ const argv = yargs(process.argv).argv;
 const verbose = argv.verbose;
 
 const sourceFiles = [
+  "packages/core-utils/Source/**/*.js",
+  "!packages/core-utils/Source/*.js",
+  "packages/core-math/Source/**/*.js",
+  "!packages/core-math/Source/*.js",
   "packages/engine/Source/**/*.js",
   "!packages/engine/Source/*.js",
   "packages/widgets/Source/**/*.js",
@@ -72,6 +78,10 @@ const sourceFiles = [
 ];
 
 const watchedSpecFiles = [
+  "packages/core-utils/Specs/**/*Spec.js",
+  "!packages/core-utils/Specs/SpecList.js",
+  "packages/core-math/Specs/**/*Spec.js",
+  "!packages/core-math/Specs/SpecList.js",
   "packages/engine/Specs/**/*Spec.js",
   "!packages/engine/Specs/SpecList.js",
   "packages/widgets/Specs/**/*Spec.js",
@@ -108,8 +118,15 @@ export async function build() {
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
+  } else if (workspace === `@${scope}/core-utils`) {
+    console.log("Building core-utils...");
+    return buildCoreUtils(buildOptions);
+  } else if (workspace === `@${scope}/core-math`) {
+    return buildCoreMath(buildOptions);
   }
 
+  await buildCoreUtils(buildOptions);
+  await buildCoreMath(buildOptions);
   await buildEngine(buildOptions);
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);
