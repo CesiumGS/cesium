@@ -43,23 +43,23 @@ jobs:
           ls -lR Build/Specs/e2e
           ls -lR Specs/e2e
         continue-on-error: true
-      - name: deploy to s3
-        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        run: |
-          aws s3 sync . s3://cesium-public-builds/cesium/$BRANCH/ \
-          --cache-control "no-cache" \
-          --exclude ".git/*" \
-          --exclude ".github/*" \
-          --exclude ".husky/*" \
-          --exclude ".vscode/*" \
-          --exclude "Build/Coverage/*" \
-          --exclude "Build/CesiumDev/*" \
-          --exclude "Build/Specs/TestWorkers" \
-          --exclude "Documentation/*" \
-          --exclude "node_modules/*" \
-          --exclude "scripts/*" \
-          --exclude "Tools/*" \
-          --delete
+      # - name: deploy to s3
+      #   if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+      #   run: |
+      #     aws s3 sync . s3://cesium-public-builds/cesium/$BRANCH/ \
+      #     --cache-control "no-cache" \
+      #     --exclude ".git/*" \
+      #     --exclude ".github/*" \
+      #     --exclude ".husky/*" \
+      #     --exclude ".vscode/*" \
+      #     --exclude "Build/Coverage/*" \
+      #     --exclude "Build/CesiumDev/*" \
+      #     --exclude "Build/Specs/TestWorkers" \
+      #     --exclude "Documentation/*" \
+      #     --exclude "node_modules/*" \
+      #     --exclude "scripts/*" \
+      #     --exclude "Tools/*" \
+      #     --delete
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
