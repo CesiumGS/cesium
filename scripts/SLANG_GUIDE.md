@@ -30,3 +30,7 @@ npm run build && npm run start
 
 - Go to the server in your web browser. Navigate to `/Apps/Sandcastle2/index.html?id=post-processing`.
 - Toggle Brightness on and move the slider back and forth. Observe that the Slang -> GLSL process worked!
+
+## WebGPU
+
+- See `CESIUM_DIR/packages/engine/Source/Shaders/WebGPUTest.slang`
