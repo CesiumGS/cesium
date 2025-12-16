@@ -1,0 +1,8 @@
+legacyId: WebGPU Post Processing Advance.html
+title: WebGPU Post Processing Advance - Dev
+description: Advanced WebGPU post-processing with texture sampling from Cesium's rendered scene.
+labels:
+  - Development
+  - Post Processing
+thumbnail: thumbnail.jpg
+development: true
