@@ -32,11 +32,10 @@ jobs:
         run: |
           ls -l Build/Specs
           ls -l Specs/e2e
-      - name: set verbose
-        run: |
-          DEBUG=pw:api
       - name: run e2e tests
         run: npm run test-e2e -- viewer.spec.js
+        env:
+          DEBUG: pw:api
         continue-on-error: true
       - name: test log 2
         run: |
