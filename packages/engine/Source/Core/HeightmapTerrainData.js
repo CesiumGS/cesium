@@ -1,5 +1,5 @@
 import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath } from "@cesium/core-math";
 import BoundingSphere from "./BoundingSphere.js";
 import GeographicProjection from "./GeographicProjection.js";
 import HeightmapEncoding from "./HeightmapEncoding.js";

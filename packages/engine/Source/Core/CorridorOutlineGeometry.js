@@ -1,5 +1,5 @@
 import { Check, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath } from "@cesium/core-math";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import BoundingSphere from "./BoundingSphere.js";
 import ComponentDatatype from "./ComponentDatatype.js";

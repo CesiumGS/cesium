@@ -1,5 +1,5 @@
 import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian4, CesiumMath } from "@cesium/core-math";
+import { Cartesian4, Math as CesiumMath } from "@cesium/core-math";
 import Color from "../Core/Color.js";
 import mergeSort from "../Core/mergeSort.js";
 import PixelFormat from "../Core/PixelFormat.js";

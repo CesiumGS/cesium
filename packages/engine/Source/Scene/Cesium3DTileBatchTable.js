@@ -4,7 +4,7 @@ import {
   RuntimeError,
   defined,
 } from "@cesium/core-utils";
-import { Cartesian2, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Math as CesiumMath } from "@cesium/core-math";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";

@@ -1,5 +1,5 @@
 import { Check, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian2, CesiumMath, Matrix4 } from "@cesium/core-math";
+import { Cartesian2, Math as CesiumMath, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import clone from "../../Core/clone.js";
 import WebGLConstants from "../../Core/WebGLConstants.js";

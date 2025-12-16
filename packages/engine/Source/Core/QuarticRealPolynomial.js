@@ -1,5 +1,5 @@
 import { DeveloperError } from "@cesium/core-utils";
-import { CesiumMath } from "@cesium/core-math";
+import { Math as CesiumMath } from "@cesium/core-math";
 import CubicRealPolynomial from "./CubicRealPolynomial.js";
 import QuadraticRealPolynomial from "./QuadraticRealPolynomial.js";
 

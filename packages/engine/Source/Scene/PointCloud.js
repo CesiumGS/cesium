@@ -1,5 +1,10 @@
 import { Check, RuntimeError, defined } from "@cesium/core-utils";
-import { Cartesian3, Cartesian4, CesiumMath, Matrix4 } from "@cesium/core-math";
+import {
+  Cartesian3,
+  Cartesian4,
+  Math as CesiumMath,
+  Matrix4,
+} from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";

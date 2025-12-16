@@ -94,6 +94,12 @@ export const makeZip = gulp.series(
     await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
 
     const packageJsonSrc = await pruneScriptsForZip("package.json");
+    const coreUtilsPackageJsonSrc = await pruneScriptsForZip(
+      "packages/core-utils/package.json",
+    );
+    const coreMathPackageJsonSrc = await pruneScriptsForZip(
+      "packages/core-math/package.json",
+    );
     const enginePackageJsonSrc = await pruneScriptsForZip(
       "packages/engine/package.json",
     );
@@ -110,6 +116,8 @@ export const makeZip = gulp.series(
           }
         }),
       )
+      .pipe(coreUtilsPackageJsonSrc)
+      .pipe(coreMathPackageJsonSrc)
       .pipe(enginePackageJsonSrc)
       .pipe(widgetsPackageJsonSrc)
       .pipe(packageJsonSrc)
@@ -128,6 +136,8 @@ export const makeZip = gulp.series(
             "Build/Documentation/**",
             "Build/Specs/**",
             "Build/package.json",
+            "packages/core-utils/Build/**",
+            "packages/core-math/Build/**",
             "packages/engine/Build/**",
             "packages/widgets/Build/**",
             "!Build/Specs/e2e/**",
@@ -146,6 +156,16 @@ export const makeZip = gulp.series(
         gulp.src(
           [
             "Apps/**",
+            "packages/core-utils/index.js",
+            "packages/core-utils/index.d.ts",
+            "packages/core-utils/LICENSE.md",
+            "packages/core-utils/README.md",
+            "packages/core-utils/Source/**",
+            "packages/core-math/index.js",
+            "packages/core-math/index.d.ts",
+            "packages/core-math/LICENSE.md",
+            "packages/core-math/README.md",
+            "packages/core-math/Source/**",
             "packages/engine/index.js",
             "packages/engine/index.d.ts",
             "packages/engine/LICENSE.md",
@@ -198,6 +218,8 @@ export const makeZip = gulp.series(
     await finished(src);
 
     rimraf.sync("./package.noprepare.json");
+    rimraf.sync("./packages/core-utils/package.noprepare.json");
+    rimraf.sync("./packages/core-math/package.noprepare.json");
     rimraf.sync("./packages/engine/package.noprepare.json");
     rimraf.sync("./packages/widgets/package.noprepare.json");
 

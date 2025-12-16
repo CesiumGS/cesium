@@ -1,5 +1,5 @@
 import { Check, Frozen, defined } from "@cesium/core-utils";
-import { CesiumMath, Matrix4 } from "@cesium/core-math";
+import { Math as CesiumMath, Matrix4 } from "@cesium/core-math";
 import combine from "../Core/combine.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";

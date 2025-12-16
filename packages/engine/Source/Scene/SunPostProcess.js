@@ -1,5 +1,10 @@
 import { defined } from "@cesium/core-utils";
-import { Cartesian2, Cartesian4, CesiumMath, Matrix4 } from "@cesium/core-math";
+import {
+  Cartesian2,
+  Cartesian4,
+  Math as CesiumMath,
+  Matrix4,
+} from "@cesium/core-math";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import destroyObject from "../Core/destroyObject.js";
 import Transforms from "../Core/Transforms.js";

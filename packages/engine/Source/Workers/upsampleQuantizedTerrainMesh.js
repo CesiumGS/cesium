@@ -1,5 +1,5 @@
 import { defined } from "@cesium/core-utils";
-import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Cartesian3, Math as CesiumMath } from "@cesium/core-math";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartographic from "../Core/Cartographic.js";

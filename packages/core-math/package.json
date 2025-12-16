@@ -1,6 +1,6 @@
 {
   "name": "@cesium/core-math",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "keywords": [
     "3D",
@@ -37,8 +37,10 @@
   "scripts": {
     "build": "gulp build --workspace @cesium/core-math",
     "build-ts": "gulp buildTs --workspace @cesium/core-math",
-    "build-docs": "typedoc ./index.js --skipErrorChecking",
-    "test": "gulp test --workspace @cesium/core-math"
+    "coverage": "gulp coverage --workspace @cesium/core-math",
+    "test": "gulp test --workspace @cesium/core-math",
+    "postversion": "gulp postversion --workspace @cesium/core-math",
+    "build-docs": "typedoc ./index.js --skipErrorChecking"
   },
   "repository": {
     "type": "git",

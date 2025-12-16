@@ -5,7 +5,7 @@ import {
   RuntimeError,
   defined,
 } from "@cesium/core-utils";
-import { Cartesian2, Cartesian3, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Cartesian3, Math as CesiumMath } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
 import Credit from "../Core/Credit.js";
 import Event from "../Core/Event.js";

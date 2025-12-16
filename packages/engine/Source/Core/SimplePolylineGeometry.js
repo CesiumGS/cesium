@@ -1,5 +1,5 @@
 import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath } from "@cesium/core-math";
 import ArcType from "./ArcType.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Color from "./Color.js";

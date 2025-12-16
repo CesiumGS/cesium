@@ -1,5 +1,10 @@
 import { Check, DeveloperError, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
+import {
+  Cartesian3,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core-math";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";

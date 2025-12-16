@@ -1,5 +1,10 @@
 import { Check, Frozen, RuntimeError, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath, Matrix3, Matrix4 } from "@cesium/core-math";
+import {
+  Cartesian3,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core-math";
 import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import hasExtension from "./hasExtension.js";

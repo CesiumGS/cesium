@@ -5,7 +5,7 @@ import {
   RuntimeError,
   defined,
 } from "@cesium/core-utils";
-import { Cartesian2, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Math as CesiumMath } from "@cesium/core-math";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
 import Intersect from "../Core/Intersect.js";

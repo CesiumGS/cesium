@@ -253,14 +253,8 @@ function filePathToModuleId(moduleId) {
 }
 
 const workspaceSourceFiles = {
-  "core-utils": [
-    "packages/core-utils/Source/**/*.js",
-    "!packages/core-utils/Source/index.js",
-  ],
-  "core-math": [
-    "packages/core-math/Source/**/*.js",
-    "!packages/core-math/Source/index.js",
-  ],
+  "core-utils": ["packages/core-utils/Source/*.js"],
+  "core-math": ["packages/core-math/Source/*.js"],
   engine: [
     "packages/engine/Source/**/*.js",
     "!packages/engine/Source/*.js",
@@ -300,14 +294,6 @@ function generateDeclaration(workspace, file) {
 export async function createCesiumJs() {
   const version = await getVersion();
   let contents = `export const VERSION = '${version}';\n`;
-
-  // Re-export core-utils types for the main Cesium bundle
-  contents += `${EOL}// Core utilities from @cesium/core-utils${EOL}`;
-  contents += `export { Check, defined, DeveloperError, Frozen, RuntimeError } from '@cesium/core-utils';${EOL}`;
-
-  // Re-export core-math types for the main Cesium bundle
-  contents += `${EOL}// Core math types from @cesium/core-math${EOL}`;
-  contents += `export { Cartesian2, Cartesian3, Cartesian4, CesiumMath, CesiumMath as Math, Matrix2, Matrix3, Matrix4 } from '@cesium/core-math';${EOL}${EOL}`;
 
   // Iterate over each workspace and generate declarations for each file.
   for (const workspace of Object.keys(workspaceSourceFiles)) {
@@ -372,8 +358,8 @@ export async function bundleIndexJs(options) {
 }
 
 const workspaceSpecFiles = {
-  "core-utils": ["packages/core-utils/Specs/**/*Spec.js"],
-  "core-math": ["packages/core-math/Specs/**/*Spec.js"],
+  "core-utils": ["packages/core-utils/Specs/*Spec.js"],
+  "core-math": ["packages/core-math/Specs/*Spec.js"],
   engine: ["packages/engine/Specs/**/*Spec.js"],
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
 };
@@ -936,7 +922,7 @@ export async function createIndexJs(workspace) {
     contents += `${EOL}// Re-export core-utils types for backwards compatibility${EOL}`;
     contents += `export { Check, defined, DeveloperError, Frozen, RuntimeError } from '@cesium/core-utils';${EOL}`;
     contents += `${EOL}// Re-export core-math types for backwards compatibility${EOL}`;
-    contents += `export { Cartesian2, Cartesian3, Cartesian4, CesiumMath, CesiumMath as Math, Matrix2, Matrix3, Matrix4 } from '@cesium/core-math';${EOL}${EOL}`;
+    contents += `export { Cartesian2, Cartesian3, Cartesian4, Math, Matrix2, Matrix3, Matrix4 } from '@cesium/core-math';${EOL}${EOL}`;
   }
 
   // Iterate over all provided source files for the workspace and export the assignment based on file name.

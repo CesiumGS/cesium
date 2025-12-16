@@ -1,5 +1,5 @@
 import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian2, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Math as CesiumMath } from "@cesium/core-math";
 import createGuid from "../Core/createGuid.js";
 import destroyObject from "../Core/destroyObject.js";
 import PixelFormat from "../Core/PixelFormat.js";

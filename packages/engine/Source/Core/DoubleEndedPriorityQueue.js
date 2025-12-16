@@ -1,5 +1,5 @@
 import { Check, defined } from "@cesium/core-utils";
-import { CesiumMath } from "@cesium/core-math";
+import { Math as CesiumMath } from "@cesium/core-math";
 
 /**
  * Array-backed min-max heap implementation of a double-ended priority queue.

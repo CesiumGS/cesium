@@ -1,5 +1,5 @@
 import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian2, Cartesian4, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Cartesian4, Math as CesiumMath } from "@cesium/core-math";
 import createWorldImageryAsync from "../Scene/createWorldImageryAsync.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";

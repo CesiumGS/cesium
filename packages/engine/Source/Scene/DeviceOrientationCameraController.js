@@ -1,5 +1,5 @@
 import { DeveloperError, defined } from "@cesium/core-utils";
-import { CesiumMath, Matrix3 } from "@cesium/core-math";
+import { Math as CesiumMath, Matrix3 } from "@cesium/core-math";
 import destroyObject from "../Core/destroyObject.js";
 import Quaternion from "../Core/Quaternion.js";
 

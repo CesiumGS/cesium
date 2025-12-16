@@ -1,4 +1,4 @@
-import { CesiumMath } from "@cesium/core-math";
+import { Math as CesiumMath } from "@cesium/core-math";
 
 /**
  * Defines different modes for blending between a target color and a primitive's source color.

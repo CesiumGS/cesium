@@ -1,5 +1,5 @@
 import { DeveloperError, defined } from "@cesium/core-utils";
-import { Cartesian2, CesiumMath } from "@cesium/core-math";
+import { Cartesian2, Math as CesiumMath } from "@cesium/core-math";
 import destroyObject from "../Core/destroyObject.js";
 import KeyboardEventModifier from "../Core/KeyboardEventModifier.js";
 import ScreenSpaceEventHandler from "../Core/ScreenSpaceEventHandler.js";

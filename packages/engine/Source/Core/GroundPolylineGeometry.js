@@ -1,5 +1,5 @@
 import { Check, DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath, Matrix3 } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath, Matrix3 } from "@cesium/core-math";
 import ApproximateTerrainHeights from "./ApproximateTerrainHeights.js";
 import ArcType from "./ArcType.js";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";

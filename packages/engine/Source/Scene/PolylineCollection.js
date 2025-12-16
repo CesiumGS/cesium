@@ -8,7 +8,7 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
-  CesiumMath,
+  Math as CesiumMath,
   Matrix4,
 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";

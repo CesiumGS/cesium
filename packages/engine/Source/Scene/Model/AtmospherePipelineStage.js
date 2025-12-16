@@ -1,4 +1,4 @@
-import { Cartesian3, CesiumMath } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath } from "@cesium/core-math";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import AtmosphereStageFS from "../../Shaders/Model/AtmosphereStageFS.js";
 import AtmosphereStageVS from "../../Shaders/Model/AtmosphereStageVS.js";

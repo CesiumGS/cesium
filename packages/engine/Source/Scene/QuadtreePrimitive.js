@@ -1,5 +1,5 @@
 import { DeveloperError, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath, Matrix4 } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
 import Event from "../Core/Event.js";
 import getTimestamp from "../Core/getTimestamp.js";

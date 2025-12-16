@@ -1,5 +1,5 @@
 import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { CesiumMath, Matrix4 } from "@cesium/core-math";
+import { Math as CesiumMath, Matrix4 } from "@cesium/core-math";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";

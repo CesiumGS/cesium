@@ -1,5 +1,10 @@
 import { DeveloperError, Frozen, defined } from "@cesium/core-utils";
-import { Cartesian3, Cartesian4, CesiumMath, Matrix4 } from "@cesium/core-math";
+import {
+  Cartesian3,
+  Cartesian4,
+  Math as CesiumMath,
+  Matrix4,
+} from "@cesium/core-math";
 import CullingVolume from "./CullingVolume.js";
 
 /**

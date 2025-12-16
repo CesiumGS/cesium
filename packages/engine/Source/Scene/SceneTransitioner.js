@@ -1,5 +1,5 @@
 import { Check, defined } from "@cesium/core-utils";
-import { Cartesian3, CesiumMath, Matrix4 } from "@cesium/core-math";
+import { Cartesian3, Math as CesiumMath, Matrix4 } from "@cesium/core-math";
 import Cartographic from "../Core/Cartographic.js";
 import destroyObject from "../Core/destroyObject.js";
 import EasingFunction from "../Core/EasingFunction.js";

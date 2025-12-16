@@ -5,7 +5,7 @@ import {
   RuntimeError,
   defined,
 } from "@cesium/core-utils";
-import { CesiumMath } from "@cesium/core-math";
+import { Math as CesiumMath } from "@cesium/core-math";
 import BoundingSphere from "./BoundingSphere.js";
 import Cesium3DTilesTerrainData from "./Cesium3DTilesTerrainData.js";
 import Credit from "./Credit.js";
