@@ -64,5 +64,5 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: e2e-report
-          path: Build/Specs/e2e/**/*
+          path: Build/Specs/e2e/
           retention-days: 30
