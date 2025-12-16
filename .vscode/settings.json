@@ -2,8 +2,13 @@
 {
     "files.exclude": {
         "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
+        "**/CVS": true,
+        "**/.ruby-lsp": true,
+        "**/__pycache__": true,
         ".idea": true,
         ".metadata": true,
         ".settings": true,
@@ -34,4 +39,5 @@
         "--ignore-revs-file",
         "${workspaceFolder}/.git-blame-ignore-revs"
     ],
+    "hide-files.files": [],
 }

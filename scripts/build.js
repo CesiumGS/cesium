@@ -1049,14 +1049,12 @@ async function bundleSpecs(options) {
   await build({
     ...buildOptions,
     entryPoints: ["Specs/spec-main.js", "Specs/karma-main.js"],
-    plugins: [externalResolvePlugin],
   });
 
   return build({
     ...buildOptions,
     entryPoints: [options.specListFile],
     outbase: options.outbase,
-    plugins: [externalResolvePlugin],
   });
 }
 
