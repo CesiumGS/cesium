@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>WebGPU Red Scene - Standalone Demo</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background: #000;
+      }
+
+      #webgpuCanvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      #info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(42, 42, 42, 0.9);
+        padding: 15px;
+        border-radius: 5px;
+        color: #fff;
+        font-size: 14px;
+        z-index: 100;
+        max-width: 350px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      #info h2 {
+        margin: 0 0 10px 0;
+        font-size: 18px;
+        color: #ff4444;
+      }
+
+      #info p {
+        margin: 5px 0;
+        line-height: 1.5;
+      }
+
+      #status {
+        color: #4caf50;
+        font-weight: bold;
+      }
+
+      .error {
+        color: #ff4444 !important;
+      }
+
+      .warning {
+        color: #ff9800 !important;
+      }
+
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        margin: 5px 0;
+      }
+
+      .info-label {
+        font-weight: bold;
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="webgpuCanvas"></canvas>
+
+    <div id="info">
+      <h2>WebGPU Red Scene Renderer</h2>
+      <div class="info-item">
+        <span class="info-label">Status:</span>
+        <span id="status">Initializing...</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Render API:</span>
+        <span id="api">WebGPU</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">FPS:</span>
+        <span id="fps">0 FPS</span>
+      </div>
+      <p
+        style="
+          margin-top: 15px;
+          font-size: 12px;
+          border-top: 1px solid rgba(255, 255, 255, 0.2);
+          padding-top: 10px;
+        "
+      >
+        This is a WebGPU rendering pipeline demo showing a red gradient scene.
+        Press <strong>I</strong> to toggle this panel.
+      </p>
+    </div>
+
+    <script type="module">
+      /**
+       * WebGPU Renderer Class - Standalone Version
+       */
+      class WebGPURenderer {
+        constructor(canvas) {
+          this._canvas = canvas;
+          this._adapter = undefined;
+          this._device = undefined;
+          this._context = undefined;
+          this._format = undefined;
+          this._pipeline = undefined;
+          this._renderPassDescriptor = undefined;
+          this._initialized = false;
+        }
+
+        async initialize() {
+          if (this._initialized) {
+            return true;
+          }
+
+          // Check if browser supports WebGPU
+          if (!navigator.gpu) {
+            console.warn("WebGPU is not supported in this browser.");
+            return false;
+          }
+
+          try {
+            // Request WebGPU adapter
+            this._adapter = await navigator.gpu.requestAdapter({
+              powerPreference: "high-performance",
+            });
+
+            if (!this._adapter) {
+              console.warn("Failed to get WebGPU adapter.");
+              return false;
+            }
+
+            // Request WebGPU device
+            this._device = await this._adapter.requestDevice();
+
+            // Configure canvas context
+            this._context = this._canvas.getContext("webgpu");
+            this._format = navigator.gpu.getPreferredCanvasFormat();
+
+            this._context.configure({
+              device: this._device,
+              format: this._format,
+              alphaMode: "premultiplied",
+            });
+
+            // Create render pipeline
+            this._createRedScenePipeline();
+
+            this._initialized = true;
+            console.log("WebGPU initialized successfully");
+            return true;
+          } catch (error) {
+            console.error("Failed to initialize WebGPU:", error);
+            return false;
+          }
+        }
+
+        _createRedScenePipeline() {
+          // Vertex shader - create a fullscreen triangle
+          const vertexShaderCode = `
+                    struct VertexOutput {
+                        @builtin(position) position: vec4f,
+                        @location(0) uv: vec2f,
+                    };
+
+                    @vertex
+                    fn main(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput {
+                        var output: VertexOutput;
+                        
+                        // Create fullscreen triangle
+                        let x = f32((vertexIndex & 1u) << 2u) - 1.0;
+                        let y = f32((vertexIndex & 2u) << 1u) - 1.0;
+                        
+                        output.position = vec4f(x, y, 0.0, 1.0);
+                        output.uv = vec2f((x + 1.0) * 0.5, (1.0 - y) * 0.5);
+                        
+                        return output;
+                    }
+                `;
+
+          // Fragment shader - output red gradient
+          const fragmentShaderCode = `
+                    @fragment
+                    fn main(@location(0) uv: vec2f) -> @location(0) vec4f {
+                        // Return red color with gradient effect
+                        let gradient = 0.5 + 0.5 * uv.y;
+                        return vec4f(1.0 * gradient, 0.0, 0.0, 1.0);
+                    }
+                `;
+
+          // Create shader modules
+          const vertexShaderModule = this._device.createShaderModule({
+            label: "Red Scene Vertex Shader",
+            code: vertexShaderCode,
+          });
+
+          const fragmentShaderModule = this._device.createShaderModule({
+            label: "Red Scene Fragment Shader",
+            code: fragmentShaderCode,
+          });
+
+          // Create render pipeline
+          this._pipeline = this._device.createRenderPipeline({
+            label: "Red Scene Render Pipeline",
+            layout: "auto",
+            vertex: {
+              module: vertexShaderModule,
+              entryPoint: "main",
+            },
+            fragment: {
+              module: fragmentShaderModule,
+              entryPoint: "main",
+              targets: [
+                {
+                  format: this._format,
+                },
+              ],
+            },
+            primitive: {
+              topology: "triangle-list",
+            },
+          });
+
+          // Create render pass descriptor
+          this._renderPassDescriptor = {
+            label: "Red Scene Render Pass",
+            colorAttachments: [
+              {
+                view: undefined, // Updated per frame
+                clearValue: { r: 0.2, g: 0.0, b: 0.0, a: 1.0 },
+                loadOp: "clear",
+                storeOp: "store",
+              },
+            ],
+          };
+
+          console.log("WebGPU pipeline created successfully");
+        }
+
+        render() {
+          if (!this._initialized || !this._device || !this._pipeline) {
+            return;
+          }
+
+          try {
+            // Get current texture view
+            const textureView = this._context.getCurrentTexture().createView();
+
+            // Update render pass descriptor
+            this._renderPassDescriptor.colorAttachments[0].view = textureView;
+
+            // Create command encoder
+            const commandEncoder = this._device.createCommandEncoder({
+              label: "Red Scene Command Encoder",
+            });
+
+            // Begin render pass
+            const passEncoder = commandEncoder.beginRenderPass(
+              this._renderPassDescriptor,
+            );
+            passEncoder.setPipeline(this._pipeline);
+            passEncoder.draw(3); // Draw 3 vertices (fullscreen triangle)
+            passEncoder.end();
+
+            // Submit commands
+            this._device.queue.submit([commandEncoder.finish()]);
+          } catch (error) {
+            console.error("WebGPU render error:", error);
+          }
+        }
+
+        isInitialized() {
+          return this._initialized;
+        }
+
+        getDevice() {
+          return this._device;
+        }
+
+        resize(width, height) {
+          if (!this._initialized) {
+            return;
+          }
+          this._canvas.width = width;
+          this._canvas.height = height;
+        }
+
+        destroy() {
+          if (this._device) {
+            this._device.destroy();
+          }
+          this._initialized = false;
+        }
+
+        static isSupported() {
+          return typeof navigator !== "undefined" && !!navigator.gpu;
+        }
+      }
+
+      // Application main logic
+      const canvas = document.getElementById("webgpuCanvas");
+      const statusElement = document.getElementById("status");
+      const fpsElement = document.getElementById("fps");
+      const apiElement = document.getElementById("api");
+
+      // FPS calculation
+      let frameCount = 0;
+      let lastTime = performance.now();
+
+      function updateFPS() {
+        frameCount++;
+        const currentTime = performance.now();
+        const elapsed = currentTime - lastTime;
+
+        if (elapsed >= 1000) {
+          const fps = Math.round((frameCount * 1000) / elapsed);
+          fpsElement.textContent = `${fps} FPS`;
+          frameCount = 0;
+          lastTime = currentTime;
+        }
+      }
+
+      // Initialize WebGPU renderer
+      async function initWebGPU() {
+        try {
+          // Check WebGPU support
+          if (!WebGPURenderer.isSupported()) {
+            statusElement.textContent = "Not Supported";
+            statusElement.className = "error";
+            apiElement.textContent = "WebGPU (Not Supported)";
+            apiElement.className = "error";
+            console.error("WebGPU is not supported in this browser");
+
+            // Display error message
+            document.getElementById("info").innerHTML += `
+                        <p class="error" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
+                            WebGPU is not supported in your browser.<br>
+                            Please use a WebGPU-enabled browser:<br>
+                            • Chrome/Edge 113+<br>
+                            • Enable chrome://flags/#enable-unsafe-webgpu
+                        </p>
+                    `;
+            return;
+          }
+
+          statusElement.textContent = "Initializing...";
+          statusElement.className = "warning";
+
+          // Create WebGPU renderer
+          const renderer = new WebGPURenderer(canvas);
+
+          // Set canvas size
+          const updateCanvasSize = () => {
+            const dpr = window.devicePixelRatio || 1;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+
+            if (renderer && renderer.isInitialized()) {
+              renderer.resize(width * dpr, height * dpr);
+            }
+          };
+
+          updateCanvasSize();
+          window.addEventListener("resize", updateCanvasSize);
+
+          // Initialize renderer
+          const initialized = await renderer.initialize();
+
+          if (!initialized) {
+            statusElement.textContent = "Init Failed";
+            statusElement.className = "error";
+            console.error("Failed to initialize WebGPU");
+            return;
+          }
+
+          statusElement.textContent = "Running";
+          statusElement.className = "";
+          console.log("WebGPU renderer is running");
+
+          // Render loop
+          function renderLoop() {
+            renderer.render();
+            updateFPS();
+            requestAnimationFrame(renderLoop);
+          }
+
+          // Start rendering
+          renderLoop();
+
+          // Add debug info
+          const device = renderer.getDevice();
+          console.log("WebGPU Device:", device);
+          console.log("Adapter:", device.adapterInfo);
+        } catch (error) {
+          statusElement.textContent = "Error";
+          statusElement.className = "error";
+          console.error("WebGPU initialization error:", error);
+
+          // Display detailed error
+          document.getElementById("info").innerHTML += `
+                    <p class="error" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 11px;">
+                        Error details: ${error.message}
+                    </p>
+                `;
+        }
+      }
+
+      // Start application
+      initWebGPU();
+
+      // Add keyboard event listener - toggle info panel
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "i" || event.key === "I") {
+          const infoPanel = document.getElementById("info");
+          infoPanel.style.display =
+            infoPanel.style.display === "none" ? "block" : "none";
+        }
+      });
+
+      console.log("WebGPU Red Scene Demo initialized");
+      console.log('Press "I" to toggle info panel');
+    </script>
+  </body>
+</html>

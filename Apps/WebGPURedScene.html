@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>WebGPU Red Scene Demo - Cesium</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background: #000;
+      }
+
+      #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        position: absolute;
+      }
+
+      #webgpuCanvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        position: absolute;
+        z-index: 1;
+      }
+
+      #info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(42, 42, 42, 0.8);
+        padding: 15px;
+        border-radius: 5px;
+        color: #fff;
+        font-size: 14px;
+        z-index: 100;
+        max-width: 300px;
+      }
+
+      #info h2 {
+        margin: 0 0 10px 0;
+        font-size: 18px;
+        color: #ff4444;
+      }
+
+      #info p {
+        margin: 5px 0;
+        line-height: 1.5;
+      }
+
+      #status {
+        color: #4caf50;
+        font-weight: bold;
+      }
+
+      .error {
+        color: #ff4444;
+      }
+
+      .warning {
+        color: #ff9800;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer">
+      <canvas id="webgpuCanvas"></canvas>
+    </div>
+
+    <div id="info">
+      <h2>WebGPU Red Scene Renderer</h2>
+      <p><strong>Status:</strong> <span id="status">Initializing...</span></p>
+      <p><strong>Render API:</strong> <span id="api">WebGPU</span></p>
+      <p><strong>FPS:</strong> <span id="fps">0</span> FPS</p>
+      <p style="margin-top: 10px; font-size: 12px">
+        This is a Cesium demo using WebGPU rendering pipeline, showing a red
+        gradient scene.
+      </p>
+    </div>
+
+    <!-- Import Cesium library -->
+    <script type="module">
+      // Import WebGPURenderer
+      import WebGPURenderer from "./packages/engine/Source/Renderer/WebGPURenderer.js";
+
+      // Get canvas and status elements
+      const canvas = document.getElementById("webgpuCanvas");
+      const statusElement = document.getElementById("status");
+      const fpsElement = document.getElementById("fps");
+      const apiElement = document.getElementById("api");
+
+      // FPS calculation
+      let frameCount = 0;
+      let lastTime = performance.now();
+      let fps = 0;
+
+      function updateFPS() {
+        frameCount++;
+        const currentTime = performance.now();
+        const elapsed = currentTime - lastTime;
+
+        if (elapsed >= 1000) {
+          fps = Math.round((frameCount * 1000) / elapsed);
+          fpsElement.textContent = fps;
+          frameCount = 0;
+          lastTime = currentTime;
+        }
+      }
+
+      // Initialize WebGPU renderer
+      async function initWebGPU() {
+        try {
+          // Check WebGPU support
+          if (!WebGPURenderer.isSupported()) {
+            statusElement.textContent = "WebGPU Not Supported";
+            statusElement.className = "error";
+            apiElement.textContent = "WebGPU (Not Supported)";
+            console.error("WebGPU is not supported in this browser");
+
+            // Display error message
+            document.getElementById("info").innerHTML += `
+                        <p class="error" style="margin-top: 10px;">
+                            WebGPU is not supported in your browser. Please use Chrome 113+ or Edge 113+.
+                        </p>
+                    `;
+            return;
+          }
+
+          statusElement.textContent = "Initializing WebGPU...";
+
+          // Create WebGPU renderer
+          const renderer = new WebGPURenderer(canvas);
+
+          // Set canvas size
+          const updateCanvasSize = () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            canvas.width = width;
+            canvas.height = height;
+
+            if (renderer && renderer.isInitialized()) {
+              renderer.resize(width, height);
+            }
+          };
+
+          updateCanvasSize();
+          window.addEventListener("resize", updateCanvasSize);
+
+          // Initialize renderer
+          const initialized = await renderer.initialize();
+
+          if (!initialized) {
+            statusElement.textContent = "WebGPU Init Failed";
+            statusElement.className = "error";
+            console.error("Failed to initialize WebGPU");
+            return;
+          }
+
+          statusElement.textContent = "Running";
+          statusElement.className = "";
+          console.log("WebGPU initialized successfully");
+
+          // Render loop
+          function renderLoop() {
+            renderer.render();
+            updateFPS();
+            requestAnimationFrame(renderLoop);
+          }
+
+          // Start rendering
+          renderLoop();
+
+          // Add debug info
+          console.log("WebGPU Device:", renderer.getDevice());
+        } catch (error) {
+          statusElement.textContent = `Error: ${error.message}`;
+          statusElement.className = "error";
+          console.error("WebGPU initialization error:", error);
+        }
+      }
+
+      // Start application
+      initWebGPU();
+
+      // Add keyboard event listener
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "i" || event.key === "I") {
+          const infoPanel = document.getElementById("info");
+          infoPanel.style.display =
+            infoPanel.style.display === "none" ? "block" : "none";
+        }
+      });
+
+      console.log("WebGPU Red Scene Demo initialized");
+      console.log('Press "I" to toggle info panel');
+    </script>
+  </body>
+</html>
