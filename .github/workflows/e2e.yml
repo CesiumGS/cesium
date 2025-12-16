@@ -16,5 +16,13 @@ jobs:
         run: npm install
       - name: build
         run: npm run build
+      - name: install Playwright browsers
+        run: npx playwright install --with-deps
       - name: run e2e tests
         run: npm run test-e2e -- viewer.spec.js
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e-report
+          path: ../../Build/Specs/e2e/report/
+          retention-days: 30
