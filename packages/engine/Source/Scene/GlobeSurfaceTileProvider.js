@@ -82,6 +82,7 @@ function GlobeSurfaceTileProvider(options) {
   this.lightingFadeOutDistance = 6500000.0;
   this.lightingFadeInDistance = 9000000.0;
   this.hasWaterMask = false;
+  this.hasSdf = false;
   this.showWaterEffect = false;
   this.oceanNormalMap = undefined;
   this.zoomedOutOceanSpecularIntensity = 0.5;
@@ -1771,6 +1772,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_waterMaskTranslationAndScale: function () {
       return this.properties.waterMaskTranslationAndScale;
     },
+    u_sdf: function () {
+      return this.properties.sdf;
+    },
     u_minMaxHeight: function () {
       return this.properties.minMaxHeight;
     },
@@ -1906,6 +1910,8 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
 
       waterMask: undefined,
       waterMaskTranslationAndScale: new Cartesian4(),
+
+      sdf: undefined,
 
       minMaxHeight: new Cartesian2(),
       scaleAndBias: new Matrix4(),
@@ -2161,6 +2167,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       surfaceTile.fill.waterMaskTranslationAndScale;
   }
 
+  const sdfTexture = surfaceTile.sdfTexture;
+
   const cameraUnderground = frameState.cameraUnderground;
 
   const globeTranslucencyState = frameState.globeTranslucencyState;
@@ -2187,6 +2195,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const vertexShadowDarkness = tileProvider.vertexShadowDarkness;
 
   const hasWaterMask = tileProvider.hasWaterMask && defined(waterMaskTexture);
+  const hasSdf = defined(sdfTexture);
+
   const showReflectiveOcean = hasWaterMask && tileProvider.showWaterEffect;
   const oceanNormalMap = tileProvider.oceanNormalMap;
   const showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
@@ -2223,6 +2233,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     --maxTextures;
   }
   if (showOceanWaves) {
+    --maxTextures;
+  }
+  if (hasSdf) {
     --maxTextures;
   }
   if (
@@ -2334,6 +2347,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.frameState = frameState;
   surfaceShaderSetOptions.surfaceTile = surfaceTile;
   surfaceShaderSetOptions.hasWaterMask = hasWaterMask;
+  surfaceShaderSetOptions.hasSdf = hasSdf;
   surfaceShaderSetOptions.showReflectiveOcean = showReflectiveOcean;
   surfaceShaderSetOptions.showOceanWaves = showOceanWaves;
   surfaceShaderSetOptions.enableLighting = tileProvider.enableLighting;
@@ -2789,6 +2803,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       waterMaskTranslationAndScale,
       uniformMapProperties.waterMaskTranslationAndScale,
     );
+
+    uniformMapProperties.sdf = sdfTexture;
 
     uniformMapProperties.minMaxHeight.x = encoding.minimumHeight;
     uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;

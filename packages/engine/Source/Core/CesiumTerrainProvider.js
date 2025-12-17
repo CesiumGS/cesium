@@ -596,7 +596,15 @@ function createHeightmapTerrainData(provider, buffer, level, x, y) {
   });
 }
 
-function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
+function createQuantizedMeshTerrainData(
+  provider,
+  buffer,
+  sdf,
+  level,
+  x,
+  y,
+  layer,
+) {
   const littleEndianExtensionSize = layer.littleEndianExtensionSize;
   let pos = 0;
   const cartesian3Elements = 3;
@@ -833,9 +841,12 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
     northSkirtHeight: skirtHeight,
     childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
     waterMask: waterMaskBuffer,
+    sdf: sdf,
     credits: provider._tileCredits,
   });
 }
+
+const scratchPromises = new Array(2);
 
 /**
  * Requests the geometry for a given tile. The result must include terrain data and
@@ -912,7 +923,203 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
   return requestTileGeometry(this, x, y, level, layerToUse, request);
 };
 
-function requestTileGeometry(provider, x, y, level, layerToUse, request) {
+/**
+ * Calculates the bounding box of the GeoJSON features.
+ * @param {Array} features - List of GeoJSON features.
+ * @returns {Array} - Bounding box [minX, minY, maxX, maxY].
+ */
+function calculateBoundingBox(features) {
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+
+  features.forEach((feature) => {
+    if (feature.geometry.type === "LineString") {
+      feature.geometry.coordinates.forEach(([x, y]) => {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      });
+    } else if (feature.geometry.type === "Polygon") {
+      feature.geometry.coordinates.forEach((ring) => {
+        ring.forEach(([x, y]) => {
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, y);
+        });
+      });
+    }
+  });
+
+  return [minX, minY, maxX, maxY];
+}
+
+/**
+ * Calculates the distance from a point to a line segment.
+ * @param {Array} point - The point [x, y].
+ * @param {Array} segmentStart - The start of the segment [x, y].
+ * @param {Array} segmentEnd - The end of the segment [x, y].
+ * @returns {number} - The distance.
+ */
+function pointToSegmentDistance(point, segmentStart, segmentEnd) {
+  const [px, py] = point;
+  const [x1, y1] = segmentStart;
+  const [x2, y2] = segmentEnd;
+
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+
+  if (dx === 0 && dy === 0) {
+    // Segment is a point
+    return Math.sqrt((px - x1) ** 2 + (py - y1) ** 2);
+  }
+
+  const t = ((px - x1) * dx + (py - y1) * dy) / (dx ** 2 + dy ** 2);
+  const clampedT = Math.max(0, Math.min(1, t));
+
+  const closestPoint = [x1 + clampedT * dx, y1 + clampedT * dy];
+  return Math.sqrt((px - closestPoint[0]) ** 2 + (py - closestPoint[1]) ** 2);
+}
+
+function generateSDF(features, resolution) {
+  const bbox = calculateBoundingBox(features);
+  const [minX, minY, maxX, maxY] = bbox;
+
+  const width = resolution;
+  const height = resolution;
+
+  const sdf = new Float32Array(width * height).fill(Infinity);
+  const featureID = new Uint32Array(width * height).fill(-1);
+
+  features.forEach((feature) => {
+    if (
+      feature.geometry.type === "LineString" ||
+      feature.geometry.type === "Polygon"
+    ) {
+      let coordinates = feature.geometry.coordinates;
+      const grid_coordinates = [];
+
+      if (feature.geometry.type === "Polygon") {
+        // for polygon, only take the outer ring
+        coordinates = coordinates[0];
+      }
+
+      // convert each world coordinate to grid coordinate
+      for (let i = 0; i < coordinates.length; i++) {
+        const [worldX, worldY] = coordinates[i];
+        const gridX = Math.floor(((worldX - minX) / (maxX - minX)) * width);
+        const gridY = Math.floor(((worldY - minY) / (maxY - minY)) * height);
+        grid_coordinates.push([gridX, gridY]);
+      }
+
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          // convert grid point to world coordinates
+          const gridPoints = [x, y];
+
+          let distance = Infinity;
+          //const distance = calculateDistanceToLine(gridPoints, grid_coordinates);
+          // loop through each segment
+          for (let i = 0; i < grid_coordinates.length - 1; i++) {
+            const segmentStart = grid_coordinates[i];
+            const segmentEnd = grid_coordinates[i + 1];
+            const dist = pointToSegmentDistance(
+              gridPoints,
+              segmentStart,
+              segmentEnd,
+            );
+            distance = Math.min(distance, dist);
+          }
+
+          if (distance < sdf[y + x * width]) {
+            sdf[y + x * width] = distance;
+            featureID[y + x * width] = features.indexOf(feature);
+          }
+        }
+      }
+
+      // log progress bar at every 10%
+      const featureIndex = features.indexOf(feature);
+      const progress = Math.floor((featureIndex / features.length) * 10);
+      if (featureIndex % Math.floor(features.length / 10) === 0) {
+        console.log(`Processing features: ${progress * 10}%`);
+      }
+    }
+  });
+
+  return [sdf, featureID];
+}
+
+/**
+ *
+ * @param {number} rootId The root tile ID (0 or 1).
+ * @param {number} level The level of the tile.
+ * @param {number} x The x coordinate of the tile.
+ * @param {number} y The y coordinate of the tile.
+ * @returns {Promise<{width: number, height: number, sdfDistances: Float32Array, sdfFeatureIds: Uint32Array}>} A promise that resolves to the SDF data.
+ */
+function requestGeoJson(rootId, level, x, y) {
+  const url =
+    "http://localhost:8070/v1/static/vector/tile_root{rootId}_level{level}_{x}_{y}.json";
+
+  return Resource.fetchJson({
+    url: url,
+    templateValues: {
+      rootId: rootId,
+      level: level,
+      x: x,
+      y: y,
+    },
+  })
+    .then(function (geojson) {
+      if (!window.sdf) {
+        return undefined;
+      }
+
+      const width = 512;
+      const height = 512;
+
+      const features = geojson.features;
+      const [sdfDistancesArray, sdfFeatureIdsArray] = generateSDF(
+        features,
+        512,
+      );
+
+      return {
+        width: width,
+        height: height,
+        distances: sdfDistancesArray,
+        featureIds: sdfFeatureIdsArray,
+      };
+    })
+    .catch(function (error) {
+      return undefined;
+    });
+}
+
+/**
+ * Gets the root ID from geographic tile coordinates.
+ * There are 2 root tiles in a geographic tiling scheme: one for each hemisphere.
+ * @private
+ * @param {number} level The level of the tile
+ * @param {number} x The x coordinate of the tile
+ * @returns {number} The root tile ID (0 or 1)
+ */
+function getRootIdFromGeographic(level, x) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  //>>includeEnd('debug');
+
+  const numberOfYTilesAtLevel = 1 << level;
+  const rootId = (x / numberOfYTilesAtLevel) | 0;
+  return rootId;
+}
+
+async function requestTileGeometry(provider, x, y, level, layerToUse, request) {
   if (!defined(layerToUse)) {
     return Promise.reject(new RuntimeError("Terrain tile doesn't exist"));
   }
@@ -984,7 +1191,17 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
     return undefined;
   }
 
-  return promise.then(function (buffer) {
+  const rootId = getRootIdFromGeographic(level, x);
+
+  const promises = scratchPromises;
+  promises[0] = promise;
+  promises[1] = requestGeoJson(rootId, level, x, y);
+
+  try {
+    const results = await Promise.all(promises);
+    const buffer = results[0];
+    const sdf = results[1];
+
     if (!defined(buffer)) {
       return Promise.reject(new RuntimeError("Mesh buffer doesn't exist."));
     }
@@ -994,12 +1211,15 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
     return createQuantizedMeshTerrainData(
       provider,
       buffer,
+      sdf,
       level,
       x,
       y,
       layerToUse,
     );
-  });
+  } catch (error) {
+    console.log(`Could not load tile: ${rootId} ${level} ${x} ${y}: ${error}`);
+  }
 }
 
 Object.defineProperties(CesiumTerrainProvider.prototype, {

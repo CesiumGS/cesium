@@ -41,6 +41,8 @@ function GlobeSurfaceTile() {
   this.waterMaskTexture = undefined;
   this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
+  this.sdfTexture = undefined;
+
   this.terrainData = undefined;
   this.vertexArray = undefined;
 
@@ -143,6 +145,11 @@ GlobeSurfaceTile.prototype.freeResources = function () {
       this.waterMaskTexture.destroy();
     }
     this.waterMaskTexture = undefined;
+  }
+
+  if (defined(this.sdfTexture)) {
+    this.sdfTexture.destroy();
+    this.sdfTexture = undefined;
   }
 
   this.terrainData = undefined;
@@ -591,6 +598,16 @@ function processTerrainStateMachine(
       }
     }
   }
+
+  if (
+    surfaceTile.terrainState >= TerrainState.RECEIVED &&
+    surfaceTile.sdfTexture === undefined
+  ) {
+    const terrainData = surfaceTile.terrainData;
+    if (terrainData.sdf !== undefined) {
+      createSdfTextureIfNeeded(frameState.context, surfaceTile);
+    }
+  }
 }
 
 function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
@@ -926,6 +943,36 @@ function createWaterMaskTextureIfNeeded(context, surfaceTile) {
     1.0,
     surfaceTile.waterMaskTranslationAndScale,
   );
+}
+
+function createSdfTextureIfNeeded(context, surfaceTile) {
+  const sdf = surfaceTile.terrainData.sdf;
+
+  if (!defined(sdf)) {
+    return;
+  }
+
+  const sampler = new Sampler({
+    wrapS: TextureWrap.CLAMP_TO_EDGE,
+    wrapT: TextureWrap.CLAMP_TO_EDGE,
+    minificationFilter: TextureMinificationFilter.NEAREST,
+    magnificationFilter: TextureMagnificationFilter.NEAREST,
+  });
+
+  const texture = Texture.create({
+    context: context,
+    pixelFormat: PixelFormat.RED,
+    pixelDatatype: PixelDatatype.FLOAT,
+    source: {
+      width: sdf.width,
+      height: sdf.height,
+      arrayBufferView: sdf.distances,
+    },
+    sampler: sampler,
+    flipY: false,
+  });
+
+  surfaceTile.sdfTexture = texture;
 }
 
 GlobeSurfaceTile.prototype._findAncestorTileWithTerrainData = function (tile) {

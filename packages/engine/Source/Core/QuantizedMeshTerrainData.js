@@ -58,6 +58,7 @@ import TerrainMesh from "./TerrainMesh.js";
  *                  otherwise, false.
  * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
  * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
+ * @param {Object} [options.sdf] The object containing SDF values.
  * @param {Credit[]} [options.credits] Array of credits for this tile.
  *
  *
@@ -177,6 +178,7 @@ function QuantizedMeshTerrainData(options) {
 
   this._createdByUpsampling = options.createdByUpsampling ?? false;
   this._waterMask = options.waterMask;
+  this._sdf = options.sdf;
 
   this._mesh = undefined;
 }
@@ -202,6 +204,12 @@ Object.defineProperties(QuantizedMeshTerrainData.prototype, {
   waterMask: {
     get: function () {
       return this._waterMask;
+    },
+  },
+
+  sdf: {
+    get: function () {
+      return this._sdf;
     },
   },
 

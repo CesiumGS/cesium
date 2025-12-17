@@ -88,7 +88,7 @@ uniform float u_minimumBrightness;
 #endif
 
 // Based on colorCorrect
-// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift 
+// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift
 // are nonzero AND when (applyFog || showGroundAtmosphere) in the tile provider
 // - The tileProvider.hue/saturation/brightnessShift are just passed through
 //   from the Globe hue/saturation/brightness, like atmosphereBrightnessShift
@@ -116,8 +116,8 @@ uniform vec4 u_translucencyRectangle;
 #endif
 
 // Based on showUndergroundColor
-// This is set when GlobeSurfaceTileProvider.isUndergroundVisible 
-// returns true, AND the tileProvider.undergroundColor had a value with 
+// This is set when GlobeSurfaceTileProvider.isUndergroundVisible
+// returns true, AND the tileProvider.undergroundColor had a value with
 // nonzero alpha, and the tileProvider.undergroundColorAlphaByDistance
 // was in the right range
 #ifdef UNDERGROUND_COLOR
@@ -183,6 +183,10 @@ bool inTranslucencyRectangle()
         v_textureCoordinates.y > u_translucencyRectangle.y &&
         v_textureCoordinates.y < u_translucencyRectangle.w;
 }
+#endif
+
+#ifdef HAS_SDF
+    uniform highp sampler2D u_sdf;
 #endif
 
 vec4 sampleAndBlend(
@@ -585,6 +589,14 @@ void main()
 #endif
 
     out_FragColor =  finalColor;
+
+#ifdef HAS_SDF
+    float dist = texture(u_sdf, v_textureCoordinates.xy).r;
+
+    if (dist < 0.5) {
+        out_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+    }
+#endif
 }
 
 
