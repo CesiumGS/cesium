@@ -112,14 +112,17 @@ export async function build() {
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === `@${scope}/core-math`) {
+  if (workspace === `@${scope}/core-utils`) {
+    return buildCoreUtils(buildOptions);
+  } else if (workspace === `@${scope}/core-math`) {
+    await buildCoreUtils(buildOptions);
     return buildCoreMath(buildOptions);
   } else if (workspace === `@${scope}/engine`) {
+    await buildCoreUtils(buildOptions);
+    await buildCoreMath(buildOptions);
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
-  } else if (workspace === `@${scope}/core-utils`) {
-    return buildCoreUtils(buildOptions);
   }
 
   await buildCoreUtils(buildOptions);
