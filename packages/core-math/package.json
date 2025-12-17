@@ -1,5 +1,6 @@
 {
   "name": "@cesium/core-math",
+  "private": true,
   "version": "0.0.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "keywords": [
