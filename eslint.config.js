@@ -194,6 +194,12 @@ export default [
     },
   },
   {
+    files: ["Specs/e2e/scenarios/**/*"],
+    languageOptions: {
+      ecmaVersion: 2022,
+    },
+  },
+  {
     files: [".github/**/*"],
     rules: {
       "n/no-missing-import": "off",

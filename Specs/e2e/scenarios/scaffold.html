@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+  </head>
+  <base href="/Specs/e2e/scenarios/" />
+  <script>
+    window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified";
+  </script>
+  <script type="importmap">
+    {
+      "imports": {
+        "Sandcastle": "../templates/Sandcastle.js",
+        "cesium": "../../../Source/Cesium.js",
+        "@cesium/engine": "../../../packages/engine/Build/Unminified/index.js",
+        "@cesium/widgets": "../../../packages/widgets/Build/Unminified/index.js"
+      }
+    }
+  </script>
+  <body>
+    <style>
+      @import url(../../../Apps/Sandcastle/templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <script type="module">
+      // TEST_CODE_HERE
+    </script>
+  </body>
+</html>
