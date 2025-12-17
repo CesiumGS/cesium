@@ -59,4 +59,13 @@ exports.defineTags = function (dictionary) {
     canHaveName: true,
     mustHaveValue: true,
   });
+
+  // Allow @import tags for type-only imports. Ignored by JSDoc, but resolved by tsc.
+  // https://github.com/microsoft/TypeScript/issues/22160#issuecomment-2021459033
+  // https://devblogs.microsoft.com/typescript/announcing-typescript-5-5-beta/#type-imports-in-jsdoc
+  dictionary.defineTag("import", {
+    canHaveType: true,
+    canHaveName: true,
+    mustHaveValue: true,
+  });
 };
