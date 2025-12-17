@@ -5,8 +5,8 @@ import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 
-/** @ignore @typedef {import('./Cartesian3')} Cartesian3 */
-/** @ignore @typedef {import('./Cartesian4')} Cartesian4 */
+/** @import Cartesian3 from './Cartesian3.js'; */
+/** @import Cartesian4 from './Cartesian4.js'; */
 
 /**
  * A 2D Cartesian point.
