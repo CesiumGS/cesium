@@ -835,9 +835,14 @@ export async function test() {
   if (!isProduction && !release) {
     console.log("Building specs...");
     if (workspace) {
-      if (workspace === "core-math") {
+      if (workspace === "core-utils") {
+        await buildCoreUtils({});
+      } else if (workspace === "core-math") {
+        await buildCoreUtils({});
         await buildCoreMath({});
       } else if (workspace === "engine") {
+        await buildCoreUtils({});
+        await buildCoreMath({});
         await buildEngine({});
       } else if (workspace === "widgets") {
         await buildWidgets({});
