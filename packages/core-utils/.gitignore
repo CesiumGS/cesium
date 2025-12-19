@@ -1,5 +1,6 @@
 index.js
 index.d.ts
+index.tsc.d.ts
 Build
 Specs/SpecList.js
 docs

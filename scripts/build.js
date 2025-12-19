@@ -916,6 +916,7 @@ export async function bundleTestWorkers(options) {
 export async function createIndexJs(workspace) {
   const version = await getVersion();
   let contents = `globalThis.CESIUM_VERSION = "${version}";\n`;
+  let contentsDts = "";
 
   // Re-export core-utils and core-math types for backwards compatibility in engine package
   if (workspace === "engine") {
@@ -937,6 +938,7 @@ export async function createIndexJs(workspace) {
 
     let moduleId = file;
     moduleId = filePathToModuleId(moduleId);
+    const moduleTypesId = moduleId.replace("Source", "Build/Types");
 
     // Rename shader files, such that ViewportQuadFS.glsl is exported as _shadersViewportQuadFS in JS.
 
@@ -946,6 +948,7 @@ export async function createIndexJs(workspace) {
     }
     assignmentName = assignmentName.replace(/(\.|-)/g, "_");
     contents += `export { default as ${assignmentName} } from './${moduleId}.js';${EOL}`;
+    contentsDts += `export { default as ${assignmentName} } from './${moduleTypesId}.js';${EOL}`;
 
     // TODO(donmccurdy): Why is this needed?
     if (assignmentName === "Math") {
@@ -956,6 +959,12 @@ export async function createIndexJs(workspace) {
   await writeFile(`packages/${workspace}/index.js`, contents, {
     encoding: "utf-8",
   });
+
+  if (workspace === "core-math" || workspace === "core-utils") {
+    await writeFile(`packages/${workspace}/index.tsc.d.ts`, contentsDts, {
+      encoding: "utf-8",
+    });
+  }
 
   return contents;
 }
