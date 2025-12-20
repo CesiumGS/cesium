@@ -13,6 +13,8 @@ export default [
       "Source/*",
       "**/ThirdParty/",
       "Tools/**/*",
+      "extensions/VSCode/out/**",
+      "extensions/VSCode/tutorials/**",
       "index.html",
       "index.release.html",
       "Apps/HelloWorld.html",
