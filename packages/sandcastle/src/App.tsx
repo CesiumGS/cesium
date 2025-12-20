@@ -51,6 +51,7 @@ import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
 import { MetadataPopover } from "./MetadataPopover.tsx";
 import { SharePopover } from "./SharePopover.tsx";
 import { SandcastlePopover } from "./SandcastlePopover.tsx";
+import UserProfile, { UserContext } from "./User/UserProfile.tsx";
 import { urlSpecifiesSandcastle } from "./Gallery/loadFromUrl.ts";
 
 const defaultJsCode = `import * as Cesium from "cesium";
@@ -187,7 +188,7 @@ function AppBarButton({
 }
 
 export type SandcastleAction =
-  | { type: "reset" }
+  | { type: "reset"; defaultToken?: string }
   | { type: "resetDirty" }
   | { type: "setCode"; code: string }
   | { type: "setHtml"; html: string }
@@ -196,6 +197,7 @@ export type SandcastleAction =
 
 function App() {
   const { settings, updateSettings } = useContext(SettingsContext);
+  const { ionClient } = useContext(UserContext);
   const rightSideRef = useRef<RightSideRef>(null);
   const consoleCollapsedHeight = 33;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
@@ -235,6 +237,19 @@ function App() {
   ): CodeState {
     switch (action.type) {
       case "reset": {
+        if (action.defaultToken) {
+          console.log("load with token:", action.defaultToken);
+          // TODO: this is a pretty hacky way to insert this but it "works" for now
+          const codeWithToken = defaultJsCode.replace(
+            "const viewer",
+            `// This is your default ion access token\nCesium.Ion.defaultAccessToken = "${action.defaultToken}";\n\nconst viewer`,
+          );
+          return {
+            ...initialState,
+            code: codeWithToken,
+            committedCode: codeWithToken,
+          };
+        }
         return { ...initialState };
       }
       case "setCode": {
@@ -350,11 +365,12 @@ function App() {
     console.log("would highlight line", lineNumber, "but not implemented yet");
   }
 
-  function resetSandcastle() {
+  function resetSandcastle(token?: string) {
     if (!confirmLeave()) {
       return;
     }
-    dispatch({ type: "reset" });
+    dispatch({ type: "reset", defaultToken: token });
+    dispatch({ type: "runSandcastle" });
 
     window.history.pushState({}, "", getBaseUrl());
 
@@ -395,12 +411,23 @@ function App() {
           if (isLoadPending || !loadFromUrl) {
             return;
           }
+
           const data = await loadFromUrl();
           if (!data) {
             return;
           }
+          const { html, title } = data;
+          let code = data.code;
 
-          const { code, html, title } = data;
+          let defaultAccessToken;
+          await ionClient.initPromise;
+          if (!code && ionClient.loggedIn) {
+            defaultAccessToken = await ionClient.getDefaultAccessToken();
+            code = defaultJsCode.replace(
+              "const viewer",
+              `Cesium.Ion.defaultAccessToken = "${defaultAccessToken}";\n\nconst viewer`,
+            );
+          }
 
           startLoadPending(() => {
             if (isLoadPending) {
@@ -409,14 +436,13 @@ function App() {
             setTitle(title);
             dispatch({
               type: "setAndRun",
-              code: code ?? defaultJsCode,
+              code: code,
               html: html ?? defaultHtmlCode,
             });
           });
         } catch (error) {
           const message = (error as Error)?.message;
           appendConsole("error", message);
-          console.error(message);
         }
       });
 
@@ -436,7 +462,14 @@ function App() {
     };
     window.addEventListener("popstate", stateLoad);
     return () => window.removeEventListener("popstate", stateLoad);
-  }, [initialized, isLoadPending, loadFromUrl, confirmLeave, appendConsole]);
+  }, [
+    initialized,
+    isLoadPending,
+    loadFromUrl,
+    confirmLeave,
+    appendConsole,
+    ionClient,
+  ]);
 
   useEffect(() => {
     // if the code has been edited listen for navigation away and warn
@@ -458,6 +491,7 @@ function App() {
 
   const onRunCode = useCallback(
     async ({ id, title, getJsCode, getHtmlCode }: GalleryItem) => {
+      console.warn("run code hit, shouldn't have");
       if (!confirmLeave()) {
         return;
       }
@@ -540,6 +574,7 @@ function App() {
         <div className="version">
           {versionString && <pre>{versionString}</pre>}
         </div>
+        <UserProfile />
       </header>
       <div className="application-bar">
         <AppBarButton
@@ -558,8 +593,12 @@ function App() {
         </AppBarButton>
         <Divider />
         <AppBarButton
-          onClick={() => {
-            resetSandcastle();
+          onClick={async () => {
+            let token;
+            if (ionClient.loggedIn) {
+              token = await ionClient.getDefaultAccessToken();
+            }
+            resetSandcastle(token);
             setLeftPanel("editor");
           }}
           label="New Sandcastle"
