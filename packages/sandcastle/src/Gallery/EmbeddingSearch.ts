@@ -144,11 +144,13 @@ class EmbeddingSearch {
    * Perform a vector similarity search
    * @param query - The search query text
    * @param limit - Maximum number of results to return
+   * @param filters - Optional filters to apply to the search results
    * @returns Array of search results ranked by relevance
    */
   async search(
     query: string,
     limit: number = 10,
+    filters?: Record<string, string | string[]> | null,
   ): Promise<VectorSearchResult[]> {
     if (!query || query.trim().length === 0) {
       return [];
@@ -171,9 +173,39 @@ class EmbeddingSearch {
       const { sentence_embedding } = await this.model(inputs);
       const queryEmbedding = sentence_embedding.tolist()[0];
 
-      const itemsWithEmbeddings = this.galleryList.entries.filter(
+      let itemsWithEmbeddings = this.galleryList.entries.filter(
         (item) => item.embedding,
       );
+
+      if (filters) {
+        itemsWithEmbeddings = itemsWithEmbeddings.filter((item) => {
+          for (const [key, value] of Object.entries(filters)) {
+            if (value === null || value === undefined) {
+              continue;
+            }
+
+            const itemValue = (item as unknown as Record<string, unknown>)[key];
+            if (itemValue === undefined) {
+              return false;
+            }
+
+            const filterValues = Array.isArray(value) ? value : [value];
+
+            if (Array.isArray(itemValue)) {
+              const hasMatch = itemValue.some((v: unknown) =>
+                filterValues.includes(v as string),
+              );
+              if (!hasMatch) {
+                return false;
+              }
+            } else if (!filterValues.includes(itemValue as string)) {
+              return false;
+            }
+          }
+          return true;
+        });
+      }
+
       const results = itemsWithEmbeddings.map((item) => {
         const score = this.cosineSimilarity(queryEmbedding, item.embedding!);
         return {
@@ -241,13 +273,15 @@ if (typeof window !== "undefined") {
  * Performs vector search using the local embedding model
  * @param query - The search query string
  * @param limit - Maximum number of results to return (default: 10)
+ * @param filters - Optional filters to apply to the search results
  * @returns Promise resolving to array of search results
  */
 export async function vectorSearch(
   query: string,
   limit: number = 10,
+  filters?: Record<string, string | string[]> | null,
 ): Promise<VectorSearchResult[]> {
-  return embeddingSearch.search(query, limit);
+  return embeddingSearch.search(query, limit, filters);
 }
 
 export { embeddingSearch };
