@@ -2357,6 +2357,14 @@ function zoom3D(controller, startPosition, movement) {
     intersection = pickPosition(controller, windowPosition, zoomCVIntersection);
   }
 
+  if (!defined(controller._globe) && defined(intersection)) {
+    const targetDistance = camera.getMagnitude();
+    const pickDistance = Cartesian3.distance(ray.origin, intersection);
+    if (targetDistance < pickDistance) {
+      intersection = undefined;
+    }
+  }
+
   let distance;
   if (defined(intersection)) {
     distance = Cartesian3.distance(ray.origin, intersection);
