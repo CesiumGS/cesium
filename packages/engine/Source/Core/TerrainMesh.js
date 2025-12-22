@@ -202,7 +202,6 @@ TerrainMesh.prototype.getTransform = function (mode, projection) {
   if (this._lastPickSceneMode === mode) {
     return this._transform;
   }
-  this._lastPickSceneMode = mode;
   this._terrainPicker.needsRebuild = true;
 
   if (!defined(mode) || mode === SceneMode.SCENE3D) {
@@ -323,13 +322,16 @@ function computeTransform2D(mesh, projection, result) {
  * @private
  */
 TerrainMesh.prototype.pick = function (ray, cullBackFaces, mode, projection) {
-  return this._terrainPicker.rayIntersect(
+  const intersection = this._terrainPicker.rayIntersect(
     ray,
     this.getTransform(mode, projection),
     cullBackFaces,
     mode,
     projection,
   );
+
+  this._lastPickSceneMode = mode;
+  return intersection;
 };
 
 /**
