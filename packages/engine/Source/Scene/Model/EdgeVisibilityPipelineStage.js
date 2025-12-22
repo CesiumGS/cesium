@@ -12,6 +12,7 @@ import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js"
 import ModelUtility from "./ModelUtility.js";
 import ModelReader from "./ModelReader.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import AttributeType from "../AttributeType.js";
 
 /**
  * Builds derived line geometry for model edges using EXT_mesh_primitive_edge_visibility data.
@@ -112,6 +113,9 @@ EdgeVisibilityPipelineStage.process = function (
     "#ifdef HAS_EDGE_FEATURE_ID",
     "    v_featureId_0 = a_edgeFeatureId;",
     "#endif",
+    "#ifdef HAS_EDGE_COLOR_ATTRIBUTE",
+    "    v_edgeColor = a_edgeColor;",
+    "#endif",
     "    // Transform normals from model space to view space",
     "    v_silhouetteNormalView = czm_normal * a_silhouetteNormal;",
     "    v_faceNormalAView = czm_normal * a_faceNormalA;",
@@ -133,6 +137,26 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
+  const runtimePrimitive = renderResources.runtimePrimitive.primitive;
+  const vertexColorInfo = collectVertexColors(runtimePrimitive);
+  const hasEdgeColorOverride = edgeResult.edgeData.some(function (edge) {
+    return defined(edge.color);
+  });
+
+  const needsEdgeColorAttribute =
+    hasEdgeColorOverride || defined(vertexColorInfo);
+
+  let edgeColorLocation;
+  if (needsEdgeColorAttribute) {
+    edgeColorLocation = shaderBuilder.addAttribute("vec4", "a_edgeColor");
+    shaderBuilder.addVarying("vec4", "v_edgeColor", "flat");
+    shaderBuilder.addDefine(
+      "HAS_EDGE_COLOR_ATTRIBUTE",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+  }
+
   // Generate paired face normals for each unique edge (used to classify silhouette edges in the shader).
   const edgeFaceNormals = generateEdgeFaceNormals(
     adjacencyData,
@@ -150,6 +174,8 @@ EdgeVisibilityPipelineStage.process = function (
     faceNormalALocation,
     faceNormalBLocation,
     edgeFeatureIdLocation,
+    edgeColorLocation,
+    vertexColorInfo,
     primitive.edgeVisibility,
     edgeFaceNormals,
   );
@@ -372,97 +398,253 @@ function generateEdgeFaceNormals(adjacencyData, edgeIndices) {
  */
 function extractVisibleEdges(primitive) {
   const edgeVisibility = primitive.edgeVisibility;
-  const visibility = edgeVisibility.visibility;
-  const indices = primitive.indices;
-
-  if (!defined(visibility) || !defined(indices)) {
+  if (!defined(edgeVisibility)) {
     return [];
   }
 
-  const triangleIndexArray = indices.typedArray;
-  const vertexCount = primitive.attributes[0].count;
+  const visibility = edgeVisibility.visibility;
+  const indices = primitive.indices;
+  const lineStrings = edgeVisibility.lineStrings;
+
+  const attributes = primitive.attributes;
+  const vertexCount =
+    defined(attributes) && attributes.length > 0 ? attributes[0].count : 0;
+
+  const hasVisibilityData =
+    defined(visibility) &&
+    defined(indices) &&
+    defined(indices.typedArray) &&
+    indices.typedArray.length > 0;
+  const hasLineStrings = defined(lineStrings) && lineStrings.length > 0;
+
+  if (!hasVisibilityData && !hasLineStrings) {
+    return [];
+  }
+
+  const triangleIndexArray = hasVisibilityData ? indices.typedArray : undefined;
   const edgeIndices = [];
   const edgeData = [];
   const seenEdgeHashes = new Set();
   let silhouetteEdgeCount = 0;
+  const globalColor = edgeVisibility.materialColor;
 
-  // Process triangles and extract edges (2 bits per edge)
-  let edgeIndex = 0;
-  const totalIndices = triangleIndexArray.length;
+  if (hasVisibilityData) {
+    let edgeIndex = 0;
+    const totalIndices = triangleIndexArray.length;
+    const visibilityArray = visibility;
 
-  for (let i = 0; i + 2 < totalIndices; i += 3) {
-    const v0 = triangleIndexArray[i];
-    const v1 = triangleIndexArray[i + 1];
-    const v2 = triangleIndexArray[i + 2];
-    for (let e = 0; e < 3; e++) {
-      let a, b;
-      if (e === 0) {
-        a = v0;
-        b = v1;
-      } else if (e === 1) {
-        a = v1;
-        b = v2;
-      } else if (e === 2) {
-        a = v2;
-        b = v0;
-      }
-      const byteIndex = Math.floor(edgeIndex / 4);
-      const bitPairOffset = (edgeIndex % 4) * 2;
-      edgeIndex++;
+    for (let i = 0; i + 2 < totalIndices; i += 3) {
+      const v0 = triangleIndexArray[i];
+      const v1 = triangleIndexArray[i + 1];
+      const v2 = triangleIndexArray[i + 2];
+      for (let e = 0; e < 3; e++) {
+        let a;
+        let b;
+        if (e === 0) {
+          a = v0;
+          b = v1;
+        } else if (e === 1) {
+          a = v1;
+          b = v2;
+        } else {
+          a = v2;
+          b = v0;
+        }
 
-      if (byteIndex >= visibility.length) {
-        break;
-      }
+        const byteIndex = Math.floor(edgeIndex / 4);
+        const bitPairOffset = (edgeIndex % 4) * 2;
+        edgeIndex++;
 
-      const byte = visibility[byteIndex];
-      const visibility2Bit = (byte >> bitPairOffset) & 0x3;
-
-      // Only include visible edge types according to EXT_mesh_primitive_edge_visibility spec
-      let shouldIncludeEdge = false;
-      switch (visibility2Bit) {
-        case 0: // HIDDEN - never draw
-          shouldIncludeEdge = false;
+        if (byteIndex >= visibilityArray.length) {
           break;
-        case 1: // SILHOUETTE - conditionally visible (front-facing vs back-facing)
-          shouldIncludeEdge = true;
-          break;
-        case 2: // HARD - always draw (primary encoding)
-          shouldIncludeEdge = true;
-          break;
-        case 3: // REPEATED - always draw (secondary encoding of a hard edge already encoded as 2)
-          shouldIncludeEdge = true;
-          break;
-      }
+        }
 
-      if (shouldIncludeEdge) {
+        const byte = visibilityArray[byteIndex];
+        const visibility2Bit = (byte >> bitPairOffset) & 0x3;
+
+        if (visibility2Bit === 0) {
+          continue;
+        }
+
         const small = Math.min(a, b);
         const big = Math.max(a, b);
-        const hash = small * vertexCount + big;
+        const edgeKey = `${small},${big}`;
 
-        if (!seenEdgeHashes.has(hash)) {
-          seenEdgeHashes.add(hash);
-          edgeIndices.push(a, b);
-
-          let mateVertexIndex = -1;
-          if (visibility2Bit === 1) {
-            mateVertexIndex = silhouetteEdgeCount;
-            silhouetteEdgeCount++;
-          }
-
-          edgeData.push({
-            edgeType: visibility2Bit,
-            triangleIndex: Math.floor(i / 3),
-            edgeIndex: e,
-            mateVertexIndex: mateVertexIndex,
-            currentTriangleVertices: [v0, v1, v2],
-          });
+        if (seenEdgeHashes.has(edgeKey)) {
+          continue;
         }
+        seenEdgeHashes.add(edgeKey);
+        edgeIndices.push(a, b);
+
+        let mateVertexIndex = -1;
+        if (visibility2Bit === 1) {
+          mateVertexIndex = silhouetteEdgeCount;
+          silhouetteEdgeCount++;
+        }
+
+        edgeData.push({
+          edgeType: visibility2Bit,
+          triangleIndex: Math.floor(i / 3),
+          edgeIndex: e,
+          mateVertexIndex: mateVertexIndex,
+          currentTriangleVertices: [v0, v1, v2],
+          color: globalColor,
+        });
+      }
+    }
+  }
+
+  if (hasLineStrings) {
+    for (let i = 0; i < lineStrings.length; i++) {
+      const lineString = lineStrings[i];
+      if (!defined(lineString) || !defined(lineString.indices)) {
+        continue;
+      }
+
+      const indicesArray = lineString.indices;
+      if (!defined(indicesArray) || indicesArray.length < 2) {
+        continue;
+      }
+
+      const restartValue = lineString.restartIndex;
+      const lineColor = defined(lineString.materialColor)
+        ? lineString.materialColor
+        : globalColor;
+
+      let previous;
+      for (let j = 0; j < indicesArray.length; j++) {
+        const currentIndex = indicesArray[j];
+        if (defined(restartValue) && currentIndex === restartValue) {
+          previous = undefined;
+          continue;
+        }
+
+        if (!defined(previous)) {
+          previous = currentIndex;
+          continue;
+        }
+
+        const a = previous;
+        const b = currentIndex;
+        previous = currentIndex;
+
+        if (a === b) {
+          continue;
+        }
+
+        if (
+          vertexCount > 0 &&
+          (a < 0 || a >= vertexCount || b < 0 || b >= vertexCount)
+        ) {
+          continue;
+        }
+
+        const small = Math.min(a, b);
+        const big = Math.max(a, b);
+        const edgeKey = `${small},${big}`;
+
+        if (seenEdgeHashes.has(edgeKey)) {
+          continue;
+        }
+
+        seenEdgeHashes.add(edgeKey);
+        edgeIndices.push(a, b);
+        edgeData.push({
+          edgeType: 2,
+          triangleIndex: -1,
+          edgeIndex: -1,
+          mateVertexIndex: -1,
+          currentTriangleVertices: undefined,
+          color: defined(lineColor) ? lineColor : undefined,
+        });
       }
     }
   }
 
   return { edgeIndices, edgeData, silhouetteEdgeCount };
 }
+
+function collectVertexColors(runtimePrimitive) {
+  if (!defined(runtimePrimitive)) {
+    return undefined;
+  }
+
+  const colorAttribute = ModelUtility.getAttributeBySemantic(
+    runtimePrimitive,
+    VertexAttributeSemantic.COLOR,
+  );
+  if (!defined(colorAttribute)) {
+    return undefined;
+  }
+
+  const components = AttributeType.getNumberOfComponents(colorAttribute.type);
+  if (components !== 3 && components !== 4) {
+    return undefined;
+  }
+
+  let colorData = colorAttribute.typedArray;
+  if (!defined(colorData)) {
+    colorData = ModelReader.readAttributeAsTypedArray(colorAttribute);
+  }
+  if (!defined(colorData)) {
+    return undefined;
+  }
+  const count = colorAttribute.count;
+  if (!defined(count) || count === 0) {
+    return undefined;
+  }
+
+  if (colorData.length < count * components) {
+    return undefined;
+  }
+
+  const isFloatArray =
+    colorData instanceof Float32Array || colorData instanceof Float64Array;
+  const isUint8Array = colorData instanceof Uint8Array;
+  const isUint16Array = colorData instanceof Uint16Array;
+
+  if (!isFloatArray && !isUint8Array && !isUint16Array) {
+    return undefined;
+  }
+
+  const colors = new Float32Array(count * 4);
+
+  const convertComponent = function (value) {
+    let converted;
+    if (isFloatArray) {
+      converted = value;
+    } else if (isUint8Array) {
+      converted = value / 255.0;
+    } else if (isUint16Array) {
+      converted = value / 65535.0;
+    }
+    return Math.min(Math.max(converted, 0.0), 1.0);
+  };
+
+  for (let i = 0; i < count; i++) {
+    const srcBase = i * components;
+    const destBase = i * 4;
+    colors[destBase] = convertComponent(colorData[srcBase]);
+    colors[destBase + 1] = convertComponent(colorData[srcBase + 1]);
+    colors[destBase + 2] = convertComponent(colorData[srcBase + 2]);
+    if (components === 4) {
+      colors[destBase + 3] = convertComponent(colorData[srcBase + 3]);
+    } else {
+      colors[destBase + 3] = 1.0;
+    }
+  }
+
+  return {
+    colors: colors,
+    count: count,
+  };
+}
+
+/**
+ * @typedef {object} VertexColorInfo
+ * @property {Float32Array} colors The packed per-vertex colors.
+ * @property {number} count The number of vertices.
+ */
 
 /**
  * Create a derived line list geometry representing edges. A new vertex domain is used so we can pack
@@ -478,6 +660,8 @@ function extractVisibleEdges(primitive) {
  * @param {number} faceNormalALocation Shader attribute location for face normal A
  * @param {number} faceNormalBLocation Shader attribute location for face normal B
  * @param {number} edgeFeatureIdLocation Shader attribute location for optional edge feature ID
+ * @param {number} edgeColorLocation Shader attribute location for optional edge color data
+ * @param {VertexColorInfo} [vertexColorInfo] Packed per-vertex colors (optional)
  * @param {Object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals[])
  * @param {Float32Array} edgeFaceNormals Packed face normals (6 floats per edge)
  * @returns {Object|undefined} Object with {vertexArray, indexBuffer, indexCount} or undefined on failure
@@ -493,6 +677,8 @@ function createCPULineEdgeGeometry(
   faceNormalALocation,
   faceNormalBLocation,
   edgeFeatureIdLocation,
+  edgeColorLocation,
+  vertexColorInfo,
   edgeVisibility,
   edgeFaceNormals,
 ) {
@@ -522,7 +708,61 @@ function createCPULineEdgeGeometry(
   const silhouetteNormalArray = new Float32Array(totalVerts * 3);
   const faceNormalAArray = new Float32Array(totalVerts * 3);
   const faceNormalBArray = new Float32Array(totalVerts * 3);
+  const needsEdgeColorAttribute = defined(edgeColorLocation);
+  const edgeColorArray = needsEdgeColorAttribute
+    ? new Float32Array(totalVerts * 4)
+    : undefined;
+  const vertexColors = defined(vertexColorInfo)
+    ? vertexColorInfo.colors
+    : undefined;
+  const vertexColorCount = defined(vertexColorInfo) ? vertexColorInfo.count : 0;
   let p = 0;
+
+  function setNoColor(destVertexIndex) {
+    if (!needsEdgeColorAttribute) {
+      return;
+    }
+    const destOffset = destVertexIndex * 4;
+    edgeColorArray[destOffset] = 0.0;
+    edgeColorArray[destOffset + 1] = 0.0;
+    edgeColorArray[destOffset + 2] = 0.0;
+    edgeColorArray[destOffset + 3] = -1.0;
+  }
+
+  function setColorFromOverride(destVertexIndex, color) {
+    if (!needsEdgeColorAttribute) {
+      return;
+    }
+    const destOffset = destVertexIndex * 4;
+    const r = defined(color.x) ? color.x : color[0];
+    const g = defined(color.y) ? color.y : color[1];
+    const b = defined(color.z) ? color.z : color[2];
+    const a = defined(color.w) ? color.w : defined(color[3]) ? color[3] : 1.0;
+    edgeColorArray[destOffset] = r;
+    edgeColorArray[destOffset + 1] = g;
+    edgeColorArray[destOffset + 2] = b;
+    edgeColorArray[destOffset + 3] = a;
+  }
+
+  function assignVertexColor(destVertexIndex, sourceVertexIndex) {
+    if (!needsEdgeColorAttribute) {
+      return;
+    }
+    if (
+      !defined(vertexColors) ||
+      sourceVertexIndex < 0 ||
+      sourceVertexIndex >= vertexColorCount
+    ) {
+      setNoColor(destVertexIndex);
+      return;
+    }
+    const srcOffset = sourceVertexIndex * 4;
+    const destOffset = destVertexIndex * 4;
+    edgeColorArray[destOffset] = vertexColors[srcOffset];
+    edgeColorArray[destOffset + 1] = vertexColors[srcOffset + 1];
+    edgeColorArray[destOffset + 2] = vertexColors[srcOffset + 2];
+    edgeColorArray[destOffset + 3] = vertexColors[srcOffset + 3];
+  }
 
   const maxSrcVertex = srcPos.length / 3 - 1;
 
@@ -564,6 +804,11 @@ function createCPULineEdgeGeometry(
       faceNormalBArray[(normalIdx + 1) * 3] = 0;
       faceNormalBArray[(normalIdx + 1) * 3 + 1] = 0;
       faceNormalBArray[(normalIdx + 1) * 3 + 2] = 1;
+      if (needsEdgeColorAttribute) {
+        const baseVertexIndex = i * 2;
+        setNoColor(baseVertexIndex);
+        setNoColor(baseVertexIndex + 1);
+      }
       continue;
     }
 
@@ -587,6 +832,21 @@ function createCPULineEdgeGeometry(
 
     edgeTypeArray[i * 2] = t;
     edgeTypeArray[i * 2 + 1] = t;
+
+    if (needsEdgeColorAttribute) {
+      const color = edgeData[i].color;
+      const baseVertexIndex = i * 2;
+      if (defined(color)) {
+        setColorFromOverride(baseVertexIndex, color);
+        setColorFromOverride(baseVertexIndex + 1, color);
+      } else if (defined(vertexColors)) {
+        assignVertexColor(baseVertexIndex, a);
+        assignVertexColor(baseVertexIndex + 1, b);
+      } else {
+        setNoColor(baseVertexIndex);
+        setNoColor(baseVertexIndex + 1);
+      }
+    }
 
     // Add silhouette normal for silhouette edges (type 1)
     let normalX = 0,
@@ -671,6 +931,14 @@ function createCPULineEdgeGeometry(
     typedArray: faceNormalBArray,
     usage: BufferUsage.STATIC_DRAW,
   });
+  let edgeColorBuffer;
+  if (needsEdgeColorAttribute) {
+    edgeColorBuffer = Buffer.createVertexBuffer({
+      context,
+      typedArray: edgeColorArray,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+  }
 
   // Create sequential indices for line pairs
   const useU32 = totalVerts > 65534;
@@ -726,6 +994,16 @@ function createCPULineEdgeGeometry(
       normalize: false,
     },
   ];
+
+  if (needsEdgeColorAttribute) {
+    attributes.push({
+      index: edgeColorLocation,
+      vertexBuffer: edgeColorBuffer,
+      componentsPerAttribute: 4,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    });
+  }
 
   // Get feature ID from original geometry
   const primitive = renderResources.runtimePrimitive.primitive;
@@ -794,6 +1072,7 @@ function createCPULineEdgeGeometry(
     indexBuffer,
     indexCount: totalVerts,
     hasEdgeFeatureIds,
+    hasEdgeColors: needsEdgeColorAttribute,
   };
 }
 
