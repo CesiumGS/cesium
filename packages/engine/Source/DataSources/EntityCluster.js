@@ -330,7 +330,7 @@ function createDeclutterCallback(entityCluster) {
     let collectionIndex;
 
     if (points.length > 0) {
-      const index = new KDBush(points.length, 64, Uint32Array);
+      const index = new KDBush(points.length, 64, Float64Array);
       for (let p = 0; p < points.length; ++p) {
         index.add(points[p].coord.x, points[p].coord.y);
       }
