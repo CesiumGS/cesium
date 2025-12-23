@@ -1,5 +1,5 @@
 // @ts-check
-/* eslint-disable no-use-before-define */
+/* eslint no-use-before-define: ["error", { "variables": false }] */
 import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
