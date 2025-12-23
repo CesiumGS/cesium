@@ -1229,13 +1229,7 @@ function requestMultipleContents(tile) {
     tile._content = multipleContents;
   }
 
-  // XXX_DYNAMIC_MULTIPLE Pragmatically claim that everything is done
-  // (which, in fact, does not have to concern the tile...)
-  tile._contentState = Cesium3DTileContentState.READY;
-  return Promise.resolve(tile._content);
-
-  /*
-  const promise = multipleContents.requestInnerContents(); 
+  const promise = multipleContents.requestInnerContents();
 
   if (!defined(promise)) {
     // Request could not all be scheduled this frame
@@ -1267,7 +1261,6 @@ function requestMultipleContents(tile) {
       tile._contentState = Cesium3DTileContentState.FAILED;
       throw error;
     });
-  */
 }
 
 async function processArrayBuffer(
