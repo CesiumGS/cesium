@@ -1,0 +1,20 @@
+{
+  "include": ["Source/**/*.js"],
+  "compilerOptions": {
+    // Module configuration.
+    "moduleResolution": "bundler",
+    "module": "ES2022",
+    "target": "ES2022",
+
+    // I/O.
+    "noEmit": true,
+    "allowJs": true,
+
+    // Disabled by default. Individual JS files may opt-in to type checking
+    // by including a `// @ts-check` comment at top of file.
+    "checkJs": false,
+
+    // TODO(donmccurdy): Keep or remove?
+    "skipLibCheck": true
+  }
+}

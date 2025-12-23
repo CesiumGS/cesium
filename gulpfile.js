@@ -252,6 +252,29 @@ export async function buildTs() {
   await createTypeScriptDefinitions();
 }
 
+export async function tsc() {
+  let workspaces;
+  if (argv.workspace && !Array.isArray(argv.workspace)) {
+    workspaces = [argv.workspace];
+  } else if (argv.workspace) {
+    workspaces = argv.workspace;
+  } else {
+    // tsc currently configured only for packages/engine.
+    workspaces = ["engine"];
+  }
+
+  for (const workspace of workspaces) {
+    const directory = workspace
+      .replace(`@${scope}/`, "")
+      .replace(`packages/`, "");
+
+    const tsconfigPath = `packages/${directory}/tsconfig.json`;
+    if (existsSync(tsconfigPath)) {
+      execSync(`npx tsc --project ${tsconfigPath}`, { stdio: "inherit" });
+    }
+  }
+}
+
 const filesToClean = [
   "Source/Cesium.js",
   "Source/Shaders/**/*.js",
