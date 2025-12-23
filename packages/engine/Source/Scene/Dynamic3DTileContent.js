@@ -1673,7 +1673,7 @@ class Dynamic3DTileContent {
    *
    * Callers may NOT modify the returned array.
    *
-   * @type {string[]} The active content URIs
+   * @type {string[]}
    */
   get _activeContentUris() {
     const tileset = this.tileset;
@@ -1722,7 +1722,7 @@ class Dynamic3DTileContent {
   /**
    * Returns ALL contents that are currently loaded.
    *
-   * @type {Cesium3DTileContent[]} The contents
+   * @type {Cesium3DTileContent[]}
    */
   get _allLoadedContents() {
     const allLoadedContents = [];
