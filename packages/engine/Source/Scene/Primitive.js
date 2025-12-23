@@ -752,23 +752,10 @@ Primitive._modifyShaderPosition = function (
         computeFunctions +=
           `${functionName}\n` +
           `{\n` +
-          `    vec4 p;\n` +
-          `    if (czm_morphTime == 1.0)\n` +
-          `    {\n` +
-          `        p = czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow);\n` +
-          `    }\n` +
-          `    else if (czm_morphTime == 0.0)\n` +
-          `    {\n` +
-          `        p = czm_translateRelativeToEye(${name}2DHigh.zxy, ${name}2DLow.zxy);\n` +
-          `    }\n` +
-          `    else\n` +
-          `    {\n` +
-          `        p = czm_columbusViewMorph(\n` +
-          `                czm_translateRelativeToEye(${name}2DHigh.zxy, ${name}2DLow.zxy),\n` +
-          `                czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow),\n` +
-          `                czm_morphTime);\n` +
-          `    }\n` +
-          `    return p;\n` +
+          `    return czm_columbusViewMorph(\n` +
+          `             czm_translateRelativeToEye(${name}2DHigh.zxy, ${name}2DLow.zxy),\n` +
+          `             czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow),\n` +
+          `             czm_morphTime);\n` +
           `}\n\n`;
       } else {
         computeFunctions +=
