@@ -21,61 +21,30 @@ const defaultThumbnailPath = "images/placeholder-thumbnail.jpg";
 const requiredMetadataKeys = ["title", "description"];
 const galleryItemConfig = /sandcastle\.(yml|yaml)/;
 
-// Embedding configuration
 const MODEL_ID = "avsolatorio/GIST-small-Embedding-v0";
-
-/**
- * Initialize the embedding model (singleton pattern)
- */
-let embeddingModel = null;
-let embeddingTokenizer = null;
-
-async function initEmbeddingModel() {
-  if (embeddingModel && embeddingTokenizer) {
-    return { model: embeddingModel, tokenizer: embeddingTokenizer };
-  }
-
-  console.log("Loading embedding model...");
-  console.log("This may take a while on first run as the model is downloaded.");
-
-  embeddingTokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
-  embeddingModel = await AutoModel.from_pretrained(MODEL_ID, {
-    dtype: "fp32",
-  });
-
-  return { model: embeddingModel, tokenizer: embeddingTokenizer };
-}
 
 function itemToText(title, description, labels) {
   const text = `Title: ${title}
-Description: ${description}
-Labels: ${labels.join(", ")}`;
+  Description: ${description}
+  Labels: ${labels.join(", ")}`;
 
   return text;
 }
 
-/**
- * Generate embeddings for a batch of items
- */
 async function generateEmbeddings(items) {
-  const { model, tokenizer } = await initEmbeddingModel();
-
-  console.log(`\nGenerating embeddings for ${items.length} gallery items...`);
+  const tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
+  const model = await AutoModel.from_pretrained(MODEL_ID, {
+    dtype: "fp32",
+  });
 
   const texts = items.map((item) =>
     itemToText(item.title, item.description, item.labels),
   );
 
-  const embeddings = [];
-
   const inputs = await tokenizer(texts, { padding: true, truncation: true });
   const { sentence_embedding } = await model(inputs);
 
-  const batchEmbeddings = sentence_embedding.tolist();
-  embeddings.push(...batchEmbeddings);
-
-  console.log(`Generated ${embeddings.length} embeddings`);
-  return embeddings;
+  return sentence_embedding.tolist();
 }
 
 async function createPagefindIndex() {
