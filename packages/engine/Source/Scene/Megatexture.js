@@ -438,9 +438,26 @@ function findFactorsOfNearbyComposite(n, maxN) {
   }
 }
 
+/**
+ * Compute the number of tiles to assign to an axis based on the remaining prime factors.
+ * We maximize the number of tiles assigned to the dimension without exceeding the maximum dimension.
+ * @private
+ * @param {number[]} factorPowers The exponents of the prime factors 2, 3, 5, and 7 whose product is the remaining number of tiles to be assigned to an axis
+ * @param {number} maxDimension The maximum number of tiles that can fit along this axis
+ * @returns {number[]} The exponents of the prime factors 2, 3, 5, and 7 whose product is the number of tiles assigned to this axis
+ */
 function getDimensionFromFactors(factorPowers, maxDimension) {
   const maxPowerOfTwo = Math.floor(Math.log2(maxDimension));
   const log2n = Math.min(factorPowers[0], maxPowerOfTwo);
+  // factorPowers includes log2n powers of 2 and at most one power of 3, 5, or 7.
+  if (log2n <= 1 && Math.max(...factorPowers.slice(1)) > 0) {
+    if (getProductOfFactors(factorPowers) <= maxDimension) {
+      // All remaining factors will fit in the current axis
+      return factorPowers.slice();
+    }
+    // Use the larger factor first (axes are in order of smallest to largest tile dimension)
+    return [0, ...factorPowers.slice(1)];
+  }
   const remainingDimension = maxDimension / 2 ** log2n;
   if (remainingDimension >= 7 / 4 && factorPowers[3] > 0) {
     return [log2n - 2, 0, 0, 1];
