@@ -6,15 +6,16 @@ import {
 } from "@huggingface/transformers";
 
 export interface VectorSearchResult {
-  rank: number;
+  score: number;
+  distance: number;
+  url: string;
   id: string;
-  legacy_id: string;
   title: string;
+  thumbnail: string;
+  lineCount: number;
   description: string;
   labels: string[];
-  distance: number;
-  score: number;
-  url: string;
+  embedding?: number[];
 }
 
 interface GalleryListItem {
@@ -38,90 +39,20 @@ class EmbeddingSearch {
   private tokenizer: PreTrainedTokenizer | null = null;
   private model: PreTrainedModel | null = null;
   private modelId: string = "avsolatorio/GIST-small-Embedding-v0";
-  private loadingPromise: Promise<void> | null = null;
 
-  /**
-   * Load the gallery list with embeddings
-   */
-  private async loadGalleryList(): Promise<void> {
-    if (this.galleryList) {
-      return;
-    }
-
-    try {
-      const response = await fetch("gallery/list.json");
-      if (!response.ok) {
-        throw new Error(`Failed to load gallery list: ${response.statusText}`);
-      }
-      this.galleryList = await response.json();
-
-      // Verify that embeddings are present
-      const itemsWithEmbeddings = this.galleryList!.entries.filter(
-        (item) => item.embedding,
-      );
-      if (itemsWithEmbeddings.length === 0) {
-        throw new Error(
-          "No embeddings found in gallery list. Run the build script to generate them.",
-        );
-      }
-
-      console.log(
-        `Loaded ${itemsWithEmbeddings.length} gallery items with embeddings`,
-      );
-    } catch (error) {
-      console.error("Failed to load gallery list:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Initialize the embedding model
-   */
-  private async loadModel(): Promise<void> {
-    if (this.model && this.tokenizer) {
-      return;
-    }
-
-    try {
-      console.log(
-        `Loading embedding model: ${this.modelId} (this may take a moment on first load)...`,
-      );
-      this.tokenizer = await AutoTokenizer.from_pretrained(this.modelId);
-      this.model = await AutoModel.from_pretrained(this.modelId);
-      console.log(`Embedding model loaded successfully: ${this.modelId}`);
-    } catch (error) {
-      console.error("Failed to load embedding model:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Initialize both the gallery list and the model
-   */
   async initialize(): Promise<void> {
-    // If already fully initialized, return immediately
     if (this.galleryList && this.model && this.tokenizer) {
       return;
     }
 
-    // If currently loading, wait for that to finish
-    if (this.loadingPromise) {
-      return this.loadingPromise;
-    }
+    const response = await fetch("gallery/list.json");
+    this.galleryList = await response.json();
+    console.log(this.galleryList)
 
-    // Start loading
-    this.loadingPromise = (async () => {
-      await Promise.all([this.loadGalleryList(), this.loadModel()]);
-      // Clear the promise after successful initialization
-      this.loadingPromise = null;
-    })();
-
-    return this.loadingPromise;
+    this.tokenizer = await AutoTokenizer.from_pretrained(this.modelId);
+    this.model = await AutoModel.from_pretrained(this.modelId);
   }
 
-  /**
-   * Calculate cosine similarity between two vectors
-   */
   private cosineSimilarity(vecA: number[], vecB: number[]): number {
     if (vecA.length !== vecB.length) {
       throw new Error("Vectors must have the same length");
@@ -140,13 +71,6 @@ class EmbeddingSearch {
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
   }
 
-  /**
-   * Perform a vector similarity search
-   * @param query - The search query text
-   * @param limit - Maximum number of results to return
-   * @param filters - Optional filters to apply to the search results
-   * @returns Array of search results ranked by relevance
-   */
   async search(
     query: string,
     limit: number = 10,
@@ -155,99 +79,45 @@ class EmbeddingSearch {
     if (!query || query.trim().length === 0) {
       return [];
     }
-
-    try {
-      if (!this.galleryList || !this.model || !this.tokenizer) {
-        await this.initialize();
-      }
-
-      if (!this.galleryList || !this.model || !this.tokenizer) {
-        throw new Error("Vector search not properly initialized");
-      }
-
-      const inputs = await this.tokenizer([query.trim()], {
-        padding: true,
-        truncation: true,
-      });
-
-      const { sentence_embedding } = await this.model(inputs);
-      const queryEmbedding = sentence_embedding.tolist()[0];
-
-      let itemsWithEmbeddings = this.galleryList.entries.filter(
-        (item) => item.embedding,
-      );
-
-      if (filters) {
-        itemsWithEmbeddings = itemsWithEmbeddings.filter((item) => {
-          for (const [key, value] of Object.entries(filters)) {
-            if (value === null || value === undefined) {
-              continue;
-            }
-
-            const itemValue = (item as unknown as Record<string, unknown>)[key];
-            if (itemValue === undefined) {
-              return false;
-            }
-
-            const filterValues = Array.isArray(value) ? value : [value];
-
-            if (Array.isArray(itemValue)) {
-              const hasMatch = itemValue.some((v: unknown) =>
-                filterValues.includes(v as string),
-              );
-              if (!hasMatch) {
-                return false;
-              }
-            } else if (!filterValues.includes(itemValue as string)) {
-              return false;
-            }
-          }
-          return true;
-        });
-      }
-
-      const results = itemsWithEmbeddings.map((item) => {
-        const score = this.cosineSimilarity(queryEmbedding, item.embedding!);
-        return {
-          ...item,
-          score,
-          distance: 1 - score, // Convert similarity to distance
-        };
-      });
-
-      results.sort((a, b) => b.score - a.score);
-      const topResults = results.slice(0, limit);
-
-      // Format results to match expected interface
-      const formattedResults = topResults.map((result, index) => ({
-        rank: index + 1,
-        id: result.id,
-        legacy_id: result.id, // Use id as legacy_id for compatibility
-        title: result.title,
-        description: result.description,
-        labels: result.labels,
-        distance: result.distance,
-        score: result.score,
-        url: result.url,
-      }));
-
-      return formattedResults;
-    } catch (error) {
-      console.error("[EmbeddingSearch] Search failed:", error);
-      // Return empty results on error so the app can continue
+    if (!this.galleryList || !this.model || !this.tokenizer) {
+      console.log("Search occured before initialization completed.");
       return [];
     }
-  }
 
-  /**
-   * Check if the search service is ready
-   */
-  isReady(): boolean {
-    return (
-      this.galleryList !== null &&
-      this.model !== null &&
-      this.tokenizer !== null
+    const inputs = await this.tokenizer([query.trim()], {
+      padding: true,
+      truncation: true,
+    });
+
+    const { sentence_embedding } = await this.model(inputs);
+    const queryEmbedding = sentence_embedding.tolist()[0];
+
+    let itemsWithEmbeddings = this.galleryList.entries.filter(
+      (item) => item.embedding,
     );
+
+    if (filters) {
+      itemsWithEmbeddings = itemsWithEmbeddings.filter((item) => {
+        if (typeof filters.labels === "string") {
+          return item.labels.includes(filters.labels);
+        }
+        return false;
+      }
+      );
+    }
+
+    const results = itemsWithEmbeddings.map((item) => {
+      const score = this.cosineSimilarity(queryEmbedding, item.embedding!);
+      return {
+        ...item,
+        score,
+        distance: 1 - score, // Convert similarity to distance
+      };
+    });
+
+    results.sort((a, b) => b.score - a.score);
+    const topResults = results.slice(0, limit);
+    return topResults;
   }
 }
 
@@ -256,26 +126,9 @@ const embeddingSearch = new EmbeddingSearch();
 // Pre-load the model and gallery list at application startup
 // This happens in the background so the UI can load while the model downloads
 if (typeof window !== "undefined") {
-  // Start loading immediately when the module is imported
-  embeddingSearch
-    .initialize()
-    .then(() => {
-      console.log(
-        "[EmbeddingSearch] Model and embeddings pre-loaded and ready for search!",
-      );
-    })
-    .catch((error) => {
-      console.error("[EmbeddingSearch] Failed to pre-load model:", error);
-    });
+  embeddingSearch.initialize();
 }
 
-/**
- * Performs vector search using the local embedding model
- * @param query - The search query string
- * @param limit - Maximum number of results to return (default: 10)
- * @param filters - Optional filters to apply to the search results
- * @returns Promise resolving to array of search results
- */
 export async function vectorSearch(
   query: string,
   limit: number = 10,
@@ -283,5 +136,3 @@ export async function vectorSearch(
 ): Promise<VectorSearchResult[]> {
   return embeddingSearch.search(query, limit, filters);
 }
-
-export { embeddingSearch };

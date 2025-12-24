@@ -115,7 +115,35 @@ export function useGalleryItemStore() {
     });
 
     if (vectorSearchResults && vectorSearchResults.length > 0) {
-      return mergeVectorSearchResults(pagefindResults);
+      for (const vectorResult of vectorSearchResults!.reverse()) {
+      const exists = pagefindResults.find(
+        (res) => res && res.id === vectorResult.id,
+      );
+      // This similarity threshold is the cutoff for showing a a vector search result
+      // There is a tradeoff depending on user query complexity
+      // Often, shorter queries may want a slightly higher threshold (~0.75)
+      // However, this number was based on testing with more complex queries
+      const similarity_threshold = 0.727;
+      if (vectorResult.score < similarity_threshold) {
+        continue;
+      }
+
+      if (exists) {
+        pagefindResults.splice(
+          pagefindResults.indexOf(exists),
+          1
+        );
+        pagefindResults.unshift(exists);
+        continue;
+      }
+      if (!exists) {
+        const item = items.find((item) => item.id === vectorResult.id);
+        if (item) {
+          pagefindResults.unshift(formatVectorSearch(item));
+        }
+      }
+    }
+    return pagefindResults;
     }
 
     return pagefindResults;
@@ -249,38 +277,6 @@ export function useGalleryItemStore() {
 
     useLoadFromUrl,
   };
-
-  function mergeVectorSearchResults(
-    pagefindResults: (HighlightedGalleryItem | undefined)[],
-  ) {
-    for (const vectorResult of vectorSearchResults!.reverse()) {
-      const exists = pagefindResults.find(
-        (res) => res && res.id === vectorResult.id,
-      );
-      const similarity_threshold = 0.75;
-      console.log(vectorResult.id);
-      console.log(vectorResult.score);
-      if (vectorResult.score < similarity_threshold) {
-        continue;
-      }
-      // Move element to front if it already exists
-      if (exists) {
-        pagefindResults.splice(
-          pagefindResults.indexOf(exists),
-          1
-        );
-        pagefindResults.unshift(exists);
-        continue;
-      }
-      if (!exists) {
-        const item = items.find((item) => item.id === vectorResult.id);
-        if (item) {
-          pagefindResults.unshift(formatVectorSearch(item));
-        }
-      }
-    }
-    return pagefindResults;
-  }
 }
 
 export type GalleryItemStore = ReturnType<typeof useGalleryItemStore> | null;
