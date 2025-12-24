@@ -1811,6 +1811,16 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   material.alphaCutoff = gltfMaterial.alphaCutoff;
   material.doubleSided = gltfMaterial.doubleSided;
 
+  // BENTLEY_materials_point_style extension
+  const pointStyleExtension = extensions.BENTLEY_materials_point_style;
+  if (defined(pointStyleExtension) && defined(pointStyleExtension.diameter)) {
+    const diameter = pointStyleExtension.diameter;
+    // Validate that diameter is a positive integer as the extension specification requires.
+    if (diameter > 0 && Math.floor(diameter) === diameter) {
+      material.pointDiameter = diameter;
+    }
+  }
+
   return material;
 }
 
