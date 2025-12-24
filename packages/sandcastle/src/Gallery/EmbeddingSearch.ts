@@ -47,7 +47,7 @@ class EmbeddingSearch {
 
     const response = await fetch("gallery/list.json");
     this.galleryList = await response.json();
-    console.log(this.galleryList)
+    console.log(this.galleryList);
 
     this.tokenizer = await AutoTokenizer.from_pretrained(this.modelId);
     this.model = await AutoModel.from_pretrained(this.modelId);
@@ -102,8 +102,7 @@ class EmbeddingSearch {
           return item.labels.includes(filters.labels);
         }
         return false;
-      }
-      );
+      });
     }
 
     const results = itemsWithEmbeddings.map((item) => {
