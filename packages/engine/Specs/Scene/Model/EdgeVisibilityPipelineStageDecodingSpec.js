@@ -1,4 +1,5 @@
 import {
+  Cartesian4,
   Buffer,
   BufferUsage,
   ComponentDatatype,
@@ -312,6 +313,36 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     const expectedEdgeKeys = new Set(["0,1", "0,2", "2,3"]);
     expect(expectedEdges).toEqual(expectedEdgeKeys);
     expect(expectedEdges.size).toBe(3);
+  });
+
+  it("generates edge color attribute for material overrides and line strings", function () {
+    const primitive = createTestPrimitive();
+    primitive.edgeVisibility.materialColor = new Cartesian4(0.2, 0.3, 0.4, 1.0);
+    primitive.edgeVisibility.lineStrings = [
+      {
+        indices: new Uint16Array([0, 1, 65535, 1, 3]),
+        restartIndex: 65535,
+        materialColor: new Cartesian4(0.9, 0.1, 0.2, 1.0),
+      },
+    ];
+
+    const renderResources = createMockRenderResources(primitive);
+    const frameState = createMockFrameState();
+
+    EdgeVisibilityPipelineStage.process(renderResources, primitive, frameState);
+
+    expect(renderResources.edgeGeometry).toBeDefined();
+
+    const attributeLocations = renderResources.shaderBuilder.attributeLocations;
+    expect(attributeLocations.a_edgeColor).toBeDefined();
+
+    const vertexDefines =
+      renderResources.shaderBuilder._vertexShaderParts.defineLines;
+    expect(vertexDefines).toContain("HAS_EDGE_COLOR_ATTRIBUTE");
+
+    const attributes =
+      renderResources.edgeGeometry.vertexArray._attributes ?? [];
+    expect(attributes.length).toBeGreaterThan(5);
   });
 
   it("sets up uniforms correctly", function () {

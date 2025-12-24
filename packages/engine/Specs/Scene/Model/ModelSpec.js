@@ -2471,6 +2471,10 @@ describe(
           },
           scene,
         );
+        await pollToPromise(function () {
+          scene.renderForSpecs();
+          return model._heightDirty === false;
+        });
         expect(model._heightDirty).toBe(false);
         const terrainProvider = await CesiumTerrainProvider.fromUrl(
           "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",
