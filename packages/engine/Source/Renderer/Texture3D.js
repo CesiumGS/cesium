@@ -68,6 +68,7 @@ function Texture3D(options) {
     sampler = new Sampler(),
   } = options;
 
+  // 3D textures are not supported in a WebGL1 context. But we allow a stub context for testing.
   if (!context.webgl2 && !defined(context.options.getWebGLStub)) {
     throw new DeveloperError(
       "WebGL1 does not support texture3D. Please use a WebGL2 context.",
@@ -342,7 +343,7 @@ function loadBufferSource(texture3D, source) {
  * @param {number} [options.zOffset=0] The offset in the z direction within the texture to copy into.
  * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the texture will be ignored.
  *
- * @exception {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
+ * @exception {DeveloperError} Unsupported copyFrom with a compressed texture pixel format.
  * @exception {DeveloperError} xOffset must be greater than or equal to zero.
  * @exception {DeveloperError} yOffset must be greater than or equal to zero.
  * @exception {DeveloperError} zOffset must be greater than or equal to zero.
@@ -371,7 +372,7 @@ Texture3D.prototype.copyFrom = function (options) {
   Check.defined("options.source.arrayBufferView", source.arrayBufferView);
   if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
     throw new DeveloperError(
-      "Cannot call copyFrom with a compressed texture pixel format.",
+      "Unsupported copyFrom with a compressed texture pixel format.",
     );
   }
   Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);

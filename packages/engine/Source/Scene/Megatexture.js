@@ -31,7 +31,7 @@ function Megatexture(
   dimensions,
   channelCount,
   componentType,
-  availableTextureMemoryBytes = 134217728,
+  availableTextureMemoryBytes = 134217728, // 128 MB
   tileCount,
 ) {
   // TODO there are a lot of texture packing rules, see https://github.com/CesiumGS/cesium/issues/9572
@@ -322,11 +322,13 @@ Megatexture.prototype.isFull = function () {
 
 /**
  * Compute a 3D texture dimension that contains the given number of tiles, or as many tiles as can fit within the available texture memory.
+ * Not used outside the class, but exposed for testing.
  * @param {Cartesian3} tileDimensions The dimensions of one tile in number of voxels.
  * @param {number} bytesPerSample The number of bytes per voxel sample.
  * @param {number} availableTextureMemoryBytes An upper limit on the texture memory size in bytes.
  * @param {number} [tileCount] The total number of tiles in the tileset.
  * @returns {Cartesian3} The computed 3D texture dimensions.
+ * @private
  */
 Megatexture.get3DTextureDimension = function (
   tileDimensions,
@@ -395,11 +397,13 @@ Megatexture.get3DTextureDimension = function (
  */
 function findFactorsOfNearbyComposite(n, maxN) {
   n = Math.min(n, maxN);
+  //>>includeStart('debug', pragmas.debug);
   if (Math.floor(n) !== n) {
     throw new DeveloperError("n and maxN must be integers");
   } else if (n < 1) {
     throw new DeveloperError("n and maxN must be at least 1");
   }
+  //>>includeEnd('debug');
   switch (n) {
     case 1:
       return [0, 0, 0, 0];
