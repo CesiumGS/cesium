@@ -302,20 +302,10 @@ export async function buildGalleryList(options = {}) {
   // regardless of if titles match the directory names
   output.entries.sort((a, b) => a.title.localeCompare(b.title));
 
-  // Generate embeddings for all entries
-  try {
-    const embeddings = await generateEmbeddings(output.entries);
-    // Add embeddings to each entry
-    output.entries.forEach((entry, index) => {
-      entry.embedding = embeddings[index];
-    });
-    console.log(
-      `\n✓ Successfully added embeddings to ${output.entries.length} gallery items`,
-    );
-  } catch (error) {
-    console.error("Failed to generate embeddings:", error);
-    console.log("Continuing without embeddings...");
-  }
+  const embeddings = await generateEmbeddings(output.entries);
+  output.entries.forEach((entry, index) => {
+    entry.embedding = embeddings[index];
+  });
 
   const outputDirectory = join(rootDirectory, publicDirectory, "gallery");
   await rimraf(outputDirectory);
