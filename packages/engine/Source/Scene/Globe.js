@@ -723,14 +723,7 @@ Globe.prototype.pickWorldCoordinates = function (
   const sphereIntersections = scratchArray;
   sphereIntersections.length = 0;
 
-  const _tilesRenderedThisFrame = this._surface._tilesRenderedThisFrame;
-  let length = _tilesRenderedThisFrame.length;
-
-  let tile;
-  let i;
-
-  for (i = 0; i < length; ++i) {
-    tile = _tilesRenderedThisFrame[i];
+  for (const tile of this._surface._tilesRenderedThisFrame) {
     const surfaceTile = tile.data;
 
     if (!defined(surfaceTile)) {
@@ -776,8 +769,8 @@ Globe.prototype.pickWorldCoordinates = function (
   sphereIntersections.sort(createComparePickTileFunction(ray.origin));
 
   let intersection;
-  length = sphereIntersections.length;
-  for (i = 0; i < length; ++i) {
+  const length = sphereIntersections.length;
+  for (let i = 0; i < length; ++i) {
     intersection = sphereIntersections[i].pick(
       ray,
       scene.mode,
