@@ -11,6 +11,8 @@
 #### Additions :tada:
 
 - Added support for the proposed [BENTLEY_materials_point_style](https://github.com/CesiumGS/glTF/pull/91) glTF extension. This allows point primitives to have a diameter property specified and respected when loaded via glTF.
+- Added support for the proposed [BENTLEY_materials_line_style](https://github.com/CesiumGS/glTF/pull/XXX) glTF extension. This enables CAD-style line visualization with variable width and dash patterns. Lines and edges can now have customizable `width` (in screen pixels) and `pattern` (16-bit repeating on/off pattern) properties when loaded via glTF.
+- Refactored `EXT_mesh_primitive_edge_visibility` implementation to use quad-based rendering instead of `gl_line` primitives. This enables variable line width support, as WebGL does not support line widths greater than 1. Each edge is now tessellated into a quad (4 vertices, 2 triangles) that expands perpendicular to the edge direction based on the material's width property.
 
 ## 1.136 - 2025-12-01
 
