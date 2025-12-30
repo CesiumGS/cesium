@@ -435,6 +435,9 @@ function findFactorsOfNearbyComposite(n, maxN) {
     case 3:
       // previousPowerOfTwo * 7 / 4
       return [log2n - 2, 0, 0, 1];
+    case 4:
+      // previousPowerOfTwo * 8 / 4
+      return [log2n + 1, 0, 0, 0];
   }
 }
 
