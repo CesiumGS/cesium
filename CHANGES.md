@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Fixes label positioning in workflows that delete and recreate clamped labels [#12949](https://github.com/CesiumGS/cesium/issues/12949)
+- Fixes multiple issues causing undefined pick results in 2D/CV scene modes [#13083](https://github.com/CesiumGS/cesium/issues/13083)
 
 ## 1.136 - 2025-12-01
 
