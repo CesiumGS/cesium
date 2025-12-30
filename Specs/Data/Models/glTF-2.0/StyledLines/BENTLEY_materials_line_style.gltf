@@ -1,0 +1,340 @@
+{
+  "extensionsUsed": [
+    "KHR_mesh_quantization",
+    "EXT_mesh_features",
+    "EXT_mesh_primitive_edge_visibility",
+    "EXT_structural_metadata",
+    "BENTLEY_materials_line_style"
+  ],
+  "extensionsRequired": [
+    "KHR_mesh_quantization"
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5123,
+      "count": 1056,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5123,
+      "count": 354,
+      "type": "VEC3",
+      "max": [
+        63939.0,
+        45112.0,
+        44922.0
+      ],
+      "min": [
+        2405.0,
+        21232.0,
+        21422.0
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 354,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5121,
+      "normalized": true,
+      "count": 354,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 354,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5121,
+      "count": 264,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5120,
+      "count": 176,
+      "type": "VEC3"
+    }
+  ],
+  "asset": {
+    "generator": "3DFT",
+    "version": "2.0"
+  },
+  "buffers": [
+    {
+      "byteLength": 13036,
+      "uri": "3-1-0.bin"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 2112,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 2112,
+      "byteLength": 2832,
+      "byteStride": 8,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 4944,
+      "byteLength": 4248,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 9192,
+      "byteLength": 1416,
+      "byteStride": 4,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 10608,
+      "byteLength": 1416,
+      "byteStride": 4,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 12024,
+      "byteLength": 264,
+      "byteStride": 1,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 12288,
+      "byteLength": 704,
+      "byteStride": 4,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 12992,
+      "byteLength": 8
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 13000,
+      "byteLength": 8
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 13008,
+      "byteLength": 8
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 13016,
+      "byteLength": 8
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 13024,
+      "byteLength": 4
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 13028,
+      "byteLength": 8
+    }
+  ],
+  "materials": [
+    {
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0.0
+      },
+      "doubleSided": true,
+      "extensions": {
+        "BENTLEY_materials_line_style": {
+          "width": 5,
+          "pattern": 61680
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 2,
+            "POSITION": 1,
+            "_FEATURE_ID_0": 4,
+            "COLOR_0": 3
+          },
+          "indices": 0,
+          "material": 0,
+          "extensions": {
+            "EXT_mesh_features": {
+              "featureIds": [
+                {
+                  "featureCount": 1,
+                  "attribute": 0,
+                  "propertyTable": 0
+                },
+                {
+                  "featureCount": 1,
+                  "attribute": 0,
+                  "propertyTable": 1
+                }
+              ]
+            },
+            "EXT_mesh_primitive_edge_visibility": {
+              "visibility": 5,
+              "silhouetteNormals": 6
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "matrix": [
+        0.00012359807736324102,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -0.00012359807736324102,
+        0.0,
+        0.0,
+        0.00012359807736324102,
+        0.0,
+        0.0,
+        -4.1,
+        -4.1,
+        4.1,
+        1.0
+      ],
+      "mesh": 0
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schema": {
+        "id": "",
+        "classes": {
+          "materials": {
+            "properties": {
+              "material": {
+                "type": "SCALAR",
+                "componentType": "UINT64"
+              }
+            }
+          },
+          "MeshPart": {
+            "properties": {
+              "element": {
+                "type": "SCALAR",
+                "componentType": "UINT64"
+              },
+              "model": {
+                "type": "SCALAR",
+                "componentType": "UINT64"
+              },
+              "subcategory": {
+                "type": "SCALAR",
+                "componentType": "UINT64"
+              },
+              "category": {
+                "type": "SCALAR",
+                "componentType": "UINT64"
+              },
+              "geometryClass": {
+                "type": "ENUM",
+                "componentType": "UINT8",
+                "enumType": "geometryClassEnum"
+              }
+            }
+          }
+        },
+        "enums": {
+          "geometryClassEnum": {
+            "name": "Geometry Class",
+            "description": "",
+            "valueType": "UINT8",
+            "values": [
+              {
+                "name": "Primary",
+                "description": "",
+                "value": 0
+              },
+              {
+                "name": "Construction",
+                "description": "",
+                "value": 1
+              },
+              {
+                "name": "Dimension",
+                "description": "",
+                "value": 2
+              },
+              {
+                "name": "Pattern",
+                "description": "",
+                "value": 3
+              }
+            ]
+          }
+        }
+      },
+      "propertyTables": [
+        {
+          "class": "MeshPart",
+          "count": 1,
+          "properties": {
+            "element": {
+              "values": 7
+            },
+            "model": {
+              "values": 8
+            },
+            "category": {
+              "values": 9
+            },
+            "subcategory": {
+              "values": 10
+            },
+            "geometryClass": {
+              "values": 11
+            }
+          }
+        },
+        {
+          "class": "materials",
+          "count": 1,
+          "properties": {
+            "material": {
+              "values": 12
+            }
+          }
+        }
+      ]
+    }
+  }
+}

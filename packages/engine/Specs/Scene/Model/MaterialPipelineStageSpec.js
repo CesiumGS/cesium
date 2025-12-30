@@ -93,6 +93,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
+    const styledLines =
+      "./Data/Models/glTF-2.0/StyledLines/BENTLEY_materials_line_style.gltf";
 
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {
@@ -905,6 +907,187 @@ describe(
       expectUniformMap(uniformMap, {
         u_testTexture: mockTexture,
       });
+    });
+
+    it("processes BENTLEY_materials_line_style with lineWidth", function () {
+      const shaderBuilder = new ShaderBuilder();
+      const uniformMap = {};
+      const renderResources = {
+        shaderBuilder: shaderBuilder,
+        uniformMap: uniformMap,
+        model: {
+          statistics: new ModelStatistics(),
+        },
+      };
+
+      const material = new ModelComponents.Material();
+      material.lineWidth = 3.0;
+
+      const frameState = {
+        context: scene.context,
+        pixelRatio: 2.0,
+      };
+
+      MaterialPipelineStage.process(renderResources, material, frameState);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_LINE_STYLE",
+        "HAS_LINE_WIDTH",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_LINE_STYLE",
+        "HAS_LINE_WIDTH",
+      ]);
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform float u_lineWidth;",
+      ]);
+
+      expect(uniformMap.u_lineWidth).toBeDefined();
+      expect(uniformMap.u_lineWidth()).toBe(6.0); // 3.0 * 2.0 pixelRatio
+    });
+
+    it("processes BENTLEY_materials_line_style with linePattern", function () {
+      const shaderBuilder = new ShaderBuilder();
+      const uniformMap = {};
+      const renderResources = {
+        shaderBuilder: shaderBuilder,
+        uniformMap: uniformMap,
+        model: {
+          statistics: new ModelStatistics(),
+        },
+      };
+
+      const material = new ModelComponents.Material();
+      material.linePattern = 0xaaaa; // dotted pattern
+
+      const frameState = {
+        context: scene.context,
+        pixelRatio: 1.0,
+      };
+
+      MaterialPipelineStage.process(renderResources, material, frameState);
+
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_LINE_STYLE",
+        "HAS_LINE_PATTERN",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform float u_linePattern;",
+      ]);
+      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+        "float v_lineCoord;",
+      ]);
+
+      expect(uniformMap.u_linePattern).toBeDefined();
+      expect(uniformMap.u_linePattern()).toBe(0xaaaa);
+    });
+
+    it("processes BENTLEY_materials_line_style with both lineWidth and linePattern", function () {
+      const shaderBuilder = new ShaderBuilder();
+      const uniformMap = {};
+      const renderResources = {
+        shaderBuilder: shaderBuilder,
+        uniformMap: uniformMap,
+        model: {
+          statistics: new ModelStatistics(),
+        },
+      };
+
+      const material = new ModelComponents.Material();
+      material.lineWidth = 2.5;
+      material.linePattern = 0xf0f0; // dashed pattern
+
+      const frameState = {
+        context: scene.context,
+        pixelRatio: 1.5,
+      };
+
+      MaterialPipelineStage.process(renderResources, material, frameState);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_LINE_STYLE",
+        "HAS_LINE_WIDTH",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_LINE_STYLE",
+        "HAS_LINE_WIDTH",
+        "HAS_LINE_PATTERN",
+      ]);
+
+      expect(uniformMap.u_lineWidth).toBeDefined();
+      expect(uniformMap.u_lineWidth()).toBe(3.75); // 2.5 * 1.5
+
+      expect(uniformMap.u_linePattern).toBeDefined();
+      expect(uniformMap.u_linePattern()).toBe(0xf0f0);
+    });
+
+    it("loads BENTLEY_materials_line_style from glTF", async function () {
+      const gltfLoader = await loadGltf(styledLines);
+      const components = gltfLoader.components;
+      const node = components.nodes[0];
+      const primitive = node.primitives[0];
+      const material = primitive.material;
+
+      expect(material).toBeDefined();
+      expect(material.lineWidth).toBe(5);
+      expect(material.linePattern).toBe(61680); // 0xF0F0
+
+      const renderResources = mockRenderResources();
+      const frameState = {
+        context: scene.context,
+        pixelRatio: 1.0,
+      };
+
+      MaterialPipelineStage.process(renderResources, material, frameState);
+
+      // Verify HAS_LINE_STYLE define is added
+      ShaderBuilderTester.expectHasVertexDefines(
+        renderResources.shaderBuilder,
+        ["HAS_LINE_STYLE", "HAS_LINE_WIDTH"],
+      );
+      ShaderBuilderTester.expectHasFragmentDefines(
+        renderResources.shaderBuilder,
+        ["HAS_LINE_STYLE", "HAS_LINE_WIDTH", "HAS_LINE_PATTERN"],
+      );
+
+      // Verify uniforms are set correctly
+      expect(renderResources.uniformMap.u_lineWidth).toBeDefined();
+      expect(renderResources.uniformMap.u_lineWidth()).toBe(5.0); // width * pixelRatio (5 * 1.0)
+
+      expect(renderResources.uniformMap.u_linePattern).toBeDefined();
+      expect(renderResources.uniformMap.u_linePattern()).toBe(61680);
+    });
+
+    it("loads BENTLEY_materials_line_style with edge visibility extension", async function () {
+      const gltfLoader = await loadGltf(styledLines);
+      const components = gltfLoader.components;
+      const node = components.nodes[0];
+      const primitive = node.primitives[0];
+
+      // Verify edge visibility data is present
+      expect(primitive.edgeVisibility).toBeDefined();
+      expect(primitive.edgeVisibility.visibility).toBeDefined();
+      expect(primitive.edgeVisibility.silhouetteNormals).toBeDefined();
+
+      // Verify material line style properties
+      const material = primitive.material;
+      expect(material.lineWidth).toBe(5);
+      expect(material.linePattern).toBe(61680);
+
+      // Test that both extensions work together
+      const renderResources = mockRenderResources();
+      const frameState = {
+        context: scene.context,
+        pixelRatio: 2.0,
+      };
+
+      MaterialPipelineStage.process(renderResources, material, frameState);
+
+      expect(renderResources.uniformMap.u_lineWidth).toBeDefined();
+      expect(renderResources.uniformMap.u_lineWidth()).toBe(10.0); // 5 * 2.0 pixelRatio
+
+      expect(renderResources.uniformMap.u_linePattern).toBeDefined();
+      expect(renderResources.uniformMap.u_linePattern()).toBe(61680);
     });
   },
   "WebGL",
