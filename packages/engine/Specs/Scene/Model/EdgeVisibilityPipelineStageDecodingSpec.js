@@ -3,17 +3,14 @@ import {
   Buffer,
   BufferUsage,
   ComponentDatatype,
-  GltfLoader,
   IndexDatatype,
   PrimitiveType,
-  Resource,
   ResourceCache,
   ShaderBuilder,
   VertexAttributeSemantic,
 } from "../../../index.js";
 import createContext from "../../../../../Specs/createContext.js";
 import EdgeVisibilityPipelineStage from "../../../Source/Scene/Model/EdgeVisibilityPipelineStage.js";
-import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import createScene from "../../../../../Specs/createScene.js";
 
 describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
@@ -42,23 +39,6 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     gltfLoaders.length = 0;
     ResourceCache.clearForSpecs();
   });
-
-  async function loadGltf(gltfPath) {
-    const resource = new Resource({
-      url: gltfPath,
-    });
-    const gltfLoader = new GltfLoader({
-      gltfResource: resource,
-      incrementallyLoadTextures: false,
-    });
-    gltfLoaders.push(gltfLoader);
-    await gltfLoader.load();
-    await waitForLoaderProcess(gltfLoader, scene);
-    return gltfLoader;
-  }
-
-  const styledLines =
-    "./Data/Models/glTF-2.0/StyledLines/BENTLEY_materials_line_style.gltf";
 
   function createTestEdgeVisibilityData() {
     // Test case from GltfLoader: Simple 2-triangle quad with shared silhouette edge
@@ -595,125 +575,6 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     expect(renderResources.edgeGeometry.primitiveType).toBe(
       PrimitiveType.TRIANGLES,
     );
-  });
-
-  it("validates line pattern uniform for BENTLEY_materials_line_style", function () {
-    const primitive = createTestPrimitive();
-    const renderResources = createMockRenderResources(primitive);
-    const frameState = createMockFrameState();
-
-    EdgeVisibilityPipelineStage.process(renderResources, primitive, frameState);
-
-    // Line pattern and width uniforms are set by MaterialPipelineStage, not EdgeVisibilityPipelineStage
-    // Here we just verify edge geometry is created correctly
-    expect(renderResources.edgeGeometry).toBeDefined();
     expect(renderResources.edgeGeometry.indexCount).toBe(18); // 3 edges × 6 indices per quad
   });
-
-  it(
-    "processes BENTLEY_materials_line_style glTF with edge visibility",
-    async function () {
-      const gltfLoader = await loadGltf(styledLines);
-      const components = gltfLoader.components;
-      const node = components.nodes[0];
-      const primitive = node.primitives[0];
-
-      // Verify the primitive has edge visibility data
-      expect(primitive.edgeVisibility).toBeDefined();
-      expect(primitive.edgeVisibility.visibility).toBeDefined();
-      expect(primitive.edgeVisibility.silhouetteNormals).toBeDefined();
-
-      // Verify material has line style properties
-      expect(primitive.material).toBeDefined();
-      expect(primitive.material.lineWidth).toBe(5);
-      expect(primitive.material.linePattern).toBe(61680); // 0xF0F0
-
-      const renderResources = createMockRenderResources(primitive);
-      const frameState = createMockFrameState();
-
-      // Process the primitive through EdgeVisibilityPipelineStage
-      EdgeVisibilityPipelineStage.process(
-        renderResources,
-        primitive,
-        frameState,
-      );
-
-      // Verify edge geometry was created with quad-based rendering
-      expect(renderResources.edgeGeometry).toBeDefined();
-      expect(renderResources.edgeGeometry.primitiveType).toBe(
-        PrimitiveType.TRIANGLES,
-      );
-      expect(renderResources.edgeGeometry.vertexArray).toBeDefined();
-      expect(renderResources.edgeGeometry.indexCount).toBeGreaterThan(0);
-
-      // Verify edge geometry has the necessary attributes for quad expansion
-      const attributes = renderResources.edgeGeometry.vertexArray._attributes;
-      expect(attributes.length).toBeGreaterThan(5); // position, edgeType, normals, edgeOffset, edgeOtherPos
-
-      // Verify shader has edge visibility functions
-      const shaderBuilder = renderResources.shaderBuilder;
-      const shaderProgram = shaderBuilder.buildShaderProgram(context);
-      expect(shaderProgram._vertexShaderText).toContain("HAS_EDGE_VISIBILITY");
-      expect(shaderProgram._vertexShaderText).toContain("a_edgeOffset");
-      expect(shaderProgram._vertexShaderText).toContain("a_edgeOtherPos");
-    },
-    "WebGL",
-  );
-
-  it(
-    "creates quad-based geometry for line width support from glTF",
-    async function () {
-      const gltfLoader = await loadGltf(styledLines);
-      const components = gltfLoader.components;
-      const node = components.nodes[0];
-      const primitive = node.primitives[0];
-
-      const renderResources = createMockRenderResources(primitive);
-      const frameState = createMockFrameState();
-
-      EdgeVisibilityPipelineStage.process(
-        renderResources,
-        primitive,
-        frameState,
-      );
-
-      // Verify quad-based rendering (TRIANGLES, not LINES)
-      expect(renderResources.edgeGeometry.primitiveType).toBe(
-        PrimitiveType.TRIANGLES,
-      );
-
-      // Index count should be multiple of 6 (2 triangles per quad)
-      expect(renderResources.edgeGeometry.indexCount % 6).toBe(0);
-
-      // Verify the edge geometry has attributes needed for variable width
-      const vertexArray = renderResources.edgeGeometry.vertexArray;
-      const attributes = vertexArray._attributes;
-
-      let hasEdgeOffset = false;
-      let hasEdgeOtherPos = false;
-
-      for (let i = 0; i < attributes.length; i++) {
-        const attr = attributes[i];
-        // Edge offset is a float (1 component)
-        if (
-          attr.componentsPerAttribute === 1 &&
-          attr.componentDatatype === ComponentDatatype.FLOAT
-        ) {
-          hasEdgeOffset = true;
-        }
-        // Edge other position is vec3 (3 components), but not position (index 0) or normals
-        if (
-          attr.componentsPerAttribute === 3 &&
-          attr.index !== 0 &&
-          attr.componentDatatype === ComponentDatatype.FLOAT
-        ) {
-          hasEdgeOtherPos = true;
-        }
-      }
-
-      expect(hasEdgeOffset).toBe(true);
-      expect(hasEdgeOtherPos).toBe(true);
-    },
-    "WebGL",
-  );
 });

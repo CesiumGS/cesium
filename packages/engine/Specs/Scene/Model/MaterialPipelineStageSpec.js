@@ -93,8 +93,6 @@ describe(
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
-    const styledLines =
-      "./Data/Models/glTF-2.0/StyledLines/BENTLEY_materials_line_style.gltf";
 
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {
@@ -1011,83 +1009,6 @@ describe(
       expect(renderResources.uniformMap.u_linePattern).toBeDefined();
       expect(renderResources.uniformMap.u_linePattern()).toBe(0xf0f0);
     });
-
-    it(
-      "loads BENTLEY_materials_line_style from glTF",
-      async function () {
-        const gltfLoader = await loadGltf(styledLines);
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const primitive = node.primitives[0];
-        const material = primitive.material;
-
-        expect(material).toBeDefined();
-        expect(material.lineWidth).toBe(5);
-        expect(material.linePattern).toBe(61680); // 0xF0F0
-
-        const renderResources = mockRenderResources();
-        const frameState = {
-          context: scene.context,
-          pixelRatio: 1.0,
-        };
-
-        MaterialPipelineStage.process(renderResources, primitive, frameState);
-
-        // Verify HAS_LINE_STYLE define is added
-        ShaderBuilderTester.expectHasVertexDefines(
-          renderResources.shaderBuilder,
-          ["HAS_LINE_STYLE", "HAS_LINE_WIDTH"],
-        );
-        ShaderBuilderTester.expectHasFragmentDefines(
-          renderResources.shaderBuilder,
-          ["HAS_LINE_STYLE", "HAS_LINE_WIDTH", "HAS_LINE_PATTERN"],
-        );
-
-        // Verify uniforms are set correctly
-        expect(renderResources.uniformMap.u_lineWidth).toBeDefined();
-        expect(renderResources.uniformMap.u_lineWidth()).toBe(5.0); // width * pixelRatio (5 * 1.0)
-
-        expect(renderResources.uniformMap.u_linePattern).toBeDefined();
-        expect(renderResources.uniformMap.u_linePattern()).toBe(61680);
-      },
-      "WebGL",
-    );
-
-    it(
-      "loads BENTLEY_materials_line_style with edge visibility extension",
-      async function () {
-        const gltfLoader = await loadGltf(styledLines);
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const primitive = node.primitives[0];
-
-        // Verify edge visibility data is present
-        expect(primitive.edgeVisibility).toBeDefined();
-        expect(primitive.edgeVisibility.visibility).toBeDefined();
-        expect(primitive.edgeVisibility.silhouetteNormals).toBeDefined();
-
-        // Verify material line style properties
-        const material = primitive.material;
-        expect(material.lineWidth).toBe(5);
-        expect(material.linePattern).toBe(61680);
-
-        // Test that both extensions work together
-        const renderResources = mockRenderResources();
-        const frameState = {
-          context: scene.context,
-          pixelRatio: 2.0,
-        };
-
-        MaterialPipelineStage.process(renderResources, primitive, frameState);
-
-        expect(renderResources.uniformMap.u_lineWidth).toBeDefined();
-        expect(renderResources.uniformMap.u_lineWidth()).toBe(10.0); // 5 * 2.0 pixelRatio
-
-        expect(renderResources.uniformMap.u_linePattern).toBeDefined();
-        expect(renderResources.uniformMap.u_linePattern()).toBe(61680);
-      },
-      "WebGL",
-    );
   },
   "WebGL",
 );

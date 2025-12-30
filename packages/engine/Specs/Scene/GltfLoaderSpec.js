@@ -138,6 +138,8 @@ describe(
       "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibilityMaterial.glb";
     const edgeVisibilityLineStringTestData =
       "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibilityLineString.glb";
+    const styledLines =
+      "./Data/Models/glTF-2.0/StyledLines/BENTLEY_materials_line_style.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -4643,6 +4645,35 @@ describe(
           primitive.edgeVisibility.silhouetteNormals.length,
         ).toBeGreaterThanOrEqual(0);
       }
+    });
+
+    it("loads BENTLEY_materials_line_style extension", async function () {
+      const gltfLoader = await loadGltf(styledLines);
+      const components = gltfLoader.components;
+      const node = components.scene.nodes[0];
+      const primitive = node.primitives[0];
+      const material = primitive.material;
+
+      expect(material).toBeDefined();
+      expect(material.lineWidth).toBe(5);
+      expect(material.linePattern).toBe(61680); // 0xF0F0
+    });
+
+    it("loads BENTLEY_materials_line_style with edge visibility", async function () {
+      const gltfLoader = await loadGltf(styledLines);
+      const components = gltfLoader.components;
+      const node = components.scene.nodes[0];
+      const primitive = node.primitives[0];
+
+      // Verify edge visibility data is present
+      expect(primitive.edgeVisibility).toBeDefined();
+      expect(primitive.edgeVisibility.visibility).toBeDefined();
+      expect(primitive.edgeVisibility.silhouetteNormals).toBeDefined();
+
+      // Verify material line style properties
+      const material = primitive.material;
+      expect(material.lineWidth).toBe(5);
+      expect(material.linePattern).toBe(61680); // 0xF0F0
     });
 
     it("parses copyright field", function () {
