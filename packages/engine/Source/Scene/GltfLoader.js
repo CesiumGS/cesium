@@ -1821,6 +1821,25 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     }
   }
 
+  // BENTLEY_materials_line_style extension
+  const lineStyleExtension = extensions.BENTLEY_materials_line_style;
+  if (defined(lineStyleExtension)) {
+    if (defined(lineStyleExtension.width)) {
+      const width = lineStyleExtension.width;
+      // Validate that width is a positive integer as the extension specification requires.
+      if (width > 0 && Math.floor(width) === width) {
+        material.lineWidth = width;
+      }
+    }
+    if (defined(lineStyleExtension.pattern)) {
+      const pattern = lineStyleExtension.pattern;
+      // Validate that pattern is a non-negative integer (16-bit unsigned)
+      if (pattern >= 0 && pattern <= 65535 && Math.floor(pattern) === pattern) {
+        material.linePattern = pattern;
+      }
+    }
+  }
+
   return material;
 }
 

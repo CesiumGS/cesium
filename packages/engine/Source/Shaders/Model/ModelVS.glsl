@@ -157,6 +157,10 @@ void main()
     // We will discard points with v_pointCloudShow == 0 in the fragment shader.
     gl_Position = positionClip;
 
+    #ifdef HAS_EDGE_VISIBILITY
+    edgeVisibilityStageVS();
+    #endif
+
     #ifdef HAS_POINT_CLOUD_SHOW_STYLE
     v_pointCloudShow = show;
     #endif

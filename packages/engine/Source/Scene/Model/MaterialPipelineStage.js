@@ -184,6 +184,44 @@ MaterialPipelineStage.process = function (
     };
   }
 
+  // Configure and handle line style for LINES primitives (BENTLEY_materials_line_style extension).
+  if (defined(material.lineWidth) || defined(material.linePattern)) {
+    shaderBuilder.addDefine(
+      "HAS_LINE_STYLE",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+  }
+
+  if (defined(material.lineWidth)) {
+    shaderBuilder.addDefine(
+      "HAS_LINE_WIDTH",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+    shaderBuilder.addUniform("float", "u_lineWidth", ShaderDestination.VERTEX);
+    uniformMap.u_lineWidth = function () {
+      return material.lineWidth * frameState.pixelRatio;
+    };
+  }
+
+  if (defined(material.linePattern)) {
+    shaderBuilder.addDefine(
+      "HAS_LINE_PATTERN",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+    shaderBuilder.addUniform(
+      "float",
+      "u_linePattern",
+      ShaderDestination.FRAGMENT,
+    );
+    shaderBuilder.addVarying("float", "v_lineCoord");
+    uniformMap.u_linePattern = function () {
+      return material.linePattern;
+    };
+  }
+
   shaderBuilder.addFragmentLines(MaterialStageFS);
 
   if (material.doubleSided) {

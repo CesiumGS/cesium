@@ -9,6 +9,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js";
+import EdgeVisibilityStageVS from "../../Shaders/Model/EdgeVisibilityStageVS.js";
 import ModelUtility from "./ModelUtility.js";
 import ModelReader from "./ModelReader.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -70,6 +71,7 @@ EdgeVisibilityPipelineStage.process = function (
     ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addFragmentLines(EdgeVisibilityStageFS);
+  shaderBuilder.addVertexLines(EdgeVisibilityStageVS);
 
   // Add a uniform to distinguish between original geometry pass and edge pass
   shaderBuilder.addUniform("bool", "u_isEdgePass", ShaderDestination.BOTH);
@@ -103,26 +105,18 @@ EdgeVisibilityPipelineStage.process = function (
   shaderBuilder.addVarying("vec3", "v_faceNormalAView", "flat");
   shaderBuilder.addVarying("vec3", "v_faceNormalBView", "flat");
 
-  // Add varying for view space position for perspective-correct silhouette detection
+  // Add attributes and varyings for quad-based wide line rendering
+  const edgeOtherPosLocation = shaderBuilder.addAttribute(
+    "vec3",
+    "a_edgeOtherPos",
+  );
+  const edgeOffsetLocation = shaderBuilder.addAttribute(
+    "float",
+    "a_edgeOffset",
+  );
+  shaderBuilder.addVarying("float", "v_edgeOffset");
 
-  // Pass edge type, silhouette normal, and face normals from vertex to fragment shader
-  shaderBuilder.addFunctionLines("setDynamicVaryingsVS", [
-    "#ifdef HAS_EDGE_VISIBILITY",
-    "  if (u_isEdgePass) {",
-    "    v_edgeType = a_edgeType;",
-    "#ifdef HAS_EDGE_FEATURE_ID",
-    "    v_featureId_0 = a_edgeFeatureId;",
-    "#endif",
-    "#ifdef HAS_EDGE_COLOR_ATTRIBUTE",
-    "    v_edgeColor = a_edgeColor;",
-    "#endif",
-    "    // Transform normals from model space to view space",
-    "    v_silhouetteNormalView = czm_normal * a_silhouetteNormal;",
-    "    v_faceNormalAView = czm_normal * a_faceNormalA;",
-    "    v_faceNormalBView = czm_normal * a_faceNormalB;",
-    "  }",
-    "#endif",
-  ]);
+  // Add varying for view space position for perspective-correct silhouette detection
 
   // Build triangle adjacency (mapping edges to adjacent triangles) and compute per-triangle face normals.
   const adjacencyData = buildTriangleAdjacency(primitive);
@@ -163,8 +157,8 @@ EdgeVisibilityPipelineStage.process = function (
     edgeResult.edgeIndices,
   );
 
-  // Create edge-domain line list geometry (2 vertices per edge) with all required attributes.
-  const edgeGeometry = createCPULineEdgeGeometry(
+  // Create edge-domain quad geometry (4 vertices per edge) with all required attributes for wide line rendering.
+  const edgeGeometry = createQuadEdgeGeometry(
     edgeResult.edgeIndices,
     edgeResult.edgeData,
     renderResources,
@@ -175,6 +169,8 @@ EdgeVisibilityPipelineStage.process = function (
     faceNormalBLocation,
     edgeFeatureIdLocation,
     edgeColorLocation,
+    edgeOtherPosLocation,
+    edgeOffsetLocation,
     vertexColorInfo,
     primitive.edgeVisibility,
     edgeFaceNormals,
@@ -197,12 +193,26 @@ EdgeVisibilityPipelineStage.process = function (
     return false;
   };
 
+  // Set default line width uniform (will be overridden in edge pass)
+  renderResources.uniformMap.u_lineWidth = function () {
+    return 1.0;
+  };
+
+  // Get line width from primitive's material if available
+  const material = primitive.material;
+  const lineWidth =
+    defined(material) && defined(material.lineWidth)
+      ? material.lineWidth * frameState.pixelRatio
+      : undefined;
+
   // Store edge geometry metadata so the renderer can issue a separate edges pass.
+  // Use TRIANGLES instead of LINES to support wide lines via quad tessellation
   renderResources.edgeGeometry = {
     vertexArray: edgeGeometry.vertexArray,
     indexCount: edgeGeometry.indexCount,
-    primitiveType: PrimitiveType.LINES,
+    primitiveType: PrimitiveType.TRIANGLES,
     pass: Pass.CESIUM_3D_TILE_EDGES,
+    lineWidth: lineWidth,
   };
 };
 
@@ -647,9 +657,8 @@ function collectVertexColors(runtimePrimitive) {
  */
 
 /**
- * Create a derived line list geometry representing edges. A new vertex domain is used so we can pack
- * per-edge attributes (silhouette normal, face normal pair, edge type, optional feature ID) without
- * modifying or duplicating the original triangle mesh. Two vertices are generated per unique edge.
+ * Create quad-based edge geometry for wide line rendering. Each edge becomes a quad (4 vertices, 2 triangles).
+ * This allows proper line width rendering in the vertex shader by extruding perpendicular to the line direction.
  *
  * @param {number[]} edgeIndices Packed array [a0,b0, a1,b1, ...] of vertex indices into the source mesh
  * @param {Object[]} edgeData Array of edge metadata including edge type and silhouette normal lookup index
@@ -661,13 +670,15 @@ function collectVertexColors(runtimePrimitive) {
  * @param {number} faceNormalBLocation Shader attribute location for face normal B
  * @param {number} edgeFeatureIdLocation Shader attribute location for optional edge feature ID
  * @param {number} edgeColorLocation Shader attribute location for optional edge color data
+ * @param {number} edgeOtherPosLocation Shader attribute location for the other endpoint position
+ * @param {number} edgeOffsetLocation Shader attribute location for edge offset (-1 or +1)
  * @param {VertexColorInfo} [vertexColorInfo] Packed per-vertex colors (optional)
  * @param {Object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals[])
  * @param {Float32Array} edgeFaceNormals Packed face normals (6 floats per edge)
  * @returns {Object|undefined} Object with {vertexArray, indexBuffer, indexCount} or undefined on failure
  * @private
  */
-function createCPULineEdgeGeometry(
+function createQuadEdgeGeometry(
   edgeIndices,
   edgeData,
   renderResources,
@@ -678,6 +689,8 @@ function createCPULineEdgeGeometry(
   faceNormalBLocation,
   edgeFeatureIdLocation,
   edgeColorLocation,
+  edgeOtherPosLocation,
+  edgeOffsetLocation,
   vertexColorInfo,
   edgeVisibility,
   edgeFaceNormals,
@@ -687,10 +700,10 @@ function createCPULineEdgeGeometry(
   }
 
   const numEdges = edgeData.length;
-  const vertsPerEdge = 2;
+  const vertsPerEdge = 4; // Each edge becomes a quad (4 vertices)
   const totalVerts = numEdges * vertsPerEdge;
 
-  // Always use location 0 for position to avoid conflicts
+  // Always use location 0 for position
   const positionLocation = 0;
 
   // Get original vertex positions
@@ -702,12 +715,15 @@ function createCPULineEdgeGeometry(
     ? positionAttribute.typedArray
     : ModelReader.readAttributeAsTypedArray(positionAttribute);
 
-  // Create edge-domain vertices (2 per edge)
+  // Create arrays for quad vertices
   const edgePosArray = new Float32Array(totalVerts * 3);
   const edgeTypeArray = new Float32Array(totalVerts);
   const silhouetteNormalArray = new Float32Array(totalVerts * 3);
   const faceNormalAArray = new Float32Array(totalVerts * 3);
   const faceNormalBArray = new Float32Array(totalVerts * 3);
+  const edgeOtherPosArray = new Float32Array(totalVerts * 3); // Position of the other endpoint
+  const edgeOffsetArray = new Float32Array(totalVerts); // -1 or +1 for quad expansion
+
   const needsEdgeColorAttribute = defined(edgeColorLocation);
   const edgeColorArray = needsEdgeColorAttribute
     ? new Float32Array(totalVerts * 4)
@@ -716,7 +732,6 @@ function createCPULineEdgeGeometry(
     ? vertexColorInfo.colors
     : undefined;
   const vertexColorCount = defined(vertexColorInfo) ? vertexColorInfo.count : 0;
-  let p = 0;
 
   function setNoColor(destVertexIndex) {
     if (!needsEdgeColorAttribute) {
@@ -744,19 +759,15 @@ function createCPULineEdgeGeometry(
     edgeColorArray[destOffset + 3] = a;
   }
 
-  function assignVertexColor(destVertexIndex, sourceVertexIndex) {
+  function assignVertexColor(destVertexIndex, srcVertexIndex) {
     if (!needsEdgeColorAttribute) {
       return;
     }
-    if (
-      !defined(vertexColors) ||
-      sourceVertexIndex < 0 ||
-      sourceVertexIndex >= vertexColorCount
-    ) {
+    if (srcVertexIndex >= vertexColorCount) {
       setNoColor(destVertexIndex);
       return;
     }
-    const srcOffset = sourceVertexIndex * 4;
+    const srcOffset = srcVertexIndex * 4;
     const destOffset = destVertexIndex * 4;
     edgeColorArray[destOffset] = vertexColors[srcOffset];
     edgeColorArray[destOffset + 1] = vertexColors[srcOffset + 1];
@@ -764,54 +775,14 @@ function createCPULineEdgeGeometry(
     edgeColorArray[destOffset + 3] = vertexColors[srcOffset + 3];
   }
 
-  const maxSrcVertex = srcPos.length / 3 - 1;
-
+  // Generate quad vertices for each edge
   for (let i = 0; i < numEdges; i++) {
     const a = edgeIndices[i * 2];
     const b = edgeIndices[i * 2 + 1];
+    const rawType = edgeData[i].edgeType;
+    const normalizedType = rawType / 255.0;
 
-    // Validate vertex indices
-    if (a < 0 || b < 0 || a > maxSrcVertex || b > maxSrcVertex) {
-      // Fill with zeros to maintain indexing
-      edgePosArray[p++] = 0;
-      edgePosArray[p++] = 0;
-      edgePosArray[p++] = 0;
-      edgePosArray[p++] = 0;
-      edgePosArray[p++] = 0;
-      edgePosArray[p++] = 0;
-      edgeTypeArray[i * 2] = 0;
-      edgeTypeArray[i * 2 + 1] = 0;
-      // Fill with default values
-      const normalIdx = i * 2;
-      silhouetteNormalArray[normalIdx * 3] = 0;
-      silhouetteNormalArray[normalIdx * 3 + 1] = 0;
-      silhouetteNormalArray[normalIdx * 3 + 2] = 1;
-      silhouetteNormalArray[(normalIdx + 1) * 3] = 0;
-      silhouetteNormalArray[(normalIdx + 1) * 3 + 1] = 0;
-      silhouetteNormalArray[(normalIdx + 1) * 3 + 2] = 1;
-
-      // Fill face normals with default values
-      faceNormalAArray[normalIdx * 3] = 0;
-      faceNormalAArray[normalIdx * 3 + 1] = 0;
-      faceNormalAArray[normalIdx * 3 + 2] = 1;
-      faceNormalAArray[(normalIdx + 1) * 3] = 0;
-      faceNormalAArray[(normalIdx + 1) * 3 + 1] = 0;
-      faceNormalAArray[(normalIdx + 1) * 3 + 2] = 1;
-
-      faceNormalBArray[normalIdx * 3] = 0;
-      faceNormalBArray[normalIdx * 3 + 1] = 0;
-      faceNormalBArray[normalIdx * 3 + 2] = 1;
-      faceNormalBArray[(normalIdx + 1) * 3] = 0;
-      faceNormalBArray[(normalIdx + 1) * 3 + 1] = 0;
-      faceNormalBArray[(normalIdx + 1) * 3 + 2] = 1;
-      if (needsEdgeColorAttribute) {
-        const baseVertexIndex = i * 2;
-        setNoColor(baseVertexIndex);
-        setNoColor(baseVertexIndex + 1);
-      }
-      continue;
-    }
-
+    // Get positions
     const ax = srcPos[a * 3];
     const ay = srcPos[a * 3 + 1];
     const az = srcPos[a * 3 + 2];
@@ -819,39 +790,71 @@ function createCPULineEdgeGeometry(
     const by = srcPos[b * 3 + 1];
     const bz = srcPos[b * 3 + 2];
 
-    // Add edge endpoints
-    edgePosArray[p++] = ax;
-    edgePosArray[p++] = ay;
-    edgePosArray[p++] = az;
-    edgePosArray[p++] = bx;
-    edgePosArray[p++] = by;
-    edgePosArray[p++] = bz;
+    // Create 4 vertices for this edge: (A-, A+, B+, B-)
+    // where +/- indicates offset perpendicular to the line
+    // Store the other endpoint position for each vertex (iTwin approach)
+    const baseVertexIndex = i * 4;
 
-    const rawType = edgeData[i].edgeType;
-    const t = rawType / 255.0;
+    // Vertex 0: position at A, other endpoint is B, offset -1
+    edgePosArray[baseVertexIndex * 3] = ax;
+    edgePosArray[baseVertexIndex * 3 + 1] = ay;
+    edgePosArray[baseVertexIndex * 3 + 2] = az;
+    edgeOtherPosArray[baseVertexIndex * 3] = bx;
+    edgeOtherPosArray[baseVertexIndex * 3 + 1] = by;
+    edgeOtherPosArray[baseVertexIndex * 3 + 2] = bz;
+    edgeOffsetArray[baseVertexIndex] = -1.0;
+    edgeTypeArray[baseVertexIndex] = normalizedType;
 
-    edgeTypeArray[i * 2] = t;
-    edgeTypeArray[i * 2 + 1] = t;
+    // Vertex 1: position at A, other endpoint is B, offset +1
+    edgePosArray[(baseVertexIndex + 1) * 3] = ax;
+    edgePosArray[(baseVertexIndex + 1) * 3 + 1] = ay;
+    edgePosArray[(baseVertexIndex + 1) * 3 + 2] = az;
+    edgeOtherPosArray[(baseVertexIndex + 1) * 3] = bx;
+    edgeOtherPosArray[(baseVertexIndex + 1) * 3 + 1] = by;
+    edgeOtherPosArray[(baseVertexIndex + 1) * 3 + 2] = bz;
+    edgeOffsetArray[baseVertexIndex + 1] = 1.0;
+    edgeTypeArray[baseVertexIndex + 1] = normalizedType;
 
-    if (needsEdgeColorAttribute) {
-      const color = edgeData[i].color;
-      const baseVertexIndex = i * 2;
-      if (defined(color)) {
-        setColorFromOverride(baseVertexIndex, color);
-        setColorFromOverride(baseVertexIndex + 1, color);
-      } else if (defined(vertexColors)) {
-        assignVertexColor(baseVertexIndex, a);
-        assignVertexColor(baseVertexIndex + 1, b);
-      } else {
-        setNoColor(baseVertexIndex);
-        setNoColor(baseVertexIndex + 1);
+    // Vertex 2: position at B, other endpoint is A, offset +1
+    edgePosArray[(baseVertexIndex + 2) * 3] = bx;
+    edgePosArray[(baseVertexIndex + 2) * 3 + 1] = by;
+    edgePosArray[(baseVertexIndex + 2) * 3 + 2] = bz;
+    edgeOtherPosArray[(baseVertexIndex + 2) * 3] = ax;
+    edgeOtherPosArray[(baseVertexIndex + 2) * 3 + 1] = ay;
+    edgeOtherPosArray[(baseVertexIndex + 2) * 3 + 2] = az;
+    edgeOffsetArray[baseVertexIndex + 2] = 1.0;
+    edgeTypeArray[baseVertexIndex + 2] = normalizedType;
+
+    // Vertex 3: position at B, other endpoint is A, offset -1
+    edgePosArray[(baseVertexIndex + 3) * 3] = bx;
+    edgePosArray[(baseVertexIndex + 3) * 3 + 1] = by;
+    edgePosArray[(baseVertexIndex + 3) * 3 + 2] = bz;
+    edgeOtherPosArray[(baseVertexIndex + 3) * 3] = ax;
+    edgeOtherPosArray[(baseVertexIndex + 3) * 3 + 1] = ay;
+    edgeOtherPosArray[(baseVertexIndex + 3) * 3 + 2] = az;
+    edgeOffsetArray[baseVertexIndex + 3] = -1.0;
+    edgeTypeArray[baseVertexIndex + 3] = normalizedType;
+
+    // Handle edge colors
+    const edgeOverrideColor = edgeData[i].color;
+    if (defined(edgeOverrideColor)) {
+      for (let v = 0; v < 4; v++) {
+        setColorFromOverride(baseVertexIndex + v, edgeOverrideColor);
+      }
+    } else if (defined(vertexColors)) {
+      for (let v = 0; v < 4; v++) {
+        assignVertexColor(baseVertexIndex + v, a);
+      }
+    } else {
+      for (let v = 0; v < 4; v++) {
+        setNoColor(baseVertexIndex + v);
       }
     }
 
-    // Add silhouette normal for silhouette edges (type 1)
+    // Set silhouette normal (same for all 4 vertices)
     let normalX = 0,
       normalY = 0,
-      normalZ = 1; // Default normal pointing up
+      normalZ = 1;
 
     if (rawType === 1 && defined(edgeVisibility.silhouetteNormals)) {
       const mateVertexIndex = edgeData[i].mateVertexIndex;
@@ -859,9 +862,7 @@ function createCPULineEdgeGeometry(
         mateVertexIndex >= 0 &&
         mateVertexIndex < edgeVisibility.silhouetteNormals.length
       ) {
-        const silhouetteNormals = edgeVisibility.silhouetteNormals;
-        const normal = silhouetteNormals[mateVertexIndex];
-
+        const normal = edgeVisibility.silhouetteNormals[mateVertexIndex];
         if (defined(normal)) {
           normalX = normal.x;
           normalY = normal.y;
@@ -870,17 +871,14 @@ function createCPULineEdgeGeometry(
       }
     }
 
-    // Set silhouette normal for both edge endpoints
-    const normalIdx = i * 2;
-    silhouetteNormalArray[normalIdx * 3] = normalX;
-    silhouetteNormalArray[normalIdx * 3 + 1] = normalY;
-    silhouetteNormalArray[normalIdx * 3 + 2] = normalZ;
-    silhouetteNormalArray[(normalIdx + 1) * 3] = normalX;
-    silhouetteNormalArray[(normalIdx + 1) * 3 + 1] = normalY;
-    silhouetteNormalArray[(normalIdx + 1) * 3 + 2] = normalZ;
+    for (let v = 0; v < 4; v++) {
+      silhouetteNormalArray[(baseVertexIndex + v) * 3] = normalX;
+      silhouetteNormalArray[(baseVertexIndex + v) * 3 + 1] = normalY;
+      silhouetteNormalArray[(baseVertexIndex + v) * 3 + 2] = normalZ;
+    }
 
-    // Set face normals for both edge endpoints
-    const faceNormalIdx = i * 6; // 6 floats per edge (2 normals * 3 components)
+    // Set face normals (same for all 4 vertices)
+    const faceNormalIdx = i * 6;
     const normalAX = edgeFaceNormals[faceNormalIdx];
     const normalAY = edgeFaceNormals[faceNormalIdx + 1];
     const normalAZ = edgeFaceNormals[faceNormalIdx + 2];
@@ -888,21 +886,14 @@ function createCPULineEdgeGeometry(
     const normalBY = edgeFaceNormals[faceNormalIdx + 4];
     const normalBZ = edgeFaceNormals[faceNormalIdx + 5];
 
-    // Face normal A for both endpoints
-    faceNormalAArray[normalIdx * 3] = normalAX;
-    faceNormalAArray[normalIdx * 3 + 1] = normalAY;
-    faceNormalAArray[normalIdx * 3 + 2] = normalAZ;
-    faceNormalAArray[(normalIdx + 1) * 3] = normalAX;
-    faceNormalAArray[(normalIdx + 1) * 3 + 1] = normalAY;
-    faceNormalAArray[(normalIdx + 1) * 3 + 2] = normalAZ;
-
-    // Face normal B for both endpoints
-    faceNormalBArray[normalIdx * 3] = normalBX;
-    faceNormalBArray[normalIdx * 3 + 1] = normalBY;
-    faceNormalBArray[normalIdx * 3 + 2] = normalBZ;
-    faceNormalBArray[(normalIdx + 1) * 3] = normalBX;
-    faceNormalBArray[(normalIdx + 1) * 3 + 1] = normalBY;
-    faceNormalBArray[(normalIdx + 1) * 3 + 2] = normalBZ;
+    for (let v = 0; v < 4; v++) {
+      faceNormalAArray[(baseVertexIndex + v) * 3] = normalAX;
+      faceNormalAArray[(baseVertexIndex + v) * 3 + 1] = normalAY;
+      faceNormalAArray[(baseVertexIndex + v) * 3 + 2] = normalAZ;
+      faceNormalBArray[(baseVertexIndex + v) * 3] = normalBX;
+      faceNormalBArray[(baseVertexIndex + v) * 3 + 1] = normalBY;
+      faceNormalBArray[(baseVertexIndex + v) * 3 + 2] = normalBZ;
+    }
   }
 
   // Create vertex buffers
@@ -911,52 +902,84 @@ function createCPULineEdgeGeometry(
     typedArray: edgePosArray,
     usage: BufferUsage.STATIC_DRAW,
   });
+
   const edgeTypeBuffer = Buffer.createVertexBuffer({
     context,
     typedArray: edgeTypeArray,
     usage: BufferUsage.STATIC_DRAW,
   });
+
   const silhouetteNormalBuffer = Buffer.createVertexBuffer({
     context,
     typedArray: silhouetteNormalArray,
     usage: BufferUsage.STATIC_DRAW,
   });
+
   const faceNormalABuffer = Buffer.createVertexBuffer({
     context,
     typedArray: faceNormalAArray,
     usage: BufferUsage.STATIC_DRAW,
   });
+
   const faceNormalBBuffer = Buffer.createVertexBuffer({
     context,
     typedArray: faceNormalBArray,
     usage: BufferUsage.STATIC_DRAW,
   });
-  let edgeColorBuffer;
-  if (needsEdgeColorAttribute) {
-    edgeColorBuffer = Buffer.createVertexBuffer({
-      context,
-      typedArray: edgeColorArray,
-      usage: BufferUsage.STATIC_DRAW,
-    });
-  }
 
-  // Create sequential indices for line pairs
+  const edgeOtherPosBuffer = Buffer.createVertexBuffer({
+    context,
+    typedArray: edgeOtherPosArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+
+  const edgeOffsetBuffer = Buffer.createVertexBuffer({
+    context,
+    typedArray: edgeOffsetArray,
+    usage: BufferUsage.STATIC_DRAW,
+  });
+
+  const edgeColorBuffer = needsEdgeColorAttribute
+    ? Buffer.createVertexBuffer({
+        context,
+        typedArray: edgeColorArray,
+        usage: BufferUsage.STATIC_DRAW,
+      })
+    : undefined;
+
+  // Create triangle indices for quads: (0,1,2, 0,2,3) for each quad
+  const numTriangles = numEdges * 2;
+  const numIndices = numTriangles * 3;
   const useU32 = totalVerts > 65534;
-  const idx = new Array(totalVerts);
-  for (let i = 0; i < totalVerts; i++) {
-    idx[i] = i;
+  const indices = useU32
+    ? new Uint32Array(numIndices)
+    : new Uint16Array(numIndices);
+
+  for (let i = 0; i < numEdges; i++) {
+    const baseVertex = i * 4;
+    const baseIndex = i * 6;
+
+    // Triangle 1: (v0, v1, v2)
+    indices[baseIndex] = baseVertex;
+    indices[baseIndex + 1] = baseVertex + 1;
+    indices[baseIndex + 2] = baseVertex + 2;
+
+    // Triangle 2: (v0, v2, v3)
+    indices[baseIndex + 3] = baseVertex;
+    indices[baseIndex + 4] = baseVertex + 2;
+    indices[baseIndex + 5] = baseVertex + 3;
   }
 
   const indexBuffer = Buffer.createIndexBuffer({
     context,
-    typedArray: useU32 ? new Uint32Array(idx) : new Uint16Array(idx),
+    typedArray: indices,
     usage: BufferUsage.STATIC_DRAW,
     indexDatatype: useU32
       ? IndexDatatype.UNSIGNED_INT
       : IndexDatatype.UNSIGNED_SHORT,
   });
 
-  // Create vertex array with position, edge type, silhouette normal, and face normal attributes
+  // Create vertex array with all attributes
   const attributes = [
     {
       index: positionLocation,
@@ -993,6 +1016,20 @@ function createCPULineEdgeGeometry(
       componentDatatype: ComponentDatatype.FLOAT,
       normalize: false,
     },
+    {
+      index: edgeOtherPosLocation,
+      vertexBuffer: edgeOtherPosBuffer,
+      componentsPerAttribute: 3,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
+    {
+      index: edgeOffsetLocation,
+      vertexBuffer: edgeOffsetBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    },
   ];
 
   if (needsEdgeColorAttribute) {
@@ -1005,74 +1042,61 @@ function createCPULineEdgeGeometry(
     });
   }
 
-  // Get feature ID from original geometry
+  // Handle feature IDs (same logic as line geometry)
   const primitive = renderResources.runtimePrimitive.primitive;
-  const getFeatureIdForEdge = function () {
-    // Try to get the first feature ID from the original primitive
-    if (defined(primitive.featureIds) && primitive.featureIds.length > 0) {
-      const firstFeatureIdSet = primitive.featureIds[0];
+  if (defined(primitive.featureIds) && primitive.featureIds.length > 0) {
+    const firstFeatureIdSet = primitive.featureIds[0];
 
-      // Handle FeatureIdAttribute objects directly using setIndex
-      if (defined(firstFeatureIdSet.setIndex)) {
-        const featureIdAttribute = primitive.attributes.find(
-          (attr) =>
-            attr.semantic === VertexAttributeSemantic.FEATURE_ID &&
-            attr.setIndex === firstFeatureIdSet.setIndex,
-        );
+    if (defined(firstFeatureIdSet.setIndex)) {
+      const featureIdAttribute = primitive.attributes.find(
+        (attr) =>
+          attr.semantic === VertexAttributeSemantic.FEATURE_ID &&
+          attr.setIndex === firstFeatureIdSet.setIndex,
+      );
 
-        if (defined(featureIdAttribute)) {
-          const featureIds = defined(featureIdAttribute.typedArray)
-            ? featureIdAttribute.typedArray
-            : ModelReader.readAttributeAsTypedArray(featureIdAttribute);
+      if (defined(featureIdAttribute)) {
+        const featureIds = defined(featureIdAttribute.typedArray)
+          ? featureIdAttribute.typedArray
+          : ModelReader.readAttributeAsTypedArray(featureIdAttribute);
 
-          // Create edge feature ID buffer based on edge indices
-          const edgeFeatureIds = new Float32Array(totalVerts);
-          for (let i = 0; i < numEdges; i++) {
-            const a = edgeIndices[i * 2];
-            const featureId = a < featureIds.length ? featureIds[a] : 0;
-            edgeFeatureIds[i * 2] = featureId;
-            edgeFeatureIds[i * 2 + 1] = featureId;
+        const edgeFeatureIds = new Float32Array(totalVerts);
+        for (let i = 0; i < numEdges; i++) {
+          const a = edgeIndices[i * 2];
+          const featureId = a < featureIds.length ? featureIds[a] : 0;
+          // Set same feature ID for all 4 vertices of the quad
+          for (let v = 0; v < 4; v++) {
+            edgeFeatureIds[i * 4 + v] = featureId;
           }
-
-          return edgeFeatureIds;
         }
+
+        const edgeFeatureIdBuffer = Buffer.createVertexBuffer({
+          context,
+          typedArray: edgeFeatureIds,
+          usage: BufferUsage.STATIC_DRAW,
+        });
+
+        attributes.push({
+          index: edgeFeatureIdLocation,
+          vertexBuffer: edgeFeatureIdBuffer,
+          componentsPerAttribute: 1,
+          componentDatatype: ComponentDatatype.FLOAT,
+          normalize: false,
+        });
       }
     }
-
-    return undefined;
-  };
-
-  const edgeFeatureIds = getFeatureIdForEdge();
-  const hasEdgeFeatureIds = defined(edgeFeatureIds);
-
-  if (hasEdgeFeatureIds) {
-    const edgeFeatureIdBuffer = Buffer.createVertexBuffer({
-      context,
-      typedArray: edgeFeatureIds,
-      usage: BufferUsage.STATIC_DRAW,
-    });
-
-    attributes.push({
-      index: edgeFeatureIdLocation,
-      vertexBuffer: edgeFeatureIdBuffer,
-      componentsPerAttribute: 1,
-      componentDatatype: ComponentDatatype.FLOAT,
-      normalize: false,
-    });
   }
 
-  const vertexArray = new VertexArray({ context, indexBuffer, attributes });
-
-  if (!vertexArray || totalVerts === 0 || totalVerts % 2 !== 0) {
-    return undefined;
-  }
+  const vertexArray = new VertexArray({
+    context,
+    attributes,
+    indexBuffer,
+  });
 
   return {
     vertexArray,
-    indexBuffer,
-    indexCount: totalVerts,
-    hasEdgeFeatureIds,
-    hasEdgeColors: needsEdgeColorAttribute,
+    indexCount: numIndices,
+    hasEdgeFeatureIds:
+      defined(primitive.featureIds) && primitive.featureIds.length > 0,
   };
 }
 

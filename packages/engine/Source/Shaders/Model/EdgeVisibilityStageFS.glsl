@@ -44,6 +44,23 @@ void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
         finalColor = v_edgeColor;
     }
 #endif
+
+#ifdef HAS_LINE_PATTERN
+    // Pattern is 16-bit, each bit represents visibility at that position
+    const float maskLength = 16.0;
+    
+    // Get the relative position within the dash from 0 to 1
+    float dashPosition = fract(v_lineCoord / maskLength);
+    // Figure out the mask index
+    float maskIndex = floor(dashPosition * maskLength);
+    // Test the bit mask
+    float maskTest = floor(u_linePattern / pow(2.0, maskIndex));
+    
+    // If bit is 0 (gap), discard the fragment (use < 1.0 for better numerical stability)
+    if (mod(maskTest, 2.0) < 1.0) {
+        discard;
+    }
+#endif
     color = finalColor;
     
     #if defined(HAS_EDGE_VISIBILITY_MRT) && !defined(CESIUM_REDIRECTED_COLOR_OUTPUT)
