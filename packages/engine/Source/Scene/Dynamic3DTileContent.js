@@ -455,7 +455,12 @@ class LRUCache {
 
 /**
  * Interface for all classes that want to be informed about the
- * state of a request
+ * state of a request.
+ *
+ * Note: The functions in this interface should be documented
+ * more extensively, but their structure, the point where they
+ * are called, and their purpose had to be reverse engineered
+ * from the existing Request/Resource/RequestScheduler classes.
  */
 class RequestListener {
   /**
@@ -817,7 +822,12 @@ class RequestHandle {
 
 /**
  * Interface for all classes that want to be informed about the
- * state of a content
+ * state of a content.
+ *
+ * Note: The functions in this interface should be documented
+ * more extensively. But their structure and calling patterns
+ * had to be reverse engineered from existing Cesium3DTIleContent
+ * implementations.
  */
 class ContentListener {
   /**
@@ -900,6 +910,7 @@ class ContentHandle {
      * This is only required for passing it through to 'finishContent'.
      *
      * @type {Cesium3DTile}
+     * @readonly
      */
     this._tile = tile;
 
@@ -908,6 +919,7 @@ class ContentHandle {
      * calling getDerivedResource with the content URI in this.
      *
      * @type {Resource}
+     * @readonly
      */
     this._baseResource = baseResource;
 
@@ -915,6 +927,7 @@ class ContentHandle {
      * The JSON representation of the 'content' from the tileset JSON.
      *
      * @type {object}
+     * @readonly
      */
     this._contentHeader = contentHeader;
 
@@ -952,7 +965,7 @@ class ContentHandle {
     this._failed = false;
 
     /**
-     * Only used for testing. See awaitPromise.
+     * Only used for testing. See waitForSpecs.
      * @type {object}
      * @readonly
      */
@@ -1127,13 +1140,13 @@ class ContentHandle {
       url: uri,
     });
     const requestHandle = new RequestHandle(resource);
+    this._requestHandle = requestHandle;
 
+    // Attach any request listeners that have already been added
+    // to this content handle to the newly created request handle
     for (const requestListener of this._requestListeners) {
       requestHandle.addRequestListener(requestListener);
     }
-
-    this._requestHandle = requestHandle;
-    const requestHandleResultPromise = requestHandle.getResultPromise();
 
     // When the request succeeds, try to create the content
     // and store it as 'this._content'. If the content
@@ -1157,7 +1170,7 @@ class ContentHandle {
           this._failed = true;
         }
 
-        // The promise is only intended for testign, and may not be awaited,
+        // The promise is only intended for testing, and may not be awaited,
         // so it cannot be rejected without causing an uncaught error.
         this._deferred.resolve(error);
       }
@@ -1200,6 +1213,11 @@ class ContentHandle {
       // so it cannot be rejected without causing an uncaught error.
       this._deferred.resolve(error);
     };
+
+    // Wire up the fulfilled- and rejected handling with
+    // the request handle, and ensure that the request
+    // is pending
+    const requestHandleResultPromise = requestHandle.getResultPromise();
     requestHandleResultPromise.then(onRequestFulfilled, onRequestRejected);
     requestHandle.ensureRequested();
   }
@@ -1309,9 +1327,6 @@ const DYNAMIC_CONTENT_SHOW_STYLE = new Cesium3DTileStyle({
  *
  * This flag determines whether the
  *
- * - featuresLength
- * - pointsLength
- * - trianglesLength
  * - geometryByteLength
  * - texturesByteLength
  * - batchTableByteLength
@@ -1338,7 +1353,7 @@ const DYNAMIC_CONTENT_SHOW_STYLE = new Cesium3DTileStyle({
  *
  * At the time of writing this, it seems that the main use of these
  * properties is in the Cesium3DTilesetStatistics, which does iterate
- * over the inner contents, so this flag is "false" right now.
+ * over the inner contents.
  *
  * Note that a content could have the respective property AND innerContents.
  * In this case, the getters should return the value from the content itself,
@@ -1346,7 +1361,20 @@ const DYNAMIC_CONTENT_SHOW_STYLE = new Cesium3DTileStyle({
  * the implementation of the composite- and multiple content are fixed by
  * computing this sum on their own, such an implementation would break.
  */
-const DYNAMIC_CONTENT_AGGREGATE_VALUES = false;
+const DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES = true;
+
+/**
+ * This serves the same purpose as the DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES
+ * flag (see this for details), but this flag affects the
+ *
+ * - featuresLength
+ * - pointsLength
+ * - trianglesLength
+ *
+ * getters instead, meaning that it aggregates the values for the
+ * contents that are "rendered" ("active");
+ */
+const DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES = false;
 
 /**
  * A class that represents 3D Tile content that may change dynamically.
@@ -1706,7 +1734,7 @@ class Dynamic3DTileContent {
    *
    * @type {Cesium3DTileContent[]}
    */
-  get _activeContents() {
+  get _activeLoadedContents() {
     const activeContents = [];
     const activeContentUris = this._activeContentUris;
     for (const activeContentUri of activeContentUris) {
@@ -1722,6 +1750,12 @@ class Dynamic3DTileContent {
   /**
    * Returns ALL contents that are currently loaded.
    *
+   * It will iterate over all contents that have been defined in
+   * the dynamic content JSON definition. Any content that
+   * is currently loaded and in memory will be contained in the
+   * returned array, regardless of whether that content is
+   * currently "active" or not.
+   *
    * @type {Cesium3DTileContent[]}
    */
   get _allLoadedContents() {
@@ -1734,6 +1768,19 @@ class Dynamic3DTileContent {
       }
     }
     return allLoadedContents;
+  }
+
+  /**
+   * Returns ALL content URIs that have been found in the dynamic
+   * content JSON.
+   *
+   * XXX_DYNAMIC This is not really used, just exposed for tests.
+   *
+   * @type {string[]}
+   */
+  get _allContentUris() {
+    const allContentUris = [...this._contentHandles.keys()];
+    return allContentUris;
   }
 
   /**
@@ -1776,8 +1823,8 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get featuresLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
-      return this.getAggregatedLoaded("featuresLength");
+    if (DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES) {
+      return this.getAggregatedRendered("featuresLength");
     }
     return 0;
   }
@@ -1789,8 +1836,8 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get pointsLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
-      return this.getAggregatedLoaded("pointsLength");
+    if (DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES) {
+      return this.getAggregatedRendered("pointsLength");
     }
     return 0;
   }
@@ -1802,8 +1849,8 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get trianglesLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
-      return this.getAggregatedLoaded("trianglesLength");
+    if (DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES) {
+      return this.getAggregatedRendered("trianglesLength");
     }
     return 0;
   }
@@ -1815,7 +1862,7 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get geometryByteLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
+    if (DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES) {
       return this.getAggregatedLoaded("geometryByteLength");
     }
     return 0;
@@ -1828,7 +1875,7 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get texturesByteLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
+    if (DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES) {
       return this.getAggregatedLoaded("texturesByteLength");
     }
     return 0;
@@ -1841,7 +1888,7 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get batchTableByteLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_VALUES) {
+    if (DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES) {
       return this.getAggregatedLoaded("batchTableByteLength");
     }
     return 0;
@@ -1849,12 +1896,34 @@ class Dynamic3DTileContent {
 
   /**
    * Fetches the value of the specified property of all contents
-   * that are currently loaded (i.e. in memory).
+   * that are currently rendered (i.e. "active" and loaded).
+   *
+   * This will call "getAggregated(content, property)" for each
+   * active and loaded content, and return the sum of the results.
+   *
+   * See DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES for details.
+   *
+   * @param {string} property The property
+   * @returns The result
+   */
+  getAggregatedRendered(property) {
+    const allLoadedContents = this._activeLoadedContents;
+    let result = 0;
+    for (const content of allLoadedContents) {
+      result += Dynamic3DTileContent.getAggregated(content, property);
+    }
+    return result;
+  }
+
+  /**
+   * Fetches the value of the specified property of all contents
+   * that are currently loaded (i.e. in memory) (regardless of
+   * whether they are "active" or not)
    *
    * This will call "getAggregated(content, property)" for each
    * loaded content, and return the sum of the results.
    *
-   * See DYNAMIC_CONTENT_AGGREGATE_VALUES for details.
+   * See DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES for details.
    *
    * @param {string} property The property
    * @returns The result
@@ -1875,6 +1944,9 @@ class Dynamic3DTileContent {
    *
    * Otherwise, it returns the value of the specified property of the
    * given content.
+   *
+   * See the documentation of the `DYNAMIC_CONTENT_AGGREGATE_...`
+   * flags for details and caveats.
    *
    * @param {Cesium3DTileContent} content The content
    * @param {string} property The property
@@ -2059,7 +2131,7 @@ class Dynamic3DTileContent {
     }
 
     // Show only the active contents.
-    const activeContents = this._activeContents;
+    const activeContents = this._activeLoadedContents;
     for (const activeContent of activeContents) {
       activeContent.applyStyle(this._lastStyle);
     }
@@ -2142,7 +2214,7 @@ class Dynamic3DTileContent {
   pick(ray, frameState, result) {
     let intersection;
     let minDistance = Number.POSITIVE_INFINITY;
-    const contents = this._activeContents;
+    const contents = this._activeLoadedContents;
     const length = contents.length;
 
     for (let i = 0; i < length; ++i) {
