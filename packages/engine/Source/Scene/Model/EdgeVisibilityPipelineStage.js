@@ -5,7 +5,9 @@ import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import Cartesian2 from "../../Core/Cartesian2.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
+import AttributeCompression from "../../Core/AttributeCompression.js";
 import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js";
@@ -356,33 +358,6 @@ function generateEdgeFaceNormals(
   const numEdges = edgeIndices.length / 2;
   const edgeFaceNormals = new Float32Array(numEdges * 6);
 
-  // Octahedral normal decode (16-bit)
-  function signNotZero(val) {
-    return val < 0.0 ? -1.0 : 1.0;
-  }
-
-  function decodeOctEncodedNormal16(val, result) {
-    let ex = val & 0xff;
-    let ey = val >> 8;
-    ex = (ex / 255.0) * 2.0 - 1.0;
-    ey = (ey / 255.0) * 2.0 - 1.0;
-    const ez = 1 - (Math.abs(ex) + Math.abs(ey));
-
-    result.x = ex;
-    result.y = ey;
-    result.z = ez;
-
-    if (result.z < 0) {
-      const x = result.x;
-      const y = result.y;
-      result.x = (1 - Math.abs(y)) * signNotZero(x);
-      result.y = (1 - Math.abs(x)) * signNotZero(y);
-    }
-
-    Cartesian3.normalize(result, result);
-    return result;
-  }
-
   const hasGLBSilhouetteNormals =
     defined(edgeVisibility) && defined(edgeVisibility.silhouetteNormals);
   let silhouetteNormalsUint32 = null;
@@ -392,27 +367,29 @@ function generateEdgeFaceNormals(
     // Decode from signed bytes to normalized vectors, then re-encode to 16-bit octahedral format.
     const normalize = (val) => 2 * ((val + 128) / 255) - 1;
 
-    // Re-encode each VEC3 BYTE to 16-bit oct-encoded normal
+    // Re-encode each VEC3 BYTE to 16-bit oct-encoded normal using AttributeCompression
     const uint16Normals = new Uint16Array(
       edgeVisibility.silhouetteNormals.length,
     );
     const scratchNormal = new Cartesian3();
+    const scratchEncoded = new Cartesian2();
 
     for (let i = 0; i < edgeVisibility.silhouetteNormals.length; i++) {
       const vec3 = edgeVisibility.silhouetteNormals[i];
 
       // Denormalize from signed byte to normal vector
-      const x = normalize(vec3.x);
-      const y = normalize(vec3.y);
-      const z = normalize(vec3.z);
-
-      scratchNormal.x = x;
-      scratchNormal.y = y;
-      scratchNormal.z = z;
+      scratchNormal.x = normalize(vec3.x);
+      scratchNormal.y = normalize(vec3.y);
+      scratchNormal.z = normalize(vec3.z);
       Cartesian3.normalize(scratchNormal, scratchNormal);
 
-      // Re-encode to 16-bit octahedral
-      uint16Normals[i] = encodeOctEncodedNormal16(scratchNormal);
+      // Use Cesium's octahedral encoding
+      AttributeCompression.octEncodeInRange(scratchNormal, 255, scratchEncoded);
+
+      // Convert to 16-bit integer: (y << 8) | x
+      const byteX = Math.floor(scratchEncoded.x) & 0xff;
+      const byteY = Math.floor(scratchEncoded.y) & 0xff;
+      uint16Normals[i] = (byteY << 8) | byteX;
     }
 
     // Pack pairs into Uint32Array (little-endian: normalA|normalB<<16)
@@ -424,24 +401,6 @@ function generateEdgeFaceNormals(
       const normalB = uint16Normals[i * 2 + 1];
       silhouetteNormalsUint32[i] = normalA | (normalB << 16);
     }
-  }
-
-  // Octahedral normal encode (16-bit)
-  function encodeOctEncodedNormal16(vec) {
-    const denom = Math.abs(vec.x) + Math.abs(vec.y) + Math.abs(vec.z);
-    let rx = vec.x / denom;
-    let ry = vec.y / denom;
-    if (vec.z < 0) {
-      const x = rx;
-      const y = ry;
-      rx = (1 - Math.abs(y)) * signNotZero(x);
-      ry = (1 - Math.abs(x)) * signNotZero(y);
-    }
-    const clampUint8 = (val) => {
-      const clamped = Math.max(-1, Math.min(1, val));
-      return Math.floor(0.5 + (clamped * 0.5 + 0.5) * 255) & 0xffff;
-    };
-    return (clampUint8(ry) << 8) | clampUint8(rx);
   }
 
   for (let i = 0; i < numEdges; i++) {
@@ -472,16 +431,21 @@ function generateEdgeFaceNormals(
       if (mateVertexIndex < silhouetteNormalsUint32.length) {
         const uint32Value = silhouetteNormalsUint32[mateVertexIndex];
 
-        // Extract two 16-bit values from Uint32 (little-endian)
-        const normalA_16bit = uint32Value & 0xffff; // Lower 16 bits
-        const normalB_16bit = (uint32Value >> 16) & 0xffff; // Upper 16 bits
-
         const decodedA = new Cartesian3();
         const decodedB = new Cartesian3();
 
-        // Decode 16-bit octahedral normals
-        decodeOctEncodedNormal16(normalA_16bit, decodedA);
-        decodeOctEncodedNormal16(normalB_16bit, decodedB);
+        // Uint32 contains 4 bytes: [xA, yA, xB, yB]
+        // Extract and decode using octDecode (rangeMax=255)
+        AttributeCompression.octDecode(
+          uint32Value & 0xff, // xA
+          (uint32Value >> 8) & 0xff, // yA
+          decodedA,
+        );
+        AttributeCompression.octDecode(
+          (uint32Value >> 16) & 0xff, // xB
+          (uint32Value >> 24) & 0xff, // yB
+          decodedB,
+        );
 
         nAx = decodedA.x;
         nAy = decodedA.y;
