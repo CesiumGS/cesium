@@ -7,6 +7,32 @@ void edgeVisibilityStageVS() {
         v_faceNormalBView = czm_normal * a_faceNormalB;
         v_edgeOffset = a_edgeOffset;
         
+        // Silhouette detection: check both endpoints of the edge
+        v_shouldDiscard = 0.0;
+        float edgeTypeInt = a_edgeType * 255.0;
+        if (edgeTypeInt > 0.5 && edgeTypeInt < 1.5) {
+            vec3 normalA = normalize(v_faceNormalAView);
+            vec3 normalB = normalize(v_faceNormalBView);
+            const float perpTol = 2.5e-4;
+            
+            // Check at current vertex (first endpoint)
+            vec4 currentPosEC = czm_modelView * vec4(v_positionMC, 1.0);
+            vec3 toEye1 = normalize(-currentPosEC.xyz);
+            float dotA1 = dot(normalA, toEye1);
+            float dotB1 = dot(normalB, toEye1);
+            
+            // Check at other vertex (second endpoint)
+            vec4 otherPosEC = czm_modelView * vec4(a_edgeOtherPos, 1.0);
+            vec3 toEye2 = normalize(-otherPosEC.xyz);
+            float dotA2 = dot(normalA, toEye2);
+            float dotB2 = dot(normalB, toEye2);
+            
+            // Discard if EITHER endpoint is non-silhouette
+            if (dotA1 * dotB1 > perpTol || dotA2 * dotB2 > perpTol) {
+                v_shouldDiscard = 1.0;
+            }
+        }
+        
 #ifdef HAS_EDGE_FEATURE_ID
         v_featureId_0 = a_edgeFeatureId;
 #endif
@@ -24,7 +50,7 @@ void edgeVisibilityStageVS() {
         vec2 otherScreen = ((otherClip.xy / otherClip.w) * 0.5 + 0.5) * czm_viewport.zw;
         vec2 windowDir = otherScreen - currentScreen;
         
-        // iTwin explanation: Temp workaround for clipping problem in perspective views (negative values don't seem to interpolate correctly)
+        // Offset base for texture coordinates to handle perspective clipping
         const float textureCoordinateBase = 8192.0;
         
         if (abs(windowDir.x) > abs(windowDir.y)) {

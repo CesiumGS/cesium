@@ -21,19 +21,9 @@ void edgeVisibilityStage(inout vec4 color, inout FeatureIds featureIds)
     }
 
     if (edgeTypeInt > 0.5 && edgeTypeInt < 1.5) { // silhouette candidate
-        vec3 normalA = normalize(v_faceNormalAView);
-        vec3 normalB = normalize(v_faceNormalBView);
-        vec3 viewDir = -normalize(v_positionEC);
-        float dotA = dot(normalA, viewDir);
-        float dotB = dot(normalB, viewDir);
-        const float eps = 1e-3;
-        bool frontA = dotA > eps;
-        bool backA = dotA < -eps;
-        bool frontB = dotB > eps;
-        bool backB = dotB < -eps;
-        bool oppositeFacing = (frontA && backB) || (backA && frontB);
-        bool bothNearGrazing = (abs(dotA) <= eps && abs(dotB) <= eps);
-        if (!(oppositeFacing && !bothNearGrazing)) {
+        // Silhouette check done in vertex shader
+        // v_shouldDiscard will be > 0.5 if this edge should be discarded
+        if (v_shouldDiscard > 0.5) {
             discard;
         }
     }
