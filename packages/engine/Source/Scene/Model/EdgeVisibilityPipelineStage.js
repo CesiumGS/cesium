@@ -381,14 +381,24 @@ function generateEdgeFaceNormals(
       scratchNormal.x = normalize(vec3.x);
       scratchNormal.y = normalize(vec3.y);
       scratchNormal.z = normalize(vec3.z);
-      Cartesian3.normalize(scratchNormal, scratchNormal);
 
-      // Use Cesium's octahedral encoding
+      // Normalize to unit vector
+      const magnitude = Cartesian3.magnitude(scratchNormal);
+      if (magnitude > 0) {
+        Cartesian3.normalize(scratchNormal, scratchNormal);
+      } else {
+        // Handle zero vector - use default up vector
+        scratchNormal.x = 0;
+        scratchNormal.y = 0;
+        scratchNormal.z = 1;
+      }
+
+      // Use Cesium's octahedral encoding (returns 0-255 integers)
       AttributeCompression.octEncodeInRange(scratchNormal, 255, scratchEncoded);
 
       // Convert to 16-bit integer: (y << 8) | x
-      const byteX = Math.floor(scratchEncoded.x) & 0xff;
-      const byteY = Math.floor(scratchEncoded.y) & 0xff;
+      const byteX = scratchEncoded.x & 0xff;
+      const byteY = scratchEncoded.y & 0xff;
       uint16Normals[i] = (byteY << 8) | byteX;
     }
 
