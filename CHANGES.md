@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Fixes label positioning in workflows that delete and recreate clamped labels [#12949](https://github.com/CesiumGS/cesium/issues/12949)
+- Fixes texture coordinates in large billboard collections [#13042](https://github.com/CesiumGS/cesium/pull/13042)
 
 ## 1.136 - 2025-12-01
 
@@ -18,7 +19,6 @@
 - Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
 - Fixed depth testing bug with billboards and labels clipping through models [#13012](https://github.com/CesiumGS/cesium/issues/13012)
 - Fixed unexpected outline artifacts around billboards [#4525](https://github.com/CesiumGS/cesium/issues/4525)
-- Fix texture coordinates in large billboard collections [#13042](https://github.com/CesiumGS/cesium/pull/13042)
 
 #### Additions :tada:
 
