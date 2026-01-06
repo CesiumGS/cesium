@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.138 - 2026-02-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed depth picking (`Scene.pickPosition`) with Gaussian splat 3D tilesets. [#12712](https://github.com/CesiumGS/cesium/issues/12712)
+
 ## 1.137 - 2026-01-05
 
 ### @cesium/engine
