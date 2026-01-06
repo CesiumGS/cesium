@@ -1028,11 +1028,12 @@ function generateSDF(rectangle, features, resolution) {
  * @param {number} level The level of the tile.
  * @param {number} x The x coordinate of the tile.
  * @param {number} y The y coordinate of the tile.
+ * @param {number} terrainY The y coordinate of the tile in terrain scheme.
  * @returns {Promise<{width: number, height: number, sdfDistances: Float32Array, sdfFeatureIds: Uint32Array}>} A promise that resolves to the SDF data.
  */
-function requestGeoJson(provider, rootId, level, x, y) {
+function requestGeoJson(provider, rootId, level, x, y, terrainY) {
   const url =
-    "http://localhost:8070/v1/static/vector/test/tile_root{rootId}_level{level}_{y}_{x}.json";
+    "http://localhost:8070/v1/static/vector/pipes/{level}/tile_{y}_{x}.geojson";
 
   return Resource.fetchJson({
     url: url,
@@ -1040,7 +1041,7 @@ function requestGeoJson(provider, rootId, level, x, y) {
       rootId: rootId,
       level: level,
       x: x,
-      y: y,
+      y: terrainY,
     },
   })
     .then(function (geojson) {
@@ -1048,8 +1049,8 @@ function requestGeoJson(provider, rootId, level, x, y) {
         return undefined;
       }
 
-      const width = 128;
-      const height = 128;
+      const width = 32;
+      const height = 32;
 
       const rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
 
@@ -1057,7 +1058,7 @@ function requestGeoJson(provider, rootId, level, x, y) {
       const [sdfDistancesArray, sdfFeatureIdsArray] = generateSDF(
         rectangle,
         features,
-        128,
+        32,
       );
 
       return {
@@ -1167,7 +1168,7 @@ async function requestTileGeometry(provider, x, y, level, layerToUse, request) {
 
   const promises = scratchPromises;
   promises[0] = promise;
-  promises[1] = requestGeoJson(provider, rootId, level, x, y);
+  promises[1] = requestGeoJson(provider, rootId, level, x, y, terrainY);
 
   try {
     const results = await Promise.all(promises);
