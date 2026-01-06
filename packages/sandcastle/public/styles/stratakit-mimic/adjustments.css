@@ -1,0 +1,148 @@
+/*
+ * A few extra adjustments to the stratakit mimic components to make them display
+ * nicely when used for sandcastle examples with minimal extra layout styling
+ */
+
+.stratakit-mimic-button {
+  margin: var(--stratakit-space-x1);
+}
+
+.stratakit-mimic-field {
+  margin: var(--stratakit-space-x1);
+}
+.stratakit-mimic-field:has(.stratakit-mimic-switch) {
+  /* We disable pointer-events on these for an easier click handler, re-enable cursor */
+  cursor: pointer;
+}
+
+.stratakit-mimic-switch {
+  /* These styles are susceptible to weird sizing if padding is set like some sandcastle already do */
+  padding: 0 !important;
+}
+
+/*
+ * Undo the reset for select elements to allow using less classes/styles in sandcastles
+ * revert-layer only undoes this layer not all styles allowing
+ * other custom styles to still affect these
+ */
+@layer reset {
+  table,
+  thead,
+  tbody,
+  tr,
+  td,
+  th {
+    all: revert-layer;
+  }
+
+  input[type="range"] {
+    margin: revert-layer;
+  }
+  input[type="checkbox"] {
+    margin: revert-layer;
+  }
+  input[type="radio"] {
+    margin: revert-layer;
+  }
+
+  .cesium-viewer,
+  .cesium-widget,
+  .cesium-viewer-voxelInspectorContainer,
+  .cesium-viewer-cesiumInspectorContainer,
+  .cesium-viewer-cesium3DTilesInspectorContainer {
+    /* Cesium defines it's own styles for all elements in the viewer and those
+     * styles don't expect a reset. Remove from everything in that section of the page */
+    *,
+    :before,
+    :after {
+      all: revert-layer;
+    }
+    /* Stratakit sets color-scheme to dark when setting up variables
+     * But this messes with iframes like the InfoBox */
+    color-scheme: light;
+  }
+}
+
+/*
+ * Semantic element "bridge" to bring closer to stratakit elements
+ * The values for these styles were extracted from the matching stratakit components
+ */
+
+select:not(.stratakit-mimic-button):not(.cesium-viewer select) {
+  background: var(--stratakit-color-bg-neutral-base);
+  padding: var(--stratakit-space-x1);
+  border-radius: var(--stratakit-ext-radius-sm);
+  cursor: pointer;
+  border-color: var(--stratakit-color-border-shadow-base);
+  margin: var(--stratakit-space-x1);
+
+  &:hover {
+    border-color: color-mix(
+      in oklch,
+      var(--stratakit-color-border-shadow-base) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-border-glow-base-hover-\%)
+    );
+    background: color-mix(
+      in oklch,
+      var(--stratakit-color-bg-neutral-base) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-bg-glow-base-hover-\%)
+    );
+  }
+}
+
+button:not(.stratakit-mimic-button):not(.cesium-viewer button) {
+  /* Missing shadows and pressed, active and disabled states but "good enough" for now */
+  background: var(--stratakit-color-bg-neutral-base);
+  padding: var(--stratakit-space-x1) var(--stratakit-space-x3);
+  border-radius: var(--stratakit-ext-radius-sm);
+  border: var(--stratakit-ext-border-border) solid;
+  border-color: var(--stratakit-color-border-shadow-base);
+  line-height: 1.2;
+  margin: var(--stratakit-space-x1);
+
+  &:hover {
+    border-color: color-mix(
+      in oklch,
+      var(--stratakit-color-border-shadow-base) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-border-glow-base-hover-\%)
+    );
+    background: color-mix(
+      in oklch,
+      var(--stratakit-color-bg-neutral-base) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-bg-glow-base-hover-\%)
+    );
+  }
+}
+
+input[type="text"]:not(.cesium-viewer input),
+input[type="number"]:not(.cesium-viewer input) {
+  background: var(--stratakit-color-bg-page-base);
+  border-radius: var(--stratakit-ext-radius-sm);
+  border: var(--stratakit-ext-border-border) solid;
+  border-color: var(--stratakit-color-border-neutral-base);
+  padding-inline: var(--stratakit-space-x2);
+  color: var(--stratakit-color-text-neutral-primary);
+
+  &[type="number"] {
+    padding-right: 0;
+  }
+
+  &:hover {
+    background-color: color-mix(
+      in oklch,
+      var(--stratakit-color-bg-page-base) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-bg-glow-base-hover-\%)
+    );
+    border-color: color-mix(
+      in oklch,
+      var(--stratakit-color-border-neutral-base) 100%,
+      var(--stratakit-color-glow-hue)
+        var(--stratakit-color-border-glow-base-hover-\%)
+    );
+  }
+}

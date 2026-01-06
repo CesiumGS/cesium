@@ -21,7 +21,6 @@ function VoxelShape() {
 Object.defineProperties(VoxelShape.prototype, {
   /**
    * An oriented bounding box containing the bounded shape.
-   * The update function must be called before accessing this value.
    *
    * @memberof VoxelShape.prototype
    * @type {OrientedBoundingBox}
@@ -34,7 +33,6 @@ Object.defineProperties(VoxelShape.prototype, {
 
   /**
    * A bounding sphere containing the bounded shape.
-   * The update function must be called before accessing this value.
    *
    * @memberof VoxelShape.prototype
    * @type {BoundingSphere}
@@ -47,7 +45,6 @@ Object.defineProperties(VoxelShape.prototype, {
 
   /**
    * A transformation matrix containing the bounded shape.
-   * The update function must be called before accessing this value.
    *
    * @memberof VoxelShape.prototype
    * @type {Matrix4}
@@ -60,7 +57,6 @@ Object.defineProperties(VoxelShape.prototype, {
 
   /**
    * A transformation matrix containing the shape, ignoring the bounds.
-   * The update function must be called before accessing this value.
    *
    * @memberof VoxelShape.prototype
    * @type {Matrix4}
@@ -72,6 +68,7 @@ Object.defineProperties(VoxelShape.prototype, {
   },
 
   /**
+   * @memberof VoxelShape.prototype
    * @type {Object<string, any>}
    * @readonly
    * @private
@@ -81,6 +78,7 @@ Object.defineProperties(VoxelShape.prototype, {
   },
 
   /**
+   * @memberof VoxelShape.prototype
    * @type {Object<string, any>}
    * @readonly
    * @private
@@ -91,6 +89,7 @@ Object.defineProperties(VoxelShape.prototype, {
 
   /**
    * The maximum number of intersections against the shape for any ray direction.
+   * @memberof VoxelShape.prototype
    * @type {number}
    * @readonly
    * @private
@@ -106,13 +105,32 @@ Object.defineProperties(VoxelShape.prototype, {
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
+ * @param {Cartesian3} [clipMinBounds] The minimum clip bounds.
+ * @param {Cartesian3} [clipMaxBounds] The maximum clip bounds.
  * @returns {boolean} Whether the shape is visible.
  */
 VoxelShape.prototype.update = DeveloperError.throwInstantiationError;
 
 /**
+ * Update any view-dependent transforms.
+ * @private
+ * @param {FrameState} frameState The frame state.
+ */
+VoxelShape.prototype.updateViewTransforms =
+  DeveloperError.throwInstantiationError;
+
+/**
+ * Converts a local coordinate to the shape's UV space.
+ * @private
+ * @param {Cartesian3} positionLocal The local coordinate to convert.
+ * @param {Cartesian3} result The Cartesian3 to store the result in.
+ * @returns {Cartesian3} The converted UV coordinate.
+ */
+VoxelShape.prototype.convertLocalToShapeUvSpace =
+  DeveloperError.throwInstantiationError;
+
+/**
  * Computes an oriented bounding box for a specified tile.
- * The update function must be called before calling this function.
  * @private
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
@@ -126,7 +144,6 @@ VoxelShape.prototype.computeOrientedBoundingBoxForTile =
 
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
- * The update function must be called before calling this function.
  * @private
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding

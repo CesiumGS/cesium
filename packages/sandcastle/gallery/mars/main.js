@@ -1,0 +1,408 @@
+import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
+
+Cesium.Ellipsoid.default = Cesium.Ellipsoid.MARS;
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  terrainProvider: false,
+  baseLayer: false,
+  baseLayerPicker: false,
+  geocoder: false,
+  shadows: false,
+  globe: new Cesium.Globe(Cesium.Ellipsoid.MARS),
+  skyBox: Cesium.SkyBox.createEarthSkyBox(),
+  skyAtmosphere: new Cesium.SkyAtmosphere(Cesium.Ellipsoid.MARS),
+});
+viewer.scene.globe.show = false;
+const scene = viewer.scene;
+const clock = viewer.clock;
+const navHelp = viewer.navigationHelpButton;
+
+// Adjust the default atmosphere coefficients to be more Mars-like
+scene.skyAtmosphere.atmosphereMieCoefficient = new Cesium.Cartesian3(
+  9.0e-5,
+  2.0e-5,
+  1.0e-5,
+);
+scene.skyAtmosphere.atmosphereRayleighCoefficient = new Cesium.Cartesian3(
+  9.0e-6,
+  2.0e-6,
+  1.0e-6,
+);
+scene.skyAtmosphere.atmosphereRayleighScaleHeight = 9000;
+scene.skyAtmosphere.atmosphereMieScaleHeight = 2700.0;
+scene.skyAtmosphere.saturationShift = -0.1;
+scene.skyAtmosphere.perFragmentAtmosphere = true;
+
+// Adjust postprocess settings for brighter and richer features
+const bloom = viewer.scene.postProcessStages.bloom;
+bloom.enabled = true;
+bloom.uniforms.brightness = -0.5;
+bloom.uniforms.stepSize = 1.0;
+bloom.uniforms.sigma = 3.0;
+bloom.uniforms.delta = 1.5;
+scene.highDynamicRange = true;
+viewer.scene.postProcessStages.exposure = 1.5;
+
+// Load Mars tileset
+try {
+  const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(3644333, {
+    enableCollision: true,
+  });
+  viewer.scene.primitives.add(tileset);
+} catch (error) {
+  console.log(error);
+}
+
+// Load the rovers and path from The Martian (by Andy Weir), from CZML data source.
+let curiosity, perseverance, ingenuity, theMartianJourney;
+try {
+  const dataSource = await Cesium.CzmlDataSource.load(
+    "../../SampleData/Mars.czml",
+  );
+  viewer.dataSources.add(dataSource);
+
+  const roverMenuEntries = [
+    {
+      text: "Fly to rover...",
+      onselect: () => {},
+    },
+  ];
+
+  const onSelectRover = (rover) => {
+    reset();
+    const roverAnimStartIso = rover.properties.animationStartTime.getValue(
+      Cesium.JulianDate.now(),
+    );
+    clock.multiplier = 604800;
+    clock.currentTime = new Cesium.JulianDate.fromIso8601(roverAnimStartIso);
+    viewer.timeline.zoomTo(rover.availability.start, rover.availability.stop);
+
+    const boundingSphere = new Cesium.BoundingSphere(
+      rover.position.getValue(clock.currentTime),
+      5000.0,
+    );
+
+    scene.camera.flyToBoundingSphere(boundingSphere, {
+      offset: new Cesium.HeadingPitchRoll(4.9791, -0.5294, 0.0),
+      easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+      maximumHeight: 5e6,
+      pitchAdjustHeight: 2.5e6,
+      duration: 3.0,
+      complete: function () {
+        highlightAnimationViewModel(); // Draw attention to the play button
+        navHelp.viewModel.showInstructions = true;
+      },
+    });
+  };
+
+  const setupRover = function (entityId, startSol, outRover) {
+    outRover = dataSource.entities.getById(entityId);
+
+    const julianDateToSol = createJulianDateToSolConverter(
+      outRover.availability.start,
+      startSol,
+    );
+    outRover.label.text = new Cesium.CallbackProperty(function (time) {
+      return julianDateToSol(time);
+    }, false);
+
+    const roverPath = dataSource.entities.getById(`${entityId}Path`);
+    roverPath.polyline.width = createWidthCallbackProperty(
+      new Cesium.NearFarScalar(0.0, 15.0, 1.0e5, 0.0),
+    );
+
+    roverMenuEntries.push({
+      text: entityId,
+      onselect: () => onSelectRover(outRover),
+    });
+
+    return outRover;
+  };
+
+  curiosity = setupRover("Curiosity", 3, curiosity);
+  perseverance = setupRover("Perseverance", 13, perseverance);
+  ingenuity = dataSource.entities.getById("Ingenuity"); // Only for viewing - no data for flight paths
+  theMartianJourney = dataSource.entities.getById("TheMartianJourney");
+  theMartianJourney.polyline.width = createWidthCallbackProperty(
+    new Cesium.NearFarScalar(0.0, 10.0, 1.0e7, 0.0),
+  );
+  theMartianJourney.rectangle.material = new Cesium.ImageMaterialProperty({
+    image: createCanvasAsTexture('Mark Watney\'s Journey in "The Martian"'),
+    transparent: true,
+  });
+
+  roverMenuEntries.push({
+    text: '"The Martian" Journey',
+    onselect: () => {
+      reset();
+      viewer.zoomTo(theMartianJourney);
+    },
+  });
+
+  Sandcastle.addToolbarMenu(roverMenuEntries);
+} catch (error) {
+  console.log(`Error loading CZML: ${error}`);
+}
+
+// For changing the width of polylines based on distance from the camera
+function createWidthCallbackProperty(nearFarScalar) {
+  return new Cesium.CallbackProperty(function () {
+    const distance = viewer.camera.positionCartographic.height;
+    let t =
+      (distance - nearFarScalar.near) /
+      (nearFarScalar.far - nearFarScalar.near);
+    t = Cesium.Math.clamp(t, 0.0, 1.0);
+    return Cesium.Math.lerp(nearFarScalar.nearValue, nearFarScalar.farValue, t);
+  }, false);
+}
+
+// Converts a Julian date to a Mars Sol number, given a start date / sol number
+function createJulianDateToSolConverter(startJulianDate, startSol) {
+  return function (julianDate) {
+    const secondsPerSol = 24 * 60 * 60 + 39 * 60 + 35;
+    const differenceInSeconds = Cesium.JulianDate.secondsDifference(
+      julianDate,
+      startJulianDate,
+    );
+    const solNumber =
+      Math.floor(differenceInSeconds / secondsPerSol) + startSol;
+    return `Sol ${solNumber}`;
+  };
+}
+
+// Load points of interest from GeoJSON data source
+try {
+  const dataSource = await Cesium.GeoJsonDataSource.load(
+    "../../SampleData/MarsPointsOfInterest.geojson",
+  );
+  viewer.dataSources.add(dataSource);
+
+  const onSelectLandmark = (landmark) => {
+    reset();
+    scene.camera.flyTo(landmark);
+  };
+
+  const landmarkMenuEntries = [
+    {
+      text: "Fly to landmark...",
+      onselect: () => {},
+    },
+  ];
+
+  const entities = dataSource.entities.values;
+  entities.forEach((entity) => {
+    entity.label = new Cesium.LabelGraphics({
+      text: entity.properties.text,
+      font: "18pt Verdana",
+      outlineColor: Cesium.Color.DARKSLATEGREY,
+      outlineWidth: 2,
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      pixelOffset: new Cesium.Cartesian2(0, -22),
+      scaleByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.5),
+      translucencyByDistance: new Cesium.NearFarScalar(2.5e7, 1.0, 4.0e7, 0.0),
+      heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+      disableDepthTestDistance: new Cesium.CallbackProperty(() => {
+        return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
+      }, false),
+    });
+
+    entity.point = new Cesium.PointGraphics({
+      pixelSize: 10,
+      color: Cesium.Color.fromBytes(243, 242, 99),
+      outlineColor: Cesium.Color.fromBytes(219, 218, 111),
+      outlineWidth: 2,
+      scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1.0, 4.0e7, 0.1),
+      heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+      disableDepthTestDistance: new Cesium.CallbackProperty(() => {
+        return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
+      }, false),
+    });
+
+    entity.name = entity.properties.text.getValue();
+    entity.description = createPickedFeatureDescription(entity);
+
+    const flyToDestination = new Cesium.Cartesian3.fromArray(
+      entity.properties.destination.getValue(),
+    );
+    const orientationArray = entity.properties.orientation.getValue();
+    const flyToOrientation = new Cesium.HeadingPitchRoll(
+      orientationArray[0],
+      orientationArray[1],
+      orientationArray[2],
+    );
+
+    landmarkMenuEntries.push({
+      text: entity.properties.text.getValue(),
+      onselect: () =>
+        onSelectLandmark({
+          destination: flyToDestination,
+          orientation: flyToOrientation,
+          easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+          maximumHeight: 5e6,
+          pitchAdjustHeight: 2.5e6,
+          duration: 3.0,
+          complete: function () {
+            viewer.selectedEntity = entity;
+            viewer.infoBox.viewModel.showInfo = true;
+          },
+        }),
+    });
+  });
+
+  Sandcastle.addToolbarMenu(landmarkMenuEntries);
+} catch (error) {
+  console.log(`Error loading GeoJSON: ${error}`);
+}
+
+// Spin Mars on first load but disable the spinning upon any input
+const rotationSpeed = Cesium.Math.toRadians(0.1);
+const removeRotation = viewer.scene.postRender.addEventListener(
+  function (scene, time) {
+    viewer.scene.camera.rotateRight(rotationSpeed);
+  },
+);
+
+const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+handler.setInputAction(
+  () => removeRotation(),
+  Cesium.ScreenSpaceEventType.LEFT_DOWN,
+);
+handler.setInputAction(
+  () => removeRotation(),
+  Cesium.ScreenSpaceEventType.RIGHT_DOWN,
+);
+handler.setInputAction(
+  () => removeRotation(),
+  Cesium.ScreenSpaceEventType.MIDDLE_DOWN,
+);
+handler.setInputAction(
+  () => removeRotation(),
+  Cesium.ScreenSpaceEventType.WHEEL,
+);
+
+// For drawing attention to the play button in the animation view model
+function highlightAnimationViewModel() {
+  if (clock.shouldAnimate) {
+    // Animation already playing
+    return;
+  }
+
+  const playPath = viewer.animation.container.querySelector(
+    "#animation_pathPlay",
+  );
+  const playButton = playPath.closest("g.cesium-animation-rectButton");
+  const ringG = viewer.animation.container.querySelector(
+    ".cesium-animation-shuttleRingG",
+  );
+  playButton.classList.add("highlight-animation");
+  ringG.classList.add("highlight-animation");
+
+  playButton.addEventListener("click", removeHighlight, { once: true });
+  setTimeout(removeHighlight, 30000); // Remove after 30 seconds if not clicked
+}
+
+function removeHighlight() {
+  const playPath = viewer.animation.container.querySelector(
+    "#animation_pathPlay",
+  );
+  const playButton = playPath.closest("g.cesium-animation-rectButton");
+  const ringG = viewer.animation.container.querySelector(
+    ".cesium-animation-shuttleRingG",
+  );
+  playButton.classList.remove("highlight-animation");
+  ringG.classList.remove("highlight-animation");
+}
+
+function reset() {
+  clock.multiplier = 1;
+  viewer.selectedEntity = undefined;
+  viewer.trackedEntity = undefined;
+  viewer.timeline.zoomTo(clock.startTime, clock.stopTime);
+  removeRotation();
+  removeHighlight();
+}
+
+// Add a listener for when the home button is clicked.
+viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
+  function (commandInfo) {
+    reset();
+  },
+);
+
+// When animating, if the multiplier is very high (which is necessary to see rover movement),
+// model lighting flickers distractingly, so disable it
+const entitiesToDisableLightingFor = [curiosity, perseverance, ingenuity];
+Cesium.knockout
+  .getObservable(viewer.clockViewModel, "shouldAnimate")
+  .subscribe(function (shouldAnimate) {
+    if (shouldAnimate && clock.multiplier >= 100000) {
+      entitiesToDisableLightingFor.forEach(function (entity) {
+        entity.model.lightColor = new Cesium.Color(0, 0, 0);
+      });
+    } else {
+      entitiesToDisableLightingFor.forEach(function (entity) {
+        entity.model.lightColor = new Cesium.Color(1, 1, 1);
+      });
+    }
+  });
+
+// To create a rectangle with text that conforms to the terrain, we can create a canvas
+// with text and use it as a texture on a rectangle entity.
+function createCanvasAsTexture(text) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 256;
+
+  const ctx = canvas.getContext("2d");
+  // Background
+  ctx.fillStyle = "rgba(0, 0, 0, 0)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Text
+  ctx.font = "36px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.strokeStyle = "rgba(0,0,0,0.1)";
+  ctx.lineWidth = 1;
+  ctx.fillStyle = "#ffffff";
+
+  ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+  return canvas;
+}
+
+// Create the HTML that will be put into the info box that shows
+// information about the currently selected feature
+function createPickedFeatureDescription(entity) {
+  return `<img\
+              width="50%"\
+              style="float:left; margin: 0 1em 1em 0;"\
+              src=${entity.properties.imageURL}>\
+            <p>${entity.properties.description}</p>\
+            <p>\
+              Source: \
+              <a style="color: white"\
+                target="_blank"\
+                href="${entity.properties.sourceURL}">${entity.properties.source}</a>\
+            </p>`;
+}
+
+// Inject instructions for interacting with the rovers into the navigation help menu
+function addRoverInstructionsToNavMenu() {
+  const div = document.querySelector(
+    ".cesium-click-navigation-help.cesium-navigation-help-instructions",
+  );
+  const table = div.querySelector("table");
+
+  const instructions1 = document.getElementById("roverHelpRowTemplate1");
+  const instructions1Clone = instructions1.content.cloneNode(true);
+  const img = instructions1Clone.querySelector("img[data-src]");
+  img.src = Cesium.buildModuleUrl(img.dataset.src);
+  table.tBodies[0].appendChild(instructions1Clone);
+
+  const instructions2 = document.getElementById("roverHelpRowTemplate2");
+  const instructions2Clone = instructions2.content.cloneNode(true);
+  table.tBodies[0].appendChild(instructions2Clone);
+}
+addRoverInstructionsToNavMenu();

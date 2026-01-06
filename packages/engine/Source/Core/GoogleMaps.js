@@ -25,10 +25,10 @@ GoogleMaps.defaultApiKey = undefined;
  * Gets or sets the default Google Map Tiles API endpoint.
  *
  * @type {string|Resource}
- * @default https://tile.googleapis.com/v1/
+ * @default https://tile.googleapis.com/
  */
 GoogleMaps.mapTilesApiEndpoint = new Resource({
-  url: "https://tile.googleapis.com/v1/",
+  url: "https://tile.googleapis.com/",
 });
 
 GoogleMaps.getDefaultCredit = function () {

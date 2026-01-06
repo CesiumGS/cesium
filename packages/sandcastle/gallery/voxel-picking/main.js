@@ -1,0 +1,193 @@
+import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
+
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+    Cesium.TileMapServiceImageryProvider.fromUrl(
+      Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+    ),
+  ),
+  baseLayerPicker: false,
+  geocoder: false,
+  timeline: false,
+  animation: false,
+});
+
+const { scene, camera } = viewer;
+
+scene.debugShowFramesPerSecond = true;
+
+const scratchColor = new Cesium.Color();
+
+const globalTransform = Cesium.Matrix4.fromScale(
+  Cesium.Cartesian3.fromElements(
+    Cesium.Ellipsoid.WGS84.maximumRadius,
+    Cesium.Ellipsoid.WGS84.maximumRadius,
+    Cesium.Ellipsoid.WGS84.maximumRadius,
+  ),
+);
+
+function ProceduralMultiTileVoxelProvider(shape) {
+  this.shape = shape;
+  this.dimensions = new Cesium.Cartesian3(4, 4, 4);
+  this.minBounds = Cesium.VoxelShapeType.getMinBounds(shape).clone();
+  this.maxBounds = Cesium.VoxelShapeType.getMaxBounds(shape).clone();
+  this.names = ["color"];
+  this.types = [Cesium.MetadataType.VEC4];
+  this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
+  this.availableLevels = 3;
+  this.globalTransform = globalTransform;
+}
+
+ProceduralMultiTileVoxelProvider.prototype.requestData = function (options) {
+  const { tileLevel, tileX, tileY, tileZ } = options;
+
+  if (tileLevel >= this.availableLevels) {
+    return Promise.reject(
+      `No tiles available beyond level ${this.availableLevels - 1}`,
+    );
+  }
+
+  const dimensions = this.dimensions;
+  const type = this.types[0];
+  const randomSeed =
+    tileZ * dimensions.y * dimensions.x + tileY * dimensions.x + tileX;
+  const dataTile = constructRandomTileData(dimensions, type, randomSeed);
+
+  const content = Cesium.VoxelContent.fromMetadataArray([dataTile]);
+  return Promise.resolve(content);
+};
+
+function constructRandomTileData(dimensions, type, randomSeed) {
+  Cesium.Math.setRandomNumberSeed(randomSeed);
+  const voxelCount = dimensions.x * dimensions.y * dimensions.z;
+  const channelCount = Cesium.MetadataType.getComponentCount(type);
+  const dataColor = new Float32Array(voxelCount * channelCount);
+
+  for (let z = 0; z < dimensions.z; z++) {
+    const indexZ = z * dimensions.y * dimensions.x;
+    for (let y = 0; y < dimensions.y; y++) {
+      const indexZY = indexZ + y * dimensions.x;
+      for (let x = 0; x < dimensions.x; x++) {
+        const lerperY = y / (dimensions.y - 1);
+
+        const h = Cesium.Math.nextRandomNumber();
+        const s = 1.0 - lerperY * 0.2;
+        const l = 0.5;
+        const color = Cesium.Color.fromHsl(h, s, l, 1.0, scratchColor);
+
+        const random2 = Cesium.Math.nextRandomNumber();
+        const alphaRandom = Math.floor(random2 + 0.5);
+
+        const index = (indexZY + x) * channelCount;
+        dataColor[index + 0] = color.red;
+        dataColor[index + 1] = color.green;
+        dataColor[index + 2] = color.blue;
+        dataColor[index + 3] = alphaRandom;
+      }
+    }
+  }
+
+  return dataColor;
+}
+
+const customShader = new Cesium.CustomShader({
+  fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+  {
+      vec3 voxelNormal = fsInput.attributes.normalEC;
+      float diffuse = max(0.0, dot(voxelNormal, czm_lightDirectionEC));
+      float lighting = 0.5 + 0.5 * diffuse;
+
+      int tileIndex = fsInput.voxel.tileIndex;
+      int sampleIndex = fsInput.voxel.sampleIndex;
+      vec3 cellColor = fsInput.metadata.color.rgb * lighting;
+      if (tileIndex == u_selectedTile && sampleIndex == u_selectedSample) {
+          material.diffuse = mix(cellColor, vec3(1.0), 0.5);
+          material.alpha = fsInput.metadata.color.a;
+      } else {
+          material.diffuse = cellColor;
+          material.alpha = fsInput.metadata.color.a;
+      }
+  }`,
+  uniforms: {
+    u_selectedTile: {
+      type: Cesium.UniformType.INT,
+      value: -1.0,
+    },
+    u_selectedSample: {
+      type: Cesium.UniformType.INT,
+      value: -1.0,
+    },
+  },
+});
+
+function createPrimitive(provider) {
+  viewer.scene.primitives.removeAll();
+
+  const voxelPrimitive = new Cesium.VoxelPrimitive({
+    provider: provider,
+    customShader: customShader,
+  });
+  voxelPrimitive.nearestSampling = true;
+  voxelPrimitive.stepSize = 0.7;
+
+  viewer.scene.primitives.add(voxelPrimitive);
+  camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {
+    duration: 0.0,
+  });
+
+  return voxelPrimitive;
+}
+
+Sandcastle.addToolbarMenu([
+  {
+    text: "Box - Procedural Tileset",
+    onselect: function () {
+      const provider = new ProceduralMultiTileVoxelProvider(
+        Cesium.VoxelShapeType.BOX,
+      );
+      createPrimitive(provider);
+    },
+  },
+  {
+    text: "Ellipsoid - Procedural Tileset",
+    onselect: function () {
+      const provider = new ProceduralMultiTileVoxelProvider(
+        Cesium.VoxelShapeType.ELLIPSOID,
+      );
+      provider.minBounds.z = 0.0;
+      provider.maxBounds.z = 1000000.0;
+      createPrimitive(provider);
+    },
+  },
+  {
+    text: "Cylinder - Procedural Tileset",
+    onselect: function () {
+      const provider = new ProceduralMultiTileVoxelProvider(
+        Cesium.VoxelShapeType.CYLINDER,
+      );
+      createPrimitive(provider);
+    },
+  },
+]);
+
+const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+const pickedCoordinate = document.getElementById("pickedCoordinate");
+const pickedColor = document.getElementById("pickedColor");
+handler.setInputAction(function (movement) {
+  const mousePosition = movement.endPosition;
+  const voxelCell = scene.pickVoxel(mousePosition);
+  if (!Cesium.defined(voxelCell)) {
+    return;
+  }
+  const { tileIndex, sampleIndex, orientedBoundingBox } = voxelCell;
+  const [x, y, z] = Object.values(orientedBoundingBox.center).map(Math.round);
+  pickedCoordinate.innerHTML = `Sample center x = ${x}, y = ${y}, z = ${z}`;
+  const rgbaValues = voxelCell.getProperty("color");
+  const color = new Cesium.Color(...rgbaValues);
+  pickedColor.style.backgroundColor = color.toCssColorString();
+
+  const { customShader } = voxelCell.primitive;
+  customShader.setUniform("u_selectedTile", tileIndex);
+  customShader.setUniform("u_selectedSample", sampleIndex);
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);

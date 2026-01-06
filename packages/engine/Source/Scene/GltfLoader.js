@@ -32,6 +32,8 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
 import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
+import addAllToArray from "../Core/addAllToArray.js";
+import getMeshPrimitives from "./getMeshPrimitives.js";
 
 const {
   Attribute,
@@ -507,8 +509,7 @@ function postProcessGeometry(loader, context) {
   for (let i = 0; i < loadPlans.length; i++) {
     const loadPlan = loadPlans[i];
     loadPlan.postProcess(context);
-
-    if (loadPlan.needsOutlines) {
+    if (loadPlan.needsOutlines || loadPlan.needsGaussianSplats) {
       // The glTF loader takes ownership of any buffers generated in the
       // post-process stage since they were created after the geometry loaders
       // finished. This way they can be destroyed when the loader is destroyed.
@@ -687,6 +688,7 @@ function getVertexBufferLoader(
   semantic,
   primitive,
   draco,
+  spzExtension,
   loadBuffer,
   loadTypedArray,
   frameState,
@@ -703,6 +705,7 @@ function getVertexBufferLoader(
     bufferViewId: bufferViewId,
     primitive: primitive,
     draco: draco,
+    spz: spzExtension,
     attributeSemantic: semantic,
     accessorId: accessorId,
     asynchronous: loader._asynchronous,
@@ -1032,7 +1035,10 @@ function createAttribute(gltf, accessorId, name, semantic, setIndex) {
     attribute.semantic === VertexAttributeSemantic.POSITION ||
     attribute.semantic === VertexAttributeSemantic.NORMAL ||
     attribute.semantic === VertexAttributeSemantic.TANGENT ||
-    attribute.semantic === VertexAttributeSemantic.TEXCOORD;
+    attribute.semantic === VertexAttributeSemantic.TEXCOORD ||
+    attribute.semantic === VertexAttributeSemantic.FEATURE_ID ||
+    attribute.semantic === VertexAttributeSemantic.SCALE ||
+    attribute.semantic === VertexAttributeSemantic.ROTATION;
 
   // In the glTF 2.0 spec, min and max are not affected by the normalized flag.
   // However, for KHR_mesh_quantization, min and max must be dequantized for
@@ -1124,6 +1130,58 @@ function finalizeDracoAttribute(
   }
 }
 
+function finalizeSpzAttribute(
+  attribute,
+  vertexBufferLoader,
+  loadBuffer,
+  loadTypedArray,
+) {
+  attribute.byteOffset = 0;
+  attribute.byteStride = undefined;
+
+  if (loadBuffer) {
+    attribute.buffer = vertexBufferLoader.buffer;
+  }
+
+  if (loadTypedArray && defined(vertexBufferLoader.typedArray)) {
+    attribute.typedArray = ComponentDatatype.createArrayBufferView(
+      attribute.componentDatatype,
+      vertexBufferLoader.typedArray.buffer,
+    );
+  }
+
+  if (attribute.semantic === VertexAttributeSemantic.POSITION) {
+    const findMinMaxXY = (flatArray) => {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      let minZ = Infinity;
+      let maxZ = -Infinity;
+
+      for (let i = 0; i < flatArray.length; i += 3) {
+        const x = flatArray[i];
+        const y = flatArray[i + 1];
+        const z = flatArray[i + 2];
+
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+        minZ = Math.min(minZ, z);
+        maxZ = Math.max(maxZ, z);
+      }
+
+      return [
+        new Cartesian3(minX, minY, minZ),
+        new Cartesian3(maxX, maxY, maxZ),
+      ];
+    };
+    const buffer = attribute.typedArray;
+    [attribute.min, attribute.max] = findMinMaxXY(buffer);
+  }
+}
+
 function finalizeAttribute(
   gltf,
   accessor,
@@ -1160,6 +1218,7 @@ function loadAttribute(
   semanticInfo,
   primitive,
   draco,
+  spz,
   loadBuffer,
   loadTypedArray,
   frameState,
@@ -1185,7 +1244,7 @@ function loadAttribute(
     setIndex,
   );
 
-  if (!defined(draco) && !defined(bufferViewId)) {
+  if (!defined(draco) && !defined(bufferViewId) && !defined(spz)) {
     return attribute;
   }
 
@@ -1195,6 +1254,7 @@ function loadAttribute(
     gltfSemantic,
     primitive,
     draco,
+    spz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1204,6 +1264,7 @@ function loadAttribute(
   loader._geometryLoaders.push(vertexBufferLoader);
   const promise = vertexBufferLoader.load();
   loader._loaderPromises.push(promise);
+
   // This can only execute once vertexBufferLoader.process() has run and returns true
   // Save this finish callback by the loader index so it can be called
   // in process().
@@ -1214,6 +1275,13 @@ function loadAttribute(
       defined(draco.attributes[gltfSemantic])
     ) {
       finalizeDracoAttribute(
+        attribute,
+        vertexBufferLoader,
+        loadBuffer,
+        loadTypedArray,
+      );
+    } else if (defined(spz)) {
+      finalizeSpzAttribute(
         attribute,
         vertexBufferLoader,
         loadBuffer,
@@ -1240,6 +1308,7 @@ function loadVertexAttribute(
   semanticInfo,
   primitive,
   draco,
+  spz,
   hasInstances,
   needsPostProcessing,
   frameState,
@@ -1287,6 +1356,7 @@ function loadVertexAttribute(
     semanticInfo,
     primitive,
     draco,
+    spz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1360,6 +1430,7 @@ function loadInstancedAttribute(
     semanticInfo,
     undefined,
     undefined,
+    undefined,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1370,13 +1441,18 @@ function loadIndices(
   loader,
   accessorId,
   primitive,
-  draco,
   hasFeatureIds,
   needsPostProcessing,
   frameState,
 ) {
   const accessor = loader.gltfJson.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
+  // Infer compression / extensions directly from the glTF primitive instead of passing in flags
+  const extensions = primitive.extensions ?? Frozen.EMPTY_OBJECT;
+  const draco = extensions.KHR_draco_mesh_compression;
+  const hasEdgeVisibility = defined(
+    extensions.EXT_mesh_primitive_edge_visibility,
+  );
 
   if (!defined(draco) && !defined(bufferViewId)) {
     return undefined;
@@ -1399,7 +1475,10 @@ function loadIndices(
   const outputTypedArrayOnly = loadAttributesAsTypedArray;
   const outputBuffer = !outputTypedArrayOnly;
   const outputTypedArray =
-    loadAttributesAsTypedArray || loadForCpuOperations || loadForClassification;
+    loadAttributesAsTypedArray ||
+    loadForCpuOperations ||
+    loadForClassification ||
+    hasEdgeVisibility;
 
   // Determine what to load right now:
   //
@@ -1876,6 +1955,7 @@ function loadMorphTarget(
   // Don't pass in primitive or draco object since morph targets can't be draco compressed
   const primitive = undefined;
   const draco = undefined;
+  const spz = undefined;
   const hasInstances = false;
 
   for (const semantic in target) {
@@ -1896,6 +1976,7 @@ function loadMorphTarget(
       semanticInfo,
       primitive,
       draco,
+      spz,
       hasInstances,
       needsPostProcessing,
       frameState,
@@ -1908,6 +1989,17 @@ function loadMorphTarget(
   }
 
   return morphTarget;
+}
+
+function fetchSpzExtensionFrom(extensions) {
+  const gaussianSplatting = extensions?.KHR_gaussian_splatting;
+  const gsExtensions = gaussianSplatting?.extensions;
+  const spz = gsExtensions?.KHR_gaussian_splatting_compression_spz_2;
+  if (defined(spz)) {
+    return spz;
+  }
+
+  return undefined;
 }
 
 /**
@@ -1947,6 +2039,49 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
+  // Edge Visibility
+  const edgeVisibilityExtension = extensions.EXT_mesh_primitive_edge_visibility;
+  const hasEdgeVisibility = defined(edgeVisibilityExtension);
+  if (hasEdgeVisibility) {
+    const visibilityAccessor =
+      loader.gltfJson.accessors[edgeVisibilityExtension.visibility];
+    if (!defined(visibilityAccessor)) {
+      throw new RuntimeError("Edge visibility accessor not found!");
+    }
+    const visibilityValues = loadAccessor(loader, visibilityAccessor);
+    primitive.edgeVisibility = {
+      visibility: visibilityValues,
+      material: edgeVisibilityExtension.material,
+    };
+
+    // Load silhouette normals
+    if (defined(edgeVisibilityExtension.silhouetteNormals)) {
+      const silhouetteNormalsAccessor =
+        loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
+      if (defined(silhouetteNormalsAccessor)) {
+        const silhouetteNormalsValues = loadAccessor(
+          loader,
+          silhouetteNormalsAccessor,
+        );
+        primitive.edgeVisibility.silhouetteNormals = silhouetteNormalsValues;
+      }
+    }
+
+    // Load line strings
+    if (defined(edgeVisibilityExtension.lineStrings)) {
+      primitivePlan.edgeVisibility.lineStrings =
+        edgeVisibilityExtension.lineStrings;
+    }
+  }
+
+  //support the latest glTF spec and the legacy extension
+  const spzExtension = fetchSpzExtensionFrom(extensions);
+
+  if (defined(spzExtension)) {
+    needsPostProcessing = true;
+    primitivePlan.needsGaussianSplats = true;
+  }
+
   const loadForClassification = loader._loadForClassification;
   const draco = extensions.KHR_draco_mesh_compression;
 
@@ -1979,6 +2114,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
         semanticInfo,
         gltfPrimitive,
         draco,
+        spzExtension,
         hasInstances,
         needsPostProcessing,
         frameState,
@@ -2011,7 +2147,6 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       loader,
       indices,
       gltfPrimitive,
-      draco,
       hasFeatureIds,
       needsPostProcessing,
       frameState,
@@ -2353,7 +2488,7 @@ function loadNode(loader, gltfNode, frameState) {
   const meshId = gltfNode.mesh;
   if (defined(meshId)) {
     const mesh = loader.gltfJson.meshes[meshId];
-    const primitives = mesh.primitives;
+    const primitives = getMeshPrimitives(mesh);
     for (let i = 0; i < primitives.length; ++i) {
       node.primitives.push(
         loadPrimitive(
@@ -2749,12 +2884,12 @@ function parse(loader, frameState) {
 
   // Gather promises and handle any errors
   const readyPromises = [];
-  readyPromises.push.apply(readyPromises, loader._loaderPromises);
+  addAllToArray(readyPromises, loader._loaderPromises);
 
   // When incrementallyLoadTextures is true, the errors are caught and thrown individually
   // since it doesn't affect the overall loader state
   if (!loader._incrementallyLoadTextures) {
-    readyPromises.push.apply(readyPromises, loader._texturesPromises);
+    addAllToArray(readyPromises, loader._texturesPromises);
   }
 
   return Promise.all(readyPromises);

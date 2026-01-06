@@ -40,11 +40,12 @@ import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix used to transform the primitive.
  * @param {CustomShader} [options.customShader] The custom shader used to style the primitive.
  * @param {Clock} [options.clock] The clock used to control time dynamic behavior.
- * @param {Boolean} [options.calculateStatistics] Generate statistics for performance profile.
+ * @param {boolean} [options.calculateStatistics] Generate statistics for performance profile.
  *
  * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider
  * @see VoxelShapeType
+ * @see {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide}
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -132,6 +133,14 @@ function VoxelPrimitive(options) {
   /**
    * This member is not known until the provider is ready.
    *
+   * @type {number}
+   * @private
+   */
+  this._availableLevels = 1;
+
+  /**
+   * This member is not known until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
@@ -162,38 +171,6 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._maxBoundsOld = new Cartesian3();
-
-  /**
-   * Minimum bounds with vertical exaggeration applied
-   *
-   * @type {Cartesian3}
-   * @private
-   */
-  this._exaggeratedMinBounds = new Cartesian3();
-
-  /**
-   * Used to detect if the shape is dirty.
-   *
-   * @type {Cartesian3}
-   * @private
-   */
-  this._exaggeratedMinBoundsOld = new Cartesian3();
-
-  /**
-   * Maximum bounds with vertical exaggeration applied
-   *
-   * @type {Cartesian3}
-   * @private
-   */
-  this._exaggeratedMaxBounds = new Cartesian3();
-
-  /**
-   * Used to detect if the shape is dirty.
-   *
-   * @type {Cartesian3}
-   * @private
-   */
-  this._exaggeratedMaxBoundsOld = new Cartesian3();
 
   /**
    * This member is not known until the provider is ready.
@@ -230,6 +207,22 @@ function VoxelPrimitive(options) {
   this._maxClippingBoundsOld = new Cartesian3();
 
   /**
+   * Vertical exaggeration applied to the voxel shape
+   *
+   * @type {number}
+   * @private
+   */
+  this._verticalExaggeration = 1.0;
+
+  /**
+   * The height relative to which the shape is exaggerated.
+   *
+   * @type {number}
+   * @private
+   */
+  this._verticalExaggerationRelativeHeight = 0.0;
+
+  /**
    * Clipping planes on the primitive
    *
    * @type {ClippingPlaneCollection}
@@ -262,30 +255,12 @@ function VoxelPrimitive(options) {
   this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
-   * Model matrix with vertical exaggeration applied. Only used for BOX shape type.
+   * Used to detect if the model matrix is dirty.
    *
    * @type {Matrix4}
    * @private
    */
-  this._exaggeratedModelMatrix = Matrix4.clone(this._modelMatrix);
-
-  /**
-   * The primitive's model matrix multiplied by the provider's model matrix.
-   * This member is not known until the provider is ready.
-   *
-   * @type {Matrix4}
-   * @private
-   */
-  this._compoundModelMatrix = new Matrix4();
-
-  /**
-   * Used to detect if the shape is dirty.
-   * This member is not known until the provider is ready.
-   *
-   * @type {Matrix4}
-   * @private
-   */
-  this._compoundModelMatrixOld = new Matrix4();
+  this._modelMatrixOld = Matrix4.clone(this._modelMatrix);
 
   /**
    * @type {CustomShader}
@@ -331,30 +306,30 @@ function VoxelPrimitive(options) {
   this._clock = options.clock;
 
   // Transforms and other values that are computed when the shape changes
+  /**
+   * @type {Matrix4}
+   * @private
+   */
+  this._transformPositionLocalToWorld = new Matrix4();
 
   /**
    * @type {Matrix4}
    * @private
    */
-  this._transformPositionWorldToUv = new Matrix4();
+  this._transformPositionWorldToLocal = new Matrix4();
 
   /**
+   * Transforms a plane in Hessian normal form from local space to view space.
    * @type {Matrix4}
    * @private
    */
-  this._transformPositionUvToWorld = new Matrix4();
+  this._transformPlaneLocalToView = new Matrix4();
 
   /**
    * @type {Matrix3}
    * @private
    */
   this._transformDirectionWorldToLocal = new Matrix3();
-
-  /**
-   * @type {Matrix3}
-   * @private
-   */
-  this._transformNormalLocalToWorld = new Matrix3();
 
   // Rendering
   /**
@@ -439,14 +414,16 @@ function VoxelPrimitive(options) {
     inputDimensions: new Cartesian3(),
     paddingBefore: new Cartesian3(),
     paddingAfter: new Cartesian3(),
-    transformPositionViewToUv: new Matrix4(),
-    transformPositionUvToView: new Matrix4(),
+    transformPositionViewToLocal: new Matrix4(),
     transformDirectionViewToLocal: new Matrix3(),
-    transformNormalLocalToWorld: new Matrix3(),
-    cameraPositionUv: new Cartesian3(),
+    cameraPositionLocal: new Cartesian3(),
+    cameraDirectionLocal: new Cartesian3(),
+    cameraTileCoordinates: new Cartesian4(),
+    cameraTileUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     clippingPlanesTexture: undefined,
     clippingPlanesMatrix: new Matrix4(),
+    renderBoundPlanesTexture: undefined,
     stepSize: 0,
     pickColor: new Color(),
   };
@@ -611,30 +588,12 @@ function initialize(primitive, provider) {
   primitive.minClippingBounds = minBounds.clone();
   primitive.maxClippingBounds = maxBounds.clone();
 
-  // Initialize the exaggerated versions of bounds and model matrix
-  primitive._exaggeratedMinBounds = Cartesian3.clone(
-    primitive._minBounds,
-    primitive._exaggeratedMinBounds,
-  );
-  primitive._exaggeratedMaxBounds = Cartesian3.clone(
-    primitive._maxBounds,
-    primitive._exaggeratedMaxBounds,
-  );
-  primitive._exaggeratedModelMatrix = Matrix4.clone(
-    primitive._modelMatrix,
-    primitive._exaggeratedModelMatrix,
-  );
-
-  checkTransformAndBounds(primitive, provider);
+  checkTransformAndBounds(primitive);
 
   // Create the shape object, and update it so it is valid for VoxelTraversal
   const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
   primitive._shape = new ShapeConstructor();
-  primitive._shapeVisible = updateShapeAndTransforms(
-    primitive,
-    primitive._shape,
-    provider,
-  );
+  primitive._shapeVisible = updateShapeAndTransforms(primitive);
 }
 
 Object.defineProperties(VoxelPrimitive.prototype, {
@@ -1075,6 +1034,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {CustomShader}
+   * @see {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide}
    */
   customShader: {
     get: function () {
@@ -1135,24 +1095,10 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
-const scratchScale = new Cartesian3();
-const scratchLocalScale = new Cartesian3();
-const scratchRotation = new Matrix3();
-const scratchRotationAndLocalScale = new Matrix3();
-const scratchTransformPositionWorldToLocal = new Matrix4();
 const scratchTransformPositionLocalToWorld = new Matrix4();
 const scratchTransformPositionLocalToProjection = new Matrix4();
-
-const transformPositionLocalToUv = Matrix4.fromRotationTranslation(
-  Matrix3.fromUniformScale(0.5, new Matrix3()),
-  new Cartesian3(0.5, 0.5, 0.5),
-  new Matrix4(),
-);
-const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
-  Matrix3.fromUniformScale(2.0, new Matrix3()),
-  new Cartesian3(-1.0, -1.0, -1.0),
-  new Matrix4(),
-);
+const scratchCameraPositionShapeUv = new Cartesian3();
+const scratchCameraTileCoordinates = new Cartesian4();
 
 /**
  * Updates the voxel primitive.
@@ -1162,6 +1108,7 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
  */
 VoxelPrimitive.prototype.update = function (frameState) {
   const provider = this._provider;
+  const uniforms = this._uniforms;
 
   // Update the custom shader in case it has texture uniforms.
   this._customShader.update(frameState);
@@ -1181,22 +1128,22 @@ VoxelPrimitive.prototype.update = function (frameState) {
     return;
   }
 
-  updateVerticalExaggeration(this, frameState);
-
   // Check if the shape is dirty before updating it. This needs to happen every
   // frame because the member variables can be modified externally via the
   // getters.
-  const shapeDirty = checkTransformAndBounds(this, provider);
-  const shape = this._shape;
-  if (shapeDirty) {
-    this._shapeVisible = updateShapeAndTransforms(this, shape, provider);
-    if (checkShapeDefines(this, shape)) {
+  const shapeDirty = checkTransformAndBounds(this);
+  const exaggerationChanged = updateVerticalExaggeration(this, frameState);
+  if (shapeDirty || exaggerationChanged) {
+    this._shapeVisible = updateShapeAndTransforms(this);
+    if (checkShapeDefines(this)) {
       this._shaderDirty = true;
     }
   }
   if (!this._shapeVisible) {
     return;
   }
+
+  this._shape.updateViewTransforms(frameState);
 
   // Update the traversal and prepare for rendering.
   const keyframeLocation = getKeyframeLocation(
@@ -1245,7 +1192,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
   }
 
   const leafNodeTexture = traversal.leafNodeTexture;
-  const uniforms = this._uniforms;
   if (defined(leafNodeTexture)) {
     uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
     uniforms.octreeLeafNodeTexelSizeUv = Cartesian2.clone(
@@ -1264,7 +1210,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Calculate the NDC-space AABB to "scissor" the fullscreen quad
   const transformPositionWorldToProjection =
     context.uniformState.viewProjection;
-  const orientedBoundingBox = shape.orientedBoundingBox;
+  const { orientedBoundingBox } = this._shape;
   const ndcAabb = orientedBoundingBoxToNdcAabb(
     orientedBoundingBox,
     transformPositionWorldToProjection,
@@ -1288,17 +1234,17 @@ VoxelPrimitive.prototype.update = function (frameState) {
     uniforms.ndcSpaceAxisAlignedBoundingBox,
   );
   const transformPositionViewToWorld = context.uniformState.inverseView;
-  uniforms.transformPositionViewToUv = Matrix4.multiplyTransformation(
-    this._transformPositionWorldToUv,
+  const transformPositionViewToLocal = Matrix4.multiplyTransformation(
+    this._transformPositionWorldToLocal,
     transformPositionViewToWorld,
-    uniforms.transformPositionViewToUv,
+    uniforms.transformPositionViewToLocal,
   );
-  const transformPositionWorldToView = context.uniformState.view;
-  uniforms.transformPositionUvToView = Matrix4.multiplyTransformation(
-    transformPositionWorldToView,
-    this._transformPositionUvToWorld,
-    uniforms.transformPositionUvToView,
+
+  this._transformPlaneLocalToView = Matrix4.transpose(
+    transformPositionViewToLocal,
+    this._transformPlaneLocalToView,
   );
+
   const transformDirectionViewToWorld =
     context.uniformState.inverseViewRotation;
   uniforms.transformDirectionViewToLocal = Matrix3.multiply(
@@ -1306,17 +1252,37 @@ VoxelPrimitive.prototype.update = function (frameState) {
     transformDirectionViewToWorld,
     uniforms.transformDirectionViewToLocal,
   );
-  uniforms.transformNormalLocalToWorld = Matrix3.clone(
-    this._transformNormalLocalToWorld,
-    uniforms.transformNormalLocalToWorld,
+  uniforms.cameraPositionLocal = Matrix4.multiplyByPoint(
+    this._transformPositionWorldToLocal,
+    frameState.camera.positionWC,
+    uniforms.cameraPositionLocal,
   );
-  const cameraPositionWorld = frameState.camera.positionWC;
-  uniforms.cameraPositionUv = Matrix4.multiplyByPoint(
-    this._transformPositionWorldToUv,
-    cameraPositionWorld,
-    uniforms.cameraPositionUv,
+  uniforms.cameraDirectionLocal = Matrix3.multiplyByVector(
+    this._transformDirectionWorldToLocal,
+    frameState.camera.directionWC,
+    uniforms.cameraDirectionLocal,
+  );
+  const cameraTileCoordinates = getTileCoordinates(
+    this,
+    uniforms.cameraPositionLocal,
+    scratchCameraTileCoordinates,
+  );
+  uniforms.cameraTileCoordinates = Cartesian4.fromElements(
+    Math.floor(cameraTileCoordinates.x),
+    Math.floor(cameraTileCoordinates.y),
+    Math.floor(cameraTileCoordinates.z),
+    cameraTileCoordinates.w,
+    uniforms.cameraTileCoordinates,
+  );
+  uniforms.cameraTileUv = Cartesian3.fromElements(
+    cameraTileCoordinates.x - Math.floor(cameraTileCoordinates.x),
+    cameraTileCoordinates.y - Math.floor(cameraTileCoordinates.y),
+    cameraTileCoordinates.z - Math.floor(cameraTileCoordinates.z),
+    uniforms.cameraTileUv,
   );
   uniforms.stepSize = this._stepSizeMultiplier;
+
+  updateRenderBoundPlanes(this, frameState);
 
   // Render the primitive
   const command = frameState.passes.pick
@@ -1324,110 +1290,74 @@ VoxelPrimitive.prototype.update = function (frameState) {
     : frameState.passes.pickVoxel
       ? this._drawCommandPickVoxel
       : this._drawCommand;
-  command.boundingVolume = shape.boundingSphere;
+  command.boundingVolume = this._shape.boundingSphere;
   frameState.commandList.push(command);
 };
+
+function updateRenderBoundPlanes(primitive, frameState) {
+  const uniforms = primitive._uniforms;
+  const { renderBoundPlanes } = primitive._shape;
+  if (!defined(renderBoundPlanes)) {
+    return;
+  }
+  renderBoundPlanes.update(frameState, primitive._transformPlaneLocalToView);
+  uniforms.renderBoundPlanesTexture = renderBoundPlanes.texture;
+}
+
+/**
+ * Converts a position in local space to tile coordinates.
+ *
+ * @param {VoxelPrimitive} primitive The primitive to get the tile coordinates for.
+ * @param {Cartesian3} positionLocal The position in local space to convert to tile coordinates.
+ * @param {Cartesian4} result The result object to store the tile coordinates.
+ * @returns {Cartesian4} The tile coordinates of the supplied position.
+ * @private
+ */
+function getTileCoordinates(primitive, positionLocal, result) {
+  const shapeUv = primitive._shape.convertLocalToShapeUvSpace(
+    positionLocal,
+    scratchCameraPositionShapeUv,
+  );
+
+  const availableLevels = primitive._availableLevels;
+  const numTiles = 2 ** (availableLevels - 1);
+
+  return Cartesian4.fromElements(
+    shapeUv.x * numTiles,
+    shapeUv.y * numTiles,
+    shapeUv.z * numTiles,
+    availableLevels - 1,
+    result,
+  );
+}
 
 const scratchExaggerationScale = new Cartesian3();
 const scratchExaggerationCenter = new Cartesian3();
 const scratchCartographicCenter = new Cartographic();
-const scratchExaggerationTranslation = new Cartesian3();
 
 /**
- * Update the exaggerated bounds of a primitive to account for vertical exaggeration
- * Currently only applies to Ellipsoid shape type
- * @param {VoxelPrimitive} primitive
- * @param {FrameState} frameState
+ * Check for changes in the vertical exaggeration of the primitive
+ * @param {VoxelPrimitive} primitive The primitive to update
+ * @param {FrameState} frameState The current frame state
+ * @returns {boolean} <code>true</code> if the exaggeration was changed
  * @private
  */
 function updateVerticalExaggeration(primitive, frameState) {
-  primitive._exaggeratedMinBounds = Cartesian3.clone(
-    primitive._minBounds,
-    primitive._exaggeratedMinBounds,
-  );
-  primitive._exaggeratedMaxBounds = Cartesian3.clone(
-    primitive._maxBounds,
-    primitive._exaggeratedMaxBounds,
-  );
+  const { verticalExaggeration, verticalExaggerationRelativeHeight } =
+    frameState;
 
-  if (primitive.shape === VoxelShapeType.ELLIPSOID) {
-    // Apply the exaggeration by stretching the height bounds
-    const relativeHeight = frameState.verticalExaggerationRelativeHeight;
-    const exaggeration = frameState.verticalExaggeration;
-    primitive._exaggeratedMinBounds.z =
-      (primitive._minBounds.z - relativeHeight) * exaggeration + relativeHeight;
-    primitive._exaggeratedMaxBounds.z =
-      (primitive._maxBounds.z - relativeHeight) * exaggeration + relativeHeight;
-  } else {
-    // Apply the exaggeration via the model matrix
-    const exaggerationScale = Cartesian3.fromElements(
-      1.0,
-      1.0,
-      frameState.verticalExaggeration,
-      scratchExaggerationScale,
-    );
-    primitive._exaggeratedModelMatrix = Matrix4.multiplyByScale(
-      primitive._modelMatrix,
-      exaggerationScale,
-      primitive._exaggeratedModelMatrix,
-    );
-    primitive._exaggeratedModelMatrix = Matrix4.multiplyByTranslation(
-      primitive._exaggeratedModelMatrix,
-      computeBoxExaggerationTranslation(primitive, frameState),
-      primitive._exaggeratedModelMatrix,
-    );
-  }
-}
-
-function computeBoxExaggerationTranslation(primitive, frameState) {
-  // Compute translation based on box center, relative height, and exaggeration
-  const {
-    shapeTransform = Matrix4.IDENTITY,
-    globalTransform = Matrix4.IDENTITY,
-  } = primitive._provider;
-
-  // Find the Cartesian position of the center of the OBB
-  const initialCenter = Matrix4.getTranslation(
-    shapeTransform,
-    scratchExaggerationCenter,
-  );
-  const intermediateCenter = Matrix4.multiplyByPoint(
-    primitive._modelMatrix,
-    initialCenter,
-    scratchExaggerationCenter,
-  );
-  const transformedCenter = Matrix4.multiplyByPoint(
-    globalTransform,
-    intermediateCenter,
-    scratchExaggerationCenter,
-  );
-
-  // Find the cartographic height
-  const ellipsoid = Ellipsoid.WGS84;
-  const centerCartographic = ellipsoid.cartesianToCartographic(
-    transformedCenter,
-    scratchCartographicCenter,
-  );
-
-  let centerHeight = 0.0;
-  if (defined(centerCartographic)) {
-    centerHeight = centerCartographic.height;
+  if (
+    primitive._verticalExaggeration === verticalExaggeration &&
+    primitive._verticalExaggerationRelativeHeight ===
+      verticalExaggerationRelativeHeight
+  ) {
+    return false;
   }
 
-  // Find the shift that will put the center in the right position relative
-  // to relativeHeight, after it is scaled by verticalExaggeration
-  const exaggeratedHeight = VerticalExaggeration.getHeight(
-    centerHeight,
-    frameState.verticalExaggeration,
-    frameState.verticalExaggerationRelativeHeight,
-  );
-
-  return Cartesian3.fromElements(
-    0.0,
-    0.0,
-    (exaggeratedHeight - centerHeight) / frameState.verticalExaggeration,
-    scratchExaggerationTranslation,
-  );
+  primitive._verticalExaggeration = verticalExaggeration;
+  primitive._verticalExaggerationRelativeHeight =
+    verticalExaggerationRelativeHeight;
+  return true;
 }
 
 /**
@@ -1511,6 +1441,7 @@ function initFromProvider(primitive, provider, context) {
     primitive._inputDimensions,
     uniforms.inputDimensions,
   );
+  primitive._availableLevels = provider.availableLevels ?? 1;
 
   // Create the VoxelTraversal, and set related uniforms
   const keyframeCount = provider.keyframeCount ?? 1;
@@ -1523,39 +1454,14 @@ function initFromProvider(primitive, provider, context) {
 /**
  * Track changes in provider transform and primitive bounds
  * @param {VoxelPrimitive} primitive
- * @param {VoxelProvider} provider
  * @returns {boolean} Whether any of the transform or bounds changed
  * @private
  */
-function checkTransformAndBounds(primitive, provider) {
-  const shapeTransform = provider.shapeTransform ?? Matrix4.IDENTITY;
-  const globalTransform = provider.globalTransform ?? Matrix4.IDENTITY;
-
-  // Compound model matrix = global transform * model matrix * shape transform
-  Matrix4.multiplyTransformation(
-    globalTransform,
-    primitive._exaggeratedModelMatrix,
-    primitive._compoundModelMatrix,
-  );
-  Matrix4.multiplyTransformation(
-    primitive._compoundModelMatrix,
-    shapeTransform,
-    primitive._compoundModelMatrix,
-  );
+function checkTransformAndBounds(primitive) {
   const numChanges =
-    updateBound(primitive, "_compoundModelMatrix", "_compoundModelMatrixOld") +
+    updateBound(primitive, "_modelMatrix", "_modelMatrixOld") +
     updateBound(primitive, "_minBounds", "_minBoundsOld") +
     updateBound(primitive, "_maxBounds", "_maxBoundsOld") +
-    updateBound(
-      primitive,
-      "_exaggeratedMinBounds",
-      "_exaggeratedMinBoundsOld",
-    ) +
-    updateBound(
-      primitive,
-      "_exaggeratedMaxBounds",
-      "_exaggeratedMaxBoundsOld",
-    ) +
     updateBound(primitive, "_minClippingBounds", "_minClippingBoundsOld") +
     updateBound(primitive, "_maxClippingBounds", "_maxClippingBoundsOld");
   return numChanges > 0;
@@ -1581,70 +1487,192 @@ function updateBound(primitive, newBoundKey, oldBoundKey) {
   return changed ? 1 : 0;
 }
 
+const scratchExaggeratedMinBounds = new Cartesian3();
+const scratchExaggeratedMaxBounds = new Cartesian3();
+const scratchExaggeratedMinClippingBounds = new Cartesian3();
+const scratchExaggeratedMaxClippingBounds = new Cartesian3();
+const scratchExaggeratedModelMatrix = new Matrix4();
+const scratchCompoundModelMatrix = new Matrix4();
+
 /**
  * Update the shape and related transforms
  * @param {VoxelPrimitive} primitive
- * @param {VoxelShape} shape
- * @param {VoxelProvider} provider
  * @returns {boolean} True if the shape is visible
  * @private
  */
-function updateShapeAndTransforms(primitive, shape, provider) {
+function updateShapeAndTransforms(primitive) {
+  const verticalExaggeration = primitive._verticalExaggeration;
+  const verticalExaggerationRelativeHeight =
+    primitive._verticalExaggerationRelativeHeight;
+  const exaggeratedMinBounds = Cartesian3.clone(
+    primitive._minBounds,
+    scratchExaggeratedMinBounds,
+  );
+  const exaggeratedMaxBounds = Cartesian3.clone(
+    primitive._maxBounds,
+    scratchExaggeratedMaxBounds,
+  );
+  const exaggeratedMinClippingBounds = Cartesian3.clone(
+    primitive._minClippingBounds,
+    scratchExaggeratedMinClippingBounds,
+  );
+  const exaggeratedMaxClippingBounds = Cartesian3.clone(
+    primitive._maxClippingBounds,
+    scratchExaggeratedMaxClippingBounds,
+  );
+  const exaggeratedModelMatrix = Matrix4.clone(
+    primitive._modelMatrix,
+    scratchExaggeratedModelMatrix,
+  );
+
+  if (primitive.shape === VoxelShapeType.ELLIPSOID) {
+    // Apply the exaggeration by stretching the height bounds
+    exaggeratedMinBounds.z = VerticalExaggeration.getHeight(
+      primitive._minBounds.z,
+      verticalExaggeration,
+      verticalExaggerationRelativeHeight,
+    );
+    exaggeratedMaxBounds.z = VerticalExaggeration.getHeight(
+      primitive._maxBounds.z,
+      verticalExaggeration,
+      verticalExaggerationRelativeHeight,
+    );
+    exaggeratedMinClippingBounds.z = VerticalExaggeration.getHeight(
+      primitive._minClippingBounds.z,
+      verticalExaggeration,
+      verticalExaggerationRelativeHeight,
+    );
+    exaggeratedMaxClippingBounds.z = VerticalExaggeration.getHeight(
+      primitive._maxClippingBounds.z,
+      verticalExaggeration,
+      verticalExaggerationRelativeHeight,
+    );
+  } else {
+    // Apply the exaggeration via the model matrix
+    const exaggerationScale = Cartesian3.fromElements(
+      1.0,
+      1.0,
+      verticalExaggeration,
+      scratchExaggerationScale,
+    );
+    Matrix4.multiplyByScale(
+      exaggeratedModelMatrix,
+      exaggerationScale,
+      exaggeratedModelMatrix,
+    );
+    Matrix4.multiplyByTranslation(
+      exaggeratedModelMatrix,
+      computeBoxExaggerationTranslation(primitive),
+      exaggeratedModelMatrix,
+    );
+  }
+
+  const provider = primitive._provider;
+  const shapeTransform = provider.shapeTransform ?? Matrix4.IDENTITY;
+  const globalTransform = provider.globalTransform ?? Matrix4.IDENTITY;
+
+  // Compound model matrix = global transform * model matrix * shape transform
+  const compoundModelMatrix = Matrix4.multiplyTransformation(
+    globalTransform,
+    exaggeratedModelMatrix,
+    scratchCompoundModelMatrix,
+  );
+  Matrix4.multiplyTransformation(
+    compoundModelMatrix,
+    shapeTransform,
+    compoundModelMatrix,
+  );
+
+  const shape = primitive._shape;
   const visible = shape.update(
-    primitive._compoundModelMatrix,
-    primitive._exaggeratedMinBounds,
-    primitive._exaggeratedMaxBounds,
-    primitive.minClippingBounds,
-    primitive.maxClippingBounds,
+    compoundModelMatrix,
+    exaggeratedMinBounds,
+    exaggeratedMaxBounds,
+    exaggeratedMinClippingBounds,
+    exaggeratedMaxClippingBounds,
   );
   if (!visible) {
     return false;
   }
 
-  const transformPositionLocalToWorld = shape.shapeTransform;
-  const transformPositionWorldToLocal = Matrix4.inverse(
-    transformPositionLocalToWorld,
-    scratchTransformPositionWorldToLocal,
+  primitive._transformPositionLocalToWorld = Matrix4.clone(
+    shape.shapeTransform,
+    primitive._transformPositionLocalToWorld,
   );
-  const rotation = Matrix4.getRotation(
-    transformPositionLocalToWorld,
-    scratchRotation,
-  );
-  // Note that inverse(rotation) is the same as transpose(rotation)
-  const scale = Matrix4.getScale(transformPositionLocalToWorld, scratchScale);
-  const maximumScaleComponent = Cartesian3.maximumComponent(scale);
-  const localScale = Cartesian3.divideByScalar(
-    scale,
-    maximumScaleComponent,
-    scratchLocalScale,
-  );
-  const rotationAndLocalScale = Matrix3.multiplyByScale(
-    rotation,
-    localScale,
-    scratchRotationAndLocalScale,
-  );
-
-  // Set member variables when the shape is dirty
-  primitive._transformPositionWorldToUv = Matrix4.multiplyTransformation(
-    transformPositionLocalToUv,
-    transformPositionWorldToLocal,
-    primitive._transformPositionWorldToUv,
-  );
-  primitive._transformPositionUvToWorld = Matrix4.multiplyTransformation(
-    transformPositionLocalToWorld,
-    transformPositionUvToLocal,
-    primitive._transformPositionUvToWorld,
+  primitive._transformPositionWorldToLocal = Matrix4.inverse(
+    primitive._transformPositionLocalToWorld,
+    primitive._transformPositionWorldToLocal,
   );
   primitive._transformDirectionWorldToLocal = Matrix4.getMatrix3(
-    transformPositionWorldToLocal,
+    primitive._transformPositionWorldToLocal,
     primitive._transformDirectionWorldToLocal,
-  );
-  primitive._transformNormalLocalToWorld = Matrix3.inverseTranspose(
-    rotationAndLocalScale,
-    primitive._transformNormalLocalToWorld,
   );
 
   return true;
+}
+
+const scratchExaggerationTranslation = new Cartesian3();
+
+/**
+ * Compute the translation to apply to box shapes to account for vertical exaggeration
+ *
+ * @param {VoxelPrimitive} primitive
+ * @returns {Cartesian3} The translation to apply to the box to account for vertical exaggeration
+ * @private
+ */
+function computeBoxExaggerationTranslation(primitive) {
+  const verticalExaggeration = primitive._verticalExaggeration;
+  const verticalExaggerationRelativeHeight =
+    primitive._verticalExaggerationRelativeHeight;
+
+  // Compute translation based on box center, relative height, and exaggeration
+  const {
+    shapeTransform = Matrix4.IDENTITY,
+    globalTransform = Matrix4.IDENTITY,
+  } = primitive._provider;
+
+  // Find the Cartesian position of the center of the OBB
+  const initialCenter = Matrix4.getTranslation(
+    shapeTransform,
+    scratchExaggerationCenter,
+  );
+  const intermediateCenter = Matrix4.multiplyByPoint(
+    primitive._modelMatrix,
+    initialCenter,
+    scratchExaggerationCenter,
+  );
+  const transformedCenter = Matrix4.multiplyByPoint(
+    globalTransform,
+    intermediateCenter,
+    scratchExaggerationCenter,
+  );
+
+  // Find the cartographic height
+  const ellipsoid = Ellipsoid.WGS84;
+  const centerCartographic = ellipsoid.cartesianToCartographic(
+    transformedCenter,
+    scratchCartographicCenter,
+  );
+
+  let centerHeight = 0.0;
+  if (defined(centerCartographic)) {
+    centerHeight = centerCartographic.height;
+  }
+
+  // Find the shift that will put the center in the right position relative
+  // to relativeHeight, after it is scaled by verticalExaggeration
+  const exaggeratedHeight = VerticalExaggeration.getHeight(
+    centerHeight,
+    verticalExaggeration,
+    verticalExaggerationRelativeHeight,
+  );
+
+  return Cartesian3.fromElements(
+    0.0,
+    0.0,
+    (exaggeratedHeight - centerHeight) / verticalExaggeration,
+    scratchExaggerationTranslation,
+  );
 }
 
 /**
@@ -1694,17 +1722,16 @@ function setTraversalUniforms(traversal, uniforms) {
 /**
  * Track changes in shape-related shader defines
  * @param {VoxelPrimitive} primitive
- * @param {VoxelShape} shape
  * @returns {boolean} True if any of the shape defines changed, requiring a shader rebuild
  * @private
  */
-function checkShapeDefines(primitive, shape) {
-  const shapeDefines = shape.shaderDefines;
-  const shapeDefinesChanged = Object.keys(shapeDefines).some(
-    (key) => shapeDefines[key] !== primitive._shapeDefinesOld[key],
+function checkShapeDefines(primitive) {
+  const { shaderDefines } = primitive._shape;
+  const shapeDefinesChanged = Object.keys(shaderDefines).some(
+    (key) => shaderDefines[key] !== primitive._shapeDefinesOld[key],
   );
   if (shapeDefinesChanged) {
-    primitive._shapeDefinesOld = clone(shapeDefines, true);
+    primitive._shapeDefinesOld = clone(shaderDefines, true);
   }
   return shapeDefinesChanged;
 }
@@ -1776,12 +1803,12 @@ function updateClippingPlanes(primitive, frameState) {
     const uniforms = primitive._uniforms;
     uniforms.clippingPlanesTexture = clippingPlanes.texture;
 
-    // Compute the clipping plane's transformation to uv space and then take the inverse
+    // Compute the clipping plane's transformation to local space and then take the inverse
     // transpose to properly transform the hessian normal form of the plane.
 
-    // transpose(inverse(worldToUv * clippingPlaneLocalToWorld))
-    // transpose(inverse(clippingPlaneLocalToWorld) * inverse(worldToUv))
-    // transpose(inverse(clippingPlaneLocalToWorld) * uvToWorld)
+    // transpose(inverse(worldToLocal * clippingPlaneLocalToWorld))
+    // transpose(inverse(clippingPlaneLocalToWorld) * inverse(worldToLocal))
+    // transpose(inverse(clippingPlaneLocalToWorld) * localToWorld)
 
     uniforms.clippingPlanesMatrix = Matrix4.transpose(
       Matrix4.multiplyTransformation(
@@ -1789,7 +1816,7 @@ function updateClippingPlanes(primitive, frameState) {
           clippingPlanes.modelMatrix,
           uniforms.clippingPlanesMatrix,
         ),
-        primitive._transformPositionUvToWorld,
+        primitive._transformPositionLocalToWorld,
         uniforms.clippingPlanesMatrix,
       ),
       uniforms.clippingPlanesMatrix,

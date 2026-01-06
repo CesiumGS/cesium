@@ -1,0 +1,116 @@
+.sandcastle-root {
+  display: grid;
+  width: 100vw;
+  height: 100vh;
+  --header-height: min-content;
+  --app-bar-width: 53px;
+  grid-template-rows: var(--header-height) auto;
+  grid-template-columns: var(--app-bar-width) auto;
+  grid-template-areas: "header header" "app-bar content";
+
+  --highlight-color-bg: var(--stratakit-color-bg-accent-muted);
+  --highlight-color-bg-hover: color-mix(
+    in oklch,
+    var(--stratakit-color-glow-hue) var(--stratakit-color-bg-glow-base-hover-\%),
+    var(--highlight-color-bg)
+  );
+  --highlight-color-bg-pressed: color-mix(
+    in oklch,
+    var(--stratakit-color-glow-hue)
+      var(--stratakit-color-bg-glow-base-pressed-\%),
+    var(--highlight-color-bg)
+  );
+  --highlight-color-text: var(--stratakit-color-text-neutral-primary);
+  --highlight-color-border: var(--stratakit-color-border-accent-muted);
+  --highlight-color-border-hover: color-mix(
+    in oklch,
+    var(--stratakit-color-glow-hue)
+      var(--stratakit-color-border-glow-base-hover-\%),
+    var(--highlight-color-border)
+  );
+  --highlight-color-border-pressed: color-mix(
+    in oklch,
+    var(--stratakit-color-glow-hue)
+      var(--stratakit-color-border-glow-base-pressed-\%),
+    var(--highlight-color-border)
+  );
+
+  & > header {
+    grid-area: header;
+    display: flex;
+    align-items: center;
+    padding: var(--stratakit-space-x2);
+    padding-right: var(--stratakit-space-x4);
+    gap: var(--stratakit-space-x2);
+    background: var(--stratakit-color-bg-page-depth);
+    border-bottom: var(--stratakit-ext-border-border) solid
+      var(--stratakit-color-border-page-base);
+
+    .metadata {
+      margin-left: var(--stratakit-space-x2);
+      color: var(--stratakit-color-text-accent-strong);
+      cursor: pointer;
+    }
+
+    .version {
+      color: var(--stratakit-color-text-neutral-secondary);
+    }
+  }
+
+  .application-bar {
+    grid-area: app-bar;
+    display: flex;
+    flex-direction: column;
+    padding: var(--stratakit-space-x2);
+    gap: var(--stratakit-space-x2);
+    background: var(--stratakit-color-bg-page-depth);
+    border-right: var(--stratakit-ext-border-border) solid
+      var(--stratakit-color-border-page-base);
+
+    button {
+      /* Force buttons to be square */
+      padding: var(--stratakit-space-x2);
+    }
+  }
+
+  .content {
+    grid-area: content;
+  }
+}
+
+.flex-spacer {
+  flex-grow: 1000;
+}
+
+.split-view {
+  /* These control the styling of the Allotment dividers */
+  --focus-border: var(--stratakit-color-border-accent-base);
+  --separator-border: var(--stratakit-color-border-neutral-base);
+}
+
+mark {
+  background: var(--highlight-color-bg);
+  border-radius: 2px;
+  border: 1px solid var(--highlight-color-border);
+  color: var(--highlight-color-text);
+}
+
+mark > span {
+  color: var(--highlight-color-text);
+}
+
+code {
+  color: var(--stratakit-color-text-neutral-secondary);
+  background-color: var(--stratakit-color-bg-control-textbox);
+  padding: var(--stratakit-space-x1);
+  border-radius: 4px;
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+
+  justify-content: center;
+  align-items: center;
+  font-family: inherit;
+  font-weight: 500;
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-12);
+  line-height: 1.3333;
+}

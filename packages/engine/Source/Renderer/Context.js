@@ -1,3 +1,4 @@
+import Buffer from "./Buffer.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
@@ -356,7 +357,7 @@ function Context(canvas, options) {
     this._vertexAttribDivisors.push(0);
   }
 
-  this._pickObjects = {};
+  this._pickObjects = new Map();
   this._nextPickColor = new Uint32Array(1);
 
   /**
@@ -1302,6 +1303,7 @@ function beginDraw(
   bindFramebuffer(context, framebuffer);
   applyRenderState(context, renderState, passState, false);
   shaderProgram._bind();
+
   context._maxFrameTextureUnitIndex = Math.max(
     context._maxFrameTextureUnitIndex,
     shaderProgram.maximumTextureUnitIndex,
@@ -1376,6 +1378,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
     } else {
       count = va.numberOfVertices;
     }
+
     if (instanceCount === 0) {
       context._gl.drawArrays(primitiveType, offset, count);
     } else {
@@ -1413,6 +1416,10 @@ Context.prototype.draw = function (
   continueDraw(this, drawCommand, shaderProgram, uniformMap);
 };
 
+Context.prototype.beginFrame = function () {
+  // A no-op. Overridden when drawing to a SharedContext.
+};
+
 Context.prototype.endFrame = function () {
   const gl = this._gl;
   gl.useProgram(null);
@@ -1436,13 +1443,88 @@ Context.prototype.endFrame = function () {
 };
 
 /**
+ * @typedef {object} ReadState
+ *
+ * Options defining a rectangle to read pixels from.
+ *
  * @private
- * @param {object} readState An object with the following properties:
- * @param {number} [readState.x=0] The x offset of the rectangle to read from.
- * @param {number} [readState.y=0] The y offset of the rectangle to read from.
- * @param {number} [readState.width=gl.drawingBufferWidth] The width of the rectangle to read from.
- * @param {number} [readState.height=gl.drawingBufferHeight] The height of the rectangle to read from.
- * @param {Framebuffer} [readState.framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
+ * @property {number} [x=0] The x offset of the rectangle to read from.
+ * @property {number} [y=0] The y offset of the rectangle to read from.
+ * @property {number} [width=this.drawingBufferWidth] The width of the rectangle to read from.
+ * @property {number} [height=this.drawingBufferHeight] The height of the rectangle to read from.
+ * @property {FrameBuffer|undefined} [framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
+ */
+
+/**
+ * Read pixels from a framebuffer into a Pixel Buffer Object (PBO).
+ *
+ * @private
+ * @param {ReadState} readState Options defining a rectangle to read pixels from.
+ * @returns {Buffer} A PixelBuffer containing the pixels read from the specified rectangle.
+ *
+ * @exception {DeveloperError} A WebGL 2 context is required to read pixels using a PBO.
+ */
+Context.prototype.readPixelsToPBO = function (readState) {
+  const gl = this._gl;
+
+  readState = readState ?? Frozen.EMPTY_OBJECT;
+  const x = Math.max(readState.x ?? 0, 0);
+  const y = Math.max(readState.y ?? 0, 0);
+  const width = readState.width ?? this.drawingBufferWidth;
+  const height = readState.height ?? this.drawingBufferHeight;
+  const framebuffer = readState.framebuffer;
+
+  if (!this._webgl2) {
+    throw new DeveloperError(
+      "A WebGL 2 context is required to read pixels using a PBO.",
+    );
+  }
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThan("readState.width", width, 0);
+  Check.typeOf.number.greaterThan("readState.height", height, 0);
+  //>>includeEnd('debug');
+
+  let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+  let pixelFormat = PixelFormat.RGBA;
+  if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
+    pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+    pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
+  }
+
+  const pixels = Buffer.createPixelBuffer({
+    context: this,
+    sizeInBytes: PixelFormat.textureSizeInBytes(
+      pixelFormat,
+      pixelDatatype,
+      width,
+      height,
+    ),
+    usage: BufferUsage.DYNAMIC_READ,
+  });
+
+  bindFramebuffer(this, framebuffer);
+
+  pixels._bind();
+  gl.readPixels(
+    x,
+    y,
+    width,
+    height,
+    pixelFormat,
+    PixelDatatype.toWebGLConstant(pixelDatatype, this),
+    0,
+  );
+  pixels._unBind();
+
+  return pixels;
+};
+
+/**
+ * Read pixels from a framebuffer into a typed array.
+ *
+ * @private
+ * @param {ReadState} readState Options defining a rectangle to read pixels from.
  * @returns {Uint8Array|Uint16Array|Float32Array|Uint32Array} The pixels in the specified rectangle.
  */
 Context.prototype.readPixels = function (readState) {
@@ -1451,8 +1533,8 @@ Context.prototype.readPixels = function (readState) {
   readState = readState ?? Frozen.EMPTY_OBJECT;
   const x = Math.max(readState.x ?? 0, 0);
   const y = Math.max(readState.y ?? 0, 0);
-  const width = readState.width ?? gl.drawingBufferWidth;
-  const height = readState.height ?? gl.drawingBufferHeight;
+  const width = readState.width ?? this.drawingBufferWidth;
+  const height = readState.height ?? this.drawingBufferHeight;
   const framebuffer = readState.framebuffer;
 
   //>>includeStart('debug', pragmas.debug);
@@ -1461,12 +1543,14 @@ Context.prototype.readPixels = function (readState) {
   //>>includeEnd('debug');
 
   let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+  let pixelFormat = PixelFormat.RGBA;
   if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
     pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+    pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
   }
 
   const pixels = PixelFormat.createTypedArray(
-    PixelFormat.RGBA,
+    pixelFormat,
     pixelDatatype,
     width,
     height,
@@ -1556,7 +1640,7 @@ Context.prototype.createViewportQuadCommand = function (
 /**
  * Gets the object associated with a pick color.
  *
- * @param {Color} pickColor The pick color.
+ * @param {number} pickColor The unsigned 32-bit RGBA pick color
  * @returns {object} The object associated with the pick color, or undefined if no object is associated with that color.
  *
  * @example
@@ -1569,9 +1653,15 @@ Context.prototype.getObjectByPickColor = function (pickColor) {
   Check.defined("pickColor", pickColor);
   //>>includeEnd('debug');
 
-  return this._pickObjects[pickColor.toRgba()];
+  return this._pickObjects.get(pickColor);
 };
 
+/**
+ *
+ * @param {Map<number, object>} pickObjects
+ * @param {number} key
+ * @param {Color} color
+ */
 function PickId(pickObjects, key, color) {
   this._pickObjects = pickObjects;
   this.key = key;
@@ -1581,16 +1671,16 @@ function PickId(pickObjects, key, color) {
 Object.defineProperties(PickId.prototype, {
   object: {
     get: function () {
-      return this._pickObjects[this.key];
+      return this._pickObjects.get(this.key);
     },
     set: function (value) {
-      this._pickObjects[this.key] = value;
+      this._pickObjects.set(this.key, value);
     },
   },
 });
 
 PickId.prototype.destroy = function () {
-  delete this._pickObjects[this.key];
+  this._pickObjects.delete(this.key);
   return undefined;
 };
 
@@ -1627,7 +1717,7 @@ Context.prototype.createPickId = function (object) {
     throw new RuntimeError("Out of unique Pick IDs.");
   }
 
-  this._pickObjects[key] = object;
+  this._pickObjects.set(key, object);
   return new PickId(this._pickObjects, key, Color.fromRgba(key));
 };
 

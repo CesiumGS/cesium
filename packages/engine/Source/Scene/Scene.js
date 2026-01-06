@@ -68,6 +68,7 @@ import SceneTransforms from "./SceneTransforms.js";
 import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
+import SharedContext from "../Renderer/SharedContext.js";
 import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
@@ -99,8 +100,8 @@ const requestRenderAfterFrame = function (scene) {
  * @param {object} options Object with the following properties:
  * @param {HTMLCanvasElement} options.canvas The HTML canvas element to create the scene for.
  * @param {ContextOptions} [options.contextOptions] Context and WebGL creation properties.
- * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
- * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
+ * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed. If not specified, a credit container will be created and added as a sibling of the canvas.
+ * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be added as a sibling of the canvas.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The default ellipsoid. If not specified, the default ellipsoid is used.
  * @param {MapProjection} [options.mapProjection=new GeographicProjection(options.ellipsoid)] The map projection to use in 2D and Columbus View modes.
  * @param {boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
@@ -132,15 +133,22 @@ function Scene(options) {
   let creditContainer = options.creditContainer;
   let creditViewport = options.creditViewport;
 
-  const contextOptions = clone(options.contextOptions);
-
   //>>includeStart('debug', pragmas.debug);
   if (!defined(canvas)) {
     throw new DeveloperError("options and options.canvas are required.");
   }
   //>>includeEnd('debug');
+
+  const countReferences = options.contextOptions instanceof SharedContext;
+  if (countReferences) {
+    this._context = options.contextOptions.createSceneContext(canvas);
+  } else {
+    const contextOptions = clone(options.contextOptions);
+    this._context = new Context(canvas, contextOptions);
+  }
+  const context = this._context;
+
   const hasCreditContainer = defined(creditContainer);
-  const context = new Context(canvas, contextOptions);
   if (!hasCreditContainer) {
     creditContainer = document.createElement("div");
     creditContainer.style.position = "absolute";
@@ -167,14 +175,13 @@ function Scene(options) {
   this._creditContainer = creditContainer;
 
   this._canvas = canvas;
-  this._context = context;
   this._computeEngine = new ComputeEngine(context);
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._globe = undefined;
   this._globeTranslucencyState = new GlobeTranslucencyState();
-  this._primitives = new PrimitiveCollection();
-  this._groundPrimitives = new PrimitiveCollection();
+  this._primitives = new PrimitiveCollection({ countReferences });
+  this._groundPrimitives = new PrimitiveCollection({ countReferences });
 
   this._globeHeight = undefined;
   this._globeHeightDirty = true;
@@ -276,7 +283,7 @@ function Scene(options) {
   /**
    * The {@link SkyBox} used to draw the stars.
    *
-   * @type {SkyBox}
+   * @type {SkyBox | undefined}
    * @default undefined
    *
    * @see Scene#backgroundColor
@@ -286,7 +293,7 @@ function Scene(options) {
   /**
    * The sky atmosphere drawn around the globe.
    *
-   * @type {SkyAtmosphere}
+   * @type {SkyAtmosphere | undefined}
    * @default undefined
    */
   this.skyAtmosphere = undefined;
@@ -294,7 +301,7 @@ function Scene(options) {
   /**
    * The {@link Sun}.
    *
-   * @type {Sun}
+   * @type {Sun | undefined}
    * @default undefined
    */
   this.sun = undefined;
@@ -311,13 +318,13 @@ function Scene(options) {
   /**
    * The {@link Moon}
    *
-   * @type Moon
+   * @type {Moon | undefined}
    * @default undefined
    */
   this.moon = undefined;
 
   /**
-   * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
+   * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is <code>undefined</code>.
    *
    * @type {Color}
    * @default {@link Color.BLACK}
@@ -406,7 +413,7 @@ function Scene(options) {
    * The default is <code>undefined</code>, indicating that all commands are executed.
    * </p>
    *
-   * @type Function
+   * @type {Function | undefined}
    *
    * @default undefined
    *
@@ -753,6 +760,15 @@ function Scene(options) {
    * @type {Light}
    */
   this.light = new SunLight();
+
+  /**
+   * Whether or not to enable edge visibility rendering for 3D tiles.
+   * When enabled, creates a framebuffer with multiple render targets
+   * for advanced edge detection and visibility techniques.
+   * @type {boolean}
+   * @default false
+   */
+  this._enableEdgeVisibility = false;
 
   // Give frameState, camera, and screen space camera controller initial state before rendering
   updateFrameNumber(this, 0.0, JulianDate.now());
@@ -1306,11 +1322,11 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Gets the simulation time when the scene was last rendered. Returns undefined if the scene has not yet been
-   * rendered.
+   * Gets the simulation time when the scene was last rendered. Returns <code>undefined</code>
+   * if the scene has not yet been rendered.
    * @memberof Scene.prototype
    *
-   * @type {JulianDate}
+   * @type {JulianDate | undefined}
    * @readonly
    */
   lastRenderTime: {
@@ -1343,7 +1359,7 @@ Object.defineProperties(Scene.prototype, {
    *
    * @memberof Scene.prototype
    *
-   * @type {object}
+   * @type {object | undefined}
    * @readonly
    *
    * @default undefined
@@ -2318,6 +2334,23 @@ function backToFront(a, b, position) {
   );
 }
 
+const scratchCart3 = new Cartesian3();
+function distanceSquaredToCenter(center, position) {
+  const diff = Cartesian3.subtract(center, position, scratchCart3);
+  const distance = Math.max(0.0, Cartesian3.magnitude(diff));
+  return distance * distance;
+}
+
+function backToFrontSplats(a, b, position) {
+  const boxA = a.boundingVolume;
+  const boxB = b.boundingVolume;
+
+  return (
+    distanceSquaredToCenter(boxB.center, position) -
+    distanceSquaredToCenter(boxA.center, position)
+  );
+}
+
 function frontToBack(a, b, position) {
   // When distances are equal equal favor sorting b before a. This gives render priority to commands later in the list.
   return (
@@ -2362,7 +2395,6 @@ function executeTranslucentCommandsFrontToBack(
     executeFunction(commands[i], scene, passState);
   }
 }
-
 /**
  * Execute commands to render voxels in the scene.
  *
@@ -2379,6 +2411,19 @@ function performVoxelsPass(scene, passState, frustumCommands) {
   commands.length = frustumCommands.indices[Pass.VOXELS];
 
   mergeSort(commands, backToFront, scene.camera.positionWC);
+
+  for (let i = 0; i < commands.length; ++i) {
+    executeCommand(commands[i], scene, passState);
+  }
+}
+
+function performGaussianSplatPass(scene, passState, frustumCommands) {
+  scene.context.uniformState.updatePass(Pass.GAUSSIAN_SPLATS);
+
+  const commands = frustumCommands.commands[Pass.GAUSSIAN_SPLATS];
+  commands.length = frustumCommands.indices[Pass.GAUSSIAN_SPLATS];
+
+  mergeSort(commands, backToFrontSplats, scene.camera.positionWC);
 
   for (let i = 0; i < commands.length; ++i) {
     executeCommand(commands[i], scene, passState);
@@ -2531,6 +2576,48 @@ function performTranslucent3DTilesClassification(
   );
 }
 
+function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
+  scene.context.uniformState.updatePass(Pass.CESIUM_3D_TILE_EDGES);
+
+  const originalFramebuffer = passState.framebuffer;
+
+  scene.context.uniformState.edgeColorTexture = scene.context.defaultTexture;
+  scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+  scene.context.uniformState.edgeDepthTexture = scene.context.defaultTexture;
+
+  // Set edge framebuffer for rendering
+  if (
+    scene._enableEdgeVisibility &&
+    defined(scene._view) &&
+    defined(scene._view.edgeFramebuffer)
+  ) {
+    passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
+  }
+
+  // performPass
+  const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_EDGES];
+  const commandCount = frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES];
+
+  // clear edge framebuffer
+  if (
+    scene._enableEdgeVisibility &&
+    defined(scene._view) &&
+    defined(scene._view.edgeFramebuffer)
+  ) {
+    const clearCommand = scene._view.edgeFramebuffer.getClearCommand(
+      new Color(0.0, 0.0, 0.0, 0.0),
+    );
+    clearCommand.execute(scene.context, passState);
+  }
+
+  // Then execute edge rendering commands
+  for (let j = 0; j < commandCount; ++j) {
+    executeCommand(commands[j], scene, passState);
+  }
+
+  passState.framebuffer = originalFramebuffer;
+}
+
 /**
  * Execute the draw commands for all the render passes.
  *
@@ -2673,6 +2760,48 @@ function executeCommands(scene, passState) {
     }
 
     let commandCount;
+
+    // Draw edges FIRST - before binding textures to avoid feedback loop
+    performCesium3DTileEdgesPass(scene, passState, frustumCommands);
+
+    if (
+      scene._enableEdgeVisibility &&
+      defined(scene._view) &&
+      defined(scene._view.edgeFramebuffer)
+    ) {
+      // Get edge color texture (attachment 0)
+      const colorTexture = scene._view.edgeFramebuffer.colorTexture;
+      if (defined(colorTexture)) {
+        scene.context.uniformState.edgeColorTexture = colorTexture;
+      } else {
+        scene.context.uniformState.edgeColorTexture =
+          scene.context.defaultTexture;
+      }
+
+      // Get edge ID texture (attachment 1)
+      const idTexture = scene._view.edgeFramebuffer.idTexture;
+      if (defined(idTexture)) {
+        scene.context.uniformState.edgeIdTexture = idTexture;
+      } else {
+        scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+      }
+
+      // Get edge depth texture (attachment 2)
+      const edgeDepthTexture = scene._view.edgeFramebuffer.depthTexture;
+      if (defined(edgeDepthTexture)) {
+        scene.context.uniformState.edgeDepthTexture = edgeDepthTexture;
+      } else {
+        scene.context.uniformState.edgeDepthTexture =
+          scene.context.defaultTexture;
+      }
+    } else {
+      scene.context.uniformState.edgeColorTexture =
+        scene.context.defaultTexture;
+      scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
+      scene.context.uniformState.edgeDepthTexture =
+        scene.context.defaultTexture;
+    }
+
     if (!useInvertClassification || picking || renderTranslucentDepthForPick) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
@@ -2781,6 +2910,8 @@ function executeCommands(scene, passState) {
     performVoxelsPass(scene, passState, frustumCommands);
 
     performPass(frustumCommands, Pass.OPAQUE);
+
+    performGaussianSplatPass(scene, passState, frustumCommands);
 
     if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
       // Do not overlap frustums in the translucent pass to avoid blending artifacts
@@ -3557,8 +3688,19 @@ function updateShadowMaps(scene) {
 function updateAndRenderPrimitives(scene) {
   const frameState = scene._frameState;
 
+  // Reset per-frame edge visibility request flag before primitives update
+  frameState.edgeVisibilityRequested = false;
+
   scene._groundPrimitives.update(frameState);
   scene._primitives.update(frameState);
+
+  // If any primitive requested edge visibility this frame, flip the scene flag lazily.
+  if (
+    frameState.edgeVisibilityRequested &&
+    scene._enableEdgeVisibility === false
+  ) {
+    scene._enableEdgeVisibility = true;
+  }
 
   updateDebugFrustumPlanes(scene);
   updateShadowMaps(scene);
@@ -3676,6 +3818,13 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
 
   const useInvertClassification = (environmentState.useInvertClassification =
     !picking && defined(passState.framebuffer) && scene.invertClassification);
+
+  // Update edge framebuffer for 3D tile edge rendering
+  const useEdgeFramebuffer = !picking && scene._enableEdgeVisibility;
+  if (useEdgeFramebuffer) {
+    view.edgeFramebuffer.update(context, view.viewport, scene._hdr);
+  }
+
   if (useInvertClassification) {
     let depthFramebuffer;
     if (frameState.invertClassificationColor.alpha === 1.0) {
@@ -3783,14 +3932,15 @@ function callAfterRenderFunctions(scene) {
   // Functions are queued up during primitive update and executed here in case
   // the function modifies scene state that should remain constant over the frame.
   const functions = scene._frameState.afterRender;
-  for (let i = 0; i < functions.length; ++i) {
-    const shouldRequestRender = functions[i]();
+  const functionsCpy = functions.slice(); // Snapshot before iterate allows callbacks to add functions for next frame
+  functions.length = 0;
+
+  for (let i = 0; i < functionsCpy.length; ++i) {
+    const shouldRequestRender = functionsCpy[i]();
     if (shouldRequestRender) {
       scene.requestRender();
     }
   }
-
-  functions.length = 0;
 }
 
 function getGlobeHeight(scene) {
@@ -4171,6 +4321,8 @@ function render(scene) {
   passState.scissorTest = undefined;
   passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 
+  context.beginFrame();
+
   if (defined(scene.globe)) {
     scene.globe.beginFrame(frameState);
   }
@@ -4340,8 +4492,8 @@ Scene.prototype.clampLineWidth = function (width) {
 };
 
 /**
- * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
- * at a particular window coordinate or undefined if nothing is at the location. Other properties may
+ * Returns an object with a <code>primitive</code> property that contains the first (top) primitive in the scene
+ * at a particular window coordinate or <code>undefined</code> if nothing is at the location. Other properties may
  * potentially be set depending on the type of primitive and may be used to further identify the picked object.
  * <p>
  * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
@@ -4359,15 +4511,47 @@ Scene.prototype.clampLineWidth = function (width) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {object} Object containing the picked primitive.
+ * @returns {object | undefined} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
  */
 Scene.prototype.pick = function (windowPosition, width, height) {
-  return this._picking.pick(this, windowPosition, width, height);
+  // Picking one object, result is either [object] or []
+  return this._picking.pick(this, windowPosition, width, height, 1)[0];
 };
 
 /**
+ * Performs the same operation as Scene.pick but asynchonosly without blocking the main render thread.
+ * Requires WebGL2 else using fallback.
+ *
+ * @example
+ * // On mouse over, color the feature yellow.
+ * handler.setInputAction(function(movement) {
+ *     const feature = scene.pickAsync(movement.endPosition).then(function(feature) {
+ *        if (feature instanceof Cesium.Cesium3DTileFeature) {
+ *            feature.color = Cesium.Color.YELLOW;
+ *        }
+ *     });
+ * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @returns {Promise<Object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
+ *
+ * @see Scene#pick
+ */
+Scene.prototype.pickAsync = async function (windowPosition, width, height) {
+  const result = await this._picking.pickAsync(
+    this,
+    windowPosition,
+    width,
+    height,
+    1,
+  );
+  return result[0];
+};
+/**
  * Returns a {@link VoxelCell} for the voxel sample rendered at a particular window coordinate,
- * or undefined if no voxel is rendered at that position.
+ * or <code>undefined</code> if no voxel is rendered at that position.
  *
  * @example
  * On left click, report the value of the "color" property at that voxel sample.
@@ -4381,7 +4565,7 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {VoxelCell|undefined} Information about the voxel cell rendered at the picked position.
+ * @returns {VoxelCell|undefined} Information about the voxel cell rendered at the picked position or <code>undefined</code> if no voxel is rendered at that position.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -4423,13 +4607,13 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
  *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {string|undefined} schemaId The ID of the metadata schema to pick values
- * from. If this is `undefined`, then it will pick the values from the object
+ * from. If this is <code>undefined</code>, then it will pick the values from the object
  * that match the given class- and property name, regardless of the schema ID.
  * @param {string} className The name of the metadata class to pick
  * values from
  * @param {string} propertyName The name of the metadata property to pick
  * values from
- * @returns {MetadataValue|undefined} The metadata value, or `undefined` when
+ * @returns {MetadataValue|undefined} The metadata value, or <code>undefined</code> when
  * no matching metadata was found at the given position
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -4498,7 +4682,7 @@ Scene.prototype.pickMetadata = function (
  * Pick the schema of the metadata of the object at the given position
  *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
- * @returns {MetadataSchema} The metadata schema, or `undefined` if there is no object with
+ * @returns {MetadataSchema | undefined} The metadata schema, or <code>undefined</code> if there is no object with
  * associated metadata at the given position.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -4567,7 +4751,7 @@ Scene.prototype.pickPosition = function (windowPosition, result) {
 };
 
 /**
- * Returns a list of objects, each containing a `primitive` property, for all primitives at
+ * Returns a list of objects, each containing a <code>primitive</code> property, for all primitives at
  * a particular window coordinate position. Other properties may also be set depending on the
  * type of primitive and may be used to further identify the picked object. The primitives in
  * the list are ordered by their visual order in the scene (front to back).
@@ -4634,9 +4818,9 @@ function updateRequestRenderModeDeferCheckPass(scene) {
  * @private
  *
  * @param {Ray} ray The ray.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @returns {object} An object containing the object and position of the first intersection.
+ * @returns {object | undefined} An object containing the object and position of the first intersection or <code>undefined</code> if there are no intersections.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */
@@ -4659,9 +4843,9 @@ Scene.prototype.pickFromRay = function (ray, objectsToExclude, width) {
  *
  * @param {Ray} ray The ray.
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Object[]} List of objects containing the object and position of each intersection.
+ * @returns {object[]} List of objects containing the object and position of each intersection.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */
@@ -4687,7 +4871,7 @@ Scene.prototype.drillPickFromRay = function (
  * @private
  *
  * @param {Ray} ray The ray.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<object>} A promise that resolves to an object containing the object and position of the first intersection.
  *
@@ -4714,7 +4898,7 @@ Scene.prototype.pickFromRayMostDetailed = function (
  *
  * @param {Ray} ray The ray.
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
  *
@@ -4745,9 +4929,9 @@ Scene.prototype.drillPickFromRayMostDetailed = function (
  * </p>
  *
  * @param {Cartographic} position The cartographic position to sample height from.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @returns {number} The height. This may be <code>undefined</code> if there was no scene geometry to sample height from.
+ * @returns {number | undefined} The height. This may be <code>undefined</code> if there was no scene geometry to sample height from.
  *
  * @example
  * const position = new Cesium.Cartographic(-1.31968, 0.698874);
@@ -4775,10 +4959,10 @@ Scene.prototype.sampleHeight = function (position, objectsToExclude, width) {
  * </p>
  *
  * @param {Cartesian3} cartesian The cartesian position.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @param {Cartesian3} [result] An optional object to return the clamped position.
- * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. This may be <code>undefined</code> if there was no scene geometry to clamp to.
+ * @returns {Cartesian3 | undefined} The modified result parameter or a new Cartesian3 instance if one was not provided. This may be <code>undefined</code> if there was no scene geometry to clamp to.
  *
  * @example
  * // Clamp an entity to the underlying scene geometry
@@ -4812,12 +4996,12 @@ Scene.prototype.clampToHeight = function (
  * using the maximum level of detail for 3D Tilesets in the scene. The height of the input positions is ignored.
  * Returns a promise that is resolved when the query completes. Each point height is modified in place.
  * If a height cannot be determined because no geometry can be sampled at that location, or another error occurs,
- * the height is set to undefined.
+ * the height is set to <code>undefined</code>.
  *
  * @param {Cartographic[]} positions The cartographic positions to update with sampled heights.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise<Cartographic[]>} A promise that resolves to the provided list of positions when the query has completed.
+ * @returns {Promise<Array<Cartographic | undefined>>} A promise that resolves to the provided list of positions when the query has completed. Positions may become <code>undefined</code> if the height cannot be determined.
  *
  * @example
  * const positions = [
@@ -4855,9 +5039,9 @@ Scene.prototype.sampleHeightMostDetailed = function (
  * can be sampled at that location, or another error occurs, the element in the array is set to undefined.
  *
  * @param {Cartesian3[]} cartesians The cartesian positions to update with clamped positions.
- * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
+ * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise<Cartesian3[]>} A promise that resolves to the provided list of positions when the query has completed.
+ * @returns {Promise<Array<Cartesian3 | undefined>>} A promise that resolves to the provided list of positions when the query has completed. Positions may become <code>undefined</code> if they cannot be clamped.
  *
  * @example
  * const cartesians = [
@@ -4894,7 +5078,7 @@ Scene.prototype.clampToHeightMostDetailed = function (
  *
  * @param {Cartesian3} position The position in cartesian coordinates.
  * @param {Cartesian2} [result] An optional object to return the input position transformed to canvas coordinates.
- * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+ * @returns {Cartesian2 | undefined} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
  *
  * @example
  * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.

@@ -1,0 +1,6 @@
+legacyId: Hello World.html
+title: Hello World
+description: A minimal CesiumJS example that initializes a 3D globe and loads default imagery. Use the Cesium Viewer Widget to start building new applications or embed Cesium into existing applications including starter UI like the timeline and geocoding. 
+labels:
+  - Getting Started
+thumbnail: thumbnail.jpg

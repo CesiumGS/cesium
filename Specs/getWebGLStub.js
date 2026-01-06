@@ -154,6 +154,11 @@ const instancedArraysStub = {
   vertexAttribDivisorANGLE: noop,
 };
 
+// WEBGL_draw_buffers
+const drawBuffersStub = {
+  drawBuffersWEBGL: noop,
+};
+
 function noop() {}
 
 function createStub() {
@@ -206,6 +211,11 @@ function getExtensionStub(name) {
   // Voxel tests rely on floating point textures
   if (name === "OES_texture_float") {
     return {};
+  }
+
+  // EdgeFramebuffer and other MRT features require draw buffers
+  if (name === "WEBGL_draw_buffers") {
+    return drawBuffersStub;
   }
 
   // No other extensions are stubbed.

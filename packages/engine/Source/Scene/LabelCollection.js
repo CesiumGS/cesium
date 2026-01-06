@@ -118,6 +118,7 @@ function unbindGlyphBillboard(labelCollection, glyph) {
   const billboard = glyph.billboard;
   if (defined(billboard)) {
     billboard.show = false;
+    billboard._clampedPosition = undefined;
     if (defined(billboard._removeCallbackFunc)) {
       billboard._removeCallbackFunc();
       billboard._removeCallbackFunc = undefined;
@@ -150,46 +151,24 @@ function rebindAllGlyphs(labelCollection, label) {
   // presize glyphs to match the new text length
   glyphs.length = textLength;
 
-  const showBackground =
-    label.show && label._showBackground && text.split("\n").join("").length > 0;
   let backgroundBillboard = label._backgroundBillboard;
   const backgroundBillboardCollection =
     labelCollection._backgroundBillboardCollection;
-  if (!showBackground) {
-    if (defined(backgroundBillboard)) {
-      backgroundBillboardCollection.remove(backgroundBillboard);
-      label._backgroundBillboard = backgroundBillboard = undefined;
-    }
-  } else {
-    if (!defined(backgroundBillboard)) {
-      backgroundBillboard = getWhitePixelBillboard(
-        backgroundBillboardCollection,
-        labelCollection,
-      );
-      label._backgroundBillboard = backgroundBillboard;
-    }
 
-    backgroundBillboard.color = label._backgroundColor;
-    backgroundBillboard.show = label._show;
-    backgroundBillboard.position = label._position;
-    backgroundBillboard.eyeOffset = label._eyeOffset;
-    backgroundBillboard.pixelOffset = label._pixelOffset;
-    backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
-    backgroundBillboard.verticalOrigin = label._verticalOrigin;
-    backgroundBillboard.heightReference = label._heightReference;
-    backgroundBillboard.scale = label.totalScale;
-    backgroundBillboard.pickPrimitive = label;
-    backgroundBillboard.id = label._id;
-    backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
-    backgroundBillboard.pixelOffsetScaleByDistance =
-      label._pixelOffsetScaleByDistance;
-    backgroundBillboard.scaleByDistance = label._scaleByDistance;
-    backgroundBillboard.distanceDisplayCondition =
-      label._distanceDisplayCondition;
-    backgroundBillboard.disableDepthTestDistance =
-      label._disableDepthTestDistance;
-    backgroundBillboard.clusterShow = label.clusterShow;
+  // Create backgroundBillboard if needed
+  if (label._showBackground && !defined(backgroundBillboard)) {
+    backgroundBillboard = getWhitePixelBillboard(
+      backgroundBillboardCollection,
+      labelCollection,
+    );
+    label._backgroundBillboard = backgroundBillboard;
   }
+
+  updateBackgroundBillboard(
+    backgroundBillboardCollection,
+    label,
+    backgroundBillboard,
+  );
 
   const glyphBillboardCollection = labelCollection._glyphBillboardCollection;
   const glyphTextureCache = glyphBillboardCollection.billboardTextureCache;
@@ -294,6 +273,7 @@ function rebindAllGlyphs(labelCollection, label) {
         });
         billboard._labelDimensions = new Cartesian2();
         billboard._labelTranslate = new Cartesian2();
+        billboard._positionFromParent = true;
       }
       glyph.billboard = billboard;
     }
@@ -332,6 +312,47 @@ function rebindAllGlyphs(labelCollection, label) {
   // changing glyphs will cause the position of the
   // glyphs to change, since different characters have different widths
   label._repositionAllGlyphs = true;
+}
+
+function updateBackgroundBillboard(
+  backgroundBillboardCollection,
+  label,
+  backgroundBillboard,
+) {
+  if (!defined(backgroundBillboard)) {
+    return;
+  }
+  const showBackground =
+    label.show &&
+    label._showBackground &&
+    label._renderedText.split("\n").join("").length > 0;
+  // Label is shown and background is hidden - remove the background billboard
+  if (label.show && !showBackground) {
+    backgroundBillboardCollection.remove(backgroundBillboard);
+    label._backgroundBillboard = backgroundBillboard = undefined;
+    return;
+  }
+
+  backgroundBillboard.color = label._backgroundColor;
+  backgroundBillboard.show = label._show;
+  backgroundBillboard.position = label._position;
+  backgroundBillboard.eyeOffset = label._eyeOffset;
+  backgroundBillboard.pixelOffset = label._pixelOffset;
+  backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
+  backgroundBillboard.verticalOrigin = label._verticalOrigin;
+  backgroundBillboard.heightReference = label._heightReference;
+  backgroundBillboard.scale = label.totalScale;
+  backgroundBillboard.pickPrimitive = label;
+  backgroundBillboard.id = label._id;
+  backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
+  backgroundBillboard.pixelOffsetScaleByDistance =
+    label._pixelOffsetScaleByDistance;
+  backgroundBillboard.scaleByDistance = label._scaleByDistance;
+  backgroundBillboard.distanceDisplayCondition =
+    label._distanceDisplayCondition;
+  backgroundBillboard.disableDepthTestDistance =
+    label._disableDepthTestDistance;
+  backgroundBillboard.clusterShow = label.clusterShow;
 }
 
 function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding) {
@@ -506,7 +527,6 @@ function repositionAllGlyphs(label) {
       glyphPixelOffset.y = 0;
     }
     glyphPixelOffset.y = glyphPixelOffset.y * scale;
-
     backgroundBillboard.width = totalLineWidth;
     backgroundBillboard.height = totalLineHeight;
     backgroundBillboard._setTranslate(glyphPixelOffset);

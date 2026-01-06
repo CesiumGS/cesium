@@ -1,58 +1,11 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import IonResource from "../Core/IonResource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import ArcGisMapServerImageryProvider from "./ArcGisMapServerImageryProvider.js";
-import BingMapsImageryProvider from "./BingMapsImageryProvider.js";
-import TileMapServiceImageryProvider from "./TileMapServiceImageryProvider.js";
-import GoogleEarthEnterpriseMapsProvider from "./GoogleEarthEnterpriseMapsProvider.js";
-import MapboxImageryProvider from "./MapboxImageryProvider.js";
-import SingleTileImageryProvider from "./SingleTileImageryProvider.js";
-import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
-import WebMapServiceImageryProvider from "./WebMapServiceImageryProvider.js";
-import WebMapTileServiceImageryProvider from "./WebMapTileServiceImageryProvider.js";
-
-// These values are the list of supported external imagery
-// assets in the Cesium ion beta. They are subject to change.
-const ImageryProviderAsyncMapping = {
-  ARCGIS_MAPSERVER: ArcGisMapServerImageryProvider.fromUrl,
-  BING: async (url, options) => {
-    return BingMapsImageryProvider.fromUrl(url, options);
-  },
-  GOOGLE_EARTH: async (url, options) => {
-    const channel = options.channel;
-    delete options.channel;
-    return GoogleEarthEnterpriseMapsProvider.fromUrl(url, channel, options);
-  },
-  MAPBOX: (url, options) => {
-    return new MapboxImageryProvider({
-      url: url,
-      ...options,
-    });
-  },
-  SINGLE_TILE: SingleTileImageryProvider.fromUrl,
-  TMS: TileMapServiceImageryProvider.fromUrl,
-  URL_TEMPLATE: (url, options) => {
-    return new UrlTemplateImageryProvider({
-      url: url,
-      ...options,
-    });
-  },
-  WMS: (url, options) => {
-    return new WebMapServiceImageryProvider({
-      url: url,
-      ...options,
-    });
-  },
-  WMTS: (url, options) => {
-    return new WebMapTileServiceImageryProvider({
-      url: url,
-      ...options,
-    });
-  },
-};
+import IonImageryProviderFactory from "./IonImageryProviderFactory.js";
 
 /**
  * @typedef {object} IonImageryProvider.ConstructorOptions
@@ -250,7 +203,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
 /**
  * Creates a provider for tiled imagery using the Cesium ion REST API.
  *
- * @param {Number} assetId  An ion imagery asset ID.
+ * @param {number} assetId  An ion imagery asset ID.
  * @param {IonImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<IonImageryProvider>} A promise which resolves to the created IonImageryProvider.
  *
@@ -283,34 +236,33 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
     IonImageryProvider._endpointCache[cacheKey] = promise;
   }
 
-  const endpoint = await promise;
+  let endpoint = await promise;
   if (endpoint.type !== "IMAGERY") {
     throw new RuntimeError(
       `Cesium ion asset ${assetId} is not an imagery asset.`,
     );
   }
 
-  let imageryProvider;
   const externalType = endpoint.externalType;
-  if (!defined(externalType)) {
-    imageryProvider = await TileMapServiceImageryProvider.fromUrl(
-      new IonResource(endpoint, endpointResource),
-    );
-  } else {
-    const factory = ImageryProviderAsyncMapping[externalType];
+  let factory = IonImageryProviderFactory.defaultFactoryCallback;
+
+  // Make a copy before editing since this object reference is cached;
+  endpoint = clone(endpoint, true);
+  endpoint.options = endpoint.options ?? {};
+  const url = endpoint.options?.url;
+  delete options.url;
+
+  if (defined(externalType)) {
+    factory = IonImageryProviderFactory[externalType];
 
     if (!defined(factory)) {
       throw new RuntimeError(
         `Unrecognized Cesium ion imagery type: ${externalType}`,
       );
     }
-    // Make a copy before editing since this object reference is cached;
-    const options = { ...endpoint.options };
-    const url = options.url;
-    delete options.url;
-    imageryProvider = await factory(url, options);
   }
 
+  const imageryProvider = await factory(url, endpoint, endpointResource);
   const provider = new IonImageryProvider(options);
 
   imageryProvider.errorEvent.addEventListener(function (tileProviderError) {

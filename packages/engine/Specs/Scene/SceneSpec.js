@@ -46,8 +46,9 @@ import {
   GroundPrimitive,
   PerInstanceColorAppearance,
   ColorGeometryInstanceAttribute,
-  Resource,
   HeightReference,
+  SharedContext,
+  Sync,
 } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";
@@ -636,6 +637,10 @@ function pickMetadataAt(scene, schemaId, className, propertyName, x, y) {
 describe(
   "Scene/Scene",
   function () {
+    // It's not easily possible to mock the most detailed pick functions
+    // so don't run those tests when using the WebGL stub
+    const webglStub = !!window.webglStub;
+
     let scene;
 
     beforeAll(function () {
@@ -660,33 +665,6 @@ describe(
           sources: ["void main() { out_FragColor = vec4(1.0); }"],
         }),
       });
-    }
-
-    function returnTileJson(path) {
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        Resource._DefaultImplementations.loadWithXhr(
-          path,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-        );
-      };
-    }
-
-    function returnQuantizedMeshTileJson() {
-      return returnTileJson(
-        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
-      );
     }
 
     function createRectangle(rectangle, height) {
@@ -798,6 +776,63 @@ describe(
         scene.backgroundColor = Color.BLUE;
         expect(scene).toRender([0, 0, 255, 255]);
       });
+
+      describe("with shared context", () => {
+        // All of these tests require a real WebGL context. Skip them if WebGL is being stubbed.
+        const webglStub = !!window.webglStub;
+
+        it("accepts a SharedContext in place of ContextOptions", function () {
+          if (webglStub) {
+            return;
+          }
+
+          const sharedContext = new SharedContext();
+          const s = new Scene({
+            canvas: createCanvas(5, 5),
+            contextOptions: sharedContext,
+          });
+
+          expect(s._context._gl).toBe(sharedContext._context._gl);
+          s.destroy();
+        });
+
+        it("draws background color with SharedContext", function () {
+          if (webglStub) {
+            return;
+          }
+
+          const sharedContext = new SharedContext();
+          const s1 = new Scene({
+            canvas: createCanvas(1, 1),
+            contextOptions: sharedContext,
+          });
+          const s2 = new Scene({
+            canvas: createCanvas(1, 1),
+            contextOptions: sharedContext,
+          });
+
+          expect(s1).toRender([0, 0, 0, 255]);
+          expect(s2).toRender([0, 0, 0, 255]);
+
+          s1.backgroundColor = Color.BLUE;
+          s2.backgroundColor = Color.RED;
+          expect(s1).toRender([0, 0, 255, 255]);
+          expect(s2).toRender([255, 0, 0, 255]);
+        });
+
+        it("reference-counts primitives IFF using a SharedContext", function () {
+          if (webglStub) {
+            return;
+          }
+
+          expect(scene.primitives._countReferences).toBe(false);
+          const s = new Scene({
+            canvas: createCanvas(5, 5),
+            contextOptions: new SharedContext(),
+          });
+          expect(s.primitives._countReferences).toBe(true);
+        });
+      });
     });
 
     it("calls afterRender functions", function () {
@@ -814,6 +849,31 @@ describe(
 
       scene.renderForSpecs();
       expect(spyListener).toHaveBeenCalled();
+    });
+
+    it("afterRender functions can schedule callbacks for next frame", function () {
+      const spyListener = jasmine.createSpy("listener");
+      const spyListener2 = jasmine.createSpy("listener");
+
+      const primitive = {
+        update: function (frameState) {
+          frameState.afterRender.push(spyListener);
+          frameState.afterRender.push(() => {
+            frameState.afterRender.push(spyListener2);
+          });
+        },
+        destroy: function () {},
+        isDestroyed: () => false,
+      };
+      scene.primitives.add(primitive);
+
+      scene.renderForSpecs();
+      expect(spyListener).toHaveBeenCalled();
+      expect(spyListener2).not.toHaveBeenCalled();
+
+      scene.renderForSpecs();
+      expect(spyListener).toHaveBeenCalled();
+      expect(spyListener2).toHaveBeenCalled();
     });
 
     function CommandMockPrimitive(command) {
@@ -1445,6 +1505,99 @@ describe(
       });
     });
 
+    it("pick", async function () {
+      if (webglStub) {
+        return;
+      }
+      const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+      const rectanglePrimitive = createRectangle(rectangle);
+      const primitives = scene.primitives;
+      primitives.add(rectanglePrimitive);
+
+      scene.camera.setView({ destination: rectangle });
+
+      const windowPosition = new Cartesian2(0, 0);
+      const result = scene.pick(windowPosition);
+
+      expect(result).toBeDefined();
+      expect(result.primitive).toEqual(rectanglePrimitive);
+    });
+
+    it("pickAsync", async function () {
+      if (webglStub) {
+        return;
+      }
+      const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+      const rectanglePrimitive = createRectangle(rectangle);
+      const primitives = scene.primitives;
+      primitives.add(rectanglePrimitive);
+
+      scene.camera.setView({ destination: rectangle });
+
+      const windowPosition = new Cartesian2(0, 0);
+
+      let result;
+      let ready = false;
+      let threw = false;
+      scene
+        .pickAsync(windowPosition)
+        .then((result0) => {
+          result = result0;
+          ready = true;
+        })
+        .catch((_error) => {
+          threw = true;
+        });
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return ready || threw;
+      });
+
+      expect(scene.context.webgl2).toBeTrue();
+      expect(threw).toBeFalse();
+      expect(ready).toBeTrue();
+      expect(result).toBeDefined();
+      expect(result.primitive).toEqual(rectanglePrimitive);
+    });
+
+    it("pickAsync can reject", async function () {
+      if (webglStub) {
+        return;
+      }
+      spyOn(Sync.prototype, "getStatus").and.callFake(function () {
+        return WebGLConstants.UNSIGNALED; // simulate never being signaled
+      });
+      const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+      const rectanglePrimitive = createRectangle(rectangle);
+      const primitives = scene.primitives;
+      primitives.add(rectanglePrimitive);
+
+      scene.camera.setView({ destination: rectangle });
+
+      const windowPosition = new Cartesian2(0, 0);
+
+      let ready = false;
+      let threw = false;
+      scene
+        .pickAsync(windowPosition)
+        .then((_result0) => {
+          ready = true;
+        })
+        .catch((_error) => {
+          threw = true;
+        });
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return ready || threw;
+      });
+
+      expect(scene.context.webgl2).toBeTrue();
+      expect(threw).toBeTrue();
+      expect(ready).toBeFalse();
+    });
+
     it("pickPosition", function () {
       if (!scene.pickPositionSupported) {
         return;
@@ -2064,29 +2217,26 @@ describe(
     });
 
     it("Sets terrainProvider", async function () {
-      returnQuantizedMeshTileJson();
-
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
-      scene.terrainProvider =
-        await CesiumTerrainProvider.fromUrl("//terrain/tiles");
+      scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/Heightmap",
+      );
 
       expect(scene.terrainProvider).toBe(globe.terrainProvider);
       scene.globe = undefined;
-      const newProvider =
-        await CesiumTerrainProvider.fromUrl("//newTerrain/tiles");
+      const newProvider = await CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
+      );
       expect(function () {
         scene.terrainProvider = newProvider;
       }).not.toThrow();
-
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("setTerrain updates terrain provider", async function () {
-      returnQuantizedMeshTileJson();
-
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
-      const promise = CesiumTerrainProvider.fromUrl("//terrain/tiles");
+      const promise = CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
+      );
       scene.setTerrain(new Terrain(promise));
 
       const originalProvider = scene.terrainProvider;
@@ -2101,26 +2251,20 @@ describe(
       await promise;
 
       expect(terrainWasChanged).toBeTrue();
-
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("setTerrain handles destroy", async function () {
       const scene = createScene();
-      returnQuantizedMeshTileJson();
-
       scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
 
-      const promise = CesiumTerrainProvider.fromUrl("//newTerrain/tiles");
+      const promise = CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/QuantizedMesh",
+      );
       scene.setTerrain(new Terrain(promise));
       scene.destroyForSpecs();
 
       await expectAsync(promise).toBeResolved();
       expect(scene.isDestroyed()).toBeTrue();
-
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("Gets terrainProviderChanged", function () {

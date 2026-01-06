@@ -1,15 +1,11 @@
 # Build Guide
 
-- [Build Guide](#build-guide)
-  - [Quickstart](#quickstart)
-  - [Get the Code](#get-the-code)
-  - [Build the Code](#build-the-code)
-    - [Development Server](#development-server)
-    - [Build Output](#build-output)
-  - [Build Scripts](#build-scripts)
-  - [Continuous Integration](#continuous-integration)
-    - [Configure a Different S3 Bucket](#configure-a-different-s3-bucket)
-    - [Configure S3 Credentials](#configure-s3-credentials)
+- [Quickstart](#quickstart)
+- [Get the Code](#get-the-code)
+- [Build the Code](#build-the-code)
+  - [Development Server](#development-server)
+  - [Build Output](#build-output)
+- [Build Scripts](#build-scripts)
 
 ## Quickstart
 
@@ -35,16 +31,15 @@
 
 5. Navigate to : [`http://localhost:8080/`](http://localhost:8080)
 
----
-
 ## Get the Code
 
-- Setup Git if it isn't already ([link](https://help.github.com/articles/set-up-git/#platform-all)).
+- [Setup Git](https://help.github.com/articles/set-up-git/#platform-all) if it isn't already.
   - New to git or need a refresher? Now's a good time to learn! [Easy tutorials here.](https://guides.github.com/)
   - Make sure your SSH keys are configured ([linux](https://help.github.com/articles/generating-ssh-keys#platform-linux) | [mac](https://help.github.com/articles/generating-ssh-keys#platform-mac) | [windows](https://help.github.com/articles/generating-ssh-keys#platform-windows)).
   - Double-check your settings for name and email: `git config --get-regexp user.*`.
   - Recommended Git settings:
     - `git config --global fetch.prune true` - when fetching remote changes, remove any remote branches that no longer exist on the remote.
+    - `git config blame.ignoreRevsFile .git-blame-ignore-revs` - uses the ignore file to skip certain noisy revisions (like formatting) when running git blame. Alternatively, for VSCode users, install the GitLens extension, which will automatically use the ignore file.
 - Have [commit access](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/CommittersGuide/README.md) to CesiumJS?
   - No
     - Fork [cesium](https://github.com/CesiumGS/cesium).
@@ -59,7 +54,7 @@
 
 Prerequisites:
 
-- Install [Node.js](http://nodejs.org/) on your system. Building Cesium requires Node 18.x or newer.
+- Install [Node.js](http://nodejs.org/) on your system. Building Cesium requires Node 20.x or newer.
 
 Cesium uses [npm modules](https://docs.npmjs.com/getting-started/what-is-npm) for development, so after syncing, you need to run `npm install` from the Cesium root directory:
 
@@ -82,7 +77,7 @@ npm start
 Then browse to [http://localhost:8080/](http://localhost:8080/). The landing page includes apps and tools commonly used during development, including:
 
 - **Hello World** : an example for how to create a 3D globe. [Tutorial here](https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/)
-- **Sandcastle** : an app for viewing and creating [code examples](https://sandcastle.cesium.com?src=Hello%20World.html&label=Showcases), complete with a live preview
+- **Sandcastle** : an app for viewing and creating [code examples](https://sandcastle.cesium.com), complete with a live preview
 - **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/TestingGuide/README.md#testing-guide)
 - **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
 
@@ -161,52 +156,3 @@ Here's the full set of scripts and what they do.
 - **Deployment scripts**
   - `deploy-status` - Sets the deployment statuses in GitHub, for use in CI
   - `deploy-set-version` - Sets the version of `package.json`, for use in CI
-
-## Continuous Integration
-
-Cesium uses [GitHub Actions](https://docs.github.com/en/actions) for continuous integration. Reusable actions are defined in `/.github/actions/` and workflows in `.github/workflows/`.
-
-(Although outdated, the blog post [Cesium Continuous Integration](http://cesium.com/blog/2016/04/07/Cesium-Continuous-Integration/) contains background on the CesiumJS CI process.)
-
-A workflow is triggered whenever someone pushes code to the Cesium repository, or an external contributor opens a pull request. After the build has completed, at the bottom of the pull request page the status of the build is shown. In the dropdown menu, individual checks are displayed. Logs and deployed artifacts can be accessed by clicking the "Details" link.
-
-![GitHub Action Checks](github_action_checks.png)
-
-The build of any branch of CesiumJS can be accessed under the [Branches](https://github.com/CesiumGS/cesium/branches/all) page, and clicking the icon next to the branch name.
-
-![GitHub Branches](github_branches.png)
-
-Additional set up is required for deployment if you do not have commit access to Cesium.
-
-### Configure a Different S3 Bucket
-
-It is possible to configure your development branch of CesiumJS to deploy build artifacts to a different [AWS S3 Bucket](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html). If you are using the cesium-public-builds bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
-
-- In `.gtihub/workflows/dev.yml`, in the following lines, replace "cesium-public-builds" with the name of your S3 bucket.
-
-```yml
-aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Coverage --delete --color on
-```
-
-```yml
-aws s3 sync Build/unzipped/ s3://cesium-public-builds/cesium/$BRANCH/Build/ --cache-control "no-cache" --delete
-```
-
-- In `gulpfile.js`, edit the following line:
-
-```javascript
-const devDeployUrl = "https://ci-builds.cesium.com/cesium/";
-```
-
-- Edit the URL to match the URL hosting the S3 bucket specified in the previous step.
-
-### Configure S3 Credentials
-
-To configure CI for deployment for a fork of Cesium, you must have valid credentials to an S3 bucket.
-
-- Go to your fork of Cesium
-- Click the **Setting** tab
-- In the left sidebar, under the **Security** section, click **Secrets and Variables** > **Actions**
-- Under **Repository secrets** add two environment variables, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, with your access key and secret key
-
-![GitHub Environment Variables](github_environment_variables.png)

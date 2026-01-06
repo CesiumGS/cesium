@@ -1,6 +1,8 @@
+import defined from "../Core/defined.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import CesiumMath from "../Core/Math.js";
@@ -8,6 +10,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
+import Transforms from "../Core/Transforms.js";
 
 /**
  * An ellipsoid {@link VoxelShape}.
@@ -23,41 +26,10 @@ import Rectangle from "../Core/Rectangle.js";
  * @private
  */
 function VoxelEllipsoidShape() {
-  /**
-   * An oriented bounding box containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @type {OrientedBoundingBox}
-   * @readonly
-   * @private
-   */
-  this.orientedBoundingBox = new OrientedBoundingBox();
-
-  /**
-   * A bounding sphere containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @type {BoundingSphere}
-   * @readonly
-   * @private
-   */
-  this.boundingSphere = new BoundingSphere();
-
-  /**
-   * A transformation matrix containing the bounded shape.
-   * The update function must be called before accessing this value.
-   * @type {Matrix4}
-   * @readonly
-   * @private
-   */
-  this.boundTransform = new Matrix4();
-
-  /**
-   * A transformation matrix containing the shape, ignoring the bounds.
-   * The update function must be called before accessing this value.
-   * @type {Matrix4}
-   * @readonly
-   * @private
-   */
-  this.shapeTransform = new Matrix4();
+  this._orientedBoundingBox = new OrientedBoundingBox();
+  this._boundingSphere = new BoundingSphere();
+  this._boundTransform = new Matrix4();
+  this._shapeTransform = new Matrix4();
 
   /**
    * @type {Rectangle}
@@ -95,31 +67,25 @@ function VoxelEllipsoidShape() {
    */
   this._rotation = new Matrix3();
 
-  /**
-   * @type {Object<string, any>}
-   * @readonly
-   * @private
-   */
-  this.shaderUniforms = {
-    ellipsoidRadiiUv: new Cartesian3(),
+  this._shaderUniforms = {
+    cameraPositionCartographic: new Cartesian3(),
+    ellipsoidEcToEastNorthUp: new Matrix3(),
+    ellipsoidRadii: new Cartesian3(),
     eccentricitySquared: 0.0,
     evoluteScale: new Cartesian2(),
-    ellipsoidInverseRadiiSquaredUv: new Cartesian3(),
+    ellipsoidCurvatureAtLatitude: new Cartesian2(),
+    ellipsoidInverseRadiiSquared: new Cartesian3(),
     ellipsoidRenderLongitudeMinMax: new Cartesian2(),
+    ellipsoidShapeUvLongitudeRangeOrigin: 0.0,
     ellipsoidShapeUvLongitudeMinMaxMid: new Cartesian3(),
-    ellipsoidUvToShapeUvLongitude: new Cartesian2(),
-    ellipsoidUvToShapeUvLatitude: new Cartesian2(),
+    ellipsoidLocalToShapeUvLongitude: new Cartesian2(),
+    ellipsoidLocalToShapeUvLatitude: new Cartesian2(),
     ellipsoidRenderLatitudeSinMinMax: new Cartesian2(),
-    ellipsoidInverseHeightDifferenceUv: 0.0,
+    ellipsoidInverseHeightDifference: 0.0,
     clipMinMaxHeight: new Cartesian2(),
   };
 
-  /**
-   * @type {Object<string, any>}
-   * @readonly
-   * @private
-   */
-  this.shaderDefines = {
+  this._shaderDefines = {
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_UNDER_HALF: undefined,
@@ -142,14 +108,103 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN: undefined,
   };
 
+  this._shaderMaximumIntersectionsLength = 0; // not known until update
+}
+
+Object.defineProperties(VoxelEllipsoidShape.prototype, {
+  /**
+   * An oriented bounding box containing the bounded shape.
+   *
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {OrientedBoundingBox}
+   * @readonly
+   * @private
+   */
+  orientedBoundingBox: {
+    get: function () {
+      return this._orientedBoundingBox;
+    },
+  },
+
+  /**
+   * A bounding sphere containing the bounded shape.
+   *
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {BoundingSphere}
+   * @readonly
+   * @private
+   */
+  boundingSphere: {
+    get: function () {
+      return this._boundingSphere;
+    },
+  },
+
+  /**
+   * A transformation matrix containing the bounded shape.
+   *
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {Matrix4}
+   * @readonly
+   * @private
+   */
+  boundTransform: {
+    get: function () {
+      return this._boundTransform;
+    },
+  },
+
+  /**
+   * A transformation matrix containing the shape, ignoring the bounds.
+   *
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {Matrix4}
+   * @readonly
+   * @private
+   */
+  shapeTransform: {
+    get: function () {
+      return this._shapeTransform;
+    },
+  },
+
+  /**
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {Object<string, any>}
+   * @readonly
+   * @private
+   */
+  shaderUniforms: {
+    get: function () {
+      return this._shaderUniforms;
+    },
+  },
+
+  /**
+   * @memberof VoxelEllipsoidShape.prototype
+   * @type {Object<string, any>}
+   * @readonly
+   * @private
+   */
+  shaderDefines: {
+    get: function () {
+      return this._shaderDefines;
+    },
+  },
+
   /**
    * The maximum number of intersections against the shape for any ray direction.
+   * @memberof VoxelEllipsoidShape.prototype
    * @type {number}
    * @readonly
    * @private
    */
-  this.shaderMaximumIntersectionsLength = 0; // not known until update
-}
+  shaderMaximumIntersectionsLength: {
+    get: function () {
+      return this._shaderMaximumIntersectionsLength;
+    },
+  },
+});
 
 const scratchActualMinBounds = new Cartesian3();
 const scratchShapeMinBounds = new Cartesian3();
@@ -159,7 +214,6 @@ const scratchClipMaxBounds = new Cartesian3();
 const scratchRenderMinBounds = new Cartesian3();
 const scratchRenderMaxBounds = new Cartesian3();
 const scratchScale = new Cartesian3();
-const scratchRotationScale = new Matrix3();
 const scratchShapeOuterExtent = new Cartesian3();
 const scratchRenderOuterExtent = new Cartesian3();
 const scratchRenderRectangle = new Rectangle();
@@ -250,7 +304,6 @@ VoxelEllipsoidShape.prototype.update = function (
     ),
     scratchShapeOuterExtent,
   );
-  const shapeMaxExtent = Cartesian3.maximumComponent(shapeOuterExtent);
 
   const renderOuterExtent = Cartesian3.add(
     radii,
@@ -300,31 +353,31 @@ VoxelEllipsoidShape.prototype.update = function (
     scratchRenderRectangle,
   );
 
-  this.orientedBoundingBox = getEllipsoidChunkObb(
+  this._orientedBoundingBox = getEllipsoidChunkObb(
     renderRectangle,
     renderMinBounds.z,
     renderMaxBounds.z,
     this._ellipsoid,
     this._translation,
     this._rotation,
-    this.orientedBoundingBox,
+    this._orientedBoundingBox,
   );
 
-  this.shapeTransform = Matrix4.fromRotationTranslation(
-    Matrix3.setScale(this._rotation, shapeOuterExtent, scratchRotationScale),
+  this._shapeTransform = Matrix4.fromRotationTranslation(
+    this._rotation,
     this._translation,
-    this.shapeTransform,
+    this._shapeTransform,
   );
 
-  this.boundTransform = Matrix4.fromRotationTranslation(
-    this.orientedBoundingBox.halfAxes,
-    this.orientedBoundingBox.center,
-    this.boundTransform,
+  this._boundTransform = Matrix4.fromRotationTranslation(
+    this._orientedBoundingBox.halfAxes,
+    this._orientedBoundingBox.center,
+    this._boundTransform,
   );
 
-  this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(
-    this.orientedBoundingBox,
-    this.boundingSphere,
+  this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
+    this._orientedBoundingBox,
+    this._boundingSphere,
   );
 
   // Longitude
@@ -415,7 +468,8 @@ VoxelEllipsoidShape.prototype.update = function (
     shapeIsLatitudeMinOverHalf;
   const shapeHasLatitude = shapeHasLatitudeMax || shapeHasLatitudeMin;
 
-  const { shaderUniforms, shaderDefines } = this;
+  const shaderUniforms = this._shaderUniforms;
+  const shaderDefines = this._shaderDefines;
 
   // To keep things simple, clear the defines every time
   for (const key in shaderDefines) {
@@ -424,30 +478,28 @@ VoxelEllipsoidShape.prototype.update = function (
     }
   }
 
-  // The ellipsoid radii scaled to [0,1]. The max ellipsoid radius will be 1.0 and others will be less.
-  shaderUniforms.ellipsoidRadiiUv = Cartesian3.divideByScalar(
+  shaderUniforms.ellipsoidRadii = Cartesian3.clone(
     shapeOuterExtent,
-    shapeMaxExtent,
-    shaderUniforms.ellipsoidRadiiUv,
+    shaderUniforms.ellipsoidRadii,
   );
-  const { x: radiiUvX, z: radiiUvZ } = shaderUniforms.ellipsoidRadiiUv;
-  const axisRatio = radiiUvZ / radiiUvX;
+  const { x: radiiX, z: radiiZ } = shaderUniforms.ellipsoidRadii;
+  const axisRatio = radiiZ / radiiX;
   shaderUniforms.eccentricitySquared = 1.0 - axisRatio * axisRatio;
   shaderUniforms.evoluteScale = Cartesian2.fromElements(
-    (radiiUvX * radiiUvX - radiiUvZ * radiiUvZ) / radiiUvX,
-    (radiiUvZ * radiiUvZ - radiiUvX * radiiUvX) / radiiUvZ,
+    (radiiX * radiiX - radiiZ * radiiZ) / radiiX,
+    (radiiZ * radiiZ - radiiX * radiiX) / radiiZ,
     shaderUniforms.evoluteScale,
   );
 
   // Used to compute geodetic surface normal.
-  shaderUniforms.ellipsoidInverseRadiiSquaredUv = Cartesian3.divideComponents(
+  shaderUniforms.ellipsoidInverseRadiiSquared = Cartesian3.divideComponents(
     Cartesian3.ONE,
     Cartesian3.multiplyComponents(
-      shaderUniforms.ellipsoidRadiiUv,
-      shaderUniforms.ellipsoidRadiiUv,
-      shaderUniforms.ellipsoidInverseRadiiSquaredUv,
+      shaderUniforms.ellipsoidRadii,
+      shaderUniforms.ellipsoidRadii,
+      shaderUniforms.ellipsoidInverseRadiiSquared,
     ),
-    shaderUniforms.ellipsoidInverseRadiiSquaredUv,
+    shaderUniforms.ellipsoidInverseRadiiSquared,
   );
 
   // Keep track of how many intersections there are going to be.
@@ -460,16 +512,16 @@ VoxelEllipsoidShape.prototype.update = function (
   intersectionCount += 1;
 
   shaderUniforms.clipMinMaxHeight = Cartesian2.fromElements(
-    (renderMinBounds.z - shapeMaxBounds.z) / shapeMaxExtent,
-    (renderMaxBounds.z - shapeMaxBounds.z) / shapeMaxExtent,
+    renderMinBounds.z - shapeMaxBounds.z,
+    renderMaxBounds.z - shapeMaxBounds.z,
     shaderUniforms.clipMinMaxHeight,
   );
 
   // The percent of space that is between the inner and outer ellipsoid.
-  const thickness = (shapeMaxBounds.z - shapeMinBounds.z) / shapeMaxExtent;
-  shaderUniforms.ellipsoidInverseHeightDifferenceUv = 1.0 / thickness;
+  const thickness = shapeMaxBounds.z - shapeMinBounds.z;
+  shaderUniforms.ellipsoidInverseHeightDifference = 1.0 / thickness;
   if (shapeMinBounds.z === shapeMaxBounds.z) {
-    shaderUniforms.ellipsoidInverseHeightDifferenceUv = 0.0;
+    shaderUniforms.ellipsoidInverseHeightDifference = 0.0;
   }
 
   // Intersects a wedge for the min and max longitude.
@@ -501,36 +553,39 @@ VoxelEllipsoidShape.prototype.update = function (
   if (shapeHasLongitude) {
     shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE"] = true;
 
-    const shapeIsLongitudeReversed = shapeMaxBounds.x < shapeMinBounds.x;
+    const uvShapeMinLongitude =
+      (shapeMinBounds.x - DefaultMinBounds.x) / defaultLongitudeRange;
+    const uvShapeMaxLongitude =
+      (shapeMaxBounds.x - DefaultMinBounds.x) / defaultLongitudeRange;
+    const uvLongitudeRangeZero =
+      1.0 - shapeLongitudeRange / defaultLongitudeRange;
+    // Translate the origin of UV angles (in [0,1]) to the center of the unoccupied space
+    const uvLongitudeRangeOrigin =
+      (uvShapeMaxLongitude + 0.5 * uvLongitudeRangeZero) % 1.0;
+    shaderUniforms.ellipsoidShapeUvLongitudeRangeOrigin =
+      uvLongitudeRangeOrigin;
 
+    const shapeIsLongitudeReversed = shapeMaxBounds.x < shapeMinBounds.x;
     if (shapeIsLongitudeReversed) {
       shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED"] =
         true;
     }
 
-    // delerp(longitudeUv, minLongitudeUv, maxLongitudeUv)
-    // (longitudeUv - minLongitudeUv) / (maxLongitudeUv - minLongitudeUv)
-    // longitudeUv / (maxLongitudeUv - minLongitudeUv) - minLongitudeUv / (maxLongitudeUv - minLongitudeUv)
-    // scale = 1.0 / (maxLongitudeUv - minLongitudeUv)
-    // scale = 1.0 / (((maxLongitude - pi) / (2.0 * pi)) - ((minLongitude - pi) / (2.0 * pi)))
-    // scale = 2.0 * pi / (maxLongitude - minLongitude)
-    // offset = -minLongitudeUv / (maxLongitudeUv - minLongitudeUv)
-    // offset = -((minLongitude - pi) / (2.0 * pi)) / (((maxLongitude - pi) / (2.0 * pi)) - ((minLongitude - pi) / (2.0 * pi)))
-    // offset = -(minLongitude - pi) / (maxLongitude - minLongitude)
     if (shapeLongitudeRange <= epsilonLongitude) {
-      shaderUniforms.ellipsoidUvToShapeUvLongitude = Cartesian2.fromElements(
+      shaderUniforms.ellipsoidLocalToShapeUvLongitude = Cartesian2.fromElements(
         0.0,
         1.0,
-        shaderUniforms.ellipsoidUvToShapeUvLongitude,
+        shaderUniforms.ellipsoidLocalToShapeUvLongitude,
       );
     } else {
       const scale = defaultLongitudeRange / shapeLongitudeRange;
+      const shiftedMinLongitude = uvShapeMinLongitude - uvLongitudeRangeOrigin;
       const offset =
-        -(shapeMinBounds.x - DefaultMinBounds.x) / shapeLongitudeRange;
-      shaderUniforms.ellipsoidUvToShapeUvLongitude = Cartesian2.fromElements(
+        -scale * (shiftedMinLongitude - Math.floor(shiftedMinLongitude));
+      shaderUniforms.ellipsoidLocalToShapeUvLongitude = Cartesian2.fromElements(
         scale,
         offset,
-        shaderUniforms.ellipsoidUvToShapeUvLongitude,
+        shaderUniforms.ellipsoidLocalToShapeUvLongitude,
       );
     }
   }
@@ -630,45 +685,92 @@ VoxelEllipsoidShape.prototype.update = function (
   if (shapeHasLatitude) {
     shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE"] = true;
 
-    // delerp(latitudeUv, minLatitudeUv, maxLatitudeUv)
-    // (latitudeUv - minLatitudeUv) / (maxLatitudeUv - minLatitudeUv)
-    // latitudeUv / (maxLatitudeUv - minLatitudeUv) - minLatitudeUv / (maxLatitudeUv - minLatitudeUv)
-    // scale = 1.0 / (maxLatitudeUv - minLatitudeUv)
-    // scale = 1.0 / (((maxLatitude - pi) / (2.0 * pi)) - ((minLatitude - pi) / (2.0 * pi)))
-    // scale = 2.0 * pi / (maxLatitude - minLatitude)
-    // offset = -minLatitudeUv / (maxLatitudeUv - minLatitudeUv)
-    // offset = -((minLatitude - -pi) / (2.0 * pi)) / (((maxLatitude - pi) / (2.0 * pi)) - ((minLatitude - pi) / (2.0 * pi)))
-    // offset = -(minLatitude - -pi) / (maxLatitude - minLatitude)
-    // offset = (-pi - minLatitude) / (maxLatitude - minLatitude)
     if (shapeLatitudeRange < epsilonLatitude) {
-      shaderUniforms.ellipsoidUvToShapeUvLatitude = Cartesian2.fromElements(
+      shaderUniforms.ellipsoidLocalToShapeUvLatitude = Cartesian2.fromElements(
         0.0,
         1.0,
-        shaderUniforms.ellipsoidUvToShapeUvLatitude,
+        shaderUniforms.ellipsoidLocalToShapeUvLatitude,
       );
     } else {
       const defaultLatitudeRange = DefaultMaxBounds.y - DefaultMinBounds.y;
       const scale = defaultLatitudeRange / shapeLatitudeRange;
       const offset =
         (DefaultMinBounds.y - shapeMinBounds.y) / shapeLatitudeRange;
-      shaderUniforms.ellipsoidUvToShapeUvLatitude = Cartesian2.fromElements(
+      shaderUniforms.ellipsoidLocalToShapeUvLatitude = Cartesian2.fromElements(
         scale,
         offset,
-        shaderUniforms.ellipsoidUvToShapeUvLatitude,
+        shaderUniforms.ellipsoidLocalToShapeUvLatitude,
       );
     }
   }
 
-  this.shaderMaximumIntersectionsLength = intersectionCount;
+  this._shaderMaximumIntersectionsLength = intersectionCount;
 
   return true;
+};
+
+const scratchCameraPositionCartographic = new Cartographic();
+const surfacePositionScratch = new Cartesian3();
+const enuTransformScratch = new Matrix4();
+const enuRotationScratch = new Matrix3();
+/**
+ * Update any view-dependent transforms.
+ * @private
+ * @param {FrameState} frameState The frame state.
+ */
+VoxelEllipsoidShape.prototype.updateViewTransforms = function (frameState) {
+  const shaderUniforms = this._shaderUniforms;
+  const ellipsoid = this._ellipsoid;
+  // TODO: incorporate modelMatrix or shapeTransform here?
+  const cameraWC = frameState.camera.positionWC;
+  const cameraPositionCartographic = ellipsoid.cartesianToCartographic(
+    cameraWC,
+    scratchCameraPositionCartographic,
+  );
+  Cartesian3.fromElements(
+    cameraPositionCartographic.longitude,
+    cameraPositionCartographic.latitude,
+    cameraPositionCartographic.height,
+    shaderUniforms.cameraPositionCartographic,
+  );
+
+  // TODO: incorporate modelMatrix here?
+  const surfacePosition = Cartesian3.fromRadians(
+    cameraPositionCartographic.longitude,
+    cameraPositionCartographic.latitude,
+    0.0,
+    ellipsoid,
+    surfacePositionScratch,
+  );
+
+  shaderUniforms.ellipsoidCurvatureAtLatitude = ellipsoid.getLocalCurvature(
+    surfacePosition,
+    shaderUniforms.ellipsoidCurvatureAtLatitude,
+  );
+
+  const enuToWorld = Transforms.eastNorthUpToFixedFrame(
+    surfacePosition,
+    ellipsoid,
+    enuTransformScratch,
+  );
+  const rotateEnuToWorld = Matrix4.getRotation(enuToWorld, enuRotationScratch);
+  const rotateWorldToView = frameState.context.uniformState.viewRotation;
+  const rotateEnuToView = Matrix3.multiply(
+    rotateWorldToView,
+    rotateEnuToWorld,
+    enuRotationScratch,
+  );
+  // Inverse is the transpose since it's a pure rotation.
+  shaderUniforms.ellipsoidEcToEastNorthUp = Matrix3.transpose(
+    rotateEnuToView,
+    shaderUniforms.ellipsoidEcToEastNorthUp,
+  );
 };
 
 const scratchRectangle = new Rectangle();
 
 /**
  * Computes an oriented bounding box for a specified tile.
- * The update function must be called before calling this function.
  * @private
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
@@ -732,13 +834,194 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForTile = function (
   );
 };
 
+const scratchQuadrantPosition = new Cartesian2();
+const scratchInverseRadii = new Cartesian2();
+const scratchEllipseTrigs = new Cartesian2();
+const scratchEllipseGuess = new Cartesian2();
+const scratchEvolute = new Cartesian2();
+const scratchQ = new Cartesian2();
+
+/**
+ * Find the nearest point on an ellipse and its radius.
+ * @param {Cartesian2} position
+ * @param {Cartesian2} radii
+ * @param {Cartesian2} evoluteScale
+ * @param {Cartesian3} result The Cartesian3 to store the result in. .x and .y components contain the nearest point on the ellipse, .z contains the local radius of curvature.
+ * @returns {Cartesian3} The nearest point on the ellipse and its radius.
+ * @private
+ */
+function nearestPointAndRadiusOnEllipse(position, radii, evoluteScale, result) {
+  // Map to the first quadrant
+  const p = Cartesian2.abs(position, scratchQuadrantPosition);
+  const inverseRadii = Cartesian2.fromElements(
+    1.0 / radii.x,
+    1.0 / radii.y,
+    scratchInverseRadii,
+  );
+  // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
+  // but store the cos and sin of t in a vec2 for efficiency.
+  // Initial guess: t = pi/4
+  let tTrigs = Cartesian2.fromElements(
+    Math.SQRT1_2,
+    Math.SQRT1_2,
+    scratchEllipseTrigs,
+  );
+  // TODO: too much duplication. Move v and evolute declarations inside loop?
+  // Initial guess of point on ellipsoid
+  let v = Cartesian2.multiplyComponents(radii, tTrigs, scratchEllipseGuess);
+  // Center of curvature of the ellipse at v
+  let evolute = Cartesian2.fromElements(
+    evoluteScale.x * tTrigs.x * tTrigs.x * tTrigs.x,
+    evoluteScale.y * tTrigs.y * tTrigs.y * tTrigs.y,
+    scratchEvolute,
+  );
+  for (let i = 0; i < 3; ++i) {
+    // Find the (approximate) intersection of p - evolute with the ellipsoid.
+    const distance = Cartesian2.magnitude(
+      Cartesian2.subtract(v, evolute, scratchQ),
+    );
+    const direction = Cartesian2.normalize(
+      Cartesian2.subtract(p, evolute, scratchQ),
+      scratchQ,
+    );
+    const q = Cartesian2.multiplyByScalar(direction, distance, scratchQ);
+    // Update the estimate of t
+    tTrigs = Cartesian2.multiplyComponents(
+      Cartesian2.add(q, evolute, scratchEllipseTrigs),
+      inverseRadii,
+      scratchEllipseTrigs,
+    );
+    tTrigs = Cartesian2.normalize(
+      Cartesian2.clamp(
+        tTrigs,
+        Cartesian2.ZERO,
+        Cartesian2.ONE,
+        scratchEllipseTrigs,
+      ),
+      scratchEllipseTrigs,
+    );
+    v = Cartesian2.multiplyComponents(radii, tTrigs, scratchEllipseGuess);
+    evolute = Cartesian2.fromElements(
+      evoluteScale.x * tTrigs.x * tTrigs.x * tTrigs.x,
+      evoluteScale.y * tTrigs.y * tTrigs.y * tTrigs.y,
+      scratchEvolute,
+    );
+  }
+
+  // Map back to the original quadrant
+  return Cartesian3.fromElements(
+    Math.sign(position.x) * v.x,
+    Math.sign(position.y) * v.y,
+    Cartesian2.magnitude(Cartesian2.subtract(v, evolute, scratchQ)),
+    result,
+  );
+}
+
+const scratchEllipseRadii = new Cartesian2();
+const scratchEllipsePosition = new Cartesian2();
+const scratchSurfacePointAndRadius = new Cartesian3();
+const scratchNormal2d = new Cartesian2();
+/**
+ * Convert a UV coordinate to the shape's UV space.
+ * @private
+ * @param {Cartesian3} positionLocal The local position to convert.
+ * @param {Cartesian3} result The Cartesian3 to store the result in.
+ * @returns {Cartesian3} The converted UV coordinate.
+ */
+VoxelEllipsoidShape.prototype.convertLocalToShapeUvSpace = function (
+  positionLocal,
+  result,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("positionLocal", positionLocal);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  let longitude = Math.atan2(positionLocal.y, positionLocal.x);
+
+  const {
+    ellipsoidRadii,
+    evoluteScale,
+    ellipsoidInverseRadiiSquared,
+    ellipsoidInverseHeightDifference,
+    ellipsoidShapeUvLongitudeRangeOrigin,
+    ellipsoidLocalToShapeUvLongitude,
+    ellipsoidLocalToShapeUvLatitude,
+  } = this._shaderUniforms;
+
+  const distanceFromZAxis = Math.hypot(positionLocal.x, positionLocal.y);
+  const posEllipse = Cartesian2.fromElements(
+    distanceFromZAxis,
+    positionLocal.z,
+    scratchEllipsePosition,
+  );
+  const surfacePointAndRadius = nearestPointAndRadiusOnEllipse(
+    posEllipse,
+    Cartesian2.fromElements(
+      ellipsoidRadii.x,
+      ellipsoidRadii.z,
+      scratchEllipseRadii,
+    ),
+    evoluteScale,
+    scratchSurfacePointAndRadius,
+  );
+
+  const normal2d = Cartesian2.normalize(
+    Cartesian2.fromElements(
+      surfacePointAndRadius.x * ellipsoidInverseRadiiSquared.x,
+      surfacePointAndRadius.y * ellipsoidInverseRadiiSquared.z,
+      scratchNormal2d,
+    ),
+    scratchNormal2d,
+  );
+  let latitude = Math.atan2(normal2d.y, normal2d.x);
+
+  const heightSign =
+    Cartesian2.magnitude(posEllipse) <
+    Cartesian2.magnitude(surfacePointAndRadius)
+      ? -1.0
+      : 1.0;
+  const heightVector = Cartesian2.subtract(
+    posEllipse,
+    surfacePointAndRadius,
+    scratchEllipsePosition,
+  );
+  let height = heightSign * Cartesian2.magnitude(heightVector);
+
+  const {
+    ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE,
+    ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE,
+  } = this._shaderDefines;
+
+  longitude = (longitude + Math.PI) / (2.0 * Math.PI);
+  if (defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)) {
+    longitude -= ellipsoidShapeUvLongitudeRangeOrigin;
+    longitude = longitude - Math.floor(longitude);
+    // Scale and shift so [0, 1] covers the occupied space.
+    longitude =
+      longitude * ellipsoidLocalToShapeUvLongitude.x +
+      ellipsoidLocalToShapeUvLongitude.y;
+  }
+
+  latitude = (latitude + Math.PI / 2.0) / Math.PI;
+  if (defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)) {
+    // Scale and shift so [0, 1] covers the occupied space.
+    latitude =
+      latitude * ellipsoidLocalToShapeUvLatitude.x +
+      ellipsoidLocalToShapeUvLatitude.y;
+  }
+
+  height = 1.0 + height * ellipsoidInverseHeightDifference;
+
+  return Cartesian3.fromElements(longitude, latitude, height, result);
+};
+
 const sampleSizeScratch = new Cartesian3();
 const scratchTileMinBounds = new Cartesian3();
 const scratchTileMaxBounds = new Cartesian3();
 
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
- * The update function must be called before calling this function.
  * @private
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding

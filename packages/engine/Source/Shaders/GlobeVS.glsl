@@ -114,7 +114,8 @@ vec4 getPositionMorphingMode(vec3 position, float height, vec2 textureCoordinate
     float yPositionFraction = get2DYPositionFraction(textureCoordinates);
     vec4 position2DWC = vec4(height, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, vec4(position3DWC, 1.0), czm_morphTime);
-    return czm_modelViewProjection * morphPosition;
+    vec4 morphPositionEC = czm_modelView * morphPosition;
+    return czm_projection * morphPositionEC;
 }
 
 #ifdef QUANTIZATION_BITS12
@@ -140,7 +141,7 @@ void main()
 #elif defined(INCLUDE_WEB_MERCATOR_Y)
     float webMercatorT = czm_decompressTextureCoordinates(compressed0.w).x;
     float encodedNormal = 0.0;
-#elif defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)
+#elif defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL) || defined(APPLY_MATERIAL)
     float webMercatorT = textureCoordinates.y;
     float encodedNormal = compressed0.w;
 #else

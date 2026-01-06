@@ -10,8 +10,11 @@ import CPUStylingPipelineStage from "./CPUStylingPipelineStage.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
+import EdgeDetectionPipelineStage from "./EdgeDetectionPipelineStage.js";
+import EdgeVisibilityPipelineStage from "./EdgeVisibilityPipelineStage.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
+import ImageryPipelineStage from "./ImageryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import MetadataPickingPipelineStage from "./MetadataPickingPipelineStage.js";
@@ -27,6 +30,7 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
 import VerticalExaggerationPipelineStage from "./VerticalExaggerationPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
+import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -86,7 +90,7 @@ function ModelRuntimePrimitive(options) {
    * is an array of classes, each with a static method called
    * <code>process()</code>
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private
@@ -168,7 +172,7 @@ function ModelRuntimePrimitive(options) {
   /**
    * Update stages to apply to this primitive.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private
@@ -206,6 +210,12 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
   const hasSkinning = defined(node.skin);
+
+  // Check whether the model is part of a `Model3DTileContent` that
+  // belongs to a tileset that has imagery layers. If this is the
+  // case, then the `ImageryPipelineStage` will be required.
+  const hasImageryLayers = defined(model.imageryLayers);
+
   const hasCustomShader = defined(customShader);
   const hasCustomFragmentShader =
     hasCustomShader && defined(customShader.fragmentShaderText);
@@ -215,6 +225,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const hasQuantization = ModelUtility.hasQuantizedAttributes(
     primitive.attributes,
   );
+
   const generateWireframeIndices =
     model.debugWireframe &&
     PrimitiveType.isTriangles(primitive.primitiveType) &&
@@ -234,6 +245,8 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   const hasOutlines =
     model._enableShowOutline && defined(primitive.outlineCoordinates);
+
+  const hasEdgeVisibility = defined(primitive.edgeVisibility);
 
   const featureIdFlags = inspectFeatureIds(model, node, primitive);
 
@@ -270,6 +283,17 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
     pipelineStages.push(DequantizationPipelineStage);
   }
 
+  if (hasImageryLayers) {
+    if (hasOutlines) {
+      oneTimeWarning(
+        "outlines-and-draping",
+        "Primitive outlines disable imagery draping",
+      );
+    } else {
+      pipelineStages.push(ImageryPipelineStage);
+    }
+  }
+
   if (materialsEnabled) {
     pipelineStages.push(MaterialPipelineStage);
   }
@@ -302,6 +326,13 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   if (hasOutlines) {
     pipelineStages.push(PrimitiveOutlinePipelineStage);
+  }
+
+  if (hasEdgeVisibility) {
+    // Indicate to Scene (after primitive updates) that the edge MRT should be enabled.
+    frameState.edgeVisibilityRequested = true;
+    pipelineStages.push(EdgeVisibilityPipelineStage);
+    pipelineStages.push(EdgeDetectionPipelineStage);
   }
 
   pipelineStages.push(AlphaPipelineStage);

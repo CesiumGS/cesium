@@ -22,10 +22,23 @@ import defined from "./defined.js";
  * evt.removeEventListener(MyObject.prototype.myListener);
  */
 function Event() {
-  this._listeners = [];
-  this._scopes = [];
-  this._toRemove = [];
-  this._insideRaiseEvent = false;
+  /**
+   * @type {Map<Listener,Set<object>>}
+   * @private
+   */
+  this._listeners = new Map();
+  /**
+   * @type {Map<Listener,Set<object>>}
+   * @private
+   */
+  this._toRemove = new Map();
+  /**
+   * @type {Map<Listener,Set<object>>}
+   * @private
+   */
+  this._toAdd = new Map();
+  this._invokingListeners = false;
+  this._listenerCount = 0; // Tracks number of listener + scope pairs
 }
 
 Object.defineProperties(Event.prototype, {
@@ -37,7 +50,7 @@ Object.defineProperties(Event.prototype, {
    */
   numberOfListeners: {
     get: function () {
-      return this._listeners.length - this._toRemove.length;
+      return this._listenerCount;
     },
   },
 });
@@ -59,15 +72,33 @@ Event.prototype.addEventListener = function (listener, scope) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("listener", listener);
   //>>includeEnd('debug');
-
-  this._listeners.push(listener);
-  this._scopes.push(scope);
-
   const event = this;
+
+  const listenerMap = event._invokingListeners
+    ? event._toAdd
+    : event._listeners;
+  const added = addEventListener(this, listenerMap, listener, scope);
+  if (added) {
+    event._listenerCount++;
+  }
+
   return function () {
     event.removeEventListener(listener, scope);
   };
 };
+
+function addEventListener(event, listenerMap, listener, scope) {
+  if (!listenerMap.has(listener)) {
+    listenerMap.set(listener, new Set());
+  }
+  const scopes = listenerMap.get(listener);
+  if (!scopes.has(scope)) {
+    scopes.add(scope);
+    return true;
+  }
+
+  return false;
+}
 
 /**
  * Unregisters a previously registered callback.
@@ -84,37 +115,46 @@ Event.prototype.removeEventListener = function (listener, scope) {
   Check.typeOf.func("listener", listener);
   //>>includeEnd('debug');
 
-  const listeners = this._listeners;
-  const scopes = this._scopes;
+  const removedFromListeners = removeEventListener(
+    this,
+    this._listeners,
+    listener,
+    scope,
+  );
+  const removedFromToAdd = removeEventListener(
+    this,
+    this._toAdd,
+    listener,
+    scope,
+  );
 
-  let index = -1;
-  for (let i = 0; i < listeners.length; i++) {
-    if (listeners[i] === listener && scopes[i] === scope) {
-      index = i;
-      break;
-    }
+  const removed = removedFromListeners || removedFromToAdd;
+  if (removed) {
+    this._listenerCount--;
   }
 
-  if (index !== -1) {
-    if (this._insideRaiseEvent) {
-      //In order to allow removing an event subscription from within
-      //a callback, we don't actually remove the items here.  Instead
-      //remember the index they are at and undefined their value.
-      this._toRemove.push(index);
-      listeners[index] = undefined;
-      scopes[index] = undefined;
-    } else {
-      listeners.splice(index, 1);
-      scopes.splice(index, 1);
-    }
-    return true;
-  }
-
-  return false;
+  return removed;
 };
 
-function compareNumber(a, b) {
-  return b - a;
+function removeEventListener(event, listenerMap, listener, scope) {
+  const scopes = listenerMap.get(listener);
+  if (!scopes || !scopes.has(scope)) {
+    return false;
+  }
+
+  if (event._invokingListeners) {
+    if (!addEventListener(event, event._toRemove, listener, scope)) {
+      // Already marked for removal
+      return false;
+    }
+  } else {
+    scopes.delete(scope);
+    if (scopes.size === 0) {
+      listenerMap.delete(listener);
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -126,34 +166,35 @@ function compareNumber(a, b) {
  * @see Event#removeEventListener
  */
 Event.prototype.raiseEvent = function () {
-  this._insideRaiseEvent = true;
+  this._invokingListeners = true;
 
-  let i;
-  const listeners = this._listeners;
-  const scopes = this._scopes;
-  let length = listeners.length;
+  for (const [listener, scopes] of this._listeners.entries()) {
+    if (!defined(listener)) {
+      continue;
+    }
 
-  for (i = 0; i < length; i++) {
-    const listener = listeners[i];
-    if (defined(listener)) {
-      listeners[i].apply(scopes[i], arguments);
+    for (const scope of scopes) {
+      listener.apply(scope, arguments);
     }
   }
 
-  //Actually remove items removed in removeEventListener.
-  const toRemove = this._toRemove;
-  length = toRemove.length;
-  if (length > 0) {
-    toRemove.sort(compareNumber);
-    for (i = 0; i < length; i++) {
-      const index = toRemove[i];
-      listeners.splice(index, 1);
-      scopes.splice(index, 1);
-    }
-    toRemove.length = 0;
-  }
+  this._invokingListeners = false;
 
-  this._insideRaiseEvent = false;
+  // Actually add items marked for addition
+  for (const [listener, scopes] of this._toAdd.entries()) {
+    for (const scope of scopes) {
+      addEventListener(this, this._listeners, listener, scope);
+    }
+  }
+  this._toAdd.clear();
+
+  // Actually remove items marked for removal
+  for (const [listener, scopes] of this._toRemove.entries()) {
+    for (const scope of scopes) {
+      removeEventListener(this, this._listeners, listener, scope);
+    }
+  }
+  this._toRemove.clear();
 };
 
 /**

@@ -981,9 +981,9 @@ function handlePointerMove(screenSpaceEventHandler, event) {
 function ScreenSpaceEventHandler(element) {
   this._inputEvents = {};
   this._buttonDown = {
-    LEFT: false,
-    MIDDLE: false,
-    RIGHT: false,
+    [MouseButton.LEFT]: false,
+    [MouseButton.MIDDLE]: false,
+    [MouseButton.RIGHT]: false,
   };
   this._isPinching = false;
   this._isTouchHolding = false;

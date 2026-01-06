@@ -11,9 +11,22 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.JOINTS,
       VertexAttributeSemantic.WEIGHTS,
       VertexAttributeSemantic.FEATURE_ID,
+      VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.ROTATION,
     ];
 
-    const hasSetIndex = [false, false, false, true, true, true, true, true];
+    const hasSetIndex = [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ];
 
     const semanticsLength = semantics.length;
     for (let i = 0; i < semanticsLength; ++i) {
@@ -51,6 +64,10 @@ describe("Scene/VertexAttributeSemantic", function () {
       "_FEATURE_ID_0",
       "_FEATURE_ID_1",
       "_OTHER",
+      "_SCALE",
+      "KHR_gaussian_splatting:SCALE",
+      "_ROTATION",
+      "KHR_gaussian_splatting:ROTATION",
     ];
 
     const expectedSemantics = [
@@ -68,6 +85,10 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.FEATURE_ID,
       VertexAttributeSemantic.FEATURE_ID,
       undefined,
+      VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.ROTATION,
+      VertexAttributeSemantic.ROTATION,
     ];
 
     const semanticsLength = gltfSemantics.length;
@@ -137,6 +158,8 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.JOINTS,
       VertexAttributeSemantic.WEIGHTS,
       VertexAttributeSemantic.FEATURE_ID,
+      VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.ROTATION,
     ];
 
     const expectedShaderTypes = [
@@ -148,6 +171,8 @@ describe("Scene/VertexAttributeSemantic", function () {
       "ivec4",
       "vec4",
       "int",
+      "vec3",
+      "vec4",
     ];
 
     const semanticsLength = semantics.length;
@@ -180,6 +205,8 @@ describe("Scene/VertexAttributeSemantic", function () {
       VertexAttributeSemantic.JOINTS,
       VertexAttributeSemantic.WEIGHTS,
       VertexAttributeSemantic.FEATURE_ID,
+      VertexAttributeSemantic.SCALE,
+      VertexAttributeSemantic.ROTATION,
     ];
 
     const expectedVariableName = [
@@ -191,6 +218,8 @@ describe("Scene/VertexAttributeSemantic", function () {
       "joints",
       "weights",
       "featureId",
+      "scale",
+      "rotation",
     ];
 
     const semanticsLength = semantics.length;

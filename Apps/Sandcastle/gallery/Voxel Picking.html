@@ -75,18 +75,22 @@
         function ProceduralMultiTileVoxelProvider(shape) {
           this.shape = shape;
           this.dimensions = new Cesium.Cartesian3(4, 4, 4);
+          this.minBounds = Cesium.VoxelShapeType.getMinBounds(shape).clone();
+          this.maxBounds = Cesium.VoxelShapeType.getMaxBounds(shape).clone();
           this.names = ["color"];
           this.types = [Cesium.MetadataType.VEC4];
           this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
-          this._levelCount = 3;
+          this.availableLevels = 3;
           this.globalTransform = globalTransform;
         }
 
         ProceduralMultiTileVoxelProvider.prototype.requestData = function (options) {
           const { tileLevel, tileX, tileY, tileZ } = options;
 
-          if (tileLevel >= this._levelCount) {
-            return Promise.reject(`No tiles available beyond level ${this._levelCount}`);
+          if (tileLevel >= this.availableLevels) {
+            return Promise.reject(
+              `No tiles available beyond level ${this.availableLevels - 1}`,
+            );
           }
 
           const dimensions = this.dimensions;
@@ -134,12 +138,10 @@
           return dataColor;
         }
 
-        const provider = new ProceduralMultiTileVoxelProvider(Cesium.VoxelShapeType.BOX);
-
         const customShader = new Cesium.CustomShader({
           fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-    {
-      vec3 voxelNormal = normalize(czm_normal * fsInput.voxel.surfaceNormal);
+  {
+      vec3 voxelNormal = fsInput.attributes.normalEC;
       float diffuse = max(0.0, dot(voxelNormal, czm_lightDirectionEC));
       float lighting = 0.5 + 0.5 * diffuse;
 
@@ -147,13 +149,13 @@
       int sampleIndex = fsInput.voxel.sampleIndex;
       vec3 cellColor = fsInput.metadata.color.rgb * lighting;
       if (tileIndex == u_selectedTile && sampleIndex == u_selectedSample) {
-        material.diffuse = mix(cellColor, vec3(1.0), 0.5);
-        material.alpha = fsInput.metadata.color.a;
+          material.diffuse = mix(cellColor, vec3(1.0), 0.5);
+          material.alpha = fsInput.metadata.color.a;
       } else {
-        material.diffuse = cellColor;
-        material.alpha = fsInput.metadata.color.a;
+          material.diffuse = cellColor;
+          material.alpha = fsInput.metadata.color.a;
       }
-    }`,
+  }`,
           uniforms: {
             u_selectedTile: {
               type: Cesium.UniformType.INT,
@@ -166,18 +168,55 @@
           },
         });
 
-        const voxelPrimitive = scene.primitives.add(
-          new Cesium.VoxelPrimitive({
+        function createPrimitive(provider) {
+          viewer.scene.primitives.removeAll();
+
+          const voxelPrimitive = new Cesium.VoxelPrimitive({
             provider: provider,
             customShader: customShader,
-          }),
-        );
+          });
+          voxelPrimitive.nearestSampling = true;
+          voxelPrimitive.stepSize = 0.7;
 
-        voxelPrimitive.nearestSampling = true;
+          viewer.scene.primitives.add(voxelPrimitive);
+          camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {
+            duration: 0.0,
+          });
 
-        camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {
-          duration: 0.0,
-        });
+          return voxelPrimitive;
+        }
+
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Box - Procedural Tileset",
+            onselect: function () {
+              const provider = new ProceduralMultiTileVoxelProvider(
+                Cesium.VoxelShapeType.BOX,
+              );
+              const primitive = createPrimitive(provider);
+            },
+          },
+          {
+            text: "Ellipsoid - Procedural Tileset",
+            onselect: function () {
+              const provider = new ProceduralMultiTileVoxelProvider(
+                Cesium.VoxelShapeType.ELLIPSOID,
+              );
+              provider.minBounds.z = 0.0;
+              provider.maxBounds.z = 1000000.0;
+              const primitive = createPrimitive(provider);
+            },
+          },
+          {
+            text: "Cylinder - Procedural Tileset",
+            onselect: function () {
+              const provider = new ProceduralMultiTileVoxelProvider(
+                Cesium.VoxelShapeType.CYLINDER,
+              );
+              const primitive = createPrimitive(provider);
+            },
+          },
+        ]);
 
         const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
         const pickedCoordinate = document.getElementById("pickedCoordinate");

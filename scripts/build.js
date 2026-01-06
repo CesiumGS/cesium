@@ -1,10 +1,10 @@
-import child_process from "child_process";
-import { existsSync, readFileSync, statSync } from "fs";
-import { readFile, writeFile } from "fs/promises";
-import { EOL } from "os";
-import path from "path";
-import { createRequire } from "module";
-import { finished } from "stream/promises";
+import child_process from "node:child_process";
+import { existsSync, statSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
+import { EOL } from "node:os";
+import path from "node:path";
+import { finished } from "node:stream/promises";
+import { fileURLToPath } from "node:url";
 
 import esbuild from "esbuild";
 import { globby } from "globby";
@@ -18,21 +18,23 @@ import { mkdirp } from "mkdirp";
 // This should match the scope of the dependencies of the root level package.json.
 const scope = "cesium";
 
-const require = createRequire(import.meta.url);
-const packageJson = require("../package.json");
-let version = packageJson.version;
-if (/\.0$/.test(version)) {
-  version = version.substring(0, version.length - 2);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const projectRoot = path.join(__dirname, "..");
+const packageJsonPath = path.join(projectRoot, "package.json");
+
+export async function getVersion() {
+  const data = await readFile(packageJsonPath, "utf8");
+  const { version } = JSON.parse(data);
+  return version;
 }
 
-const copyrightHeaderTemplate = readFileSync(
-  path.join("Source", "copyrightHeader.js"),
-  "utf8",
-);
-const combinedCopyrightHeader = copyrightHeaderTemplate.replace(
-  "${version}",
-  version,
-);
+async function getCopyrightHeader() {
+  const copyrightHeaderTemplate = await readFile(
+    path.join("Source", "copyrightHeader.js"),
+    "utf8",
+  );
+  return copyrightHeaderTemplate.replace("${version}", await getVersion());
+}
 
 function escapeCharacters(token) {
   return token.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
@@ -164,7 +166,7 @@ export async function bundleCesiumJs(options) {
   buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
   buildConfig.write = options.write;
   buildConfig.banner = {
-    js: combinedCopyrightHeader,
+    js: await getCopyrightHeader(),
   };
   // print errors immediately, and collect warnings so we can filter out known ones
   buildConfig.logLevel = "info";
@@ -288,6 +290,7 @@ function generateDeclaration(workspace, file) {
  * @returns {Buffer} contents
  */
 export async function createCesiumJs() {
+  const version = await getVersion();
   let contents = `export const VERSION = '${version}';\n`;
 
   // Iterate over each workspace and generate declarations for each file.
@@ -304,6 +307,54 @@ export async function createCesiumJs() {
   return contents;
 }
 
+/**
+ * Bundles all individual modules, optionally minifying and stripping out debug pragmas.
+ * @param {object} options
+ * @param {string} options.outputDirectory Directory where build artifacts are output
+ * @param {string} options.entryPoint script to bundle
+ * @param {boolean} [options.minify=false] true if the output should be minified
+ * @param {boolean} [options.removePragmas=false] true if the output should have debug pragmas stripped out
+ * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
+ * @param {boolean} [options.incremental=false] true if build output should be cached for repeated builds
+ * @param {boolean} [options.write=true] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
+ */
+export async function bundleIndexJs(options) {
+  const buildConfig = {
+    ...defaultESBuildOptions(),
+    entryPoints: [options.entryPoint],
+    minify: options.minify,
+    sourcemap: options.sourcemap,
+    plugins: options.removePragmas ? [stripPragmaPlugin] : undefined,
+    write: options.write,
+    banner: {
+      js: await getCopyrightHeader(),
+    },
+    // print errors immediately, and collect warnings so we can filter out known ones
+    logLevel: "info",
+  };
+
+  const contexts = {};
+  const incremental = options.incremental ?? false;
+  const build = incremental ? esbuild.context : esbuild.build;
+
+  // Build ESM
+  const esm = await build({
+    ...buildConfig,
+    format: "esm",
+    outfile: path.join(options.outputDirectory, "index.js"),
+    // NOTE: doing this requires an importmap defined in the browser but avoids multiple CesiumJS instances
+    external: options.entryPoint.includes("engine") ? [] : ["@cesium/engine"],
+  });
+
+  if (incremental) {
+    contexts.esm = esm;
+  } else {
+    handleBuildWarnings(esm);
+  }
+
+  return contexts;
+}
+
 const workspaceSpecFiles = {
   engine: ["packages/engine/Specs/**/*Spec.js"],
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
@@ -314,6 +365,7 @@ const workspaceSpecFiles = {
  * @returns {Buffer} contents
  */
 export async function createCombinedSpecList() {
+  const version = await getVersion();
   let contents = `export const VERSION = '${version}';\n`;
 
   for (const workspace of Object.keys(workspaceSpecFiles)) {
@@ -383,11 +435,14 @@ export async function bundleWorkers(options) {
     workerConfig.logOverride = {
       "empty-import-meta": "silent",
     };
+    workerConfig.plugins = options.removePragmas
+      ? [stripPragmaPlugin]
+      : undefined;
   } else {
     workerConfig.format = "esm";
     workerConfig.splitting = true;
     workerConfig.banner = {
-      js: combinedCopyrightHeader,
+      js: await getCopyrightHeader(),
     };
     workerConfig.entryPoints = workers;
     workerConfig.outdir = path.join(options.path, "Workers");
@@ -622,7 +677,8 @@ export async function createGalleryList(noDevelopmentGallery) {
 
   // In CI, the version is set to something like '1.43.0-branch-name-buildNumber'
   // We need to extract just the Major.Minor version
-  const majorMinor = packageJson.version.match(/^(.*)\.(.*)\./);
+  const version = await getVersion();
+  const majorMinor = version.match(/^(.*)\.(.*)\./);
   const major = majorMinor[1];
   const minor = Number(majorMinor[2]) - 1; // We want the last release, not current release
   const tagVersion = `${major}.${minor}`;
@@ -854,6 +910,7 @@ export async function bundleTestWorkers(options) {
  * @returns
  */
 export async function createIndexJs(workspace) {
+  const version = await getVersion();
   let contents = `globalThis.CESIUM_VERSION = "${version}";\n`;
 
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
@@ -1010,6 +1067,19 @@ export const buildEngine = async (options) => {
   // Create index.js
   await createIndexJs("engine");
 
+  const contexts = await bundleIndexJs({
+    minify: minify,
+    incremental: incremental,
+    sourcemap: true,
+    removePragmas: false,
+    outputDirectory: path.join(
+      `packages/engine/Build`,
+      `${!minify ? "Unminified" : "Minified"}`,
+    ),
+    write: write,
+    entryPoint: `packages/engine/index.js`,
+  });
+
   // Build workers.
   await bundleWorkers({
     ...options,
@@ -1029,6 +1099,8 @@ export const buildEngine = async (options) => {
     specListFile: specListFile,
     write: write,
   });
+
+  return contexts;
 };
 
 /**
@@ -1036,12 +1108,14 @@ export const buildEngine = async (options) => {
  *
  * @param {object} options
  * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {boolean} [options.minify=false] True if bundles should be minified.
  * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  */
 export const buildWidgets = async (options) => {
   options = options || {};
 
   const incremental = options.incremental ?? false;
+  const minify = options.minify ?? false;
   const write = options.write ?? true;
 
   // Generate Build folder to place build artifacts.
@@ -1049,6 +1123,19 @@ export const buildWidgets = async (options) => {
 
   // Create index.js
   await createIndexJs("widgets");
+
+  const contexts = await bundleIndexJs({
+    minify: minify,
+    incremental: incremental,
+    sourcemap: true,
+    removePragmas: false,
+    outputDirectory: path.join(
+      `packages/widgets/Build`,
+      `${!minify ? "Unminified" : "Minified"}`,
+    ),
+    write: write,
+    entryPoint: `packages/widgets/index.js`,
+  });
 
   // Create SpecList.js
   const specFiles = await globby(workspaceSpecFiles["widgets"]);
@@ -1062,6 +1149,8 @@ export const buildWidgets = async (options) => {
     specListFile: specListFile,
     write: write,
   });
+
+  return contexts;
 };
 
 /**

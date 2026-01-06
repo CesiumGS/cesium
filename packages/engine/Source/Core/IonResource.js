@@ -8,6 +8,14 @@ import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
 
 /**
+ * A function that will be invoked when the access token is refreshed.
+ * @callback IonResourceRefreshCallback
+ * @param {IonResource} ionResource The root IonResource being refreshed.
+ * @param {object} endpoint The result of the Cesium ion asset endpoint service. This may be modified in place by the callback.
+ * @private
+ */
+
+/**
  * A {@link Resource} instance that encapsulates Cesium ion asset access.
  * This object is normally not instantiated directly, use {@link IonResource.fromAssetId}.
  *
@@ -16,7 +24,7 @@ import RuntimeError from "./RuntimeError.js";
  * @augments Resource
  *
  * @param {object} endpoint The result of the Cesium ion asset endpoint service.
- * @param {Resource} endpointResource The resource used to retrieve the endpoint.
+ * @param {Resource} endpointResource The original resource used to retrieve the endpoint.
  *
  * @see Ion
  * @see IonImageryProvider
@@ -70,6 +78,13 @@ function IonResource(endpoint, endpointResource) {
   this._pendingPromise = undefined;
   this._credits = undefined;
   this._isExternal = isExternal;
+
+  /**
+   * A function that, if defined, will be invoked when the access token is refreshed.
+   * @private
+   * @type {IonResourceRefreshCallback|undefined}
+   */
+  this.refreshCallback = undefined;
 }
 
 if (defined(Object.create)) {
@@ -84,7 +99,7 @@ if (defined(Object.create)) {
  * @param {object} [options] An object with the following properties:
  * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
  * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
- * @returns {Promise<IonResource>} A Promise to am instance representing the Cesium ion Asset.
+ * @returns {Promise<IonResource>} A Promise to an instance representing the Cesium ion Asset.
  *
  * @example
  * // Load a Cesium3DTileset with asset ID of 124624234
@@ -199,22 +214,15 @@ IonResource.prototype._makeRequest = function (options) {
     return Resource.prototype._makeRequest.call(this, options);
   }
 
-  if (!defined(options.headers)) {
-    options.headers = {};
-  }
+  options.headers = addClientHeaders(options.headers);
   options.headers.Authorization = `Bearer ${this._ionEndpoint.accessToken}`;
-  options.headers["X-Cesium-Client"] = "CesiumJS";
-  /* global CESIUM_VERSION */
-  if (typeof CESIUM_VERSION !== "undefined") {
-    options.headers["X-Cesium-Client-Version"] = CESIUM_VERSION;
-  }
 
   return Resource.prototype._makeRequest.call(this, options);
 };
 
 /**
  * @private
- */
+ **/
 IonResource._createEndpointResource = function (assetId, options) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("assetId", assetId);
@@ -233,8 +241,34 @@ IonResource._createEndpointResource = function (assetId, options) {
     resourceOptions.queryParameters = { access_token: accessToken };
   }
 
+  if (defined(options.queryParameters)) {
+    resourceOptions.queryParameters = {
+      ...resourceOptions.queryParameters,
+      ...options.queryParameters,
+    };
+  }
+
+  resourceOptions.headers = addClientHeaders(resourceOptions.headers);
+
   return server.getDerivedResource(resourceOptions);
 };
+
+/**
+ * Adds CesiumJS client headers to the provided headers object.
+ * @private
+ * @param {object} [headers={}] The headers to modify.
+ * @returns {object} The modified headers.
+ */
+function addClientHeaders(headers = {}) {
+  headers["X-Cesium-Client"] = "CesiumJS";
+
+  /* global CESIUM_VERSION */
+  if (typeof CESIUM_VERSION !== "undefined") {
+    headers["X-Cesium-Client-Version"] = CESIUM_VERSION;
+  }
+
+  return headers;
+}
 
 function retryCallback(that, error) {
   const ionRoot = that._ionRoot ?? that;
@@ -261,9 +295,14 @@ function retryCallback(that, error) {
     ionRoot._pendingPromise = endpointResource
       .fetchJson()
       .then(function (newEndpoint) {
-        //Set the token for root resource so new derived resources automatically pick it up
+        const refreshCallback = that.refreshCallback ?? ionRoot.refreshCallback;
+        if (defined(refreshCallback)) {
+          refreshCallback(ionRoot, newEndpoint);
+        }
+
+        // Set the token for root resource so new derived resources automatically pick it up
         ionRoot._ionEndpoint = newEndpoint;
-        return newEndpoint;
+        return ionRoot._ionEndpoint;
       })
       .finally(function (newEndpoint) {
         // Pass or fail, we're done with this promise, the next failure should use a new one.
@@ -278,4 +317,5 @@ function retryCallback(that, error) {
     return true;
   });
 }
+
 export default IonResource;

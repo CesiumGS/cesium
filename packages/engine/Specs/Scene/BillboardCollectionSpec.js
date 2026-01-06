@@ -347,6 +347,40 @@ describe("Scene/BillboardCollection", function () {
     expect(b.image.length).toBe(guidLength);
   });
 
+  it("image property setter computes SVG width and height", function () {
+    const b = billboards.add();
+
+    // Don't override image size if billboard size is unspecified.
+    b.image = "icon.svg";
+    expect(b.image).toBe("icon.svg");
+    expect(b._imageWidth).toBeUndefined();
+    expect(b._imageHeight).toBeUndefined();
+
+    // Don't override image size for raster images.
+    b.width = b.height = 50;
+    b.image = "icon.png";
+    expect(b._imageWidth).toBeUndefined();
+    expect(b._imageHeight).toBeUndefined();
+
+    // Override image size with billboard size for SVGs.
+    b.width = b.height = 50;
+    b.image = "icon.svg";
+    expect(b._imageWidth).toBe(50);
+    expect(b._imageHeight).toBe(50);
+
+    // Limit billboard-derived SVG size to 512px.
+    b.width = b.height = 10000;
+    b.image = "icon-lg.svg";
+    expect(b._imageWidth).toBe(512);
+    expect(b._imageHeight).toBe(512);
+
+    // Don't override image size if billboard is not sized in pixels.
+    b.sizeInMeters = true;
+    b.image = "icon.svg";
+    expect(b._imageWidth).toBeUndefined();
+    expect(b._imageHeight).toBeUndefined();
+  });
+
   it("is not destroyed", function () {
     expect(billboards.isDestroyed()).toEqual(false);
   });
@@ -2490,6 +2524,50 @@ describe("Scene/BillboardCollection", function () {
         expect(scene).toPickPrimitive(b);
       });
 
+      it("renders translucency correctly independently of image width", async function () {
+        // This test effectively probes at writeCompressedAttrib1, which packs together imageWidth and translucencyByDistance.
+        // In a previous regression, imageWidth was not being rounded, and was being packed incorrectly as a result of being treated as an incorrect type (float vs int).
+        const narrowBillboard = billboards.add({
+          position: Cartesian3.ZERO,
+          image: whiteImage,
+          width: 230.23,
+          translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+        });
+
+        const wideBillboard = billboards.add({
+          position: Cartesian3.ZERO,
+          image: whiteImage,
+          width: 300.355,
+          translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+        });
+
+        // Position the camera in the middle of the translucency range
+        camera.position = new Cartesian3(3.0, 0.0, 0.0);
+
+        await pollToPromise(() => {
+          scene.renderForSpecs();
+          return narrowBillboard.ready && wideBillboard.ready;
+        });
+
+        wideBillboard.show = false;
+        narrowBillboard.show = true;
+        let narrowBillboardColor;
+        expect(scene).toRenderAndCall(([r, g, b, a]) => {
+          expect([r, g, b]).not.toEqual([0, 0, 0]);
+          narrowBillboardColor = [r, g, b, a];
+        });
+
+        wideBillboard.show = true;
+        narrowBillboard.show = false;
+        let wideBillboardColor;
+        expect(scene).toRenderAndCall(([r, g, b, a]) => {
+          expect([r, g, b]).not.toEqual([0, 0, 0]);
+          wideBillboardColor = [r, g, b, a];
+        });
+
+        expect(narrowBillboardColor).toEqual(wideBillboardColor);
+      });
+
       describe("height referenced billboards", function () {
         let billboardsWithHeight;
         beforeEach(function () {
@@ -2687,7 +2765,7 @@ describe("Scene/BillboardCollection", function () {
           );
 
           const terrainProvider = await CesiumTerrainProvider.fromUrl(
-            "made/up/url",
+            "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",
             {
               requestVertexNormals: true,
             },

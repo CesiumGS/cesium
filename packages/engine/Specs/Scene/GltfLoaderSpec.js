@@ -128,6 +128,10 @@ describe(
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
+    const meshPrimitiveRestartTestData =
+      "./Data/Models/glTF-2.0/MeshPrimitiveRestart/glTF/MeshPrimitiveRestart.gltf";
+    const edgeVisibilityTestData =
+      "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility.glb";
 
     let scene;
     const gltfLoaders = [];
@@ -4170,6 +4174,219 @@ describe(
       expect(clearcoatRoughnessFactor).toBe(0.2);
       expect(clearcoatRoughnessTexture.texture.width).toBe(256);
       expect(clearcoatNormalTexture.texture.width).toBe(256);
+    });
+
+    it("loads model with EXT_mesh_primitive_restart extension", async function () {
+      const gltf = await Resource.fetchJson({
+        url: meshPrimitiveRestartTestData,
+      });
+      const gltfLoader = await loadGltf(meshPrimitiveRestartTestData);
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(gltf.meshes[0].primitives.length).toBe(8);
+      expect(loadedPrimitives.length).toBe(4);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if a primitive appears in multiple groups", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].extensions.EXT_mesh_primitive_restart.primitiveGroups[3].primitives[1] = 5;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if a primitive appears more than once in a group", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].extensions.EXT_mesh_primitive_restart.primitiveGroups[3].primitives[1] = 6;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart for unsupported modes", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].primitives[6].mode = 4;
+        delete gltf.meshes[0].primitives[0].mode;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if primitives have different modes", async function () {
+      function modifyGltf(gltf) {
+        gltf.meshes[0].primitives[7].mode = 3;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("does not load with EXT_mesh_primitive_restart if a primitive does not define an indices property", async function () {
+      function modifyGltf(gltf) {
+        delete gltf.meshes[0].primitives[0].indices;
+        return gltf;
+      }
+      const gltfLoader = await loadModifiedGltfAndTest(
+        meshPrimitiveRestartTestData,
+        undefined,
+        modifyGltf,
+      );
+      const loadedPrimitives = gltfLoader.components.nodes[0]["primitives"];
+
+      expect(loadedPrimitives.length).toBe(8);
+    });
+
+    it("loads model with EXT_mesh_primitive_edge_visibility extension", async function () {
+      const gltfLoader = await loadGltf(edgeVisibilityTestData);
+      const components = gltfLoader.components;
+      const scene = components.scene;
+
+      expect(scene).toBeDefined();
+      expect(scene.nodes).toBeDefined();
+      expect(scene.nodes.length).toBeGreaterThan(0);
+
+      const primitive = scene.nodes[0].primitives[0];
+      expect(primitive).toBeDefined();
+
+      expect(primitive.edgeVisibility).toBeDefined();
+      expect(primitive.edgeVisibility.visibility).toBeDefined();
+      expect(primitive.edgeVisibility.silhouetteNormals).toBeDefined();
+      expect(primitive.edgeVisibility.silhouetteNormals.length).toBeGreaterThan(
+        0,
+      );
+    });
+
+    it("processes edge visibility data correctly", async function () {
+      const gltfLoader = await loadGltf(edgeVisibilityTestData);
+      const components = gltfLoader.components;
+      const scene = components.scene;
+      const primitive = scene.nodes[0].primitives[0];
+
+      const edgeVisibility = primitive.edgeVisibility;
+      expect(edgeVisibility).toBeDefined();
+
+      const visibilityData = edgeVisibility.visibility;
+      expect(visibilityData).toBeDefined();
+      expect(visibilityData.length).toBeGreaterThan(0);
+
+      let hasValidVisibilityValues = false;
+      for (let i = 0; i < visibilityData.length; i++) {
+        const value = visibilityData[i];
+        if (value !== 0) {
+          hasValidVisibilityValues = true;
+          expect(value).toBeGreaterThanOrEqual(0);
+          expect(value).toBeLessThanOrEqual(255);
+        }
+      }
+      expect(hasValidVisibilityValues).toBe(true);
+    });
+
+    it("loads primitive without edge visibility extension", async function () {
+      const gltfLoader = await loadGltf(triangle);
+      const components = gltfLoader.components;
+      const scene = components.scene;
+      const primitive = scene.nodes[0].primitives[0];
+
+      expect(primitive.edgeVisibility).toBeUndefined();
+    });
+
+    it("validates edge visibility bitfield format", async function () {
+      const gltfLoader = await loadGltf(edgeVisibilityTestData);
+      const components = gltfLoader.components;
+      const scene = components.scene;
+      const primitive = scene.nodes[0].primitives[0];
+
+      const edgeVisibility = primitive.edgeVisibility;
+      expect(edgeVisibility).toBeDefined();
+      expect(edgeVisibility.visibility).toBeDefined();
+
+      const visibilityData = edgeVisibility.visibility;
+      expect(visibilityData.length).toBeGreaterThan(0);
+
+      let hasVisibleEdges = false;
+      for (let i = 0; i < visibilityData.length; i++) {
+        const byte = visibilityData[i];
+
+        for (let bit = 0; bit < 8; bit += 2) {
+          const edgeVisibility = (byte >> bit) & 0x3;
+          expect(edgeVisibility).toBeGreaterThanOrEqual(0);
+          expect(edgeVisibility).toBeLessThanOrEqual(3);
+          if (edgeVisibility === 1 || edgeVisibility === 2) {
+            hasVisibleEdges = true;
+          }
+        }
+      }
+      expect(hasVisibleEdges).toBe(true);
+    });
+
+    it("handles edge visibility silhouette normals", async function () {
+      const gltfLoader = await loadGltf(edgeVisibilityTestData);
+      const components = gltfLoader.components;
+      const scene = components.scene;
+      const primitive = scene.nodes[0].primitives[0];
+
+      const edgeVisibility = primitive.edgeVisibility;
+      expect(edgeVisibility).toBeDefined();
+      expect(edgeVisibility.silhouetteNormals).toBeDefined();
+
+      const silhouetteNormals = edgeVisibility.silhouetteNormals;
+      expect(silhouetteNormals.length).toBeGreaterThan(0);
+
+      for (let i = 0; i < silhouetteNormals.length; i++) {
+        const normal = silhouetteNormals[i];
+        expect(normal).toBeDefined();
+        expect(normal.x).toBeDefined();
+        expect(normal.y).toBeDefined();
+        expect(normal.z).toBeDefined();
+        expect(typeof normal.x).toBe("number");
+        expect(typeof normal.y).toBe("number");
+        expect(typeof normal.z).toBe("number");
+        expect(isNaN(normal.x)).toBe(false);
+        expect(isNaN(normal.y)).toBe(false);
+        expect(isNaN(normal.z)).toBe(false);
+      }
+    });
+
+    it("validates edge visibility data loading", async function () {
+      const gltfLoader = await loadGltf(edgeVisibilityTestData);
+      const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+
+      expect(primitive.edgeVisibility).toBeDefined();
+      expect(primitive.edgeVisibility.visibility).toBeDefined();
+      expect(primitive.edgeVisibility.visibility.length).toBeGreaterThan(0);
+
+      if (primitive.edgeVisibility.silhouetteNormals) {
+        expect(
+          primitive.edgeVisibility.silhouetteNormals.length,
+        ).toBeGreaterThanOrEqual(0);
+      }
     });
 
     it("parses copyright field", function () {

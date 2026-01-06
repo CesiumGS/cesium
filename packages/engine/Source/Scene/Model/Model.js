@@ -43,6 +43,7 @@ import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
+import ModelImagery from "./ModelImagery.js";
 
 /**
  * <div class="notice">
@@ -69,6 +70,9 @@ import pickModel from "./pickModel.js";
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing|EXT_mesh_gpu_instancing}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/pull/2514|EXT_mesh_primitive_restart}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_meshopt_compression|EXT_meshopt_compression}
@@ -381,6 +385,8 @@ function Model(options) {
     this._clippingPolygons = clippingPolygons;
   }
   this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
+
+  this._modelImagery = new ModelImagery(this);
 
   this._lightColor = Cartesian3.clone(options.lightColor);
 
@@ -1376,6 +1382,28 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * If this model is part of a <code>Model3DTileContent</code> of a tileset,
+   * then this will return the <code>ImageryLayerCollection</code>
+   * of that tileset. Otherwise, <code>undefined</code> is returned.
+   *
+   * @memberof Model.prototype
+   * @type {ImageryLayerCollection|undefined}
+   * @readonly
+   * @private
+   */
+  imageryLayers: {
+    get: function () {
+      if (defined(this._content)) {
+        const tileset = this._content.tileset;
+        if (defined(tileset)) {
+          return tileset.imageryLayers;
+        }
+      }
+      return undefined;
+    },
+  },
+
+  /**
    * The directional light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * Disabling additional light sources by setting
@@ -1926,6 +1954,19 @@ Model.prototype.update = function (frameState) {
   // is currently morphing.
   if (!this._resourcesLoaded || frameState.mode === SceneMode.MORPHING) {
     return;
+  }
+
+  const modelImagery = this._modelImagery;
+  modelImagery.update(frameState);
+  if (!modelImagery.ready) {
+    // If the imagery loading should not happen asynchronously,
+    // then do not let the model count as 'ready' until the
+    // modelImagery is 'ready'
+    const asynchronouslyLoadImagery =
+      this._content?.tileset?._asynchronouslyLoadImagery ?? false;
+    if (!asynchronouslyLoadImagery) {
+      return;
+    }
   }
 
   updateFeatureTableId(this);

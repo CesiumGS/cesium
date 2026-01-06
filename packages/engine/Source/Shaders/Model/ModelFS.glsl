@@ -1,5 +1,6 @@
 
 precision highp float;
+
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;
@@ -86,7 +87,7 @@ void main()
 
     // When not picking metadata END
     //========================================================================
-    #else 
+    #else
     //========================================================================
     // When picking metadata START
 
@@ -118,9 +119,15 @@ void main()
     atmosphereStage(color, attributes);
     #endif
 
+    #ifdef HAS_EDGE_VISIBILITY
+    edgeVisibilityStage(color, featureIds);
+    edgeDetectionStage(color, featureIds);
+    #endif
+
     #endif
     // When not picking metadata END
     //========================================================================
 
     out_FragColor = color;
 }
+
