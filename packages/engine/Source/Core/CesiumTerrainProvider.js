@@ -1,7 +1,6 @@
 import AttributeCompression from "./AttributeCompression.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
-import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import Frozen from "./Frozen.js";
@@ -23,6 +22,7 @@ import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TileAvailability from "./TileAvailability.js";
 import TileProviderError from "./TileProviderError.js";
+import SDF from "./sdf.js";
 
 function LayerInformation(layer) {
   this.resource = layer.resource;
@@ -925,104 +925,6 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
 };
 
 /**
- * Calculates the distance from a point to a line segment.
- * @param {Array} point - The point [x, y].
- * @param {Array} segmentStart - The start of the segment [x, y].
- * @param {Array} segmentEnd - The end of the segment [x, y].
- * @returns {number} - The distance.
- */
-function pointToSegmentDistance(point, segmentStart, segmentEnd) {
-  const [px, py] = point;
-  const [x1, y1] = segmentStart;
-  const [x2, y2] = segmentEnd;
-
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-
-  if (dx === 0 && dy === 0) {
-    // Segment is a point
-    return Math.sqrt((px - x1) ** 2 + (py - y1) ** 2);
-  }
-
-  const t = ((px - x1) * dx + (py - y1) * dy) / (dx ** 2 + dy ** 2);
-  const clampedT = Math.max(0, Math.min(1, t));
-
-  const closestPoint = [x1 + clampedT * dx, y1 + clampedT * dy];
-  return Math.sqrt((px - closestPoint[0]) ** 2 + (py - closestPoint[1]) ** 2);
-}
-
-function generateSDF(rectangle, features, resolution) {
-  const minX = CesiumMath.toDegrees(rectangle.west);
-  const minY = CesiumMath.toDegrees(rectangle.south);
-  const maxX = CesiumMath.toDegrees(rectangle.east);
-  const maxY = CesiumMath.toDegrees(rectangle.north);
-
-  const width = resolution;
-  const height = resolution;
-
-  const sdf = new Float32Array(width * height).fill(Infinity);
-  const featureID = new Uint32Array(width * height).fill(-1);
-
-  features.forEach((feature) => {
-    if (
-      feature.geometry.type === "LineString" ||
-      feature.geometry.type === "Polygon"
-    ) {
-      let coordinates = feature.geometry.coordinates;
-      const grid_coordinates = [];
-
-      if (feature.geometry.type === "Polygon") {
-        // for polygon, only take the outer ring
-        coordinates = coordinates[0];
-      }
-
-      // convert each world coordinate to grid coordinate
-      for (let i = 0; i < coordinates.length; i++) {
-        const [worldX, worldY] = coordinates[i];
-        const gridX = Math.floor(((worldX - minX) / (maxX - minX)) * width);
-        const gridY = Math.floor(((worldY - minY) / (maxY - minY)) * height);
-        grid_coordinates.push([gridX, gridY]);
-      }
-
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          // convert grid point to world coordinates
-          const gridPoints = [x, y];
-
-          let distance = Infinity;
-          //const distance = calculateDistanceToLine(gridPoints, grid_coordinates);
-          // loop through each segment
-          for (let i = 0; i < grid_coordinates.length - 1; i++) {
-            const segmentStart = grid_coordinates[i];
-            const segmentEnd = grid_coordinates[i + 1];
-            const dist = pointToSegmentDistance(
-              gridPoints,
-              segmentStart,
-              segmentEnd,
-            );
-            distance = Math.min(distance, dist);
-          }
-
-          if (distance < sdf[y * width + x]) {
-            sdf[y * width + x] = distance;
-            featureID[y * width + x] = features.indexOf(feature);
-          }
-        }
-      }
-
-      // log progress bar at every 10%
-      const featureIndex = features.indexOf(feature);
-      const progress = Math.floor((featureIndex / features.length) * 10);
-      if (featureIndex % Math.floor(features.length / 10) === 0) {
-        console.log(`Processing features: ${progress * 10}%`);
-      }
-    }
-  });
-
-  return [sdf, featureID];
-}
-
-/**
  *
  * @param {number} rootId The root tile ID (0 or 1).
  * @param {number} level The level of the tile.
@@ -1049,16 +951,16 @@ function requestGeoJson(provider, rootId, level, x, y, terrainY) {
         return undefined;
       }
 
-      const width = 32;
-      const height = 32;
+      const width = 256;
+      const height = 256;
 
       const rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
 
       const features = geojson.features;
-      const [sdfDistancesArray, sdfFeatureIdsArray] = generateSDF(
+      const [sdfDistancesArray, sdfFeatureIdsArray] = SDF.generateSDFSweep(
         rectangle,
         features,
-        32,
+        256,
       );
 
       return {
