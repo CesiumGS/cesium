@@ -1,6 +1,7 @@
 import AttributeCompression from "./AttributeCompression.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
+import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import Frozen from "./Frozen.js";
@@ -924,40 +925,6 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
 };
 
 /**
- * Calculates the bounding box of the GeoJSON features.
- * @param {Array} features - List of GeoJSON features.
- * @returns {Array} - Bounding box [minX, minY, maxX, maxY].
- */
-function calculateBoundingBox(features) {
-  let minX = Infinity,
-    minY = Infinity,
-    maxX = -Infinity,
-    maxY = -Infinity;
-
-  features.forEach((feature) => {
-    if (feature.geometry.type === "LineString") {
-      feature.geometry.coordinates.forEach(([x, y]) => {
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x);
-        maxY = Math.max(maxY, y);
-      });
-    } else if (feature.geometry.type === "Polygon") {
-      feature.geometry.coordinates.forEach((ring) => {
-        ring.forEach(([x, y]) => {
-          minX = Math.min(minX, x);
-          minY = Math.min(minY, y);
-          maxX = Math.max(maxX, x);
-          maxY = Math.max(maxY, y);
-        });
-      });
-    }
-  });
-
-  return [minX, minY, maxX, maxY];
-}
-
-/**
  * Calculates the distance from a point to a line segment.
  * @param {Array} point - The point [x, y].
  * @param {Array} segmentStart - The start of the segment [x, y].
@@ -984,9 +951,11 @@ function pointToSegmentDistance(point, segmentStart, segmentEnd) {
   return Math.sqrt((px - closestPoint[0]) ** 2 + (py - closestPoint[1]) ** 2);
 }
 
-function generateSDF(features, resolution) {
-  const bbox = calculateBoundingBox(features);
-  const [minX, minY, maxX, maxY] = bbox;
+function generateSDF(rectangle, features, resolution) {
+  const minX = CesiumMath.toDegrees(rectangle.west);
+  const minY = CesiumMath.toDegrees(rectangle.south);
+  const maxX = CesiumMath.toDegrees(rectangle.east);
+  const maxY = CesiumMath.toDegrees(rectangle.north);
 
   const width = resolution;
   const height = resolution;
@@ -1034,9 +1003,9 @@ function generateSDF(features, resolution) {
             distance = Math.min(distance, dist);
           }
 
-          if (distance < sdf[y + x * width]) {
-            sdf[y + x * width] = distance;
-            featureID[y + x * width] = features.indexOf(feature);
+          if (distance < sdf[y * width + x]) {
+            sdf[y * width + x] = distance;
+            featureID[y * width + x] = features.indexOf(feature);
           }
         }
       }
@@ -1061,9 +1030,9 @@ function generateSDF(features, resolution) {
  * @param {number} y The y coordinate of the tile.
  * @returns {Promise<{width: number, height: number, sdfDistances: Float32Array, sdfFeatureIds: Uint32Array}>} A promise that resolves to the SDF data.
  */
-function requestGeoJson(rootId, level, x, y) {
+function requestGeoJson(provider, rootId, level, x, y) {
   const url =
-    "http://localhost:8070/v1/static/vector/tile_root{rootId}_level{level}_{x}_{y}.json";
+    "http://localhost:8070/v1/static/vector/test/tile_root{rootId}_level{level}_{y}_{x}.json";
 
   return Resource.fetchJson({
     url: url,
@@ -1079,13 +1048,16 @@ function requestGeoJson(rootId, level, x, y) {
         return undefined;
       }
 
-      const width = 512;
-      const height = 512;
+      const width = 128;
+      const height = 128;
+
+      const rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
 
       const features = geojson.features;
       const [sdfDistancesArray, sdfFeatureIdsArray] = generateSDF(
+        rectangle,
         features,
-        512,
+        128,
       );
 
       return {
@@ -1195,7 +1167,7 @@ async function requestTileGeometry(provider, x, y, level, layerToUse, request) {
 
   const promises = scratchPromises;
   promises[0] = promise;
-  promises[1] = requestGeoJson(rootId, level, x, y);
+  promises[1] = requestGeoJson(provider, rootId, level, x, y);
 
   try {
     const results = await Promise.all(promises);

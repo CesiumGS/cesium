@@ -187,6 +187,26 @@ bool inTranslucencyRectangle()
 
 #ifdef HAS_SDF
     uniform highp sampler2D u_sdf;
+
+float sampleBilinear(sampler2D tex, vec2 uv) {
+    ivec2 size = textureSize(tex, 0); // LOD 0
+
+    vec2 texel = uv * vec2(size) - 0.5;
+    ivec2 i = ivec2(floor(texel));
+    vec2 f = fract(texel);
+
+    float a = texelFetch(tex, i, 0).r;
+    float b = texelFetch(tex, i + ivec2(1, 0), 0).r;
+    float c = texelFetch(tex, i + ivec2(0, 1), 0).r;
+    float d = texelFetch(tex, i + ivec2(1, 1), 0).r;
+
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float sampleNearest(sampler2D tex, vec2 uv) {
+    return texelFetch(tex, ivec2(floor(uv * vec2(textureSize(tex, 0)))), 0).r;
+}
+
 #endif
 
 vec4 sampleAndBlend(
@@ -591,7 +611,8 @@ void main()
     out_FragColor =  finalColor;
 
 #ifdef HAS_SDF
-    float dist = texture(u_sdf, v_textureCoordinates.xy).r;
+    float dist = sampleNearest(u_sdf, v_textureCoordinates.xy);
+    //float dist = sampleBilinear(u_sdf, v_textureCoordinates.xy);
 
     if (dist < 0.5) {
         out_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
