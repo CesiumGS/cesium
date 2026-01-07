@@ -613,9 +613,10 @@ void main()
 #ifdef HAS_SDF
     float dist = sampleNearest(u_sdf, v_textureCoordinates.xy);
     //float dist = sampleBilinear(u_sdf, v_textureCoordinates.xy);
-
-    if (dist < 0.5) {
-        out_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+    float lwidth = 5.0;
+    if (dist < lwidth) {
+        float renormalized = clamp((lwidth - dist) / lwidth, 0.0, 1.0);
+        out_FragColor = vec4(renormalized, renormalized, 0.0, renormalized);
     }
 #endif
 }
