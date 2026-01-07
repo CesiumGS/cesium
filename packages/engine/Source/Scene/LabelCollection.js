@@ -1,5 +1,6 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Cartesian2 from "../Core/Cartesian2.js";
+import CesiumMath from "../Core/Math.js";
 import Color from "../Core/Color.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
@@ -132,6 +133,7 @@ const splitter = new GraphemeSplitter();
 const whitespaceRegex = /\s/;
 
 function rebindAllGlyphs(labelCollection, label) {
+  const labels = labelCollection._labels;
   const text = label._renderedText;
   const graphemes = splitter.splitGraphemes(text);
   const textLength = graphemes.length;
@@ -139,20 +141,25 @@ function rebindAllGlyphs(labelCollection, label) {
   const glyphsLength = glyphs.length;
 
   // Compute SDF size based on largest label font size.
-  const sdfSize = labelCollection._labels.reduce(
-    (maxSize, label) => Math.max(maxSize, Number(label._fontSize)),
-    SDFSettings.FONT_SIZE,
+  const sdfSize = CesiumMath.clamp(
+    labels.reduce((max, l) => Math.max(max, l._fontSize), 0),
+    SDFSettings.MIN_FONT_SIZE,
+    SDFSettings.MAX_FONT_SIZE,
   );
 
   // Compute a font size scale relative to the sdf font generated size.
   label._relativeSize = label._fontSize / sdfSize;
 
   // if we have more glyphs than needed, unbind the extras.
-  if (textLength < glyphsLength) {
-    for (let glyphIndex = textLength; glyphIndex < glyphsLength; ++glyphIndex) {
+  if (textLength < glyphsLength || labelCollection._sdfSize < sdfSize) {
+    let glyphIndex = labelCollection._sdfSize < sdfSize ? 0 : textLength;
+    while (glyphIndex < glyphsLength) {
       unbindGlyphBillboard(labelCollection, glyphs[glyphIndex]);
+      glyphIndex++;
     }
   }
+
+  labelCollection._sdfSize = sdfSize;
 
   // presize glyphs to match the new text length
   glyphs.length = textLength;
@@ -190,11 +197,13 @@ function rebindAllGlyphs(labelCollection, label) {
       character,
       label._fontFamily,
       label._fontStyle,
-      label._fontSize,
       label._fontWeight,
       +verticalOrigin,
     ]);
 
+    // TODO(donmccurdy): We're unbinding the glyph billboard above, but the glyph texture cache entry remains,
+    // so nothing is rebound. Worth checking whether this might represent a memory leak (black textures mobile)
+    // in `main`. But in any case, we need to replace the cached texture now.
     let dimensions = textDimensionsCache[id];
     let glyphBillboardTexture = glyphTextureCache.get(id);
     if (!defined(glyphBillboardTexture) || !defined(dimensions)) {
@@ -653,6 +662,7 @@ function LabelCollection(options) {
   this._labels = [];
   this._labelsToUpdate = [];
   this._totalGlyphCount = 0;
+  this._sdfSize = SDFSettings.MIN_FONT_SIZE;
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
 
