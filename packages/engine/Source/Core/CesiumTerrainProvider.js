@@ -952,7 +952,7 @@ function requestGeoJson(provider, rootId, level, x, y, terrainY) {
       }
 
       const width = 256;
-      const height = 256;
+      const height = 512;
 
       const rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
 
