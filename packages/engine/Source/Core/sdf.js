@@ -113,19 +113,25 @@ import CesiumMath from "./Math.js";
 
   return [sdf, featureID];
 }*/
+function toGlobalIndex(pix_x, pix_y, width, height, rowMajor = true) {
+  if (rowMajor) {
+    return pix_x + pix_y * width;
+  }
+  return pix_y + pix_x * height;
+}
 
 function getV(pix_x, pix_y, sdf, width, height) {
   if (pix_x < 0 || pix_y < 0 || pix_x >= width || pix_y >= height) {
     return Infinity;
   }
-  return sdf[pix_y + pix_x * height];
+  return sdf[toGlobalIndex(pix_x, pix_y, width, height)];
 }
 
 function setV(pix_x, pix_y, value, sdf, width, height) {
   if (pix_x < 0 || pix_y < 0 || pix_x >= width || pix_y >= height) {
     return;
   }
-  sdf[pix_y + pix_x * height] = value;
+  sdf[toGlobalIndex(pix_x, pix_y, width, height)] = value;
 }
 
 function isOnGeo(pix_x, pix_y, sdf, width, height) {
@@ -335,7 +341,7 @@ function generateSDFSweep(
                 }
               }
 
-              const idxCurr = y + x * resolutionH;
+              const idxCurr = toGlobalIndex(x, y, width, height);
               if (inside) {
                 if (sdf[idxCurr] !== 0) {
                   sdf[idxCurr] = -Infinity;
