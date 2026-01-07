@@ -960,7 +960,8 @@ function requestGeoJson(provider, rootId, level, x, y, terrainY) {
       const [sdfDistancesArray, sdfFeatureIdsArray] = SDF.generateSDFSweep(
         rectangle,
         features,
-        256,
+        width,
+        height,
       );
 
       return {

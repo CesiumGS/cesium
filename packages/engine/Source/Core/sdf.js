@@ -6,7 +6,7 @@ import CesiumMath from "./Math.js";
  * @param {Array} line - The line as an array of coordinates [[x1, y1], [x2, y2], ...].
  * @returns {number} - The shortest distance.
  */
-function calculateDistanceToLine(point, line) {
+/*function calculateDistanceToLine(point, line) {
   let minDistance = Infinity;
 
   for (let i = 0; i < line.length - 1; i++) {
@@ -17,7 +17,7 @@ function calculateDistanceToLine(point, line) {
   }
 
   return minDistance;
-}
+}*/
 
 /**
  * Calculates the distance from a point to a line segment.
@@ -26,7 +26,7 @@ function calculateDistanceToLine(point, line) {
  * @param {Array} segmentEnd - The end of the segment [x, y].
  * @returns {number} - The distance.
  */
-function pointToSegmentDistance(point, segmentStart, segmentEnd) {
+/*function pointToSegmentDistance(point, segmentStart, segmentEnd) {
   const [px, py] = point;
   const [x1, y1] = segmentStart;
   const [x2, y2] = segmentEnd;
@@ -44,7 +44,7 @@ function pointToSegmentDistance(point, segmentStart, segmentEnd) {
 
   const closestPoint = [x1 + clampedT * dx, y1 + clampedT * dy];
   return Math.sqrt((px - closestPoint[0]) ** 2 + (py - closestPoint[1]) ** 2);
-}
+}*/
 
 /**
  * Generates a Float32Array signed distance field (SDF) for GeoJSON line features
@@ -52,7 +52,7 @@ function pointToSegmentDistance(point, segmentStart, segmentEnd) {
  * @param {number} resolution - Resolution of the SDF grid.
  * @returns {Array} - 2D array representing the SDF grid.
  */
-function generateSDF(rectangle, features, resolution) {
+/*function generateSDF(rectangle, features, resolution) {
   const minX = CesiumMath.toDegrees(rectangle.west);
   const minY = CesiumMath.toDegrees(rectangle.south);
   const maxX = CesiumMath.toDegrees(rectangle.east);
@@ -112,41 +112,54 @@ function generateSDF(rectangle, features, resolution) {
   });
 
   return [sdf, featureID];
-}
+}*/
 
-function getV(pix_x, pix_y, sdf, resolution) {
-  if (pix_x < 0 || pix_y < 0 || pix_x >= resolution || pix_y >= resolution) {
+function getV(pix_x, pix_y, sdf, width, height) {
+  if (pix_x < 0 || pix_y < 0 || pix_x >= width || pix_y >= height) {
     return Infinity;
   }
-  return sdf[pix_y * resolution + pix_x];
+  return sdf[pix_y + pix_x * height];
 }
 
-function setV(pix_x, pix_y, value, sdf, resolution) {
-  if (pix_x < 0 || pix_y < 0 || pix_x >= resolution || pix_y >= resolution) {
+function setV(pix_x, pix_y, value, sdf, width, height) {
+  if (pix_x < 0 || pix_y < 0 || pix_x >= width || pix_y >= height) {
     return;
   }
-  return (sdf[pix_y * resolution + pix_x] = value);
+  sdf[pix_y + pix_x * height] = value;
 }
 
-function isOnGeo(pix_x, pix_y, sdf, resolution) {
-  if (pix_x < 0 || pix_y === resolution || pix_y < 0 || pix_y >= resolution) {
+function isOnGeo(pix_x, pix_y, sdf, width, height) {
+  if (pix_x < 0 || pix_y < 0 || pix_x >= width || pix_y >= height) {
     return false;
   }
-  return getV(pix_x, pix_y, sdf, resolution) === 0;
+  return getV(pix_x, pix_y, sdf, width, height) === 0;
 }
 
-function updateByNeighbors(pix_x, pix_y, sdf, featureIDs, resolution) {
-  const isOn = isOnGeo(pix_x, pix_y, sdf, resolution);
+function updateByNeighbors(
+  pix_x,
+  pix_y,
+  sdf,
+  featureIDs,
+  resolutionW,
+  resolutionH,
+) {
+  const isOn = isOnGeo(pix_x, pix_y, sdf, resolutionW, resolutionH);
 
   if (isOn) {
     // on geo, skip
     return;
   }
 
-  const minDistanceSigned = getV(pix_x, pix_y, sdf, resolution);
+  const minDistanceSigned = getV(pix_x, pix_y, sdf, resolutionW, resolutionH);
   let minDistance = Math.abs(minDistanceSigned);
   const minDistanceSign = minDistanceSigned >= 0 ? 1 : -1;
-  let minDistanceIndx = getV(pix_x, pix_y, featureIDs, resolution);
+  let minDistanceIndx = getV(
+    pix_x,
+    pix_y,
+    featureIDs,
+    resolutionW,
+    resolutionH,
+  );
 
   // 3x3 neighborhood
   const neighbors = [
@@ -164,9 +177,9 @@ function updateByNeighbors(pix_x, pix_y, sdf, featureIDs, resolution) {
     const [dx, dy] = neighbors[i];
     const n_x = pix_x + dx;
     const n_y = pix_y + dy;
-    const n_featureID = getV(n_x, n_y, featureIDs, resolution);
+    const n_featureID = getV(n_x, n_y, featureIDs, resolutionW, resolutionH);
 
-    if (isOnGeo(n_x, n_y, sdf, resolution)) {
+    if (isOnGeo(n_x, n_y, sdf, resolutionW, resolutionH)) {
       // neighbor is on geo, make distance
       const adjusted_distance = Math.sqrt(dx * dx + dy * dy);
       if (adjusted_distance < minDistance) {
@@ -175,7 +188,7 @@ function updateByNeighbors(pix_x, pix_y, sdf, featureIDs, resolution) {
       }
     } else {
       // neighbor is not on geo, compute adjusted distance
-      const n_v = Math.abs(getV(n_x, n_y, sdf, resolution));
+      const n_v = Math.abs(getV(n_x, n_y, sdf, resolutionW, resolutionH));
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       const adjusted_distance = n_v + distance;
@@ -187,18 +200,31 @@ function updateByNeighbors(pix_x, pix_y, sdf, featureIDs, resolution) {
     }
   }
 
-  setV(pix_x, pix_y, minDistance * minDistanceSign, sdf, resolution);
-  setV(pix_x, pix_y, minDistanceIndx, featureIDs, resolution);
+  setV(
+    pix_x,
+    pix_y,
+    minDistance * minDistanceSign,
+    sdf,
+    resolutionW,
+    resolutionH,
+  );
+  setV(pix_x, pix_y, minDistanceIndx, featureIDs, resolutionW, resolutionH);
 }
 
-function generateSDFSweep(rectangle, features, resolution, negPoly = false) {
+function generateSDFSweep(
+  rectangle,
+  features,
+  resolutionW,
+  resolutionH,
+  negPoly = false,
+) {
   const minX = CesiumMath.toDegrees(rectangle.west);
   const minY = CesiumMath.toDegrees(rectangle.south);
   const maxX = CesiumMath.toDegrees(rectangle.east);
   const maxY = CesiumMath.toDegrees(rectangle.north);
 
-  const width = resolution;
-  const height = resolution;
+  const width = resolutionW;
+  const height = resolutionH;
 
   const sdf = new Float32Array(width * height).fill(Infinity);
   const featureID = new Uint32Array(width * height).fill(-1);
@@ -238,8 +264,15 @@ function generateSDFSweep(rectangle, features, resolution, negPoly = false) {
 
         while (true) {
           // set pixel as on geo
-          setV(x, y, 0, sdf, resolution);
-          setV(x, y, features.indexOf(feature), featureID, resolution);
+          setV(x, y, 0, sdf, resolutionW, resolutionH);
+          setV(
+            x,
+            y,
+            features.indexOf(feature),
+            featureID,
+            resolutionW,
+            resolutionH,
+          );
 
           if (x === gridX2 && y === gridY2) {
             break;
@@ -302,7 +335,7 @@ function generateSDFSweep(rectangle, features, resolution, negPoly = false) {
                 }
               }
 
-              const idxCurr = y * resolution + x;
+              const idxCurr = y + x * resolutionH;
               if (inside) {
                 if (sdf[idxCurr] !== 0) {
                   sdf[idxCurr] = -Infinity;
@@ -318,35 +351,35 @@ function generateSDFSweep(rectangle, features, resolution, negPoly = false) {
   // Sweep through the grid left to right, top to bottom
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      updateByNeighbors(x, y, sdf, featureID, resolution);
+      updateByNeighbors(x, y, sdf, featureID, resolutionW, resolutionH);
     }
   }
 
   // Sweep through the grid left to right, bottom to top
   for (let y = height - 1; y >= 0; y--) {
     for (let x = 0; x < width; x++) {
-      updateByNeighbors(x, y, sdf, featureID, resolution);
+      updateByNeighbors(x, y, sdf, featureID, resolutionW, resolutionH);
     }
   }
 
   // Sweep through the grid right to left, bottom to top
   for (let y = height - 1; y >= 0; y--) {
     for (let x = width - 1; x >= 0; x--) {
-      updateByNeighbors(x, y, sdf, featureID, resolution);
+      updateByNeighbors(x, y, sdf, featureID, resolutionW, resolutionH);
     }
   }
 
   // Sweep through the grid right to left, top to bottom
   for (let y = 0; y < height; y++) {
     for (let x = width - 1; x >= 0; x--) {
-      updateByNeighbors(x, y, sdf, featureID, resolution);
+      updateByNeighbors(x, y, sdf, featureID, resolutionW, resolutionH);
     }
   }
 
   return [sdf, featureID];
 }
 
-function updateGridByNeighbors(
+/*function updateGridByNeighbors(
   pix_x,
   pix_y,
   sdf,
@@ -531,10 +564,10 @@ function generateSDFSweepGridSpace(rectangle, features, resolution) {
   }
 
   return [sdf, featureID];
-}
+}*/
 
 export default {
-  generateSDF,
+  //generateSDF,
   generateSDFSweep,
-  generateSDFSweepGridSpace,
+  //generateSDFSweepGridSpace,
 };
