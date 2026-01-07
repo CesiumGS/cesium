@@ -17,7 +17,7 @@ import VertexFormat from "../Core/VertexFormat.js";
  *
  * Initialization options for the EquirectangularPanorama constructor
  *
- * @property {Image} image 2:1 equirectangular image path
+ * @property {object} image 2:1 equirectangular image path
  * @property {Matrix4} [transform=Matrix4.IDENTITY]  The 4x4 transformation matrix to place the panorama relative to the globe.
  * @property {number} [radius=100000.0] The radius of the panorama in meters.
  * @param {number} [options.minimumClock=0.0] The minimum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
@@ -111,47 +111,16 @@ function EquirectangularPanorama(options) {
   return primitive;
 }
 
-Object.defineProperties(EquirectangularPanorama.prototype, {
-  /**
-   * Determines if the panorama will be shown.
-   * @memberof Panorama.prototype
-   * @type {boolean}
-   * @readonly
-   */
-  show: {
-    get: DeveloperError.throwInstantiationError,
-  },
+Object.defineProperties(EquirectangularPanorama.prototype, {});
 
-  /**
-   * The alpha blending value of this layer, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof Panorama.prototype
-   * @type {number}
-   * @readonly
-   */
-  alpha: {
-    get: DeveloperError.throwInstantiationError,
-  },
-
-  /**
-   * Gets the height of each tile, in pixels.
-   * @memberof Panorama.prototype
-   * @type {boolean}
-   * @readonly
-   */
-  debugShowExtents: {
-    get: DeveloperError.throwInstantiationError,
-  },
-});
-
-/**
- * Gets the sources for the panorama
- *
- * @returns {Image[]} The source images for the panorama.
- */
-EquirectangularPanorama.prototype.getSources = function () {
-  return this._image;
-};
+// /**
+//  * Gets the sources for the panorama
+//  *
+//  * @returns {Image[]} The source images for the panorama.
+//  */
+// EquirectangularPanorama.prototype.getSources = function () {
+//   return this._image;
+// };
 
 /**
  * Gets the transform for the panorama
