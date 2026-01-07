@@ -56,14 +56,14 @@ Object.defineProperties(Panorama.prototype, {
   },
 });
 
-/**
- * Gets the sources for the panorama
- *
- * @returns {Image[]} The source images for the panorama.
- */
-Panorama.prototype.getSources = function () {
-  DeveloperError.throwInstantiationError();
-};
+// /**
+//  * Gets the sources for the panorama
+//  *
+//  * @returns {Image[]} The source images for the panorama.
+//  */
+// Panorama.prototype.getSources = function () {
+//   DeveloperError.throwInstantiationError();
+// };
 
 /**
  * Gets the transform for the panorama

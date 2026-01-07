@@ -1,4 +1,3 @@
-import DeveloperError from "../Core/DeveloperError.js";
 import SkyBox from "./SkyBox.js";
 
 /**
@@ -8,7 +7,7 @@ import SkyBox from "./SkyBox.js";
  * the sky box must not exceed {@link Scene#maximumCubeMapSize}.
  * </p>
  *
- * @alias SkyBox
+ * @alias CubeMapPanorama
  * @constructor
  *
  * @param {object} options Object with the following properties:
@@ -52,47 +51,16 @@ function CubeMapPanorama(options) {
   return skyBox;
 }
 
-Object.defineProperties(CubeMapPanorama.prototype, {
-  /**
-   * Determines if the panorama will be shown.
-   * @memberof Panorama.prototype
-   * @type {boolean}
-   * @readonly
-   */
-  show: {
-    get: DeveloperError.throwInstantiationError,
-  },
+Object.defineProperties(CubeMapPanorama.prototype, {});
 
-  /**
-   * The alpha blending value of this layer, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof Panorama.prototype
-   * @type {number}
-   * @readonly
-   */
-  alpha: {
-    get: DeveloperError.throwInstantiationError,
-  },
-
-  /**
-   * Gets the height of each tile, in pixels.
-   * @memberof Panorama.prototype
-   * @type {boolean}
-   * @readonly
-   */
-  debugShowExtents: {
-    get: DeveloperError.throwInstantiationError,
-  },
-});
-
-/**
- * Gets the sources for the panorama
- *
- * @returns {Image[]} The source images for the panorama.
- */
-CubeMapPanorama.prototype.getSources = function () {
-  return this._sources;
-};
+// /**
+//  * Gets the sources for the panorama
+//  *
+//  * @returns {Image[]} The source images for the panorama.
+//  */
+// CubeMapPanorama.prototype.getSources = function () {
+//   return this._sources;
+// };
 
 /**
  * Gets the transform for the panorama
