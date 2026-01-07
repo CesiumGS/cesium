@@ -2,9 +2,13 @@ import defined from "../../Core/defined.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import Matrix3 from "../../Core/Matrix3.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import Transforms from "../../Core/Transforms.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Pass from "../../Renderer/Pass.js";
 import MaterialStageFS from "../../Shaders/Model/MaterialStageFS.js";
+import ConstantLodStageVS from "../../Shaders/Model/ConstantLodStageVS.js";
+import ConstantLodStageFS from "../../Shaders/Model/ConstantLodStageFS.js";
 import AlphaMode from "../AlphaMode.js";
 import ModelComponents from "../ModelComponents.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -60,6 +64,23 @@ MaterialPipelineStage.process = function (
   const material = primitive.material;
   const { model, uniformMap, shaderBuilder } = renderResources;
 
+  if (!defined(uniformMap.u_constantLodDistance)) {
+    uniformMap.u_constantLodDistance = function () {
+      const boundingSphere = model.boundingSphere;
+      const camera = frameState.camera;
+
+      if (defined(boundingSphere) && defined(camera)) {
+        const distance = Cartesian3.distance(
+          camera.positionWC,
+          boundingSphere.center,
+        );
+        return Math.max(distance, 0.1);
+      }
+
+      return 100.0;
+    };
+  }
+
   // Classification models only use position and feature ID attributes,
   // so textures should be disabled to avoid compile errors.
   const hasClassification = defined(model.classificationType);
@@ -77,6 +98,7 @@ MaterialPipelineStage.process = function (
     defaultNormalTexture,
     defaultEmissiveTexture,
     disableTextures,
+    renderResources,
   );
 
   if (defined(material.specularGlossiness)) {
@@ -130,6 +152,7 @@ MaterialPipelineStage.process = function (
       shaderBuilder,
       defaultTexture,
       disableTextures,
+      renderResources,
     );
   }
 
@@ -177,6 +200,107 @@ MaterialPipelineStage.process = function (
     );
   }
 };
+
+/**
+ * Process constant LOD extension for a texture
+ *
+ * @param {ShaderBuilder} shaderBuilder The shader builder to modify
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
+ * @param {string} uniformName The name of the sampler uniform
+ * @param {string} defineName The name of the texture for use in the defines
+ * @param {PrimitiveRenderResources} renderResources The render resources
+ * @private
+ */
+function processConstantLod(
+  shaderBuilder,
+  uniformMap,
+  textureReader,
+  uniformName,
+  defineName,
+  renderResources,
+) {
+  const constantLod = textureReader.constantLod;
+
+  if (!defined(constantLod)) {
+    return;
+  }
+
+  const constantLodDefine = `HAS_${defineName}_CONSTANT_LOD`;
+  shaderBuilder.addDefine(constantLodDefine, undefined, ShaderDestination.BOTH);
+
+  if (!defined(uniformMap.u_constantLodOffset)) {
+    shaderBuilder.addDefine(
+      "HAS_CONSTANT_LOD",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+
+    shaderBuilder.addVarying("vec3", "v_constantLodUvCustom");
+
+    shaderBuilder.addUniform(
+      "vec2",
+      "u_constantLodOffset",
+      ShaderDestination.VERTEX,
+    );
+
+    shaderBuilder.addUniform(
+      "float",
+      "u_constantLodDistance",
+      ShaderDestination.VERTEX,
+    );
+
+    shaderBuilder.addUniform(
+      "mat4",
+      "u_constantLodWorldToEnu",
+      ShaderDestination.VERTEX,
+    );
+
+    shaderBuilder.addFragmentLines(ConstantLodStageFS);
+
+    const constantLodLines = ConstantLodStageVS.split("\n").filter((line) => {
+      return !line.trim().startsWith("//") || line.includes("#");
+    });
+    shaderBuilder.addFunctionLines("setDynamicVaryingsVS", constantLodLines);
+  }
+
+  const paramsUniformName = `${uniformName}ConstantLodParams`;
+  shaderBuilder.addUniform(
+    "vec3",
+    paramsUniformName,
+    ShaderDestination.FRAGMENT,
+  );
+
+  uniformMap[paramsUniformName] = function () {
+    return new Cartesian3(
+      constantLod.minClampDistance,
+      constantLod.maxClampDistance,
+      constantLod.repetitions,
+    );
+  };
+
+  if (!defined(uniformMap.u_constantLodOffset)) {
+    uniformMap.u_constantLodOffset = function () {
+      return constantLod.offset;
+    };
+
+    const enuMatrixInverse = Matrix4.clone(Matrix4.IDENTITY);
+    let matrixComputed = false;
+
+    uniformMap.u_constantLodWorldToEnu = function () {
+      if (!matrixComputed) {
+        const boundingSphere = renderResources.model.boundingSphere;
+        if (defined(boundingSphere)) {
+          const modelCenter = boundingSphere.center;
+          const enuFrame = Transforms.eastNorthUpToFixedFrame(modelCenter);
+          Matrix4.inverse(enuFrame, enuMatrixInverse);
+          matrixComputed = true;
+        }
+      }
+      return matrixComputed ? enuMatrixInverse : Matrix4.IDENTITY;
+    };
+  }
+}
 
 /**
  * Process a single texture transformation and add it to the shader and uniform map.
@@ -272,6 +396,7 @@ function processTexture(
   uniformName,
   defineName,
   defaultTexture,
+  renderResources,
 ) {
   // Add a uniform for the texture itself
   shaderBuilder.addUniform(
@@ -323,6 +448,16 @@ function processTexture(
       defineName,
     );
   }
+
+  // Process constant LOD extension if present
+  processConstantLod(
+    shaderBuilder,
+    uniformMap,
+    textureReader,
+    uniformName,
+    defineName,
+    renderResources,
+  );
 }
 
 function processMaterialUniforms(
@@ -763,6 +898,7 @@ function processClearcoatUniforms(
  * @param {ShaderBuilder} shaderBuilder
  * @param {Texture} defaultTexture
  * @param {boolean} disableTextures
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @private
  */
 function processMetallicRoughnessUniforms(
@@ -771,6 +907,7 @@ function processMetallicRoughnessUniforms(
   shaderBuilder,
   defaultTexture,
   disableTextures,
+  renderResources,
 ) {
   shaderBuilder.addDefine(
     "USE_METALLIC_ROUGHNESS",
@@ -787,6 +924,7 @@ function processMetallicRoughnessUniforms(
       "u_baseColorTexture",
       "BASE_COLOR",
       defaultTexture,
+      renderResources,
     );
   }
 
