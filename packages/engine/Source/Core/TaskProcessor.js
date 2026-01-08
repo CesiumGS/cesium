@@ -178,12 +178,135 @@ async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  *                                        scheduleTask will not queue any more tasks, allowing
  *                                        work to be rescheduled in future frames.
  */
-function TaskProcessor(workerPath, maximumActiveTasks) {
-  this._workerPath = workerPath;
-  this._maximumActiveTasks = maximumActiveTasks ?? Number.POSITIVE_INFINITY;
-  this._activeTasks = 0;
-  this._nextID = 0;
-  this._webAssemblyPromise = undefined;
+class TaskProcessor {
+  constructor(workerPath, maximumActiveTasks) {
+    this._workerPath = workerPath;
+    this._maximumActiveTasks = maximumActiveTasks ?? Number.POSITIVE_INFINITY;
+    this._activeTasks = 0;
+    this._nextID = 0;
+    this._webAssemblyPromise = undefined;
+  }
+
+  /**
+   * Schedule a task to be processed by the web worker asynchronously.  If there are currently more
+   * tasks active than the maximum set by the constructor, will immediately return undefined.
+   * Otherwise, returns a promise that will resolve to the result posted back by the worker when
+   * finished.
+   *
+   * @param {object} parameters Any input data that will be posted to the worker.
+   * @param {object[]} [transferableObjects] An array of objects contained in parameters that should be
+   *                                      transferred to the worker instead of copied.
+   * @returns {Promise<object>|undefined} Either a promise that will resolve to the result when available, or undefined
+   *                    if there are too many active tasks,
+   *
+   * @example
+   * const taskProcessor = new Cesium.TaskProcessor('myWorkerPath');
+   * const promise = taskProcessor.scheduleTask({
+   *     someParameter : true,
+   *     another : 'hello'
+   * });
+   * if (!Cesium.defined(promise)) {
+   *     // too many active tasks - try again later
+   * } else {
+   *     promise.then(function(result) {
+   *         // use the result of the task
+   *     });
+   * }
+   */
+  scheduleTask(parameters, transferableObjects) {
+    if (!defined(this._worker)) {
+      this._worker = createWorker(this._workerPath);
+    }
+
+    if (this._activeTasks >= this._maximumActiveTasks) {
+      return undefined;
+    }
+
+    return scheduleTask(this, parameters, transferableObjects);
+  }
+
+  /**
+   * Posts a message to a web worker with configuration to initialize loading
+   * and compiling a web assembly module asynchronously, as well as an optional
+   * fallback JavaScript module to use if Web Assembly is not supported.
+   *
+   * @param {object} [webAssemblyOptions] An object with the following properties:
+   * @param {string} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
+   * @param {string} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
+   * @param {string} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
+   * @returns {Promise<*>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
+   *
+   * @exception {RuntimeError} This browser does not support Web Assembly, and no backup module was provided
+   */
+  async initWebAssemblyModule(webAssemblyOptions) {
+    if (defined(this._webAssemblyPromise)) {
+      return this._webAssemblyPromise;
+    }
+
+    const init = async () => {
+      const worker = (this._worker = createWorker(this._workerPath));
+      const wasmConfig = await getWebAssemblyLoaderConfig(
+        this,
+        webAssemblyOptions,
+      );
+      const canTransfer = await Promise.resolve(canTransferArrayBuffer());
+      let transferableObjects;
+      const binary = wasmConfig.wasmBinary;
+      if (defined(binary) && canTransfer) {
+        transferableObjects = [binary];
+      }
+
+      const promise = new Promise((resolve, reject) => {
+        worker.onmessage = function ({ data }) {
+          if (defined(data)) {
+            resolve(data.result);
+          } else {
+            reject(new RuntimeError("Could not configure wasm module"));
+          }
+        };
+      });
+
+      worker.postMessage(
+        {
+          canTransferArrayBuffer: canTransfer,
+          parameters: { webAssemblyConfig: wasmConfig },
+        },
+        transferableObjects,
+      );
+
+      return promise;
+    };
+
+    this._webAssemblyPromise = init();
+    return this._webAssemblyPromise;
+  }
+
+  /**
+   * Returns true if this object was destroyed; otherwise, false.
+   * <br /><br />
+   * If this object was destroyed, it should not be used; calling any function other than
+   * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+   *
+   * @returns {boolean} True if this object was destroyed; otherwise, false.
+   *
+   * @see TaskProcessor#destroy
+   */
+  isDestroyed() {
+    return false;
+  }
+
+  /**
+   * Destroys this object.  This will immediately terminate the Worker.
+   * <br /><br />
+   * Once an object is destroyed, it should not be used; calling any function other than
+   * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+   */
+  destroy() {
+    if (defined(this._worker)) {
+      this._worker.terminate();
+    }
+    return destroyObject(this);
+  }
 }
 
 const createOnmessageHandler = (worker, id, resolve, reject) => {
@@ -259,132 +382,6 @@ async function scheduleTask(processor, parameters, transferableObjects) {
     throw error;
   }
 }
-
-/**
- * Schedule a task to be processed by the web worker asynchronously.  If there are currently more
- * tasks active than the maximum set by the constructor, will immediately return undefined.
- * Otherwise, returns a promise that will resolve to the result posted back by the worker when
- * finished.
- *
- * @param {object} parameters Any input data that will be posted to the worker.
- * @param {object[]} [transferableObjects] An array of objects contained in parameters that should be
- *                                      transferred to the worker instead of copied.
- * @returns {Promise<object>|undefined} Either a promise that will resolve to the result when available, or undefined
- *                    if there are too many active tasks,
- *
- * @example
- * const taskProcessor = new Cesium.TaskProcessor('myWorkerPath');
- * const promise = taskProcessor.scheduleTask({
- *     someParameter : true,
- *     another : 'hello'
- * });
- * if (!Cesium.defined(promise)) {
- *     // too many active tasks - try again later
- * } else {
- *     promise.then(function(result) {
- *         // use the result of the task
- *     });
- * }
- */
-TaskProcessor.prototype.scheduleTask = function (
-  parameters,
-  transferableObjects,
-) {
-  if (!defined(this._worker)) {
-    this._worker = createWorker(this._workerPath);
-  }
-
-  if (this._activeTasks >= this._maximumActiveTasks) {
-    return undefined;
-  }
-
-  return scheduleTask(this, parameters, transferableObjects);
-};
-
-/**
- * Posts a message to a web worker with configuration to initialize loading
- * and compiling a web assembly module asynchronously, as well as an optional
- * fallback JavaScript module to use if Web Assembly is not supported.
- *
- * @param {object} [webAssemblyOptions] An object with the following properties:
- * @param {string} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
- * @param {string} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
- * @param {string} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
- * @returns {Promise<*>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
- *
- * @exception {RuntimeError} This browser does not support Web Assembly, and no backup module was provided
- */
-TaskProcessor.prototype.initWebAssemblyModule = async function (
-  webAssemblyOptions,
-) {
-  if (defined(this._webAssemblyPromise)) {
-    return this._webAssemblyPromise;
-  }
-
-  const init = async () => {
-    const worker = (this._worker = createWorker(this._workerPath));
-    const wasmConfig = await getWebAssemblyLoaderConfig(
-      this,
-      webAssemblyOptions,
-    );
-    const canTransfer = await Promise.resolve(canTransferArrayBuffer());
-    let transferableObjects;
-    const binary = wasmConfig.wasmBinary;
-    if (defined(binary) && canTransfer) {
-      transferableObjects = [binary];
-    }
-
-    const promise = new Promise((resolve, reject) => {
-      worker.onmessage = function ({ data }) {
-        if (defined(data)) {
-          resolve(data.result);
-        } else {
-          reject(new RuntimeError("Could not configure wasm module"));
-        }
-      };
-    });
-
-    worker.postMessage(
-      {
-        canTransferArrayBuffer: canTransfer,
-        parameters: { webAssemblyConfig: wasmConfig },
-      },
-      transferableObjects,
-    );
-
-    return promise;
-  };
-
-  this._webAssemblyPromise = init();
-  return this._webAssemblyPromise;
-};
-
-/**
- * Returns true if this object was destroyed; otherwise, false.
- * <br /><br />
- * If this object was destroyed, it should not be used; calling any function other than
- * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
- * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
- * @see TaskProcessor#destroy
- */
-TaskProcessor.prototype.isDestroyed = function () {
-  return false;
-};
-
-/**
- * Destroys this object.  This will immediately terminate the Worker.
- * <br /><br />
- * Once an object is destroyed, it should not be used; calling any function other than
- * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- */
-TaskProcessor.prototype.destroy = function () {
-  if (defined(this._worker)) {
-    this._worker.terminate();
-  }
-  return destroyObject(this);
-};
 
 /**
  * An event that's raised when a task is completed successfully.  Event handlers are passed

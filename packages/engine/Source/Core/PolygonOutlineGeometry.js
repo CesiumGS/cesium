@@ -346,342 +346,345 @@ function createGeometryFromPositionsExtruded(
  * });
  * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
  */
-function PolygonOutlineGeometry(options) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options", options);
-  Check.typeOf.object("options.polygonHierarchy", options.polygonHierarchy);
+class PolygonOutlineGeometry {
+  constructor(options) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options", options);
+    Check.typeOf.object("options.polygonHierarchy", options.polygonHierarchy);
 
-  if (options.perPositionHeight && defined(options.height)) {
-    throw new DeveloperError(
-      "Cannot use both options.perPositionHeight and options.height",
-    );
+    if (options.perPositionHeight && defined(options.height)) {
+      throw new DeveloperError(
+        "Cannot use both options.perPositionHeight and options.height",
+      );
+    }
+    if (
+      defined(options.arcType) &&
+      options.arcType !== ArcType.GEODESIC &&
+      options.arcType !== ArcType.RHUMB
+    ) {
+      throw new DeveloperError(
+        "Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    const polygonHierarchy = options.polygonHierarchy;
+    const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+    const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+    const perPositionHeight = options.perPositionHeight ?? false;
+    const perPositionHeightExtrude =
+      perPositionHeight && defined(options.extrudedHeight);
+    const arcType = options.arcType ?? ArcType.GEODESIC;
+
+    let height = options.height ?? 0.0;
+    let extrudedHeight = options.extrudedHeight ?? height;
+
+    if (!perPositionHeightExtrude) {
+      const h = Math.max(height, extrudedHeight);
+      extrudedHeight = Math.min(height, extrudedHeight);
+      height = h;
+    }
+
+    this._ellipsoid = Ellipsoid.clone(ellipsoid);
+    this._granularity = granularity;
+    this._height = height;
+    this._extrudedHeight = extrudedHeight;
+    this._arcType = arcType;
+    this._polygonHierarchy = polygonHierarchy;
+    this._perPositionHeight = perPositionHeight;
+    this._perPositionHeightExtrude = perPositionHeightExtrude;
+    this._offsetAttribute = options.offsetAttribute;
+    this._workerName = "createPolygonOutlineGeometry";
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {number}
+     */
+    this.packedLength =
+      PolygonGeometryLibrary.computeHierarchyPackedLength(
+        polygonHierarchy,
+        Cartesian3,
+      ) +
+      Ellipsoid.packedLength +
+      8;
   }
-  if (
-    defined(options.arcType) &&
-    options.arcType !== ArcType.GEODESIC &&
-    options.arcType !== ArcType.RHUMB
-  ) {
-    throw new DeveloperError(
-      "Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB.",
-    );
-  }
-  //>>includeEnd('debug');
-
-  const polygonHierarchy = options.polygonHierarchy;
-  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
-  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
-  const perPositionHeight = options.perPositionHeight ?? false;
-  const perPositionHeightExtrude =
-    perPositionHeight && defined(options.extrudedHeight);
-  const arcType = options.arcType ?? ArcType.GEODESIC;
-
-  let height = options.height ?? 0.0;
-  let extrudedHeight = options.extrudedHeight ?? height;
-
-  if (!perPositionHeightExtrude) {
-    const h = Math.max(height, extrudedHeight);
-    extrudedHeight = Math.min(height, extrudedHeight);
-    height = h;
-  }
-
-  this._ellipsoid = Ellipsoid.clone(ellipsoid);
-  this._granularity = granularity;
-  this._height = height;
-  this._extrudedHeight = extrudedHeight;
-  this._arcType = arcType;
-  this._polygonHierarchy = polygonHierarchy;
-  this._perPositionHeight = perPositionHeight;
-  this._perPositionHeightExtrude = perPositionHeightExtrude;
-  this._offsetAttribute = options.offsetAttribute;
-  this._workerName = "createPolygonOutlineGeometry";
 
   /**
-   * The number of elements used to pack the object into an array.
-   * @type {number}
+   * Stores the provided instance into the provided array.
+   *
+   * @param {PolygonOutlineGeometry} value The value to pack.
+   * @param {number[]} array The array to pack into.
+   * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+   *
+   * @returns {number[]} The array that was packed into
    */
-  this.packedLength =
-    PolygonGeometryLibrary.computeHierarchyPackedLength(
-      polygonHierarchy,
+  static pack(value, array, startingIndex) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("value", value);
+    Check.defined("array", array);
+    //>>includeEnd('debug');
+
+    startingIndex = startingIndex ?? 0;
+
+    startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
+      value._polygonHierarchy,
+      array,
+      startingIndex,
       Cartesian3,
-    ) +
-    Ellipsoid.packedLength +
-    8;
+    );
+
+    Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+    startingIndex += Ellipsoid.packedLength;
+
+    array[startingIndex++] = value._height;
+    array[startingIndex++] = value._extrudedHeight;
+    array[startingIndex++] = value._granularity;
+    array[startingIndex++] = value._perPositionHeightExtrude ? 1.0 : 0.0;
+    array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
+    array[startingIndex++] = value._arcType;
+    array[startingIndex++] = value._offsetAttribute ?? -1;
+    array[startingIndex] = value.packedLength;
+
+    return array;
+  }
+
+  /**
+   * Retrieves an instance from a packed array.
+   *
+   * @param {number[]} array The packed array.
+   * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
+   * @param {PolygonOutlineGeometry} [result] The object into which to store the result.
+   * @returns {PolygonOutlineGeometry} The modified result parameter or a new PolygonOutlineGeometry instance if one was not provided.
+   */
+  static unpack(array, startingIndex, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("array", array);
+    //>>includeEnd('debug');
+
+    startingIndex = startingIndex ?? 0;
+
+    const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
+      array,
+      startingIndex,
+      Cartesian3,
+    );
+    startingIndex = polygonHierarchy.startingIndex;
+    delete polygonHierarchy.startingIndex;
+
+    const ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+    startingIndex += Ellipsoid.packedLength;
+
+    const height = array[startingIndex++];
+    const extrudedHeight = array[startingIndex++];
+    const granularity = array[startingIndex++];
+    const perPositionHeightExtrude = array[startingIndex++] === 1.0;
+    const perPositionHeight = array[startingIndex++] === 1.0;
+    const arcType = array[startingIndex++];
+    const offsetAttribute = array[startingIndex++];
+    const packedLength = array[startingIndex];
+
+    if (!defined(result)) {
+      result = new PolygonOutlineGeometry(dummyOptions);
+    }
+
+    result._polygonHierarchy = polygonHierarchy;
+    result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+    result._height = height;
+    result._extrudedHeight = extrudedHeight;
+    result._granularity = granularity;
+    result._perPositionHeight = perPositionHeight;
+    result._perPositionHeightExtrude = perPositionHeightExtrude;
+    result._arcType = arcType;
+    result._offsetAttribute =
+      offsetAttribute === -1 ? undefined : offsetAttribute;
+    result.packedLength = packedLength;
+
+    return result;
+  }
+
+  /**
+   * A description of a polygon outline from an array of positions.
+   *
+   * @param {object} options Object with the following properties:
+   * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
+   * @param {number} [options.height=0.0] The height of the polygon.
+   * @param {number} [options.extrudedHeight] The height of the polygon extrusion.
+   * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
+   * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+   * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
+   * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of path the outline must follow. Valid options are {@link LinkType.GEODESIC} and {@link ArcType.RHUMB}.
+   * @returns {PolygonOutlineGeometry}
+   *
+   *
+   * @example
+   * // create a polygon from points
+   * const polygon = Cesium.PolygonOutlineGeometry.fromPositions({
+   *   positions : Cesium.Cartesian3.fromDegreesArray([
+   *     -72.0, 40.0,
+   *     -70.0, 35.0,
+   *     -75.0, 30.0,
+   *     -70.0, 30.0,
+   *     -68.0, 40.0
+   *   ])
+   * });
+   * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
+   *
+   * @see PolygonOutlineGeometry#createGeometry
+   */
+  static fromPositions(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
+
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("options.positions", options.positions);
+    //>>includeEnd('debug');
+
+    const newOptions = {
+      polygonHierarchy: {
+        positions: options.positions,
+      },
+      height: options.height,
+      extrudedHeight: options.extrudedHeight,
+      ellipsoid: options.ellipsoid,
+      granularity: options.granularity,
+      perPositionHeight: options.perPositionHeight,
+      arcType: options.arcType,
+      offsetAttribute: options.offsetAttribute,
+    };
+    return new PolygonOutlineGeometry(newOptions);
+  }
+
+  /**
+   * Computes the geometric representation of a polygon outline, including its vertices, indices, and a bounding sphere.
+   *
+   * @param {PolygonOutlineGeometry} polygonGeometry A description of the polygon outline.
+   * @returns {Geometry|undefined} The computed vertices and indices.
+   */
+  static createGeometry(polygonGeometry) {
+    const ellipsoid = polygonGeometry._ellipsoid;
+    const granularity = polygonGeometry._granularity;
+    const polygonHierarchy = polygonGeometry._polygonHierarchy;
+    const perPositionHeight = polygonGeometry._perPositionHeight;
+    const arcType = polygonGeometry._arcType;
+
+    const polygons = PolygonGeometryLibrary.polygonOutlinesFromHierarchy(
+      polygonHierarchy,
+      !perPositionHeight,
+      ellipsoid,
+    );
+
+    if (polygons.length === 0) {
+      return undefined;
+    }
+
+    let geometryInstance;
+    const geometries = [];
+    const minDistance = CesiumMath.chordLength(
+      granularity,
+      ellipsoid.maximumRadius,
+    );
+
+    const height = polygonGeometry._height;
+    const extrudedHeight = polygonGeometry._extrudedHeight;
+    const extrude =
+      polygonGeometry._perPositionHeightExtrude ||
+      !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
+    let offsetValue;
+    let i;
+    if (extrude) {
+      for (i = 0; i < polygons.length; i++) {
+        geometryInstance = createGeometryFromPositionsExtruded(
+          ellipsoid,
+          polygons[i],
+          minDistance,
+          perPositionHeight,
+          arcType,
+        );
+        geometryInstance.geometry =
+          PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(
+            geometryInstance.geometry,
+            height,
+            extrudedHeight,
+            ellipsoid,
+            perPositionHeight,
+          );
+        if (defined(polygonGeometry._offsetAttribute)) {
+          const size =
+            geometryInstance.geometry.attributes.position.values.length / 3;
+          let offsetAttribute = new Uint8Array(size);
+          if (polygonGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
+            offsetAttribute = offsetAttribute.fill(1, 0, size / 2);
+          } else {
+            offsetValue =
+              polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
+                ? 0
+                : 1;
+            offsetAttribute = offsetAttribute.fill(offsetValue);
+          }
+
+          geometryInstance.geometry.attributes.applyOffset =
+            new GeometryAttribute({
+              componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+              componentsPerAttribute: 1,
+              values: offsetAttribute,
+            });
+        }
+        geometries.push(geometryInstance);
+      }
+    } else {
+      for (i = 0; i < polygons.length; i++) {
+        geometryInstance = createGeometryFromPositions(
+          ellipsoid,
+          polygons[i],
+          minDistance,
+          perPositionHeight,
+          arcType,
+        );
+        geometryInstance.geometry.attributes.position.values =
+          PolygonPipeline.scaleToGeodeticHeight(
+            geometryInstance.geometry.attributes.position.values,
+            height,
+            ellipsoid,
+            !perPositionHeight,
+          );
+
+        if (defined(polygonGeometry._offsetAttribute)) {
+          const length =
+            geometryInstance.geometry.attributes.position.values.length;
+          offsetValue =
+            polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
+              ? 0
+              : 1;
+          const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
+          geometryInstance.geometry.attributes.applyOffset =
+            new GeometryAttribute({
+              componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+              componentsPerAttribute: 1,
+              values: applyOffset,
+            });
+        }
+
+        geometries.push(geometryInstance);
+      }
+    }
+
+    const geometry = GeometryPipeline.combineInstances(geometries)[0];
+    const boundingSphere = BoundingSphere.fromVertices(
+      geometry.attributes.position.values,
+    );
+
+    return new Geometry({
+      attributes: geometry.attributes,
+      indices: geometry.indices,
+      primitiveType: geometry.primitiveType,
+      boundingSphere: boundingSphere,
+      offsetAttribute: polygonGeometry._offsetAttribute,
+    });
+  }
 }
-
-/**
- * Stores the provided instance into the provided array.
- *
- * @param {PolygonOutlineGeometry} value The value to pack.
- * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
- * @returns {number[]} The array that was packed into
- */
-PolygonOutlineGeometry.pack = function (value, array, startingIndex) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("value", value);
-  Check.defined("array", array);
-  //>>includeEnd('debug');
-
-  startingIndex = startingIndex ?? 0;
-
-  startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
-    value._polygonHierarchy,
-    array,
-    startingIndex,
-    Cartesian3,
-  );
-
-  Ellipsoid.pack(value._ellipsoid, array, startingIndex);
-  startingIndex += Ellipsoid.packedLength;
-
-  array[startingIndex++] = value._height;
-  array[startingIndex++] = value._extrudedHeight;
-  array[startingIndex++] = value._granularity;
-  array[startingIndex++] = value._perPositionHeightExtrude ? 1.0 : 0.0;
-  array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
-  array[startingIndex++] = value._arcType;
-  array[startingIndex++] = value._offsetAttribute ?? -1;
-  array[startingIndex] = value.packedLength;
-
-  return array;
-};
 
 const scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
 const dummyOptions = {
   polygonHierarchy: {},
 };
 
-/**
- * Retrieves an instance from a packed array.
- *
- * @param {number[]} array The packed array.
- * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
- * @param {PolygonOutlineGeometry} [result] The object into which to store the result.
- * @returns {PolygonOutlineGeometry} The modified result parameter or a new PolygonOutlineGeometry instance if one was not provided.
- */
-PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("array", array);
-  //>>includeEnd('debug');
-
-  startingIndex = startingIndex ?? 0;
-
-  const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
-    array,
-    startingIndex,
-    Cartesian3,
-  );
-  startingIndex = polygonHierarchy.startingIndex;
-  delete polygonHierarchy.startingIndex;
-
-  const ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
-  startingIndex += Ellipsoid.packedLength;
-
-  const height = array[startingIndex++];
-  const extrudedHeight = array[startingIndex++];
-  const granularity = array[startingIndex++];
-  const perPositionHeightExtrude = array[startingIndex++] === 1.0;
-  const perPositionHeight = array[startingIndex++] === 1.0;
-  const arcType = array[startingIndex++];
-  const offsetAttribute = array[startingIndex++];
-  const packedLength = array[startingIndex];
-
-  if (!defined(result)) {
-    result = new PolygonOutlineGeometry(dummyOptions);
-  }
-
-  result._polygonHierarchy = polygonHierarchy;
-  result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-  result._height = height;
-  result._extrudedHeight = extrudedHeight;
-  result._granularity = granularity;
-  result._perPositionHeight = perPositionHeight;
-  result._perPositionHeightExtrude = perPositionHeightExtrude;
-  result._arcType = arcType;
-  result._offsetAttribute =
-    offsetAttribute === -1 ? undefined : offsetAttribute;
-  result.packedLength = packedLength;
-
-  return result;
-};
-
-/**
- * A description of a polygon outline from an array of positions.
- *
- * @param {object} options Object with the following properties:
- * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
- * @param {number} [options.height=0.0] The height of the polygon.
- * @param {number} [options.extrudedHeight] The height of the polygon extrusion.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
- * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
- * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of path the outline must follow. Valid options are {@link LinkType.GEODESIC} and {@link ArcType.RHUMB}.
- * @returns {PolygonOutlineGeometry}
- *
- *
- * @example
- * // create a polygon from points
- * const polygon = Cesium.PolygonOutlineGeometry.fromPositions({
- *   positions : Cesium.Cartesian3.fromDegreesArray([
- *     -72.0, 40.0,
- *     -70.0, 35.0,
- *     -75.0, 30.0,
- *     -70.0, 30.0,
- *     -68.0, 40.0
- *   ])
- * });
- * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
- *
- * @see PolygonOutlineGeometry#createGeometry
- */
-PolygonOutlineGeometry.fromPositions = function (options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.positions", options.positions);
-  //>>includeEnd('debug');
-
-  const newOptions = {
-    polygonHierarchy: {
-      positions: options.positions,
-    },
-    height: options.height,
-    extrudedHeight: options.extrudedHeight,
-    ellipsoid: options.ellipsoid,
-    granularity: options.granularity,
-    perPositionHeight: options.perPositionHeight,
-    arcType: options.arcType,
-    offsetAttribute: options.offsetAttribute,
-  };
-  return new PolygonOutlineGeometry(newOptions);
-};
-
-/**
- * Computes the geometric representation of a polygon outline, including its vertices, indices, and a bounding sphere.
- *
- * @param {PolygonOutlineGeometry} polygonGeometry A description of the polygon outline.
- * @returns {Geometry|undefined} The computed vertices and indices.
- */
-PolygonOutlineGeometry.createGeometry = function (polygonGeometry) {
-  const ellipsoid = polygonGeometry._ellipsoid;
-  const granularity = polygonGeometry._granularity;
-  const polygonHierarchy = polygonGeometry._polygonHierarchy;
-  const perPositionHeight = polygonGeometry._perPositionHeight;
-  const arcType = polygonGeometry._arcType;
-
-  const polygons = PolygonGeometryLibrary.polygonOutlinesFromHierarchy(
-    polygonHierarchy,
-    !perPositionHeight,
-    ellipsoid,
-  );
-
-  if (polygons.length === 0) {
-    return undefined;
-  }
-
-  let geometryInstance;
-  const geometries = [];
-  const minDistance = CesiumMath.chordLength(
-    granularity,
-    ellipsoid.maximumRadius,
-  );
-
-  const height = polygonGeometry._height;
-  const extrudedHeight = polygonGeometry._extrudedHeight;
-  const extrude =
-    polygonGeometry._perPositionHeightExtrude ||
-    !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
-  let offsetValue;
-  let i;
-  if (extrude) {
-    for (i = 0; i < polygons.length; i++) {
-      geometryInstance = createGeometryFromPositionsExtruded(
-        ellipsoid,
-        polygons[i],
-        minDistance,
-        perPositionHeight,
-        arcType,
-      );
-      geometryInstance.geometry =
-        PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(
-          geometryInstance.geometry,
-          height,
-          extrudedHeight,
-          ellipsoid,
-          perPositionHeight,
-        );
-      if (defined(polygonGeometry._offsetAttribute)) {
-        const size =
-          geometryInstance.geometry.attributes.position.values.length / 3;
-        let offsetAttribute = new Uint8Array(size);
-        if (polygonGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
-          offsetAttribute = offsetAttribute.fill(1, 0, size / 2);
-        } else {
-          offsetValue =
-            polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
-              ? 0
-              : 1;
-          offsetAttribute = offsetAttribute.fill(offsetValue);
-        }
-
-        geometryInstance.geometry.attributes.applyOffset =
-          new GeometryAttribute({
-            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute: 1,
-            values: offsetAttribute,
-          });
-      }
-      geometries.push(geometryInstance);
-    }
-  } else {
-    for (i = 0; i < polygons.length; i++) {
-      geometryInstance = createGeometryFromPositions(
-        ellipsoid,
-        polygons[i],
-        minDistance,
-        perPositionHeight,
-        arcType,
-      );
-      geometryInstance.geometry.attributes.position.values =
-        PolygonPipeline.scaleToGeodeticHeight(
-          geometryInstance.geometry.attributes.position.values,
-          height,
-          ellipsoid,
-          !perPositionHeight,
-        );
-
-      if (defined(polygonGeometry._offsetAttribute)) {
-        const length =
-          geometryInstance.geometry.attributes.position.values.length;
-        offsetValue =
-          polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
-            ? 0
-            : 1;
-        const applyOffset = new Uint8Array(length / 3).fill(offsetValue);
-        geometryInstance.geometry.attributes.applyOffset =
-          new GeometryAttribute({
-            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute: 1,
-            values: applyOffset,
-          });
-      }
-
-      geometries.push(geometryInstance);
-    }
-  }
-
-  const geometry = GeometryPipeline.combineInstances(geometries)[0];
-  const boundingSphere = BoundingSphere.fromVertices(
-    geometry.attributes.position.values,
-  );
-
-  return new Geometry({
-    attributes: geometry.attributes,
-    indices: geometry.indices,
-    primitiveType: geometry.primitiveType,
-    boundingSphere: boundingSphere,
-    offsetAttribute: polygonGeometry._offsetAttribute,
-  });
-};
 export default PolygonOutlineGeometry;

@@ -9,7 +9,63 @@ import TaskProcessor from "./TaskProcessor.js";
  *
  * @private
  */
-function KTX2Transcoder() {}
+class KTX2Transcoder {
+  static transcode(ktx2Buffer, supportedTargetFormats) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("supportedTargetFormats", supportedTargetFormats);
+    //>>includeEnd('debug');
+
+    if (!defined(KTX2Transcoder._readyPromise)) {
+      makeReadyPromise();
+    }
+
+    return KTX2Transcoder._readyPromise
+      .then(function (taskProcessor) {
+        let bufferView = ktx2Buffer;
+        if (ktx2Buffer instanceof ArrayBuffer) {
+          bufferView = new Uint8Array(ktx2Buffer);
+        }
+        const parameters = {
+          supportedTargetFormats: supportedTargetFormats,
+          ktx2Buffer: bufferView,
+        };
+        return taskProcessor.scheduleTask(parameters, [bufferView.buffer]);
+      })
+      .then(function (result) {
+        const levelsLength = result.length;
+        const faceKeys = Object.keys(result[0]);
+
+        for (let i = 0; i < levelsLength; i++) {
+          const faces = result[i];
+          for (let j = 0; j < faceKeys.length; j++) {
+            const face = faces[faceKeys[j]];
+            faces[faceKeys[j]] = new CompressedTextureBuffer(
+              face.internalFormat,
+              face.datatype,
+              face.width,
+              face.height,
+              face.levelBuffer,
+            );
+          }
+        }
+
+        // Cleaning up parsed result if it's a single image
+        if (faceKeys.length === 1) {
+          for (let i = 0; i < levelsLength; ++i) {
+            result[i] = result[i][faceKeys[0]];
+          }
+
+          if (levelsLength === 1) {
+            result = result[0];
+          }
+        }
+        return result;
+      })
+      .catch(function (error) {
+        throw error;
+      });
+  }
+}
 
 KTX2Transcoder._transcodeTaskProcessor = new TaskProcessor(
   "transcodeKTX2",
@@ -32,61 +88,5 @@ function makeReadyPromise() {
     });
   KTX2Transcoder._readyPromise = readyPromise;
 }
-
-KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("supportedTargetFormats", supportedTargetFormats);
-  //>>includeEnd('debug');
-
-  if (!defined(KTX2Transcoder._readyPromise)) {
-    makeReadyPromise();
-  }
-
-  return KTX2Transcoder._readyPromise
-    .then(function (taskProcessor) {
-      let bufferView = ktx2Buffer;
-      if (ktx2Buffer instanceof ArrayBuffer) {
-        bufferView = new Uint8Array(ktx2Buffer);
-      }
-      const parameters = {
-        supportedTargetFormats: supportedTargetFormats,
-        ktx2Buffer: bufferView,
-      };
-      return taskProcessor.scheduleTask(parameters, [bufferView.buffer]);
-    })
-    .then(function (result) {
-      const levelsLength = result.length;
-      const faceKeys = Object.keys(result[0]);
-
-      for (let i = 0; i < levelsLength; i++) {
-        const faces = result[i];
-        for (let j = 0; j < faceKeys.length; j++) {
-          const face = faces[faceKeys[j]];
-          faces[faceKeys[j]] = new CompressedTextureBuffer(
-            face.internalFormat,
-            face.datatype,
-            face.width,
-            face.height,
-            face.levelBuffer,
-          );
-        }
-      }
-
-      // Cleaning up parsed result if it's a single image
-      if (faceKeys.length === 1) {
-        for (let i = 0; i < levelsLength; ++i) {
-          result[i] = result[i][faceKeys[0]];
-        }
-
-        if (levelsLength === 1) {
-          result = result[0];
-        }
-      }
-      return result;
-    })
-    .catch(function (error) {
-      throw error;
-    });
-};
 
 export default KTX2Transcoder;

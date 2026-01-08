@@ -389,34 +389,32 @@ function interpolateUsingSurfaceDistance(
  *
  * @exception {DeveloperError} angle between start and end must be at least 0.0125 radians.
  */
-function EllipsoidRhumbLine(start, end, ellipsoid) {
-  const e = ellipsoid ?? Ellipsoid.default;
-  this._ellipsoid = e;
-  this._start = new Cartographic();
-  this._end = new Cartographic();
+class EllipsoidRhumbLine {
+  constructor(start, end, ellipsoid) {
+    const e = ellipsoid ?? Ellipsoid.default;
+    this._ellipsoid = e;
+    this._start = new Cartographic();
+    this._end = new Cartographic();
 
-  this._heading = undefined;
-  this._distance = undefined;
-  this._ellipticity = undefined;
-  this._ellipticitySquared = undefined;
+    this._heading = undefined;
+    this._distance = undefined;
+    this._ellipticity = undefined;
+    this._ellipticitySquared = undefined;
 
-  if (defined(start) && defined(end)) {
-    computeProperties(this, start, end, e);
+    if (defined(start) && defined(end)) {
+      computeProperties(this, start, end, e);
+    }
   }
-}
 
-Object.defineProperties(EllipsoidRhumbLine.prototype, {
   /**
    * Gets the ellipsoid.
    * @memberof EllipsoidRhumbLine.prototype
    * @type {Ellipsoid}
    * @readonly
    */
-  ellipsoid: {
-    get: function () {
-      return this._ellipsoid;
-    },
-  },
+  get ellipsoid() {
+    return this._ellipsoid;
+  }
 
   /**
    * Gets the surface distance between the start and end point
@@ -424,15 +422,13 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
    * @type {number}
    * @readonly
    */
-  surfaceDistance: {
-    get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      Check.defined("distance", this._distance);
-      //>>includeEnd('debug');
+  get surfaceDistance() {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("distance", this._distance);
+    //>>includeEnd('debug');
 
-      return this._distance;
-    },
-  },
+    return this._distance;
+  }
 
   /**
    * Gets the initial planetodetic point on the path.
@@ -440,11 +436,9 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
    * @type {Cartographic}
    * @readonly
    */
-  start: {
-    get: function () {
-      return this._start;
-    },
-  },
+  get start() {
+    return this._start;
+  }
 
   /**
    * Gets the final planetodetic point on the path.
@@ -452,11 +446,9 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
    * @type {Cartographic}
    * @readonly
    */
-  end: {
-    get: function () {
-      return this._end;
-    },
-  },
+  get end() {
+    return this._end;
+  }
 
   /**
    * Gets the heading from the start point to the end point.
@@ -464,288 +456,269 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
    * @type {number}
    * @readonly
    */
-  heading: {
-    get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      Check.defined("distance", this._distance);
-      //>>includeEnd('debug');
+  get heading() {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("distance", this._distance);
+    //>>includeEnd('debug');
 
-      return this._heading;
-    },
-  },
-});
-
-/**
- * Create a rhumb line using an initial position with a heading and distance.
- *
- * @param {Cartographic} start The initial planetodetic point on the path.
- * @param {number} heading The heading in radians.
- * @param {number} distance The rhumb line distance between the start and end point.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the rhumb line lies.
- * @param {EllipsoidRhumbLine} [result] The object in which to store the result.
- * @returns {EllipsoidRhumbLine} The EllipsoidRhumbLine object.
- */
-EllipsoidRhumbLine.fromStartHeadingDistance = function (
-  start,
-  heading,
-  distance,
-  ellipsoid,
-  result,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("start", start);
-  Check.defined("heading", heading);
-  Check.defined("distance", distance);
-  Check.typeOf.number.greaterThan("distance", distance, 0.0);
-  //>>includeEnd('debug');
-
-  const e = ellipsoid ?? Ellipsoid.default;
-  const major = e.maximumRadius;
-  const minor = e.minimumRadius;
-  const majorSquared = major * major;
-  const minorSquared = minor * minor;
-  const ellipticity = Math.sqrt((majorSquared - minorSquared) / majorSquared);
-
-  heading = CesiumMath.negativePiToPi(heading);
-  const end = interpolateUsingSurfaceDistance(
-    start,
-    heading,
-    distance,
-    e.maximumRadius,
-    ellipticity,
-  );
-
-  if (
-    !defined(result) ||
-    (defined(ellipsoid) && !ellipsoid.equals(result.ellipsoid))
-  ) {
-    return new EllipsoidRhumbLine(start, end, e);
+    return this._heading;
   }
 
-  result.setEndPoints(start, end);
-  return result;
-};
+  /**
+   * Create a rhumb line using an initial position with a heading and distance.
+   *
+   * @param {Cartographic} start The initial planetodetic point on the path.
+   * @param {number} heading The heading in radians.
+   * @param {number} distance The rhumb line distance between the start and end point.
+   * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the rhumb line lies.
+   * @param {EllipsoidRhumbLine} [result] The object in which to store the result.
+   * @returns {EllipsoidRhumbLine} The EllipsoidRhumbLine object.
+   */
+  static fromStartHeadingDistance(start, heading, distance, ellipsoid, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("start", start);
+    Check.defined("heading", heading);
+    Check.defined("distance", distance);
+    Check.typeOf.number.greaterThan("distance", distance, 0.0);
+    //>>includeEnd('debug');
 
-/**
- * Sets the start and end points of the rhumb line.
- *
- * @param {Cartographic} start The initial planetodetic point on the path.
- * @param {Cartographic} end The final planetodetic point on the path.
- */
-EllipsoidRhumbLine.prototype.setEndPoints = function (start, end) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("start", start);
-  Check.defined("end", end);
-  //>>includeEnd('debug');
+    const e = ellipsoid ?? Ellipsoid.default;
+    const major = e.maximumRadius;
+    const minor = e.minimumRadius;
+    const majorSquared = major * major;
+    const minorSquared = minor * minor;
+    const ellipticity = Math.sqrt((majorSquared - minorSquared) / majorSquared);
 
-  computeProperties(this, start, end, this._ellipsoid);
-};
-
-/**
- * Provides the location of a point at the indicated portion along the rhumb line.
- *
- * @param {number} fraction The portion of the distance between the initial and final points.
- * @param {Cartographic} [result] The object in which to store the result.
- * @returns {Cartographic} The location of the point along the rhumb line.
- */
-EllipsoidRhumbLine.prototype.interpolateUsingFraction = function (
-  fraction,
-  result,
-) {
-  return this.interpolateUsingSurfaceDistance(
-    fraction * this._distance,
-    result,
-  );
-};
-
-/**
- * Provides the location of a point at the indicated distance along the rhumb line.
- *
- * @param {number} distance The distance from the initial point to the point of interest along the rhumbLine.
- * @param {Cartographic} [result] The object in which to store the result.
- * @returns {Cartographic} The location of the point along the rhumb line.
- *
- * @exception {DeveloperError} start and end must be set before calling function interpolateUsingSurfaceDistance
- */
-EllipsoidRhumbLine.prototype.interpolateUsingSurfaceDistance = function (
-  distance,
-  result,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("distance", distance);
-  if (!defined(this._distance) || this._distance === 0.0) {
-    throw new DeveloperError(
-      "EllipsoidRhumbLine must have distinct start and end set.",
+    heading = CesiumMath.negativePiToPi(heading);
+    const end = interpolateUsingSurfaceDistance(
+      start,
+      heading,
+      distance,
+      e.maximumRadius,
+      ellipticity,
     );
-  }
-  //>>includeEnd('debug');
 
-  return interpolateUsingSurfaceDistance(
-    this._start,
-    this._heading,
-    distance,
-    this._ellipsoid.maximumRadius,
-    this._ellipticity,
-    result,
-  );
-};
-
-/**
- * Provides the location of a point at the indicated longitude along the rhumb line.
- * If the longitude is outside the range of start and end points, the first intersection with the longitude from the start point in the direction of the heading is returned. This follows the spiral property of a rhumb line.
- *
- * @param {number} intersectionLongitude The longitude, in radians, at which to find the intersection point from the starting point using the heading.
- * @param {Cartographic} [result] The object in which to store the result.
- * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection or infinite intersections.
- *
- * @exception {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
- */
-EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function (
-  intersectionLongitude,
-  result,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("intersectionLongitude", intersectionLongitude);
-  if (!defined(this._distance) || this._distance === 0.0) {
-    throw new DeveloperError(
-      "EllipsoidRhumbLine must have distinct start and end set.",
-    );
-  }
-  //>>includeEnd('debug');
-
-  const ellipticity = this._ellipticity;
-  const heading = this._heading;
-  const absHeading = Math.abs(heading);
-  const start = this._start;
-
-  intersectionLongitude = CesiumMath.negativePiToPi(intersectionLongitude);
-
-  if (
-    CesiumMath.equalsEpsilon(
-      Math.abs(intersectionLongitude),
-      Math.PI,
-      CesiumMath.EPSILON14,
-    )
-  ) {
-    intersectionLongitude = CesiumMath.sign(start.longitude) * Math.PI;
-  }
-
-  if (!defined(result)) {
-    result = new Cartographic();
-  }
-
-  // If heading is -PI/2 or PI/2, this is an E-W rhumb line
-  // If heading is 0 or PI, this is an N-S rhumb line
-  if (Math.abs(CesiumMath.PI_OVER_TWO - absHeading) <= CesiumMath.EPSILON8) {
-    result.longitude = intersectionLongitude;
-    result.latitude = start.latitude;
-    result.height = 0;
-    return result;
-  } else if (
-    CesiumMath.equalsEpsilon(
-      Math.abs(CesiumMath.PI_OVER_TWO - absHeading),
-      CesiumMath.PI_OVER_TWO,
-      CesiumMath.EPSILON8,
-    )
-  ) {
     if (
-      CesiumMath.equalsEpsilon(
-        intersectionLongitude,
-        start.longitude,
-        CesiumMath.EPSILON12,
-      )
+      !defined(result) ||
+      (defined(ellipsoid) && !ellipsoid.equals(result.ellipsoid))
     ) {
-      return undefined;
+      return new EllipsoidRhumbLine(start, end, e);
     }
 
-    result.longitude = intersectionLongitude;
-    result.latitude =
-      CesiumMath.PI_OVER_TWO *
-      CesiumMath.sign(CesiumMath.PI_OVER_TWO - heading);
-    result.height = 0;
+    result.setEndPoints(start, end);
     return result;
   }
 
-  // Use iterative solver from Equation 9 from http://edwilliams.org/ellipsoid/ellipsoid.pdf
-  const phi1 = start.latitude;
-  const eSinPhi1 = ellipticity * Math.sin(phi1);
-  const leftComponent =
-    Math.tan(0.5 * (CesiumMath.PI_OVER_TWO + phi1)) *
-    Math.exp((intersectionLongitude - start.longitude) / Math.tan(heading));
-  const denominator = (1 + eSinPhi1) / (1 - eSinPhi1);
+  /**
+   * Sets the start and end points of the rhumb line.
+   *
+   * @param {Cartographic} start The initial planetodetic point on the path.
+   * @param {Cartographic} end The final planetodetic point on the path.
+   */
+  setEndPoints(start, end) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("start", start);
+    Check.defined("end", end);
+    //>>includeEnd('debug');
 
-  let newPhi = start.latitude;
-  let phi;
-  do {
-    phi = newPhi;
-    const eSinPhi = ellipticity * Math.sin(phi);
-    const numerator = (1 + eSinPhi) / (1 - eSinPhi);
-    newPhi =
-      2 *
-        Math.atan(
-          leftComponent * Math.pow(numerator / denominator, ellipticity / 2),
-        ) -
-      CesiumMath.PI_OVER_TWO;
-  } while (!CesiumMath.equalsEpsilon(newPhi, phi, CesiumMath.EPSILON12));
+    computeProperties(this, start, end, this._ellipsoid);
+  }
 
-  result.longitude = intersectionLongitude;
-  result.latitude = newPhi;
-  result.height = 0;
-  return result;
-};
-
-/**
- * Provides the location of a point at the indicated latitude along the rhumb line.
- * If the latitude is outside the range of start and end points, the first intersection with the latitude from that start point in the direction of the heading is returned. This follows the spiral property of a rhumb line.
- *
- * @param {number} intersectionLatitude The latitude, in radians, at which to find the intersection point from the starting point using the heading.
- * @param {Cartographic} [result] The object in which to store the result.
- * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection or infinite intersections.
- *
- * @exception {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
- */
-EllipsoidRhumbLine.prototype.findIntersectionWithLatitude = function (
-  intersectionLatitude,
-  result,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("intersectionLatitude", intersectionLatitude);
-  if (!defined(this._distance) || this._distance === 0.0) {
-    throw new DeveloperError(
-      "EllipsoidRhumbLine must have distinct start and end set.",
+  /**
+   * Provides the location of a point at the indicated portion along the rhumb line.
+   *
+   * @param {number} fraction The portion of the distance between the initial and final points.
+   * @param {Cartographic} [result] The object in which to store the result.
+   * @returns {Cartographic} The location of the point along the rhumb line.
+   */
+  interpolateUsingFraction(fraction, result) {
+    return this.interpolateUsingSurfaceDistance(
+      fraction * this._distance,
+      result,
     );
   }
-  //>>includeEnd('debug');
 
-  const ellipticity = this._ellipticity;
-  const heading = this._heading;
-  const start = this._start;
+  /**
+   * Provides the location of a point at the indicated distance along the rhumb line.
+   *
+   * @param {number} distance The distance from the initial point to the point of interest along the rhumbLine.
+   * @param {Cartographic} [result] The object in which to store the result.
+   * @returns {Cartographic} The location of the point along the rhumb line.
+   *
+   * @exception {DeveloperError} start and end must be set before calling function interpolateUsingSurfaceDistance
+   */
+  interpolateUsingSurfaceDistance(distance, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("distance", distance);
+    if (!defined(this._distance) || this._distance === 0.0) {
+      throw new DeveloperError(
+        "EllipsoidRhumbLine must have distinct start and end set.",
+      );
+    }
+    //>>includeEnd('debug');
 
-  // If start and end have same latitude, return undefined since it's either no intersection or infinite intersections
-  if (
-    CesiumMath.equalsEpsilon(
-      Math.abs(heading),
-      CesiumMath.PI_OVER_TWO,
-      CesiumMath.EPSILON8,
-    )
-  ) {
-    return;
+    return interpolateUsingSurfaceDistance(
+      this._start,
+      this._heading,
+      distance,
+      this._ellipsoid.maximumRadius,
+      this._ellipticity,
+      result,
+    );
   }
 
-  // Can be solved using the same equations from interpolateUsingSurfaceDistance
-  const sigma1 = calculateSigma(ellipticity, start.latitude);
-  const sigma2 = calculateSigma(ellipticity, intersectionLatitude);
-  const deltaLongitude = Math.tan(heading) * (sigma2 - sigma1);
-  const longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
+  /**
+   * Provides the location of a point at the indicated longitude along the rhumb line.
+   * If the longitude is outside the range of start and end points, the first intersection with the longitude from the start point in the direction of the heading is returned. This follows the spiral property of a rhumb line.
+   *
+   * @param {number} intersectionLongitude The longitude, in radians, at which to find the intersection point from the starting point using the heading.
+   * @param {Cartographic} [result] The object in which to store the result.
+   * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection or infinite intersections.
+   *
+   * @exception {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
+   */
+  findIntersectionWithLongitude(intersectionLongitude, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("intersectionLongitude", intersectionLongitude);
+    if (!defined(this._distance) || this._distance === 0.0) {
+      throw new DeveloperError(
+        "EllipsoidRhumbLine must have distinct start and end set.",
+      );
+    }
+    //>>includeEnd('debug');
 
-  if (defined(result)) {
-    result.longitude = longitude;
-    result.latitude = intersectionLatitude;
+    const ellipticity = this._ellipticity;
+    const heading = this._heading;
+    const absHeading = Math.abs(heading);
+    const start = this._start;
+
+    intersectionLongitude = CesiumMath.negativePiToPi(intersectionLongitude);
+
+    if (
+      CesiumMath.equalsEpsilon(
+        Math.abs(intersectionLongitude),
+        Math.PI,
+        CesiumMath.EPSILON14,
+      )
+    ) {
+      intersectionLongitude = CesiumMath.sign(start.longitude) * Math.PI;
+    }
+
+    if (!defined(result)) {
+      result = new Cartographic();
+    }
+
+    // If heading is -PI/2 or PI/2, this is an E-W rhumb line
+    // If heading is 0 or PI, this is an N-S rhumb line
+    if (Math.abs(CesiumMath.PI_OVER_TWO - absHeading) <= CesiumMath.EPSILON8) {
+      result.longitude = intersectionLongitude;
+      result.latitude = start.latitude;
+      result.height = 0;
+      return result;
+    } else if (
+      CesiumMath.equalsEpsilon(
+        Math.abs(CesiumMath.PI_OVER_TWO - absHeading),
+        CesiumMath.PI_OVER_TWO,
+        CesiumMath.EPSILON8,
+      )
+    ) {
+      if (
+        CesiumMath.equalsEpsilon(
+          intersectionLongitude,
+          start.longitude,
+          CesiumMath.EPSILON12,
+        )
+      ) {
+        return undefined;
+      }
+
+      result.longitude = intersectionLongitude;
+      result.latitude =
+        CesiumMath.PI_OVER_TWO *
+        CesiumMath.sign(CesiumMath.PI_OVER_TWO - heading);
+      result.height = 0;
+      return result;
+    }
+
+    // Use iterative solver from Equation 9 from http://edwilliams.org/ellipsoid/ellipsoid.pdf
+    const phi1 = start.latitude;
+    const eSinPhi1 = ellipticity * Math.sin(phi1);
+    const leftComponent =
+      Math.tan(0.5 * (CesiumMath.PI_OVER_TWO + phi1)) *
+      Math.exp((intersectionLongitude - start.longitude) / Math.tan(heading));
+    const denominator = (1 + eSinPhi1) / (1 - eSinPhi1);
+
+    let newPhi = start.latitude;
+    let phi;
+    do {
+      phi = newPhi;
+      const eSinPhi = ellipticity * Math.sin(phi);
+      const numerator = (1 + eSinPhi) / (1 - eSinPhi);
+      newPhi =
+        2 *
+          Math.atan(
+            leftComponent * Math.pow(numerator / denominator, ellipticity / 2),
+          ) -
+        CesiumMath.PI_OVER_TWO;
+    } while (!CesiumMath.equalsEpsilon(newPhi, phi, CesiumMath.EPSILON12));
+
+    result.longitude = intersectionLongitude;
+    result.latitude = newPhi;
     result.height = 0;
-
     return result;
   }
 
-  return new Cartographic(longitude, intersectionLatitude, 0);
-};
+  /**
+   * Provides the location of a point at the indicated latitude along the rhumb line.
+   * If the latitude is outside the range of start and end points, the first intersection with the latitude from that start point in the direction of the heading is returned. This follows the spiral property of a rhumb line.
+   *
+   * @param {number} intersectionLatitude The latitude, in radians, at which to find the intersection point from the starting point using the heading.
+   * @param {Cartographic} [result] The object in which to store the result.
+   * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection or infinite intersections.
+   *
+   * @exception {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
+   */
+  findIntersectionWithLatitude(intersectionLatitude, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("intersectionLatitude", intersectionLatitude);
+    if (!defined(this._distance) || this._distance === 0.0) {
+      throw new DeveloperError(
+        "EllipsoidRhumbLine must have distinct start and end set.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    const ellipticity = this._ellipticity;
+    const heading = this._heading;
+    const start = this._start;
+
+    // If start and end have same latitude, return undefined since it's either no intersection or infinite intersections
+    if (
+      CesiumMath.equalsEpsilon(
+        Math.abs(heading),
+        CesiumMath.PI_OVER_TWO,
+        CesiumMath.EPSILON8,
+      )
+    ) {
+      return;
+    }
+
+    // Can be solved using the same equations from interpolateUsingSurfaceDistance
+    const sigma1 = calculateSigma(ellipticity, start.latitude);
+    const sigma2 = calculateSigma(ellipticity, intersectionLatitude);
+    const deltaLongitude = Math.tan(heading) * (sigma2 - sigma1);
+    const longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
+
+    if (defined(result)) {
+      result.longitude = longitude;
+      result.latitude = intersectionLatitude;
+      result.height = 0;
+
+      return result;
+    }
+
+    return new Cartographic(longitude, intersectionLatitude, 0);
+  }
+}
+
 export default EllipsoidRhumbLine;

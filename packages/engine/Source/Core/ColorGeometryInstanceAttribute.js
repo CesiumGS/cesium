@@ -31,28 +31,28 @@ import DeveloperError from "./DeveloperError.js";
  * @see GeometryInstance
  * @see GeometryInstanceAttribute
  */
-function ColorGeometryInstanceAttribute(red, green, blue, alpha) {
-  red = red ?? 1.0;
-  green = green ?? 1.0;
-  blue = blue ?? 1.0;
-  alpha = alpha ?? 1.0;
+class ColorGeometryInstanceAttribute {
+  constructor(red, green, blue, alpha) {
+    red = red ?? 1.0;
+    green = green ?? 1.0;
+    blue = blue ?? 1.0;
+    alpha = alpha ?? 1.0;
 
-  /**
-   * The values for the attributes stored in a typed array.
-   *
-   * @type Uint8Array
-   *
-   * @default [255, 255, 255, 255]
-   */
-  this.value = new Uint8Array([
-    Color.floatToByte(red),
-    Color.floatToByte(green),
-    Color.floatToByte(blue),
-    Color.floatToByte(alpha),
-  ]);
-}
+    /**
+     * The values for the attributes stored in a typed array.
+     *
+     * @type Uint8Array
+     *
+     * @default [255, 255, 255, 255]
+     */
+    this.value = new Uint8Array([
+      Color.floatToByte(red),
+      Color.floatToByte(green),
+      Color.floatToByte(blue),
+      Color.floatToByte(alpha),
+    ]);
+  }
 
-Object.defineProperties(ColorGeometryInstanceAttribute.prototype, {
   /**
    * The datatype of each component in the attribute, e.g., individual elements in
    * {@link ColorGeometryInstanceAttribute#value}.
@@ -64,11 +64,9 @@ Object.defineProperties(ColorGeometryInstanceAttribute.prototype, {
    *
    * @default {@link ComponentDatatype.UNSIGNED_BYTE}
    */
-  componentDatatype: {
-    get: function () {
-      return ComponentDatatype.UNSIGNED_BYTE;
-    },
-  },
+  get componentDatatype() {
+    return ComponentDatatype.UNSIGNED_BYTE;
+  }
 
   /**
    * The number of components in the attributes, i.e., {@link ColorGeometryInstanceAttribute#value}.
@@ -80,11 +78,9 @@ Object.defineProperties(ColorGeometryInstanceAttribute.prototype, {
    *
    * @default 4
    */
-  componentsPerAttribute: {
-    get: function () {
-      return 4;
-    },
-  },
+  get componentsPerAttribute() {
+    return 4;
+  }
 
   /**
    * When <code>true</code> and <code>componentDatatype</code> is an integer format,
@@ -98,84 +94,83 @@ Object.defineProperties(ColorGeometryInstanceAttribute.prototype, {
    *
    * @default true
    */
-  normalize: {
-    get: function () {
-      return true;
-    },
-  },
-});
-
-/**
- * Creates a new {@link ColorGeometryInstanceAttribute} instance given the provided {@link Color}.
- *
- * @param {Color} color The color.
- * @returns {ColorGeometryInstanceAttribute} The new {@link ColorGeometryInstanceAttribute} instance.
- *
- * @example
- * const instance = new Cesium.GeometryInstance({
- *   geometry : geometry,
- *   attributes : {
- *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.CORNFLOWERBLUE),
- *   }
- * });
- */
-ColorGeometryInstanceAttribute.fromColor = function (color) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(color)) {
-    throw new DeveloperError("color is required.");
+  get normalize() {
+    return true;
   }
-  //>>includeEnd('debug');
 
-  return new ColorGeometryInstanceAttribute(
-    color.red,
-    color.green,
-    color.blue,
-    color.alpha,
-  );
-};
+  /**
+   * Creates a new {@link ColorGeometryInstanceAttribute} instance given the provided {@link Color}.
+   *
+   * @param {Color} color The color.
+   * @returns {ColorGeometryInstanceAttribute} The new {@link ColorGeometryInstanceAttribute} instance.
+   *
+   * @example
+   * const instance = new Cesium.GeometryInstance({
+   *   geometry : geometry,
+   *   attributes : {
+   *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.CORNFLOWERBLUE),
+   *   }
+   * });
+   */
+  static fromColor(color) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(color)) {
+      throw new DeveloperError("color is required.");
+    }
+    //>>includeEnd('debug');
 
-/**
- * Converts a color to a typed array that can be used to assign a color attribute.
- *
- * @param {Color} color The color.
- * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
- *
- * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
- *
- * @example
- * const attributes = primitive.getGeometryInstanceAttributes('an id');
- * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA, attributes.color);
- */
-ColorGeometryInstanceAttribute.toValue = function (color, result) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(color)) {
-    throw new DeveloperError("color is required.");
+    return new ColorGeometryInstanceAttribute(
+      color.red,
+      color.green,
+      color.blue,
+      color.alpha,
+    );
   }
-  //>>includeEnd('debug');
 
-  if (!defined(result)) {
-    return new Uint8Array(color.toBytes());
+  /**
+   * Converts a color to a typed array that can be used to assign a color attribute.
+   *
+   * @param {Color} color The color.
+   * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
+   *
+   * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
+   *
+   * @example
+   * const attributes = primitive.getGeometryInstanceAttributes('an id');
+   * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA, attributes.color);
+   */
+  static toValue(color, result) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(color)) {
+      throw new DeveloperError("color is required.");
+    }
+    //>>includeEnd('debug');
+
+    if (!defined(result)) {
+      return new Uint8Array(color.toBytes());
+    }
+    return color.toBytes(result);
   }
-  return color.toBytes(result);
-};
 
-/**
- * Compares the provided ColorGeometryInstanceAttributes and returns
- * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
- * @param {ColorGeometryInstanceAttribute} [left] The first ColorGeometryInstanceAttribute.
- * @param {ColorGeometryInstanceAttribute} [right] The second ColorGeometryInstanceAttribute.
- * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
- */
-ColorGeometryInstanceAttribute.equals = function (left, right) {
-  return (
-    left === right ||
-    (defined(left) &&
-      defined(right) &&
-      left.value[0] === right.value[0] &&
-      left.value[1] === right.value[1] &&
-      left.value[2] === right.value[2] &&
-      left.value[3] === right.value[3])
-  );
-};
+  /**
+   * Compares the provided ColorGeometryInstanceAttributes and returns
+   * <code>true</code> if they are equal, <code>false</code> otherwise.
+   *
+   * @param {ColorGeometryInstanceAttribute} [left] The first ColorGeometryInstanceAttribute.
+   * @param {ColorGeometryInstanceAttribute} [right] The second ColorGeometryInstanceAttribute.
+   * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+   */
+  static equals(left, right) {
+    return (
+      left === right ||
+      (defined(left) &&
+        defined(right) &&
+        left.value[0] === right.value[0] &&
+        left.value[1] === right.value[1] &&
+        left.value[2] === right.value[2] &&
+        left.value[3] === right.value[3])
+    );
+  }
+}
+
 export default ColorGeometryInstanceAttribute;

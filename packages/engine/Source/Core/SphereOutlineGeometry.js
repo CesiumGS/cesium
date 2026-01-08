@@ -27,18 +27,81 @@ import EllipsoidOutlineGeometry from "./EllipsoidOutlineGeometry.js";
  * });
  * const geometry = Cesium.SphereOutlineGeometry.createGeometry(sphere);
  */
-function SphereOutlineGeometry(options) {
-  const radius = options.radius ?? 1.0;
-  const radii = new Cartesian3(radius, radius, radius);
-  const ellipsoidOptions = {
-    radii: radii,
-    stackPartitions: options.stackPartitions,
-    slicePartitions: options.slicePartitions,
-    subdivisions: options.subdivisions,
-  };
+class SphereOutlineGeometry {
+  constructor(options) {
+    const radius = options.radius ?? 1.0;
+    const radii = new Cartesian3(radius, radius, radius);
+    const ellipsoidOptions = {
+      radii: radii,
+      stackPartitions: options.stackPartitions,
+      slicePartitions: options.slicePartitions,
+      subdivisions: options.subdivisions,
+    };
 
-  this._ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);
-  this._workerName = "createSphereOutlineGeometry";
+    this._ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);
+    this._workerName = "createSphereOutlineGeometry";
+  }
+
+  /**
+   * Stores the provided instance into the provided array.
+   *
+   * @param {SphereOutlineGeometry} value The value to pack.
+   * @param {number[]} array The array to pack into.
+   * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+   *
+   * @returns {number[]} The array that was packed into
+   */
+  static pack(value, array, startingIndex) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("value", value);
+    //>>includeEnd('debug');
+
+    return EllipsoidOutlineGeometry.pack(
+      value._ellipsoidGeometry,
+      array,
+      startingIndex,
+    );
+  }
+
+  /**
+   * Retrieves an instance from a packed array.
+   *
+   * @param {number[]} array The packed array.
+   * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
+   * @param {SphereOutlineGeometry} [result] The object into which to store the result.
+   * @returns {SphereOutlineGeometry} The modified result parameter or a new SphereOutlineGeometry instance if one was not provided.
+   */
+  static unpack(array, startingIndex, result) {
+    const ellipsoidGeometry = EllipsoidOutlineGeometry.unpack(
+      array,
+      startingIndex,
+      scratchEllipsoidGeometry,
+    );
+    scratchOptions.stackPartitions = ellipsoidGeometry._stackPartitions;
+    scratchOptions.slicePartitions = ellipsoidGeometry._slicePartitions;
+    scratchOptions.subdivisions = ellipsoidGeometry._subdivisions;
+
+    if (!defined(result)) {
+      scratchOptions.radius = ellipsoidGeometry._radii.x;
+      return new SphereOutlineGeometry(scratchOptions);
+    }
+
+    Cartesian3.clone(ellipsoidGeometry._radii, scratchOptions.radii);
+    result._ellipsoidGeometry = new EllipsoidOutlineGeometry(scratchOptions);
+    return result;
+  }
+
+  /**
+   * Computes the geometric representation of an outline of a sphere, including its vertices, indices, and a bounding sphere.
+   *
+   * @param {SphereOutlineGeometry} sphereGeometry A description of the sphere outline.
+   * @returns {Geometry|undefined} The computed vertices and indices.
+   */
+  static createGeometry(sphereGeometry) {
+    return EllipsoidOutlineGeometry.createGeometry(
+      sphereGeometry._ellipsoidGeometry,
+    );
+  }
 }
 
 /**
@@ -46,27 +109,6 @@ function SphereOutlineGeometry(options) {
  * @type {number}
  */
 SphereOutlineGeometry.packedLength = EllipsoidOutlineGeometry.packedLength;
-
-/**
- * Stores the provided instance into the provided array.
- *
- * @param {SphereOutlineGeometry} value The value to pack.
- * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
- * @returns {number[]} The array that was packed into
- */
-SphereOutlineGeometry.pack = function (value, array, startingIndex) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("value", value);
-  //>>includeEnd('debug');
-
-  return EllipsoidOutlineGeometry.pack(
-    value._ellipsoidGeometry,
-    array,
-    startingIndex,
-  );
-};
 
 const scratchEllipsoidGeometry = new EllipsoidOutlineGeometry();
 const scratchOptions = {
@@ -77,43 +119,4 @@ const scratchOptions = {
   subdivisions: undefined,
 };
 
-/**
- * Retrieves an instance from a packed array.
- *
- * @param {number[]} array The packed array.
- * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
- * @param {SphereOutlineGeometry} [result] The object into which to store the result.
- * @returns {SphereOutlineGeometry} The modified result parameter or a new SphereOutlineGeometry instance if one was not provided.
- */
-SphereOutlineGeometry.unpack = function (array, startingIndex, result) {
-  const ellipsoidGeometry = EllipsoidOutlineGeometry.unpack(
-    array,
-    startingIndex,
-    scratchEllipsoidGeometry,
-  );
-  scratchOptions.stackPartitions = ellipsoidGeometry._stackPartitions;
-  scratchOptions.slicePartitions = ellipsoidGeometry._slicePartitions;
-  scratchOptions.subdivisions = ellipsoidGeometry._subdivisions;
-
-  if (!defined(result)) {
-    scratchOptions.radius = ellipsoidGeometry._radii.x;
-    return new SphereOutlineGeometry(scratchOptions);
-  }
-
-  Cartesian3.clone(ellipsoidGeometry._radii, scratchOptions.radii);
-  result._ellipsoidGeometry = new EllipsoidOutlineGeometry(scratchOptions);
-  return result;
-};
-
-/**
- * Computes the geometric representation of an outline of a sphere, including its vertices, indices, and a bounding sphere.
- *
- * @param {SphereOutlineGeometry} sphereGeometry A description of the sphere outline.
- * @returns {Geometry|undefined} The computed vertices and indices.
- */
-SphereOutlineGeometry.createGeometry = function (sphereGeometry) {
-  return EllipsoidOutlineGeometry.createGeometry(
-    sphereGeometry._ellipsoidGeometry,
-  );
-};
 export default SphereOutlineGeometry;

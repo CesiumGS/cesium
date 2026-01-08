@@ -17,49 +17,49 @@ import defined from "./defined.js";
  *
  * @see DeveloperError
  */
-function RuntimeError(message) {
-  /**
-   * 'RuntimeError' indicating that this exception was thrown due to a runtime error.
-   * @type {string}
-   * @readonly
-   */
-  this.name = "RuntimeError";
+class RuntimeError extends Error {
+  constructor(message) {
+    /**
+     * 'RuntimeError' indicating that this exception was thrown due to a runtime error.
+     * @type {string}
+     * @readonly
+     */
+    this.name = "RuntimeError";
 
-  /**
-   * The explanation for why this exception was thrown.
-   * @type {string}
-   * @readonly
-   */
-  this.message = message;
+    /**
+     * The explanation for why this exception was thrown.
+     * @type {string}
+     * @readonly
+     */
+    this.message = message;
 
-  //Browsers such as IE don't have a stack property until you actually throw the error.
-  let stack;
-  try {
-    throw new Error();
-  } catch (e) {
-    stack = e.stack;
+    //Browsers such as IE don't have a stack property until you actually throw the error.
+    let stack;
+    try {
+      throw new Error();
+    } catch (e) {
+      stack = e.stack;
+    }
+
+    /**
+     * The stack trace of this exception, if available.
+     * @type {string}
+     * @readonly
+     */
+    this.stack = stack;
   }
 
-  /**
-   * The stack trace of this exception, if available.
-   * @type {string}
-   * @readonly
-   */
-  this.stack = stack;
-}
+  toString() {
+    let str = `${this.name}: ${this.message}`;
 
-if (defined(Object.create)) {
-  RuntimeError.prototype = Object.create(Error.prototype);
-  RuntimeError.prototype.constructor = RuntimeError;
-}
+    if (defined(this.stack)) {
+      str += `\n${this.stack.toString()}`;
+    }
 
-RuntimeError.prototype.toString = function () {
-  let str = `${this.name}: ${this.message}`;
-
-  if (defined(this.stack)) {
-    str += `\n${this.stack.toString()}`;
+    return str;
   }
+}
 
-  return str;
-};
+if (defined(Object.create)) {}
+
 export default RuntimeError;

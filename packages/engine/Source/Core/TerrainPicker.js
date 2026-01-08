@@ -26,131 +26,177 @@ const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
  *
  * @private
  */
-function TerrainPicker(vertices, indices, encoding) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("vertices", vertices);
-  Check.defined("indices", indices);
-  Check.defined("encoding", encoding);
-  //>>includeEnd('debug');
+class TerrainPicker {
+  constructor(vertices, indices, encoding) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("vertices", vertices);
+    Check.defined("indices", indices);
+    Check.defined("encoding", encoding);
+    //>>includeEnd('debug');
+
+    /**
+     * The terrain mesh's vertex buffer.
+     * @type {Float32Array}
+     */
+    this._vertices = vertices;
+    /**
+     * The terrain mesh's index buffer.
+     * @type {Uint32Array}
+     */
+    this._indices = indices;
+    /**
+     * The terrain mesh's vertex encoding.
+     * @type {TerrainEncoding}
+     */
+    this._encoding = encoding;
+    /**
+     * The inverse of the terrain mesh tile's transform from world space to local space.
+     * @type {Matrix4}
+     */
+    this._inverseTransform = new Matrix4(); // Compute as-needed on rebuild
+    /**
+     * Whether or not to reset this terrain mesh's picker on the next ray intersection.
+     * @type {Boolean}
+     */
+    this._needsRebuild = true;
+    /**
+     * The root node of the terrain picker's quadtree.
+     * @type {TerrainPickerNode}
+     */
+    this._rootNode = new TerrainPickerNode();
+  }
 
   /**
-   * The terrain mesh's vertex buffer.
-   * @type {Float32Array}
+   * Indicates whether the terrain picker needs to be rebuilt due to changes in the underlying terrain mesh's vertices or indices.
+   * @type {boolean}
    */
-  this._vertices = vertices;
+  get needsRebuild() {
+    return this._needsRebuild;
+  }
+
+  set needsRebuild(value) {
+    this._needsRebuild = value;
+  }
+
   /**
-   * The terrain mesh's index buffer.
-   * @type {Uint32Array}
+   * Determines the point on the mesh where the given ray intersects.
+   * @param {Ray} ray The ray to test.
+   * @param {Matrix4} tileTransform The terrain mesh tile's transform from local space to world space.
+   * @param {Boolean} cullBackFaces Whether to consider back-facing triangles as intersections.
+   * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
+   * @param {MapProjection} projection The map projection.
+   * @returns {Cartesian3 | undefined} result The intersection point, or undefined if there is no intersection.
+   * @memberof TerrainPicker
+   * @private
    */
-  this._indices = indices;
-  /**
-   * The terrain mesh's vertex encoding.
-   * @type {TerrainEncoding}
-   */
-  this._encoding = encoding;
-  /**
-   * The inverse of the terrain mesh tile's transform from world space to local space.
-   * @type {Matrix4}
-   */
-  this._inverseTransform = new Matrix4(); // Compute as-needed on rebuild
-  /**
-   * Whether or not to reset this terrain mesh's picker on the next ray intersection.
-   * @type {Boolean}
-   */
-  this._needsRebuild = true;
-  /**
-   * The root node of the terrain picker's quadtree.
-   * @type {TerrainPickerNode}
-   */
-  this._rootNode = new TerrainPickerNode();
+  rayIntersect(ray, tileTransform, cullBackFaces, mode, projection) {
+    // Lazily (re)create the terrain picker
+    if (this._needsRebuild) {
+      reset(this, tileTransform);
+    }
+
+    const invTransform = this._inverseTransform;
+
+    const transformedRay = scratchTransformedRay;
+
+    transformedRay.origin = Matrix4.multiplyByPoint(
+      invTransform,
+      ray.origin,
+      transformedRay.origin,
+    );
+    transformedRay.direction = Matrix4.multiplyByPointAsVector(
+      invTransform,
+      ray.direction,
+      transformedRay.direction,
+    );
+
+    const intersections = [];
+    getNodesIntersectingRay(this._rootNode, transformedRay, intersections);
+
+    return findClosestPointInClosestNode(
+      this,
+      intersections,
+      ray,
+      cullBackFaces,
+      mode,
+      projection,
+    );
+  }
 }
 
 const incrementallyBuildTerrainPickerTaskProcessor = new TaskProcessor(
   "incrementallyBuildTerrainPicker",
 );
 
-Object.defineProperties(TerrainPicker.prototype, {
-  /**
-   * Indicates whether the terrain picker needs to be rebuilt due to changes in the underlying terrain mesh's vertices or indices.
-   * @type {boolean}
-   */
-  needsRebuild: {
-    get: function () {
-      return this._needsRebuild;
-    },
-    set: function (value) {
-      this._needsRebuild = value;
-    },
-  },
-});
-
 /**
  * A node in the terrain picker quadtree.
  * @constructor
  * @private
  */
-function TerrainPickerNode() {
-  /**
-   * The tree-space x-coordinate of this node.
-   * @type {Number}
-   */
-  this.x = 0;
-  /**
-   * The tree-space y-coordinate of this node.
-   * @type {Number}
-   */
-  this.y = 0;
-  /**
-   * The level of this node in the quadtree.
-   * @type {Number}
-   */
-  this.level = 0;
-  /**
-   * The axis-aligned bounding box of this node (in the tree's local space).
-   * @type {AxisAlignedBoundingBox}
-   */
-  this.aabb = createAABBForNode(this.x, this.y, this.level);
-  /**
-   * The indices of the triangles that intersect this node.
-   * @type {Uint32Array}
-   */
-  this.intersectingTriangles = new Uint32Array(0);
-  /**
-   * The child terrain picker nodes of this node.
-   * @type {TerrainPickerNode[]}
-   */
-  this.children = [];
-  /**
-   * Whether or not this node is currently building its children on a worker.
-   * @type {Boolean}
-   */
-  this.buildingChildren = false;
-}
-
-/**
- * Adds a child node to this node.
- *
- * @param {number} childIdx The index of the child to add (0-3).
- * @memberof TerrainPickerNode
- */
-TerrainPickerNode.prototype.addChild = function (childIdx) {
-  //>>includeStart('debug', pragmas.debug);
-  if (childIdx < 0 || childIdx > 3) {
-    throw new DeveloperError(
-      "TerrainPickerNode child index must be between 0 and 3, inclusive.",
-    );
+class TerrainPickerNode {
+  constructor() {
+    /**
+     * The tree-space x-coordinate of this node.
+     * @type {Number}
+     */
+    this.x = 0;
+    /**
+     * The tree-space y-coordinate of this node.
+     * @type {Number}
+     */
+    this.y = 0;
+    /**
+     * The level of this node in the quadtree.
+     * @type {Number}
+     */
+    this.level = 0;
+    /**
+     * The axis-aligned bounding box of this node (in the tree's local space).
+     * @type {AxisAlignedBoundingBox}
+     */
+    this.aabb = createAABBForNode(this.x, this.y, this.level);
+    /**
+     * The indices of the triangles that intersect this node.
+     * @type {Uint32Array}
+     */
+    this.intersectingTriangles = new Uint32Array(0);
+    /**
+     * The child terrain picker nodes of this node.
+     * @type {TerrainPickerNode[]}
+     */
+    this.children = [];
+    /**
+     * Whether or not this node is currently building its children on a worker.
+     * @type {Boolean}
+     */
+    this.buildingChildren = false;
   }
-  //>>includeEnd('debug');
 
-  const childNode = new TerrainPickerNode();
-  // Use bitwise operations to get child x,y from child index and parent x,y
-  childNode.x = this.x * 2 + (childIdx & 1);
-  childNode.y = this.y * 2 + ((childIdx >> 1) & 1);
-  childNode.level = this.level + 1;
-  childNode.aabb = createAABBForNode(childNode.x, childNode.y, childNode.level);
+  /**
+   * Adds a child node to this node.
+   *
+   * @param {number} childIdx The index of the child to add (0-3).
+   * @memberof TerrainPickerNode
+   */
+  addChild(childIdx) {
+    //>>includeStart('debug', pragmas.debug);
+    if (childIdx < 0 || childIdx > 3) {
+      throw new DeveloperError(
+        "TerrainPickerNode child index must be between 0 and 3, inclusive.",
+      );
+    }
+    //>>includeEnd('debug');
 
-  this.children[childIdx] = childNode;
-};
+    const childNode = new TerrainPickerNode();
+    // Use bitwise operations to get child x,y from child index and parent x,y
+    childNode.x = this.x * 2 + (childIdx & 1);
+    childNode.y = this.y * 2 + ((childIdx >> 1) & 1);
+    childNode.level = this.level + 1;
+    childNode.aabb = createAABBForNode(childNode.x, childNode.y, childNode.level);
+
+    this.children[childIdx] = childNode;
+  }
+}
 
 const scratchTransformedRay = new Ray();
 const scratchTrianglePoints = [
@@ -158,57 +204,6 @@ const scratchTrianglePoints = [
   new Cartesian3(),
   new Cartesian3(),
 ];
-
-/**
- * Determines the point on the mesh where the given ray intersects.
- * @param {Ray} ray The ray to test.
- * @param {Matrix4} tileTransform The terrain mesh tile's transform from local space to world space.
- * @param {Boolean} cullBackFaces Whether to consider back-facing triangles as intersections.
- * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
- * @param {MapProjection} projection The map projection.
- * @returns {Cartesian3 | undefined} result The intersection point, or undefined if there is no intersection.
- * @memberof TerrainPicker
- * @private
- */
-TerrainPicker.prototype.rayIntersect = function (
-  ray,
-  tileTransform,
-  cullBackFaces,
-  mode,
-  projection,
-) {
-  // Lazily (re)create the terrain picker
-  if (this._needsRebuild) {
-    reset(this, tileTransform);
-  }
-
-  const invTransform = this._inverseTransform;
-
-  const transformedRay = scratchTransformedRay;
-
-  transformedRay.origin = Matrix4.multiplyByPoint(
-    invTransform,
-    ray.origin,
-    transformedRay.origin,
-  );
-  transformedRay.direction = Matrix4.multiplyByPointAsVector(
-    invTransform,
-    ray.direction,
-    transformedRay.direction,
-  );
-
-  const intersections = [];
-  getNodesIntersectingRay(this._rootNode, transformedRay, intersections);
-
-  return findClosestPointInClosestNode(
-    this,
-    intersections,
-    ray,
-    cullBackFaces,
-    mode,
-    projection,
-  );
-};
 
 /**
  * Resets the terrain picker's quadtree structure to just the root node. Done whenever the underlying terrain mesh changes.

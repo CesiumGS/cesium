@@ -31,105 +31,100 @@ import RuntimeError from "./RuntimeError.js";
  * @see createWorldTerrain
  * @see https://cesium.com
  */
-function IonResource(endpoint, endpointResource) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("endpoint", endpoint);
-  Check.defined("endpointResource", endpointResource);
-  //>>includeEnd('debug');
+class IonResource extends Resource {
+  constructor(endpoint, endpointResource) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("endpoint", endpoint);
+    Check.defined("endpointResource", endpointResource);
+    //>>includeEnd('debug');
 
-  let options;
-  const externalType = endpoint.externalType;
-  const isExternal = defined(externalType);
+    let options;
+    const externalType = endpoint.externalType;
+    const isExternal = defined(externalType);
 
-  if (!isExternal) {
-    options = {
-      url: endpoint.url,
-      retryAttempts: 1,
-      retryCallback: retryCallback,
-    };
-  } else if (
-    externalType === "3DTILES" ||
-    externalType === "STK_TERRAIN_SERVER"
-  ) {
-    // 3D Tiles and STK Terrain Server external assets can still be represented as an IonResource
-    options = { url: endpoint.options.url };
-  } else {
-    //External imagery assets have additional configuration that can't be represented as a Resource
-    throw new RuntimeError(
-      "Ion.createResource does not support external imagery assets; use IonImageryProvider instead.",
-    );
+    if (!isExternal) {
+      options = {
+        url: endpoint.url,
+        retryAttempts: 1,
+        retryCallback: retryCallback,
+      };
+    } else if (
+      externalType === "3DTILES" ||
+      externalType === "STK_TERRAIN_SERVER"
+    ) {
+      // 3D Tiles and STK Terrain Server external assets can still be represented as an IonResource
+      options = { url: endpoint.options.url };
+    } else {
+      //External imagery assets have additional configuration that can't be represented as a Resource
+      throw new RuntimeError(
+        "Ion.createResource does not support external imagery assets; use IonImageryProvider instead.",
+      );
+    }
+
+    super(options);
+
+    // The asset endpoint data returned from ion.
+    this._ionEndpoint = endpoint;
+    this._ionEndpointDomain = isExternal
+      ? undefined
+      : new Uri(endpoint.url).authority();
+
+    // The endpoint resource to fetch when a new token is needed
+    this._ionEndpointResource = endpointResource;
+
+    // The primary IonResource from which an instance is derived
+    this._ionRoot = undefined;
+
+    // Shared promise for endpooint requests amd credits (only ever set on the root request)
+    this._pendingPromise = undefined;
+    this._credits = undefined;
+    this._isExternal = isExternal;
+
+    /**
+     * A function that, if defined, will be invoked when the access token is refreshed.
+     * @private
+     * @type {IonResourceRefreshCallback|undefined}
+     */
+    this.refreshCallback = undefined;
   }
 
-  Resource.call(this, options);
-
-  // The asset endpoint data returned from ion.
-  this._ionEndpoint = endpoint;
-  this._ionEndpointDomain = isExternal
-    ? undefined
-    : new Uri(endpoint.url).authority();
-
-  // The endpoint resource to fetch when a new token is needed
-  this._ionEndpointResource = endpointResource;
-
-  // The primary IonResource from which an instance is derived
-  this._ionRoot = undefined;
-
-  // Shared promise for endpooint requests amd credits (only ever set on the root request)
-  this._pendingPromise = undefined;
-  this._credits = undefined;
-  this._isExternal = isExternal;
-
   /**
-   * A function that, if defined, will be invoked when the access token is refreshed.
-   * @private
-   * @type {IonResourceRefreshCallback|undefined}
+   * Asynchronously creates an instance.
+   *
+   * @param {number} assetId The Cesium ion asset id.
+   * @param {object} [options] An object with the following properties:
+   * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
+   * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
+   * @returns {Promise<IonResource>} A Promise to an instance representing the Cesium ion Asset.
+   *
+   * @example
+   * // Load a Cesium3DTileset with asset ID of 124624234
+   * try {
+   *   const resource = await Cesium.IonResource.fromAssetId(124624234);
+   *   const tileset = await Cesium.Cesium3DTileset.fromUrl(resource);
+   *   scene.primitives.add(tileset);
+   * } catch (error) {
+   *   console.error(`Error creating tileset: ${error}`);
+   * }
+   *
+   * @example
+   * //Load a CZML file with asset ID of 10890
+   * Cesium.IonResource.fromAssetId(10890)
+   *   .then(function (resource) {
+   *     viewer.dataSources.add(Cesium.CzmlDataSource.load(resource));
+   *   });
    */
-  this.refreshCallback = undefined;
-}
+  static fromAssetId(assetId, options) {
+    const endpointResource = IonResource._createEndpointResource(
+      assetId,
+      options,
+    );
 
-if (defined(Object.create)) {
-  IonResource.prototype = Object.create(Resource.prototype);
-  IonResource.prototype.constructor = IonResource;
-}
+    return endpointResource.fetchJson().then(function (endpoint) {
+      return new IonResource(endpoint, endpointResource);
+    });
+  }
 
-/**
- * Asynchronously creates an instance.
- *
- * @param {number} assetId The Cesium ion asset id.
- * @param {object} [options] An object with the following properties:
- * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
- * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
- * @returns {Promise<IonResource>} A Promise to an instance representing the Cesium ion Asset.
- *
- * @example
- * // Load a Cesium3DTileset with asset ID of 124624234
- * try {
- *   const resource = await Cesium.IonResource.fromAssetId(124624234);
- *   const tileset = await Cesium.Cesium3DTileset.fromUrl(resource);
- *   scene.primitives.add(tileset);
- * } catch (error) {
- *   console.error(`Error creating tileset: ${error}`);
- * }
- *
- * @example
- * //Load a CZML file with asset ID of 10890
- * Cesium.IonResource.fromAssetId(10890)
- *   .then(function (resource) {
- *     viewer.dataSources.add(Cesium.CzmlDataSource.load(resource));
- *   });
- */
-IonResource.fromAssetId = function (assetId, options) {
-  const endpointResource = IonResource._createEndpointResource(
-    assetId,
-    options,
-  );
-
-  return endpointResource.fetchJson().then(function (endpoint) {
-    return new IonResource(endpoint, endpointResource);
-  });
-};
-
-Object.defineProperties(IonResource.prototype, {
   /**
    * Gets the credits required for attribution of the asset.
    *
@@ -137,121 +132,121 @@ Object.defineProperties(IonResource.prototype, {
    * @type {Credit[]}
    * @readonly
    */
-  credits: {
-    get: function () {
-      // Only we're not the root, return its credits;
-      if (defined(this._ionRoot)) {
-        return this._ionRoot.credits;
-      }
-
-      // We are the root
-      if (defined(this._credits)) {
-        return this._credits;
-      }
-
-      this._credits = IonResource.getCreditsFromEndpoint(
-        this._ionEndpoint,
-        this._ionEndpointResource,
-      );
-
-      return this._credits;
-    },
-  },
-});
-
-/** @private */
-IonResource.getCreditsFromEndpoint = function (endpoint, endpointResource) {
-  const credits = endpoint.attributions.map(Credit.getIonCredit);
-  const defaultTokenCredit = Ion.getDefaultTokenCredit(
-    endpointResource.queryParameters.access_token,
-  );
-  if (defined(defaultTokenCredit)) {
-    credits.push(Credit.clone(defaultTokenCredit));
-  }
-  return credits;
-};
-
-/** @inheritdoc */
-IonResource.prototype.clone = function (result) {
-  // We always want to use the root's information because it's the most up-to-date
-  const ionRoot = this._ionRoot ?? this;
-
-  if (!defined(result)) {
-    result = new IonResource(
-      ionRoot._ionEndpoint,
-      ionRoot._ionEndpointResource,
-    );
-  }
-
-  result = Resource.prototype.clone.call(this, result);
-  result._ionRoot = ionRoot;
-  result._isExternal = this._isExternal;
-
-  return result;
-};
-
-IonResource.prototype.fetchImage = function (options) {
-  if (!this._isExternal) {
-    const userOptions = options;
-    options = {
-      preferBlob: true,
-    };
-    if (defined(userOptions)) {
-      options.flipY = userOptions.flipY;
-      options.preferImageBitmap = userOptions.preferImageBitmap;
+  get credits() {
+    // Only we're not the root, return its credits;
+    if (defined(this._ionRoot)) {
+      return this._ionRoot.credits;
     }
+
+    // We are the root
+    if (defined(this._credits)) {
+      return this._credits;
+    }
+
+    this._credits = IonResource.getCreditsFromEndpoint(
+      this._ionEndpoint,
+      this._ionEndpointResource,
+    );
+
+    return this._credits;
   }
 
-  return Resource.prototype.fetchImage.call(this, options);
-};
+  /** @private */
+  static getCreditsFromEndpoint(endpoint, endpointResource) {
+    const credits = endpoint.attributions.map(Credit.getIonCredit);
+    const defaultTokenCredit = Ion.getDefaultTokenCredit(
+      endpointResource.queryParameters.access_token,
+    );
+    if (defined(defaultTokenCredit)) {
+      credits.push(Credit.clone(defaultTokenCredit));
+    }
+    return credits;
+  }
 
-IonResource.prototype._makeRequest = function (options) {
-  // Don't send ion access token to non-ion servers.
-  if (
-    this._isExternal ||
-    new Uri(this.url).authority() !== this._ionEndpointDomain
-  ) {
+  /** @inheritdoc */
+  clone(result) {
+    // We always want to use the root's information because it's the most up-to-date
+    const ionRoot = this._ionRoot ?? this;
+
+    if (!defined(result)) {
+      result = new IonResource(
+        ionRoot._ionEndpoint,
+        ionRoot._ionEndpointResource,
+      );
+    }
+
+    result = Resource.prototype.clone.call(this, result);
+    result._ionRoot = ionRoot;
+    result._isExternal = this._isExternal;
+
+    return result;
+  }
+
+  fetchImage(options) {
+    if (!this._isExternal) {
+      const userOptions = options;
+      options = {
+        preferBlob: true,
+      };
+      if (defined(userOptions)) {
+        options.flipY = userOptions.flipY;
+        options.preferImageBitmap = userOptions.preferImageBitmap;
+      }
+    }
+
+    return Resource.prototype.fetchImage.call(this, options);
+  }
+
+  _makeRequest(options) {
+    // Don't send ion access token to non-ion servers.
+    if (
+      this._isExternal ||
+      new Uri(this.url).authority() !== this._ionEndpointDomain
+    ) {
+      return Resource.prototype._makeRequest.call(this, options);
+    }
+
+    options.headers = addClientHeaders(options.headers);
+    options.headers.Authorization = `Bearer ${this._ionEndpoint.accessToken}`;
+
     return Resource.prototype._makeRequest.call(this, options);
   }
 
-  options.headers = addClientHeaders(options.headers);
-  options.headers.Authorization = `Bearer ${this._ionEndpoint.accessToken}`;
+  /**
+   * @private
+   **/
+  static _createEndpointResource(assetId, options) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("assetId", assetId);
+    //>>includeEnd('debug');
 
-  return Resource.prototype._makeRequest.call(this, options);
-};
+    options = options ?? Frozen.EMPTY_OBJECT;
+    let server = options.server ?? Ion.defaultServer;
+    const accessToken = options.accessToken ?? Ion.defaultAccessToken;
+    server = Resource.createIfNeeded(server);
 
-/**
- * @private
- **/
-IonResource._createEndpointResource = function (assetId, options) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("assetId", assetId);
-  //>>includeEnd('debug');
-
-  options = options ?? Frozen.EMPTY_OBJECT;
-  let server = options.server ?? Ion.defaultServer;
-  const accessToken = options.accessToken ?? Ion.defaultAccessToken;
-  server = Resource.createIfNeeded(server);
-
-  const resourceOptions = {
-    url: `v1/assets/${assetId}/endpoint`,
-  };
-
-  if (defined(accessToken)) {
-    resourceOptions.queryParameters = { access_token: accessToken };
-  }
-
-  if (defined(options.queryParameters)) {
-    resourceOptions.queryParameters = {
-      ...resourceOptions.queryParameters,
-      ...options.queryParameters,
+    const resourceOptions = {
+      url: `v1/assets/${assetId}/endpoint`,
     };
+
+    if (defined(accessToken)) {
+      resourceOptions.queryParameters = { access_token: accessToken };
+    }
+
+    if (defined(options.queryParameters)) {
+      resourceOptions.queryParameters = {
+        ...resourceOptions.queryParameters,
+        ...options.queryParameters,
+      };
+    }
+
+    resourceOptions.headers = addClientHeaders(resourceOptions.headers);
+
+    return server.getDerivedResource(resourceOptions);
   }
+}
 
-  resourceOptions.headers = addClientHeaders(resourceOptions.headers);
-
-  return server.getDerivedResource(resourceOptions);
-};
+if (defined(Object.create)) {}
 
 /**
  * Adds CesiumJS client headers to the provided headers object.

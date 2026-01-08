@@ -49,34 +49,34 @@ function createEvaluateFunction(spline) {
  * @see LinearSpline
  * @see MorphWeightSpline
  */
-function QuaternionSpline(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class QuaternionSpline {
+  constructor(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  const points = options.points;
-  const times = options.times;
+    const points = options.points;
+    const times = options.times;
 
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(points) || !defined(times)) {
-    throw new DeveloperError("points and times are required.");
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(points) || !defined(times)) {
+      throw new DeveloperError("points and times are required.");
+    }
+    if (points.length < 2) {
+      throw new DeveloperError(
+        "points.length must be greater than or equal to 2.",
+      );
+    }
+    if (times.length !== points.length) {
+      throw new DeveloperError("times.length must be equal to points.length.");
+    }
+    //>>includeEnd('debug');
+
+    this._times = times;
+    this._points = points;
+
+    this._evaluateFunction = createEvaluateFunction(this);
+    this._lastTimeIndex = 0;
   }
-  if (points.length < 2) {
-    throw new DeveloperError(
-      "points.length must be greater than or equal to 2.",
-    );
-  }
-  if (times.length !== points.length) {
-    throw new DeveloperError("times.length must be equal to points.length.");
-  }
-  //>>includeEnd('debug');
 
-  this._times = times;
-  this._points = points;
-
-  this._evaluateFunction = createEvaluateFunction(this);
-  this._lastTimeIndex = 0;
-}
-
-Object.defineProperties(QuaternionSpline.prototype, {
   /**
    * An array of times for the control points.
    *
@@ -85,11 +85,9 @@ Object.defineProperties(QuaternionSpline.prototype, {
    * @type {number[]}
    * @readonly
    */
-  times: {
-    get: function () {
-      return this._times;
-    },
-  },
+  get times() {
+    return this._times;
+  }
 
   /**
    * An array of {@link Quaternion} control points.
@@ -99,12 +97,25 @@ Object.defineProperties(QuaternionSpline.prototype, {
    * @type {Quaternion[]}
    * @readonly
    */
-  points: {
-    get: function () {
-      return this._points;
-    },
-  },
-});
+  get points() {
+    return this._points;
+  }
+
+  /**
+   * Evaluates the curve at a given time.
+   *
+   * @param {number} time The time at which to evaluate the curve.
+   * @param {Quaternion} [result] The object onto which to store the result.
+   * @returns {Quaternion} The modified result parameter or a new instance of the point on the curve at the given time.
+   *
+   * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+   *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
+   *                             in the array <code>times</code>.
+   */
+  evaluate(time, result) {
+    return this._evaluateFunction(time, result);
+  }
+}
 
 /**
  * Finds an index <code>i</code> in <code>times</code> such that the parameter
@@ -138,18 +149,4 @@ QuaternionSpline.prototype.wrapTime = Spline.prototype.wrapTime;
  */
 QuaternionSpline.prototype.clampTime = Spline.prototype.clampTime;
 
-/**
- * Evaluates the curve at a given time.
- *
- * @param {number} time The time at which to evaluate the curve.
- * @param {Quaternion} [result] The object onto which to store the result.
- * @returns {Quaternion} The modified result parameter or a new instance of the point on the curve at the given time.
- *
- * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
- *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
- *                             in the array <code>times</code>.
- */
-QuaternionSpline.prototype.evaluate = function (time, result) {
-  return this._evaluateFunction(time, result);
-};
 export default QuaternionSpline;

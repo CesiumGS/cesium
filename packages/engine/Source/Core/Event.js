@@ -21,71 +21,145 @@ import defined from "./defined.js";
  * evt.raiseEvent('1', '2');
  * evt.removeEventListener(MyObject.prototype.myListener);
  */
-function Event() {
-  /**
-   * @type {Map<Listener,Set<object>>}
-   * @private
-   */
-  this._listeners = new Map();
-  /**
-   * @type {Map<Listener,Set<object>>}
-   * @private
-   */
-  this._toRemove = new Map();
-  /**
-   * @type {Map<Listener,Set<object>>}
-   * @private
-   */
-  this._toAdd = new Map();
-  this._invokingListeners = false;
-  this._listenerCount = 0; // Tracks number of listener + scope pairs
-}
+class Event {
+  constructor() {
+    /**
+     * @type {Map<Listener,Set<object>>}
+     * @private
+     */
+    this._listeners = new Map();
+    /**
+     * @type {Map<Listener,Set<object>>}
+     * @private
+     */
+    this._toRemove = new Map();
+    /**
+     * @type {Map<Listener,Set<object>>}
+     * @private
+     */
+    this._toAdd = new Map();
+    this._invokingListeners = false;
+    this._listenerCount = 0; // Tracks number of listener + scope pairs
+  }
 
-Object.defineProperties(Event.prototype, {
   /**
    * The number of listeners currently subscribed to the event.
    * @memberof Event.prototype
    * @type {number}
    * @readonly
    */
-  numberOfListeners: {
-    get: function () {
-      return this._listenerCount;
-    },
-  },
-});
-
-/**
- * Registers a callback function to be executed whenever the event is raised.
- * An optional scope can be provided to serve as the <code>this</code> pointer
- * in which the function will execute.
- *
- * @param {Listener} listener The function to be executed when the event is raised.
- * @param {object} [scope] An optional object scope to serve as the <code>this</code>
- *        pointer in which the listener function will execute.
- * @returns {Event.RemoveCallback} A function that will remove this event listener when invoked.
- *
- * @see Event#raiseEvent
- * @see Event#removeEventListener
- */
-Event.prototype.addEventListener = function (listener, scope) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.func("listener", listener);
-  //>>includeEnd('debug');
-  const event = this;
-
-  const listenerMap = event._invokingListeners
-    ? event._toAdd
-    : event._listeners;
-  const added = addEventListener(this, listenerMap, listener, scope);
-  if (added) {
-    event._listenerCount++;
+  get numberOfListeners() {
+    return this._listenerCount;
   }
 
-  return function () {
-    event.removeEventListener(listener, scope);
-  };
-};
+  /**
+   * Registers a callback function to be executed whenever the event is raised.
+   * An optional scope can be provided to serve as the <code>this</code> pointer
+   * in which the function will execute.
+   *
+   * @param {Listener} listener The function to be executed when the event is raised.
+   * @param {object} [scope] An optional object scope to serve as the <code>this</code>
+   *        pointer in which the listener function will execute.
+   * @returns {Event.RemoveCallback} A function that will remove this event listener when invoked.
+   *
+   * @see Event#raiseEvent
+   * @see Event#removeEventListener
+   */
+  addEventListener(listener, scope) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.func("listener", listener);
+    //>>includeEnd('debug');
+    const event = this;
+
+    const listenerMap = event._invokingListeners
+      ? event._toAdd
+      : event._listeners;
+    const added = addEventListener(this, listenerMap, listener, scope);
+    if (added) {
+      event._listenerCount++;
+    }
+
+    return function () {
+      event.removeEventListener(listener, scope);
+    };
+  }
+
+  /**
+   * Unregisters a previously registered callback.
+   *
+   * @param {Listener} listener The function to be unregistered.
+   * @param {object} [scope] The scope that was originally passed to addEventListener.
+   * @returns {boolean} <code>true</code> if the listener was removed; <code>false</code> if the listener and scope are not registered with the event.
+   *
+   * @see Event#addEventListener
+   * @see Event#raiseEvent
+   */
+  removeEventListener(listener, scope) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.func("listener", listener);
+    //>>includeEnd('debug');
+
+    const removedFromListeners = removeEventListener(
+      this,
+      this._listeners,
+      listener,
+      scope,
+    );
+    const removedFromToAdd = removeEventListener(
+      this,
+      this._toAdd,
+      listener,
+      scope,
+    );
+
+    const removed = removedFromListeners || removedFromToAdd;
+    if (removed) {
+      this._listenerCount--;
+    }
+
+    return removed;
+  }
+
+  /**
+   * Raises the event by calling each registered listener with all supplied arguments.
+   *
+   * @param {...Parameters<Listener>} arguments This method takes any number of parameters and passes them through to the listener functions.
+   *
+   * @see Event#addEventListener
+   * @see Event#removeEventListener
+   */
+  raiseEvent() {
+    this._invokingListeners = true;
+
+    for (const [listener, scopes] of this._listeners.entries()) {
+      if (!defined(listener)) {
+        continue;
+      }
+
+      for (const scope of scopes) {
+        listener.apply(scope, arguments);
+      }
+    }
+
+    this._invokingListeners = false;
+
+    // Actually add items marked for addition
+    for (const [listener, scopes] of this._toAdd.entries()) {
+      for (const scope of scopes) {
+        addEventListener(this, this._listeners, listener, scope);
+      }
+    }
+    this._toAdd.clear();
+
+    // Actually remove items marked for removal
+    for (const [listener, scopes] of this._toRemove.entries()) {
+      for (const scope of scopes) {
+        removeEventListener(this, this._listeners, listener, scope);
+      }
+    }
+    this._toRemove.clear();
+  }
+}
 
 function addEventListener(event, listenerMap, listener, scope) {
   if (!listenerMap.has(listener)) {
@@ -99,42 +173,6 @@ function addEventListener(event, listenerMap, listener, scope) {
 
   return false;
 }
-
-/**
- * Unregisters a previously registered callback.
- *
- * @param {Listener} listener The function to be unregistered.
- * @param {object} [scope] The scope that was originally passed to addEventListener.
- * @returns {boolean} <code>true</code> if the listener was removed; <code>false</code> if the listener and scope are not registered with the event.
- *
- * @see Event#addEventListener
- * @see Event#raiseEvent
- */
-Event.prototype.removeEventListener = function (listener, scope) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.func("listener", listener);
-  //>>includeEnd('debug');
-
-  const removedFromListeners = removeEventListener(
-    this,
-    this._listeners,
-    listener,
-    scope,
-  );
-  const removedFromToAdd = removeEventListener(
-    this,
-    this._toAdd,
-    listener,
-    scope,
-  );
-
-  const removed = removedFromListeners || removedFromToAdd;
-  if (removed) {
-    this._listenerCount--;
-  }
-
-  return removed;
-};
 
 function removeEventListener(event, listenerMap, listener, scope) {
   const scopes = listenerMap.get(listener);
@@ -156,46 +194,6 @@ function removeEventListener(event, listenerMap, listener, scope) {
 
   return true;
 }
-
-/**
- * Raises the event by calling each registered listener with all supplied arguments.
- *
- * @param {...Parameters<Listener>} arguments This method takes any number of parameters and passes them through to the listener functions.
- *
- * @see Event#addEventListener
- * @see Event#removeEventListener
- */
-Event.prototype.raiseEvent = function () {
-  this._invokingListeners = true;
-
-  for (const [listener, scopes] of this._listeners.entries()) {
-    if (!defined(listener)) {
-      continue;
-    }
-
-    for (const scope of scopes) {
-      listener.apply(scope, arguments);
-    }
-  }
-
-  this._invokingListeners = false;
-
-  // Actually add items marked for addition
-  for (const [listener, scopes] of this._toAdd.entries()) {
-    for (const scope of scopes) {
-      addEventListener(this, this._listeners, listener, scope);
-    }
-  }
-  this._toAdd.clear();
-
-  // Actually remove items marked for removal
-  for (const [listener, scopes] of this._toRemove.entries()) {
-    for (const scope of scopes) {
-      removeEventListener(this, this._listeners, listener, scope);
-    }
-  }
-  this._toRemove.clear();
-};
 
 /**
  * A function that removes a listener.

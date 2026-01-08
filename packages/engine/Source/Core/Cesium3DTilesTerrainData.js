@@ -52,67 +52,66 @@ import TerrainMesh from "./TerrainMesh.js";
  * @see HeightmapTerrainData
  * @see GoogleEarthEnterpriseTerrainData
  */
-function Cesium3DTilesTerrainData(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class Cesium3DTilesTerrainData {
+  constructor(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  //>>includeStart('debug', pragmas.debug)
-  Check.defined("options.gltf", options.gltf);
-  Check.typeOf.number("options.minimumHeight", options.minimumHeight);
-  Check.typeOf.number("options.maximumHeight", options.maximumHeight);
-  Check.typeOf.object("options.boundingSphere", options.boundingSphere);
-  Check.typeOf.object(
-    "option.orientedBoundingBox",
-    options.orientedBoundingBox,
-  );
-  Check.typeOf.object(
-    "options.horizonOcclusionPoint",
-    options.horizonOcclusionPoint,
-  );
-  Check.typeOf.number("options.skirtHeight", options.skirtHeight);
-  //>>includeEnd('debug');
+    //>>includeStart('debug', pragmas.debug)
+    Check.defined("options.gltf", options.gltf);
+    Check.typeOf.number("options.minimumHeight", options.minimumHeight);
+    Check.typeOf.number("options.maximumHeight", options.maximumHeight);
+    Check.typeOf.object("options.boundingSphere", options.boundingSphere);
+    Check.typeOf.object(
+      "option.orientedBoundingBox",
+      options.orientedBoundingBox,
+    );
+    Check.typeOf.object(
+      "options.horizonOcclusionPoint",
+      options.horizonOcclusionPoint,
+    );
+    Check.typeOf.number("options.skirtHeight", options.skirtHeight);
+    //>>includeEnd('debug');
 
-  this._minimumHeight = options.minimumHeight;
-  this._maximumHeight = options.maximumHeight;
-  this._skirtHeight = options.skirtHeight;
-  this._boundingSphere = BoundingSphere.clone(
-    options.boundingSphere,
-    new BoundingSphere(),
-  );
-  this._orientedBoundingBox = OrientedBoundingBox.clone(
-    options.orientedBoundingBox,
-    new OrientedBoundingBox(),
-  );
-  this._horizonOcclusionPoint = Cartesian3.clone(
-    options.horizonOcclusionPoint,
-    new Cartesian3(),
-  );
-  this._hasVertexNormals = options.requestVertexNormals ?? false;
-  this._hasWaterMask = options.requestWaterMask ?? false;
-  this._hasWebMercatorT = true;
-  this._credits = options.credits;
-  this._childTileMask = options.childTileMask ?? 15;
-  this._gltf = options.gltf;
+    this._minimumHeight = options.minimumHeight;
+    this._maximumHeight = options.maximumHeight;
+    this._skirtHeight = options.skirtHeight;
+    this._boundingSphere = BoundingSphere.clone(
+      options.boundingSphere,
+      new BoundingSphere(),
+    );
+    this._orientedBoundingBox = OrientedBoundingBox.clone(
+      options.orientedBoundingBox,
+      new OrientedBoundingBox(),
+    );
+    this._horizonOcclusionPoint = Cartesian3.clone(
+      options.horizonOcclusionPoint,
+      new Cartesian3(),
+    );
+    this._hasVertexNormals = options.requestVertexNormals ?? false;
+    this._hasWaterMask = options.requestWaterMask ?? false;
+    this._hasWebMercatorT = true;
+    this._credits = options.credits;
+    this._childTileMask = options.childTileMask ?? 15;
+    this._gltf = options.gltf;
 
-  /**
-   * @private
-   * @type {TerrainMesh|undefined}
-   */
-  this._mesh = undefined;
+    /**
+     * @private
+     * @type {TerrainMesh|undefined}
+     */
+    this._mesh = undefined;
 
-  this._waterMask = options.waterMask;
-}
+    this._waterMask = options.waterMask;
+  }
 
-Object.defineProperties(Cesium3DTilesTerrainData.prototype, {
   /**
    * An array of credits for this tile.
    * @memberof Cesium3DTilesTerrainData.prototype
    * @type {Credit[]|undefined}
    */
-  credits: {
-    get: function () {
-      return this._credits;
-    },
-  },
+  get credits() {
+    return this._credits;
+  }
+
   /**
    * The water mask included in this terrain data, if any. A water mask is a rectangular
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
@@ -120,72 +119,351 @@ Object.defineProperties(Cesium3DTilesTerrainData.prototype, {
    * @memberof Cesium3DTilesTerrainData.prototype
    * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement|ImageBitmap|undefined}
    */
-  waterMask: {
-    get: function () {
-      return this._waterMask;
-    },
-  },
-});
-
-/**
- * Returns the terrain height at a specified longitude and latitude, or undefined if the mesh is undefined.
- *
- * @param {Rectangle} rectangle The rectangle covered by this terrain data.
- * @param {number} longitude The longitude in radians.
- * @param {number} latitude The latitude in radians.
- * @returns {number|undefined} The terrain height at the specified position, or undefined if the mesh is undefined.
- *          If the position is outside the rectangle, this method will extrapolate the height,
- *          which is likely to be wildly incorrect for positions far outside the rectangle.
- */
-Cesium3DTilesTerrainData.prototype.interpolateHeight = function (
-  rectangle,
-  longitude,
-  latitude,
-) {
-  const mesh = this._mesh;
-  if (mesh === undefined) {
-    return undefined;
+  get waterMask() {
+    return this._waterMask;
   }
 
-  const height = interpolateMeshHeight(mesh, rectangle, longitude, latitude);
-  return height;
-};
+  /**
+   * Returns the terrain height at a specified longitude and latitude, or undefined if the mesh is undefined.
+   *
+   * @param {Rectangle} rectangle The rectangle covered by this terrain data.
+   * @param {number} longitude The longitude in radians.
+   * @param {number} latitude The latitude in radians.
+   * @returns {number|undefined} The terrain height at the specified position, or undefined if the mesh is undefined.
+   *          If the position is outside the rectangle, this method will extrapolate the height,
+   *          which is likely to be wildly incorrect for positions far outside the rectangle.
+   */
+  interpolateHeight(rectangle, longitude, latitude) {
+    const mesh = this._mesh;
+    if (mesh === undefined) {
+      return undefined;
+    }
 
-/**
- * Determines if a given child tile is available, based on the
- * {@link TerrainData#childTileMask}. The given child tile coordinates are assumed
- * to be one of the four children of this tile. If non-child tile coordinates are
- * given, the availability of the southeast child tile is returned.
- *
- * @param {number} thisX The tile X coordinate of this (the parent) tile.
- * @param {number} thisY The tile Y coordinate of this (the parent) tile.
- * @param {number} childX The tile X coordinate of the child tile to check for availability.
- * @param {number} childY The tile Y coordinate of the child tile to check for availability.
- * @returns {boolean} True if the child tile is available; otherwise, false.
- */
-Cesium3DTilesTerrainData.prototype.isChildAvailable = function (
-  thisX,
-  thisY,
-  childX,
-  childY,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("thisX", thisX);
-  Check.typeOf.number("thisY", thisY);
-  Check.typeOf.number("childX", childX);
-  Check.typeOf.number("childY", childY);
-  //>>includeEnd('debug');
-
-  let bitNumber = 2; // northwest child
-  if (childX !== thisX * 2) {
-    ++bitNumber; // east child
-  }
-  if (childY !== thisY * 2) {
-    bitNumber -= 2; // south child
+    const height = interpolateMeshHeight(mesh, rectangle, longitude, latitude);
+    return height;
   }
 
-  return (this._childTileMask & (1 << bitNumber)) !== 0;
-};
+  /**
+   * Determines if a given child tile is available, based on the
+   * {@link TerrainData#childTileMask}. The given child tile coordinates are assumed
+   * to be one of the four children of this tile. If non-child tile coordinates are
+   * given, the availability of the southeast child tile is returned.
+   *
+   * @param {number} thisX The tile X coordinate of this (the parent) tile.
+   * @param {number} thisY The tile Y coordinate of this (the parent) tile.
+   * @param {number} childX The tile X coordinate of the child tile to check for availability.
+   * @param {number} childY The tile Y coordinate of the child tile to check for availability.
+   * @returns {boolean} True if the child tile is available; otherwise, false.
+   */
+  isChildAvailable(thisX, thisY, childX, childY) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("thisX", thisX);
+    Check.typeOf.number("thisY", thisY);
+    Check.typeOf.number("childX", childX);
+    Check.typeOf.number("childY", childY);
+    //>>includeEnd('debug');
+
+    let bitNumber = 2; // northwest child
+    if (childX !== thisX * 2) {
+      ++bitNumber; // east child
+    }
+    if (childY !== thisY * 2) {
+      bitNumber -= 2; // south child
+    }
+
+    return (this._childTileMask & (1 << bitNumber)) !== 0;
+  }
+
+  /**
+   * Creates a {@link TerrainMesh} from this terrain data.
+   *
+   * @private
+   *
+   * @param {object} options Object with the following properties:
+   * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
+   * @param {number} options.x The X coordinate of the tile for which to create the terrain data.
+   * @param {number} options.y The Y coordinate of the tile for which to create the terrain data.
+   * @param {number} options.level The level of the tile for which to create the terrain data.
+   * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+   * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+   * @param {boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
+   * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
+   *          asynchronous mesh creations are already in progress and the operation should
+   *          be retried later.
+   */
+  createMesh(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
+
+    //>>includeStart('debug', pragmas.debug)
+    Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+    Check.typeOf.number("options.x", options.x);
+    Check.typeOf.number("options.y", options.y);
+    Check.typeOf.number("options.level", options.level);
+    //>>includeEnd('debug');
+
+    const throttle = options.throttle ?? true;
+    const createMeshTaskProcessor = throttle
+      ? createMeshTaskProcessorThrottle
+      : createMeshTaskProcessorNoThrottle;
+
+    const tilingScheme = options.tilingScheme;
+    const ellipsoid = tilingScheme.ellipsoid;
+    const x = options.x;
+    const y = options.y;
+    const level = options.level;
+    const rectangle = tilingScheme.tileXYToRectangle(
+      x,
+      y,
+      level,
+      new Rectangle(),
+    );
+
+    const gltf = this._gltf;
+    const verticesPromise = createMeshTaskProcessor.scheduleTask({
+      ellipsoid: ellipsoid,
+      rectangle: rectangle,
+      hasVertexNormals: this._hasVertexNormals,
+      hasWaterMask: this._hasWaterMask,
+      hasWebMercatorT: this._hasWebMercatorT,
+      gltf: gltf,
+      minimumHeight: this._minimumHeight,
+      maximumHeight: this._maximumHeight,
+      boundingSphere: this._boundingSphere,
+      orientedBoundingBox: this._orientedBoundingBox,
+      horizonOcclusionPoint: this._horizonOcclusionPoint,
+      skirtHeight: this._skirtHeight,
+      exaggeration: options.exaggeration,
+      exaggerationRelativeHeight: options.exaggerationRelativeHeight,
+    });
+
+    if (!defined(verticesPromise)) {
+      // Too many active requests. Postponed.
+      return undefined;
+    }
+
+    const that = this;
+    return Promise.resolve(verticesPromise).then(function (result) {
+      const taskResult = result;
+
+      // Need to re-clone and re-wrap all buffers and complex objects to put them back into their normal state
+      const encoding = TerrainEncoding.clone(
+        taskResult.encoding,
+        new TerrainEncoding(),
+      );
+      const vertices = new Float32Array(taskResult.verticesBuffer);
+      const vertexCount = vertices.length / encoding.stride;
+      const vertexCountWithoutSkirts = taskResult.vertexCountWithoutSkirts;
+      // For consistency with glTF spec, 16 bit index buffer can't contain 65535
+      const SizedIndexType = vertexCount <= 65535 ? Uint16Array : Uint32Array;
+      const indices = new SizedIndexType(taskResult.indicesBuffer);
+      const westIndices = new SizedIndexType(taskResult.westIndicesBuffer);
+      const eastIndices = new SizedIndexType(taskResult.eastIndicesBuffer);
+      const southIndices = new SizedIndexType(taskResult.southIndicesBuffer);
+      const northIndices = new SizedIndexType(taskResult.northIndicesBuffer);
+      const indexCountWithoutSkirts = taskResult.indexCountWithoutSkirts;
+      const minimumHeight = that._minimumHeight;
+      const maximumHeight = that._maximumHeight;
+      const center = Cartesian3.clone(encoding.center, new Cartesian3());
+      const boundingSphere = BoundingSphere.clone(
+        that._boundingSphere,
+        new BoundingSphere(),
+      );
+      const horizonOcclusionPoint = Cartesian3.clone(
+        that._horizonOcclusionPoint,
+        new Cartesian3(),
+      );
+      const orientedBoundingBox = OrientedBoundingBox.clone(
+        that._orientedBoundingBox,
+        new OrientedBoundingBox(),
+      );
+
+      const mesh = new TerrainMesh(
+        center,
+        vertices,
+        indices,
+        indexCountWithoutSkirts,
+        vertexCountWithoutSkirts,
+        minimumHeight,
+        maximumHeight,
+        rectangle,
+        boundingSphere,
+        horizonOcclusionPoint,
+        encoding.stride,
+        orientedBoundingBox,
+        encoding,
+        westIndices,
+        southIndices,
+        eastIndices,
+        northIndices,
+      );
+
+      that._mesh = mesh;
+
+      return Promise.resolve(mesh);
+    });
+  }
+
+  /**
+   * Creates a {@link TerrainMesh} from this terrain data synchronously.
+   *
+   * @private
+   *
+   * @param {object} options Object with the following properties:
+   * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
+   * @param {number} options.x The X coordinate of the tile for which to create the terrain data.
+   * @param {number} options.y The Y coordinate of the tile for which to create the terrain data.
+   * @param {number} options.level The level of the tile for which to create the terrain data.
+   * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+   * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+   * @returns {Promise.<TerrainMesh>} A promise for the terrain mesh.
+   */
+  _createMeshSync(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
+
+    //>>includeStart('debug', pragmas.debug)
+    Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+    Check.typeOf.number("options.x", options.x);
+    Check.typeOf.number("options.y", options.y);
+    Check.typeOf.number("options.level", options.level);
+    //>>includeEnd('debug');
+
+    const tilingScheme = options.tilingScheme;
+    const ellipsoid = tilingScheme.ellipsoid;
+    const x = options.x;
+    const y = options.y;
+    const level = options.level;
+    const rectangle = tilingScheme.tileXYToRectangle(
+      x,
+      y,
+      level,
+      new Rectangle(),
+    );
+
+    const meshPromise = Cesium3DTilesTerrainGeometryProcessor.createMesh({
+      ellipsoid: ellipsoid,
+      rectangle: rectangle,
+      hasVertexNormals: this._hasVertexNormals,
+      hasWebMercatorT: this._hasWebMercatorT,
+      gltf: this._gltf,
+      minimumHeight: this._minimumHeight,
+      maximumHeight: this._maximumHeight,
+      boundingSphere: this._boundingSphere,
+      orientedBoundingBox: this._orientedBoundingBox,
+      horizonOcclusionPoint: this._horizonOcclusionPoint,
+      skirtHeight: this._skirtHeight,
+      exaggeration: options.exaggeration,
+      exaggerationRelativeHeight: options.exaggerationRelativeHeight,
+    });
+
+    const that = this;
+    return Promise.resolve(meshPromise).then(function (mesh) {
+      that._mesh = mesh;
+      return Promise.resolve(mesh);
+    });
+  }
+
+  /**
+   * Upsamples this terrain data for use by a descendant tile.
+   *
+   * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
+   * @param {number} thisX The X coordinate of this tile in the tiling scheme.
+   * @param {number} thisY The Y coordinate of this tile in the tiling scheme.
+   * @param {number} thisLevel The level of this tile in the tiling scheme.
+   * @param {number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+   * @param {number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+   * @param {number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
+   * @returns {Promise.<TerrainData>|undefined} A promise for upsampled terrain data for the descendant tile, or undefined if createMesh has not been called yet or too many asynchronous upsample operations are in progress and the request has been deferred.
+   */
+  upsample(
+    tilingScheme,
+    thisX,
+    thisY,
+    thisLevel,
+    descendantX,
+    descendantY,
+    descendantLevel
+  ) {
+    // mesh is not defined, so there are no UVs yet, so exit early
+    const mesh = this._mesh;
+    if (mesh === undefined) {
+      return undefined;
+    }
+
+    const isSynchronous = false;
+    const upsampledTerrainData = upsampleMesh(
+      isSynchronous,
+      mesh,
+      this._skirtHeight,
+      this._credits,
+      tilingScheme,
+      thisX,
+      thisY,
+      thisLevel,
+      descendantX,
+      descendantY,
+      descendantLevel,
+    );
+    return upsampledTerrainData;
+  }
+
+  /**
+   * Upsamples this terrain data for use by a descendant tile synchronously.
+   *
+   * @private
+   *
+   * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
+   * @param {number} thisX The X coordinate of this tile in the tiling scheme.
+   * @param {number} thisY The Y coordinate of this tile in the tiling scheme.
+   * @param {number} thisLevel The level of this tile in the tiling scheme.
+   * @param {number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+   * @param {number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+   * @param {number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
+   * @returns {Promise.<TerrainData>|undefined} A promise for upsampled terrain data for the descendant tile, or undefined if createMesh has not been called yet.
+   */
+  _upsampleSync(
+    tilingScheme,
+    thisX,
+    thisY,
+    thisLevel,
+    descendantX,
+    descendantY,
+    descendantLevel
+  ) {
+    // mesh is not defined, so there are no UVs yet, so exit early
+    const mesh = this._mesh;
+    if (mesh === undefined) {
+      return undefined;
+    }
+
+    const isSynchronous = true;
+    const upsampledTerrainData = upsampleMesh(
+      isSynchronous,
+      mesh,
+      this._skirtHeight,
+      this._credits,
+      tilingScheme,
+      thisX,
+      thisY,
+      thisLevel,
+      descendantX,
+      descendantY,
+      descendantLevel,
+    );
+    return upsampledTerrainData;
+  }
+
+  /**
+   * Gets a value indicating whether or not this terrain data was created by upsampling lower resolution
+   * terrain data. If this value is false, the data was obtained from some other source, such
+   * as by downloading it from a remote server. This method should return true for instances
+   * returned from a call to {@link Cesium3DTilesTerrainData#upsample}.
+   *
+   * @returns {boolean} True if this instance was created by upsampling; otherwise, false.
+   */
+  wasCreatedByUpsampling() {
+    return false;
+  }
+}
 
 const createMeshTaskName = "createVerticesFromCesium3DTilesTerrain";
 const createMeshTaskProcessorNoThrottle = new TaskProcessor(createMeshTaskName);
@@ -193,296 +471,6 @@ const createMeshTaskProcessorThrottle = new TaskProcessor(
   createMeshTaskName,
   TerrainData.maximumAsynchronousTasks,
 );
-
-/**
- * Creates a {@link TerrainMesh} from this terrain data.
- *
- * @private
- *
- * @param {object} options Object with the following properties:
- * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
- * @param {number} options.x The X coordinate of the tile for which to create the terrain data.
- * @param {number} options.y The Y coordinate of the tile for which to create the terrain data.
- * @param {number} options.level The level of the tile for which to create the terrain data.
- * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
- * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
- * @param {boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
- * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
- *          asynchronous mesh creations are already in progress and the operation should
- *          be retried later.
- */
-Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-
-  //>>includeStart('debug', pragmas.debug)
-  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
-  Check.typeOf.number("options.x", options.x);
-  Check.typeOf.number("options.y", options.y);
-  Check.typeOf.number("options.level", options.level);
-  //>>includeEnd('debug');
-
-  const throttle = options.throttle ?? true;
-  const createMeshTaskProcessor = throttle
-    ? createMeshTaskProcessorThrottle
-    : createMeshTaskProcessorNoThrottle;
-
-  const tilingScheme = options.tilingScheme;
-  const ellipsoid = tilingScheme.ellipsoid;
-  const x = options.x;
-  const y = options.y;
-  const level = options.level;
-  const rectangle = tilingScheme.tileXYToRectangle(
-    x,
-    y,
-    level,
-    new Rectangle(),
-  );
-
-  const gltf = this._gltf;
-  const verticesPromise = createMeshTaskProcessor.scheduleTask({
-    ellipsoid: ellipsoid,
-    rectangle: rectangle,
-    hasVertexNormals: this._hasVertexNormals,
-    hasWaterMask: this._hasWaterMask,
-    hasWebMercatorT: this._hasWebMercatorT,
-    gltf: gltf,
-    minimumHeight: this._minimumHeight,
-    maximumHeight: this._maximumHeight,
-    boundingSphere: this._boundingSphere,
-    orientedBoundingBox: this._orientedBoundingBox,
-    horizonOcclusionPoint: this._horizonOcclusionPoint,
-    skirtHeight: this._skirtHeight,
-    exaggeration: options.exaggeration,
-    exaggerationRelativeHeight: options.exaggerationRelativeHeight,
-  });
-
-  if (!defined(verticesPromise)) {
-    // Too many active requests. Postponed.
-    return undefined;
-  }
-
-  const that = this;
-  return Promise.resolve(verticesPromise).then(function (result) {
-    const taskResult = result;
-
-    // Need to re-clone and re-wrap all buffers and complex objects to put them back into their normal state
-    const encoding = TerrainEncoding.clone(
-      taskResult.encoding,
-      new TerrainEncoding(),
-    );
-    const vertices = new Float32Array(taskResult.verticesBuffer);
-    const vertexCount = vertices.length / encoding.stride;
-    const vertexCountWithoutSkirts = taskResult.vertexCountWithoutSkirts;
-    // For consistency with glTF spec, 16 bit index buffer can't contain 65535
-    const SizedIndexType = vertexCount <= 65535 ? Uint16Array : Uint32Array;
-    const indices = new SizedIndexType(taskResult.indicesBuffer);
-    const westIndices = new SizedIndexType(taskResult.westIndicesBuffer);
-    const eastIndices = new SizedIndexType(taskResult.eastIndicesBuffer);
-    const southIndices = new SizedIndexType(taskResult.southIndicesBuffer);
-    const northIndices = new SizedIndexType(taskResult.northIndicesBuffer);
-    const indexCountWithoutSkirts = taskResult.indexCountWithoutSkirts;
-    const minimumHeight = that._minimumHeight;
-    const maximumHeight = that._maximumHeight;
-    const center = Cartesian3.clone(encoding.center, new Cartesian3());
-    const boundingSphere = BoundingSphere.clone(
-      that._boundingSphere,
-      new BoundingSphere(),
-    );
-    const horizonOcclusionPoint = Cartesian3.clone(
-      that._horizonOcclusionPoint,
-      new Cartesian3(),
-    );
-    const orientedBoundingBox = OrientedBoundingBox.clone(
-      that._orientedBoundingBox,
-      new OrientedBoundingBox(),
-    );
-
-    const mesh = new TerrainMesh(
-      center,
-      vertices,
-      indices,
-      indexCountWithoutSkirts,
-      vertexCountWithoutSkirts,
-      minimumHeight,
-      maximumHeight,
-      rectangle,
-      boundingSphere,
-      horizonOcclusionPoint,
-      encoding.stride,
-      orientedBoundingBox,
-      encoding,
-      westIndices,
-      southIndices,
-      eastIndices,
-      northIndices,
-    );
-
-    that._mesh = mesh;
-
-    return Promise.resolve(mesh);
-  });
-};
-
-/**
- * Creates a {@link TerrainMesh} from this terrain data synchronously.
- *
- * @private
- *
- * @param {object} options Object with the following properties:
- * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
- * @param {number} options.x The X coordinate of the tile for which to create the terrain data.
- * @param {number} options.y The Y coordinate of the tile for which to create the terrain data.
- * @param {number} options.level The level of the tile for which to create the terrain data.
- * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
- * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
- * @returns {Promise.<TerrainMesh>} A promise for the terrain mesh.
- */
-Cesium3DTilesTerrainData.prototype._createMeshSync = function (options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-
-  //>>includeStart('debug', pragmas.debug)
-  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
-  Check.typeOf.number("options.x", options.x);
-  Check.typeOf.number("options.y", options.y);
-  Check.typeOf.number("options.level", options.level);
-  //>>includeEnd('debug');
-
-  const tilingScheme = options.tilingScheme;
-  const ellipsoid = tilingScheme.ellipsoid;
-  const x = options.x;
-  const y = options.y;
-  const level = options.level;
-  const rectangle = tilingScheme.tileXYToRectangle(
-    x,
-    y,
-    level,
-    new Rectangle(),
-  );
-
-  const meshPromise = Cesium3DTilesTerrainGeometryProcessor.createMesh({
-    ellipsoid: ellipsoid,
-    rectangle: rectangle,
-    hasVertexNormals: this._hasVertexNormals,
-    hasWebMercatorT: this._hasWebMercatorT,
-    gltf: this._gltf,
-    minimumHeight: this._minimumHeight,
-    maximumHeight: this._maximumHeight,
-    boundingSphere: this._boundingSphere,
-    orientedBoundingBox: this._orientedBoundingBox,
-    horizonOcclusionPoint: this._horizonOcclusionPoint,
-    skirtHeight: this._skirtHeight,
-    exaggeration: options.exaggeration,
-    exaggerationRelativeHeight: options.exaggerationRelativeHeight,
-  });
-
-  const that = this;
-  return Promise.resolve(meshPromise).then(function (mesh) {
-    that._mesh = mesh;
-    return Promise.resolve(mesh);
-  });
-};
-
-/**
- * Upsamples this terrain data for use by a descendant tile.
- *
- * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
- * @param {number} thisX The X coordinate of this tile in the tiling scheme.
- * @param {number} thisY The Y coordinate of this tile in the tiling scheme.
- * @param {number} thisLevel The level of this tile in the tiling scheme.
- * @param {number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
- * @param {number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
- * @param {number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
- * @returns {Promise.<TerrainData>|undefined} A promise for upsampled terrain data for the descendant tile, or undefined if createMesh has not been called yet or too many asynchronous upsample operations are in progress and the request has been deferred.
- */
-Cesium3DTilesTerrainData.prototype.upsample = function (
-  tilingScheme,
-  thisX,
-  thisY,
-  thisLevel,
-  descendantX,
-  descendantY,
-  descendantLevel,
-) {
-  // mesh is not defined, so there are no UVs yet, so exit early
-  const mesh = this._mesh;
-  if (mesh === undefined) {
-    return undefined;
-  }
-
-  const isSynchronous = false;
-  const upsampledTerrainData = upsampleMesh(
-    isSynchronous,
-    mesh,
-    this._skirtHeight,
-    this._credits,
-    tilingScheme,
-    thisX,
-    thisY,
-    thisLevel,
-    descendantX,
-    descendantY,
-    descendantLevel,
-  );
-  return upsampledTerrainData;
-};
-
-/**
- * Upsamples this terrain data for use by a descendant tile synchronously.
- *
- * @private
- *
- * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
- * @param {number} thisX The X coordinate of this tile in the tiling scheme.
- * @param {number} thisY The Y coordinate of this tile in the tiling scheme.
- * @param {number} thisLevel The level of this tile in the tiling scheme.
- * @param {number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
- * @param {number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
- * @param {number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
- * @returns {Promise.<TerrainData>|undefined} A promise for upsampled terrain data for the descendant tile, or undefined if createMesh has not been called yet.
- */
-Cesium3DTilesTerrainData.prototype._upsampleSync = function (
-  tilingScheme,
-  thisX,
-  thisY,
-  thisLevel,
-  descendantX,
-  descendantY,
-  descendantLevel,
-) {
-  // mesh is not defined, so there are no UVs yet, so exit early
-  const mesh = this._mesh;
-  if (mesh === undefined) {
-    return undefined;
-  }
-
-  const isSynchronous = true;
-  const upsampledTerrainData = upsampleMesh(
-    isSynchronous,
-    mesh,
-    this._skirtHeight,
-    this._credits,
-    tilingScheme,
-    thisX,
-    thisY,
-    thisLevel,
-    descendantX,
-    descendantY,
-    descendantLevel,
-  );
-  return upsampledTerrainData;
-};
-
-/**
- * Gets a value indicating whether or not this terrain data was created by upsampling lower resolution
- * terrain data. If this value is false, the data was obtained from some other source, such
- * as by downloading it from a remote server. This method should return true for instances
- * returned from a call to {@link Cesium3DTilesTerrainData#upsample}.
- *
- * @returns {boolean} True if this instance was created by upsampling; otherwise, false.
- */
-Cesium3DTilesTerrainData.prototype.wasCreatedByUpsampling = function () {
-  return false;
-};
 
 /**
  * @private
@@ -493,188 +481,177 @@ Cesium3DTilesTerrainData.prototype.wasCreatedByUpsampling = function () {
  * @param {number} options.skirtHeight The height of the skirt to add on the edges of the tile.
  * @param {Credit[]} [options.credits] Array of credits for this tile.
  */
-function Cesium3DTilesUpsampleTerrainData(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class Cesium3DTilesUpsampleTerrainData {
+  constructor(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  //>>includeStart('debug', pragmas.debug)
-  Check.defined("options.terrainMesh", options.terrainMesh);
-  Check.defined("options.skirtHeight", options.skirtHeight);
-  //>>includeEnd('debug');
+    //>>includeStart('debug', pragmas.debug)
+    Check.defined("options.terrainMesh", options.terrainMesh);
+    Check.defined("options.skirtHeight", options.skirtHeight);
+    //>>includeEnd('debug');
 
-  this._mesh = options.terrainMesh;
-  this._skirtHeight = options.skirtHeight;
-  this._credits = options.credits;
-}
+    this._mesh = options.terrainMesh;
+    this._skirtHeight = options.skirtHeight;
+    this._credits = options.credits;
+  }
 
-/**
- * Creates a {@link TerrainMesh} from this terrain data.
- *
- * @private
- *
- * @param {object} options Object with the following properties:
- * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
- * @param {number} options.x The X coordinate of the tile for which to create the terrain data.
- * @param {number} options.y The Y coordinate of the tile for which to create the terrain data.
- * @param {number} options.level The level of the tile for which to create the terrain data.
- * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
- * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
- * @param {boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
- * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many asynchronous mesh creations are already in progress and the operation should be retried later.
- */
-Cesium3DTilesUpsampleTerrainData.prototype.createMesh = function (options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+  /**
+   * Creates a {@link TerrainMesh} from this terrain data.
+   *
+   * @private
+   *
+   * @param {object} options Object with the following properties:
+   * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
+   * @param {number} options.x The X coordinate of the tile for which to create the terrain data.
+   * @param {number} options.y The Y coordinate of the tile for which to create the terrain data.
+   * @param {number} options.level The level of the tile for which to create the terrain data.
+   * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+   * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+   * @param {boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
+   * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many asynchronous mesh creations are already in progress and the operation should be retried later.
+   */
+  createMesh(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.tilingScheme", options.tilingScheme);
-  Check.typeOf.number("options.x", options.x);
-  Check.typeOf.number("options.y", options.y);
-  Check.typeOf.number("options.level", options.level);
-  //>>includeEnd('debug');
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options.tilingScheme", options.tilingScheme);
+    Check.typeOf.number("options.x", options.x);
+    Check.typeOf.number("options.y", options.y);
+    Check.typeOf.number("options.level", options.level);
+    //>>includeEnd('debug');
 
-  return Promise.resolve(this._mesh);
-};
+    return Promise.resolve(this._mesh);
+  }
 
-/**
- * Upsamples this terrain data for use by a descendant tile.
- *
- * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
- * @param {number} thisX The X coordinate of this tile in the tiling scheme.
- * @param {number} thisY The Y coordinate of this tile in the tiling scheme.
- * @param {number} thisLevel The level of this tile in the tiling scheme.
- * @param {number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
- * @param {number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
- * @param {number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
- * @returns {Promise.<TerrainData>|undefined} A promise for upsampled terrain data for the descendant tile, or undefined if too many asynchronous upsample operations are in progress and the request has been deferred.
- */
-Cesium3DTilesUpsampleTerrainData.prototype.upsample = function (
-  tilingScheme,
-  thisX,
-  thisY,
-  thisLevel,
-  descendantX,
-  descendantY,
-  descendantLevel,
-) {
-  const isSynchronous = false;
-  const upsampledTerrainData = upsampleMesh(
-    isSynchronous,
-    this._mesh,
-    this._skirtHeight,
-    this._credits,
+  /**
+   * Upsamples this terrain data for use by a descendant tile.
+   *
+   * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
+   * @param {number} thisX The X coordinate of this tile in the tiling scheme.
+   * @param {number} thisY The Y coordinate of this tile in the tiling scheme.
+   * @param {number} thisLevel The level of this tile in the tiling scheme.
+   * @param {number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+   * @param {number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+   * @param {number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
+   * @returns {Promise.<TerrainData>|undefined} A promise for upsampled terrain data for the descendant tile, or undefined if too many asynchronous upsample operations are in progress and the request has been deferred.
+   */
+  upsample(
     tilingScheme,
     thisX,
     thisY,
     thisLevel,
     descendantX,
     descendantY,
-    descendantLevel,
-  );
-  return upsampledTerrainData;
-};
+    descendantLevel
+  ) {
+    const isSynchronous = false;
+    const upsampledTerrainData = upsampleMesh(
+      isSynchronous,
+      this._mesh,
+      this._skirtHeight,
+      this._credits,
+      tilingScheme,
+      thisX,
+      thisY,
+      thisLevel,
+      descendantX,
+      descendantY,
+      descendantLevel,
+    );
+    return upsampledTerrainData;
+  }
 
-/**
- * Upsamples this terrain data for use by a descendant tile synchronously.
- *
- * @private
- *
- * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
- * @param {number} thisX The X coordinate of this tile in the tiling scheme.
- * @param {number} thisY The Y coordinate of this tile in the tiling scheme.
- * @param {number} thisLevel The level of this tile in the tiling scheme.
- * @param {number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
- * @param {number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
- * @param {number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
- * @returns {Promise.<TerrainData>} A promise for upsampled terrain data for the descendant tile.
- */
-Cesium3DTilesUpsampleTerrainData.prototype._upsampleSync = function (
-  tilingScheme,
-  thisX,
-  thisY,
-  thisLevel,
-  descendantX,
-  descendantY,
-  descendantLevel,
-) {
-  const isSynchronous = true;
-  return upsampleMesh(
-    isSynchronous,
-    this._mesh,
-    this._skirtHeight,
-    this._credits,
+  /**
+   * Upsamples this terrain data for use by a descendant tile synchronously.
+   *
+   * @private
+   *
+   * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
+   * @param {number} thisX The X coordinate of this tile in the tiling scheme.
+   * @param {number} thisY The Y coordinate of this tile in the tiling scheme.
+   * @param {number} thisLevel The level of this tile in the tiling scheme.
+   * @param {number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+   * @param {number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+   * @param {number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
+   * @returns {Promise.<TerrainData>} A promise for upsampled terrain data for the descendant tile.
+   */
+  _upsampleSync(
     tilingScheme,
     thisX,
     thisY,
     thisLevel,
     descendantX,
     descendantY,
-    descendantLevel,
-  );
-};
+    descendantLevel
+  ) {
+    const isSynchronous = true;
+    return upsampleMesh(
+      isSynchronous,
+      this._mesh,
+      this._skirtHeight,
+      this._credits,
+      tilingScheme,
+      thisX,
+      thisY,
+      thisLevel,
+      descendantX,
+      descendantY,
+      descendantLevel,
+    );
+  }
 
-/**
- * Computes the terrain height at a specified longitude and latitude.
- *
- * @param {Rectangle} rectangle The rectangle covered by this terrain data.
- * @param {number} longitude The longitude in radians.
- * @param {number} latitude The latitude in radians.
- * @returns {number} The terrain height at the specified position. If the position is outside the rectangle, this method will extrapolate the height, which is likely to be wildly incorrect for positions far outside the rectangle.
- */
-Cesium3DTilesUpsampleTerrainData.prototype.interpolateHeight = function (
-  rectangle,
-  longitude,
-  latitude,
-) {
-  const mesh = this._mesh;
-  const height = interpolateMeshHeight(mesh, rectangle, longitude, latitude);
-  return height;
-};
+  /**
+   * Computes the terrain height at a specified longitude and latitude.
+   *
+   * @param {Rectangle} rectangle The rectangle covered by this terrain data.
+   * @param {number} longitude The longitude in radians.
+   * @param {number} latitude The latitude in radians.
+   * @returns {number} The terrain height at the specified position. If the position is outside the rectangle, this method will extrapolate the height, which is likely to be wildly incorrect for positions far outside the rectangle.
+   */
+  interpolateHeight(rectangle, longitude, latitude) {
+    const mesh = this._mesh;
+    const height = interpolateMeshHeight(mesh, rectangle, longitude, latitude);
+    return height;
+  }
 
-/**
- * Gets a value indicating whether or not this terrain data was created by upsampling lower resolution
- * terrain data. If this value is false, the data was obtained from some other source, such
- * as by downloading it from a remote server. This method should return true for instances
- * returned from a call to {@link TerrainData#upsample}.
- *
- * @returns {boolean} True if this instance was created by upsampling; otherwise, false.
- */
-Cesium3DTilesUpsampleTerrainData.prototype.wasCreatedByUpsampling =
-  function () {
+  /**
+   * Gets a value indicating whether or not this terrain data was created by upsampling lower resolution
+   * terrain data. If this value is false, the data was obtained from some other source, such
+   * as by downloading it from a remote server. This method should return true for instances
+   * returned from a call to {@link TerrainData#upsample}.
+   *
+   * @returns {boolean} True if this instance was created by upsampling; otherwise, false.
+   */
+  wasCreatedByUpsampling() {
     return true;
-  };
+  }
 
-/**
- * Determines if a given child tile is available, based on the
- * {@link TerrainData#childTileMask}. The given child tile coordinates are assumed
- * to be one of the four children of this tile. If non-child tile coordinates are
- * given, the availability of the southeast child tile is returned.
- *
- * @param {number} _thisX The tile X coordinate of this (the parent) tile.
- * @param {number} _thisY The tile Y coordinate of this (the parent) tile.
- * @param {number} _childX The tile X coordinate of the child tile to check for availability.
- * @param {number} _childY The tile Y coordinate of the child tile to check for availability.
- * @returns {boolean} True if the child tile is available; otherwise, false.
- */
-Cesium3DTilesUpsampleTerrainData.prototype.isChildAvailable = function (
-  _thisX,
-  _thisY,
-  _childX,
-  _childY,
-) {
-  // upsample tiles are dynamic so they don't have children
-  return false;
-};
+  /**
+   * Determines if a given child tile is available, based on the
+   * {@link TerrainData#childTileMask}. The given child tile coordinates are assumed
+   * to be one of the four children of this tile. If non-child tile coordinates are
+   * given, the availability of the southeast child tile is returned.
+   *
+   * @param {number} _thisX The tile X coordinate of this (the parent) tile.
+   * @param {number} _thisY The tile Y coordinate of this (the parent) tile.
+   * @param {number} _childX The tile X coordinate of the child tile to check for availability.
+   * @param {number} _childY The tile Y coordinate of the child tile to check for availability.
+   * @returns {boolean} True if the child tile is available; otherwise, false.
+   */
+  isChildAvailable(_thisX, _thisY, _childX, _childY) {
+    // upsample tiles are dynamic so they don't have children
+    return false;
+  }
 
-Object.defineProperties(Cesium3DTilesUpsampleTerrainData.prototype, {
   /**
    * An array of credits for this tile.
    * @memberof Cesium3DTilesUpsampleTerrainData.prototype
    * @type {Credit[]|undefined}
    */
-  credits: {
-    get: function () {
-      return this._credits;
-    },
-  },
+  get credits() {
+    return this._credits;
+  }
+
   /**
    * The water mask included in this terrain data, if any. A water mask is a rectangular
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
@@ -682,13 +659,11 @@ Object.defineProperties(Cesium3DTilesUpsampleTerrainData.prototype, {
    * @memberof Cesium3DTilesUpsampleTerrainData.prototype
    * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement|ImageBitmap|undefined}
    */
-  waterMask: {
-    get: function () {
-      // Note: watermask not needed because there's a fallback in another file that checks for ancestor tile water mask
-      return undefined;
-    },
-  },
-});
+  get waterMask() {
+    // Note: watermask not needed because there's a fallback in another file that checks for ancestor tile water mask
+    return undefined;
+  }
+}
 
 const upsampleTaskProcessor = new TaskProcessor(
   "upsampleVerticesFromCesium3DTilesTerrain",
