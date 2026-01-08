@@ -109,7 +109,7 @@ class Stereographic {
    *
    * @param {Cartesian3} cartesian The point to project.
    * @param {Stereographic} [result] The object onto which to store the result.
-   * @returns {Sterographic} The modified result parameter or a new Sterographic instance if none was provided.
+   * @returns {Stereographic} The modified result parameter or a new Stereographic instance if none was provided.
    */
   static fromCartesian(cartesian, result) {
     //>>includeStart('debug', pragmas.debug);
@@ -159,7 +159,7 @@ class Stereographic {
    *
    * @param {Cartesian3[]} cartesians The points to project.
    * @param {Stereographic[]} [result] The object onto which to store the result.
-   * @returns {Sterographic[]} The modified result parameter or a new Sterographic instance if none was provided.
+   * @returns {Stereographic[]} The modified result parameter or a new Stereographic instance if none was provided.
    */
   static fromCartesianArray(cartesians, result) {
     //>>includeStart('debug', pragmas.debug);
