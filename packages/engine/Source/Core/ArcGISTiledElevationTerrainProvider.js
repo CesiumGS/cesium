@@ -40,45 +40,43 @@ const ALL_CHILDREN = 15;
  *
  * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  */
-class TerrainProviderBuilder {
-  constructor(options) {
-    this.ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+function TerrainProviderBuilder(options) {
+  this.ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
-    this.credit = undefined;
-    this.tilingScheme = undefined;
-    this.height = undefined;
-    this.width = undefined;
-    this.encoding = undefined;
-    this.lodCount = undefined;
-    this.hasAvailability = false;
-    this.tilesAvailable = undefined;
-    this.tilesAvailabilityLoaded = undefined;
-    this.levelZeroMaximumGeometricError = undefined;
-    this.terrainDataStructure = undefined;
-  }
-
-  /**
-   * Complete ArcGISTiledElevationTerrainProvider creation based on builder values.
-   *
-   * @private
-   *
-   * @param {ArcGISTiledElevationTerrainProvider} provider
-   */
-  build(provider) {
-    provider._credit = this.credit;
-    provider._tilingScheme = this.tilingScheme;
-    provider._height = this.height;
-    provider._width = this.width;
-    provider._encoding = this.encoding;
-    provider._lodCount = this.lodCount;
-    provider._hasAvailability = this.hasAvailability;
-    provider._tilesAvailable = this.tilesAvailable;
-    provider._tilesAvailabilityLoaded = this.tilesAvailabilityLoaded;
-    provider._levelZeroMaximumGeometricError =
-      this.levelZeroMaximumGeometricError;
-    provider._terrainDataStructure = this.terrainDataStructure;
-  }
+  this.credit = undefined;
+  this.tilingScheme = undefined;
+  this.height = undefined;
+  this.width = undefined;
+  this.encoding = undefined;
+  this.lodCount = undefined;
+  this.hasAvailability = false;
+  this.tilesAvailable = undefined;
+  this.tilesAvailabilityLoaded = undefined;
+  this.levelZeroMaximumGeometricError = undefined;
+  this.terrainDataStructure = undefined;
 }
+
+/**
+ * Complete ArcGISTiledElevationTerrainProvider creation based on builder values.
+ *
+ * @private
+ *
+ * @param {ArcGISTiledElevationTerrainProvider} provider
+ */
+TerrainProviderBuilder.prototype.build = function (provider) {
+  provider._credit = this.credit;
+  provider._tilingScheme = this.tilingScheme;
+  provider._height = this.height;
+  provider._width = this.width;
+  provider._encoding = this.encoding;
+  provider._lodCount = this.lodCount;
+  provider._hasAvailability = this.hasAvailability;
+  provider._tilesAvailable = this.tilesAvailable;
+  provider._tilesAvailabilityLoaded = this.tilesAvailabilityLoaded;
+  provider._levelZeroMaximumGeometricError =
+    this.levelZeroMaximumGeometricError;
+  provider._terrainDataStructure = this.terrainDataStructure;
+};
 
 function parseMetadataSuccess(terrainProviderBuilder, metadata) {
   const copyrightText = metadata.copyrightText;
@@ -235,29 +233,29 @@ async function requestMetadata(
  *
  * @see TerrainProvider
  */
-class ArcGISTiledElevationTerrainProvider {
-  constructor(options) {
-    options = options ?? Frozen.EMPTY_OBJECT;
+function ArcGISTiledElevationTerrainProvider(options) {
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-    this._resource = undefined;
-    this._credit = undefined;
-    this._tilingScheme = undefined;
-    this._levelZeroMaximumGeometricError = undefined;
-    this._maxLevel = undefined;
-    this._terrainDataStructure = undefined;
-    this._width = undefined;
-    this._height = undefined;
-    this._encoding = undefined;
-    this._lodCount = undefined;
+  this._resource = undefined;
+  this._credit = undefined;
+  this._tilingScheme = undefined;
+  this._levelZeroMaximumGeometricError = undefined;
+  this._maxLevel = undefined;
+  this._terrainDataStructure = undefined;
+  this._width = undefined;
+  this._height = undefined;
+  this._encoding = undefined;
+  this._lodCount = undefined;
 
-    this._hasAvailability = false;
-    this._tilesAvailable = undefined;
-    this._tilesAvailabilityLoaded = undefined;
-    this._availableCache = {};
+  this._hasAvailability = false;
+  this._tilesAvailable = undefined;
+  this._tilesAvailabilityLoaded = undefined;
+  this._availableCache = {};
 
-    this._errorEvent = new Event();
-  }
+  this._errorEvent = new Event();
+}
 
+Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
   /**
    * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
@@ -266,9 +264,11 @@ class ArcGISTiledElevationTerrainProvider {
    * @type {Event}
    * @readonly
    */
-  get errorEvent() {
-    return this._errorEvent;
-  }
+  errorEvent: {
+    get: function () {
+      return this._errorEvent;
+    },
+  },
 
   /**
    * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
@@ -277,9 +277,11 @@ class ArcGISTiledElevationTerrainProvider {
    * @type {Credit}
    * @readonly
    */
-  get credit() {
-    return this._credit;
-  }
+  credit: {
+    get: function () {
+      return this._credit;
+    },
+  },
 
   /**
    * Gets the tiling scheme used by this provider.
@@ -287,9 +289,11 @@ class ArcGISTiledElevationTerrainProvider {
    * @type {GeographicTilingScheme}
    * @readonly
    */
-  get tilingScheme() {
-    return this._tilingScheme;
-  }
+  tilingScheme: {
+    get: function () {
+      return this._tilingScheme;
+    },
+  },
 
   /**
    * Gets a value indicating whether or not the provider includes a water mask.  The water mask
@@ -299,9 +303,11 @@ class ArcGISTiledElevationTerrainProvider {
    * @type {boolean}
    * @readonly
    */
-  get hasWaterMask() {
-    return false;
-  }
+  hasWaterMask: {
+    get: function () {
+      return false;
+    },
+  },
 
   /**
    * Gets a value indicating whether or not the requested tiles include vertex normals.
@@ -309,10 +315,11 @@ class ArcGISTiledElevationTerrainProvider {
    * @type {boolean}
    * @readonly
    */
-  get hasVertexNormals() {
-    return false;
-  }
-
+  hasVertexNormals: {
+    get: function () {
+      return false;
+    },
+  },
   /**
    * Gets an object that can be used to determine availability of terrain from this provider, such as
    * at points and in rectangles. This property may be undefined if availability
@@ -321,185 +328,147 @@ class ArcGISTiledElevationTerrainProvider {
    * @type {TileAvailability|undefined}
    * @readonly
    */
-  get availability() {
-    return this._tilesAvailable;
-  }
+  availability: {
+    get: function () {
+      return this._tilesAvailable;
+    },
+  },
+});
 
-  /**
-   * Creates a {@link TerrainProvider} that produces terrain geometry by tessellating height maps
-   * retrieved from Elevation Tiles of an an ArcGIS ImageService.
-   *
-   * @param {Resource|string|Promise<Resource>|Promise<string>} url The URL of the ArcGIS ImageServer service.
-   * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options.
-   * @returns {Promise<ArcGISTiledElevationTerrainProvider>}
-   *
-   * @example
-   * const terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
-   *   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
-   * });
-   * viewer.terrainProvider = terrainProvider;
-   *
-   * @exception {RuntimeError} metadata specifies invalid spatial reference
-   * @exception {RuntimeError} metadata does not specify tileInfo
-   */
-  static async fromUrl(url, options) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.defined("url", url);
-    //>>includeEnd('debug');
+/**
+ * Creates a {@link TerrainProvider} that produces terrain geometry by tessellating height maps
+ * retrieved from Elevation Tiles of an an ArcGIS ImageService.
+ *
+ * @param {Resource|string|Promise<Resource>|Promise<string>} url The URL of the ArcGIS ImageServer service.
+ * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options.
+ * @returns {Promise<ArcGISTiledElevationTerrainProvider>}
+ *
+ * @example
+ * const terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
+ *   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
+ * });
+ * viewer.terrainProvider = terrainProvider;
+ *
+ * @exception {RuntimeError} metadata specifies invalid spatial reference
+ * @exception {RuntimeError} metadata does not specify tileInfo
+ */
+ArcGISTiledElevationTerrainProvider.fromUrl = async function (url, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
 
-    options = options ?? Frozen.EMPTY_OBJECT;
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-    url = await Promise.resolve(url);
-    let resource = Resource.createIfNeeded(url);
-    resource.appendForwardSlash();
-    if (defined(options.token)) {
-      resource = resource.getDerivedResource({
-        queryParameters: {
-          token: options.token,
-        },
-      });
-    }
-
-    const metadataResource = resource.getDerivedResource({
+  url = await Promise.resolve(url);
+  let resource = Resource.createIfNeeded(url);
+  resource.appendForwardSlash();
+  if (defined(options.token)) {
+    resource = resource.getDerivedResource({
       queryParameters: {
-        f: "pjson",
+        token: options.token,
       },
     });
-
-    const terrainProviderBuilder = new TerrainProviderBuilder(options);
-    await requestMetadata(terrainProviderBuilder, metadataResource);
-
-    const provider = new ArcGISTiledElevationTerrainProvider(options);
-    terrainProviderBuilder.build(provider);
-    provider._resource = resource;
-
-    return provider;
   }
 
-  /**
-   * Requests the geometry for a given tile. The result includes terrain
-   * data and indicates that all child tiles are available.
-   *
-   * @param {number} x The X coordinate of the tile for which to request geometry.
-   * @param {number} y The Y coordinate of the tile for which to request geometry.
-   * @param {number} level The level of the tile for which to request geometry.
-   * @param {Request} [request] The request object. Intended for internal use only.
-   * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
-   *          returns undefined instead of a promise, it is an indication that too many requests are already
-   *          pending and the request will be retried later.
-   */
-  requestTileGeometry(x, y, level, request) {
-    const tileResource = this._resource.getDerivedResource({
-      url: `tile/${level}/${y}/${x}`,
-      request: request,
-    });
+  const metadataResource = resource.getDerivedResource({
+    queryParameters: {
+      f: "pjson",
+    },
+  });
 
-    const hasAvailability = this._hasAvailability;
-    let availabilityPromise = Promise.resolve(true);
-    let availabilityRequest;
-    if (
-      hasAvailability &&
-      !defined(isTileAvailable(this, level + 1, x * 2, y * 2))
-    ) {
-      // We need to load child availability
-      const availabilityResult = requestAvailability(
-        this,
-        level + 1,
-        x * 2,
-        y * 2,
-      );
+  const terrainProviderBuilder = new TerrainProviderBuilder(options);
+  await requestMetadata(terrainProviderBuilder, metadataResource);
 
-      availabilityPromise = availabilityResult.promise;
-      availabilityRequest = availabilityResult.request;
-    }
+  const provider = new ArcGISTiledElevationTerrainProvider(options);
+  terrainProviderBuilder.build(provider);
+  provider._resource = resource;
 
-    const promise = tileResource.fetchArrayBuffer();
-    if (!defined(promise) || !defined(availabilityPromise)) {
-      return undefined;
-    }
+  return provider;
+};
 
-    const that = this;
-    const tilesAvailable = this._tilesAvailable;
-    return Promise.all([promise, availabilityPromise])
-      .then(function (result) {
-        return new HeightmapTerrainData({
-          buffer: result[0],
-          width: that._width,
-          height: that._height,
-          childTileMask: hasAvailability
-            ? tilesAvailable.computeChildMaskForTile(level, x, y)
-            : ALL_CHILDREN,
-          structure: that._terrainDataStructure,
-          encoding: that._encoding,
-        });
-      })
-      .catch(async function (error) {
-        if (
-          defined(availabilityRequest) &&
-          availabilityRequest.state === RequestState.CANCELLED
-        ) {
-          request.cancel();
+/**
+ * Requests the geometry for a given tile. The result includes terrain
+ * data and indicates that all child tiles are available.
+ *
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @param {Request} [request] The request object. Intended for internal use only.
+ * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
+ *          returns undefined instead of a promise, it is an indication that too many requests are already
+ *          pending and the request will be retried later.
+ */
+ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
+  x,
+  y,
+  level,
+  request,
+) {
+  const tileResource = this._resource.getDerivedResource({
+    url: `tile/${level}/${y}/${x}`,
+    request: request,
+  });
 
-          // Don't reject the promise till the request is actually cancelled
-          // Otherwise it will think the request failed, but it didn't.
-          try {
-            await request.deferred?.promise;
-          } catch {
-            // Eat this error
-          }
+  const hasAvailability = this._hasAvailability;
+  let availabilityPromise = Promise.resolve(true);
+  let availabilityRequest;
+  if (
+    hasAvailability &&
+    !defined(isTileAvailable(this, level + 1, x * 2, y * 2))
+  ) {
+    // We need to load child availability
+    const availabilityResult = requestAvailability(
+      this,
+      level + 1,
+      x * 2,
+      y * 2,
+    );
 
-          request.state = RequestState.CANCELLED;
-          return Promise.reject(error);
-        }
-        return Promise.reject(error);
+    availabilityPromise = availabilityResult.promise;
+    availabilityRequest = availabilityResult.request;
+  }
+
+  const promise = tileResource.fetchArrayBuffer();
+  if (!defined(promise) || !defined(availabilityPromise)) {
+    return undefined;
+  }
+
+  const that = this;
+  const tilesAvailable = this._tilesAvailable;
+  return Promise.all([promise, availabilityPromise])
+    .then(function (result) {
+      return new HeightmapTerrainData({
+        buffer: result[0],
+        width: that._width,
+        height: that._height,
+        childTileMask: hasAvailability
+          ? tilesAvailable.computeChildMaskForTile(level, x, y)
+          : ALL_CHILDREN,
+        structure: that._terrainDataStructure,
+        encoding: that._encoding,
       });
-  }
+    })
+    .catch(async function (error) {
+      if (
+        defined(availabilityRequest) &&
+        availabilityRequest.state === RequestState.CANCELLED
+      ) {
+        request.cancel();
 
-  /**
-   * Gets the maximum geometric error allowed in a tile at a given level.
-   *
-   * @param {number} level The tile level for which to get the maximum geometric error.
-   * @returns {number} The maximum geometric error.
-   */
-  getLevelMaximumGeometricError(level) {
-    return this._levelZeroMaximumGeometricError / (1 << level);
-  }
+        // Don't reject the promise till the request is actually cancelled
+        // Otherwise it will think the request failed, but it didn't.
+        try {
+          await request.deferred?.promise;
+        } catch {
+          // Eat this error
+        }
 
-  /**
-   * Determines whether data for a tile is available to be loaded.
-   *
-   * @param {number} x The X coordinate of the tile for which to request geometry.
-   * @param {number} y The Y coordinate of the tile for which to request geometry.
-   * @param {number} level The level of the tile for which to request geometry.
-   * @returns {boolean|undefined} Undefined if not supported, otherwise true or false.
-   */
-  getTileDataAvailable(x, y, level) {
-    if (!this._hasAvailability) {
-      return undefined;
-    }
-
-    const result = isTileAvailable(this, level, x, y);
-    if (defined(result)) {
-      return result;
-    }
-
-    requestAvailability(this, level, x, y);
-
-    return undefined;
-  }
-
-  /**
-   * Makes sure we load availability data for a tile
-   *
-   * @param {number} x The X coordinate of the tile for which to request geometry.
-   * @param {number} y The Y coordinate of the tile for which to request geometry.
-   * @param {number} level The level of the tile for which to request geometry.
-   * @returns {undefined} This provider does not support loading availability.
-   */
-  loadTileDataAvailability(x, y, level) {
-    return undefined;
-  }
-}
+        request.state = RequestState.CANCELLED;
+        return Promise.reject(error);
+      }
+      return Promise.reject(error);
+    });
+};
 
 function isTileAvailable(that, level, x, y) {
   if (!that._hasAvailability) {
@@ -525,6 +494,57 @@ function isTileAvailable(that, level, x, y) {
 
   return undefined;
 }
+
+/**
+ * Gets the maximum geometric error allowed in a tile at a given level.
+ *
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error.
+ */
+ArcGISTiledElevationTerrainProvider.prototype.getLevelMaximumGeometricError =
+  function (level) {
+    return this._levelZeroMaximumGeometricError / (1 << level);
+  };
+
+/**
+ * Determines whether data for a tile is available to be loaded.
+ *
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {boolean|undefined} Undefined if not supported, otherwise true or false.
+ */
+ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
+  x,
+  y,
+  level,
+) {
+  if (!this._hasAvailability) {
+    return undefined;
+  }
+
+  const result = isTileAvailable(this, level, x, y);
+  if (defined(result)) {
+    return result;
+  }
+
+  requestAvailability(this, level, x, y);
+
+  return undefined;
+};
+
+/**
+ * Makes sure we load availability data for a tile
+ *
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {undefined} This provider does not support loading availability.
+ */
+ArcGISTiledElevationTerrainProvider.prototype.loadTileDataAvailability =
+  function (x, y, level) {
+    return undefined;
+  };
 
 function findRange(origin, width, height, data) {
   const endCol = width - 1;

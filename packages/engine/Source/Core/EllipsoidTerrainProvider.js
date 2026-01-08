@@ -23,29 +23,29 @@ import TerrainProvider from "./TerrainProvider.js";
  *
  * @see TerrainProvider
  */
-class EllipsoidTerrainProvider {
-  constructor(options) {
-    options = options ?? Frozen.EMPTY_OBJECT;
+function EllipsoidTerrainProvider(options) {
+  options = options ?? Frozen.EMPTY_OBJECT;
 
-    this._tilingScheme = options.tilingScheme;
-    if (!defined(this._tilingScheme)) {
-      this._tilingScheme = new GeographicTilingScheme({
-        ellipsoid: options.ellipsoid ?? Ellipsoid.default,
-      });
-    }
-
-    // Note: the 64 below does NOT need to match the actual vertex dimensions, because
-    // the ellipsoid is significantly smoother than actual terrain.
-    this._levelZeroMaximumGeometricError =
-      TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
-        this._tilingScheme.ellipsoid,
-        64,
-        this._tilingScheme.getNumberOfXTilesAtLevel(0),
-      );
-
-    this._errorEvent = new Event();
+  this._tilingScheme = options.tilingScheme;
+  if (!defined(this._tilingScheme)) {
+    this._tilingScheme = new GeographicTilingScheme({
+      ellipsoid: options.ellipsoid ?? Ellipsoid.default,
+    });
   }
 
+  // Note: the 64 below does NOT need to match the actual vertex dimensions, because
+  // the ellipsoid is significantly smoother than actual terrain.
+  this._levelZeroMaximumGeometricError =
+    TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+      this._tilingScheme.ellipsoid,
+      64,
+      this._tilingScheme.getNumberOfXTilesAtLevel(0),
+    );
+
+  this._errorEvent = new Event();
+}
+
+Object.defineProperties(EllipsoidTerrainProvider.prototype, {
   /**
    * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
@@ -54,9 +54,11 @@ class EllipsoidTerrainProvider {
    * @type {Event}
    * @readonly
    */
-  get errorEvent() {
-    return this._errorEvent;
-  }
+  errorEvent: {
+    get: function () {
+      return this._errorEvent;
+    },
+  },
 
   /**
    * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
@@ -65,9 +67,11 @@ class EllipsoidTerrainProvider {
    * @type {Credit}
    * @readonly
    */
-  get credit() {
-    return undefined;
-  }
+  credit: {
+    get: function () {
+      return undefined;
+    },
+  },
 
   /**
    * Gets the tiling scheme used by this provider.
@@ -75,9 +79,11 @@ class EllipsoidTerrainProvider {
    * @type {GeographicTilingScheme}
    * @readonly
    */
-  get tilingScheme() {
-    return this._tilingScheme;
-  }
+  tilingScheme: {
+    get: function () {
+      return this._tilingScheme;
+    },
+  },
 
   /**
    * Gets a value indicating whether or not the provider includes a water mask.  The water mask
@@ -87,9 +93,11 @@ class EllipsoidTerrainProvider {
    * @type {boolean}
    * @readonly
    */
-  get hasWaterMask() {
-    return false;
-  }
+  hasWaterMask: {
+    get: function () {
+      return false;
+    },
+  },
 
   /**
    * Gets a value indicating whether or not the requested tiles include vertex normals.
@@ -97,10 +105,11 @@ class EllipsoidTerrainProvider {
    * @type {boolean}
    * @readonly
    */
-  get hasVertexNormals() {
-    return false;
-  }
-
+  hasVertexNormals: {
+    get: function () {
+      return false;
+    },
+  },
   /**
    * Gets an object that can be used to determine availability of terrain from this provider, such as
    * at points and in rectangles. This property may be undefined if availability
@@ -109,68 +118,84 @@ class EllipsoidTerrainProvider {
    * @type {TileAvailability|undefined}
    * @readonly
    */
-  get availability() {
-    return undefined;
-  }
+  availability: {
+    get: function () {
+      return undefined;
+    },
+  },
+});
 
-  /**
-   * Requests the geometry for a given tile. The result includes terrain
-   * data and indicates that all child tiles are available.
-   *
-   * @param {number} x The X coordinate of the tile for which to request geometry.
-   * @param {number} y The Y coordinate of the tile for which to request geometry.
-   * @param {number} level The level of the tile for which to request geometry.
-   * @param {Request} [request] The request object. Intended for internal use only.
-   *
-   * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
-   *          returns undefined instead of a promise, it is an indication that too many requests are already
-   *          pending and the request will be retried later.
-   */
-  requestTileGeometry(x, y, level, request) {
-    const width = 16;
-    const height = 16;
-    return Promise.resolve(
-      new HeightmapTerrainData({
-        buffer: new Uint8Array(width * height),
-        width: width,
-        height: height,
-      }),
-    );
-  }
+/**
+ * Requests the geometry for a given tile. The result includes terrain
+ * data and indicates that all child tiles are available.
+ *
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @param {Request} [request] The request object. Intended for internal use only.
+ *
+ * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
+ *          returns undefined instead of a promise, it is an indication that too many requests are already
+ *          pending and the request will be retried later.
+ */
+EllipsoidTerrainProvider.prototype.requestTileGeometry = function (
+  x,
+  y,
+  level,
+  request,
+) {
+  const width = 16;
+  const height = 16;
+  return Promise.resolve(
+    new HeightmapTerrainData({
+      buffer: new Uint8Array(width * height),
+      width: width,
+      height: height,
+    }),
+  );
+};
 
-  /**
-   * Gets the maximum geometric error allowed in a tile at a given level.
-   *
-   * @param {number} level The tile level for which to get the maximum geometric error.
-   * @returns {number} The maximum geometric error.
-   */
-  getLevelMaximumGeometricError(level) {
-    return this._levelZeroMaximumGeometricError / (1 << level);
-  }
+/**
+ * Gets the maximum geometric error allowed in a tile at a given level.
+ *
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error.
+ */
+EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = function (
+  level,
+) {
+  return this._levelZeroMaximumGeometricError / (1 << level);
+};
 
-  /**
-   * Determines whether data for a tile is available to be loaded.
-   *
-   * @param {number} x The X coordinate of the tile for which to request geometry.
-   * @param {number} y The Y coordinate of the tile for which to request geometry.
-   * @param {number} level The level of the tile for which to request geometry.
-   * @returns {boolean|undefined} Undefined if not supported, otherwise true or false.
-   */
-  getTileDataAvailable(x, y, level) {
-    return undefined;
-  }
+/**
+ * Determines whether data for a tile is available to be loaded.
+ *
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {boolean|undefined} Undefined if not supported, otherwise true or false.
+ */
+EllipsoidTerrainProvider.prototype.getTileDataAvailable = function (
+  x,
+  y,
+  level,
+) {
+  return undefined;
+};
 
-  /**
-   * Makes sure we load availability data for a tile
-   *
-   * @param {number} x The X coordinate of the tile for which to request geometry.
-   * @param {number} y The Y coordinate of the tile for which to request geometry.
-   * @param {number} level The level of the tile for which to request geometry.
-   * @returns {undefined} This provider does not support loading availability.
-   */
-  loadTileDataAvailability(x, y, level) {
-    return undefined;
-  }
-}
-
+/**
+ * Makes sure we load availability data for a tile
+ *
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {undefined} This provider does not support loading availability.
+ */
+EllipsoidTerrainProvider.prototype.loadTileDataAvailability = function (
+  x,
+  y,
+  level,
+) {
+  return undefined;
+};
 export default EllipsoidTerrainProvider;
