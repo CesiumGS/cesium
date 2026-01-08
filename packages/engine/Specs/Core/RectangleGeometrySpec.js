@@ -480,7 +480,7 @@ describe("Core/RectangleGeometry", function () {
   });
 
   it("computing rectangle property", function () {
-    const rectangle = new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+    const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
     const geometry = new RectangleGeometry({
       vertexFormat: VertexFormat.POSITION_ONLY,
       rectangle: rectangle,
@@ -495,7 +495,7 @@ describe("Core/RectangleGeometry", function () {
   });
 
   it("computing rectangle property with rotation", function () {
-    const rectangle = new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+    const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
     const geometry = new RectangleGeometry({
       vertexFormat: VertexFormat.POSITION_ONLY,
       rectangle: rectangle,
@@ -523,7 +523,7 @@ describe("Core/RectangleGeometry", function () {
   });
 
   it("computing textureCoordinateRotationPoints property", function () {
-    const rectangle = new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+    const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
     let geometry = new RectangleGeometry({
       vertexFormat: VertexFormat.POSITION_ONLY,
       rectangle: rectangle,
@@ -598,7 +598,7 @@ describe("Core/RectangleGeometry", function () {
   it("computeRectangle", function () {
     const options = {
       vertexFormat: VertexFormat.POSITION_ONLY,
-      rectangle: new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0),
+      rectangle: Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0),
       granularity: 1.0,
       ellipsoid: Ellipsoid.UNIT_SPHERE,
       rotation: CesiumMath.PI,
@@ -614,7 +614,7 @@ describe("Core/RectangleGeometry", function () {
   it("computeRectangle with result parameter", function () {
     const options = {
       vertexFormat: VertexFormat.POSITION_ONLY,
-      rectangle: new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0),
+      rectangle: Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0),
     };
     const geometry = new RectangleGeometry(options);
 

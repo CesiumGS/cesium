@@ -417,7 +417,7 @@ class WallOutlineGeometry {
       attributes: attributes,
       indices: indices,
       primitiveType: PrimitiveType.LINES,
-      boundingSphere: new BoundingSphere.fromVertices(positions),
+      boundingSphere: BoundingSphere.fromVertices(positions),
     });
   }
 }

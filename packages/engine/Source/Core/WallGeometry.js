@@ -616,7 +616,7 @@ class WallGeometry {
       attributes: attributes,
       indices: indices,
       primitiveType: PrimitiveType.TRIANGLES,
-      boundingSphere: new BoundingSphere.fromVertices(positions),
+      boundingSphere: BoundingSphere.fromVertices(positions),
     });
   }
 }
