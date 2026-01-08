@@ -66,7 +66,10 @@ class FrustumOutlineGeometry {
      * @type {number}
      */
     this.packedLength =
-      2 + frustumPackedLength + Cartesian3.packedLength + Quaternion.packedLength;
+      2 +
+      frustumPackedLength +
+      Cartesian3.packedLength +
+      Quaternion.packedLength;
   }
 
   /**

@@ -186,7 +186,10 @@ class FrustumGeometry {
     result._frustumType = frustumType;
     result._origin = Cartesian3.clone(origin, result._origin);
     result._orientation = Quaternion.clone(orientation, result._orientation);
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._drawNearPlane = drawNearPlane;
 
     return result;
@@ -200,7 +203,7 @@ class FrustumGeometry {
     positions,
     xDirection,
     yDirection,
-    zDirection
+    zDirection,
   ) {
     const rotationMatrix = Matrix3.fromQuaternion(
       orientation,
@@ -429,7 +432,16 @@ class FrustumGeometry {
 
       offset = 0;
       if (drawNearPlane) {
-        getAttributes(offset, normals, tangents, bitangents, st, negativeZ, x, y); // near
+        getAttributes(
+          offset,
+          normals,
+          tangents,
+          bitangents,
+          st,
+          negativeZ,
+          x,
+          y,
+        ); // near
         offset += 3 * 4;
       }
       getAttributes(offset, normals, tangents, bitangents, st, z, negativeX, y); // far

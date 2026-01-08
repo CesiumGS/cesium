@@ -102,7 +102,8 @@ class CircleOutlineGeometry {
     scratchOptions.height = ellipseGeometry._height;
     scratchOptions.extrudedHeight = ellipseGeometry._extrudedHeight;
     scratchOptions.granularity = ellipseGeometry._granularity;
-    scratchOptions.numberOfVerticalLines = ellipseGeometry._numberOfVerticalLines;
+    scratchOptions.numberOfVerticalLines =
+      ellipseGeometry._numberOfVerticalLines;
 
     if (!defined(result)) {
       scratchOptions.radius = ellipseGeometry._semiMajorAxis;
@@ -122,7 +123,9 @@ class CircleOutlineGeometry {
    * @returns {Geometry|undefined} The computed vertices and indices.
    */
   static createGeometry(circleGeometry) {
-    return EllipseOutlineGeometry.createGeometry(circleGeometry._ellipseGeometry);
+    return EllipseOutlineGeometry.createGeometry(
+      circleGeometry._ellipseGeometry,
+    );
   }
 }
 

@@ -99,7 +99,11 @@ class BoxGeometry {
     Check.typeOf.number.greaterThanOrEquals("dimensions.z", dimensions.z, 0);
     //>>includeEnd('debug');
 
-    const corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
+    const corner = Cartesian3.multiplyByScalar(
+      dimensions,
+      0.5,
+      new Cartesian3(),
+    );
 
     return new BoxGeometry({
       minimum: Cartesian3.negate(corner, new Cartesian3()),
@@ -214,7 +218,10 @@ class BoxGeometry {
 
     result._minimum = Cartesian3.clone(min, result._minimum);
     result._maximum = Cartesian3.clone(max, result._maximum);
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._offsetAttribute =
       offsetAttribute === -1 ? undefined : offsetAttribute;
 

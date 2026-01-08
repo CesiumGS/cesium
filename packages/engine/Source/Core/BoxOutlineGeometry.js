@@ -89,7 +89,11 @@ class BoxOutlineGeometry {
     Check.typeOf.number.greaterThanOrEquals("dimensions.z", dimensions.z, 0);
     //>>includeEnd('debug');
 
-    const corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
+    const corner = Cartesian3.multiplyByScalar(
+      dimensions,
+      0.5,
+      new Cartesian3(),
+    );
 
     return new BoxOutlineGeometry({
       minimum: Cartesian3.negate(corner, new Cartesian3()),

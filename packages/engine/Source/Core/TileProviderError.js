@@ -98,7 +98,16 @@ class TileProviderError {
    *          should be passed to this function the next time it is called for the same error in order
    *          to track retry counts.
    */
-  static reportError(previousError, provider, event, message, x, y, level, errorDetails) {
+  static reportError(
+    previousError,
+    provider,
+    event,
+    message,
+    x,
+    y,
+    level,
+    errorDetails,
+  ) {
     let error = previousError;
     if (!defined(previousError)) {
       error = new TileProviderError(

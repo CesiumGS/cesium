@@ -179,7 +179,10 @@ class Ellipsoid {
     Cartesian3.clone(ellipsoid._radiiSquared, result._radiiSquared);
     Cartesian3.clone(ellipsoid._radiiToTheFourth, result._radiiToTheFourth);
     Cartesian3.clone(ellipsoid._oneOverRadii, result._oneOverRadii);
-    Cartesian3.clone(ellipsoid._oneOverRadiiSquared, result._oneOverRadiiSquared);
+    Cartesian3.clone(
+      ellipsoid._oneOverRadiiSquared,
+      result._oneOverRadiiSquared,
+    );
     result._minimumRadius = ellipsoid._minimumRadius;
     result._maximumRadius = ellipsoid._maximumRadius;
     result._centerToleranceSquared = ellipsoid._centerToleranceSquared;

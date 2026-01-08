@@ -95,7 +95,8 @@ class Iau2006XysData {
     const stopDaysSinceEpoch = getDaysSinceEpoch(this, stopDayTT, stopSecondTT);
 
     let startIndex =
-      (startDaysSinceEpoch / this._stepSizeDays - this._interpolationOrder / 2) |
+      (startDaysSinceEpoch / this._stepSizeDays -
+        this._interpolationOrder / 2) |
       0;
     if (startIndex < 0) {
       startIndex = 0;

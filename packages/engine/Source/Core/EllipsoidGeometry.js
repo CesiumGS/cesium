@@ -155,7 +155,11 @@ class EllipsoidGeometry {
     const radii = Cartesian3.unpack(array, startingIndex, scratchRadii);
     startingIndex += Cartesian3.packedLength;
 
-    const innerRadii = Cartesian3.unpack(array, startingIndex, scratchInnerRadii);
+    const innerRadii = Cartesian3.unpack(
+      array,
+      startingIndex,
+      scratchInnerRadii,
+    );
     startingIndex += Cartesian3.packedLength;
 
     const vertexFormat = VertexFormat.unpack(
@@ -187,7 +191,10 @@ class EllipsoidGeometry {
 
     result._radii = Cartesian3.clone(radii, result._radii);
     result._innerRadii = Cartesian3.clone(innerRadii, result._innerRadii);
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._minimumClock = minimumClock;
     result._maximumClock = maximumClock;
     result._minimumCone = minimumCone;
@@ -493,7 +500,11 @@ class EllipsoidGeometry {
     ) {
       for (i = 0; i < vertexCount; i++) {
         ellipsoid = isInner[i] ? ellipsoidInner : ellipsoidOuter;
-        const position = Cartesian3.fromArray(positions, i * 3, scratchPosition);
+        const position = Cartesian3.fromArray(
+          positions,
+          i * 3,
+          scratchPosition,
+        );
         const normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
         if (negateNormal[i]) {
           Cartesian3.negate(normal, normal);
@@ -540,7 +551,11 @@ class EllipsoidGeometry {
           }
 
           if (vertexFormat.bitangent) {
-            const bitangent = Cartesian3.cross(normal, tangent, scratchBitangent);
+            const bitangent = Cartesian3.cross(
+              normal,
+              tangent,
+              scratchBitangent,
+            );
             Cartesian3.normalize(bitangent, bitangent);
 
             bitangents[bitangentIndex++] = bitangent.x;

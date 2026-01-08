@@ -258,7 +258,13 @@ class PerspectiveFrustum {
    * const distance = Cesium.Cartesian3.magnitude(toCenterProj);
    * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, scene.pixelRatio, new Cesium.Cartesian2());
    */
-  getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result) {
+  getPixelDimensions(
+    drawingBufferWidth,
+    drawingBufferHeight,
+    distance,
+    pixelRatio,
+    result,
+  ) {
     update(this);
     return this._offCenterFrustum.getPixelDimensions(
       drawingBufferWidth,

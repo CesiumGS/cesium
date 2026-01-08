@@ -9,20 +9,20 @@
  * @param {string} proxy The proxy URL that will be used to requests all resources.
  */
 class DefaultProxy {
- constructor(proxy) {
-   this.proxy = proxy;
- }
+  constructor(proxy) {
+    this.proxy = proxy;
+  }
 
- /**
-  * Get the final URL to use to request a given resource.
-  *
-  * @param {string} resource The resource to request.
-  * @returns {string} proxied resource
-  */
- getURL(resource) {
-   const prefix = this.proxy.indexOf("?") === -1 ? "?" : "";
-   return this.proxy + prefix + encodeURIComponent(resource);
- }
+  /**
+   * Get the final URL to use to request a given resource.
+   *
+   * @param {string} resource The resource to request.
+   * @returns {string} proxied resource
+   */
+  getURL(resource) {
+    const prefix = this.proxy.indexOf("?") === -1 ? "?" : "";
+    return this.proxy + prefix + encodeURIComponent(resource);
+  }
 }
 
 export default DefaultProxy;

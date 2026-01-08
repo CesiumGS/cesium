@@ -49,7 +49,11 @@ class MorphWeightSpline {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("weights", weights);
     Check.defined("times", times);
-    Check.typeOf.number.greaterThanOrEquals("weights.length", weights.length, 3);
+    Check.typeOf.number.greaterThanOrEquals(
+      "weights.length",
+      weights.length,
+      3,
+    );
     if (weights.length % times.length !== 0) {
       throw new DeveloperError(
         "times.length must be a factor of weights.length.",

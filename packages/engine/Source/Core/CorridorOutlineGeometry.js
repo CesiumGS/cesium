@@ -404,7 +404,10 @@ class CorridorOutlineGeometry {
      * @type {number}
      */
     this.packedLength =
-      1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + 6;
+      1 +
+      positions.length * Cartesian3.packedLength +
+      Ellipsoid.packedLength +
+      6;
   }
 
   /**
@@ -547,7 +550,8 @@ class CorridorOutlineGeometry {
       params.offsetAttribute = corridorOutlineGeometry._offsetAttribute;
       attr = computePositionsExtruded(params);
     } else {
-      const computedPositions = CorridorGeometryLibrary.computePositions(params);
+      const computedPositions =
+        CorridorGeometryLibrary.computePositions(params);
       attr = combine(computedPositions, params.cornerType);
       attr.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(
         attr.attributes.position.values,

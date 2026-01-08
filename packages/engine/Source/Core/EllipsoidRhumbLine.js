@@ -707,7 +707,9 @@ class EllipsoidRhumbLine {
     const sigma1 = calculateSigma(ellipticity, start.latitude);
     const sigma2 = calculateSigma(ellipticity, intersectionLatitude);
     const deltaLongitude = Math.tan(heading) * (sigma2 - sigma1);
-    const longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
+    const longitude = CesiumMath.negativePiToPi(
+      start.longitude + deltaLongitude,
+    );
 
     if (defined(result)) {
       result.longitude = longitude;

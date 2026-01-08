@@ -381,7 +381,7 @@ class Cesium3DTilesTerrainData {
     thisLevel,
     descendantX,
     descendantY,
-    descendantLevel
+    descendantLevel,
   ) {
     // mesh is not defined, so there are no UVs yet, so exit early
     const mesh = this._mesh;
@@ -427,7 +427,7 @@ class Cesium3DTilesTerrainData {
     thisLevel,
     descendantX,
     descendantY,
-    descendantLevel
+    descendantLevel,
   ) {
     // mesh is not defined, so there are no UVs yet, so exit early
     const mesh = this._mesh;
@@ -542,7 +542,7 @@ class Cesium3DTilesUpsampleTerrainData {
     thisLevel,
     descendantX,
     descendantY,
-    descendantLevel
+    descendantLevel,
   ) {
     const isSynchronous = false;
     const upsampledTerrainData = upsampleMesh(
@@ -582,7 +582,7 @@ class Cesium3DTilesUpsampleTerrainData {
     thisLevel,
     descendantX,
     descendantY,
-    descendantLevel
+    descendantLevel,
   ) {
     const isSynchronous = true;
     return upsampleMesh(

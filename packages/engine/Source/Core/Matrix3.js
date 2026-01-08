@@ -45,7 +45,7 @@ class Matrix3 {
     column2Row1,
     column0Row2,
     column1Row2,
-    column2Row2
+    column2Row2,
   ) {
     this[0] = column0Row0 ?? 0.0;
     this[1] = column0Row1 ?? 0.0;
@@ -387,7 +387,17 @@ class Matrix3 {
     //>>includeEnd('debug');
 
     if (!defined(result)) {
-      return new Matrix3(scale.x, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, scale.z);
+      return new Matrix3(
+        scale.x,
+        0.0,
+        0.0,
+        0.0,
+        scale.y,
+        0.0,
+        0.0,
+        0.0,
+        scale.z,
+      );
     }
 
     result[0] = scale.x;
@@ -1340,11 +1350,17 @@ class Matrix3 {
       Matrix3.IDENTITY,
       result.unitary,
     ));
-    const diagMatrix = (result.diagonal = Matrix3.clone(matrix, result.diagonal));
+    const diagMatrix = (result.diagonal = Matrix3.clone(
+      matrix,
+      result.diagonal,
+    ));
 
     const epsilon = tolerance * computeFrobeniusNorm(diagMatrix);
 
-    while (sweep < maxSweeps && offDiagonalFrobeniusNorm(diagMatrix) > epsilon) {
+    while (
+      sweep < maxSweeps &&
+      offDiagonalFrobeniusNorm(diagMatrix) > epsilon
+    ) {
       shurDecomposition(diagMatrix, jMatrix);
       Matrix3.transpose(jMatrix, jMatrixTranspose);
       Matrix3.multiply(diagMatrix, jMatrix, diagMatrix);

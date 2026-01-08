@@ -443,7 +443,9 @@ class RectangleOutlineGeometry {
       if (defined(rectangleGeometry._offsetAttribute)) {
         const size = geometry.attributes.position.values.length / 3;
         let offsetAttribute = new Uint8Array(size);
-        if (rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
+        if (
+          rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.TOP
+        ) {
           offsetAttribute = offsetAttribute.fill(1, 0, size / 2);
         } else {
           offsetValue =
@@ -474,12 +476,13 @@ class RectangleOutlineGeometry {
       boundingSphere = BoundingSphere.union(topBS, bottomBS);
     } else {
       geometry = constructRectangle(rectangleGeometry, computedOptions);
-      geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(
-        geometry.attributes.position.values,
-        surfaceHeight,
-        ellipsoid,
-        false,
-      );
+      geometry.attributes.position.values =
+        PolygonPipeline.scaleToGeodeticHeight(
+          geometry.attributes.position.values,
+          surfaceHeight,
+          ellipsoid,
+          false,
+        );
 
       if (defined(rectangleGeometry._offsetAttribute)) {
         const length = geometry.attributes.position.values.length;

@@ -1641,7 +1641,9 @@ class Resource {
       // and there's no good way to detect support for these options. For now, continue to use 'from-image'. See: https://github.com/CesiumGS/cesium/issues/12846
       imageOrientation: options.flipY ? "flipY" : "none",
       premultiplyAlpha: options.premultiplyAlpha ? "premultiply" : "none",
-      colorSpaceConversion: options.skipColorSpaceConversion ? "none" : "default",
+      colorSpaceConversion: options.skipColorSpaceConversion
+        ? "none"
+        : "default",
     });
   }
 }

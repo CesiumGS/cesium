@@ -101,7 +101,8 @@ class RequestScheduler {
       RequestScheduler.requestsByServer[serverKey] ??
       RequestScheduler.maximumRequestsPerServer;
     const hasOpenSlotsServer =
-      numberOfActiveRequestsByServer[serverKey] + desiredRequests <= maxRequests;
+      numberOfActiveRequestsByServer[serverKey] + desiredRequests <=
+      maxRequests;
 
     return hasOpenSlotsServer;
   }

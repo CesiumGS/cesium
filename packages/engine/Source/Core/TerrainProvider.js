@@ -173,7 +173,7 @@ class TerrainProvider {
     westIndicesSouthToNorth,
     southIndicesEastToWest,
     eastIndicesNorthToSouth,
-    northIndicesWestToEast
+    northIndicesWestToEast,
   ) {
     return (
       westIndicesSouthToNorth.length +
@@ -241,7 +241,7 @@ class TerrainProvider {
     northIndicesWestToEast,
     vertexCount,
     indices,
-    offset
+    offset,
   ) {
     let vertexIndex = vertexCount;
     offset = addSkirtIndices(
@@ -286,7 +286,7 @@ class TerrainProvider {
     northIndicesWestToEast,
     vertexCount,
     indices,
-    offset
+    offset,
   ) {
     // Add skirt indices without filled corners
     TerrainProvider.addSkirtIndices(
@@ -352,7 +352,11 @@ class TerrainProvider {
    * @param {number} numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
    * @returns {number} An estimated geometric error.
    */
-  static getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
+  static getEstimatedLevelZeroGeometricErrorForAHeightmap(
+    ellipsoid,
+    tileImageWidth,
+    numberOfTilesAtLevelZero,
+  ) {
     return (
       (ellipsoid.maximumRadius *
         2 *

@@ -9,19 +9,19 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @abstract
  */
 class GeometryFactory {
- constructor() {
-   DeveloperError.throwInstantiationError();
- }
+  constructor() {
+    DeveloperError.throwInstantiationError();
+  }
 
- /**
-  * Returns a geometry.
-  *
-  * @param {GeometryFactory} geometryFactory A description of the circle.
-  * @returns {Geometry|undefined} The computed vertices and indices.
-  */
- static createGeometry(geometryFactory) {
-   DeveloperError.throwInstantiationError();
- }
+  /**
+   * Returns a geometry.
+   *
+   * @param {GeometryFactory} geometryFactory A description of the circle.
+   * @returns {Geometry|undefined} The computed vertices and indices.
+   */
+  static createGeometry(geometryFactory) {
+    DeveloperError.throwInstantiationError();
+  }
 }
 
 export default GeometryFactory;

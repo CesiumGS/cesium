@@ -33,7 +33,11 @@ class AxisAlignedBoundingBox {
 
     // If center was not defined, compute it.
     if (!defined(center)) {
-      center = Cartesian3.midpoint(this.minimum, this.maximum, new Cartesian3());
+      center = Cartesian3.midpoint(
+        this.minimum,
+        this.maximum,
+        new Cartesian3(),
+      );
     } else {
       center = Cartesian3.clone(center);
     }

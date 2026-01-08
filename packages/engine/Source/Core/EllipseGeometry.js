@@ -1057,7 +1057,10 @@ class EllipseGeometry {
 
     result._center = Cartesian3.clone(center, result._center);
     result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._semiMajorAxis = semiMajorAxis;
     result._semiMinorAxis = semiMinorAxis;
     result._rotation = rotation;

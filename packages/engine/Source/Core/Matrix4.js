@@ -70,7 +70,7 @@ class Matrix4 {
     column0Row3,
     column1Row3,
     column2Row3,
-    column3Row3
+    column3Row3,
   ) {
     this[0] = column0Row0 ?? 0.0;
     this[1] = column0Row1 ?? 0.0;
@@ -418,7 +418,12 @@ class Matrix4 {
    *   new Cesium.Cartesian3(7.0, 8.0, 9.0), // scale
    *   result);
    */
-  static fromTranslationQuaternionRotationScale(translation, rotation, scale, result) {
+  static fromTranslationQuaternionRotationScale(
+    translation,
+    rotation,
+    scale,
+    result,
+  ) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("translation", translation);
     Check.typeOf.object("rotation", rotation);
@@ -510,7 +515,11 @@ class Matrix4 {
     Check.typeOf.object("translation", translation);
     //>>includeEnd('debug');
 
-    return Matrix4.fromRotationTranslation(Matrix3.IDENTITY, translation, result);
+    return Matrix4.fromRotationTranslation(
+      Matrix3.IDENTITY,
+      translation,
+      result,
+    );
   }
 
   /**
@@ -835,7 +844,15 @@ class Matrix4 {
    * @param {Matrix4} result The object in which the result will be stored.
    * @returns {Matrix4} The modified result parameter.
    */
-  static computeOrthographicOffCenter(left, right, bottom, top, near, far, result) {
+  static computeOrthographicOffCenter(
+    left,
+    right,
+    bottom,
+    top,
+    near,
+    far,
+    result,
+  ) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number("left", left);
     Check.typeOf.number("right", right);
@@ -888,7 +905,15 @@ class Matrix4 {
    * @param {Matrix4} result The object in which the result will be stored.
    * @returns {Matrix4} The modified result parameter.
    */
-  static computePerspectiveOffCenter(left, right, bottom, top, near, far, result) {
+  static computePerspectiveOffCenter(
+    left,
+    right,
+    bottom,
+    top,
+    near,
+    far,
+    result,
+  ) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number("left", left);
     Check.typeOf.number("right", right);
@@ -937,7 +962,14 @@ class Matrix4 {
    * @param {Matrix4} result The object in which the result will be stored.
    * @returns {Matrix4} The modified result parameter.
    */
-  static computeInfinitePerspectiveOffCenter(left, right, bottom, top, near, result) {
+  static computeInfinitePerspectiveOffCenter(
+    left,
+    right,
+    bottom,
+    top,
+    near,
+    result,
+  ) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number("left", left);
     Check.typeOf.number("right", right);
@@ -992,7 +1024,12 @@ class Matrix4 {
    *     height : 768.0
    * }, 0.0, 1.0, new Cesium.Matrix4());
    */
-  static computeViewportTransformation(viewport, nearDepthRange, farDepthRange, result) {
+  static computeViewportTransformation(
+    viewport,
+    nearDepthRange,
+    farDepthRange,
+    result,
+  ) {
     if (!defined(result)) {
       result = new Matrix4();
     }
@@ -2131,10 +2168,14 @@ class Matrix4 {
     const vZ = cartesian.z;
     const vW = cartesian.w;
 
-    const x = matrix[0] * vX + matrix[4] * vY + matrix[8] * vZ + matrix[12] * vW;
-    const y = matrix[1] * vX + matrix[5] * vY + matrix[9] * vZ + matrix[13] * vW;
-    const z = matrix[2] * vX + matrix[6] * vY + matrix[10] * vZ + matrix[14] * vW;
-    const w = matrix[3] * vX + matrix[7] * vY + matrix[11] * vZ + matrix[15] * vW;
+    const x =
+      matrix[0] * vX + matrix[4] * vY + matrix[8] * vZ + matrix[12] * vW;
+    const y =
+      matrix[1] * vX + matrix[5] * vY + matrix[9] * vZ + matrix[13] * vW;
+    const z =
+      matrix[2] * vX + matrix[6] * vY + matrix[10] * vZ + matrix[14] * vW;
+    const w =
+      matrix[3] * vX + matrix[7] * vY + matrix[11] * vZ + matrix[15] * vW;
 
     result.x = x;
     result.y = y;

@@ -154,7 +154,11 @@ class EllipsoidOutlineGeometry {
     const radii = Cartesian3.unpack(array, startingIndex, scratchRadii);
     startingIndex += Cartesian3.packedLength;
 
-    const innerRadii = Cartesian3.unpack(array, startingIndex, scratchInnerRadii);
+    const innerRadii = Cartesian3.unpack(
+      array,
+      startingIndex,
+      scratchInnerRadii,
+    );
     startingIndex += Cartesian3.packedLength;
 
     const minimumClock = array[startingIndex++];
@@ -321,7 +325,8 @@ class EllipsoidOutlineGeometry {
     sinPhi.length = subdivisions;
     cosPhi.length = subdivisions;
     for (i = 0; i < subdivisions; i++) {
-      phi = minimumCone + (i * (maximumCone - minimumCone)) / (subdivisions - 1);
+      phi =
+        minimumCone + (i * (maximumCone - minimumCone)) / (subdivisions - 1);
       sinPhi[i] = sin(phi);
       cosPhi[i] = cos(phi);
     }

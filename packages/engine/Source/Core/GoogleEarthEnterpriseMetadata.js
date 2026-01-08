@@ -338,7 +338,9 @@ class GoogleEarthEnterpriseMetadata {
           const key = keys[i];
           const r = result[key];
           if (r !== null) {
-            const info = GoogleEarthEnterpriseTileInformation.clone(result[key]);
+            const info = GoogleEarthEnterpriseTileInformation.clone(
+              result[key],
+            );
             const keyLength = key.length;
             if (keyLength === topLevelKeyLength) {
               info.setParent(root);

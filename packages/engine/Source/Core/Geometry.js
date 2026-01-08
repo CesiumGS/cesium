@@ -227,7 +227,12 @@ class Geometry {
    * @returns {number[]} An array of 6 numbers specifying [minimum point, u extent, v extent] as points in the "cartographic" system.
    * @private
    */
-  static _textureCoordinateRotationPoints(positions, stRotation, ellipsoid, boundingRectangle) {
+  static _textureCoordinateRotationPoints(
+    positions,
+    stRotation,
+    ellipsoid,
+    boundingRectangle,
+  ) {
     let i;
 
     // Create a local east-north-up coordinate system centered on the polygon's bounding rectangle.

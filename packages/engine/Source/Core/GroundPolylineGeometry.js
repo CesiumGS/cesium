@@ -440,7 +440,12 @@ class GroundPolylineGeometry {
       minHeight,
       previousBottom,
     );
-    nextBottom = getPosition(ellipsoid, nextCartographic, minHeight, nextBottom);
+    nextBottom = getPosition(
+      ellipsoid,
+      nextCartographic,
+      minHeight,
+      nextBottom,
+    );
     vertexBottom = getPosition(
       ellipsoid,
       startCartographic,

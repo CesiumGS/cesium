@@ -219,7 +219,9 @@ class CoplanarPolygonOutlineGeometry {
     }
 
     const geometry = GeometryPipeline.combineInstances(geometries)[0];
-    const boundingSphere = BoundingSphere.fromPoints(polygonHierarchy.positions);
+    const boundingSphere = BoundingSphere.fromPoints(
+      polygonHierarchy.positions,
+    );
 
     return new Geometry({
       attributes: geometry.attributes,

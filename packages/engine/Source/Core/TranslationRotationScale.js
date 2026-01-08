@@ -16,45 +16,45 @@ const defaultRotation = Quaternion.IDENTITY;
  * @param {Cartesian3} [scale=new Cartesian3(1.0, 1.0, 1.0)] A {@link Cartesian3} specifying the (x, y, z) scaling to apply to the node.
  */
 class TranslationRotationScale {
- constructor(translation, rotation, scale) {
-   /**
-    * Gets or sets the (x, y, z) translation to apply to the node.
-    * @type {Cartesian3}
-    * @default Cartesian3.ZERO
-    */
-   this.translation = Cartesian3.clone(translation ?? defaultTranslation);
+  constructor(translation, rotation, scale) {
+    /**
+     * Gets or sets the (x, y, z) translation to apply to the node.
+     * @type {Cartesian3}
+     * @default Cartesian3.ZERO
+     */
+    this.translation = Cartesian3.clone(translation ?? defaultTranslation);
 
-   /**
-    * Gets or sets the (x, y, z, w) rotation to apply to the node.
-    * @type {Quaternion}
-    * @default Quaternion.IDENTITY
-    */
-   this.rotation = Quaternion.clone(rotation ?? defaultRotation);
+    /**
+     * Gets or sets the (x, y, z, w) rotation to apply to the node.
+     * @type {Quaternion}
+     * @default Quaternion.IDENTITY
+     */
+    this.rotation = Quaternion.clone(rotation ?? defaultRotation);
 
-   /**
-    * Gets or sets the (x, y, z) scaling to apply to the node.
-    * @type {Cartesian3}
-    * @default new Cartesian3(1.0, 1.0, 1.0)
-    */
-   this.scale = Cartesian3.clone(scale ?? defaultScale);
- }
+    /**
+     * Gets or sets the (x, y, z) scaling to apply to the node.
+     * @type {Cartesian3}
+     * @default new Cartesian3(1.0, 1.0, 1.0)
+     */
+    this.scale = Cartesian3.clone(scale ?? defaultScale);
+  }
 
- /**
-  * Compares this instance against the provided instance and returns
-  * <code>true</code> if they are equal, <code>false</code> otherwise.
-  *
-  * @param {TranslationRotationScale} [right] The right hand side TranslationRotationScale.
-  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
-  */
- equals(right) {
-   return (
-     this === right ||
-     (defined(right) &&
-       Cartesian3.equals(this.translation, right.translation) &&
-       Quaternion.equals(this.rotation, right.rotation) &&
-       Cartesian3.equals(this.scale, right.scale))
-   );
- }
+  /**
+   * Compares this instance against the provided instance and returns
+   * <code>true</code> if they are equal, <code>false</code> otherwise.
+   *
+   * @param {TranslationRotationScale} [right] The right hand side TranslationRotationScale.
+   * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+   */
+  equals(right) {
+    return (
+      this === right ||
+      (defined(right) &&
+        Cartesian3.equals(this.translation, right.translation) &&
+        Quaternion.equals(this.rotation, right.rotation) &&
+        Cartesian3.equals(this.scale, right.scale))
+    );
+  }
 }
 
 export default TranslationRotationScale;
