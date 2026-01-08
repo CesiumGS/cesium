@@ -613,10 +613,13 @@ void main()
 #ifdef HAS_SDF
     float dist = sampleNearest(u_sdf, v_textureCoordinates.xy);
     //float dist = sampleBilinear(u_sdf, v_textureCoordinates.xy);
-    float lwidth = 5.0;
+    //float cameraDist = length(czm_view[3]);
+    float maxRadii = max(czm_ellipsoidRadii.x, max(czm_ellipsoidRadii.y, czm_ellipsoidRadii.z));
+    float cameraScaling = clamp( (cameraDist - maxRadii)/1000.0, 1.0, 2.0);
+    float lwidth = 2.0 * cameraScaling;
     if (dist < lwidth) {
         float renormalized = clamp((lwidth - dist) / lwidth, 0.0, 1.0);
-        out_FragColor = vec4(renormalized, renormalized, 0.0, renormalized);
+        out_FragColor = vec4(renormalized, renormalized, 0.0, renormalized*renormalized);
     }
 #endif
 }
