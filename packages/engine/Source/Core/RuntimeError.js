@@ -19,6 +19,8 @@ import defined from "./defined.js";
  */
 class RuntimeError extends Error {
   constructor(message) {
+    super(message);
+
     /**
      * 'RuntimeError' indicating that this exception was thrown due to a runtime error.
      * @type {string}
@@ -59,7 +61,5 @@ class RuntimeError extends Error {
     return str;
   }
 }
-
-if (defined(Object.create)) {}
 
 export default RuntimeError;
