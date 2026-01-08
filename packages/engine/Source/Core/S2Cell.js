@@ -155,304 +155,306 @@ const S2_POSITION_TO_ORIENTATION_MASK = [
  * @param {bigint} [cellId] The 64-bit S2CellId.
  * @private
  */
-function S2Cell(cellId) {
-  if (!FeatureDetection.supportsBigInt()) {
-    throw new RuntimeError("S2 required BigInt support");
-  }
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(cellId)) {
-    throw new DeveloperError("cell ID is required.");
-  }
-  if (!S2Cell.isValidId(cellId)) {
-    throw new DeveloperError("cell ID is invalid.");
-  }
-  //>>includeEnd('debug');
-
-  this._cellId = cellId;
-  this._level = S2Cell.getLevel(cellId);
-}
-
-/**
- * Creates a new S2Cell from a token. A token is a hexadecimal representation of the 64-bit S2CellId.
- *
- * @param {string} token The token for the S2 Cell.
- * @returns {S2Cell} Returns a new S2Cell.
- * @private
- */
-S2Cell.fromToken = function (token) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("token", token);
-  if (!S2Cell.isValidToken(token)) {
-    throw new DeveloperError("token is invalid.");
-  }
-  //>>includeEnd('debug');
-
-  return new S2Cell(S2Cell.getIdFromToken(token));
-};
-
-/**
- * Validates an S2 cell ID.
- *
- * @param {bigint} [cellId] The S2CellId.
- * @returns {boolean} Returns true if the cell ID is valid, returns false otherwise.
- * @private
- */
-S2Cell.isValidId = function (cellId) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.bigint("cellId", cellId);
-  //>>includeEnd('debug');
-
-  // Check if sentinel bit is missing.
-  if (cellId <= 0) {
-    return false;
-  }
-
-  // Check if face bits indicate a valid value, in range [0-5].
-  if (cellId >> BigInt(S2_POSITION_BITS) > 5) {
-    return false;
-  }
-
-  // Check trailing 1 bit is in one of the even bit positions allowed for the 30 levels, using a bitmask.
-  const lowestSetBit = cellId & (~cellId + BigInt(1));
-  if (!(lowestSetBit & BigInt("0x1555555555555555"))) {
-    return false;
-  }
-
-  return true;
-};
-
-/**
- * Validates an S2 cell token.
- *
- * @param {string} [token] The hexadecimal representation of an S2CellId.
- * @returns {boolean} Returns true if the token is valid, returns false otherwise.
- * @private
- */
-S2Cell.isValidToken = function (token) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("token", token);
-  //>>includeEnd('debug');
-
-  if (!/^[0-9a-fA-F]{1,16}$/.test(token)) {
-    return false;
-  }
-
-  return S2Cell.isValidId(S2Cell.getIdFromToken(token));
-};
-
-/**
- * Converts an S2 cell token to a 64-bit S2 cell ID.
- *
- * @param {string} [token] The hexadecimal representation of an S2CellId. Expected to be a valid S2 token.
- * @returns {bigint} Returns the S2 cell ID.
- * @private
- */
-S2Cell.getIdFromToken = function (token) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("token", token);
-  //>>includeEnd('debug');
-
-  return BigInt("0x" + token + "0".repeat(16 - token.length)); // eslint-disable-line
-};
-
-/**
- * Converts a 64-bit S2 cell ID to an S2 cell token.
- *
- * @param {bigint} [cellId] The S2 cell ID.
- * @returns {string} Returns hexadecimal representation of an S2CellId.
- * @private
- */
-S2Cell.getTokenFromId = function (cellId) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.bigint("cellId", cellId);
-  //>>includeEnd('debug');
-
-  const trailingZeroHexChars = Math.floor(countTrailingZeroBits(cellId) / 4);
-  const hexString = cellId.toString(16).replace(/0*$/, "");
-
-  const zeroString = Array(17 - trailingZeroHexChars - hexString.length).join(
-    "0",
-  );
-  return zeroString + hexString;
-};
-
-/**
- * Gets the level of the cell from the cell ID.
- *
- * @param {bigint} [cellId] The S2 cell ID.
- * @returns {number} Returns the level of the cell.
- * @private
- */
-S2Cell.getLevel = function (cellId) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.bigint("cellId", cellId);
-  if (!S2Cell.isValidId(cellId)) {
-    throw new DeveloperError();
-  }
-  //>>includeEnd('debug');
-
-  let lsbPosition = 0;
-  while (cellId !== BigInt(0)) {
-    if (cellId & BigInt(1)) {
-      break;
+class S2Cell {
+  constructor(cellId) {
+    if (!FeatureDetection.supportsBigInt()) {
+      throw new RuntimeError("S2 required BigInt support");
     }
-    lsbPosition++;
-    cellId = cellId >> BigInt(1);
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(cellId)) {
+      throw new DeveloperError("cell ID is required.");
+    }
+    if (!S2Cell.isValidId(cellId)) {
+      throw new DeveloperError("cell ID is invalid.");
+    }
+    //>>includeEnd('debug');
+
+    this._cellId = cellId;
+    this._level = S2Cell.getLevel(cellId);
   }
 
-  // We use (>> 1) because there are 2 bits per level.
-  return S2_MAX_LEVEL - (lsbPosition >> 1);
-};
+  /**
+   * Creates a new S2Cell from a token. A token is a hexadecimal representation of the 64-bit S2CellId.
+   *
+   * @param {string} token The token for the S2 Cell.
+   * @returns {S2Cell} Returns a new S2Cell.
+   * @private
+   */
+  static fromToken(token) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("token", token);
+    if (!S2Cell.isValidToken(token)) {
+      throw new DeveloperError("token is invalid.");
+    }
+    //>>includeEnd('debug');
 
-/**
- * Gets the child cell of the cell at the given index.
- *
- * @param {number} index An integer index of the child.
- * @returns {S2Cell} The child of the S2Cell.
- * @private
- */
-S2Cell.prototype.getChild = function (index) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("index", index);
-  if (index < 0 || index > 3) {
-    throw new DeveloperError("child index must be in the range [0-3].");
-  }
-  if (this._level === 30) {
-    throw new DeveloperError("cannot get child of leaf cell.");
-  }
-  //>>includeEnd('debug');
-
-  // Shift sentinel bit 2 positions to the right.
-  const newLsb = lsb(this._cellId) >> BigInt(2);
-  // Insert child index before the sentinel bit.
-  const childCellId = this._cellId + BigInt(2 * index + 1 - 4) * newLsb;
-  return new S2Cell(childCellId);
-};
-
-/**
- * Gets the parent cell of an S2Cell.
- *
- * @returns {S2Cell} Returns the parent of the S2Cell.
- * @private
- */
-S2Cell.prototype.getParent = function () {
-  //>>includeStart('debug', pragmas.debug);
-  if (this._level === 0) {
-    throw new DeveloperError("cannot get parent of root cell.");
-  }
-  //>>includeEnd('debug');
-  // Shift the sentinel bit 2 positions to the left.
-  const newLsb = lsb(this._cellId) << BigInt(2);
-  // Erase the left over bits to the right of the sentinel bit.
-  return new S2Cell((this._cellId & (~newLsb + BigInt(1))) | newLsb);
-};
-
-/**
- * Gets the parent cell at the given level.
- *
- * @returns {S2Cell} Returns the parent of the S2Cell.
- * @private
- */
-S2Cell.prototype.getParentAtLevel = function (level) {
-  //>>includeStart('debug', pragmas.debug);
-  if (this._level === 0 || level < 0 || this._level < level) {
-    throw new DeveloperError("cannot get parent at invalid level.");
-  }
-  //>>includeEnd('debug');
-  const newLsb = lsbForLevel(level);
-  return new S2Cell((this._cellId & -newLsb) | newLsb);
-};
-
-/**
- * Get center of the S2 cell.
- *
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
- * @returns {Cartesian3} The position of center of the S2 cell.
- * @private
- */
-S2Cell.prototype.getCenter = function (ellipsoid) {
-  ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
-
-  let center = getS2Center(this._cellId, this._level);
-  // Normalize XYZ.
-  center = Cartesian3.normalize(center, center);
-  const cartographic = new Cartographic.fromCartesian(
-    center,
-    Ellipsoid.UNIT_SPHERE,
-  );
-  // Interpret as geodetic coordinates on the ellipsoid.
-  return Cartographic.toCartesian(cartographic, ellipsoid, new Cartesian3());
-};
-
-/**
- * Get vertex of the S2 cell. Vertices are indexed in CCW order.
- *
- * @param {number} index An integer index of the vertex. Must be in the range [0-3].
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
- * @returns {Cartesian3} The position of the vertex of the S2 cell.
- * @private
- */
-S2Cell.prototype.getVertex = function (index, ellipsoid) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("index", index);
-  if (index < 0 || index > 3) {
-    throw new DeveloperError("vertex index must be in the range [0-3].");
-  }
-  //>>includeEnd('debug');
-
-  ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
-
-  let vertex = getS2Vertex(this._cellId, this._level, index);
-  // Normalize XYZ.
-  vertex = Cartesian3.normalize(vertex, vertex);
-  const cartographic = new Cartographic.fromCartesian(
-    vertex,
-    Ellipsoid.UNIT_SPHERE,
-  );
-  // Interpret as geodetic coordinates on the ellipsoid.
-  return Cartographic.toCartesian(cartographic, ellipsoid, new Cartesian3());
-};
-
-/**
- * Creates an S2Cell from its face, position along the Hilbert curve for a given level.
- *
- * @param {number} face The root face of S2 this cell is on. Must be in the range [0-5].
- * @param {bigint} position The position along the Hilbert curve. Must be in the range [0-4**level).
- * @param {number} level The level of the S2 curve. Must be in the range [0-30].
- * @returns {S2Cell} A new S2Cell from the given parameters.
- * @private
- */
-S2Cell.fromFacePositionLevel = function (face, position, level) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.bigint("position", position);
-  if (face < 0 || face > 5) {
-    throw new DeveloperError("Invalid S2 Face (must be within 0-5)");
+    return new S2Cell(S2Cell.getIdFromToken(token));
   }
 
-  if (level < 0 || level > S2_MAX_LEVEL) {
-    throw new DeveloperError("Invalid level (must be within 0-30)");
-  }
-  if (position < 0 || position >= Math.pow(4, level)) {
-    throw new DeveloperError("Invalid Hilbert position for level");
-  }
-  //>>includeEnd('debug');
+  /**
+   * Validates an S2 cell ID.
+   *
+   * @param {bigint} [cellId] The S2CellId.
+   * @returns {boolean} Returns true if the cell ID is valid, returns false otherwise.
+   * @private
+   */
+  static isValidId(cellId) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.bigint("cellId", cellId);
+    //>>includeEnd('debug');
 
-  const faceBitString =
-    (face < 4 ? "0" : "") + (face < 2 ? "0" : "") + face.toString(2);
-  const positionBitString = position.toString(2);
-  const positionPrefixPadding = Array(
-    2 * level - positionBitString.length + 1,
-  ).join("0");
-  const positionSuffixPadding = Array(S2_POSITION_BITS - 2 * level).join("0");
+    // Check if sentinel bit is missing.
+    if (cellId <= 0) {
+      return false;
+    }
 
-  const cellId = BigInt(
-    `0b${faceBitString}${positionPrefixPadding}${positionBitString}1${
-      // Adding the sentinel bit that always follows the position bits.
-      positionSuffixPadding
-    }`,
-  );
-  return new S2Cell(cellId);
-};
+    // Check if face bits indicate a valid value, in range [0-5].
+    if (cellId >> BigInt(S2_POSITION_BITS) > 5) {
+      return false;
+    }
+
+    // Check trailing 1 bit is in one of the even bit positions allowed for the 30 levels, using a bitmask.
+    const lowestSetBit = cellId & (~cellId + BigInt(1));
+    if (!(lowestSetBit & BigInt("0x1555555555555555"))) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Validates an S2 cell token.
+   *
+   * @param {string} [token] The hexadecimal representation of an S2CellId.
+   * @returns {boolean} Returns true if the token is valid, returns false otherwise.
+   * @private
+   */
+  static isValidToken(token) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("token", token);
+    //>>includeEnd('debug');
+
+    if (!/^[0-9a-fA-F]{1,16}$/.test(token)) {
+      return false;
+    }
+
+    return S2Cell.isValidId(S2Cell.getIdFromToken(token));
+  }
+
+  /**
+   * Converts an S2 cell token to a 64-bit S2 cell ID.
+   *
+   * @param {string} [token] The hexadecimal representation of an S2CellId. Expected to be a valid S2 token.
+   * @returns {bigint} Returns the S2 cell ID.
+   * @private
+   */
+  static getIdFromToken(token) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("token", token);
+    //>>includeEnd('debug');
+
+    return BigInt("0x" + token + "0".repeat(16 - token.length)); // eslint-disable-line
+  }
+
+  /**
+   * Converts a 64-bit S2 cell ID to an S2 cell token.
+   *
+   * @param {bigint} [cellId] The S2 cell ID.
+   * @returns {string} Returns hexadecimal representation of an S2CellId.
+   * @private
+   */
+  static getTokenFromId(cellId) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.bigint("cellId", cellId);
+    //>>includeEnd('debug');
+
+    const trailingZeroHexChars = Math.floor(countTrailingZeroBits(cellId) / 4);
+    const hexString = cellId.toString(16).replace(/0*$/, "");
+
+    const zeroString = Array(17 - trailingZeroHexChars - hexString.length).join(
+      "0",
+    );
+    return zeroString + hexString;
+  }
+
+  /**
+   * Gets the level of the cell from the cell ID.
+   *
+   * @param {bigint} [cellId] The S2 cell ID.
+   * @returns {number} Returns the level of the cell.
+   * @private
+   */
+  static getLevel(cellId) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.bigint("cellId", cellId);
+    if (!S2Cell.isValidId(cellId)) {
+      throw new DeveloperError();
+    }
+    //>>includeEnd('debug');
+
+    let lsbPosition = 0;
+    while (cellId !== BigInt(0)) {
+      if (cellId & BigInt(1)) {
+        break;
+      }
+      lsbPosition++;
+      cellId = cellId >> BigInt(1);
+    }
+
+    // We use (>> 1) because there are 2 bits per level.
+    return S2_MAX_LEVEL - (lsbPosition >> 1);
+  }
+
+  /**
+   * Gets the child cell of the cell at the given index.
+   *
+   * @param {number} index An integer index of the child.
+   * @returns {S2Cell} The child of the S2Cell.
+   * @private
+   */
+  getChild(index) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("index", index);
+    if (index < 0 || index > 3) {
+      throw new DeveloperError("child index must be in the range [0-3].");
+    }
+    if (this._level === 30) {
+      throw new DeveloperError("cannot get child of leaf cell.");
+    }
+    //>>includeEnd('debug');
+
+    // Shift sentinel bit 2 positions to the right.
+    const newLsb = lsb(this._cellId) >> BigInt(2);
+    // Insert child index before the sentinel bit.
+    const childCellId = this._cellId + BigInt(2 * index + 1 - 4) * newLsb;
+    return new S2Cell(childCellId);
+  }
+
+  /**
+   * Gets the parent cell of an S2Cell.
+   *
+   * @returns {S2Cell} Returns the parent of the S2Cell.
+   * @private
+   */
+  getParent() {
+    //>>includeStart('debug', pragmas.debug);
+    if (this._level === 0) {
+      throw new DeveloperError("cannot get parent of root cell.");
+    }
+    //>>includeEnd('debug');
+    // Shift the sentinel bit 2 positions to the left.
+    const newLsb = lsb(this._cellId) << BigInt(2);
+    // Erase the left over bits to the right of the sentinel bit.
+    return new S2Cell((this._cellId & (~newLsb + BigInt(1))) | newLsb);
+  }
+
+  /**
+   * Gets the parent cell at the given level.
+   *
+   * @returns {S2Cell} Returns the parent of the S2Cell.
+   * @private
+   */
+  getParentAtLevel(level) {
+    //>>includeStart('debug', pragmas.debug);
+    if (this._level === 0 || level < 0 || this._level < level) {
+      throw new DeveloperError("cannot get parent at invalid level.");
+    }
+    //>>includeEnd('debug');
+    const newLsb = lsbForLevel(level);
+    return new S2Cell((this._cellId & -newLsb) | newLsb);
+  }
+
+  /**
+   * Get center of the S2 cell.
+   *
+   * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
+   * @returns {Cartesian3} The position of center of the S2 cell.
+   * @private
+   */
+  getCenter(ellipsoid) {
+    ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
+
+    let center = getS2Center(this._cellId, this._level);
+    // Normalize XYZ.
+    center = Cartesian3.normalize(center, center);
+    const cartographic = new Cartographic.fromCartesian(
+      center,
+      Ellipsoid.UNIT_SPHERE,
+    );
+    // Interpret as geodetic coordinates on the ellipsoid.
+    return Cartographic.toCartesian(cartographic, ellipsoid, new Cartesian3());
+  }
+
+  /**
+   * Get vertex of the S2 cell. Vertices are indexed in CCW order.
+   *
+   * @param {number} index An integer index of the vertex. Must be in the range [0-3].
+   * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
+   * @returns {Cartesian3} The position of the vertex of the S2 cell.
+   * @private
+   */
+  getVertex(index, ellipsoid) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("index", index);
+    if (index < 0 || index > 3) {
+      throw new DeveloperError("vertex index must be in the range [0-3].");
+    }
+    //>>includeEnd('debug');
+
+    ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
+
+    let vertex = getS2Vertex(this._cellId, this._level, index);
+    // Normalize XYZ.
+    vertex = Cartesian3.normalize(vertex, vertex);
+    const cartographic = new Cartographic.fromCartesian(
+      vertex,
+      Ellipsoid.UNIT_SPHERE,
+    );
+    // Interpret as geodetic coordinates on the ellipsoid.
+    return Cartographic.toCartesian(cartographic, ellipsoid, new Cartesian3());
+  }
+
+  /**
+   * Creates an S2Cell from its face, position along the Hilbert curve for a given level.
+   *
+   * @param {number} face The root face of S2 this cell is on. Must be in the range [0-5].
+   * @param {bigint} position The position along the Hilbert curve. Must be in the range [0-4**level).
+   * @param {number} level The level of the S2 curve. Must be in the range [0-30].
+   * @returns {S2Cell} A new S2Cell from the given parameters.
+   * @private
+   */
+  static fromFacePositionLevel(face, position, level) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.bigint("position", position);
+    if (face < 0 || face > 5) {
+      throw new DeveloperError("Invalid S2 Face (must be within 0-5)");
+    }
+
+    if (level < 0 || level > S2_MAX_LEVEL) {
+      throw new DeveloperError("Invalid level (must be within 0-30)");
+    }
+    if (position < 0 || position >= Math.pow(4, level)) {
+      throw new DeveloperError("Invalid Hilbert position for level");
+    }
+    //>>includeEnd('debug');
+
+    const faceBitString =
+      (face < 4 ? "0" : "") + (face < 2 ? "0" : "") + face.toString(2);
+    const positionBitString = position.toString(2);
+    const positionPrefixPadding = Array(
+      2 * level - positionBitString.length + 1,
+    ).join("0");
+    const positionSuffixPadding = Array(S2_POSITION_BITS - 2 * level).join("0");
+
+    const cellId = BigInt(
+      `0b${faceBitString}${positionPrefixPadding}${positionBitString}1${
+        // Adding the sentinel bit that always follows the position bits.
+        positionSuffixPadding
+      }`,
+    );
+    return new S2Cell(cellId);
+  }
+}
 
 /**
  * @private

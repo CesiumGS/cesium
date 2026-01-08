@@ -40,107 +40,107 @@ import JulianDate from "./JulianDate.js";
  * @see ClockRange
  * @see JulianDate
  */
-function Clock(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class Clock {
+  constructor(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  let currentTime = options.currentTime;
-  let startTime = options.startTime;
-  let stopTime = options.stopTime;
+    let currentTime = options.currentTime;
+    let startTime = options.startTime;
+    let stopTime = options.stopTime;
 
-  if (!defined(currentTime)) {
-    // if not specified, current time is the start time,
-    // or if that is not specified, 1 day before the stop time,
-    // or if that is not specified, then now.
-    if (defined(startTime)) {
-      currentTime = JulianDate.clone(startTime);
-    } else if (defined(stopTime)) {
-      currentTime = JulianDate.addDays(stopTime, -1.0, new JulianDate());
+    if (!defined(currentTime)) {
+      // if not specified, current time is the start time,
+      // or if that is not specified, 1 day before the stop time,
+      // or if that is not specified, then now.
+      if (defined(startTime)) {
+        currentTime = JulianDate.clone(startTime);
+      } else if (defined(stopTime)) {
+        currentTime = JulianDate.addDays(stopTime, -1.0, new JulianDate());
+      } else {
+        currentTime = JulianDate.now();
+      }
     } else {
-      currentTime = JulianDate.now();
+      currentTime = JulianDate.clone(currentTime);
     }
-  } else {
-    currentTime = JulianDate.clone(currentTime);
+
+    if (!defined(startTime)) {
+      // if not specified, start time is the current time
+      // (as determined above)
+      startTime = JulianDate.clone(currentTime);
+    } else {
+      startTime = JulianDate.clone(startTime);
+    }
+
+    if (!defined(stopTime)) {
+      // if not specified, stop time is 1 day after the start time
+      // (as determined above)
+      stopTime = JulianDate.addDays(startTime, 1.0, new JulianDate());
+    } else {
+      stopTime = JulianDate.clone(stopTime);
+    }
+
+    //>>includeStart('debug', pragmas.debug);
+    if (JulianDate.greaterThan(startTime, stopTime)) {
+      throw new DeveloperError("startTime must come before stopTime.");
+    }
+    //>>includeEnd('debug');
+
+    /**
+     * The start time of the clock.
+     * @type {JulianDate}
+     */
+    this.startTime = startTime;
+
+    /**
+     * The stop time of the clock.
+     * @type {JulianDate}
+     */
+    this.stopTime = stopTime;
+
+    /**
+     * Determines how the clock should behave when
+     * {@link Clock#startTime} or {@link Clock#stopTime}
+     * is reached.
+     * @type {ClockRange}
+     * @default {@link ClockRange.UNBOUNDED}
+     */
+    this.clockRange = options.clockRange ?? ClockRange.UNBOUNDED;
+
+    /**
+     * Indicates whether {@link Clock#tick} can advance time.  This could be false if data is being buffered,
+     * for example.  The clock will only advance time when both
+     * {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
+     * @type {boolean}
+     * @default true
+     */
+    this.canAnimate = options.canAnimate ?? true;
+
+    /**
+     * An {@link Event} that is fired whenever {@link Clock#tick} is called.
+     * @type {Event}
+     */
+    this.onTick = new Event();
+    /**
+     * An {@link Event} that is fired whenever {@link Clock#stopTime} is reached.
+     * @type {Event}
+     */
+    this.onStop = new Event();
+
+    this._currentTime = undefined;
+    this._multiplier = undefined;
+    this._clockStep = undefined;
+    this._shouldAnimate = undefined;
+    this._lastSystemTime = getTimestamp();
+
+    // set values using the property setters to
+    // make values consistent.
+
+    this.currentTime = currentTime;
+    this.multiplier = options.multiplier ?? 1.0;
+    this.shouldAnimate = options.shouldAnimate ?? false;
+    this.clockStep = options.clockStep ?? ClockStep.SYSTEM_CLOCK_MULTIPLIER;
   }
 
-  if (!defined(startTime)) {
-    // if not specified, start time is the current time
-    // (as determined above)
-    startTime = JulianDate.clone(currentTime);
-  } else {
-    startTime = JulianDate.clone(startTime);
-  }
-
-  if (!defined(stopTime)) {
-    // if not specified, stop time is 1 day after the start time
-    // (as determined above)
-    stopTime = JulianDate.addDays(startTime, 1.0, new JulianDate());
-  } else {
-    stopTime = JulianDate.clone(stopTime);
-  }
-
-  //>>includeStart('debug', pragmas.debug);
-  if (JulianDate.greaterThan(startTime, stopTime)) {
-    throw new DeveloperError("startTime must come before stopTime.");
-  }
-  //>>includeEnd('debug');
-
-  /**
-   * The start time of the clock.
-   * @type {JulianDate}
-   */
-  this.startTime = startTime;
-
-  /**
-   * The stop time of the clock.
-   * @type {JulianDate}
-   */
-  this.stopTime = stopTime;
-
-  /**
-   * Determines how the clock should behave when
-   * {@link Clock#startTime} or {@link Clock#stopTime}
-   * is reached.
-   * @type {ClockRange}
-   * @default {@link ClockRange.UNBOUNDED}
-   */
-  this.clockRange = options.clockRange ?? ClockRange.UNBOUNDED;
-
-  /**
-   * Indicates whether {@link Clock#tick} can advance time.  This could be false if data is being buffered,
-   * for example.  The clock will only advance time when both
-   * {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
-   * @type {boolean}
-   * @default true
-   */
-  this.canAnimate = options.canAnimate ?? true;
-
-  /**
-   * An {@link Event} that is fired whenever {@link Clock#tick} is called.
-   * @type {Event}
-   */
-  this.onTick = new Event();
-  /**
-   * An {@link Event} that is fired whenever {@link Clock#stopTime} is reached.
-   * @type {Event}
-   */
-  this.onStop = new Event();
-
-  this._currentTime = undefined;
-  this._multiplier = undefined;
-  this._clockStep = undefined;
-  this._shouldAnimate = undefined;
-  this._lastSystemTime = getTimestamp();
-
-  // set values using the property setters to
-  // make values consistent.
-
-  this.currentTime = currentTime;
-  this.multiplier = options.multiplier ?? 1.0;
-  this.shouldAnimate = options.shouldAnimate ?? false;
-  this.clockStep = options.clockStep ?? ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-}
-
-Object.defineProperties(Clock.prototype, {
   /**
    * The current time.
    * Changing this property will change
@@ -149,22 +149,21 @@ Object.defineProperties(Clock.prototype, {
    * @memberof Clock.prototype
    * @type {JulianDate}
    */
-  currentTime: {
-    get: function () {
-      return this._currentTime;
-    },
-    set: function (value) {
-      if (JulianDate.equals(this._currentTime, value)) {
-        return;
-      }
+  get currentTime() {
+    return this._currentTime;
+  }
 
-      if (this._clockStep === ClockStep.SYSTEM_CLOCK) {
-        this._clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-      }
+  set currentTime(value) {
+    if (JulianDate.equals(this._currentTime, value)) {
+      return;
+    }
 
-      this._currentTime = value;
-    },
-  },
+    if (this._clockStep === ClockStep.SYSTEM_CLOCK) {
+      this._clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+    }
+
+    this._currentTime = value;
+  }
 
   /**
    * Gets or sets how much time advances when {@link Clock#tick} is called. Negative values allow for advancing backwards.
@@ -178,22 +177,21 @@ Object.defineProperties(Clock.prototype, {
    * @type {number}
    * @default 1.0
    */
-  multiplier: {
-    get: function () {
-      return this._multiplier;
-    },
-    set: function (value) {
-      if (this._multiplier === value) {
-        return;
-      }
+  get multiplier() {
+    return this._multiplier;
+  }
 
-      if (this._clockStep === ClockStep.SYSTEM_CLOCK) {
-        this._clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-      }
+  set multiplier(value) {
+    if (this._multiplier === value) {
+      return;
+    }
 
-      this._multiplier = value;
-    },
-  },
+    if (this._clockStep === ClockStep.SYSTEM_CLOCK) {
+      this._clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+    }
+
+    this._multiplier = value;
+  }
 
   /**
    * Determines if calls to {@link Clock#tick} are frame dependent or system clock dependent.
@@ -204,20 +202,19 @@ Object.defineProperties(Clock.prototype, {
    * @type ClockStep
    * @default {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}
    */
-  clockStep: {
-    get: function () {
-      return this._clockStep;
-    },
-    set: function (value) {
-      if (value === ClockStep.SYSTEM_CLOCK) {
-        this._multiplier = 1.0;
-        this._shouldAnimate = true;
-        this._currentTime = JulianDate.now();
-      }
+  get clockStep() {
+    return this._clockStep;
+  }
 
-      this._clockStep = value;
-    },
-  },
+  set clockStep(value) {
+    if (value === ClockStep.SYSTEM_CLOCK) {
+      this._multiplier = 1.0;
+      this._shouldAnimate = true;
+      this._currentTime = JulianDate.now();
+    }
+
+    this._clockStep = value;
+  }
 
   /**
    * Indicates whether {@link Clock#tick} should attempt to advance time.
@@ -230,87 +227,87 @@ Object.defineProperties(Clock.prototype, {
    * @type {boolean}
    * @default false
    */
-  shouldAnimate: {
-    get: function () {
-      return this._shouldAnimate;
-    },
-    set: function (value) {
-      if (this._shouldAnimate === value) {
-        return;
-      }
+  get shouldAnimate() {
+    return this._shouldAnimate;
+  }
 
-      if (this._clockStep === ClockStep.SYSTEM_CLOCK) {
-        this._clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-      }
+  set shouldAnimate(value) {
+    if (this._shouldAnimate === value) {
+      return;
+    }
 
-      this._shouldAnimate = value;
-    },
-  },
-});
+    if (this._clockStep === ClockStep.SYSTEM_CLOCK) {
+      this._clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+    }
 
-/**
- * Advances the clock from the current time based on the current configuration options.
- * tick should be called every frame, regardless of whether animation is taking place
- * or not.  To control animation, use the {@link Clock#shouldAnimate} property.
- *
- * @returns {JulianDate} The new value of the {@link Clock#currentTime} property.
- */
-Clock.prototype.tick = function () {
-  const currentSystemTime = getTimestamp();
-  let currentTime = JulianDate.clone(this._currentTime);
+    this._shouldAnimate = value;
+  }
 
-  if (this.canAnimate && this._shouldAnimate) {
-    const clockStep = this._clockStep;
-    if (clockStep === ClockStep.SYSTEM_CLOCK) {
-      currentTime = JulianDate.now(currentTime);
-    } else {
-      const multiplier = this._multiplier;
+  /**
+   * Advances the clock from the current time based on the current configuration options.
+   * tick should be called every frame, regardless of whether animation is taking place
+   * or not.  To control animation, use the {@link Clock#shouldAnimate} property.
+   *
+   * @returns {JulianDate} The new value of the {@link Clock#currentTime} property.
+   */
+  tick() {
+    const currentSystemTime = getTimestamp();
+    let currentTime = JulianDate.clone(this._currentTime);
 
-      if (clockStep === ClockStep.TICK_DEPENDENT) {
-        currentTime = JulianDate.addSeconds(
-          currentTime,
-          multiplier,
-          currentTime,
-        );
+    if (this.canAnimate && this._shouldAnimate) {
+      const clockStep = this._clockStep;
+      if (clockStep === ClockStep.SYSTEM_CLOCK) {
+        currentTime = JulianDate.now(currentTime);
       } else {
-        const milliseconds = currentSystemTime - this._lastSystemTime;
-        currentTime = JulianDate.addSeconds(
-          currentTime,
-          multiplier * (milliseconds / 1000.0),
-          currentTime,
-        );
-      }
+        const multiplier = this._multiplier;
 
-      const clockRange = this.clockRange;
-      const startTime = this.startTime;
-      const stopTime = this.stopTime;
-
-      if (clockRange === ClockRange.CLAMPED) {
-        if (JulianDate.lessThan(currentTime, startTime)) {
-          currentTime = JulianDate.clone(startTime, currentTime);
-        } else if (JulianDate.greaterThan(currentTime, stopTime)) {
-          currentTime = JulianDate.clone(stopTime, currentTime);
-          this.onStop.raiseEvent(this);
-        }
-      } else if (clockRange === ClockRange.LOOP_STOP) {
-        if (JulianDate.lessThan(currentTime, startTime)) {
-          currentTime = JulianDate.clone(startTime, currentTime);
-        }
-        while (JulianDate.greaterThan(currentTime, stopTime)) {
+        if (clockStep === ClockStep.TICK_DEPENDENT) {
           currentTime = JulianDate.addSeconds(
-            startTime,
-            JulianDate.secondsDifference(currentTime, stopTime),
+            currentTime,
+            multiplier,
             currentTime,
           );
-          this.onStop.raiseEvent(this);
+        } else {
+          const milliseconds = currentSystemTime - this._lastSystemTime;
+          currentTime = JulianDate.addSeconds(
+            currentTime,
+            multiplier * (milliseconds / 1000.0),
+            currentTime,
+          );
+        }
+
+        const clockRange = this.clockRange;
+        const startTime = this.startTime;
+        const stopTime = this.stopTime;
+
+        if (clockRange === ClockRange.CLAMPED) {
+          if (JulianDate.lessThan(currentTime, startTime)) {
+            currentTime = JulianDate.clone(startTime, currentTime);
+          } else if (JulianDate.greaterThan(currentTime, stopTime)) {
+            currentTime = JulianDate.clone(stopTime, currentTime);
+            this.onStop.raiseEvent(this);
+          }
+        } else if (clockRange === ClockRange.LOOP_STOP) {
+          if (JulianDate.lessThan(currentTime, startTime)) {
+            currentTime = JulianDate.clone(startTime, currentTime);
+          }
+          while (JulianDate.greaterThan(currentTime, stopTime)) {
+            currentTime = JulianDate.addSeconds(
+              startTime,
+              JulianDate.secondsDifference(currentTime, stopTime),
+              currentTime,
+            );
+            this.onStop.raiseEvent(this);
+          }
         }
       }
     }
-  }
 
-  this._currentTime = currentTime;
-  this._lastSystemTime = currentSystemTime;
-  this.onTick.raiseEvent(this);
-  return currentTime;
-};
+    this._currentTime = currentTime;
+    this._lastSystemTime = currentSystemTime;
+    this.onTick.raiseEvent(this);
+    return currentTime;
+  }
+}
+
 export default Clock;

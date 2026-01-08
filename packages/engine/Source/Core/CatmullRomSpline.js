@@ -147,55 +147,55 @@ const lastTangentScratch = new Cartesian3();
  * @see QuaternionSpline
  * @see MorphWeightSpline
  */
-function CatmullRomSpline(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class CatmullRomSpline {
+  constructor(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  const points = options.points;
-  const times = options.times;
-  let firstTangent = options.firstTangent;
-  let lastTangent = options.lastTangent;
+    const points = options.points;
+    const times = options.times;
+    let firstTangent = options.firstTangent;
+    let lastTangent = options.lastTangent;
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("points", points);
-  Check.defined("times", times);
-  Check.typeOf.number.greaterThanOrEquals("points.length", points.length, 2);
-  Check.typeOf.number.equals(
-    "times.length",
-    "points.length",
-    times.length,
-    points.length,
-  );
-  //>>includeEnd('debug');
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("points", points);
+    Check.defined("times", times);
+    Check.typeOf.number.greaterThanOrEquals("points.length", points.length, 2);
+    Check.typeOf.number.equals(
+      "times.length",
+      "points.length",
+      times.length,
+      points.length,
+    );
+    //>>includeEnd('debug');
 
-  if (points.length > 2) {
-    if (!defined(firstTangent)) {
-      firstTangent = firstTangentScratch;
-      Cartesian3.multiplyByScalar(points[1], 2.0, firstTangent);
-      Cartesian3.subtract(firstTangent, points[2], firstTangent);
-      Cartesian3.subtract(firstTangent, points[0], firstTangent);
-      Cartesian3.multiplyByScalar(firstTangent, 0.5, firstTangent);
+    if (points.length > 2) {
+      if (!defined(firstTangent)) {
+        firstTangent = firstTangentScratch;
+        Cartesian3.multiplyByScalar(points[1], 2.0, firstTangent);
+        Cartesian3.subtract(firstTangent, points[2], firstTangent);
+        Cartesian3.subtract(firstTangent, points[0], firstTangent);
+        Cartesian3.multiplyByScalar(firstTangent, 0.5, firstTangent);
+      }
+
+      if (!defined(lastTangent)) {
+        const n = points.length - 1;
+        lastTangent = lastTangentScratch;
+        Cartesian3.multiplyByScalar(points[n - 1], 2.0, lastTangent);
+        Cartesian3.subtract(points[n], lastTangent, lastTangent);
+        Cartesian3.add(lastTangent, points[n - 2], lastTangent);
+        Cartesian3.multiplyByScalar(lastTangent, 0.5, lastTangent);
+      }
     }
 
-    if (!defined(lastTangent)) {
-      const n = points.length - 1;
-      lastTangent = lastTangentScratch;
-      Cartesian3.multiplyByScalar(points[n - 1], 2.0, lastTangent);
-      Cartesian3.subtract(points[n], lastTangent, lastTangent);
-      Cartesian3.add(lastTangent, points[n - 2], lastTangent);
-      Cartesian3.multiplyByScalar(lastTangent, 0.5, lastTangent);
-    }
+    this._times = times;
+    this._points = points;
+    this._firstTangent = Cartesian3.clone(firstTangent);
+    this._lastTangent = Cartesian3.clone(lastTangent);
+
+    this._evaluateFunction = createEvaluateFunction(this);
+    this._lastTimeIndex = 0;
   }
 
-  this._times = times;
-  this._points = points;
-  this._firstTangent = Cartesian3.clone(firstTangent);
-  this._lastTangent = Cartesian3.clone(lastTangent);
-
-  this._evaluateFunction = createEvaluateFunction(this);
-  this._lastTimeIndex = 0;
-}
-
-Object.defineProperties(CatmullRomSpline.prototype, {
   /**
    * An array of times for the control points.
    *
@@ -204,11 +204,9 @@ Object.defineProperties(CatmullRomSpline.prototype, {
    * @type {number[]}
    * @readonly
    */
-  times: {
-    get: function () {
-      return this._times;
-    },
-  },
+  get times() {
+    return this._times;
+  }
 
   /**
    * An array of {@link Cartesian3} control points.
@@ -218,11 +216,9 @@ Object.defineProperties(CatmullRomSpline.prototype, {
    * @type {Cartesian3[]}
    * @readonly
    */
-  points: {
-    get: function () {
-      return this._points;
-    },
-  },
+  get points() {
+    return this._points;
+  }
 
   /**
    * The tangent at the first control point.
@@ -232,11 +228,9 @@ Object.defineProperties(CatmullRomSpline.prototype, {
    * @type {Cartesian3}
    * @readonly
    */
-  firstTangent: {
-    get: function () {
-      return this._firstTangent;
-    },
-  },
+  get firstTangent() {
+    return this._firstTangent;
+  }
 
   /**
    * The tangent at the last control point.
@@ -246,12 +240,25 @@ Object.defineProperties(CatmullRomSpline.prototype, {
    * @type {Cartesian3}
    * @readonly
    */
-  lastTangent: {
-    get: function () {
-      return this._lastTangent;
-    },
-  },
-});
+  get lastTangent() {
+    return this._lastTangent;
+  }
+
+  /**
+   * Evaluates the curve at a given time.
+   *
+   * @param {number} time The time at which to evaluate the curve.
+   * @param {Cartesian3} [result] The object onto which to store the result.
+   * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
+   *
+   * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+   *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
+   *                             in the array <code>times</code>.
+   */
+  evaluate(time, result) {
+    return this._evaluateFunction(time, result);
+  }
+}
 
 /**
  * @private
@@ -307,18 +314,4 @@ CatmullRomSpline.prototype.wrapTime = Spline.prototype.wrapTime;
  */
 CatmullRomSpline.prototype.clampTime = Spline.prototype.clampTime;
 
-/**
- * Evaluates the curve at a given time.
- *
- * @param {number} time The time at which to evaluate the curve.
- * @param {Cartesian3} [result] The object onto which to store the result.
- * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
- *
- * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
- *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
- *                             in the array <code>times</code>.
- */
-CatmullRomSpline.prototype.evaluate = function (time, result) {
-  return this._evaluateFunction(time, result);
-};
 export default CatmullRomSpline;

@@ -31,103 +31,92 @@ import DeveloperError from "./DeveloperError.js";
  * @see GeometryInstance
  * @see GeometryInstanceAttribute
  */
-function DistanceDisplayConditionGeometryInstanceAttribute(near, far) {
-  near = near ?? 0.0;
-  far = far ?? Number.MAX_VALUE;
+class DistanceDisplayConditionGeometryInstanceAttribute {
+  constructor(near, far) {
+    near = near ?? 0.0;
+    far = far ?? Number.MAX_VALUE;
 
-  //>>includeStart('debug', pragmas.debug);
-  if (far <= near) {
-    throw new DeveloperError(
-      "far distance must be greater than near distance.",
-    );
+    //>>includeStart('debug', pragmas.debug);
+    if (far <= near) {
+      throw new DeveloperError(
+        "far distance must be greater than near distance.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    /**
+     * The values for the attributes stored in a typed array.
+     *
+     * @type {Float32Array}
+     *
+     * @default [0.0, 0.0, Number.MAX_VALUE]
+     */
+    this.value = new Float32Array([near, far]);
   }
-  //>>includeEnd('debug');
 
   /**
-   * The values for the attributes stored in a typed array.
+   * The datatype of each component in the attribute, e.g., individual elements in
+   * {@link DistanceDisplayConditionGeometryInstanceAttribute#value}.
    *
-   * @type {Float32Array}
+   * @memberof DistanceDisplayConditionGeometryInstanceAttribute.prototype
    *
-   * @default [0.0, 0.0, Number.MAX_VALUE]
+   * @type {ComponentDatatype}
+   * @readonly
+   *
+   * @default {@link ComponentDatatype.FLOAT}
    */
-  this.value = new Float32Array([near, far]);
-}
+  get componentDatatype() {
+    return ComponentDatatype.FLOAT;
+  }
 
-Object.defineProperties(
-  DistanceDisplayConditionGeometryInstanceAttribute.prototype,
-  {
-    /**
-     * The datatype of each component in the attribute, e.g., individual elements in
-     * {@link DistanceDisplayConditionGeometryInstanceAttribute#value}.
-     *
-     * @memberof DistanceDisplayConditionGeometryInstanceAttribute.prototype
-     *
-     * @type {ComponentDatatype}
-     * @readonly
-     *
-     * @default {@link ComponentDatatype.FLOAT}
-     */
-    componentDatatype: {
-      get: function () {
-        return ComponentDatatype.FLOAT;
-      },
-    },
+  /**
+   * The number of components in the attributes, i.e., {@link DistanceDisplayConditionGeometryInstanceAttribute#value}.
+   *
+   * @memberof DistanceDisplayConditionGeometryInstanceAttribute.prototype
+   *
+   * @type {number}
+   * @readonly
+   *
+   * @default 3
+   */
+  get componentsPerAttribute() {
+    return 2;
+  }
 
-    /**
-     * The number of components in the attributes, i.e., {@link DistanceDisplayConditionGeometryInstanceAttribute#value}.
-     *
-     * @memberof DistanceDisplayConditionGeometryInstanceAttribute.prototype
-     *
-     * @type {number}
-     * @readonly
-     *
-     * @default 3
-     */
-    componentsPerAttribute: {
-      get: function () {
-        return 2;
-      },
-    },
+  /**
+   * When <code>true</code> and <code>componentDatatype</code> is an integer format,
+   * indicate that the components should be mapped to the range [0, 1] (unsigned)
+   * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
+   *
+   * @memberof DistanceDisplayConditionGeometryInstanceAttribute.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   *
+   * @default false
+   */
+  get normalize() {
+    return false;
+  }
 
-    /**
-     * When <code>true</code> and <code>componentDatatype</code> is an integer format,
-     * indicate that the components should be mapped to the range [0, 1] (unsigned)
-     * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
-     *
-     * @memberof DistanceDisplayConditionGeometryInstanceAttribute.prototype
-     *
-     * @type {boolean}
-     * @readonly
-     *
-     * @default false
-     */
-    normalize: {
-      get: function () {
-        return false;
-      },
-    },
-  },
-);
-
-/**
- * Creates a new {@link DistanceDisplayConditionGeometryInstanceAttribute} instance given the provided an enabled flag and {@link DistanceDisplayCondition}.
- *
- * @param {DistanceDisplayCondition} distanceDisplayCondition The distance display condition.
- * @returns {DistanceDisplayConditionGeometryInstanceAttribute} The new {@link DistanceDisplayConditionGeometryInstanceAttribute} instance.
- *
- * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
- *
- * @example
- * const distanceDisplayCondition = new Cesium.DistanceDisplayCondition(100.0, 10000.0);
- * const instance = new Cesium.GeometryInstance({
- *   geometry : geometry,
- *   attributes : {
- *     distanceDisplayCondition : Cesium.DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
- *   }
- * });
- */
-DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition =
-  function (distanceDisplayCondition) {
+  /**
+   * Creates a new {@link DistanceDisplayConditionGeometryInstanceAttribute} instance given the provided an enabled flag and {@link DistanceDisplayCondition}.
+   *
+   * @param {DistanceDisplayCondition} distanceDisplayCondition The distance display condition.
+   * @returns {DistanceDisplayConditionGeometryInstanceAttribute} The new {@link DistanceDisplayConditionGeometryInstanceAttribute} instance.
+   *
+   * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
+   *
+   * @example
+   * const distanceDisplayCondition = new Cesium.DistanceDisplayCondition(100.0, 10000.0);
+   * const instance = new Cesium.GeometryInstance({
+   *   geometry : geometry,
+   *   attributes : {
+   *     distanceDisplayCondition : Cesium.DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
+   *   }
+   * });
+   */
+  static fromDistanceDisplayCondition(distanceDisplayCondition) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(distanceDisplayCondition)) {
       throw new DeveloperError("distanceDisplayCondition is required.");
@@ -143,37 +132,36 @@ DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition =
       distanceDisplayCondition.near,
       distanceDisplayCondition.far,
     );
-  };
-
-/**
- * Converts a distance display condition to a typed array that can be used to assign a distance display condition attribute.
- *
- * @param {DistanceDisplayCondition} distanceDisplayCondition The distance display condition value.
- * @param {Float32Array} [result] The array to store the result in, if undefined a new instance will be created.
- * @returns {Float32Array} The modified result parameter or a new instance if result was undefined.
- *
- * @example
- * const attributes = primitive.getGeometryInstanceAttributes('an id');
- * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
- */
-DistanceDisplayConditionGeometryInstanceAttribute.toValue = function (
-  distanceDisplayCondition,
-  result,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(distanceDisplayCondition)) {
-    throw new DeveloperError("distanceDisplayCondition is required.");
   }
-  //>>includeEnd('debug');
 
-  if (!defined(result)) {
-    return new Float32Array([
-      distanceDisplayCondition.near,
-      distanceDisplayCondition.far,
-    ]);
+  /**
+   * Converts a distance display condition to a typed array that can be used to assign a distance display condition attribute.
+   *
+   * @param {DistanceDisplayCondition} distanceDisplayCondition The distance display condition value.
+   * @param {Float32Array} [result] The array to store the result in, if undefined a new instance will be created.
+   * @returns {Float32Array} The modified result parameter or a new instance if result was undefined.
+   *
+   * @example
+   * const attributes = primitive.getGeometryInstanceAttributes('an id');
+   * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
+   */
+  static toValue(distanceDisplayCondition, result) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(distanceDisplayCondition)) {
+      throw new DeveloperError("distanceDisplayCondition is required.");
+    }
+    //>>includeEnd('debug');
+
+    if (!defined(result)) {
+      return new Float32Array([
+        distanceDisplayCondition.near,
+        distanceDisplayCondition.far,
+      ]);
+    }
+    result[0] = distanceDisplayCondition.near;
+    result[1] = distanceDisplayCondition.far;
+    return result;
   }
-  result[0] = distanceDisplayCondition.near;
-  result[1] = distanceDisplayCondition.far;
-  return result;
-};
+}
+
 export default DistanceDisplayConditionGeometryInstanceAttribute;

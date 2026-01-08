@@ -41,34 +41,34 @@ import Spline from "./Spline.js";
  * @see QuaternionSpline
  * @see MorphWeightSpline
  */
-function LinearSpline(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class LinearSpline {
+  constructor(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  const points = options.points;
-  const times = options.times;
+    const points = options.points;
+    const times = options.times;
 
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(points) || !defined(times)) {
-    throw new DeveloperError("points and times are required.");
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(points) || !defined(times)) {
+      throw new DeveloperError("points and times are required.");
+    }
+    if (points.length < 2) {
+      throw new DeveloperError(
+        "points.length must be greater than or equal to 2.",
+      );
+    }
+    if (times.length !== points.length) {
+      throw new DeveloperError("times.length must be equal to points.length.");
+    }
+    //>>includeEnd('debug');
+
+    this._times = times;
+    this._points = points;
+    this._pointType = Spline.getPointType(points[0]);
+
+    this._lastTimeIndex = 0;
   }
-  if (points.length < 2) {
-    throw new DeveloperError(
-      "points.length must be greater than or equal to 2.",
-    );
-  }
-  if (times.length !== points.length) {
-    throw new DeveloperError("times.length must be equal to points.length.");
-  }
-  //>>includeEnd('debug');
 
-  this._times = times;
-  this._points = points;
-  this._pointType = Spline.getPointType(points[0]);
-
-  this._lastTimeIndex = 0;
-}
-
-Object.defineProperties(LinearSpline.prototype, {
   /**
    * An array of times for the control points.
    *
@@ -77,11 +77,9 @@ Object.defineProperties(LinearSpline.prototype, {
    * @type {number[]}
    * @readonly
    */
-  times: {
-    get: function () {
-      return this._times;
-    },
-  },
+  get times() {
+    return this._times;
+  }
 
   /**
    * An array of {@link Cartesian3} control points.
@@ -91,12 +89,43 @@ Object.defineProperties(LinearSpline.prototype, {
    * @type {number[]|Cartesian3[]}
    * @readonly
    */
-  points: {
-    get: function () {
-      return this._points;
-    },
-  },
-});
+  get points() {
+    return this._points;
+  }
+
+  /**
+   * Evaluates the curve at a given time.
+   *
+   * @param {number} time The time at which to evaluate the curve.
+   * @param {Cartesian3} [result] The object onto which to store the result.
+   * @returns {number|Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
+   *
+   * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+   *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
+   *                             in the array <code>times</code>.
+   */
+  evaluate(time, result) {
+    const points = this.points;
+    const times = this.times;
+
+    const i = (this._lastTimeIndex = this.findTimeInterval(
+      time,
+      this._lastTimeIndex,
+    ));
+    const u = (time - times[i]) / (times[i + 1] - times[i]);
+
+    const PointType = this._pointType;
+    if (PointType === Number) {
+      return (1.0 - u) * points[i] + u * points[i + 1];
+    }
+
+    if (!defined(result)) {
+      result = new Cartesian3();
+    }
+
+    return Cartesian3.lerp(points[i], points[i + 1], u, result);
+  }
+}
 
 /**
  * Finds an index <code>i</code> in <code>times</code> such that the parameter
@@ -129,38 +158,5 @@ LinearSpline.prototype.wrapTime = Spline.prototype.wrapTime;
  * @return {number} The time, clamped to the animation period.
  */
 LinearSpline.prototype.clampTime = Spline.prototype.clampTime;
-
-/**
- * Evaluates the curve at a given time.
- *
- * @param {number} time The time at which to evaluate the curve.
- * @param {Cartesian3} [result] The object onto which to store the result.
- * @returns {number|Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
- *
- * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
- *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
- *                             in the array <code>times</code>.
- */
-LinearSpline.prototype.evaluate = function (time, result) {
-  const points = this.points;
-  const times = this.times;
-
-  const i = (this._lastTimeIndex = this.findTimeInterval(
-    time,
-    this._lastTimeIndex,
-  ));
-  const u = (time - times[i]) / (times[i + 1] - times[i]);
-
-  const PointType = this._pointType;
-  if (PointType === Number) {
-    return (1.0 - u) * points[i] + u * points[i + 1];
-  }
-
-  if (!defined(result)) {
-    result = new Cartesian3();
-  }
-
-  return Cartesian3.lerp(points[i], points[i + 1], u, result);
-};
 
 export default LinearSpline;

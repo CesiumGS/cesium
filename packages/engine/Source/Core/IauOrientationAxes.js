@@ -18,12 +18,44 @@ import Quaternion from "./Quaternion.js";
  *
  * @private
  */
-function IauOrientationAxes(computeFunction) {
-  if (!defined(computeFunction) || typeof computeFunction !== "function") {
-    computeFunction = Iau2000Orientation.ComputeMoon;
+class IauOrientationAxes {
+  constructor(computeFunction) {
+    if (!defined(computeFunction) || typeof computeFunction !== "function") {
+      computeFunction = Iau2000Orientation.ComputeMoon;
+    }
+
+    this._computeFunction = computeFunction;
   }
 
-  this._computeFunction = computeFunction;
+  /**
+   * Computes a rotation from ICRF to a Globe's Fixed axes.
+   *
+   * @param {JulianDate} date The date to evaluate the matrix.
+   * @param {Matrix3} result The object onto which to store the result.
+   * @returns {Matrix3} The modified result parameter or a new instance of the rotation from ICRF to Fixed.
+   */
+  evaluate(date, result) {
+    if (!defined(date)) {
+      date = JulianDate.now();
+    }
+
+    const alphaDeltaW = this._computeFunction(date);
+    const precMtx = computeRotationMatrix(
+      alphaDeltaW.rightAscension,
+      alphaDeltaW.declination,
+      result,
+    );
+
+    const rot = CesiumMath.zeroToTwoPi(alphaDeltaW.rotation);
+    const quat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, rot, quatScratch);
+    const rotMtx = Matrix3.fromQuaternion(
+      Quaternion.conjugate(quat, quat),
+      rotMtxScratch,
+    );
+
+    const cbi2cbf = Matrix3.multiply(rotMtx, precMtx, precMtx);
+    return cbi2cbf;
+  }
 }
 
 const xAxisScratch = new Cartesian3();
@@ -64,36 +96,6 @@ function computeRotationMatrix(alpha, delta, result) {
 
 const rotMtxScratch = new Matrix3();
 const quatScratch = new Quaternion();
-
-/**
- * Computes a rotation from ICRF to a Globe's Fixed axes.
- *
- * @param {JulianDate} date The date to evaluate the matrix.
- * @param {Matrix3} result The object onto which to store the result.
- * @returns {Matrix3} The modified result parameter or a new instance of the rotation from ICRF to Fixed.
- */
-IauOrientationAxes.prototype.evaluate = function (date, result) {
-  if (!defined(date)) {
-    date = JulianDate.now();
-  }
-
-  const alphaDeltaW = this._computeFunction(date);
-  const precMtx = computeRotationMatrix(
-    alphaDeltaW.rightAscension,
-    alphaDeltaW.declination,
-    result,
-  );
-
-  const rot = CesiumMath.zeroToTwoPi(alphaDeltaW.rotation);
-  const quat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, rot, quatScratch);
-  const rotMtx = Matrix3.fromQuaternion(
-    Quaternion.conjugate(quat, quat),
-    rotMtxScratch,
-  );
-
-  const cbi2cbf = Matrix3.multiply(rotMtx, precMtx, precMtx);
-  return cbi2cbf;
-};
 
 /**
  * A function that computes the {@link IauOrientationParameters} for a {@link JulianDate}.

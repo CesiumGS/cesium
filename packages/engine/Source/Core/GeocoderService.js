@@ -19,8 +19,23 @@ import DeveloperError from "./DeveloperError.js";
  * @see PeliasGeocoderService
  * @see OpenCageGeocoderService
  */
-function GeocoderService() {
-  DeveloperError.throwInstantiationError();
+class GeocoderService {
+ constructor() {
+   DeveloperError.throwInstantiationError();
+ }
+
+ /**
+  * Parses credits from the geocoder result attributions, if present.
+  * @param {GeocoderService.Result} geocoderResult The geocoder result
+  * @returns {Credit[]|undefined} A list of credits if present in the result, otherwise undefined
+  */
+ static getCreditsFromResult(geocoderResult) {
+   if (defined(geocoderResult.attributions)) {
+     return geocoderResult.attributions.map(Credit.getIonCredit);
+   }
+
+   return undefined;
+ }
 }
 
 Object.defineProperties(GeocoderService.prototype, {
@@ -35,19 +50,6 @@ Object.defineProperties(GeocoderService.prototype, {
     get: DeveloperError.throwInstantiationError,
   },
 });
-
-/**
- * Parses credits from the geocoder result attributions, if present.
- * @param {GeocoderService.Result} geocoderResult The geocoder result
- * @returns {Credit[]|undefined} A list of credits if present in the result, otherwise undefined
- */
-GeocoderService.getCreditsFromResult = function (geocoderResult) {
-  if (defined(geocoderResult.attributions)) {
-    return geocoderResult.attributions.map(Credit.getIonCredit);
-  }
-
-  return undefined;
-};
 
 /**
  * @function

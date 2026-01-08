@@ -4,13 +4,13 @@
  * @alias Queue
  * @constructor
  */
-function Queue() {
-  this._array = [];
-  this._offset = 0;
-  this._length = 0;
-}
+class Queue {
+  constructor() {
+    this._array = [];
+    this._offset = 0;
+    this._length = 0;
+  }
 
-Object.defineProperties(Queue.prototype, {
   /**
    * The length of the queue.
    *
@@ -19,94 +19,92 @@ Object.defineProperties(Queue.prototype, {
    * @type {number}
    * @readonly
    */
-  length: {
-    get: function () {
-      return this._length;
-    },
-  },
-});
-
-/**
- * Enqueues the specified item.
- *
- * @param {*} item The item to enqueue.
- */
-Queue.prototype.enqueue = function (item) {
-  this._array.push(item);
-  this._length++;
-};
-
-/**
- * Dequeues an item.  Returns undefined if the queue is empty.
- *
- * @returns {*} The the dequeued item.
- */
-Queue.prototype.dequeue = function () {
-  if (this._length === 0) {
-    return undefined;
+  get length() {
+    return this._length;
   }
 
-  const array = this._array;
-  let offset = this._offset;
-  const item = array[offset];
-  array[offset] = undefined;
-
-  offset++;
-  if (offset > 10 && offset * 2 > array.length) {
-    //compact array
-    this._array = array.slice(offset);
-    offset = 0;
+  /**
+   * Enqueues the specified item.
+   *
+   * @param {*} item The item to enqueue.
+   */
+  enqueue(item) {
+    this._array.push(item);
+    this._length++;
   }
 
-  this._offset = offset;
-  this._length--;
+  /**
+   * Dequeues an item.  Returns undefined if the queue is empty.
+   *
+   * @returns {*} The the dequeued item.
+   */
+  dequeue() {
+    if (this._length === 0) {
+      return undefined;
+    }
 
-  return item;
-};
+    const array = this._array;
+    let offset = this._offset;
+    const item = array[offset];
+    array[offset] = undefined;
 
-/**
- * Returns the item at the front of the queue.  Returns undefined if the queue is empty.
- *
- * @returns {*} The item at the front of the queue.
- */
-Queue.prototype.peek = function () {
-  if (this._length === 0) {
-    return undefined;
+    offset++;
+    if (offset > 10 && offset * 2 > array.length) {
+      //compact array
+      this._array = array.slice(offset);
+      offset = 0;
+    }
+
+    this._offset = offset;
+    this._length--;
+
+    return item;
   }
 
-  return this._array[this._offset];
-};
+  /**
+   * Returns the item at the front of the queue.  Returns undefined if the queue is empty.
+   *
+   * @returns {*} The item at the front of the queue.
+   */
+  peek() {
+    if (this._length === 0) {
+      return undefined;
+    }
 
-/**
- * Check whether this queue contains the specified item.
- *
- * @param {*} item The item to search for.
- */
-Queue.prototype.contains = function (item) {
-  return this._array.indexOf(item) !== -1;
-};
-
-/**
- * Remove all items from the queue.
- */
-Queue.prototype.clear = function () {
-  this._array.length = this._offset = this._length = 0;
-};
-
-/**
- * Sort the items in the queue in-place.
- *
- * @param {Queue.Comparator} compareFunction A function that defines the sort order.
- */
-Queue.prototype.sort = function (compareFunction) {
-  if (this._offset > 0) {
-    //compact array
-    this._array = this._array.slice(this._offset);
-    this._offset = 0;
+    return this._array[this._offset];
   }
 
-  this._array.sort(compareFunction);
-};
+  /**
+   * Check whether this queue contains the specified item.
+   *
+   * @param {*} item The item to search for.
+   */
+  contains(item) {
+    return this._array.indexOf(item) !== -1;
+  }
+
+  /**
+   * Remove all items from the queue.
+   */
+  clear() {
+    this._array.length = this._offset = this._length = 0;
+  }
+
+  /**
+   * Sort the items in the queue in-place.
+   *
+   * @param {Queue.Comparator} compareFunction A function that defines the sort order.
+   */
+  sort(compareFunction) {
+    if (this._offset > 0) {
+      //compact array
+      this._array = this._array.slice(this._offset);
+      this._offset = 0;
+    }
+
+    this._array.sort(compareFunction);
+  }
+}
 
 /**
  * A function used to compare two items while sorting a queue.

@@ -7,23 +7,22 @@ import DeveloperError from "./DeveloperError.js";
  * @alias AssociativeArray
  * @constructor
  */
-function AssociativeArray() {
-  this._array = [];
-  this._hash = {};
-}
+class AssociativeArray {
+  constructor() {
+    this._array = [];
+    this._hash = {};
+  }
 
-Object.defineProperties(AssociativeArray.prototype, {
   /**
    * Gets the number of items in the collection.
    * @memberof AssociativeArray.prototype
    *
    * @type {number}
    */
-  length: {
-    get: function () {
-      return this._array.length;
-    },
-  },
+  get length() {
+    return this._array.length;
+  }
+
   /**
    * Gets an unordered array of all values in the collection.
    * This is a live array that will automatically reflect the values in the collection,
@@ -32,96 +31,95 @@ Object.defineProperties(AssociativeArray.prototype, {
    *
    * @type {Array}
    */
-  values: {
-    get: function () {
-      return this._array;
-    },
-  },
-});
-
-/**
- * Determines if the provided key is in the array.
- *
- * @param {string|number} key The key to check.
- * @returns {boolean} <code>true</code> if the key is in the array, <code>false</code> otherwise.
- */
-AssociativeArray.prototype.contains = function (key) {
-  //>>includeStart('debug', pragmas.debug);
-  if (typeof key !== "string" && typeof key !== "number") {
-    throw new DeveloperError("key is required to be a string or number.");
+  get values() {
+    return this._array;
   }
-  //>>includeEnd('debug');
-  return defined(this._hash[key]);
-};
 
-/**
- * Associates the provided key with the provided value.  If the key already
- * exists, it is overwritten with the new value.
- *
- * @param {string|number} key A unique identifier.
- * @param {*} value The value to associate with the provided key.
- */
-AssociativeArray.prototype.set = function (key, value) {
-  //>>includeStart('debug', pragmas.debug);
-  if (typeof key !== "string" && typeof key !== "number") {
-    throw new DeveloperError("key is required to be a string or number.");
+  /**
+   * Determines if the provided key is in the array.
+   *
+   * @param {string|number} key The key to check.
+   * @returns {boolean} <code>true</code> if the key is in the array, <code>false</code> otherwise.
+   */
+  contains(key) {
+    //>>includeStart('debug', pragmas.debug);
+    if (typeof key !== "string" && typeof key !== "number") {
+      throw new DeveloperError("key is required to be a string or number.");
+    }
+    //>>includeEnd('debug');
+    return defined(this._hash[key]);
   }
-  //>>includeEnd('debug');
 
-  const oldValue = this._hash[key];
-  if (value !== oldValue) {
-    this.remove(key);
-    this._hash[key] = value;
-    this._array.push(value);
+  /**
+   * Associates the provided key with the provided value.  If the key already
+   * exists, it is overwritten with the new value.
+   *
+   * @param {string|number} key A unique identifier.
+   * @param {*} value The value to associate with the provided key.
+   */
+  set(key, value) {
+    //>>includeStart('debug', pragmas.debug);
+    if (typeof key !== "string" && typeof key !== "number") {
+      throw new DeveloperError("key is required to be a string or number.");
+    }
+    //>>includeEnd('debug');
+
+    const oldValue = this._hash[key];
+    if (value !== oldValue) {
+      this.remove(key);
+      this._hash[key] = value;
+      this._array.push(value);
+    }
   }
-};
 
-/**
- * Retrieves the value associated with the provided key.
- *
- * @param {string|number} key The key whose value is to be retrieved.
- * @returns {*} The associated value, or undefined if the key does not exist in the collection.
- */
-AssociativeArray.prototype.get = function (key) {
-  //>>includeStart('debug', pragmas.debug);
-  if (typeof key !== "string" && typeof key !== "number") {
-    throw new DeveloperError("key is required to be a string or number.");
+  /**
+   * Retrieves the value associated with the provided key.
+   *
+   * @param {string|number} key The key whose value is to be retrieved.
+   * @returns {*} The associated value, or undefined if the key does not exist in the collection.
+   */
+  get(key) {
+    //>>includeStart('debug', pragmas.debug);
+    if (typeof key !== "string" && typeof key !== "number") {
+      throw new DeveloperError("key is required to be a string or number.");
+    }
+    //>>includeEnd('debug');
+    return this._hash[key];
   }
-  //>>includeEnd('debug');
-  return this._hash[key];
-};
 
-/**
- * Removes a key-value pair from the collection.
- *
- * @param {string|number} key The key to be removed.
- * @returns {boolean} True if it was removed, false if the key was not in the collection.
- */
-AssociativeArray.prototype.remove = function (key) {
-  //>>includeStart('debug', pragmas.debug);
-  if (defined(key) && typeof key !== "string" && typeof key !== "number") {
-    throw new DeveloperError("key is required to be a string or number.");
+  /**
+   * Removes a key-value pair from the collection.
+   *
+   * @param {string|number} key The key to be removed.
+   * @returns {boolean} True if it was removed, false if the key was not in the collection.
+   */
+  remove(key) {
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(key) && typeof key !== "string" && typeof key !== "number") {
+      throw new DeveloperError("key is required to be a string or number.");
+    }
+    //>>includeEnd('debug');
+
+    const value = this._hash[key];
+    const hasValue = defined(value);
+    if (hasValue) {
+      const array = this._array;
+      array.splice(array.indexOf(value), 1);
+      delete this._hash[key];
+    }
+    return hasValue;
   }
-  //>>includeEnd('debug');
 
-  const value = this._hash[key];
-  const hasValue = defined(value);
-  if (hasValue) {
+  /**
+   * Clears the collection.
+   */
+  removeAll() {
     const array = this._array;
-    array.splice(array.indexOf(value), 1);
-    delete this._hash[key];
+    if (array.length > 0) {
+      this._hash = {};
+      array.length = 0;
+    }
   }
-  return hasValue;
-};
+}
 
-/**
- * Clears the collection.
- */
-AssociativeArray.prototype.removeAll = function () {
-  const array = this._array;
-  if (array.length > 0) {
-    this._hash = {};
-    array.length = 0;
-  }
-};
 export default AssociativeArray;

@@ -217,48 +217,49 @@ function imageRenderingValue() {
     : undefined;
 }
 
-function supportsWebP() {
-  //>>includeStart('debug', pragmas.debug);
-  if (!supportsWebP.initialized) {
-    throw new DeveloperError(
-      "You must call FeatureDetection.supportsWebP.initialize and wait for the promise to resolve before calling FeatureDetection.supportsWebP",
-    );
+class supportsWebP {
+  constructor() {
+    //>>includeStart('debug', pragmas.debug);
+    if (!supportsWebP.initialized) {
+      throw new DeveloperError(
+        "You must call FeatureDetection.supportsWebP.initialize and wait for the promise to resolve before calling FeatureDetection.supportsWebP",
+      );
+    }
+    //>>includeEnd('debug');
+    return supportsWebP._result;
   }
-  //>>includeEnd('debug');
-  return supportsWebP._result;
-}
-supportsWebP._promise = undefined;
-supportsWebP._result = undefined;
-supportsWebP.initialize = function () {
-  // From https://developers.google.com/speed/webp/faq#how_can_i_detect_browser_support_for_webp
-  if (defined(supportsWebP._promise)) {
+
+  static initialize() {
+    // From https://developers.google.com/speed/webp/faq#how_can_i_detect_browser_support_for_webp
+    if (defined(supportsWebP._promise)) {
+      return supportsWebP._promise;
+    }
+
+    supportsWebP._promise = new Promise((resolve) => {
+      const image = new Image();
+      image.onload = function () {
+        supportsWebP._result = image.width > 0 && image.height > 0;
+        resolve(supportsWebP._result);
+      };
+
+      image.onerror = function () {
+        supportsWebP._result = false;
+        resolve(supportsWebP._result);
+      };
+      image.src =
+        "data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA";
+    });
+
     return supportsWebP._promise;
   }
 
-  supportsWebP._promise = new Promise((resolve) => {
-    const image = new Image();
-    image.onload = function () {
-      supportsWebP._result = image.width > 0 && image.height > 0;
-      resolve(supportsWebP._result);
-    };
+  static get initialized() {
+    return defined(supportsWebP._result);
+  }
+}
 
-    image.onerror = function () {
-      supportsWebP._result = false;
-      resolve(supportsWebP._result);
-    };
-    image.src =
-      "data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA";
-  });
-
-  return supportsWebP._promise;
-};
-Object.defineProperties(supportsWebP, {
-  initialized: {
-    get: function () {
-      return defined(supportsWebP._result);
-    },
-  },
-});
+supportsWebP._promise = undefined;
+supportsWebP._result = undefined;
 
 const typedArrayTypes = [];
 if (typeof ArrayBuffer !== "undefined") {

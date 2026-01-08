@@ -18,8 +18,349 @@ import CesiumMath from "./Math.js";
  * @see ArcGISTiledElevationTerrainProvider
  * @see Cesium3DTilesTerrainProvider
  */
-function TerrainProvider() {
-  DeveloperError.throwInstantiationError();
+class TerrainProvider {
+  constructor() {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Gets a list of indices for a triangle mesh representing a regular grid.  Calling
+   * this function multiple times with the same grid width and height returns the
+   * same list of indices.  The total number of vertices must be less than or equal
+   * to 65536.
+   *
+   * @param {number} width The number of vertices in the regular grid in the horizontal direction.
+   * @param {number} height The number of vertices in the regular grid in the vertical direction.
+   * @returns {Uint16Array|Uint32Array} The list of indices. Uint16Array gets returned for 64KB or less and Uint32Array for 4GB or less.
+   */
+  static getRegularGridIndices(width, height) {
+    //>>includeStart('debug', pragmas.debug);
+    if (width * height >= CesiumMath.FOUR_GIGABYTES) {
+      throw new DeveloperError(
+        "The total number of vertices (width * height) must be less than 4,294,967,296.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    let byWidth = regularGridIndicesCache[width];
+    if (!defined(byWidth)) {
+      regularGridIndicesCache[width] = byWidth = [];
+    }
+
+    let indices = byWidth[height];
+    if (!defined(indices)) {
+      if (width * height < CesiumMath.SIXTY_FOUR_KILOBYTES) {
+        indices = byWidth[height] = new Uint16Array(
+          (width - 1) * (height - 1) * 6,
+        );
+      } else {
+        indices = byWidth[height] = new Uint32Array(
+          (width - 1) * (height - 1) * 6,
+        );
+      }
+      addRegularGridIndices(width, height, indices, 0);
+    }
+
+    return indices;
+  }
+
+  /**
+   * @private
+   */
+  static getRegularGridIndicesAndEdgeIndices(width, height) {
+    //>>includeStart('debug', pragmas.debug);
+    if (width * height >= CesiumMath.FOUR_GIGABYTES) {
+      throw new DeveloperError(
+        "The total number of vertices (width * height) must be less than 4,294,967,296.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    let byWidth = regularGridAndEdgeIndicesCache[width];
+    if (!defined(byWidth)) {
+      regularGridAndEdgeIndicesCache[width] = byWidth = [];
+    }
+
+    let indicesAndEdges = byWidth[height];
+    if (!defined(indicesAndEdges)) {
+      const indices = TerrainProvider.getRegularGridIndices(width, height);
+
+      const edgeIndices = getEdgeIndices(width, height);
+      const westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
+      const southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
+      const eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
+      const northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
+
+      indicesAndEdges = byWidth[height] = {
+        indices: indices,
+        westIndicesSouthToNorth: westIndicesSouthToNorth,
+        southIndicesEastToWest: southIndicesEastToWest,
+        eastIndicesNorthToSouth: eastIndicesNorthToSouth,
+        northIndicesWestToEast: northIndicesWestToEast,
+      };
+    }
+
+    return indicesAndEdges;
+  }
+
+  /**
+   * @private
+   */
+  static getRegularGridAndSkirtIndicesAndEdgeIndices(width, height) {
+    //>>includeStart('debug', pragmas.debug);
+    if (width * height >= CesiumMath.FOUR_GIGABYTES) {
+      throw new DeveloperError(
+        "The total number of vertices (width * height) must be less than 4,294,967,296.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    let byWidth = regularGridAndSkirtAndEdgeIndicesCache[width];
+    if (!defined(byWidth)) {
+      regularGridAndSkirtAndEdgeIndicesCache[width] = byWidth = [];
+    }
+
+    let indicesAndEdges = byWidth[height];
+    if (!defined(indicesAndEdges)) {
+      const gridVertexCount = width * height;
+      const gridIndexCount = (width - 1) * (height - 1) * 6;
+      const edgeVertexCount = width * 2 + height * 2;
+      const edgeIndexCount = Math.max(0, edgeVertexCount - 4) * 6;
+      const vertexCount = gridVertexCount + edgeVertexCount;
+      const indexCount = gridIndexCount + edgeIndexCount;
+
+      const edgeIndices = getEdgeIndices(width, height);
+      const westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
+      const southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
+      const eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
+      const northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
+
+      const indices = IndexDatatype.createTypedArray(vertexCount, indexCount);
+      addRegularGridIndices(width, height, indices, 0);
+      TerrainProvider.addSkirtIndices(
+        westIndicesSouthToNorth,
+        southIndicesEastToWest,
+        eastIndicesNorthToSouth,
+        northIndicesWestToEast,
+        gridVertexCount,
+        indices,
+        gridIndexCount,
+      );
+
+      indicesAndEdges = byWidth[height] = {
+        indices: indices,
+        westIndicesSouthToNorth: westIndicesSouthToNorth,
+        southIndicesEastToWest: southIndicesEastToWest,
+        eastIndicesNorthToSouth: eastIndicesNorthToSouth,
+        northIndicesWestToEast: northIndicesWestToEast,
+        indexCountWithoutSkirts: gridIndexCount,
+      };
+    }
+
+    return indicesAndEdges;
+  }
+
+  /**
+   * Calculates the number of skirt vertices given the edge indices.
+   * @private
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth Edge indices along the west side of the tile.
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest Edge indices along the south side of the tile.
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth Edge indices along the east side of the tile.
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast Edge indices along the north side of the tile.
+   * @returns {number} The number of skirt vertices.
+   */
+  static getSkirtVertexCount(
+    westIndicesSouthToNorth,
+    southIndicesEastToWest,
+    eastIndicesNorthToSouth,
+    northIndicesWestToEast
+  ) {
+    return (
+      westIndicesSouthToNorth.length +
+      southIndicesEastToWest.length +
+      eastIndicesNorthToSouth.length +
+      northIndicesWestToEast.length
+    );
+  }
+
+  /**
+   * Compute the number of skirt indices given the number of skirt vertices.
+   * Consider a 3x3 grid of vertices. There will be 8 skirt vertices around the edge:
+   * - 16 edge triangles
+   * - 48 indices
+   *
+   *   |\|\|
+   * |/|   |/|
+   * |/|   |/|
+   *   |\|\|
+   *
+   * @private
+   * @param {number} skirtVertexCount
+   * @returns {number}
+   */
+  static getSkirtIndexCount(skirtVertexCount) {
+    return (skirtVertexCount - 4) * 2 * 3;
+  }
+
+  /**
+   * Compute the number of skirt indices given the number of skirt vertices with filled corners.
+   * Consider a 3x3 grid of vertices. There will be 8 skirt vertices around the edge:
+   * - 16 edge triangles
+   * - 4 cap triangles
+   * - 60 indices
+   *
+   *  /|\|\|\
+   * |/|   |/|
+   * |/|   |/|
+   *  \|\|\|/
+   *
+   * @private
+   * @param {number} skirtVertexCount
+   * @returns {number}
+   */
+  static getSkirtIndexCountWithFilledCorners(skirtVertexCount) {
+    return ((skirtVertexCount - 4) * 2 + 4) * 3;
+  }
+
+  /**
+   * Adds skirt indices.
+   * This does not add filled corners. Use {@link TerrainProvider.addSkirtIndicesWithFilledCorners} to add skirt indices with filled corners.
+   * @private
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North.
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West.
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South.
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East.
+   * @param {number} vertexCount The number of vertices in the tile before adding skirt vertices.
+   * @param {Uint16Array|Uint32Array} indices The array of indices to which skirt indices are added.
+   * @param {number} offset The offset into the indices array at which to start adding skirt indices.
+   */
+  static addSkirtIndices(
+    westIndicesSouthToNorth,
+    southIndicesEastToWest,
+    eastIndicesNorthToSouth,
+    northIndicesWestToEast,
+    vertexCount,
+    indices,
+    offset
+  ) {
+    let vertexIndex = vertexCount;
+    offset = addSkirtIndices(
+      westIndicesSouthToNorth,
+      vertexIndex,
+      indices,
+      offset,
+    );
+    vertexIndex += westIndicesSouthToNorth.length;
+    offset = addSkirtIndices(
+      southIndicesEastToWest,
+      vertexIndex,
+      indices,
+      offset,
+    );
+    vertexIndex += southIndicesEastToWest.length;
+    offset = addSkirtIndices(
+      eastIndicesNorthToSouth,
+      vertexIndex,
+      indices,
+      offset,
+    );
+    vertexIndex += eastIndicesNorthToSouth.length;
+    addSkirtIndices(northIndicesWestToEast, vertexIndex, indices, offset);
+  }
+
+  /**
+   * Adds skirt indices with filled corners.
+   * @private
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North.
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West.
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South.
+   * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East.
+   * @param {number} vertexCount The number of vertices in the tile before adding skirt vertices.
+   * @param {Uint16Array|Uint32Array} indices The array of indices to which skirt indices are added.
+   * @param {number} offset The offset into the indices array at which to start adding skirt indices.
+   */
+  static addSkirtIndicesWithFilledCorners(
+    westIndicesSouthToNorth,
+    southIndicesEastToWest,
+    eastIndicesNorthToSouth,
+    northIndicesWestToEast,
+    vertexCount,
+    indices,
+    offset
+  ) {
+    // Add skirt indices without filled corners
+    TerrainProvider.addSkirtIndices(
+      westIndicesSouthToNorth,
+      southIndicesEastToWest,
+      eastIndicesNorthToSouth,
+      northIndicesWestToEast,
+      vertexCount,
+      indices,
+      offset,
+    );
+
+    const skirtVertexCount = TerrainProvider.getSkirtVertexCount(
+      westIndicesSouthToNorth,
+      southIndicesEastToWest,
+      eastIndicesNorthToSouth,
+      northIndicesWestToEast,
+    );
+    const skirtIndexCountWithoutCaps =
+      TerrainProvider.getSkirtIndexCount(skirtVertexCount);
+
+    const cornerStartIdx = offset + skirtIndexCountWithoutCaps;
+
+    const cornerSWIndex = westIndicesSouthToNorth[0];
+    const cornerNWIndex = northIndicesWestToEast[0];
+    const cornerNEIndex = eastIndicesNorthToSouth[0];
+    const cornerSEIndex = southIndicesEastToWest[0];
+
+    // Indices based on edge order in addSkirtIndices
+    const westSouthIndex = vertexCount;
+    const westNorthIndex = westSouthIndex + westIndicesSouthToNorth.length - 1;
+    const southEastIndex = westNorthIndex + 1;
+    const southWestIndex = southEastIndex + southIndicesEastToWest.length - 1;
+    const eastNorthIndex = southWestIndex + 1;
+    const eastSouthIndex = eastNorthIndex + eastIndicesNorthToSouth.length - 1;
+    const northWestIndex = eastSouthIndex + 1;
+    const northEastIndex = northWestIndex + northIndicesWestToEast.length - 1;
+
+    // Connect the corner vertices with the skirt vertices extending from the corner
+
+    indices[cornerStartIdx + 0] = cornerSWIndex;
+    indices[cornerStartIdx + 1] = westSouthIndex;
+    indices[cornerStartIdx + 2] = southWestIndex;
+
+    indices[cornerStartIdx + 3] = cornerSEIndex;
+    indices[cornerStartIdx + 4] = southEastIndex;
+    indices[cornerStartIdx + 5] = eastSouthIndex;
+
+    indices[cornerStartIdx + 6] = cornerNEIndex;
+    indices[cornerStartIdx + 7] = eastNorthIndex;
+    indices[cornerStartIdx + 8] = northEastIndex;
+
+    indices[cornerStartIdx + 9] = cornerNWIndex;
+    indices[cornerStartIdx + 10] = northWestIndex;
+    indices[cornerStartIdx + 11] = westNorthIndex;
+  }
+
+  /**
+   * Determines an appropriate geometric error estimate when the geometry comes from a heightmap.
+   *
+   * @param {Ellipsoid} ellipsoid The ellipsoid to which the terrain is attached.
+   * @param {number} tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
+   * @param {number} numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
+   * @returns {number} An estimated geometric error.
+   */
+  static getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
+    return (
+      (ellipsoid.maximumRadius *
+        2 *
+        Math.PI *
+        TerrainProvider.heightmapTerrainQuality) /
+      (tileImageWidth * numberOfTilesAtLevelZero)
+    );
+  }
 }
 
 Object.defineProperties(TerrainProvider.prototype, {
@@ -93,335 +434,9 @@ Object.defineProperties(TerrainProvider.prototype, {
 
 const regularGridIndicesCache = [];
 
-/**
- * Gets a list of indices for a triangle mesh representing a regular grid.  Calling
- * this function multiple times with the same grid width and height returns the
- * same list of indices.  The total number of vertices must be less than or equal
- * to 65536.
- *
- * @param {number} width The number of vertices in the regular grid in the horizontal direction.
- * @param {number} height The number of vertices in the regular grid in the vertical direction.
- * @returns {Uint16Array|Uint32Array} The list of indices. Uint16Array gets returned for 64KB or less and Uint32Array for 4GB or less.
- */
-TerrainProvider.getRegularGridIndices = function (width, height) {
-  //>>includeStart('debug', pragmas.debug);
-  if (width * height >= CesiumMath.FOUR_GIGABYTES) {
-    throw new DeveloperError(
-      "The total number of vertices (width * height) must be less than 4,294,967,296.",
-    );
-  }
-  //>>includeEnd('debug');
-
-  let byWidth = regularGridIndicesCache[width];
-  if (!defined(byWidth)) {
-    regularGridIndicesCache[width] = byWidth = [];
-  }
-
-  let indices = byWidth[height];
-  if (!defined(indices)) {
-    if (width * height < CesiumMath.SIXTY_FOUR_KILOBYTES) {
-      indices = byWidth[height] = new Uint16Array(
-        (width - 1) * (height - 1) * 6,
-      );
-    } else {
-      indices = byWidth[height] = new Uint32Array(
-        (width - 1) * (height - 1) * 6,
-      );
-    }
-    addRegularGridIndices(width, height, indices, 0);
-  }
-
-  return indices;
-};
-
 const regularGridAndEdgeIndicesCache = [];
 
-/**
- * @private
- */
-TerrainProvider.getRegularGridIndicesAndEdgeIndices = function (width, height) {
-  //>>includeStart('debug', pragmas.debug);
-  if (width * height >= CesiumMath.FOUR_GIGABYTES) {
-    throw new DeveloperError(
-      "The total number of vertices (width * height) must be less than 4,294,967,296.",
-    );
-  }
-  //>>includeEnd('debug');
-
-  let byWidth = regularGridAndEdgeIndicesCache[width];
-  if (!defined(byWidth)) {
-    regularGridAndEdgeIndicesCache[width] = byWidth = [];
-  }
-
-  let indicesAndEdges = byWidth[height];
-  if (!defined(indicesAndEdges)) {
-    const indices = TerrainProvider.getRegularGridIndices(width, height);
-
-    const edgeIndices = getEdgeIndices(width, height);
-    const westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
-    const southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
-    const eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
-    const northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
-
-    indicesAndEdges = byWidth[height] = {
-      indices: indices,
-      westIndicesSouthToNorth: westIndicesSouthToNorth,
-      southIndicesEastToWest: southIndicesEastToWest,
-      eastIndicesNorthToSouth: eastIndicesNorthToSouth,
-      northIndicesWestToEast: northIndicesWestToEast,
-    };
-  }
-
-  return indicesAndEdges;
-};
-
 const regularGridAndSkirtAndEdgeIndicesCache = [];
-
-/**
- * @private
- */
-TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function (
-  width,
-  height,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  if (width * height >= CesiumMath.FOUR_GIGABYTES) {
-    throw new DeveloperError(
-      "The total number of vertices (width * height) must be less than 4,294,967,296.",
-    );
-  }
-  //>>includeEnd('debug');
-
-  let byWidth = regularGridAndSkirtAndEdgeIndicesCache[width];
-  if (!defined(byWidth)) {
-    regularGridAndSkirtAndEdgeIndicesCache[width] = byWidth = [];
-  }
-
-  let indicesAndEdges = byWidth[height];
-  if (!defined(indicesAndEdges)) {
-    const gridVertexCount = width * height;
-    const gridIndexCount = (width - 1) * (height - 1) * 6;
-    const edgeVertexCount = width * 2 + height * 2;
-    const edgeIndexCount = Math.max(0, edgeVertexCount - 4) * 6;
-    const vertexCount = gridVertexCount + edgeVertexCount;
-    const indexCount = gridIndexCount + edgeIndexCount;
-
-    const edgeIndices = getEdgeIndices(width, height);
-    const westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
-    const southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
-    const eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
-    const northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
-
-    const indices = IndexDatatype.createTypedArray(vertexCount, indexCount);
-    addRegularGridIndices(width, height, indices, 0);
-    TerrainProvider.addSkirtIndices(
-      westIndicesSouthToNorth,
-      southIndicesEastToWest,
-      eastIndicesNorthToSouth,
-      northIndicesWestToEast,
-      gridVertexCount,
-      indices,
-      gridIndexCount,
-    );
-
-    indicesAndEdges = byWidth[height] = {
-      indices: indices,
-      westIndicesSouthToNorth: westIndicesSouthToNorth,
-      southIndicesEastToWest: southIndicesEastToWest,
-      eastIndicesNorthToSouth: eastIndicesNorthToSouth,
-      northIndicesWestToEast: northIndicesWestToEast,
-      indexCountWithoutSkirts: gridIndexCount,
-    };
-  }
-
-  return indicesAndEdges;
-};
-
-/**
- * Calculates the number of skirt vertices given the edge indices.
- * @private
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth Edge indices along the west side of the tile.
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest Edge indices along the south side of the tile.
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth Edge indices along the east side of the tile.
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast Edge indices along the north side of the tile.
- * @returns {number} The number of skirt vertices.
- */
-TerrainProvider.getSkirtVertexCount = function (
-  westIndicesSouthToNorth,
-  southIndicesEastToWest,
-  eastIndicesNorthToSouth,
-  northIndicesWestToEast,
-) {
-  return (
-    westIndicesSouthToNorth.length +
-    southIndicesEastToWest.length +
-    eastIndicesNorthToSouth.length +
-    northIndicesWestToEast.length
-  );
-};
-
-/**
- * Compute the number of skirt indices given the number of skirt vertices.
- * Consider a 3x3 grid of vertices. There will be 8 skirt vertices around the edge:
- * - 16 edge triangles
- * - 48 indices
- *
- *   |\|\|
- * |/|   |/|
- * |/|   |/|
- *   |\|\|
- *
- * @private
- * @param {number} skirtVertexCount
- * @returns {number}
- */
-TerrainProvider.getSkirtIndexCount = function (skirtVertexCount) {
-  return (skirtVertexCount - 4) * 2 * 3;
-};
-
-/**
- * Compute the number of skirt indices given the number of skirt vertices with filled corners.
- * Consider a 3x3 grid of vertices. There will be 8 skirt vertices around the edge:
- * - 16 edge triangles
- * - 4 cap triangles
- * - 60 indices
- *
- *  /|\|\|\
- * |/|   |/|
- * |/|   |/|
- *  \|\|\|/
- *
- * @private
- * @param {number} skirtVertexCount
- * @returns {number}
- */
-TerrainProvider.getSkirtIndexCountWithFilledCorners = function (
-  skirtVertexCount,
-) {
-  return ((skirtVertexCount - 4) * 2 + 4) * 3;
-};
-
-/**
- * Adds skirt indices.
- * This does not add filled corners. Use {@link TerrainProvider.addSkirtIndicesWithFilledCorners} to add skirt indices with filled corners.
- * @private
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North.
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West.
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South.
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East.
- * @param {number} vertexCount The number of vertices in the tile before adding skirt vertices.
- * @param {Uint16Array|Uint32Array} indices The array of indices to which skirt indices are added.
- * @param {number} offset The offset into the indices array at which to start adding skirt indices.
- */
-TerrainProvider.addSkirtIndices = function (
-  westIndicesSouthToNorth,
-  southIndicesEastToWest,
-  eastIndicesNorthToSouth,
-  northIndicesWestToEast,
-  vertexCount,
-  indices,
-  offset,
-) {
-  let vertexIndex = vertexCount;
-  offset = addSkirtIndices(
-    westIndicesSouthToNorth,
-    vertexIndex,
-    indices,
-    offset,
-  );
-  vertexIndex += westIndicesSouthToNorth.length;
-  offset = addSkirtIndices(
-    southIndicesEastToWest,
-    vertexIndex,
-    indices,
-    offset,
-  );
-  vertexIndex += southIndicesEastToWest.length;
-  offset = addSkirtIndices(
-    eastIndicesNorthToSouth,
-    vertexIndex,
-    indices,
-    offset,
-  );
-  vertexIndex += eastIndicesNorthToSouth.length;
-  addSkirtIndices(northIndicesWestToEast, vertexIndex, indices, offset);
-};
-
-/**
- * Adds skirt indices with filled corners.
- * @private
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North.
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West.
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South.
- * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East.
- * @param {number} vertexCount The number of vertices in the tile before adding skirt vertices.
- * @param {Uint16Array|Uint32Array} indices The array of indices to which skirt indices are added.
- * @param {number} offset The offset into the indices array at which to start adding skirt indices.
- */
-TerrainProvider.addSkirtIndicesWithFilledCorners = function (
-  westIndicesSouthToNorth,
-  southIndicesEastToWest,
-  eastIndicesNorthToSouth,
-  northIndicesWestToEast,
-  vertexCount,
-  indices,
-  offset,
-) {
-  // Add skirt indices without filled corners
-  TerrainProvider.addSkirtIndices(
-    westIndicesSouthToNorth,
-    southIndicesEastToWest,
-    eastIndicesNorthToSouth,
-    northIndicesWestToEast,
-    vertexCount,
-    indices,
-    offset,
-  );
-
-  const skirtVertexCount = TerrainProvider.getSkirtVertexCount(
-    westIndicesSouthToNorth,
-    southIndicesEastToWest,
-    eastIndicesNorthToSouth,
-    northIndicesWestToEast,
-  );
-  const skirtIndexCountWithoutCaps =
-    TerrainProvider.getSkirtIndexCount(skirtVertexCount);
-
-  const cornerStartIdx = offset + skirtIndexCountWithoutCaps;
-
-  const cornerSWIndex = westIndicesSouthToNorth[0];
-  const cornerNWIndex = northIndicesWestToEast[0];
-  const cornerNEIndex = eastIndicesNorthToSouth[0];
-  const cornerSEIndex = southIndicesEastToWest[0];
-
-  // Indices based on edge order in addSkirtIndices
-  const westSouthIndex = vertexCount;
-  const westNorthIndex = westSouthIndex + westIndicesSouthToNorth.length - 1;
-  const southEastIndex = westNorthIndex + 1;
-  const southWestIndex = southEastIndex + southIndicesEastToWest.length - 1;
-  const eastNorthIndex = southWestIndex + 1;
-  const eastSouthIndex = eastNorthIndex + eastIndicesNorthToSouth.length - 1;
-  const northWestIndex = eastSouthIndex + 1;
-  const northEastIndex = northWestIndex + northIndicesWestToEast.length - 1;
-
-  // Connect the corner vertices with the skirt vertices extending from the corner
-
-  indices[cornerStartIdx + 0] = cornerSWIndex;
-  indices[cornerStartIdx + 1] = westSouthIndex;
-  indices[cornerStartIdx + 2] = southWestIndex;
-
-  indices[cornerStartIdx + 3] = cornerSEIndex;
-  indices[cornerStartIdx + 4] = southEastIndex;
-  indices[cornerStartIdx + 5] = eastSouthIndex;
-
-  indices[cornerStartIdx + 6] = cornerNEIndex;
-  indices[cornerStartIdx + 7] = eastNorthIndex;
-  indices[cornerStartIdx + 8] = northEastIndex;
-
-  indices[cornerStartIdx + 9] = cornerNWIndex;
-  indices[cornerStartIdx + 10] = northWestIndex;
-  indices[cornerStartIdx + 11] = westNorthIndex;
-};
 
 function getEdgeIndices(width, height) {
   const westIndicesSouthToNorth = new Array(height);
@@ -501,28 +516,6 @@ function addSkirtIndices(edgeIndices, vertexIndex, indices, offset) {
  * @type {number}
  */
 TerrainProvider.heightmapTerrainQuality = 0.25;
-
-/**
- * Determines an appropriate geometric error estimate when the geometry comes from a heightmap.
- *
- * @param {Ellipsoid} ellipsoid The ellipsoid to which the terrain is attached.
- * @param {number} tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
- * @param {number} numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
- * @returns {number} An estimated geometric error.
- */
-TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function (
-  ellipsoid,
-  tileImageWidth,
-  numberOfTilesAtLevelZero,
-) {
-  return (
-    (ellipsoid.maximumRadius *
-      2 *
-      Math.PI *
-      TerrainProvider.heightmapTerrainQuality) /
-    (tileImageWidth * numberOfTilesAtLevelZero)
-  );
-};
 
 /**
  * Requests the geometry for a given tile. The result must include terrain data and

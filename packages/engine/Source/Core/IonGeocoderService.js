@@ -54,47 +54,47 @@ function queryParameterToProvider(parameter) {
  *
  * @see Ion
  */
-function IonGeocoderService(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class IonGeocoderService {
+  constructor(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.scene", options.scene);
-  //>>includeEnd('debug');
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options.scene", options.scene);
+    //>>includeEnd('debug');
 
-  const geocodeProviderType =
-    options.geocodeProviderType ?? IonGeocodeProviderType.DEFAULT;
-  //>>includeStart('debug', pragmas.debug);
-  validateIonGeocodeProviderType(geocodeProviderType);
-  //>>includeEnd('debug');
+    const geocodeProviderType =
+      options.geocodeProviderType ?? IonGeocodeProviderType.DEFAULT;
+    //>>includeStart('debug', pragmas.debug);
+    validateIonGeocodeProviderType(geocodeProviderType);
+    //>>includeEnd('debug');
 
-  const accessToken = options.accessToken ?? Ion.defaultAccessToken;
-  const server = Resource.createIfNeeded(options.server ?? Ion.defaultServer);
-  server.appendForwardSlash();
+    const accessToken = options.accessToken ?? Ion.defaultAccessToken;
+    const server = Resource.createIfNeeded(options.server ?? Ion.defaultServer);
+    server.appendForwardSlash();
 
-  const defaultTokenCredit = Ion.getDefaultTokenCredit(accessToken);
-  if (defined(defaultTokenCredit)) {
-    options.scene.frameState.creditDisplay.addStaticCredit(
-      Credit.clone(defaultTokenCredit),
-    );
+    const defaultTokenCredit = Ion.getDefaultTokenCredit(accessToken);
+    if (defined(defaultTokenCredit)) {
+      options.scene.frameState.creditDisplay.addStaticCredit(
+        Credit.clone(defaultTokenCredit),
+      );
+    }
+
+    const searchEndpoint = server.getDerivedResource({
+      url: "v1/geocode",
+    });
+
+    if (defined(accessToken)) {
+      searchEndpoint.appendQueryParameters({ access_token: accessToken });
+    }
+
+    this._accessToken = accessToken;
+    this._server = server;
+    this._pelias = new PeliasGeocoderService(searchEndpoint);
+    // geocoderProviderType isn't stored here directly but instead relies on the
+    // query parameters of this._pelias.url.  Use the setter logic to update value.
+    this.geocodeProviderType = geocodeProviderType;
   }
 
-  const searchEndpoint = server.getDerivedResource({
-    url: "v1/geocode",
-  });
-
-  if (defined(accessToken)) {
-    searchEndpoint.appendQueryParameters({ access_token: accessToken });
-  }
-
-  this._accessToken = accessToken;
-  this._server = server;
-  this._pelias = new PeliasGeocoderService(searchEndpoint);
-  // geocoderProviderType isn't stored here directly but instead relies on the
-  // query parameters of this._pelias.url.  Use the setter logic to update value.
-  this.geocodeProviderType = geocodeProviderType;
-}
-
-Object.defineProperties(IonGeocoderService.prototype, {
   /**
    * Gets the credit to display after a geocode is performed. Typically this is used to credit
    * the geocoder service.
@@ -102,46 +102,45 @@ Object.defineProperties(IonGeocoderService.prototype, {
    * @type {Credit|undefined}
    * @readonly
    */
-  credit: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get credit() {
+    return undefined;
+  }
+
   /**
    * The geocoding service that Cesium ion API server should use to fulfill geocding requests.
    * @memberof IonGeocoderService.prototype
    * @type {IonGeocodeProviderType}
    * @default IonGeocodeProviderType.DEFAULT
    */
-  geocodeProviderType: {
-    get: function () {
-      return queryParameterToProvider(
-        this._pelias.url.queryParameters["geocoder"],
-      );
-    },
-    set: function (geocodeProviderType) {
-      validateIonGeocodeProviderType(geocodeProviderType);
-      const query = {
-        ...this._pelias.url.queryParameters,
-        geocoder: providerToQueryParameter(geocodeProviderType),
-      };
-      // Delete the geocoder parameter to prevent sending &geocoder=undefined in the query
-      if (!defined(query.geocoder)) {
-        delete query.geocoder;
-      }
-      this._pelias.url.setQueryParameters(query);
-    },
-  },
-});
+  get geocodeProviderType() {
+    return queryParameterToProvider(
+      this._pelias.url.queryParameters["geocoder"],
+    );
+  }
 
-/**
- * @function
- *
- * @param {string} query The query to be sent to the geocoder service
- * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
- * @returns {Promise<GeocoderService.Result[]>}
- */
-IonGeocoderService.prototype.geocode = async function (query, geocodeType) {
-  return this._pelias.geocode(query, geocodeType);
-};
+  set geocodeProviderType(geocodeProviderType) {
+    validateIonGeocodeProviderType(geocodeProviderType);
+    const query = {
+      ...this._pelias.url.queryParameters,
+      geocoder: providerToQueryParameter(geocodeProviderType),
+    };
+    // Delete the geocoder parameter to prevent sending &geocoder=undefined in the query
+    if (!defined(query.geocoder)) {
+      delete query.geocoder;
+    }
+    this._pelias.url.setQueryParameters(query);
+  }
+
+  /**
+   * @function
+   *
+   * @param {string} query The query to be sent to the geocoder service
+   * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
+   * @returns {Promise<GeocoderService.Result[]>}
+   */
+  async geocode(query, geocodeType) {
+    return this._pelias.geocode(query, geocodeType);
+  }
+}
+
 export default IonGeocoderService;

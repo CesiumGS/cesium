@@ -28,126 +28,116 @@ import Rectangle from "./Rectangle.js";
  *
  * @private
  */
-function EllipsoidalOccluder(ellipsoid, cameraPosition) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("ellipsoid", ellipsoid);
-  //>>includeEnd('debug');
+class EllipsoidalOccluder {
+  constructor(ellipsoid, cameraPosition) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("ellipsoid", ellipsoid);
+    //>>includeEnd('debug');
 
-  this._ellipsoid = ellipsoid;
-  this._cameraPosition = new Cartesian3();
-  this._cameraPositionInScaledSpace = new Cartesian3();
-  this._distanceToLimbInScaledSpaceSquared = 0.0;
+    this._ellipsoid = ellipsoid;
+    this._cameraPosition = new Cartesian3();
+    this._cameraPositionInScaledSpace = new Cartesian3();
+    this._distanceToLimbInScaledSpaceSquared = 0.0;
 
-  // cameraPosition fills in the above values
-  if (defined(cameraPosition)) {
-    this.cameraPosition = cameraPosition;
+    // cameraPosition fills in the above values
+    if (defined(cameraPosition)) {
+      this.cameraPosition = cameraPosition;
+    }
   }
-}
 
-Object.defineProperties(EllipsoidalOccluder.prototype, {
   /**
    * Gets the occluding ellipsoid.
    * @memberof EllipsoidalOccluder.prototype
    * @type {Ellipsoid}
    */
-  ellipsoid: {
-    get: function () {
-      return this._ellipsoid;
-    },
-  },
+  get ellipsoid() {
+    return this._ellipsoid;
+  }
+
   /**
    * Gets or sets the position of the camera.
    * @memberof EllipsoidalOccluder.prototype
    * @type {Cartesian3}
    */
-  cameraPosition: {
-    get: function () {
-      return this._cameraPosition;
-    },
-    set: function (cameraPosition) {
-      // See https://cesium.com/blog/2013/04/25/Horizon-culling/
-      const ellipsoid = this._ellipsoid;
-      const cv = ellipsoid.transformPositionToScaledSpace(
-        cameraPosition,
-        this._cameraPositionInScaledSpace,
-      );
-      const vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
+  get cameraPosition() {
+    return this._cameraPosition;
+  }
 
-      Cartesian3.clone(cameraPosition, this._cameraPosition);
-      this._cameraPositionInScaledSpace = cv;
-      this._distanceToLimbInScaledSpaceSquared = vhMagnitudeSquared;
-    },
-  },
-});
+  set cameraPosition(cameraPosition) {
+    // See https://cesium.com/blog/2013/04/25/Horizon-culling/
+    const ellipsoid = this._ellipsoid;
+    const cv = ellipsoid.transformPositionToScaledSpace(
+      cameraPosition,
+      this._cameraPositionInScaledSpace,
+    );
+    const vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
 
-const scratchCartesian = new Cartesian3();
+    Cartesian3.clone(cameraPosition, this._cameraPosition);
+    this._cameraPositionInScaledSpace = cv;
+    this._distanceToLimbInScaledSpaceSquared = vhMagnitudeSquared;
+  }
 
-/**
- * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
- *
- * @param {Cartesian3} occludee The point to test for visibility.
- * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
- *
- * @example
- * const cameraPosition = new Cesium.Cartesian3(0, 0, 2.5);
- * const ellipsoid = new Cesium.Ellipsoid(1.0, 1.1, 0.9);
- * const occluder = new Cesium.EllipsoidalOccluder(ellipsoid, cameraPosition);
- * const point = new Cesium.Cartesian3(0, -3, -3);
- * occluder.isPointVisible(point); //returns true
- */
-EllipsoidalOccluder.prototype.isPointVisible = function (occludee) {
-  const ellipsoid = this._ellipsoid;
-  const occludeeScaledSpacePosition = ellipsoid.transformPositionToScaledSpace(
-    occludee,
-    scratchCartesian,
-  );
-  return isScaledSpacePointVisible(
-    occludeeScaledSpacePosition,
-    this._cameraPositionInScaledSpace,
-    this._distanceToLimbInScaledSpaceSquared,
-  );
-};
+  /**
+   * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
+   *
+   * @param {Cartesian3} occludee The point to test for visibility.
+   * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+   *
+   * @example
+   * const cameraPosition = new Cesium.Cartesian3(0, 0, 2.5);
+   * const ellipsoid = new Cesium.Ellipsoid(1.0, 1.1, 0.9);
+   * const occluder = new Cesium.EllipsoidalOccluder(ellipsoid, cameraPosition);
+   * const point = new Cesium.Cartesian3(0, -3, -3);
+   * occluder.isPointVisible(point); //returns true
+   */
+  isPointVisible(occludee) {
+    const ellipsoid = this._ellipsoid;
+    const occludeeScaledSpacePosition = ellipsoid.transformPositionToScaledSpace(
+      occludee,
+      scratchCartesian,
+    );
+    return isScaledSpacePointVisible(
+      occludeeScaledSpacePosition,
+      this._cameraPositionInScaledSpace,
+      this._distanceToLimbInScaledSpaceSquared,
+    );
+  }
 
-/**
- * Determines whether or not a point expressed in the ellipsoid scaled space, is hidden from view by the
- * occluder.  To transform a Cartesian X, Y, Z position in the coordinate system aligned with the ellipsoid
- * into the scaled space, call {@link Ellipsoid#transformPositionToScaledSpace}.
- *
- * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space.
- * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
- *
- * @example
- * const cameraPosition = new Cesium.Cartesian3(0, 0, 2.5);
- * const ellipsoid = new Cesium.Ellipsoid(1.0, 1.1, 0.9);
- * const occluder = new Cesium.EllipsoidalOccluder(ellipsoid, cameraPosition);
- * const point = new Cesium.Cartesian3(0, -3, -3);
- * const scaledSpacePoint = ellipsoid.transformPositionToScaledSpace(point);
- * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
- */
-EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function (
-  occludeeScaledSpacePosition,
-) {
-  return isScaledSpacePointVisible(
-    occludeeScaledSpacePosition,
-    this._cameraPositionInScaledSpace,
-    this._distanceToLimbInScaledSpaceSquared,
-  );
-};
+  /**
+   * Determines whether or not a point expressed in the ellipsoid scaled space, is hidden from view by the
+   * occluder.  To transform a Cartesian X, Y, Z position in the coordinate system aligned with the ellipsoid
+   * into the scaled space, call {@link Ellipsoid#transformPositionToScaledSpace}.
+   *
+   * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space.
+   * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+   *
+   * @example
+   * const cameraPosition = new Cesium.Cartesian3(0, 0, 2.5);
+   * const ellipsoid = new Cesium.Ellipsoid(1.0, 1.1, 0.9);
+   * const occluder = new Cesium.EllipsoidalOccluder(ellipsoid, cameraPosition);
+   * const point = new Cesium.Cartesian3(0, -3, -3);
+   * const scaledSpacePoint = ellipsoid.transformPositionToScaledSpace(point);
+   * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
+   */
+  isScaledSpacePointVisible(occludeeScaledSpacePosition) {
+    return isScaledSpacePointVisible(
+      occludeeScaledSpacePosition,
+      this._cameraPositionInScaledSpace,
+      this._distanceToLimbInScaledSpaceSquared,
+    );
+  }
 
-const scratchCameraPositionInScaledSpaceShrunk = new Cartesian3();
-
-/**
- * Similar to {@link EllipsoidalOccluder#isScaledSpacePointVisible} except tests against an
- * ellipsoid that has been shrunk by the minimum height when the minimum height is below
- * the ellipsoid. This is intended to be used with points generated by
- * {@link EllipsoidalOccluder#computeHorizonCullingPointPossiblyUnderEllipsoid} or
- * {@link EllipsoidalOccluder#computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid}.
- *
- * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space of the possibly-shrunk ellipsoid.
- * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
- */
-EllipsoidalOccluder.prototype.isScaledSpacePointVisiblePossiblyUnderEllipsoid =
-  function (occludeeScaledSpacePosition, minimumHeight) {
+  /**
+   * Similar to {@link EllipsoidalOccluder#isScaledSpacePointVisible} except tests against an
+   * ellipsoid that has been shrunk by the minimum height when the minimum height is below
+   * the ellipsoid. This is intended to be used with points generated by
+   * {@link EllipsoidalOccluder#computeHorizonCullingPointPossiblyUnderEllipsoid} or
+   * {@link EllipsoidalOccluder#computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid}.
+   *
+   * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space of the possibly-shrunk ellipsoid.
+   * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+   */
+  isScaledSpacePointVisiblePossiblyUnderEllipsoid(occludeeScaledSpacePosition, minimumHeight) {
     const ellipsoid = this._ellipsoid;
     let vhMagnitudeSquared;
     let cv;
@@ -173,58 +163,51 @@ EllipsoidalOccluder.prototype.isScaledSpacePointVisiblePossiblyUnderEllipsoid =
       cv,
       vhMagnitudeSquared,
     );
-  };
+  }
 
-/**
- * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
- * the horizon, all of the positions are guaranteed to be below the horizon as well.  The returned point
- * is expressed in the ellipsoid-scaled space and is suitable for use with
- * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
- *
- * @param {Cartesian3} directionToPoint The direction that the computed point will lie along.
- *                     A reasonable direction to use is the direction from the center of the ellipsoid to
- *                     the center of the bounding sphere computed from the positions.  The direction need not
- *                     be normalized.
- * @param {Cartesian3[]} positions The positions from which to compute the horizon culling point.  The positions
- *                       must be expressed in a reference frame centered at the ellipsoid and aligned with the
- *                       ellipsoid's axes.
- * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
- * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
- */
-EllipsoidalOccluder.prototype.computeHorizonCullingPoint = function (
-  directionToPoint,
-  positions,
-  result,
-) {
-  return computeHorizonCullingPointFromPositions(
-    this._ellipsoid,
-    directionToPoint,
-    positions,
-    result,
-  );
-};
+  /**
+   * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
+   * the horizon, all of the positions are guaranteed to be below the horizon as well.  The returned point
+   * is expressed in the ellipsoid-scaled space and is suitable for use with
+   * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
+   *
+   * @param {Cartesian3} directionToPoint The direction that the computed point will lie along.
+   *                     A reasonable direction to use is the direction from the center of the ellipsoid to
+   *                     the center of the bounding sphere computed from the positions.  The direction need not
+   *                     be normalized.
+   * @param {Cartesian3[]} positions The positions from which to compute the horizon culling point.  The positions
+   *                       must be expressed in a reference frame centered at the ellipsoid and aligned with the
+   *                       ellipsoid's axes.
+   * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
+   * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
+   */
+  computeHorizonCullingPoint(directionToPoint, positions, result) {
+    return computeHorizonCullingPointFromPositions(
+      this._ellipsoid,
+      directionToPoint,
+      positions,
+      result,
+    );
+  }
 
-const scratchEllipsoidShrunk = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
-
-/**
- * Similar to {@link EllipsoidalOccluder#computeHorizonCullingPoint} except computes the culling
- * point relative to an ellipsoid that has been shrunk by the minimum height when the minimum height is below
- * the ellipsoid. The returned point is expressed in the possibly-shrunk ellipsoid-scaled space and is suitable
- * for use with {@link EllipsoidalOccluder#isScaledSpacePointVisiblePossiblyUnderEllipsoid}.
- *
- * @param {Cartesian3} directionToPoint The direction that the computed point will lie along.
- *                     A reasonable direction to use is the direction from the center of the ellipsoid to
- *                     the center of the bounding sphere computed from the positions.  The direction need not
- *                     be normalized.
- * @param {Cartesian3[]} positions The positions from which to compute the horizon culling point.  The positions
- *                       must be expressed in a reference frame centered at the ellipsoid and aligned with the
- *                       ellipsoid's axes.
- * @param {number} [minimumHeight] The minimum height of all positions. If this value is undefined, all positions are assumed to be above the ellipsoid.
- * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
- * @returns {Cartesian3} The computed horizon culling point, expressed in the possibly-shrunk ellipsoid-scaled space.
- */
-EllipsoidalOccluder.prototype.computeHorizonCullingPointPossiblyUnderEllipsoid =
-  function (directionToPoint, positions, minimumHeight, result) {
+  /**
+   * Similar to {@link EllipsoidalOccluder#computeHorizonCullingPoint} except computes the culling
+   * point relative to an ellipsoid that has been shrunk by the minimum height when the minimum height is below
+   * the ellipsoid. The returned point is expressed in the possibly-shrunk ellipsoid-scaled space and is suitable
+   * for use with {@link EllipsoidalOccluder#isScaledSpacePointVisiblePossiblyUnderEllipsoid}.
+   *
+   * @param {Cartesian3} directionToPoint The direction that the computed point will lie along.
+   *                     A reasonable direction to use is the direction from the center of the ellipsoid to
+   *                     the center of the bounding sphere computed from the positions.  The direction need not
+   *                     be normalized.
+   * @param {Cartesian3[]} positions The positions from which to compute the horizon culling point.  The positions
+   *                       must be expressed in a reference frame centered at the ellipsoid and aligned with the
+   *                       ellipsoid's axes.
+   * @param {number} [minimumHeight] The minimum height of all positions. If this value is undefined, all positions are assumed to be above the ellipsoid.
+   * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
+   * @returns {Cartesian3} The computed horizon culling point, expressed in the possibly-shrunk ellipsoid-scaled space.
+   */
+  computeHorizonCullingPointPossiblyUnderEllipsoid(directionToPoint, positions, minimumHeight, result) {
     const possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(
       this._ellipsoid,
       minimumHeight,
@@ -236,27 +219,27 @@ EllipsoidalOccluder.prototype.computeHorizonCullingPointPossiblyUnderEllipsoid =
       positions,
       result,
     );
-  };
-/**
- * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
- * the horizon, all of the positions are guaranteed to be below the horizon as well.  The returned point
- * is expressed in the ellipsoid-scaled space and is suitable for use with
- * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
- *
- * @param {Cartesian3} directionToPoint The direction that the computed point will lie along.
- *                     A reasonable direction to use is the direction from the center of the ellipsoid to
- *                     the center of the bounding sphere computed from the positions.  The direction need not
- *                     be normalized.
- * @param {number[]|Float32Array|Float64Array} vertices  The vertices from which to compute the horizon culling point. The positions
- *                   must be expressed in a reference frame centered at the ellipsoid and aligned with the
- *                   ellipsoid's axes.
- * @param {number} [stride=3]
- * @param {Cartesian3} [center=Cartesian3.ZERO]
- * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
- * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
- */
-EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVertices =
-  function (directionToPoint, vertices, stride, center, result) {
+  }
+
+  /**
+   * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
+   * the horizon, all of the positions are guaranteed to be below the horizon as well.  The returned point
+   * is expressed in the ellipsoid-scaled space and is suitable for use with
+   * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
+   *
+   * @param {Cartesian3} directionToPoint The direction that the computed point will lie along.
+   *                     A reasonable direction to use is the direction from the center of the ellipsoid to
+   *                     the center of the bounding sphere computed from the positions.  The direction need not
+   *                     be normalized.
+   * @param {number[]|Float32Array|Float64Array} vertices  The vertices from which to compute the horizon culling point. The positions
+   *                   must be expressed in a reference frame centered at the ellipsoid and aligned with the
+   *                   ellipsoid's axes.
+   * @param {number} [stride=3]
+   * @param {Cartesian3} [center=Cartesian3.ZERO]
+   * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
+   * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
+   */
+  computeHorizonCullingPointFromVertices(directionToPoint, vertices, stride, center, result) {
     return computeHorizonCullingPointFromVertices(
       this._ellipsoid,
       directionToPoint,
@@ -265,29 +248,28 @@ EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVertices =
       center,
       result,
     );
-  };
+  }
 
-/**
- * Similar to {@link EllipsoidalOccluder#computeHorizonCullingPointFromVertices} except computes the culling
- * point relative to an ellipsoid that has been shrunk by the minimum height when the minimum height is below
- * the ellipsoid. The returned point is expressed in the possibly-shrunk ellipsoid-scaled space and is suitable
- * for use with {@link EllipsoidalOccluder#isScaledSpacePointVisiblePossiblyUnderEllipsoid}.
- *
- * @param {Cartesian3} directionToPoint The direction that the computed point will lie along.
- *                     A reasonable direction to use is the direction from the center of the ellipsoid to
- *                     the center of the bounding sphere computed from the positions.  The direction need not
- *                     be normalized.
- * @param {number[]|Float32Array|Float64Array} vertices  The vertices from which to compute the horizon culling point.  The positions
- *                   must be expressed in a reference frame centered at the ellipsoid and aligned with the
- *                   ellipsoid's axes.
- * @param {number} [stride=3]
- * @param {Cartesian3} [center=Cartesian3.ZERO]
- * @param {number} [minimumHeight] The minimum height of all vertices. If this value is undefined, all vertices are assumed to be above the ellipsoid.
- * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
- * @returns {Cartesian3} The computed horizon culling point, expressed in the possibly-shrunk ellipsoid-scaled space.
- */
-EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid =
-  function (directionToPoint, vertices, stride, center, minimumHeight, result) {
+  /**
+   * Similar to {@link EllipsoidalOccluder#computeHorizonCullingPointFromVertices} except computes the culling
+   * point relative to an ellipsoid that has been shrunk by the minimum height when the minimum height is below
+   * the ellipsoid. The returned point is expressed in the possibly-shrunk ellipsoid-scaled space and is suitable
+   * for use with {@link EllipsoidalOccluder#isScaledSpacePointVisiblePossiblyUnderEllipsoid}.
+   *
+   * @param {Cartesian3} directionToPoint The direction that the computed point will lie along.
+   *                     A reasonable direction to use is the direction from the center of the ellipsoid to
+   *                     the center of the bounding sphere computed from the positions.  The direction need not
+   *                     be normalized.
+   * @param {number[]|Float32Array|Float64Array} vertices  The vertices from which to compute the horizon culling point.  The positions
+   *                   must be expressed in a reference frame centered at the ellipsoid and aligned with the
+   *                   ellipsoid's axes.
+   * @param {number} [stride=3]
+   * @param {Cartesian3} [center=Cartesian3.ZERO]
+   * @param {number} [minimumHeight] The minimum height of all vertices. If this value is undefined, all vertices are assumed to be above the ellipsoid.
+   * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
+   * @returns {Cartesian3} The computed horizon culling point, expressed in the possibly-shrunk ellipsoid-scaled space.
+   */
+  computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid(directionToPoint, vertices, stride, center, minimumHeight, result) {
     const possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(
       this._ellipsoid,
       minimumHeight,
@@ -301,24 +283,21 @@ EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVerticesPossiblyUnde
       center,
       result,
     );
-  };
+  }
 
-const subsampleScratch = [];
-
-/**
- * Computes a point that can be used for horizon culling of a rectangle.  If the point is below
- * the horizon, the ellipsoid-conforming rectangle is guaranteed to be below the horizon as well.
- * The returned point is expressed in the ellipsoid-scaled space and is suitable for use with
- * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
- *
- * @param {Rectangle} rectangle The rectangle for which to compute the horizon culling point.
- * @param {Ellipsoid} ellipsoid The ellipsoid on which the rectangle is defined.  This may be different from
- *                    the ellipsoid used by this instance for occlusion testing.
- * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
- * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
- */
-EllipsoidalOccluder.prototype.computeHorizonCullingPointFromRectangle =
-  function (rectangle, ellipsoid, result) {
+  /**
+   * Computes a point that can be used for horizon culling of a rectangle.  If the point is below
+   * the horizon, the ellipsoid-conforming rectangle is guaranteed to be below the horizon as well.
+   * The returned point is expressed in the ellipsoid-scaled space and is suitable for use with
+   * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
+   *
+   * @param {Rectangle} rectangle The rectangle for which to compute the horizon culling point.
+   * @param {Ellipsoid} ellipsoid The ellipsoid on which the rectangle is defined.  This may be different from
+   *                    the ellipsoid used by this instance for occlusion testing.
+   * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
+   * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
+   */
+  computeHorizonCullingPointFromRectangle(rectangle, ellipsoid, result) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("rectangle", rectangle);
     //>>includeEnd('debug');
@@ -338,7 +317,16 @@ EllipsoidalOccluder.prototype.computeHorizonCullingPointFromRectangle =
     }
 
     return this.computeHorizonCullingPoint(bs.center, positions, result);
-  };
+  }
+}
+
+const scratchCartesian = new Cartesian3();
+
+const scratchCameraPositionInScaledSpaceShrunk = new Cartesian3();
+
+const scratchEllipsoidShrunk = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+
+const subsampleScratch = [];
 
 const scratchEllipsoidShrunkRadii = new Cartesian3();
 
