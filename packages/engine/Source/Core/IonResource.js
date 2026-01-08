@@ -246,8 +246,6 @@ class IonResource extends Resource {
   }
 }
 
-if (defined(Object.create)) {}
-
 /**
  * Adds CesiumJS client headers to the provided headers object.
  * @private

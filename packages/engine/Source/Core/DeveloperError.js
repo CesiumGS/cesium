@@ -20,6 +20,8 @@ import defined from "./defined.js";
  */
 class DeveloperError extends Error {
   constructor(message) {
+    super(message);
+
     /**
      * 'DeveloperError' indicating that this exception was thrown due to a developer error.
      * @type {string}
@@ -69,7 +71,5 @@ class DeveloperError extends Error {
     );
   }
 }
-
-if (defined(Object.create)) {}
 
 export default DeveloperError;
