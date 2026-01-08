@@ -238,7 +238,13 @@ class BoundingSphere {
    * @param {BoundingSphere} [result] The object onto which to store the result.
    * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
    */
-  static fromRectangleWithHeights2D(rectangle, projection, minimumHeight, maximumHeight, result) {
+  static fromRectangleWithHeights2D(
+    rectangle,
+    projection,
+    minimumHeight,
+    maximumHeight,
+    result,
+  ) {
     if (!defined(result)) {
       result = new BoundingSphere();
     }
@@ -778,7 +784,11 @@ class BoundingSphere {
     }
 
     if (length === 2) {
-      return BoundingSphere.union(boundingSpheres[0], boundingSpheres[1], result);
+      return BoundingSphere.union(
+        boundingSpheres[0],
+        boundingSpheres[1],
+        result,
+      );
     }
 
     const positions = [];
@@ -1213,7 +1223,10 @@ class BoundingSphere {
       // defined here so pick the x-axis as a fallback.
       normal = Cartesian3.clone(Cartesian3.UNIT_X, projectTo2DNormalScratch);
     } else {
-      normal = ellipsoid.geodeticSurfaceNormal(center, projectTo2DNormalScratch);
+      normal = ellipsoid.geodeticSurfaceNormal(
+        center,
+        projectTo2DNormalScratch,
+      );
     }
     const east = Cartesian3.cross(
       Cartesian3.UNIT_Z,

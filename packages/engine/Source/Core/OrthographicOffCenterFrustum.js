@@ -217,7 +217,10 @@ class OrthographicOffCenterFrustum {
     plane.x = -direction.x;
     plane.y = -direction.y;
     plane.z = -direction.z;
-    plane.w = -Cartesian3.dot(Cartesian3.negate(direction, negateScratch), point);
+    plane.w = -Cartesian3.dot(
+      Cartesian3.negate(direction, negateScratch),
+      point,
+    );
 
     return this._cullingVolume;
   }
@@ -241,7 +244,13 @@ class OrthographicOffCenterFrustum {
    * // Get the width and height of a pixel.
    * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
    */
-  getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result) {
+  getPixelDimensions(
+    drawingBufferWidth,
+    drawingBufferHeight,
+    distance,
+    pixelRatio,
+    result,
+  ) {
     update(this);
 
     //>>includeStart('debug', pragmas.debug);
@@ -254,7 +263,9 @@ class OrthographicOffCenterFrustum {
       throw new DeveloperError("drawingBufferWidth must be greater than zero.");
     }
     if (drawingBufferHeight <= 0) {
-      throw new DeveloperError("drawingBufferHeight must be greater than zero.");
+      throw new DeveloperError(
+        "drawingBufferHeight must be greater than zero.",
+      );
     }
     if (!defined(distance)) {
       throw new DeveloperError("distance is required.");

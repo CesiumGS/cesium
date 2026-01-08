@@ -92,10 +92,8 @@ class EllipsoidalOccluder {
    */
   isPointVisible(occludee) {
     const ellipsoid = this._ellipsoid;
-    const occludeeScaledSpacePosition = ellipsoid.transformPositionToScaledSpace(
-      occludee,
-      scratchCartesian,
-    );
+    const occludeeScaledSpacePosition =
+      ellipsoid.transformPositionToScaledSpace(occludee, scratchCartesian);
     return isScaledSpacePointVisible(
       occludeeScaledSpacePosition,
       this._cameraPositionInScaledSpace,
@@ -137,7 +135,10 @@ class EllipsoidalOccluder {
    * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space of the possibly-shrunk ellipsoid.
    * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
    */
-  isScaledSpacePointVisiblePossiblyUnderEllipsoid(occludeeScaledSpacePosition, minimumHeight) {
+  isScaledSpacePointVisiblePossiblyUnderEllipsoid(
+    occludeeScaledSpacePosition,
+    minimumHeight,
+  ) {
     const ellipsoid = this._ellipsoid;
     let vhMagnitudeSquared;
     let cv;
@@ -207,7 +208,12 @@ class EllipsoidalOccluder {
    * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
    * @returns {Cartesian3} The computed horizon culling point, expressed in the possibly-shrunk ellipsoid-scaled space.
    */
-  computeHorizonCullingPointPossiblyUnderEllipsoid(directionToPoint, positions, minimumHeight, result) {
+  computeHorizonCullingPointPossiblyUnderEllipsoid(
+    directionToPoint,
+    positions,
+    minimumHeight,
+    result,
+  ) {
     const possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(
       this._ellipsoid,
       minimumHeight,
@@ -239,7 +245,13 @@ class EllipsoidalOccluder {
    * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
    * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
    */
-  computeHorizonCullingPointFromVertices(directionToPoint, vertices, stride, center, result) {
+  computeHorizonCullingPointFromVertices(
+    directionToPoint,
+    vertices,
+    stride,
+    center,
+    result,
+  ) {
     return computeHorizonCullingPointFromVertices(
       this._ellipsoid,
       directionToPoint,
@@ -269,7 +281,14 @@ class EllipsoidalOccluder {
    * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
    * @returns {Cartesian3} The computed horizon culling point, expressed in the possibly-shrunk ellipsoid-scaled space.
    */
-  computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid(directionToPoint, vertices, stride, center, minimumHeight, result) {
+  computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid(
+    directionToPoint,
+    vertices,
+    stride,
+    center,
+    minimumHeight,
+    result,
+  ) {
     const possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(
       this._ellipsoid,
       minimumHeight,

@@ -160,13 +160,15 @@ class WebMercatorTilingScheme {
     const yTiles = this.getNumberOfYTilesAtLevel(level);
 
     const xTileWidth =
-      (this._rectangleNortheastInMeters.x - this._rectangleSouthwestInMeters.x) /
+      (this._rectangleNortheastInMeters.x -
+        this._rectangleSouthwestInMeters.x) /
       xTiles;
     const west = this._rectangleSouthwestInMeters.x + x * xTileWidth;
     const east = this._rectangleSouthwestInMeters.x + (x + 1) * xTileWidth;
 
     const yTileHeight =
-      (this._rectangleNortheastInMeters.y - this._rectangleSouthwestInMeters.y) /
+      (this._rectangleNortheastInMeters.y -
+        this._rectangleSouthwestInMeters.y) /
       yTiles;
     const north = this._rectangleNortheastInMeters.y - y * yTileHeight;
     const south = this._rectangleNortheastInMeters.y - (y + 1) * yTileHeight;

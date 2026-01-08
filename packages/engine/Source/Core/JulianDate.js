@@ -542,7 +542,8 @@ class JulianDate {
       day++;
     }
 
-    tmp = inLeapYear && month === 2 ? daysInLeapFebruary : daysInMonth[month - 1];
+    tmp =
+      inLeapYear && month === 2 ? daysInLeapFebruary : daysInMonth[month - 1];
     while (day > tmp) {
       day -= tmp;
       month++;

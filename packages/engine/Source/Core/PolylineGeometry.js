@@ -135,7 +135,9 @@ class PolylineGeometry {
     this._workerName = "createPolylineGeometry";
 
     let numComponents = 1 + positions.length * Cartesian3.packedLength;
-    numComponents += defined(colors) ? 1 + colors.length * Color.packedLength : 1;
+    numComponents += defined(colors)
+      ? 1 + colors.length * Color.packedLength
+      : 1;
 
     /**
      * The number of elements used to pack the object into an array.
@@ -259,7 +261,10 @@ class PolylineGeometry {
     result._positions = positions;
     result._colors = colors;
     result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._width = width;
     result._colorsPerVertex = colorsPerVertex;
     result._arcType = arcType;
@@ -302,7 +307,8 @@ class PolylineGeometry {
         let remove = false;
         if (colorsPerVertex) {
           remove =
-            index === nextRemovedIndex || (index === 0 && nextRemovedIndex === 1);
+            index === nextRemovedIndex ||
+            (index === 0 && nextRemovedIndex === 1);
         } else {
           remove = index + 1 === nextRemovedIndex;
         }
@@ -472,7 +478,10 @@ class PolylineGeometry {
 
         if (vertexFormat.st) {
           st[stIndex++] = j / (positionsLength - 1);
-          st[stIndex++] = Math.max(expandAndWidth[expandAndWidthIndex - 2], 0.0);
+          st[stIndex++] = Math.max(
+            expandAndWidth[expandAndWidthIndex - 2],
+            0.0,
+          );
         }
 
         if (defined(finalColors)) {
@@ -529,7 +538,10 @@ class PolylineGeometry {
       });
     }
 
-    const indices = IndexDatatype.createTypedArray(size, positionsLength * 6 - 6);
+    const indices = IndexDatatype.createTypedArray(
+      size,
+      positionsLength * 6 - 6,
+    );
     let index = 0;
     let indicesIndex = 0;
     const length = positionsLength - 1.0;

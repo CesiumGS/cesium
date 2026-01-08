@@ -611,7 +611,9 @@ class PolygonOutlineGeometry {
           const size =
             geometryInstance.geometry.attributes.position.values.length / 3;
           let offsetAttribute = new Uint8Array(size);
-          if (polygonGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
+          if (
+            polygonGeometry._offsetAttribute === GeometryOffsetAttribute.TOP
+          ) {
             offsetAttribute = offsetAttribute.fill(1, 0, size / 2);
           } else {
             offsetValue =

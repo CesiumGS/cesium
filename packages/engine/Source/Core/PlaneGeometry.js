@@ -81,7 +81,10 @@ class PlaneGeometry {
       return new PlaneGeometry(scratchOptions);
     }
 
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
 
     return result;
   }

@@ -244,7 +244,8 @@ class Occluder {
           tempVec,
         );
         const tempVecMagnitudeSquared = Cartesian3.magnitudeSquared(tempVec);
-        const occluderRadiusSquared = this._occluderRadius * this._occluderRadius;
+        const occluderRadiusSquared =
+          this._occluderRadius * this._occluderRadius;
         const occludeeRadiusSquared = occludeeRadius * occludeeRadius;
         if (
           (this._horizonDistance * this._horizonDistance +
@@ -346,7 +347,8 @@ class Occluder {
           this._horizonPlanePosition,
           tempVec,
         );
-        return Cartesian3.dot(tempVec, this._horizonPlaneNormal) > -occludeeRadius
+        return Cartesian3.dot(tempVec, this._horizonPlaneNormal) >
+          -occludeeRadius
           ? Visibility.PARTIAL
           : Visibility.FULL;
       }
@@ -381,7 +383,11 @@ class Occluder {
    * const occludeePosition = tileOccluderSphere.center;
    * const occludeePt = Cesium.Occluder.computeOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
    */
-  static computeOccludeePoint(occluderBoundingSphere, occludeePosition, positions) {
+  static computeOccludeePoint(
+    occluderBoundingSphere,
+    occludeePosition,
+    positions,
+  ) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(occluderBoundingSphere)) {
       throw new DeveloperError("occluderBoundingSphere is required.");
@@ -412,7 +418,10 @@ class Occluder {
       Cartesian3.subtract(occludeePos, occluderPosition, occludeePointScratch),
       occludeePointScratch,
     );
-    const occluderPlaneD = -Cartesian3.dot(occluderPlaneNormal, occluderPosition);
+    const occluderPlaneD = -Cartesian3.dot(
+      occluderPlaneNormal,
+      occluderPosition,
+    );
 
     //For each position, determine the horizon intersection. Choose the position and intersection
     //that results in the greatest angle with the occcluder plane.
@@ -504,7 +513,11 @@ class Occluder {
     return undefined;
   }
 
-  static _anyRotationVector(occluderPosition, occluderPlaneNormal, occluderPlaneD) {
+  static _anyRotationVector(
+    occluderPosition,
+    occluderPlaneNormal,
+    occluderPlaneD,
+  ) {
     const tempVec0 = Cartesian3.abs(occluderPlaneNormal, tempVec0Scratch);
     let majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
     if (
@@ -553,7 +566,7 @@ class Occluder {
     occluderPlaneNormal,
     occluderPlaneD,
     position,
-    anyRotationVector
+    anyRotationVector,
   ) {
     //Determine the angle between the occluder plane normal and the position direction
     let positionDirection = Cartesian3.subtract(
@@ -590,7 +603,7 @@ class Occluder {
     occluderPlaneNormal,
     occluderPlaneD,
     anyRotationVector,
-    position
+    position,
   ) {
     const pos = Cartesian3.clone(position, posScratch1);
     const occluderPosition = Cartesian3.clone(

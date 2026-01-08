@@ -73,7 +73,11 @@ class OrientedBoundingBox {
     startingIndex = startingIndex ?? 0;
 
     Cartesian3.pack(value.center, array, startingIndex);
-    Matrix3.pack(value.halfAxes, array, startingIndex + Cartesian3.packedLength);
+    Matrix3.pack(
+      value.halfAxes,
+      array,
+      startingIndex + Cartesian3.packedLength,
+    );
 
     return array;
   }
@@ -236,7 +240,13 @@ class OrientedBoundingBox {
    * @exception {DeveloperError} rectangle.height must be between 0 and pi.
    * @exception {DeveloperError} ellipsoid must be an ellipsoid of revolution (<code>radii.x == radii.y</code>)
    */
-  static fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid, result) {
+  static fromRectangle(
+    rectangle,
+    minimumHeight,
+    maximumHeight,
+    ellipsoid,
+    result,
+  ) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(rectangle)) {
       throw new DeveloperError("rectangle is required");

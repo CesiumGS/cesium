@@ -261,7 +261,12 @@ class Quaternion {
    * @param {number} [lastIndex=packedArray.length] The index of the last element to be converted.
    * @param {number[]} [result] The object into which to store the result.
    */
-  static convertPackedArrayForInterpolation(packedArray, startingIndex, lastIndex, result) {
+  static convertPackedArrayForInterpolation(
+    packedArray,
+    startingIndex,
+    lastIndex,
+    result,
+  ) {
     Quaternion.unpack(
       packedArray,
       lastIndex * 4,
@@ -317,7 +322,13 @@ class Quaternion {
    * @param {Quaternion} [result] The object into which to store the result.
    * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
    */
-  static unpackInterpolationResult(array, sourceArray, firstIndex, lastIndex, result) {
+  static unpackInterpolationResult(
+    array,
+    sourceArray,
+    firstIndex,
+    lastIndex,
+    result,
+  ) {
     if (!defined(result)) {
       result = new Quaternion();
     }
@@ -818,10 +829,16 @@ class Quaternion {
 
     const qInv = Quaternion.conjugate(q1, squadScratchQuaternion0);
     Quaternion.multiply(qInv, q2, squadScratchQuaternion1);
-    const cart0 = Quaternion.log(squadScratchQuaternion1, squadScratchCartesian0);
+    const cart0 = Quaternion.log(
+      squadScratchQuaternion1,
+      squadScratchCartesian0,
+    );
 
     Quaternion.multiply(qInv, q0, squadScratchQuaternion1);
-    const cart1 = Quaternion.log(squadScratchQuaternion1, squadScratchCartesian1);
+    const cart1 = Quaternion.log(
+      squadScratchQuaternion1,
+      squadScratchCartesian1,
+    );
 
     Cartesian3.add(cart0, cart1, cart0);
     Cartesian3.multiplyByScalar(cart0, 0.25, cart0);

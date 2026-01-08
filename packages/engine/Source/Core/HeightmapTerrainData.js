@@ -195,7 +195,8 @@ class HeightmapTerrainData {
     const y = options.y;
     const level = options.level;
     const exaggeration = options.exaggeration ?? 1.0;
-    const exaggerationRelativeHeight = options.exaggerationRelativeHeight ?? 0.0;
+    const exaggerationRelativeHeight =
+      options.exaggerationRelativeHeight ?? 0.0;
     const throttle = options.throttle ?? true;
 
     const ellipsoid = tilingScheme.ellipsoid;
@@ -203,7 +204,9 @@ class HeightmapTerrainData {
     const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
 
     // Compute the center of the tile for RTC rendering.
-    const center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
+    const center = ellipsoid.cartographicToCartesian(
+      Rectangle.center(rectangle),
+    );
 
     const structure = this._structure;
 
@@ -312,14 +315,17 @@ class HeightmapTerrainData {
     const y = options.y;
     const level = options.level;
     const exaggeration = options.exaggeration ?? 1.0;
-    const exaggerationRelativeHeight = options.exaggerationRelativeHeight ?? 0.0;
+    const exaggerationRelativeHeight =
+      options.exaggerationRelativeHeight ?? 0.0;
 
     const ellipsoid = tilingScheme.ellipsoid;
     const nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
     const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
 
     // Compute the center of the tile for RTC rendering.
-    const center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
+    const center = ellipsoid.cartographicToCartesian(
+      Rectangle.center(rectangle),
+    );
 
     const structure = this._structure;
 
@@ -479,7 +485,7 @@ class HeightmapTerrainData {
     thisLevel,
     descendantX,
     descendantY,
-    descendantLevel
+    descendantLevel,
   ) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(tilingScheme)) {

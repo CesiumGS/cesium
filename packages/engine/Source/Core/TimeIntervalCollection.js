@@ -304,7 +304,10 @@ class TimeIntervalCollection {
     // Handle the common case quickly: we're adding a new interval which is after all existing intervals.
     if (
       intervals.length === 0 ||
-      JulianDate.greaterThan(interval.start, intervals[intervals.length - 1].stop)
+      JulianDate.greaterThan(
+        interval.start,
+        intervals[intervals.length - 1].stop,
+      )
     ) {
       intervals.push(interval);
       this._changedEvent.raiseEvent(this);
@@ -345,7 +348,10 @@ class TimeIntervalCollection {
       // Not the first thing in the list, so see if the interval before this one
       // overlaps this one.
 
-      comparison = JulianDate.compare(intervals[index - 1].stop, interval.start);
+      comparison = JulianDate.compare(
+        intervals[index - 1].stop,
+        interval.start,
+      );
       if (
         comparison > 0 ||
         (comparison === 0 &&
@@ -358,7 +364,9 @@ class TimeIntervalCollection {
             : intervals[index - 1].data === interval.data
         ) {
           // Overlapping intervals have the same data, so combine them
-          if (JulianDate.greaterThan(interval.stop, intervals[index - 1].stop)) {
+          if (
+            JulianDate.greaterThan(interval.stop, intervals[index - 1].stop)
+          ) {
             interval = new TimeInterval({
               start: intervals[index - 1].start,
               stop: interval.stop,
@@ -578,7 +586,10 @@ class TimeIntervalCollection {
 
     // Check for the case where the input interval ends on the same date
     // as an existing interval.
-    if (index < intervals.length && interval.stop.equals(intervals[index].stop)) {
+    if (
+      index < intervals.length &&
+      interval.stop.equals(intervals[index].stop)
+    ) {
       result = true;
 
       if (!interval.isStopIncluded && intervals[index].isStopIncluded) {

@@ -1138,7 +1138,10 @@ class RectangleGeometry {
 
     result._rectangle = Rectangle.clone(rectangle, result._rectangle);
     result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._granularity = granularity;
     result._surfaceHeight = surfaceHeight;
     result._rotation = rotation;
@@ -1182,7 +1185,13 @@ class RectangleGeometry {
     const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
     const rotation = options.rotation ?? 0.0;
 
-    return computeRectangle(rectangle, granularity, rotation, ellipsoid, result);
+    return computeRectangle(
+      rectangle,
+      granularity,
+      rotation,
+      ellipsoid,
+      result,
+    );
   }
 
   /**
@@ -1228,7 +1237,10 @@ class RectangleGeometry {
     const tangentRotationMatrix = tangentRotationMatrixScratch;
     if (stRotation !== 0 || rotation !== 0) {
       const center = Rectangle.center(rectangle, centerScratch);
-      const axis = ellipsoid.geodeticSurfaceNormalCartographic(center, v1Scratch);
+      const axis = ellipsoid.geodeticSurfaceNormalCartographic(
+        center,
+        v1Scratch,
+      );
       Quaternion.fromAxisAngle(axis, -stRotation, quaternionScratch);
       Matrix3.fromQuaternion(quaternionScratch, tangentRotationMatrix);
     } else {
@@ -1268,12 +1280,13 @@ class RectangleGeometry {
       boundingSphere = BoundingSphere.union(topBS, bottomBS);
     } else {
       geometry = constructRectangle(rectangleGeometry, computedOptions);
-      geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(
-        geometry.attributes.position.values,
-        surfaceHeight,
-        ellipsoid,
-        false,
-      );
+      geometry.attributes.position.values =
+        PolygonPipeline.scaleToGeodeticHeight(
+          geometry.attributes.position.values,
+          surfaceHeight,
+          ellipsoid,
+          false,
+        );
 
       if (defined(rectangleGeometry._offsetAttribute)) {
         const length = geometry.attributes.position.values.length;

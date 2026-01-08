@@ -290,7 +290,13 @@ class PerspectiveOffCenterFrustum {
    * const distance = Cesium.Cartesian3.magnitude(toCenterProj);
    * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, scene.pixelRatio, new Cesium.Cartesian2());
    */
-  getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result) {
+  getPixelDimensions(
+    drawingBufferWidth,
+    drawingBufferHeight,
+    distance,
+    pixelRatio,
+    result,
+  ) {
     update(this);
 
     //>>includeStart('debug', pragmas.debug);
@@ -303,7 +309,9 @@ class PerspectiveOffCenterFrustum {
       throw new DeveloperError("drawingBufferWidth must be greater than zero.");
     }
     if (drawingBufferHeight <= 0) {
-      throw new DeveloperError("drawingBufferHeight must be greater than zero.");
+      throw new DeveloperError(
+        "drawingBufferHeight must be greater than zero.",
+      );
     }
     if (!defined(distance)) {
       throw new DeveloperError("distance is required.");

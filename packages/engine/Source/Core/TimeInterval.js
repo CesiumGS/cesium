@@ -340,7 +340,10 @@ class TimeInterval {
       return timeInterval.isStartIncluded;
     }
 
-    const dateComparedToStop = JulianDate.compare(julianDate, timeInterval.stop);
+    const dateComparedToStop = JulianDate.compare(
+      julianDate,
+      timeInterval.stop,
+    );
     if (dateComparedToStop === 0) {
       return timeInterval.isStopIncluded;
     }

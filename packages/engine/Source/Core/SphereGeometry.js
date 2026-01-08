@@ -57,7 +57,11 @@ class SphereGeometry {
     Check.typeOf.object("value", value);
     //>>includeEnd('debug');
 
-    return EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
+    return EllipsoidGeometry.pack(
+      value._ellipsoidGeometry,
+      array,
+      startingIndex,
+    );
   }
 
   /**

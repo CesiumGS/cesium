@@ -251,7 +251,10 @@ class WallGeometry {
     result._minimumHeights = minimumHeights;
     result._maximumHeights = maximumHeights;
     result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._granularity = granularity;
 
     return result;
@@ -366,7 +369,9 @@ class WallGeometry {
     let length = topPositions.length;
     let size = length * 2;
 
-    const positions = vertexFormat.position ? new Float64Array(size) : undefined;
+    const positions = vertexFormat.position
+      ? new Float64Array(size)
+      : undefined;
     const normals = vertexFormat.normal ? new Float32Array(size) : undefined;
     const tangents = vertexFormat.tangent ? new Float32Array(size) : undefined;
     const bitangents = vertexFormat.bitangent
@@ -424,7 +429,11 @@ class WallGeometry {
         textureCoordinates[stIndex++] = 1.0;
       }
 
-      if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
+      if (
+        vertexFormat.normal ||
+        vertexFormat.tangent ||
+        vertexFormat.bitangent
+      ) {
         let nextTop = Cartesian3.clone(
           Cartesian3.ZERO,
           scratchCartesian3Position5,

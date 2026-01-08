@@ -51,7 +51,8 @@ class HeadingPitchRoll {
     if (!defined(result)) {
       result = new HeadingPitchRoll();
     }
-    const test = 2 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x);
+    const test =
+      2 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x);
     const denominatorRoll =
       1 - 2 * (quaternion.x * quaternion.x + quaternion.y * quaternion.y);
     const numeratorRoll =

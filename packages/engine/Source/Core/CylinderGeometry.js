@@ -164,7 +164,10 @@ class CylinderGeometry {
       return new CylinderGeometry(scratchOptions);
     }
 
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._length = length;
     result._topRadius = topRadius;
     result._bottomRadius = bottomRadius;
@@ -362,7 +365,11 @@ class CylinderGeometry {
     if (vertexFormat.st) {
       const rad = Math.max(topRadius, bottomRadius);
       for (i = 0; i < numVertices; i++) {
-        const position = Cartesian3.fromArray(positions, i * 3, positionScratch);
+        const position = Cartesian3.fromArray(
+          positions,
+          i * 3,
+          positionScratch,
+        );
         st[textureCoordIndex++] = (position.x + rad) / (2.0 * rad);
         st[textureCoordIndex++] = (position.y + rad) / (2.0 * rad);
       }

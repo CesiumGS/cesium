@@ -48,7 +48,7 @@ class TerrainEncoding {
     hasWebMercatorT,
     hasGeodeticSurfaceNormals,
     exaggeration,
-    exaggerationRelativeHeight
+    exaggerationRelativeHeight,
   ) {
     let quantization = TerrainQuantization.NONE;
     let toENU;
@@ -216,7 +216,7 @@ class TerrainEncoding {
     height,
     normalToPack,
     webMercatorT,
-    geodeticSurfaceNormal
+    geodeticSurfaceNormal,
   ) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("vertexBuffer", vertexBuffer);
@@ -241,7 +241,11 @@ class TerrainEncoding {
       position.z = CesiumMath.clamp(position.z, 0.0, 1.0);
 
       const hDim = this.maximumHeight - this.minimumHeight;
-      const h = CesiumMath.clamp((height - this.minimumHeight) / hDim, 0.0, 1.0);
+      const h = CesiumMath.clamp(
+        (height - this.minimumHeight) / hDim,
+        0.0,
+        1.0,
+      );
 
       Cartesian2.fromElements(position.x, position.y, cartesian2Scratch);
       const compressed0 =
@@ -474,7 +478,11 @@ class TerrainEncoding {
       );
     }
 
-    return Cartesian2.fromElements(buffer[index + 4], buffer[index + 5], result);
+    return Cartesian2.fromElements(
+      buffer[index + 4],
+      buffer[index + 5],
+      result,
+    );
   }
 
   /**
@@ -566,7 +574,8 @@ class TerrainEncoding {
     Check.typeOf.object("result", result);
     //>>includeEnd('debug');
 
-    const bufferIndex = (index = index * this.stride + this._offsetVertexNormal);
+    const bufferIndex = (index =
+      index * this.stride + this._offsetVertexNormal);
     return AttributeCompression.octDecodeFloat(buffer[bufferIndex], result);
   }
 

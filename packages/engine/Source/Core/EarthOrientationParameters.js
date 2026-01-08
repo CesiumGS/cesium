@@ -176,7 +176,8 @@ class EarthOrientationParameters {
       );
       const isAfterLastSample = !defined(nextIndexDate);
       const isBeforeNext =
-        isAfterLastSample || JulianDate.greaterThanOrEquals(nextIndexDate, date);
+        isAfterLastSample ||
+        JulianDate.greaterThanOrEquals(nextIndexDate, date);
 
       if (isAfterPrevious && isBeforeNext) {
         before = lastIndex;

@@ -116,7 +116,9 @@ class SimplePolylineGeometry {
     this._workerName = "createSimplePolylineGeometry";
 
     let numComponents = 1 + positions.length * Cartesian3.packedLength;
-    numComponents += defined(colors) ? 1 + colors.length * Color.packedLength : 1;
+    numComponents += defined(colors)
+      ? 1 + colors.length * Color.packedLength
+      : 1;
 
     /**
      * The number of elements used to pack the object into an array.

@@ -532,7 +532,11 @@ class Rectangle {
       north,
       -CesiumMath.PI_OVER_TWO,
     );
-    Check.typeOf.number.lessThanOrEquals("north", north, CesiumMath.PI_OVER_TWO);
+    Check.typeOf.number.lessThanOrEquals(
+      "north",
+      north,
+      CesiumMath.PI_OVER_TWO,
+    );
 
     const south = rectangle.south;
     Check.typeOf.number.greaterThanOrEquals(
@@ -540,7 +544,11 @@ class Rectangle {
       south,
       -CesiumMath.PI_OVER_TWO,
     );
-    Check.typeOf.number.lessThanOrEquals("south", south, CesiumMath.PI_OVER_TWO);
+    Check.typeOf.number.lessThanOrEquals(
+      "south",
+      south,
+      CesiumMath.PI_OVER_TWO,
+    );
 
     const west = rectangle.west;
     Check.typeOf.number.greaterThanOrEquals("west", west, -Math.PI);
@@ -973,7 +981,14 @@ class Rectangle {
    * @param {Rectangle} [result] The object onto which to store the result.
    * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
    */
-  static subsection(rectangle, westLerp, southLerp, eastLerp, northLerp, result) {
+  static subsection(
+    rectangle,
+    westLerp,
+    southLerp,
+    eastLerp,
+    northLerp,
+    result,
+  ) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("rectangle", rectangle);
     Check.typeOf.number.greaterThanOrEquals("westLerp", westLerp, 0.0);
@@ -1002,8 +1017,12 @@ class Rectangle {
       result.east = rectangle.west + eastLerp * width;
     } else {
       const width = CesiumMath.TWO_PI + rectangle.east - rectangle.west;
-      result.west = CesiumMath.negativePiToPi(rectangle.west + westLerp * width);
-      result.east = CesiumMath.negativePiToPi(rectangle.west + eastLerp * width);
+      result.west = CesiumMath.negativePiToPi(
+        rectangle.west + westLerp * width,
+      );
+      result.east = CesiumMath.negativePiToPi(
+        rectangle.west + eastLerp * width,
+      );
     }
     const height = rectangle.north - rectangle.south;
     result.south = rectangle.south + southLerp * height;

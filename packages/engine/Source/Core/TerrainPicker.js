@@ -192,7 +192,11 @@ class TerrainPickerNode {
     childNode.x = this.x * 2 + (childIdx & 1);
     childNode.y = this.y * 2 + ((childIdx >> 1) & 1);
     childNode.level = this.level + 1;
-    childNode.aabb = createAABBForNode(childNode.x, childNode.y, childNode.level);
+    childNode.aabb = createAABBForNode(
+      childNode.x,
+      childNode.y,
+      childNode.level,
+    );
 
     this.children[childIdx] = childNode;
   }

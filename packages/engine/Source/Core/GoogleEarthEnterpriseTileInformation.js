@@ -27,7 +27,7 @@ class GoogleEarthEnterpriseTileInformation {
     imageryVersion,
     terrainVersion,
     imageryProvider,
-    terrainProvider
+    terrainProvider,
   ) {
     this._bits = bits;
     this.cnodeVersion = cnodeVersion;

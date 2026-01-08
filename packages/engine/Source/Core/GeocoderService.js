@@ -20,22 +20,22 @@ import DeveloperError from "./DeveloperError.js";
  * @see OpenCageGeocoderService
  */
 class GeocoderService {
- constructor() {
-   DeveloperError.throwInstantiationError();
- }
+  constructor() {
+    DeveloperError.throwInstantiationError();
+  }
 
- /**
-  * Parses credits from the geocoder result attributions, if present.
-  * @param {GeocoderService.Result} geocoderResult The geocoder result
-  * @returns {Credit[]|undefined} A list of credits if present in the result, otherwise undefined
-  */
- static getCreditsFromResult(geocoderResult) {
-   if (defined(geocoderResult.attributions)) {
-     return geocoderResult.attributions.map(Credit.getIonCredit);
-   }
+  /**
+   * Parses credits from the geocoder result attributions, if present.
+   * @param {GeocoderService.Result} geocoderResult The geocoder result
+   * @returns {Credit[]|undefined} A list of credits if present in the result, otherwise undefined
+   */
+  static getCreditsFromResult(geocoderResult) {
+    if (defined(geocoderResult.attributions)) {
+      return geocoderResult.attributions.map(Credit.getIonCredit);
+    }
 
-   return undefined;
- }
+    return undefined;
+  }
 }
 
 Object.defineProperties(GeocoderService.prototype, {

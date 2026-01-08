@@ -350,7 +350,10 @@ class PolylineVolumeGeometry {
     result._positions = positions;
     result._shape = shape;
     result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._cornerType = cornerType;
     result._granularity = granularity;
 

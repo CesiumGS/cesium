@@ -929,7 +929,10 @@ class PolygonGeometry {
 
     result._polygonHierarchy = polygonHierarchy;
     result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._height = height;
     result._extrudedHeight = extrudedHeight;
     result._granularity = granularity;
@@ -1128,7 +1131,8 @@ class PolygonGeometry {
       perPositionHeight: perPositionHeight,
       vertexFormat: vertexFormat,
       geometry: undefined,
-      rotationAxis: getTangentPlane(rectangle, outerRing, ellipsoid).plane.normal,
+      rotationAxis: getTangentPlane(rectangle, outerRing, ellipsoid).plane
+        .normal,
       projectTo2d: createProjectPositionTo2d(rectangle, outerRing, ellipsoid),
       boundingRectangle: boundingRectangle,
       ellipsoid: ellipsoid,
@@ -1166,13 +1170,14 @@ class PolygonGeometry {
         let topAndBottom;
         if (closeTop && closeBottom) {
           topAndBottom = splitGeometry.topAndBottom;
-          options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(
-            topAndBottom.geometry,
-            height,
-            extrudedHeight,
-            ellipsoid,
-            perPositionHeight,
-          );
+          options.geometry =
+            PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(
+              topAndBottom.geometry,
+              height,
+              extrudedHeight,
+              ellipsoid,
+              perPositionHeight,
+            );
         } else if (closeTop) {
           topAndBottom = splitGeometry.topAndBottom;
           topAndBottom.geometry.attributes.position.values =
@@ -1204,13 +1209,14 @@ class PolygonGeometry {
         options.wall = true;
         for (let k = 0; k < walls.length; k++) {
           const wall = walls[k];
-          options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(
-            wall.geometry,
-            height,
-            extrudedHeight,
-            ellipsoid,
-            perPositionHeight,
-          );
+          options.geometry =
+            PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(
+              wall.geometry,
+              height,
+              extrudedHeight,
+              ellipsoid,
+              perPositionHeight,
+            );
           wall.geometry = computeAttributes(options);
           geometries.push(wall);
         }

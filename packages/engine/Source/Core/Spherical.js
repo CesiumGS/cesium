@@ -73,7 +73,11 @@ class Spherical {
     }
 
     if (!defined(result)) {
-      return new Spherical(spherical.clock, spherical.cone, spherical.magnitude);
+      return new Spherical(
+        spherical.clock,
+        spherical.cone,
+        spherical.magnitude,
+      );
     }
 
     result.clock = spherical.clock;

@@ -430,7 +430,10 @@ class CoplanarPolygonGeometry {
 
     result._polygonHierarchy = polygonHierarchy;
     result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._stRotation = stRotation;
     result._textureCoordinates = textureCoordinates;
     result.packedLength = packedLength;

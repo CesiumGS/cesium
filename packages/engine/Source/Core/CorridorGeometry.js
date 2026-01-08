@@ -1208,7 +1208,10 @@ class CorridorGeometry {
 
     result._positions = positions;
     result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
-    result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+    result._vertexFormat = VertexFormat.clone(
+      vertexFormat,
+      result._vertexFormat,
+    );
     result._width = width;
     result._height = height;
     result._extrudedHeight = extrudedHeight;
@@ -1296,7 +1299,8 @@ class CorridorGeometry {
       params.offsetAttribute = corridorGeometry._offsetAttribute;
       attr = computePositionsExtruded(params, vertexFormat);
     } else {
-      const computedPositions = CorridorGeometryLibrary.computePositions(params);
+      const computedPositions =
+        CorridorGeometryLibrary.computePositions(params);
       attr = combine(computedPositions, vertexFormat, ellipsoid);
       attr.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(
         attr.attributes.position.values,

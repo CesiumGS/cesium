@@ -833,7 +833,13 @@ class Cartesian3 {
 
     longitude = CesiumMath.toRadians(longitude);
     latitude = CesiumMath.toRadians(latitude);
-    return Cartesian3.fromRadians(longitude, latitude, height, ellipsoid, result);
+    return Cartesian3.fromRadians(
+      longitude,
+      latitude,
+      height,
+      ellipsoid,
+      result,
+    );
   }
 
   /**

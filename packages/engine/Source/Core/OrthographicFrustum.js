@@ -178,7 +178,13 @@ class OrthographicFrustum {
    * // Get the width and height of a pixel.
    * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
    */
-  getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result) {
+  getPixelDimensions(
+    drawingBufferWidth,
+    drawingBufferHeight,
+    distance,
+    pixelRatio,
+    result,
+  ) {
     update(this);
     return this._offCenterFrustum.getPixelDimensions(
       drawingBufferWidth,
