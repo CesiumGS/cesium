@@ -81,6 +81,13 @@ export default [
             "Avoid Array.push.apply(). Use addAllToArray() for arrays of unknown size, or the spread syntax for arrays that are known to be small",
         },
       ],
+      // When ES6 class implementations refer to scratch variable instances of
+      // the same class, ESLint raises a use-before-define error. At runtime
+      // this is just fine, so configure ESLint to allow it in upper scopes.
+      "no-use-before-define": [
+        "error",
+        { variables: false, functions: false, classes: false },
+      ],
     },
   },
   {
