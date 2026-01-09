@@ -5,12 +5,20 @@
  */
 const SDFSettings = {
   /**
-   * The font size in pixels
+   * Minimum font size in pixels
    *
    * @type {number}
    * @constant
    */
-  FONT_SIZE: 48.0,
+  MIN_FONT_SIZE: 48.0,
+
+  /**
+   * Maximum font size in pixels
+   *
+   * @type {number}
+   * @constant
+   */
+  MAX_FONT_SIZE: 256.0,
 
   /**
    * Whitespace padding around glyphs.
