@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Additions :tada:
+
+- Added `EntityCluster.allDeclusteredEvent` which fires when all previously clustered entities have been declustered [#5760](https://github.com/CesiumGS/cesium/issues/5760)
+
 #### Fixes :wrench:
 
 - Fixes jitter artifacts on Intel Arc GPUs [#12879](https://github.com/CesiumGS/cesium/issues/12879)

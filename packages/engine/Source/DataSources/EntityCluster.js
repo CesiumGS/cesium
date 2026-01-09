@@ -66,6 +66,8 @@ function EntityCluster(options) {
   this._removeEventListener = undefined;
 
   this._clusterEvent = new Event();
+  this._allDeclusteredEvent = new Event();
+  this._previouslyClusteredEntities = [];
 
   /**
    * Determines if entities in this collection will be shown.
@@ -216,7 +218,7 @@ function getScreenSpacePositions(
   }
 }
 
-const pointBoundinRectangleScratch = new BoundingRectangle();
+const pointBoundingRectangleScratch = new BoundingRectangle();
 const totalBoundingRectangleScratch = new BoundingRectangle();
 const neighborBoundingRectangleScratch = new BoundingRectangle();
 
@@ -414,7 +416,7 @@ function createDeclutterCallback(entityCluster) {
           point.coord,
           pixelRange,
           entityCluster,
-          pointBoundinRectangleScratch,
+          pointBoundingRectangleScratch,
         );
         const totalBBox = BoundingRectangle.clone(
           bbox,
@@ -500,8 +502,40 @@ function createDeclutterCallback(entityCluster) {
       entityCluster._clusterPointCollection = undefined;
     }
 
-    entityCluster._previousClusters = newClusters;
-    entityCluster._previousHeight = currentHeight;
+    const currentlyClusteredIds = [];
+
+    if (defined(clusteredLabelCollection)) {
+      for (let c = 0; c < clusteredLabelCollection.length; ++c) {
+        const clusterLabel = clusteredLabelCollection.get(c);
+        currentlyClusteredIds.push(...clusterLabel.id);
+      }
+    }
+
+    if (defined(clusteredBillboardCollection)) {
+      for (let c = 0; c < clusteredBillboardCollection.length; ++c) {
+        const clusterBillboard = clusteredBillboardCollection.get(c);
+        currentlyClusteredIds.push(...clusterBillboard.id);
+      }
+    }
+
+    if (defined(clusteredPointCollection)) {
+      for (let c = 0; c < clusteredPointCollection.length; ++c) {
+        const clusterPoint = clusteredPointCollection.get(c);
+        currentlyClusteredIds.push(...clusterPoint.id);
+      }
+    }
+
+    const hasActiveClusters = currentlyClusteredIds.length > 0;
+    const hadPreviouslyClusters =
+      entityCluster._previouslyClusteredEntities.length > 0;
+
+    if (!hasActiveClusters && hadPreviouslyClusters) {
+      entityCluster._allDeclusteredEvent.raiseEvent(
+        entityCluster._previouslyClusteredEntities,
+      );
+    }
+
+    entityCluster._previouslyClusteredEntities = currentlyClusteredIds;
   };
 }
 
@@ -565,6 +599,16 @@ Object.defineProperties(EntityCluster.prototype, {
   clusterEvent: {
     get: function () {
       return this._clusterEvent;
+    },
+  },
+  /**
+   * Gets the event that will be raised when all entities have been declustered.
+   * @memberof EntityCluster.prototype
+   * @type {Event<EntityCluster.declusterCallback>}
+   */
+  allDeclusteredEvent: {
+    get: function () {
+      return this._allDeclusteredEvent;
     },
   },
   /**
@@ -993,6 +1037,7 @@ EntityCluster.prototype.destroy = function () {
 
   this._previousClusters = [];
   this._previousHeight = undefined;
+  this._previouslyClusteredEntities = [];
 
   this._enabledDirty = false;
   this._pixelRangeDirty = false;
@@ -1002,7 +1047,7 @@ EntityCluster.prototype.destroy = function () {
 };
 
 /**
- * A event listener function used to style clusters.
+ * An event listener function used to style clusters.
  * @callback EntityCluster.newClusterCallback
  *
  * @param {Entity[]} clusteredEntities An array of the entities contained in the cluster.
@@ -1017,6 +1062,19 @@ EntityCluster.prototype.destroy = function () {
  * dataSource.clustering.clusterEvent.addEventListener(function(entities, cluster) {
  *     cluster.label.show = true;
  *     cluster.label.text = entities.length.toLocaleString();
+ * });
+ */
+/**
+ * An event listener function used when all entities have been declustered.
+ * @callback EntityCluster.declusterCallback
+ *
+ * @param {Entity[]} declusteredEntities An array of the entities that were in the last
+ * remaining clusters and are now displayed individually.
+ *
+ * @example
+ * // Listen for decluster events
+ * dataSource.clustering.declusterEvent.addEventListener(function(entities) {
+ *     console.log('All clusters removed. Last entities declustered:', entities);
  * });
  */
 export default EntityCluster;
