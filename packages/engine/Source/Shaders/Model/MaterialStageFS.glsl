@@ -174,7 +174,12 @@ vec4 getBaseColorFromTexture()
         baseColorTexCoords = computeTextureTransform(baseColorTexCoords, u_baseColorTextureTransform);
     #endif
 
-    vec4 baseColorWithAlpha = czm_srgbToLinear(texture(u_baseColorTexture, baseColorTexCoords));
+    vec4 baseColorWithAlpha;
+    #if defined(HAS_BASE_COLOR_CONSTANT_LOD) && defined(HAS_CONSTANT_LOD)
+        baseColorWithAlpha = czm_srgbToLinear(constantLodTextureLookup(u_baseColorTexture, u_baseColorTextureConstantLodParams));
+    #else
+        baseColorWithAlpha = czm_srgbToLinear(texture(u_baseColorTexture, baseColorTexCoords));
+    #endif
 
     #ifdef HAS_BASE_COLOR_FACTOR
         baseColorWithAlpha *= u_baseColorFactor;
