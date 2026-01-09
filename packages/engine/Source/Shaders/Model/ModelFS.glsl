@@ -29,6 +29,14 @@ SelectedFeature selectedFeature;
 
 void main()
 {
+    #ifdef PRIMITIVE_TYPE_POINTS
+    // Render points as circles
+    float distanceToCenter = length(gl_PointCoord - vec2(0.5));
+    if (distanceToCenter > 0.5) {
+        discard;
+    }
+    #endif
+
     #ifdef HAS_POINT_CLOUD_SHOW_STYLE
         if (v_pointCloudShow == 0.0)
         {
