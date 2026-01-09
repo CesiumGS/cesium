@@ -1022,6 +1022,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._indexes = sortedData;
       this._sorterState = GaussianSplatSortingState.SORTED;
     });
+
+    this._sorterState = GaussianSplatSortingState.SORTING;
   } else if (this._sorterState === GaussianSplatSortingState.WAITING) {
     if (!defined(this._sorterPromise)) {
       this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
