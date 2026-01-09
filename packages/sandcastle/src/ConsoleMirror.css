@@ -14,12 +14,21 @@
       var(--stratakit-color-border-neutral-muted);
 
     .title {
-      /* Match the height of the badge to avoid flow shifts when adding them */
-      height: 20px;
+      /* Match the height of buttons to avoid flow shifts when adding them */
+      height: 24px;
       align-content: center;
       margin-right: var(--stratakit-space-x1);
     }
+
+    .spacer {
+      flex-grow: 100;
+    }
   }
+
+  &:not(.expanded) .clear-button {
+    display: none;
+  }
+
   .logs {
     overflow: auto;
     padding: 0 var(--stratakit-space-x2);
@@ -29,10 +38,20 @@
       gap: var(--stratakit-space-x2);
       margin: var(--stratakit-space-x1);
       padding: var(--stratakit-space-x1) 0 var(--stratakit-space-x05);
+      font-family: var(--stratakit-font-family-mono);
     }
     .message + .message {
       border-top: var(--stratakit-ext-border-border) solid
         var(--stratakit-color-border-neutral-muted);
+    }
+    .no-icon {
+      /* "Filler" icon to take up the same space */
+      width: 1rem;
+      height: 1rem;
+      flex-shrink: 0;
+    }
+    .message-index {
+      user-select: none;
     }
     .content {
       text-wrap: wrap;
@@ -46,6 +65,10 @@
     }
     .message.error {
       color: var(--stratakit-color-text-critical-base);
+    }
+    .message.special {
+      font-style: italic;
+      color: var(--stratakit-color-text-neutral-tertiary);
     }
   }
 }

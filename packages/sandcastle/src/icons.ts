@@ -21,6 +21,7 @@ import documentation from "@stratakit/icons/documentation.svg";
 import info from "@stratakit/icons/info.svg";
 import copy from "@stratakit/icons/copy.svg";
 import retry from "@stratakit/icons/retry.svg";
+import deleteIcon from "@stratakit/icons/delete.svg";
 
 export {
   add,
@@ -46,4 +47,5 @@ export {
   info,
   copy,
   retry,
+  deleteIcon,
 };

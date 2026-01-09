@@ -22,7 +22,7 @@ import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
 const ALL_CHILDREN = 15;
 
 /**
- * @typedef {Object} ArcGISTiledElevationTerrainProvider.ConstructorOptions
+ * @typedef {object} ArcGISTiledElevationTerrainProvider.ConstructorOptions
  *
  * Initialization options for the ArcGISTiledElevationTerrainProvider constructor
  *
@@ -339,7 +339,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
  * Creates a {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from Elevation Tiles of an an ArcGIS ImageService.
  *
- * @param {Resource|String|Promise<Resource>|Promise<String>} url The URL of the ArcGIS ImageServer service.
+ * @param {Resource|string|Promise<Resource>|Promise<string>} url The URL of the ArcGIS ImageServer service.
  * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options.
  * @returns {Promise<ArcGISTiledElevationTerrainProvider>}
  *

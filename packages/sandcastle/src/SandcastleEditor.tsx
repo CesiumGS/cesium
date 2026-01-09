@@ -51,9 +51,6 @@ self.MonacoEnvironment = {
 // open network access
 loader.config({ monaco });
 
-const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
-const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
-
 export type SandcastleEditorRef = {
   formatCode(): void;
 };
@@ -67,6 +64,7 @@ function SandcastleEditor({
   onHtmlChange,
   onRun: onRunSandcastle,
   setJs,
+  readOnly,
 }: {
   ref?: RefObject<SandcastleEditorRef | null>;
   darkTheme: boolean;
@@ -76,6 +74,7 @@ function SandcastleEditor({
   onHtmlChange: OnChange;
   onRun: () => void;
   setJs: (newCode: string) => void;
+  readOnly: boolean;
 }) {
   const [activeTab, setActiveTab] = useState<"js" | "html">("js");
   const internalEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
@@ -86,7 +85,7 @@ function SandcastleEditor({
   const documentRef = useRef(document);
   useEffect(() => {
     const cssName = availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono";
-    const fontFace = [...documentRef.current.fonts.values()].find(
+    const fontFace = [...documentRef.current.fonts].find(
       (font) => font.family === cssName && font.weight === "400",
     );
     if (fontFace?.status !== "loaded") {
@@ -117,6 +116,10 @@ function SandcastleEditor({
     });
   }, [fontSize]);
 
+  function formatEditor() {
+    internalEditorRef.current?.getAction("editor.action.formatDocument")?.run();
+  }
+
   useImperativeHandle(ref, () => {
     return {
       formatCode() {
@@ -124,10 +127,6 @@ function SandcastleEditor({
       },
     };
   }, []);
-
-  function formatEditor() {
-    internalEditorRef.current?.getAction("editor.action.formatDocument")?.run();
-  }
 
   function handleEditorDidMount(
     editor: monaco.editor.IStandaloneCodeEditor,
@@ -210,25 +209,63 @@ function SandcastleEditor({
   async function setTypes(monaco: Monaco) {
     // https://microsoft.github.io/monaco-editor/playground.html?source=v0.52.2#example-extending-language-services-configure-javascript-defaults
 
-    const cesiumTypes = await (await fetch(TYPES_URL)).text();
-    // define a "global" variable so types work even with out the import statement
-    const cesiumTypesWithGlobal = `${cesiumTypes}\nvar Cesium: typeof import('cesium');`;
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      cesiumTypesWithGlobal,
-      "ts:cesium.d.ts",
+    const typeImportPaths = __VITE_TYPE_IMPORT_PATHS__ ?? {};
+
+    const typeImports: {
+      url: string;
+      filename: string;
+      transformTypes?: (typesContent: string) => string;
+    }[] = [
+      {
+        url: typeImportPaths["cesium"],
+        filename: "ts:cesium.d.ts",
+        transformTypes(typesContent: string) {
+          // define a "global" variable so types work even with out the import statement
+          return `${typesContent}\nvar Cesium: typeof import('cesium');`;
+        },
+      },
+      {
+        url: typeImportPaths["Sandcastle"],
+        filename: "ts:sandcastle.d.ts",
+        transformTypes(typesContent: string) {
+          return `declare module 'Sandcastle' {
+      ${typesContent}
+    }
+      var Sandcastle: typeof import('Sandcastle').default;`;
+        },
+      },
+    ];
+
+    const extraImportNames = Object.keys(typeImportPaths).filter(
+      (name) => !["cesium", "Sandcastle"].includes(name),
     );
+    for (const extraName of extraImportNames) {
+      typeImports.push({
+        url: typeImportPaths[extraName],
+        filename: `ts:${extraName.replace(/@\//, "-")}.d.ts`,
+      });
+    }
 
-    const sandcastleTypes = await (await fetch(SANDCASTLE_TYPES_URL)).text();
-    // surround in a module so the import statement works nicely
-    // also define a "global" so types show even if you don't have the import
-    const sandcastleModuleTypes = `declare module 'Sandcastle' {
-        ${sandcastleTypes}
-      }
-        var Sandcastle: typeof import('Sandcastle').default;`;
-
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      sandcastleModuleTypes,
-      "ts:sandcastle.d.ts",
+    await Promise.allSettled(
+      typeImports.map(async (typeImport) => {
+        const { url, transformTypes, filename } = typeImport;
+        if (!url) {
+          return;
+        }
+        try {
+          const responseText = await (await fetch(url)).text();
+          const typesContent = transformTypes
+            ? transformTypes(responseText)
+            : responseText;
+          monaco.languages.typescript.javascriptDefaults.addExtraLib(
+            typesContent,
+            filename,
+          );
+        } catch (error) {
+          console.error(`Unable to load types for ${filename} at ${url}`);
+          console.error(error);
+        }
+      }),
     );
   }
 
@@ -344,6 +381,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
               availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono",
             fontSize: fontSize,
             fontLigatures: fontLigatures,
+            readOnly: readOnly,
           }}
           path={activeTab === "js" ? "script.js" : "index.html"}
           language={activeTab === "js" ? "javascript" : "html"}

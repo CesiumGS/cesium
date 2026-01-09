@@ -41,11 +41,11 @@ async function initializeDecoder() {
 
 /**
  * Transcodes I3S to glTF in a web worker
- * @param {String} url custom attributes source URL
- * @param {Object} defaultGeometrySchema Schema to use during decoding
+ * @param {string} url custom attributes source URL
+ * @param {object} defaultGeometrySchema Schema to use during decoding
  * @param {I3SGeometry} geometryData The draco encoded geometry data
  * @param {Array} [featureData] The draco encoded feature data
- * @param {Object} [symbologyData] The rendering symbology to apply
+ * @param {object} [symbologyData] The rendering symbology to apply
  * @returns Promise<undefined|object> Returns a promise which resolves to the glTF result, or undefined if the task cannot be scheduled this frame.
  *
  * @exception {RuntimeError} I3S decoder could not be initialized.
