@@ -14,7 +14,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * A compile time flag for excessive logging, as long as there is
  * active development and testing.
  */
-const DYNAMIC_CONTENT_LOGGING = true;
+const DYNAMIC_CONTENT_LOGGING = false;
 
 /**
  * A generic N-dimensional map, used internally for content lookups.
