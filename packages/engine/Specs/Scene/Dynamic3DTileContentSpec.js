@@ -3,6 +3,9 @@ import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
+// These are not written into the index.js. See "build.js".
+import { LRUCache, NDMap } from "../../Source/Scene/Dynamic3DTileContent.js";
+
 /**
  * Move the camera to look at the spec tileset.
  *
@@ -98,89 +101,6 @@ describe(
 
     afterEach(function () {
       scene.primitives.removeAll();
-    });
-
-    it("XXX_DYNAMIC_WORKS", async function () {
-      const tileset = await Cesium3DTilesTester.loadTileset(
-        scene,
-        invalidDynamicContentTilesetUrl,
-      );
-
-      const dynamicContentProperties = {};
-      const dynamicContentsPropertyProvider = () => {
-        return dynamicContentProperties;
-      };
-      tileset.dynamicContentPropertyProvider = dynamicContentsPropertyProvider;
-      /*
-      const dynamicContentsPropertyProvider = () => {
-        console.log("Here we go, providing properties");
-        return  {
-          exampleTimeStamp: '2025-09-25',
-          exampleRevision: 'revision0'
-        };
-      };
-      tileset.dynamicContentPropertyProvider = dynamicContentsPropertyProvider;
-      */
-
-      fitCameraForSpec(scene.camera);
-      scene.renderForSpecs();
-      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-      const content = tileset.root.content;
-
-      const allActual = content._allContentUris;
-      const allExpected = [
-        "content-2025-09-25-revision0.glb",
-        "content-2025-09-26-revision0.glb",
-        "INVALID-URI-FOR-content-2025-09-27-revision0.glb-FOR-SPEC",
-        "content-2025-09-25-revision1.glb",
-        "content-2025-09-26-revision1.glb",
-        "content-2025-09-27-revision1.glb",
-        "content-2025-09-25-revision2.glb",
-        "content-2025-09-26-revision2.glb",
-        "content-2025-09-27-revision2.glb",
-      ];
-
-      expect(allActual).toEqual(allExpected);
-
-      console.log("Here we go, something loaded?");
-
-      dynamicContentProperties.exampleTimeStamp = "2025-09-25";
-      dynamicContentProperties.exampleRevision = "revision0";
-      await waitForActiveLoadedContentsReady(scene, content, 1);
-
-      const activeActual = content._activeContentUris;
-      const activeExpected = ["content-2025-09-25-revision0.glb"];
-      expect(activeActual).toEqual(activeExpected);
-
-      const singleTextureByteLength = 1048576;
-      const singleGeometryByteLength = 156;
-
-      await waitForActiveLoadedContentsReady(scene, content, 1);
-
-      expect(tileset.statistics.geometryByteLength).toEqual(
-        singleGeometryByteLength,
-      );
-      expect(tileset.statistics.texturesByteLength).toEqual(
-        singleTextureByteLength,
-      );
-
-      console.log("Before failing:");
-      console.log(tileset.statistics);
-
-      dynamicContentProperties.exampleTimeStamp = "2025-09-27";
-      dynamicContentProperties.exampleRevision = "revision0";
-      const activeActual1 = content._activeContentUris;
-      const activeExpected1 = [
-        "INVALID-URI-FOR-content-2025-09-27-revision0.glb-FOR-SPEC",
-      ];
-      expect(activeActual1).toEqual(activeExpected1);
-
-      scene.renderForSpecs();
-      await content.waitForSpecs();
-
-      console.log("After failing:");
-      console.log(tileset.statistics);
-      expect(tileset.statistics.numberOfAttemptedRequests).toBe(1);
     });
 
     it("considers all content URIs that are given in the content JSON", async function () {
@@ -415,239 +335,662 @@ describe(
       expect(tileset.statistics.numberOfAttemptedRequests).toBe(1);
     });
 
+    it("provides the right content metadata for the active content", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        dynamicContentTilesetUrl,
+      );
+
+      // Assign the dynamic content properties provider. The properties
+      // of this object will be changed, and the spec will check that
+      // the activation of the corresponding contents works
+      const dynamicContentProperties = {};
+      const dynamicContentsPropertyProvider = () => {
+        return dynamicContentProperties;
+      };
+      tileset.dynamicContentPropertyProvider = dynamicContentsPropertyProvider;
+
+      // Pretend this was a unit test
+      fitCameraForSpec(scene.camera);
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      const content = tileset.root.content;
+
+      // Activate one specific content and wait for it to be ready
+      dynamicContentProperties.exampleTimeStamp = "2025-09-25";
+      dynamicContentProperties.exampleRevision = "revision0";
+      await waitForActiveLoadedContentsReady(scene, content, 1);
+
+      // Check that the metadata of the activated content is provided
+      const activeLoadedContentA = content._activeLoadedContents[0];
+      const metadataA = activeLoadedContentA.metadata;
+      expect(metadataA).toBeDefined();
+      expect(metadataA.getProperty("exampleFloatProperty")).toEqual(0.0);
+      expect(metadataA.getProperty("exampleStringProperty")).toEqual(
+        "Example_0_0",
+      );
+
+      // Activate another content and wait for it to be ready
+      dynamicContentProperties.exampleTimeStamp = "2025-09-26";
+      dynamicContentProperties.exampleRevision = "revision1";
+      await waitForActiveLoadedContentsReady(scene, content, 1);
+
+      // Check that the metadata of the new activated content is provided
+      const activeLoadedContentB = content._activeLoadedContents[0];
+      const metadataB = activeLoadedContentB.metadata;
+      expect(metadataB).toBeDefined();
+      expect(metadataB.getProperty("exampleFloatProperty")).toEqual(1.1);
+      expect(metadataB.getProperty("exampleStringProperty")).toEqual(
+        "Example_1_1",
+      );
+    });
+
     it("destroys. That's simple...", function () {
       return Cesium3DTilesTester.tileDestroys(scene, dynamicContentTilesetUrl);
     });
-
-    // XXX_DYNAMIC From Multiple3DTileContent - try to shoehorn for Dynamic3DTileContent...
-    /*
-    describe("metadata", function () {
-      const withGroupMetadataUrl =
-        "./Data/Cesium3DTiles/MultipleContents/GroupMetadata/tileset_1.1.json";
-      const withGroupMetadataLegacyUrl =
-        "./Data/Cesium3DTiles/MultipleContents/GroupMetadata/tileset_1.0.json";
-      const withExplicitContentMetadataUrl =
-        "./Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.1.json";
-      const withExplicitContentMetadataLegacyUrl =
-        "./Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.0.json";
-      const withImplicitContentMetadataUrl =
-        "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.1.json";
-
-      let metadataClass;
-      let groupMetadata;
-
-      beforeAll(function () {
-        metadataClass = MetadataClass.fromJson({
-          id: "test",
-          class: {
-            properties: {
-              name: {
-                type: "STRING",
-              },
-              height: {
-                type: "SCALAR",
-                componentType: "FLOAT32",
-              },
-            },
-          },
-        });
-
-        groupMetadata = new GroupMetadata({
-          id: "testGroup",
-          group: {
-            properties: {
-              name: "Test Group",
-              height: 35.6,
-            },
-          },
-          class: metadataClass,
-        });
-      });
-
-      it("group metadata returns undefined", function () {
-        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
-          function (tileset) {
-            const content = tileset.root.content;
-            expect(content.group).not.toBeDefined();
-          },
-        );
-      });
-
-      it("assigning group metadata throws", function () {
-        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
-          function (tileset) {
-            expect(function () {
-              const content = tileset.root.content;
-              content.group = new Cesium3DContentGroup({
-                metadata: groupMetadata,
-              });
-            }).toThrowDeveloperError();
-          },
-        );
-      });
-
-      it("initializes group metadata for inner contents", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          withGroupMetadataUrl,
-        ).then(function (tileset) {
-          const multipleContents = tileset.root.content;
-          const innerContents = multipleContents.innerContents;
-
-          const buildingsContent = innerContents[0];
-          let groupMetadata = buildingsContent.group.metadata;
-          expect(groupMetadata).toBeDefined();
-          expect(groupMetadata.getProperty("color")).toEqual(
-            new Cartesian3(255, 127, 0),
-          );
-          expect(groupMetadata.getProperty("priority")).toBe(10);
-          expect(groupMetadata.getProperty("isInstanced")).toBe(false);
-
-          const cubesContent = innerContents[1];
-          groupMetadata = cubesContent.group.metadata;
-          expect(groupMetadata).toBeDefined();
-          expect(groupMetadata.getProperty("color")).toEqual(
-            new Cartesian3(0, 255, 127),
-          );
-          expect(groupMetadata.getProperty("priority")).toBe(5);
-          expect(groupMetadata.getProperty("isInstanced")).toBe(true);
-        });
-      });
-
-      it("initializes group metadata for inner contents (legacy)", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          withGroupMetadataLegacyUrl,
-        ).then(function (tileset) {
-          const multipleContents = tileset.root.content;
-          const innerContents = multipleContents.innerContents;
-
-          const buildingsContent = innerContents[0];
-          let groupMetadata = buildingsContent.group.metadata;
-          expect(groupMetadata).toBeDefined();
-          expect(groupMetadata.getProperty("color")).toEqual(
-            new Cartesian3(255, 127, 0),
-          );
-          expect(groupMetadata.getProperty("priority")).toBe(10);
-          expect(groupMetadata.getProperty("isInstanced")).toBe(false);
-
-          const cubesContent = innerContents[1];
-          groupMetadata = cubesContent.group.metadata;
-          expect(groupMetadata).toBeDefined();
-          expect(groupMetadata.getProperty("color")).toEqual(
-            new Cartesian3(0, 255, 127),
-          );
-          expect(groupMetadata.getProperty("priority")).toBe(5);
-          expect(groupMetadata.getProperty("isInstanced")).toBe(true);
-        });
-      });
-
-      it("content metadata returns undefined", function () {
-        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
-          function (tileset) {
-            const content = tileset.root.content;
-            expect(content.metadata).not.toBeDefined();
-          },
-        );
-      });
-
-      it("assigning content metadata throws", function () {
-        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
-          function (tileset) {
-            expect(function () {
-              const content = tileset.root.content;
-              content.metadata = {};
-            }).toThrowDeveloperError();
-          },
-        );
-      });
-
-      it("initializes explicit content metadata for inner contents", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          withExplicitContentMetadataUrl,
-        ).then(function (tileset) {
-          const multipleContents = tileset.root.content;
-          const innerContents = multipleContents.innerContents;
-
-          const batchedContent = innerContents[0];
-          const batchedMetadata = batchedContent.metadata;
-          expect(batchedMetadata).toBeDefined();
-          expect(batchedMetadata.getProperty("highlightColor")).toEqual(
-            new Cartesian3(0, 0, 255),
-          );
-          expect(batchedMetadata.getProperty("author")).toEqual("Cesium");
-
-          const instancedContent = innerContents[1];
-          const instancedMetadata = instancedContent.metadata;
-          expect(instancedMetadata).toBeDefined();
-          expect(instancedMetadata.getProperty("numberOfInstances")).toEqual(
-            50,
-          );
-          expect(instancedMetadata.getProperty("author")).toEqual(
-            "Sample Author",
-          );
-        });
-      });
-
-      it("initializes explicit content metadata for inner contents (legacy)", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          withExplicitContentMetadataLegacyUrl,
-        ).then(function (tileset) {
-          const multipleContents = tileset.root.content;
-          const innerContents = multipleContents.innerContents;
-
-          const batchedContent = innerContents[0];
-          const batchedMetadata = batchedContent.metadata;
-          expect(batchedMetadata).toBeDefined();
-          expect(batchedMetadata.getProperty("highlightColor")).toEqual(
-            new Cartesian3(0, 0, 255),
-          );
-          expect(batchedMetadata.getProperty("author")).toEqual("Cesium");
-
-          const instancedContent = innerContents[1];
-          const instancedMetadata = instancedContent.metadata;
-          expect(instancedMetadata).toBeDefined();
-          expect(instancedMetadata.getProperty("numberOfInstances")).toEqual(
-            50,
-          );
-          expect(instancedMetadata.getProperty("author")).toEqual(
-            "Sample Author",
-          );
-        });
-      });
-
-      it("initializes implicit content metadata for inner contents", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          withImplicitContentMetadataUrl,
-        ).then(function (tileset) {
-          const placeholderTile = tileset.root;
-          const subtreeRootTile = placeholderTile.children[0];
-
-          // This retrieves the tile at (1, 1, 1)
-          const subtreeChildTile = subtreeRootTile.children[0];
-
-          const multipleContents = subtreeChildTile.content;
-          const innerContents = multipleContents.innerContents;
-
-          const buildingContent = innerContents[0];
-          const buildingMetadata = buildingContent.metadata;
-          expect(buildingMetadata).toBeDefined();
-          expect(buildingMetadata.getProperty("height")).toEqual(50);
-          expect(buildingMetadata.getProperty("color")).toEqual(
-            new Cartesian3(0, 0, 255),
-          );
-
-          const treeContent = innerContents[1];
-          const treeMetadata = treeContent.metadata;
-          expect(treeMetadata).toBeDefined();
-          expect(treeMetadata.getProperty("age")).toEqual(16);
-        });
-      });
-    });
-    */
   },
   "WebGL",
 );
+
+//============================================================================
+// NDMap
+
+describe("Scene/Dynamic3DTileContent/NDMap", function () {
+  it("constructor throws for empty dimensionNames array", async function () {
+    expect(function () {
+      /*eslint-disable no-unused-vars*/
+      const map = new NDMap([]);
+      /*eslint-enable no-unused-vars*/
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws for duplicates in dimensionNames", async function () {
+    expect(function () {
+      /*eslint-disable no-unused-vars*/
+      const map = new NDMap(["dimA", "dimB", "dimB"]);
+      /*eslint-enable no-unused-vars*/
+    }).toThrowDeveloperError();
+  });
+
+  it("basic set and get works", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // The map is initially empty
+    expect(map.size).toBe(0);
+
+    // Add an entry
+    const key0a = {
+      dimA: 12,
+      dimB: 23,
+      unused: 34,
+    };
+    map.set(key0a, "value0");
+
+    // The size is now 1
+    expect(map.size).toBe(1);
+
+    // Fetch the first entry
+    const key0b = {
+      dimA: 12,
+      dimB: 23,
+      unused: 45,
+    };
+    const value0 = map.get(key0b);
+    expect(value0).toBe("value0");
+  });
+
+  it("properly sets values for existing keys", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // The map is initially empty
+    expect(map.size).toBe(0);
+
+    // Add an entry
+    const key0 = {
+      dimA: 12,
+      dimB: 23,
+      unused: 34,
+    };
+    map.set(key0, "value0a");
+
+    // The size is now 1
+    expect(map.size).toBe(1);
+
+    // Overwrite the entry with a new value
+    map.set(key0, "value0b");
+
+    // The size is now 1
+    expect(map.size).toBe(1);
+
+    // Fetch the the value of the entry
+    const key0b = {
+      dimA: 12,
+      dimB: 23,
+      unused: 45,
+    };
+    const value0 = map.get(key0b);
+    expect(value0).toBe("value0b");
+  });
+
+  it("properly reports key presence and handles deletion", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // The map is initially empty
+    expect(map.size).toBe(0);
+
+    // Add an entry
+    const key0a = {
+      dimA: 12,
+      dimB: 23,
+      unused: 34,
+    };
+    map.set(key0a, "value0");
+
+    // The size is now 1
+    expect(map.size).toBe(1);
+
+    // Define a key that is equivalent to the first one
+    const key0b = {
+      dimA: 12,
+      dimB: 23,
+      unused: 45,
+    };
+
+    // Ensure that the map has the key
+    const actualHasB = map.has(key0b);
+    expect(actualHasB).toBe(true);
+
+    // Delete the key
+    map.delete(key0b);
+
+    // The size is now 0
+    expect(map.size).toBe(0);
+
+    // Expect the key to no longer be present
+    const actualHasA = map.has(key0a);
+    expect(actualHasA).toBe(false);
+  });
+
+  it("ignores missing dimensions", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // Add an entry that is missing one dimension
+    const key0 = {
+      dimA: 12,
+    };
+    map.set(key0, "value0");
+
+    // Expect the value to be fetched nevertheless
+    const value0 = map.get(key0);
+    expect(value0).toBe("value0");
+  });
+
+  it("provides all keys", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // Add some entries
+    const key0 = {
+      dimA: 12,
+      dimB: 23,
+      unused: 34,
+    };
+    map.set(key0, "value0");
+
+    const key1 = {
+      dimA: 23,
+      dimB: 34,
+      unused: 45,
+    };
+    map.set(key1, "value1");
+
+    const key2 = {
+      dimA: 34,
+      dimB: 45,
+      unused: 56,
+    };
+    map.set(key2, "value2");
+
+    // The keys do not retain the unused properties
+    const expectedKeys = [
+      {
+        dimA: 12,
+        dimB: 23,
+      },
+      {
+        dimA: 23,
+        dimB: 34,
+      },
+      {
+        dimA: 34,
+        dimB: 45,
+      },
+    ];
+    const actualKeys = [...map.keys()];
+    expect(actualKeys).toEqual(expectedKeys);
+  });
+
+  it("provides all values", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // Add some entries
+    const key0 = {
+      dimA: 12,
+      dimB: 23,
+      unused: 34,
+    };
+    map.set(key0, "value0");
+
+    const key1 = {
+      dimA: 23,
+      dimB: 34,
+      unused: 45,
+    };
+    map.set(key1, "value1");
+
+    const key2 = {
+      dimA: 34,
+      dimB: 45,
+      unused: 56,
+    };
+    map.set(key2, "value2");
+
+    const expectedValues = ["value0", "value1", "value2"];
+    const actualValues = [...map.values()];
+    expect(actualValues).toEqual(expectedValues);
+  });
+
+  it("provides all entries", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // Add some entries
+    const key0 = {
+      dimA: 12,
+      dimB: 23,
+      unused: 34,
+    };
+    map.set(key0, "value0");
+
+    const key1 = {
+      dimA: 23,
+      dimB: 34,
+      unused: 45,
+    };
+    map.set(key1, "value1");
+
+    const key2 = {
+      dimA: 34,
+      dimB: 45,
+      unused: 56,
+    };
+    map.set(key2, "value2");
+
+    const expectedEntries = [
+      [
+        {
+          dimA: 12,
+          dimB: 23,
+        },
+        "value0",
+      ],
+      [
+        {
+          dimA: 23,
+          dimB: 34,
+        },
+        "value1",
+      ],
+      [
+        {
+          dimA: 34,
+          dimB: 45,
+        },
+        "value2",
+      ],
+    ];
+
+    const actualEntries = [...map.entries()];
+    expect(actualEntries).toEqual(expectedEntries);
+  });
+
+  it("clears all entries", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // The map is initially empty
+    expect(map.size).toBe(0);
+
+    // Add some entries
+    const key0 = {
+      dimA: 12,
+      dimB: 23,
+      unused: 34,
+    };
+    map.set(key0, "value0");
+
+    const key1 = {
+      dimA: 23,
+      dimB: 34,
+      unused: 45,
+    };
+    map.set(key1, "value1");
+
+    const key2 = {
+      dimA: 34,
+      dimB: 45,
+      unused: 56,
+    };
+    map.set(key2, "value2");
+
+    // The map now has a size of 3
+    expect(map.size).toBe(3);
+
+    // Clear the map
+    map.clear();
+
+    // The map now has a size of 0
+    expect(map.size).toBe(0);
+  });
+
+  it("is iterable over its entries", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // Add some entries
+    const key0 = {
+      dimA: 12,
+      dimB: 23,
+      unused: 34,
+    };
+    map.set(key0, "value0");
+
+    const key1 = {
+      dimA: 23,
+      dimB: 34,
+      unused: 45,
+    };
+    map.set(key1, "value1");
+
+    const key2 = {
+      dimA: 34,
+      dimB: 45,
+      unused: 56,
+    };
+    map.set(key2, "value2");
+
+    const expectedEntries = [
+      [
+        {
+          dimA: 12,
+          dimB: 23,
+        },
+        "value0",
+      ],
+      [
+        {
+          dimA: 23,
+          dimB: 34,
+        },
+        "value1",
+      ],
+      [
+        {
+          dimA: 34,
+          dimB: 45,
+        },
+        "value2",
+      ],
+    ];
+
+    const actualEntries = [...map];
+    expect(actualEntries).toEqual(expectedEntries);
+  });
+
+  it("iterates over entries in forEach", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // Add some entries
+    const key0 = {
+      dimA: 12,
+      dimB: 23,
+      unused: 34,
+    };
+    map.set(key0, "value0");
+
+    const key1 = {
+      dimA: 23,
+      dimB: 34,
+      unused: 45,
+    };
+    map.set(key1, "value1");
+
+    const key2 = {
+      dimA: 34,
+      dimB: 45,
+      unused: 56,
+    };
+    map.set(key2, "value2");
+
+    const expectedEntries = [
+      [
+        {
+          dimA: 12,
+          dimB: 23,
+        },
+        "value0",
+      ],
+      [
+        {
+          dimA: 23,
+          dimB: 34,
+        },
+        "value1",
+      ],
+      [
+        {
+          dimA: 34,
+          dimB: 45,
+        },
+        "value2",
+      ],
+    ];
+
+    const actualEntries = [];
+    map.forEach((e) => {
+      actualEntries.push(e);
+    });
+    expect(actualEntries).toEqual(expectedEntries);
+  });
+
+  it("gets an existing value instead of computing a default", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // The map is initially empty
+    expect(map.size).toBe(0);
+
+    // Add an entry
+    const key0a = {
+      dimA: 12,
+      dimB: 23,
+      unused: 34,
+    };
+    map.set(key0a, "value0a");
+
+    // Query the value for an equivalent key
+    // (not computing a default)
+    const key0b = {
+      dimA: 12,
+      dimB: 23,
+      unused: 99,
+    };
+    const value0 = map.getOrInsertComputed(key0b, () => "computedValue0");
+    expect(value0).toBe("value0a");
+  });
+
+  it("computes a default only once", async function () {
+    const map = new NDMap(["dimA", "dimB"]);
+
+    // The map is initially empty
+    expect(map.size).toBe(0);
+
+    // Query the value for a key that does not exist,
+    // computing the default
+    const key0a = {
+      dimA: 12,
+      dimB: 23,
+      unused: 34,
+    };
+    const value0a = map.getOrInsertComputed(key0a, () => "computedValue0a");
+    expect(value0a).toBe("computedValue0a");
+
+    // Query an equivalent key
+    const key0b = {
+      dimA: 12,
+      dimB: 23,
+      unused: 99,
+    };
+    const value0b = map.get(key0b);
+    expect(value0b).toBe("computedValue0a");
+
+    // Query an equivalent key, not computing the default
+    const value0b2 = map.getOrInsertComputed(key0b, () => "computedValue0b");
+    expect(value0b2).toBe("computedValue0a");
+
+    // Just verify the map size again...
+    expect(map.size).toBe(1);
+  });
+});
+
+//============================================================================
+
+//============================================================================
+// LRUCache
+
+describe("Scene/Dynamic3DTileContent/LRUCache", function () {
+  it("constructor throws for non-positive maximum size", async function () {
+    expect(function () {
+      /*eslint-disable no-unused-vars*/
+      const map = new LRUCache(0);
+      /*eslint-enable no-unused-vars*/
+    }).toThrowDeveloperError();
+  });
+
+  it("has the basic functionality of a map (with infinite size)", async function () {
+    const m = new LRUCache(Number.POSITIVE_INFINITY);
+    expect(m.size).toBe(0);
+
+    m.set("key0", "value0a");
+    expect(m.size).toBe(1);
+
+    m.set("key0", "value0b");
+    expect(m.size).toBe(1);
+
+    expect(m.get("key0")).toBe("value0b");
+    expect(m.has("key0")).toBeTrue();
+    expect(m.has("keyX")).toBeFalse();
+
+    m.set("key1", "value1");
+    m.set("key2", "value2");
+    expect(m.size).toBe(3);
+
+    const expectedKeys = ["key0", "key1", "key2"];
+    const actualKeys = [...m.keys()];
+    expect(actualKeys).toEqual(expectedKeys);
+
+    const expectedValues = ["value0b", "value1", "value2"];
+    const actualValues = [...m.values()];
+    expect(actualValues).toEqual(expectedValues);
+
+    const expectedEntries = [
+      ["key0", "value0b"],
+      ["key1", "value1"],
+      ["key2", "value2"],
+    ];
+    const actualEntries = [...m.entries()];
+    expect(actualEntries).toEqual(expectedEntries);
+
+    m.clear();
+    expect(m.size).toBe(0);
+  });
+
+  it("properly evicts oldest element", async function () {
+    const evictedKeys = [];
+    const m = new LRUCache(2, (k, v) => {
+      evictedKeys.push(k);
+    });
+    expect(m.size).toBe(0);
+
+    m.set("key0", "value0");
+    m.set("key1", "value1");
+    m.set("key2", "value2");
+
+    expect(evictedKeys).toEqual(["key0"]);
+  });
+
+  it("properly detects access as usage for LRU", async function () {
+    const evictedKeys = [];
+    const m = new LRUCache(2, (k, v) => {
+      evictedKeys.push(k);
+    });
+    expect(m.size).toBe(0);
+
+    m.set("key0", "value0");
+    m.set("key1", "value1");
+
+    // Move key0 up in the LRU sequence
+    m.get("key0");
+    m.set("key2", "value2");
+
+    expect(evictedKeys).toEqual(["key1"]);
+  });
+
+  it("trimToSize evicts the oldest elements", async function () {
+    const evictedKeys = [];
+    const m = new LRUCache(Number.POSITIVE_INFINITY, (k, v) => {
+      evictedKeys.push(k);
+    });
+    expect(m.size).toBe(0);
+
+    m.set("key0", "value0");
+    m.set("key1", "value1");
+    m.set("key2", "value2");
+    m.set("key3", "value3");
+
+    expect(m.size).toBe(4);
+    expect(evictedKeys).toEqual([]);
+
+    m.trimToSize(2);
+
+    expect(m.size).toBe(2);
+    expect(evictedKeys).toEqual(["key0", "key1"]);
+
+    m.set("key0", "value0");
+
+    expect(m.size).toBe(3);
+    expect([...m.keys()]).toEqual(["key2", "key3", "key0"]);
+
+    expect(evictedKeys).toEqual(["key0", "key1"]);
+  });
+
+  it("setMaximumSize evicts the oldest elements and establishes the size constraint", async function () {
+    const evictedKeys = [];
+    const m = new LRUCache(Number.POSITIVE_INFINITY, (k, v) => {
+      evictedKeys.push(k);
+    });
+    expect(m.size).toBe(0);
+
+    m.set("key0", "value0");
+    m.set("key1", "value1");
+    m.set("key2", "value2");
+    m.set("key3", "value3");
+
+    expect(m.size).toBe(4);
+    expect(evictedKeys).toEqual([]);
+
+    m.setMaximumSize(2);
+
+    expect(m.size).toBe(2);
+    expect(evictedKeys).toEqual(["key0", "key1"]);
+
+    m.set("key0", "value0");
+
+    expect(m.size).toBe(2);
+    expect(evictedKeys).toEqual(["key0", "key1", "key2"]);
+  });
+});
