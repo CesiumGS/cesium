@@ -83,7 +83,7 @@ function VoxelTraversal(
   const providerTileCount = defined(provider.maximumTileCount)
     ? provider.maximumTileCount
     : defined(provider.availableLevels)
-      ? Math.pow(8, provider.availableLevels - 1)
+      ? (8 ** provider.availableLevels - 1) / 7
       : undefined;
 
   // TODO make sure to split the maximumTextureMemoryByteLength across all the megatextures
