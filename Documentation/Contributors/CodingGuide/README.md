@@ -19,6 +19,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
   - [Formatting](#formatting)
   - [Spelling](#spelling)
   - [Linting](#linting)
+  - [Type Checking](#type-checking)
   - [Units](#units)
   - [Basic Code Construction](#basic-code-construction)
   - [Functions](#functions)
@@ -171,6 +172,34 @@ try {
 } catch (ex) {}
 /*eslint-enable no-empty*/
 ```
+
+## Type Checking
+
+We are incrementally adopting [type checking for JavaScript files](https://www.typescriptlang.org/docs/handbook/type-checking-javascript-files.html). As of January 2026, type checks are enabled on a file-by-file basis, with `// @ts-check` annotations at the top of a file used to opt in. As adoption progresses, we expect this pattern will eventually be flipped to an opt-opt annotation instead. To see type system hints and errors in some editors or IDEs, you may need to configure or install TypeScript language server support. When in doubt, VSCode supports TypeScript language services [by default](https://code.visualstudio.com/docs/nodejs/working-with-javascript).
+
+**References:**
+
+For developers already familiar with TypeScript, writing JavaScript with JSDoc type annotations has some differences. For a summary of the annotation syntax, and supported features in JSDoc vs. TSDoc, see:
+
+- [Type Checking JavaScript Files \| TypeScript](https://www.typescriptlang.org/docs/handbook/type-checking-javascript-files.html)
+- [JSDoc Reference \| TypeScript](https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html)
+- [JSDoc Cheatsheet and Type Safety Tricks](https://docs.joshuatz.com/cheatsheets/js/jsdoc/) by Joshua Tzucker
+
+**Guidelines:**
+
+1. **Incremental adoption with `@ts-check` annotations.** Enabling type checks for existing and new JavaScript files, using `// @ts-check` annotations, is encouraged but not required in the course of ongoing feature development and maintenance. If type-related changes are noisy enough to obscure the functional changes your PR, consider splitting the type fixes into a separate PR.
+2. **Common JavaScript/JSDoc obstacles.** JSDoc-based type checks have limited support for some coding patterns used in the CesiumJS codebase, such as classic prototype-based inheritance and `Object.defineProperties()`. In most cases these problems can be solved by refactoring with newer coding patterns, by hand or with tooling like [lebab](https://github.com/lebab/lebab). In other cases the solution may be less obvious, and a temporary skip-check annotation may be used to satisfy the type system. Example with lebab:
+   ```bash
+   npx lebab packages/engine/Source/Core/Cartesian2.js \
+     -o packages/engine/Source/Core/Cartesian2.js --transform class
+   ```
+3. **Prefer `@ts-expect-error` over `@ts-ignore`.** Sometimes a source file's types are _mostly_ consistent, but a few stubborn errors remain unsolved. These may be blocked by out-of-scope work, or may simply be unjustifiably difficult to solve in JSDoc-based types. Use `@ts-expect-error` annotations to relax the type system for specific lines. Unlike `@ts-ignore`, `@ts-expect-error` will raise errors when the line no longer contains an error, making it easier to clean up annotations later on.
+4. **Prefer `unknown` or `@ts-expect-error` over `any`.** Casting types to `any` forces them to be accepted everywhere, and effectively disables all type-checking dependent on that type. This tends to propagate throughout a type system, reducing the effectiveness of type checks, and should be avoided when possible. Prefer casting to `unknown`, or using a `@ts-expect-error` annotation. For example, when defining an object with string keys, with values whose types we don't care about, prefer `Record<string, unknown>` to `Record<string, any>`.
+5. **Type-only imports.** When JSDoc annotations depend on types not otherwise imported in a source file, it will be necessary to tell TypeScript where to find them. To avoid otherwise-unused imports, use type-only imports in separate one-line JSDoc comments:
+   ```javascript
+   /** @import Cartesian3 from './Cartesian3.js'; */
+   /** @import Cartesian4 from './Cartesian4.js'; */
+   ```
 
 ## Units
 
