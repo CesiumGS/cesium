@@ -14,6 +14,12 @@ import Matrix4 from "./Matrix4.js";
  *
  * @param {object} options Object with the following properties:
  * @param {Geometry|GeometryFactory} options.geometry The geometry to instance.
+ *        When a {@link Geometry} is passed, it will be used directly. When an
+ *        object implementing {@link GeometryFactory} is passed (for example an
+ *        instance of {@link RectangleGeometry} or {@link EllipsoidGeometry}),
+ *        the actual geometry will be created either asynchronously on a web
+ *        worker or synchronously on the main thread depending on the
+ *        {@link Primitive} options.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
  * @param {object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick} or get/set per-instance attributes with {@link Primitive#getGeometryInstanceAttributes}.
  * @param {object} [options.attributes] Per-instance attributes like a show or color attribute shown in the example below.
