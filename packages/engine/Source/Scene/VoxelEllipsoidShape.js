@@ -520,6 +520,9 @@ VoxelEllipsoidShape.prototype.update = function (
   // The percent of space that is between the inner and outer ellipsoid.
   const thickness = shapeMaxBounds.z - shapeMinBounds.z;
   shaderUniforms.ellipsoidInverseHeightDifference = 1.0 / thickness;
+  // Default to 0.0 to handle zero-thickness shapes.
+  // When the inner and outer ellipsoid radii are equal, the shape becomes
+  // a 2D surface rather than a 3D volume.
   if (shapeMinBounds.z === shapeMaxBounds.z) {
     shaderUniforms.ellipsoidInverseHeightDifference = 0.0;
   }

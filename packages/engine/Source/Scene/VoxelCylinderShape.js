@@ -359,6 +359,9 @@ VoxelCylinderShape.prototype.update = function (
   }
 
   const radiusRange = maxBounds.x - minBounds.x;
+  // Default to scale=0.0 and offset=1.0 to handle zero-thickness shapes.
+  // When radiusRange is 0, the shape becomes a 2D surface rather than a 3D volume,
+  // and these defaults allow the shader logic to work correctly.
   let radialScale = 0.0;
   let radialOffset = 1.0;
   if (radiusRange !== 0.0) {
@@ -372,6 +375,9 @@ VoxelCylinderShape.prototype.update = function (
   );
 
   const heightRange = maxBounds.z - minBounds.z; // Default 2.0
+  // Default to scale=0.0 and offset=1.0 to handle zero-thickness shapes.
+  // When heightRange is 0, the shape becomes a 2D surface rather than a 3D volume,
+  // and these defaults allow the shader logic to work correctly.
   let heightScale = 0.0;
   let heightOffset = 1.0;
   if (heightRange !== 0.0) {
@@ -415,6 +421,8 @@ VoxelCylinderShape.prototype.update = function (
   shaderUniforms.cylinderShapeUvAngleRangeOrigin = uvAngleRangeOrigin;
 
   if (shapeAngleRange <= epsilonAngle) {
+    // Default to scale=0.0 and offset=1.0 for zero-thickness angle range.
+    // This handles the edge case where the cylinder has no angular extent.
     shaderUniforms.cylinderLocalToShapeUvAngle = Cartesian2.fromElements(
       0.0,
       1.0,
