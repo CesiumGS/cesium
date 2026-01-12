@@ -24,6 +24,8 @@ import TextureWrap from "../Renderer/TextureWrap.js";
  * @param {MetadataComponentType} componentType The component type of the metadata.
  * @param {number} [availableTextureMemoryBytes=134217728] An upper limit on the texture memory size in bytes.
  *
+ * TODO: describe exceptions
+ *
  * @private
  */
 function Megatexture(
@@ -387,6 +389,98 @@ Megatexture.get3DTextureDimension = function (
 
   return textureDimension;
 };
+
+/**
+ * Compute a 3D texture dimension that contains the given number of tiles, or as many tiles as can fit within the available texture memory.
+ * Not used outside the class, but exposed for testing.
+ * @param {Cartesian3} tileDimensions The dimensions of one tile in number of voxels.
+ * @param {number} bytesPerSample The number of bytes per voxel sample.
+ * @param {number} availableTextureMemoryBytes An upper limit on the texture memory size in bytes.
+ * @param {number} [tileCount] The total number of tiles in the tileset.
+ * @returns {Cartesian3} The computed 3D texture dimensions.
+ *
+ * TODO: describe exceptions
+ * @private
+ */
+Megatexture.get3DTextureDimensionGreedy = function (
+  tileDimensions,
+  bytesPerSample,
+  availableTextureMemoryBytes,
+  tileCount,
+) {
+  const { maximum3DTextureSize } = ContextLimits;
+  if (Cartesian3.maximumComponent(tileDimensions) > maximum3DTextureSize) {
+    throw new RuntimeError(
+      "The GL context does not support a 3D texture large enough to contain a tile with the given dimensions.",
+    );
+  }
+
+  // Find the number of tiles we can fit.
+  const tileSizeInBytes =
+    bytesPerSample * tileDimensions.x * tileDimensions.y * tileDimensions.z;
+  const maxTileCount = Math.floor(
+    availableTextureMemoryBytes / tileSizeInBytes,
+  );
+  if (maxTileCount < 1) {
+    throw new RuntimeError(
+      "Not enough texture memory available to create a megatexture with the given tile dimensions.",
+    );
+  }
+
+  if (defined(tileCount)) {
+    tileCount = Math.min(tileCount, maxTileCount);
+  } else {
+    tileCount = maxTileCount;
+  }
+
+  // Sort the tile dimensions from largest to smallest.
+  const sortedDimensions = Object.entries(tileDimensions).sort(
+    (a, b) => b[1] - a[1],
+  );
+
+  // Compute the number of tiles that we can fit along each axis of a 3D texture,
+  // starting from the largest texture the context can support
+  const tilesPerDimension = sortedDimensions.map(([axis, dimension]) =>
+    Math.floor(maximum3DTextureSize / dimension),
+  );
+
+  // Reduce the number of tiles along each dimension until the total number of
+  // tiles is close to but not less than tileCount.
+  // Start from the dimension along which the tiles are largest, since
+  // along this dimension each removed slice will contain the most tiles.
+  for (let i = 0; i < 3; i++) {
+    const currentTileCount = getVolume(tilesPerDimension);
+    if (currentTileCount < tileCount) {
+      break;
+    }
+    const sliceDimensions = tilesPerDimension.slice();
+    sliceDimensions.splice(i, 1);
+    const tilesPerSlice = sliceDimensions[0] * sliceDimensions[1];
+    const excessTiles = currentTileCount - tileCount;
+    const slicesToRemove = Math.floor(excessTiles / tilesPerSlice);
+    tilesPerDimension[i] -= slicesToRemove;
+  }
+
+  // Make sure we are less than maximumTileCount (to fit within memory)
+  if (getVolume(tilesPerDimension) > maxTileCount) {
+    tilesPerDimension[2] = Math.floor(
+      maxTileCount / (tilesPerDimension[0] * tilesPerDimension[1]),
+    );
+  }
+
+  // Compute the final texture dimensions
+  const textureDimension = new Cartesian3();
+  for (let i = 0; i < 3; i++) {
+    const [axis, dimension] = sortedDimensions[i];
+    textureDimension[axis] = tilesPerDimension[i] * dimension;
+  }
+
+  return textureDimension;
+};
+
+function getVolume(dimensionsArray) {
+  return dimensionsArray.reduce((p, d) => p * d);
+}
 
 /**
  * Approximate an integer by a product of small prime factors (2, 3, 5, and 7).
