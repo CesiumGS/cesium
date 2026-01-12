@@ -90,32 +90,18 @@ function webkitVersion() {
 
 let isInternetExplorerResult;
 let internetExplorerVersionResult;
+/**
+ * @deprecated Cesium no longer supports Internet Explorer. This function always returns false.
+ */
 function isInternetExplorer() {
-  if (!defined(isInternetExplorerResult)) {
-    isInternetExplorerResult = false;
-
-    let fields;
-    if (theNavigator.appName === "Microsoft Internet Explorer") {
-      fields = /MSIE ([0-9]{1,}[\.0-9]{0,})/.exec(theNavigator.userAgent);
-      if (fields !== null) {
-        isInternetExplorerResult = true;
-        internetExplorerVersionResult = extractVersion(fields[1]);
-      }
-    } else if (theNavigator.appName === "Netscape") {
-      fields = /Trident\/.*rv:([0-9]{1,}[\.0-9]{0,})/.exec(
-        theNavigator.userAgent,
-      );
-      if (fields !== null) {
-        isInternetExplorerResult = true;
-        internetExplorerVersionResult = extractVersion(fields[1]);
-      }
-    }
-  }
-  return isInternetExplorerResult;
+  return false;
 }
 
+/**
+ * @deprecated Cesium no longer supports Internet Explorer. This function always returns undefined.
+ */
 function internetExplorerVersion() {
-  return isInternetExplorer() && internetExplorerVersionResult;
+  return undefined;
 }
 
 let isEdgeResult;
