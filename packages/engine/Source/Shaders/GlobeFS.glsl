@@ -207,6 +207,21 @@ float sampleNearest(sampler2D tex, vec2 uv) {
     return texelFetch(tex, ivec2(floor(uv * vec2(textureSize(tex, 0)))), 0).r;
 }
 
+#define inverseLerp(a,b,x) ((x-a)/(b-a))
+
+float filterSDF(float sdf, vec2 uvCoordinate, vec2 textureSize) {
+    // Calculate the texel area of this fragment
+    mat2 pixelFootprint = mat2(dFdx(uvCoordinate), dFdy(uvCoordinate));
+    float pixelFootprintDiameterSqr = abs(determinant(pixelFootprint));
+    pixelFootprintDiameterSqr *= textureSize.x * textureSize.y;
+    float pixelFootprintDiameter = sqrt(pixelFootprintDiameterSqr);
+
+    //pixelFootprintDiameter = clamp(pixelFootprintDiameter, 0.1, 2.0);
+
+    return sdf/pixelFootprintDiameter;
+}
+
+
 #endif
 
 vec4 sampleAndBlend(
@@ -612,14 +627,14 @@ void main()
 
 #ifdef HAS_SDF
     float dist = sampleNearest(u_sdf, v_textureCoordinates.xy);
+    dist = filterSDF(dist, v_textureCoordinates.xy, vec2(textureSize(u_sdf, 0)));
     //float dist = sampleBilinear(u_sdf, v_textureCoordinates.xy);
-    //float cameraDist = length(czm_view[3]);
-    float maxRadii = max(czm_ellipsoidRadii.x, max(czm_ellipsoidRadii.y, czm_ellipsoidRadii.z));
-    float cameraScaling = clamp( (cameraDist - maxRadii)/1000.0, 1.0, 2.0);
-    float lwidth = 2.0 * cameraScaling;
-    if (dist < lwidth) {
+
+    float lwidth = 2.0;
+    if (dist <= lwidth) {
         float renormalized = clamp((lwidth - dist) / lwidth, 0.0, 1.0);
-        out_FragColor = vec4(renormalized, renormalized, 0.0, renormalized*renormalized);
+
+        out_FragColor = vec4(renormalized, renormalized, 0.0, renormalized);
     }
 #endif
 }
