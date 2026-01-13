@@ -88,22 +88,6 @@ function webkitVersion() {
   return isWebkit() && webkitVersionResult;
 }
 
-let isInternetExplorerResult;
-let internetExplorerVersionResult;
-/**
- * @deprecated Cesium no longer supports Internet Explorer. This function always returns false.
- */
-function isInternetExplorer() {
-  return false;
-}
-
-/**
- * @deprecated Cesium no longer supports Internet Explorer. This function always returns undefined.
- */
-function internetExplorerVersion() {
-  return undefined;
-}
-
 let isEdgeResult;
 let edgeVersionResult;
 function isEdge() {
@@ -289,8 +273,6 @@ const FeatureDetection = {
   safariVersion: safariVersion,
   isWebkit: isWebkit,
   webkitVersion: webkitVersion,
-  isInternetExplorer: isInternetExplorer,
-  internetExplorerVersion: internetExplorerVersion,
   isEdge: isEdge,
   edgeVersion: edgeVersion,
   isFirefox: isFirefox,

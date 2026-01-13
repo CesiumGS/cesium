@@ -53,14 +53,10 @@ function registerListener(screenSpaceEventHandler, domType, element, callback) {
     callback(screenSpaceEventHandler, e);
   }
 
-  if (FeatureDetection.isInternetExplorer()) {
-    element.addEventListener(domType, listener, false);
-  } else {
-    element.addEventListener(domType, listener, {
+  element.addEventListener(domType, listener, {
       capture: false,
       passive: false,
     });
-  }
 
   screenSpaceEventHandler._removalFunctions.push(function () {
     element.removeEventListener(domType, listener, false);

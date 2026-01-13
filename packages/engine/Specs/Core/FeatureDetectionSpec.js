@@ -86,20 +86,7 @@ describe("Core/FeatureDetection", function () {
     }
   });
 
-  it("detects Internet Explorer", function () {
-    const isInternetExplorer = FeatureDetection.isInternetExplorer();
-    expect(typeof isInternetExplorer).toEqual("boolean");
-
-    if (isInternetExplorer) {
-      const internetExplorerVersion =
-        FeatureDetection.internetExplorerVersion();
-      checkVersionArray(internetExplorerVersion);
-
-      console.log(
-        `detected Internet Explorer ${internetExplorerVersion.join(".")}`,
-      );
-    }
-  });
+  
 
   it("detects Edge", function () {
     const isEdge = FeatureDetection.isEdge();

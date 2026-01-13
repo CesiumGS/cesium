@@ -1294,9 +1294,7 @@ PolylineBucket.prototype.updateShader = function (
     defines.push("POLYLINE_DASH");
   }
 
-  if (!FeatureDetection.isInternetExplorer()) {
-    defines.push("CLIP_POLYLINE");
-  }
+  defines.push("CLIP_POLYLINE");
 
   const fs = new ShaderSource({
     defines: defines,

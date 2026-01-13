@@ -11,9 +11,7 @@ import Material from "./Material.js";
 let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineMaterialAppearanceVS}`;
 const defaultFragmentShaderSource = PolylineFS;
 
-if (!FeatureDetection.isInternetExplorer()) {
-  defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
-}
+defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
 
 /**
  * An appearance for {@link PolylineGeometry} that supports shading with materials.

@@ -9,9 +9,7 @@ import Appearance from "./Appearance.js";
 let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineColorAppearanceVS}`;
 const defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
 
-if (!FeatureDetection.isInternetExplorer()) {
-  defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
-}
+defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
 
 /**
  * An appearance for {@link GeometryInstance} instances with color attributes and

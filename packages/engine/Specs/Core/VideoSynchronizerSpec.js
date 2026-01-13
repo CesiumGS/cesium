@@ -10,11 +10,6 @@ import {
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Core/VideoSynchronizer", function () {
-  //Video textures do not work on Internet Explorer
-  if (FeatureDetection.isInternetExplorer()) {
-    return;
-  }
-
   function loadVideo() {
     const element = document.createElement("video");
     let source = document.createElement("source");

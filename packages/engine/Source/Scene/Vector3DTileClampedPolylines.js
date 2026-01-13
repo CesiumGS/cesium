@@ -559,7 +559,7 @@ function createShaders(primitive, context) {
   const vs = new ShaderSource({
     defines: [
       "VECTOR_TILE",
-      !FeatureDetection.isInternetExplorer() ? "CLIP_POLYLINE" : "",
+      "CLIP_POLYLINE",
     ],
     sources: [PolylineCommon, vsSource],
   });
