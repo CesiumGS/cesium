@@ -273,17 +273,20 @@ PropertyTextureProperty.prototype.getGlslType = function () {
 
 PropertyTextureProperty.prototype.unpackInShader = function (
   packedValueGlsl,
+  metadataVariable,
   initializationLines,
 ) {
   const glslType = this.getGlslType();
   const numChannels = this._channels.length;
-  const assignRawValuesLine = `${floatTypesByComponentCount[numChannels]} rawChannels = ${packedValueGlsl};`;
-  const assignRawBitsLine = `uint rawBits = czm_unpackTexture(rawChannels);`;
-  const unpackedValueName = "unpackedValue";
+  const rawChannelsName = `${metadataVariable}RawChannels`;
+  const rawBitsName = `${metadataVariable}RawBits`;
+  const unpackedValueName = `${metadataVariable}UnpackedValue`;
+  const assignRawValuesLine = `${floatTypesByComponentCount[numChannels]} ${rawChannelsName} = ${packedValueGlsl};`;
+  const assignRawBitsLine = `uint ${rawBitsName} = czm_unpackTexture(${rawChannelsName});`;
   const castFunction = floatTypesByComponentCount.includes(glslType)
     ? "uintBitsToFloat"
     : glslType;
-  const assignUnpackedValueLine = `${glslType} ${unpackedValueName} = ${castFunction}(rawBits);`;
+  const assignUnpackedValueLine = `${glslType} ${unpackedValueName} = ${castFunction}(${rawBitsName});`;
 
   // TODO: handle normalization and special case where only a single channel is used.
 

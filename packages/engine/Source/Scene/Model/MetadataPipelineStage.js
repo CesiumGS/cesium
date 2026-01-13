@@ -476,6 +476,7 @@ function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
   const valueExpression = `texture(${textureUniformName}, ${texCoordVariableExpression}).${channels}`;
   const unpackedValue = property.unpackInShader(
     valueExpression,
+    metadataVariable,
     initializationLines,
   );
 
