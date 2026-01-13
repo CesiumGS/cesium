@@ -1,3 +1,14 @@
+import SceneMode from "../Scene/SceneMode.js";
+import Cartesian3 from "./Cartesian3.js";
+import Cartographic from "./Cartographic.js";
+import defined from "./defined.js";
+import Ellipsoid from "./Ellipsoid.js";
+import Matrix4 from "./Matrix4.js";
+import OrientedBoundingBox from "./OrientedBoundingBox.js";
+import TerrainPicker from "./TerrainPicker.js";
+import Transforms from "./Transforms.js";
+import VerticalExaggeration from "./VerticalExaggeration.js";
+
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
  * usually created from raw {@link TerrainData}.
@@ -15,6 +26,7 @@
  * @param {number} vertexCountWithoutSkirts The vertex count of the mesh not including skirts.
  * @param {number} minimumHeight The lowest height in the tile, in meters above the ellipsoid.
  * @param {number} maximumHeight The highest height in the tile, in meters above the ellipsoid.
+ * @param {Rectangle} rectangle The rectangle, in radians, covered by this tile.
  * @param {BoundingSphere} boundingSphere3D A bounding sphere that completely contains the tile.
  * @param {Cartesian3} occludeePointInScaledSpace The occludee point of the tile, represented in ellipsoid-
  *                     scaled space, and used for horizon culling.  If this point is below the horizon,
@@ -22,10 +34,10 @@
  * @param {number} [vertexStride=6] The number of components in each vertex.
  * @param {OrientedBoundingBox} [orientedBoundingBox] A bounding box that completely contains the tile.
  * @param {TerrainEncoding} encoding Information used to decode the mesh.
- * @param {number[]} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
- * @param {number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
- * @param {number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
- * @param {number[]} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
+ * @param {number[]|Uint8Array|Uint16Array|Uint32Array} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
  *
  * @private
  */
@@ -37,6 +49,7 @@ function TerrainMesh(
   vertexCountWithoutSkirts,
   minimumHeight,
   maximumHeight,
+  rectangle,
   boundingSphere3D,
   occludeePointInScaledSpace,
   vertexStride,
@@ -102,6 +115,12 @@ function TerrainMesh(
   this.maximumHeight = maximumHeight;
 
   /**
+   * The rectangle, in radians, covered by this tile.
+   * @type {Rectangle}
+   */
+  this.rectangle = rectangle;
+
+  /**
    * A bounding sphere that completely contains the tile.
    * @type {BoundingSphere}
    */
@@ -129,26 +148,214 @@ function TerrainMesh(
 
   /**
    * The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
-   * @type {number[]}
+   * @type {number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.westIndicesSouthToNorth = westIndicesSouthToNorth;
 
   /**
    * The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
-   * @type {number[]}
+   * @type {number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.southIndicesEastToWest = southIndicesEastToWest;
 
   /**
    * The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
-   * @type {number[]}
+   * @type {number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.eastIndicesNorthToSouth = eastIndicesNorthToSouth;
 
   /**
    * The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
-   * @type {number[]}
+   * @type {number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
+
+  /**
+   * The transform from model to world coordinates based on the terrain mesh's oriented bounding box.
+   * In 3D mode, this is computed from the oriented bounding box.  In 2D and Columbus View modes,
+   * this is computed from the tile's rectangle's projected coordinates.
+   * @type {Matrix4}
+   */
+  this._transform = new Matrix4();
+
+  /**
+   * True if the transform needs to be recomputed (due to changes in exaggeration or scene mode).
+   * @type {boolean}
+   */
+  this._recomputeTransform = true;
+
+  /**
+   * The terrain picker for this mesh, used for ray intersection tests.
+   * @type {TerrainPicker}
+   */
+  this._terrainPicker = new TerrainPicker(vertices, indices, encoding);
 }
+
+/**
+ * Get the terrain tile's model-to-world transform matrix for the given scene mode and projection.
+ * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
+ * @param {MapProjection} projection The map projection.
+ * @returns {Matrix4} The transform matrix.
+ * @private
+ */
+TerrainMesh.prototype.getTransform = function (mode, projection) {
+  if (!this._recomputeTransform) {
+    return this._transform;
+  }
+  this._recomputeTransform = false;
+
+  if (!defined(mode) || mode === SceneMode.SCENE3D) {
+    return computeTransform(this, this._transform);
+  }
+
+  return computeTransform2D(this, projection, this._transform);
+};
+
+function computeTransform(mesh, result) {
+  const exaggeration = mesh.encoding.exaggeration;
+  const exaggerationRelativeHeight = mesh.encoding.exaggerationRelativeHeight;
+
+  const exaggeratedMinHeight = VerticalExaggeration.getHeight(
+    mesh.minimumHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const exaggeratedMaxHeight = VerticalExaggeration.getHeight(
+    mesh.maximumHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const obb = OrientedBoundingBox.fromRectangle(
+    mesh.rectangle,
+    exaggeratedMinHeight,
+    exaggeratedMaxHeight,
+    Ellipsoid.default,
+    mesh.orientedBoundingBox,
+  );
+
+  return OrientedBoundingBox.computeTransformation(obb, result);
+}
+
+const scratchSWCartesian = new Cartesian3();
+const scratchNECartesian = new Cartesian3();
+const scratchSWCartographic = new Cartographic();
+const scratchNECartographic = new Cartographic();
+const scratchScale2D = new Cartesian3();
+const scratchCenter2D = new Cartesian3();
+
+/**
+ * Get the terrain tile's model-to-world transform matrix for 2D or Columbus View modes.
+ * Assumes tiles in 2D are axis-aligned and still rectangular. (This is true for Web Mercator and Geographic projections.)
+ * @param {TerrainMesh} mesh The terrain mesh.
+ * @param {MapProjection} projection The map projection.
+ * @param {Matrix4} result The object in which to store the result.
+ * @returns {Matrix4} The transform matrix.
+ * @private
+ */
+function computeTransform2D(mesh, projection, result) {
+  const exaggeration = mesh.encoding.exaggeration;
+  const exaggerationRelativeHeight = mesh.encoding.exaggerationRelativeHeight;
+
+  const exaggeratedMinHeight = VerticalExaggeration.getHeight(
+    mesh.minimumHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const exaggeratedMaxHeight = VerticalExaggeration.getHeight(
+    mesh.maximumHeight,
+    exaggeration,
+    exaggerationRelativeHeight,
+  );
+
+  const southwest = projection.project(
+    Cartographic.fromRadians(
+      mesh.rectangle.west,
+      mesh.rectangle.south,
+      0,
+      scratchSWCartographic,
+    ),
+    scratchSWCartesian,
+  );
+
+  const northeast = projection.project(
+    Cartographic.fromRadians(
+      mesh.rectangle.east,
+      mesh.rectangle.north,
+      0,
+      scratchNECartographic,
+    ),
+    scratchNECartesian,
+  );
+
+  const heightRange = exaggeratedMaxHeight - exaggeratedMinHeight;
+  const scale = Cartesian3.fromElements(
+    northeast.x - southwest.x,
+    northeast.y - southwest.y,
+    heightRange > 0 ? heightRange : 1.0, // Avoid zero scale
+    scratchScale2D,
+  );
+
+  const center = Cartesian3.fromElements(
+    southwest.x + scale.x * 0.5,
+    southwest.y + scale.y * 0.5,
+    exaggeratedMinHeight + scale.z * 0.5,
+    scratchCenter2D,
+  );
+
+  Matrix4.fromTranslation(center, result);
+  Matrix4.setScale(result, scale, result);
+  Matrix4.multiply(Transforms.SWIZZLE_3D_TO_2D_MATRIX, result, result);
+
+  return result;
+}
+
+/**
+ * Gives the point on this terrain tile where the given ray intersects
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {boolean} cullBackFaces Whether to consider back-facing triangles as intersections.
+ * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
+ * @param {MapProjection} projection The map projection.
+ * @returns {Cartesian3} The point on the mesh where the ray intersects, or undefined if there is no intersection.
+ * @private
+ */
+TerrainMesh.prototype.pick = function (ray, cullBackFaces, mode, projection) {
+  return this._terrainPicker.rayIntersect(
+    ray,
+    this.getTransform(mode, projection),
+    cullBackFaces,
+    mode,
+    projection,
+  );
+};
+
+/**
+ * Updates the terrain mesh to account for changes in vertical exaggeration.
+ * @param {Number} exaggeration A scalar used to exaggerate terrain.
+ * @param {Number} exaggerationRelativeHeight The relative height from which terrain is exaggerated.
+ * @private
+ */
+TerrainMesh.prototype.updateExaggeration = function (
+  exaggeration,
+  exaggerationRelativeHeight,
+) {
+  // The encoding stored on the TerrainMesh references the updated exaggeration values already. This is just used
+  // to trigger a rebuild on the terrain picker.
+  this._terrainPicker._vertices = this.vertices;
+  this._terrainPicker.needsRebuild = true;
+  this._recomputeTransform = true;
+};
+
+/**
+ * Updates the terrain mesh to account for changes in scene mode.
+ * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
+ * @private
+ */
+TerrainMesh.prototype.updateSceneMode = function (mode) {
+  this._terrainPicker.needsRebuild = true;
+  this._recomputeTransform = true;
+};
+
 export default TerrainMesh;

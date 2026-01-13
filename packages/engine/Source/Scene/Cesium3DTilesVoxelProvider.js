@@ -25,7 +25,7 @@ import CesiumMath from "../Core/Math.js";
 import Quaternion from "../Core/Quaternion.js";
 
 /**
- * @typedef {Object} Cesium3DTilesVoxelProvider.ConstructorOptions
+ * @typedef {object} Cesium3DTilesVoxelProvider.ConstructorOptions
  *
  * Initialization options for the Cesium3DTilesVoxelProvider constructor
  *

@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import Frozen from "../Core/Frozen.js";
 import Credit from "../Core/Credit.js";
 import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
@@ -12,16 +13,15 @@ const trailingSlashRegex = /\/$/;
  *
  * Initialization options for the Azure2DImageryProvider constructor
  *
- * @property {object} options Object with the following properties:
- * @property {string} [options.url="https://atlas.microsoft.com/"] The Azure server url.
- * @property {string} [options.tilesetId="microsoft.imagery"] The Azure tileset ID. Valid options are {@link microsoft.imagery}, {@link microsoft.base.road}, and {@link microsoft.base.labels.road}
- * @property {string} options.subscriptionKey The public subscription key for the imagery.
- * @property {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
- * @property {number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ * @property {string} subscriptionKey The public subscription key for the imagery.
+ * @property {string} [url="https://atlas.microsoft.com/"] The Azure server url.
+ * @property {string} [tilesetId="microsoft.imagery"] The Azure tileset ID. Valid options are {@link microsoft.imagery}, {@link microsoft.base.road}, and {@link microsoft.base.labels.road}
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @property {number} [options.maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
- * @property {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @property {number} [maximumLevel=22] The maximum level-of-detail supported by the imagery provider.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  */
 
 /**
@@ -29,7 +29,6 @@ const trailingSlashRegex = /\/$/;
  *
  * @alias Azure2DImageryProvider
  * @constructor
- * @private
  * @param {Azure2DImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @example
@@ -41,15 +40,17 @@ const trailingSlashRegex = /\/$/;
  */
 function Azure2DImageryProvider(options) {
   options = options ?? {};
-  options.maximumLevel = options.maximumLevel ?? 22;
-  options.minimumLevel = options.minimumLevel ?? 0;
+  const tilesetId = options.tilesetId ?? "microsoft.imagery";
+  this._maximumLevel = options.maximumLevel ?? 22;
+  this._minimumLevel = options.minimumLevel ?? 0;
 
-  const subscriptionKey =
+  this._subscriptionKey =
     options.subscriptionKey ?? options["subscription-key"];
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.tilesetId", options.tilesetId);
-  Check.defined("options.subscriptionKey", subscriptionKey);
+  Check.defined("options.subscriptionKey", this._subscriptionKey);
   //>>includeEnd('debug');
+
+  this._tilesetId = options.tilesetId;
 
   const resource =
     options.url instanceof IonResource
@@ -60,18 +61,22 @@ function Azure2DImageryProvider(options) {
   if (!trailingSlashRegex.test(templateUrl)) {
     templateUrl += "/";
   }
-  templateUrl += `map/tile`;
 
-  resource.url = templateUrl;
+  const tilesUrl = `${templateUrl}map/tile`;
+  this._viewportUrl = `${templateUrl}map/attribution`;
+
+  resource.url = tilesUrl;
 
   resource.setQueryParameters({
     "api-version": "2024-04-01",
-    tilesetId: options.tilesetId,
+    tilesetId: tilesetId,
+    "subscription-key": this._subscriptionKey,
     zoom: `{z}`,
     x: `{x}`,
     y: `{y}`,
-    "subscription-key": subscriptionKey,
   });
+
+  this._resource = resource;
 
   let credit;
   if (defined(options.credit)) {
@@ -83,6 +88,8 @@ function Azure2DImageryProvider(options) {
 
   const provider = new UrlTemplateImageryProvider({
     ...options,
+    maximumLevel: this._maximumLevel,
+    minimumLevel: this._minimumLevel,
     url: resource,
     credit: credit,
   });
@@ -91,6 +98,7 @@ function Azure2DImageryProvider(options) {
 
   // This will be defined for ion resources
   this._tileCredits = resource.credits;
+  this._attributionsByLevel = undefined;
 }
 
 Object.defineProperties(Azure2DImageryProvider.prototype, {
@@ -261,7 +269,18 @@ Object.defineProperties(Azure2DImageryProvider.prototype, {
  * @returns {Credit[]|undefined} The credits to be displayed when the tile is displayed.
  */
 Azure2DImageryProvider.prototype.getTileCredits = function (x, y, level) {
-  return this._imageryProvider.getTileCredits(x, y, level);
+  const hasAttributions = defined(this._attributionsByLevel);
+
+  if (!hasAttributions || !defined(this._tileCredits)) {
+    return undefined;
+  }
+
+  const innerCredits = this._attributionsByLevel.get(level);
+  if (!defined(this._tileCredits)) {
+    return innerCredits;
+  }
+
+  return this._tileCredits.concat(innerCredits);
 };
 
 /**
@@ -280,7 +299,21 @@ Azure2DImageryProvider.prototype.requestImage = function (
   level,
   request,
 ) {
-  return this._imageryProvider.requestImage(x, y, level, request);
+  const promise = this._imageryProvider.requestImage(x, y, level, request);
+
+  // If the requestImage call returns undefined, it couldn't be scheduled this frame. Make sure to return undefined so this can be handled upstream.
+  if (!defined(promise)) {
+    return undefined;
+  }
+
+  // Asynchronously request and populate _attributionsByLevel if it hasn't been already. We do this here so that the promise can be properly awaited.
+  if (!defined(this._attributionsByLevel)) {
+    return Promise.all([promise, this.getViewportCredits()]).then(
+      (results) => results[0],
+    );
+  }
+
+  return promise;
 };
 
 /**
@@ -303,6 +336,58 @@ Azure2DImageryProvider.prototype.pickFeatures = function (
 ) {
   return undefined;
 };
+
+/**
+ * Get attribution for imagery from Azure Maps to display in the credits
+ * @private
+ * @return {Promise<Map<Credit[]>>} The list of attribution sources to display in the credits.
+ */
+Azure2DImageryProvider.prototype.getViewportCredits = async function () {
+  const maximumLevel = this._maximumLevel;
+
+  const promises = [];
+  for (let level = 0; level < maximumLevel + 1; level++) {
+    promises.push(
+      fetchViewportAttribution(
+        this._resource,
+        this._viewportUrl,
+        this._subscriptionKey,
+        this._tilesetId,
+        level,
+      ),
+    );
+  }
+  const results = await Promise.all(promises);
+
+  const attributionsByLevel = new Map();
+  for (let level = 0; level < maximumLevel + 1; level++) {
+    const credits = [];
+    const attributions = results[level].join(",");
+    if (attributions) {
+      const levelCredits = new Credit(attributions);
+      credits.push(levelCredits);
+    }
+    attributionsByLevel.set(level, credits);
+  }
+
+  this._attributionsByLevel = attributionsByLevel;
+
+  return attributionsByLevel;
+};
+
+async function fetchViewportAttribution(resource, url, key, tilesetId, level) {
+  const viewportResource = resource.getDerivedResource({
+    url,
+    queryParameters: {
+      zoom: level,
+      bounds: "-180,-90,180,90",
+    },
+    data: JSON.stringify(Frozen.EMPTY_OBJECT),
+  });
+
+  const viewportJson = await viewportResource.fetchJson();
+  return viewportJson.copyrights;
+}
 
 // Exposed for tests
 export default Azure2DImageryProvider;
