@@ -76,6 +76,7 @@ function PropertyTextureProperty(options) {
   this._classProperty = classProperty;
   this._extras = property.extras;
   this._extensions = property.extensions;
+  this._channels = channels;
 }
 
 Object.defineProperties(PropertyTextureProperty.prototype, {
@@ -195,52 +196,38 @@ PropertyTextureProperty.prototype.isGpuCompatible = function () {
   const classProperty = this._classProperty;
   const type = classProperty.type;
   const componentType = classProperty.componentType;
+  const textureChannelsString = this._textureReader.channels;
 
-  if (classProperty.isArray) {
-    // only support arrays of 1-4 UINT8 scalars (normalized or unnormalized)
-    if (classProperty.isVariableLengthArray) {
-      oneTimeWarning(
-        `Property texture property ${classProperty.id} is a variable-length array, which is not supported`,
-      );
-      return false;
-    }
-    if (classProperty.arrayLength > 4) {
-      oneTimeWarning(
-        `Property texture property ${classProperty.id} is an array of length ${classProperty.arrayLength}, but may have at most a length of 4`,
-      );
-      return false;
-    }
-    if (type !== MetadataType.SCALAR) {
-      oneTimeWarning(
-        `Property texture property ${classProperty.id} is an array of type ${type}, but only SCALAR is supported`,
-      );
-      return false;
-    }
-    if (componentType !== MetadataComponentType.UINT8) {
-      oneTimeWarning(
-        `Property texture property ${classProperty.id} is an array with component type ${componentType}, but only UINT8 is supported`,
-      );
-      return false;
-    }
-    return true;
+  if (classProperty.isVariableLengthArray) {
+    oneTimeWarning(
+      `Property texture property "${classProperty.id}" is a variable-length array, which is not supported.`,
+    );
+    return false;
   }
 
-  if (MetadataType.isVectorType(type) || type === MetadataType.SCALAR) {
-    if (componentType !== MetadataComponentType.UINT8) {
-      oneTimeWarning(
-        `Property texture property ${classProperty.id} has component type ${componentType}, but only UINT8 is supported`,
-      );
-      return false;
-    }
-    return true;
+  if (type === MetadataType.STRING) {
+    oneTimeWarning(
+      `Property texture property "${classProperty.id}" is a string type, which is not supported.`,
+    );
+    return false;
   }
 
-  // For this initial implementation, only UINT8-based properties
-  // are supported.
-  oneTimeWarning(
-    `Property texture property ${classProperty.id} has an unsupported type`,
-  );
-  return false;
+  // For all other properties, make sure the components fit in the sampled channels.
+  // (Note that it's possible to treat 64-bit types as two 32-bit components, but for now that's not supported)
+  const componentCount = MetadataType.getComponentCount(type);
+  const arrayLength = classProperty.isArray ? classProperty.arrayLength : 1;
+  const bytesPerComponent = MetadataComponentType.getSizeInBytes(componentType);
+  if (
+    componentCount * arrayLength * bytesPerComponent >
+    this._channels.length
+  ) {
+    oneTimeWarning(
+      `Property texture property "${classProperty.id}" with type ${type} and component type ${componentType} does not fit in the ${textureChannelsString} channels.`,
+    );
+    return false;
+  }
+
+  return true;
 };
 
 const floatTypesByComponentCount = [undefined, "float", "vec2", "vec3", "vec4"];
@@ -251,38 +238,60 @@ const integerTypesByComponentCount = [
   "ivec3",
   "ivec4",
 ];
+const unsignedIntegerTypesByComponentCount = [
+  undefined,
+  "uint",
+  "uvec2",
+  "uvec3",
+  "uvec4",
+];
+
 PropertyTextureProperty.prototype.getGlslType = function () {
   const classProperty = this._classProperty;
+  const componentType = classProperty.componentType;
 
   let componentCount = MetadataType.getComponentCount(classProperty.type);
   if (classProperty.isArray) {
-    // fixed-sized arrays of length 2-4 UINT8s are represented as vectors as the
-    // shader since those are more useful in GLSL.
+    // fixed-sized arrays (that fit into 4 channels - checked in isGpuCompatible) become vectors in the shader
     componentCount = classProperty.arrayLength;
   }
 
-  // Normalized UINT8 properties are float types in the shader
-  if (classProperty.normalized) {
+  // Normalized integers are also represented as float types in the shader on initial texture read.
+  if (
+    !MetadataComponentType.isIntegerType(componentType) ||
+    classProperty.normalized
+  ) {
     return floatTypesByComponentCount[componentCount];
   }
 
-  // other UINT8-based properties are represented as integer types.
+  if (MetadataComponentType.isUnsignedIntegerType(componentType)) {
+    return unsignedIntegerTypesByComponentCount[componentCount];
+  }
+
   return integerTypesByComponentCount[componentCount];
 };
 
-PropertyTextureProperty.prototype.unpackInShader = function (packedValueGlsl) {
-  const classProperty = this._classProperty;
-
-  // no unpacking needed if for normalized types
-  if (classProperty.normalized) {
-    return packedValueGlsl;
-  }
-
-  // integer types are read from the texture as normalized float values.
-  // these need to be rescaled to [0, 255] and cast to the appropriate integer
-  // type.
+PropertyTextureProperty.prototype.unpackInShader = function (
+  packedValueGlsl,
+  initializationLines,
+) {
   const glslType = this.getGlslType();
-  return `${glslType}(255.0 * ${packedValueGlsl})`;
+  const numChannels = this._channels.length;
+  const assignRawValuesLine = `${floatTypesByComponentCount[numChannels]} rawChannels = ${packedValueGlsl};`;
+  const assignRawBitsLine = `uint rawBits = czm_unpackTexture(rawChannels);`;
+  const unpackedValueName = "unpackedValue";
+  const castFunction = floatTypesByComponentCount.includes(glslType)
+    ? "uintBitsToFloat"
+    : glslType;
+  const assignUnpackedValueLine = `${glslType} ${unpackedValueName} = ${castFunction}(rawBits);`;
+
+  // TODO: handle normalization and special case where only a single channel is used.
+
+  initializationLines.push(assignRawValuesLine);
+  initializationLines.push(assignRawBitsLine);
+  initializationLines.push(assignUnpackedValueLine);
+
+  return unpackedValueName;
 };
 
 /**

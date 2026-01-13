@@ -431,6 +431,7 @@ function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
   const { texCoord, channels, index, texture, transform } =
     property.textureReader;
   const textureUniformName = `u_propertyTexture_${index}`;
+  const initializationLines = [];
 
   // Property texture properties may share the same physical texture, so only
   // add the texture uniform the first time we encounter it.
@@ -473,11 +474,10 @@ function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
     texCoordVariableExpression = `vec2(${transformUniformName} * vec3(${texCoordVariable}, 1.0))`;
   }
   const valueExpression = `texture(${textureUniformName}, ${texCoordVariableExpression}).${channels}`;
-
-  // Some types need an unpacking step or two. For example, since texture reads
-  // are always normalized, UINT8 (not normalized) properties need to be
-  // un-normalized in the shader.
-  const unpackedValue = property.unpackInShader(valueExpression);
+  const unpackedValue = property.unpackInShader(
+    valueExpression,
+    initializationLines,
+  );
 
   const transformedValue = addValueTransformUniforms({
     valueExpression: unpackedValue,
@@ -488,10 +488,11 @@ function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
     property: property,
   });
 
-  const initializationLine = `metadata.${metadataVariable} = ${transformedValue};`;
+  const finalAssignment = `metadata.${metadataVariable} = ${transformedValue};`;
+  initializationLines.push(finalAssignment);
   shaderBuilder.addFunctionLines(
     MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
-    [initializationLine],
+    initializationLines,
   );
 }
 
