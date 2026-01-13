@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Fixes jitter artifacts on Intel Arc GPUs [#12879](https://github.com/CesiumGS/cesium/issues/12879)
+- Fixed label sizing for some fonts and characters [#9767](https://github.com/CesiumGS/cesium/issues/9767)
 - Fix scene `sampleHeightMostDetailed` does not work when a tileset is added by primitive collection [#13097](https://github.com/CesiumGS/cesium/issues/13097)
 
 ## 1.137 - 2026-01-05
