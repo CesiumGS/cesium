@@ -3,7 +3,9 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import MetadataType from "./MetadataType.js";
-import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataComponentType, {
+  ScalarCategories,
+} from "./MetadataComponentType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
@@ -231,6 +233,7 @@ PropertyTextureProperty.prototype.isGpuCompatible = function () {
 };
 
 const floatTypesByComponentCount = [undefined, "float", "vec2", "vec3", "vec4"];
+
 const integerTypesByComponentCount = [
   undefined,
   "int",
@@ -245,6 +248,13 @@ const unsignedIntegerTypesByComponentCount = [
   "uvec3",
   "uvec4",
 ];
+
+// Map from scalar component type to the GLSL function used to reinterpret from uint bits
+const scalarTypeToCastFunction = {
+  [ScalarCategories.FLOAT]: "uintBitsToFloat",
+  [ScalarCategories.INTEGER]: "int",
+  [ScalarCategories.UNSIGNED_INTEGER]: "uint",
+};
 
 PropertyTextureProperty.prototype.getGlslType = function () {
   const classProperty = this._classProperty;
@@ -277,15 +287,17 @@ PropertyTextureProperty.prototype.unpackInShader = function (
   initializationLines,
 ) {
   const glslType = this.getGlslType();
+  const componentType = this._classProperty.componentType;
   const numChannels = this._channels.length;
+
   const rawChannelsName = `${metadataVariable}RawChannels`;
   const rawBitsName = `${metadataVariable}RawBits`;
   const unpackedValueName = `${metadataVariable}UnpackedValue`;
+
   const assignRawValuesLine = `${floatTypesByComponentCount[numChannels]} ${rawChannelsName} = ${packedValueGlsl};`;
   const assignRawBitsLine = `uint ${rawBitsName} = czm_unpackTexture(${rawChannelsName});`;
-  const castFunction = floatTypesByComponentCount.includes(glslType)
-    ? "uintBitsToFloat"
-    : glslType;
+  const castFunction =
+    scalarTypeToCastFunction[MetadataComponentType.category(componentType)];
   const assignUnpackedValueLine = `${glslType} ${unpackedValueName} = ${castFunction}(${rawBitsName});`;
 
   // TODO: handle normalization and special case where only a single channel is used.

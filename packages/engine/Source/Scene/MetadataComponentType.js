@@ -87,6 +87,85 @@ const MetadataComponentType = {
   FLOAT64: "FLOAT64",
 };
 
+export const ScalarCategories = {
+  INTEGER: "int",
+  UNSIGNED_INTEGER: "uint",
+  FLOAT: "float",
+};
+
+MetadataComponentType.typeInfo = {
+  INT8: {
+    isInteger: true,
+    isUnsigned: false,
+    vectorCompatible: true,
+    size: 1,
+    category: ScalarCategories.INTEGER,
+  },
+  UINT8: {
+    isInteger: true,
+    isUnsigned: true,
+    vectorCompatible: true,
+    size: 1,
+    category: ScalarCategories.UNSIGNED_INTEGER,
+  },
+  INT16: {
+    isInteger: true,
+    isUnsigned: false,
+    vectorCompatible: true,
+    size: 2,
+    category: ScalarCategories.INTEGER,
+  },
+  UINT16: {
+    isInteger: true,
+    isUnsigned: true,
+    vectorCompatible: true,
+    size: 2,
+    category: ScalarCategories.UNSIGNED_INTEGER,
+  },
+  INT32: {
+    isInteger: true,
+    isUnsigned: false,
+    vectorCompatible: true,
+    size: 4,
+    category: ScalarCategories.INTEGER,
+  },
+  UINT32: {
+    isInteger: true,
+    isUnsigned: true,
+    vectorCompatible: true,
+    size: 4,
+    category: ScalarCategories.UNSIGNED_INTEGER,
+  },
+  INT64: {
+    isInteger: true,
+    isUnsigned: false,
+    vectorCompatible: false,
+    size: 8,
+    category: ScalarCategories.INTEGER,
+  },
+  UINT64: {
+    isInteger: true,
+    isUnsigned: true,
+    vectorCompatible: false,
+    size: 8,
+    category: ScalarCategories.UNSIGNED_INTEGER,
+  },
+  FLOAT32: {
+    isInteger: false,
+    isUnsigned: false,
+    vectorCompatible: true,
+    size: 4,
+    category: ScalarCategories.FLOAT,
+  },
+  FLOAT64: {
+    isInteger: false,
+    isUnsigned: false,
+    vectorCompatible: true,
+    size: 8,
+    category: ScalarCategories.FLOAT,
+  },
+};
+
 /**
  * Gets the minimum value for the numeric type.
  * <p>
@@ -198,19 +277,7 @@ MetadataComponentType.isIntegerType = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.INT64:
-    case MetadataComponentType.UINT64:
-      return true;
-    default:
-      return false;
-  }
+  return MetadataComponentType.typeInfo[type].isInteger;
 };
 
 /**
@@ -226,15 +293,7 @@ MetadataComponentType.isUnsignedIntegerType = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  switch (type) {
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.UINT64:
-      return true;
-    default:
-      return false;
-  }
+  return MetadataComponentType.typeInfo[type].isUnsigned;
 };
 
 /**
@@ -250,19 +309,20 @@ MetadataComponentType.isVectorCompatible = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.FLOAT32:
-    case MetadataComponentType.FLOAT64:
-      return true;
-    default:
-      return false;
-  }
+  return MetadataComponentType.typeInfo[type].vectorCompatible;
+};
+
+/**
+ * Gets the category of the numeric type (signed integer, unsigned integer, or float).
+ * @param {MetadataComponentType} type The type.
+ * @returns {ScalarCategories} The category.
+ */
+MetadataComponentType.category = function (type) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
+
+  return MetadataComponentType.typeInfo[type].category;
 };
 
 /**
@@ -380,24 +440,7 @@ MetadataComponentType.getSizeInBytes = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-      return 1;
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-      return 2;
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-      return 4;
-    case MetadataComponentType.INT64:
-    case MetadataComponentType.UINT64:
-      return 8;
-    case MetadataComponentType.FLOAT32:
-      return 4;
-    case MetadataComponentType.FLOAT64:
-      return 8;
-  }
+  return MetadataComponentType.typeInfo[type].size;
 };
 
 /**
