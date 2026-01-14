@@ -26,16 +26,15 @@ import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
-import Texture from "../Renderer/Texture.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import PolylineFS from "../Shaders/PolylineFS.js";
 import PolylineVS from "../Shaders/PolylineVS.js";
 import BatchTable from "./BatchTable.js";
 import BlendingState from "./BlendingState.js";
-import Material from "./Material.js";
 import Polyline from "./Polyline.js";
 import SceneMode from "./SceneMode.js";
+import Material from "./Material.js";
 
 const SHOW_INDEX = Polyline.SHOW_INDEX;
 const WIDTH_INDEX = Polyline.WIDTH_INDEX;
@@ -160,6 +159,11 @@ function PolylineCollection(options) {
   this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
   this._polylines = [];
   this._polylineBuckets = {};
+
+  /** @type {Material} */
+  this._defaultMaterial = Material.fromType(Material.ColorType, {
+    color: new Color(1.0, 1.0, 1.0, 1.0),
+  });
 
   // The buffer usage is determined based on the usage of the attribute over time.
   this._positionBufferUsage = {
@@ -459,6 +463,7 @@ PolylineCollection.prototype.update = function (frameState) {
     } else {
       const length = polylinesToUpdate.length;
       const polylineBuckets = this._polylineBuckets;
+      const polylineBucketsUpdated = new Set();
       for (let ii = 0; ii < length; ++ii) {
         polyline = polylinesToUpdate[ii];
         properties = polyline._propertiesChanged;
@@ -533,7 +538,17 @@ PolylineCollection.prototype.update = function (frameState) {
           }
         }
 
+        // Bucket may be undefined for empty Polyline.
+        if (bucket) {
+          polylineBucketsUpdated.add(bucket);
+        }
+
         polyline._clean();
+      }
+
+      // Invalidate bounding volume cache for affected buckets.
+      for (const bucket of polylineBucketsUpdated) {
+        bucket.invalidateBoundingVolumes();
       }
     }
     polylinesToUpdate.length = 0;
@@ -586,9 +601,6 @@ PolylineCollection.prototype.update = function (frameState) {
   }
 };
 
-const boundingSphereScratch = new BoundingSphere();
-const boundingSphereScratch2 = new BoundingSphere();
-
 function createCommandLists(
   polylineCollection,
   frameState,
@@ -600,7 +612,6 @@ function createCommandLists(
 
   const commandsLength = commands.length;
   let commandIndex = 0;
-  let cloneBoundingSphere = true;
 
   const vertexArrays = polylineCollection._vertexArrays;
   const debugShowBoundingVolume = polylineCollection.debugShowBoundingVolume;
@@ -617,12 +628,14 @@ function createCommandLists(
     for (let n = 0; n < bucketLength; ++n) {
       const bucketLocator = buckets[n];
 
+      bucketLocator.bucket.updateBoundingVolumes(frameState.mode);
+
       let offset = bucketLocator.offset;
       const sp = bucketLocator.bucket.shaderProgram;
 
       const polylines = bucketLocator.bucket.polylines;
       const polylineLength = polylines.length;
-      let currentId;
+      let currentMaterialId;
       let currentMaterial;
       let count = 0;
       let command;
@@ -630,9 +643,8 @@ function createCommandLists(
 
       for (let s = 0; s < polylineLength; ++s) {
         const polyline = polylines[s];
-        const mId = createMaterialId(polyline._material);
-        if (mId !== currentId) {
-          if (defined(currentId) && count > 0) {
+        if (polyline._material._id !== currentMaterialId) {
+          if (defined(currentMaterialId) && count > 0) {
             const translucent = currentMaterial.isTranslucent();
 
             if (commandIndex >= commandsLength) {
@@ -652,7 +664,7 @@ function createCommandLists(
             );
 
             command.boundingVolume = BoundingSphere.clone(
-              boundingSphereScratch,
+              bucketLocator.bucket.boundingVolumes[currentMaterialId],
               command.boundingVolume,
             );
             command.modelMatrix = modelMatrix;
@@ -671,14 +683,13 @@ function createCommandLists(
 
             offset += count;
             count = 0;
-            cloneBoundingSphere = true;
 
             commandList.push(command);
           }
 
           currentMaterial = polyline._material;
           currentMaterial.update(context);
-          currentId = mId;
+          currentMaterialId = polyline._material._id;
         }
 
         const locators = polyline._locatorBuckets;
@@ -689,44 +700,9 @@ function createCommandLists(
             count += locator.count;
           }
         }
-
-        let boundingVolume;
-        if (frameState.mode === SceneMode.SCENE3D) {
-          boundingVolume = polyline._boundingVolumeWC;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-          boundingVolume = polyline._boundingVolume2D;
-        } else if (frameState.mode === SceneMode.SCENE2D) {
-          if (defined(polyline._boundingVolume2D)) {
-            boundingVolume = BoundingSphere.clone(
-              polyline._boundingVolume2D,
-              boundingSphereScratch2,
-            );
-            boundingVolume.center.x = 0.0;
-          }
-        } else if (
-          defined(polyline._boundingVolumeWC) &&
-          defined(polyline._boundingVolume2D)
-        ) {
-          boundingVolume = BoundingSphere.union(
-            polyline._boundingVolumeWC,
-            polyline._boundingVolume2D,
-            boundingSphereScratch2,
-          );
-        }
-
-        if (cloneBoundingSphere) {
-          cloneBoundingSphere = false;
-          BoundingSphere.clone(boundingVolume, boundingSphereScratch);
-        } else {
-          BoundingSphere.union(
-            boundingVolume,
-            boundingSphereScratch,
-            boundingSphereScratch,
-          );
-        }
       }
 
-      if (defined(currentId) && count > 0) {
+      if (defined(currentMaterialId) && count > 0) {
         if (commandIndex >= commandsLength) {
           command = new DrawCommand({
             owner: polylineCollection,
@@ -744,7 +720,7 @@ function createCommandLists(
         );
 
         command.boundingVolume = BoundingSphere.clone(
-          boundingSphereScratch,
+          bucketLocator.bucket.boundingVolumes[currentMaterialId],
           command.boundingVolume,
         );
         command.modelMatrix = modelMatrix;
@@ -763,12 +739,10 @@ function createCommandLists(
         command.count = count;
         command.offset = offset;
 
-        cloneBoundingSphere = true;
-
         commandList.push(command);
       }
 
-      currentId = undefined;
+      currentMaterialId = undefined;
     }
   }
 
@@ -810,6 +784,8 @@ PolylineCollection.prototype.destroy = function () {
   releaseShaders(this);
   destroyPolylines(this);
   this._batchTable = this._batchTable && this._batchTable.destroy();
+  this._defaultMaterial =
+    this._defaultMaterial && this._defaultMaterial.destroy();
   return destroyObject(this);
 };
 
@@ -1121,31 +1097,6 @@ function createVertexArrays(collection, context, projection) {
   }
 }
 
-function replacer(key, value) {
-  if (value instanceof Texture) {
-    return value.id;
-  }
-
-  return value;
-}
-
-const scratchUniformArray = [];
-function createMaterialId(material) {
-  const uniforms = Material._uniformList[material.type];
-  const length = uniforms.length;
-  scratchUniformArray.length = 2.0 * length;
-
-  let index = 0;
-  for (let i = 0; i < length; ++i) {
-    const uniform = uniforms[i];
-    scratchUniformArray[index] = uniform;
-    scratchUniformArray[index + 1] = material._uniforms[uniform]();
-    index += 2;
-  }
-
-  return `${material.type}:${JSON.stringify(scratchUniformArray, replacer)}`;
-}
-
 function sortPolylinesIntoBuckets(collection) {
   const mode = collection._mode;
   const modelMatrix = collection._modelMatrix;
@@ -1263,6 +1214,13 @@ function PolylineBucket(material, mode, modelMatrix) {
   this.shaderProgram = undefined;
   this.mode = mode;
   this.modelMatrix = modelMatrix;
+  /**
+   * Mapping from material IDs to per-material bounding volumes.
+   * @type {Object<string, BoundingSphere>}
+   */
+  this.boundingVolumes = {};
+  this._boundingVolumesMode = SceneMode.SCENE3D;
+  this._boundingVolumesDirty = true;
 }
 
 PolylineBucket.prototype.addPolyline = function (p) {
@@ -1947,4 +1905,75 @@ PolylineBucket.prototype.writeUpdate = function (
     );
   }
 };
+
+const boundingSphereScratch = new BoundingSphere();
+
+/**
+ * @param {SceneMode} mode
+ */
+PolylineBucket.prototype.updateBoundingVolumes = function (mode) {
+  if (mode === this._boundingVolumesMode && !this._boundingVolumesDirty) {
+    return;
+  }
+
+  /** @type {Object<string, boolean>} */
+  const isBoundingVolumeInitialized = {};
+
+  for (let i = 0, il = this.polylines.length; i < il; i++) {
+    const polyline = this.polylines[i];
+    const materialId = polyline._material._id;
+
+    let boundingVolume;
+
+    if (mode === SceneMode.SCENE3D) {
+      boundingVolume = polyline._boundingVolumeWC;
+    } else if (mode === SceneMode.COLUMBUS_VIEW) {
+      boundingVolume = polyline._boundingVolume2D;
+    } else if (mode === SceneMode.SCENE2D) {
+      if (defined(polyline._boundingVolume2D)) {
+        boundingVolume = BoundingSphere.clone(
+          polyline._boundingVolume2D,
+          boundingSphereScratch,
+        );
+        boundingVolume.center.x = 0.0;
+      }
+    } else if (
+      defined(polyline._boundingVolumeWC) &&
+      defined(polyline._boundingVolume2D)
+    ) {
+      boundingVolume = BoundingSphere.union(
+        polyline._boundingVolumeWC,
+        polyline._boundingVolume2D,
+        boundingSphereScratch,
+      );
+    }
+
+    if (!isBoundingVolumeInitialized[materialId]) {
+      this.boundingVolumes[materialId] = boundingVolume.clone(
+        this.boundingVolumes[materialId],
+      );
+      isBoundingVolumeInitialized[materialId] = true;
+    } else {
+      BoundingSphere.union(
+        boundingVolume,
+        this.boundingVolumes[materialId],
+        this.boundingVolumes[materialId],
+      );
+    }
+  }
+
+  for (const materialId of Object.keys(this.boundingVolumes)) {
+    if (!isBoundingVolumeInitialized[materialId]) {
+      delete this.boundingVolumes[materialId];
+    }
+  }
+
+  this._boundingVolumesDirty = false;
+  this._boundingVolumesMode = mode;
+};
+
+PolylineBucket.prototype.invalidateBoundingVolumes = function () {
+  this._boundingVolumesDirty = true;
+};
+
 export default PolylineCollection;

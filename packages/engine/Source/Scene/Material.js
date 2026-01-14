@@ -308,6 +308,8 @@ function Material(options) {
    */
   this.translucent = undefined;
 
+  this._id = createGuid();
+
   this._minificationFilter =
     options.minificationFilter ?? TextureMinificationFilter.LINEAR;
   this._magnificationFilter =

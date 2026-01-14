@@ -1,14 +1,12 @@
 import arrayRemoveDuplicates from "../Core/arrayRemoveDuplicates.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PolylinePipeline from "../Core/PolylinePipeline.js";
-import Material from "./Material.js";
 
 /**
  * <div class="notice">
@@ -42,12 +40,7 @@ function Polyline(options, polylineCollection) {
   this._loop = options.loop ?? false;
   this._distanceDisplayCondition = options.distanceDisplayCondition;
 
-  this._material = options.material;
-  if (!defined(this._material)) {
-    this._material = Material.fromType(Material.ColorType, {
-      color: new Color(1.0, 1.0, 1.0, 1.0),
-    });
-  }
+  this._material = options.material ?? polylineCollection._defaultMaterial;
 
   let positions = options.positions;
   if (!defined(positions)) {
@@ -425,7 +418,6 @@ Polyline.prototype._clean = function () {
 
 Polyline.prototype._destroy = function () {
   this._pickId = this._pickId && this._pickId.destroy();
-  this._material = this._material && this._material.destroy();
   this._polylineCollection = undefined;
 };
 export default Polyline;
