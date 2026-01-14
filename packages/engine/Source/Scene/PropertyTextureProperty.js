@@ -249,11 +249,11 @@ const unsignedIntegerTypesByComponentCount = [
   "uvec4",
 ];
 
-// Map from scalar component type to the GLSL function used to reinterpret from uint bits
-const scalarTypeToCastFunction = {
+// Map from scalar component type to the GLSL function used to reinterpret from uint bits to the scalar type
+const uintBitsToScalarType = {
   [ScalarCategories.FLOAT]: "uintBitsToFloat",
   [ScalarCategories.INTEGER]: "int",
-  [ScalarCategories.UNSIGNED_INTEGER]: "uint",
+  [ScalarCategories.UNSIGNED_INTEGER]: "",
 };
 
 PropertyTextureProperty.prototype.getGlslType = function () {
@@ -261,10 +261,8 @@ PropertyTextureProperty.prototype.getGlslType = function () {
   const componentType = classProperty.componentType;
 
   let componentCount = MetadataType.getComponentCount(classProperty.type);
-  if (classProperty.isArray) {
-    // fixed-sized arrays (that fit into 4 channels - checked in isGpuCompatible) become vectors in the shader
-    componentCount = classProperty.arrayLength;
-  }
+  const arrayLength = classProperty.isArray ? classProperty.arrayLength : 1;
+  componentCount *= arrayLength;
 
   // Normalized integers are also represented as float types in the shader on initial texture read.
   if (
@@ -287,24 +285,55 @@ PropertyTextureProperty.prototype.unpackInShader = function (
   initializationLines,
 ) {
   const glslType = this.getGlslType();
-  const componentType = this._classProperty.componentType;
+  const classProperty = this._classProperty;
+  const componentType = classProperty.componentType;
   const numChannels = this._channels.length;
+  const channelsString = this._textureReader.channels;
+  const type = classProperty.type;
 
-  const rawChannelsName = `${metadataVariable}RawChannels`;
-  const rawBitsName = `${metadataVariable}RawBits`;
-  const unpackedValueName = `${metadataVariable}UnpackedValue`;
+  // Calculate total number of components
+  // (e.g. a length-2 fixed-sized array of VEC2 has 4 components - isGpuCompatible checks this fits in the channels)
+  const componentCount =
+    MetadataType.getComponentCount(type) *
+    (classProperty.isArray ? classProperty.arrayLength : 1);
+  const channelsPerComponent = Math.floor(numChannels / componentCount);
 
+  const rawChannelsName = `${metadataVariable}_rawChannels`;
+  const rawBitsName = `${metadataVariable}_rawBits`;
+  const unpackedValueName = `${metadataVariable}_unpackedValue`;
+
+  const declareUnpackedValueLine = `${glslType} ${unpackedValueName};`;
+  initializationLines.push(declareUnpackedValueLine);
+
+  // Sample all (specified) channels of the texture
   const assignRawValuesLine = `${floatTypesByComponentCount[numChannels]} ${rawChannelsName} = ${packedValueGlsl};`;
-  const assignRawBitsLine = `uint ${rawBitsName} = czm_unpackTexture(${rawChannelsName});`;
+  initializationLines.push(assignRawValuesLine);
+
   const castFunction =
-    scalarTypeToCastFunction[MetadataComponentType.category(componentType)];
-  const assignUnpackedValueLine = `${glslType} ${unpackedValueName} = ${castFunction}(${rawBitsName});`;
+    uintBitsToScalarType[MetadataComponentType.category(componentType)];
+  const hasMultipleComponents = componentCount > 1;
+  const usesMultipleChannelsPerComponent = channelsPerComponent > 1;
+
+  // Unpack each component of the output property from the raw channel values
+  // E.g. if the output type is a vec2, and 4 channels are given, unpack x from `rg` and y from `ba`
+  for (let i = 0; i < componentCount; i++) {
+    let subChannels = "";
+    if (usesMultipleChannelsPerComponent) {
+      subChannels = `.${channelsString.slice(i * channelsPerComponent, (i + 1) * channelsPerComponent)}`;
+    }
+    const assignRawBitsLine = `uint ${rawBitsName} = czm_unpackTexture(${rawChannelsName}${subChannels});`;
+
+    let indexExpression = "";
+    if (hasMultipleComponents) {
+      indexExpression = `[${i}]`;
+    }
+    const assignUnpackedValueLine = `${unpackedValueName}${indexExpression} = ${castFunction}(${rawBitsName});`;
+
+    initializationLines.push(assignRawBitsLine);
+    initializationLines.push(assignUnpackedValueLine);
+  }
 
   // TODO: handle normalization and special case where only a single channel is used.
-
-  initializationLines.push(assignRawValuesLine);
-  initializationLines.push(assignRawBitsLine);
-  initializationLines.push(assignUnpackedValueLine);
 
   return unpackedValueName;
 };
