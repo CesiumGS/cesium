@@ -9,6 +9,7 @@
 - Fixes jitter artifacts on Intel Arc GPUs [#12879](https://github.com/CesiumGS/cesium/issues/12879)
 - Fixed label sizing for some fonts and characters [#9767](https://github.com/CesiumGS/cesium/issues/9767)
 - Fixed a type error when accessing the ellipsoid of a viewer [#13123](https://github.com/CesiumGS/cesium/pull/13123)
+- Fixed a bug where entities have not been clustered correctly [#13064](https://github.com/CesiumGS/cesium/pull/13064)
 
 ## 1.137 - 2026-01-05
 
