@@ -54,18 +54,14 @@ const MetadataComponentType = {
    */
   UINT32: "UINT32",
   /**
-   * A 64-bit signed integer. This type requires BigInt support.
-   *
-   * @see FeatureDetection.supportsBigInt
+   * A 64-bit signed integer.
    *
    * @type {string}
    * @constant
    */
   INT64: "INT64",
   /**
-   * A 64-bit signed integer. This type requires BigInt support
-   *
-   * @see FeatureDetection.supportsBigInt
+   * A 64-bit signed integer.
    *
    * @type {string}
    * @constant
@@ -95,8 +91,6 @@ export const ScalarCategories = {
 
 MetadataComponentType.typeInfo = {
   INT8: {
-    isInteger: true,
-    isUnsigned: false,
     vectorCompatible: true,
     size: 1,
     maximumValue: 127,
@@ -104,8 +98,6 @@ MetadataComponentType.typeInfo = {
     category: ScalarCategories.INTEGER,
   },
   UINT8: {
-    isInteger: true,
-    isUnsigned: true,
     vectorCompatible: true,
     size: 1,
     maximumValue: 255,
@@ -113,8 +105,6 @@ MetadataComponentType.typeInfo = {
     category: ScalarCategories.UNSIGNED_INTEGER,
   },
   INT16: {
-    isInteger: true,
-    isUnsigned: false,
     vectorCompatible: true,
     size: 2,
     maximumValue: 32767,
@@ -122,8 +112,6 @@ MetadataComponentType.typeInfo = {
     category: ScalarCategories.INTEGER,
   },
   UINT16: {
-    isInteger: true,
-    isUnsigned: true,
     vectorCompatible: true,
     size: 2,
     maximumValue: 65535,
@@ -131,8 +119,6 @@ MetadataComponentType.typeInfo = {
     category: ScalarCategories.UNSIGNED_INTEGER,
   },
   INT32: {
-    isInteger: true,
-    isUnsigned: false,
     vectorCompatible: true,
     size: 4,
     maximumValue: 2147483647,
@@ -140,8 +126,6 @@ MetadataComponentType.typeInfo = {
     category: ScalarCategories.INTEGER,
   },
   UINT32: {
-    isInteger: true,
-    isUnsigned: true,
     vectorCompatible: true,
     size: 4,
     maximumValue: 4294967295,
@@ -149,8 +133,6 @@ MetadataComponentType.typeInfo = {
     category: ScalarCategories.UNSIGNED_INTEGER,
   },
   INT64: {
-    isInteger: true,
-    isUnsigned: false,
     vectorCompatible: false,
     size: 8,
     maximumValue: BigInt("9223372036854775807"),
@@ -158,8 +140,6 @@ MetadataComponentType.typeInfo = {
     category: ScalarCategories.INTEGER,
   },
   UINT64: {
-    isInteger: true,
-    isUnsigned: true,
     vectorCompatible: false,
     size: 8,
     maximumValue: BigInt("18446744073709551615"),
@@ -167,8 +147,6 @@ MetadataComponentType.typeInfo = {
     category: ScalarCategories.UNSIGNED_INTEGER,
   },
   FLOAT32: {
-    isInteger: false,
-    isUnsigned: false,
     vectorCompatible: true,
     size: 4,
     maximumValue: 340282346638528859811704183484516925440.0,
@@ -176,8 +154,6 @@ MetadataComponentType.typeInfo = {
     category: ScalarCategories.FLOAT,
   },
   FLOAT64: {
-    isInteger: false,
-    isUnsigned: false,
     vectorCompatible: true,
     size: 8,
     maximumValue: Number.MAX_VALUE,
@@ -238,7 +214,9 @@ MetadataComponentType.isIntegerType = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  return MetadataComponentType.typeInfo[type].isInteger;
+  return (
+    MetadataComponentType.typeInfo[type].category !== ScalarCategories.FLOAT
+  );
 };
 
 /**
@@ -254,7 +232,10 @@ MetadataComponentType.isUnsignedIntegerType = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  return MetadataComponentType.typeInfo[type].isUnsigned;
+  return (
+    MetadataComponentType.typeInfo[type].category ===
+    ScalarCategories.UNSIGNED_INTEGER
+  );
 };
 
 /**
