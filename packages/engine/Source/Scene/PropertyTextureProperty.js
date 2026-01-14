@@ -264,7 +264,7 @@ PropertyTextureProperty.prototype.getGlslType = function () {
   const arrayLength = classProperty.isArray ? classProperty.arrayLength : 1;
   componentCount *= arrayLength;
 
-  // Normalized integers are also represented as float types in the shader on initial texture read.
+  // Normalized fields are integers represented as float types ([0, 1] or [-1, 1] depending if signed)
   if (
     !MetadataComponentType.isIntegerType(componentType) ||
     classProperty.normalized
@@ -327,13 +327,21 @@ PropertyTextureProperty.prototype.unpackInShader = function (
     if (hasMultipleComponents) {
       indexExpression = `[${i}]`;
     }
-    const assignUnpackedValueLine = `${unpackedValueName}${indexExpression} = ${castFunction}(${rawBitsName});`;
+
+    let normalize = "";
+    let toFloatIfNormalize = "";
+    if (classProperty.normalized) {
+      const maxValue = MetadataComponentType.getMaximum(componentType);
+      normalize = ` * ${1.0 / Number(maxValue)}`;
+      toFloatIfNormalize = "float";
+      initializationLines.push("// Component type must be normalized");
+    }
+
+    const assignUnpackedValueLine = `${unpackedValueName}${indexExpression} = ${toFloatIfNormalize}(${castFunction}(${rawBitsName}))${normalize};`;
 
     initializationLines.push(assignRawBitsLine);
     initializationLines.push(assignUnpackedValueLine);
   }
-
-  // TODO: handle normalization and special case where only a single channel is used.
 
   return unpackedValueName;
 };

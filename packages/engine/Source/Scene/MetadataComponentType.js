@@ -99,6 +99,8 @@ MetadataComponentType.typeInfo = {
     isUnsigned: false,
     vectorCompatible: true,
     size: 1,
+    maximumValue: 127,
+    minimumValue: -128,
     category: ScalarCategories.INTEGER,
   },
   UINT8: {
@@ -106,6 +108,8 @@ MetadataComponentType.typeInfo = {
     isUnsigned: true,
     vectorCompatible: true,
     size: 1,
+    maximumValue: 255,
+    minimumValue: 0,
     category: ScalarCategories.UNSIGNED_INTEGER,
   },
   INT16: {
@@ -113,6 +117,8 @@ MetadataComponentType.typeInfo = {
     isUnsigned: false,
     vectorCompatible: true,
     size: 2,
+    maximumValue: 32767,
+    minimumValue: -32768,
     category: ScalarCategories.INTEGER,
   },
   UINT16: {
@@ -120,6 +126,8 @@ MetadataComponentType.typeInfo = {
     isUnsigned: true,
     vectorCompatible: true,
     size: 2,
+    maximumValue: 65535,
+    minimumValue: 0,
     category: ScalarCategories.UNSIGNED_INTEGER,
   },
   INT32: {
@@ -127,6 +135,8 @@ MetadataComponentType.typeInfo = {
     isUnsigned: false,
     vectorCompatible: true,
     size: 4,
+    maximumValue: 2147483647,
+    minimumValue: -2147483648,
     category: ScalarCategories.INTEGER,
   },
   UINT32: {
@@ -134,6 +144,8 @@ MetadataComponentType.typeInfo = {
     isUnsigned: true,
     vectorCompatible: true,
     size: 4,
+    maximumValue: 4294967295,
+    minimumValue: 0,
     category: ScalarCategories.UNSIGNED_INTEGER,
   },
   INT64: {
@@ -141,6 +153,8 @@ MetadataComponentType.typeInfo = {
     isUnsigned: false,
     vectorCompatible: false,
     size: 8,
+    maximumValue: BigInt("9223372036854775807"),
+    minimumValue: BigInt("-9223372036854775808"),
     category: ScalarCategories.INTEGER,
   },
   UINT64: {
@@ -148,6 +162,8 @@ MetadataComponentType.typeInfo = {
     isUnsigned: true,
     vectorCompatible: false,
     size: 8,
+    maximumValue: BigInt("18446744073709551615"),
+    minimumValue: BigInt(0),
     category: ScalarCategories.UNSIGNED_INTEGER,
   },
   FLOAT32: {
@@ -155,6 +171,8 @@ MetadataComponentType.typeInfo = {
     isUnsigned: false,
     vectorCompatible: true,
     size: 4,
+    maximumValue: 340282346638528859811704183484516925440.0,
+    minimumValue: -340282346638528859811704183484516925440.0,
     category: ScalarCategories.FLOAT,
   },
   FLOAT64: {
@@ -162,6 +180,8 @@ MetadataComponentType.typeInfo = {
     isUnsigned: false,
     vectorCompatible: true,
     size: 8,
+    maximumValue: Number.MAX_VALUE,
+    minimumValue: -Number.MAX_VALUE,
     category: ScalarCategories.FLOAT,
   },
 };
@@ -169,8 +189,7 @@ MetadataComponentType.typeInfo = {
 /**
  * Gets the minimum value for the numeric type.
  * <p>
- * Returns a BigInt for the INT64 and UINT64 types if BigInt is supported on this platform.
- * Otherwise an approximate number is returned.
+ * Returns a BigInt for the INT64 and UINT64 types.
  * </p>
  *
  * @param {MetadataComponentType} type The type.
@@ -183,35 +202,7 @@ MetadataComponentType.getMinimum = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  switch (type) {
-    case MetadataComponentType.INT8:
-      return -128;
-    case MetadataComponentType.UINT8:
-      return 0;
-    case MetadataComponentType.INT16:
-      return -32768;
-    case MetadataComponentType.UINT16:
-      return 0;
-    case MetadataComponentType.INT32:
-      return -2147483648;
-    case MetadataComponentType.UINT32:
-      return 0;
-    case MetadataComponentType.INT64:
-      if (FeatureDetection.supportsBigInt()) {
-        return BigInt("-9223372036854775808");
-      }
-      return -Math.pow(2, 63);
-    case MetadataComponentType.UINT64:
-      if (FeatureDetection.supportsBigInt()) {
-        return BigInt(0);
-      }
-      return 0;
-    case MetadataComponentType.FLOAT32:
-      // Maximum 32-bit floating point number. This value will be converted to the nearest 64-bit Number
-      return -340282346638528859811704183484516925440.0;
-    case MetadataComponentType.FLOAT64:
-      return -Number.MAX_VALUE;
-  }
+  return MetadataComponentType.typeInfo[type].minimumValue;
 };
 
 /**
@@ -231,37 +222,7 @@ MetadataComponentType.getMaximum = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  switch (type) {
-    case MetadataComponentType.INT8:
-      return 127;
-    case MetadataComponentType.UINT8:
-      return 255;
-    case MetadataComponentType.INT16:
-      return 32767;
-    case MetadataComponentType.UINT16:
-      return 65535;
-    case MetadataComponentType.INT32:
-      return 2147483647;
-    case MetadataComponentType.UINT32:
-      return 4294967295;
-    case MetadataComponentType.INT64:
-      if (FeatureDetection.supportsBigInt()) {
-        // Need to initialize with a string otherwise the value will be 9223372036854775808
-        return BigInt("9223372036854775807");
-      }
-      return Math.pow(2, 63) - 1;
-    case MetadataComponentType.UINT64:
-      if (FeatureDetection.supportsBigInt()) {
-        // Need to initialize with a string otherwise the value will be 18446744073709551616
-        return BigInt("18446744073709551615");
-      }
-      return Math.pow(2, 64) - 1;
-    case MetadataComponentType.FLOAT32:
-      // Maximum 32-bit floating point number
-      return 340282346638528859811704183484516925440.0;
-    case MetadataComponentType.FLOAT64:
-      return Number.MAX_VALUE;
-  }
+  return MetadataComponentType.typeInfo[type].maximumValue;
 };
 
 /**
