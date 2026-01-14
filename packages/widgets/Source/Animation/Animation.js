@@ -406,6 +406,7 @@ SvgButton.prototype.setTooltip = function (tooltip) {
  *
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {AnimationViewModel} viewModel The view model used by this widget.
+ * @param {string} [cspStyleNonce] A nonce to be added to the style tag for CSP compliance
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  *
@@ -428,7 +429,7 @@ SvgButton.prototype.setTooltip = function (tooltip) {
  * @see AnimationViewModel
  * @see Clock
  */
-function Animation(container, viewModel) {
+function Animation(container, viewModel, cspStyleNonce) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(container)) {
     throw new DeveloperError("container is required.");
@@ -466,6 +467,9 @@ function Animation(container, viewModel) {
 .cesium-animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\
 .cesium-animation-knobOuter { fill: url(#animation_knobOuter); }\
 .cesium-animation-knobInner { fill: url(#animation_knobInner); }";
+  if (defined(cspStyleNonce)) {
+    cssStyle.setAttribute("nonce", cspStyleNonce);
+  }
 
   ownerDocument.head.insertBefore(cssStyle, ownerDocument.head.childNodes[0]);
 
