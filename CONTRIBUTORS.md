@@ -437,4 +437,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Marco Zhan](https://github.com/marcoYxz)
 - [Mikhail Porotkin](https://github.com/porotkin)
 - [Adam Beili](https://github.com/Beilinson)
-- [陌离](https://github.com/Duan971231)
+- [段寒松](https://github.com/Duan971231)
