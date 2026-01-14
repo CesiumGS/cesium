@@ -1,4 +1,3 @@
-/* global CESIUM_CSP_STYLE_NONCE */
 import AssociativeArray from "../Core/AssociativeArray.js";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
@@ -275,8 +274,9 @@ function appendCss(container) {
 
   const shadowRootOrDocumentHead = getShadowRoot(container) ?? document.head;
   const styleElem = document.createElement("style");
-  if (defined(CESIUM_CSP_STYLE_NONCE)) {
-    styleElem.setAttribute("nonce", CESIUM_CSP_STYLE_NONCE);
+  const nonce = globalThis?.CESIUM_CSP_STYLE_NONCE;
+  if (defined(nonce)) {
+    styleElem.setAttribute("nonce", nonce);
   }
   styleElem.innerHTML = style;
   shadowRootOrDocumentHead.appendChild(styleElem);
