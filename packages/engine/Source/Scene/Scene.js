@@ -112,7 +112,6 @@ const requestRenderAfterFrame = function (scene) {
  * @param {number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
  * @param {number} [options.msaaSamples=4] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets. Set to 1 to disable MSAA.
- * @param {string} [options.cspStyleNonce] A nonce to be used in the Content Security Policy (CSP) header for inlined styles used by the credit display.
  *
  * @see CesiumWidget
  * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -168,13 +167,8 @@ function Scene(options) {
   this._jobScheduler = new JobScheduler();
   this._frameState = new FrameState(
     context,
-    new CreditDisplay(
-      creditContainer,
-      "•",
-      creditViewport,
-      options.cspStyleNonce
-    ),
-    this._jobScheduler
+    new CreditDisplay(creditContainer, "•", creditViewport),
+    this._jobScheduler,
   );
   this._frameState.scene3DOnly = options.scene3DOnly ?? false;
   this._removeCreditContainer = !hasCreditContainer;

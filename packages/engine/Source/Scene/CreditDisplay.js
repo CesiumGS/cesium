@@ -1,3 +1,4 @@
+/* global CESIUM_CSP_STYLE_NONCE */
 import AssociativeArray from "../Core/AssociativeArray.js";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
@@ -162,7 +163,7 @@ function styleLightboxContainer(that) {
   }
 }
 
-function appendCss(container, cspStyleNonce) {
+function appendCss(container) {
   const style = /*css*/ `
 .cesium-credit-lightbox-overlay {
   display: none;
@@ -274,8 +275,8 @@ function appendCss(container, cspStyleNonce) {
 
   const shadowRootOrDocumentHead = getShadowRoot(container) ?? document.head;
   const styleElem = document.createElement("style");
-  if (defined(cspStyleNonce)) {
-    styleElem.setAttribute("nonce", cspStyleNonce);
+  if (defined(CESIUM_CSP_STYLE_NONCE)) {
+    styleElem.setAttribute("nonce", CESIUM_CSP_STYLE_NONCE);
   }
   styleElem.innerHTML = style;
   shadowRootOrDocumentHead.appendChild(styleElem);
@@ -287,7 +288,6 @@ function appendCss(container, cspStyleNonce) {
  * @param {HTMLElement} container The HTML element where credits will be displayed
  * @param {string} [delimiter= '•'] The string to separate text credits
  * @param {HTMLElement} [viewport=document.body] The HTML element that will contain the credits popup
- * @param {string} [cspStyleNonce] A nonce to be added to the style tag for CSP compliance
  *
  * @alias CreditDisplay
  * @constructor
@@ -302,7 +302,7 @@ function appendCss(container, cspStyleNonce) {
  * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank">Cesium</a>');
  * viewer.creditDisplay.addStaticCredit(credit);
  */
-function CreditDisplay(container, delimiter, viewport, cspStyleNonce) {
+function CreditDisplay(container, delimiter, viewport) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("container", container);
   //>>includeEnd('debug');
@@ -356,7 +356,7 @@ function CreditDisplay(container, delimiter, viewport, cspStyleNonce) {
   expandLink.textContent = "Data attribution";
   container.appendChild(expandLink);
 
-  appendCss(container, cspStyleNonce);
+  appendCss(container);
   const cesiumCredit = Credit.clone(CreditDisplay.cesiumCredit);
 
   this._delimiter = delimiter ?? "•";
