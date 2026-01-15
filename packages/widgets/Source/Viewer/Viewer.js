@@ -1275,7 +1275,7 @@ Object.defineProperties(Viewer.prototype, {
    */
   ellipsoid: {
     get: function () {
-      return this._scene.ellipsoid;
+      return this.scene.ellipsoid;
     },
   },
 
