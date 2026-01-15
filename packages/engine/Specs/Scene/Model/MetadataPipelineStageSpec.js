@@ -14,6 +14,7 @@ import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
+import createContext from "../../../../../Specs/createContext.js";
 
 describe(
   "Scene/Model/MetadataPipelineStage",
@@ -34,14 +35,17 @@ describe(
       "./Data/Cesium3DTiles/Metadata/PropertyAttributesPointCloud/tileset.json";
 
     let scene;
+    let context;
     const gltfLoaders = [];
 
     beforeAll(function () {
       scene = createScene();
+      context = createContext();
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+      context.destroyForSpecs();
     });
 
     function cleanup(resourcesArray) {
@@ -274,6 +278,10 @@ describe(
     });
 
     it("Adds property textures to the shader", function () {
+      if (!context.webgl2) {
+        return;
+      }
+
       return loadGltf(simplePropertyTexture).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const node = components.nodes[0];
@@ -360,6 +368,10 @@ describe(
     });
 
     it("Adds property texture transform to the shader", async function () {
+      if (!context.webgl2) {
+        return;
+      }
+
       const gltfLoader = await loadGltf(propertyTextureWithTextureTransformUrl);
       const components = gltfLoader.components;
       const node = components.nodes[0];
@@ -416,6 +428,10 @@ describe(
     });
 
     it("Handles property textures with vector values", function () {
+      if (!context.webgl2) {
+        return;
+      }
+
       return loadGltf(propertyTextureWithVectorProperties).then(
         function (gltfLoader) {
           const components = gltfLoader.components;
@@ -560,6 +576,10 @@ describe(
     });
 
     it("Handles property textures that use multiple channels to represent higher-precision types", function () {
+      if (!context.webgl2) {
+        return;
+      }
+
       return loadGltf(propertyTextureWith32BitTypes).then(
         function (gltfLoader) {
           const components = gltfLoader.components;
