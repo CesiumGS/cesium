@@ -3,6 +3,7 @@ import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
+import defined from "../Core/defined.js";
 
 /**
  * An enum of metadata component types.
@@ -214,9 +215,12 @@ MetadataComponentType.isIntegerType = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  return (
-    MetadataComponentType.typeInfo[type].category !== ScalarCategories.FLOAT
-  );
+  const typeInfo = MetadataComponentType.typeInfo[type];
+  if (!defined(typeInfo)) {
+    return false;
+  }
+
+  return typeInfo.category !== ScalarCategories.FLOAT;
 };
 
 /**
@@ -232,10 +236,12 @@ MetadataComponentType.isUnsignedIntegerType = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  return (
-    MetadataComponentType.typeInfo[type].category ===
-    ScalarCategories.UNSIGNED_INTEGER
-  );
+  const typeInfo = MetadataComponentType.typeInfo[type];
+  if (!defined(typeInfo)) {
+    return false;
+  }
+
+  return typeInfo.category === ScalarCategories.UNSIGNED_INTEGER;
 };
 
 /**
@@ -251,7 +257,12 @@ MetadataComponentType.isVectorCompatible = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  return MetadataComponentType.typeInfo[type].vectorCompatible;
+  const typeInfo = MetadataComponentType.typeInfo[type];
+  if (!defined(typeInfo)) {
+    return false;
+  }
+
+  return typeInfo.vectorCompatible;
 };
 
 /**
@@ -264,7 +275,12 @@ MetadataComponentType.category = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  return MetadataComponentType.typeInfo[type].category;
+  const typeInfo = MetadataComponentType.typeInfo[type];
+  if (!defined(typeInfo)) {
+    return undefined;
+  }
+
+  return typeInfo.category;
 };
 
 /**
