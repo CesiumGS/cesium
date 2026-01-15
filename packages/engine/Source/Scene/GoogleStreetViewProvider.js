@@ -44,9 +44,17 @@ const getGoogleStreetViewTileUrls = async (options) => {
 };
 
 async function loadBitmap(url) {
-  const response = await fetch(url, { mode: "cors" });
-  const blob = await response.blob();
-  return createImageBitmap(blob);
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) {
+      return null;
+    }
+
+    const blob = await response.blob();
+    return await createImageBitmap(blob);
+  } catch {
+    return null;
+  }
 }
 
 async function stitchBitmapsFromTileMap(tileMap) {
@@ -69,12 +77,18 @@ async function stitchBitmapsFromTileMap(tileMap) {
     }
   }
 
-  const bitmaps = await Promise.all(
+  const loaded = await Promise.all(
     tiles.map(async (t) => ({
       ...t,
       bitmap: await loadBitmap(t.src),
     })),
   );
+
+  const bitmaps = loaded.filter((t) => t.bitmap);
+
+  if (bitmaps.length === 0) {
+    throw new Error("No tiles could be loaded");
+  }
 
   const minX = Math.min(...bitmaps.map((t) => t.x));
   const maxX = Math.max(...bitmaps.map((t) => t.x));
