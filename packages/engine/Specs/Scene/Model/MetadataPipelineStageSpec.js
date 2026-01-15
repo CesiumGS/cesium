@@ -26,6 +26,8 @@ describe(
       "./Data/Models/glTF-2.0/PropertyTextureWithVectorProperties/glTF/PropertyTextureWithVectorProperties.gltf";
     const propertyTextureWithTextureTransformUrl =
       "./Data/Models/glTF-2.0/PropertyTextureWithTextureTransform/glTF/PropertyTextureWithTextureTransform.gltf";
+    const propertyTextureWith32BitTypes =
+      "./Data/Models/glTF-2.0/PropertyTextureWith32BitTypes/glTF/PropertyTextureWith32BitTypes.gltf";
     const boxTexturedBinary =
       "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
     const tilesetWithMetadataStatistics =
@@ -553,6 +555,79 @@ describe(
           expect(uniformMap.u_valueTransformProperty_scale()).toEqual(
             new Cartesian2(2, 2),
           );
+        },
+      );
+    });
+
+    it("Handles property textures that use multiple channels to represent higher-precision types", function () {
+      return loadGltf(propertyTextureWith32BitTypes).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[0];
+          const primitive = node.primitives[0];
+          const frameState = scene.frameState;
+          const renderResources = mockRenderResources(components);
+
+          MetadataPipelineStage.process(renderResources, primitive, frameState);
+
+          const shaderBuilder = renderResources.shaderBuilder;
+
+          checkMetadataClassStructs(shaderBuilder, ["float"]);
+
+          ShaderBuilderTester.expectHasVertexStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_VS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA,
+            [],
+          );
+          ShaderBuilderTester.expectHasFragmentStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_FS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA,
+            ["    float insideTemperature;"],
+          );
+
+          // Check for the MetadataClass struct, containing the specific fields
+          // required by this test dataset
+          ShaderBuilderTester.expectHasFragmentStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_FS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
+            ["    floatMetadataClass insideTemperature;"],
+          );
+
+          ShaderBuilderTester.expectHasVertexFunctionUnordered(
+            shaderBuilder,
+            MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
+            MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
+            [],
+          );
+
+          // Check that the correct values are assigned to the metadata and metadataClass structs
+          ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+            shaderBuilder,
+            MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
+            MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
+            [
+              "    float insideTemperature_unpackedValue;",
+              "    uint insideTemperature_rawBits;",
+              "    vec4 insideTemperature_rawChannels = texture(u_propertyTexture_0, attributes.texCoord_0).rgba;",
+              "    insideTemperature_rawBits = czm_unpackTexture(insideTemperature_rawChannels.rgba);",
+              "    insideTemperature_unpackedValue = (uintBitsToFloat(insideTemperature_rawBits));",
+              "    metadata.insideTemperature = insideTemperature_unpackedValue;",
+            ],
+          );
+
+          ShaderBuilderTester.expectHasVertexFunctionUnordered(
+            shaderBuilder,
+            MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS,
+            MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS,
+            [],
+          );
+          ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+          ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+            "uniform sampler2D u_propertyTexture_0;",
+          ]);
         },
       );
     });
