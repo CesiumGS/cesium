@@ -3,13 +3,6 @@ import Sandcastle from "Sandcastle";
 
 const assetId = 3830184;
 
-const base = Cesium.ImageryLayer.fromProviderAsync(
-  Cesium.Google2DImageryProvider.fromIonAssetId({
-    assetId,
-    mapType: "satellite",
-  }),
-);
-
 const overlay = Cesium.ImageryLayer.fromProviderAsync(
   Cesium.Google2DImageryProvider.fromIonAssetId({
     assetId,
@@ -30,8 +23,14 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 });
 viewer.geocoder.viewModel.keepExpanded = true;
 
-viewer.imageryLayers.add(base);
-viewer.imageryLayers.add(overlay);
+const tileset = await Cesium.createGooglePhotorealistic3DTileset({
+  // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
+  onlyUsingWithGoogleGeocoder: true,
+  //show: false,
+});
+viewer.scene.primitives.add(tileset);
+
+tileset.imageryLayers.add(overlay);
 
 const apiKey = "Google Streetview API Key";
 
@@ -73,7 +72,7 @@ function selectPano(position) {
       .then((panoIdMetadata) => {
         const panoLat = panoIdMetadata.lat;
         const panoLng = panoIdMetadata.lng;
-        const height = 3; //panoIdMetadata.originalElevationAboveEgm96;
+        const height = carto.height;
 
         provider
           .loadPanoramafromPanoId({
@@ -86,7 +85,7 @@ function selectPano(position) {
             const position = Cesium.Cartesian3.fromDegrees(
               panoLng,
               panoLat,
-              height,
+              height + 2,
             );
 
             viewer.scene.camera.lookAt(
@@ -98,6 +97,7 @@ function selectPano(position) {
               ),
             );
             viewer.scene.screenSpaceCameraController.enableZoom = false;
+            overlay.show = false;
             disablePicking();
             viewer.scene.globe.show = false;
           });
@@ -135,6 +135,8 @@ function returnToMap() {
     duration: 0,
   });
   viewer.scene.globe.show = true;
+  tileset.show = true;
+  overlay.show = true;
   viewer.scene.screenSpaceCameraController.enableZoom = true;
   const primitives = viewer.scene.primitives;
   // Iterate in reverse to avoid index issues when removing
@@ -143,28 +145,6 @@ function returnToMap() {
     if (primitive instanceof Cesium.PanoramaCollection) {
       primitives.remove(primitive);
     }
-  }
-}
-
-// Add Photorealistic 3D Tiles
-let tileset;
-async function toggleGP3DTiles() {
-  if (!Cesium.defined(tileset)) {
-    try {
-      tileset = await Cesium.createGooglePhotorealistic3DTileset({
-        // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
-        onlyUsingWithGoogleGeocoder: true,
-        //show: false,
-      });
-      viewer.scene.primitives.add(tileset);
-    } catch (error) {
-      console.log(`Error loading Photorealistic 3D Tiles tileset.
-                ${error}`);
-    }
-  } else if (!tileset.show) {
-    tileset.show = true;
-  } else {
-    tileset.show = false;
   }
 }
 
@@ -177,9 +157,11 @@ Sandcastle.addToolbarButton("Return to map", async function () {
 });
 
 Sandcastle.addToolbarButton("Toggle Photorealistic Tiles", function () {
-  toggleGP3DTiles();
+  if (tileset.show) {
+    tileset.show = false;
+  } else {
+    tileset.show = true;
+  }
 });
 
 enablePicking();
-
-returnToMap();
