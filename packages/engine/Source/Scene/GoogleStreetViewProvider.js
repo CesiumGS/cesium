@@ -43,40 +43,90 @@ const getGoogleStreetViewTileUrls = async (options) => {
   return tileIds;
 };
 
-const getTilesfromUrls = (options) => {
-  const { tileIds, transform, p } = options;
-  let panoramaTiles = [];
-  let tileUrl, partitionSize, minClock, maxClock, minCone, maxCone;
-  let tx, ty;
+async function loadBitmap(url) {
+  const response = await fetch(url, { mode: "cors" });
+  const blob = await response.blob();
+  return createImageBitmap(blob);
+}
 
-  for (const tileId in tileIds) {
-    if (tileId in tileIds) {
-      [, tx, ty] = tileId.split("/");
-      tileUrl = tileIds[tileId];
+async function stitchBitmapsFromTileMap(tileMap) {
+  // tileMap: Record<"z/x/y", string>
 
-      partitionSize = 180 / p;
+  const tiles = Object.entries(tileMap).map(([key, src]) => {
+    const [z, x, y] = key.split("/").map(Number);
+    return { z, x, y, src };
+  });
 
-      minClock = 360 - (+tx + 1) * partitionSize;
-      maxClock = 360 - tx * partitionSize;
-      minCone = ty * partitionSize;
-      maxCone = (+ty + 1) * partitionSize;
+  if (tiles.length === 0) {
+    throw new Error("No tiles provided");
+  }
 
-      const panoTile = new EquirectangularPanorama({
-        image: tileUrl,
-        transform,
-        minimumClock: minClock,
-        maximumClock: maxClock,
-        minimumCone: minCone,
-        maximumCone: maxCone,
-        repeatHorizontal: -p * 2,
-        repeatVertical: p,
-      });
-
-      panoramaTiles = [...panoramaTiles, panoTile];
+  // sanity check: all same zoom
+  const zoom = tiles[0].z;
+  for (const t of tiles) {
+    if (t.z !== zoom) {
+      throw new DeveloperError("All tiles must have the same zoom level");
     }
   }
-  return panoramaTiles;
-};
+
+  const bitmaps = await Promise.all(
+    tiles.map(async (t) => ({
+      ...t,
+      bitmap: await loadBitmap(t.src),
+    })),
+  );
+
+  const minX = Math.min(...bitmaps.map((t) => t.x));
+  const maxX = Math.max(...bitmaps.map((t) => t.x));
+  const minY = Math.min(...bitmaps.map((t) => t.y));
+  const maxY = Math.max(...bitmaps.map((t) => t.y));
+
+  const cols = maxX - minX + 1;
+  const rows = maxY - minY + 1;
+
+  const colWidths = Array(cols).fill(0);
+  const rowHeights = Array(rows).fill(0);
+
+  for (const t of bitmaps) {
+    const col = t.x - minX;
+    const row = t.y - minY;
+    colWidths[col] = Math.max(colWidths[col], t.bitmap.width);
+    rowHeights[row] = Math.max(rowHeights[row], t.bitmap.height);
+  }
+
+  const width = colWidths.reduce((a, b) => a + b, 0);
+  const height = rowHeights.reduce((a, b) => a + b, 0);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+
+  const xOffsets = [];
+  const yOffsets = [];
+
+  colWidths.reduce((acc, w, i) => {
+    xOffsets[i] = acc;
+    return acc + w;
+  }, 0);
+
+  rowHeights.reduce((acc, h, i) => {
+    yOffsets[i] = acc;
+    return acc + h;
+  }, 0);
+
+  for (const t of bitmaps) {
+    const col = t.x - minX;
+    const row = t.y - minY;
+    ctx.drawImage(t.bitmap, xOffsets[col], yOffsets[row]);
+  }
+
+  for (const t of bitmaps) {
+    t.bitmap.close();
+  }
+
+  return canvas;
+}
 
 /**
  * Provides imagery to be displayed in a panorama.  This type describes an
@@ -109,6 +159,7 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
 
   const zInput = options.zInput || 1;
   const heading = options.heading || 0;
+  const tilt = options.tilt || 0;
   let panoId = options.panoId;
 
   if (!defined(panoId)) {
@@ -129,8 +180,17 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
 
   const headingRad = CesiumMath.toRadians(-heading - 90);
   const headingRotation = Matrix3.fromRotationZ(headingRad);
-  const headingRotation4 = Matrix4.fromRotationTranslation(
+
+  const tiltRad = CesiumMath.toRadians(tilt);
+  const tiltRotation = Matrix3.fromRotationY(tiltRad);
+  const combinedRotation = Matrix3.multiply(
     headingRotation,
+    tiltRotation,
+    new Matrix3(),
+  );
+
+  const headingRotation4 = Matrix4.fromRotationTranslation(
+    combinedRotation, //headingRotation,
     Cartesian3.ZERO,
   );
 
@@ -142,7 +202,7 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
 
   const p = GOOGLE_STREETVIEW_PARTITION_REFERENCE[zInput];
 
-  const tileIds = await getGoogleStreetViewTileUrls({
+  const tileMap = await getGoogleStreetViewTileUrls({
     z: zInput,
     p,
     panoId,
@@ -150,17 +210,15 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
     session: this._session,
   });
 
-  const panoramaTiles = getTilesfromUrls({
-    tileIds,
-    transform: transform,
-    p,
+  const canvas = await stitchBitmapsFromTileMap(tileMap);
+
+  const panoTile = new EquirectangularPanorama({
+    image: canvas,
+    transform,
+    repeatHorizontal: -1,
   });
 
-  for (const panoramaTileIndex in panoramaTiles) {
-    if (panoramaTileIndex in panoramaTiles) {
-      panoCollection.add(panoramaTiles[panoramaTileIndex]);
-    }
-  }
+  panoCollection.add(panoTile);
 
   return panoCollection;
 };
@@ -175,8 +233,6 @@ GoogleStreetViewProvider.prototype.loadPanoramafromPanoId = async function (
 ) {
   const { panoId, zInput } = options;
 
-  console.log("loadPanoraramafromPanoId ", panoId);
-
   // get position of panoId to calculate transform
   const panoIdMetadata = await this.getPanoIdMetadata({ panoId });
 
@@ -186,11 +242,14 @@ GoogleStreetViewProvider.prototype.loadPanoramafromPanoId = async function (
     panoIdMetadata.originalElevationAboveEgm96,
   );
 
+  const panoTilt = -90 + panoIdMetadata.tilt;
+
   return this.loadPanorama({
     cartographic,
     zInput,
     panoId,
     heading: panoIdMetadata.heading,
+    tilt: panoTilt,
   });
 };
 
@@ -226,7 +285,6 @@ GoogleStreetViewProvider.prototype.getPanoIdMetadata = async function (
   options,
 ) {
   const { panoId } = options;
-  console.log("getPanoIdMetadata ", panoId);
   const metadataResponse = await Resource.fetch({
     url: "https://tile.googleapis.com/v1/streetview/metadata",
     queryParameters: {
