@@ -303,7 +303,9 @@ PropertyTextureProperty.prototype.unpackInShader = function (
   const unpackedValueName = `${metadataVariable}_unpackedValue`;
 
   const declareUnpackedValueLine = `${glslType} ${unpackedValueName};`;
+  const declareRawBitsLine = `uint ${rawBitsName};`;
   initializationLines.push(declareUnpackedValueLine);
+  initializationLines.push(declareRawBitsLine);
 
   // Sample all (specified) channels of the texture
   const assignRawValuesLine = `${floatTypesByComponentCount[numChannels]} ${rawChannelsName} = ${packedValueGlsl};`;
@@ -321,7 +323,7 @@ PropertyTextureProperty.prototype.unpackInShader = function (
     if (usesMultipleChannelsPerComponent) {
       subChannels = `.${channelsString.slice(i * channelsPerComponent, (i + 1) * channelsPerComponent)}`;
     }
-    const assignRawBitsLine = `uint ${rawBitsName} = czm_unpackTexture(${rawChannelsName}${subChannels});`;
+    const assignRawBitsLine = `${rawBitsName} = czm_unpackTexture(${rawChannelsName}${subChannels});`;
 
     let indexExpression = "";
     if (hasMultipleComponents) {
@@ -334,7 +336,6 @@ PropertyTextureProperty.prototype.unpackInShader = function (
       const maxValue = MetadataComponentType.getMaximum(componentType);
       normalize = ` * ${1.0 / Number(maxValue)}`;
       toFloatIfNormalize = "float";
-      initializationLines.push("// Component type must be normalized");
     }
 
     const assignUnpackedValueLine = `${unpackedValueName}${indexExpression} = ${toFloatIfNormalize}(${castFunction}(${rawBitsName}))${normalize};`;
@@ -344,6 +345,43 @@ PropertyTextureProperty.prototype.unpackInShader = function (
   }
 
   return unpackedValueName;
+};
+
+PropertyTextureProperty.prototype.getGlslTypeWebGL1 = function () {
+  const classProperty = this._classProperty;
+
+  let componentCount = MetadataType.getComponentCount(classProperty.type);
+  if (classProperty.isArray) {
+    // fixed-sized arrays of length 2-4 UINT8s are represented as vectors as the
+    // shader since those are more useful in GLSL.
+    componentCount = classProperty.arrayLength;
+  }
+
+  // Normalized UINT8 properties are float types in the shader
+  if (classProperty.normalized) {
+    return floatTypesByComponentCount[componentCount];
+  }
+
+  // other UINT8-based properties are represented as integer types.
+  return integerTypesByComponentCount[componentCount];
+};
+
+// In WebGL 1, we limit property texture support to UINT8 properties.
+PropertyTextureProperty.prototype.unpackInShaderWebGL1 = function (
+  packedValueGlsl,
+) {
+  const classProperty = this._classProperty;
+
+  // no unpacking needed if for normalized types
+  if (classProperty.normalized) {
+    return packedValueGlsl;
+  }
+
+  // integer types are read from the texture as normalized float values.
+  // these need to be rescaled to [0, 255] and cast to the appropriate integer
+  // type.
+  const glslType = this.getGlslTypeWebGL1();
+  return `${glslType}(255.0 * ${packedValueGlsl})`;
 };
 
 /**

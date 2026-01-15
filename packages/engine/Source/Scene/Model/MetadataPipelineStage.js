@@ -85,6 +85,7 @@ MetadataPipelineStage.process = function (
   const { shaderBuilder, model } = renderResources;
   const { structuralMetadata = {}, content } = model;
   const statistics = content?.tileset.metadataExtension?.statistics;
+  const webgl2 = frameState.context.webgl2;
 
   const propertyAttributesInfo = getPropertyAttributesInfo(
     structuralMetadata.propertyAttributes,
@@ -112,7 +113,7 @@ MetadataPipelineStage.process = function (
   }
   for (let i = 0; i < propertyTexturesInfo.length; i++) {
     const info = propertyTexturesInfo[i];
-    processPropertyTextureProperty(renderResources, info);
+    processPropertyTextureProperty(renderResources, info, webgl2);
   }
 };
 
@@ -409,10 +410,11 @@ function addPropertyAttributePropertyMetadata(renderResources, propertyInfo) {
  * Update the shader for a single PropertyTextureProperty
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {object[]} propertyInfo Info about the PropertyTextureProperty
+ * @param {boolean} webgl2 True if the context is WebGL2
  * @private
  */
-function processPropertyTextureProperty(renderResources, propertyInfo) {
-  addPropertyTexturePropertyMetadata(renderResources, propertyInfo);
+function processPropertyTextureProperty(renderResources, propertyInfo, webgl2) {
+  addPropertyTexturePropertyMetadata(renderResources, propertyInfo, webgl2);
   addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
   addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
 }
@@ -422,9 +424,14 @@ function processPropertyTextureProperty(renderResources, propertyInfo) {
  * initializeMetadata function, for a PropertyTextureProperty
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {object} propertyInfo Info about the PropertyTextureProperty
+ * @param {boolean} webgl2 True if the context is WebGL2
  * @private
  */
-function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
+function addPropertyTexturePropertyMetadata(
+  renderResources,
+  propertyInfo,
+  webgl2,
+) {
   const { shaderBuilder, uniformMap } = renderResources;
   const { metadataVariable, glslType, property } = propertyInfo;
 
@@ -474,11 +481,16 @@ function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
     texCoordVariableExpression = `vec2(${transformUniformName} * vec3(${texCoordVariable}, 1.0))`;
   }
   const valueExpression = `texture(${textureUniformName}, ${texCoordVariableExpression}).${channels}`;
-  const unpackedValue = property.unpackInShader(
-    valueExpression,
-    metadataVariable,
-    initializationLines,
-  );
+  let unpackedValue;
+  if (webgl2) {
+    unpackedValue = property.unpackInShader(
+      valueExpression,
+      metadataVariable,
+      initializationLines,
+    );
+  } else {
+    unpackedValue = property.unpackInShaderWebGL1(valueExpression);
+  }
 
   const transformedValue = addValueTransformUniforms({
     valueExpression: unpackedValue,
