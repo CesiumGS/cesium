@@ -2,6 +2,7 @@ import * as Cesium from "cesium";
 import Sandcastle from "Sandcastle";
 
 const assetId = 3830184;
+const HEIGHT_THRESHOLD = 9000;
 
 const overlay = Cesium.ImageryLayer.fromProviderAsync(
   Cesium.Google2DImageryProvider.fromIonAssetId({
@@ -108,6 +109,13 @@ const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 // Function to enable picking
 function enablePicking() {
   handler.setInputAction((click) => {
+    const height = viewer.camera.positionCartographic.height;
+
+    if (height > HEIGHT_THRESHOLD) {
+      // too zoomed out — ignore clicks
+      return;
+    }
+
     saveCameraView(viewer);
     position = viewer.scene.pickPosition(click.position);
     if (Cesium.defined(position)) {
@@ -201,7 +209,6 @@ function removeTopModal() {
   }
 }
 
-const HEIGHT_THRESHOLD = 9000;
 let overlayAdded = false;
 
 viewer.camera.changed.addEventListener(() => {
