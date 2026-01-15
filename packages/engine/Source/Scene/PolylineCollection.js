@@ -26,6 +26,7 @@ import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
+import Texture from "../Renderer/Texture.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import PolylineFS from "../Shaders/PolylineFS.js";
@@ -159,11 +160,6 @@ function PolylineCollection(options) {
   this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
   this._polylines = [];
   this._polylineBuckets = {};
-
-  /** @type {Material} */
-  this._defaultMaterial = Material.fromType(Material.ColorType, {
-    color: new Color(1.0, 1.0, 1.0, 1.0),
-  });
 
   // The buffer usage is determined based on the usage of the attribute over time.
   this._positionBufferUsage = {
@@ -635,7 +631,6 @@ function createCommandLists(
 
       const polylines = bucketLocator.bucket.polylines;
       const polylineLength = polylines.length;
-      let currentMaterialId;
       let currentMaterial;
       let count = 0;
       let command;
@@ -643,8 +638,8 @@ function createCommandLists(
 
       for (let s = 0; s < polylineLength; ++s) {
         const polyline = polylines[s];
-        if (polyline._material._id !== currentMaterialId) {
-          if (defined(currentMaterialId) && count > 0) {
+        if (!deepEqualsMaterial(currentMaterial, polyline._material)) {
+          if (defined(currentMaterial) && count > 0) {
             const translucent = currentMaterial.isTranslucent();
 
             if (commandIndex >= commandsLength) {
@@ -664,7 +659,7 @@ function createCommandLists(
             );
 
             command.boundingVolume = BoundingSphere.clone(
-              bucketLocator.bucket.boundingVolumes[currentMaterialId],
+              bucketLocator.bucket.boundingVolumes[currentMaterial._id],
               command.boundingVolume,
             );
             command.modelMatrix = modelMatrix;
@@ -689,7 +684,6 @@ function createCommandLists(
 
           currentMaterial = polyline._material;
           currentMaterial.update(context);
-          currentMaterialId = polyline._material._id;
         }
 
         const locators = polyline._locatorBuckets;
@@ -702,7 +696,7 @@ function createCommandLists(
         }
       }
 
-      if (defined(currentMaterialId) && count > 0) {
+      if (defined(currentMaterial) && count > 0) {
         if (commandIndex >= commandsLength) {
           command = new DrawCommand({
             owner: polylineCollection,
@@ -720,7 +714,7 @@ function createCommandLists(
         );
 
         command.boundingVolume = BoundingSphere.clone(
-          bucketLocator.bucket.boundingVolumes[currentMaterialId],
+          bucketLocator.bucket.boundingVolumes[currentMaterial._id],
           command.boundingVolume,
         );
         command.modelMatrix = modelMatrix;
@@ -742,7 +736,7 @@ function createCommandLists(
         commandList.push(command);
       }
 
-      currentMaterialId = undefined;
+      currentMaterial = undefined;
     }
   }
 
@@ -784,8 +778,6 @@ PolylineCollection.prototype.destroy = function () {
   releaseShaders(this);
   destroyPolylines(this);
   this._batchTable = this._batchTable && this._batchTable.destroy();
-  this._defaultMaterial =
-    this._defaultMaterial && this._defaultMaterial.destroy();
   return destroyObject(this);
 };
 
@@ -1095,6 +1087,48 @@ function createVertexArrays(collection, context, projection) {
       }
     }
   }
+}
+
+/**
+ * @param {Material} a
+ * @param {Material} b
+ * @returns {boolean}
+ */
+function deepEqualsMaterial(a, b) {
+  if (a === b) {
+    return true;
+  }
+
+  if (!defined(a) || !defined(b) || a.type !== b.type) {
+    return false;
+  }
+
+  const uniformsA = Material._uniformList[a.type];
+  const uniformsB = Material._uniformList[b.type];
+  if (uniformsA.length !== uniformsB.length) {
+    return false;
+  }
+
+  for (let i = 0, il = uniformsA.length; i < il; i++) {
+    const keyA = uniformsA[i];
+    const keyB = uniformsB[i];
+
+    if (keyA !== keyB) {
+      return false;
+    }
+
+    let valueA = a._uniforms[keyA]();
+    let valueB = b._uniforms[keyB]();
+
+    valueA = valueA instanceof Texture ? valueA.id : String(valueA);
+    valueB = valueB instanceof Texture ? valueB.id : String(valueB);
+
+    if (valueA !== valueB) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function sortPolylinesIntoBuckets(collection) {
@@ -1960,6 +1994,30 @@ PolylineBucket.prototype.updateBoundingVolumes = function (mode) {
         this.boundingVolumes[materialId],
       );
     }
+  }
+
+  // The first material in a contiguous series of identical materials will
+  // be used when drawing the batch; make sure this material's bounding volume
+  // includes the bounds of all materials drawn with its batch.
+  let batchMaterial;
+  let previousMaterial;
+  for (let i = 0, il = this.polylines.length; i < il; i++) {
+    const material = this.polylines[i]._material;
+    if (material === batchMaterial || material === previousMaterial) {
+      continue;
+    }
+
+    if (deepEqualsMaterial(material, batchMaterial)) {
+      BoundingSphere.union(
+        this.boundingVolumes[material._id],
+        this.boundingVolumes[batchMaterial._id],
+        this.boundingVolumes[batchMaterial._id],
+      );
+    } else {
+      batchMaterial = material;
+    }
+
+    previousMaterial = material;
   }
 
   for (const materialId of Object.keys(this.boundingVolumes)) {

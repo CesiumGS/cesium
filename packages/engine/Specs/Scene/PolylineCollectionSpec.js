@@ -1879,10 +1879,8 @@ describe(
             z: 4.0,
           },
         ],
-        material: Material.fromType(Material.ColorType, {
-          color: new Color(1.0, 0.0, 0.0, 1.0),
-        }),
       });
+      one.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
       const two = polylines.add({
         positions: [
@@ -1897,10 +1895,8 @@ describe(
             z: 6.0,
           },
         ],
-        material: Material.fromType(Material.ColorType, {
-          color: new Color(0.0, 1.0, 0.0, 1.0),
-        }),
       });
+      two.material.uniforms.color = new Color(0.0, 1.0, 0.0, 1.0);
 
       scene.primitives.add(polylines);
       scene.render();
