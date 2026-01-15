@@ -1,5 +1,4 @@
 import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 import CesiumMath from "../Core/Math.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defined from "../Core/defined.js";
@@ -16,7 +15,6 @@ import SpatialNode from "./SpatialNode.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
-import VoxelMetadataOrder from "./VoxelMetadataOrder.js";
 
 /**
  * Handles tileset traversal, tile requests, and GPU resources. Intended to be
@@ -38,19 +36,8 @@ function VoxelTraversal(
   keyframeCount,
   maximumTextureMemoryByteLength,
 ) {
-  const { provider, dimensions } = primitive;
-  const { types, componentTypes, metadataOrder } = provider;
-
-  // Adjust input tile dimensions for metadata order
-  const inputDimensions = Cartesian3.clone(
-    primitive.inputDimensions,
-    new Cartesian3(),
-  );
-  if (metadataOrder === VoxelMetadataOrder.Y_UP) {
-    const inputDimensionsY = inputDimensions.y;
-    inputDimensions.y = inputDimensions.z;
-    inputDimensions.z = inputDimensionsY;
-  }
+  const { provider, dimensions, inputDimensions } = primitive;
+  const { types, componentTypes } = provider;
 
   // TODO: refine this. If provider.maximumTileCount is not defined, we will always allocate 512 MB per metadata property.
   if (defined(maximumTextureMemoryByteLength)) {

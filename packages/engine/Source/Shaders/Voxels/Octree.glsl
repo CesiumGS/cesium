@@ -102,8 +102,9 @@ void addSampleCoordinates(in TileAndUvCoordinate tileAndUv, inout SampleData sam
 #if defined(Y_UP_METADATA_ORDER)
 #if defined(SHAPE_BOX)
     float inputY = inputCoordinate.y;
-    inputCoordinate.y = float(u_inputDimensions.y) - inputCoordinate.z;
-    inputCoordinate.z = inputY;
+    inputCoordinate.y = inputCoordinate.z;
+    // u_inputDimensions.z is the y-up dimension along the 3D Tiles y-axis.
+    inputCoordinate.z = float(u_inputDimensions.z) - inputY;
 #elif defined(SHAPE_CYLINDER)
     float angle = inputCoordinate.y;
     float height = inputCoordinate.z;

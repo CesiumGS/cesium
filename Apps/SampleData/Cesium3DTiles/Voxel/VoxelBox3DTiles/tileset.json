@@ -54,8 +54,8 @@
         "3DTILES_content_voxels": {
           "dimensions": [
             2,
-            2,
-            2
+            4,
+            3
           ],
           "class": "voxel"
         }
