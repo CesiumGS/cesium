@@ -566,7 +566,7 @@ TweenCollection.prototype.update = function (time) {
       // if it's the case that the update callback 1) clears all tweens held in the scene, then 2) adds new tweens
       // the splice operation below will not be operating on the original tween, but one of the unprocessed tweens added
       // from the update callback
-      if (tweens[i].needsStart) {
+      if (tweens[i]?.needsStart) {
         continue;
       }
       tweenjs.stop();
