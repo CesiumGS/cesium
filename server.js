@@ -251,6 +251,7 @@ const throttle = (callback) => {
     glslWatcher.on("all", async () => {
       await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
       esmCache.clear();
+      engineBundleCache.clear();
       iifeCache.clear();
     });
 
