@@ -53,6 +53,7 @@ loader.config({ monaco });
 
 export type SandcastleEditorRef = {
   formatCode(): void;
+  highlightLine(n?: number): void;
 };
 
 function SandcastleEditor({
@@ -120,10 +121,42 @@ function SandcastleEditor({
     internalEditorRef.current?.getAction("editor.action.formatDocument")?.run();
   }
 
+  const highlightDecorRef =
+    useRef<monaco.editor.IEditorDecorationsCollection>(null);
+
   useImperativeHandle(ref, () => {
     return {
       formatCode() {
         formatEditor();
+      },
+      highlightLine(n) {
+        if (n === 0) {
+          // If the highlight is unsure where to go it defaults to 0
+          // this is nearly meaningless to users so just ignore this
+          return;
+        }
+
+        if (n === undefined) {
+          highlightDecorRef.current?.clear();
+          return;
+        }
+
+        console.log("highlight editor", n, highlightDecorRef.current);
+        highlightDecorRef.current?.set([
+          {
+            range: new monaco.Range(n, 1, n, 1),
+            options: {
+              isWholeLine: true,
+              linesDecorationsClassName: "highlight myLineDecoration",
+              className: "highlight",
+              glyphMarginClassName: "highlight-3",
+              stickiness:
+                monaco.editor.TrackedRangeStickiness
+                  .NeverGrowsWhenTypingAtEdges,
+            },
+          },
+        ]);
+        internalEditorRef.current?.revealLineInCenterIfOutsideViewport(n);
       },
     };
   }, []);
@@ -162,6 +195,33 @@ function SandcastleEditor({
       { keybinding: KeyMod.CtrlCmd | KeyCode.KeyS, command: "run-sandcastle" },
       { keybinding: KeyMod.Alt | KeyCode.Enter, command: "run-sandcastle" },
     ]);
+
+    // const decorations = editor.createDecorationsCollection([
+    //   {
+    //     range: new monaco.Range(3, 1, 3, 1),
+    //     options: {
+    //       isWholeLine: true,
+    //       className: "myContentClass",
+    //       glyphMarginClassName: "myGlyphMarginClass",
+    //     },
+    //   },
+    // ]);
+    const highlightDecorations = editor.createDecorationsCollection([
+      {
+        range: new monaco.Range(3, 1, 5, 1),
+        options: {
+          isWholeLine: true,
+          linesDecorationsClassName: "myLineDecoration",
+        },
+      },
+      {
+        range: new monaco.Range(7, 1, 7, 24),
+        options: { inlineClassName: "myInlineDecoration" },
+      },
+    ]);
+    // @ts-expect-error TODO: remove this, just for testing
+    window.decorations = highlightDecorations;
+    highlightDecorRef.current = highlightDecorations;
   }
 
   function handleEditorWillMount(monaco: Monaco) {
