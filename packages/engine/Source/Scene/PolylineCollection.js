@@ -659,7 +659,7 @@ function createCommandLists(
             );
 
             command.boundingVolume = BoundingSphere.clone(
-              bucketLocator.bucket.boundingVolumes[currentMaterial._id],
+              bucketLocator.bucket.boundingVolumes.get(currentMaterial),
               command.boundingVolume,
             );
             command.modelMatrix = modelMatrix;
@@ -714,7 +714,7 @@ function createCommandLists(
         );
 
         command.boundingVolume = BoundingSphere.clone(
-          bucketLocator.bucket.boundingVolumes[currentMaterial._id],
+          bucketLocator.bucket.boundingVolumes.get(currentMaterial),
           command.boundingVolume,
         );
         command.modelMatrix = modelMatrix;
@@ -1250,9 +1250,9 @@ function PolylineBucket(material, mode, modelMatrix) {
   this.modelMatrix = modelMatrix;
   /**
    * Mapping from material IDs to per-material bounding volumes.
-   * @type {Object<string, BoundingSphere>}
+   * @type {Map<Material, BoundingSphere>}
    */
-  this.boundingVolumes = {};
+  this.boundingVolumes = new Map();
   this._boundingVolumesMode = SceneMode.SCENE3D;
   this._boundingVolumesDirty = true;
 }
@@ -1950,12 +1950,12 @@ PolylineBucket.prototype.updateBoundingVolumes = function (mode) {
     return;
   }
 
-  /** @type {Object<string, boolean>} */
-  const isBoundingVolumeInitialized = {};
+  /** @type {Set<Material>} */
+  const hasInitializedBoundingVolume = new Set();
 
   for (let i = 0, il = this.polylines.length; i < il; i++) {
     const polyline = this.polylines[i];
-    const materialId = polyline._material._id;
+    const material = polyline._material;
 
     let boundingVolume;
 
@@ -1982,16 +1982,18 @@ PolylineBucket.prototype.updateBoundingVolumes = function (mode) {
       );
     }
 
-    if (!isBoundingVolumeInitialized[materialId]) {
-      this.boundingVolumes[materialId] = boundingVolume.clone(
-        this.boundingVolumes[materialId],
+    if (!hasInitializedBoundingVolume.has(material)) {
+      const materialBoundingVolume = boundingVolume.clone(
+        this.boundingVolumes.get(material),
       );
-      isBoundingVolumeInitialized[materialId] = true;
+      this.boundingVolumes.set(material, materialBoundingVolume);
+      hasInitializedBoundingVolume.add(material);
     } else {
+      const materialBoundingVolume = this.boundingVolumes.get(material);
       BoundingSphere.union(
         boundingVolume,
-        this.boundingVolumes[materialId],
-        this.boundingVolumes[materialId],
+        materialBoundingVolume,
+        materialBoundingVolume,
       );
     }
   }
@@ -2009,9 +2011,9 @@ PolylineBucket.prototype.updateBoundingVolumes = function (mode) {
 
     if (deepEqualsMaterial(material, batchMaterial)) {
       BoundingSphere.union(
-        this.boundingVolumes[material._id],
-        this.boundingVolumes[batchMaterial._id],
-        this.boundingVolumes[batchMaterial._id],
+        this.boundingVolumes.get(material),
+        this.boundingVolumes.get(batchMaterial),
+        this.boundingVolumes.get(batchMaterial),
       );
     } else {
       batchMaterial = material;
@@ -2020,9 +2022,9 @@ PolylineBucket.prototype.updateBoundingVolumes = function (mode) {
     previousMaterial = material;
   }
 
-  for (const materialId of Object.keys(this.boundingVolumes)) {
-    if (!isBoundingVolumeInitialized[materialId]) {
-      delete this.boundingVolumes[materialId];
+  for (const material of this.boundingVolumes.keys()) {
+    if (!hasInitializedBoundingVolume.has(material)) {
+      this.boundingVolumes.delete(material);
     }
   }
 
