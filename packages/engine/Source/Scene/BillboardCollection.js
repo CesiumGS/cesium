@@ -130,7 +130,7 @@ const attributeLocationsInstanced = {
  * @see Billboard
  * @see LabelCollection
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=billboards|Cesium Sandcastle Billboard Demo}
  *
  * @example
  * // Create a billboard collection with two billboards

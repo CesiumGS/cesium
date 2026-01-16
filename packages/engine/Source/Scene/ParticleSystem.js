@@ -52,8 +52,8 @@ const defaultImageSize = new Cartesian2(1.0, 1.0);
  * @param {number} [options.minimumMass] Sets the minimum bound for the mass of a particle in kilograms. A particle's actual mass will be chosen as a random amount above this value.
  * @param {number} [options.maximumMass] Sets the maximum mass of particles in kilograms. A particle's actual mass will be chosen as a random amount below this value.
  * @demo {@link https://cesium.com/learn/cesiumjs-learn/cesiumjs-particle-systems/|Particle Systems Tutorial}
- * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System.html&label=Showcases|Particle Systems Tutorial Demo}
- * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
+ * @demo {@link https://sandcastle.cesium.com/?id=particle-system&label=Showcases|Particle Systems Tutorial Demo}
+ * @demo {@link https://sandcastle.cesium.com/?id=particle-system-fireworks&label=Showcases|Particle Systems Fireworks Demo}
  */
 function ParticleSystem(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
