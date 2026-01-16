@@ -26,7 +26,7 @@ import {
 import Gallery from "./Gallery/Gallery.js";
 
 import { Bucket, BucketPlaceholder } from "./Bucket.tsx";
-import SandcastleEditor from "./SandcastleEditor.tsx";
+import SandcastleEditor, { SandcastleEditorRef } from "./SandcastleEditor.tsx";
 import {
   add,
   image,
@@ -97,6 +97,7 @@ function AppBarButton({
 
 function App() {
   const { settings, updateSettings } = useContext(SettingsContext);
+  const editorRef = useRef<SandcastleEditorRef>(null);
   const rightSideRef = useRef<ViewerConsoleStackRef>(null);
   const consoleCollapsedHeight = 33;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
@@ -176,6 +177,7 @@ function App() {
 
   function highlightLine(lineNumber: number) {
     console.log("would highlight line", lineNumber, "but not implemented yet");
+    editorRef.current?.highlightLine(lineNumber);
   }
 
   function resetSandcastle() {
@@ -439,6 +441,7 @@ function App() {
         <Allotment.Pane minSize={400} className="left-panel">
           {leftPanel === "editor" && (
             <SandcastleEditor
+              ref={editorRef}
               darkTheme={settings.theme === "dark"}
               onJsChange={(value: string = "") =>
                 dispatch({ type: "setCode", code: value })

@@ -27,4 +27,27 @@
     /* Monaco needs a defined height for dynamic resizing to work */
     height: 100%;
   }
+  .myInlineDecoration {
+    color: red !important;
+    cursor: pointer;
+    text-decoration: underline;
+    font-weight: bold;
+    font-style: oblique;
+  }
+
+  .myLineDecoration {
+    background: lightblue;
+    width: 5px !important;
+    margin-left: 3px;
+  }
+
+  .highlight {
+    background: rgba(100, 0, 255, 0.5);
+  }
+  .highlight-2 {
+    background: lightblue;
+  }
+  .highlight-3 {
+    background: lightgreen;
+  }
 }
