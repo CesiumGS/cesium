@@ -3022,6 +3022,12 @@ function renderEnvironment(scene, passState) {
   if (environmentState.isMoonVisible) {
     environmentState.moonCommand.execute(context, passState);
   }
+
+  // execute panorama commands
+  const panoramaCommandList = scene.frameState.panoramaCommandList;
+  for (let i = 0; i < panoramaCommandList.length; ++i) {
+    executeCommand(panoramaCommandList[i], scene, passState);
+  }
 }
 
 /**
