@@ -17,7 +17,7 @@ import CesiumInspectorViewModel from "./CesiumInspectorViewModel.js";
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene The Scene instance to use.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=cesium-inspector|Cesium Sandcastle Cesium Inspector Demo}
  */
 function CesiumInspector(container, scene) {
   //>>includeStart('debug', pragmas.debug);

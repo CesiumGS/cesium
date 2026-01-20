@@ -76,7 +76,7 @@ import ShadowMapShader from "./ShadowMapShader.js";
  *
  * @exception {DeveloperError} Only one or four cascades are supported.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=shadows|Cesium Sandcastle Shadows Demo}
  */
 function ShadowMap(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
