@@ -4,6 +4,8 @@ import Sandcastle from "Sandcastle";
 const assetId = 3830184;
 const HEIGHT_THRESHOLD = 9000;
 
+let cubeMapPano = false;
+
 const overlay = Cesium.ImageryLayer.fromProviderAsync(
   Cesium.Google2DImageryProvider.fromIonAssetId({
     assetId,
@@ -31,7 +33,7 @@ const tileset = await Cesium.createGooglePhotorealistic3DTileset({
 });
 viewer.scene.primitives.add(tileset);
 
-const apiKey = "Google Streetview API Key";
+const apiKey = "Google Streetview Tiles API Key";
 
 const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
   apiKey,
@@ -56,6 +58,83 @@ function saveCameraView(viewer) {
   savedHeading = camera.heading;
   savedPitch = camera.pitch;
   savedRoll = camera.roll;
+}
+
+function selectPanoCubeMap(position) {
+  const carto = Cesium.Cartographic.fromCartesian(position);
+
+  const panoLat = Cesium.Math.toDegrees(carto.latitude);
+  const panoLng = Cesium.Math.toDegrees(carto.longitude);
+  const height = carto.height;
+  const pos = [panoLat, panoLng]; //lat,lng Aukland
+  const posString = pos.join(",");
+  const posObj = Cesium.Cartesian3.fromDegrees(pos[1], pos[0], 0);
+
+  const baseUrl = "https://maps.googleapis.com/maps/api/streetview";
+  function pUrl(h, p) {
+    const r = new Cesium.Resource({
+      url: baseUrl,
+      queryParameters: {
+        size: "600x600",
+        location: posString,
+        heading: h,
+        pitch: p,
+        key: "Google Streetview API Key",
+      },
+    });
+    return r.url;
+  }
+
+  const positiveX = pUrl(0, 0);
+  const negativeX = pUrl(180, 0);
+  const positiveZ = pUrl(270, 0);
+  const negativeZ = pUrl(90, 0);
+  const positiveY = pUrl(-90, -90);
+  const negativeY = pUrl(-90, 90);
+
+  const cityPano = new Cesium.CubeMapPanorama({
+    sources: {
+      positiveX,
+      negativeX,
+      positiveY,
+      negativeY,
+      positiveZ,
+      negativeZ,
+    },
+  });
+
+  viewer.scene.primitives.add(cityPano);
+
+  Cesium.Transforms.northDownEastToFixedFrame =
+    Cesium.Transforms.localFrameToFixedFrameGenerator("north", "down");
+
+  Cesium.Transforms.computeTemeToPseudoFixedMatrix = (time, result) =>
+    Cesium.Matrix4.getMatrix3(
+      Cesium.Transforms.northDownEastToFixedFrame(
+        posObj,
+        Cesium.Ellipsoid.default,
+      ),
+      result,
+    );
+
+  const lookPosition = Cesium.Cartesian3.fromDegrees(
+    panoLng,
+    panoLat,
+    height + 2,
+  );
+
+  viewer.scene.camera.lookAt(
+    lookPosition,
+    new Cesium.HeadingPitchRange(
+      Cesium.Math.toRadians(-90), // heading
+      0, // pitch
+      2, // small offset to allow rotation
+    ),
+  );
+  viewer.scene.screenSpaceCameraController.enableZoom = false;
+  overlay.show = false;
+  disablePicking();
+  viewer.scene.globe.show = false;
 }
 
 function selectPano(position) {
@@ -119,7 +198,11 @@ function enablePicking() {
     saveCameraView(viewer);
     position = viewer.scene.pickPosition(click.position);
     if (Cesium.defined(position)) {
-      selectPano(position);
+      if (cubeMapPano) {
+        selectPanoCubeMap(position);
+      } else {
+        selectPano(position);
+      }
     }
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
@@ -228,3 +311,7 @@ viewer.camera.changed.addEventListener(() => {
 });
 
 showTopModal("Zoom in closer to select Streetview imagery");
+
+Sandcastle.addToggleButton("Cube Map Pano", cubeMapPano, function (checked) {
+  cubeMapPano = checked;
+});
