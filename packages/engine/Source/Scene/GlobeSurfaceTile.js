@@ -42,6 +42,8 @@ function GlobeSurfaceTile() {
   this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
   this.sdfTexture = undefined;
+  this.gpuLookupTexture = undefined;
+  this.gridCellIndices = undefined;
 
   this.terrainData = undefined;
   this.vertexArray = undefined;
@@ -150,6 +152,11 @@ GlobeSurfaceTile.prototype.freeResources = function () {
   if (defined(this.sdfTexture)) {
     this.sdfTexture.destroy();
     this.sdfTexture = undefined;
+  }
+
+  if (defined(this.gpuLookupTexture)) {
+    this.gpuLookupTexture.destroy();
+    this.gpuLookupTexture = undefined;
   }
 
   this.terrainData = undefined;
@@ -608,6 +615,16 @@ function processTerrainStateMachine(
       createSdfTextureIfNeeded(frameState.context, surfaceTile);
     }
   }
+
+  if (
+    surfaceTile.terrainState >= TerrainState.RECEIVED &&
+    surfaceTile.gpuLookupTexture === undefined
+  ) {
+    const terrainData = surfaceTile.terrainData;
+    if (terrainData.gpuLookup !== undefined) {
+      createGpuLookupTextureIfNeeded(frameState.context, surfaceTile);
+    }
+  }
 }
 
 function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
@@ -973,6 +990,42 @@ function createSdfTextureIfNeeded(context, surfaceTile) {
   });
 
   surfaceTile.sdfTexture = texture;
+}
+
+function createGpuLookupTextureIfNeeded(context, surfaceTile) {
+  const gpuLookup = surfaceTile.terrainData.gpuLookup;
+
+  if (!defined(gpuLookup)) {
+    return;
+  }
+
+  const geoArray = gpuLookup[0];
+  const ltextWidth = gpuLookup[1];
+  const ltextureHeight = gpuLookup[2];
+  const gridCellIndices = gpuLookup[3];
+
+  const sampler = new Sampler({
+    wrapS: TextureWrap.CLAMP_TO_EDGE,
+    wrapT: TextureWrap.CLAMP_TO_EDGE,
+    minificationFilter: TextureMinificationFilter.NEAREST,
+    magnificationFilter: TextureMagnificationFilter.NEAREST,
+  });
+
+  const texture = Texture.create({
+    context: context,
+    pixelFormat: PixelFormat.RGBA,
+    pixelDatatype: PixelDatatype.FLOAT,
+    source: {
+      width: ltextWidth,
+      height: ltextureHeight,
+      arrayBufferView: geoArray,
+    },
+    sampler: sampler,
+    flipY: false,
+  });
+
+  surfaceTile.gpuLookupTexture = texture;
+  surfaceTile.gridCellIndices = gridCellIndices;
 }
 
 GlobeSurfaceTile.prototype._findAncestorTileWithTerrainData = function (tile) {

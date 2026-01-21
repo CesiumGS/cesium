@@ -59,6 +59,7 @@ import TerrainMesh from "./TerrainMesh.js";
  * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
  * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
  * @param {Object} [options.sdf] The object containing SDF values.
+ * @param {Object} [options.gpuLookup] The object containing GPU lookup values.
  * @param {Credit[]} [options.credits] Array of credits for this tile.
  *
  *
@@ -179,6 +180,7 @@ function QuantizedMeshTerrainData(options) {
   this._createdByUpsampling = options.createdByUpsampling ?? false;
   this._waterMask = options.waterMask;
   this._sdf = options.sdf;
+  this._gpuLookup = options.gpuLookup;
 
   this._mesh = undefined;
 }
@@ -210,6 +212,12 @@ Object.defineProperties(QuantizedMeshTerrainData.prototype, {
   sdf: {
     get: function () {
       return this._sdf;
+    },
+  },
+
+  gpuLookup: {
+    get: function () {
+      return this._gpuLookup;
     },
   },
 
