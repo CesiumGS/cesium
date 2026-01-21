@@ -111,6 +111,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   const applySplit = options.applySplit;
   const hasWaterMask = options.hasWaterMask;
   const hasSdf = options.hasSdf;
+  const hasGpuLookup = options.hasGpuLookup;
   const showReflectiveOcean = options.showReflectiveOcean;
   const showOceanWaves = options.showOceanWaves;
   const enableLighting = options.enableLighting;
@@ -192,8 +193,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     (colorToAlpha << 27) |
     (hasGeodeticSurfaceNormals << 28) |
     (hasExaggeration << 29) |
-    (showUndergroundColor << 30) |
-    (hasSdf << 31);
+    (hasSdf << 30) |
+    (hasGpuLookup << 31);
 
   let currentClippingShaderState = 0;
   if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -286,6 +287,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     }
     if (hasSdf) {
       fs.defines.push("HAS_SDF");
+    }
+    if (hasGpuLookup) {
+      fs.defines.push("HAS_GPU_LOOKUP");
     }
     if (showReflectiveOcean) {
       fs.defines.push("SHOW_REFLECTIVE_OCEAN");

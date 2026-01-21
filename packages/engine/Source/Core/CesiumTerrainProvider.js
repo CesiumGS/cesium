@@ -1,6 +1,7 @@
 import AttributeCompression from "./AttributeCompression.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
+import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import Frozen from "./Frozen.js";
@@ -23,6 +24,7 @@ import TerrainProvider from "./TerrainProvider.js";
 import TileAvailability from "./TileAvailability.js";
 import TileProviderError from "./TileProviderError.js";
 import SDF from "./sdf.js";
+import geojsonToArrayInGrid from "./geoLookup.js";
 
 function LayerInformation(layer) {
   this.resource = layer.resource;
@@ -601,6 +603,7 @@ function createQuantizedMeshTerrainData(
   provider,
   buffer,
   sdf,
+  gpuLookup,
   level,
   x,
   y,
@@ -843,6 +846,7 @@ function createQuantizedMeshTerrainData(
     childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
     waterMask: waterMaskBuffer,
     sdf: sdf,
+    gpuLookup: gpuLookup,
     credits: provider._tileCredits,
   });
 }
@@ -949,13 +953,13 @@ function requestGeoJson(provider, rootId, level, x, y, terrainY) {
     .then(function (geojson) {
       const results = {};
 
+      const rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
+      const features = geojson.features;
+
       if (window.sdf) {
         const width = 256;
         const height = 256;
 
-        const rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
-
-        const features = geojson.features;
         const [sdfDistancesArray, sdfFeatureIdsArray] = SDF.generateSDFSweep(
           rectangle,
           features,
@@ -969,6 +973,20 @@ function requestGeoJson(provider, rootId, level, x, y, terrainY) {
           distances: sdfDistancesArray,
           featureIds: sdfFeatureIdsArray,
         };
+      }
+
+      if (window.gpuLookup) {
+        const minX = CesiumMath.toDegrees(rectangle.west);
+        const minY = CesiumMath.toDegrees(rectangle.south);
+        const maxX = CesiumMath.toDegrees(rectangle.east);
+        const maxY = CesiumMath.toDegrees(rectangle.north);
+
+        results.gpuLookup = geojsonToArrayInGrid(features, [
+          minX,
+          minY,
+          maxX,
+          maxY,
+        ]);
       }
 
       return results;
@@ -1079,6 +1097,7 @@ async function requestTileGeometry(provider, x, y, level, layerToUse, request) {
     const results = await Promise.all(promises);
     const buffer = results[0];
     const sdf = results[1]?.sdf;
+    const gpuLookup = results[1]?.gpuLookup;
 
     if (!defined(buffer)) {
       return Promise.reject(new RuntimeError("Mesh buffer doesn't exist."));
@@ -1090,6 +1109,7 @@ async function requestTileGeometry(provider, x, y, level, layerToUse, request) {
       provider,
       buffer,
       sdf,
+      gpuLookup,
       level,
       x,
       y,

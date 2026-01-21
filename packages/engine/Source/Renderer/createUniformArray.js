@@ -354,6 +354,11 @@ function UniformArrayInt(gl, activeUniform, uniformName, locations) {
 
 UniformArrayInt.prototype.set = function () {
   const value = this.value;
+
+  if (!defined(value)) {
+    return;
+  }
+
   const length = value.length;
   const arraybuffer = this._value;
   let changed = false;
