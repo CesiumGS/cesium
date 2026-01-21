@@ -21,6 +21,7 @@ import SkyBoxVS from "../Shaders/SkyBoxVS.js";
 import BlendingState from "./BlendingState.js";
 import SceneMode from "./SceneMode.js";
 import Pass from "../Renderer/Pass.js";
+import Credit from "../Core/Credit.js";
 
 /**
  * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.
@@ -35,6 +36,7 @@ import Pass from "../Renderer/Pass.js";
  * @param {object} options Object with the following properties:
  * @param {object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
  * @param {boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {Credit|string} [options.credit] A credit for the panorama, which is displayed on the canvas.
  *
  *
  * @example
@@ -87,7 +89,43 @@ function CubeMapPanorama(options) {
   this._useHdr = undefined;
   this._hasError = false;
   this._error = undefined;
+
+  // Credit specified by the user.
+  let credit = options.credit;
+  if (typeof credit === "string") {
+    credit = new Credit(credit);
+  }
+  this._credit = credit;
 }
+
+Object.defineProperties(CubeMapPanorama.prototype, {});
+
+/**
+ * Gets the source images for the panorama
+ *
+ * @returns {object} The source images for the panorama.
+ */
+CubeMapPanorama.prototype.getSources = function () {
+  return this._sources;
+};
+
+/**
+ * Gets the transform for the panorama
+ *
+ * @returns {Matrix4} The transform for the panorama.
+ */
+CubeMapPanorama.prototype.getTransform = function () {
+  return this._transform;
+};
+
+/**
+ * Gets the credits for the panorama
+ *
+ * @returns {Credit[]} The credits for the panorama.
+ */
+CubeMapPanorama.prototype.getCredits = function () {
+  return this.credit;
+};
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -226,6 +264,11 @@ CubeMapPanorama.prototype.update = function (frameState, useHdr) {
 
   if (!defined(this._cubeMap)) {
     return undefined;
+  }
+
+  if (this.show) {
+    const creditDisplay = frameState.creditDisplay;
+    creditDisplay.addCreditToNextFrame(this._credit);
   }
 
   if (this._returnCommand) {

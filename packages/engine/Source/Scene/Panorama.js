@@ -14,10 +14,9 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @abstract
  *
  * @see EquirectangularPanorama
- * @see SkyBoxPanorama
+ * @see CubeMapPanorama
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+ * @demo {@link https://sandcastle.cesium.com/Apps/Sandcastle2/index.html?id=google-streetview-panorama-2|Cesium Sandcastle Google Streetview Panorama}
  */
 function Panorama() {
   DeveloperError.throwInstantiationError();
@@ -56,14 +55,14 @@ Object.defineProperties(Panorama.prototype, {
   },
 });
 
-// /**
-//  * Gets the sources for the panorama
-//  *
-//  * @returns {Image[]} The source images for the panorama.
-//  */
-// Panorama.prototype.getSources = function () {
-//   DeveloperError.throwInstantiationError();
-// };
+/**
+ * Gets the sources for the panorama
+ *
+ * @returns {object} The source images for the panorama.
+ */
+Panorama.prototype.getSources = function () {
+  DeveloperError.throwInstantiationError();
+};
 
 /**
  * Gets the transform for the panorama

@@ -1,6 +1,7 @@
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import Credit from "../Core/Credit.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -17,7 +18,7 @@ import VertexFormat from "../Core/VertexFormat.js";
  *
  * Initialization options for the EquirectangularPanorama constructor
  *
- * @property {object} image 2:1 equirectangular image path
+ * @property {object} image 2:1 360 degrees equirectangular image path
  * @property {Matrix4} [transform=Matrix4.IDENTITY]  The 4x4 transformation matrix to place the panorama relative to the globe.
  * @property {number} [radius=100000.0] The radius of the panorama in meters.
  * @param {number} [options.minimumClock=0.0] The minimum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
@@ -26,6 +27,7 @@ import VertexFormat from "../Core/VertexFormat.js";
  * @param {number} [options.maximumCone=PI] The maximum angle measured from the positive z-axis and toward the negative z-axis.
  * @param {number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
  * @param {number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices. * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+ * @param {Credit|string} [options.credit] A credit for the panorama, which is displayed on the canvas.
  */
 
 /**
@@ -54,6 +56,13 @@ function EquirectangularPanorama(options) {
     throw new DeveloperError("options.image is required.");
   }
   //>>includeEnd('debug');
+
+  // Credit specified by the user.
+  let credit = options.credit;
+  if (typeof credit === "string") {
+    credit = new Credit(credit);
+  }
+  this._credit = credit;
 
   this._radius = options.radius || 100000.0;
   this._image = options.image;
@@ -86,7 +95,7 @@ function EquirectangularPanorama(options) {
     fabric: {
       type: "Image",
       uniforms: {
-        image: this._image, // 2:1 equirectangular image path
+        image: this._image, // 2:1 360 degrees equirectangular image path
         repeat: new Cartesian2(this._repeatHorizontal, this._repeatVertical), // flip horizontally
       },
     },
@@ -106,6 +115,7 @@ function EquirectangularPanorama(options) {
         },
       },
     }),
+    credit: this._credit,
   });
 
   return primitive;
@@ -113,14 +123,14 @@ function EquirectangularPanorama(options) {
 
 Object.defineProperties(EquirectangularPanorama.prototype, {});
 
-// /**
-//  * Gets the sources for the panorama
-//  *
-//  * @returns {Image[]} The source images for the panorama.
-//  */
-// EquirectangularPanorama.prototype.getSources = function () {
-//   return this._image;
-// };
+/**
+ * Gets the source image for the panorama
+ *
+ * @returns {object} The source image for the panorama.
+ */
+EquirectangularPanorama.prototype.getSources = function () {
+  return this._image;
+};
 
 /**
  * Gets the transform for the panorama
@@ -138,6 +148,10 @@ EquirectangularPanorama.prototype.getTransform = function () {
  */
 EquirectangularPanorama.prototype.getCredits = function () {
   return this.credit;
+};
+
+EquirectangularPanorama.prototype.update = function (frameState) {
+  console.log("");
 };
 
 // Exposed for tests
