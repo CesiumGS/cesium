@@ -11,7 +11,7 @@ import I3SBuildingSceneLayerExplorerViewModel from "./I3SBuildingSceneLayerExplo
  * @param {string} containerId The DOM element ID that will contain the widget.
  * @param {I3SDataProvider} i3sProvider I3S Data provider instance.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=I3S%20Building%20Scene%20Layer.html|I3S Building Scene Layer}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=i3s-building-scene-layer|I3S Building Scene Layer}
  */
 function I3SBuildingSceneLayerExplorer(containerId, i3sProvider) {
   const container = document.getElementById(containerId);
