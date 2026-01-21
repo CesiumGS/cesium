@@ -10,6 +10,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import CesiumMath from "../Core/Math.js";
 import Transforms from "../Core/Transforms.js";
 import Frozen from "../Core/Frozen.js";
+import GoogleMaps from "../Core/GoogleMaps.js";
 
 // Maps API tile level to number of partitions in sphere
 const GOOGLE_STREETVIEW_PARTITION_REFERENCE = {
@@ -226,10 +227,13 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
 
   const canvas = await stitchBitmapsFromTileMap(tileMap);
 
+  const credit = GoogleMaps.getDefaultCredit();
+
   const panoTile = new EquirectangularPanorama({
     image: canvas,
     transform,
     repeatHorizontal: -1,
+    credit,
   });
 
   panoCollection.add(panoTile);
