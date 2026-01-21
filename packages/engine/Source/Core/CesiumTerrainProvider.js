@@ -947,29 +947,31 @@ function requestGeoJson(provider, rootId, level, x, y, terrainY) {
     },
   })
     .then(function (geojson) {
-      if (!window.sdf) {
-        return undefined;
+      const results = {};
+
+      if (window.sdf) {
+        const width = 256;
+        const height = 256;
+
+        const rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
+
+        const features = geojson.features;
+        const [sdfDistancesArray, sdfFeatureIdsArray] = SDF.generateSDFSweep(
+          rectangle,
+          features,
+          width,
+          height,
+        );
+
+        results.sdf = {
+          width: width,
+          height: height,
+          distances: sdfDistancesArray,
+          featureIds: sdfFeatureIdsArray,
+        };
       }
 
-      const width = 256;
-      const height = 256;
-
-      const rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
-
-      const features = geojson.features;
-      const [sdfDistancesArray, sdfFeatureIdsArray] = SDF.generateSDFSweep(
-        rectangle,
-        features,
-        width,
-        height,
-      );
-
-      return {
-        width: width,
-        height: height,
-        distances: sdfDistancesArray,
-        featureIds: sdfFeatureIdsArray,
-      };
+      return results;
     })
     .catch(function (error) {
       return undefined;
@@ -1076,7 +1078,7 @@ async function requestTileGeometry(provider, x, y, level, layerToUse, request) {
   try {
     const results = await Promise.all(promises);
     const buffer = results[0];
-    const sdf = results[1];
+    const sdf = results[1]?.sdf;
 
     if (!defined(buffer)) {
       return Promise.reject(new RuntimeError("Mesh buffer doesn't exist."));
