@@ -5,7 +5,7 @@ const viewer = new Cesium.Viewer("cesiumContainer");
 
 viewer.scene.terrainProvider = false;
 
-const apiKey = "Google Maps API Key";
+const googleStreetViewStaticApiKey = "key for Google Street View Static API";
 
 const setTransform = (posObj) => {
   Cesium.Transforms.northDownEastToFixedFrame =
@@ -43,7 +43,7 @@ const cubeMapFromGoogle = (pos) => {
         location: posString,
         heading: h,
         pitch: p,
-        key: apiKey,
+        key: googleStreetViewStaticApiKey,
       },
     });
     return r.url;
