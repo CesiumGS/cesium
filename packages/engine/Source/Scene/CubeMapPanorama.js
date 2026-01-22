@@ -18,10 +18,12 @@ import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import SkyBoxFS from "../Shaders/SkyBoxFS.js";
 import SkyBoxVS from "../Shaders/SkyBoxVS.js";
+import CubeMapPanoramaVS from "../Shaders/CubeMapPanoramaVS.js";
 import BlendingState from "./BlendingState.js";
 import SceneMode from "./SceneMode.js";
 import Pass from "../Renderer/Pass.js";
 import Credit from "../Core/Credit.js";
+import Transforms from "../Core/Transforms.js";
 
 /**
  * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.
@@ -66,6 +68,8 @@ function CubeMapPanorama(options) {
    */
   this.sources = options.sources;
   this._sources = undefined;
+
+  this._temeToFixedRotation = options.temeToFixedRotation ?? undefined;
 
   /**
    * Determines if the sky box will be shown.
@@ -222,6 +226,9 @@ CubeMapPanorama.prototype.update = function (frameState, useHdr) {
       u_cubeMap: function () {
         return that._cubeMap;
       },
+      u_temeToFixedRotation: function () {
+        return that._temeToFixedRotation;
+      },
     };
 
     const geometry = BoxGeometry.createGeometry(
@@ -255,7 +262,10 @@ CubeMapPanorama.prototype.update = function (frameState, useHdr) {
     });
     command.shaderProgram = ShaderProgram.fromCache({
       context: context,
-      vertexShaderSource: SkyBoxVS,
+      //vertexShaderSource: SkyBoxVS,
+      vertexShaderSource: defined(this._temeToFixedRotation)
+        ? CubeMapPanoramaVS
+        : SkyBoxVS,
       fragmentShaderSource: fs,
       attributeLocations: this._attributeLocations,
     });
@@ -339,6 +349,17 @@ CubeMapPanorama.createEarthSkyBox = function () {
       negativeZ: getDefaultSkyBoxUrl("mz"),
     },
   });
+};
+
+const scratchMatrix4 = new Matrix4();
+
+CubeMapPanorama.localNorthDownTemeRotation = function (position, ellipsoid) {
+  const generator = Transforms.localFrameToFixedFrameGenerator("north", "down");
+
+  return function (frameState, result) {
+    const m4 = generator(position, ellipsoid, scratchMatrix4);
+    return Matrix4.getMatrix3(m4, result);
+  };
 };
 
 export default CubeMapPanorama;
