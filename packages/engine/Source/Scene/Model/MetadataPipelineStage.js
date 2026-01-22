@@ -203,7 +203,7 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
   const classStatistics = statistics?.classes[classId];
 
   const propertiesArray = Object.entries(propertyTexture.properties).filter(
-    ([id, property]) => property.isGpuCompatible(),
+    ([id, property]) => property.classProperty.isGpuCompatible(),
   );
   const infoArray = new Array(propertiesArray.length);
 

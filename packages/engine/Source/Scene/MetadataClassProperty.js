@@ -11,6 +11,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import MetadataType from "./MetadataType.js";
 import MetadataComponentType from "./MetadataComponentType.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * A metadata property, as part of a {@link MetadataClass}.
@@ -1186,6 +1187,48 @@ MetadataClassProperty.valueTransformInPlace = function (
   }
 
   return values;
+};
+
+/**
+ * Determines whether this property can be stored in a texture, given the property's datatype and the number of
+ * texture channels dedicated property value.
+ *
+ * @param {Number} channelsLength The number of texture channels to pack each property value into
+ * @returns {boolean} true if the property can be stored in a texture with the given number of channels, false otherwise
+ *
+ * @private
+ */
+MetadataClassProperty.prototype.isGpuCompatible = function (channelsLength) {
+  const type = this.type;
+  const componentType = this.componentType;
+
+  if (this.isVariableLengthArray) {
+    oneTimeWarning(
+      `Property texture property "${this.id}" is a variable-length array, which is not supported.`,
+    );
+    return false;
+  }
+
+  if (type === MetadataType.STRING) {
+    oneTimeWarning(
+      `Property texture property "${this.id}" is a string type, which is not supported.`,
+    );
+    return false;
+  }
+
+  // For all other properties, make sure the components fit in the sampled channels.
+  // (Note that it's possible to treat 64-bit types as two 32-bit components, but for now that's not supported)
+  const componentCount = MetadataType.getComponentCount(type);
+  const arrayLength = this.isArray ? this.arrayLength : 1;
+  const bytesPerComponent = MetadataComponentType.getSizeInBytes(componentType);
+  if (componentCount * arrayLength * bytesPerComponent > channelsLength) {
+    oneTimeWarning(
+      `Property texture property "${this.id}" with type ${type} and component type ${componentType} does not fit into ${channelsLength} channels.`,
+    );
+    return false;
+  }
+
+  return true;
 };
 
 export default MetadataClassProperty;

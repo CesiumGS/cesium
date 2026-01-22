@@ -3067,4 +3067,159 @@ describe("Scene/MetadataClassProperty", function () {
       ]);
     });
   });
+
+  describe("isGpuCompatible", function () {
+    it("isGpuCompatible returns false for variable-length arrays and string types", function () {
+      const cases = [
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "STRING",
+            },
+          }),
+        },
+      ];
+
+      for (let i = 0; i < cases.length; i++) {
+        const numChannels = cases[i].channels.length;
+        expect(cases[i].property.isGpuCompatible(numChannels)).toBe(false);
+      }
+    });
+
+    it("isGpuCompatible returns false for properties that can't fit in 4 channels", function () {
+      const cases = [
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC4",
+              componentType: "FLOAT32",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+              array: true,
+              count: 5,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "FLOAT32",
+            },
+          }),
+        },
+      ];
+
+      for (let i = 0; i < cases.length; i++) {
+        const numChannels = cases[i].channels.length;
+        expect(cases[i].property.isGpuCompatible(numChannels)).toBe(false);
+      }
+    });
+
+    it("isGpuCompatible returns true for other types", function () {
+      const cases = [
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0, 1],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 4,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "INT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+              array: true,
+              count: 2,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 4,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+      ];
+
+      for (let i = 0; i < cases.length; i++) {
+        const numChannels = cases[i].channels.length;
+        expect(cases[i].property.isGpuCompatible(numChannels)).toBe(true);
+      }
+    });
+  });
 });
