@@ -175,7 +175,7 @@ function configureCameraFrustum(widget) {
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Widget.html|Cesium Sandcastle Cesium Widget Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=cesium-widget|Cesium Sandcastle Cesium Widget Demo}
  *
  * @example
  * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
