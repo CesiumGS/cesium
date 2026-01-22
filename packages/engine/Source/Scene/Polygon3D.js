@@ -1,0 +1,240 @@
+// @ts-check
+
+import assert from "../Core/assert.js";
+import Feature3D from "./Feature3D.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
+
+/** @import Polygon3DCollection from "./Polygon3DCollection.js"; */
+
+const { ERR_CAPACITY, ERR_RESIZE } = Feature3D;
+
+/**
+ * Polygon3D.
+ *
+ * Represented as one (1) external linear ring of four (4) or more
+ * positions, where first and last position are the same. May optionally
+ * define one or more internal linear rings ("holes") within the polygon.
+ * Stores a precomputed triangulation, including one or more triangles.
+ * Holes and triangles are stored as indices into the positions array.
+ *
+ * See: https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.6
+ */
+class Polygon3D extends Feature3D {
+  /** @type {BoundingSphere} */
+  _boundingSphere = new BoundingSphere();
+
+  static Layout = {
+    ...Feature3D.Layout,
+
+    /**
+     * Bounding sphere for polygon.
+     * @type {number}
+     */
+    BOUNDING_SPHERE: Feature3D.Layout.__BYTE_LENGTH,
+
+    /**
+     * Offset in position array to first vertex in polygon, number of VEC3 elements.
+     * @type {number}
+     */
+    POSITION_OFFSET_U32:
+      Feature3D.Layout.__BYTE_LENGTH + BoundingSphere.packedLength,
+
+    /**
+     * Count of positions (vertices) in this polygon, number of VEC3 elements.
+     * @type {number}
+     */
+    POSITION_COUNT_U32:
+      Feature3D.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 4,
+
+    /**
+     * Offset in holes array to first hole in polygon, number of integer elements.
+     * @type {number}
+     */
+    HOLE_OFFSET_U32:
+      Feature3D.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 8,
+
+    /**
+     * Count of holes (indices) in this polygon, number of integer elements.
+     * @type {number}
+     */
+    HOLE_COUNT_U32:
+      Feature3D.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 12,
+
+    /**
+     * Offset in triangles array to first triangle in polygon, number of VEC3 elements.
+     * @type {number}
+     */
+    TRIANGLE_OFFSET_U32:
+      Feature3D.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 16,
+
+    /**
+     * Count of triangles (3x uint32) in this polygon, number of VEC3 elements.
+     * @type {number}
+     */
+    TRIANGLE_COUNT_U32:
+      Feature3D.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 20,
+
+    /** @type {number} */
+    __BYTE_LENGTH:
+      Feature3D.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 24,
+  };
+
+  /////////////////////////////////////////////////////////////////////////////
+  // LIFECYCLE
+
+  /**
+   * @param {Polygon3DCollection} collection
+   * @param {number} index
+   * @param {Polygon3D} result
+   * @returns {Polygon3D}
+   * @override
+   */
+  static fromCollection(collection, index, result = new Polygon3D()) {
+    super.fromCollection(collection, index, result);
+    result._byteOffset = index * Polygon3D.Layout.__BYTE_LENGTH;
+    return result;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // GEOMETRY
+
+  /** @returns {number} */
+  getVertexCount() {
+    return this._getUint32(Polygon3D.Layout.POSITION_COUNT_U32);
+  }
+
+  /**
+   * @param {Float64Array} result
+   * return {Float64Array}
+   */
+  getPositions(result) {
+    const collection = this._collection;
+    const vertexOffset = this._getUint32(Polygon3D.Layout.POSITION_OFFSET_U32);
+    const vertexCount = this._getUint32(Polygon3D.Layout.POSITION_COUNT_U32);
+    const positionF64 = collection._positionF64;
+    for (let i = 0; i < vertexCount; i++) {
+      result[i * 3] = positionF64[(vertexOffset + i) * 3];
+      result[i * 3 + 1] = positionF64[(vertexOffset + i) * 3 + 1];
+      result[i * 3 + 2] = positionF64[(vertexOffset + i) * 3 + 2];
+    }
+    return result;
+  }
+
+  /** @param {Float64Array} positions */
+  setPositions(positions) {
+    const collection = this._collection;
+    const vertexOffset = this._getUint32(Polygon3D.Layout.POSITION_OFFSET_U32);
+    const srcCount = this._getUint32(Polygon3D.Layout.POSITION_COUNT_U32);
+    const dstCount = positions.length / 3;
+    const collectionCount = collection._positionCount + dstCount - srcCount;
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(srcCount === dstCount || this._isResizable(), ERR_RESIZE);
+    assert(collectionCount <= collection._positionCountMax, ERR_CAPACITY);
+    //>>includeEnd('debug');
+
+    collection._positionCount = collectionCount;
+    this._setUint32(Polygon3D.Layout.POSITION_COUNT_U32, dstCount);
+
+    const positionF64 = collection._positionF64;
+    for (let i = 0; i < dstCount; i++) {
+      positionF64[(vertexOffset + i) * 3] = positions[i * 3];
+      positionF64[(vertexOffset + i) * 3 + 1] = positions[i * 3 + 1];
+      positionF64[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
+    }
+  }
+
+  /** @returns {number} */
+  getHoleCount() {
+    return this._getUint32(Polygon3D.Layout.HOLE_COUNT_U32);
+  }
+
+  /**
+   * @param {Uint32Array} result
+   * @returns {Uint32Array}
+   */
+  getHoles(result) {
+    const collection = /** @type {Polygon3DCollection} */ (this._collection);
+    const holeOffset = this._getUint32(Polygon3D.Layout.HOLE_OFFSET_U32);
+    const holeCount = this._getUint32(Polygon3D.Layout.HOLE_COUNT_U32);
+    const holeIndexU32 = collection._holeIndexU32;
+    for (let i = 0; i < holeCount; i++) {
+      result[i] = holeIndexU32[holeOffset + i];
+    }
+    return result;
+  }
+
+  /** @param {Uint32Array} holes */
+  setHoles(holes) {
+    const collection = /** @type {Polygon3DCollection} */ (this._collection);
+    const holeOffset = this._getUint32(Polygon3D.Layout.HOLE_OFFSET_U32);
+    const srcCount = this._getUint32(Polygon3D.Layout.HOLE_COUNT_U32);
+    const dstCount = holes.length;
+    const collectionCount = collection._holeCount + dstCount - srcCount;
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(srcCount === dstCount || this._isResizable(), ERR_RESIZE);
+    assert(collectionCount <= collection._holeCountMax, ERR_CAPACITY);
+    //>>includeEnd('debug');
+
+    collection._holeCount = collectionCount;
+    this._setUint32(Polygon3D.Layout.HOLE_COUNT_U32, dstCount);
+
+    const holeIndexU32 = collection._holeIndexU32;
+    for (let i = 0; i < dstCount; i++) {
+      holeIndexU32[holeOffset + i] = holes[i];
+    }
+  }
+
+  /** @returns {number} */
+  getTriangleCount() {
+    return this._getUint32(Polygon3D.Layout.TRIANGLE_COUNT_U32);
+  }
+
+  /**
+   * @param {Uint32Array} result
+   * @returns {Uint32Array}
+   */
+  getTriangles(result) {
+    const collection = /** @type {Polygon3DCollection} */ (this._collection);
+    const triangleOffset = this._getUint32(
+      Polygon3D.Layout.TRIANGLE_OFFSET_U32,
+    );
+    const triangleCount = this._getUint32(Polygon3D.Layout.TRIANGLE_COUNT_U32);
+    const indices = collection._triangleIndexU32;
+    for (let i = 0; i < triangleCount; i++) {
+      result[i * 3] = indices[(triangleOffset + i) * 3];
+      result[i * 3 + 1] = indices[(triangleOffset + i) * 3 + 1];
+      result[i * 3 + 2] = indices[(triangleOffset + i) * 3 + 2];
+    }
+    return result;
+  }
+
+  /** @param {Uint32Array} indices */
+  setTriangles(indices) {
+    const collection = /** @type {Polygon3DCollection} */ (this._collection);
+    const triangleOffset = this._getUint32(
+      Polygon3D.Layout.TRIANGLE_OFFSET_U32,
+    );
+    const srcCount = this._getUint32(Polygon3D.Layout.TRIANGLE_COUNT_U32);
+    const dstCount = indices.length / 3;
+    const collectionCount = collection._triangleCount + dstCount - srcCount;
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(srcCount === dstCount || this._isResizable(), ERR_RESIZE);
+    assert(collectionCount <= collection._triangleCountMax, ERR_CAPACITY);
+    //>>includeEnd('debug');
+
+    collection._triangleCount += dstCount - srcCount;
+    this._setUint32(Polygon3D.Layout.TRIANGLE_COUNT_U32, dstCount);
+
+    const dstIndices = collection._triangleIndexU32;
+    for (let i = 0; i < dstCount; i++) {
+      dstIndices[(triangleOffset + i) * 3] = indices[i * 3];
+      dstIndices[(triangleOffset + i) * 3 + 1] = indices[i * 3 + 1];
+      dstIndices[(triangleOffset + i) * 3 + 2] = indices[i * 3 + 2];
+    }
+  }
+}
+
+export default Polygon3D;
