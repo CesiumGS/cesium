@@ -2235,7 +2235,7 @@ Primitive.prototype.update = function (frameState) {
     twoPasses,
   );
 
-  if (this.show) {
+  if (this.show && defined(this.credit)) {
     const creditDisplay = frameState.creditDisplay;
     creditDisplay.addCreditToNextFrame(this._credit);
   }
