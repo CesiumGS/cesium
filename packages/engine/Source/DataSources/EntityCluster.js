@@ -30,7 +30,7 @@ import KDBush from "kdbush";
  * @alias EntityCluster
  * @constructor
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=clustering|Cesium Sandcastle Clustering Demo}
  */
 function EntityCluster(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
