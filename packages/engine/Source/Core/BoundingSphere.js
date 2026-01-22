@@ -350,7 +350,7 @@ BoundingSphere.fromRectangle3D = function (
  * algorithms, a naive algorithm and Ritter's algorithm. The smaller of the two spheres is used to
  * ensure a tight fit.
  *
- * @param {number[]} [positions] An array of points that the bounding sphere will enclose.  Each point
+ * @param {number[]|TypedArray} [positions] An array of points that the bounding sphere will enclose.  Each point
  *        is formed from three elements in the array in the order X, Y, Z.
  * @param {Cartesian3} [center=Cartesian3.ZERO] The position to which the positions are relative, which need not be the
  *        origin of the coordinate system.  This is useful when the positions are to be used for
