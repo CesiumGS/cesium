@@ -40,7 +40,7 @@ import Credit from "../Core/Credit.js";
  *
  *
  * @example
- * scene.skyBox = new Cesium.CubeMapPanorama({
+ * scene.primitives.add(new Cesium.CubeMapPanorama({
  *   sources : {
  *     positiveX : 'skybox_px.png',
  *     negativeX : 'skybox_nx.png',
@@ -49,7 +49,7 @@ import Credit from "../Core/Credit.js";
  *     positiveZ : 'skybox_pz.png',
  *     negativeZ : 'skybox_nz.png'
  *   }
- * });
+ * }));
  *
  * @see Scene#skyBox
  * @see Transforms.computeTemeToPseudoFixedMatrix

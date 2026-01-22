@@ -41,9 +41,9 @@ import VertexFormat from "../Core/VertexFormat.js";
  *
  * @example
  * // Equirectangular panorama
- * const panorama = new Cesium.EquirectangularPanorama({
+ * scene.primitives.add(new Cesium.EquirectangularPanorama({
  *     image: 'path/to/image',
- * });
+ * }));
  *
  * @see {@link https://docs.mapbox.com/api/maps/raster-tiles/}
  * @see {@link https://docs.mapbox.com/api/accounts/tokens/}
