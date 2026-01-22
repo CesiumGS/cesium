@@ -46,6 +46,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @param {string} options.cesiumVersion CesiumJS version to display in the top right
  * @param {string} [options.commitSha] Optional commit hash to display in the top right of the application
  * @param {ImportList} options.imports Set of imports to add to the import map for the iframe and standalone html pages. These paths should match the URL where it can be accessed within the current environment.
+ * @param {string} [options.outerOrigin="http://localhost:8080"] Origin of the outer application
+ * @param {string} [options.innerOrigin] Origin of the inner viewer bucket. Defaults to the outerOrigin if not provided
  * @param {{src: string, dest: string}[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolidate files for a singular static deployment (ie during production). Source paths should be absolute, dest paths should be relative to the page root. It is up to you to ensure these files exist BEFORE building sandcastle.
  */
 export function createSandcastleConfig({
@@ -55,6 +57,8 @@ export function createSandcastleConfig({
   cesiumVersion,
   commitSha,
   imports,
+  outerOrigin = "http://localhost:8080",
+  innerOrigin,
   copyExtraFiles = [],
 }) {
   if (!cesiumVersion || cesiumVersion === "") {
@@ -93,7 +97,7 @@ export function createSandcastleConfig({
   };
   /** @type {Object<string, string>} */
   const typePaths = {
-    Sandcastle: "../templates/Sandcastle.d.ts",
+    Sandcastle: "templates/Sandcastle.d.ts",
   };
   for (const [key, value] of Object.entries(imports)) {
     importMap[key] = value.path;
@@ -105,6 +109,8 @@ export function createSandcastleConfig({
     __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(typePaths),
     __CESIUM_VERSION__: JSON.stringify(`Cesium ${cesiumVersion}`),
     __COMMIT_SHA__: JSON.stringify(commitSha ?? undefined),
+    __OUTER_ORIGIN__: JSON.stringify(outerOrigin),
+    __INNER_ORIGIN__: JSON.stringify(innerOrigin ?? outerOrigin),
   };
 
   const plugins = config.plugins ?? [];

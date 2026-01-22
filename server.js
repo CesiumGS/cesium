@@ -436,6 +436,27 @@ const throttle = (callback) => {
     process.exit(0);
   });
 
+  const sandcastleApp = express();
+  // TODO: these should be hooked up to the same self-rebuilding bundles as the main server so devs can test their changes
+  sandcastleApp.use(express.static("./Apps/Sandcastle2"));
+  sandcastleApp.use("/Build", express.static("./Build"));
+  sandcastleApp.use("/Source", express.static("./Source"));
+  sandcastleApp.use(
+    "/packages/engine/Build/Unminified",
+    express.static("./packages/engine/Build/Unminified"),
+  );
+  sandcastleApp.use(
+    "/packages/widgets/Build/Unminified",
+    express.static("./packages/widgets/Build/Unminified"),
+  );
+
+  const sandcastleServer = sandcastleApp.listen(8081, "localhost", function () {
+    console.log(
+      "Sandcastle viewer server running locally.  Connect to http://localhost:%d/",
+      sandcastleServer.address().port,
+    );
+  });
+
   let isFirstSig = true;
   process.on("SIGINT", function () {
     if (isFirstSig) {

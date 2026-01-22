@@ -1,5 +1,5 @@
 {
-  "include": ["./Sandcastle.ts"],
+  "include": ["./*.ts", "../vite-env.d.ts"],
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,

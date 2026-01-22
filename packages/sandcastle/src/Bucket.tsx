@@ -3,13 +3,27 @@ import { embedInSandcastleTemplate } from "./Helpers";
 import "./Bucket.css";
 import { ConsoleMessageType } from "./ConsoleMirror";
 
+type ReactDevToolsMessage = {
+  source: "react-devtools-bridge" | "react-devtools-content-script";
+};
+
+function isReactMessage(
+  data: SandcastleMessage | ReactDevToolsMessage,
+): data is ReactDevToolsMessage {
+  return "source" in data && data.source.includes("react-devtools");
+}
+
 type SandcastleMessage =
   | { type: "reload" }
+  | { type: "bucketReady" }
   | { type: "consoleClear" }
   | { type: "consoleLog"; log: string }
   | { type: "consoleWarn"; warn: string }
   | { type: "consoleError"; error: string; lineNumber?: number; url?: string }
   | { type: "highlight"; highlight: number };
+
+const INNER_ORIGIN = __INNER_ORIGIN__;
+const bucketUrl = `${__INNER_ORIGIN__}/templates/bucket.html`;
 
 export function Bucket({
   code,
@@ -146,16 +160,38 @@ export function Bucket({
       // When we want to run sandcastle code we just need to reload the bucket
       // it sends a message when loaded which triggers the message handler below
       // to load the actual code
-      bucket.current.contentWindow.location.reload();
+      // TODO: this should probably be using the IframeBridge
+      bucket.current.contentWindow.postMessage(
+        {
+          type: "reload",
+        },
+        INNER_ORIGIN,
+      );
     }
     lastRunNumber.current = runNumber;
   }, [code, html, runNumber]);
 
   useEffect(() => {
-    const messageHandler = function (e: MessageEvent<SandcastleMessage>) {
+    const messageHandler = function (
+      e: MessageEvent<SandcastleMessage | ReactDevToolsMessage>,
+    ) {
+      const data = e.data;
+      if (isReactMessage(data)) {
+        // filter all of these, we don't care
+        return;
+      }
+
+      if (e.origin !== INNER_ORIGIN) {
+        console.log(`App message: ignoring bad origin - ${e.origin}`, e);
+        // ignore messages from origins we don't recognize
+        return;
+      }
+
+      console.log("App recieved message", e);
+
       // The iframe (bucket.html) sends this message on load.
       // This triggers the code to be injected into the iframe.
-      if (e.data.type === "reload") {
+      if (data.type === "reload") {
         if (!bucket.current || !bucket.current.contentDocument) {
           // Reload fired, bucket not specified yet.
           return;
@@ -168,30 +204,44 @@ export function Bucket({
           // into the iframe, causing the demo to run there.
           activateBucketScripts(bucket.current, code, html);
         }
-      } else if (e.data.type === "consoleClear") {
+      } else if (data.type === "bucketReady") {
+        // Firefox line numbers are zero-based, not one-based.
+        const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
+
+        resetConsole();
+        // TODO: this should probably be using the IframeBridge
+        bucket.current?.contentWindow?.postMessage(
+          {
+            type: "runCode",
+            code: embedInSandcastleTemplate(code, isFirefox),
+            html,
+          },
+          INNER_ORIGIN,
+        );
+      } else if (data.type === "consoleClear") {
         resetConsole({ showMessage: true });
-      } else if (e.data.type === "consoleLog") {
+      } else if (data.type === "consoleLog") {
         // Console log messages from the iframe display in Sandcastle.
-        appendConsole("log", e.data.log);
-      } else if (e.data.type === "consoleError") {
+        appendConsole("log", data.log);
+      } else if (data.type === "consoleError") {
         // Console error messages from the iframe display in Sandcastle
-        let errorMsg = e.data.error;
-        const lineNumber = e.data.lineNumber;
+        let errorMsg = data.error;
+        const lineNumber = data.lineNumber;
         if (lineNumber) {
           errorMsg += ` (on line ${lineNumber}`;
 
-          if (e.data.url) {
-            errorMsg += ` of ${e.data.url}`;
+          if (data.url) {
+            errorMsg += ` of ${data.url}`;
           }
           errorMsg += ")";
         }
         appendConsole("error", errorMsg);
-      } else if (e.data.type === "consoleWarn") {
+      } else if (data.type === "consoleWarn") {
         // Console warning messages from the iframe display in Sandcastle.
-        appendConsole("warn", e.data.warn);
-      } else if (e.data.type === "highlight") {
+        appendConsole("warn", data.warn);
+      } else if (data.type === "highlight") {
         // Hovering objects in the embedded Cesium window.
-        highlightLine(e.data.highlight);
+        highlightLine(data.highlight);
       }
     };
     window.addEventListener("message", messageHandler);
@@ -210,7 +260,7 @@ export function Bucket({
       <iframe
         ref={bucket}
         id="bucketFrame"
-        src="templates/bucket.html"
+        src={bucketUrl}
         className="fullFrame"
         allowFullScreen
       ></iframe>

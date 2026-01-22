@@ -55,6 +55,9 @@ export async function buildSandcastleApp({
       basePath: "./",
       cesiumBaseUrl: "/Build/CesiumUnminified",
       cesiumVersion: version,
+      // TODO: gotta figure out what these should be
+      // outerOrigin: "http://localhost:8080",
+      // innerOrigin: "http://localhost:8081",
       imports: {
         cesium: {
           path: "/js/Cesium.js",
@@ -101,6 +104,8 @@ export async function buildSandcastleApp({
       outDir: join(__dirname, "../Apps/Sandcastle2"),
       basePath: "./",
       cesiumBaseUrl: "../../../Build/CesiumUnminified",
+      outerOrigin: "http://localhost:8080",
+      innerOrigin: "http://localhost:8081",
       cesiumVersion: version,
       commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
       imports: {
