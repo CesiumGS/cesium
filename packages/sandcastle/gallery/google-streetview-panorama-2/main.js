@@ -4,6 +4,9 @@ import Sandcastle from "Sandcastle";
 const assetId = 3830184;
 const HEIGHT_THRESHOLD = 9000;
 
+const googleStreetViewStaticApiKey = "key for Google Street View Static API";
+const googleMapTilesApiKey = "key for Google Map Tiles API";
+
 let cubeMapPano = false;
 
 const overlay = Cesium.ImageryLayer.fromProviderAsync(
@@ -33,10 +36,8 @@ const tileset = await Cesium.createGooglePhotorealistic3DTileset({
 });
 viewer.scene.primitives.add(tileset);
 
-const apiKey = "Google Streetview Tiles API Key";
-
 const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
-  apiKey,
+  apiKey: googleMapTilesApiKey,
 });
 
 let savedLng = 0;
@@ -79,7 +80,7 @@ function selectPanoCubeMap(position) {
         location: posString,
         heading: h,
         pitch: p,
-        key: "Google Streetview API Key",
+        key: googleStreetViewStaticApiKey,
       },
     });
     return r.url;

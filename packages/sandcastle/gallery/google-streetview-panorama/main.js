@@ -18,10 +18,10 @@ try {
           ${error}`);
 }
 
-const apiKey = "Google Streetview API Key";
+const googleMapTilesApiKey = "Google Map Tiles API Key";
 
 const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
-  apiKey,
+  apiKey: googleMapTilesApiKey,
 });
 
 const longitude = -75.222071;
