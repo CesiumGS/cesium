@@ -1,5 +1,5 @@
 import Frozen from "../Core/Frozen.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
+
 import VertexFormat from "../Core/VertexFormat.js";
 import PerInstanceFlatColorAppearanceFS from "../Shaders/Appearances/PerInstanceFlatColorAppearanceFS.js";
 import PolylineColorAppearanceVS from "../Shaders/Appearances/PolylineColorAppearanceVS.js";
@@ -9,9 +9,7 @@ import Appearance from "./Appearance.js";
 let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineColorAppearanceVS}`;
 const defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
 
-if (!FeatureDetection.isInternetExplorer()) {
-  defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
-}
+defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
 
 /**
  * An appearance for {@link GeometryInstance} instances with color attributes and

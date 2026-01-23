@@ -11,7 +11,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
+
 import IndexDatatype from "../Core/IndexDatatype.js";
 import Intersect from "../Core/Intersect.js";
 import CesiumMath from "../Core/Math.js";
@@ -1294,9 +1294,7 @@ PolylineBucket.prototype.updateShader = function (
     defines.push("POLYLINE_DASH");
   }
 
-  if (!FeatureDetection.isInternetExplorer()) {
-    defines.push("CLIP_POLYLINE");
-  }
+  defines.push("CLIP_POLYLINE");
 
   const fs = new ShaderSource({
     defines: defines,
