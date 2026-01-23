@@ -214,7 +214,7 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
       metadataVariable: sanitizeGlslIdentifier(propertyId),
       property,
       type: property.classProperty.type,
-      glslType: property.getGlslType(),
+      glslType: property.classProperty.getGlslType(),
       propertyStatistics: classStatistics?.properties[propertyId],
       shaderDestination: ShaderDestination.FRAGMENT,
     };

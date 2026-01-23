@@ -195,21 +195,6 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
 
 const floatTypesByComponentCount = [undefined, "float", "vec2", "vec3", "vec4"];
 
-const integerTypesByComponentCount = [
-  undefined,
-  "int",
-  "ivec2",
-  "ivec3",
-  "ivec4",
-];
-const unsignedIntegerTypesByComponentCount = [
-  undefined,
-  "uint",
-  "uvec2",
-  "uvec3",
-  "uvec4",
-];
-
 // Map from scalar component type to the GLSL function used to reinterpret from uint bits to the scalar type
 const uintBitsToScalarType = {
   [ScalarCategories.FLOAT]: "uintBitsToFloat",
@@ -217,36 +202,13 @@ const uintBitsToScalarType = {
   [ScalarCategories.UNSIGNED_INTEGER]: "",
 };
 
-PropertyTextureProperty.prototype.getGlslType = function () {
-  const classProperty = this._classProperty;
-  const componentType = classProperty.componentType;
-
-  let componentCount = MetadataType.getComponentCount(classProperty.type);
-  const arrayLength = classProperty.isArray ? classProperty.arrayLength : 1;
-  componentCount *= arrayLength;
-
-  // Normalized fields are integers represented as float types ([0, 1] or [-1, 1] depending if signed)
-  if (
-    !MetadataComponentType.isIntegerType(componentType) ||
-    classProperty.normalized
-  ) {
-    return floatTypesByComponentCount[componentCount];
-  }
-
-  if (MetadataComponentType.isUnsignedIntegerType(componentType)) {
-    return unsignedIntegerTypesByComponentCount[componentCount];
-  }
-
-  return integerTypesByComponentCount[componentCount];
-};
-
 PropertyTextureProperty.prototype.unpackInShader = function (
   packedValueGlsl,
   metadataVariable,
   initializationLines,
 ) {
-  const glslType = this.getGlslType();
   const classProperty = this._classProperty;
+  const glslType = classProperty.getGlslType();
   const componentType = classProperty.componentType;
   const numChannels = this._channels.length;
   const channelsString = this._textureReader.channels;
@@ -308,25 +270,6 @@ PropertyTextureProperty.prototype.unpackInShader = function (
   return unpackedValueName;
 };
 
-PropertyTextureProperty.prototype.getGlslTypeWebGL1 = function () {
-  const classProperty = this._classProperty;
-
-  let componentCount = MetadataType.getComponentCount(classProperty.type);
-  if (classProperty.isArray) {
-    // fixed-sized arrays of length 2-4 UINT8s are represented as vectors as the
-    // shader since those are more useful in GLSL.
-    componentCount = classProperty.arrayLength;
-  }
-
-  // Normalized UINT8 properties are float types in the shader
-  if (classProperty.normalized) {
-    return floatTypesByComponentCount[componentCount];
-  }
-
-  // other UINT8-based properties are represented as integer types.
-  return integerTypesByComponentCount[componentCount];
-};
-
 // In WebGL 1, we limit property texture support to UINT8 properties.
 PropertyTextureProperty.prototype.unpackInShaderWebGL1 = function (
   packedValueGlsl,
@@ -341,7 +284,7 @@ PropertyTextureProperty.prototype.unpackInShaderWebGL1 = function (
   // integer types are read from the texture as normalized float values.
   // these need to be rescaled to [0, 255] and cast to the appropriate integer
   // type.
-  const glslType = this.getGlslTypeWebGL1();
+  const glslType = classProperty.getGlslTypeWebGL1();
   return `${glslType}(255.0 * ${packedValueGlsl})`;
 };
 

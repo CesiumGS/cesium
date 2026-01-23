@@ -1241,4 +1241,58 @@ MetadataClassProperty.prototype.isGpuCompatible = function (channelsLength) {
   return true;
 };
 
+const floatTypesByComponentCount = [undefined, "float", "vec2", "vec3", "vec4"];
+
+const integerTypesByComponentCount = [
+  undefined,
+  "int",
+  "ivec2",
+  "ivec3",
+  "ivec4",
+];
+
+const unsignedIntegerTypesByComponentCount = [
+  undefined,
+  "uint",
+  "uvec2",
+  "uvec3",
+  "uvec4",
+];
+
+MetadataClassProperty.prototype.getGlslTypeWebGL1 = function () {
+  let componentCount = MetadataType.getComponentCount(this.type);
+  if (this.isArray) {
+    // fixed-sized arrays of length 2-4 UINT8s are represented as vectors as the
+    // shader since those are more useful in GLSL.
+    componentCount = this.arrayLength;
+  }
+
+  // Normalized UINT8 properties are float types in the shader
+  if (this.normalized) {
+    return floatTypesByComponentCount[componentCount];
+  }
+
+  // other UINT8-based properties are represented as integer types.
+  return integerTypesByComponentCount[componentCount];
+};
+
+MetadataClassProperty.prototype.getGlslType = function () {
+  const componentType = this.componentType;
+
+  let componentCount = MetadataType.getComponentCount(this.type);
+  const arrayLength = this.isArray ? this.arrayLength : 1;
+  componentCount *= arrayLength;
+
+  // Normalized fields are integers represented as float types ([0, 1] or [-1, 1] depending if signed)
+  if (!MetadataComponentType.isIntegerType(componentType) || this.normalized) {
+    return floatTypesByComponentCount[componentCount];
+  }
+
+  if (MetadataComponentType.isUnsignedIntegerType(componentType)) {
+    return unsignedIntegerTypesByComponentCount[componentCount];
+  }
+
+  return integerTypesByComponentCount[componentCount];
+};
+
 export default MetadataClassProperty;
