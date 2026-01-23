@@ -1,6 +1,6 @@
 legacyId: Constant LOD.html
 title: Constant LOD - Dev
-description: EXT_textureInfo_constant_lod test
+description: Use the EXT_textureInfo_constant_lod glTF extension to create a constant level-of-detail texture.
 labels:
   - Development
 thumbnail: thumbnail.jpg

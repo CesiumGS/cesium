@@ -1,11 +1,6 @@
 import * as Cesium from "cesium";
 
-const viewer = new Cesium.Viewer("cesiumContainer", {
-  infoBox: false,
-  selectionIndicator: false,
-  shadows: true,
-  shouldAnimate: true,
-});
+const viewer = new Cesium.Viewer("cesiumContainer");
 
 function createModel(url, height) {
   viewer.entities.removeAll();
@@ -35,4 +30,7 @@ function createModel(url, height) {
   viewer.trackedEntity = entity;
 }
 
-createModel("http://localhost:8081/example.gltf", 0);
+createModel(
+  "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod.gltf",
+  0,
+);
