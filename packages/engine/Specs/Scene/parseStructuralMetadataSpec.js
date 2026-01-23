@@ -565,18 +565,7 @@ describe(
         // Minimal well-formed buffers (just good enough for testing)
         // name.stringOffsets: 3 * UINT32 for count=2 => [0, 1, 2]
         const nameStringOffsets = new Uint8Array([
-          0,
-          0,
-          0,
-          0, //
-          1,
-          0,
-          0,
-          0, //
-          2,
-          0,
-          0,
-          0, //
+          0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0,
         ]);
         // name.values: UTF-8 bytes for "A" + "B"
         const nameValues = new Uint8Array([65, 66]);

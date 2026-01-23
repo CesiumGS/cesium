@@ -500,7 +500,10 @@ GltfStructuralMetadataLoader.prototype.unload = function () {
   }
   this._schemaLoader = undefined;
 
-  this._structuralMetadata.destroy();
+  if (defined(this._structuralMetadata)) {
+    this._structuralMetadata.destroy();
+  }
+
   this._structuralMetadata = undefined;
 };
 

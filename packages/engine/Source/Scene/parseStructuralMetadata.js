@@ -130,7 +130,9 @@ const NUM_CHANNELS = 4;
  * @param {Object<string, Uint8Array>} bufferViews An object mapping bufferView IDs to Uint8Array objects for the given property table.
  * @param {MetadataClass} classDefinition Class defined in the schema
  * @param {Context} context The rendering context.
- * @returns
+ * @returns {Texture|undefined} The created texture, or <code>undefined</code> if no properties are GPU compatible.
+ *
+ * @private
  */
 function createTextureForPropertyTable(
   propertyTable,
