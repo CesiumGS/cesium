@@ -202,7 +202,7 @@ function collectGpuCompatiblePropertyBufferViews(
   for (const propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
       const property = properties[propertyId];
-      const bufferView = bufferViews[property.bufferView];
+      const bufferView = bufferViews[property.values];
       const classProperty = classDefinition.properties[propertyId];
 
       // Certain properties like strings, dynamic-sized arrays, and 64-bit types cannot be represented easily on the GPU.
