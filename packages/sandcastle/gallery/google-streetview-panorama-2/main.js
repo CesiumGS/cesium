@@ -93,14 +93,11 @@ function selectPanoCubeMap(position) {
   const positiveY = pUrl(-90, -90);
   const negativeY = pUrl(-90, 90);
 
-  Cesium.Transforms.northDownEastToFixedFrame =
+  const ndeToFixedFrameTransform =
     Cesium.Transforms.localFrameToFixedFrameGenerator("north", "down");
 
   const transform = Cesium.Matrix4.getMatrix3(
-    Cesium.Transforms.northDownEastToFixedFrame(
-      posObj,
-      Cesium.Ellipsoid.default,
-    ),
+    ndeToFixedFrameTransform(posObj, Cesium.Ellipsoid.default),
     new Cesium.Matrix3(),
   );
 
@@ -113,7 +110,7 @@ function selectPanoCubeMap(position) {
       positiveZ,
       negativeZ,
     },
-    temeToFixedRotation: transform,
+    transform: transform,
   });
 
   viewer.scene.primitives.add(cityPano);
@@ -145,8 +142,6 @@ function selectPano(position) {
   const carto = Cesium.Cartographic.fromCartesian(position);
 
   provider.getPanoIds({ cartographic: carto }).then((panoIds) => {
-    console.log(panoIds);
-
     provider
       .getPanoIdMetadata({
         panoId: panoIds.panoIds[0],
@@ -233,26 +228,18 @@ function returnToMap() {
   viewer.scene.screenSpaceCameraController.enableZoom = true;
   const primitives = viewer.scene.primitives;
   // Iterate in reverse to avoid index issues when removing
-  console.log("returnToMap primitives ", primitives);
   for (let i = primitives.length - 1; i >= 0; i--) {
     const primitive = primitives.get(i);
     const remove =
       primitive instanceof Cesium.PanoramaCollection ||
       primitive instanceof Cesium.CubeMapPanorama;
-    console.log("prim ", primitive, " remove ", remove);
     if (remove) {
       primitives.remove(primitive);
     }
   }
-  console.log("returnToMap primitives after ", primitives);
-  console.log("skyBox ", viewer.scene.skyBox);
 }
 
 Sandcastle.addToolbarButton("Return to map", async function () {
-  // if (Cesium.defined(cubeMapPanoPrimitive)) {
-  //   cubeMapPanoPrimitive.destroy();
-  //   //console.log("cubeMapPanoPrimitive --> ", cubeMapPanoPrimitive)
-  // }
   viewer.scene.terrainProvider =
     await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
   viewer.scene.skyBox = Cesium.SkyBox.createEarthSkyBox();
@@ -327,10 +314,6 @@ viewer.camera.changed.addEventListener(() => {
 
 showTopModal("Zoom in closer to select Streetview imagery");
 
-Sandcastle.addToggleButton(
-  "Cube Map Pano",
-  cubeMapPano,
-  function (checked) {
-    cubeMapPano = checked;
-  },
-);
+Sandcastle.addToggleButton("Cube Map Pano", cubeMapPano, function (checked) {
+  cubeMapPano = checked;
+});
