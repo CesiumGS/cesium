@@ -449,6 +449,7 @@ GltfStructuralMetadataLoader.prototype.process = function (frameState) {
       schema: schema,
       bufferViews: bufferViews,
       textures: textures,
+      context: frameState.context,
     });
   } else {
     this._structuralMetadata = parseFeatureMetadataLegacy({
@@ -499,6 +500,7 @@ GltfStructuralMetadataLoader.prototype.unload = function () {
   }
   this._schemaLoader = undefined;
 
+  this._structuralMetadata.destroy();
   this._structuralMetadata = undefined;
 };
 

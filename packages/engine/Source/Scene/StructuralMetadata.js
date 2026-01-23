@@ -240,4 +240,18 @@ StructuralMetadata.prototype.getPropertyAttribute = function (
   return this._propertyAttributes[propertyAttributeId];
 };
 
+/**
+ * Destroys any resources that need cleaning up in the structural metadata.
+ *
+ * @private
+ */
+StructuralMetadata.prototype.destroy = function () {
+  const propertyTables = this._propertyTables;
+  if (defined(propertyTables)) {
+    for (let i = 0; i < propertyTables.length; i++) {
+      propertyTables[i].destroy();
+    }
+  }
+};
+
 export default StructuralMetadata;

@@ -1190,6 +1190,23 @@ MetadataClassProperty.valueTransformInPlace = function (
 };
 
 /**
+ * Determines the byte size of a single property element.
+ * For example, if the metadata type is VEC3 and the component type is FLOAT32, this would return 12 bytes.
+ *
+ * @returns {number} The byte size of a single property element.
+ *
+ * @private
+ */
+MetadataClassProperty.prototype.bytesPerElement = function () {
+  const type = this.type;
+  const componentType = this.componentType;
+  const componentCount = MetadataType.getComponentCount(type);
+  const arrayLength = this.isArray ? this.arrayLength : 1;
+  const bytesPerComponent = MetadataComponentType.getSizeInBytes(componentType);
+  return componentCount * arrayLength * bytesPerComponent;
+};
+
+/**
  * Determines whether this property can be stored in a texture, given the property's datatype and the number of
  * texture channels dedicated property value.
  *
@@ -1200,7 +1217,6 @@ MetadataClassProperty.valueTransformInPlace = function (
  */
 MetadataClassProperty.prototype.isGpuCompatible = function (channelsLength) {
   const type = this.type;
-  const componentType = this.componentType;
 
   if (this.isVariableLengthArray) {
     oneTimeWarning(
@@ -1218,12 +1234,10 @@ MetadataClassProperty.prototype.isGpuCompatible = function (channelsLength) {
 
   // For all other properties, make sure the components fit in the sampled channels.
   // (Note that it's possible to treat 64-bit types as two 32-bit components, but for now that's not supported)
-  const componentCount = MetadataType.getComponentCount(type);
-  const arrayLength = this.isArray ? this.arrayLength : 1;
-  const bytesPerComponent = MetadataComponentType.getSizeInBytes(componentType);
-  if (componentCount * arrayLength * bytesPerComponent > channelsLength) {
+  const elementSizeInBytes = this.bytesPerElement();
+  if (elementSizeInBytes > channelsLength) {
     oneTimeWarning(
-      `Property texture property "${this.id}" with type ${type} and component type ${componentType} does not fit into ${channelsLength} channels.`,
+      `Property texture property "${this.id}" has size ${elementSizeInBytes} which does not fit into ${channelsLength} texture channels.`,
     );
     return false;
   }
