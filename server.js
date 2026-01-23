@@ -433,7 +433,6 @@ const throttle = (callback) => {
 
   server.on("close", function () {
     console.log("Cesium development server stopped.");
-    process.exit(0);
   });
 
   const sandcastleApp = express();
@@ -457,12 +456,19 @@ const throttle = (callback) => {
     );
   });
 
+  sandcastleServer.on("close", function () {
+    console.log("Sandcastle viewer server stopped.");
+    process.exit(0);
+  });
+
   let isFirstSig = true;
   process.on("SIGINT", function () {
     if (isFirstSig) {
-      console.log("\nCesium development server shutting down.");
+      console.log("\nCesium development servers shutting down.");
 
-      server.close();
+      server.close(() => {
+        sandcastleServer.close();
+      });
 
       if (!production) {
         contexts.esm.dispose();
