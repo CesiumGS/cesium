@@ -5,6 +5,7 @@ import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribu
 import defined from "../Core/defined.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
+import JulianDate from "../Core/JulianDate.js";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
 import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import Primitive from "../Scene/Primitive.js";
@@ -54,7 +55,42 @@ function Batch(
 }
 
 Batch.prototype.onMaterialChanged = function () {
+  // Check if the material actually changed in a meaningful way
+  // by comparing the current material value with the stored material value
+  const currentTime = JulianDate.now();
+  const currentMaterial = MaterialProperty.getValue(
+    currentTime,
+    this.materialProperty,
+    undefined,
+  );
+
+  if (!defined(this._lastMaterialValue)) {
+    // First time, store the material value
+    this._lastMaterialValue = currentMaterial;
+    return;
+  }
+
+  // Compare the current material with the last stored material
+  // If they're functionally the same, don't invalidate the batch
+  if (defined(currentMaterial) && defined(this._lastMaterialValue)) {
+    // Simple comparison for now - in practice, we'd need a deep equality check
+    // For color materials, we can compare the color values
+    if (currentMaterial.type === this._lastMaterialValue.type) {
+      if (currentMaterial.type === "Color") {
+        const currentColor = currentMaterial.uniforms.color;
+        const lastColor = this._lastMaterialValue.uniforms.color;
+        if (Color.equals(currentColor, lastColor)) {
+          // Colors are the same, don't invalidate
+          return;
+        }
+      }
+      // For other material types, we might need more sophisticated comparison
+    }
+  }
+
+  // Material actually changed, invalidate the batch
   this.invalidated = true;
+  this._lastMaterialValue = currentMaterial;
 };
 
 Batch.prototype.isMaterial = function (updater) {
