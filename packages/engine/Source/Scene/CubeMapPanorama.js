@@ -69,7 +69,7 @@ function CubeMapPanorama(options) {
   this.sources = options.sources;
   this._sources = undefined;
 
-  this._temeToFixedRotation = options.temeToFixedRotation ?? undefined;
+  this._transform = options.transform ?? undefined;
 
   /**
    * Determines if the sky box will be shown.
@@ -228,8 +228,8 @@ CubeMapPanorama.prototype.update = function (frameState, useHdr) {
       u_cubeMap: function () {
         return that._cubeMap;
       },
-      u_temeToFixedRotation: function () {
-        return that._temeToFixedRotation;
+      u_cubeMapPanoramaTransform: function () {
+        return that._transform;
       },
     };
 
@@ -266,7 +266,7 @@ CubeMapPanorama.prototype.update = function (frameState, useHdr) {
     command.shaderProgram = ShaderProgram.fromCache({
       context: context,
       //vertexShaderSource: SkyBoxVS,
-      vertexShaderSource: defined(this._temeToFixedRotation)
+      vertexShaderSource: defined(this._transform)
         ? CubeMapPanoramaVS
         : SkyBoxVS,
       fragmentShaderSource: fs,
