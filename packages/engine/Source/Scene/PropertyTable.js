@@ -165,6 +165,20 @@ Object.defineProperties(PropertyTable.prototype, {
       return totalByteLength;
     },
   },
+
+  /**
+   * The texture containing the property table data, if any.
+   *
+   * @memberof PropertyTable.prototype
+   * @type {Texture | undefined}
+   * @readonly
+   * @private
+   */
+  texture: {
+    get: function () {
+      return this._texture;
+    },
+  },
 });
 
 /**

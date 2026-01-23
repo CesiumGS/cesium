@@ -12,6 +12,10 @@ import PixelFormat from "../Core/PixelFormat.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
+import TextureWrap from "../Renderer/TextureWrap.js";
+import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
+import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
+import ContextLimits from "../Renderer/ContextLimits.js";
 
 /**
  * Parse the <code>EXT_structural_metadata</code> glTF extension to create a
@@ -156,11 +160,11 @@ function createTextureForPropertyTable(
 
   // In the future, we could use multiple textures if we would exceed the maximum texture size.
   if (
-    numFeatures > context.maximumTextureSize ||
-    numGpuCompatibleProperties > context.maximumTextureSize
+    numFeatures > ContextLimits.maximumTextureSize ||
+    numGpuCompatibleProperties > ContextLimits.maximumTextureSize
   ) {
     oneTimeWarning(
-      `Cannot create a texture for the property table "${propertyTable.name}" because it exceeds the maximum texture size of ${context.maximumTextureSize}.`,
+      `Cannot create a texture for the property table "${propertyTable.name}" because it exceeds the maximum texture size of ${ContextLimits.maximumTextureSize}.`,
     );
     return undefined;
   }
@@ -172,13 +176,13 @@ function createTextureForPropertyTable(
 
   // Create a sampler fit for sampling raw data without mipmapping / filtering etc.
   const sampler = new Sampler({
-    wrapS: Sampler.WRAP_CLAMP_TO_EDGE,
-    wrapT: Sampler.WRAP_CLAMP_TO_EDGE,
-    minificationFilter: Sampler.FILTER_NEAREST,
-    magnificationFilter: Sampler.FILTER_NEAREST,
+    wrapS: TextureWrap.CLAMP_TO_EDGE,
+    wrapT: TextureWrap.CLAMP_TO_EDGE,
+    minificationFilter: TextureMinificationFilter.NEAREST,
+    magnificationFilter: TextureMagnificationFilter.NEAREST,
   });
 
-  return new Texture({
+  return Texture.create({
     context: context,
     pixelFormat: PixelFormat.RGBA,
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
