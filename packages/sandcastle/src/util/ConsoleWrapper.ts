@@ -1,4 +1,4 @@
-/** @import { IframeBridge } from "./IframeBridge" */
+import { BridgeToApp } from "./IframeBridge";
 
 let bucket = window.location.href;
 const pos = bucket.lastIndexOf("/");
@@ -13,11 +13,8 @@ if (pos > 0 && pos < bucket.length - 1) {
  * This is handy for logging simple object values while also avoiding getting way out of hand
  * when logging large complex objects that would create a massive string using JSON.stringify directly.
  * This can still generate large strings for large objects like our Viewer but it's still shorter.
- *
- * @param {object} obj
- * @returns {string}
  */
-function simpleStringify(obj) {
+function simpleStringify(obj: object) {
   if ("toString" in obj && obj.toString !== Object.prototype.toString) {
     // Use customized toString functions if they're specified
     // if it's the native function continue instead of getting [object Object]
@@ -56,9 +53,9 @@ function simpleStringify(obj) {
 /**
  * Join an array with commas and wrap with []
  *
- * @param {any[]} arr Input array
+ * @param arr Input array
  */
-function arrayString(arr) {
+function arrayString(arr: unknown[]) {
   return `[${arr.join(", ")}]`;
 }
 
@@ -66,10 +63,11 @@ function arrayString(arr) {
  * Print a function to a string. If the function is long or nested you can use the signatureOnly param
  * to return a shorter string containing only the signature
  *
- * @param {function} func Input function
- * @param {boolean} [signatureOnly] Whether to only output the function signature or the full function
+ * @param func Input function
+ * @param signatureOnly Whether to only output the function signature or the full function
  */
-function functionString(func, signatureOnly) {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+function functionString(func: Function, signatureOnly?: boolean) {
   const functionAsString = func.toString();
   if (signatureOnly) {
     const signaturePattern = /function.*\)/;
@@ -85,7 +83,7 @@ function functionString(func, signatureOnly) {
   const linesTruncatedMatch = functionAsString.match(lineTruncatePattern);
   if (linesTruncatedMatch === null) {
     // unable to match and truncate by lines for some reason
-    return linesTruncatedMatch.toString();
+    return functionAsString;
   }
   let truncated = linesTruncatedMatch[0];
   if (functionAsString.length > truncated.length) {
@@ -97,9 +95,9 @@ function functionString(func, signatureOnly) {
 /**
  * Get the line of the error. Attempts to extract from the error stack itself
  *
- * @param {Error} error Input error
+ * @param error Input error
  */
-function errorLineNumber(error) {
+function errorLineNumber(error: Error | { stack: unknown }) {
   if (typeof error.stack !== "string") {
     return;
   }
@@ -138,11 +136,8 @@ function errorLineNumber(error) {
  * Take a singular value and return the string representation for it.
  * Handles multiple types with specific handling for arrays, objects and functions.
  * Any value that is not specifically processed will get converted by `value.toString()`
- *
- * @param {any} value
- * @returns {string}
  */
-function print(value) {
+function print(value: unknown): string {
   if (value === null) {
     return "null";
   }
@@ -160,7 +155,11 @@ function print(value) {
       }),
     );
   }
-  if (typeof value.stack === "string") {
+  if (
+    typeof value === "object" &&
+    "stack" in value &&
+    typeof value.stack === "string"
+  ) {
     // assume this is an Error object and attempt to extract the line number
     const lineNumber = errorLineNumber(value);
     if (lineNumber !== undefined) {
@@ -179,10 +178,9 @@ function print(value) {
 /**
  * Combine any number of arguments into a single string converting them as needed.
  *
- * @param {any[]} args an array of any values, can be mixed types
- * @returns {string}
+ * @param args an array of any values, can be mixed types
  */
-function combineArguments(args) {
+function combineArguments(args: unknown[]) {
   return args.map(print).join(" ");
 }
 
@@ -191,12 +189,15 @@ export const originalLog = console.log;
 export const originalWarn = console.warn;
 export const originalError = console.error;
 
+window.originalClear = originalClear;
+window.originalLog = originalLog;
+window.originalWarn = originalWarn;
+window.originalError = originalError;
+
 /**
  * Return whether the value is defined even if it's falsey
- *
- * @param {any} value
  */
-function defined(value) {
+function defined<T>(value: T): value is NonNullable<T> {
   return value !== undefined && value !== null;
 }
 
@@ -204,10 +205,13 @@ function defined(value) {
  * Setup the handler to catch uncaught errors on the window itself and send them
  * over the iframe bridge to the app
  *
- * @param {IframeBridge} iframeBridge Bridge to send messages over
+ * @param iframeBridge Bridge to send messages over
  */
-function setupWindowErrorHandler(iframeBridge) {
-  window.onerror = function (errorMsg, url, lineNumber) {
+function setupWindowErrorHandler(iframeBridge: BridgeToApp) {
+  window.addEventListener("error", (event) => {
+    const errorMsg = event.message;
+    let lineNumber = event.lineno;
+    let url = event.filename;
     if (defined(lineNumber)) {
       if (defined(url) && url.indexOf(bucket) > -1) {
         // if the URL is the bucket itself, ignore it
@@ -243,14 +247,16 @@ function setupWindowErrorHandler(iframeBridge) {
     }
     originalError.apply(console, [errorMsg]);
     return false;
-  };
+  });
 }
 
-/**
- *
- * @param {IframeBridge} iframeBridge
- */
-export function wrapConsoleFunctions(iframeBridge) {
+export type ConsoleMessage =
+  | { type: "consoleClear" }
+  | { type: "consoleLog"; log: string }
+  | { type: "consoleWarn"; warn: string }
+  | { type: "consoleError"; error: string; lineNumber?: number; url?: string };
+
+export function wrapConsoleFunctions(iframeBridge: BridgeToApp) {
   console.clear = function () {
     originalClear();
     iframeBridge.sendMessage({

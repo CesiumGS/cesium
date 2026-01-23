@@ -1,10 +1,13 @@
+// @ts-check
 import {
   originalLog,
   originalWarn,
   wrapConsoleFunctions,
-} from "../src/util/ConsoleWrapper.js";
+} from "../src/util/ConsoleWrapper";
 import { IframeBridge } from "../src/util/IframeBridge";
 import DOMPurify from "dompurify";
+
+/** @import {BridgeToApp} from '../src/util/IframeBridge' */
 
 /* eslint-disable-next-line no-undef */
 const OUTER_ORIGIN = __OUTER_ORIGIN__;
@@ -41,12 +44,13 @@ function loadSandcastle(code, html) {
 }
 
 function initPage() {
-  const bridge = new IframeBridge(OUTER_ORIGIN, window.parent);
+  /** @type {BridgeToApp} */
+  const bridge = new IframeBridge(OUTER_ORIGIN, window.parent, "Bucket");
 
   wrapConsoleFunctions(bridge);
 
   bridge.addEventListener((e) => {
-    originalLog("Bucket received message", e);
+    originalLog("> Bucket received message", e);
     if (e.data.type === "reload") {
       window.location.reload();
     } else if (e.data.type === "runCode") {

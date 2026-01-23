@@ -1,35 +1,90 @@
-import { originalLog } from "./ConsoleWrapper";
+// Inside the bucket we want to avoid calling the wrapped console.log
+// which would create an infinite loop of postMessage and log calls
 
-export class IframeBridge {
+import { MessageToBucket } from "../Bucket";
+import { ConsoleMessage } from "./ConsoleWrapper";
+
+// @ts-expect-error We know this global may exist
+const log = window.originalLog ?? console.log;
+
+type ReactDevToolsMessage = {
+  source: "react-devtools-bridge" | "react-devtools-content-script";
+};
+
+function isReactMessage(
+  event: MessageEvent,
+): event is MessageEvent<ReactDevToolsMessage> {
+  return "source" in event.data && event.data.source.includes("react-devtools");
+}
+
+/**
+ * Generic type to give some structure to the Bridge messages by default if not specified
+ */
+type MessageWithType = {
+  type: string;
+} & Record<string, unknown>;
+
+export type MessageToApp =
+  | { type: "bucketReady" }
+  | ConsoleMessage
+  | { type: "highlight"; highlight: number };
+export type BridgeToApp = IframeBridge<MessageToApp, MessageToBucket>;
+export type BridgeToBucket = IframeBridge<BridgeToBucket, MessageToApp>;
+
+export class IframeBridge<
+  SendMessageType = MessageWithType,
+  RecieveMessageType = MessageWithType,
+> {
   remoteOrigin: string;
   targetWindow: Window;
-  #windowListener: ((event: MessageEvent) => void) | undefined;
+  #debugIdent?: string;
+  #windowListener:
+    | ((event: MessageEvent<RecieveMessageType>) => void)
+    | undefined;
 
-  constructor(remoteOrigin: string, targetWindow: Window) {
+  constructor(
+    remoteOrigin: string,
+    targetWindow: Window,
+    debugIdent = "Bridge",
+  ) {
     this.remoteOrigin = remoteOrigin;
     this.targetWindow = targetWindow;
+    this.#debugIdent = debugIdent;
   }
 
-  sendMessage(message: unknown) {
+  sendMessage(message: SendMessageType) {
     if (window === this.targetWindow) {
-      originalLog("Bucket not sending message to self", message);
+      log(`xxx ${this.#debugIdent} not sending message to self`, message);
       // don't run when it's only this page open. It can crash the browser with an endless
       // loop of triggering our own message listener or just create "feedback" listening to our own messages
       return;
     }
-    originalLog("Bucket sending message:", message);
+    log(`<<< ${this.#debugIdent} sending message:`, message);
     this.targetWindow.postMessage(message, this.remoteOrigin);
   }
 
-  addEventListener(handler: (event: MessageEvent) => void) {
-    this.#windowListener = (e) => {
-      if (e.origin !== this.remoteOrigin) {
-        originalLog(`Bucket message: ignoring bad origin - ${e.origin}`);
-        // ignore messages from origins we don't recognize
+  addEventListener(handler: (event: MessageEvent<RecieveMessageType>) => void) {
+    this.#windowListener = (
+      e: MessageEvent<ReactDevToolsMessage> | MessageEvent<RecieveMessageType>,
+    ) => {
+      if (isReactMessage(e)) {
+        // filter all of these, we don't care
         return;
       }
-      if (e.data?.source?.includes("react-devtools")) {
-        // filter all of these, we don't care
+      if (e.origin !== this.remoteOrigin) {
+        // ignore messages from origins we don't recognize
+        log(
+          `xxx ${this.#debugIdent} recieved message: ignoring bad origin - ${e.origin}`,
+          e,
+        );
+        return;
+      }
+      if (window === e.source) {
+        // ignore messages that come from the same window
+        log(
+          `xxx ${this.#debugIdent} recieved message: ignoring message from self`,
+          e,
+        );
         return;
       }
 

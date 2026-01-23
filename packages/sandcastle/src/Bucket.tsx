@@ -1,17 +1,8 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { embedInSandcastleTemplate } from "./Helpers";
 import "./Bucket.css";
 import { ConsoleMessageType } from "./ConsoleMirror";
-
-type ReactDevToolsMessage = {
-  source: "react-devtools-bridge" | "react-devtools-content-script";
-};
-
-function isReactMessage(
-  data: SandcastleMessage | ReactDevToolsMessage,
-): data is ReactDevToolsMessage {
-  return "source" in data && data.source.includes("react-devtools");
-}
+import { IframeBridge } from "./util/IframeBridge";
 
 type SandcastleMessage =
   | { type: "reload" }
@@ -21,6 +12,10 @@ type SandcastleMessage =
   | { type: "consoleWarn"; warn: string }
   | { type: "consoleError"; error: string; lineNumber?: number; url?: string }
   | { type: "highlight"; highlight: number };
+
+export type MessageToBucket =
+  | { type: "reload" }
+  | { type: "runCode"; code: string; html: string };
 
 const INNER_ORIGIN = __INNER_ORIGIN__;
 const bucketUrl = `${__INNER_ORIGIN__}/templates/bucket.html`;
@@ -48,6 +43,8 @@ export function Bucket({
   resetConsole: (options?: { showMessage?: boolean | undefined }) => void;
 }) {
   const bucket = useRef<HTMLIFrameElement>(null);
+  const iframeBridge =
+    useRef<IframeBridge<MessageToBucket, SandcastleMessage>>(null);
   const lastRunNumber = useRef<number>(Number.NEGATIVE_INFINITY);
 
   const activateBucketScripts = useCallback(
@@ -151,43 +148,30 @@ export function Bucket({
     [appendConsole],
   );
 
+  const [bucketReady, setBucketReady] = useState(false);
+
   useEffect(() => {
     if (
+      bucketReady &&
       runNumber !== lastRunNumber.current &&
-      bucket.current &&
-      bucket.current.contentWindow
+      iframeBridge.current
     ) {
       // When we want to run sandcastle code we just need to reload the bucket
       // it sends a message when loaded which triggers the message handler below
       // to load the actual code
-      // TODO: this should probably be using the IframeBridge
-      bucket.current.contentWindow.postMessage(
-        {
-          type: "reload",
-        },
-        INNER_ORIGIN,
-      );
+      iframeBridge.current.sendMessage({
+        type: "reload",
+      });
     }
     lastRunNumber.current = runNumber;
-  }, [code, html, runNumber]);
+  }, [bucketReady, code, html, runNumber]);
 
   useEffect(() => {
-    const messageHandler = function (
-      e: MessageEvent<SandcastleMessage | ReactDevToolsMessage>,
-    ) {
+    const messageHandler = function (e: MessageEvent<SandcastleMessage>) {
+      if (!iframeBridge.current) {
+        return;
+      }
       const data = e.data;
-      if (isReactMessage(data)) {
-        // filter all of these, we don't care
-        return;
-      }
-
-      if (e.origin !== INNER_ORIGIN) {
-        console.log(`App message: ignoring bad origin - ${e.origin}`, e);
-        // ignore messages from origins we don't recognize
-        return;
-      }
-
-      console.log("App recieved message", e);
 
       // The iframe (bucket.html) sends this message on load.
       // This triggers the code to be injected into the iframe.
@@ -205,19 +189,16 @@ export function Bucket({
           activateBucketScripts(bucket.current, code, html);
         }
       } else if (data.type === "bucketReady") {
+        setBucketReady(true);
         // Firefox line numbers are zero-based, not one-based.
         const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
 
         resetConsole();
-        // TODO: this should probably be using the IframeBridge
-        bucket.current?.contentWindow?.postMessage(
-          {
-            type: "runCode",
-            code: embedInSandcastleTemplate(code, isFirefox),
-            html,
-          },
-          INNER_ORIGIN,
-        );
+        iframeBridge.current.sendMessage({
+          type: "runCode",
+          code: embedInSandcastleTemplate(code, isFirefox),
+          html,
+        });
       } else if (data.type === "consoleClear") {
         resetConsole({ showMessage: true });
       } else if (data.type === "consoleLog") {
@@ -244,8 +225,12 @@ export function Bucket({
         highlightLine(data.highlight);
       }
     };
-    window.addEventListener("message", messageHandler);
-    return () => window.removeEventListener("message", messageHandler);
+
+    if (!iframeBridge.current) {
+      return;
+    }
+    iframeBridge.current.addEventListener(messageHandler);
+    return () => iframeBridge.current?.removeEventListener();
   }, [
     code,
     html,
@@ -258,7 +243,21 @@ export function Bucket({
   return (
     <div className="bucket-container">
       <iframe
-        ref={bucket}
+        ref={(iframe) => {
+          bucket.current = iframe;
+          if (
+            iframe?.contentWindow &&
+            (!iframeBridge.current ||
+              iframeBridge.current.targetWindow !== iframe?.contentWindow)
+          ) {
+            iframeBridge.current = new IframeBridge(
+              INNER_ORIGIN,
+              iframe.contentWindow,
+              "App",
+            );
+            console.log("bridge created", iframeBridge.current);
+          }
+        }}
         id="bucketFrame"
         src={bucketUrl}
         className="fullFrame"
