@@ -231,7 +231,7 @@ function returnToMap() {
   for (let i = primitives.length - 1; i >= 0; i--) {
     const primitive = primitives.get(i);
     const remove =
-      primitive instanceof Cesium.PanoramaCollection ||
+      primitive instanceof Cesium.EquirectangularPanorama ||
       primitive instanceof Cesium.CubeMapPanorama;
     if (remove) {
       primitives.remove(primitive);

@@ -31,7 +31,7 @@ import VertexFormat from "../Core/VertexFormat.js";
  */
 
 /**
- * Provides tiled imagery hosted by Mapbox.
+ * Provides equirectangular imagery to be displayed on the surface of an ellipsoid.
  *
  * @alias EquirectangularPanorama
  * @constructor
@@ -45,8 +45,6 @@ import VertexFormat from "../Core/VertexFormat.js";
  *     image: 'path/to/image',
  * }));
  *
- * @see {@link https://docs.mapbox.com/api/maps/raster-tiles/}
- * @see {@link https://docs.mapbox.com/api/accounts/tokens/}
  */
 function EquirectangularPanorama(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -59,6 +57,7 @@ function EquirectangularPanorama(options) {
 
   // Credit specified by the user.
   let credit = options.credit;
+  console.log("credit ", credit, " typeof credit ", typeof credit);
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
@@ -67,7 +66,6 @@ function EquirectangularPanorama(options) {
   this._radius = options.radius || 100000.0;
   this._image = options.image;
   this._transform = options.transform || Matrix4.IDENTITY;
-  this._credit = options.credit || undefined;
   this._minimumClock = options.minimumClock || 0; //degrees
   this._maximumClock = options.maximumClock || 360;
   this._minimumCone = options.minimumCone || 0;
@@ -102,7 +100,7 @@ function EquirectangularPanorama(options) {
   });
 
   // Create the primitive with the material
-  const primitive = new Primitive({
+  this._primitive = new Primitive({
     geometryInstances: geometryInstance,
     appearance: new MaterialAppearance({
       material: equirectangularMaterial,
@@ -118,10 +116,22 @@ function EquirectangularPanorama(options) {
     credit: this._credit,
   });
 
-  return primitive;
+  return this;
 }
 
-Object.defineProperties(EquirectangularPanorama.prototype, {});
+Object.defineProperties(EquirectangularPanorama.prototype, {
+  /**
+   * Gets the primitive object.
+   * @memberof Panorama.prototype
+   * @type {object}
+   * @readonly
+   */
+  primitive: {
+    get: function () {
+      return this._primitive;
+    },
+  },
+});
 
 /**
  * Gets the source image for the panorama
@@ -147,11 +157,24 @@ EquirectangularPanorama.prototype.getTransform = function () {
  * @returns {Credit[]} The credits for the panorama.
  */
 EquirectangularPanorama.prototype.getCredits = function () {
-  return this.credit;
+  return this._credit;
 };
 
 EquirectangularPanorama.prototype.update = function (frameState) {
   console.log("");
+};
+
+// Proxy update/destroy/etc to the primitive
+EquirectangularPanorama.prototype.update = function (frameState) {
+  return this._primitive.update(frameState);
+};
+
+EquirectangularPanorama.prototype.destroy = function () {
+  return this._primitive.destroy();
+};
+
+EquirectangularPanorama.prototype.isDestroyed = function () {
+  return this._primitive.isDestroyed();
 };
 
 // Exposed for tests

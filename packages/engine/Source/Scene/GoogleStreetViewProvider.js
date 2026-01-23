@@ -1,6 +1,5 @@
 import DeveloperError from "../Core/DeveloperError.js";
 import EquirectangularPanorama from "./EquirectangularPanorama.js";
-import PanoramaCollection from "./PanoramaCollection.js";
 import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -167,7 +166,7 @@ Object.defineProperties(GoogleStreetViewProvider.prototype, {});
 /**
  * Gets the panorama collection containing the panorama primitive for the given cartographic location
  *
- * @returns {PanoramaCollection} The panorama collection containing imagery.
+ * @returns {EquirectangularPanorama} The panorama collection containing imagery.
  */
 GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
   const { cartographic } = options;
@@ -183,8 +182,6 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
     });
     panoId = panoIds[0];
   }
-
-  const panoCollection = new PanoramaCollection();
 
   const position = Cartesian3.fromDegrees(
     cartographic.longitude,
@@ -229,22 +226,20 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
 
   const credit = GoogleMaps.getDefaultCredit();
 
-  const panoTile = new EquirectangularPanorama({
+  const panorama = new EquirectangularPanorama({
     image: canvas,
     transform,
     repeatHorizontal: -1,
     credit,
   });
 
-  panoCollection.add(panoTile);
-
-  return panoCollection;
+  return panorama;
 };
 
 /**
  * Gets the panorama collection with the panorama primitive for the given panoId and zoom level
  *
- * @returns {PanoramaCollection} The panorama collection containing the panorama primitive.
+ * @returns {EquirectangularPanorama} The panorama collection containing the panorama primitive.
  */
 GoogleStreetViewProvider.prototype.loadPanoramafromPanoId = async function (
   options,
