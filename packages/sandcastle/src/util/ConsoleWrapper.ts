@@ -126,7 +126,7 @@ function errorLineNumber(error) {
         /*eslint-disable no-empty*/
         try {
           lineNumber = parseInt(stack.substring(lineStart + 1, lineEnd1), 10);
-        } catch (ex) {}
+        } catch {}
         /*eslint-enable no-empty*/
       }
     }
@@ -225,7 +225,7 @@ function setupWindowErrorHandler(iframeBridge) {
             pos += 12;
             lineNumber = parseInt(errorMsg.substring(pos), 10);
           }
-        } catch (ex) {}
+        } catch {}
         /*eslint-enable no-empty*/
       }
       iframeBridge.sendMessage({

@@ -2,8 +2,8 @@ import {
   originalLog,
   originalWarn,
   wrapConsoleFunctions,
-} from "./ConsoleWrapper.js";
-import { IframeBridge } from "./IframeBridge";
+} from "../src/util/ConsoleWrapper.js";
+import { IframeBridge } from "../src/util/IframeBridge";
 import DOMPurify from "dompurify";
 
 /* eslint-disable-next-line no-undef */
