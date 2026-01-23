@@ -80,6 +80,7 @@ function CubeMapPanorama(options) {
   this.show = options.show ?? true;
 
   this._returnCommand = options.returnCommand ?? false;
+  this._addToPanoramaCommandList = !this._returnCommand;
 
   this._command = new DrawCommand({
     modelMatrix: Matrix4.clone(Matrix4.IDENTITY),
@@ -217,6 +218,7 @@ CubeMapPanorama.prototype.update = function (frameState, useHdr) {
         source: sources,
       });
     }
+    this._addToPanoramaCommandList = true;
   }
 
   const command = this._command;
@@ -253,6 +255,7 @@ CubeMapPanorama.prototype.update = function (frameState, useHdr) {
       depthMask: false,
       blending: BlendingState.ALPHA_BLEND,
     });
+    this._addToPanoramaCommandList = true;
   }
 
   if (!defined(command.shaderProgram) || this._useHdr !== useHdr) {
@@ -270,6 +273,7 @@ CubeMapPanorama.prototype.update = function (frameState, useHdr) {
       attributeLocations: this._attributeLocations,
     });
     this._useHdr = useHdr;
+    this._addToPanoramaCommandList = true;
   }
 
   if (!defined(this._cubeMap)) {
@@ -285,7 +289,10 @@ CubeMapPanorama.prototype.update = function (frameState, useHdr) {
     return command;
   }
 
-  panoramaCommandList.push(command);
+  if (this._addToPanoramaCommandList) {
+    panoramaCommandList.push(command);
+    this._addToPanoramaCommandList = false;
+  }
 };
 
 /**
