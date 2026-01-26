@@ -164,7 +164,7 @@ Agent Skills provide automatic activation based on context, without needing to t
 
 3. Enable the `chat.useAgentSkills` setting in VS Code
 
-The skill will automatically activate when you ask Cesium-related questions and can be invoked directly with `/context7`.
+The skill will automatically activate when you ask Cesium-related questions.
 
 ##### User profile (all workspaces)
 
