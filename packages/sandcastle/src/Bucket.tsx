@@ -20,7 +20,7 @@ export type MessageToBucket =
 const INNER_ORIGIN = __INNER_ORIGIN__;
 // using pathname lets this adapt to deployed locations like CI
 // TODO: We need to decide if the deployed location on a separate origin has the same structure or not
-const bucketUrl = `${new URL(`${location.pathname.replace("index.html", "")}templates/bucket.html`, __INNER_ORIGIN__)}`;
+const bucketUrl = `${new URL(`${location.pathname.replace(/[^\/]+.html/, "")}templates/bucket.html`, __INNER_ORIGIN__)}`;
 
 export function Bucket({
   code,
