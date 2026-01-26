@@ -16,6 +16,3 @@ dist-ssr
 public/gallery
 templates/Sandcastle.d.ts
 templates/Sandcastle.js
-# TODO: these probably need moved elsewhere
-templates/IframeBridge.d.ts
-templates/IframeBridge.js
