@@ -17,6 +17,14 @@ function isReactMessage(
   return "source" in event.data && event.data.source.includes("react-devtools");
 }
 
+type MonacoMessage = { vscodeScheduleAsyncWork: number };
+
+function isMonacoMessage(
+  event: MessageEvent,
+): event is MessageEvent<MonacoMessage> {
+  return "vscodeScheduleAsyncWork" in event.data;
+}
+
 /**
  * Generic type to give some structure to the Bridge messages by default if not specified
  */
@@ -65,9 +73,17 @@ export class IframeBridge<
 
   addEventListener(handler: (event: MessageEvent<RecieveMessageType>) => void) {
     this.#windowListener = (
-      e: MessageEvent<ReactDevToolsMessage> | MessageEvent<RecieveMessageType>,
+      e:
+        | MessageEvent<ReactDevToolsMessage>
+        | MessageEvent<RecieveMessageType>
+        | MessageEvent<MonacoMessage>,
     ) => {
-      if (isReactMessage(e)) {
+      if (
+        typeof e.data !== "object" ||
+        isReactMessage(e) ||
+        isMonacoMessage(e)
+      ) {
+        // TODO: consider flipping this to check for _our_ format only instead of excluding others
         // filter all of these, we don't care
         return;
       }
@@ -87,6 +103,8 @@ export class IframeBridge<
         );
         return;
       }
+
+      log(`>>> ${this.#debugIdent} recieved message:`, e);
 
       handler(e);
     };

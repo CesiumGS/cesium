@@ -1,9 +1,5 @@
 // @ts-check
-import {
-  originalLog,
-  originalWarn,
-  wrapConsoleFunctions,
-} from "../src/util/ConsoleWrapper";
+import { originalWarn, wrapConsoleFunctions } from "../src/util/ConsoleWrapper";
 import { IframeBridge } from "../src/util/IframeBridge";
 import DOMPurify from "dompurify";
 
@@ -50,7 +46,6 @@ function initPage() {
   wrapConsoleFunctions(bridge);
 
   bridge.addEventListener((e) => {
-    originalLog("> Bucket received message", e);
     if (e.data.type === "reload") {
       window.location.reload();
     } else if (e.data.type === "runCode") {

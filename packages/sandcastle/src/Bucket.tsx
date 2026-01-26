@@ -261,6 +261,7 @@ export function Bucket({
         id="bucketFrame"
         src={bucketUrl}
         className="fullFrame"
+        sandbox="allow-scripts allow-same-origin"
         allowFullScreen
       ></iframe>
     </div>
