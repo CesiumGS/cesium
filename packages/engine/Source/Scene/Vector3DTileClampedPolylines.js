@@ -6,7 +6,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
+
 import IndexDatatype from "../Core/IndexDatatype.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -557,10 +557,7 @@ function createShaders(primitive, context) {
   )(Vector3DTileClampedPolylinesFS);
 
   const vs = new ShaderSource({
-    defines: [
-      "VECTOR_TILE",
-      !FeatureDetection.isInternetExplorer() ? "CLIP_POLYLINE" : "",
-    ],
+    defines: ["VECTOR_TILE", "CLIP_POLYLINE"],
     sources: [PolylineCommon, vsSource],
   });
   const fs = new ShaderSource({
