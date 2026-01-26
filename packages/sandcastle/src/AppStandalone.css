@@ -1,8 +1,10 @@
 .sandcastle-root {
-  display: grid;
   width: 100vw;
   height: 100vh;
-  grid-template-rows: 1fr;
-  /* TODO: This is needed to override the App.css until I fix the imports */
-  grid-template-columns: 1fr;
+}
+
+.split-view {
+  /* These control the styling of the Allotment dividers */
+  --focus-border: var(--stratakit-color-border-accent-base);
+  --separator-border: var(--stratakit-color-border-neutral-base);
 }
