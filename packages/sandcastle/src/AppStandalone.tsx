@@ -23,23 +23,14 @@ import {
 } from "./util/useCodeState";
 
 function AppStandalone() {
-  const [sandcastleTitle, setSandcastleTitle] = useState("New Sandcastle");
   const galleryItemStore = useGalleryItemStore();
   const loadFromUrl = galleryItemStore.useLoadFromUrl();
   const [initialized, setInitialized] = useState(false);
   const [isLoadPending, startLoadPending] = useTransition();
 
-  const { setPageTitle, setIsDirty } = usePageTitle();
+  const { setPageTitle } = usePageTitle();
 
   const [codeState, dispatch] = useCodeState();
-
-  useEffect(() => {
-    setIsDirty(codeState.dirty);
-  }, [setIsDirty, codeState.dirty]);
-
-  useEffect(() => {
-    setPageTitle(sandcastleTitle);
-  }, [setPageTitle, sandcastleTitle]);
 
   const rightSideRef = useRef<ViewerConsoleStackRef>(null);
   const consoleCollapsedHeight = 33;
@@ -98,7 +89,7 @@ function AppStandalone() {
             if (isLoadPending) {
               return;
             }
-            setSandcastleTitle(title);
+            setPageTitle(title);
             dispatch({
               type: "setAndRun",
               code: code ?? defaultJsCode,
@@ -124,7 +115,14 @@ function AppStandalone() {
     };
     window.addEventListener("popstate", stateLoad);
     return () => window.removeEventListener("popstate", stateLoad);
-  }, [initialized, isLoadPending, loadFromUrl, appendConsole, dispatch]);
+  }, [
+    initialized,
+    isLoadPending,
+    loadFromUrl,
+    appendConsole,
+    dispatch,
+    setPageTitle,
+  ]);
 
   return (
     <Root
