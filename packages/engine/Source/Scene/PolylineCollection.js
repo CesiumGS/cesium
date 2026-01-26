@@ -11,7 +11,6 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-
 import IndexDatatype from "../Core/IndexDatatype.js";
 import Intersect from "../Core/Intersect.js";
 import CesiumMath from "../Core/Math.js";

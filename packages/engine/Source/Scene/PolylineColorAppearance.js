@@ -1,5 +1,4 @@
 import Frozen from "../Core/Frozen.js";
-
 import VertexFormat from "../Core/VertexFormat.js";
 import PerInstanceFlatColorAppearanceFS from "../Shaders/Appearances/PerInstanceFlatColorAppearanceFS.js";
 import PolylineColorAppearanceVS from "../Shaders/Appearances/PolylineColorAppearanceVS.js";

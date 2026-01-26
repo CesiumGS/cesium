@@ -6,7 +6,6 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-
 import IndexDatatype from "../Core/IndexDatatype.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Matrix4 from "../Core/Matrix4.js";
