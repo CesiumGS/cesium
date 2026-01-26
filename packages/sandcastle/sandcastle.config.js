@@ -14,7 +14,7 @@ const config = {
         termSimilarity: 0.85, // Fuzzier word matching
       },
     },
-    defaultFilters: { labels: "Showcases" },
+    defaultFilters: null,
     defaultThumbnail: "images/placeholder-thumbnail.jpg",
     metadata: {
       legacyId: undefined,
