@@ -435,6 +435,8 @@ const throttle = (callback) => {
     console.log("Cesium development server stopped.");
   });
 
+  // TODO: this really could just be a second call to `app.listen` with a different port. We should discuss how we want
+  // the local development env to work.
   const sandcastleApp = express();
   // TODO: this mimics the other server, can they be combined, is this even the way way want to set this up?
   sandcastleApp.use(express.static("."));
