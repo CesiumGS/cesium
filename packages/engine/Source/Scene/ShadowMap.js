@@ -145,7 +145,6 @@ function ShadowMap(options) {
   // Re-enable once https://github.com/CesiumGS/cesium/issues/4560 is resolved.
   let polygonOffsetSupported = true;
   if (
-    FeatureDetection.isInternetExplorer() ||
     FeatureDetection.isEdge() ||
     ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) &&
       FeatureDetection.isWindows() &&
