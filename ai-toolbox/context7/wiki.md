@@ -2,7 +2,7 @@
 
 ## Overview
 
-Context7 is an MCP (Model Context Protocol) server that provides real-time access to up-to-date library documentation and code examples directly to AI coding assistants. It retrieves current documentation from source repositories instead of relying on potentially outdated LLM training data.
+[Context7](https://context7.com/docs/overview) is an MCP (Model Context Protocol) server that provides real-time access to up-to-date library documentation and code examples directly to AI coding assistants. It retrieves current documentation from source repositories instead of relying on potentially outdated LLM training data.
 
 **Repository**: https://github.com/upstash/context7
 
@@ -105,14 +105,6 @@ Create a Cesium Viewer with Bing Maps imagery. use context7
 
 ### Library-Specific Queries
 
-Use `/CesiumGS/cesium` as the library ID for direct access:
-
-```text
-How do I add a 3D Tileset to a Cesium Viewer? use library /CesiumGS/cesium
-```
-
-### Cesium-Specific Examples
-
 #### Example 1: CesiumJS API Reference
 
 ```text
@@ -153,7 +145,7 @@ Expected result: Unity-specific C# code with Cesium3DTileset and CesiumCameraCon
 
 ```text
 Explain the tile refinement strategy for REPLACE and ADD in 3D Tiles 1.1. 
-use context7
+/websites/ogc_cs_22-025r4
 ```
 
 Expected result: Specification-compliant explanation of refinement strategies and schema details.
@@ -168,7 +160,7 @@ Agent Skills provide automatic activation based on context, without needing to t
 
 1. Create the skill directory structure: `.github/skills/context7`
 
-2. Copy the skill content from [context7.SKILL.md](context7.SKILL.md) to `.github/skills/context7/SKILL.md`
+2. Copy the skill content from [SKILL.md](skills_examples/SKILL.md) to `.github/skills/context7/SKILL.md`
 
 3. Enable the `chat.useAgentSkills` setting in VS Code
 
@@ -189,7 +181,7 @@ See [VS Code Agent Skills documentation](https://code.visualstudio.com/docs/copi
 
 1. Create the skill directory `.claude/skills/context7`
 
-2. Copy the skill content from [context7.SKILL.md](context7.SKILL.md) to `.claude/skills/context7/SKILL.md`
+2. Copy the skill content from [SKILL.md](skills_examples/SKILL.md) to `.claude/skills/context7/SKILL.md`
 
 The skill will automatically activate when relevant or can be invoked with `/context7`.
 
