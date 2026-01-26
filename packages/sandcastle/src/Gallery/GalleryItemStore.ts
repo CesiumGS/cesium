@@ -13,7 +13,11 @@ import { getBaseUrl } from "../util/getBaseUrl.ts";
 import { applyHighlightToItem, formatVectorSearch } from "./applyHighlight.tsx";
 import { loadFromUrl } from "./loadFromUrl.ts";
 import "../../@types/pagefind-client.d.ts";
-import { vectorSearch, type VectorSearchResult } from "./EmbeddingSearch.ts";
+import {
+  vectorSearch,
+  type VectorSearchResult,
+  onEmbeddingModelLoaded,
+} from "./EmbeddingSearch.ts";
 
 const galleryListPath = `gallery/list.json`;
 const pagefindUrl = `gallery/pagefind/pagefind.js`;
@@ -67,6 +71,14 @@ export function useGalleryItemStore() {
     VectorSearchResult[] | null
   >(null);
   const [isSearchPending, startSearch] = useTransition();
+  const [embeddingModelLoaded, setEmbeddingModelLoaded] = useState(false);
+
+  useEffect(() => {
+    onEmbeddingModelLoaded(() => {
+      setEmbeddingModelLoaded(true);
+    });
+  }, []);
+
   useEffect(() => {
     const pagefind = getPagefind();
     if (!pagefind) {
@@ -89,14 +101,18 @@ export function useGalleryItemStore() {
       const values = data.filter(isFulfilled).map(({ value }) => value);
       startSearch(() => setSearchResults(values));
 
-      if (searchTerm !== null && searchTerm.trim() !== "") {
+      if (
+        embeddingModelLoaded &&
+        searchTerm !== null &&
+        searchTerm.trim() !== ""
+      ) {
         const vectorResults = await vectorSearch(searchTerm, 5, searchFilter);
         startSearch(() => setVectorSearchResults(vectorResults));
       } else {
         startSearch(() => setVectorSearchResults(null));
       }
     });
-  }, [searchTerm, searchFilter]);
+  }, [searchTerm, searchFilter, embeddingModelLoaded]);
 
   const memoizedSearchResults = useMemo(() => {
     if (!searchResults) {

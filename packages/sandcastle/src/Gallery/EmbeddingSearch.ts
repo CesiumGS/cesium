@@ -39,6 +39,7 @@ class EmbeddingSearch {
   private tokenizer: PreTrainedTokenizer | null = null;
   private model: PreTrainedModel | null = null;
   private modelId: string = "avsolatorio/GIST-small-Embedding-v0";
+  private onInitializedCallbacks: (() => void)[] = [];
 
   async initialize(): Promise<void> {
     if (this.galleryList && this.model && this.tokenizer) {
@@ -51,6 +52,16 @@ class EmbeddingSearch {
 
     this.tokenizer = await AutoTokenizer.from_pretrained(this.modelId);
     this.model = await AutoModel.from_pretrained(this.modelId);
+
+    this.onInitializedCallbacks.forEach((callback) => callback());
+  }
+
+  onInitialized(callback: () => void): void {
+    if (this.galleryList && this.model && this.tokenizer) {
+      callback();
+    } else {
+      this.onInitializedCallbacks.push(callback);
+    }
   }
 
   private cosineSimilarity(vecA: number[], vecB: number[]): number {
@@ -134,4 +145,8 @@ export async function vectorSearch(
   filters?: Record<string, string | string[]> | null,
 ): Promise<VectorSearchResult[]> {
   return embeddingSearch.search(query, limit, filters);
+}
+
+export function onEmbeddingModelLoaded(callback: () => void): void {
+  embeddingSearch.onInitialized(callback);
 }
