@@ -100,12 +100,20 @@ export async function buildSandcastleApp({
       ],
     });
   } else {
+    let outerOrigin = "http://localhost:8080";
+    let innerOrigin = "http://localhost:8081";
+
+    if (process.env.CI) {
+      outerOrigin = "https://ci-builds.cesium.com/";
+      innerOrigin = "https://ci-builds.cesium.com/";
+    }
+
     config = createSandcastleConfig({
       outDir: join(__dirname, "../Apps/Sandcastle2"),
       basePath: "./",
       cesiumBaseUrl: "../../../Build/CesiumUnminified",
-      outerOrigin: "http://localhost:8080",
-      innerOrigin: "http://localhost:8081",
+      outerOrigin,
+      innerOrigin,
       cesiumVersion: version,
       commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
       imports: {
