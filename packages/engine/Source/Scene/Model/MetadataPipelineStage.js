@@ -481,15 +481,17 @@ function addPropertyTexturePropertyMetadata(
     texCoordVariableExpression = `vec2(${transformUniformName} * vec3(${texCoordVariable}, 1.0))`;
   }
   const valueExpression = `texture(${textureUniformName}, ${texCoordVariableExpression}).${channels}`;
+  const classProperty = property.classProperty;
   let unpackedValue;
   if (webgl2) {
-    unpackedValue = property.unpackInShader(
+    unpackedValue = classProperty.unpackTextureInShader(
       valueExpression,
+      channels,
       metadataVariable,
       initializationLines,
     );
   } else {
-    unpackedValue = property.unpackInShaderWebGL1(valueExpression);
+    unpackedValue = classProperty.unpackTextureInShaderWebGL1(valueExpression);
   }
 
   const transformedValue = addValueTransformUniforms({
@@ -498,7 +500,7 @@ function addPropertyTexturePropertyMetadata(
     glslType: glslType,
     metadataVariable: metadataVariable,
     shaderDestination: ShaderDestination.FRAGMENT,
-    property: property,
+    property: classProperty,
   });
 
   const finalAssignment = `metadata.${metadataVariable} = ${transformedValue};`;

@@ -10,7 +10,9 @@ import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import MetadataType from "./MetadataType.js";
-import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataComponentType, {
+  ScalarCategories,
+} from "./MetadataComponentType.js";
 
 /**
  * A metadata property, as part of a {@link MetadataClass}.
@@ -1259,6 +1261,13 @@ const unsignedIntegerTypesByComponentCount = [
   "uvec4",
 ];
 
+// Map from scalar component type to the GLSL function used to reinterpret from uint bits to the scalar type
+const uintBitsToScalarType = {
+  [ScalarCategories.FLOAT]: "uintBitsToFloat",
+  [ScalarCategories.INTEGER]: "int",
+  [ScalarCategories.UNSIGNED_INTEGER]: "",
+};
+
 MetadataClassProperty.prototype.getGlslTypeWebGL1 = function () {
   let componentCount = MetadataType.getComponentCount(this.type);
   if (this.isArray) {
@@ -1293,6 +1302,89 @@ MetadataClassProperty.prototype.getGlslType = function () {
   }
 
   return integerTypesByComponentCount[componentCount];
+};
+
+MetadataClassProperty.prototype.unpackTextureInShader = function (
+  sampledTextureExpression,
+  channelsString,
+  metadataVariableName,
+  shaderLines,
+) {
+  const glslType = this.getGlslType();
+  const componentType = this.componentType;
+  const numChannels = channelsString.length;
+  const type = this.type;
+
+  // Calculate total number of components
+  // (e.g. a length-2 fixed-sized array of VEC2 has 4 components - isGpuCompatible checks this fits in the channels)
+  const componentCount =
+    MetadataType.getComponentCount(type) *
+    (this.isArray ? this.arrayLength : 1);
+  const channelsPerComponent = Math.floor(numChannels / componentCount);
+
+  const rawChannelsName = `${metadataVariableName}_rawChannels`;
+  const rawBitsName = `${metadataVariableName}_rawBits`;
+  const unpackedValueName = `${metadataVariableName}_unpackedValue`;
+
+  const declareUnpackedValueLine = `${glslType} ${unpackedValueName};`;
+  const declareRawBitsLine = `uint ${rawBitsName};`;
+  shaderLines.push(declareUnpackedValueLine);
+  shaderLines.push(declareRawBitsLine);
+
+  // Sample all (specified) channels of the texture
+  const assignRawValuesLine = `${floatTypesByComponentCount[numChannels]} ${rawChannelsName} = ${sampledTextureExpression};`;
+  shaderLines.push(assignRawValuesLine);
+
+  const castFunction =
+    uintBitsToScalarType[MetadataComponentType.category(componentType)];
+  const hasMultipleComponents = componentCount > 1;
+  const usesMultipleChannelsPerComponent = channelsPerComponent > 1;
+
+  // Unpack each component of the output property from the raw channel values
+  // E.g. if the output type is a vec2, and 4 channels are given, unpack x from `rg` and y from `ba`
+  for (let i = 0; i < componentCount; i++) {
+    let subChannels = "";
+    if (usesMultipleChannelsPerComponent) {
+      subChannels = `.${channelsString.slice(i * channelsPerComponent, (i + 1) * channelsPerComponent)}`;
+    }
+    const assignRawBitsLine = `${rawBitsName} = czm_unpackTexture(${rawChannelsName}${subChannels});`;
+
+    let indexExpression = "";
+    if (hasMultipleComponents) {
+      indexExpression = `[${i}]`;
+    }
+
+    let normalize = "";
+    let toFloatIfNormalize = "";
+    if (this.normalized) {
+      const maxValue = MetadataComponentType.getMaximum(componentType);
+      normalize = ` * ${1.0 / Number(maxValue)}`;
+      toFloatIfNormalize = "float";
+    }
+
+    const assignUnpackedValueLine = `${unpackedValueName}${indexExpression} = ${toFloatIfNormalize}(${castFunction}(${rawBitsName}))${normalize};`;
+
+    shaderLines.push(assignRawBitsLine);
+    shaderLines.push(assignUnpackedValueLine);
+  }
+
+  return unpackedValueName;
+};
+
+// In WebGL 1, we limit property texture support to UINT8 properties.
+MetadataClassProperty.prototype.unpackTextureInShaderWebGL1 = function (
+  sampledTextureExpression,
+) {
+  // no unpacking needed if for normalized types
+  if (this.normalized) {
+    return sampledTextureExpression;
+  }
+
+  // integer types are read from the texture as normalized float values.
+  // these need to be rescaled to [0, 255] and cast to the appropriate integer
+  // type.
+  const glslType = this.getGlslTypeWebGL1();
+  return `${glslType}(255.0 * ${sampledTextureExpression})`;
 };
 
 export default MetadataClassProperty;
