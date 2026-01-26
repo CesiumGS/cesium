@@ -4,7 +4,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
+
 import IndexDatatype from "../Core/IndexDatatype.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -456,10 +456,7 @@ function createShaders(primitive, context) {
   )(PolylineFS);
 
   const vs = new ShaderSource({
-    defines: [
-      "VECTOR_TILE",
-      !FeatureDetection.isInternetExplorer() ? "CLIP_POLYLINE" : "",
-    ],
+    defines: ["VECTOR_TILE", "CLIP_POLYLINE"],
     sources: [PolylineCommon, vsSource],
   });
   const fs = new ShaderSource({
