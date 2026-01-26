@@ -145,7 +145,7 @@ Expected result: Unity-specific C# code with Cesium3DTileset and CesiumCameraCon
 
 ```text
 Explain the tile refinement strategy for REPLACE and ADD in 3D Tiles 1.1. 
-/websites/ogc_cs_22-025r4
+use library /websites/ogc_cs_22-025r4
 ```
 
 Expected result: Specification-compliant explanation of refinement strategies and schema details.
