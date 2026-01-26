@@ -70,11 +70,11 @@ const versionString = __COMMIT_SHA__
   ? `Commit: ${__COMMIT_SHA__.replaceAll(/['"]/g, "").substring(0, 7)} - ${cesiumVersion}`
   : cesiumVersion;
 
-type RightSideRef = {
+export type RightSideRef = {
   toggleExpanded: () => void;
 };
 
-function RightSideAllotment({
+export function RightSideAllotment({
   ref,
   children,
   consoleCollapsedHeight,
@@ -376,6 +376,27 @@ function App() {
     window.focus();
   }
 
+  function openStandaloneExperiment() {
+    const searchParams = new URLSearchParams(window.location.search);
+
+    const standaloneUrl = `${getBaseUrl().replace("index.html", "")}standalone2.html`;
+
+    const url = new URL(standaloneUrl);
+    const currentId = searchParams.get("id");
+    if (currentId && !codeState.dirty) {
+      url.searchParams.set("id", currentId);
+    } else {
+      const base64String = makeCompressedBase64String({
+        code: codeState.code,
+        html: codeState.html,
+      });
+      url.hash = `c=${base64String}`;
+    }
+
+    window.open(url, "_blank");
+    window.focus();
+  }
+
   // Starts fetching data
   const galleryItemStore = useGalleryItemStore();
 
@@ -511,6 +532,9 @@ function App() {
         <Divider aria-orientation="vertical" />
         <Button onClick={() => openStandalone()}>
           Standalone <Icon href={windowPopout} />
+        </Button>
+        <Button onClick={() => openStandaloneExperiment()}>
+          Standalone experiment <Icon href={windowPopout} />
         </Button>
         <div className="flex-spacer"></div>
         <SandcastlePopover

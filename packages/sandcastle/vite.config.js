@@ -28,6 +28,7 @@ const baseConfig = {
         index: resolve(__dirname, "./index.html"),
         bucket: resolve(__dirname, "./templates/bucket.html"),
         standalone: resolve(__dirname, "./standalone.html"),
+        standalone2: resolve(__dirname, "./standalone2.html"),
       },
     },
     assetsInlineLimit: (filePath) => {
