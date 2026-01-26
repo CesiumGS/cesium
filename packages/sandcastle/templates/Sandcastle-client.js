@@ -29,12 +29,12 @@ function loadSandcastle(code, html) {
 
   const div = document.createElement("div");
   div.innerHTML = sanitized;
-  document.body.append(div);
+  document.body.appendChild(div);
 
   const script = document.createElement("script");
   script.type = "module";
   script.textContent = code;
-  document.body.append(script);
+  document.body.appendChild(script);
 
   document.body.dataset.sandcastleLoaded = "yes";
 }

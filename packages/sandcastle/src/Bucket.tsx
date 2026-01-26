@@ -1,21 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { embedInSandcastleTemplate } from "./Helpers";
 import "./Bucket.css";
 import { ConsoleMessageType } from "./ConsoleMirror";
-import { IframeBridge } from "./util/IframeBridge";
-
-type SandcastleMessage =
-  | { type: "reload" }
-  | { type: "bucketReady" }
-  | { type: "consoleClear" }
-  | { type: "consoleLog"; log: string }
-  | { type: "consoleWarn"; warn: string }
-  | { type: "consoleError"; error: string; lineNumber?: number; url?: string }
-  | { type: "highlight"; highlight: number };
-
-export type MessageToBucket =
-  | { type: "reload" }
-  | { type: "runCode"; code: string; html: string };
+import {
+  BridgeToBucket,
+  IframeBridge,
+  MessageToApp,
+} from "./util/IframeBridge";
 
 const INNER_ORIGIN = __INNER_ORIGIN__;
 // using pathname lets this adapt to deployed locations like CI
@@ -44,112 +35,8 @@ export function Bucket({
   appendConsole: (type: ConsoleMessageType, message: string) => void;
   resetConsole: (options?: { showMessage?: boolean | undefined }) => void;
 }) {
-  const bucket = useRef<HTMLIFrameElement>(null);
-  const iframeBridge =
-    useRef<IframeBridge<MessageToBucket, SandcastleMessage>>(null);
+  const iframeBridge = useRef<BridgeToBucket>(null);
   const lastRunNumber = useRef<number>(Number.NEGATIVE_INFINITY);
-
-  const activateBucketScripts = useCallback(
-    function activateBucketScripts(
-      bucketFrame: HTMLIFrameElement,
-      code: string,
-      html: string,
-    ) {
-      const bucketDoc = bucketFrame.contentDocument;
-      if (!bucketDoc) {
-        return;
-      }
-
-      const headNodes = bucketDoc.head.childNodes;
-      let node;
-      const nodes: HTMLScriptElement[] = [];
-      let i, len;
-      for (i = 0, len = headNodes.length; i < len; ++i) {
-        node = headNodes[i];
-        // header is included in blank frame.
-        if (
-          node instanceof HTMLScriptElement &&
-          node.src.indexOf("Sandcastle-header.js") < 0 &&
-          node.src.indexOf("Cesium.js") < 0
-        ) {
-          nodes.push(node);
-        }
-      }
-
-      for (i = 0, len = nodes.length; i < len; ++i) {
-        bucketDoc.head.removeChild(nodes[i]);
-      }
-
-      // Apply user HTML to bucket.
-      const htmlElement = bucketDoc.createElement("div");
-      htmlElement.innerHTML = html;
-      bucketDoc.body.appendChild(htmlElement);
-
-      const onScriptTagError = function () {
-        if (bucketFrame.contentDocument === bucketDoc) {
-          // @ts-expect-error this has type any because it's from anywhere inside the bucket
-          appendConsole("error", `Error loading ${this.src}`);
-          appendConsole(
-            "error",
-            "Make sure Cesium is built, see the Contributor's Guide for details.",
-          );
-        }
-      };
-
-      // Load each script after the previous one has loaded.
-      const loadScript = function () {
-        if (bucketFrame.contentDocument !== bucketDoc) {
-          // A newer reload has happened, abort this.
-          return;
-        }
-        if (nodes.length > 0) {
-          while (nodes.length > 0) {
-            node = nodes.shift();
-            if (!node) {
-              continue;
-            }
-            const scriptElement = bucketDoc.createElement("script");
-            let hasSrc = false;
-            for (
-              let j = 0, numAttrs = node.attributes.length;
-              j < numAttrs;
-              ++j
-            ) {
-              const name = node.attributes[j].name;
-              const val = node.attributes[j].value;
-              scriptElement.setAttribute(name, val);
-              if (name === "src" && val) {
-                hasSrc = true;
-              }
-            }
-            scriptElement.innerHTML = node.innerHTML;
-            if (hasSrc) {
-              scriptElement.onload = loadScript;
-              scriptElement.onerror = onScriptTagError;
-              bucketDoc.head.appendChild(scriptElement);
-            } else {
-              bucketDoc.head.appendChild(scriptElement);
-              loadScript();
-            }
-          }
-        } else {
-          // Apply user JS to bucket
-          const element = bucketDoc.createElement("script");
-          element.type = "module";
-
-          // Firefox line numbers are zero-based, not one-based.
-          const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
-
-          element.textContent = embedInSandcastleTemplate(code, isFirefox);
-          bucketDoc.body.appendChild(element);
-        }
-      };
-
-      loadScript();
-    },
-    [appendConsole],
-  );
-
   const [bucketReady, setBucketReady] = useState(false);
 
   useEffect(() => {
@@ -169,28 +56,14 @@ export function Bucket({
   }, [bucketReady, code, html, runNumber]);
 
   useEffect(() => {
-    const messageHandler = function (e: MessageEvent<SandcastleMessage>) {
+    const messageHandler = function (e: MessageEvent<MessageToApp>) {
       if (!iframeBridge.current) {
         return;
       }
-      const data = e.data;
 
-      // The iframe (bucket.html) sends this message on load.
-      // This triggers the code to be injected into the iframe.
-      if (data.type === "reload") {
-        if (!bucket.current || !bucket.current.contentDocument) {
-          // Reload fired, bucket not specified yet.
-          return;
-        }
-        const bucketDoc = bucket.current.contentDocument;
-        if (bucketDoc.body.dataset.sandcastleLoaded !== "yes") {
-          bucketDoc.body.dataset.sandcastleLoaded = "yes";
-          resetConsole();
-          // This happens after the bucket.html reloads, to inject the editor code
-          // into the iframe, causing the demo to run there.
-          activateBucketScripts(bucket.current, code, html);
-        }
-      } else if (data.type === "bucketReady") {
+      if (e.data.type === "bucketReady") {
+        // The iframe (bucket.html) sends this message on load.
+        // We send the code in response to make sure the page is ready to receive it
         setBucketReady(true);
         // Firefox line numbers are zero-based, not one-based.
         const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
@@ -201,30 +74,30 @@ export function Bucket({
           code: embedInSandcastleTemplate(code, isFirefox),
           html,
         });
-      } else if (data.type === "consoleClear") {
+      } else if (e.data.type === "consoleClear") {
         resetConsole({ showMessage: true });
-      } else if (data.type === "consoleLog") {
+      } else if (e.data.type === "consoleLog") {
         // Console log messages from the iframe display in Sandcastle.
-        appendConsole("log", data.log);
-      } else if (data.type === "consoleError") {
+        appendConsole("log", e.data.log);
+      } else if (e.data.type === "consoleError") {
         // Console error messages from the iframe display in Sandcastle
-        let errorMsg = data.error;
-        const lineNumber = data.lineNumber;
+        let errorMsg = e.data.error;
+        const lineNumber = e.data.lineNumber;
         if (lineNumber) {
           errorMsg += ` (on line ${lineNumber}`;
 
-          if (data.url) {
-            errorMsg += ` of ${data.url}`;
+          if (e.data.url) {
+            errorMsg += ` of ${e.data.url}`;
           }
           errorMsg += ")";
         }
         appendConsole("error", errorMsg);
-      } else if (data.type === "consoleWarn") {
+      } else if (e.data.type === "consoleWarn") {
         // Console warning messages from the iframe display in Sandcastle.
-        appendConsole("warn", data.warn);
-      } else if (data.type === "highlight") {
+        appendConsole("warn", e.data.warn);
+      } else if (e.data.type === "highlight") {
         // Hovering objects in the embedded Cesium window.
-        highlightLine(data.highlight);
+        highlightLine(e.data.highlight);
       }
     };
 
@@ -233,31 +106,22 @@ export function Bucket({
     }
     iframeBridge.current.addEventListener(messageHandler);
     return () => iframeBridge.current?.removeEventListener();
-  }, [
-    code,
-    html,
-    highlightLine,
-    resetConsole,
-    appendConsole,
-    activateBucketScripts,
-  ]);
+  }, [code, html, highlightLine, resetConsole, appendConsole]);
 
   return (
     <div className="bucket-container">
       <iframe
         ref={(iframe) => {
-          bucket.current = iframe;
           if (
             iframe?.contentWindow &&
             (!iframeBridge.current ||
-              iframeBridge.current.targetWindow !== iframe?.contentWindow)
+              iframeBridge.current.targetWindow !== iframe.contentWindow)
           ) {
             iframeBridge.current = new IframeBridge(
               INNER_ORIGIN,
               iframe.contentWindow,
               "App",
             );
-            console.log("bridge created", iframeBridge.current);
           }
         }}
         id="bucketFrame"

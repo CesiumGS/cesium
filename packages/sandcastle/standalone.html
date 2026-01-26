@@ -118,29 +118,14 @@
       let base64String;
       let data;
 
-      // Since we are setting the HTML base href below, we need to get the getCesiumBaseUrl
-      // upfront so that the value is correct. It gets cached for future calls.
-      // This is only a problem when using combined Cesium, which is the only time Cesium
-      // will be defined below.
-      // TODO: I don't think this is needed anymore after switching to ESM modules but
-      // I need to verify that
-      // if (typeof window.Cesium !== "undefined") {
-      //   window.Cesium.buildModuleUrl.getCesiumBaseUrl();
-      // }
-
       if (window.location.hash.indexOf("#c=") === 0) {
         base64String = window.location.hash.substr(3);
         data = decodeBase64Data(base64String);
-        //Handle case where demo is in a sub-directory by modifying
-        //the HTML to add a base href.
-        document.head.innerHTML = `${document.head.innerHTML}<base href="${data.baseHref}" />`;
-        window.sandcastleData = data;
       }
 
       let code;
-      if (window.sandcastleData) {
+      if (data) {
         base64String = window.location.hash.substr(3);
-        data = window.sandcastleData;
         let html = data.html;
         code = data.code;
         const isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
@@ -161,11 +146,5 @@
         scriptElement.innerHTML = embedInSandcastleTemplate(code, isFirefox);
       }
     </script>
-    <!-- TODO: this is broken -->
-    <script
-      type="text/javascript"
-      src="../Sandcastle-client.js"
-      vite-ignore
-    ></script>
   </body>
 </html>

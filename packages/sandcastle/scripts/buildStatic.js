@@ -104,6 +104,12 @@ export function createSandcastleConfig({
     typePaths[key] = value.typesPath;
   }
 
+  if (!innerOrigin || innerOrigin === outerOrigin) {
+    console.warn(
+      "WARNING: If the inner and outer origin are the same there is no browser protection for secrets. Please check your config if this is not intended",
+    );
+  }
+
   config.define = {
     ...config.define,
     __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(typePaths),

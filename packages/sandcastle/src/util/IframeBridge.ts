@@ -1,9 +1,7 @@
+import { type ConsoleMessage } from "./ConsoleWrapper";
+
 // Inside the bucket we want to avoid calling the wrapped console.log
 // which would create an infinite loop of postMessage and log calls
-
-import { MessageToBucket } from "../Bucket";
-import { ConsoleMessage } from "./ConsoleWrapper";
-
 // @ts-expect-error We know this global may exist
 const log = window.originalLog ?? console.log;
 
@@ -36,8 +34,11 @@ export type MessageToApp =
   | { type: "bucketReady" }
   | ConsoleMessage
   | { type: "highlight"; highlight: number };
+export type MessageToBucket =
+  | { type: "reload" }
+  | { type: "runCode"; code: string; html: string };
 export type BridgeToApp = IframeBridge<MessageToApp, MessageToBucket>;
-export type BridgeToBucket = IframeBridge<BridgeToBucket, MessageToApp>;
+export type BridgeToBucket = IframeBridge<MessageToBucket, MessageToApp>;
 
 export class IframeBridge<
   SendMessageType = MessageWithType,
