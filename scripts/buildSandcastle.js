@@ -104,8 +104,8 @@ export async function buildSandcastleApp({
     let innerOrigin = "http://localhost:8081";
 
     if (process.env.CI) {
-      outerOrigin = "https://ci-builds.cesium.com/";
-      innerOrigin = "https://ci-builds.cesium.com/";
+      outerOrigin = "https://ci-builds.cesium.com";
+      innerOrigin = "https://ci-builds.cesium.com";
     }
 
     config = createSandcastleConfig({

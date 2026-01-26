@@ -18,7 +18,7 @@ export type MessageToBucket =
   | { type: "runCode"; code: string; html: string };
 
 const INNER_ORIGIN = __INNER_ORIGIN__;
-const bucketUrl = `${__INNER_ORIGIN__}/templates/bucket.html`;
+const bucketUrl = `${new URL(`/templates/bucket.html`, __INNER_ORIGIN__)}`;
 
 export function Bucket({
   code,
