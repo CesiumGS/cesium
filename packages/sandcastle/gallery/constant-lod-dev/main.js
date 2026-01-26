@@ -1,4 +1,5 @@
 import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
 
 const viewer = new Cesium.Viewer("cesiumContainer");
 
@@ -34,3 +35,35 @@ createModel(
   "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod.gltf",
   0,
 );
+
+const options = [
+  {
+    text: "Checkerboard",
+    onselect: function () {
+      createModel(
+        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Checker.gltf",
+        0,
+      );
+    },
+  },
+  {
+    text: "Grass",
+    onselect: function () {
+      createModel(
+        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Grass.gltf",
+        100,
+      );
+    },
+  },
+  {
+    text: "Normal map",
+    onselect: function () {
+      createModel(
+        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_NormalMap.gltf",
+        100,
+      );
+    },
+  },
+];
+
+Sandcastle.addToolbarMenu(options);
