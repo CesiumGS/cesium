@@ -46,7 +46,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {LabelGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=labels|Cesium Sandcastle Labels Demo}
  */
 function LabelGraphics(options) {
   this._definitionChanged = new Event();
