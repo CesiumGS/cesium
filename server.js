@@ -436,6 +436,8 @@ const throttle = (callback) => {
   });
 
   const sandcastleApp = express();
+  // TODO: this mimics the other server, can they be combined, is this even the way way want to set this up?
+  sandcastleApp.use(express.static("."));
   // TODO: these should be hooked up to the same self-rebuilding bundles as the main server so devs can test their changes
   sandcastleApp.use(express.static("./Apps/Sandcastle2"));
   sandcastleApp.use("/Build", express.static("./Build"));
