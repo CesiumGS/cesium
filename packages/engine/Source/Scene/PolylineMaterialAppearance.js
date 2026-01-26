@@ -7,10 +7,8 @@ import PolylineFS from "../Shaders/PolylineFS.js";
 import Appearance from "./Appearance.js";
 import Material from "./Material.js";
 
-let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineMaterialAppearanceVS}`;
+const defaultVertexShaderSource = `#define CLIP_POLYLINE \n${PolylineCommon}\n${PolylineMaterialAppearanceVS}`;
 const defaultFragmentShaderSource = PolylineFS;
-
-defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
 
 /**
  * An appearance for {@link PolylineGeometry} that supports shading with materials.

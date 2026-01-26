@@ -5,10 +5,8 @@ import PolylineColorAppearanceVS from "../Shaders/Appearances/PolylineColorAppea
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import Appearance from "./Appearance.js";
 
-let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineColorAppearanceVS}`;
+const defaultVertexShaderSource = `#define CLIP_POLYLINE \n${PolylineCommon}\n${PolylineColorAppearanceVS}`;
 const defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
-
-defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
 
 /**
  * An appearance for {@link GeometryInstance} instances with color attributes and
