@@ -1,6 +1,7 @@
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import CubeMapPanorama from "./CubeMapPanorama.js";
 import SceneMode from "./SceneMode.js";
+import destroyObject from "../Core/destroyObject.js";
 
 /**
  * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.
@@ -33,12 +34,46 @@ import SceneMode from "./SceneMode.js";
  * @see Transforms.computeTemeToPseudoFixedMatrix
  */
 function SkyBox(options) {
+  /**
+   * The sources used to create the cube map faces: an object
+   * with <code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>,
+   * <code>negativeY</code>, <code>positiveZ</code>, and <code>negativeZ</code> properties.
+   * These can be either URLs or <code>Image</code> objects.
+   *
+   * @type {object}
+   * @default undefined
+   */
+  this._sources = options.sources;
+
+  /**
+   * Determines if the sky box will be shown.
+   *
+   * @type {boolean}
+   * @default true
+   */
+  this.show = options.show ?? true;
   this._panorama = new CubeMapPanorama({
-    sources: options.sources,
-    show: options.show,
+    sources: this._sources,
+    show: this._show,
     returnCommand: true,
   });
 }
+
+Object.defineProperties(SkyBox.prototype, {
+  /**
+   * Gets or sets the the primitive object.
+   * @memberof Panorama.prototype
+   * @type {object}
+   */
+  sources: {
+    get: function () {
+      return this._panorama.sources;
+    },
+    set: function (value) {
+      this._panorama.sources = value;
+    },
+  },
+});
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -98,6 +133,7 @@ SkyBox.prototype.isDestroyed = function () {
  */
 SkyBox.prototype.destroy = function () {
   this._panorama = this._panorama && this._panorama.destroy();
+  return destroyObject(this);
 };
 
 function getDefaultSkyBoxUrl(suffix) {
