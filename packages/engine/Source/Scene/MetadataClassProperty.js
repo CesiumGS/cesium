@@ -1217,6 +1217,12 @@ MetadataClassProperty.prototype.bytesPerElement = function () {
  * @private
  */
 MetadataClassProperty.prototype.isGpuCompatible = function (channelsLength) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(channelsLength) || channelsLength <= 0) {
+    throw new DeveloperError("channelsLength must be a positive number.");
+  }
+  //>>includeEnd('debug');
+
   const type = this.type;
 
   if (this.isVariableLengthArray) {

@@ -51,7 +51,7 @@ void main()
     Metadata metadata;
     MetadataClass metadataClass;
     MetadataStatistics metadataStatistics;
-    metadataStage(metadata, metadataClass, metadataStatistics, attributes);
+    metadataStage(featureIds, metadata, metadataClass, metadataStatistics, attributes);
 
     //========================================================================
     // When not picking metadata START

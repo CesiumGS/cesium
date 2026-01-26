@@ -115,6 +115,23 @@ Object.defineProperties(PropertyTable.prototype, {
   },
 
   /**
+   * The properties stored in this table.
+   *
+   * @memberof PropertyTable.prototype
+   * @type {MetadataClassProperty}
+   * @readonly
+   */
+  properties: {
+    get: function () {
+      if (defined(this._metadataTable)) {
+        return this._metadataTable.class.properties;
+      }
+
+      return undefined;
+    },
+  },
+
+  /**
    * Extra user-defined properties.
    *
    * @memberof PropertyTable.prototype
