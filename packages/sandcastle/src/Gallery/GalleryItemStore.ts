@@ -72,6 +72,7 @@ export function useGalleryItemStore() {
   >(null);
   const [isSearchPending, startSearch] = useTransition();
   const [embeddingModelLoaded, setEmbeddingModelLoaded] = useState(false);
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     onEmbeddingModelLoaded(() => {
@@ -85,7 +86,12 @@ export function useGalleryItemStore() {
       return;
     }
 
-    startSearch(async () => {
+    // Search abort logic handles the issue of race conditions as the user types out a search, which launches multiple async searches
+    searchAbortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    searchAbortControllerRef.current = abortController;
+
+    const performSearch = async () => {
       /* @ts-expect-error: null is a valid search term value */
       const { results } = await pagefind.search(searchTerm, {
         filters: searchFilter,
@@ -99,6 +105,11 @@ export function useGalleryItemStore() {
       ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
 
       const values = data.filter(isFulfilled).map(({ value }) => value);
+
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       startSearch(() => setSearchResults(values));
 
       if (
@@ -111,7 +122,13 @@ export function useGalleryItemStore() {
       } else {
         startSearch(() => setVectorSearchResults(null));
       }
-    });
+    };
+
+    performSearch();
+
+    return () => {
+      abortController.abort();
+    };
   }, [searchTerm, searchFilter, embeddingModelLoaded]);
 
   const memoizedSearchResults = useMemo(() => {
