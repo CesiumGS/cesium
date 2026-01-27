@@ -14,15 +14,11 @@ jobs:
       statuses: write
       contents: read
     env:
-      BUILD_VERSION: ${{ github.ref_name }}.${{ github.run_number }}
       AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: us-east-1
-      BRANCH: ${{ github.ref_name }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GITHUB_REPO: ${{ github.repository }}
-      GITHUB_SHA: ${{ github.sha }}
-      DEPLOYED_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
+      BASE_URL: /cesium/${{ github.ref_name }}/
     steps:
       - uses: actions/checkout@v6
       - name: install node 22
@@ -31,8 +27,18 @@ jobs:
           node-version: "22"
       - name: npm install
         run: npm install
-      - name: set the version in package.json
-        run: npm run deploy-set-version -- --buildVersion $BUILD_VERSION
+      - name: set version in package.json
+        run: |
+          npx @dotenvx/dotenvx run -f ./.github/workflows/.env.push \
+          -- sh -c \
+          'npm version prerelease --preid $BRANCH --ws --include-workspace-root --no-git-tag-version'
+      - name: set status pending
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: |
+          npx @dotenvx/dotenvx run -f ./.github/workflows/.env.push -- \
+          node ./scripts/setCommitStatus.js zip pending && \
+          node ./scripts/setCommitStatus.js npm pending && \
+          node ./scripts/setCommitStatus.js index pending
       - name: create release zip
         run: npm run make-zip
       - name: package cesium module
@@ -45,7 +51,9 @@ jobs:
       - name: deploy to s3
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: |
-          aws s3 sync . s3://cesium-public-builds/cesium/$BRANCH/ \
+          npx @dotenvx/dotenvx run -f ./.github/workflows/.env.push -f .env \
+          -- sh -c \
+          'aws s3 sync . $BUILD_ARTIFACT_BUCKET \
           --cache-control "no-cache" \
           --exclude ".git/*" \
           --exclude ".github/*" \
@@ -58,7 +66,11 @@ jobs:
           --exclude "node_modules/*" \
           --exclude "scripts/*" \
           --exclude "Tools/*" \
-          --delete
-      - name: set status
+          --delete'
+      - name: set status success
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        run: npm run deploy-status -- --status success --message Deployed
+        run: |
+          npx @dotenvx/dotenvx run -f ./.github/workflows/.env.push -- \
+          node ./scripts/setCommitStatus.js zip ${{ job.status }} && \
+          node ./scripts/setCommitStatus.js npm ${{ job.status }} && \
+          node ./scripts/setCommitStatus.js index ${{ job.status }}

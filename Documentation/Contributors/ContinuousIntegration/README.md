@@ -2,8 +2,9 @@
 
 - [Background](#background)
 - [Actions and workflows](#actions-and-workflows)
+  - [Environment variables](#environment-variables)
 - [Continuous deployment](#continuous-deployment)
-- [Configuration](#configuration)
+- [Configuration guide](#configuration-guide)
   - [Configure a different S3 bucket](#configure-a-different-s3-bucket)
   - [Configure S3 credentials](#configure-s3-credentials)
 
@@ -18,51 +19,52 @@ CesiumJS uses [GitHub Actions](https://docs.github.com/en/actions) for continuou
 
 Reusable actions are defined in `/.github/actions/` and workflows in `.github/workflows/`.
 
-A workflow is triggered whenever someone pushes code to the CesiumJS repository, or an external contributor opens a pull request. After the build has completed, at the bottom of the pull request page the status of the build is shown. In the dropdown menu, individual checks are displayed. Logs and deployed artifacts can be accessed by clicking the "Details" link.
+Workflows are triggered when a commit is pushed to the `cesium` repository and when a contributor opens or updates a pull request. After the build has completed, the overall status of the build is shown at the bottom of the pull request page.
+
+In the dropdown menu, individual status checks are displayed. Logs and deployed build artifacts can be accessed by clicking the link associated with the individual check.
 
 ![GitHub Action Checks](github_action_checks.png)
 
-The workflow checks for any CesiumJS branch are accessible under the [Branches](https://github.com/CesiumGS/cesium/branches/all) page by clicking the icon next to the branch name.
+The status checks for any branch are also accessible under the [Branches](https://github.com/CesiumGS/cesium/branches/all) page by clicking the icon next to the branch name.
 
 ![GitHub Branches](github_branches.png)
 
+### Environment variables
+
+Any non-secret environment variables for CI and CD are managed using `.env` files and [dotenvx](https://github.com/dotenvx/dotenvx).
+
+- **Local dev**: `.env` is checked in at the repository root and provides defaults constant values and local fallbacks.
+  - To run a script or command with these variables configured locally, use `npx @dotenvx/dotenvx run -- <COMMAND>`, e.g., `npx @dotenvx/dotenvx run -- node ./scripts/setCommitStatus.js`.
+  - To expand a variable directly in a command, use a subshell command, e.g., `npx @dotenvx/dotenvx run -- sh -c 'echo "${BRANCH}"'`.
+- **GitHub Actions workflow - `push` trigger**: `.github/workflows/.env.push`
+- **GitHub Actions workflow - `pull_request` trigger**: `.github/workflows/.env.pull_request`
+
 ## Continuous deployment
 
-Automated deployments make recent code changes available for testing and review without needing to fetch and build locally. We deploy each of the following on a per-branch basis.
+Automated deployments make recent code changes available for convenient testing and review—No need to fetch or build locally. In the `cesium` repository, all continuous deployment artifacts are uploaded for commits authored by users with commit access.
 
-| Artifact         | Link (`main` branch)                                                                                                                                                       |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sandcastle       | [`https://ci-builds.cesium.com/cesium/main/Apps/Sandcastle/index.html`](https://ci-builds.cesium.com/cesium/main/Apps/Sandcastle/index.html)                               |
-| Documentation    | [`https://ci-builds.cesium.com/cesium/main/Build/Documentation/index.html`](https://ci-builds.cesium.com/cesium/main/Build/Documentation/index.html)                       |
-| Coverage results | [`https://ci-builds.cesium.com/cesium/main/Build/Coverage/index.html`](https://ci-builds.cesium.com/cesium/main/Build/Coverage/index.html)                                 |
-| Release zip      | [`https://ci-builds.cesium.com/cesium/main/<github-ref-name>.<github-run-number>.zip`](https://ci-builds.cesium.com/cesium/main/<github-ref-name>.<github-run-number>.zip) |
-| npm package      | [`https://ci-builds.cesium.com/cesium/main/<github-ref-name>.<github-run-number>.tgz`](https://ci-builds.cesium.com/cesium/main/<github-ref-name>.<github-run-number>.tgz) |
+Each of the following are deployed on a per-branch basis.
 
-## Configuration
+| Artifact         | Link pattern (`main`)                                                                                                                                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Sandcastle       | `https://ci-builds.cesium.com/cesium/<BRANCH>/Apps/Sandcastle/index.html` (i.e., [`https://ci-builds.cesium.com/cesium/main/Apps/Sandcastle/index.html`](https://ci-builds.cesium.com/cesium/main/Apps/Sandcastle/index.html))             |
+| Documentation    | `https://ci-builds.cesium.com/cesium/<BRANCH>/Build/Documentation/index.html` (i.e., [`https://ci-builds.cesium.com/cesium/main/Build/Documentation/index.html`](https://ci-builds.cesium.com/cesium/main/Build/Documentation/index.html)) |
+| Coverage results | `https://ci-builds.cesium.com/cesium/<BRANCH>/Build/Coverage/index.html` (i.e., [`https://ci-builds.cesium.com/cesium/main/Build/Coverage/index.html`](https://ci-builds.cesium.com/cesium/main/Build/Coverage/index.html))                |
+| Release zip      | `https://ci-builds.cesium.com/cesium/<BRANCH>/Cesium-<VERSION>-<BRANCH>.0.zip` (i.e., [`https://ci-builds.cesium.com/cesium/main/Cesium-1.X.X-main.0.zip`](https://ci-builds.cesium.com/cesium/main/Cesium-1.X.X-main.0.zip))              |
+| npm package      | `https://ci-builds.cesium.com/cesium/<BRANCH>/cesium-<VERSION>-<BRANCH>.0.tgz` (i.e., [`https://ci-builds.cesium.com/cesium/main/cesium-1.X.X-main.0.tgz`](https://ci-builds.cesium.com/cesium/main/cesium-1.X.X-main.0.tgz))              |
 
-Additional set up is required for deployment if you do not have commit access to CesiumJS.
+## Configuration guide
+
+Additional set up is required for deployment _only_ if you do not have commit access to CesiumJS.
 
 ### Configure a different S3 bucket
 
-It is possible to configure your development branch of CesiumJS to deploy build artifacts to a different [AWS S3 Bucket](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html). If you are using the cesium-public-builds bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
+It is possible to configure your development branch of CesiumJS to deploy build artifacts to a different [AWS S3 Bucket](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html). If you are using the default "cesium-public-builds" bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
 
-- In `.gtihub/workflows/dev.yml`, in the following lines, replace "cesium-public-builds" with the name of your S3 bucket.
+In the environment file `.env`, update the following values:
 
-```sh
-aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Coverage --delete --color on
-```
-
-```sh
-aws s3 sync Build/unzipped/ s3://cesium-public-builds/cesium/$BRANCH/Build/ --cache-control "no-cache" --delete
-```
-
-- In `gulpfile.js`, edit the following line:
-
-```javascript
-const devDeployUrl = "https://ci-builds.cesium.com/cesium/";
-```
-
-- Edit the URL to match the URL hosting the S3 bucket specified in the previous step.
+- Replace the value of `BUILD_ARTIFACT_BUCKET` with the name of the target S3 bucket.
+- Replace the value of `BUILD_ARTIFACT_URL` with the public URL correspondeding to the target S3 bucket.
 
 ### Configure S3 credentials
 

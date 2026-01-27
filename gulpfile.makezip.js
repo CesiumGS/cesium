@@ -52,8 +52,6 @@ async function pruneScriptsForZip(packageJsonPath) {
   delete scripts.prettier;
 
   // Remove deploy tasks
-  delete scripts["deploy-status"];
-  delete scripts["deploy-set-version"];
   delete scripts["website-release"];
 
   // Set server tasks to use production flag

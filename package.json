@@ -23,7 +23,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/CesiumGS/cesium.git"
+    "url": "git+https://github.com/CesiumGS/cesium.git"
   },
   "bugs": {
     "url": "https://github.com/CesiumGS/cesium/issues"
@@ -56,6 +56,7 @@
   },
   "devDependencies": {
     "@cesium/eslint-config": "^12.0.0",
+    "@dotenvx/dotenvx": "^1.51.0",
     "@playwright/test": "^1.41.1",
     "chokidar": "^5.0.0",
     "cloc": "^2.6.0-cloc",
@@ -95,7 +96,6 @@
     "markdownlint-cli": "^0.47.0",
     "merge-stream": "^2.0.0",
     "mkdirp": "^3.0.1",
-    "node-fetch": "^3.2.10",
     "open": "^11.0.0",
     "prettier": "3.7.4",
     "prismjs": "^1.28.0",
@@ -139,8 +139,6 @@
     "test-e2e-release-all": "release=true playwright test -c Specs/e2e/playwright.config.js",
     "test-e2e-report": "playwright show-report Build/Specs/e2e/report",
     "test-e2e-update": "playwright test -c Specs/e2e/playwright.config.js --project=chromium -u",
-    "deploy-status": "gulp deployStatus",
-    "deploy-set-version": "gulp deploySetVersion",
     "prettier": "prettier --write \"**/*\"",
     "prettier-check": "prettier --check \"**/*\"",
     "cspell": "npx cspell lint -c .vscode/cspell.json --unique --no-progress"

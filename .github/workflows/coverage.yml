@@ -1,0 +1,45 @@
+name: coverage
+on: 
+  pull_request:
+concurrency:
+  group: coverage-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: us-east-1
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      statuses: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: install node 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: npm install
+        run: npm install
+      - name: set status pending
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: |
+          npx @dotenvx/dotenvx run -f ./.github/workflows/.env.pull_request -- \
+          node ./scripts/setCommitStatus.js coverage pending
+      - name: build
+        run: npm run build
+      - name: coverage (firefox)
+        run: npm run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
+      - name: upload coverage artifacts
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: |
+          npx @dotenvx/dotenvx run -f ./.github/workflows/.env.pull_request -f .env \
+          -- sh -c \
+          'aws s3 sync ./Build/Coverage $BUILD_ARTIFACT_BUCKET/Build/Coverage --delete'
+      - name: set status success
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: |
+          npx @dotenvx/dotenvx run -f ./.github/workflows/.env.pull_request -- \
+          node ./scripts/setCommitStatus.js coverage ${{ job.status }}
