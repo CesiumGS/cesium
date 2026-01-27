@@ -35,6 +35,7 @@ function GoogleStreetViewProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   this._session = options.session;
   this._key = options.apiKey;
+  this._skipColorSpaceConversion = options.skipColorSpaceConversion;
 }
 
 Object.defineProperties(GoogleStreetViewProvider.prototype, {});
@@ -98,8 +99,10 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
     session: this._session,
   });
 
-  const canvas =
-    await GoogleStreetViewProvider.stitchBitmapsFromTileMap(tileMap);
+  const canvas = await GoogleStreetViewProvider.stitchBitmapsFromTileMap(
+    tileMap,
+    this._skipColorSpaceConversion,
+  );
 
   const credit = GoogleMaps.getDefaultCredit();
 
@@ -192,6 +195,7 @@ GoogleStreetViewProvider.prototype.getPanoIdMetadata = async function (
  * Creates an {@link PanoramaProvider} which provides image tiles from {@link https://developers.google.com/maps/documentation/tile/streetview|Google Street View Tiles}.
  * @param {object} options Object with the following properties:
  * @param {string} [options.apiKey=GoogleMaps.defaultApiKey] Your API key to access Google Street View Tiles. See {@link https://developers.google.com/maps/documentation/javascript/get-api-key} for instructions on how to create your own key.
+ * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
  * @returns {Promise<GoogleStreetViewProvider>} A promise that resolves to the created GoogleStreetViewProvider.
@@ -250,21 +254,30 @@ GoogleStreetViewProvider.getGoogleStreetViewTileUrls = async function (
   return tileIds;
 };
 
-GoogleStreetViewProvider.loadBitmap = async function (url) {
-  try {
-    const response = await fetch(url, { mode: "cors" });
-    if (!response.ok) {
-      return null;
-    }
+GoogleStreetViewProvider.loadBitmaps = async function (tiles) {
+  const flipOptions = {
+    flipY: false,
+    skipColorSpaceConversion: true,
+    preferImageBitmap: true,
+  };
 
-    const blob = await response.blob();
-    return await createImageBitmap(blob);
+  try {
+    const loaded = await Promise.all(
+      tiles.map(async (t) => ({
+        ...t,
+        bitmap: await Resource.createIfNeeded(t.src).fetchImage(flipOptions),
+      })),
+    );
+    return loaded.filter((t) => t.bitmap);
   } catch {
     return null;
   }
 };
 
-GoogleStreetViewProvider.stitchBitmapsFromTileMap = async function (tileMap) {
+GoogleStreetViewProvider.stitchBitmapsFromTileMap = async function (
+  tileMap,
+  skipColorSpaceConversion,
+) {
   // tileMap: Record<"z/x/y", string>
 
   const tiles = Object.entries(tileMap).map(([key, src]) => {
@@ -276,7 +289,7 @@ GoogleStreetViewProvider.stitchBitmapsFromTileMap = async function (tileMap) {
     throw new DeveloperError("No tiles provided");
   }
 
-  // sanity check: all same zoom
+  // Ensure all tiles have the same zoom level
   const zoom = tiles[0].z;
   for (const t of tiles) {
     if (t.z !== zoom) {
@@ -284,16 +297,9 @@ GoogleStreetViewProvider.stitchBitmapsFromTileMap = async function (tileMap) {
     }
   }
 
-  const loaded = await Promise.all(
-    tiles.map(async (t) => ({
-      ...t,
-      bitmap: await GoogleStreetViewProvider.loadBitmap(t.src),
-    })),
-  );
+  const bitmaps = await GoogleStreetViewProvider.loadBitmaps(tiles);
 
-  const bitmaps = loaded.filter((t) => t.bitmap);
-
-  if (bitmaps.length === 0) {
+  if (!defined(bitmaps)) {
     throw new DeveloperError("No tiles could be loaded");
   }
 

@@ -124,12 +124,17 @@ describe("Scene/GoogleStreetViewProvider", function () {
         "getGoogleStreetViewTileUrls",
       ).and.returnValue(Promise.resolve(fakeTileMap));
 
-      spyOn(GoogleStreetViewProvider, "loadBitmap").and.returnValue(
-        Promise.resolve({
-          width: 256,
-          height: 256,
-          close: jasmine.createSpy("close"),
-        }),
+      spyOn(GoogleStreetViewProvider, "loadBitmaps").and.callFake(
+        async (tiles) => {
+          return tiles.map((t) => ({
+            ...t,
+            bitmap: {
+              width: 256,
+              height: 256,
+              close: jasmine.createSpy("close"),
+            },
+          }));
+        },
       );
 
       spyOn(document, "createElement").and.callFake(() => {
@@ -206,64 +211,89 @@ describe("Scene/GoogleStreetViewProvider", function () {
       });
     });
 
-    describe("loadBitmap", function () {
-      let originalFetch;
-      let originalCreateImageBitmap;
+    describe("GoogleStreetViewProvider.loadBitmaps", function () {
+      let originalCreateIfNeeded;
 
       beforeEach(function () {
-        originalFetch = window.fetch;
-        originalCreateImageBitmap = window.createImageBitmap;
+        originalCreateIfNeeded = Resource.createIfNeeded;
       });
 
       afterEach(function () {
-        window.fetch = originalFetch;
-        window.createImageBitmap = originalCreateImageBitmap;
+        Resource.createIfNeeded = originalCreateIfNeeded;
       });
 
-      it("returns an ImageBitmap when fetch succeeds", async function () {
-        const fakeBlob = {};
-        const fakeBitmap = { width: 256, height: 256 };
+      it("returns tiles with bitmaps when fetchImage succeeds", async function () {
+        const fakeBitmap = {
+          width: 256,
+          height: 256,
+          close: jasmine.createSpy("close"),
+        };
 
-        window.fetch = jasmine.createSpy().and.returnValue(
-          Promise.resolve({
-            ok: true,
-            blob: () => Promise.resolve(fakeBlob),
-          }),
-        );
+        spyOn(Resource, "createIfNeeded").and.callFake((url) => {
+          return {
+            url,
+            fetchImage: jasmine
+              .createSpy("fetchImage")
+              .and.returnValue(Promise.resolve(fakeBitmap)),
+          };
+        });
 
-        window.createImageBitmap = jasmine
-          .createSpy()
-          .and.returnValue(Promise.resolve(fakeBitmap));
+        const tiles = [
+          { z: 2, x: 0, y: 0, src: "a.png" },
+          { z: 2, x: 1, y: 0, src: "b.png" },
+        ];
 
-        const result = await GoogleStreetViewProvider.loadBitmap("test.png");
+        const result = await GoogleStreetViewProvider.loadBitmaps(tiles);
 
-        expect(fetch).toHaveBeenCalled();
-        expect(createImageBitmap).toHaveBeenCalledWith(fakeBlob);
-        expect(result).toBe(fakeBitmap);
+        expect(result.length).toBe(2);
+        expect(result[0].bitmap).toBe(fakeBitmap);
+        expect(result[1].bitmap).toBe(fakeBitmap);
+
+        expect(Resource.createIfNeeded).toHaveBeenCalledWith("a.png");
+        expect(Resource.createIfNeeded).toHaveBeenCalledWith("b.png");
       });
 
-      it("returns null when response is not ok", async function () {
-        window.fetch = jasmine
-          .createSpy()
-          .and.returnValue(Promise.resolve({ ok: false }));
+      it("passes correct flipOptions to fetchImage", async function () {
+        const fetchSpy = jasmine
+          .createSpy("fetchImage")
+          .and.returnValue(Promise.resolve({ width: 256, height: 256 }));
 
-        const result = await GoogleStreetViewProvider.loadBitmap("bad.png");
+        spyOn(Resource, "createIfNeeded").and.returnValue({
+          fetchImage: fetchSpy,
+        });
+
+        const tiles = [{ src: "a.png" }];
+
+        await GoogleStreetViewProvider.loadBitmaps(tiles);
+
+        expect(fetchSpy).toHaveBeenCalledWith({
+          flipY: false,
+          skipColorSpaceConversion: true,
+          preferImageBitmap: true,
+        });
+      });
+
+      it("returns null if fetchImage throws", async function () {
+        spyOn(Resource, "createIfNeeded").and.returnValue({
+          fetchImage: jasmine
+            .createSpy("fetchImage")
+            .and.returnValue(Promise.reject(new Error("network error"))),
+        });
+
+        const tiles = [{ src: "error.png" }];
+
+        const result = await GoogleStreetViewProvider.loadBitmaps(tiles);
 
         expect(result).toBeNull();
       });
 
-      it("returns null when fetch throws", async function () {
-        window.fetch = jasmine
-          .createSpy()
-          .and.returnValue(Promise.reject(new Error("network error")));
-
-        const result = await GoogleStreetViewProvider.loadBitmap("error.png");
-
-        expect(result).toBeNull();
+      it("returns an empty array when given no tiles", async function () {
+        const result = await GoogleStreetViewProvider.loadBitmaps([]);
+        expect(result).toEqual([]);
       });
     });
 
-    describe("stitchBitmapsFromTileMap", function () {
+    describe("GoogleStreetViewProvider.stitchBitmapsFromTileMap", function () {
       let originalCreateElement;
 
       beforeEach(function () {
@@ -294,8 +324,17 @@ describe("Scene/GoogleStreetViewProvider", function () {
           "3/0/0": "b.png",
         };
 
-        spyOn(GoogleStreetViewProvider, "loadBitmap").and.returnValue(
-          Promise.resolve({ width: 256, height: 256 }),
+        spyOn(GoogleStreetViewProvider, "loadBitmaps").and.callFake(
+          async (tiles) => {
+            return tiles.map((t) => ({
+              ...t,
+              bitmap: {
+                width: 256,
+                height: 256,
+                close: jasmine.createSpy("close"),
+              },
+            }));
+          },
         );
 
         await expectAsync(
@@ -309,13 +348,18 @@ describe("Scene/GoogleStreetViewProvider", function () {
           "2/1/0": "b.png",
         };
 
-        spyOn(GoogleStreetViewProvider, "loadBitmap").and.callFake((url) => {
-          return Promise.resolve(
-            url === "a.png"
-              ? { width: 256, height: 256, close: jasmine.createSpy("close") }
-              : { width: 128, height: 256, close: jasmine.createSpy("close") },
-          );
-        });
+        spyOn(GoogleStreetViewProvider, "loadBitmaps").and.callFake(
+          async (tiles) => {
+            return tiles.map((t) => ({
+              ...t,
+              bitmap: {
+                width: t.src === "a.png" ? 256 : 128,
+                height: 256,
+                close: jasmine.createSpy("close"),
+              },
+            }));
+          },
+        );
 
         await expectAsync(
           GoogleStreetViewProvider.stitchBitmapsFromTileMap(tileMap),
@@ -328,7 +372,7 @@ describe("Scene/GoogleStreetViewProvider", function () {
           "2/1/0": "b.png",
         };
 
-        spyOn(GoogleStreetViewProvider, "loadBitmap").and.returnValue(
+        spyOn(GoogleStreetViewProvider, "loadBitmaps").and.returnValue(
           Promise.resolve(null),
         );
 
@@ -349,10 +393,14 @@ describe("Scene/GoogleStreetViewProvider", function () {
           height: 50,
           close: jasmine.createSpy("close"),
         };
-
-        spyOn(GoogleStreetViewProvider, "loadBitmap").and.callFake((url) => {
-          return Promise.resolve(url === "a.png" ? bitmap1 : bitmap2);
-        });
+        spyOn(GoogleStreetViewProvider, "loadBitmaps").and.callFake(
+          async (tiles) => {
+            return tiles.map((t) => ({
+              ...t,
+              bitmap: t.src === "a.png" ? bitmap1 : bitmap2,
+            }));
+          },
+        );
 
         const tileMap = {
           "2/0/0": "a.png",
@@ -381,9 +429,14 @@ describe("Scene/GoogleStreetViewProvider", function () {
           close: jasmine.createSpy("close"),
         };
 
-        spyOn(GoogleStreetViewProvider, "loadBitmap").and.callFake((url) => {
-          return Promise.resolve(url === "a.png" ? bitmap1 : bitmap2);
-        });
+        spyOn(GoogleStreetViewProvider, "loadBitmaps").and.callFake(
+          async (tiles) => {
+            return tiles.map((t) => ({
+              ...t,
+              bitmap: t.src === "a.png" ? bitmap1 : bitmap2,
+            }));
+          },
+        );
 
         const tileMap = {
           "1/0/0": "a.png",
@@ -405,9 +458,14 @@ describe("Scene/GoogleStreetViewProvider", function () {
           close: jasmine.createSpy("close"),
         };
 
-        spyOn(GoogleStreetViewProvider, "loadBitmap").and.callFake((url) => {
-          return Promise.resolve(sampleBitmap);
-        });
+        spyOn(GoogleStreetViewProvider, "loadBitmaps").and.callFake(
+          async (tiles) => {
+            return tiles.map((t) => ({
+              ...t,
+              bitmap: sampleBitmap,
+            }));
+          },
+        );
 
         const tileMap = {
           "2/0/0": "0.png",
