@@ -125,10 +125,6 @@ export function useGalleryItemStore() {
     };
 
     performSearch();
-
-    return () => {
-      abortController.abort();
-    };
   }, [searchTerm, searchFilter, embeddingModelLoaded]);
 
   const memoizedSearchResults = useMemo(() => {
