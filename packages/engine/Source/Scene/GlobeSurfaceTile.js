@@ -43,7 +43,7 @@ function GlobeSurfaceTile() {
 
   this.sdfTexture = undefined;
   this.gpuLookupTexture = undefined;
-  this.gridCellIndices = undefined;
+  this.gridCellIndicesTexture = undefined;
 
   this.terrainData = undefined;
   this.vertexArray = undefined;
@@ -157,6 +157,11 @@ GlobeSurfaceTile.prototype.freeResources = function () {
   if (defined(this.gpuLookupTexture)) {
     this.gpuLookupTexture.destroy();
     this.gpuLookupTexture = undefined;
+  }
+
+  if (defined(this.gridCellIndicesTexture)) {
+    this.gridCellIndicesTexture.destroy();
+    this.gridCellIndicesTexture = undefined;
   }
 
   this.terrainData = undefined;
@@ -623,6 +628,7 @@ function processTerrainStateMachine(
     const terrainData = surfaceTile.terrainData;
     if (terrainData.gpuLookup !== undefined) {
       createGpuLookupTextureIfNeeded(frameState.context, surfaceTile);
+      createGridCellIndicesTextureIfNeeded(frameState.context, surfaceTile);
     }
   }
 }
@@ -1002,7 +1008,6 @@ function createGpuLookupTextureIfNeeded(context, surfaceTile) {
   const geoArray = gpuLookup[0];
   const ltextWidth = gpuLookup[1];
   const ltextureHeight = gpuLookup[2];
-  const gridCellIndices = gpuLookup[3];
 
   const sampler = new Sampler({
     wrapS: TextureWrap.CLAMP_TO_EDGE,
@@ -1025,7 +1030,39 @@ function createGpuLookupTextureIfNeeded(context, surfaceTile) {
   });
 
   surfaceTile.gpuLookupTexture = texture;
-  surfaceTile.gridCellIndices = gridCellIndices;
+}
+
+function createGridCellIndicesTextureIfNeeded(context, surfaceTile) {
+  const gpuLookup = surfaceTile.terrainData.gpuLookup;
+
+  if (!defined(gpuLookup)) {
+    return;
+  }
+
+  const gridCellIndices = gpuLookup[3];
+
+  const sampler = new Sampler({
+    wrapS: TextureWrap.CLAMP_TO_EDGE,
+    wrapT: TextureWrap.CLAMP_TO_EDGE,
+    minificationFilter: TextureMinificationFilter.NEAREST,
+    magnificationFilter: TextureMagnificationFilter.NEAREST,
+  });
+
+  const texture = Texture.create({
+    context: context,
+    pixelFormat: PixelFormat.RED,
+    // TODO: could not get UNSIGNED_INT to work
+    pixelDatatype: PixelDatatype.FLOAT,
+    source: {
+      width: gridCellIndices.length,
+      height: 1,
+      arrayBufferView: new Float32Array(gridCellIndices),
+    },
+    sampler: sampler,
+    flipY: false,
+  });
+
+  surfaceTile.gridCellIndicesTexture = texture;
 }
 
 GlobeSurfaceTile.prototype._findAncestorTileWithTerrainData = function (tile) {

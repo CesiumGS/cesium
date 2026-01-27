@@ -225,8 +225,7 @@ float filterSDF(float sdf, vec2 uvCoordinate, vec2 textureSize) {
 #endif
 #ifdef HAS_GPU_LOOKUP
     uniform highp sampler2D u_gpuLookup;
-
-    uniform int u_gridCellIndices[258]; // Adjust the size to match your array length
+    uniform highp sampler2D u_gridCellIndices;
 
     // Calculate the distance between a point and a line segment
     float distanceToLine(vec2 p, vec4 l) {
@@ -723,14 +722,14 @@ void main()
     // Initialize the minimum distance to a large value
     float minDist = 1.0; // Assume normalized coordinates (0 to 1)
 
-    int subGridSizeX = int(u_gridCellIndices[0]);
-    int subGridSizeY = int(u_gridCellIndices[1]);
+    int subGridSizeX = int(texelFetch(u_gridCellIndices, ivec2(0, 0), 0).r);
+    int subGridSizeY = int(texelFetch(u_gridCellIndices, ivec2(1, 0), 0).r);
     ivec2 cell = getGridCell(v_textureCoordinates.xy, subGridSizeX, subGridSizeY);
     int cellIndex = cell.x + cell.y * subGridSizeX;
     int cellStart = 0;
-    int cellEnd = int(u_gridCellIndices[cellIndex+2]);
+    int cellEnd = int(texelFetch(u_gridCellIndices, ivec2(cellIndex+2, 0), 0).r);
     if (cellIndex > 0){
-        cellStart = int(u_gridCellIndices[cellIndex+1]);
+        cellStart = int(texelFetch(u_gridCellIndices, ivec2(cellIndex+1, 0), 0).r);
     }
     //cellEnd = 20;
 

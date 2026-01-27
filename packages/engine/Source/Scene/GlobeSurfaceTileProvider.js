@@ -2178,7 +2178,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
 
   const sdfTexture = surfaceTile.sdfTexture;
   const gpuLookupTexture = surfaceTile.gpuLookupTexture;
-  const gridCellIndices = surfaceTile.gridCellIndices;
+  const gridCellIndicesTexture = surfaceTile.gridCellIndicesTexture;
 
   const cameraUnderground = frameState.cameraUnderground;
 
@@ -2251,7 +2251,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     --maxTextures;
   }
   if (hasGpuLookup) {
-    --maxTextures;
+    --maxTextures; // gpuLookupTexture
+    --maxTextures; // gridCellIndicesTexture
   }
   if (
     defined(frameState.shadowState) &&
@@ -2822,7 +2823,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
 
     uniformMapProperties.sdf = sdfTexture;
     uniformMapProperties.gpuLookup = gpuLookupTexture;
-    uniformMapProperties.gridCellIndices = gridCellIndices;
+    uniformMapProperties.gridCellIndices = gridCellIndicesTexture;
 
     uniformMapProperties.minMaxHeight.x = encoding.minimumHeight;
     uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;
