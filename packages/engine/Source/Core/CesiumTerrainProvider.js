@@ -949,8 +949,7 @@ function checkIfGeoJsonHasPolygons(features) {
  * @returns {Promise<{width: number, height: number, sdfDistances: Float32Array, sdfFeatureIds: Uint32Array}>} A promise that resolves to the SDF data.
  */
 function requestGeoJson(provider, rootId, level, x, y, terrainY) {
-  const url =
-    "http://localhost:8070/v1/static/vector/pipes/{level}/tile_{y}_{x}.geojson";
+  const url = window.geoJsonUrl;
 
   return Resource.fetchJson({
     url: url,
