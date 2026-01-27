@@ -1628,7 +1628,7 @@ function Material() {
    * The point diameter in pixels for POINTS primitives. This is set by the
    * BENTLEY_materials_point_style extension.
    *
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    * @private
    */
