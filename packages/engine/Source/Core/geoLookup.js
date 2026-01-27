@@ -319,6 +319,11 @@ function geojsonToArrayInGrid(
     "Number of line segments after grid split:",
     numOfLineSegmentsGeoJSON,
   );
+
+  if (numOfLineSegmentsGeoJSON === 0) {
+    return undefined;
+  }
+
   // get texture size to the next power of 2
   const textureWidth = Math.pow(
     2,

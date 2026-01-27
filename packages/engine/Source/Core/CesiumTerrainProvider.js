@@ -998,7 +998,9 @@ function requestGeoJson(provider, rootId, level, x, y, terrainY) {
           maxY,
         ]);
 
-        results.gpuLookup.push(checkIfGeoJsonHasPolygons(features));
+        if (defined(results.gpuLookup)) {
+          results.gpuLookup.push(checkIfGeoJsonHasPolygons(features));
+        }
       }
 
       return results;
