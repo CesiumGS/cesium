@@ -1816,7 +1816,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   if (defined(pointStyleExtension) && defined(pointStyleExtension.diameter)) {
     const diameter = pointStyleExtension.diameter;
     // The spec requires a positive integer, but we floor non-integers as a best effort.
-    if (diameter > 0) {
+    if (diameter >= 1) {
       material.pointDiameter = Math.floor(diameter);
     }
   }
