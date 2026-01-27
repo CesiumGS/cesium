@@ -67,7 +67,7 @@ const defaultHtmlCode = `<style>
 
 const cesiumVersion = __CESIUM_VERSION__;
 const versionString = __COMMIT_SHA__
-  ? `Commit: ${__COMMIT_SHA__.substring(0, 7)} - ${cesiumVersion}`
+  ? `Commit: ${__COMMIT_SHA__.replaceAll(/['"]/g, "").substring(0, 7)} - ${cesiumVersion}`
   : cesiumVersion;
 
 type RightSideRef = {
