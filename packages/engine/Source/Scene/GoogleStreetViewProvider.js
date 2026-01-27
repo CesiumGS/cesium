@@ -18,130 +18,6 @@ const GOOGLE_STREETVIEW_PARTITION_REFERENCE = {
   4: 8,
 };
 
-const getGoogleStreetViewTileUrls = async (options) => {
-  const { z, p, panoId, key, session } = options;
-  const tileIds = {};
-  let tileIdKey, tileResource, tileApiUrl;
-  for (let x = 0; x < p * 2; x++) {
-    for (let y = 0; y < p; y++) {
-      tileApiUrl = `https://tile.googleapis.com/v1/streetview/tiles/${z}/${x}/${y}`;
-
-      tileResource = new Resource({
-        url: tileApiUrl,
-        queryParameters: {
-          key: key,
-          session: session,
-          panoId: panoId,
-        },
-        data: JSON.stringify({}),
-      });
-
-      tileIdKey = `${z}/${x}/${y}`;
-      tileIds[tileIdKey] = tileResource.url;
-    }
-  }
-  return tileIds;
-};
-
-async function loadBitmap(url) {
-  try {
-    const response = await fetch(url, { mode: "cors" });
-    if (!response.ok) {
-      return null;
-    }
-
-    const blob = await response.blob();
-    return await createImageBitmap(blob);
-  } catch {
-    return null;
-  }
-}
-
-async function stitchBitmapsFromTileMap(tileMap) {
-  // tileMap: Record<"z/x/y", string>
-
-  const tiles = Object.entries(tileMap).map(([key, src]) => {
-    const [z, x, y] = key.split("/").map(Number);
-    return { z, x, y, src };
-  });
-
-  if (tiles.length === 0) {
-    throw new Error("No tiles provided");
-  }
-
-  // sanity check: all same zoom
-  const zoom = tiles[0].z;
-  for (const t of tiles) {
-    if (t.z !== zoom) {
-      throw new DeveloperError("All tiles must have the same zoom level");
-    }
-  }
-
-  const loaded = await Promise.all(
-    tiles.map(async (t) => ({
-      ...t,
-      bitmap: await loadBitmap(t.src),
-    })),
-  );
-
-  const bitmaps = loaded.filter((t) => t.bitmap);
-
-  if (bitmaps.length === 0) {
-    throw new Error("No tiles could be loaded");
-  }
-
-  const minX = Math.min(...bitmaps.map((t) => t.x));
-  const maxX = Math.max(...bitmaps.map((t) => t.x));
-  const minY = Math.min(...bitmaps.map((t) => t.y));
-  const maxY = Math.max(...bitmaps.map((t) => t.y));
-
-  const cols = maxX - minX + 1;
-  const rows = maxY - minY + 1;
-
-  const colWidths = Array(cols).fill(0);
-  const rowHeights = Array(rows).fill(0);
-
-  for (const t of bitmaps) {
-    const col = t.x - minX;
-    const row = t.y - minY;
-    colWidths[col] = Math.max(colWidths[col], t.bitmap.width);
-    rowHeights[row] = Math.max(rowHeights[row], t.bitmap.height);
-  }
-
-  const width = colWidths.reduce((a, b) => a + b, 0);
-  const height = rowHeights.reduce((a, b) => a + b, 0);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-
-  const xOffsets = [];
-  const yOffsets = [];
-
-  colWidths.reduce((acc, w, i) => {
-    xOffsets[i] = acc;
-    return acc + w;
-  }, 0);
-
-  rowHeights.reduce((acc, h, i) => {
-    yOffsets[i] = acc;
-    return acc + h;
-  }, 0);
-
-  for (const t of bitmaps) {
-    const col = t.x - minX;
-    const row = t.y - minY;
-    ctx.drawImage(t.bitmap, xOffsets[col], yOffsets[row]);
-  }
-
-  for (const t of bitmaps) {
-    t.bitmap.close();
-  }
-
-  return canvas;
-}
-
 /**
  * Provides imagery to be displayed in a panorama.  This type describes an
  * interface and is not intended to be instantiated directly.
@@ -212,17 +88,18 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
     new Matrix4(),
   );
 
-  const p = GOOGLE_STREETVIEW_PARTITION_REFERENCE[zInput];
+  const partition = GOOGLE_STREETVIEW_PARTITION_REFERENCE[zInput];
 
-  const tileMap = await getGoogleStreetViewTileUrls({
+  const tileMap = await GoogleStreetViewProvider.getGoogleStreetViewTileUrls({
     z: zInput,
-    p,
+    partition,
     panoId,
     key: this._key,
     session: this._session,
   });
 
-  const canvas = await stitchBitmapsFromTileMap(tileMap);
+  const canvas =
+    await GoogleStreetViewProvider.stitchBitmapsFromTileMap(tileMap);
 
   const credit = GoogleMaps.getDefaultCredit();
 
@@ -344,6 +221,140 @@ GoogleStreetViewProvider.fromUrl = async function (options) {
     ...options,
     //credit: options.credit ?? GoogleMaps.getDefaultCredit(),
   });
+};
+
+GoogleStreetViewProvider.getGoogleStreetViewTileUrls = async function (
+  options,
+) {
+  const { z, partition, panoId, key, session } = options;
+  const tileIds = {};
+  let tileIdKey, tileResource, tileApiUrl;
+  for (let x = 0; x < partition * 2; x++) {
+    for (let y = 0; y < partition; y++) {
+      tileApiUrl = `https://tile.googleapis.com/v1/streetview/tiles/${z}/${x}/${y}`;
+
+      tileResource = new Resource({
+        url: tileApiUrl,
+        queryParameters: {
+          key: key,
+          session: session,
+          panoId: panoId,
+        },
+        data: JSON.stringify({}),
+      });
+
+      tileIdKey = `${z}/${x}/${y}`;
+      tileIds[tileIdKey] = tileResource.url;
+    }
+  }
+  return tileIds;
+};
+
+GoogleStreetViewProvider.loadBitmap = async function (url) {
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) {
+      return null;
+    }
+
+    const blob = await response.blob();
+    return await createImageBitmap(blob);
+  } catch {
+    return null;
+  }
+};
+
+GoogleStreetViewProvider.stitchBitmapsFromTileMap = async function (tileMap) {
+  // tileMap: Record<"z/x/y", string>
+
+  const tiles = Object.entries(tileMap).map(([key, src]) => {
+    const [z, x, y] = key.split("/").map(Number);
+    return { z, x, y, src };
+  });
+
+  if (tiles.length === 0) {
+    throw new DeveloperError("No tiles provided");
+  }
+
+  // sanity check: all same zoom
+  const zoom = tiles[0].z;
+  for (const t of tiles) {
+    if (t.z !== zoom) {
+      throw new DeveloperError("All tiles must have the same zoom level");
+    }
+  }
+
+  const loaded = await Promise.all(
+    tiles.map(async (t) => ({
+      ...t,
+      bitmap: await GoogleStreetViewProvider.loadBitmap(t.src),
+    })),
+  );
+
+  const bitmaps = loaded.filter((t) => t.bitmap);
+
+  if (bitmaps.length === 0) {
+    throw new DeveloperError("No tiles could be loaded");
+  }
+
+  // Ensure all tiles have the same dimensions
+  const first = bitmaps[0].bitmap;
+  for (const t of bitmaps) {
+    if (t.bitmap.width !== first.width || t.bitmap.height !== first.height) {
+      throw new DeveloperError("All tiles must have the same dimensions");
+    }
+  }
+
+  const minX = Math.min(...bitmaps.map((t) => t.x));
+  const maxX = Math.max(...bitmaps.map((t) => t.x));
+  const minY = Math.min(...bitmaps.map((t) => t.y));
+  const maxY = Math.max(...bitmaps.map((t) => t.y));
+
+  const cols = maxX - minX + 1;
+  const rows = maxY - minY + 1;
+
+  const colWidths = Array(cols).fill(0);
+  const rowHeights = Array(rows).fill(0);
+
+  for (const t of bitmaps) {
+    const col = t.x - minX;
+    const row = t.y - minY;
+    colWidths[col] = Math.max(colWidths[col], t.bitmap.width);
+    rowHeights[row] = Math.max(rowHeights[row], t.bitmap.height);
+  }
+
+  const width = colWidths.reduce((a, b) => a + b, 0);
+  const height = rowHeights.reduce((a, b) => a + b, 0);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+
+  const xOffsets = [];
+  const yOffsets = [];
+
+  colWidths.reduce((acc, w, i) => {
+    xOffsets[i] = acc;
+    return acc + w;
+  }, 0);
+
+  rowHeights.reduce((acc, h, i) => {
+    yOffsets[i] = acc;
+    return acc + h;
+  }, 0);
+
+  for (const t of bitmaps) {
+    const col = t.x - minX;
+    const row = t.y - minY;
+    ctx.drawImage(t.bitmap, xOffsets[col], yOffsets[row]);
+  }
+
+  for (const t of bitmaps) {
+    t.bitmap.close();
+  }
+
+  return canvas;
 };
 
 export default GoogleStreetViewProvider;
