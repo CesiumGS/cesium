@@ -57,7 +57,6 @@ function EquirectangularPanorama(options) {
 
   // Credit specified by the user.
   let credit = options.credit;
-  console.log("credit ", credit, " typeof credit ", typeof credit);
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
@@ -158,10 +157,6 @@ EquirectangularPanorama.prototype.getTransform = function () {
  */
 EquirectangularPanorama.prototype.getCredits = function () {
   return this._credit;
-};
-
-EquirectangularPanorama.prototype.update = function (frameState) {
-  console.log("");
 };
 
 // Proxy update/destroy/etc to the primitive
