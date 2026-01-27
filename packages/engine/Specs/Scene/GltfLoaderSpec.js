@@ -128,6 +128,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
+    const planarFillTestData =
+      "./Data/Models/glTF-2.0/PlanarFill/glTF/PlanarFill.gltf";
     const meshPrimitiveRestartTestData =
       "./Data/Models/glTF-2.0/MeshPrimitiveRestart/glTF/MeshPrimitiveRestart.gltf";
     const edgeVisibilityTestData =
@@ -4174,6 +4176,65 @@ describe(
       expect(clearcoatRoughnessFactor).toBe(0.2);
       expect(clearcoatRoughnessTexture.texture.width).toBe(256);
       expect(clearcoatNormalTexture.texture.width).toBe(256);
+    });
+
+    it("loads model with BENTLEY_materials_planar_fill extension", async function () {
+      const gltfLoader = await loadGltf(planarFillTestData);
+
+      const primitives = gltfLoader.components.nodes[0].primitives;
+      expect(primitives.length).toBe(2);
+
+      // First material has all planarFill properties set
+      const material0 = primitives[0].material;
+      expect(material0.planarFill).toBeDefined();
+      expect(material0.planarFill.wireframeFill).toBe(1);
+      expect(material0.planarFill.backgroundFill).toBe(true);
+      expect(material0.planarFill.behind).toBe(true);
+
+      // Second material has only wireframeFill set, others should have defaults
+      const material1 = primitives[1].material;
+      expect(material1.planarFill).toBeDefined();
+      expect(material1.planarFill.wireframeFill).toBe(2);
+      expect(material1.planarFill.backgroundFill).toBe(false);
+      expect(material1.planarFill.behind).toBe(false);
+    });
+
+    it("loads model with BENTLEY_materials_planar_fill extension with defaults", async function () {
+      function modifyGltf(gltf) {
+        // Set extension with empty object to test defaults
+        gltf.materials[0].extensions.BENTLEY_materials_planar_fill = {};
+        return gltf;
+      }
+
+      const gltfLoader = await loadModifiedGltfAndTest(
+        planarFillTestData,
+        undefined,
+        modifyGltf,
+      );
+
+      const material = gltfLoader.components.nodes[0].primitives[0].material;
+      expect(material.planarFill).toBeDefined();
+      expect(material.planarFill.wireframeFill).toBe(0);
+      expect(material.planarFill.backgroundFill).toBe(false);
+      expect(material.planarFill.behind).toBe(false);
+    });
+
+    it("loads model without BENTLEY_materials_planar_fill when extension is not present", async function () {
+      function modifyGltf(gltf) {
+        // Remove the extension from the material
+        delete gltf.materials[0].extensions.BENTLEY_materials_planar_fill;
+        delete gltf.materials[1].extensions.BENTLEY_materials_planar_fill;
+        return gltf;
+      }
+
+      const gltfLoader = await loadModifiedGltfAndTest(
+        planarFillTestData,
+        undefined,
+        modifyGltf,
+      );
+
+      const material = gltfLoader.components.nodes[0].primitives[0].material;
+      expect(material.planarFill).toBeUndefined();
     });
 
     it("loads model with EXT_mesh_primitive_restart extension", async function () {

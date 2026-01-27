@@ -1738,6 +1738,26 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
 }
 
 /**
+ * Load properties for the BENTLEY_materials_planar_fill extension
+ * @param {object} planarFillInfo The contents of the BENTLEY_materials_planar_fill extension in the parsed glTF JSON
+ * @returns {ModelComponents.PlanarFill}
+ * @private
+ */
+function loadPlanarFill(planarFillInfo) {
+  const {
+    wireframeFill = 0,
+    backgroundFill = false,
+    behind = false,
+  } = planarFillInfo;
+
+  return {
+    wireframeFill: wireframeFill,
+    backgroundFill: backgroundFill,
+    behind: behind,
+  };
+}
+
+/**
  * Load textures and parse factors and flags for a glTF material
  *
  * @param {GltfLoader} loader
@@ -1755,6 +1775,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   const pbrAnisotropy = extensions.KHR_materials_anisotropy;
   const pbrClearcoat = extensions.KHR_materials_clearcoat;
   const pbrMetallicRoughness = gltfMaterial.pbrMetallicRoughness;
+  const planarFill = extensions.BENTLEY_materials_planar_fill;
 
   material.unlit = defined(extensions.KHR_materials_unlit);
 
@@ -1810,6 +1831,11 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   material.alphaMode = gltfMaterial.alphaMode;
   material.alphaCutoff = gltfMaterial.alphaCutoff;
   material.doubleSided = gltfMaterial.doubleSided;
+
+  // BENTLEY_materials_planar_fill extension
+  if (defined(planarFill)) {
+    material.planarFill = loadPlanarFill(planarFill);
+  }
 
   return material;
 }
