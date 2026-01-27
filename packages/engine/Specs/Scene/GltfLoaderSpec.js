@@ -4176,6 +4176,72 @@ describe(
       expect(clearcoatNormalTexture.texture.width).toBe(256);
     });
 
+    it("loads model with EXT_textureInfo_constant_lod extension on base color texture", async function () {
+      const constantLodChecker =
+        "./Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Checker.gltf";
+      const gltfLoader = await loadGltf(constantLodChecker);
+
+      const { material } = gltfLoader.components.nodes[0].primitives[0];
+      const { baseColorTexture } = material.metallicRoughness;
+
+      expect(baseColorTexture).toBeDefined();
+      expect(baseColorTexture.texture.width).toBe(1024);
+      expect(baseColorTexture.constantLod).toBeDefined();
+      expect(baseColorTexture.constantLod.repetitions).toBe(3.0);
+      expect(baseColorTexture.constantLod.offset).toEqual(
+        new Cartesian2(0.5, 0.5),
+      );
+      expect(baseColorTexture.constantLod.minClampDistance).toBe(0.0);
+      expect(baseColorTexture.constantLod.maxClampDistance).toBe(100.0);
+    });
+
+    it("loads model with EXT_textureInfo_constant_lod extension on normal texture", async function () {
+      const constantLodNormalMap =
+        "./Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_NormalMap.gltf";
+      const gltfLoader = await loadGltf(constantLodNormalMap);
+
+      const { material } = gltfLoader.components.nodes[0].primitives[0];
+      const { baseColorTexture } = material.metallicRoughness;
+      const { normalTexture } = material;
+
+      expect(baseColorTexture).toBeDefined();
+      expect(baseColorTexture.constantLod).toBeDefined();
+      expect(baseColorTexture.constantLod.repetitions).toBe(3.0);
+      expect(baseColorTexture.constantLod.offset).toEqual(
+        new Cartesian2(0.5, 0.5),
+      );
+      expect(baseColorTexture.constantLod.minClampDistance).toBe(0.0);
+      expect(baseColorTexture.constantLod.maxClampDistance).toBe(100.0);
+
+      // Normal texture also has the extension and uses base color's properties
+      expect(normalTexture).toBeDefined();
+      expect(normalTexture.texture.width).toBe(512);
+      expect(normalTexture.constantLod).toBeDefined();
+      expect(normalTexture.constantLod.repetitions).toBe(3.0);
+      expect(normalTexture.constantLod.offset).toEqual(
+        new Cartesian2(0.5, 0.5),
+      );
+      expect(normalTexture.constantLod.minClampDistance).toBe(0.0);
+      expect(normalTexture.constantLod.maxClampDistance).toBe(100.0);
+    });
+
+    it("loads model with EXT_textureInfo_constant_lod extension on unsupported textures without crashing", async function () {
+      const constantLodEmissiveOcclusion =
+        "./Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_EmissiveOcclusion.gltf";
+      const gltfLoader = await loadGltf(constantLodEmissiveOcclusion);
+
+      const { material } = gltfLoader.components.nodes[0].primitives[0];
+
+      expect(material).toBeDefined();
+      expect(material.emissiveTexture).toBeDefined();
+      expect(material.occlusionTexture).toBeDefined();
+
+      expect(material.emissiveTexture.constantLod).toBeDefined();
+      expect(material.emissiveTexture.constantLod.repetitions).toBe(2.0);
+      expect(material.occlusionTexture.constantLod).toBeDefined();
+      expect(material.occlusionTexture.constantLod.repetitions).toBe(3.0);
+    });
+
     it("loads model with EXT_mesh_primitive_restart extension", async function () {
       const gltf = await Resource.fetchJson({
         url: meshPrimitiveRestartTestData,

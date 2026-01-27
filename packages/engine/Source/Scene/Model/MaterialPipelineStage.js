@@ -108,6 +108,7 @@ MaterialPipelineStage.process = function (
       shaderBuilder,
       defaultTexture,
       disableTextures,
+      renderResources,
     );
   } else {
     if (
@@ -223,6 +224,11 @@ function processConstantLod(
   const constantLod = textureReader.constantLod;
 
   if (!defined(constantLod)) {
+    return;
+  }
+
+  // renderResources is required for constant LOD to transform from ECEF/world coordinates to ENU
+  if (!defined(renderResources)) {
     return;
   }
 
@@ -468,6 +474,7 @@ function processMaterialUniforms(
   defaultNormalTexture,
   defaultEmissiveTexture,
   disableTextures,
+  renderResources,
 ) {
   const { emissiveFactor, emissiveTexture, normalTexture, occlusionTexture } =
     material;
@@ -502,14 +509,43 @@ function processMaterialUniforms(
     }
   }
 
+  // Extract base color constant LOD to apply to normal texture
+  let baseColorConstantLod;
+  if (
+    defined(material.metallicRoughness) &&
+    defined(material.metallicRoughness.baseColorTexture) &&
+    defined(material.metallicRoughness.baseColorTexture.constantLod)
+  ) {
+    baseColorConstantLod =
+      material.metallicRoughness.baseColorTexture.constantLod;
+  } else if (
+    defined(material.specularGlossiness) &&
+    defined(material.specularGlossiness.diffuseTexture) &&
+    defined(material.specularGlossiness.diffuseTexture.constantLod)
+  ) {
+    baseColorConstantLod =
+      material.specularGlossiness.diffuseTexture.constantLod;
+  }
+
   if (defined(normalTexture) && !disableTextures) {
+    // If normal texture AND base color have constant LOD, use base color's constant LOD properties to keep textures in sync
+    let normalTextureToProcess = normalTexture;
+    if (defined(normalTexture.constantLod) && defined(baseColorConstantLod)) {
+      normalTextureToProcess = Object.create(
+        Object.getPrototypeOf(normalTexture),
+      );
+      Object.assign(normalTextureToProcess, normalTexture);
+      normalTextureToProcess.constantLod = baseColorConstantLod;
+    }
+
     processTexture(
       shaderBuilder,
       uniformMap,
-      normalTexture,
+      normalTextureToProcess,
       "u_normalTexture",
       "NORMAL",
       defaultNormalTexture,
+      renderResources,
     );
   }
 
@@ -533,6 +569,7 @@ function processMaterialUniforms(
  * @param {ShaderBuilder} shaderBuilder
  * @param {Texture} defaultTexture
  * @param {boolean} disableTextures
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @private
  */
 function processSpecularGlossinessUniforms(
@@ -541,6 +578,7 @@ function processSpecularGlossinessUniforms(
   shaderBuilder,
   defaultTexture,
   disableTextures,
+  renderResources,
 ) {
   const {
     diffuseTexture,
@@ -564,6 +602,7 @@ function processSpecularGlossinessUniforms(
       "u_diffuseTexture",
       "DIFFUSE",
       defaultTexture,
+      renderResources,
     );
   }
 

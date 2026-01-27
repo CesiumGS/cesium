@@ -47,19 +47,19 @@ const options = [
     },
   },
   {
-    text: "Grass",
+    text: "Checkerboard with normal map",
     onselect: function () {
       createModel(
-        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Grass.gltf",
+        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_NormalMap.gltf",
         100,
       );
     },
   },
   {
-    text: "Normal map",
+    text: "Grass",
     onselect: function () {
       createModel(
-        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_NormalMap.gltf",
+        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Grass.gltf",
         100,
       );
     },
