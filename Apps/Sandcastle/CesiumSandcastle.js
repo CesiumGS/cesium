@@ -26,6 +26,7 @@ require({
       location: "../Apps/Sandcastle/ThirdParty",
     },
   ],
+  //@ts-expect-error TS thinks this is using the native require when it's not
 }, [
   "CodeMirror/lib/codemirror",
   "dijit/Dialog",
