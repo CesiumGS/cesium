@@ -186,7 +186,7 @@ bool inTranslucencyRectangle()
 #endif
 
 #ifdef HAS_SDF
-    uniform highp sampler2D u_sdf;
+    uniform highp sampler2D u_sdfTexture;
 
 float sampleBilinear(sampler2D tex, vec2 uv) {
     ivec2 size = textureSize(tex, 0); // LOD 0
@@ -224,8 +224,8 @@ float filterSDF(float sdf, vec2 uvCoordinate, vec2 textureSize) {
 
 #endif
 #ifdef HAS_GPU_LOOKUP
-    uniform highp sampler2D u_gpuLookup;
-    uniform highp sampler2D u_gridCellIndices;
+    uniform highp sampler2D u_lineTexture;
+    uniform highp sampler2D u_gridCellIndicesTexture;
 
     // Calculate the distance between a point and a line segment
     float distanceToLine(vec2 p, vec4 l) {
@@ -697,9 +697,9 @@ void main()
     out_FragColor =  finalColor;
 
 #ifdef HAS_SDF
-    float dist = sampleNearest(u_sdf, v_textureCoordinates.xy);
-    dist = filterSDF(dist, v_textureCoordinates.xy, vec2(textureSize(u_sdf, 0)));
-    //float dist = sampleBilinear(u_sdf, v_textureCoordinates.xy);
+    float dist = sampleNearest(u_sdfTexture, v_textureCoordinates.xy);
+    dist = filterSDF(dist, v_textureCoordinates.xy, vec2(textureSize(u_sdfTexture, 0)));
+    //float dist = sampleBilinear(u_sdfTexture, v_textureCoordinates.xy);
 
     float lwidth = 2.0;
     if (dist <= lwidth) {
@@ -710,7 +710,7 @@ void main()
 #endif
 #ifdef HAS_GPU_LOOKUP
     // Get the width of the texture using textureSize
-    vec2 texSize = vec2(textureSize(u_gpuLookup, 0));
+    vec2 texSize = vec2(textureSize(u_lineTexture, 0));
     float tsizeX = float(texSize.x);
     float tsizeY = float(texSize.y);
 
@@ -722,14 +722,14 @@ void main()
     // Initialize the minimum distance to a large value
     float minDist = 1.0; // Assume normalized coordinates (0 to 1)
 
-    int subGridSizeX = int(texelFetch(u_gridCellIndices, ivec2(0, 0), 0).r);
-    int subGridSizeY = int(texelFetch(u_gridCellIndices, ivec2(1, 0), 0).r);
+    int subGridSizeX = int(texelFetch(u_gridCellIndicesTexture, ivec2(0, 0), 0).r);
+    int subGridSizeY = int(texelFetch(u_gridCellIndicesTexture, ivec2(1, 0), 0).r);
     ivec2 cell = getGridCell(v_textureCoordinates.xy, subGridSizeX, subGridSizeY);
     int cellIndex = cell.x + cell.y * subGridSizeX;
     int cellStart = 0;
-    int cellEnd = int(texelFetch(u_gridCellIndices, ivec2(cellIndex+2, 0), 0).r);
+    int cellEnd = int(texelFetch(u_gridCellIndicesTexture, ivec2(cellIndex+2, 0), 0).r);
     if (cellIndex > 0){
-        cellStart = int(texelFetch(u_gridCellIndices, ivec2(cellIndex+1, 0), 0).r);
+        cellStart = int(texelFetch(u_gridCellIndicesTexture, ivec2(cellIndex+1, 0), 0).r);
     }
     //cellEnd = 20;
 
@@ -743,7 +743,7 @@ void main()
         float texCoordY = (float(j) + 0.5) / tsizeY;
 
         // Sample the current texel
-        vec4 texel = texture(u_gpuLookup, vec2(texCoordX, texCoordY));
+        vec4 texel = texture(u_lineTexture, vec2(texCoordX, texCoordY));
         // skip if reaches end, marked by -1 as this should be normalized to [0, 1]
         if (texel.r == -1.0){
             break;

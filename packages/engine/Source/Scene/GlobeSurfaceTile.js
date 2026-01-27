@@ -42,7 +42,7 @@ function GlobeSurfaceTile() {
   this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
   this.sdfTexture = undefined;
-  this.gpuLookupTexture = undefined;
+  this.lineTexture = undefined;
   this.gridCellIndicesTexture = undefined;
 
   this.terrainData = undefined;
@@ -154,9 +154,9 @@ GlobeSurfaceTile.prototype.freeResources = function () {
     this.sdfTexture = undefined;
   }
 
-  if (defined(this.gpuLookupTexture)) {
-    this.gpuLookupTexture.destroy();
-    this.gpuLookupTexture = undefined;
+  if (defined(this.lineTexture)) {
+    this.lineTexture.destroy();
+    this.lineTexture = undefined;
   }
 
   if (defined(this.gridCellIndicesTexture)) {
@@ -623,12 +623,11 @@ function processTerrainStateMachine(
 
   if (
     surfaceTile.terrainState >= TerrainState.RECEIVED &&
-    surfaceTile.gpuLookupTexture === undefined
+    surfaceTile.lineTexture === undefined
   ) {
     const terrainData = surfaceTile.terrainData;
     if (terrainData.gpuLookup !== undefined) {
-      createGpuLookupTextureIfNeeded(frameState.context, surfaceTile);
-      createGridCellIndicesTextureIfNeeded(frameState.context, surfaceTile);
+      createGpuLookupTexturesIfNeeded(frameState.context, surfaceTile);
     }
   }
 }
@@ -998,7 +997,7 @@ function createSdfTextureIfNeeded(context, surfaceTile) {
   surfaceTile.sdfTexture = texture;
 }
 
-function createGpuLookupTextureIfNeeded(context, surfaceTile) {
+function createGpuLookupTexturesIfNeeded(context, surfaceTile) {
   const gpuLookup = surfaceTile.terrainData.gpuLookup;
 
   if (!defined(gpuLookup)) {
@@ -1008,6 +1007,7 @@ function createGpuLookupTextureIfNeeded(context, surfaceTile) {
   const geoArray = gpuLookup[0];
   const ltextWidth = gpuLookup[1];
   const ltextureHeight = gpuLookup[2];
+  const gridCellIndices = gpuLookup[3];
 
   const sampler = new Sampler({
     wrapS: TextureWrap.CLAMP_TO_EDGE,
@@ -1016,7 +1016,7 @@ function createGpuLookupTextureIfNeeded(context, surfaceTile) {
     magnificationFilter: TextureMagnificationFilter.NEAREST,
   });
 
-  const texture = Texture.create({
+  const lineTexture = Texture.create({
     context: context,
     pixelFormat: PixelFormat.RGBA,
     pixelDatatype: PixelDatatype.FLOAT,
@@ -1029,26 +1029,7 @@ function createGpuLookupTextureIfNeeded(context, surfaceTile) {
     flipY: false,
   });
 
-  surfaceTile.gpuLookupTexture = texture;
-}
-
-function createGridCellIndicesTextureIfNeeded(context, surfaceTile) {
-  const gpuLookup = surfaceTile.terrainData.gpuLookup;
-
-  if (!defined(gpuLookup)) {
-    return;
-  }
-
-  const gridCellIndices = gpuLookup[3];
-
-  const sampler = new Sampler({
-    wrapS: TextureWrap.CLAMP_TO_EDGE,
-    wrapT: TextureWrap.CLAMP_TO_EDGE,
-    minificationFilter: TextureMinificationFilter.NEAREST,
-    magnificationFilter: TextureMagnificationFilter.NEAREST,
-  });
-
-  const texture = Texture.create({
+  const gridCellIndicesTexture = Texture.create({
     context: context,
     pixelFormat: PixelFormat.RED,
     // TODO: could not get UNSIGNED_INT to work
@@ -1062,7 +1043,8 @@ function createGridCellIndicesTextureIfNeeded(context, surfaceTile) {
     flipY: false,
   });
 
-  surfaceTile.gridCellIndicesTexture = texture;
+  surfaceTile.lineTexture = lineTexture;
+  surfaceTile.gridCellIndicesTexture = gridCellIndicesTexture;
 }
 
 GlobeSurfaceTile.prototype._findAncestorTileWithTerrainData = function (tile) {

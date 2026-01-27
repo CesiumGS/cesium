@@ -1773,14 +1773,14 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_waterMaskTranslationAndScale: function () {
       return this.properties.waterMaskTranslationAndScale;
     },
-    u_sdf: function () {
-      return this.properties.sdf;
+    u_sdfTexture: function () {
+      return this.properties.sdfTexture;
     },
-    u_gpuLookup: function () {
-      return this.properties.gpuLookup;
+    u_lineTexture: function () {
+      return this.properties.lineTexture;
     },
-    u_gridCellIndices: function () {
-      return this.properties.gridCellIndices;
+    u_gridCellIndicesTexture: function () {
+      return this.properties.gridCellIndicesTexture;
     },
     u_minMaxHeight: function () {
       return this.properties.minMaxHeight;
@@ -1918,9 +1918,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       waterMask: undefined,
       waterMaskTranslationAndScale: new Cartesian4(),
 
-      sdf: undefined,
-      gpuLookup: undefined,
-      gridCellIndices: undefined,
+      sdfTexture: undefined,
+      lineTexture: undefined,
+      gridCellIndicesTexture: undefined,
 
       minMaxHeight: new Cartesian2(),
       scaleAndBias: new Matrix4(),
@@ -2177,7 +2177,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   }
 
   const sdfTexture = surfaceTile.sdfTexture;
-  const gpuLookupTexture = surfaceTile.gpuLookupTexture;
+  const lineTexture = surfaceTile.lineTexture;
   const gridCellIndicesTexture = surfaceTile.gridCellIndicesTexture;
 
   const cameraUnderground = frameState.cameraUnderground;
@@ -2207,7 +2207,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
 
   const hasWaterMask = tileProvider.hasWaterMask && defined(waterMaskTexture);
   const hasSdf = defined(sdfTexture);
-  const hasGpuLookup = defined(gpuLookupTexture);
+  const hasGpuLookup = defined(lineTexture) && defined(gridCellIndicesTexture);
 
   const showReflectiveOcean = hasWaterMask && tileProvider.showWaterEffect;
   const oceanNormalMap = tileProvider.oceanNormalMap;
@@ -2251,7 +2251,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     --maxTextures;
   }
   if (hasGpuLookup) {
-    --maxTextures; // gpuLookupTexture
+    --maxTextures; // lineTexture
     --maxTextures; // gridCellIndicesTexture
   }
   if (
@@ -2821,9 +2821,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       uniformMapProperties.waterMaskTranslationAndScale,
     );
 
-    uniformMapProperties.sdf = sdfTexture;
-    uniformMapProperties.gpuLookup = gpuLookupTexture;
-    uniformMapProperties.gridCellIndices = gridCellIndicesTexture;
+    uniformMapProperties.sdfTexture = sdfTexture;
+    uniformMapProperties.lineTexture = lineTexture;
+    uniformMapProperties.gridCellIndicesTexture = gridCellIndicesTexture;
 
     uniformMapProperties.minMaxHeight.x = encoding.minimumHeight;
     uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;
