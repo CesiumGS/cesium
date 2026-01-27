@@ -118,13 +118,13 @@ Object.defineProperties(PropertyTable.prototype, {
    * The properties stored in this table.
    *
    * @memberof PropertyTable.prototype
-   * @type {MetadataClassProperty}
+   * @type {Object<string, MetadataTableProperty>}
    * @readonly
    */
   properties: {
     get: function () {
       if (defined(this._metadataTable)) {
-        return this._metadataTable.class.properties;
+        return this._metadataTable.properties;
       }
 
       return undefined;

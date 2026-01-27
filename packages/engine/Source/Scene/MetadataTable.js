@@ -100,6 +100,20 @@ Object.defineProperties(MetadataTable.prototype, {
       return this._byteLength;
     },
   },
+
+  /**
+   * The properties of the table.
+   *
+   * @memberof MetadataTable.prototype
+   * @type {Object<string, MetadataTableProperty>}
+   * @readonly
+   * @private
+   */
+  properties: {
+    get: function () {
+      return this._properties;
+    },
+  },
 });
 
 /**

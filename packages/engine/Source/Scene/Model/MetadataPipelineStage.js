@@ -281,7 +281,7 @@ function getPropertyTableInfo(
     tableToFeatureSetInfo.get(String(propertyTable.id)) ?? {};
 
   const propertiesArray = Object.entries(propertyTable.properties).filter(
-    ([id, property]) => property.isGpuCompatible(NUM_CHANNELS),
+    ([id, property]) => property.classProperty.isGpuCompatible(NUM_CHANNELS),
   );
   const infoArray = new Array(propertiesArray.length);
 
@@ -294,8 +294,8 @@ function getPropertyTableInfo(
     infoArray[i] = {
       metadataVariable: sanitizeGlslIdentifier(propertyId),
       property,
-      type: property.type,
-      glslType: property.getGlslType(),
+      type: property.classProperty.type,
+      glslType: property.classProperty.getGlslType(),
       propertyStatistics: classStatistics?.properties[propertyId],
       shaderDestination: shaderDestination,
       propertyTable: propertyTable,
@@ -522,7 +522,7 @@ function addPropertyAttributePropertyMetadata(renderResources, propertyInfo) {
     glslType: glslType,
     metadataVariable: metadataVariable,
     shaderDestination: ShaderDestination.BOTH,
-    property: property.classProperty,
+    property: property,
   });
 
   // declare the struct field
@@ -643,7 +643,7 @@ function addPropertyTexturePropertyMetadata(
     glslType: glslType,
     metadataVariable: metadataVariable,
     shaderDestination: ShaderDestination.FRAGMENT,
-    property: classProperty,
+    property: property,
   });
 
   const finalAssignment = `metadata.${metadataVariable} = ${transformedValue};`;
@@ -833,8 +833,9 @@ function addPropertyTablePropertyMetadata(
   const featureIdExpression = `featureIds.${featureIdVariableName}`;
   const texCoordExpression = `ivec2(${featureIdExpression}, ${propertyIndex})`;
   const textureSampleExpression = `texelFetch(${textureUniformName}, ${texCoordExpression}, 0)`;
+  const classProperty = property.classProperty;
 
-  const unpackedVariable = property.unpackTextureInShader(
+  const unpackedVariable = classProperty.unpackTextureInShader(
     textureSampleExpression,
     `rgba`,
     metadataVariable,
