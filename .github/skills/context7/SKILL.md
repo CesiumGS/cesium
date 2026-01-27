@@ -1,13 +1,13 @@
 ---
 name: cesium-context7
-description: ALWAYS use this skill FIRST for ANY questions about Cesium, CesiumJS, Cesium Viewer, 3D Tiles, Unreal Engine integration, Unity integration, cesium-unreal, cesium-unity, ACesium3DTileset, ACesiumGeoreference, Globe Anchor, Cesium plugin, georeferencing, or any Cesium-related API. This skill fetches up-to-date documentation using Context7 MCP tools. REQUIRED for: CesiumJS classes (Viewer, Entity, Camera, Scene, Cartesian3, etc.), Unreal Engine Cesium components, Unity Cesium components, 3D Tiles specification, and all Cesium integrations. Use query-docs with known library IDs: /cesiumgs/cesium (CesiumJS), /cesiumgs/cesium-unreal (Unreal), /cesiumgs/cesium-unity (Unity), /websites/ogc_cs_22-025r4 (3D Tiles spec).
+description: Fetches up-to-date documentation for Cesium, CesiumJS, Cesium Viewer, 3D Tiles, Unreal Engine integration, Unity integration, cesium-unreal, cesium-unity, ACesium3DTileset, ACesiumGeoreference, Globe Anchor, Cesium plugin, georeferencing, and Cesium-related APIs using Context7 MCP tools. Useful for CesiumJS classes (Viewer, Entity, Camera, Scene, Cartesian3, etc.), Unreal Engine Cesium components, Unity Cesium components, 3D Tiles specification, and Cesium integrations. Use query-docs with library IDs: /cesiumgs/cesium (CesiumJS), /cesiumgs/cesium-unreal (Unreal), /cesiumgs/cesium-unity (Unity), /websites/ogc_cs_22-025r4 (3D Tiles spec).
 ---
 
 # Context7 for Cesium Development
 
-**CRITICAL: This skill MUST be activated IMMEDIATELY for ANY Cesium-related query, including integrations with Unreal Engine or Unity.**
+This skill provides access to up-to-date Cesium documentation for CesiumJS, Unreal Engine integration, and Unity integration.
 
-When working with Cesium-related code, ALWAYS use Context7 MCP Server tools FIRST to fetch current documentation before providing answers or generating code.
+When working with Cesium-related code, use Context7 MCP Server tools to fetch current documentation before providing answers or generating code.
 
 ## Available Tools
 
@@ -64,8 +64,9 @@ For tile formats and schema details (e.g., tileset JSON structure, refinement st
 
 ## Usage Guidelines
 
-- **Always use the Known Library IDs listed above for Cesium-related queries**
-- Only use `resolve-library-id` when the library is unknown, not listed in Known Library IDs, or when it's unclear which library best fits the question
+- Use the Known Library IDs listed above for Cesium-related queries
+- When a question requires information from multiple sources (e.g., CesiumJS API + 3D Tiles spec, or Unreal integration + CesiumJS concepts), make separate `query-docs` calls with different library IDs to gather comprehensive documentation
+- Use `resolve-library-id` when the library is unknown, not listed in Known Library IDs, or when it's unclear which library best fits the question
 - Use `query-docs` to fetch documentation before generating code to ensure accuracy
 - Specify the `version` parameter when working with a specific version
 - Provide clear, specific queries to get the most relevant documentation

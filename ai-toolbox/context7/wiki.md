@@ -150,6 +150,21 @@ use library /websites/ogc_cs_22-025r4
 
 Expected result: Specification-compliant explanation of refinement strategies and schema details.
 
+#### Example 6: Multiple Documents
+
+Some questions require information from multiple sources. Make separate queries with different library IDs:
+
+```text
+How does CesiumJS implement 3D Tiles batched content, and what are the specification requirements?
+1. Query /cesiumgs/cesium for implementation details
+2. Query /websites/ogc_cs_22-025r4 for specification requirements
+```
+
+Other examples requiring multiple documents:
+
+- **Unreal + CesiumJS**: "How do I load custom 3D Tiles in Unreal Engine?" (query both `/cesiumgs/cesium-unreal` and `/websites/ogc_cs_22-025r4`)
+- **Cross-platform**: "What are the differences in georeference setup between Unreal and Unity?" (query both `/cesiumgs/cesium-unreal` and `/cesiumgs/cesium-unity`)
+
 ### Automation with Agent Skills (Recommended)
 
 Agent Skills provide automatic activation based on context, without needing to type "use context7" or manually select instructions.
