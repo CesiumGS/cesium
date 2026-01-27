@@ -928,6 +928,17 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
   return requestTileGeometry(this, x, y, level, layerToUse, request);
 };
 
+function checkIfGeoJsonHasPolygons(features) {
+  for (const feature of features) {
+    if (feature.geometry.type === "Polygon") {
+      console.log("Found polygon feature");
+      return true; // Exit the loop and return true
+    }
+  }
+  console.log("No polygon feature found");
+  return false;
+}
+
 /**
  *
  * @param {number} rootId The root tile ID (0 or 1).
@@ -987,6 +998,8 @@ function requestGeoJson(provider, rootId, level, x, y, terrainY) {
           maxX,
           maxY,
         ]);
+
+        results.gpuLookup.push(checkIfGeoJsonHasPolygons(features));
       }
 
       return results;

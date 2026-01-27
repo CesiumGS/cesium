@@ -83,7 +83,8 @@ function GlobeSurfaceTileProvider(options) {
   this.lightingFadeInDistance = 9000000.0;
   this.hasWaterMask = false;
   this.hasSdf = false;
-  this.hasGpuLookup = false;
+  this.hasGpuLookupPolylines = false;
+  this.hasGpuLookupPolygons = false;
   this.showWaterEffect = false;
   this.oceanNormalMap = undefined;
   this.zoomedOutOceanSpecularIntensity = 0.5;
@@ -2212,10 +2213,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
 
   const hasWaterMask = tileProvider.hasWaterMask && defined(waterMaskTexture);
   const hasSdf = defined(sdfTexture);
-  const hasGpuLookup =
-    defined(lineTexture) &&
-    defined(cutFlagsTexture) &&
-    defined(gridCellIndicesTexture);
+  const hasGpuLookupPolylines =
+    defined(lineTexture) && !defined(cutFlagsTexture);
+  const hasGpuLookupPolygons = defined(lineTexture) && defined(cutFlagsTexture);
 
   const showReflectiveOcean = hasWaterMask && tileProvider.showWaterEffect;
   const oceanNormalMap = tileProvider.oceanNormalMap;
@@ -2258,10 +2258,13 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   if (hasSdf) {
     --maxTextures;
   }
-  if (hasGpuLookup) {
+  if (hasGpuLookupPolylines) {
     --maxTextures; // lineTexture
-    --maxTextures; // cutFlagsTexture
     --maxTextures; // gridCellIndicesTexture
+  } else if (hasGpuLookupPolygons) {
+    --maxTextures; // lineTexture
+    --maxTextures; // gridCellIndicesTexture
+    --maxTextures; // cutFlagsTexture
   }
   if (
     defined(frameState.shadowState) &&
@@ -2373,7 +2376,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.surfaceTile = surfaceTile;
   surfaceShaderSetOptions.hasWaterMask = hasWaterMask;
   surfaceShaderSetOptions.hasSdf = hasSdf;
-  surfaceShaderSetOptions.hasGpuLookup = hasGpuLookup;
+  surfaceShaderSetOptions.hasGpuLookupPolylines = hasGpuLookupPolylines;
+  surfaceShaderSetOptions.hasGpuLookupPolygons = hasGpuLookupPolygons;
   surfaceShaderSetOptions.showReflectiveOcean = showReflectiveOcean;
   surfaceShaderSetOptions.showOceanWaves = showOceanWaves;
   surfaceShaderSetOptions.enableLighting = tileProvider.enableLighting;

@@ -629,9 +629,7 @@ function processTerrainStateMachine(
 
   if (
     surfaceTile.terrainState >= TerrainState.RECEIVED &&
-    (surfaceTile.lineTexture === undefined ||
-      surfaceTile.cutFlagsTexture === undefined ||
-      surfaceTile.gridCellIndicesTexture === undefined)
+    surfaceTile.lineTexture === undefined
   ) {
     const terrainData = surfaceTile.terrainData;
     if (terrainData.gpuLookup !== undefined) {
@@ -1017,6 +1015,7 @@ function createGpuLookupTexturesIfNeeded(context, surfaceTile) {
   const ltextureHeight = gpuLookup[2];
   const gridCellIndices = gpuLookup[3];
   const cutFlags = gpuLookup[6];
+  const hasPolygons = gpuLookup[7];
 
   const sampler = new Sampler({
     wrapS: TextureWrap.CLAMP_TO_EDGE,
@@ -1038,19 +1037,6 @@ function createGpuLookupTexturesIfNeeded(context, surfaceTile) {
     flipY: false,
   });
 
-  const cutFlagsTexture = Texture.create({
-    context: context,
-    pixelFormat: PixelFormat.RED,
-    pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-    source: {
-      width: ltextWidth,
-      height: ltextureHeight,
-      arrayBufferView: cutFlags,
-    },
-    sampler: sampler,
-    flipY: false,
-  });
-
   const gridCellIndicesTexture = Texture.create({
     context: context,
     pixelFormat: PixelFormat.RED,
@@ -1066,8 +1052,24 @@ function createGpuLookupTexturesIfNeeded(context, surfaceTile) {
   });
 
   surfaceTile.lineTexture = lineTexture;
-  surfaceTile.cutFlagsTexture = cutFlagsTexture;
   surfaceTile.gridCellIndicesTexture = gridCellIndicesTexture;
+
+  if (hasPolygons) {
+    const cutFlagsTexture = Texture.create({
+      context: context,
+      pixelFormat: PixelFormat.RED,
+      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+      source: {
+        width: ltextWidth,
+        height: ltextureHeight,
+        arrayBufferView: cutFlags,
+      },
+      sampler: sampler,
+      flipY: false,
+    });
+
+    surfaceTile.cutFlagsTexture = cutFlagsTexture;
+  }
 }
 
 GlobeSurfaceTile.prototype._findAncestorTileWithTerrainData = function (tile) {

@@ -223,11 +223,16 @@ float filterSDF(float sdf, vec2 uvCoordinate, vec2 textureSize) {
 
 
 #endif
-#ifdef HAS_GPU_LOOKUP
+#ifdef HAS_GPU_LOOKUP_POLYLINES
+    uniform highp sampler2D u_lineTexture;
+    uniform highp sampler2D u_gridCellIndicesTexture;
+#elif defined(HAS_GPU_LOOKUP_POLYGONS)
     uniform highp sampler2D u_lineTexture;
     uniform highp sampler2D u_cutFlagsTexture;
     uniform highp sampler2D u_gridCellIndicesTexture;
+#endif
 
+#if defined(HAS_GPU_LOOKUP_POLYLINES) || defined(HAS_GPU_LOOKUP_POLYGONS)
     // Calculate the distance between a point and a line segment
     float distanceToLine(vec2 p, vec4 l) {
         vec2 a = vec2(l.x, l.y); // Start point of the line
@@ -293,7 +298,6 @@ float filterSDF(float sdf, vec2 uvCoordinate, vec2 textureSize) {
 
         return ivec2(i, j);
     }
-
 #endif
 
 vec4 sampleAndBlend(
@@ -709,7 +713,64 @@ void main()
         out_FragColor = vec4(renormalized, renormalized, 0.0, renormalized);
     }
 #endif
-#ifdef HAS_GPU_LOOKUP
+#ifdef HAS_GPU_LOOKUP_POLYLINES
+    // Get the width of the texture using textureSize
+    vec2 texSize = vec2(textureSize(u_lineTexture, 0));
+    float tsizeX = float(texSize.x);
+    float tsizeY = float(texSize.y);
+
+    // Define a threshold for coloring the fragment in screenspace
+    // Approximated 1 pixel length (0.5 dist each side with 0.3 padding for smoothness)
+    float threshold = 0.8;
+    threshold = scaleDistFragToTex(threshold, v_textureCoordinates.xy);
+
+    // Initialize the minimum distance to a large value
+    float minDist = 1.0; // Assume normalized coordinates (0 to 1)
+
+    int subGridSizeX = int(texelFetch(u_gridCellIndicesTexture, ivec2(0, 0), 0).r);
+    int subGridSizeY = int(texelFetch(u_gridCellIndicesTexture, ivec2(1, 0), 0).r);
+    ivec2 cell = getGridCell(v_textureCoordinates.xy, subGridSizeX, subGridSizeY);
+    int cellIndex = cell.x + cell.y * subGridSizeX;
+    int cellStart = 0;
+    int cellEnd = int(texelFetch(u_gridCellIndicesTexture, ivec2(cellIndex+2, 0), 0).r);
+    if (cellIndex > 0){
+        cellStart = int(texelFetch(u_gridCellIndicesTexture, ivec2(cellIndex+1, 0), 0).r);
+    }
+    //cellEnd = 20;
+
+    // Iterate over the texels of the line texture
+    for (int k = cellStart; k < cellEnd; k++) {
+        int j = k / int(tsizeX);
+        int i = k - j * int(tsizeX);
+
+        // Calculate the texture coordinate for the current texel
+        float texCoordX = (float(i) + 0.5) / tsizeX;
+        float texCoordY = (float(j) + 0.5) / tsizeY;
+
+        // Sample the current texel
+        vec4 texel = texture(u_lineTexture, vec2(texCoordX, texCoordY));
+        // skip if reaches end, marked by -1 as this should be normalized to [0, 1]
+        if (texel.r == -1.0){
+            break;
+        }
+
+        // Calculate the distance to the current line segment
+        // TODO: for better line rendering on steep slopes, scale by x and y derivatives respectively
+        float dist = distanceToLine(v_textureCoordinates.xy, texel);
+
+        // Update the minimum distance
+        minDist = min(minDist, dist);
+
+        if (minDist < threshold){
+            break;
+        }
+    }
+
+    // Color the fragment based on the minimum distance
+    if (minDist < threshold) {
+        out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red for close fragments
+    }
+#elif defined(HAS_GPU_LOOKUP_POLYGONS)
     // Get the width of the texture using textureSize
     vec2 texSize = vec2(textureSize(u_lineTexture, 0));
     float tsizeX = float(texSize.x);
