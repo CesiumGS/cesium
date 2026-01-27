@@ -118,8 +118,17 @@ export async function buildGalleryList(options = {}) {
   };
 
   const galleryFiles = await globby(
-    galleryFilesPattern.map((pattern) => join(rootDirectory, pattern, "**/*")),
+    galleryFilesPattern.map((pattern) =>
+      // globby can only work with paths using '/' but node on windows uses '\'
+      // convert them right before passing to globby to ensure all joins work as expected
+      join(rootDirectory, pattern, "**/*").replaceAll("\\", "/"),
+    ),
   );
+  if (galleryFiles.length === 0) {
+    console.warn(
+      "Did not find any gallery files. Please check the configuration is correct",
+    );
+  }
   const yamlFiles = galleryFiles.filter((path) =>
     basename(path).match(galleryItemConfig),
   );
@@ -174,7 +183,11 @@ export async function buildGalleryList(options = {}) {
     if (
       check(!/^[a-zA-Z0-9-.]+$/.test(slug), `"${slug}" is not a valid slug`) ||
       check(!title, `${slug} - Missing title`) ||
-      check(!description, `${slug} - Missing description`)
+      check(!description, `${slug} - Missing description`) ||
+      check(
+        !development && labels.includes("Development"),
+        `${slug} has Development label but not marked as development sandcastle`,
+      )
     ) {
       continue;
     }
@@ -300,7 +313,7 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
 
   try {
     const config = await import(pathToFileURL(configPath).href);
-    const { root, publicDir, gallery, sourceUrl } = config.default;
+    const { root, publicDirectory, gallery, sourceUrl } = config.default;
 
     // Paths are specified relative to the config file
     const configDir = dirname(configPath);
@@ -316,7 +329,7 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
 
     buildGalleryOptions = {
       rootDirectory: configRoot,
-      publicDirectory: publicDir,
+      publicDirectory: publicDirectory,
       galleryFiles: files,
       sourceUrl,
       defaultThumbnail,

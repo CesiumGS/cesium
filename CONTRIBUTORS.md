@@ -104,6 +104,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Erin Ingram](https://github.com/eringram)
   - [Daniel Zhong](https://github.com/danielzhong)
   - [Mark Schlosser](https://github.com/markschlosseratbentley)
+  - [Adam Larkeryd](https://github.com/alarkbentley)
+  - [Don McCurdy](https://github.com/donmccurdy)
 - [Flightradar24 AB](https://www.flightradar24.com)
   - [Aleksei Kalmykov](https://github.com/kalmykov)
 - [BIT Systems](http://www.caci.com/bit-systems)
@@ -435,3 +437,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Marco Zhan](https://github.com/marcoYxz)
 - [Mikhail Porotkin](https://github.com/porotkin)
 - [Adam Beili](https://github.com/Beilinson)
+- [段寒松](https://github.com/Duan971231)

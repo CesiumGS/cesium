@@ -34,24 +34,16 @@ describe("Scene/Azure2DImageryProvider", function () {
     );
   });
 
-  it("requires tilesetId to be specified", function () {
-    expect(function () {
-      return new Azure2DImageryProvider({
-        subscriptionKey: "a-subscription-key",
-      });
-    }).toThrowDeveloperError(
-      "options.tilesetId is required, actual value was undefined",
-    );
-  });
-
   it("requestImage returns a promise for an image and loads it for cross-origin use", function () {
     const provider = new Azure2DImageryProvider({
       subscriptionKey: "test-subscriptionKey",
       tilesetId: "a-tileset-id",
     });
 
+    provider._attributionsByLevel = {};
+
     expect(provider.url).toEqual(
-      "https://atlas.microsoft.com/map/tile?api-version=2024-04-01&tilesetId=a-tileset-id&zoom={z}&x={x}&y={y}&subscription-key=test-subscriptionKey",
+      "https://atlas.microsoft.com/map/tile?api-version=2024-04-01&tilesetId=a-tileset-id&subscription-key=test-subscriptionKey&zoom={z}&x={x}&y={y}",
     );
     expect(provider.tileWidth).toEqual(256);
     expect(provider.tileHeight).toEqual(256);
@@ -83,6 +75,8 @@ describe("Scene/Azure2DImageryProvider", function () {
       tilesetId: "a-tileset-id",
       rectangle: rectangle,
     });
+
+    provider._attributionsByLevel = {};
 
     expect(provider.tileWidth).toEqual(256);
     expect(provider.tileHeight).toEqual(256);
@@ -143,6 +137,7 @@ describe("Scene/Azure2DImageryProvider", function () {
       subscriptionKey: "test-subscriptionKey",
       tilesetId: "a-tileset-id",
     });
+    provider._attributionsByLevel = {};
 
     const layer = new ImageryLayer(provider);
 

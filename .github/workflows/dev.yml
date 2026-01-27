@@ -1,7 +1,7 @@
 name: dev
-on: 
+on:
   push:
-    branches: 
+    branches:
       - main
   pull_request:
 concurrency:
@@ -11,7 +11,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -27,7 +27,7 @@ jobs:
   release-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -43,7 +43,7 @@ jobs:
   node-20:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 20
         uses: actions/setup-node@v6
         with:

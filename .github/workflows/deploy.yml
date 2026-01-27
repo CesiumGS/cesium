@@ -20,7 +20,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BASE_URL: /cesium/${{ github.ref_name }}/
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -47,8 +47,6 @@ jobs:
         run: npm pack --workspaces &> /dev/null
       - name: build apps
         run: npm run build-apps
-      - name: build sandcastle v2
-        run: npm run build-ci -w packages/sandcastle -- -l warn
       - uses: ./.github/actions/verify-package
       - name: deploy to s3
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}

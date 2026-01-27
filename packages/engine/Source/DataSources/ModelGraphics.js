@@ -66,7 +66,7 @@ function createEnvironmentMapPropertyBag(value) {
  *
  * @param {ModelGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=3d-models|Cesium Sandcastle 3D Models Demo}
  */
 function ModelGraphics(options) {
   this._definitionChanged = new Event();

@@ -596,7 +596,7 @@ function createGeometryFromPositionsExtruded(
  * @see PolygonGeometry#createGeometry
  * @see PolygonGeometry#fromPositions
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=polygon|Cesium Sandcastle Polygon Demo}
  *
  * @example
  * // 1. create a polygon from points

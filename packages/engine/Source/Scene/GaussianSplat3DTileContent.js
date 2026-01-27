@@ -125,7 +125,6 @@ GaussianSplat3DTileContent.tilesetRequiresGaussianSplattingExt = function (
   tileset,
 ) {
   let hasGaussianSplatExtension = false;
-  let hasLegacyGaussianSplatExtension = false;
   if (tileset.isGltfExtensionRequired instanceof Function) {
     hasGaussianSplatExtension =
       tileset.isGltfExtensionRequired("KHR_gaussian_splatting") &&
@@ -133,22 +132,20 @@ GaussianSplat3DTileContent.tilesetRequiresGaussianSplattingExt = function (
         "KHR_gaussian_splatting_compression_spz_2",
       );
 
-    hasLegacyGaussianSplatExtension = tileset.isGltfExtensionRequired(
-      "KHR_spz_gaussian_splats_compression",
-    );
+    if (
+      tileset.isGltfExtensionRequired("KHR_spz_gaussian_splats_compression")
+    ) {
+      deprecationWarning(
+        "KHR_spz_gaussian_splats_compression",
+        "Support for the original KHR_spz_gaussian_splats_compression extension has been removed in favor " +
+          "of the up to date KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extensions" +
+          "\n\nPlease retile your tileset with the KHR_gaussian_splatting and " +
+          "KHR_gaussian_splatting_compression_spz_2 extensions.",
+      );
+    }
   }
 
-  if (hasLegacyGaussianSplatExtension) {
-    deprecationWarning(
-      "KHR_spz_gaussian_splats_compression",
-      "Support for the original KHR_spz_gaussian_splats_compression extension has been deprecated in favor " +
-        "of the up to date KHR_gaussian_splatting and KHR_gaussian_splatting_compression_spz_2 extensions and will be " +
-        "removed in CesiumJS 1.135.\n\nPlease retile your tileset with the KHR_gaussian_splatting and " +
-        "KHR_gaussian_splatting_compression_spz_2 extensions.",
-    );
-  }
-
-  return hasGaussianSplatExtension || hasLegacyGaussianSplatExtension;
+  return hasGaussianSplatExtension;
 };
 
 Object.defineProperties(GaussianSplat3DTileContent.prototype, {
