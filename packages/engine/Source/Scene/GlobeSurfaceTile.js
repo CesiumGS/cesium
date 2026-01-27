@@ -43,6 +43,7 @@ function GlobeSurfaceTile() {
 
   this.sdfTexture = undefined;
   this.lineTexture = undefined;
+  this.cutFlagsTexture = undefined;
   this.gridCellIndicesTexture = undefined;
 
   this.terrainData = undefined;
@@ -157,6 +158,11 @@ GlobeSurfaceTile.prototype.freeResources = function () {
   if (defined(this.lineTexture)) {
     this.lineTexture.destroy();
     this.lineTexture = undefined;
+  }
+
+  if (defined(this.cutFlagsTexture)) {
+    this.cutFlagsTexture.destroy();
+    this.cutFlagsTexture = undefined;
   }
 
   if (defined(this.gridCellIndicesTexture)) {
@@ -623,7 +629,9 @@ function processTerrainStateMachine(
 
   if (
     surfaceTile.terrainState >= TerrainState.RECEIVED &&
-    surfaceTile.lineTexture === undefined
+    (surfaceTile.lineTexture === undefined ||
+      surfaceTile.cutFlagsTexture === undefined ||
+      surfaceTile.gridCellIndicesTexture === undefined)
   ) {
     const terrainData = surfaceTile.terrainData;
     if (terrainData.gpuLookup !== undefined) {
@@ -1008,6 +1016,7 @@ function createGpuLookupTexturesIfNeeded(context, surfaceTile) {
   const ltextWidth = gpuLookup[1];
   const ltextureHeight = gpuLookup[2];
   const gridCellIndices = gpuLookup[3];
+  const cutFlags = gpuLookup[6];
 
   const sampler = new Sampler({
     wrapS: TextureWrap.CLAMP_TO_EDGE,
@@ -1029,6 +1038,19 @@ function createGpuLookupTexturesIfNeeded(context, surfaceTile) {
     flipY: false,
   });
 
+  const cutFlagsTexture = Texture.create({
+    context: context,
+    pixelFormat: PixelFormat.RED,
+    pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+    source: {
+      width: ltextWidth,
+      height: ltextureHeight,
+      arrayBufferView: cutFlags,
+    },
+    sampler: sampler,
+    flipY: false,
+  });
+
   const gridCellIndicesTexture = Texture.create({
     context: context,
     pixelFormat: PixelFormat.RED,
@@ -1044,6 +1066,7 @@ function createGpuLookupTexturesIfNeeded(context, surfaceTile) {
   });
 
   surfaceTile.lineTexture = lineTexture;
+  surfaceTile.cutFlagsTexture = cutFlagsTexture;
   surfaceTile.gridCellIndicesTexture = gridCellIndicesTexture;
 }
 

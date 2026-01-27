@@ -225,6 +225,7 @@ float filterSDF(float sdf, vec2 uvCoordinate, vec2 textureSize) {
 #endif
 #ifdef HAS_GPU_LOOKUP
     uniform highp sampler2D u_lineTexture;
+    uniform highp sampler2D u_cutFlagsTexture;
     uniform highp sampler2D u_gridCellIndicesTexture;
 
     // Calculate the distance between a point and a line segment
@@ -721,6 +722,8 @@ void main()
 
     // Initialize the minimum distance to a large value
     float minDist = 1.0; // Assume normalized coordinates (0 to 1)
+    float minDistSign = 1.0; // init to inside
+    int cutFlag = 1;
 
     int subGridSizeX = int(texelFetch(u_gridCellIndicesTexture, ivec2(0, 0), 0).r);
     int subGridSizeY = int(texelFetch(u_gridCellIndicesTexture, ivec2(1, 0), 0).r);
@@ -731,7 +734,6 @@ void main()
     if (cellIndex > 0){
         cellStart = int(texelFetch(u_gridCellIndicesTexture, ivec2(cellIndex+1, 0), 0).r);
     }
-    //cellEnd = 20;
 
     // Iterate over the texels of the line texture
     for (int k = cellStart; k < cellEnd; k++) {
@@ -754,16 +756,38 @@ void main()
         float dist = distanceToLine(v_textureCoordinates.xy, texel);
 
         // Update the minimum distance
-        minDist = min(minDist, dist);
+        if (minDist > dist){
+            minDist = dist;
+            cutFlag = int(texture(u_cutFlagsTexture, vec2(texCoordX, texCoordY)).r*255.0);
+        }
 
-        if (minDist < threshold){
+        if ((minDist < threshold) && (cutFlag == 0)){
             break;
+        }
+
+        // Check if the ray intersects the current line segment
+        // Ray casting
+        // https://autogis-site.readthedocs.io/en/latest/lessons/lesson-3/point-in-polygon-queries.html
+        if ((v_textureCoordinates.y > texel.y && v_textureCoordinates.y <= texel.w) || (v_textureCoordinates.y > texel.w && v_textureCoordinates.y <= texel.y)) {
+            // Compute the x-coordinate of the intersection point
+            float t = (v_textureCoordinates.y - texel.y) / (texel.w - texel.y);
+            float intersectionX = texel.x + t * (texel.z - texel.x);
+
+            // Check if the intersection point is to the right of the ray's origin
+            if (intersectionX > v_textureCoordinates.x) {
+                minDistSign = minDistSign*-1.0;
+            }
+
         }
     }
 
+    // color all inside pixels
+    if (minDistSign < 0.0){
+        out_FragColor = vec4(0.0, 0.0, 1.0, 1.0); // Blue for close fragments
+    }
     // Color the fragment based on the minimum distance
-    if (minDist < threshold) {
-        out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red for close fragments
+    if ((minDist < threshold) && (cutFlag == 0)) {
+        out_FragColor = vec4(1.0, 0.0, 1.0, 1.0); // Purple for close fragments
     }
 #endif
 }

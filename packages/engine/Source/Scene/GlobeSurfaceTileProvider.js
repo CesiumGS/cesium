@@ -1779,6 +1779,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_lineTexture: function () {
       return this.properties.lineTexture;
     },
+    u_cutFlagsTexture: function () {
+      return this.properties.cutFlagsTexture;
+    },
     u_gridCellIndicesTexture: function () {
       return this.properties.gridCellIndicesTexture;
     },
@@ -1920,6 +1923,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
 
       sdfTexture: undefined,
       lineTexture: undefined,
+      cutFlagsTexture: undefined,
       gridCellIndicesTexture: undefined,
 
       minMaxHeight: new Cartesian2(),
@@ -2178,6 +2182,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
 
   const sdfTexture = surfaceTile.sdfTexture;
   const lineTexture = surfaceTile.lineTexture;
+  const cutFlagsTexture = surfaceTile.cutFlagsTexture;
   const gridCellIndicesTexture = surfaceTile.gridCellIndicesTexture;
 
   const cameraUnderground = frameState.cameraUnderground;
@@ -2207,7 +2212,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
 
   const hasWaterMask = tileProvider.hasWaterMask && defined(waterMaskTexture);
   const hasSdf = defined(sdfTexture);
-  const hasGpuLookup = defined(lineTexture) && defined(gridCellIndicesTexture);
+  const hasGpuLookup =
+    defined(lineTexture) &&
+    defined(cutFlagsTexture) &&
+    defined(gridCellIndicesTexture);
 
   const showReflectiveOcean = hasWaterMask && tileProvider.showWaterEffect;
   const oceanNormalMap = tileProvider.oceanNormalMap;
@@ -2252,6 +2260,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   }
   if (hasGpuLookup) {
     --maxTextures; // lineTexture
+    --maxTextures; // cutFlagsTexture
     --maxTextures; // gridCellIndicesTexture
   }
   if (
@@ -2823,6 +2832,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
 
     uniformMapProperties.sdfTexture = sdfTexture;
     uniformMapProperties.lineTexture = lineTexture;
+    uniformMapProperties.cutFlagsTexture = cutFlagsTexture;
     uniformMapProperties.gridCellIndicesTexture = gridCellIndicesTexture;
 
     uniformMapProperties.minMaxHeight.x = encoding.minimumHeight;
