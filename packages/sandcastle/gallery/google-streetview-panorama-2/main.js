@@ -212,6 +212,7 @@ function goToPanoView(options) {
   const { position, heading } = options;
 
   selectedViewType = ViewType.PanoView;
+  viewer.scene.globe.show = false;
 
   viewer.scene.camera.lookAt(
     position,
@@ -225,7 +226,6 @@ function goToPanoView(options) {
   viewer.scene.screenSpaceCameraController.enableZoom = false;
   streetviewOverlay.show = false;
   disablePicking();
-  viewer.scene.globe.show = false;
   removeTopModal();
   setPanoViewToolBar();
 }
