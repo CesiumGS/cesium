@@ -199,12 +199,12 @@ function geojsonToArrayInGrid(
   // aim for 1k lines per grid cell
   const gridSizeX = Math.ceil(Math.sqrt(lineSegmentsCount / targetLinePerCell));
   const gridSizeY = Math.ceil(Math.sqrt(lineSegmentsCount / targetLinePerCell));
-  console.log("Grid size (auto computed):", gridSizeX, gridSizeY);
+  //console.log("Grid size (auto computed):", gridSizeX, gridSizeY);
 
   // chop into grid cells
   const cellWidth = (bbox[2] - bbox[0]) / gridSizeX;
   const cellHeight = (bbox[3] - bbox[1]) / gridSizeY;
-  console.log("Cell size:", cellWidth, cellHeight);
+  //console.log("Cell size:", cellWidth, cellHeight);
 
   // get a 2D array to hold line segments in each cell
   const grid = new Array(gridSizeX);
@@ -218,7 +218,7 @@ function geojsonToArrayInGrid(
     }
   }
 
-  console.log("Original number of line segments:", lineSegmentsCount);
+  //console.log("Original number of line segments:", lineSegmentsCount);
   let numOfLineSegmentsGeoJSON = 0;
 
   // assign line segments to grid cells
@@ -229,9 +229,48 @@ function geojsonToArrayInGrid(
 
       if (geometry.type === "Polygon") {
         for (let j = 0; j < lineCoords.length; j++) {
+          const ring = lineCoords[j];
+          let minX = ring[0][0];
+          let maxX = ring[0][0];
+          let minY = ring[0][1];
+          let maxY = ring[0][1];
+          for (let k = 1; k < ring.length; k++) {
+            const x = ring[k][0];
+            const y = ring[k][1];
+            if (x < minX) {
+              minX = x;
+            }
+            if (x > maxX) {
+              maxX = x;
+            }
+            if (y < minY) {
+              minY = y;
+            }
+            if (y > maxY) {
+              maxY = y;
+            }
+          }
+          // determine which grid cells the polygon ring bbox overlaps
+          const startCellX = Math.max(
+            0,
+            Math.floor((minX - bbox[0]) / cellWidth),
+          );
+          const endCellX = Math.min(
+            gridSizeX - 1,
+            Math.floor((maxX - bbox[0]) / cellWidth),
+          );
+          const startCellY = Math.max(
+            0,
+            Math.floor((minY - bbox[1]) / cellHeight),
+          );
+          const endCellY = Math.min(
+            gridSizeY - 1,
+            Math.floor((maxY - bbox[1]) / cellHeight),
+          );
+
           // iterate through grid cells
-          for (let c = 0; c < gridSizeX; c++) {
-            for (let r = 0; r < gridSizeY; r++) {
+          for (let c = startCellX; c <= endCellX; c++) {
+            for (let r = startCellY; r <= endCellY; r++) {
               const cellMinX = bbox[0] + c * cellWidth;
               const cellMaxX = bbox[0] + (c + 1) * cellWidth;
               const cellMinY = bbox[1] + r * cellHeight;
@@ -310,10 +349,10 @@ function geojsonToArrayInGrid(
     }
   }
 
-  console.log(
-    "Number of line segments after grid assignment:",
-    numOfLineSegmentsGeoJSON,
-  );
+  //console.log(
+  //  "Number of line segments after grid assignment:",
+  //  numOfLineSegmentsGeoJSON,
+  //);
 
   console.log(
     "Number of line segments after grid split:",
