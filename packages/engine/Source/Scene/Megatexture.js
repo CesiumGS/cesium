@@ -24,7 +24,8 @@ import TextureWrap from "../Renderer/TextureWrap.js";
  * @param {MetadataComponentType} componentType The component type of the metadata.
  * @param {number} [availableTextureMemoryBytes=134217728] An upper limit on the texture memory size in bytes.
  *
- * TODO: describe exceptions
+ * @exception {RuntimeError} The GL context does not support a 3D texture large enough to contain a tile with the given dimensions.
+ * @exception {RuntimeError} Not enough texture memory available to create a megatexture with the given tile dimensions.
  *
  * @private
  */
@@ -48,11 +49,6 @@ function Megatexture(
     availableTextureMemoryBytes,
     tileCount,
   );
-  if (Cartesian3.equals(textureDimension, Cartesian3.ZERO)) {
-    throw new RuntimeError(
-      "Not enough texture memory available to create a megatexture with the given tile dimensions.",
-    );
-  }
 
   const tileCounts = Cartesian3.divideComponents(
     textureDimension,
@@ -261,6 +257,8 @@ function MegatextureNode(index) {
  * Add an array of tile metadata to the megatexture.
  * @param {Array} data The data to be added.
  * @returns {number} The index of the tile's location in the megatexture.
+ *
+ * @exception {DeveloperError} Trying to add when there are no empty spots.
  */
 Megatexture.prototype.add = function (data) {
   if (this.isFull()) {
@@ -290,6 +288,7 @@ Megatexture.prototype.add = function (data) {
 
 /**
  * @param {number} index
+ * @exception {DeveloperError} Megatexture index out of bounds.
  */
 Megatexture.prototype.remove = function (index) {
   if (index < 0 || index >= this.maximumTileCount) {
@@ -330,79 +329,12 @@ Megatexture.prototype.isFull = function () {
  * @param {number} availableTextureMemoryBytes An upper limit on the texture memory size in bytes.
  * @param {number} [tileCount] The total number of tiles in the tileset.
  * @returns {Cartesian3} The computed 3D texture dimensions.
+ *
+ * @exception {RuntimeError} The GL context does not support a 3D texture large enough to contain a tile with the given dimensions.
+ * @exception {RuntimeError} Not enough texture memory available to create a megatexture with the given tile dimensions.
  * @private
  */
 Megatexture.get3DTextureDimension = function (
-  tileDimensions,
-  bytesPerSample,
-  availableTextureMemoryBytes,
-  tileCount,
-) {
-  const textureDimension = new Cartesian3();
-  const { maximum3DTextureSize } = ContextLimits;
-
-  // Find the number of tiles we can fit.
-  const tileSizeInBytes =
-    bytesPerSample * tileDimensions.x * tileDimensions.y * tileDimensions.z;
-  const maxTileCount = Math.floor(
-    availableTextureMemoryBytes / tileSizeInBytes,
-  );
-  if (maxTileCount < 1) {
-    return textureDimension;
-  }
-
-  if (defined(tileCount)) {
-    tileCount = Math.min(tileCount, maxTileCount);
-  } else {
-    tileCount = maxTileCount;
-  }
-
-  // Sort the tile dimensions from smallest to largest.
-  const sortedDimensions = Object.entries(tileDimensions).sort(
-    (a, b) => a[1] - b[1],
-  );
-
-  // Try arranging all tiles in a single column along the axis of the smallest tile dimension.
-  const singleColumnLength = sortedDimensions[0][1] * tileCount;
-  if (singleColumnLength <= maximum3DTextureSize) {
-    textureDimension[sortedDimensions[0][0]] = singleColumnLength;
-    textureDimension[sortedDimensions[1][0]] = sortedDimensions[1][1];
-    textureDimension[sortedDimensions[2][0]] = sortedDimensions[2][1];
-    return textureDimension;
-  }
-
-  // Find a nearby number with no prime factor larger than 7.
-  const factors = findFactorsOfNearbyComposite(tileCount, maxTileCount);
-
-  // Split these factors into the three dimensions, keeping the total texture size
-  // smaller than the maximum in each dimension.
-  for (let i = 0; i < 3; i++) {
-    const [axis, length] = sortedDimensions[i];
-    const maxTileCountAlongAxis = Math.floor(maximum3DTextureSize / length);
-    const axisFactors = getDimensionFromFactors(factors, maxTileCountAlongAxis);
-    textureDimension[axis] = getProductOfFactors(axisFactors) * length;
-    // Remove used factors.
-    for (let j = 0; j < factors.length; j++) {
-      factors[j] -= axisFactors[j];
-    }
-  }
-
-  return textureDimension;
-};
-
-/**
- * Compute a 3D texture dimension that contains the given number of tiles, or as many tiles as can fit within the available texture memory.
- * Not used outside the class, but exposed for testing.
- * @param {Cartesian3} tileDimensions The dimensions of one tile in number of voxels.
- * @param {number} bytesPerSample The number of bytes per voxel sample.
- * @param {number} availableTextureMemoryBytes An upper limit on the texture memory size in bytes.
- * @param {number} [tileCount] The total number of tiles in the tileset.
- * @returns {Cartesian3} The computed 3D texture dimensions.
- *
- * TODO: describe exceptions
- * @private
- */
-Megatexture.get3DTextureDimensionGreedy = function (
   tileDimensions,
   bytesPerSample,
   availableTextureMemoryBytes,
@@ -480,99 +412,6 @@ Megatexture.get3DTextureDimensionGreedy = function (
 
 function getVolume(dimensionsArray) {
   return dimensionsArray.reduce((p, d) => p * d);
-}
-
-/**
- * Approximate an integer by a product of small prime factors (2, 3, 5, and 7).
- * @private
- * @param {number} n The integer to be approximated
- * @param {number} maxN A maximum integer which the approximation should not exceed
- * @returns {number[]} The exponents of the prime factors 2, 3, 5, and 7 whose product is the approximation of n
- */
-function findFactorsOfNearbyComposite(n, maxN) {
-  n = Math.min(n, maxN);
-  //>>includeStart('debug', pragmas.debug);
-  if (Math.floor(n) !== n) {
-    throw new DeveloperError("n and maxN must be integers");
-  } else if (n < 1) {
-    throw new DeveloperError("n and maxN must be at least 1");
-  }
-  //>>includeEnd('debug');
-  switch (n) {
-    case 1:
-      return [0, 0, 0, 0];
-    case 2:
-      return [1, 0, 0, 0];
-    case 3:
-      return [0, 1, 0, 0];
-  }
-  const log2n = Math.floor(Math.log2(n));
-  const previousPowerOfTwo = 2 ** log2n;
-  const residual = n - previousPowerOfTwo;
-  const interval = 2 ** (log2n - 2);
-  let intervalIndex = Math.ceil(residual / interval);
-  const nextComposite = previousPowerOfTwo + intervalIndex * interval;
-  if (nextComposite > maxN) {
-    // Use the previous composite instead
-    intervalIndex--;
-  }
-  switch (intervalIndex) {
-    case 0:
-      // previousPowerOfTwo
-      return [log2n, 0, 0, 0];
-    case 1:
-      // previousPowerOfTwo * 5 / 4
-      return [log2n - 2, 0, 1, 0];
-    case 2:
-      // previousPowerOfTwo * 6 / 4
-      return [log2n - 1, 1, 0, 0];
-    case 3:
-      // previousPowerOfTwo * 7 / 4
-      return [log2n - 2, 0, 0, 1];
-    case 4:
-      // previousPowerOfTwo * 8 / 4
-      return [log2n + 1, 0, 0, 0];
-  }
-}
-
-/**
- * Compute the number of tiles to assign to an axis based on the remaining prime factors.
- * We maximize the number of tiles assigned to the dimension without exceeding the maximum dimension.
- * @private
- * @param {number[]} factorPowers The exponents of the prime factors 2, 3, 5, and 7 whose product is the remaining number of tiles to be assigned to an axis
- * @param {number} maxDimension The maximum number of tiles that can fit along this axis
- * @returns {number[]} The exponents of the prime factors 2, 3, 5, and 7 whose product is the number of tiles assigned to this axis
- */
-function getDimensionFromFactors(factorPowers, maxDimension) {
-  const maxPowerOfTwo = Math.floor(Math.log2(maxDimension));
-  const log2n = Math.min(factorPowers[0], maxPowerOfTwo);
-  // factorPowers includes log2n powers of 2 and at most one power of 3, 5, or 7.
-  if (log2n <= 1 && Math.max(...factorPowers.slice(1)) > 0) {
-    if (getProductOfFactors(factorPowers) <= maxDimension) {
-      // All remaining factors will fit in the current axis
-      return factorPowers.slice();
-    }
-    // Use the larger factor first (axes are in order of smallest to largest tile dimension)
-    return [0, ...factorPowers.slice(1)];
-  }
-  const remainingDimension = maxDimension / 2 ** log2n;
-  if (remainingDimension >= 7 / 4 && factorPowers[3] > 0) {
-    return [log2n - 2, 0, 0, 1];
-  } else if (remainingDimension >= 6 / 4 && factorPowers[1] > 0) {
-    return [log2n - 1, 1, 0, 0];
-  } else if (remainingDimension >= 5 / 4 && factorPowers[2] > 0) {
-    return [log2n - 2, 0, 1, 0];
-  }
-  return [log2n, 0, 0, 0];
-}
-
-function getProductOfFactors(factorPowers) {
-  let product = 1;
-  const primeFactors = [2, 3, 5, 7];
-  for (let i = 0; i < primeFactors.length; i++) {
-    product *= primeFactors[i] ** factorPowers[i];
-  }
-  return product;
 }
 
 /**
