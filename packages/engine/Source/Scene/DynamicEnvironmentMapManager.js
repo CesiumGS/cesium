@@ -855,7 +855,7 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
   const mode = frameState.mode;
   const isSupported =
     // @ts-expect-error A FrameState type works here because the function only references the context parameter.
-    DynamicEnvironmentMapManager.isDynamicUpdateSupported(frameState)  &&
+    DynamicEnvironmentMapManager.isDynamicUpdateSupported(frameState) &&
     this._mipmapLevels >= 1;
 
   if (
