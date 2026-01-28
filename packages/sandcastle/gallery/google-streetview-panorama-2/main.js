@@ -1,17 +1,25 @@
 import * as Cesium from "cesium";
-import Sandcastle from "Sandcastle";
 
-const assetId = 3830184;
 const HEIGHT_THRESHOLD = 9000;
 
 const googleStreetViewStaticApiKey = "key for Google Street View Static API";
 const googleMapTilesApiKey = "key for Google Map Tiles API";
 
-let cubeMapPano = false;
+const ViewType = Object.freeze({
+  MapView: 0,
+  PanoView: 1,
+});
+let selectedViewType = ViewType.MapView;
 
-const overlay = Cesium.ImageryLayer.fromProviderAsync(
+const PanoType = Object.freeze({
+  Equirectangular: 0,
+  CubeMap: 1,
+});
+let selectedPanoType = PanoType.Equirectangular;
+
+const streetviewOverlay = Cesium.ImageryLayer.fromProviderAsync(
   Cesium.Google2DImageryProvider.fromIonAssetId({
-    assetId,
+    assetId: 3830184,
     overlayLayerType: "layerStreetview",
   }),
 );
@@ -29,11 +37,15 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 });
 viewer.geocoder.viewModel.keepExpanded = true;
 
+const satelliteWithLabelsOverlay = viewer.imageryLayers.addImageryProvider(
+  await Cesium.IonImageryProvider.fromAssetId(3830183),
+);
+
 const tileset = await Cesium.createGooglePhotorealistic3DTileset({
   // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
   onlyUsingWithGoogleGeocoder: true,
-  //show: false,
 });
+tileset.show = false;
 viewer.scene.primitives.add(tileset);
 
 const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
@@ -115,27 +127,18 @@ function selectPanoCubeMap(position) {
 
   viewer.scene.primitives.add(cityPano);
 
-  // Cesium.Transforms.computeTemeToPseudoFixedMatrix = (time, result) =>
-  //   transform
-
   const lookPosition = Cesium.Cartesian3.fromDegrees(
     panoLng,
     panoLat,
     height + 2,
   );
 
-  viewer.scene.camera.lookAt(
-    lookPosition,
-    new Cesium.HeadingPitchRange(
-      Cesium.Math.toRadians(-90), // heading
-      0, // pitch
-      2, // small offset to allow rotation
-    ),
-  );
-  viewer.scene.screenSpaceCameraController.enableZoom = false;
-  overlay.show = false;
-  disablePicking();
-  viewer.scene.globe.show = false;
+  const heading = Cesium.Math.toRadians(-90);
+
+  goToPanoView({
+    position: lookPosition,
+    heading,
+  });
 }
 
 function selectPano(position) {
@@ -159,24 +162,18 @@ function selectPano(position) {
           .then((streetViewPanorama) => {
             viewer.scene.primitives.add(streetViewPanorama);
 
-            const position = Cesium.Cartesian3.fromDegrees(
+            const lookPosition = Cesium.Cartesian3.fromDegrees(
               panoLng,
               panoLat,
               height + 2,
             );
 
-            viewer.scene.camera.lookAt(
-              position,
-              new Cesium.HeadingPitchRange(
-                Cesium.Math.toRadians(panoIdMetadata.heading), // heading
-                0, // pitch
-                2, // small offset to allow rotation
-              ),
-            );
-            viewer.scene.screenSpaceCameraController.enableZoom = false;
-            overlay.show = false;
-            disablePicking();
-            viewer.scene.globe.show = false;
+            const heading = Cesium.Math.toRadians(panoIdMetadata.heading);
+
+            goToPanoView({
+              position: lookPosition,
+              heading,
+            });
           });
       });
   });
@@ -197,7 +194,7 @@ function enablePicking() {
     saveCameraView(viewer);
     position = viewer.scene.pickPosition(click.position);
     if (Cesium.defined(position)) {
-      if (cubeMapPano) {
+      if (selectedPanoType === PanoType.CubeMap) {
         selectPanoCubeMap(position);
       } else {
         selectPano(position);
@@ -211,6 +208,28 @@ function disablePicking() {
   handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
 
+function goToPanoView(options) {
+  const { position, heading } = options;
+
+  selectedViewType = ViewType.PanoView;
+
+  viewer.scene.camera.lookAt(
+    position,
+    new Cesium.HeadingPitchRange(
+      heading, // heading
+      0, // pitch
+      2, // small offset to allow rotation
+    ),
+  );
+
+  viewer.scene.screenSpaceCameraController.enableZoom = false;
+  streetviewOverlay.show = false;
+  disablePicking();
+  viewer.scene.globe.show = false;
+  removeTopModal();
+  setPanoViewToolBar();
+}
+
 function returnToMap() {
   viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
   viewer.camera.flyTo({
@@ -222,9 +241,10 @@ function returnToMap() {
     },
     duration: 0,
   });
+  selectedViewType = ViewType.MapView;
   viewer.scene.globe.show = true;
   tileset.show = true;
-  overlay.show = true;
+  streetviewOverlay.show = true;
   viewer.scene.screenSpaceCameraController.enableZoom = true;
   const primitives = viewer.scene.primitives;
   // Iterate in reverse to avoid index issues when removing
@@ -237,25 +257,106 @@ function returnToMap() {
       primitives.remove(primitive);
     }
   }
+  showTopModal(
+    "Highlighted locations indicate available Street View imagery. Click to select.",
+  );
+  setMapViewToolBar();
 }
 
-Sandcastle.addToolbarButton("Return to map", async function () {
-  viewer.scene.terrainProvider =
-    await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
-  viewer.scene.skyBox = Cesium.SkyBox.createEarthSkyBox();
-  returnToMap();
-  enablePicking();
-});
+let photorealisticTilesToggle;
+let panoTypeDropdown;
+let returnToMapButton;
 
-Sandcastle.addToolbarButton("Toggle Photorealistic Tiles", function () {
-  if (tileset.show) {
-    tileset.show = false;
-  } else {
-    tileset.show = true;
+const toolbar = document.getElementById("toolbar");
+
+function createButton(label, onClick) {
+  const btn = document.createElement("button");
+  btn.textContent = label;
+  btn.className = "cesium-button";
+  btn.onclick = onClick;
+  toolbar.appendChild(btn);
+  return btn;
+}
+
+function createDropdown(options, initialIndex = 0) {
+  const select = document.createElement("select");
+  select.className = "cesium-button";
+
+  options.forEach((opt, index) => {
+    const option = document.createElement("option");
+    option.text = opt.text;
+    option.value = index;
+    select.add(option);
+  });
+
+  // Set initial selection
+  select.selectedIndex = initialIndex;
+
+  select.onchange = () => {
+    options[select.selectedIndex].onselect();
+  };
+
+  toolbar.appendChild(select);
+  return select;
+}
+
+function setPanoViewToolBar() {
+  if (Cesium.defined(panoTypeDropdown)) {
+    panoTypeDropdown.remove();
+    panoTypeDropdown = undefined;
   }
-});
+
+  photorealisticTilesToggle = createButton(
+    "Toggle Photorealistic Tiles",
+    function () {
+      if (selectedViewType === ViewType.MapView) {
+        return;
+      }
+      tileset.show = !tileset.show;
+    },
+  );
+
+  returnToMapButton = createButton("Return to map", async function () {
+    viewer.scene.terrainProvider =
+      await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
+    viewer.scene.skyBox = Cesium.SkyBox.createEarthSkyBox();
+    returnToMap();
+    enablePicking();
+  });
+}
+
+function setMapViewToolBar() {
+  if (Cesium.defined(photorealisticTilesToggle)) {
+    photorealisticTilesToggle.remove();
+    photorealisticTilesToggle = undefined;
+  }
+
+  if (Cesium.defined(returnToMapButton)) {
+    returnToMapButton.remove();
+    returnToMapButton = undefined;
+  }
+
+  panoTypeDropdown = createDropdown(
+    [
+      {
+        text: "Equirectangular Panorama Tiles",
+        onselect: function () {
+          selectedPanoType = PanoType.Equirectangular;
+        },
+      },
+      {
+        text: "Cube Map Panorama",
+        onselect: function () {
+          selectedPanoType = PanoType.CubeMap;
+        },
+      },
+    ],
+    selectedPanoType,
+  );
+}
 
 enablePicking();
+setMapViewToolBar();
 
 let modalElement;
 
@@ -270,7 +371,7 @@ function showTopModal(message) {
 
   Object.assign(modalElement.style, {
     position: "absolute",
-    top: "10px",
+    top: "50px",
     left: "50%",
     transform: "translateX(-50%)",
     background: "rgba(0,0,0,0.8)",
@@ -294,26 +395,32 @@ function removeTopModal() {
   }
 }
 
-let overlayAdded = false;
-
 viewer.camera.changed.addEventListener(() => {
-  const height = viewer.camera.positionCartographic.height;
-
-  if (height < HEIGHT_THRESHOLD && !overlayAdded) {
-    overlayAdded = true;
-    tileset.imageryLayers.add(overlay);
-    removeTopModal();
+  if (selectedViewType === ViewType.PanoView) {
+    return;
   }
 
-  if (height >= HEIGHT_THRESHOLD && overlayAdded) {
-    tileset.imageryLayers.remove(overlay, false);
-    overlayAdded = false;
+  const height = viewer.camera.positionCartographic.height;
+  if (height < HEIGHT_THRESHOLD) {
+    satelliteWithLabelsOverlay.show = false;
+    tileset.show = true;
+    if (!tileset.imageryLayers.contains(streetviewOverlay)) {
+      tileset.imageryLayers.add(streetviewOverlay);
+    }
+
+    removeTopModal();
+    showTopModal(
+      "Highlighted locations indicate available Street View imagery. Click to select.",
+    );
+  }
+
+  if (height >= HEIGHT_THRESHOLD) {
+    tileset.show = false;
+    tileset.imageryLayers.remove(streetviewOverlay, false);
+    satelliteWithLabelsOverlay.show = true;
+    removeTopModal();
     showTopModal("Zoom in closer to select Streetview imagery");
   }
 });
 
 showTopModal("Zoom in closer to select Streetview imagery");
-
-Sandcastle.addToggleButton("Cube Map Pano", cubeMapPano, function (checked) {
-  cubeMapPano = checked;
-});
