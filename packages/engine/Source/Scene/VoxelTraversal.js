@@ -39,14 +39,13 @@ function VoxelTraversal(
   const { provider, dimensions, inputDimensions } = primitive;
   const { types, componentTypes } = provider;
 
-  // TODO: refine this. If provider.maximumTileCount is not defined, we will always allocate 512 MB per metadata property.
   if (defined(maximumTextureMemoryByteLength)) {
     maximumTextureMemoryByteLength = Math.min(
       Math.max(0, maximumTextureMemoryByteLength),
       512 * 1024 * 1024,
     );
   } else {
-    maximumTextureMemoryByteLength = 512 * 1024 * 1024;
+    maximumTextureMemoryByteLength = 128 * 1024 * 1024;
   }
 
   /**

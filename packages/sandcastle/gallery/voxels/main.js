@@ -35,6 +35,7 @@ function ProceduralSingleTileVoxelProvider(shape) {
   this.types = [Cesium.MetadataType.VEC4];
   this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
   this.globalTransform = globalTransform;
+  this.availableLevels = 1;
 }
 
 const scratchColor = new Cesium.Color();
