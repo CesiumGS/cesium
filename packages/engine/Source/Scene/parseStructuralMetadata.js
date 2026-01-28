@@ -146,13 +146,21 @@ function createTextureForPropertyTable(
   }
 
   const numFeatures = propertyTable.count;
-  const gpuCompatiblePropertyBufferViews =
-    collectGpuCompatiblePropertyBufferViews(
+
+  let gpuCompatiblePropertyBufferViews;
+  try {
+    gpuCompatiblePropertyBufferViews = collectGpuCompatiblePropertyBufferViews(
       properties,
       bufferViews,
       classDefinition,
       numFeatures,
     );
+  } catch (error) {
+    console.warn(
+      `Failed to create texture for property table "${propertyTable.name}": ${error.message}`,
+    );
+    return undefined;
+  }
 
   const numGpuCompatibleProperties = gpuCompatiblePropertyBufferViews.length;
 
