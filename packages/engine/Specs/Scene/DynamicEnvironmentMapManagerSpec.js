@@ -250,11 +250,11 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             return;
           }
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           expect(manager.sphericalHarmonicCoefficients).not.toEqual(
             DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
@@ -390,11 +390,11 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             return;
           }
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           const L0 = manager.sphericalHarmonicCoefficients[0];
           const L1_1 = manager.sphericalHarmonicCoefficients[1];
@@ -438,11 +438,11 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             return;
           }
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           const L0 = manager.sphericalHarmonicCoefficients[0];
           const L1_1 = manager.sphericalHarmonicCoefficients[1];
@@ -486,11 +486,11 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             return;
           }
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           const L0 = manager.sphericalHarmonicCoefficients[0];
           const L1_1 = manager.sphericalHarmonicCoefficients[1];
@@ -622,22 +622,22 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             return;
           }
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           const L0 = manager.sphericalHarmonicCoefficients[0];
 
           manager.brightness = 1.0;
           manager.reset();
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           expect(L0).toBeGreaterThan(manager.sphericalHarmonicCoefficients[0]);
         });
@@ -665,22 +665,22 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             return;
           }
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           const L0 = manager.sphericalHarmonicCoefficients[0];
 
           manager.atmosphereScatteringIntensity = 1.0;
           manager.reset();
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           expect(L0).toBeGreaterThan(manager.sphericalHarmonicCoefficients[0]);
         });
@@ -708,22 +708,22 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             return;
           }
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           const L0 = manager.sphericalHarmonicCoefficients[0];
 
           manager.gamma = 1.0;
           manager.reset();
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           expect(L0).toBeLessThan(manager.sphericalHarmonicCoefficients[0]);
         });
@@ -751,11 +751,11 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             return;
           }
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           const L0 = manager.sphericalHarmonicCoefficients[0];
 
@@ -789,22 +789,22 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             return;
           }
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           const L0 = manager.sphericalHarmonicCoefficients[0];
 
           manager.groundColor = Color.BLUE;
           manager.reset();
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           expect(L0.x).toBeGreaterThan(
             manager.sphericalHarmonicCoefficients[0].x,
@@ -839,11 +839,11 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             return;
           }
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           const L0 = manager.sphericalHarmonicCoefficients[0];
           const L1_1 = manager.sphericalHarmonicCoefficients[1];
@@ -853,11 +853,11 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
           manager.groundAlbedo = 0.0;
           manager.reset();
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           expect(L0).toBeGreaterThan(manager.sphericalHarmonicCoefficients[0]);
           expect(L1_1).toBeLessThan(manager.sphericalHarmonicCoefficients[1]);
@@ -893,22 +893,22 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
             return;
           }
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           const L0 = manager.sphericalHarmonicCoefficients[0];
 
           scene.atmosphere.hueShift = 0.0;
           manager.reset();
 
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
-          scene.renderForSpecs();
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
+          scene.renderForSpecs(time);
 
           expect(L0.x).toBeGreaterThan(
             manager.sphericalHarmonicCoefficients[0].x,
