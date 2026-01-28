@@ -81,7 +81,7 @@ function getNumofLineSegments(features) {
  * @param {number} y1 - The maximum y-coordinate of the bounding box.
  * @returns {Array} The clipped polygon ring as an array of points.
  */
-function clipPolygonToBoundingBox(ring, x0, x1, y0, y1) {
+function clipPolygonToBoundingBox(ring, flags, x0, x1, y0, y1) {
   // Helper function to check if a point is inside the boundary
   function isInside(point, boundary, isVertical, isMin) {
     const [x, y] = point;
@@ -142,7 +142,7 @@ function clipPolygonToBoundingBox(ring, x0, x1, y0, y1) {
 
   // Start with the original ring
   let clippedRing = ring;
-  let clippingFlags = [];
+  let clippingFlags = flags;
 
   // Clip against each boundary of the bounding box
   [clippedRing, clippingFlags] = clipAgainstBoundary(
@@ -226,10 +226,18 @@ function geojsonToArrayInGrid(
     const geometry = features[i].geometry;
     if (geometry.type === "LineString" || geometry.type === "Polygon") {
       const lineCoords = geometry.coordinates;
+      const ringCutFlags = geometry.cut_flags || null;
+      if (
+        ringCutFlags.length !== lineCoords.length &&
+        geometry.type === "Polygon"
+      ) {
+        console.warn("Polygon feature", i, "missing cutFlags property");
+      }
 
       if (geometry.type === "Polygon") {
         for (let j = 0; j < lineCoords.length; j++) {
           const ring = lineCoords[j];
+
           let minX = ring[0][0];
           let maxX = ring[0][0];
           let minY = ring[0][1];
@@ -277,6 +285,7 @@ function geojsonToArrayInGrid(
               const cellMaxY = bbox[1] + (r + 1) * cellHeight;
               const clipped = clipPolygonToBoundingBox(
                 lineCoords[j],
+                ringCutFlags[j],
                 cellMinX,
                 cellMaxX,
                 cellMinY,
