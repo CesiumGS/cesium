@@ -166,6 +166,7 @@ function createTextureForPropertyTable(
     numGpuCompatibleProperties > ContextLimits.maximumTextureSize
   ) {
     oneTimeWarning(
+      "PropertyTableTextureExceedsMaximumSize",
       `Cannot create a texture for the property table "${propertyTable.name}" because it exceeds the maximum texture size of ${ContextLimits.maximumTextureSize}.`,
     );
     return undefined;

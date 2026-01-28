@@ -11,7 +11,6 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import MetadataType from "./MetadataType.js";
 import MetadataComponentType from "./MetadataComponentType.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * A metadata property, as part of a {@link MetadataClass}.
@@ -1219,16 +1218,10 @@ MetadataClassProperty.prototype.isGpuCompatible = function (channelsLength) {
   const type = this.type;
 
   if (this.isVariableLengthArray) {
-    oneTimeWarning(
-      `Property texture property "${this.id}" is a variable-length array, which is not supported.`,
-    );
     return false;
   }
 
   if (type === MetadataType.STRING) {
-    oneTimeWarning(
-      `Property texture property "${this.id}" is a string type, which is not supported.`,
-    );
     return false;
   }
 
@@ -1236,9 +1229,6 @@ MetadataClassProperty.prototype.isGpuCompatible = function (channelsLength) {
   // (Note that it's possible to treat 64-bit types as two 32-bit components, but for now that's not supported)
   const elementSizeInBytes = this.bytesPerElement();
   if (elementSizeInBytes > channelsLength) {
-    oneTimeWarning(
-      `Property texture property "${this.id}" has size ${elementSizeInBytes} which does not fit into ${channelsLength} texture channels.`,
-    );
     return false;
   }
 
