@@ -20,7 +20,7 @@
     "classnames": "^2.5.1",
     "monaco-editor": "^0.52.2",
     "pako": "^2.1.0",
-    "prettier": "^3.7.3",
+    "prettier": "^3.7.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-stay-scrolled": "^9.0.0",

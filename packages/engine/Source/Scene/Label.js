@@ -134,7 +134,7 @@ function parseFont(label) {
  * @see LabelCollection
  * @see LabelCollection#add
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=labels|Cesium Sandcastle Labels Demo}
  */
 function Label(options, labelCollection) {
   options = options ?? Frozen.EMPTY_OBJECT;

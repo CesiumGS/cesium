@@ -41,7 +41,7 @@ import Transforms from "./Transforms.js";
  * @see BoxGeometry
  * @see EllipsoidGeometry
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=geometry-and-appearances|Geometry and Appearances Demo}
  *
  * @example
  * // Create geometry with a position attribute and indexed lines.

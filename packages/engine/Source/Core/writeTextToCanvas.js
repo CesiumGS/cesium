@@ -3,95 +3,41 @@ import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
-function measureText(context2D, textString, font, stroke, fill) {
+/**
+ * Computes dimensions for text, based on current canvas state.
+ *
+ * Rounds metrics, excluding width, to whole pixels. This is purely to minimize
+ * rendering differences with migration to in-browser measureText(), and may be
+ * revised in the future. See: github.com/CesiumGS/cesium/pull/13081
+ */
+function measureText(context2D, textString) {
   const metrics = context2D.measureText(textString);
   const isSpace = !/\S/.test(textString);
 
-  if (!isSpace) {
-    const fontSize = document.defaultView
-      .getComputedStyle(context2D.canvas)
-      .getPropertyValue("font-size")
-      .replace("px", "");
-    const canvas = document.createElement("canvas");
-    const padding = 100;
-    const width = (metrics.width + padding) | 0;
-    const height = 3 * fontSize;
-    const baseline = height / 2;
-    canvas.width = width;
-    canvas.height = height;
-
-    const ctx = canvas.getContext("2d");
-    ctx.font = font;
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width + 1, canvas.height + 1);
-
-    if (stroke) {
-      ctx.strokeStyle = "black";
-      ctx.lineWidth = context2D.lineWidth;
-      ctx.strokeText(textString, padding / 2, baseline);
-    }
-
-    if (fill) {
-      ctx.fillStyle = "black";
-      ctx.fillText(textString, padding / 2, baseline);
-    }
-
-    // Context image data has width * height * 4 elements, because
-    // each pixel's R, G, B and A are consecutive values in the array.
-    const pixelData = ctx.getImageData(0, 0, width, height).data;
-    const length = pixelData.length;
-    const width4 = width * 4;
-    let i, j;
-
-    let ascent, descent;
-    // Find the number of rows (from the top) until the first non-white pixel
-    for (i = 0; i < length; ++i) {
-      if (pixelData[i] !== 255) {
-        ascent = (i / width4) | 0;
-        break;
-      }
-    }
-
-    // Find the number of rows (from the bottom) until the first non-white pixel
-    for (i = length - 1; i >= 0; --i) {
-      if (pixelData[i] !== 255) {
-        descent = (i / width4) | 0;
-        break;
-      }
-    }
-
-    let minx = -1;
-    // For each column, for each row, check for first non-white pixel
-    for (i = 0; i < width && minx === -1; ++i) {
-      for (j = 0; j < height; ++j) {
-        const pixelIndex = i * 4 + j * width4;
-        if (
-          pixelData[pixelIndex] !== 255 ||
-          pixelData[pixelIndex + 1] !== 255 ||
-          pixelData[pixelIndex + 2] !== 255 ||
-          pixelData[pixelIndex + 3] !== 255
-        ) {
-          minx = i;
-          break;
-        }
-      }
-    }
-
+  if (isSpace) {
     return {
       width: metrics.width,
-      height: descent - ascent,
-      ascent: baseline - ascent,
-      descent: descent - baseline,
-      minx: minx - padding / 2,
+      height: 0,
+      ascent: 0,
+      descent: 0,
+      minx: 0,
     };
   }
 
+  // Baseline alignment requires `height = ascent + descent`. Rounding (if any)
+  // must be done before summing, or glyph pairs like "ij" may be misaligned.
+  const ascent = Math.round(metrics.actualBoundingBoxAscent);
+  const descent = Math.round(metrics.actualBoundingBoxDescent);
+
+  // Characters like "_" may have height <0.5 at some sizes, don't round to zero.
+  const height = Math.max(ascent + descent, 1);
+
   return {
     width: metrics.width,
-    height: 0,
-    ascent: 0,
-    descent: 0,
-    minx: 0,
+    height,
+    ascent,
+    descent,
+    minx: -Math.round(metrics.actualBoundingBoxLeft),
   };
 }
 
@@ -164,28 +110,36 @@ function writeTextToCanvas(text, options) {
   canvas.style.visibility = "hidden";
   document.body.appendChild(canvas);
 
-  const dimensions = measureText(context2D, text, font, stroke, fill);
-  // Set canvas.dimensions to be accessed in LabelCollection
+  const dimensions = measureText(context2D, text);
+
+  // Set canvas.dimensions to be accessed in LabelCollection. LabelCollection
+  // hard-codes strokeWidth=0, so dimensions should not include stroke padding.
   canvas.dimensions = dimensions;
 
   document.body.removeChild(canvas);
   canvas.style.visibility = "";
 
+  // measureText does not account for stroke width, added here. LabelCollection
+  // calls writeTextToCanvas with hard-coded strokeWidth=0, so stroke padding
+  // matters only when calling `writeTextToCanvas` directly.
+  const isSpace = !/\S/.test(text);
+  const strokePadding = stroke && !isSpace ? Math.ceil(strokeWidth / 2) : 0;
+  const doubleStrokePadding = strokePadding * 2;
+
   // Some characters, such as the letter j, have a non-zero starting position.
   // This value is used for kerning later, but we need to take it into account
   // now in order to draw the text completely on the canvas
-  const x = -dimensions.minx;
+  const x = -dimensions.minx + strokePadding;
 
   // Expand the width to include the starting position.
-  const width = Math.ceil(dimensions.width) + x + doublePadding;
+  const width = Math.ceil(dimensions.width) + x + doublePadding + strokePadding;
 
   // While the height of the letter is correct, we need to adjust
   // where we start drawing it so that letters like j and y properly dip
   // below the line.
 
-  const height = dimensions.height + doublePadding;
-  const baseline = height - dimensions.ascent + padding;
-  const y = height - baseline + doublePadding;
+  const height = dimensions.height + doublePadding + doubleStrokePadding;
+  const y = dimensions.ascent + padding + strokePadding;
 
   canvas.width = width;
   canvas.height = height;

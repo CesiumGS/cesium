@@ -5,7 +5,7 @@ const viewer = new Cesium.Viewer("cesiumContainer");
 // The following .gltf file contains styled point data using the BENTLEY_materials_point_style extension.
 // The styled point data allows the points to have a variety of diameters.
 const modelURL =
-  "../../SampleData/models/StyledPoints/points-r5-g8-b14-y10.gltf";
+  "../../../Specs/Data/Models/glTF-2.0/StyledPoints/points-r5-g8-b14-y10.gltf";
 
 const height = 0.0;
 const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);

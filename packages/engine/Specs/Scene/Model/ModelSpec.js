@@ -21,7 +21,6 @@ import {
   DynamicAtmosphereLightingType,
   DracoLoader,
   Ellipsoid,
-  FeatureDetection,
   Globe,
   Fog,
   HeadingPitchRange,
@@ -1845,11 +1844,6 @@ describe(
       });
 
       it("picks box textured", async function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         // This model gets clipped if log depth is disabled, so zoom out
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
@@ -1868,11 +1862,6 @@ describe(
       });
 
       it("picks box textured with id", async function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         // This model gets clipped if log depth is disabled, so zoom out
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
@@ -1893,11 +1882,6 @@ describe(
       });
 
       it("picks box textured with a new id", async function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         // This model gets clipped if log depth is disabled, so zoom out
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
@@ -1925,11 +1909,6 @@ describe(
       });
 
       it("doesn't pick when allowPicking is false", async function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         // This model gets clipped if log depth is disabled, so zoom out
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
@@ -1948,11 +1927,6 @@ describe(
       });
 
       it("doesn't pick when model is hidden", async function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         // This model gets clipped if log depth is disabled, so zoom out
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);

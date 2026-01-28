@@ -4346,9 +4346,9 @@ describe(
       expect(material.pointDiameter).toBeUndefined();
     });
 
-    it("ignores BENTLEY_materials_point_style with non-integer diameter", async function () {
+    it("floors BENTLEY_materials_point_style with non-integer diameter", async function () {
       function modifyGltf(gltf) {
-        // Set an invalid non-integer diameter (diameters must be integers).
+        // Set a non-integer diameter (spec requires integers, but we floor as a best effort).
         gltf.materials[0].extensions.BENTLEY_materials_point_style.diameter = 5.5;
         return gltf;
       }
@@ -4359,9 +4359,9 @@ describe(
         modifyGltf,
       );
 
-      // Invalid non-integer diameter should be ignored; property should be undefined once the glTF is loaded.
+      // Non-integer diameter should be floored to the nearest integer.
       const material = gltfLoader.components.nodes[0].primitives[0].material;
-      expect(material.pointDiameter).toBeUndefined();
+      expect(material.pointDiameter).toBe(5);
     });
 
     it("loads model with EXT_mesh_primitive_restart extension", async function () {

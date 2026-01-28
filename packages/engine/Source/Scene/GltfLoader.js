@@ -1815,9 +1815,9 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   const pointStyleExtension = extensions.BENTLEY_materials_point_style;
   if (defined(pointStyleExtension) && defined(pointStyleExtension.diameter)) {
     const diameter = pointStyleExtension.diameter;
-    // Validate that diameter is a positive integer as the extension specification requires.
-    if (diameter > 0 && Math.floor(diameter) === diameter) {
-      material.pointDiameter = diameter;
+    // The spec requires a positive integer, but we floor non-integers as a best effort.
+    if (diameter >= 1) {
+      material.pointDiameter = Math.floor(diameter);
     }
   }
 
