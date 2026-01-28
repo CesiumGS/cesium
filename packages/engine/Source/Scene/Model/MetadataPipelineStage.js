@@ -259,13 +259,11 @@ function getPropertyTablesInfo(
     primitive,
   );
 
-  return propertyTables.flatMap((propertyTable) => {
-    return getPropertyTableInfo(
-      propertyTable,
-      tableToFeatureSetInfo,
-      statistics,
+  return propertyTables
+    .filter((propertyTable) => defined(propertyTable.class))
+    .flatMap((propertyTable) =>
+      getPropertyTableInfo(propertyTable, tableToFeatureSetInfo, statistics),
     );
-  });
 }
 
 function getPropertyTableInfo(
@@ -792,7 +790,7 @@ function addPropertyTablePropertyMetadata(
     return;
   }
 
-  if (!defined(featureIdVariableName)) {
+  if (!defined(featureIdVariableName) || !defined(propertyTable.texture)) {
     return;
   }
 
