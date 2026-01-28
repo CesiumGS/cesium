@@ -83,7 +83,6 @@ function Polyline(options, polylineCollection) {
 
   this._actualLength = undefined;
 
-  // eslint-disable-next-line no-use-before-define
   this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
   this._polylineCollection = polylineCollection;
   this._dirty = false;
