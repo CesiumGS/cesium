@@ -162,7 +162,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * @memberof ImageBasedLighting.prototype
    *
    * @type {Cartesian3[]}
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+   * @demo {@link https://sandcastle.cesium.com/index.html?id=image-based-lighting|Sandcastle Image Based Lighting Demo}
    * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
    */
   sphericalHarmonicCoefficients: {
@@ -187,7 +187,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
    *
    * @memberof ImageBasedLighting.prototype
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+   * @demo {@link https://sandcastle.cesium.com/index.html?id=image-based-lighting|Sandcastle Image Based Lighting Demo}
    * @type {string}
    * @see ImageBasedLighting#sphericalHarmonicCoefficients
    */
