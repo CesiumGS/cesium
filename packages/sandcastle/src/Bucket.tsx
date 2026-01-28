@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { embedInSandcastleTemplate } from "./Helpers";
 import "./Bucket.css";
 import { ConsoleMessageType } from "./ConsoleMirror";
+import DOMPurify from "dompurify";
 
 type SandcastleMessage =
   | { type: "reload" }
@@ -68,8 +69,12 @@ export function Bucket({
       }
 
       // Apply user HTML to bucket.
+      const sanitized = DOMPurify.sanitize(html, {
+        ADD_TAGS: ["style"],
+        FORCE_BODY: true,
+      });
       const htmlElement = bucketDoc.createElement("div");
-      htmlElement.innerHTML = html;
+      htmlElement.innerHTML = sanitized;
       bucketDoc.body.appendChild(htmlElement);
 
       const onScriptTagError = function () {

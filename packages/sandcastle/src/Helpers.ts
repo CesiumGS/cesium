@@ -23,14 +23,15 @@ window.Cesium = Cesium;
 type SandcastleSaveData = {
   code: string;
   html: string;
-  baseHref?: string;
 };
 
 export function makeCompressedBase64String(data: SandcastleSaveData) {
   // data stored in the hash as:
   // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
-  const { code, html, baseHref } = data;
-  const encode = baseHref ? [code, html, baseHref] : [code, html];
+  const { code, html } = data;
+  // historically there was sometimes a third element in this array that contained a baseHref
+  // caution should be taken if we add a 3rd element back
+  const encode = [code, html];
   let jsonString = JSON.stringify(encode);
 
   // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
@@ -69,10 +70,11 @@ export function decodeBase64Data(base64String: string): SandcastleSaveData {
   // index 0 is code, index 1 is html
   const code = json[0];
   const html = json[1];
-  const baseHref = json[2];
+  // historically there was a third element in this array for some links
+  // that contained a baseHref. This is no longer used but could show up in old links
+  // if they were saved. caution should be taken if we add a 3rd element back
   return {
     code: code,
     html: html,
-    baseHref: baseHref,
   };
 }
