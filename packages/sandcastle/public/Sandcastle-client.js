@@ -1,6 +1,32 @@
 (function () {
   "use strict";
-  window.parent.postMessage({ type: "reload" }, "*");
+  window.addEventListener("message", (e) => {
+    if (e.data?.source?.includes("react-devtools")) {
+      // we don't care about any of these
+      return;
+    }
+    console.log("Bucket received message", e);
+    if (e.data.type === "reload") {
+      window.location.reload();
+    } else if (e.data.type === "load") {
+      const { code, html } = e.data;
+
+      const div = document.createElement("div");
+      div.innerHTML = html;
+      document.body.append(div);
+
+      const script = document.createElement("script");
+      script.type = "module";
+      script.textContent = code;
+      document.body.append(script);
+
+      document.body.dataset.sandcastleLoaded = "yes";
+    }
+  });
+  if (window.parent !== window) {
+    // don't send when not nested as an iframe
+    window.parent.postMessage({ type: "reload" }, "*");
+  }
 
   function defined(value) {
     return value !== undefined;
@@ -172,36 +198,42 @@
   const originalClear = console.clear;
   console.clear = function () {
     originalClear();
-    window.parent.postMessage(
-      {
-        type: "consoleClear",
-      },
-      "*",
-    );
+    if (window.parent !== window) {
+      window.parent.postMessage(
+        {
+          type: "consoleClear",
+        },
+        "*",
+      );
+    }
   };
 
   const originalLog = console.log;
   console.log = function (...args) {
     originalLog.apply(console, args);
-    window.parent.postMessage(
-      {
-        type: "consoleLog",
-        log: combineArguments(args),
-      },
-      "*",
-    );
+    if (window.parent !== window) {
+      window.parent.postMessage(
+        {
+          type: "consoleLog",
+          log: combineArguments(args),
+        },
+        "*",
+      );
+    }
   };
 
   const originalWarn = console.warn;
   console.warn = function (...args) {
     originalWarn.apply(console, args);
-    window.parent.postMessage(
-      {
-        type: "consoleWarn",
-        warn: combineArguments(args),
-      },
-      "*",
-    );
+    if (window.parent !== window) {
+      window.parent.postMessage(
+        {
+          type: "consoleWarn",
+          warn: combineArguments(args),
+        },
+        "*",
+      );
+    }
   };
 
   let bucket = window.location.href;
@@ -224,13 +256,15 @@
       return;
     }
 
-    window.parent.postMessage(
-      {
-        type: "consoleError",
-        error: combineArguments(args),
-      },
-      "*",
-    );
+    if (window.parent !== window) {
+      window.parent.postMessage(
+        {
+          type: "consoleError",
+          error: combineArguments(args),
+        },
+        "*",
+      );
+    }
   };
 
   window.onerror = function (errorMsg, url, lineNumber) {
@@ -254,24 +288,28 @@
         } catch (ex) {}
         /*eslint-enable no-empty*/
       }
-      window.parent.postMessage(
-        {
-          type: "consoleError",
-          error: errorMsg,
-          url: url,
-          lineNumber: lineNumber,
-        },
-        "*",
-      );
+      if (window.parent !== window) {
+        window.parent.postMessage(
+          {
+            type: "consoleError",
+            error: errorMsg,
+            url: url,
+            lineNumber: lineNumber,
+          },
+          "*",
+        );
+      }
     } else {
-      window.parent.postMessage(
-        {
-          type: "consoleError",
-          error: errorMsg,
-          url: url,
-        },
-        "*",
-      );
+      if (window.parent !== window) {
+        window.parent.postMessage(
+          {
+            type: "consoleError",
+            error: errorMsg,
+            url: url,
+          },
+          "*",
+        );
+      }
     }
     originalError.apply(console, [errorMsg]);
     return false;

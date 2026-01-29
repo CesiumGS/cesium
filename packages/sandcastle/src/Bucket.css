@@ -27,4 +27,19 @@
     font-family: sans-serif;
     color: #eee;
   }
+
+  .error-message {
+    border: 1px solid var(--stratakit-color-border-critical-base);
+    background: var(--stratakit-color-bg-page-depth);
+    width: 75%;
+    max-width: 500px;
+    padding: var(--stratakit-space-x2);
+    border-radius: var(--stratakit-ext-radius-md);
+
+    span {
+      font-size: 1rem;
+      font-family: monospace;
+      font-weight: normal;
+    }
+  }
 }

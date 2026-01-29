@@ -72,5 +72,11 @@ export default defineConfig(({ command }) => {
     ],
   });
 
-  return config;
+  return {
+    ...config,
+    server: {
+      ...config.server,
+      cors: "*",
+    },
+  };
 });
