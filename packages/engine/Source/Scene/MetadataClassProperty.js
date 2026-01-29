@@ -1292,18 +1292,18 @@ MetadataClassProperty.prototype.getGlslTypeWebGL1 = function () {
 };
 
 MetadataClassProperty.prototype.getGlslType = function () {
-  const componentType = this.componentType;
+  const valueType = this.valueType;
 
   let componentCount = MetadataType.getComponentCount(this.type);
   const arrayLength = this.isArray ? this.arrayLength : 1;
   componentCount *= arrayLength;
 
   // Normalized fields are integers represented as float types ([0, 1] or [-1, 1] depending if signed)
-  if (!MetadataComponentType.isIntegerType(componentType) || this.normalized) {
+  if (!MetadataComponentType.isIntegerType(valueType) || this.normalized) {
     return floatTypesByComponentCount[componentCount];
   }
 
-  if (MetadataComponentType.isUnsignedIntegerType(componentType)) {
+  if (MetadataComponentType.isUnsignedIntegerType(valueType)) {
     return unsignedIntegerTypesByComponentCount[componentCount];
   }
 
@@ -1317,7 +1317,7 @@ MetadataClassProperty.prototype.unpackTextureInShader = function (
   shaderLines,
 ) {
   const glslType = this.getGlslType();
-  const componentType = this.componentType;
+  const valueType = this.valueType;
   const numChannels = channelsString.length;
   const type = this.type;
 
@@ -1342,7 +1342,7 @@ MetadataClassProperty.prototype.unpackTextureInShader = function (
   shaderLines.push(assignRawValuesLine);
 
   const castFunction =
-    uintBitsToScalarType[MetadataComponentType.category(componentType)];
+    uintBitsToScalarType[MetadataComponentType.category(valueType)];
   const hasMultipleComponents = componentCount > 1;
   const usesMultipleChannelsPerComponent = channelsPerComponent > 1;
 
@@ -1363,7 +1363,7 @@ MetadataClassProperty.prototype.unpackTextureInShader = function (
     let normalize = "";
     let toFloatIfNormalize = "";
     if (this.normalized) {
-      const maxValue = MetadataComponentType.getMaximum(componentType);
+      const maxValue = MetadataComponentType.getMaximum(valueType);
       normalize = ` * ${1.0 / Number(maxValue)}`;
       toFloatIfNormalize = "float";
     }
