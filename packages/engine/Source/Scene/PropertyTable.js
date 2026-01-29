@@ -53,6 +53,7 @@ function PropertyTable(options) {
   this._metadataTable = options.metadataTable;
   this._jsonMetadataTable = options.jsonMetadataTable;
   this._batchTableHierarchy = options.batchTableHierarchy;
+  this._texture = options.texture; // Property table buffer data packed into a GPU texture
 }
 
 Object.defineProperties(PropertyTable.prototype, {
@@ -162,6 +163,20 @@ Object.defineProperties(PropertyTable.prototype, {
       }
 
       return totalByteLength;
+    },
+  },
+
+  /**
+   * The texture containing the property table data, if any.
+   *
+   * @memberof PropertyTable.prototype
+   * @type {Texture | undefined}
+   * @readonly
+   * @private
+   */
+  texture: {
+    get: function () {
+      return this._texture;
     },
   },
 });
@@ -531,6 +546,17 @@ PropertyTable.prototype.getExactClassName = function (featureId) {
   }
 
   return hierarchy.getClassName(featureId);
+};
+
+/**
+ * Destroys any resources that need cleaning up in the property table.
+ *
+ * @private
+ */
+PropertyTable.prototype.destroy = function () {
+  if (defined(this._texture)) {
+    this._texture.destroy();
+  }
 };
 
 export default PropertyTable;
