@@ -6,6 +6,7 @@
 
 #### Fixes :wrench:
 
+- Fixed error with `DynamicEnvironmentMapManager` when `ContextLimits.maximumCubeMapSize` is zero.
 - Improved voxel memory usage by reworking `Megatexture` to use `Texture3D`. [#12570](https://github.com/CesiumGS/cesium/issues/12570)
 - Fixes jitter artifacts on Intel Arc GPUs [#12879](https://github.com/CesiumGS/cesium/issues/12879)
 - Fixed label sizing for some fonts and characters [#9767](https://github.com/CesiumGS/cesium/issues/9767)
