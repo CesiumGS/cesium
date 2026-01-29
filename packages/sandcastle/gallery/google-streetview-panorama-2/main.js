@@ -143,39 +143,30 @@ function selectPanoCubeMap(position) {
 
 function selectPano(position) {
   const carto = Cesium.Cartographic.fromCartesian(position);
+  provider.getPanoIds(carto).then((panoIdList) => {
+    const panoId = panoIdList[0];
+    provider.getPanoIdMetadata(panoId).then((panoIdMetadata) => {
+      const panoLat = panoIdMetadata.lat;
+      const panoLng = panoIdMetadata.lng;
+      const height = carto.height;
 
-  provider.getPanoIds({ cartographic: carto }).then((panoIds) => {
-    provider
-      .getPanoIdMetadata({
-        panoId: panoIds.panoIds[0],
-      })
-      .then((panoIdMetadata) => {
-        const panoLat = panoIdMetadata.lat;
-        const panoLng = panoIdMetadata.lng;
-        const height = carto.height;
+      provider.loadPanoramafromPanoId(panoId, 3).then((streetViewPanorama) => {
+        viewer.scene.primitives.add(streetViewPanorama);
 
-        provider
-          .loadPanoramafromPanoId({
-            zInput: 3,
-            panoId: panoIds.panoIds[0],
-          })
-          .then((streetViewPanorama) => {
-            viewer.scene.primitives.add(streetViewPanorama);
+        const lookPosition = Cesium.Cartesian3.fromDegrees(
+          panoLng,
+          panoLat,
+          height + 2,
+        );
 
-            const lookPosition = Cesium.Cartesian3.fromDegrees(
-              panoLng,
-              panoLat,
-              height + 2,
-            );
+        const heading = Cesium.Math.toRadians(panoIdMetadata.heading);
 
-            const heading = Cesium.Math.toRadians(panoIdMetadata.heading);
-
-            goToPanoView({
-              position: lookPosition,
-              heading,
-            });
-          });
+        goToPanoView({
+          position: lookPosition,
+          heading,
+        });
       });
+    });
   });
 }
 

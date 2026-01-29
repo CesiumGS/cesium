@@ -19,17 +19,20 @@ const GOOGLE_STREETVIEW_PARTITION_REFERENCE = {
 };
 
 /**
- * Provides imagery to be displayed in a panorama.  This type describes an
- * interface and is not intended to be instantiated directly.
+ * <div class="notice">
+ * This object is normally not instantiated directly, use {@link GoogleStreetViewProvider.fromUrl}.
+ * </div>
+ *
+ *
+ * Creates a {@link PanoramaProvider} which provides panoramic images from the {@link https://developers.google.com/maps/documentation/tile/streetview|Google Street View Tiles API}.
  *
  * @alias GoogleStreetViewProvider
  * @constructor
  *
  * @see EquirectangularPanorama
- * @see SkyBoxPanorama
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=google-streetview-panorama-2|Cesium Sandcastle Google Streetview Panorama}
+ *
  */
 function GoogleStreetViewProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -41,23 +44,54 @@ function GoogleStreetViewProvider(options) {
 Object.defineProperties(GoogleStreetViewProvider.prototype, {});
 
 /**
- * Gets the panorama collection containing the panorama primitive for the given cartographic location
+ * Gets the panorama primitive for a requested position and orientation.
+ * @param {object} options Object with the following properties:
+ * @param {Cartographic} options.cartographic The position to place the panorama in the scene.
+ * @param {string} [options.panoId] The panoramaId identifier for the image in the Google API. If not provided this will be looked up for the provided cartographic location.
+ * @param {string} [options.zInput=1] The zoom level for which to load panorama tiles. Valid values are 2 to 4. See {@link https://developers.google.com/maps/documentation/tile/streetview#street_view_image_tiles}
+ * @param {boolean} [options.heading=0] The heading to orient the panorama in the scene in degrees. Valid values are 0 to 360.
+ * @param {boolean} [options.tilt=0] The tilt to orient the panorama in the scene in degrees. Valid values are -180 to 180.
+ * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
- * @returns {EquirectangularPanorama} The panorama collection containing imagery.
+ * @returns {EquirectangularPanorama} The panorama primitive textured with imagery.
+ *
+ * @example
+ *
+ * const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
+ *   apiKey: 'your Google Streetview Tiles api key'
+ * })
+ * const panoIds = provider.getPanoIds(position);
+ * const panoId = panoIds[0];
+ * const panoIdMetadata = provider.getPanoIdMetadata(panoId);
+ * const { heading, tilt } = panoIdMetadata;
+ * const primitive = await provider.loadPanorama({
+ *   position,
+ *   zInput: 3,
+ *   heading,
+ *   tilt,
+ *   panoId
+ * });
+ * viewer.scene.primitive.add(primitive);
+ *
  */
 GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
-  const { cartographic } = options;
-
+  const cartographic = options.cartographic;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.cartographic)) {
+    throw new DeveloperError("options.cartographic is required.");
+  }
+  //>>includeEnd('debug');
   const zInput = options.zInput || 1;
-  const heading = options.heading || 0;
-  const tilt = options.tilt || 0;
-  let panoId = options.panoId;
+  let heading = options.heading || 0;
+  let tilt = options.tilt || 0;
 
+  let panoId = options.panoId;
   if (!defined(panoId)) {
-    const panoIds = await this.getPanoIds({
-      cartographic,
-    });
+    const panoIds = await this.getPanoIds(cartographic);
     panoId = panoIds[0];
+    const panoIdMetadata = this.getPanoIdMetadata(panoId);
+    ({ heading, tilt } =
+      GoogleStreetViewProvider.parseMetadata(panoIdMetadata));
   }
 
   const position = Cartesian3.fromDegrees(
@@ -91,6 +125,10 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
 
   const partition = GOOGLE_STREETVIEW_PARTITION_REFERENCE[zInput];
 
+  if (!partition) {
+    throw new DeveloperError(`Unsupported Street View zoom level: ${zInput}`);
+  }
+
   const tileMap = await GoogleStreetViewProvider.getGoogleStreetViewTileUrls({
     z: zInput,
     partition,
@@ -117,43 +155,57 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
 };
 
 /**
- * Gets the panorama collection with the panorama primitive for the given panoId and zoom level
+ * Gets the panorama primitive for a given panoId. Lookup a panoId using {@link GoogleStreetViewProvider#getPanoId}.
  *
- * @returns {EquirectangularPanorama} The panorama collection containing the panorama primitive.
+ * @param {string} panoId
+ * @param {string} zInput
+ *
+ * @returns {EquirectangularPanorama} The panorama primitive textured with imagery.
+ *
+ * @example
+ *
+ * const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
+ *   apiKey: 'your Google Streetview Tiles api key'
+ * })
+ * const panoIds = provider.getPanoIds(position);
+ * const primitive = await provider.loadPanoramafromPanoId(panoIds[0]);
+ * viewer.scene.primitive.add(primitive);
  */
 GoogleStreetViewProvider.prototype.loadPanoramafromPanoId = async function (
-  options,
+  panoId,
+  zInput,
 ) {
-  const { panoId, zInput } = options;
+  const panoIdMetadata = await this.getPanoIdMetadata(panoId);
 
-  // get position of panoId to calculate transform
-  const panoIdMetadata = await this.getPanoIdMetadata({ panoId });
-
-  const cartographic = new Cartographic(
-    panoIdMetadata.lng,
-    panoIdMetadata.lat,
-    panoIdMetadata.originalElevationAboveEgm96,
-  );
-
-  const panoTilt = -90 + panoIdMetadata.tilt;
+  const { heading, tilt, cartographic } =
+    GoogleStreetViewProvider.parseMetadata(panoIdMetadata);
 
   return this.loadPanorama({
     cartographic,
     zInput,
+    heading,
+    tilt,
     panoId,
-    heading: panoIdMetadata.heading,
-    tilt: panoTilt,
   });
 };
 
 /**
- * Gets the panoIds for the given cartographic location
- */
-GoogleStreetViewProvider.prototype.getPanoIds = async function (options) {
-  const { cartographic } = options;
+ * Gets the panoIds for the given cartographic location. See {@link https://developers.google.com/maps/documentation/tile/streetview#panoid-search}.
 
-  const longitude = CesiumMath.toDegrees(cartographic.longitude);
-  const latitude = CesiumMath.toDegrees(cartographic.latitude);
+ * @param {Cartographic} position
+ * 
+ * @returns {string[]} an array of panoIds ordered by decreasing distance to the target position 
+ * 
+ * @example
+ * 
+ * const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
+ *   apiKey: 'your Google Streetview Tiles api key'
+ * })
+ * const panoIds = provider.getPanoIds(position);
+ */
+GoogleStreetViewProvider.prototype.getPanoIds = async function (position) {
+  const longitude = CesiumMath.toDegrees(position.longitude);
+  const latitude = CesiumMath.toDegrees(position.latitude);
 
   const panoIdsResponse = await Resource.post({
     url: "https://tile.googleapis.com/v1/streetview/panoIds",
@@ -167,17 +219,22 @@ GoogleStreetViewProvider.prototype.getPanoIds = async function (options) {
     }),
   });
 
-  return JSON.parse(panoIdsResponse);
+  const panoIdJson = JSON.parse(panoIdsResponse);
+  return panoIdJson.panoIds;
 };
 
 /**
- * Gets metadata for panoId
+ * Gets metadata for panoId. See {@link https://developers.google.com/maps/documentation/tile/streetview#metadata_response} for response object.
+ * @param {string} panoId
+ *
+ * @returns {object} object containing metadata for the panoId.
+ *
+ * @example
+ * const panoIds = provider.getPanoIds(position);
+ * const panoIdMetadata = provider.getPanoIdMetadata(panoIds[0]);
  *
  */
-GoogleStreetViewProvider.prototype.getPanoIdMetadata = async function (
-  options,
-) {
-  const { panoId } = options;
+GoogleStreetViewProvider.prototype.getPanoIdMetadata = async function (panoId) {
   const metadataResponse = await Resource.fetch({
     url: "https://tile.googleapis.com/v1/streetview/metadata",
     queryParameters: {
@@ -192,13 +249,18 @@ GoogleStreetViewProvider.prototype.getPanoIdMetadata = async function (
 };
 
 /**
- * Creates an {@link PanoramaProvider} which provides image tiles from {@link https://developers.google.com/maps/documentation/tile/streetview|Google Street View Tiles}.
+ * Creates a {@link PanoramaProvider} which provides image tiles from the {@link https://developers.google.com/maps/documentation/tile/streetview|Google Street View Tiles API}.
  * @param {object} options Object with the following properties:
  * @param {string} [options.apiKey=GoogleMaps.defaultApiKey] Your API key to access Google Street View Tiles. See {@link https://developers.google.com/maps/documentation/javascript/get-api-key} for instructions on how to create your own key.
  * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
- * @returns {Promise<GoogleStreetViewProvider>} A promise that resolves to the created GoogleStreetViewProvider.
+ * @returns {Promise<GoogleStreetViewProvider>} A promise that resolves to the created GoogleStreetViewProvider.'
+ *
+ * @example
+ * const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
+ *   apiKey: 'your Google Streetview Tiles api key'
+ * })
  */
 GoogleStreetViewProvider.fromUrl = async function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -223,7 +285,6 @@ GoogleStreetViewProvider.fromUrl = async function (options) {
   return new GoogleStreetViewProvider({
     ...responseJson,
     ...options,
-    //credit: options.credit ?? GoogleMaps.getDefaultCredit(),
   });
 };
 
@@ -361,6 +422,22 @@ GoogleStreetViewProvider.stitchBitmapsFromTileMap = async function (
   }
 
   return canvas;
+};
+
+GoogleStreetViewProvider.parseMetadata = function (panoIdMetadata) {
+  const cartographic = new Cartographic(
+    panoIdMetadata.lng,
+    panoIdMetadata.lat,
+    panoIdMetadata.originalElevationAboveEgm96,
+  );
+
+  const tilt = -90 + panoIdMetadata.tilt;
+  const heading = panoIdMetadata.heading;
+  return {
+    cartographic,
+    heading,
+    tilt,
+  };
 };
 
 export default GoogleStreetViewProvider;
