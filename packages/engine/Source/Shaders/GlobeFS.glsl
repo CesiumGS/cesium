@@ -260,6 +260,34 @@ float filterSDF(float sdf, vec2 uvCoordinate, vec2 textureSize) {
         return length(p - closestPoint);
     }
 
+
+    // Calculate the distance between a point and a line segment with projected point info
+    vec3 distanceToLineWithT(vec2 p, vec4 l) {
+        vec2 a = vec2(l.x, l.y); // Start point of the line
+        vec2 b = vec2(l.z, l.w); // End point of the line
+
+        // Vector from point `a` to point `b`
+        vec2 ab = b - a;
+
+        // Handle degenerate case: if the line segment is a point
+        float abLengthSquared = dot(ab, ab);
+        if (abLengthSquared < 1e-8) { // Small threshold to avoid division by zero
+            return vec3(length(p - a), 0.0, 0.0); // Distance to the single point
+        }
+
+        // Vector from point `a` to the test point `p`
+        vec2 ap = p - a;
+
+        // Project `ap` onto `ab` to find the closest point on the infinite line
+        float t = clamp(dot(ap, ab) / abLengthSquared, 0.0, 1.0);
+
+        // Closest point on the line segment
+        vec2 closestPoint = a + t * ab;
+
+        // Return the distance between the point and the closest point on the line
+        return vec3(length(p - closestPoint), t, length(ab));
+    }
+
     // Convert a 1D index to a 2D index (x, y) in a width x height texture
     ivec2 indexTo2D(int index, int width, int height) {
         // Calculate the y-coordinate (row) by dividing the index by the width
@@ -284,6 +312,18 @@ float filterSDF(float sdf, vec2 uvCoordinate, vec2 textureSize) {
         float pixelFootprintRadii = sqrt(pixelFootprintDiameterSqr);
 
         return val*pixelFootprintRadii;
+    }
+
+    float scaleDistTexToFrag(float val, vec2 uvCoordinate) {
+
+        // Calculate the texel area of this fragment
+        mat2 pixelFootprint = mat2(dFdx(uvCoordinate), dFdy(uvCoordinate));
+        float pixelFootprintDiameterSqr = abs(determinant(pixelFootprint));
+
+        // Get pixel radii in texel space (approximated)
+        float pixelFootprintRadii = sqrt(pixelFootprintDiameterSqr);
+
+        return val/pixelFootprintRadii;
     }
 
     // Calculate the grid cell indices (i, j) for a grid
@@ -784,6 +824,8 @@ void main()
     // Initialize the minimum distance to a large value
     float minDist = 1.0; // Assume normalized coordinates (0 to 1)
     float minDistSign = 1.0; // init to inside
+    float minDistT = 0.0;
+    float minDistTLen = 0.0;
     int cutFlag = 1;
 
     int subGridSizeX = int(texelFetch(u_gridCellIndicesTexture, ivec2(0, 0), 0).r);
@@ -814,12 +856,15 @@ void main()
 
         // Calculate the distance to the current line segment
         // TODO: for better line rendering on steep slopes, scale by x and y derivatives respectively
-        float dist = distanceToLine(v_textureCoordinates.xy, texel);
+        vec3 distV = distanceToLineWithT(v_textureCoordinates.xy, texel);
+        float dist = distV.x;
 
         // Update the minimum distance
         if (minDist > dist){
             minDist = dist;
             cutFlag = int(texture(u_cutFlagsTexture, vec2(texCoordX, texCoordY)).r*255.0);
+            minDistT = distV.y;
+            minDistTLen = distV.z;
         }
 
         if ((minDist < threshold) && (cutFlag == 0)){
@@ -846,8 +891,12 @@ void main()
     if (minDistSign < 0.0){
         out_FragColor = vec4(0.0, 0.0, 1.0, 1.0); // Blue for close fragments
     }
+    float dashedLine = scaleDistTexToFrag(minDistT*minDistTLen, v_textureCoordinates.xy);
+    float dashedSegLen = 10.0;
+    float dashedSegSolid = 5.0;
+    bool dashedSolid = mod(dashedLine, dashedSegLen) < dashedSegSolid; // set to true for solid lines
     // Color the fragment based on the minimum distance
-    if ((minDist < threshold) && (cutFlag == 0)) {
+    if ((minDist < threshold) && (cutFlag == 0) && dashedSolid) {
         out_FragColor = vec4(1.0, 0.0, 1.0, 1.0); // Purple for close fragments
     }
 #endif
