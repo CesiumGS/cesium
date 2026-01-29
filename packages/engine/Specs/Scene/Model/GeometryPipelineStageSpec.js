@@ -1198,6 +1198,33 @@ describe(
       });
     });
 
+    it("uses flat varying qualifier for point primitive vertex attributes", function () {
+      return loadGltf(weather).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene.frameState,
+        );
+
+        const shaderBuilder = renderResources.shaderBuilder;
+
+        ShaderBuilderTester.expectHasVaryings(
+          shaderBuilder,
+          [
+            "vec3 v_positionEC;",
+            "vec3 v_positionMC;",
+            "vec3 v_positionWC;",
+            "float v_featureId_0;",
+          ],
+          ["", "", "", "flat"],
+        );
+      });
+    });
+
     it("prepares Draco model for dequantization stage", function () {
       return loadGltf(dracoMilkTruck).then(function (gltfLoader) {
         const components = gltfLoader.components;
