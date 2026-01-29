@@ -129,7 +129,7 @@ describe(
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
     const planarFillTestData =
-      "./Data/Models/glTF-2.0/PlanarFill/glTF/PlanarFill.gltf";
+      "./Data/Models/glTF-2.0/PlanarFill/glTF/planar-fill-polygons.gltf";
     const pointStyleTestData =
       "./Data/Models/glTF-2.0/StyledPoints/points-r5-g8-b14-y10.gltf";
     const meshPrimitiveRestartTestData =
@@ -4183,22 +4183,54 @@ describe(
     it("loads model with BENTLEY_materials_planar_fill extension", async function () {
       const gltfLoader = await loadGltf(planarFillTestData);
 
-      const primitives = gltfLoader.components.nodes[0].primitives;
-      expect(primitives.length).toBe(2);
+      const nodes = gltfLoader.components.nodes;
+      expect(nodes.length).toBe(8);
 
-      // First material has all planarFill properties set
-      const material0 = primitives[0].material;
+      // Node 0 (RedWireframeFillAlways): wireframeFill: 1
+      const material0 = nodes[0].primitives[0].material;
       expect(material0.planarFill).toBeDefined();
       expect(material0.planarFill.wireframeFill).toBe(1);
-      expect(material0.planarFill.backgroundFill).toBe(true);
-      expect(material0.planarFill.behind).toBe(true);
+      expect(material0.planarFill.backgroundFill).toBe(false);
+      expect(material0.planarFill.behind).toBe(false);
 
-      // Second material has only wireframeFill set, others should have defaults
-      const material1 = primitives[1].material;
+      // Node 1 (GreenBackgroundFillMask): backgroundFill: true
+      const material1 = nodes[1].primitives[0].material;
       expect(material1.planarFill).toBeDefined();
-      expect(material1.planarFill.wireframeFill).toBe(2);
-      expect(material1.planarFill.backgroundFill).toBe(false);
+      expect(material1.planarFill.wireframeFill).toBe(0);
+      expect(material1.planarFill.backgroundFill).toBe(true);
       expect(material1.planarFill.behind).toBe(false);
+
+      // Node 2 (BlueBehindCoplanar): behind: true
+      const material2 = nodes[2].primitives[0].material;
+      expect(material2.planarFill).toBeDefined();
+      expect(material2.planarFill.wireframeFill).toBe(0);
+      expect(material2.planarFill.backgroundFill).toBe(false);
+      expect(material2.planarFill.behind).toBe(true);
+
+      // Node 3 (YellowWireframeFillNone): wireframeFill: 0
+      const material3 = nodes[3].primitives[0].material;
+      expect(material3.planarFill).toBeDefined();
+      expect(material3.planarFill.wireframeFill).toBe(0);
+      expect(material3.planarFill.backgroundFill).toBe(false);
+      expect(material3.planarFill.behind).toBe(false);
+
+      // Node 4 (CyanWireframeFillToggle): wireframeFill: 2
+      const material4 = nodes[4].primitives[0].material;
+      expect(material4.planarFill).toBeDefined();
+      expect(material4.planarFill.wireframeFill).toBe(2);
+      expect(material4.planarFill.backgroundFill).toBe(false);
+      expect(material4.planarFill.behind).toBe(false);
+
+      // Node 5 (MagentaNoExtension): no extension
+      const material5 = nodes[5].primitives[0].material;
+      expect(material5.planarFill).toBeUndefined();
+
+      // Node 6 (BlueBehindFalse): behind: false
+      const material6 = nodes[6].primitives[0].material;
+      expect(material6.planarFill).toBeDefined();
+      expect(material6.planarFill.wireframeFill).toBe(0);
+      expect(material6.planarFill.backgroundFill).toBe(false);
+      expect(material6.planarFill.behind).toBe(false);
     });
 
     it("loads model with BENTLEY_materials_planar_fill extension with defaults", async function () {
@@ -4219,24 +4251,6 @@ describe(
       expect(material.planarFill.wireframeFill).toBe(0);
       expect(material.planarFill.backgroundFill).toBe(false);
       expect(material.planarFill.behind).toBe(false);
-    });
-
-    it("loads model without BENTLEY_materials_planar_fill when extension is not present", async function () {
-      function modifyGltf(gltf) {
-        // Remove the extension from the material
-        delete gltf.materials[0].extensions.BENTLEY_materials_planar_fill;
-        delete gltf.materials[1].extensions.BENTLEY_materials_planar_fill;
-        return gltf;
-      }
-
-      const gltfLoader = await loadModifiedGltfAndTest(
-        planarFillTestData,
-        undefined,
-        modifyGltf,
-      );
-
-      const material = gltfLoader.components.nodes[0].primitives[0].material;
-      expect(material.planarFill).toBeUndefined();
     });
 
     it("loads model with BENTLEY_materials_point_style extension", async function () {
