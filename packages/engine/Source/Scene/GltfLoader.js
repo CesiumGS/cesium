@@ -61,6 +61,7 @@ const {
   Specular,
   Anisotropy,
   Clearcoat,
+  PlanarFill,
   Material,
 } = ModelComponents;
 
@@ -1745,16 +1746,17 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
  */
 function loadPlanarFill(planarFillInfo) {
   const {
-    wireframeFill = 0,
+    wireframeFill = PlanarFill.DEFAULT_WIREFRAME_FILL,
     backgroundFill = false,
     behind = false,
   } = planarFillInfo;
 
-  return {
-    wireframeFill: wireframeFill,
-    backgroundFill: backgroundFill,
-    behind: behind,
-  };
+  const planarFill = new PlanarFill();
+  planarFill.wireframeFill = wireframeFill;
+  planarFill.backgroundFill = backgroundFill;
+  planarFill.behind = behind;
+
+  return planarFill;
 }
 
 /**

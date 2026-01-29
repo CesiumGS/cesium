@@ -1507,6 +1507,53 @@ Clearcoat.DEFAULT_CLEARCOAT_FACTOR = 0.0;
 Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR = 0.0;
 
 /**
+ * Planar fill properties from the BENTLEY_materials_planar_fill extension.
+ * Controls the rendering behavior of planar polygon fills for CAD-style visualization.
+ *
+ * @alias ModelComponents.PlanarFill
+ * @constructor
+ *
+ * @private
+ */
+function PlanarFill() {
+  /**
+   * Specifies whether and when the interior fill is displayed in wireframe view mode.
+   * 0 = NONE (never drawn), 1 = ALWAYS (always drawn), 2 = TOGGLE (drawn when fill display is enabled).
+   *
+   * @type {number}
+   * @default 0
+   * @private
+   */
+  this.wireframeFill = PlanarFill.DEFAULT_WIREFRAME_FILL;
+
+  /**
+   * If true, the fill should be drawn using the view's background color,
+   * creating an invisible masking polygon.
+   *
+   * @type {boolean}
+   * @default false
+   * @private
+   */
+  this.backgroundFill = false;
+
+  /**
+   * If true, the fill should be drawn behind other coplanar geometry
+   * belonging to the same logical object, useful for mitigating z-fighting
+   * with overlaid geometry such as hatch patterns or text.
+   *
+   * @type {boolean}
+   * @default false
+   * @private
+   */
+  this.behind = false;
+}
+
+/**
+ * @private
+ */
+PlanarFill.DEFAULT_WIREFRAME_FILL = 0;
+
+/**
  * The material appearance of a primitive.
  *
  * @alias ModelComponents.Material
@@ -1633,6 +1680,15 @@ function Material() {
    * @private
    */
   this.pointDiameter = undefined;
+
+  /**
+   * Planar fill properties from the BENTLEY_materials_planar_fill extension.
+   * Controls the rendering behavior of planar polygon fills for CAD-style visualization.
+   *
+   * @type {ModelComponents.PlanarFill}
+   * @private
+   */
+  this.planarFill = undefined;
 }
 
 /**
@@ -1667,6 +1723,7 @@ ModelComponents.SpecularGlossiness = SpecularGlossiness;
 ModelComponents.Specular = Specular;
 ModelComponents.Anisotropy = Anisotropy;
 ModelComponents.Clearcoat = Clearcoat;
+ModelComponents.PlanarFill = PlanarFill;
 ModelComponents.Material = Material;
 
 export default ModelComponents;
