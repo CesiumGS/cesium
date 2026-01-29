@@ -72,7 +72,6 @@ function VoxelTraversal(
       ? (8 ** provider.availableLevels - 1) / 7
       : undefined;
 
-  // TODO make sure to split the maximumTextureMemoryByteLength across all the megatextures
   for (let i = 0; i < types.length; i++) {
     const type = types[i];
     const componentCount = MetadataType.getComponentCount(type);
@@ -91,7 +90,6 @@ function VoxelTraversal(
       this.megatextures[i].textureMemoryByteLength;
   }
 
-  // TODO: this number actually varies per megatexture, depending on bytes per sample!
   const maximumTileCount = this.megatextures[0].maximumTileCount;
 
   /**
