@@ -128,13 +128,10 @@ describe(
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
-<<<<<<< HEAD
     const planarFillTestData =
       "./Data/Models/glTF-2.0/PlanarFill/glTF/PlanarFill.gltf";
-=======
     const pointStyleTestData =
       "./Data/Models/glTF-2.0/StyledPoints/points-r5-g8-b14-y10.gltf";
->>>>>>> main
     const meshPrimitiveRestartTestData =
       "./Data/Models/glTF-2.0/MeshPrimitiveRestart/glTF/MeshPrimitiveRestart.gltf";
     const edgeVisibilityTestData =
