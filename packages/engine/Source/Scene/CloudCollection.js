@@ -86,8 +86,8 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  * @see CloudCollection#remove
  * @see CumulusCloud
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Clouds.html|Cesium Sandcastle Clouds Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Cloud%20Parameters.html|Cesium Sandcastle Cloud Parameters Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=clouds|Cesium Sandcastle Clouds Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=cloud-parameters|Cesium Sandcastle Cloud Parameters Demo}
  *
  * @example
  * // Create a cloud collection with two cumulus clouds

@@ -93,7 +93,7 @@ import isDataUri from "../Core/isDataUri.js";
  * @param {Billboard.ConstructorOptions} options Object describing initialization options
  * @param {BillboardCollection} billboardCollection Instance of BillboardCollection
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=billboards|Cesium Sandcastle Billboard Demo}
  */
 function Billboard(options, billboardCollection) {
   options = options ?? Frozen.EMPTY_OBJECT;
