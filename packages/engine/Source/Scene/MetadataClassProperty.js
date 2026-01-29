@@ -1198,10 +1198,10 @@ MetadataClassProperty.valueTransformInPlace = function (
  */
 MetadataClassProperty.prototype.bytesPerElement = function () {
   const type = this.type;
-  const componentType = this.componentType;
+  const valueType = this.valueType;
   const componentCount = MetadataType.getComponentCount(type);
   const arrayLength = this.isArray ? this.arrayLength : 1;
-  const bytesPerComponent = MetadataComponentType.getSizeInBytes(componentType);
+  const bytesPerComponent = MetadataComponentType.getSizeInBytes(valueType);
   return componentCount * arrayLength * bytesPerComponent;
 };
 
@@ -1222,6 +1222,12 @@ MetadataClassProperty.prototype.isGpuCompatible = function (channelsLength) {
   }
 
   if (type === MetadataType.STRING) {
+    return false;
+  }
+
+  // For the time being, boolean properties are not considered GPU compatible, because they are
+  // packed as bitstreams and the texture-unpacking logic does not currently support this.
+  if (type === MetadataType.BOOLEAN) {
     return false;
   }
 
