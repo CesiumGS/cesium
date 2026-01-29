@@ -50,7 +50,11 @@ describe("Scene/GoogleStreetViewProvider", function () {
   describe("getPanoIds", function () {
     it("requests panoIds from Google API", async function () {
       spyOn(Resource, "post").and.returnValue(
-        Promise.resolve(JSON.stringify(["pano-1", "pano-2"])),
+        Promise.resolve(
+          JSON.stringify({
+            panoIds: ["pano-1", "pano-2"],
+          }),
+        ),
       );
 
       const cartographic = new Cartographic(
@@ -59,7 +63,7 @@ describe("Scene/GoogleStreetViewProvider", function () {
         0,
       );
 
-      const panoIds = await provider.getPanoIds({ cartographic });
+      const panoIds = await provider.getPanoIds(cartographic);
 
       expect(panoIds).toEqual(["pano-1", "pano-2"]);
       expect(Resource.post).toHaveBeenCalled();
