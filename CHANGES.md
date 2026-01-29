@@ -11,6 +11,10 @@
 - Fixed a type error when accessing the ellipsoid of a viewer [#13123](https://github.com/CesiumGS/cesium/pull/13123)
 - Fixed a bug where entities have not been clustered correctly [#13064](https://github.com/CesiumGS/cesium/pull/13064)
 
+#### Additions :tada:
+
+- Adds a `CESIUM_CSP_STYLE_NONCE` global for setting a nonce on style tags created by CesiumJS to comply with Content Security Policy (CSP) requirements.
+
 ## 1.137 - 2026-01-05
 
 ### @cesium/engine
