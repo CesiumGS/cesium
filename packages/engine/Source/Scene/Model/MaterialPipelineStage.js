@@ -191,6 +191,23 @@ MaterialPipelineStage.process = function (
     alphaOptions.alphaCutoff = material.alphaCutoff;
   }
 
+  // Configure and handle point diameter for POINTS primitives (BENTLEY_materials_point_style extension).
+  if (defined(material.pointDiameter)) {
+    shaderBuilder.addDefine(
+      "HAS_POINT_DIAMETER",
+      undefined,
+      ShaderDestination.VERTEX,
+    );
+    shaderBuilder.addUniform(
+      "float",
+      "u_pointDiameter",
+      ShaderDestination.VERTEX,
+    );
+    uniformMap.u_pointDiameter = function () {
+      return material.pointDiameter * frameState.pixelRatio;
+    };
+  }
+
   shaderBuilder.addFragmentLines(MaterialStageFS);
 
   if (material.doubleSided) {

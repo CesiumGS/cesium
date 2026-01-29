@@ -128,6 +128,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
+    const pointStyleTestData =
+      "./Data/Models/glTF-2.0/StyledPoints/points-r5-g8-b14-y10.gltf";
     const meshPrimitiveRestartTestData =
       "./Data/Models/glTF-2.0/MeshPrimitiveRestart/glTF/MeshPrimitiveRestart.gltf";
     const edgeVisibilityTestData =
@@ -4240,6 +4242,55 @@ describe(
       expect(material.emissiveTexture.constantLod.repetitions).toBe(2.0);
       expect(material.occlusionTexture.constantLod).toBeDefined();
       expect(material.occlusionTexture.constantLod.repetitions).toBe(3.0);
+    it("loads model with BENTLEY_materials_point_style extension", async function () {
+      const gltfLoader = await loadGltf(pointStyleTestData);
+
+      // The test model has 4 primitives with different materials. Let's verify they all exist.
+      const primitives = gltfLoader.components.nodes[0].primitives;
+      expect(primitives.length).toBe(4);
+
+      // Check that pointDiameter was loaded correctly for each material. Each primitive has a different diameter.
+      expect(primitives[0].material.pointDiameter).toBe(5);
+      expect(primitives[1].material.pointDiameter).toBe(8);
+      expect(primitives[2].material.pointDiameter).toBe(14);
+      expect(primitives[3].material.pointDiameter).toBe(10);
+    });
+
+    it("ignores BENTLEY_materials_point_style with invalid negative diameter", async function () {
+      function modifyGltf(gltf) {
+        // Set an invalid negative diameter (diameters must be >0).
+        gltf.materials[0].extensions.BENTLEY_materials_point_style.diameter =
+          -5;
+        return gltf;
+      }
+
+      const gltfLoader = await loadModifiedGltfAndTest(
+        pointStyleTestData,
+        undefined,
+        modifyGltf,
+      );
+
+      // The invalid negative diameter should be ignored; property should be undefined once the glTF is loaded.
+      const material = gltfLoader.components.nodes[0].primitives[0].material;
+      expect(material.pointDiameter).toBeUndefined();
+    });
+
+    it("floors BENTLEY_materials_point_style with non-integer diameter", async function () {
+      function modifyGltf(gltf) {
+        // Set a non-integer diameter (spec requires integers, but we floor as a best effort).
+        gltf.materials[0].extensions.BENTLEY_materials_point_style.diameter = 5.5;
+        return gltf;
+      }
+
+      const gltfLoader = await loadModifiedGltfAndTest(
+        pointStyleTestData,
+        undefined,
+        modifyGltf,
+      );
+
+      // Non-integer diameter should be floored to the nearest integer.
+      const material = gltfLoader.components.nodes[0].primitives[0].material;
+      expect(material.pointDiameter).toBe(5);
     });
 
     it("loads model with EXT_mesh_primitive_restart extension", async function () {
