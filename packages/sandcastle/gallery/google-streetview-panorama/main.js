@@ -34,19 +34,14 @@ const cartographic = new Cesium.Cartographic.fromDegrees(
   height,
 );
 
-const panoIds = await provider.getPanoIds({ cartographic });
+const panoIds = await provider.getPanoIds(cartographic);
 
-const panoIdMetadata = await provider.getPanoIdMetadata({
-  panoId: panoIds.panoIds[0],
-});
+const panoIdMetadata = await provider.getPanoIdMetadata(panoIds[0]);
 
 const panoLat = panoIdMetadata.lat;
 const panoLng = panoIdMetadata.lng;
 
-const streetViewPanorama = await provider.loadPanoramafromPanoId({
-  zInput: 3,
-  panoId: panoIds.panoIds[0],
-});
+const streetViewPanorama = await provider.loadPanoramafromPanoId(panoIds[0], 3);
 
 viewer.scene.primitives.add(streetViewPanorama);
 
