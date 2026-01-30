@@ -20,6 +20,7 @@ import Point3DCollectionVS from "../Shaders/Point3DCollectionVS.js";
 import Point3DCollectionFS from "../Shaders/Point3DCollectionFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import CesiumMath from "../Core/Math.js";
+import AttributeCompression from "../Core/AttributeCompression.js";
 
 /** @import FrameState from "../Scene/FrameState.js"; */
 /** @import Point3DCollection from "./Point3DCollection.js"; */
@@ -116,7 +117,8 @@ function renderPoints(collection, frameState, renderContext) {
       positionLowAndColorArray[i * stride] = encodedCartesian.low.x;
       positionLowAndColorArray[i * stride + 1] = encodedCartesian.low.y;
       positionLowAndColorArray[i * stride + 2] = encodedCartesian.low.z;
-      positionLowAndColorArray[i * stride + 3] = compressRGB(color);
+      positionLowAndColorArray[i * stride + 3] =
+        AttributeCompression.encodeRGB8(color);
     }
 
     const positionHighBuffer = Buffer.createVertexBuffer({
@@ -205,21 +207,6 @@ function renderPoints(collection, frameState, renderContext) {
   }
 
   return renderContext;
-}
-
-const LEFT_SHIFT16 = 65536.0;
-const LEFT_SHIFT8 = 256.0;
-
-/**
- * @param {Color} color
- * @returns {number}
- */
-function compressRGB(color) {
-  return (
-    Math.round(CesiumMath.clamp(color.red * 255, 0, 255)) * LEFT_SHIFT16 +
-    Math.round(CesiumMath.clamp(color.green * 255, 0, 255)) * LEFT_SHIFT8 +
-    Math.round(CesiumMath.clamp(color.blue * 255, 0, 255))
-  );
 }
 
 export default renderPoints;
