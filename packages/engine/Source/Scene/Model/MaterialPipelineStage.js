@@ -15,7 +15,6 @@ import ModelUtility from "./ModelUtility.js";
 const { Material, MetallicRoughness, SpecularGlossiness, Specular, Clearcoat } =
   ModelComponents;
 
-
 /**
  * The material pipeline stage processes textures and other uniforms needed
  * to render a primitive. This handles the following material types:
@@ -283,8 +282,8 @@ MaterialPipelineStage.process = function (
       return pixelsPerWorld;
     };
 
-    const cumDistVar = ModelUtility.getAttributeInfo(cumDistAttribute)
-      .variableName;
+    const cumDistVar =
+      ModelUtility.getAttributeInfo(cumDistAttribute).variableName;
     shaderBuilder.addVertexLines(`
 #ifdef HAS_LINE_CUMULATIVE_DISTANCE
 void lineStyleStageVS(in ProcessedAttributes attributes)
