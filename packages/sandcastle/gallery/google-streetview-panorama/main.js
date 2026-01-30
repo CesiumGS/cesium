@@ -41,7 +41,7 @@ const panoIdMetadata = await provider.getPanoIdMetadata(panoIds[0]);
 const panoLat = panoIdMetadata.lat;
 const panoLng = panoIdMetadata.lng;
 
-const streetViewPanorama = await provider.loadPanoramafromPanoId(panoIds[0], 3);
+const streetViewPanorama = await provider.loadPanoramaFromPanoId(panoIds[0], 3);
 
 viewer.scene.primitives.add(streetViewPanorama);
 
