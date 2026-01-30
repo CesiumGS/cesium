@@ -129,16 +129,15 @@ describe("Scene/GoogleStreetViewProvider", function () {
       ).and.returnValue(Promise.resolve(fakeTileMap));
 
       spyOn(GoogleStreetViewProvider, "loadBitmaps").and.callFake(
-        async (tiles) => {
-          return tiles.map((t) => ({
+        async (tiles) =>
+          tiles.map((t) => ({
             ...t,
             bitmap: {
               width: 256,
               height: 256,
               close: jasmine.createSpy("close"),
             },
-          }));
-        },
+          })),
       );
 
       spyOn(document, "createElement").and.callFake(() => {
@@ -224,21 +223,19 @@ describe("Scene/GoogleStreetViewProvider", function () {
         Resource.createIfNeeded = originalCreateIfNeeded;
       });
 
-      it("returns tiles with bitmaps when fetchImage succeeds", async function () {
+      it("returns loaded tiles when fetchImage succeeds", async function () {
         const fakeBitmap = {
           width: 256,
           height: 256,
           close: jasmine.createSpy("close"),
         };
 
-        spyOn(Resource, "createIfNeeded").and.callFake((url) => {
-          return {
-            url,
-            fetchImage: jasmine
-              .createSpy("fetchImage")
-              .and.returnValue(Promise.resolve(fakeBitmap)),
-          };
-        });
+        spyOn(Resource, "createIfNeeded").and.callFake((url) => ({
+          url,
+          fetchImage: jasmine
+            .createSpy("fetchImage")
+            .and.returnValue(Promise.resolve(fakeBitmap)),
+        }));
 
         const tiles = [
           { z: 2, x: 0, y: 0, src: "a.png" },
@@ -258,7 +255,9 @@ describe("Scene/GoogleStreetViewProvider", function () {
       it("passes correct flipOptions to fetchImage", async function () {
         const fetchSpy = jasmine
           .createSpy("fetchImage")
-          .and.returnValue(Promise.resolve({ width: 256, height: 256 }));
+          .and.returnValue(
+            Promise.resolve({ width: 256, height: 256, close() {} }),
+          );
 
         spyOn(Resource, "createIfNeeded").and.returnValue({
           fetchImage: fetchSpy,
@@ -275,7 +274,7 @@ describe("Scene/GoogleStreetViewProvider", function () {
         });
       });
 
-      it("throws a DeveloperError if fetchImage throws", async function () {
+      it("fails silently and returns an empty array when fetchImage rejects", async function () {
         spyOn(Resource, "createIfNeeded").and.returnValue({
           fetchImage: jasmine
             .createSpy("fetchImage")
@@ -284,13 +283,46 @@ describe("Scene/GoogleStreetViewProvider", function () {
 
         const tiles = [{ src: "error.png" }];
 
-        await expectAsync(
-          GoogleStreetViewProvider.loadBitmaps(tiles),
-        ).toBeRejectedWithDeveloperError();
+        const result = await GoogleStreetViewProvider.loadBitmaps(tiles);
+
+        expect(result).toEqual([]);
+      });
+
+      it("returns only successfully loaded tiles when some fetches fail", async function () {
+        const fakeBitmap = {
+          width: 256,
+          height: 256,
+          close: jasmine.createSpy("close"),
+        };
+
+        spyOn(Resource, "createIfNeeded").and.callFake((url) => {
+          if (url === "bad.png") {
+            return {
+              fetchImage: jasmine
+                .createSpy("fetchImage")
+                .and.returnValue(Promise.reject(new Error("network error"))),
+            };
+          }
+
+          return {
+            fetchImage: jasmine
+              .createSpy("fetchImage")
+              .and.returnValue(Promise.resolve(fakeBitmap)),
+          };
+        });
+
+        const tiles = [{ src: "good.png" }, { src: "bad.png" }];
+
+        const result = await GoogleStreetViewProvider.loadBitmaps(tiles);
+
+        expect(result.length).toBe(1);
+        expect(result[0].src).toBe("good.png");
+        expect(result[0].bitmap).toBe(fakeBitmap);
       });
 
       it("returns an empty array when given no tiles", async function () {
         const result = await GoogleStreetViewProvider.loadBitmaps([]);
+
         expect(result).toEqual([]);
       });
     });
@@ -375,7 +407,7 @@ describe("Scene/GoogleStreetViewProvider", function () {
         };
 
         spyOn(GoogleStreetViewProvider, "loadBitmaps").and.returnValue(
-          Promise.resolve(null),
+          Promise.resolve([]),
         );
 
         await expectAsync(
