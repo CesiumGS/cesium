@@ -433,15 +433,46 @@ const throttle = (callback) => {
 
   server.on("close", function () {
     console.log("Cesium development server stopped.");
+  });
+
+  // TODO: this really could just be a second call to `app.listen` with a different port. We should discuss how we want
+  // the local development env to work.
+  const sandcastleApp = express();
+  // TODO: this mimics the other server, can they be combined, is this even the way way want to set this up?
+  sandcastleApp.use(express.static("."));
+  // TODO: these should be hooked up to the same self-rebuilding bundles as the main server so devs can test their changes
+  sandcastleApp.use(express.static("./Apps/Sandcastle2"));
+  sandcastleApp.use("/Build", express.static("./Build"));
+  sandcastleApp.use("/Source", express.static("./Source"));
+  sandcastleApp.use(
+    "/packages/engine/Build/Unminified",
+    express.static("./packages/engine/Build/Unminified"),
+  );
+  sandcastleApp.use(
+    "/packages/widgets/Build/Unminified",
+    express.static("./packages/widgets/Build/Unminified"),
+  );
+
+  const sandcastleServer = sandcastleApp.listen(8081, "localhost", function () {
+    console.log(
+      "Sandcastle viewer server running locally.  Connect to http://localhost:%d/",
+      sandcastleServer.address().port,
+    );
+  });
+
+  sandcastleServer.on("close", function () {
+    console.log("Sandcastle viewer server stopped.");
     process.exit(0);
   });
 
   let isFirstSig = true;
   process.on("SIGINT", function () {
     if (isFirstSig) {
-      console.log("\nCesium development server shutting down.");
+      console.log("\nCesium development servers shutting down.");
 
-      server.close();
+      server.close(() => {
+        sandcastleServer.close();
+      });
 
       if (!production) {
         contexts.esm.dispose();
