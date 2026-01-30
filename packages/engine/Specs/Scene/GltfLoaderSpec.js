@@ -4243,7 +4243,7 @@ describe(
       expect(material.occlusionTexture.constantLod).toBeDefined();
       expect(material.occlusionTexture.constantLod.repetitions).toBe(3.0);
     });
-    
+
     it("loads model with BENTLEY_materials_point_style extension", async function () {
       const gltfLoader = await loadGltf(pointStyleTestData);
 
