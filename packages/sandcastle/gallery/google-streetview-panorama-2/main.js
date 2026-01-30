@@ -150,7 +150,7 @@ function selectPano(position) {
       const panoLng = panoIdMetadata.lng;
       const height = carto.height;
 
-      provider.loadPanoramafromPanoId(panoId, 3).then((streetViewPanorama) => {
+      provider.loadPanoramaFromPanoId(panoId, 3).then((streetViewPanorama) => {
         viewer.scene.primitives.add(streetViewPanorama);
 
         const lookPosition = Cesium.Cartesian3.fromDegrees(
