@@ -33,7 +33,7 @@ const Polyline3DAttributeLocations = {
 };
 
 /**
- * @typedef {object} Point3DRenderContext
+ * @typedef {object} Polyline3DRenderContext
  * @property {VertexArray} [vertexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
@@ -44,8 +44,8 @@ const Polyline3DAttributeLocations = {
 /**
  * @param {Polyline3DCollection} collection
  * @param {FrameState} frameState
- * @param {Point3DRenderContext} [renderContext]
- * @returns {Point3DRenderContext}
+ * @param {Polyline3DRenderContext} [renderContext]
+ * @returns {Polyline3DRenderContext}
  */
 function renderPolyline3DCollection(collection, frameState, renderContext) {
   const context = frameState.context;
@@ -64,16 +64,16 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
     const featureCount = collection._featureCount;
     const vertexCount = collection._positionCount;
 
-    let featureVertexCountMax = 0;
+    let vertexCountPerFeatureMax = 0;
     for (let i = 0, il = featureCount; i < il; i++) {
       Polyline3D.fromCollection(collection, i, polyline);
-      featureVertexCountMax = Math.max(
+      vertexCountPerFeatureMax = Math.max(
         polyline.getPositionCount(),
-        featureVertexCountMax,
+        vertexCountPerFeatureMax,
       );
     }
 
-    const cartesianArray = new Float64Array(featureVertexCountMax * 3);
+    const cartesianArray = new Float64Array(vertexCountPerFeatureMax * 3);
     const positionHighAndShowArray = new Float32Array(vertexCount * 4);
     const positionLowAndColorArray = new Float32Array(vertexCount * 4);
     const indexArray = new Uint32Array((vertexCount - featureCount) * 2);
@@ -104,7 +104,7 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
 
         // TODO(donmccurdy): Illegible, explain/document this.
         indexArray[iOffset++] = vOffset;
-        if (j > 0 && j < jl - 1) {
+        if (j > 0 && j + 1 < jl) {
           indexArray[iOffset++] = vOffset;
         }
 

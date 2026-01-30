@@ -38,7 +38,7 @@ class Polyline3DCollection extends Feature3DCollection {
   add(options, result = new Polyline3D()) {
     super.add(options, result);
 
-    const vertexOffset = this._positionCount * 3;
+    const vertexOffset = this._positionCount;
     result._setUint32(Polyline3D.Layout.POSITION_OFFSET_U32, vertexOffset);
     result._setUint32(Polyline3D.Layout.POSITION_COUNT_U32, 0);
 
