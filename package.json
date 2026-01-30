@@ -97,7 +97,7 @@
     "mkdirp": "^3.0.1",
     "node-fetch": "^3.2.10",
     "open": "^11.0.0",
-    "prettier": "3.7.4",
+    "prettier": "3.8.1",
     "prismjs": "^1.28.0",
     "rimraf": "^6.0.1",
     "tsd-jsdoc": "^2.5.0",
