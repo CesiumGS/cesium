@@ -229,6 +229,7 @@ function geojsonToArrayInGrid(
       const lineCoords = geometry.coordinates;
       const ringCutFlags = geometry.cut_flags || null;
       if (
+        ringCutFlags &&
         ringCutFlags.length !== lineCoords.length &&
         geometry.type === "Polygon"
       ) {
