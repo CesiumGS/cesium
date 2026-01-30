@@ -2,6 +2,7 @@
 
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Color from "../Core/Color.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -135,6 +136,15 @@ class Feature3DCollection {
    */
   static clone(collection, result) {
     throw new DeveloperError(ERR_NOT_IMPLEMENTED);
+  }
+
+  updateBoundingVolume() {
+    BoundingSphere.fromVertices(
+      this._positionF64,
+      Cartesian3.ZERO,
+      4,
+      this._boundingVolume,
+    );
   }
 
   /////////////////////////////////////////////////////////////////////////////
