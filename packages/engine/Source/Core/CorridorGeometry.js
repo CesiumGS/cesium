@@ -1060,7 +1060,7 @@ function computeRectangle(positions, ellipsoid, width, cornerType, result) {
  * @see CorridorGeometry.createGeometry
  * @see Packable
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=corridor|Cesium Sandcastle Corridor Demo}
  *
  * @example
  * const corridor = new Cesium.CorridorGeometry({

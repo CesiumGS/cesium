@@ -114,28 +114,20 @@
         embedInSandcastleTemplate,
         decodeBase64Data,
       } from "/src/Helpers.ts";
-
-      let base64String;
-      let data;
+      import DOMPurify from "dompurify";
 
       if (window.location.hash.indexOf("#c=") === 0) {
-        base64String = window.location.hash.substr(3);
-        data = decodeBase64Data(base64String);
-      }
-
-      let code;
-      if (data) {
-        base64String = window.location.hash.substr(3);
-        let html = data.html;
-        code = data.code;
-        const isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
-        if (isIE11) {
-          html = html.replace("../templates", "templates");
-        }
+        const base64String = window.location.hash.substr(3);
+        const data = decodeBase64Data(base64String);
+        const { code, html } = data;
 
         // Add the HTML content
+        const sanitized = DOMPurify.sanitize(html, {
+          ADD_TAGS: ["style"],
+          FORCE_BODY: true,
+        });
         const htmlElement = document.createElement("div");
-        htmlElement.innerHTML = html;
+        htmlElement.innerHTML = sanitized;
         document.body.appendChild(htmlElement);
 
         // Add the JavaScript
