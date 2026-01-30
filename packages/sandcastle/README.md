@@ -61,7 +61,9 @@ development: false
 
 ### Thumbnails
 
-Thumbnails should be any image that represents what the sandcastle does. Often this will just be the Viewer with or without any Sandcastle interaction buttons. Thumbnail files should be limited in size to help save on bandwidth. Currently most are around 225px in width.
+Thumbnails should be any image that represents what the sandcastle does. Often this will just be the Viewer with or without any Sandcastle interaction buttons.
+
+Thumbnail files should be limited in size to help save on bandwidth. For consistency we have chosen the dimensions `225x150px` for our images.
 
 ## Expanding the ESLint configuration
 
