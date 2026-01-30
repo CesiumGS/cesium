@@ -107,8 +107,7 @@ void main()
     // When picking metadata END
     //========================================================================
 
-    #ifdef HAS_LINE_PATTERN
-    // Apply line pattern masking in the main pass
+    #if defined(HAS_LINE_PATTERN) && !defined(HAS_EDGE_VISIBILITY)
     const float maskLength = 16.0;
     float dashPosition = fract(v_lineCoord / maskLength);
     float maskIndex = floor(dashPosition * maskLength);
