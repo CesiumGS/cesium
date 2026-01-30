@@ -3,6 +3,9 @@
 import defined from "../Core/defined.js";
 import Feature3DCollection from "./Feature3DCollection.js";
 import Polyline3D from "./Polyline3D.js";
+import renderPolylines from "./renderPolyline3DCollection.js";
+
+/** @import FrameState from "../Scene/FrameState.js" */
 
 /**
  * @typedef {object} Polyline3DOptions
@@ -16,6 +19,9 @@ import Polyline3D from "./Polyline3D.js";
  * @extends Feature3DCollection<Polyline3D>
  */
 class Polyline3DCollection extends Feature3DCollection {
+  /** @type {Record<string, unknown>} */
+  _renderContext = null;
+
   _getFeatureClass() {
     return Polyline3D;
   }
@@ -43,6 +49,15 @@ class Polyline3DCollection extends Feature3DCollection {
     }
 
     return result;
+  }
+
+  /** @param {FrameState} frameState */
+  update(frameState) {
+    this._renderContext = renderPolylines(
+      this,
+      frameState,
+      this._renderContext,
+    );
   }
 }
 
