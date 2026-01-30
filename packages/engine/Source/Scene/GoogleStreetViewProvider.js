@@ -292,19 +292,26 @@ GoogleStreetViewProvider.loadBitmaps = async function (tiles) {
     preferImageBitmap: true,
   };
 
-  try {
-    const loaded = await Promise.all(
-      tiles.map(async (t) => ({
-        ...t,
-        bitmap: await Resource.createIfNeeded(t.src).fetchImage(flipOptions),
-      })),
-    );
-    return loaded.filter((t) => t.bitmap);
-  } catch (error) {
-    throw new DeveloperError(
-      `Failed to load Street View tiles: ${error.message}`
-    );
+  const results = await Promise.allSettled(
+    tiles.map(async (t) => {
+      const bitmap = await Resource.createIfNeeded(t.src).fetchImage(
+        flipOptions,
+      );
+      return { ...t, bitmap };
+    }),
+  );
+
+  const loaded = [];
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+
+    if (result.status === "fulfilled") {
+      loaded.push(result.value);
+    }
   }
+
+  return loaded;
 };
 
 GoogleStreetViewProvider.stitchBitmapsFromTileMap = async function (
@@ -332,7 +339,7 @@ GoogleStreetViewProvider.stitchBitmapsFromTileMap = async function (
 
   const bitmaps = await GoogleStreetViewProvider.loadBitmaps(tiles);
 
-  if (!defined(bitmaps)) {
+  if (bitmaps.length === 0) {
     throw new DeveloperError("No tiles could be loaded");
   }
 
