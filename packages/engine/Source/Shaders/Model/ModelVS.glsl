@@ -110,7 +110,7 @@ void main()
     // This returns the value that will be assigned to gl_Position.
     vec4 positionClip = geometryStage(attributes, modelView, normal);
 
-    #ifdef HAS_LINE_CUMULATIVE_DISTANCE
+    #if defined(HAS_LINE_CUMULATIVE_DISTANCE) || defined(HAS_LINE_PATTERN)
     lineStyleStageVS(attributes);
     #endif
 

@@ -297,6 +297,23 @@ void lineStyleStageVS(in ProcessedAttributes attributes)
 }
 #endif
 `);
+  } else if (defined(material.linePattern)) {
+    shaderBuilder.addVertexLines(`
+#ifdef HAS_LINE_PATTERN
+void lineStyleStageVS(in ProcessedAttributes attributes)
+{
+    vec4 posClip = gl_Position;
+    vec2 screenPos = ((posClip.xy / posClip.w) * 0.5 + 0.5) * czm_viewport.zw;
+    
+    const float textureCoordinateBase = 8192.0;
+    if (czm_viewport.z > czm_viewport.w) {
+        v_lineCoord = textureCoordinateBase + screenPos.x;
+    } else {
+        v_lineCoord = textureCoordinateBase + screenPos.y;
+    }
+}
+#endif
+`);
   }
 
   shaderBuilder.addFragmentLines(MaterialStageFS);

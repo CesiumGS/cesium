@@ -156,6 +156,19 @@ EdgeVisibilityPipelineStage.process = function (
     );
   }
 
+  let cumDistAttribute;
+  let edgeCumDistLocation;
+  const cumDistAttr = ModelUtility.getAttributeBySemantic(
+    primitive,
+    "BENTLEY_materials_line_style:CUMULATIVE_DISTANCE"
+  );
+
+  if (defined(cumDistAttr)) {
+    cumDistAttribute = cumDistAttr;
+    edgeCumDistLocation = shaderBuilder.addAttribute("float", "a_edgeCumulativeDistance");
+    shaderBuilder.addDefine("HAS_EDGE_CUMULATIVE_DISTANCE", undefined, ShaderDestination.VERTEX);
+  }
+
   // Generate paired face normals for each unique edge (used to classify silhouette edges in the shader).
   const edgeFaceNormals = generateEdgeFaceNormals(
     adjacencyData,
@@ -181,6 +194,8 @@ EdgeVisibilityPipelineStage.process = function (
     vertexColorInfo,
     primitive.edgeVisibility,
     edgeFaceNormals,
+    cumDistAttribute,
+    edgeCumDistLocation,
   );
 
   if (!defined(edgeGeometry)) {
@@ -205,7 +220,20 @@ EdgeVisibilityPipelineStage.process = function (
     return 1.0;
   };
 
-  // Get line width from primitive's material if available
+  if (defined(cumDistAttribute)) {
+    const cumDistData = defined(cumDistAttribute.typedArray)
+      ? cumDistAttribute.typedArray
+      : ModelReader.readAttributeAsTypedArray(cumDistAttribute);
+    const maxCumDist = Math.max(...cumDistData);
+
+    renderResources.uniformMap.u_edgeCumulativeDistanceMax = function () {
+      return maxCumDist > 0 ? maxCumDist : 1.0;
+    };
+    renderResources.uniformMap.u_pixelsPerWorld = function () {
+      return 1.0;
+    };
+  }
+
   const material = primitive.material;
   const lineWidth =
     defined(material) && defined(material.lineWidth)
@@ -795,6 +823,8 @@ function collectVertexColors(runtimePrimitive) {
  * @param {VertexColorInfo} [vertexColorInfo] Packed per-vertex colors (optional)
  * @param {Object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals[])
  * @param {Float32Array} edgeFaceNormals Packed face normals (6 floats per edge)
+ * @param {Object} [cumDistAttribute] Cumulative distance attribute
+ * @param {number} [edgeCumDistLocation] Cumulative distance location
  * @returns {Object|undefined} Object with {vertexArray, indexBuffer, indexCount} or undefined on failure
  * @private
  */
@@ -814,6 +844,8 @@ function createQuadEdgeGeometry(
   vertexColorInfo,
   edgeVisibility,
   edgeFaceNormals,
+  cumDistAttribute,
+  edgeCumDistLocation,
 ) {
   if (!defined(edgeIndices) || edgeIndices.length === 0) {
     return undefined;
@@ -841,8 +873,17 @@ function createQuadEdgeGeometry(
   const silhouetteNormalArray = new Float32Array(totalVerts * 3);
   const faceNormalAArray = new Float32Array(totalVerts * 3);
   const faceNormalBArray = new Float32Array(totalVerts * 3);
-  const edgeOtherPosArray = new Float32Array(totalVerts * 3); // Position of the other endpoint
-  const edgeOffsetArray = new Float32Array(totalVerts); // -1 or +1 for quad expansion
+  const edgeOtherPosArray = new Float32Array(totalVerts * 3);
+  const edgeOffsetArray = new Float32Array(totalVerts);
+
+  const needsCumulativeDistance = defined(cumDistAttribute);
+  const edgeCumDistArray = needsCumulativeDistance ? new Float32Array(totalVerts) : undefined;
+  let srcCumDist;
+  if (needsCumulativeDistance) {
+    srcCumDist = defined(cumDistAttribute.typedArray)
+      ? cumDistAttribute.typedArray
+      : ModelReader.readAttributeAsTypedArray(cumDistAttribute);
+  }
 
   const needsEdgeColorAttribute = defined(edgeColorLocation);
   const edgeColorArray = needsEdgeColorAttribute
@@ -971,6 +1012,15 @@ function createQuadEdgeGeometry(
       }
     }
 
+    if (needsCumulativeDistance) {
+      const cumDistA = srcCumDist[a];
+      const cumDistB = srcCumDist[b];
+      edgeCumDistArray[baseVertexIndex] = cumDistA;
+      edgeCumDistArray[baseVertexIndex + 1] = cumDistA;
+      edgeCumDistArray[baseVertexIndex + 2] = cumDistB;
+      edgeCumDistArray[baseVertexIndex + 3] = cumDistB;
+    }
+
     // Set silhouette normal (same for all 4 vertices)
     let normalX = 0,
       normalY = 0,
@@ -1063,6 +1113,14 @@ function createQuadEdgeGeometry(
     ? Buffer.createVertexBuffer({
         context,
         typedArray: edgeColorArray,
+        usage: BufferUsage.STATIC_DRAW,
+      })
+    : undefined;
+
+  const edgeCumDistBuffer = needsCumulativeDistance
+    ? Buffer.createVertexBuffer({
+        context,
+        typedArray: edgeCumDistArray,
         usage: BufferUsage.STATIC_DRAW,
       })
     : undefined;
@@ -1162,7 +1220,16 @@ function createQuadEdgeGeometry(
     });
   }
 
-  // Handle feature IDs (same logic as line geometry)
+  if (needsCumulativeDistance) {
+    attributes.push({
+      index: edgeCumDistLocation,
+      vertexBuffer: edgeCumDistBuffer,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      normalize: false,
+    });
+  }
+
   const primitive = renderResources.runtimePrimitive.primitive;
   if (defined(primitive.featureIds) && primitive.featureIds.length > 0) {
     const firstFeatureIdSet = primitive.featureIds[0];

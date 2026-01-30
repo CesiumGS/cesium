@@ -42,22 +42,23 @@ void edgeVisibilityStageVS() {
 #endif
 
 #ifdef HAS_LINE_PATTERN
-        // 16-bit pattern, 1 bit = 1 screen pixel, repeats every 16 pixels
-        vec4 currentClip = czm_modelViewProjection * vec4(v_positionMC, 1.0);
-        vec2 currentScreen = ((currentClip.xy / currentClip.w) * 0.5 + 0.5) * czm_viewport.zw;
-        
-        vec4 otherClip = czm_modelViewProjection * vec4(a_edgeOtherPos, 1.0);
-        vec2 otherScreen = ((otherClip.xy / otherClip.w) * 0.5 + 0.5) * czm_viewport.zw;
-        vec2 windowDir = otherScreen - currentScreen;
-        
-        // Offset base for texture coordinates to handle perspective clipping
-        const float textureCoordinateBase = 8192.0;
-        
-        if (abs(windowDir.x) > abs(windowDir.y)) {
-            v_lineCoord = textureCoordinateBase + currentScreen.x;
-        } else {
-            v_lineCoord = textureCoordinateBase + currentScreen.y;
-        }
+        #ifdef HAS_EDGE_CUMULATIVE_DISTANCE
+            v_lineCoord = a_edgeCumulativeDistance * u_pixelsPerWorld;
+        #else
+            vec4 currentClip = czm_modelViewProjection * vec4(v_positionMC, 1.0);
+            vec2 currentScreen = ((currentClip.xy / currentClip.w) * 0.5 + 0.5) * czm_viewport.zw;
+            
+            vec4 otherClip = czm_modelViewProjection * vec4(a_edgeOtherPos, 1.0);
+            vec2 otherScreen = ((otherClip.xy / otherClip.w) * 0.5 + 0.5) * czm_viewport.zw;
+            vec2 windowDir = otherScreen - currentScreen;
+            
+            const float textureCoordinateBase = 8192.0;
+            if (abs(windowDir.x) > abs(windowDir.y)) {
+                v_lineCoord = textureCoordinateBase + currentScreen.x;
+            } else {
+                v_lineCoord = textureCoordinateBase + currentScreen.y;
+            }
+        #endif
 #endif
         
         // Expand vertex to form quad
