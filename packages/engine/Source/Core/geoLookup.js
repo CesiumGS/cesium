@@ -192,6 +192,7 @@ function geojsonToArrayInGrid(
   bbox,
   targetLinePerCell = 1000,
   useTest = false,
+  inGridClip = false,
 ) {
   const lineSegmentsCount = getNumofLineSegments(features);
 
@@ -283,16 +284,24 @@ function geojsonToArrayInGrid(
               const cellMaxX = bbox[0] + (c + 1) * cellWidth;
               const cellMinY = bbox[1] + r * cellHeight;
               const cellMaxY = bbox[1] + (r + 1) * cellHeight;
-              const clipped = clipPolygonToBoundingBox(
-                lineCoords[j],
-                ringCutFlags[j],
-                cellMinX,
-                cellMaxX,
-                cellMinY,
-                cellMaxY,
-              );
-              const p = clipped[0];
-              const flags = clipped[1];
+              let p, flags;
+              if (inGridClip) {
+                const clipped = clipPolygonToBoundingBox(
+                  lineCoords[j],
+                  ringCutFlags[j],
+                  cellMinX,
+                  cellMaxX,
+                  cellMinY,
+                  cellMaxY,
+                );
+                p = clipped[0];
+                flags = clipped[1];
+              } else {
+                p = lineCoords[j];
+                flags = ringCutFlags
+                  ? ringCutFlags.slice(0, lineCoords[j].length)
+                  : new Array(lineCoords[j].length).fill(false);
+              }
               if (p.length > 0) {
                 // convert to line segments
                 for (let k = 0; k < p.length - 1; k++) {
