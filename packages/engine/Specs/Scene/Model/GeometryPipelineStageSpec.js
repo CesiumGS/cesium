@@ -1199,6 +1199,10 @@ describe(
     });
 
     it("uses flat varying qualifier for point primitive vertex attributes", function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
       return loadGltf(weather).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[0].primitives[0];
