@@ -4,25 +4,23 @@ import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Point3D from "./Point3D.js";
 import Buffer from "../Renderer/Buffer.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
-import BlendingState from "../Scene/BlendingState.js";
+import BlendingState from "./BlendingState.js";
 import Color from "../Core/Color.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
-import PrimitiveType from "../Core/PrimitiveType";
+import PrimitiveType from "../Core/PrimitiveType.js";
 import Point3DCollectionVS from "../Shaders/Point3DCollectionVS.js";
 import Point3DCollectionFS from "../Shaders/Point3DCollectionFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import CesiumMath from "../Core/Math.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 
-/** @import FrameState from "../Scene/FrameState.js"; */
+/** @import FrameState from "./FrameState.js"; */
 /** @import Point3DCollection from "./Point3DCollection.js"; */
 
 /** @type {{positionHighAndShow: number, positionLowAndColor: number}} */
@@ -39,7 +37,6 @@ const Point3DAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {object} [uniformMap]
- * @property {boolean} [needsBoundingVolumeUpdate]
  * @property {boolean} [firstDrawTimed]
  */
 
@@ -49,44 +46,12 @@ const Point3DAttributeLocations = {
  * @param {Point3DRenderContext} [renderContext]
  * @returns {Point3DRenderContext}
  */
-function renderPoints(collection, frameState, renderContext) {
+function renderPoint3DCollection(collection, frameState, renderContext) {
   const context = frameState.context;
-  renderContext = renderContext || { needsBoundingVolumeUpdate: true };
+  renderContext = renderContext || {};
 
   if (!renderContext.firstDrawTimed) {
-    console.time("renderPoints::init");
-  }
-
-  // TODO(donmccurdy): Renderer shouldn't maintain collection bounding volume.
-  if (renderContext.needsBoundingVolumeUpdate) {
-    const globalMin = new Cartesian3(
-      Number.POSITIVE_INFINITY,
-      Number.POSITIVE_INFINITY,
-      Number.POSITIVE_INFINITY,
-    );
-
-    const globalMax = new Cartesian3(
-      Number.NEGATIVE_INFINITY,
-      Number.NEGATIVE_INFINITY,
-      Number.NEGATIVE_INFINITY,
-    );
-
-    const point = new Point3D();
-    const globalCartesian = new Cartesian3();
-
-    for (let i = 0, il = collection.length; i < il; i++) {
-      Point3D.fromCollection(collection, i, point).getPosition(globalCartesian);
-      Cartesian3.minimumByComponent(globalMin, globalCartesian, globalMin);
-      Cartesian3.maximumByComponent(globalMax, globalCartesian, globalMax);
-    }
-
-    BoundingSphere.fromCornerPoints(
-      globalMin,
-      globalMax,
-      collection._boundingVolume,
-    );
-
-    renderContext.needsBoundingVolumeUpdate = false;
+    console.time("renderPoint3DCollection::init");
   }
 
   if (!defined(renderContext.vertexArray)) {
@@ -152,6 +117,8 @@ function renderPoints(collection, frameState, renderContext) {
         },
       ],
     });
+
+    collection.updateBoundingVolume();
   }
 
   if (!defined(renderContext.renderState)) {
@@ -202,11 +169,11 @@ function renderPoints(collection, frameState, renderContext) {
   frameState.commandList.push(command);
 
   if (!renderContext.firstDrawTimed) {
-    console.timeEnd("renderPoints::init");
+    console.timeEnd("renderPoint3DCollection::init");
     renderContext.firstDrawTimed = true;
   }
 
   return renderContext;
 }
 
-export default renderPoints;
+export default renderPoint3DCollection;

@@ -3,7 +3,7 @@
 import Feature3DCollection from "./Feature3DCollection.js";
 import Point3D from "./Point3D.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import renderPoints from "./Point3DRenderer.js";
+import renderPoints from "./renderPoint3DCollection.js";
 
 /** @import FrameState from "../Scene/FrameState.js" */
 
@@ -38,9 +38,6 @@ class Point3DCollection extends Feature3DCollection {
 
     return result;
   }
-
-  /////////////////////////////////////////////////////////////////////////////
-  // RENDER
 
   /** @param {FrameState} frameState */
   update(frameState) {
