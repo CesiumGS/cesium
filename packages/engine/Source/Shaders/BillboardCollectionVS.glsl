@@ -409,7 +409,7 @@ if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &
     temp = floor(temp) * SHIFT_RIGHT8;
     outlineWidth = (temp - floor(temp)) * SHIFT_LEFT8;
     outlineColor.a = floor(temp);
-    outlineColor /= 255.0;
+    outlineColor.a /= 255.0;
 
     v_outlineWidth = outlineWidth / 255.0;
     v_outlineColor = outlineColor;
