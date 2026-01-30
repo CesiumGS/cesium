@@ -64,7 +64,14 @@ NormalInfo getNormalInfo(ProcessedAttributes attributes)
 
     #ifdef HAS_NORMAL_TEXTURE
         mat3 tbn = mat3(tangent, bitangent, geometryNormal);
-        vec3 normalSample = texture(u_normalTexture, normalTexCoords).rgb;
+        
+        vec3 normalSample;
+        #if defined(HAS_NORMAL_CONSTANT_LOD) && defined(HAS_CONSTANT_LOD)
+            normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams).rgb;
+        #else
+            normalSample = texture(u_normalTexture, normalTexCoords).rgb;
+        #endif
+        
         normalSample = 2.0 * normalSample - 1.0;
         #ifdef HAS_NORMAL_TEXTURE_SCALE
             normalSample.xy *= u_normalTextureScale;
@@ -109,7 +116,14 @@ vec3 getNormalFromTexture(ProcessedAttributes attributes, vec3 geometryNormal)
     #endif
 
     mat3 tbn = mat3(t, b, geometryNormal);
-    vec3 normalSample = texture(u_normalTexture, normalTexCoords).rgb;
+    
+    vec3 normalSample;
+    #if defined(HAS_NORMAL_CONSTANT_LOD) && defined(HAS_CONSTANT_LOD)
+        normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams).rgb;
+    #else
+        normalSample = texture(u_normalTexture, normalTexCoords).rgb;
+    #endif
+    
     normalSample = 2.0 * normalSample - 1.0;
     #ifdef HAS_NORMAL_TEXTURE_SCALE
         normalSample.xy *= u_normalTextureScale;
@@ -174,7 +188,12 @@ vec4 getBaseColorFromTexture()
         baseColorTexCoords = computeTextureTransform(baseColorTexCoords, u_baseColorTextureTransform);
     #endif
 
-    vec4 baseColorWithAlpha = czm_srgbToLinear(texture(u_baseColorTexture, baseColorTexCoords));
+    vec4 baseColorWithAlpha;
+    #if defined(HAS_BASE_COLOR_CONSTANT_LOD) && defined(HAS_CONSTANT_LOD)
+        baseColorWithAlpha = czm_srgbToLinear(constantLodTextureLookup(u_baseColorTexture, u_baseColorTextureConstantLodParams));
+    #else
+        baseColorWithAlpha = czm_srgbToLinear(texture(u_baseColorTexture, baseColorTexCoords));
+    #endif
 
     #ifdef HAS_BASE_COLOR_FACTOR
         baseColorWithAlpha *= u_baseColorFactor;
