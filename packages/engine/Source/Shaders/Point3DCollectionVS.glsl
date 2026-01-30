@@ -9,7 +9,7 @@ void main()
     vec3 positionHigh = positionHighAndShow.xyz;
     vec3 positionLow = positionLowAndColor.xyz;
     float show = positionHighAndShow.w;
-    vec4 color = czm_decompressRGB(positionLowAndColor.w);
+    vec4 color = czm_decodeRGB8(positionLowAndColor.w);
 
     ///////////////////////////////////////////////////////////////////////////
 
