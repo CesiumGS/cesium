@@ -1,5 +1,3 @@
-import { defined } from "@cesium/engine";
-
 function ShaderBuilderTester() {}
 
 function expectHasLine(linesArray, line) {
@@ -62,38 +60,24 @@ ShaderBuilderTester.expectHasFragmentUniforms = function (
   );
 };
 
-ShaderBuilderTester.expectHasVaryings = function (
+ShaderBuilderTester.expectVertexVaryings = function (
   shaderBuilder,
-  expectedVaryings,
-  expectedInterpolationQualifiers,
+  expectedVaryingLines,
 ) {
-  expect(shaderBuilder._vertexShaderParts.varyingLines).toEqual(
-    jasmine.arrayWithExactContents(
-      expectedVaryings.map((varying) => jasmine.stringContaining(varying)),
-    ),
+  expectEqualUnordered(
+    shaderBuilder._vertexShaderParts.varyingLines,
+    expectedVaryingLines,
   );
-  expect(shaderBuilder._fragmentShaderParts.varyingLines).toEqual(
-    jasmine.arrayWithExactContents(
-      expectedVaryings.map((varying) => jasmine.stringContaining(varying)),
-    ),
-  );
+};
 
-  if (defined(expectedInterpolationQualifiers)) {
-    expect(shaderBuilder._vertexShaderParts.varyingLines).toEqual(
-      jasmine.arrayWithExactContents(
-        expectedInterpolationQualifiers.map((interpolationQualifier) =>
-          jasmine.stringContaining(interpolationQualifier),
-        ),
-      ),
-    );
-    expect(shaderBuilder._fragmentShaderParts.varyingLines).toEqual(
-      jasmine.arrayWithExactContents(
-        expectedInterpolationQualifiers.map((interpolationQualifier) =>
-          jasmine.stringContaining(interpolationQualifier),
-        ),
-      ),
-    );
-  }
+ShaderBuilderTester.expectFragmentVaryings = function (
+  shaderBuilder,
+  expectedVaryingLines,
+) {
+  expectEqualUnordered(
+    shaderBuilder._fragmentShaderParts.varyingLines,
+    expectedVaryingLines,
+  );
 };
 
 ShaderBuilderTester.expectHasVertexStructIds = function (
