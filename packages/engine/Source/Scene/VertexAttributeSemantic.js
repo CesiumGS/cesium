@@ -87,6 +87,13 @@ const VertexAttributeSemantic = {
    * @constant
    */
   ROTATION: "KHR_gaussian_splatting:ROTATION",
+  /**
+   * Per-vertex cumulative distance for line patterning.
+   *
+   * @type {string}
+   * @constant
+   */
+  CUMULATIVE_DISTANCE: "BENTLEY_materials_line_style:CUMULATIVE_DISTANCE",
 };
 
 function semanticToVariableName(semantic) {
@@ -111,6 +118,8 @@ function semanticToVariableName(semantic) {
       return "scale";
     case VertexAttributeSemantic.ROTATION:
       return "rotation";
+    case VertexAttributeSemantic.CUMULATIVE_DISTANCE:
+      return "cumulativeDistance";
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError("semantic is not a valid value.");
@@ -136,6 +145,7 @@ VertexAttributeSemantic.hasSetIndex = function (semantic) {
     case VertexAttributeSemantic.POSITION:
     case VertexAttributeSemantic.NORMAL:
     case VertexAttributeSemantic.TANGENT:
+    case VertexAttributeSemantic.CUMULATIVE_DISTANCE:
       return false;
     case VertexAttributeSemantic.TEXCOORD:
     case VertexAttributeSemantic.COLOR:
@@ -198,6 +208,8 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
     case "KHR_gaussian_splatting:ROTATION":
     case "_ROTATION":
       return VertexAttributeSemantic.ROTATION;
+    case "BENTLEY_materials_line_style:CUMULATIVE_DISTANCE":
+      return VertexAttributeSemantic.CUMULATIVE_DISTANCE;
   }
 
   return undefined;
@@ -271,6 +283,8 @@ VertexAttributeSemantic.getGlslType = function (semantic) {
       return "vec3";
     case VertexAttributeSemantic.ROTATION:
       return "vec4";
+    case VertexAttributeSemantic.CUMULATIVE_DISTANCE:
+      return "float";
     case VertexAttributeSemantic.OPACITY:
       return "float";
     //>>includeStart('debug', pragmas.debug);
