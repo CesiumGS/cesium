@@ -3,15 +3,10 @@
   "private": true,
   "version": "0.0.4",
   "type": "module",
-  "files": [
-    "scripts/buildGallery.js"
-  ],
+  "main": "index.js",
   "scripts": {
     "dev": "npm run build-gallery && vite --config vite.config.dev.ts",
-    "build": "npm run build-app",
-    "build-app": "tsc -b && npm run build-gallery && vite build --config vite.config.app.ts",
-    "build-ci": "tsc -b && npm run build-gallery && vite build --config vite.config.ci.ts",
-    "build-prod": "tsc -b && npm run build-gallery && vite build --config vite.config.prod.ts",
+    "build": "echo 'Sandcastle cannot be built directly. Use the exported buildStatic() function instead'",
     "build-gallery": "node scripts/buildGallery.js"
   },
   "dependencies": {
@@ -23,13 +18,15 @@
     "@stratakit/structures": "^0.3.2",
     "allotment": "^1.20.4",
     "classnames": "^2.5.1",
+    "dompurify": "^3.3.1",
     "monaco-editor": "^0.52.2",
     "pako": "^2.1.0",
-    "prettier": "^3.5.3",
+    "prettier": "^3.7.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-stay-scrolled": "^9.0.0",
     "react-use": "^17.6.0",
+    "typescript": "^5.9.3",
     "yargs": "^18.0.0"
   },
   "devDependencies": {
@@ -38,12 +35,11 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^5.0.4",
-    "globby": "^15.0.0",
+    "globby": "^16.0.0",
     "jsdom": "^27.0.0",
     "pagefind": "^1.3.0",
     "rimraf": "^6.0.1",
     "slugify": "^1.6.6",
-    "typescript": "^5.9.3",
     "vite": "^7.1.9",
     "vite-plugin-static-copy": "^3.1.3",
     "yaml": "^2.8.0"

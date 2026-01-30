@@ -57,6 +57,9 @@
     :after {
       all: revert-layer;
     }
+    /* Stratakit sets color-scheme to dark when setting up variables
+     * But this messes with iframes like the InfoBox */
+    color-scheme: light;
   }
 }
 

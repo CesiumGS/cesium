@@ -1274,6 +1274,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       vertexCount,
       minimumHeight,
       maximumHeight,
+      rectangle,
       BoundingSphere.fromOrientedBoundingBox(obb),
       computeOccludeePoint(
         tileProvider,

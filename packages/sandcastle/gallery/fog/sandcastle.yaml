@@ -2,5 +2,6 @@ legacyId: Fog.html
 title: Fog
 description: Control fog parameters.
 labels:
-  - Development
+  - Atmosphere
+  - Graphics
 thumbnail: thumbnail.jpg

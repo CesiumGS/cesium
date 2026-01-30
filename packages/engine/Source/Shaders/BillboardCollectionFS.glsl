@@ -126,12 +126,14 @@ void doThreePointDepthTest(float eyeDepth, bool applyTranslate) {
     float globeDepth3 = getGlobeDepth(adjustedST, vec2(1.0, 1.0), applyTranslate, dimensions, imageSize); // top right corner
     if (globeDepth3 == 0.0 || globeDepth3 < epsilonEyeDepth) return;
 
-    // All three key points are occluded, discard the fragment (and by extension the entire billboard)            
+    // All three key points are occluded, discard the fragment (and by extension the entire billboard)
     discard;
 }
 #endif
 
-void doDepthTest() {
+// Extra manual depth testing is done to allow more control over how a billboard is occluded
+// by the globe when near and far from the camera.
+void doDepthTest(float globeDepth) {
     float temp = v_compressed.y;
     temp = temp * SHIFT_RIGHT1;
     float temp2 = (temp - floor(temp)) * SHIFT_LEFT1;
@@ -145,7 +147,7 @@ void doDepthTest() {
     // vertex texture sampling is not supported, in which case we do it here.
     bool applyTranslate = floor(temp) != 0.0;
     doThreePointDepthTest(eyeDepth, applyTranslate);
-    
+
 #elif defined(VS_THREE_POINT_DEPTH_CHECK)
     // Since discarding vertices is not possible, the vertex shader sets eyeDepth to 0 to indicate the depth test failed. Apply the discard here.
     if (eyeDepth > -u_threePointDepthTestDistance) {
@@ -156,21 +158,19 @@ void doDepthTest() {
     }
 #endif
 
-    // Automatic depth testing of billboards is disabled (@see BillboardCollection#update).
-    // Instead, we do one of two types of manual depth tests (potentially in addition to the test above), depending on the camera's distance to the billboard fragment.
     // If we're far away, we just compare against a flat, camera-facing depth-plane at the ellipsoid's center.
     // If we're close, we compare against the globe depth texture (which includes depth from the 3D tile pass).
     vec2 fragSt = gl_FragCoord.xy / czm_viewport.zw;
     float globeDepth = getGlobeDepthAtCoords(fragSt);
     if (globeDepth == 0.0) return; // Not on globe
-    
+
+    // If we're far away, we just compare against a flat, camera-facing depth-plane at the ellipsoid's center.
+    // If we're close, we compare against the globe depth texture (which includes depth from the 3D tile pass).
     float distanceToEllipsoid = -v_splitDirectionAndEllipsoidDepthEC.y;
     bool useGlobeDepth = eyeDepth > -u_coarseDepthTestDistance;
-    float testDistance = useGlobeDepth ? globeDepth : distanceToEllipsoid;
-    float testDelta = eyeDepth - testDistance;
 
-    float depthsilon = useGlobeDepth ? u_threePointDepthTestDistance : u_coarseDepthTestDistance;
-    if (testDelta < -depthsilon) {
+    float testDistance = useGlobeDepth ? globeDepth : distanceToEllipsoid;
+    if (eyeDepth < testDistance) {
         discard;
     }
 }
@@ -180,7 +180,7 @@ void main()
     if (v_splitDirectionAndEllipsoidDepthEC.x < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
     if (v_splitDirectionAndEllipsoidDepthEC.x > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
     doDepthTest();
-    
+
     vec4 color = texture(u_atlas, v_textureCoordinates);
 
 #ifdef SDF
@@ -247,6 +247,18 @@ void main()
     out_FragColor = color;
 
 #ifdef LOG_DEPTH
-    czm_writeLogDepth();
+    // If we've made it here, we passed our manual depth test, above. But the automatic depth test will
+    // still run, and some fragments of the billboard may clip against the globe. To prevent that,
+    // ensure the depth value we write out is in front of the globe depth.
+    float depthArg = v_depthFromNearPlusOne;
+
+    if (globeDepth != 0.0) { // On the globe
+        float globeDepthFromNearPlusOne = (-globeDepth - czm_currentFrustum.x) + 1.0;
+        float nudge = max(globeDepthFromNearPlusOne * 5e-6, czm_epsilon7);
+        float globeOnTop = max(1.0, globeDepthFromNearPlusOne - nudge);
+        depthArg = min(depthArg, globeOnTop);
+    }
+
+    czm_writeLogDepth(depthArg);
 #endif
 }

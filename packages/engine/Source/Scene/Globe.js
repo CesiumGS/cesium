@@ -943,7 +943,9 @@ Globe.prototype.getHeight = function (cartographic) {
 
   const intersection = tile.data.pick(
     ray,
-    undefined,
+    // Globe height is the same at a given cartographic regardless of the scene mode,
+    // but the ray is constructed via a surface normal (which assumes 3D), so pick in 3D mode.
+    SceneMode.SCENE3D,
     projection,
     false,
     scratchGetHeightIntersection,

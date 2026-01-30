@@ -5,6 +5,9 @@ import {
   BufferUsage,
   Context,
   ContextLimits,
+  ClearCommand,
+  PixelFormat,
+  PixelDatatype,
 } from "../../index.js";
 
 import createContext from "../../../../Specs/createContext.js";
@@ -41,48 +44,54 @@ describe(
     it("get maximumCombinedTextureImageUnits", function () {
       expect(
         ContextLimits.maximumCombinedTextureImageUnits,
-      ).toBeGreaterThanOrEqual(8);
+      ).toBeGreaterThanOrEqual(32);
     });
 
     it("get maximumCubeMapSize", function () {
-      expect(ContextLimits.maximumCubeMapSize).toBeGreaterThanOrEqual(16);
+      expect(ContextLimits.maximumCubeMapSize).toBeGreaterThanOrEqual(2048);
     });
 
     it("get maximumFragmentUniformVectors", function () {
       expect(
         ContextLimits.maximumFragmentUniformVectors,
-      ).toBeGreaterThanOrEqual(16);
+      ).toBeGreaterThanOrEqual(224);
     });
 
     it("get maximumTextureImageUnits", function () {
-      expect(ContextLimits.maximumTextureImageUnits).toBeGreaterThanOrEqual(8);
+      expect(ContextLimits.maximumTextureImageUnits).toBeGreaterThanOrEqual(16);
     });
 
     it("get maximumRenderbufferSize", function () {
-      expect(ContextLimits.maximumRenderbufferSize).toBeGreaterThanOrEqual(1);
+      expect(ContextLimits.maximumRenderbufferSize).toBeGreaterThanOrEqual(
+        2048,
+      );
     });
 
     it("get maximumTextureSize", function () {
-      expect(ContextLimits.maximumTextureSize).toBeGreaterThanOrEqual(64);
+      expect(ContextLimits.maximumTextureSize).toBeGreaterThanOrEqual(2048);
+    });
+
+    it("get maximum3DTextureSize", function () {
+      expect(ContextLimits.maximum3DTextureSize).toBeGreaterThanOrEqual(256);
     });
 
     it("get maximumVaryingVectors", function () {
-      expect(ContextLimits.maximumVaryingVectors).toBeGreaterThanOrEqual(8);
+      expect(ContextLimits.maximumVaryingVectors).toBeGreaterThanOrEqual(15);
     });
 
     it("get maximumVertexAttributes", function () {
-      expect(ContextLimits.maximumVertexAttributes).toBeGreaterThanOrEqual(8);
+      expect(ContextLimits.maximumVertexAttributes).toBeGreaterThanOrEqual(16);
     });
 
     it("get maximumVertexTextureImageUnits", function () {
       expect(
         ContextLimits.maximumVertexTextureImageUnits,
-      ).toBeGreaterThanOrEqual(0);
+      ).toBeGreaterThanOrEqual(16);
     });
 
     it("get maximumVertexUniformVectors", function () {
       expect(ContextLimits.maximumVertexUniformVectors).toBeGreaterThanOrEqual(
-        1,
+        256,
       );
     });
 
@@ -339,6 +348,65 @@ describe(
         });
         expect(c2._webgl2).toBe(true);
       }
+    });
+
+    it("readPixels", function () {
+      if (webglStub) {
+        return;
+      }
+      const c = createContext();
+      const command = new ClearCommand({
+        color: Color.WHITE,
+      });
+      command.execute(c);
+      const pixels = c.readPixels();
+      expect(pixels).toBeDefined();
+      expect(pixels).toEqual([255, 255, 255, 255]);
+      c.destroyForSpecs();
+    });
+
+    it("readPixels using PBO", function () {
+      if (webglStub) {
+        return;
+      }
+      const c = createContext();
+      if (!c.webgl2) {
+        return;
+      }
+      const command = new ClearCommand({
+        color: Color.WHITE,
+      });
+      command.execute(c);
+      const pixelBuffer = c.readPixelsToPBO({
+        width: 1,
+        height: 1,
+      });
+      const pixels = PixelFormat.createTypedArray(
+        PixelFormat.RGBA,
+        PixelDatatype.UNSIGNED_BYTE,
+        1,
+        1,
+      );
+      pixelBuffer.getBufferData(pixels);
+      pixelBuffer.destroy();
+      expect(pixels).toBeDefined();
+      expect(pixels).toEqual([255, 255, 255, 255]);
+      c.destroyForSpecs();
+    });
+
+    it(`readPixels using PBO throws without WebGL 2`, function () {
+      if (webglStub) {
+        return;
+      }
+      const c = createContext({
+        requestWebgl1: true,
+      });
+      expect(function () {
+        c.readPixelsToPBO();
+      }).toThrowDeveloperError(
+        "A WebGL 2 context is required to read pixels using a PBO.",
+      );
+      c.destroyForSpecs();
     });
   },
   "WebGL",

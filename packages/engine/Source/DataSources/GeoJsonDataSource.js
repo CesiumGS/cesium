@@ -578,8 +578,8 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  * @param {string} [name] The name of this data source.  If undefined, a name will be taken from
  *                        the name of the GeoJSON file.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=GeoJSON%20simplestyle.html|Cesium Sandcastle GeoJSON simplestyle Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=geojson-and-topojson|Cesium Sandcastle GeoJSON and TopoJSON Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=geojson-simplestyle|Cesium Sandcastle GeoJSON simplestyle Demo}
  *
  * @example
  * const viewer = new Cesium.Viewer('cesiumContainer');

@@ -2,11 +2,17 @@ import classNames from "classnames";
 import "./ConsoleMirror.css";
 import { useLayoutEffect, useRef } from "react";
 import useStayScrolled from "react-stay-scrolled";
-import { Badge } from "@stratakit/bricks";
-import { caretDown, caretUp, statusError, statusWarning } from "./icons";
+import { Badge, Button } from "@stratakit/bricks";
+import {
+  caretDown,
+  caretUp,
+  deleteIcon,
+  statusError,
+  statusWarning,
+} from "./icons";
 import { Icon } from "@stratakit/foundations";
 
-export type ConsoleMessageType = "log" | "warn" | "error";
+export type ConsoleMessageType = "log" | "warn" | "error" | "special";
 export type ConsoleMessage = {
   type: ConsoleMessageType;
   message: string;
@@ -27,10 +33,12 @@ export function ConsoleMirror({
   logs,
   expanded: consoleExpanded,
   toggleExpanded,
+  resetConsole,
 }: {
   logs: ConsoleMessage[];
   expanded: boolean;
   toggleExpanded: () => void;
+  resetConsole: (options?: { showMessage?: boolean }) => void;
 }) {
   const logsRef = useRef<HTMLDivElement>(document.createElement("div"));
   // TODO: determine if we need this lib or can implement ourselves. It's a little outdated
@@ -64,6 +72,19 @@ export function ConsoleMirror({
         {errors.length > 0 && (
           <Badge label={errors.length} tone="critical" variant="muted" />
         )}
+        <div className="spacer"></div>
+        <Button
+          className="clear-button"
+          variant="ghost"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            resetConsole({ showMessage: true });
+          }}
+        >
+          <Icon href={deleteIcon} />
+          Clear console
+        </Button>
       </div>
       <div className="logs" ref={logsRef}>
         {logs.length === 0 && (
@@ -79,6 +100,7 @@ export function ConsoleMirror({
               className={classNames("message", {
                 warning: log.type === "warn",
                 error: log.type === "error",
+                special: log.type === "special",
               })}
             >
               <ConsoleIcon type={log.type} />

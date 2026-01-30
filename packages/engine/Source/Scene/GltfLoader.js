@@ -1811,6 +1811,16 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   material.alphaCutoff = gltfMaterial.alphaCutoff;
   material.doubleSided = gltfMaterial.doubleSided;
 
+  // BENTLEY_materials_point_style extension
+  const pointStyleExtension = extensions.BENTLEY_materials_point_style;
+  if (defined(pointStyleExtension) && defined(pointStyleExtension.diameter)) {
+    const diameter = pointStyleExtension.diameter;
+    // The spec requires a positive integer, but we floor non-integers as a best effort.
+    if (diameter >= 1) {
+      material.pointDiameter = Math.floor(diameter);
+    }
+  }
+
   return material;
 }
 
@@ -1997,11 +2007,6 @@ function fetchSpzExtensionFrom(extensions) {
   const spz = gsExtensions?.KHR_gaussian_splatting_compression_spz_2;
   if (defined(spz)) {
     return spz;
-  }
-
-  const legacySpz = extensions?.KHR_spz_gaussian_splats_compression;
-  if (defined(legacySpz)) {
-    return legacySpz;
   }
 
   return undefined;

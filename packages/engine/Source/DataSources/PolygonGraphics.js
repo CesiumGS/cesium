@@ -55,7 +55,7 @@ function createPolygonHierarchyProperty(value) {
  * @param {PolygonGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @see Entity
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=polygon|Cesium Sandcastle Polygon Demo}
  */
 function PolygonGraphics(options) {
   this._definitionChanged = new Event();

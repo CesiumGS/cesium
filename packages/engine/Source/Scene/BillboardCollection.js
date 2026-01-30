@@ -34,6 +34,8 @@ import SDFSettings from "./SDFSettings.js";
 import TextureAtlas from "../Renderer/TextureAtlas.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
+import WebGLConstants from "../Core/WebGLConstants.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 
 const SHOW_INDEX = Billboard.SHOW_INDEX;
 const POSITION_INDEX = Billboard.POSITION_INDEX;
@@ -128,7 +130,7 @@ const attributeLocationsInstanced = {
  * @see Billboard
  * @see LabelCollection
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=billboards|Cesium Sandcastle Billboard Demo}
  *
  * @example
  * // Create a billboard collection with two billboards
@@ -1783,6 +1785,19 @@ BillboardCollection.prototype.update = function (frameState) {
   }
 
   const context = frameState.context;
+
+  if (
+    !context.instancedArrays ||
+    !(ContextLimits.maximumVertexTextureImageUnits > 0)
+  ) {
+    deprecationWarning(
+      "Billboard-unsupported-ANGLE_instanced_arrays",
+      "Beginning in CesiumJS 1.140, billboards and labels will require device support for WebGL 2, " +
+        "or WebGL 1 with ANGLE_instanced_arrays and MAX_VERTEX_TEXTURE_IMAGE_UNITS > 0. For more " +
+        "information or to share feedback, see: https://github.com/CesiumGS/cesium/issues/13053",
+    );
+  }
+
   this._instanced = context.instancedArrays;
   attributeLocations = this._instanced
     ? attributeLocationsInstanced
@@ -2039,7 +2054,8 @@ BillboardCollection.prototype.update = function (frameState) {
     ) {
       this._rsOpaque = RenderState.fromCache({
         depthTest: {
-          enabled: false,
+          enabled: true,
+          func: WebGLConstants.LESS,
         },
         depthMask: true,
       });
@@ -2059,7 +2075,10 @@ BillboardCollection.prototype.update = function (frameState) {
     ) {
       this._rsTranslucent = RenderState.fromCache({
         depthTest: {
-          enabled: false,
+          enabled: true,
+          func: useTranslucentDepthMask
+            ? WebGLConstants.LEQUAL
+            : WebGLConstants.LESS,
         },
         depthMask: useTranslucentDepthMask,
         blending: BlendingState.ALPHA_BLEND,

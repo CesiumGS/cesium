@@ -1,8 +1,6 @@
 legacyId: Azure 2D Tiles.html
 title: Azure 2D Tiles
 description: Global imagery data from Azure Maps.
-development: true
 labels:
   - Imagery
-  - Development
 thumbnail: thumbnail.jpg

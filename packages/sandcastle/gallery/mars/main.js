@@ -373,10 +373,10 @@ function createPickedFeatureDescription(entity) {
               width="50%"\
               style="float:left; margin: 0 1em 1em 0;"\
               src=${entity.properties.imageURL}>\
-            <p style="color: black">${entity.properties.description}</p>\
-            <p style="color: black">\
+            <p>${entity.properties.description}</p>\
+            <p>\
               Source: \
-              <a style="color: black"\
+              <a style="color: white"\
                 target="_blank"\
                 href="${entity.properties.sourceURL}">${entity.properties.source}</a>\
             </p>`;
