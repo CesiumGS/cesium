@@ -317,7 +317,7 @@ function BillboardCollection(options) {
   ];
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
-  this._coarseDepthTestDistance = Ellipsoid.default.minimumRadius / 100;
+  this._coarseDepthTestDistance = Ellipsoid.default.minimumRadius / 10;
   this._threePointDepthTestDistance = Ellipsoid.default.minimumRadius / 1000;
 
   this._uniforms = {

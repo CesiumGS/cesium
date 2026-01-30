@@ -160,14 +160,15 @@ void doDepthTest(float globeDepth) {
 
     // If we're far away, we just compare against a flat, camera-facing depth-plane at the ellipsoid's center.
     // If we're close, we compare against the globe depth texture (which includes depth from the 3D tile pass).
-    vec2 fragSt = gl_FragCoord.xy / czm_viewport.zw;
-    float globeDepth = getGlobeDepthAtCoords(fragSt);
-    if (globeDepth == 0.0) return; // Not on globe
+    bool useGlobeDepth = eyeDepth > -u_coarseDepthTestDistance;
+    if (useGlobeDepth && globeDepth == 0.0) {
+        // Pixel not on globe = instant pass
+        return;
+    }
 
     // If we're far away, we just compare against a flat, camera-facing depth-plane at the ellipsoid's center.
     // If we're close, we compare against the globe depth texture (which includes depth from the 3D tile pass).
     float distanceToEllipsoid = -v_splitDirectionAndEllipsoidDepthEC.y;
-    bool useGlobeDepth = eyeDepth > -u_coarseDepthTestDistance;
 
     float testDistance = useGlobeDepth ? globeDepth : distanceToEllipsoid;
     if (eyeDepth < testDistance) {
@@ -179,7 +180,9 @@ void main()
 {
     if (v_splitDirectionAndEllipsoidDepthEC.x < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
     if (v_splitDirectionAndEllipsoidDepthEC.x > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
-    doDepthTest();
+    vec2 fragSt = gl_FragCoord.xy / czm_viewport.zw;
+    float globeDepth = getGlobeDepthAtCoords(fragSt);
+    doDepthTest(globeDepth);
 
     vec4 color = texture(u_atlas, v_textureCoordinates);
 
@@ -247,9 +250,10 @@ void main()
     out_FragColor = color;
 
 #ifdef LOG_DEPTH
-    // If we've made it here, we passed our manual depth test, above. But the automatic depth test will
-    // still run, and some fragments of the billboard may clip against the globe. To prevent that,
-    // ensure the depth value we write out is in front of the globe depth.
+    // If we've made it here, the manual depth test above determined that this fragment should be visible.
+    // But the automatic depth test must still run in order to write the result to the depth buffer, and its results may
+    // disagree with our manual depth test's results. To prefer our manual results, fudge the depth of this fragment to
+    // always be on top of the globe.
     float depthArg = v_depthFromNearPlusOne;
 
     if (globeDepth != 0.0) { // On the globe
