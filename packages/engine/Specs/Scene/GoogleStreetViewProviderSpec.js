@@ -156,21 +156,19 @@ describe("Scene/GoogleStreetViewProvider", function () {
         CesiumMath.toRadians(0),
         0,
       );
-      console.log("here 1");
 
       const panorama = await provider.loadPanorama({
         cartographic,
-        zInput: 2,
+        zoom: 2,
         heading: 0,
         tilt: 0,
       });
-      console.log("here 2");
 
       expect(panorama).toEqual(jasmine.any(EquirectangularPanorama));
     });
   });
 
-  describe("loadPanoramafromPanoId", function () {
+  describe("loadPanoramaFromPanoId", function () {
     it("loads panorama using panoId metadata", async function () {
       spyOn(provider, "getPanoIdMetadata").and.returnValue(
         Promise.resolve({
@@ -186,9 +184,9 @@ describe("Scene/GoogleStreetViewProvider", function () {
         Promise.resolve("panorama-result"),
       );
 
-      const result = await provider.loadPanoramafromPanoId({
+      const result = await provider.loadPanoramaFromPanoId({
         panoId: "pano-abc",
-        zInput: 2,
+        zoom: 2,
       });
 
       expect(provider.loadPanorama).toHaveBeenCalled();
@@ -277,7 +275,7 @@ describe("Scene/GoogleStreetViewProvider", function () {
         });
       });
 
-      it("returns null if fetchImage throws", async function () {
+      it("throws a DeveloperError if fetchImage throws", async function () {
         spyOn(Resource, "createIfNeeded").and.returnValue({
           fetchImage: jasmine
             .createSpy("fetchImage")
@@ -286,9 +284,9 @@ describe("Scene/GoogleStreetViewProvider", function () {
 
         const tiles = [{ src: "error.png" }];
 
-        const result = await GoogleStreetViewProvider.loadBitmaps(tiles);
-
-        expect(result).toBeNull();
+        await expectAsync(
+          GoogleStreetViewProvider.loadBitmaps(tiles),
+        ).toBeRejectedWithDeveloperError();
       });
 
       it("returns an empty array when given no tiles", async function () {
