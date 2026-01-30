@@ -2,7 +2,7 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Point3D from "./Point3D.js";
+import Polyline3D from "./Polyline3D.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import VertexArray from "../Renderer/VertexArray.js";
@@ -15,16 +15,17 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import Point3DCollectionVS from "../Shaders/Point3DCollectionVS.js";
-import Point3DCollectionFS from "../Shaders/Point3DCollectionFS.js";
+import Polyline3DCollectionVS from "../Shaders/Polyline3DCollectionVS.js";
+import Polyline3DCollectionFS from "../Shaders/Polyline3DCollectionFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
+import IndexDatatype from "../Core/IndexDatatype.js";
 
 /** @import FrameState from "./FrameState.js"; */
-/** @import Point3DCollection from "./Point3DCollection.js"; */
+/** @import Polyline3DCollection from "./Polyline3DCollection.js"; */
 
 /** @type {{positionHighAndShow: number, positionLowAndColor: number}} */
-const Point3DAttributeLocations = {
+const Polyline3DAttributeLocations = {
   /** @type {number} */
   positionHighAndShow: 0,
   /** @type {number} */
@@ -41,49 +42,74 @@ const Point3DAttributeLocations = {
  */
 
 /**
- * @param {Point3DCollection} collection
+ * @param {Polyline3DCollection} collection
  * @param {FrameState} frameState
  * @param {Point3DRenderContext} [renderContext]
  * @returns {Point3DRenderContext}
  */
-function renderPoint3DCollection(collection, frameState, renderContext) {
+function renderPolyline3DCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || {};
 
   if (!renderContext.firstDrawTimed) {
-    console.time("renderPoint3DCollection::init");
+    console.time("renderPolyline3DCollection::init");
   }
 
   if (!defined(renderContext.vertexArray)) {
-    const point = new Point3D();
+    const polyline = new Polyline3D();
     const color = new Color();
     const cartesian = new Cartesian3();
     const encodedCartesian = new EncodedCartesian3();
 
     const featureCount = collection._featureCount;
-    const stride = 4;
+    const vertexCount = collection._positionCount;
 
-    const positionHighAndShowArray = new Float32Array(featureCount * stride);
-    const positionLowAndColorArray = new Float32Array(featureCount * stride);
+    let featureVertexCountMax = 0;
+    for (let i = 0, il = featureCount; i < il; i++) {
+      Polyline3D.fromCollection(collection, i, polyline);
+      featureVertexCountMax = Math.max(
+        polyline.getPositionCount(),
+        featureVertexCountMax,
+      );
+    }
+
+    const cartesianArray = new Float64Array(featureVertexCountMax * 3);
+    const positionHighAndShowArray = new Float32Array(vertexCount * 4);
+    const positionLowAndColorArray = new Float32Array(vertexCount * 4);
+    const indexArray = new Uint32Array((vertexCount - featureCount) * 2);
+
+    let vOffset = 0;
+    let iOffset = 0;
 
     for (let i = 0, il = featureCount; i < il; i++) {
-      Point3D.fromCollection(collection, i, point);
+      Polyline3D.fromCollection(collection, i, polyline);
 
-      point.getPosition(cartesian);
-      EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
+      polyline.getPositions(cartesianArray);
+      polyline.getColor(color);
 
-      point.getColor(color);
+      for (let j = 0, jl = polyline.getPositionCount(); j < jl; j++) {
+        Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
+        EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
 
-      positionHighAndShowArray[i * stride] = encodedCartesian.high.x;
-      positionHighAndShowArray[i * stride + 1] = encodedCartesian.high.y;
-      positionHighAndShowArray[i * stride + 2] = encodedCartesian.high.z;
-      positionHighAndShowArray[i * stride + 3] = point.show ? 1 : 0;
+        positionHighAndShowArray[vOffset * 4] = encodedCartesian.high.x;
+        positionHighAndShowArray[vOffset * 4 + 1] = encodedCartesian.high.y;
+        positionHighAndShowArray[vOffset * 4 + 2] = encodedCartesian.high.z;
+        positionHighAndShowArray[vOffset * 4 + 3] = polyline.show ? 1 : 0;
 
-      positionLowAndColorArray[i * stride] = encodedCartesian.low.x;
-      positionLowAndColorArray[i * stride + 1] = encodedCartesian.low.y;
-      positionLowAndColorArray[i * stride + 2] = encodedCartesian.low.z;
-      positionLowAndColorArray[i * stride + 3] =
-        AttributeCompression.encodeRGB8(color);
+        positionLowAndColorArray[vOffset * 4] = encodedCartesian.low.x;
+        positionLowAndColorArray[vOffset * 4 + 1] = encodedCartesian.low.y;
+        positionLowAndColorArray[vOffset * 4 + 2] = encodedCartesian.low.z;
+        positionLowAndColorArray[vOffset * 4 + 3] =
+          AttributeCompression.encodeRGB8(color);
+
+        // TODO(donmccurdy): Illegible, explain/document this.
+        indexArray[iOffset++] = vOffset;
+        if (j > 0 && j < jl - 1) {
+          indexArray[iOffset++] = vOffset;
+        }
+
+        vOffset++;
+      }
     }
 
     const positionHighBuffer = Buffer.createVertexBuffer({
@@ -100,17 +126,27 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
       usage: BufferUsage.STATIC_DRAW,
     });
 
+    const indexBuffer = Buffer.createIndexBuffer({
+      context,
+      typedArray: indexArray,
+      // @ts-expect-error TODO(donmccurdy): BufferUsage types incorrect.
+      usage: BufferUsage.STATIC_DRAW,
+      // @ts-expect-error TODO(donmccurdy): IndexDatatype types incorrect.
+      indexDatatype: IndexDatatype.UNSIGNED_INT,
+    });
+
     renderContext.vertexArray = new VertexArray({
       context,
+      indexBuffer,
       attributes: [
         {
-          index: Point3DAttributeLocations.positionHighAndShow,
+          index: Polyline3DAttributeLocations.positionHighAndShow,
           vertexBuffer: positionHighBuffer,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 4,
         },
         {
-          index: Point3DAttributeLocations.positionLowAndColor,
+          index: Polyline3DAttributeLocations.positionLowAndColor,
           vertexBuffer: positionLowBuffer,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 4,
@@ -137,26 +173,27 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.shaderProgram)) {
     const vertexShaderSource = new ShaderSource({
-      sources: [Point3DCollectionVS],
+      sources: [Polyline3DCollectionVS],
     });
 
     const fragmentShaderSource = new ShaderSource({
-      sources: [Point3DCollectionFS],
+      sources: [Polyline3DCollectionFS],
     });
 
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource,
       fragmentShaderSource,
-      attributeLocations: Point3DAttributeLocations,
+      attributeLocations: Polyline3DAttributeLocations,
     });
   }
 
   const command = new DrawCommand({
-    primitiveType: PrimitiveType.POINTS,
+    primitiveType: PrimitiveType.LINES,
     pass: Pass.OPAQUE,
 
     vertexArray: renderContext.vertexArray,
+
     renderState: renderContext.renderState,
     shaderProgram: renderContext.shaderProgram,
     uniformMap: renderContext.uniformMap,
@@ -169,11 +206,11 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
   frameState.commandList.push(command);
 
   if (!renderContext.firstDrawTimed) {
-    console.timeEnd("renderPoint3DCollection::init");
+    console.timeEnd("renderPolyline3DCollection::init");
     renderContext.firstDrawTimed = true;
   }
 
   return renderContext;
 }
 
-export default renderPoint3DCollection;
+export default renderPolyline3DCollection;
