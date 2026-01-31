@@ -10,9 +10,14 @@ import {
   useRef,
 } from "react";
 import { getBaseUrl } from "../util/getBaseUrl.ts";
-import { applyHighlightToItem } from "./applyHighlight.tsx";
+import { applyHighlightToItem, formatVectorSearch } from "./applyHighlight.tsx";
 import { loadFromUrl } from "./loadFromUrl.ts";
 import "../../@types/pagefind-client.d.ts";
+import {
+  vectorSearch,
+  type VectorSearchResult,
+  onEmbeddingModelLoaded,
+} from "./EmbeddingSearch.ts";
 
 const galleryListPath = `gallery/list.json`;
 const pagefindUrl = `gallery/pagefind/pagefind.js`;
@@ -62,14 +67,31 @@ export function useGalleryItemStore() {
   const [searchResults, setSearchResults] = useState<
     PagefindSearchFragment[] | null
   >(null);
+  const [vectorSearchResults, setVectorSearchResults] = useState<
+    VectorSearchResult[] | null
+  >(null);
   const [isSearchPending, startSearch] = useTransition();
+  const [embeddingModelLoaded, setEmbeddingModelLoaded] = useState(false);
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    onEmbeddingModelLoaded(() => {
+      setEmbeddingModelLoaded(true);
+    });
+  }, []);
+
   useEffect(() => {
     const pagefind = getPagefind();
     if (!pagefind) {
       return;
     }
 
-    startSearch(async () => {
+    // Search abort logic handles the issue of race conditions as the user types out a search, which launches multiple async searches
+    searchAbortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    searchAbortControllerRef.current = abortController;
+
+    const performSearch = async () => {
       /* @ts-expect-error: null is a valid search term value */
       const { results } = await pagefind.search(searchTerm, {
         filters: searchFilter,
@@ -83,16 +105,34 @@ export function useGalleryItemStore() {
       ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
 
       const values = data.filter(isFulfilled).map(({ value }) => value);
+
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       startSearch(() => setSearchResults(values));
-    });
-  }, [searchTerm, searchFilter]);
+
+      if (
+        embeddingModelLoaded &&
+        searchTerm !== null &&
+        searchTerm.trim() !== ""
+      ) {
+        const vectorResults = await vectorSearch(searchTerm, 5, searchFilter);
+        startSearch(() => setVectorSearchResults(vectorResults));
+      } else {
+        startSearch(() => setVectorSearchResults(null));
+      }
+    };
+
+    performSearch();
+  }, [searchTerm, searchFilter, embeddingModelLoaded]);
 
   const memoizedSearchResults = useMemo(() => {
     if (!searchResults) {
       return items ?? [];
     }
 
-    return searchResults.map((result) => {
+    const pagefindResults = searchResults.map((result) => {
       const { id } = result.meta;
       const item = items.find((item) => item.id === id);
 
@@ -102,7 +142,38 @@ export function useGalleryItemStore() {
 
       return applyHighlightToItem(item, result);
     });
-  }, [items, searchResults]);
+
+    if (vectorSearchResults && vectorSearchResults.length > 0) {
+      for (const vectorResult of vectorSearchResults!.reverse()) {
+        const exists = pagefindResults.find(
+          (res) => res && res.id === vectorResult.id,
+        );
+        // This similarity threshold is the cutoff for showing a a vector search result
+        // There is a tradeoff depending on user query complexity
+        // Often, shorter queries may want a slightly higher threshold (~0.75)
+        // However, this number was based on testing with more complex queries
+        const similarity_threshold = 0.727;
+        if (vectorResult.score < similarity_threshold) {
+          continue;
+        }
+
+        if (exists) {
+          pagefindResults.splice(pagefindResults.indexOf(exists), 1);
+          pagefindResults.unshift(exists);
+          continue;
+        }
+        if (!exists) {
+          const item = items.find((item) => item.id === vectorResult.id);
+          if (item) {
+            pagefindResults.unshift(formatVectorSearch(item));
+          }
+        }
+      }
+      return pagefindResults;
+    }
+
+    return pagefindResults;
+  }, [items, searchResults, vectorSearchResults]);
 
   // Pagefind search configuration is loaded with the rest of the gallery options.
   // Once we've loaded those options, load and intiate pagefind.
@@ -201,12 +272,20 @@ export function useGalleryItemStore() {
       // search everything after page load. Remove the filter on the first search only
       // to ensure we search everything
       if (isFirstSearch) {
-        setSearchFilter(null);
+        if (searchFilter === defaultSearchFilter) {
+          setSearchFilter(null);
+        }
         setFirstSearch(false);
       }
       setSearchTerm(newSearchTerm);
     },
-    [setSearchTerm, isFirstSearch, setSearchFilter],
+    [
+      setSearchTerm,
+      isFirstSearch,
+      setSearchFilter,
+      searchFilter,
+      defaultSearchFilter,
+    ],
   );
 
   return {

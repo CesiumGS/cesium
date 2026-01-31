@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.138 - 2026-01-27
+
+- Updated Sandcastle Gallery creation process to leverage MIT licensed Huggingface model to vectorize each sandcastle for embedding search
+- Modified Sandcastle application to use a hybrid pagefind and embedding search
+
 ## 1.138 - 2026-02-02
 
 ### @cesium/engine

@@ -9,6 +9,7 @@ import { rimraf } from "rimraf";
 import { parse } from "yaml";
 import { globby } from "globby";
 import * as pagefind from "pagefind";
+import { AutoModel, AutoTokenizer } from "@huggingface/transformers";
 
 import createGalleryRecord from "./createGalleryRecord.js";
 
@@ -19,6 +20,32 @@ const defaultGalleryFiles = ["gallery"];
 const defaultThumbnailPath = "images/placeholder-thumbnail.jpg";
 const requiredMetadataKeys = ["title", "description"];
 const galleryItemConfig = /sandcastle\.(yml|yaml)/;
+
+const MODEL_ID = "avsolatorio/GIST-small-Embedding-v0";
+
+function itemToText(title, description, labels) {
+  const text = `Title: ${title}
+  Description: ${description}
+  Labels: ${labels.join(", ")}`;
+
+  return text;
+}
+
+async function generateEmbeddings(items) {
+  const tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
+  const model = await AutoModel.from_pretrained(MODEL_ID, {
+    dtype: "fp32",
+  });
+
+  const texts = items.map((item) =>
+    itemToText(item.title, item.description, item.labels),
+  );
+
+  const inputs = await tokenizer(texts, { padding: true, truncation: true });
+  const { sentence_embedding } = await model(inputs);
+
+  return sentence_embedding.tolist();
+}
 
 async function createPagefindIndex() {
   try {
@@ -89,6 +116,7 @@ export async function buildGalleryList(options = {}) {
    * @property {number} lineCount
    * @property {string} description
    * @property {string[]} labels
+   * @property {number[]} [embedding] - Vector embedding for semantic search
    */
 
   /**
@@ -273,6 +301,11 @@ export async function buildGalleryList(options = {}) {
   // Sort alphabetically so the default sort order when loaded is alphabetical,
   // regardless of if titles match the directory names
   output.entries.sort((a, b) => a.title.localeCompare(b.title));
+
+  const embeddings = await generateEmbeddings(output.entries);
+  output.entries.forEach((entry, index) => {
+    entry.embedding = embeddings[index];
+  });
 
   const outputDirectory = join(rootDirectory, publicDirectory, "gallery");
   await rimraf(outputDirectory);
