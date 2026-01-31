@@ -9,7 +9,7 @@ uniform vec4 u_highlightColor;
 in vec2 v_textureCoordinates;
 in vec4 v_pickColor;
 in vec4 v_color;
-in float v_splitDirection;
+in vec2 v_splitDirectionAndEllipsoidDepthEC;
 
 #ifdef SDF
 in vec4 v_outlineColor;
@@ -126,12 +126,12 @@ void doThreePointDepthTest(float eyeDepth, bool applyTranslate) {
     float globeDepth3 = getGlobeDepth(adjustedST, vec2(1.0, 1.0), applyTranslate, dimensions, imageSize); // top right corner
     if (globeDepth3 == 0.0 || globeDepth3 < epsilonEyeDepth) return;
 
-    // All three key points are occluded, discard the fragment (and by extension the entire billboard)            
+    // All three key points are occluded, discard the fragment (and by extension the entire billboard)
     discard;
 }
 #endif
 
-// Extra manual depth testing is done to allow more control over how a billboard is occluded 
+// Extra manual depth testing is done to allow more control over how a billboard is occluded
 // by the globe when near and far from the camera.
 void doDepthTest(float globeDepth) {
     float temp = v_compressed.y;
@@ -147,7 +147,7 @@ void doDepthTest(float globeDepth) {
     // vertex texture sampling is not supported, in which case we do it here.
     bool applyTranslate = floor(temp) != 0.0;
     doThreePointDepthTest(eyeDepth, applyTranslate);
-    
+
 #elif defined(VS_THREE_POINT_DEPTH_CHECK)
     // Since discarding vertices is not possible, the vertex shader sets eyeDepth to 0 to indicate the depth test failed. Apply the discard here.
     if (eyeDepth > -u_threePointDepthTestDistance) {
@@ -160,10 +160,17 @@ void doDepthTest(float globeDepth) {
 
     // If we're far away, we just compare against a flat, camera-facing depth-plane at the ellipsoid's center.
     // If we're close, we compare against the globe depth texture (which includes depth from the 3D tile pass).
+    bool useGlobeDepth = eyeDepth > -u_coarseDepthTestDistance;
+    if (useGlobeDepth && globeDepth == 0.0) {
+        // Pixel not on globe = instant pass
+        return;
+    }
 
-    if (globeDepth == 0.0) return; // Not on globe    
-    float distanceToEllipsoidCenter = -length(czm_viewerPositionWC); // depth is negative by convention
-    float testDistance = (eyeDepth > -u_coarseDepthTestDistance) ? globeDepth : distanceToEllipsoidCenter;
+    // If we're far away, we just compare against a flat, camera-facing depth-plane at the ellipsoid's center.
+    // If we're close, we compare against the globe depth texture (which includes depth from the 3D tile pass).
+    float distanceToEllipsoid = -v_splitDirectionAndEllipsoidDepthEC.y;
+
+    float testDistance = useGlobeDepth ? globeDepth : distanceToEllipsoid;
     if (eyeDepth < testDistance) {
         discard;
     }
@@ -171,13 +178,12 @@ void doDepthTest(float globeDepth) {
 
 void main()
 {
-    if (v_splitDirection < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
-    if (v_splitDirection > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
-    
+    if (v_splitDirectionAndEllipsoidDepthEC.x < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
+    if (v_splitDirectionAndEllipsoidDepthEC.x > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
     vec2 fragSt = gl_FragCoord.xy / czm_viewport.zw;
     float globeDepth = getGlobeDepthAtCoords(fragSt);
     doDepthTest(globeDepth);
-    
+
     vec4 color = texture(u_atlas, v_textureCoordinates);
 
 #ifdef SDF
@@ -244,9 +250,10 @@ void main()
     out_FragColor = color;
 
 #ifdef LOG_DEPTH
-    // If we've made it here, we passed our manual depth test, above. But the automatic depth test will
-    // still run, and some fragments of the billboard may clip against the globe. To prevent that,
-    // ensure the depth value we write out is in front of the globe depth.
+    // If we've made it here, the manual depth test above determined that this fragment should be visible.
+    // But the automatic depth test must still run in order to write the result to the depth buffer, and its results may
+    // disagree with our manual depth test's results. To prefer our manual results, fudge the depth of this fragment to
+    // always be on top of the globe.
     float depthArg = v_depthFromNearPlusOne;
 
     if (globeDepth != 0.0) { // On the globe
