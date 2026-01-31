@@ -1,6 +1,5 @@
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import PolylineMaterialAppearanceVS from "../Shaders/Appearances/PolylineMaterialAppearanceVS.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
@@ -8,12 +7,8 @@ import PolylineFS from "../Shaders/PolylineFS.js";
 import Appearance from "./Appearance.js";
 import Material from "./Material.js";
 
-let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineMaterialAppearanceVS}`;
+const defaultVertexShaderSource = `#define CLIP_POLYLINE \n${PolylineCommon}\n${PolylineMaterialAppearanceVS}`;
 const defaultFragmentShaderSource = PolylineFS;
-
-if (!FeatureDetection.isInternetExplorer()) {
-  defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
-}
 
 /**
  * An appearance for {@link PolylineGeometry} that supports shading with materials.

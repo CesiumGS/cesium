@@ -839,8 +839,7 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
 DynamicEnvironmentMapManager.prototype.update = function (frameState) {
   const mode = frameState.mode;
   const isSupported =
-    // A FrameState type works here because the function only references the context parameter.
-    // @ts-ignore
+    // @ts-expect-error A FrameState type works here because the function only references the context parameter.
     DynamicEnvironmentMapManager.isDynamicUpdateSupported(frameState);
 
   if (
