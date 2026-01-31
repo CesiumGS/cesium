@@ -134,6 +134,12 @@ describe(
       "./Data/Models/glTF-2.0/MeshPrimitiveRestart/glTF/MeshPrimitiveRestart.gltf";
     const edgeVisibilityTestData =
       "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility.glb";
+    const edgeVisibilityMaterialTestData =
+      "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibilityMaterial.glb";
+    const edgeVisibilityLineStringTestData =
+      "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibilityLineString.glb";
+    const styledLines =
+      "./Data/Models/glTF-2.0/StyledLines/BENTLEY_materials_line_style.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -229,14 +235,16 @@ describe(
     }
 
     async function loadModifiedGltfAndTest(gltfPath, options, modifyFunction) {
-      let gltf = await Resource.fetchJson({
+      const arrayBuffer = await Resource.fetchArrayBuffer({
         url: gltfPath,
       });
 
-      gltf = modifyFunction(gltf);
+      const gltfData = parseGlb(arrayBuffer);
+      const modifiedGltf = modifyFunction(gltfData.gltf) ?? gltfData.gltf;
+      const rebuiltGlb = createGlbBuffer(modifiedGltf, gltfData.binaryChunk);
 
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        Promise.resolve(generateJsonBuffer(gltf).buffer),
+        Promise.resolve(rebuiltGlb),
       );
 
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
@@ -246,6 +254,133 @@ describe(
       await waitForLoaderProcess(gltfLoader, scene);
 
       return gltfLoader;
+    }
+
+    async function loadModifiedGlbAndTest(gltfPath, options, modifyFunction) {
+      const arrayBuffer = await Resource.fetchArrayBuffer({
+        url: gltfPath,
+      });
+
+      const gltfData = parseGlb(arrayBuffer);
+      const modifiedGltf = modifyFunction(gltfData.gltf) ?? gltfData.gltf;
+      const rebuiltGlb = createGlbBuffer(modifiedGltf, gltfData.binaryChunk);
+
+      spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
+        Promise.resolve(rebuiltGlb),
+      );
+
+      const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+      gltfLoaders.push(gltfLoader);
+
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, scene);
+
+      return gltfLoader;
+    }
+
+    function parseGlb(arrayBuffer) {
+      const dataView = new DataView(arrayBuffer);
+      if (dataView.byteLength < 12) {
+        const jsonText = new TextDecoder().decode(new Uint8Array(arrayBuffer));
+        return { gltf: JSON.parse(jsonText), binaryChunk: undefined };
+      }
+
+      const magic = dataView.getUint32(0, true);
+      if (magic !== 0x46546c67) {
+        const jsonText = new TextDecoder().decode(new Uint8Array(arrayBuffer));
+        return { gltf: JSON.parse(jsonText), binaryChunk: undefined };
+      }
+
+      let offset = 12;
+      let jsonObject;
+      let binaryChunk;
+      const textDecoder = new TextDecoder();
+
+      while (offset < arrayBuffer.byteLength) {
+        const chunkLength = dataView.getUint32(offset, true);
+        offset += 4;
+        const chunkType = dataView.getUint32(offset, true);
+        offset += 4;
+
+        const chunkData = new Uint8Array(arrayBuffer, offset, chunkLength);
+        if (chunkType === 0x4e4f534a) {
+          jsonObject = JSON.parse(textDecoder.decode(chunkData));
+        } else if (chunkType === 0x004e4942) {
+          binaryChunk = chunkData.slice();
+        }
+
+        offset += chunkLength;
+      }
+
+      if (!jsonObject) {
+        throw new RuntimeError("GLB JSON chunk not found.");
+      }
+
+      if (binaryChunk && jsonObject.buffers && jsonObject.buffers.length > 0) {
+        jsonObject.buffers[0].byteLength = binaryChunk.length;
+        delete jsonObject.buffers[0].uri;
+      }
+
+      return { gltf: jsonObject, binaryChunk: binaryChunk };
+    }
+
+    function createGlbBuffer(gltf, binaryChunk) {
+      const textEncoder = new TextEncoder();
+      const jsonBuffer = textEncoder.encode(JSON.stringify(gltf));
+      const jsonPadding = (4 - (jsonBuffer.byteLength % 4)) % 4;
+      const paddedJson = new Uint8Array(jsonBuffer.byteLength + jsonPadding);
+      paddedJson.set(jsonBuffer);
+      if (jsonPadding > 0) {
+        paddedJson.fill(0x20, jsonBuffer.byteLength);
+      }
+
+      let paddedBinary;
+      if (binaryChunk && binaryChunk.length > 0) {
+        const binPadding = (4 - (binaryChunk.length % 4)) % 4;
+        paddedBinary = new Uint8Array(binaryChunk.length + binPadding);
+        paddedBinary.set(binaryChunk);
+        if (binPadding > 0) {
+          paddedBinary.fill(0, binaryChunk.length);
+        }
+      }
+
+      const hasBinaryChunk = !!paddedBinary;
+      const totalLength =
+        12 +
+        8 +
+        paddedJson.byteLength +
+        (hasBinaryChunk ? 8 + paddedBinary.byteLength : 0);
+
+      const glbBuffer = new ArrayBuffer(totalLength);
+      const dataView = new DataView(glbBuffer);
+      let offset = 0;
+
+      dataView.setUint32(offset, 0x46546c67, true);
+      offset += 4;
+      dataView.setUint32(offset, 2, true);
+      offset += 4;
+      dataView.setUint32(offset, totalLength, true);
+      offset += 4;
+
+      dataView.setUint32(offset, paddedJson.byteLength, true);
+      offset += 4;
+      dataView.setUint32(offset, 0x4e4f534a, true);
+      offset += 4;
+      new Uint8Array(glbBuffer, offset, paddedJson.byteLength).set(paddedJson);
+      offset += paddedJson.byteLength;
+
+      if (hasBinaryChunk) {
+        dataView.setUint32(offset, paddedBinary.byteLength, true);
+        offset += 4;
+        dataView.setUint32(offset, 0x004e4942, true);
+        offset += 4;
+        new Uint8Array(glbBuffer, offset, paddedBinary.byteLength).set(
+          paddedBinary,
+        );
+        offset += paddedBinary.byteLength;
+      }
+
+      return glbBuffer;
     }
 
     function getAttribute(attributes, semantic, setIndex) {
@@ -4427,6 +4562,76 @@ describe(
       }
     });
 
+    it("loads edge visibility material color override", async function () {
+      const gltfLoader = await loadModifiedGlbAndTest(
+        edgeVisibilityMaterialTestData,
+        undefined,
+        function (gltf) {
+          const primitive = gltf.meshes[0].primitives[0];
+          const extension =
+            primitive.extensions.EXT_mesh_primitive_edge_visibility;
+          extension.material = 0;
+
+          const material = gltf.materials[0];
+          const pbr =
+            material.pbrMetallicRoughness ??
+            (material.pbrMetallicRoughness = {});
+          pbr.baseColorFactor = [0.2, 0.4, 0.6, 0.8];
+
+          return gltf;
+        },
+      );
+
+      const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+      const edgeVisibility = primitive.edgeVisibility;
+      expect(edgeVisibility).toBeDefined();
+      expect(edgeVisibility.materialColor).toEqualEpsilon(
+        new Cartesian4(0.2, 0.4, 0.6, 0.8),
+        CesiumMath.EPSILON7,
+      );
+    });
+
+    it("loads edge visibility line strings", async function () {
+      const gltfLoader = await loadModifiedGlbAndTest(
+        edgeVisibilityLineStringTestData,
+        undefined,
+        function (gltf) {
+          const primitive = gltf.meshes[0].primitives[0];
+          primitive.extensions = primitive.extensions ?? Object.create(null);
+          primitive.extensions.EXT_mesh_primitive_edge_visibility = {
+            lineStrings: [
+              {
+                indices: gltf.meshes[0].primitives[1].indices,
+                material: 0,
+              },
+            ],
+          };
+
+          const material = gltf.materials[0];
+          const pbr =
+            material.pbrMetallicRoughness ??
+            (material.pbrMetallicRoughness = {});
+          pbr.baseColorFactor = [1.0, 0.5, 0.0, 1.0];
+
+          return gltf;
+        },
+      );
+
+      const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+      const edgeVisibility = primitive.edgeVisibility;
+      expect(edgeVisibility).toBeDefined();
+      expect(edgeVisibility.lineStrings).toBeDefined();
+
+      const lineStrings = edgeVisibility.lineStrings;
+      expect(lineStrings.length).toBe(1);
+      expect(lineStrings[0].indices.length).toBeGreaterThan(0);
+      expect(lineStrings[0].restartIndex).toBeDefined();
+      expect(lineStrings[0].materialColor).toEqualEpsilon(
+        new Cartesian4(1.0, 0.5, 0.0, 1.0),
+        CesiumMath.EPSILON7,
+      );
+    });
+
     it("validates edge visibility data loading", async function () {
       const gltfLoader = await loadGltf(edgeVisibilityTestData);
       const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
@@ -4440,6 +4645,35 @@ describe(
           primitive.edgeVisibility.silhouetteNormals.length,
         ).toBeGreaterThanOrEqual(0);
       }
+    });
+
+    it("loads BENTLEY_materials_line_style extension", async function () {
+      const gltfLoader = await loadGltf(styledLines);
+      const components = gltfLoader.components;
+      const node = components.scene.nodes[0];
+      const primitive = node.primitives[0];
+      const material = primitive.material;
+
+      expect(material).toBeDefined();
+      expect(material.lineWidth).toBe(5);
+      expect(material.linePattern).toBe(61680); // 0xF0F0
+    });
+
+    it("loads BENTLEY_materials_line_style with edge visibility", async function () {
+      const gltfLoader = await loadGltf(styledLines);
+      const components = gltfLoader.components;
+      const node = components.scene.nodes[0];
+      const primitive = node.primitives[0];
+
+      // Verify edge visibility data is present
+      expect(primitive.edgeVisibility).toBeDefined();
+      expect(primitive.edgeVisibility.visibility).toBeDefined();
+      expect(primitive.edgeVisibility.silhouetteNormals).toBeDefined();
+
+      // Verify material line style properties
+      const material = primitive.material;
+      expect(material.lineWidth).toBe(5);
+      expect(material.linePattern).toBe(61680); // 0xF0F0
     });
 
     it("parses copyright field", function () {
