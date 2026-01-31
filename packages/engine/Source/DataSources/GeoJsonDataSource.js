@@ -3,6 +3,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";
+import destroyObject from "../Core/destroyObject.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -963,6 +964,8 @@ function preload(that, data, options, clear) {
       return load(that, geoJson, options, sourceUri, clear);
     })
     .catch(function (error) {
+      // Clear promises in case of error to prevent memory leaks
+      that._promises.length = 0;
       DataSource.setLoading(that, false);
       that._error.raiseEvent(that, error);
       throw error;
@@ -980,6 +983,19 @@ function preload(that, data, options, clear) {
  */
 GeoJsonDataSource.prototype.update = function (time) {
   return true;
+};
+
+/**
+ * Cancels any remaining asynchronous operations and clears the promises array.
+ * This method should be called before destroying the data source to ensure
+ * all pending operations are cancelled and memory is freed.
+ */
+GeoJsonDataSource.prototype.cancelLoading = function () {
+  // Clear the promises array to cancel any pending operations
+  this._promises.length = 0;
+  if (this._isLoading) {
+    DataSource.setLoading(this, false);
+  }
 };
 
 function load(that, geoJson, options, sourceUri, clear) {
@@ -1047,13 +1063,47 @@ function load(that, geoJson, options, sourceUri, clear) {
       typeHandler(that, geoJson, geoJson, crsFunction, options);
     }
 
-    return Promise.all(that._promises).then(function () {
-      that._promises.length = 0;
-      DataSource.setLoading(that, false);
-      return that;
-    });
+    return Promise.all(that._promises)
+      .then(function () {
+        // Clean up promises array
+        that._promises.length = 0;
+        DataSource.setLoading(that, false);
+        return that;
+      })
+      .catch(function (error) {
+        // Ensure promises array is cleared even if there's an error
+        that._promises.length = 0;
+        DataSource.setLoading(that, false);
+        throw error;
+      });
   });
 }
+
+/**
+ * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * release of WebGL resources, instead of relying on the garbage collector to eventually destroy this object.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ */
+GeoJsonDataSource.prototype.destroy = function () {
+  // Cancel any pending promises
+  this._promises.length = 0;
+
+  // Dispose of the pin builder to free up image resources
+  if (this._pinBuilder) {
+    this._pinBuilder = this._pinBuilder.destroy();
+  }
+
+  // Clear the entity collection
+  if (this._entityCollection) {
+    this._entityCollection.removeAll();
+  }
+
+  // Clean up other resources
+  this._resourceCredits.length = 0;
+
+  return destroyObject(this);
+};
 
 /**
  * This callback is displayed as part of the GeoJsonDataSource class.
