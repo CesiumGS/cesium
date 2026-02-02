@@ -139,8 +139,14 @@ class Feature3DCollection {
   }
 
   updateBoundingVolume() {
+    // Exclude unused space in the position buffer.
+    const vertices = new Float64Array(
+      this._positionF64.buffer,
+      this._positionF64.byteOffset,
+      this._positionCount * 3,
+    );
     BoundingSphere.fromVertices(
-      this._positionF64,
+      vertices,
       Cartesian3.ZERO,
       4,
       this._boundingVolume,
