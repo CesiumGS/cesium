@@ -25,12 +25,14 @@ There is no one release manager; instead, [our community shares the responsibili
      - If an update is incompatible, open a new issue tagged with the `dependencies` label.
      - If an update can be resolved, commit the changes and open a PR for review.
 
-   > [!IMPORTANT]
-   > We pin an exact version of **`prettier`**. If the version of `prettier` should be incremented, use an exact version by running `npm install prettier@latest --save-exact`.
-   >
-   > If you run `npm install prettier@latest` without the `--save-exact` argument, remove the `^` in `package.json`.
-   >
-   > It's reccomended to commit the package update and a seperate commit for any automated formatting updates to streamline PR reviews.
+> [!IMPORTANT]
+> We pin an exact version of **`prettier`**. If the version of `prettier` should be incremented, use an exact version by running `npm install prettier@latest --save-exact`.
+>
+> If you run `npm install prettier@latest` without the `--save-exact` argument, remove the `^` in `package.json`.
+>
+> It's reccomended to commit the package update and a seperate commit for any automated formatting updates to streamline PR reviews.
+
+<!-- markdownlint-disable MD029 -->
 
 2. **Check the [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release).** Work with the team to ensure accountability for priority items—This can be done via the "CesiumJS" channel in Teams.
    - Ask the team if there are any items not tagged with the `priority - next release` label which should be.
@@ -40,6 +42,8 @@ There is no one release manager; instead, [our community shares the responsibili
    - Open a PR to address each items scheduled for removal in the next release, if any.
 4. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
 5. Start thinking ahead for a good image for the release blog post in case you need to prepare any data, assets, or examples.
+
+<!-- markdownlint-enable MD029 -->
 
 ## Release testing and packaging
 
