@@ -1,4 +1,4 @@
-# Release Guide
+# CesiumJS Release Guide
 
 We release CesiumJS on the first work day of every month.
 
@@ -43,7 +43,8 @@ There is no one release manager; instead, [our community shares the responsibili
 
 ## Release testing and packaging
 
-**Follow these instructions exactly. Do not switch branches or otherwise manipulate your local clone at any point in the process unless instructed to do so. If you need to switch branches for whatever reason, you must start the entire process over again.**
+> [!IMPORTANT]
+> _Follow these instructions exactly. Do not switch branches or otherwise manipulate your local clone at any point in the process unless instructed to do so. If you need to switch branches for whatever reason, you must start the entire process over again._
 
 1. Verify there are no [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release).
 2. Verify there are no [`remove in [this version number]` issues](https://github.com/CesiumGS/cesium/labels?q=remove). Delete the label. Create a new label with the next highest `remove in [version]` relative to the existing labels.
