@@ -36,21 +36,21 @@ describe("Polygon3DCollection", () => {
     collection.add({ positions: positions3 }, polygon);
 
     Polygon3D.fromCollection(collection, 0, polygon);
-    expect(polygon.getVertexCount(), 3);
+    expect(polygon.getPositionCount(), 3);
     expect(polygon.getPositions(new Float64Array(9))).toEqualEpsilon(
       positions1,
       EPS,
     );
 
     Polygon3D.fromCollection(collection, 1, polygon);
-    expect(polygon.getVertexCount(), 2);
+    expect(polygon.getPositionCount(), 2);
     expect(polygon.getPositions(new Float64Array(6))).toEqualEpsilon(
       positions2,
       EPS,
     );
 
     Polygon3D.fromCollection(collection, 2, polygon);
-    expect(polygon.getVertexCount(), 3);
+    expect(polygon.getPositionCount(), 3);
     expect(polygon.getPositions(new Float64Array(9))).toEqualEpsilon(
       positions3,
       EPS,

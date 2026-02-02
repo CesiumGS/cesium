@@ -99,7 +99,7 @@ class Polygon3D extends Feature3D {
   // GEOMETRY
 
   /** @returns {number} */
-  getVertexCount() {
+  getPositionCount() {
     return this._getUint32(Polygon3D.Layout.POSITION_COUNT_U32);
   }
 

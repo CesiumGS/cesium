@@ -5,8 +5,10 @@ import Feature3D from "./Feature3D.js";
 import Feature3DCollection from "./Feature3DCollection.js";
 import Polygon3D from "./Polygon3D.js";
 import Frozen from "../Core/Frozen.js";
+import renderPolygons from "./renderPolygon3DCollection.js";
 
 /** @import Matrix4 from "../Core/Matrix4.js"; */
+/** @import FrameState from "../Scene/FrameState.js" */
 
 /**
  * @typedef {object} Polygon3DOptions
@@ -125,6 +127,11 @@ class Polygon3DCollection extends Feature3DCollection {
     }
 
     return result;
+  }
+
+  /** @param {FrameState} frameState */
+  update(frameState) {
+    this._renderContext = renderPolygons(this, frameState, this._renderContext);
   }
 }
 export default Polygon3DCollection;
