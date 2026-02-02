@@ -129,7 +129,7 @@ describe("Scene/GoogleStreetViewProvider", function () {
         Promise.resolve({
           heading: 0,
           tilt: 0,
-        })
+        }),
       );
       spyOn(Resource, "post").and.returnValue(
         Promise.resolve(JSON.stringify(["pano-xyz"])),
@@ -168,25 +168,27 @@ describe("Scene/GoogleStreetViewProvider", function () {
           heading: 90,
           tilt: 5,
           originalElevationAboveEgm96: 50,
-        })
+        }),
       );
 
-      const loadPanoramaSpy = spyOn(
-        provider,
-        "loadPanorama"
-      ).and.returnValue(Promise.resolve("panorama-result"));
+      const loadPanoramaSpy = spyOn(provider, "loadPanorama").and.returnValue(
+        Promise.resolve("panorama-result"),
+      );
 
       const mockPanoId = "pano-abc";
       const mockZoom = 2;
 
-      const result = await provider.loadPanoramaFromPanoId(mockPanoId, mockZoom);
+      const result = await provider.loadPanoramaFromPanoId(
+        mockPanoId,
+        mockZoom,
+      );
 
       expect(loadPanoramaSpy).toHaveBeenCalledWith({
         cartographic: jasmine.any(Cartographic),
         zoom: 2,
         heading: 90,
         tilt: -85,
-        panoId: mockPanoId
+        panoId: mockPanoId,
       });
 
       expect(result).toBe("panorama-result");
