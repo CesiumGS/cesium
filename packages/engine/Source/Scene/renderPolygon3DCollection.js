@@ -97,11 +97,11 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
       polygon.getColor(color);
 
       for (let j = 0, jl = polygon.getTriangleCount(); j < jl; j++) {
-        indexArray[iOffset] = polygonIndexArray[iOffset] + vOffset;
-        indexArray[iOffset + 1] = polygonIndexArray[iOffset + 1] + vOffset;
-        indexArray[iOffset + 2] = polygonIndexArray[iOffset + 2] + vOffset;
+        indexArray[iOffset * 3] = polygonIndexArray[j * 3] + vOffset;
+        indexArray[iOffset * 3 + 1] = polygonIndexArray[j * 3 + 1] + vOffset;
+        indexArray[iOffset * 3 + 2] = polygonIndexArray[j * 3 + 2] + vOffset;
 
-        iOffset += 3;
+        iOffset++;
       }
 
       for (let j = 0, jl = polygon.getPositionCount(); j < jl; j++) {

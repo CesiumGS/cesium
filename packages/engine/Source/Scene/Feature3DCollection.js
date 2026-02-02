@@ -5,7 +5,6 @@ import Color from "../Core/Color.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Feature3D from "./Feature3D.js";
 
 const { ERR_INSTANTIATION, ERR_NOT_IMPLEMENTED } = Feature3D;
@@ -26,7 +25,6 @@ class Feature3DCollection {
    * @param {number} [options.maxFeatureCount=Feature3D.DEFAULT_COUNT]
    * @param {number} [options.maxVertexCount=Feature3D.DEFAULT_COUNT]
    * @param {boolean} [options.show=true]
-   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
@@ -34,9 +32,6 @@ class Feature3DCollection {
 
     /** @type {boolean} */
     this.show = options.show ?? true;
-
-    /** @type {Matrix4} */
-    this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
     /** @type {boolean} */
     this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
