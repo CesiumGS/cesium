@@ -278,18 +278,27 @@ function getPropertyTableInfo(
   const featureSetInfo =
     tableToFeatureSetInfo.get(String(propertyTable.id)) ?? {};
 
-  const propertiesArray = Object.entries(propertyTable.properties).filter(
-    ([id, property]) => property.classProperty.isGpuCompatible(NUM_CHANNELS),
-  );
-  const infoArray = new Array(propertiesArray.length);
-
   const shaderDestination =
     featureSetInfo.shaderDestination ?? ShaderDestination.BOTH;
 
-  for (let i = 0; i < propertiesArray.length; i++) {
-    const [propertyId, property] = propertiesArray[i];
+  const classProperties = propertyTable.class?.properties ?? {};
+  const infoArray = [];
 
-    infoArray[i] = {
+  for (const propertyId in classProperties) {
+    if (!classProperties.hasOwnProperty(propertyId)) {
+      continue;
+    }
+
+    const property = propertyTable.properties[propertyId];
+    if (!defined(property)) {
+      continue;
+    }
+
+    if (!property.classProperty.isGpuCompatible(NUM_CHANNELS)) {
+      continue;
+    }
+
+    infoArray.push({
       metadataVariable: sanitizeGlslIdentifier(propertyId),
       property,
       type: property.classProperty.type,
@@ -298,7 +307,7 @@ function getPropertyTableInfo(
       shaderDestination: shaderDestination,
       propertyTable: propertyTable,
       featureIdVariableName: featureSetInfo.variableName,
-    };
+    });
   }
 
   return infoArray;
