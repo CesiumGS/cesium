@@ -6,6 +6,8 @@
 
 #### Fixes :wrench:
 
+- Fixed error with `DynamicEnvironmentMapManager` when `ContextLimits.maximumCubeMapSize` is zero.
+- Improved voxel memory usage by reworking `Megatexture` to use `Texture3D`. [#12570](https://github.com/CesiumGS/cesium/issues/12570)
 - Fixes jitter artifacts on Intel Arc GPUs [#12879](https://github.com/CesiumGS/cesium/issues/12879)
 - Fixed label sizing for some fonts and characters [#9767](https://github.com/CesiumGS/cesium/issues/9767)
 - Fix scene `sampleHeightMostDetailed` does not work when a tileset is added by primitive collection [#13097](https://github.com/CesiumGS/cesium/issues/13097)
@@ -24,6 +26,10 @@
 #### Deprecated :hourglass_flowing_sand:
 
 - Beginning in CesiumJS 1.140, billboards and labels will require device support for WebGL 2, or WebGL 1 with ANGLE_instanced_arrays and MAX_VERTEX_TEXTURE_IMAGE_UNITS > 0. For more information or to share feedback, please see [#13053](https://github.com/CesiumGS/cesium/issues/13053). [#13067](https://github.com/CesiumGS/cesium/issues/13067)
+
+#### Additions :tada:
+
+- Added support for the proposed [BENTLEY_materials_point_style](https://github.com/CesiumGS/glTF/pull/91) glTF extension. This allows point primitives to have a diameter property specified and respected when loaded via glTF.
 
 ## 1.136 - 2025-12-01
 
