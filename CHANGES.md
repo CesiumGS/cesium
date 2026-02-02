@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.139 - 2026-03-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed an issue where object picking behaved unexpectedly after returning from VR mode to normal mode. [#7819](https://github.com/CesiumGS/cesium/issues/7819)
+
 ## 1.138 - 2026-02-02
 
 ### @cesium/engine
