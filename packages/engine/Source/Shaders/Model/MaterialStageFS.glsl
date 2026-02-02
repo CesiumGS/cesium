@@ -437,8 +437,14 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
     #endif
 
     vec4 baseColorWithAlpha = vec4(1.0);
-    // Regardless of whether we use PBR, set a base color
-    #ifdef HAS_BASE_COLOR_TEXTURE
+    // Regardless of whether we use PBR, set a base color.
+    // HAS_BACKGROUND_FILL (from BENTLEY_materials_planar_fill) overrides with
+    // the view's background color to create an invisible masking polygon.
+    // The background color is in sRGB, so convert to linear to match the
+    // material pipeline's expected color space.
+    #ifdef HAS_BACKGROUND_FILL
+        baseColorWithAlpha = czm_srgbToLinear(czm_backgroundColor);
+    #elif defined(HAS_BASE_COLOR_TEXTURE)
         baseColorWithAlpha = getBaseColorFromTexture();
     #elif defined(HAS_BASE_COLOR_FACTOR)
         baseColorWithAlpha = u_baseColorFactor;
