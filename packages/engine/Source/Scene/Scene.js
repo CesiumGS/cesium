@@ -1488,28 +1488,26 @@ Object.defineProperties(Scene.prototype, {
         );
       }
       //>>includeEnd('debug');
-      if (this._useWebVR !== value) {
-        this._useWebVR = value;
-        if (this._useWebVR) {
-          this._frameState.creditDisplay.container.style.visibility = "hidden";
-          this._cameraVR = new Camera(this);
-          if (!defined(this._deviceOrientationCameraController)) {
-            this._deviceOrientationCameraController =
-              new DeviceOrientationCameraController(this);
-          }
-
-          this._aspectRatioVR = this.camera.frustum.aspectRatio;
-        } else {
-          this._frameState.creditDisplay.container.style.visibility = "visible";
-          this._cameraVR = undefined;
+      this._useWebVR = value;
+      if (this._useWebVR) {
+        this._frameState.creditDisplay.container.style.visibility = "hidden";
+        this._cameraVR = new Camera(this);
+        if (!defined(this._deviceOrientationCameraController)) {
           this._deviceOrientationCameraController =
-            this._deviceOrientationCameraController &&
-            !this._deviceOrientationCameraController.isDestroyed() &&
-            this._deviceOrientationCameraController.destroy();
-
-          this.camera.frustum.aspectRatio = this._aspectRatioVR;
-          this.camera.frustum.xOffset = 0.0;
+            new DeviceOrientationCameraController(this);
         }
+
+        this._aspectRatioVR = this.camera.frustum.aspectRatio;
+      } else {
+        this._frameState.creditDisplay.container.style.visibility = "visible";
+        this._cameraVR = undefined;
+        this._deviceOrientationCameraController =
+          this._deviceOrientationCameraController &&
+          !this._deviceOrientationCameraController.isDestroyed() &&
+          this._deviceOrientationCameraController.destroy();
+
+        this.camera.frustum.aspectRatio = this._aspectRatioVR;
+        this.camera.frustum.xOffset = 0.0;
       }
     },
   },
