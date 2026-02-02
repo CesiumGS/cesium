@@ -541,10 +541,10 @@ function getVertexPosition(
     result,
   );
 
-  // Due to wrapping in 2D/CV modes, near the antimeridian, the vertex 
+  // Due to wrapping in 2D/CV modes, near the antimeridian, the vertex
   // position may correspond to the other side of the world from the ray origin.
   // Compare the vertex position to the ray origin and adjust it accordingly.
-  // A spherical approximation is sufficient for cylindrical projections, 
+  // A spherical approximation is sufficient for cylindrical projections,
   // like mercator and geographic.
   const worldWidth = CesiumMath.TWO_PI * projection.ellipsoid.maximumRadius;
   const k = Math.round((ray.origin.y - position.y) / worldWidth);
