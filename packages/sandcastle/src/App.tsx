@@ -363,14 +363,9 @@ function App() {
   }
 
   function openStandalone() {
-    let baseHref = getBaseUrl();
-    const pos = baseHref.lastIndexOf("/");
-    baseHref = `${baseHref.substring(0, pos)}/gallery/`;
-
     const base64String = makeCompressedBase64String({
       code: codeState.code,
       html: codeState.html,
-      baseHref,
     });
 
     let url = getBaseUrl();
