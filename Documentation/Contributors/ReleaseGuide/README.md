@@ -17,27 +17,27 @@ There is no one release manager; instead, [our community shares the responsibili
 ## One week before release
 
 1. **Update outdated npm dependencies.**
-    - List outdated dependencies with [`npm outdated`](https://docs.npmjs.com/cli/v8/commands/npm-outdated):
-        - Run `npm install`, then `npm outdated`.
-    - For each outdated dependency, if any:
-        - Check against the [`dependencies` label](https://github.com/CesiumGS/cesium/issues?q=is%3Aissue+is%3Aopen+label%3Adependencies) for any known compatability issues or specifics on pinned versions. Skip the dependency update if it is still incompatable. 
-        - To increment a dependency, checkout a new branch. Run `npm install <packagename>@latest` and verify the update.
-        - If an update is incompatible, open a new issue tagged with the `dependencies` label.
-        - If an update can be resolved, commit the changes and open a PR for review.
+   - List outdated dependencies with [`npm outdated`](https://docs.npmjs.com/cli/v8/commands/npm-outdated):
+     - Run `npm install`, then `npm outdated`.
+   - For each outdated dependency, if any:
+     - Check against the [`dependencies` label](https://github.com/CesiumGS/cesium/issues?q=is%3Aissue+is%3Aopen+label%3Adependencies) for any known compatability issues or specifics on pinned versions. Skip the dependency update if it is still incompatible.
+     - To increment a dependency, checkout a new branch. Run `npm install <packagename>@latest` and verify the update.
+     - If an update is incompatible, open a new issue tagged with the `dependencies` label.
+     - If an update can be resolved, commit the changes and open a PR for review.
 
-> [!IMPORTANT]
-> We pin an exact version of **`prettier`**. If the version of `prettier` should be incremented, use an exact version by running `npm install prettier@latest --save-exact`. 
-> 
-> If you run `npm install prettier@latest` without the `--save-exact` argument, remove the `^` in `package.json`.
->
-> It's reccomended to commit the package update and a seperate commit for any automated formatting updates to streamline PR reviews.
-        
+   > [!IMPORTANT]
+   > We pin an exact version of **`prettier`**. If the version of `prettier` should be incremented, use an exact version by running `npm install prettier@latest --save-exact`.
+   >
+   > If you run `npm install prettier@latest` without the `--save-exact` argument, remove the `^` in `package.json`.
+   >
+   > It's reccomended to commit the package update and a seperate commit for any automated formatting updates to streamline PR reviews.
+
 2. **Check the [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release).** Work with the team to ensure accountability for priority items—This can be done via the "CesiumJS" channel in Teams.
-    - Ask the team if there are any items not tagged with the `priority - next release` label which should be.
-    - Any outstanding items, post a message to the  to figure out what needs to be addressed before we can release.
+   - Ask the team if there are any items not tagged with the `priority - next release` label which should be.
+   - Any outstanding items, post a message to the to figure out what needs to be addressed before we can release.
 3. **Check the [`remove in <version number>` issues](https://github.com/CesiumGS/cesium/labels?q=remove).**
-    - Search the codebase for any scheduled deprecations and ensure a corresponding tagged issue exists.
-    - Open a PR to address each items scheduled for removal in the next release, if any.
+   - Search the codebase for any scheduled deprecations and ensure a corresponding tagged issue exists.
+   - Open a PR to address each items scheduled for removal in the next release, if any.
 4. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
 5. Start thinking ahead for a good image for the release blog post in case you need to prepare any data, assets, or examples.
 
