@@ -1,0 +1,390 @@
+/**
+ * SimpleDiffPreview Component Styles
+ *
+ * Lightweight text-based diff display styles.
+ * Shares similar design patterns with DiffPreview but optimized for text rendering.
+ */
+
+.simple-diff-preview {
+  display: flex;
+  flex-direction: column;
+  background: var(--stratakit-color-bg-path-base, #1a1a1a);
+  border: 1px solid var(--stratakit-color-border-neutral-muted, #404040);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0.75rem 0;
+  transition: all 0.2s ease;
+}
+
+.simple-diff-preview.collapsed {
+  background: var(--stratakit-color-bg-depth-plus-1, #2a2a2a);
+}
+
+.simple-diff-preview.success {
+  border-color: var(--stratakit-color-border-accent-base, #4a9eff);
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+  animation: successPulse 0.5s ease;
+}
+
+@keyframes successPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(74, 158, 255, 0.3);
+  }
+}
+
+/* Header */
+.simple-diff-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted, #404040);
+  background: var(--stratakit-color-bg-depth-plus-1, #2a2a2a);
+  user-select: none;
+}
+
+.simple-diff-preview.collapsed .simple-diff-preview-header {
+  border-bottom: none;
+}
+
+.simple-diff-preview-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary, #e5e5e5);
+}
+
+.simple-diff-preview-collapse-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--stratakit-color-text-neutral-secondary, #999);
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.simple-diff-preview-collapse-btn:hover {
+  background: var(--stratakit-color-bg-depth-plus-1, #2a2a2a);
+  color: var(--stratakit-color-text-neutral-primary, #e5e5e5);
+}
+
+.simple-diff-preview-collapse-btn:focus {
+  outline: 2px solid var(--stratakit-color-border-accent-base, #4a9eff);
+  outline-offset: 2px;
+}
+
+.collapse-icon {
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.collapse-icon.collapsed {
+  transform: rotate(-90deg);
+}
+
+.simple-diff-preview-filename {
+  font-family: var(--stratakit-font-family-mono, "Monaco", "Menlo", monospace);
+  font-size: 0.875rem;
+}
+
+/* Stats */
+.simple-diff-preview-stats {
+  display: flex;
+  gap: 0.75rem;
+  font-family: var(--stratakit-font-family-mono, "Monaco", "Menlo", monospace);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.stat-added,
+.stat-removed {
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-added {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.stat-removed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Content area */
+.simple-diff-preview-content {
+  background: var(--stratakit-color-bg-page-depth, #0d0d0d);
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+.simple-diff-lines {
+  margin: 0;
+  padding: 0.5rem 0;
+  font-family: var(
+    --stratakit-font-family-mono,
+    "Monaco",
+    "Menlo",
+    "Ubuntu Mono",
+    monospace
+  );
+  font-size: 0.813rem;
+  line-height: 1.5;
+  color: var(--stratakit-color-text-neutral-primary, #e5e5e5);
+}
+
+/* Diff lines */
+.diff-line {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  min-height: 20px;
+}
+
+.diff-line-added {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.diff-line-removed {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.diff-line-unchanged {
+  background: transparent;
+}
+
+.diff-line:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.diff-line-added:hover {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.diff-line-removed:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Line numbers */
+.line-number {
+  display: inline-block;
+  width: 3.5rem;
+  text-align: right;
+  color: var(--stratakit-color-text-neutral-secondary, #999);
+  font-size: 0.75rem;
+  user-select: none;
+  padding: 0 0.5rem;
+  flex-shrink: 0;
+}
+
+.line-number.original {
+  border-right: 1px solid var(--stratakit-color-border-neutral-muted, #404040);
+}
+
+.line-number.modified {
+  border-right: 1px solid var(--stratakit-color-border-neutral-muted, #404040);
+}
+
+/* Line marker */
+.line-marker {
+  display: inline-block;
+  width: 1.5rem;
+  text-align: center;
+  font-weight: bold;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.diff-line-added .line-marker {
+  color: #22c55e;
+}
+
+.diff-line-removed .line-marker {
+  color: #ef4444;
+}
+
+/* Line content */
+.line-content {
+  flex: 1;
+  white-space: pre;
+  padding-left: 0.5rem;
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  border: none;
+  color: inherit;
+}
+
+.diff-line-added .line-content {
+  color: #d4fce4;
+}
+
+.diff-line-removed .line-content {
+  color: #fecaca;
+}
+
+/* Action buttons */
+.simple-diff-preview-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted, #404040);
+  background: var(--stratakit-color-bg-depth-plus-1, #2a2a2a);
+  gap: 0.5rem;
+}
+
+.simple-diff-preview-actions-left,
+.simple-diff-preview-actions-right {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.simple-diff-preview-actions button {
+  transition: all 0.2s ease;
+}
+
+.simple-diff-preview-actions .apply-button {
+  position: relative;
+}
+
+/* Spinner for loading state */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 0.25rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Success message */
+.simple-diff-preview-success {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(34, 197, 94, 0.95);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .simple-diff-preview-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .simple-diff-preview-stats {
+    align-self: flex-end;
+  }
+
+  .simple-diff-preview-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .simple-diff-preview-actions-left,
+  .simple-diff-preview-actions-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .line-number {
+    width: 2.5rem;
+    font-size: 0.7rem;
+  }
+
+  .simple-diff-lines {
+    font-size: 0.75rem;
+  }
+}
+
+/* Accessibility improvements */
+.simple-diff-preview button:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-base, #4a9eff);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .simple-diff-preview {
+    border-width: 2px;
+  }
+
+  .stat-added,
+  .stat-removed {
+    border-width: 2px;
+  }
+
+  .diff-line-added {
+    background: rgba(34, 197, 94, 0.25);
+  }
+
+  .diff-line-removed {
+    background: rgba(239, 68, 68, 0.25);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .simple-diff-preview,
+  .collapse-icon,
+  .simple-diff-preview-actions button,
+  .spinner {
+    animation: none;
+    transition: none;
+  }
+
+  .collapse-icon.collapsed {
+    transform: none;
+  }
+}

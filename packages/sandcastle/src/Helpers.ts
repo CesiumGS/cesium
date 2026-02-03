@@ -1,4 +1,5 @@
 import Pako from "pako";
+import { ApiKeyManager } from "./AI/ApiKeyManager";
 
 export function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
   let imports = "";
@@ -10,7 +11,17 @@ export function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
     imports += `import Sandcastle from "Sandcastle";\n`;
   }
 
-  return `${addExtraLine ? "\n" : ""}${code}
+  // Set the Cesium Ion access token if configured in localStorage
+  // This runs before the user's code, after imports are hoisted
+  let tokenSetup = "";
+  const cesiumIonToken = ApiKeyManager.getCesiumIonToken() || "";
+  if (cesiumIonToken) {
+    tokenSetup = `// Set default Cesium Ion access token
+Cesium.Ion.defaultAccessToken = ${JSON.stringify(cesiumIonToken)};
+`;
+  }
+
+  return `${addExtraLine ? "\n" : ""}${tokenSetup}${code}
 // Imports are hoisted. Adding them here preserves line numbers with the editor
 ${imports}
 // Call default actions that might have been set up

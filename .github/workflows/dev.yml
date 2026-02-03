@@ -31,6 +31,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: us-east-1
       BRANCH: ${{ github.ref_name }}
+      CESIUM_ACCESS_TOKEN: ${{ secrets.CESIUM_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v5
       - name: install node 22
@@ -64,6 +65,8 @@ jobs:
         run: npm run cloc
   node-20:
     runs-on: ubuntu-latest
+    env:
+      CESIUM_ACCESS_TOKEN: ${{ secrets.CESIUM_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v5
       - name: install node 20

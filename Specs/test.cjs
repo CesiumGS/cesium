@@ -4,10 +4,16 @@ const assert = require("node:assert");
 const {
   Cartographic,
   createWorldTerrainAsync,
+  Ion,
   sampleTerrain,
 } = require("cesium");
 
 // NodeJS smoke screen test
+
+// Use CESIUM_ACCESS_TOKEN env var if available
+if (process.env.CESIUM_ACCESS_TOKEN) {
+  Ion.defaultAccessToken = process.env.CESIUM_ACCESS_TOKEN;
+}
 
 async function test() {
   const provider = await createWorldTerrainAsync();

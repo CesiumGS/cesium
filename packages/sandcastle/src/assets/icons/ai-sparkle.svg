@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="icon" fill="none" viewBox="0 0 16 16">
+    <path fill="currentColor" d="M8 1c.2 0 .38.12.46.3L10 6l4.7 1.54a.5.5 0 0 1 0 .92L10 10l-1.54 4.7a.5.5 0 0 1-.92 0L6 10l-4.7-1.54a.5.5 0 0 1 0-.92L6 6l1.54-4.7A.5.5 0 0 1 8 1Z"/>
+  </symbol>
+  <symbol id="icon-large" fill="none" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12 2c.3 0 .57.18.69.45L15 9l6.55 2.31a.75.75 0 0 1 0 1.38L15 15l-2.31 6.55a.75.75 0 0 1-1.38 0L9 15l-6.55-2.31a.75.75 0 0 1 0-1.38L9 9l2.31-6.55A.75.75 0 0 1 12 2Z"/>
+  </symbol>
+  <use href="#icon"/>
+</svg>

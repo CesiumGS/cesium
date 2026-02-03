@@ -1,0 +1,94 @@
+.guidance-prompt {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--stratakit-color-bg-panel-depth, #1a1a1a);
+  border: 2px solid var(--stratakit-color-border-accent-default, #f59e0b);
+  border-radius: 8px;
+  animation: guidance-prompt-enter 0.3s ease-out;
+}
+
+@keyframes guidance-prompt-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.guidance-prompt-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.guidance-prompt-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.guidance-prompt-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.guidance-prompt-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--stratakit-color-bg-input-default, #0d0d0d);
+  border: 1px solid var(--stratakit-color-border-neutral-default, #404040);
+  border-radius: 6px;
+  color: var(--stratakit-color-text-default, #ffffff);
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+  margin-bottom: 0.75rem;
+  transition: border-color 0.2s ease;
+}
+
+.guidance-prompt-textarea:focus {
+  outline: none;
+  border-color: var(--stratakit-color-border-accent-default, #f59e0b);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1);
+}
+
+.guidance-prompt-textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.guidance-prompt-textarea::placeholder {
+  color: var(--stratakit-color-text-subtle, #666);
+}
+
+.guidance-prompt-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .guidance-prompt {
+  background: #1a1a1a;
+  border-color: #f59e0b;
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .guidance-prompt {
+  background: #fffbeb;
+  border-color: #f59e0b;
+}
+
+[data-theme="light"] .guidance-prompt-textarea {
+  background: #ffffff;
+  border-color: #d4d4d4;
+  color: #0d0d0d;
+}
+
+[data-theme="light"] .guidance-prompt-textarea::placeholder {
+  color: #999;
+}

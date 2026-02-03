@@ -101,15 +101,23 @@
         display: none;
       }
     </style>
+    <script>
+      window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
+    </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "cesium": "__CESIUM_BASE_URL__/index.js",
+          "Sandcastle": "/templates/Sandcastle.ts"
+        }
+      }
+    </script>
     <script type="module">
       import { unstable_loadStyles } from "@stratakit/foundations";
 
       unstable_loadStyles(document);
     </script>
     <link rel="stylesheet" href="/styles/stratakit-mimic/styles.css" />
-    <script>
-      window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
-    </script>
   </head>
   <body class="sandcastle-loading">
     <script

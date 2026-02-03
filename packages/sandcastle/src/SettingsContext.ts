@@ -1,4 +1,5 @@
 import { createContext } from "react";
+import type { AutoIterationConfig } from "./AI/types";
 
 export type AvailableFontId =
   | "droid-sans"
@@ -41,6 +42,14 @@ export type Settings = {
   fontSize: number;
   fontLigatures: boolean;
   defaultPanel: LeftPanel;
+  autoIteration: AutoIterationConfig;
+  extendedThinking: {
+    enabled: boolean;
+    budget: number;
+  };
+  autoApplyChanges: boolean;
+  pinnedModels: string[];
+  customPromptAddendum: string;
 };
 
 export const initialSettings: Settings = {
@@ -49,6 +58,22 @@ export const initialSettings: Settings = {
   fontSize: 14,
   fontLigatures: false,
   defaultPanel: "gallery",
+  autoIteration: {
+    enabled: true,
+    maxIterations: 3,
+    maxTotalRequests: 20,
+    escalationThreshold: 3,
+    waitTimeMs: 5000,
+    detectOscillation: true,
+    includeStackTraces: true,
+  },
+  extendedThinking: {
+    enabled: true,
+    budget: 2048,
+  },
+  autoApplyChanges: true,
+  pinnedModels: [],
+  customPromptAddendum: "",
 };
 
 export const SettingsContext = createContext<{
