@@ -12,6 +12,9 @@ const scratchTrianglePoints = [
 ];
 const scratchTriangleAABB = new AxisAlignedBoundingBox();
 
+const TILE_AABB_MAX = new Cartesian3(0.5, 0.5, 0.5);
+const TILE_AABB_MIN = new Cartesian3(-0.5, -0.5, -0.5);
+
 /**
  * Builds the next layer of the terrain picker's quadtree by determining which triangles intersect
  * each of the four child nodes. (Essentially distributing the parent's triangles to its children.)
@@ -42,7 +45,7 @@ function incrementallyBuildTerrainPicker(parameters, transferableObjects) {
   );
 
   const triangleIndices = new Uint32Array(parameters.triangleIndices);
-  const trianglePositions = new Float32Array(parameters.trianglePositions);
+  const trianglePositions = new Float64Array(parameters.trianglePositions);
   const intersectingTrianglesArrays = Array.from({ length: 4 }, () => []);
 
   for (let j = 0; j < triangleIndices.length; j++) {
@@ -102,7 +105,18 @@ function createAABBFromTriangle(inverseTransform, trianglePoints) {
     trianglePoints[2],
   );
 
-  return AxisAlignedBoundingBox.fromPoints(trianglePoints, scratchTriangleAABB);
+  const aabb = AxisAlignedBoundingBox.fromPoints(
+    trianglePoints,
+    scratchTriangleAABB,
+  );
+
+  // In 2D mode, sometimes the height-scale of a tile is 0. See {@link TerrainMesh#computeTransform2D}.
+  // This makes the inverseTransform degenerate, so we set the height-scale to 1 to be prevent that. However, this is artificial and
+  // can lead to the triangle's AABB extending beyond the (height) bounds of the tile's AABB.
+  // Thus, we clamp the triangle's AABB to the tile's local-space AABB.
+  Cartesian3.clamp(aabb.minimum, TILE_AABB_MIN, TILE_AABB_MAX, aabb.minimum);
+  Cartesian3.clamp(aabb.maximum, TILE_AABB_MIN, TILE_AABB_MAX, aabb.maximum);
+  return aabb;
 }
 
 export default createTaskProcessorWorker(incrementallyBuildTerrainPicker);
