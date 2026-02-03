@@ -18,6 +18,9 @@ import { Button, Kbd, Tooltip } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import { play, textAlignLeft } from "./icons";
 import { setupSandcastleSnippets } from "./setupSandcastleSnippets";
+import { InlineChangeWidget } from "./InlineChangeWidget";
+import type { InlineChange, DiffBlock } from "./AI/types";
+import { DiffApplier } from "./AI/DiffApplier";
 
 import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import JsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
@@ -51,8 +54,22 @@ self.MonacoEnvironment = {
 // open network access
 loader.config({ monaco });
 
+const TYPES_URL = `${__PAGE_BASE_URL__}Source/Cesium.d.ts`;
+const SANDCASTLE_TYPES_URL = `templates/Sandcastle.d.ts`;
+
 export type SandcastleEditorRef = {
   formatCode(): void;
+  applyAiEdit(code?: string, language?: "javascript" | "html"): void;
+  queueInlineChange(
+    diff: import("./AI/types").DiffBlock,
+    language: "javascript" | "html",
+    startLine: number,
+    endLine: number,
+  ): void;
+  clearInlineChanges(): void;
+  getInlineChanges(): InlineChange[];
+  acceptInlineChange(changeId: string): void;
+  rejectInlineChange(changeId: string): void;
 };
 
 function SandcastleEditor({
@@ -65,6 +82,7 @@ function SandcastleEditor({
   onRun: onRunSandcastle,
   setJs,
   readOnly,
+  onQueueInlineChange,
 }: {
   ref?: RefObject<SandcastleEditorRef | null>;
   darkTheme: boolean;
@@ -75,9 +93,17 @@ function SandcastleEditor({
   onRun: () => void;
   setJs: (newCode: string) => void;
   readOnly: boolean;
+  onQueueInlineChange?: (changes: InlineChange[]) => void;
 }) {
   const [activeTab, setActiveTab] = useState<"js" | "html">("js");
   const internalEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
+  const [editorInstance, setEditorInstance] =
+    useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+
+  // Inline change management
+  const [inlineChanges, setInlineChanges] = useState<InlineChange[]>([]);
+  const [currentChangeIndex, setCurrentChangeIndex] = useState(0);
+  const decorationsRef = useRef<string[]>([]);
 
   const {
     settings: { fontFamily, fontSize, fontLigatures },
@@ -116,28 +142,208 @@ function SandcastleEditor({
     });
   }, [fontSize]);
 
+  // Update Monaco decorations when inline changes change
+  useEffect(() => {
+    const editor = internalEditorRef.current;
+    if (!editor || inlineChanges.length === 0) {
+      // Clear decorations if no changes
+      if (decorationsRef.current.length > 0) {
+        decorationsRef.current =
+          editor?.deltaDecorations(decorationsRef.current, []) || [];
+      }
+      return;
+    }
+
+    // Filter changes for the current active tab
+    const relevantChanges = inlineChanges.filter((change) => {
+      return (
+        (activeTab === "js" && change.language === "javascript") ||
+        (activeTab === "html" && change.language === "html")
+      );
+    });
+
+    // Create decorations for each change
+    const newDecorations: monaco.editor.IModelDeltaDecoration[] =
+      relevantChanges.map((change) => ({
+        range: new monaco.Range(change.startLine, 1, change.endLine, 1),
+        options: {
+          isWholeLine: true,
+          className: "inline-change-decoration",
+          glyphMarginClassName: "inline-change-decoration-glyph",
+          linesDecorationsClassName: "inline-change-decoration-glyph",
+        },
+      }));
+
+    // Apply decorations
+    decorationsRef.current = editor.deltaDecorations(
+      decorationsRef.current,
+      newDecorations,
+    );
+  }, [inlineChanges, activeTab]);
+
   function formatEditor() {
     internalEditorRef.current?.getAction("editor.action.formatDocument")?.run();
   }
+
+  // Queue a new inline change from the AI
+  const queueInlineChange = (
+    diff: DiffBlock,
+    language: "javascript" | "html",
+    startLine: number,
+    endLine: number,
+  ) => {
+    const newChange: InlineChange = {
+      id: crypto.randomUUID(),
+      diff,
+      language,
+      startLine,
+      endLine,
+      timestamp: Date.now(),
+      source: "Copilot",
+    };
+
+    setInlineChanges((prev) => [...prev, newChange]);
+
+    // Switch to the appropriate tab
+    if (language === "javascript" && activeTab !== "js") {
+      setActiveTab("js");
+    } else if (language === "html" && activeTab !== "html") {
+      setActiveTab("html");
+    }
+  };
+
+  // Accept a change and apply it
+  const acceptInlineChange = (changeId: string) => {
+    const change = inlineChanges.find((c) => c.id === changeId);
+    if (!change) {
+      return;
+    }
+
+    // Apply the diff
+    const applier = new DiffApplier();
+    const sourceCode = change.language === "javascript" ? js : html;
+    const result = applier.applyDiffs(sourceCode, [change.diff], {
+      strict: false,
+    });
+
+    if (result.success && result.modifiedCode) {
+      if (change.language === "javascript") {
+        setJs(result.modifiedCode);
+      } else {
+        onHtmlChange(
+          result.modifiedCode,
+          {} as monaco.editor.IModelContentChangedEvent,
+        );
+      }
+    }
+
+    // Remove this change from the queue
+    setInlineChanges((prev) => prev.filter((c) => c.id !== changeId));
+
+    // Adjust current index if needed
+    setCurrentChangeIndex((prevIndex) => {
+      const newLength = inlineChanges.length - 1;
+      if (newLength === 0) {
+        return 0;
+      }
+      return Math.min(prevIndex, newLength - 1);
+    });
+  };
+
+  // Reject a change and remove it
+  const rejectInlineChange = (changeId: string) => {
+    setInlineChanges((prev) => prev.filter((c) => c.id !== changeId));
+
+    // Adjust current index if needed
+    setCurrentChangeIndex((prevIndex) => {
+      const newLength = inlineChanges.length - 1;
+      if (newLength === 0) {
+        return 0;
+      }
+      return Math.min(prevIndex, newLength - 1);
+    });
+  };
+
+  // Clear all inline changes
+  const clearInlineChanges = () => {
+    setInlineChanges([]);
+    setCurrentChangeIndex(0);
+  };
+
+  // Notify parent component when inline changes are queued
+  useEffect(() => {
+    onQueueInlineChange?.(inlineChanges);
+  }, [inlineChanges, onQueueInlineChange]);
 
   useImperativeHandle(ref, () => {
     return {
       formatCode() {
         formatEditor();
       },
+      applyAiEdit(code?: string, language?: "javascript" | "html") {
+        if (!code) {
+          return;
+        }
+
+        if (language === "javascript") {
+          // Replace entire JS code
+          setJs(code);
+          // Switch to JS tab if not already there
+          setActiveTab("js");
+        } else if (language === "html") {
+          // For now, we'll just replace the entire HTML
+          // In the future, could be more sophisticated with partial updates
+          onHtmlChange(code, {} as monaco.editor.IModelContentChangedEvent);
+          setActiveTab("html");
+        }
+      },
+      queueInlineChange,
+      clearInlineChanges,
+      getInlineChanges: () => inlineChanges,
+      acceptInlineChange,
+      rejectInlineChange,
     };
-  }, []);
+  }, [
+    setJs,
+    onHtmlChange,
+    setActiveTab,
+    inlineChanges,
+    queueInlineChange,
+    acceptInlineChange,
+    rejectInlineChange,
+  ]);
 
   function handleEditorDidMount(
     editor: monaco.editor.IStandaloneCodeEditor,
     monaco: Monaco,
   ) {
     internalEditorRef.current = editor;
+    setEditorInstance(editor);
 
+    // Add run sandcastle command
     monaco.editor.addCommand({
       id: "run-sandcastle",
       run: () => {
         onRunSandcastle();
+      },
+    });
+
+    // Add inline change commands
+    monaco.editor.addCommand({
+      id: "accept-inline-change",
+      run: () => {
+        if (inlineChanges.length > 0 && inlineChanges[currentChangeIndex]) {
+          acceptInlineChange(inlineChanges[currentChangeIndex].id);
+        }
+      },
+    });
+
+    monaco.editor.addCommand({
+      id: "reject-inline-change",
+      run: () => {
+        if (inlineChanges.length > 0 && inlineChanges[currentChangeIndex]) {
+          rejectInlineChange(inlineChanges[currentChangeIndex].id);
+        }
       },
     });
 
@@ -161,6 +367,15 @@ function SandcastleEditor({
       { keybinding: KeyCode.F8, command: "run-sandcastle" },
       { keybinding: KeyMod.CtrlCmd | KeyCode.KeyS, command: "run-sandcastle" },
       { keybinding: KeyMod.Alt | KeyCode.Enter, command: "run-sandcastle" },
+      // Inline change keyboard shortcuts
+      {
+        keybinding: KeyMod.CtrlCmd | KeyCode.KeyY,
+        command: "accept-inline-change",
+      },
+      {
+        keybinding: KeyMod.CtrlCmd | KeyCode.KeyN,
+        command: "reject-inline-change",
+      },
     ]);
   }
 
@@ -209,63 +424,25 @@ function SandcastleEditor({
   async function setTypes(monaco: Monaco) {
     // https://microsoft.github.io/monaco-editor/playground.html?source=v0.52.2#example-extending-language-services-configure-javascript-defaults
 
-    const typeImportPaths = __VITE_TYPE_IMPORT_PATHS__ ?? {};
-
-    const typeImports: {
-      url: string;
-      filename: string;
-      transformTypes?: (typesContent: string) => string;
-    }[] = [
-      {
-        url: typeImportPaths["cesium"],
-        filename: "ts:cesium.d.ts",
-        transformTypes(typesContent: string) {
-          // define a "global" variable so types work even with out the import statement
-          return `${typesContent}\nvar Cesium: typeof import('cesium');`;
-        },
-      },
-      {
-        url: typeImportPaths["Sandcastle"],
-        filename: "ts:sandcastle.d.ts",
-        transformTypes(typesContent: string) {
-          return `declare module 'Sandcastle' {
-      ${typesContent}
-    }
-      var Sandcastle: typeof import('Sandcastle').default;`;
-        },
-      },
-    ];
-
-    const extraImportNames = Object.keys(typeImportPaths).filter(
-      (name) => !["cesium", "Sandcastle"].includes(name),
+    const cesiumTypes = await (await fetch(TYPES_URL)).text();
+    // define a "global" variable so types work even with out the import statement
+    const cesiumTypesWithGlobal = `${cesiumTypes}\nvar Cesium: typeof import('cesium');`;
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+      cesiumTypesWithGlobal,
+      "ts:cesium.d.ts",
     );
-    for (const extraName of extraImportNames) {
-      typeImports.push({
-        url: typeImportPaths[extraName],
-        filename: `ts:${extraName.replace(/@\//, "-")}.d.ts`,
-      });
-    }
 
-    await Promise.allSettled(
-      typeImports.map(async (typeImport) => {
-        const { url, transformTypes, filename } = typeImport;
-        if (!url) {
-          return;
-        }
-        try {
-          const responseText = await (await fetch(url)).text();
-          const typesContent = transformTypes
-            ? transformTypes(responseText)
-            : responseText;
-          monaco.languages.typescript.javascriptDefaults.addExtraLib(
-            typesContent,
-            filename,
-          );
-        } catch (error) {
-          console.error(`Unable to load types for ${filename} at ${url}`);
-          console.error(error);
-        }
-      }),
+    const sandcastleTypes = await (await fetch(SANDCASTLE_TYPES_URL)).text();
+    // surround in a module so the import statement works nicely
+    // also define a "global" so types show even if you don't have the import
+    const sandcastleModuleTypes = `declare module 'Sandcastle' {
+        ${sandcastleTypes}
+      }
+        var Sandcastle: typeof import('Sandcastle').default;`;
+
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+      sandcastleModuleTypes,
+      "ts:sandcastle.d.ts",
     );
   }
 
@@ -318,8 +495,24 @@ const ${variableName} = [
 Sandcastle.addToolbarMenu(${variableName});`);
   }
 
+  // Filter changes for current tab
+  const currentTabChanges = inlineChanges.filter((change) => {
+    return (
+      (activeTab === "js" && change.language === "javascript") ||
+      (activeTab === "html" && change.language === "html")
+    );
+  });
+
   return (
     <div className="editor-container">
+      <InlineChangeWidget
+        editor={editorInstance}
+        changes={currentTabChanges}
+        currentChangeIndex={currentChangeIndex}
+        onNavigate={setCurrentChangeIndex}
+        onAccept={acceptInlineChange}
+        onReject={rejectInlineChange}
+      />
       <div className="header">
         <Tabs.Root>
           <Tabs.TabList tone="accent">

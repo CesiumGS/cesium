@@ -1,0 +1,136 @@
+/* Compact Icon-Only Toggle Button */
+.compact-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  flex-shrink: 0;
+}
+
+.compact-toggle:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.compact-toggle:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+/* Active (enabled) state */
+.compact-toggle-active {
+  background: transparent;
+}
+
+.compact-toggle-active:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.compact-toggle-active:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+/* SVG Icon styling */
+.compact-toggle-icon {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  user-select: none;
+  color: rgba(255, 255, 255, 0.5);
+  stroke-width: 1.5;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* For image-based icons (not Lucide components), apply filter */
+img.compact-toggle-icon {
+  filter: brightness(0) invert(1); /* Make SVG images white */
+  opacity: 0.5;
+}
+
+.compact-toggle:hover:not(:disabled) .compact-toggle-icon {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.compact-toggle:hover:not(:disabled) img.compact-toggle-icon {
+  opacity: 0.9;
+}
+
+.compact-toggle-active .compact-toggle-icon {
+  color: rgba(74, 158, 255, 1);
+}
+
+.compact-toggle-active img.compact-toggle-icon {
+  opacity: 1;
+  filter: brightness(1) saturate(1.5);
+}
+
+/* Emoji icon styling */
+.compact-toggle-emoji {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.9;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.compact-toggle:hover:not(:disabled) .compact-toggle-emoji {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.compact-toggle:active:not(:disabled) .compact-toggle-emoji {
+  transform: scale(0.95);
+}
+
+/* Disabled state */
+.compact-toggle-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Focus state for accessibility */
+.compact-toggle:focus-visible {
+  outline: 2px solid rgba(74, 158, 255, 0.6);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .compact-toggle,
+  .compact-toggle-icon {
+    transition: none !important;
+  }
+
+  .compact-toggle:hover:not(:disabled),
+  .compact-toggle:active:not(:disabled),
+  .compact-toggle-active:hover:not(:disabled),
+  .compact-toggle-active:active:not(:disabled) {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .compact-toggle {
+    border-width: 2px;
+  }
+
+  .compact-toggle-active {
+    border-width: 2px;
+  }
+}

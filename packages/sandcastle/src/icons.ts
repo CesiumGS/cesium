@@ -20,8 +20,15 @@ import close from "@stratakit/icons/close.svg";
 import documentation from "@stratakit/icons/documentation.svg";
 import info from "@stratakit/icons/info.svg";
 import copy from "@stratakit/icons/copy.svg";
-import retry from "@stratakit/icons/retry.svg";
 import deleteIcon from "@stratakit/icons/delete.svg";
+import retry from "@stratakit/icons/retry.svg";
+import aiSparkle from "@stratakit/icons/ai-sparkle.svg";
+import automagic from "@stratakit/icons/automagic.svg";
+import history from "@stratakit/icons/history.svg";
+import key from "@stratakit/icons/key.svg";
+import lock from "@stratakit/icons/lock.svg";
+import geminiLogo from "./assets/icons/gemini-logo.png";
+import cesiumLogo from "./assets/cesium-logo.svg";
 
 export {
   add,
@@ -43,9 +50,16 @@ export {
   textAlignLeft,
   search,
   close,
+  deleteIcon,
   documentation,
   info,
   copy,
   retry,
-  deleteIcon,
+  aiSparkle,
+  automagic,
+  history,
+  key,
+  lock,
+  geminiLogo,
+  cesiumLogo,
 };

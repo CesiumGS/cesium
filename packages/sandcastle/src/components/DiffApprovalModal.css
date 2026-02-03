@@ -1,0 +1,221 @@
+/**
+ * DiffApprovalModal Styles
+ */
+
+.diff-approval-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+.diff-approval-modal {
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.diff-approval-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #3c3c3c;
+  background: #252526;
+}
+
+.diff-approval-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.diff-approval-file-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: #0066cc;
+  color: white;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.diff-approval-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.diff-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diff-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.diff-section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #cccccc;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.diff-section-lines {
+  font-size: 12px;
+  color: #858585;
+}
+
+.diff-code-block {
+  margin: 0;
+  padding: 12px 16px;
+  background: #1a1a1a;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.diff-code-block code {
+  color: #d4d4d4;
+  white-space: pre;
+}
+
+.diff-search {
+  border-left: 3px solid #d73a49;
+  background: #1a1a1a;
+}
+
+.diff-replace {
+  border-left: 3px solid #28a745;
+  background: #1a1a1a;
+}
+
+.diff-approval-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-top: 1px solid #3c3c3c;
+  background: #252526;
+}
+
+.diff-auto-apply-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #cccccc;
+  cursor: pointer;
+  user-select: none;
+}
+
+.diff-auto-apply-checkbox input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.diff-approval-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.diff-approval-button {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.diff-approval-reject {
+  background: #3c3c3c;
+  color: #cccccc;
+}
+
+.diff-approval-reject:hover {
+  background: #505050;
+}
+
+.diff-approval-apply {
+  background: #0066cc;
+  color: white;
+}
+
+.diff-approval-apply:hover {
+  background: #0052a3;
+}
+
+.diff-approval-hints {
+  padding: 8px 20px;
+  text-align: center;
+  font-size: 11px;
+  color: #858585;
+  background: #1a1a1a;
+  border-top: 1px solid #3c3c3c;
+}
+
+.diff-approval-hints kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #2d2d2d;
+  border: 1px solid #3c3c3c;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  color: #cccccc;
+}
+
+/* Scrollbar styling */
+.diff-approval-content::-webkit-scrollbar,
+.diff-code-block::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.diff-approval-content::-webkit-scrollbar-track,
+.diff-code-block::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.diff-approval-content::-webkit-scrollbar-thumb,
+.diff-code-block::-webkit-scrollbar-thumb {
+  background: #3c3c3c;
+  border-radius: 5px;
+}
+
+.diff-approval-content::-webkit-scrollbar-thumb:hover,
+.diff-code-block::-webkit-scrollbar-thumb:hover {
+  background: #505050;
+}

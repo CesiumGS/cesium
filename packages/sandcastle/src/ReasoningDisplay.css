@@ -1,0 +1,431 @@
+/**
+ * ReasoningDisplay Component Styles
+ *
+ * Glassmorphism-styled collapsible reasoning display
+ * Compatible with the Sandcastle dark theme design system.
+ */
+
+/* Container */
+.reasoning-container {
+  display: flex;
+  flex-direction: column;
+  margin: 0.75rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Glassmorphism effect */
+  background: linear-gradient(
+    135deg,
+    rgba(74, 158, 255, 0.05) 0%,
+    rgba(138, 180, 248, 0.03) 100%
+  );
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(74, 158, 255, 0.15);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+.reasoning-container.expanded {
+  border-color: rgba(74, 158, 255, 0.25);
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 0 20px rgba(74, 158, 255, 0.1);
+}
+
+/* Header - clickable toggle */
+.reasoning-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  background: rgba(26, 26, 26, 0.4);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  color: inherit;
+  font-family: inherit;
+}
+
+.reasoning-header:hover {
+  background: rgba(42, 42, 42, 0.5);
+}
+
+.reasoning-header:focus {
+  outline: 2px solid var(--stratakit-color-border-accent-base, #4a9eff);
+  outline-offset: -2px;
+}
+
+.reasoning-header:active {
+  background: rgba(42, 42, 42, 0.6);
+}
+
+.reasoning-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+/* Icon */
+.reasoning-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  transition: all 0.3s ease;
+}
+
+.reasoning-icon.streaming {
+  color: var(--stratakit-color-border-accent-base, #4a9eff);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.reasoning-icon.complete {
+  color: #22c55e;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Badge label */
+.reasoning-badge {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--stratakit-color-text-neutral-primary, #e5e5e5);
+  letter-spacing: 0.01em;
+}
+
+/* Token count */
+.reasoning-tokens {
+  font-family: var(--stratakit-font-family-mono, "Monaco", "Menlo", monospace);
+  font-size: 0.75rem;
+  color: var(--stratakit-color-text-neutral-secondary, #999);
+  padding: 0.125rem 0.5rem;
+  background: rgba(74, 158, 255, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(74, 158, 255, 0.2);
+}
+
+/* Chevron toggle */
+.reasoning-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--stratakit-color-text-neutral-secondary, #999);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reasoning-toggle.expanded {
+  transform: rotate(180deg);
+}
+
+.reasoning-toggle.collapsed {
+  transform: rotate(0deg);
+}
+
+/* Content - collapsible */
+.reasoning-content {
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(13, 13, 13, 0.3);
+}
+
+.reasoning-content.expanded {
+  max-height: 600px;
+  opacity: 1;
+  padding: 1rem;
+  border-top: 1px solid rgba(74, 158, 255, 0.1);
+}
+
+.reasoning-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding: 0 1rem;
+}
+
+/* Reasoning text */
+.reasoning-text {
+  font-family: var(
+    --stratakit-font-family-sans,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif
+  );
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--stratakit-color-text-neutral-primary, #e5e5e5);
+  word-wrap: break-word;
+  overflow-y: auto;
+  max-height: 520px;
+
+  /* Custom scrollbar for dark theme */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(74, 158, 255, 0.3) transparent;
+}
+
+/* Markdown styling within reasoning */
+.reasoning-text h1,
+.reasoning-text h2,
+.reasoning-text h3,
+.reasoning-text h4 {
+  color: var(--stratakit-color-text-neutral-primary, #e5e5e5);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.reasoning-text h1 {
+  font-size: 1.25rem;
+}
+.reasoning-text h2 {
+  font-size: 1.125rem;
+}
+.reasoning-text h3 {
+  font-size: 1rem;
+}
+.reasoning-text h4 {
+  font-size: 0.9375rem;
+}
+
+.reasoning-text p {
+  margin: 0.5rem 0;
+}
+
+.reasoning-text ul,
+.reasoning-text ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.reasoning-text li {
+  margin: 0.25rem 0;
+}
+
+/* Hide task list checkboxes (CES-9 fix: defense-in-depth)
+ * Prevents checkbox artifacts from appearing during streaming
+ * when remark-gfm misinterprets "[ ]" patterns as task lists */
+.reasoning-text input[type="checkbox"] {
+  display: none;
+}
+
+.reasoning-text code {
+  font-family: var(--stratakit-font-family-mono, "Monaco", "Menlo", monospace);
+  background: rgba(74, 158, 255, 0.1);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  font-size: 0.8125rem;
+}
+
+.reasoning-text pre {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.75rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+.reasoning-text pre code {
+  background: none;
+  padding: 0;
+}
+
+.reasoning-text strong {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary, #fff);
+}
+
+.reasoning-text em {
+  font-style: italic;
+}
+
+.reasoning-text blockquote {
+  border-left: 3px solid rgba(74, 158, 255, 0.3);
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  color: var(--stratakit-color-text-neutral-secondary, #999);
+}
+
+.reasoning-text::-webkit-scrollbar {
+  width: 8px;
+}
+
+.reasoning-text::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.reasoning-text::-webkit-scrollbar-thumb {
+  background: rgba(74, 158, 255, 0.3);
+  border-radius: 4px;
+}
+
+.reasoning-text::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 158, 255, 0.5);
+}
+
+/* Streaming cursor */
+.reasoning-cursor {
+  display: inline-block;
+  color: var(--stratakit-color-border-accent-base, #4a9eff);
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Gradient overlay for long content */
+.reasoning-content.expanded::after {
+  content: "";
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(13, 13, 13, 0.3) 100%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.reasoning-text::-webkit-scrollbar-thumb:vertical {
+  background: rgba(74, 158, 255, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .reasoning-container {
+    border-radius: 8px;
+    margin: 0.5rem 0;
+  }
+
+  .reasoning-header {
+    padding: 0.75rem;
+  }
+
+  .reasoning-content.expanded {
+    padding: 0.75rem;
+    max-height: 400px;
+  }
+
+  .reasoning-text {
+    font-size: 0.8125rem;
+    max-height: 340px;
+  }
+
+  .reasoning-badge {
+    font-size: 0.8125rem;
+  }
+
+  .reasoning-tokens {
+    font-size: 0.6875rem;
+    padding: 0.0625rem 0.375rem;
+  }
+}
+
+/* Accessibility - High contrast mode */
+@media (prefers-contrast: high) {
+  .reasoning-container {
+    border-width: 2px;
+    border-color: var(--stratakit-color-border-accent-base, #4a9eff);
+  }
+
+  .reasoning-header {
+    background: rgba(26, 26, 26, 0.8);
+  }
+
+  .reasoning-content.expanded {
+    border-top-width: 2px;
+  }
+
+  .reasoning-tokens {
+    border-width: 2px;
+  }
+}
+
+/* Accessibility - Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .reasoning-container,
+  .reasoning-header,
+  .reasoning-toggle,
+  .reasoning-content,
+  .reasoning-icon {
+    animation: none;
+    transition: none;
+  }
+
+  .reasoning-icon.streaming {
+    animation: none;
+    opacity: 1;
+  }
+
+  .reasoning-cursor {
+    animation: none;
+    opacity: 1;
+  }
+
+  /* Still allow expand/collapse but without animation */
+  .reasoning-content.expanded {
+    max-height: 600px;
+  }
+
+  .reasoning-content.collapsed {
+    max-height: 0;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+.reasoning-header:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-base, #4a9eff);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+/* Print styles */
+@media print {
+  .reasoning-container {
+    border: 1px solid #000;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .reasoning-content {
+    max-height: none !important;
+    opacity: 1 !important;
+    padding: 1rem !important;
+  }
+
+  .reasoning-toggle {
+    display: none;
+  }
+
+  .reasoning-header {
+    background: transparent;
+    cursor: default;
+  }
+}

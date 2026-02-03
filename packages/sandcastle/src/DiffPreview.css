@@ -1,0 +1,400 @@
+/**
+ * DiffPreview Component Styles
+ *
+ * Dark theme compatible styles matching the Sandcastle UI design system.
+ * Uses stratakit CSS variables for consistency.
+ */
+
+.diff-preview {
+  display: flex;
+  flex-direction: column;
+  background: var(--stratakit-color-bg-path-base, #1a1a1a);
+  border: 1px solid var(--stratakit-color-border-neutral-muted, #404040);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0.75rem 0;
+  transition: all 0.2s ease;
+}
+
+.diff-preview.collapsed {
+  background: var(--stratakit-color-bg-depth-plus-1, #2a2a2a);
+}
+
+.diff-preview.success {
+  border-color: var(--stratakit-color-border-accent-base, #4a9eff);
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+  animation: successPulse 0.5s ease;
+}
+
+@keyframes successPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(74, 158, 255, 0.3);
+  }
+}
+
+/* Header */
+.diff-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted, #404040);
+  background: var(--stratakit-color-bg-depth-plus-1, #2a2a2a);
+  user-select: none;
+}
+
+/* Applied state banner */
+.diff-preview-applied-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: linear-gradient(
+    135deg,
+    rgba(74, 158, 255, 0.15) 0%,
+    rgba(59, 130, 246, 0.1) 100%
+  );
+  border-bottom: 1px solid rgba(74, 158, 255, 0.3);
+  color: var(--stratakit-color-text-neutral-primary, #e5e5e5);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.applied-banner-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(74, 158, 255, 0.3);
+  color: #4a9eff;
+  font-size: 0.75rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.applied-banner-text {
+  color: rgba(74, 158, 255, 1);
+  letter-spacing: 0.01em;
+}
+
+/* Applied read-only state for diff editor */
+.diff-preview-editor.applied-read-only {
+  opacity: 0.92;
+  border: 1px solid rgba(74, 158, 255, 0.2);
+  border-radius: 4px;
+}
+
+/* Controls section */
+.diff-preview-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.diff-preview.collapsed .diff-preview-header {
+  border-bottom: none;
+}
+
+.diff-preview-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary, #e5e5e5);
+}
+
+.diff-preview-collapse-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--stratakit-color-text-neutral-secondary, #999);
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.diff-preview-collapse-btn:hover {
+  background: var(--stratakit-color-bg-depth-plus-1, #2a2a2a);
+  color: var(--stratakit-color-text-neutral-primary, #e5e5e5);
+}
+
+.diff-preview-collapse-btn:focus {
+  outline: 2px solid var(--stratakit-color-border-accent-base, #4a9eff);
+  outline-offset: 2px;
+}
+
+.collapse-icon {
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.collapse-icon.collapsed {
+  transform: rotate(-90deg);
+}
+
+.diff-preview-filename {
+  font-family: var(--stratakit-font-family-mono, "Monaco", "Menlo", monospace);
+  font-size: 0.875rem;
+}
+
+/* Stats */
+.diff-preview-stats {
+  display: flex;
+  gap: 0.75rem;
+  font-family: var(--stratakit-font-family-mono, "Monaco", "Menlo", monospace);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Mode toggle */
+.diff-preview-mode-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.mode-toggle-button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  min-width: 32px;
+  justify-content: center;
+}
+
+.stat-added,
+.stat-removed,
+.stat-modified {
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-added {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.stat-removed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.stat-modified {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+/* Editor container */
+.diff-preview-editor {
+  position: relative;
+  min-height: 200px;
+  background: var(--stratakit-color-bg-page-depth, #0d0d0d);
+}
+
+.diff-preview-editor.large-diff {
+  min-height: 400px;
+}
+
+/* Mode-specific editor styles */
+.diff-preview-editor.side-by-side-mode {
+  /* Default side-by-side styling */
+}
+
+.diff-preview-editor.inline-mode {
+  /* Inline mode takes more vertical space but less horizontal */
+  max-width: 100%;
+}
+
+/* Monaco diff editor overrides */
+.diff-preview-editor .monaco-diff-editor {
+  border-radius: 0;
+}
+
+.diff-preview-editor .monaco-editor {
+  background: var(--stratakit-color-bg-page-depth, #0d0d0d);
+}
+
+.diff-preview-editor .monaco-editor .margin {
+  background: var(--stratakit-color-bg-depth-plus-1, #2a2a2a);
+}
+
+/* Action buttons */
+.diff-preview-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted, #404040);
+  background: var(--stratakit-color-bg-depth-plus-1, #2a2a2a);
+  gap: 0.5rem;
+}
+
+.diff-preview-actions-left,
+.diff-preview-actions-right {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.diff-preview-actions button {
+  transition: all 0.2s ease;
+}
+
+.diff-preview-actions .apply-button {
+  position: relative;
+}
+
+.diff-preview-actions .applied-button {
+  background: rgba(34, 197, 94, 0.15) !important;
+  color: #22c55e !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
+  cursor: default;
+  opacity: 0.9;
+}
+
+/* Spinner for loading state */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 0.25rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Success message */
+.diff-preview-success {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(34, 197, 94, 0.95);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .diff-preview-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .diff-preview-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .diff-preview-stats {
+    align-self: flex-start;
+  }
+
+  .diff-preview-mode-toggle {
+    align-self: flex-end;
+  }
+
+  .diff-preview-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .diff-preview-actions-left,
+  .diff-preview-actions-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .diff-preview-editor {
+    min-height: 250px;
+  }
+
+  .diff-preview-editor.large-diff {
+    min-height: 350px;
+  }
+
+  .diff-preview-editor.inline-mode {
+    min-height: 350px;
+  }
+
+  .diff-preview-editor.inline-mode.large-diff {
+    min-height: 450px;
+  }
+}
+
+/* Accessibility improvements */
+.diff-preview button:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-base, #4a9eff);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .diff-preview {
+    border-width: 2px;
+  }
+
+  .stat-added,
+  .stat-removed,
+  .stat-modified {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .diff-preview,
+  .collapse-icon,
+  .diff-preview-actions button,
+  .spinner {
+    animation: none;
+    transition: none;
+  }
+
+  .collapse-icon.collapsed {
+    transform: none;
+  }
+}

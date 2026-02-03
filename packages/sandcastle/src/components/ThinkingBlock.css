@@ -1,0 +1,167 @@
+/* Thinking Block - Subtle collapsible accordion for AI reasoning */
+
+.thinking-block {
+  margin: 12px 0;
+  border-radius: 8px;
+  background: rgba(74, 158, 255, 0.05);
+  border: 1px solid rgba(74, 158, 255, 0.15);
+  overflow: hidden;
+  transition: all 0.2s ease;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.thinking-block:hover {
+  background: rgba(74, 158, 255, 0.08);
+  border-color: rgba(74, 158, 255, 0.25);
+}
+
+.thinking-block-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  min-width: 0; /* Allow flex items to shrink below content size */
+}
+
+.thinking-block-header.streaming {
+  cursor: pointer;
+}
+
+.thinking-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.thinking-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: rgba(74, 158, 255, 1);
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+
+.thinking-preview {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  opacity: 0.7;
+  direction: rtl;
+  text-align: left;
+  font-style: italic;
+  min-width: 0; /* Allow text to shrink */
+}
+
+.thinking-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.thinking-spinner {
+  font-size: 18px;
+  color: rgba(74, 158, 255, 0.8);
+  animation: thinking-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes thinking-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.thinking-chevron {
+  font-size: 10px;
+  color: rgba(74, 158, 255, 0.7);
+  transition: transform 0.2s ease;
+}
+
+.thinking-chevron.expanded {
+  transform: rotate(0deg);
+}
+
+.thinking-block-header:hover .thinking-chevron {
+  color: rgba(74, 158, 255, 1);
+}
+
+.thinking-block-content {
+  padding: 12px 16px 16px 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--vscode-foreground);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  background: rgba(0, 0, 0, 0.1);
+  border-top: 1px solid rgba(74, 158, 255, 0.15);
+  animation: thinking-expand 0.2s ease;
+  font-family:
+    "SF Mono", "Monaco", "Inconsolata", "Fira Code", "Droid Sans Mono",
+    monospace;
+  max-width: 100%;
+  overflow-x: auto; /* Allow horizontal scroll if absolutely necessary */
+  box-sizing: border-box;
+}
+
+.thinking-cursor {
+  display: inline-block;
+  color: rgba(74, 158, 255, 1);
+  animation: thinking-cursor-blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+@keyframes thinking-cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes thinking-expand {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+    padding-top: 12px;
+    padding-bottom: 16px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .thinking-block,
+  .thinking-block-header,
+  .thinking-chevron,
+  .thinking-block-content {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .thinking-spinner {
+    animation: none !important;
+    opacity: 0.7;
+  }
+}

@@ -1,0 +1,206 @@
+.tool-call-container {
+  margin: 8px 0;
+  border: 1px solid var(--vscode-editorGroup-border);
+  border-radius: 6px;
+  background: var(--vscode-editor-background);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.tool-call-container:hover {
+  border-color: var(--vscode-focusBorder);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.tool-call-header {
+  padding: 10px 12px;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+  border-bottom: 1px solid var(--vscode-editorGroup-border);
+}
+
+.tool-call-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tool-call-icon-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.tool-call-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--vscode-symbolIcon-functionForeground);
+}
+
+.tool-call-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--vscode-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tool-call-status-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tool-call-status {
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.tool-call-expand-btn {
+  background: transparent;
+  border: none;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+  opacity: 0.6;
+}
+
+.tool-call-expand-btn:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+  opacity: 1;
+}
+
+.diff-preview {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  background: var(--vscode-editor-background);
+}
+
+.diff-section {
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--vscode-editorGroup-border);
+}
+
+.diff-label {
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.search-section .diff-label {
+  background: rgba(255, 100, 100, 0.15);
+  color: var(--vscode-gitDecoration-deletedResourceForeground);
+  border-bottom: 1px solid rgba(255, 100, 100, 0.2);
+}
+
+.replace-section .diff-label {
+  background: rgba(100, 255, 100, 0.15);
+  color: var(--vscode-gitDecoration-addedResourceForeground);
+  border-bottom: 1px solid rgba(100, 255, 100, 0.2);
+}
+
+.diff-content {
+  margin: 0;
+  padding: 10px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 12px;
+  line-height: 1.5;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.search-section .diff-content {
+  background: rgba(255, 100, 100, 0.05);
+}
+
+.replace-section .diff-content {
+  background: rgba(100, 255, 100, 0.05);
+}
+
+.tool-call-expanded {
+  padding: 12px;
+  background: var(--vscode-editor-background);
+  border-top: 1px solid var(--vscode-editorGroup-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.expanded-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.expanded-section.error-section .expanded-code {
+  background: rgba(255, 100, 100, 0.1);
+  border-left: 3px solid var(--vscode-errorForeground);
+}
+
+.expanded-label {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.expanded-code {
+  margin: 0;
+  padding: 10px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 12px;
+  line-height: 1.5;
+  background: var(--vscode-textCodeBlock-background);
+  color: var(--vscode-editor-foreground);
+  border: 1px solid var(--vscode-editorGroup-border);
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Scrollbar styling */
+.diff-content::-webkit-scrollbar,
+.expanded-code::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.diff-content::-webkit-scrollbar-track,
+.expanded-code::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.diff-content::-webkit-scrollbar-thumb,
+.expanded-code::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 4px;
+}
+
+.diff-content::-webkit-scrollbar-thumb:hover,
+.expanded-code::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}
