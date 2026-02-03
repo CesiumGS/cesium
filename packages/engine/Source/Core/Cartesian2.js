@@ -1,21 +1,25 @@
+// @ts-check
+
 import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 
+/** @import Cartesian3 from "./Cartesian3.js"; */
+/** @import Cartesian4 from "./Cartesian4.js"; */
+
 /**
  * A 2D Cartesian point.
- * @alias Cartesian2
- * @constructor
- *
- * @param {number} [x=0.0] The X component.
- * @param {number} [y=0.0] The Y component.
  *
  * @see Cartesian3
  * @see Cartesian4
  * @see Packable
  */
 class Cartesian2 {
+  /**
+   * @param {number} [x=0.0] The X component.
+   * @param {number} [y=0.0] The Y component.
+   */
   constructor(x, y) {
     /**
      * The X component.
@@ -74,10 +78,10 @@ class Cartesian2 {
    * Stores the provided instance into the provided array.
    *
    * @param {Cartesian2} value The value to pack.
-   * @param {number[]} array The array to pack into.
+   * @param {number[]|Float64Array|Float32Array} array The array to pack into.
    * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
    *
-   * @returns {number[]} The array that was packed into
+   * @returns {number[]|Float64Array|Float32Array} The array that was packed into
    */
   static pack(value, array, startingIndex) {
     //>>includeStart('debug', pragmas.debug);
@@ -96,7 +100,7 @@ class Cartesian2 {
   /**
    * Retrieves an instance from a packed array.
    *
-   * @param {number[]} array The packed array.
+   * @param {number[]|Float64Array|Float32Array} array The packed array.
    * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
    * @param {Cartesian2} [result] The object into which to store the result.
    * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
@@ -120,8 +124,8 @@ class Cartesian2 {
    * Flattens an array of Cartesian2s into an array of components.
    *
    * @param {Cartesian2[]} array The array of cartesians to pack.
-   * @param {number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 2 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 2) elements.
-   * @returns {number[]} The packed array.
+   * @param {number[]|Float64Array|Float32Array} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 2 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 2) elements.
+   * @returns {number[]|Float64Array|Float32Array} The packed array.
    */
   static packArray(array, result) {
     //>>includeStart('debug', pragmas.debug);
@@ -139,7 +143,7 @@ class Cartesian2 {
       );
       //>>includeEnd('debug');
     } else if (result.length !== resultLength) {
-      result.length = resultLength;
+      /** @type {number[]} */ (result).length = resultLength;
     }
 
     for (let i = 0; i < length; ++i) {
@@ -641,6 +645,9 @@ class Cartesian2 {
   }
 
   /**
+   * @param {Cartesian2} cartesian
+   * @param {number[]} array
+   * @param {number} offset
    * @private
    */
   static equalsArray(cartesian, array, offset) {

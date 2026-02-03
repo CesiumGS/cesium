@@ -1,22 +1,27 @@
+// @ts-check
+
 import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 
+/** @import Cartesian4 from "./Cartesian4.js"; */
+/** @import Ellipsoid from "./Ellipsoid.js"; */
+/** @import Spherical from "./Spherical.js"; */
+
 /**
  * A 3D Cartesian point.
- * @alias Cartesian3
- * @constructor
- *
- * @param {number} [x=0.0] The X component.
- * @param {number} [y=0.0] The Y component.
- * @param {number} [z=0.0] The Z component.
  *
  * @see Cartesian2
  * @see Cartesian4
  * @see Packable
  */
 class Cartesian3 {
+  /**
+   * @param {number} [x=0.0] The X component.
+   * @param {number} [y=0.0] The Y component.
+   * @param {number} [z=0.0] The Z component.
+   */
   constructor(x, y, z) {
     /**
      * The X component.
@@ -111,10 +116,10 @@ class Cartesian3 {
    * Stores the provided instance into the provided array.
    *
    * @param {Cartesian3} value The value to pack.
-   * @param {number[]} array The array to pack into.
+   * @param {number[]|Float64Array|Float32Array} array The array to pack into.
    * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
    *
-   * @returns {number[]} The array that was packed into
+   * @returns {number[]|Float64Array|Float32Array} The array that was packed into
    */
   static pack(value, array, startingIndex) {
     //>>includeStart('debug', pragmas.debug);
@@ -134,7 +139,7 @@ class Cartesian3 {
   /**
    * Retrieves an instance from a packed array.
    *
-   * @param {number[]} array The packed array.
+   * @param {number[]|Float64Array|Float32Array} array The packed array.
    * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
    * @param {Cartesian3} [result] The object into which to store the result.
    * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
@@ -159,8 +164,8 @@ class Cartesian3 {
    * Flattens an array of Cartesian3s into an array of components.
    *
    * @param {Cartesian3[]} array The array of cartesians to pack.
-   * @param {number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 3 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 3) elements.
-   * @returns {number[]} The packed array.
+   * @param {number[]|Float64Array|Float32Array} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 3 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 3) elements.
+   * @returns {number[]|Float64Array|Float32Array} The packed array.
    */
   static packArray(array, result) {
     //>>includeStart('debug', pragmas.debug);
@@ -178,7 +183,7 @@ class Cartesian3 {
       );
       //>>includeEnd('debug');
     } else if (result.length !== resultLength) {
-      result.length = resultLength;
+      /** @type {number[]} */ (result).length = resultLength;
     }
 
     for (let i = 0; i < length; ++i) {
@@ -190,7 +195,7 @@ class Cartesian3 {
   /**
    * Unpacks an array of cartesian components into an array of Cartesian3s.
    *
-   * @param {number[]} array The array of components to unpack.
+   * @param {number[]|Float64Array|Float32Array} array The array of components to unpack.
    * @param {Cartesian3[]} [result] The array onto which to store the result.
    * @returns {Cartesian3[]} The unpacked array.
    */
@@ -291,7 +296,7 @@ class Cartesian3 {
   /**
    * Constrain a value to lie between two values.
    *
-   * @param {Cartesian3} cartesian The value to clamp.
+   * @param {Cartesian3} value The value to clamp.
    * @param {Cartesian3} min The minimum bound.
    * @param {Cartesian3} max The maximum bound.
    * @param {Cartesian3} result The object into which to store the result.
@@ -712,6 +717,9 @@ class Cartesian3 {
   }
 
   /**
+   * @param {Cartesian3} cartesian
+   * @param {number[]} array
+   * @param {number} offset
    * @private
    */
   static equalsArray(cartesian, array, offset) {
@@ -865,7 +873,8 @@ class Cartesian3 {
 
     const radiiSquared = !defined(ellipsoid)
       ? Cartesian3._ellipsoidRadiiSquared
-      : ellipsoid.radiiSquared;
+      : // @ts-expect-error Requires type-checking on Ellipsoid.js.
+        ellipsoid.radiiSquared;
 
     const cosLatitude = Math.cos(latitude);
     scratchN.x = cosLatitude * Math.cos(longitude);
