@@ -767,6 +767,7 @@ export class DiffMatcher {
   public findClosestMatch(
     searchText: string,
     sourceCode: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     options?: MatchOptions,
   ): { confidence: number; matchedText: string; startLine: number } | null {
     if (!searchText || !sourceCode) {
@@ -777,11 +778,6 @@ export class DiffMatcher {
     if (searchLen === 0 || sourceCode.length < searchLen) {
       return null;
     }
-
-    const _opts: Required<MatchOptions> = {
-      ...this.defaultOptions,
-      ...options,
-    };
 
     let bestMatch: {
       start: number;
@@ -813,8 +809,14 @@ export class DiffMatcher {
     const minLen = Math.floor(searchLen * 0.85);
     const maxLen = Math.min(sourceCode.length, Math.floor(searchLen * 1.15));
 
-    for (let len = minLen; len <= maxLen; len += Math.max(1, Math.floor((maxLen - minLen) / 10))) {
-      if (len === searchLen) {continue;} // Already tried
+    for (
+      let len = minLen;
+      len <= maxLen;
+      len += Math.max(1, Math.floor((maxLen - minLen) / 10))
+    ) {
+      if (len === searchLen) {
+        continue;
+      } // Already tried
 
       for (let i = 0; i <= sourceCode.length - len; i += stepSize * 2) {
         const candidate = sourceCode.slice(i, i + len);

@@ -972,6 +972,7 @@ viewer.camera.setView({
       ]);
 
       // Consume the generator with tools
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for await (const _ of client.generateWithContext(
         "Test",
         mockContext,
@@ -1009,6 +1010,7 @@ viewer.camera.setView({
       ]);
 
       // Consume the generator WITHOUT tools
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for await (const _ of client.generateWithContext(
         "Test",
         mockContext,
@@ -1219,6 +1221,7 @@ viewer.camera.setView({
         ];
 
         // Consume the generator
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for await (const _ of client.submitToolResult(
           toolCall,
           toolResult,
