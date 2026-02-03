@@ -9,7 +9,12 @@
  */
 
 import { DiffMatcher } from "./DiffMatcher";
-import type { DiffBlock, MatchResult, MatchOptions, MatchStrategy } from "./types";
+import {
+  MatchStrategy,
+  type DiffBlock,
+  type MatchResult,
+  type MatchOptions,
+} from "./types";
 
 /**
  * Result of indentation detection
@@ -54,8 +59,15 @@ export class RooStyleDiffStrategy {
     error?: string;
   }> {
     try {
-      console.log("[RooStyleDiffStrategy] 🚀 applyDiff called with middle-out search");
-      console.log("[RooStyleDiffStrategy] Source length:", sourceCode.length, "lines:", sourceCode.split("\n").length);
+      console.log(
+        "[RooStyleDiffStrategy] 🚀 applyDiff called with middle-out search",
+      );
+      console.log(
+        "[RooStyleDiffStrategy] Source length:",
+        sourceCode.length,
+        "lines:",
+        sourceCode.split("\n").length,
+      );
 
       // 1. Find the code to replace using middle-out search
       const match = await this.middleOutSearch(
@@ -322,15 +334,13 @@ export class RooStyleDiffStrategy {
             ? "\t".repeat(Math.floor(indentDiff / sourceIndent.size))
             : " ".repeat(indentDiff);
         return additionalIndent + line;
-      } 
-        // Remove indentation
-        const removeCount = Math.abs(indentDiff);
-        if (sourceIndent.type === "tabs") {
-          return line.replace(new RegExp(`^\t{1,${removeCount}}`), "");
-        } 
-          return line.replace(new RegExp(`^ {1,${removeCount}}`), "");
-        
-      
+      }
+      // Remove indentation
+      const removeCount = Math.abs(indentDiff);
+      if (sourceIndent.type === "tabs") {
+        return line.replace(new RegExp(`^\t{1,${removeCount}}`), "");
+      }
+      return line.replace(new RegExp(`^ {1,${removeCount}}`), "");
     });
 
     return adjustedLines.join("\n");
