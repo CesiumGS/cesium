@@ -1225,7 +1225,7 @@ function TextureReader() {
   /**
    * Constant level-of-detail parameters from the EXT_textureInfo_constant_lod extension.
    *
-   * @type {object}
+   * @type {object|undefined}
    * @private
    */
   this.constantLod = undefined;

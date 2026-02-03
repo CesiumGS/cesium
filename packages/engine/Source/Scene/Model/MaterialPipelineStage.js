@@ -227,7 +227,7 @@ MaterialPipelineStage.process = function (
  * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
  * @param {string} uniformName The name of the sampler uniform
  * @param {string} defineName The name of the texture for use in the defines
- * @param {PrimitiveRenderResources} renderResources The render resources
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources
  * @private
  */
 function processConstantLod(
@@ -586,7 +586,7 @@ function processMaterialUniforms(
  * @param {ShaderBuilder} shaderBuilder
  * @param {Texture} defaultTexture
  * @param {boolean} disableTextures
- * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources for the primitive
  * @private
  */
 function processSpecularGlossinessUniforms(
@@ -954,7 +954,7 @@ function processClearcoatUniforms(
  * @param {ShaderBuilder} shaderBuilder
  * @param {Texture} defaultTexture
  * @param {boolean} disableTextures
- * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources for the primitive
  * @private
  */
 function processMetallicRoughnessUniforms(
