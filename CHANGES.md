@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.139 - 2026-03-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
+
 ## 1.138 - 2026-02-02
 
 ### @cesium/engine
@@ -12,7 +20,6 @@
 - Fixed label sizing for some fonts and characters [#9767](https://github.com/CesiumGS/cesium/issues/9767)
 - Fixed a type error when accessing the ellipsoid of a viewer [#13123](https://github.com/CesiumGS/cesium/pull/13123)
 - Fixed a bug where entities have not been clustered correctly [#13064](https://github.com/CesiumGS/cesium/pull/13064)
-- Fixes precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
 
 ## 1.137 - 2026-01-05
 
