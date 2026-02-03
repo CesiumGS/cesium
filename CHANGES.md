@@ -6,7 +6,7 @@
 
 #### Fixes :wrench:
 
-- Fixed an issue where object picking behaved unexpectedly after returning from VR mode to normal mode. [#7819](https://github.com/CesiumGS/cesium/issues/7819)
+- Fixed abnormal picking in VR mode. [#7819](https://github.com/CesiumGS/cesium/issues/7819)
 
 ## 1.138 - 2026-02-02
 
