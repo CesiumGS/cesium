@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { embedInSandcastleTemplate } from "./Helpers";
 import "./Bucket.css";
 import { ConsoleMessageType } from "./ConsoleMirror";
+import DOMPurify from "dompurify";
 
 type SandcastleMessage =
   | { type: "reload" }
@@ -10,7 +11,7 @@ type SandcastleMessage =
   | { type: "consoleError"; error: string; lineNumber?: number; url?: string }
   | { type: "highlight"; highlight: number };
 
-function Bucket({
+export function Bucket({
   code,
   html,
   runNumber,
@@ -66,14 +67,13 @@ function Bucket({
     }
 
     // Apply user HTML to bucket.
-    // Parse the HTML to extract style tags and body content separately
-    const tempDiv = bucketDoc.createElement("div");
-    tempDiv.innerHTML = html;
-
-    // Move all children from temp div to body (including <style> tags)
-    while (tempDiv.firstChild) {
-      bucketDoc.body.appendChild(tempDiv.firstChild);
-    }
+    const sanitized = DOMPurify.sanitize(html, {
+      ADD_TAGS: ["style"],
+      FORCE_BODY: true,
+    });
+    const htmlElement = bucketDoc.createElement("div");
+    htmlElement.innerHTML = sanitized;
+    bucketDoc.body.appendChild(htmlElement);
 
     const onScriptTagError = function () {
       if (bucketFrame.contentDocument === bucketDoc) {
@@ -218,4 +218,10 @@ function Bucket({
   );
 }
 
-export default Bucket;
+export function BucketPlaceholder() {
+  return (
+    <div className="bucket-container">
+      <div className="fullFrame">Loading...</div>
+    </div>
+  );
+}

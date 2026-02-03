@@ -35,6 +35,7 @@ import TextureAtlas from "../Renderer/TextureAtlas.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 
 const SHOW_INDEX = Billboard.SHOW_INDEX;
 const POSITION_INDEX = Billboard.POSITION_INDEX;
@@ -129,7 +130,7 @@ const attributeLocationsInstanced = {
  * @see Billboard
  * @see LabelCollection
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=billboards|Cesium Sandcastle Billboard Demo}
  *
  * @example
  * // Create a billboard collection with two billboards
@@ -1203,22 +1204,14 @@ function writeCompressedAttrib2(
   );
   let labelHorizontalOrigin = billboard._labelHorizontalOrigin ?? -2;
   labelHorizontalOrigin += 2;
-  const compressed3 = imageHeight * LEFT_SHIFT2 + labelHorizontalOrigin;
 
-  let red = Color.floatToByte(color.red);
-  let green = Color.floatToByte(color.green);
-  let blue = Color.floatToByte(color.blue);
-  const compressed0 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
-
-  red = Color.floatToByte(pickColor.red);
-  green = Color.floatToByte(pickColor.green);
-  blue = Color.floatToByte(pickColor.blue);
-  const compressed1 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
-
-  let compressed2 =
+  const compressed0 = AttributeCompression.encodeRGB8(color);
+  const compressed1 = AttributeCompression.encodeRGB8(pickColor);
+  const compressed2 =
     Color.floatToByte(color.alpha) * LEFT_SHIFT16 +
-    Color.floatToByte(pickColor.alpha) * LEFT_SHIFT8;
-  compressed2 += sizeInMeters * 2.0 + validAlignedAxis;
+    Color.floatToByte(pickColor.alpha) * LEFT_SHIFT8 +
+    (sizeInMeters * 2.0 + validAlignedAxis);
+  const compressed3 = imageHeight * LEFT_SHIFT2 + labelHorizontalOrigin;
 
   if (billboardCollection._instanced) {
     i = billboard._index;
@@ -1525,10 +1518,7 @@ function writeSDF(billboardCollection, frameState, vafWriters, billboard) {
   const outlineColor = billboard.outlineColor;
   const outlineWidth = billboard.outlineWidth;
 
-  const red = Color.floatToByte(outlineColor.red);
-  const green = Color.floatToByte(outlineColor.green);
-  const blue = Color.floatToByte(outlineColor.blue);
-  const compressed0 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
+  const compressed0 = AttributeCompression.encodeRGB8(outlineColor);
 
   // Compute the relative outline distance
   const outlineDistance = outlineWidth / SDFSettings.RADIUS;
@@ -1784,6 +1774,19 @@ BillboardCollection.prototype.update = function (frameState) {
   }
 
   const context = frameState.context;
+
+  if (
+    !context.instancedArrays ||
+    !(ContextLimits.maximumVertexTextureImageUnits > 0)
+  ) {
+    deprecationWarning(
+      "Billboard-unsupported-ANGLE_instanced_arrays",
+      "Beginning in CesiumJS 1.140, billboards and labels will require device support for WebGL 2, " +
+        "or WebGL 1 with ANGLE_instanced_arrays and MAX_VERTEX_TEXTURE_IMAGE_UNITS > 0. For more " +
+        "information or to share feedback, see: https://github.com/CesiumGS/cesium/issues/13053",
+    );
+  }
+
   this._instanced = context.instancedArrays;
   attributeLocations = this._instanced
     ? attributeLocationsInstanced

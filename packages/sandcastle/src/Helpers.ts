@@ -34,14 +34,13 @@ window.Cesium = Cesium;
 type SandcastleSaveData = {
   code: string;
   html: string;
-  baseHref?: string;
 };
 
 export function makeCompressedBase64String(data: SandcastleSaveData) {
   // data stored in the hash as:
   // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
-  const { code, html, baseHref } = data;
-  const encode = baseHref ? [code, html, baseHref] : [code, html];
+  const { code, html } = data;
+  const encode = [code, html];
   let jsonString = JSON.stringify(encode);
 
   // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
@@ -81,9 +80,15 @@ export function decodeBase64Data(base64String: string): SandcastleSaveData {
   const code = json[0];
   const html = json[1];
   const baseHref = json[2];
+  if (baseHref !== undefined) {
+    // historically the third element allowed changing the <base> of the page when loaded
+    // This is no longer supported but could show up in old links if they were saved.
+    console.warn(
+      "Sandcastle no longer supports setting the base through the sandcastle URL",
+    );
+  }
   return {
     code: code,
     html: html,
-    baseHref: baseHref,
   };
 }

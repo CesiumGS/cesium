@@ -3518,7 +3518,7 @@ function load(dataSource, entityCollection, data, options) {
  * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
  * @see {@link https://developers.google.com/kml/|Google KML Documentation}
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=KML.html|Cesium Sandcastle KML Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=kml|Cesium Sandcastle KML Demo}
  *
  * @example
  * const viewer = new Cesium.Viewer('cesiumContainer');

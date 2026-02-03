@@ -81,6 +81,7 @@ function SandcastleEditor({
   onHtmlChange,
   onRun: onRunSandcastle,
   setJs,
+  readOnly,
   onQueueInlineChange,
 }: {
   ref?: RefObject<SandcastleEditorRef | null>;
@@ -91,6 +92,7 @@ function SandcastleEditor({
   onHtmlChange: OnChange;
   onRun: () => void;
   setJs: (newCode: string) => void;
+  readOnly?: boolean;
   onQueueInlineChange?: (changes: InlineChange[]) => void;
 }) {
   const [activeTab, setActiveTab] = useState<"js" | "html">("js");
@@ -572,6 +574,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
               availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono",
             fontSize: fontSize,
             fontLigatures: fontLigatures,
+            readOnly: readOnly,
           }}
           path={activeTab === "js" ? "script.js" : "index.html"}
           language={activeTab === "js" ? "javascript" : "html"}

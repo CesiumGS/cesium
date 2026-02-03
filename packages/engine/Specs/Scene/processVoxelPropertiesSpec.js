@@ -186,7 +186,7 @@ describe("Scene/processVoxelProperties", function () {
     ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
       "getPropertiesFromMegatextureAtUv",
-      "Properties getPropertiesFromMegatextureAtUv(vec2 texcoord)",
+      "Properties getPropertiesFromMegatextureAtUv(vec3 texcoord)",
       [
         "    Properties properties;",
         "    properties.a = texture(u_megatextureTextures[0], texcoord).r;",
