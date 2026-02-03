@@ -1,8 +1,10 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import CesiumMath from "../Core/Math.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import Entity from "./Entity.js";
 import JulianDate from "../Core/JulianDate.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -21,12 +23,121 @@ import SampledPositionProperty from "./SampledPositionProperty.js";
 import ScaledPositionProperty from "./ScaledPositionProperty.js";
 import TimeIntervalCollectionPositionProperty from "./TimeIntervalCollectionPositionProperty.js";
 
+const update3DMatrix3Scratch1 = new Matrix3();
+const update3DMatrix3Scratch2 = new Matrix3();
+const update3DMatrix3Scratch3 = new Matrix3();
+const update3DCartesian3Scratch0 = new Cartesian3();
+const update3DCartesian3Scratch1 = new Cartesian3();
+const update3DCartesian3Scratch2 = new Cartesian3();
+const update3DCartesian3Scratch3 = new Cartesian3();
+
+function computeVvlhTransform(time, positionProperty, result) {
+  const cartesian = positionProperty.getValue(time, update3DCartesian3Scratch0);
+  if (defined(cartesian)) {
+    // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
+    // Slower moving vehicles will most likely default to east-north-up, while faster ones will be LVLH.
+    const deltaTime = JulianDate.addSeconds(time, 0.01, new JulianDate());
+    const deltaCartesian = positionProperty.getValue(
+      deltaTime,
+      update3DCartesian3Scratch1
+    );
+    if (
+      defined(deltaCartesian) &&
+      !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON16)
+    ) {
+      let toInertial = Transforms.computeFixedToIcrfMatrix(
+        time,
+        update3DMatrix3Scratch1
+      );
+      let toInertialDelta = Transforms.computeFixedToIcrfMatrix(
+        deltaTime,
+        update3DMatrix3Scratch2
+      );
+      let toFixed;
+
+      if (!defined(toInertial) || !defined(toInertialDelta)) {
+        toFixed = Transforms.computeTemeToPseudoFixedMatrix(
+          time,
+          update3DMatrix3Scratch3
+        );
+        toInertial = Matrix3.transpose(toFixed, update3DMatrix3Scratch1);
+        toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(
+          deltaTime,
+          update3DMatrix3Scratch2
+        );
+        Matrix3.transpose(toInertialDelta, toInertialDelta);
+      } else {
+        toFixed = Matrix3.transpose(toInertial, update3DMatrix3Scratch3);
+      }
+
+      // Z along the position
+      const zBasis = update3DCartesian3Scratch2;
+      Cartesian3.normalize(cartesian, zBasis);
+      Cartesian3.normalize(deltaCartesian, deltaCartesian);
+
+      Matrix3.multiplyByVector(toInertial, zBasis, zBasis);
+      Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, deltaCartesian);
+
+      // Y is along the angular momentum vector (e.g. "orbit normal")
+      const yBasis = Cartesian3.cross(
+        zBasis,
+        deltaCartesian,
+        update3DCartesian3Scratch3
+      );
+      if (
+        !Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON16)
+      ) {
+        // X is along the cross of y and z (right handed basis / in the direction of motion)
+        const xBasis = Cartesian3.cross(
+          yBasis,
+          zBasis,
+          update3DCartesian3Scratch1
+        );
+
+        Matrix3.multiplyByVector(toFixed, xBasis, xBasis);
+        Matrix3.multiplyByVector(toFixed, yBasis, yBasis);
+        Matrix3.multiplyByVector(toFixed, zBasis, zBasis);
+
+        Cartesian3.normalize(xBasis, xBasis);
+        Cartesian3.normalize(yBasis, yBasis);
+        Cartesian3.normalize(zBasis, zBasis);
+
+        if (!defined(result)) {
+          result = new Matrix4();
+        }
+
+        result[0] = xBasis.x;
+        result[1] = xBasis.y;
+        result[2] = xBasis.z;
+        result[3] = 0.0;
+        result[4] = yBasis.x;
+        result[5] = yBasis.y;
+        result[6] = yBasis.z;
+        result[7] = 0.0;
+        result[8] = zBasis.x;
+        result[9] = zBasis.y;
+        result[10] = zBasis.z;
+        result[11] = 0.0;
+        result[12] = cartesian.x;
+        result[13] = cartesian.y;
+        result[14] = cartesian.z;
+        result[15] = 1.0;
+        return result;
+      }
+    }
+  }
+  return undefined;
+}
+
 const defaultResolution = 60.0;
 const defaultWidth = 1.0;
 
 const scratchTimeInterval = new TimeInterval();
 const subSampleCompositePropertyScratch = new TimeInterval();
 const subSampleIntervalPropertyScratch = new TimeInterval();
+
+const rr = new Matrix4();
+const q = new Matrix3();
 
 function EntityData(entity) {
   this.entity = entity;
@@ -35,6 +146,7 @@ function EntityData(entity) {
   this.updater = undefined;
 }
 
+const sampleScratch = new Cartesian3();
 function subSampleSampledProperty(
   property,
   start,
@@ -46,12 +158,40 @@ function subSampleSampledProperty(
   startingIndex,
   result,
 ) {
+  let refEntity;
+  let refPosition;
+
+  let entityFrame = false;
+  if (referenceFrame instanceof Entity) {
+    refEntity = referenceFrame;
+    refPosition = refEntity.position;
+    referenceFrame = ReferenceFrame.FIXED;
+    entityFrame = true;
+  }
+
   let r = startingIndex;
   //Always step exactly on start (but only use it if it exists.)
   let tmp;
+  let tmp2;
   tmp = property.getValueInReferenceFrame(start, referenceFrame, result[r]);
-  if (defined(tmp)) {
-    result[r++] = tmp;
+  if (!entityFrame) {
+    if (defined(tmp)) {
+      result[r++] = tmp;
+    }
+  } else {
+    tmp2 = refPosition.getValueInReferenceFrame(
+      start,
+      referenceFrame,
+      sampleScratch
+    );
+    if (defined(tmp) && defined(tmp2)) {
+      result[r++] = Cartesian3.subtract(tmp, tmp2, tmp);
+      if (defined(computeVvlhTransform(start, refPosition, rr))) {
+        Matrix4.inverse(rr, rr);
+        Matrix4.getRotation(rr, q, q);
+        Matrix3.multiplyByVector(q, tmp, tmp);
+      }
+    }
   }
 
   let steppedOnNow =
@@ -78,8 +218,24 @@ function subSampleSampledProperty(
         referenceFrame,
         result[r],
       );
-      if (defined(tmp)) {
-        result[r++] = tmp;
+      if (!entityFrame) {
+        if (defined(tmp)) {
+          result[r++] = tmp;
+        }
+      } else {
+        tmp2 = refPosition.getValueInReferenceFrame(
+          updateTime,
+          referenceFrame,
+          sampleScratch
+        );
+        if (defined(tmp) && defined(tmp2)) {
+          result[r++] = Cartesian3.subtract(tmp, tmp2, tmp);
+          if (defined(computeVvlhTransform(updateTime, refPosition, rr))) {
+            Matrix4.inverse(rr, rr);
+            Matrix4.getRotation(rr, q, q);
+            Matrix3.multiplyByVector(q, tmp, tmp);
+          }
+        }
       }
       steppedOnNow = true;
     }
@@ -93,8 +249,24 @@ function subSampleSampledProperty(
         referenceFrame,
         result[r],
       );
-      if (defined(tmp)) {
-        result[r++] = tmp;
+      if (!entityFrame) {
+        if (defined(tmp)) {
+          result[r++] = tmp;
+        }
+      } else {
+        tmp2 = refPosition.getValueInReferenceFrame(
+          current,
+          referenceFrame,
+          sampleScratch
+        );
+        if (defined(tmp) && defined(tmp2)) {
+          result[r++] = Cartesian3.subtract(tmp, tmp2, tmp);
+          if (defined(computeVvlhTransform(current, refPosition, rr))) {
+            Matrix4.inverse(rr, rr);
+            Matrix4.getRotation(rr, q, q);
+            Matrix3.multiplyByVector(q, tmp, tmp);
+          }
+        }
       }
     }
 
@@ -129,8 +301,24 @@ function subSampleSampledProperty(
 
   //Always step exactly on stop (but only use it if it exists.)
   tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[r]);
-  if (defined(tmp)) {
-    result[r++] = tmp;
+  if (!entityFrame) {
+    if (defined(tmp)) {
+      result[r++] = tmp;
+    }
+  } else {
+    tmp2 = refPosition.getValueInReferenceFrame(
+      stop,
+      referenceFrame,
+      sampleScratch
+    );
+    if (defined(tmp) && defined(tmp2)) {
+      result[r++] = Cartesian3.subtract(tmp, tmp2, tmp);
+      if (defined(computeVvlhTransform(stop, refPosition, rr))) {
+        Matrix4.inverse(rr, rr);
+        Matrix4.getRotation(rr, q, q);
+        Matrix3.multiplyByVector(q, tmp, tmp);
+      }
+    }
   }
 
   return r;
@@ -493,15 +681,23 @@ function PolylineUpdater(scene, referenceFrame) {
 }
 
 PolylineUpdater.prototype.update = function (time) {
-  if (this._referenceFrame === ReferenceFrame.INERTIAL) {
-    const toFixed = Transforms.computeIcrfToCentralBodyFixedMatrix(
-      time,
-      toFixedScratch,
-    );
+  const frame = this._referenceFrame;
+  if (frame === ReferenceFrame.INERTIAL) {
+    let toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
+    if (!defined(toFixed)) {
+      toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, toFixedScratch);
+    }
     Matrix4.fromRotationTranslation(
       toFixed,
       Cartesian3.ZERO,
-      this._polylineCollection.modelMatrix,
+      this._polylineCollection.modelMatrix
+    );
+  } else if (frame instanceof Entity) {
+    //data._getModelMatrix(time, this._polylineCollection.modelMatrix);
+    computeVvlhTransform(
+      time,
+      frame.position,
+      this._polylineCollection.modelMatrix
     );
   }
 };
@@ -713,12 +909,22 @@ PathVisualizer.prototype.update = function (time) {
 
     const lastUpdater = item.updater;
 
+    let isRelative = false;
+
     let frameToVisualize = ReferenceFrame.FIXED;
+    let frameToVisualizeKey = frameToVisualize.toString();
     if (this._scene.mode === SceneMode.SCENE3D) {
-      frameToVisualize = positionProperty.referenceFrame;
+      if (defined(entity.relativeToId)) {
+        isRelative = true;
+        frameToVisualize = this._entityCollection.getById(entity.relativeToId);
+        frameToVisualizeKey = entity.relativeToId;
+      } else {
+        frameToVisualize = positionProperty.referenceFrame;
+        frameToVisualizeKey = frameToVisualize.toString();
+      }
     }
 
-    let currentUpdater = this._updaters[frameToVisualize];
+    let currentUpdater = this._updaters[frameToVisualizeKey];
 
     if (lastUpdater === currentUpdater && defined(currentUpdater)) {
       currentUpdater.updateObject(time, item);
@@ -729,10 +935,14 @@ PathVisualizer.prototype.update = function (time) {
       lastUpdater.removeObject(item);
     }
 
+    if (isRelative && !defined(frameToVisualize)) {
+      continue;
+    }
+
     if (!defined(currentUpdater)) {
       currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
       currentUpdater.update(time);
-      this._updaters[frameToVisualize] = currentUpdater;
+      this._updaters[frameToVisualizeKey] = currentUpdater;
     }
 
     item.updater = currentUpdater;
