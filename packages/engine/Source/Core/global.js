@@ -7,3 +7,10 @@
  * Union of all numeric typed array constructor types.
  * @typedef {Float64ArrayConstructor|Float32ArrayConstructor|Uint32ArrayConstructor|Uint16ArrayConstructor|Uint8ArrayConstructor|Int32ArrayConstructor|Int16ArrayConstructor|Int8ArrayConstructor} TypedArrayConstructor
  */
+
+/**
+ * See `TYPE_ONLY_EXPORTS` in `build.js`. This file adds no runtime exports, and must only
+ * define type definitions.
+ * @ignore
+ */
+export default null;

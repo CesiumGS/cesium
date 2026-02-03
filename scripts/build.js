@@ -22,6 +22,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, "..");
 const packageJsonPath = path.join(projectRoot, "package.json");
 
+const TYPE_ONLY_EXPORTS = new Set(["global"]);
+
 export async function getVersion() {
   const data = await readFile(packageJsonPath, "utf8");
   const { version } = JSON.parse(data);
@@ -282,6 +284,11 @@ function generateDeclaration(workspace, file) {
     assignmentName = `_shaders${assignmentName}`;
   }
   assignmentName = assignmentName.replace(/(\.|-)/g, "_");
+
+  if (TYPE_ONLY_EXPORTS.has(assignmentName)) {
+    return;
+  }
+
   return `export { ${assignmentName} } from '@${scope}/${workspace}';`;
 }
 
@@ -933,6 +940,11 @@ export async function createIndexJs(workspace) {
       assignmentName = `_shaders${assignmentName}`;
     }
     assignmentName = assignmentName.replace(/(\.|-)/g, "_");
+
+    if (TYPE_ONLY_EXPORTS.has(assignmentName)) {
+      return;
+    }
+
     contents += `export { default as ${assignmentName} } from './${moduleId}.js';${EOL}`;
   });
 
