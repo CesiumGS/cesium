@@ -3212,6 +3212,16 @@ function executeWebVRCommands(scene, passState) {
   const renderTranslucentDepthForPick =
     environmentState.renderTranslucentDepthForPick;
 
+  const context = scene.context;
+  const frameState = scene.frameState;
+  const uniformState = context.uniformState;
+  frameState.cullingVolume = camera.frustum.computeCullingVolume(
+    camera.positionWC,
+    camera.directionWC,
+    camera.upWC,
+  );
+  uniformState.update(frameState);
+
   updateAndRenderPrimitives(scene);
 
   view.createPotentiallyVisibleSet(scene);
@@ -3224,6 +3234,7 @@ function executeWebVRCommands(scene, passState) {
 
   // Based on Calculating Stereo pairs by Paul Bourke
   // http://paulbourke.net/stereographics/stereorender/
+  const originViewport = BoundingRectangle.clone(passState.viewport);
   const viewport = passState.viewport;
   viewport.x = 0;
   viewport.y = 0;
@@ -3258,6 +3269,7 @@ function executeWebVRCommands(scene, passState) {
   executeCommands(scene, passState);
 
   Camera.clone(savedCamera, camera);
+  passState.viewport = originViewport;
 }
 
 const scratch2DViewportCartographic = new Cartographic(
