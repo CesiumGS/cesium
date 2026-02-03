@@ -118,6 +118,10 @@ const attributeLocationsInstanced = {
  * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
  * @param {boolean} [options.show=true] Determines if the billboards in the collection will be shown.
+ * @param {number} [options.coarseDepthTestDistance] An eye-space distance, beyond which, billboards in the collection are depth-tested against a camera-facing plane at the ellipsoid's center,
+ * rather than against the full globe depth buffer. This setting is secondary to a billboard's disableDepthTestDistance value.
+ * @param {number} [options.threePointDepthTestDistance] Within this distance, for billboards in the collection that are clamped to the ground, three key points on each billboard will be depth tested.
+ * If any key point is visible, the whole billboard will be visible. Settings this value to 0 disables this feature.
  *
  * @performance For best performance, prefer a few collections, each with many billboards, to
  * many collections with only a few billboards each.  Organize collections so that billboards
@@ -317,8 +321,8 @@ function BillboardCollection(options) {
   ];
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
-  this._coarseDepthTestDistance = Ellipsoid.default.minimumRadius / 10;
-  this._threePointDepthTestDistance = Ellipsoid.default.minimumRadius / 1000;
+  this._coarseDepthTestDistance = options.coarseDepthTestDistance ?? Ellipsoid.default.minimumRadius / 10;
+  this._threePointDepthTestDistance = options.threePointDepthTestDistance ?? Ellipsoid.default.minimumRadius / 1000;
 
   this._uniforms = {
     u_atlas: () => {
@@ -327,13 +331,9 @@ function BillboardCollection(options) {
     u_highlightColor: () => {
       return this._highlightColor;
     },
-    // An eye-space distance, beyond which, the billboard is simply tested against a camera-facing plane at the ellipsoid's center,
-    // rather than against a depth texture. Note: only if the disableDepthTestingDistance property permits.
     u_coarseDepthTestDistance: () => {
       return this._coarseDepthTestDistance;
     },
-    // Within this distance, if the billboard is clamped to the ground, we'll depth-test 3 key points.
-    // If any key point is visible, the whole billboard will be visible.
     u_threePointDepthTestDistance: () => {
       return this._threePointDepthTestDistance;
     },
@@ -466,6 +466,47 @@ Object.defineProperties(BillboardCollection.prototype, {
       return this._billboardTextureCache;
     },
   },
+
+  /**
+   * An eye-space distance, beyond which, billboards are depth-tested against a camera-facing plane at the ellipsoid's center,
+   * rather than against the full globe depth buffer. This setting is secondary to a billboard's disableDepthTestDistance value.
+   *
+   * @private
+   * @memberof BillboardCollection.prototype
+   * @type {number}
+   */
+  coarseDepthTestDistance: {
+    get: function () {
+      return this._coarseDepthTestDistance;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("coarseDepthTestDistance", value);
+      //>>includeEnd('debug');
+      this._coarseDepthTestDistance = value;
+    },
+  },
+
+  /**
+   * Within this distance, if billboards in the collection are clamped to the ground, three key points on each billboard will be depth tested.
+   * If any key point is visible, the whole billboard will be visible. Settings this value to 0 disables this feature.
+   *
+   * @private
+   * @memberof BillboardCollection.prototype
+   * @type {number}
+   */
+  threePointDepthTestDistance: {
+    get: function () {
+      return this._threePointDepthTestDistance;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("threePointDepthTestDistance", value);
+      //>>includeEnd('debug');
+      this._threePointDepthTestDistance = value;
+    },
+  },
+
 });
 
 function destroyBillboards(billboards) {
