@@ -148,7 +148,7 @@ export function useGalleryItemStore() {
         const exists = pagefindResults.find(
           (res) => res && res.id === vectorResult.id,
         );
-        // This similarity threshold is the cutoff for showing a a vector search result
+        // This similarity threshold is the cutoff for showing a vector search result
         // There is a tradeoff depending on user query complexity
         // Often, shorter queries may want a slightly higher threshold (~0.75)
         // However, this number was based on testing with more complex queries

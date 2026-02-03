@@ -34,7 +34,7 @@ function itemToText(title, description, labels) {
 async function generateEmbeddings(items) {
   const tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
   const model = await AutoModel.from_pretrained(MODEL_ID, {
-    dtype: "fp32",
+    dtype: "q8",
   });
 
   const texts = items.map((item) =>

@@ -51,8 +51,9 @@ class EmbeddingSearch {
     console.log(this.galleryList);
 
     this.tokenizer = await AutoTokenizer.from_pretrained(this.modelId);
-    this.model = await AutoModel.from_pretrained(this.modelId);
-
+    this.model = await AutoModel.from_pretrained(this.modelId, {
+      dtype: "q8",
+    });
     this.onInitializedCallbacks.forEach((callback) => callback());
   }
 
