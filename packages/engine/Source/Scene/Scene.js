@@ -3212,6 +3212,16 @@ function executeWebVRCommands(scene, passState) {
   const renderTranslucentDepthForPick =
     environmentState.renderTranslucentDepthForPick;
 
+  const context = scene.context;
+  const frameState = scene.frameState;
+  const uniformState = context.uniformState;
+  frameState.cullingVolume = camera.frustum.computeCullingVolume(
+    camera.positionWC,
+    camera.directionWC,
+    camera.upWC,
+  );
+  uniformState.update(frameState);
+
   updateAndRenderPrimitives(scene);
 
   view.createPotentiallyVisibleSet(scene);
