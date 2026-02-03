@@ -321,8 +321,11 @@ function BillboardCollection(options) {
   ];
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
-  this._coarseDepthTestDistance = options.coarseDepthTestDistance ?? Ellipsoid.default.minimumRadius / 10;
-  this._threePointDepthTestDistance = options.threePointDepthTestDistance ?? Ellipsoid.default.minimumRadius / 1000;
+  this._coarseDepthTestDistance =
+    options.coarseDepthTestDistance ?? Ellipsoid.default.minimumRadius / 10;
+  this._threePointDepthTestDistance =
+    options.threePointDepthTestDistance ??
+    Ellipsoid.default.minimumRadius / 1000;
 
   this._uniforms = {
     u_atlas: () => {
@@ -506,7 +509,6 @@ Object.defineProperties(BillboardCollection.prototype, {
       this._threePointDepthTestDistance = value;
     },
   },
-
 });
 
 function destroyBillboards(billboards) {

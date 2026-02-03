@@ -1,5 +1,17 @@
 # Change Log
 
+## 1.139 - 2026-03-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixes billboard depth testing near horizon [#13159](https://github.com/CesiumGS/cesium/issues/13159)
+
+#### Additions :tada:
+
+- Exposes more depth testing options on `BillboardCollection` and `LabelCollection`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
+
 ## 1.138 - 2026-02-02
 
 ### @cesium/engine

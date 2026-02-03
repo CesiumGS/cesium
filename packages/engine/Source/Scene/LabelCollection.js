@@ -19,6 +19,7 @@ import SDFSettings from "./SDFSettings.js";
 import TextureAtlas from "../Renderer/TextureAtlas.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 import GraphemeSplitter from "grapheme-splitter";
+import { Check } from "@cesium/engine";
 
 /**
  * A glyph represents a single character in label.
@@ -593,6 +594,10 @@ function destroyLabel(labelCollection, label) {
  * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
  * @param {boolean} [options.show=true] Determines if the labels in the collection will be shown.
+ * @param {number} [options.coarseDepthTestDistance] An eye-space distance, beyond which, labels in the collection are depth-tested against a camera-facing plane at the ellipsoid's center,
+ * rather than against the full globe depth buffer. This setting is secondary to a billboard's disableDepthTestDistance value.
+ * @param {number} [options.threePointDepthTestDistance] Within this distance, for labels in the collection that are clamped to the ground, three key points on each label will be depth tested.
+ * If any key point is visible, the whole label will be visible. Settings this value to 0 disables this feature.
  *
  * @performance For best performance, prefer a few collections, each with many labels, to
  * many collections with only a few labels each.  Avoid having collections where some
@@ -629,6 +634,8 @@ function LabelCollection(options) {
     textureAtlas: new TextureAtlas({
       initialSize: whitePixelSize,
     }),
+    coarseDepthTestDistance: options.coarseDepthTestDistance,
+    threePointDepthTestDistance: options.threePointDepthTestDistance,
   });
   this._backgroundBillboardCollection = backgroundBillboardCollection;
   this._backgroundBillboardTexture = new BillboardTexture(
@@ -638,6 +645,8 @@ function LabelCollection(options) {
   this._glyphBillboardCollection = new BillboardCollection({
     scene: this._scene,
     batchTable: this._batchTable,
+    coarseDepthTestDistance: options.coarseDepthTestDistance,
+    threePointDepthTestDistance: options.threePointDepthTestDistance,
   });
   this._glyphBillboardCollection._sdf = true;
 
@@ -757,6 +766,48 @@ Object.defineProperties(LabelCollection.prototype, {
       }
 
       return this._glyphBillboardCollection.ready;
+    },
+  },
+
+  /**
+   * An eye-space distance, beyond which, labels are depth-tested against a camera-facing plane at the ellipsoid's center,
+   * rather than against the full globe depth buffer. This setting is secondary to a label's disableDepthTestDistance value.
+   *
+   * @private
+   * @memberof LabelCollection.prototype
+   * @type {number}
+   */
+  coarseDepthTestDistance: {
+    get: function () {
+      return this._coarseDepthTestDistance;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("coarseDepthTestDistance", value);
+      //>>includeEnd('debug');
+      this._backgroundBillboardCollection.coarseDepthTestDistance = value;
+      this._glyphBillboardCollection.coarseDepthTestDistance = value;
+    },
+  },
+
+  /**
+   * Within this distance, if labels in the collection are clamped to the ground, three key points on each label will be depth tested.
+   * If any key point is visible, the whole label will be visible. Settings this value to 0 disables this feature.
+   *
+   * @private
+   * @memberof LabelCollection.prototype
+   * @type {number}
+   */
+  threePointDepthTestDistance: {
+    get: function () {
+      return this._threePointDepthTestDistance;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("threePointDepthTestDistance", value);
+      //>>includeEnd('debug');
+      this._backgroundBillboardCollection.threePointDepthTestDistance = value;
+      this._glyphBillboardCollection.threePointDepthTestDistance = value;
     },
   },
 });
