@@ -28,6 +28,7 @@ const baseConfig = {
         index: resolve(__dirname, "./index.html"),
         bucket: resolve(__dirname, "./templates/bucket.html"),
         standalone: resolve(__dirname, "./standalone.html"),
+        standalone2: resolve(__dirname, "./standalone-old.html"),
       },
     },
     assetsInlineLimit: (filePath) => {
@@ -43,7 +44,8 @@ const baseConfig = {
       // for legacy reasons however the <base> tag makes it behave
       // as if it's nested inside the `/templates/` directory.
       // we need to adjust the vite built asset paths to "un-nest" this change
-      if (hostId.endsWith("standalone.html")) {
+      // TODO: remove with the old version
+      if (hostId.endsWith("standalone-old.html")) {
         return `../${filename}`;
       }
     },
