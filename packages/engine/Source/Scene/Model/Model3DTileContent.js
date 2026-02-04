@@ -270,6 +270,7 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;
   model.splitDirection = tileset.splitDirection;
   model.debugWireframe = tileset.debugWireframe;
+  model.cadWireframe = tileset.cadWireframe;
   model.showOutline = tileset.showOutline;
   model.outlineColor = tileset.outlineColor;
   model.pointCloudShading = tileset.pointCloudShading;
