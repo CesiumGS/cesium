@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Fixes :wrench:
+
+- Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
+
 #### Additions :tada:
 
 - Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors [#13174](https://github.com/CesiumGS/cesium/pull/13174)
