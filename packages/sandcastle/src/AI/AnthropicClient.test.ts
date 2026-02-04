@@ -40,7 +40,9 @@ interface AnthropicStreamEvent {
   };
 }
 
-function createSseStream(events: AnthropicStreamEvent[]): ReadableStream<Uint8Array> {
+function createSseStream(
+  events: AnthropicStreamEvent[],
+): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
     start(controller: ReadableStreamDefaultController<Uint8Array>) {
       for (const event of events) {
@@ -79,15 +81,22 @@ describe("AnthropicClient", () => {
     });
 
     it("should initialize with custom model", () => {
-      const client = new AnthropicClient(mockApiKey, "claude-opus-4-5-20251101");
+      const client = new AnthropicClient(
+        mockApiKey,
+        "claude-opus-4-5-20251101",
+      );
       expect(client.getModel()).toBe("claude-opus-4-5-20251101");
     });
 
     it("should accept custom options", () => {
-      const client = new AnthropicClient(mockApiKey, "claude-sonnet-4-5-20250929", {
-        thinkingBudgetTokens: 5000,
-        maxTokens: 8000,
-      });
+      const client = new AnthropicClient(
+        mockApiKey,
+        "claude-sonnet-4-5-20250929",
+        {
+          thinkingBudgetTokens: 5000,
+          maxTokens: 8000,
+        },
+      );
       // Options are internal but constructor should not throw
       expect(client.getModel()).toBe("claude-sonnet-4-5-20250929");
     });
@@ -182,7 +191,10 @@ describe("AnthropicClient", () => {
 
     it("should yield error for whitespace-only message", async () => {
       const chunks: StreamChunk[] = [];
-      for await (const chunk of client.generateWithContext("   ", mockContext)) {
+      for await (const chunk of client.generateWithContext(
+        "   ",
+        mockContext,
+      )) {
         chunks.push(chunk);
       }
 
@@ -416,7 +428,10 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
@@ -447,7 +462,10 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
@@ -476,7 +494,10 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
@@ -567,7 +588,12 @@ describe("AnthropicClient", () => {
           {
             role: "assistant",
             content: [
-              { type: "tool_use", id: "tool_123", name: "apply_diff", input: {} },
+              {
+                type: "tool_use",
+                id: "tool_123",
+                name: "apply_diff",
+                input: {},
+              },
             ],
           },
         ],
@@ -583,7 +609,10 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
@@ -604,7 +633,9 @@ describe("AnthropicClient", () => {
       expect(toolResultMessage.role).toBe("user");
       expect(toolResultMessage.content[0].type).toBe("tool_result");
       expect(toolResultMessage.content[0].tool_use_id).toBe("tool_123");
-      expect(toolResultMessage.content[0].content).toBe("Diff applied successfully");
+      expect(toolResultMessage.content[0].content).toBe(
+        "Diff applied successfully",
+      );
       expect(toolResultMessage.content[0].is_error).toBe(false);
     });
 
@@ -612,7 +643,10 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
@@ -631,7 +665,9 @@ describe("AnthropicClient", () => {
       const toolResultMessage = body.messages[body.messages.length - 1];
 
       expect(toolResultMessage.content[0].is_error).toBe(true);
-      expect(toolResultMessage.content[0].content).toBe("Search string not found");
+      expect(toolResultMessage.content[0].content).toBe(
+        "Search string not found",
+      );
     });
 
     it("should include tools in follow-up request when provided", async () => {
@@ -639,14 +675,21 @@ describe("AnthropicClient", () => {
         {
           name: "apply_diff",
           description: "Apply diff",
-          input_schema: { type: "object" as const, properties: {}, required: [] },
+          input_schema: {
+            type: "object" as const,
+            properties: {},
+            required: [],
+          },
         },
       ];
 
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
@@ -753,7 +796,10 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
@@ -775,7 +821,10 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
@@ -800,7 +849,10 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
@@ -834,7 +886,10 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
@@ -869,15 +924,15 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for await (const _ of client.generateWithContext(
-        "Test",
-        mockContext,
-      )) {
+      for await (const _ of client.generateWithContext("Test", mockContext)) {
         // consume
       }
 
@@ -900,7 +955,10 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 
@@ -927,7 +985,10 @@ describe("AnthropicClient", () => {
       queueStreamingResponse([
         { type: "message_start", message: { usage: { input_tokens: 100 } } },
         { type: "content_block_start", content_block: { type: "text" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "ok" } },
+        {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "ok" },
+        },
         { type: "content_block_stop" },
       ]);
 

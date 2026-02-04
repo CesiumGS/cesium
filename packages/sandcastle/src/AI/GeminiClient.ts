@@ -203,7 +203,9 @@ export class GeminiClient {
     // Gemini API bug where thoughtSignature is sometimes not returned,
     // causing subsequent API calls to fail with 400 errors.
     const hasTools = tools && tools.length > 0;
-    const thinkingBudget = hasTools ? 0 : (this.options.thinkingBudgetTokens ?? 16000);
+    const thinkingBudget = hasTools
+      ? 0
+      : (this.options.thinkingBudgetTokens ?? 16000);
     const requestConfig: Record<string, unknown> = {
       temperature: this.options.temperature ?? 0,
       maxOutputTokens: 65536, // Maximum output to prevent premature truncation
@@ -453,7 +455,8 @@ export class GeminiClient {
 
                   const thoughtSignature =
                     (part as { thoughtSignature?: string }).thoughtSignature ??
-                    (part as { thought_signature?: string }).thought_signature ??
+                    (part as { thought_signature?: string })
+                      .thought_signature ??
                     (functionCall as { thoughtSignature?: string })
                       .thoughtSignature ??
                     (functionCall as { thought_signature?: string })
@@ -509,9 +512,7 @@ export class GeminiClient {
                 }
               }
             } else if (DEBUG) {
-              console.log(
-                `[GeminiClient] Chunk #${chunkNumber} has no parts`,
-              );
+              console.log(`[GeminiClient] Chunk #${chunkNumber} has no parts`);
             }
 
             // Track usage metadata
@@ -854,7 +855,9 @@ User Request: ${userMessage}`;
     // Gemini API bug where thoughtSignature is sometimes not returned,
     // causing subsequent API calls to fail with 400 errors.
     const hasTools = tools && tools.length > 0;
-    const thinkingBudget = hasTools ? 0 : (this.options.thinkingBudgetTokens ?? 16000);
+    const thinkingBudget = hasTools
+      ? 0
+      : (this.options.thinkingBudgetTokens ?? 16000);
     if (thinkingBudget > 0) {
       requestConfig.thinkingConfig = {
         thinkingBudget: thinkingBudget,
@@ -960,7 +963,8 @@ User Request: ${userMessage}`;
                 if (functionCall) {
                   const thoughtSignature =
                     (part as { thoughtSignature?: string }).thoughtSignature ??
-                    (part as { thought_signature?: string }).thought_signature ??
+                    (part as { thought_signature?: string })
+                      .thought_signature ??
                     (functionCall as { thoughtSignature?: string })
                       .thoughtSignature ??
                     (functionCall as { thought_signature?: string })

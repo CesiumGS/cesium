@@ -83,7 +83,13 @@ vi.mock("@monaco-editor/react", () => ({
 
 // Mock react-virtuoso
 vi.mock("react-virtuoso", () => ({
-  Virtuoso: ({ data, itemContent }: { data: unknown[]; itemContent: (index: number, item: unknown) => React.ReactNode }) => (
+  Virtuoso: ({
+    data,
+    itemContent,
+  }: {
+    data: unknown[];
+    itemContent: (index: number, item: unknown) => React.ReactNode;
+  }) => (
     <div data-testid="virtuoso-list">
       {data.map((item, index) => (
         <div key={index}>{itemContent(index, item)}</div>
@@ -98,8 +104,12 @@ vi.mock("./ChatMessage", () => ({
     <div data-testid={`chat-message-${message.id}`}>
       <div data-testid="message-role">{message.role}</div>
       <div data-testid="message-content">{message.content}</div>
-      {message.error && <div data-testid="message-error">Error: {message.content}</div>}
-      {message.reasoning && <div data-testid="message-reasoning">{message.reasoning}</div>}
+      {message.error && (
+        <div data-testid="message-error">Error: {message.content}</div>
+      )}
+      {message.reasoning && (
+        <div data-testid="message-reasoning">{message.reasoning}</div>
+      )}
       {message.toolCalls && (
         <div data-testid="message-tool-calls">
           {message.toolCalls.map((tc) => (
@@ -115,7 +125,9 @@ vi.mock("./ChatMessage", () => ({
 
 // Mock AttachmentPreview
 vi.mock("./AttachmentPreview", () => ({
-  AttachmentPreview: () => <div data-testid="attachment-preview">Attachment</div>,
+  AttachmentPreview: () => (
+    <div data-testid="attachment-preview">Attachment</div>
+  ),
 }));
 
 // Mock PromptInput
@@ -132,7 +144,9 @@ vi.mock("./components/common/PromptInput", () => ({
       <button
         data-testid="submit-button"
         onClick={(e) => {
-          const input = (e.target as HTMLElement).parentElement?.querySelector('input');
+          const input = (e.target as HTMLElement).parentElement?.querySelector(
+            "input",
+          );
           if (input?.dataset.value) {
             onSubmit(input.dataset.value);
           }
@@ -165,7 +179,9 @@ describe("ChatPanel - Critical Path Tests", () => {
       };
 
       const { AIClientFactory } = await import("./AI/AIClientFactory");
-      vi.mocked(AIClientFactory.createClient).mockReturnValue(mockClient as never);
+      vi.mocked(AIClientFactory.createClient).mockReturnValue(
+        mockClient as never,
+      );
 
       const { container } = render(
         <ChatPanel
@@ -177,7 +193,9 @@ describe("ChatPanel - Critical Path Tests", () => {
       );
 
       // Initially, no messages should be present
-      expect(container.querySelectorAll('[data-testid^="chat-message-"]')).toHaveLength(0);
+      expect(
+        container.querySelectorAll('[data-testid^="chat-message-"]'),
+      ).toHaveLength(0);
 
       const user = userEvent.setup();
       const input = screen.getByTestId("prompt-input");
@@ -189,7 +207,9 @@ describe("ChatPanel - Critical Path Tests", () => {
 
       await waitFor(() => {
         // Should have user message but NO empty assistant message
-        const messages = container.querySelectorAll('[data-testid^="chat-message-"]');
+        const messages = container.querySelectorAll(
+          '[data-testid^="chat-message-"]',
+        );
         expect(messages.length).toBe(1); // Only user message
         expect(screen.getByText("user")).toBeInTheDocument();
       });
@@ -207,7 +227,9 @@ describe("ChatPanel - Critical Path Tests", () => {
       };
 
       const { AIClientFactory } = await import("./AI/AIClientFactory");
-      vi.mocked(AIClientFactory.createClient).mockReturnValue(mockClient as never);
+      vi.mocked(AIClientFactory.createClient).mockReturnValue(
+        mockClient as never,
+      );
 
       const { container } = render(
         <ChatPanel
@@ -228,7 +250,9 @@ describe("ChatPanel - Critical Path Tests", () => {
 
       await waitFor(
         () => {
-          const messages = container.querySelectorAll('[data-testid^="chat-message-"]');
+          const messages = container.querySelectorAll(
+            '[data-testid^="chat-message-"]',
+          );
           expect(messages.length).toBe(2); // User + assistant
           expect(screen.getByText("Hello world")).toBeInTheDocument();
         },
@@ -249,7 +273,9 @@ describe("ChatPanel - Critical Path Tests", () => {
       };
 
       const { AIClientFactory } = await import("./AI/AIClientFactory");
-      vi.mocked(AIClientFactory.createClient).mockReturnValue(mockClient as never);
+      vi.mocked(AIClientFactory.createClient).mockReturnValue(
+        mockClient as never,
+      );
 
       render(
         <ChatPanel
@@ -272,7 +298,9 @@ describe("ChatPanel - Critical Path Tests", () => {
         () => {
           // Should have reasoning and text content
           expect(screen.getByTestId("message-reasoning")).toBeInTheDocument();
-          expect(screen.getByText(/Let me think... about this/)).toBeInTheDocument();
+          expect(
+            screen.getByText(/Let me think... about this/),
+          ).toBeInTheDocument();
           expect(screen.getByText("Answer")).toBeInTheDocument();
         },
         { timeout: 3000 },
@@ -326,7 +354,9 @@ describe("ChatPanel - Critical Path Tests", () => {
       };
 
       const { AIClientFactory } = await import("./AI/AIClientFactory");
-      vi.mocked(AIClientFactory.createClient).mockReturnValue(mockClient as never);
+      vi.mocked(AIClientFactory.createClient).mockReturnValue(
+        mockClient as never,
+      );
 
       render(
         <ChatPanel
@@ -384,9 +414,13 @@ describe("ChatPanel - Critical Path Tests", () => {
       };
 
       const { AIClientFactory } = await import("./AI/AIClientFactory");
-      vi.mocked(AIClientFactory.createClient).mockReturnValue(mockClient as never);
+      vi.mocked(AIClientFactory.createClient).mockReturnValue(
+        mockClient as never,
+      );
 
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       render(
         <ChatPanel
@@ -461,7 +495,9 @@ describe("ChatPanel - Critical Path Tests", () => {
       };
 
       const { AIClientFactory } = await import("./AI/AIClientFactory");
-      vi.mocked(AIClientFactory.createClient).mockReturnValue(mockClient as never);
+      vi.mocked(AIClientFactory.createClient).mockReturnValue(
+        mockClient as never,
+      );
 
       render(
         <ChatPanel
@@ -503,7 +539,9 @@ describe("ChatPanel - Critical Path Tests", () => {
       };
 
       const { AIClientFactory } = await import("./AI/AIClientFactory");
-      vi.mocked(AIClientFactory.createClient).mockReturnValue(mockClient as never);
+      vi.mocked(AIClientFactory.createClient).mockReturnValue(
+        mockClient as never,
+      );
 
       render(
         <ChatPanel
@@ -543,7 +581,9 @@ describe("ChatPanel - Critical Path Tests", () => {
       };
 
       const { AIClientFactory } = await import("./AI/AIClientFactory");
-      vi.mocked(AIClientFactory.createClient).mockReturnValue(mockClient as never);
+      vi.mocked(AIClientFactory.createClient).mockReturnValue(
+        mockClient as never,
+      );
 
       const { container } = render(
         <ChatPanel
@@ -564,7 +604,9 @@ describe("ChatPanel - Critical Path Tests", () => {
 
       await waitFor(
         () => {
-          const messages = container.querySelectorAll('[data-testid^="chat-message-"]');
+          const messages = container.querySelectorAll(
+            '[data-testid^="chat-message-"]',
+          );
           // Should have user message and error message (not empty)
           expect(messages.length).toBe(2);
           expect(screen.getByTestId("message-error")).toBeInTheDocument();
@@ -586,7 +628,9 @@ describe("ChatPanel - Critical Path Tests", () => {
       };
 
       const { AIClientFactory } = await import("./AI/AIClientFactory");
-      vi.mocked(AIClientFactory.createClient).mockReturnValue(mockClient as never);
+      vi.mocked(AIClientFactory.createClient).mockReturnValue(
+        mockClient as never,
+      );
 
       render(
         <ChatPanel

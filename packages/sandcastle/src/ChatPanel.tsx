@@ -73,7 +73,6 @@ type MessageContentBlock =
       };
     };
 
-
 interface ChatPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -114,10 +113,18 @@ export function ChatPanel({
   const history = useHistory();
 
   // Get model context
-  const { models, currentModel, pinnedModels, setCurrentModel, togglePin, refreshModels } =
-    useModel();
+  const {
+    models,
+    currentModel,
+    pinnedModels,
+    setCurrentModel,
+    togglePin,
+    refreshModels,
+  } = useModel();
   const selectedModel =
-    currentModel || AIClientFactory.getDefaultModel() || "gemini-3-flash-preview";
+    currentModel ||
+    AIClientFactory.getDefaultModel() ||
+    "gemini-3-flash-preview";
 
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [input, setInput] = useState("");
@@ -909,9 +916,7 @@ export function ChatPanel({
         console.log(`[ChatPanel] ✅ Client created`);
 
         // Get tools from registry
-        console.log(
-          `[ChatPanel] 🛠️ Tool registry exists: ${!!toolRegistry}`,
-        );
+        console.log(`[ChatPanel] 🛠️ Tool registry exists: ${!!toolRegistry}`);
         const tools = toolRegistry ? toolRegistry.getAllTools() : undefined;
         console.log(
           `[ChatPanel] 📋 Tools to pass to client: ${tools ? tools.length : 0}`,
@@ -981,7 +986,10 @@ export function ChatPanel({
               ? (result.output ?? "Success")
               : (result.error ?? "Unknown error");
 
-          const buildToolResultMessage = (call: ToolCall, result: ToolResult) => ({
+          const buildToolResultMessage = (
+            call: ToolCall,
+            result: ToolResult,
+          ) => ({
             role: "user" as const,
             content: [
               {
@@ -1196,7 +1204,12 @@ export function ChatPanel({
               const finalContent =
                 contText || (streamError ? `⚠️ Error: ${streamError}` : "");
               if (!contMsgId) {
-                if (finalContent || contReasoning || streamError || nextToolCall) {
+                if (
+                  finalContent ||
+                  contReasoning ||
+                  streamError ||
+                  nextToolCall
+                ) {
                   const contMsg: ChatMessageType = {
                     id: `msg-${Date.now()}-assistant`,
                     role: "assistant",
@@ -1205,7 +1218,9 @@ export function ChatPanel({
                     reasoning: contReasoning,
                     isStreaming: false,
                     error: !!streamError,
-                    toolCalls: nextToolCall ? [{ toolCall: nextToolCall }] : undefined,
+                    toolCalls: nextToolCall
+                      ? [{ toolCall: nextToolCall }]
+                      : undefined,
                   };
                   contMsgId = contMsg.id;
                   setMessages((prev) => [...prev, contMsg]);
@@ -1426,9 +1441,7 @@ export function ChatPanel({
 
         // Consume the AsyncGenerator
         console.log("[ChatPanel] 🚀 Starting stream processing...");
-        console.log(
-          `[ChatPanel] 🔧 Tools: ${toolsToPass?.length || 0}`,
-        );
+        console.log(`[ChatPanel] 🔧 Tools: ${toolsToPass?.length || 0}`);
 
         if (toolsToPass && toolsToPass.length > 0) {
           console.log(
@@ -1701,7 +1714,8 @@ export function ChatPanel({
 
         // Final message update with all data (immediate, no throttling)
         // If there was a stream error and no text content, show the error to the user
-        const finalContent = accumulatedText || (streamError ? `⚠️ Error: ${streamError}` : "");
+        const finalContent =
+          accumulatedText || (streamError ? `⚠️ Error: ${streamError}` : "");
         if (!assistantMessageId) {
           if (finalContent || reasoning || streamError) {
             const assistantMessage: ChatMessageType = {

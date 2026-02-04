@@ -202,10 +202,7 @@ function createApplyDiffHandler(
       });
 
       if (!result.success) {
-        console.log(
-          "[ToolRegistry] ❌ Diff application failed:",
-          result.error,
-        );
+        console.log("[ToolRegistry] ❌ Diff application failed:", result.error);
 
         // Find closest match to help the model self-correct
         const closest = matcher.findClosestMatch(search, sourceCode);
@@ -213,9 +210,10 @@ function createApplyDiffHandler(
 
         if (closest) {
           const confidencePercent = (closest.confidence * 100).toFixed(0);
-          const preview = closest.matchedText.length > 200
-            ? `${closest.matchedText.slice(0, 200)}...`
-            : closest.matchedText;
+          const preview =
+            closest.matchedText.length > 200
+              ? `${closest.matchedText.slice(0, 200)}...`
+              : closest.matchedText;
 
           errorMessage += `\n\nClosest match found (${confidencePercent}% similar) at line ${closest.startLine}:\n\`\`\`\n${preview}\n\`\`\`\n\nTip: Copy the SEARCH block exactly from the code shown above, including all whitespace and formatting.`;
         }
@@ -235,7 +233,9 @@ function createApplyDiffHandler(
       // Get the OTHER file's current contents so the model knows what to search for
       // when making subsequent edits. This prevents the model from guessing file contents.
       const otherFile = file === "javascript" ? "html" : "javascript";
-      const otherFileContents = getSourceCode(otherFile as "javascript" | "html");
+      const otherFileContents = getSourceCode(
+        otherFile as "javascript" | "html",
+      );
 
       return {
         tool_call_id: "",
