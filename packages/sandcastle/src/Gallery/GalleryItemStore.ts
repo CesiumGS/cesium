@@ -146,9 +146,6 @@ export function useGalleryItemStore() {
 
     if (vectorSearchResults && vectorSearchResults.length > 0) {
       for (const vectorResult of vectorSearchResults.reverse()) {
-        const exists = pagefindResults.find(
-          (res) => res && res.id === vectorResult.id,
-        );
         // This similarity threshold is the cutoff for showing a vector search result
         // There is a tradeoff depending on user query complexity
         // Often, shorter queries may want a slightly higher threshold (~0.75)
@@ -158,12 +155,15 @@ export function useGalleryItemStore() {
           continue;
         }
 
+        const exists = pagefindResults.find(
+          (res) => res && res.id === vectorResult.id,
+        );
+
         if (exists) {
           pagefindResults.splice(pagefindResults.indexOf(exists), 1);
           pagefindResults.unshift(exists);
           continue;
-        }
-        if (!exists) {
+        } else {
           const item = items.find((item) => item.id === vectorResult.id);
           if (item) {
             pagefindResults.unshift(formatVectorSearch(item));
