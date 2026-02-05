@@ -23,6 +23,7 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import RenderState from "../Renderer/RenderState.js";
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
@@ -47,6 +48,14 @@ const GaussianSplatSortingState = {
   ERROR: 4,
 };
 
+const SnapshotState = {
+  BUILDING: "BUILDING",
+  TEXTURE_PENDING: "TEXTURE_PENDING",
+  TEXTURE_READY: "TEXTURE_READY",
+  SORTING: "SORTING",
+  READY: "READY",
+};
+
 function haveSelectedTilesChanged(primitive, selectedTiles) {
   const prevSet = primitive._selectedTileSet;
   if (!defined(prevSet) || prevSet.size !== selectedTiles.length) {
@@ -68,6 +77,126 @@ function isActiveSort(primitive, activeSort) {
     activeSort.requestId === primitive._sortRequestId &&
     activeSort.dataGeneration === primitive._splatDataGeneration
   );
+}
+
+function destroySnapshotTextures(snapshot) {
+  if (!defined(snapshot)) {
+    return;
+  }
+  if (defined(snapshot.gaussianSplatTexture)) {
+    snapshot.gaussianSplatTexture.destroy();
+    snapshot.gaussianSplatTexture = undefined;
+  }
+  if (defined(snapshot.sphericalHarmonicsTexture)) {
+    snapshot.sphericalHarmonicsTexture.destroy();
+    snapshot.sphericalHarmonicsTexture = undefined;
+  }
+}
+
+function retireTexture(primitive, texture, frameNumber) {
+  if (!defined(texture)) {
+    return;
+  }
+  const retired = primitive._retiredTextures;
+  retired.push({
+    texture: texture,
+    frameNumber: frameNumber,
+  });
+}
+
+function releaseRetiredTextures(primitive, frameNumber) {
+  const retired = primitive._retiredTextures;
+  if (!defined(retired) || retired.length === 0) {
+    return;
+  }
+  const next = [];
+  for (let i = 0; i < retired.length; i++) {
+    const entry = retired[i];
+    if (frameNumber - entry.frameNumber > 0) {
+      entry.texture.destroy();
+    } else {
+      next.push(entry);
+    }
+  }
+  primitive._retiredTextures = next;
+}
+
+function commitSnapshot(primitive, snapshot, frameState) {
+  if (!defined(snapshot.indexes) || snapshot.state !== SnapshotState.READY) {
+    throw new DeveloperError("Committing snapshot before it is READY.");
+  }
+
+  const frameNumber = defined(frameState) ? frameState.frameNumber : 0;
+  const currentSnapshot = primitive._snapshot;
+  if (defined(currentSnapshot)) {
+    if (
+      defined(currentSnapshot.gaussianSplatTexture) &&
+      currentSnapshot.gaussianSplatTexture !== snapshot.gaussianSplatTexture
+    ) {
+      retireTexture(
+        primitive,
+        currentSnapshot.gaussianSplatTexture,
+        frameNumber,
+      );
+    }
+    if (
+      defined(currentSnapshot.sphericalHarmonicsTexture) &&
+      currentSnapshot.sphericalHarmonicsTexture !==
+        snapshot.sphericalHarmonicsTexture
+    ) {
+      retireTexture(
+        primitive,
+        currentSnapshot.sphericalHarmonicsTexture,
+        frameNumber,
+      );
+    }
+  } else {
+    if (
+      defined(primitive.gaussianSplatTexture) &&
+      primitive.gaussianSplatTexture !== snapshot.gaussianSplatTexture
+    ) {
+      retireTexture(
+        primitive,
+        primitive.gaussianSplatTexture,
+        frameNumber,
+      );
+    }
+    if (
+      defined(primitive.sphericalHarmonicsTexture) &&
+      primitive.sphericalHarmonicsTexture !== snapshot.sphericalHarmonicsTexture
+    ) {
+      retireTexture(
+        primitive,
+        primitive.sphericalHarmonicsTexture,
+        frameNumber,
+      );
+    }
+  }
+
+  primitive._snapshot = snapshot;
+  primitive._positions = snapshot.positions;
+  primitive._rotations = snapshot.rotations;
+  primitive._scales = snapshot.scales;
+  primitive._colors = snapshot.colors;
+  primitive._shData = snapshot.shData;
+  primitive._sphericalHarmonicsDegree = snapshot.sphericalHarmonicsDegree;
+  primitive._numSplats = snapshot.numSplats;
+  primitive._indexes = snapshot.indexes;
+  primitive.gaussianSplatTexture = snapshot.gaussianSplatTexture;
+  primitive.sphericalHarmonicsTexture = snapshot.sphericalHarmonicsTexture;
+  primitive._lastTextureWidth = snapshot.lastTextureWidth;
+  primitive._lastTextureHeight = snapshot.lastTextureHeight;
+  primitive._hasGaussianSplatTexture = defined(snapshot.gaussianSplatTexture);
+  primitive._needsGaussianSplatTexture = false;
+  primitive._gaussianSplatTexturePending = false;
+
+  primitive._vertexArray = undefined;
+  primitive._vertexArrayLen = -1;
+  primitive._drawCommand = undefined;
+  primitive._sorterPromise = undefined;
+  primitive._activeSort = undefined;
+  primitive._sorterState = GaussianSplatSortingState.IDLE;
+  primitive._dirty = false;
 }
 
 function createSphericalHarmonicsTexture(context, shData) {
@@ -167,6 +296,9 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._needsGaussianSplatTexture = true;
+  this._snapshot = undefined;
+  this._pendingSnapshot = undefined;
+  this._retiredTextures = [];
 
   /**
    * The previous view matrix used to determine if the primitive needs to be updated.
@@ -325,6 +457,8 @@ function GaussianSplatPrimitive(options) {
   this._splatDataGeneration = 0;
   this._sortRequestId = 0;
   this._activeSort = undefined;
+  this._pendingSortPromise = undefined;
+  this._pendingSort = undefined;
 
   /**
    * An error that occurred during the Gaussian splat sorting operation.
@@ -389,10 +523,18 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   this._scales = undefined;
   this._colors = undefined;
   this._indexes = undefined;
-  if (defined(this.gaussianSplatTexture)) {
-    this.gaussianSplatTexture.destroy();
-    this.gaussianSplatTexture = undefined;
+  destroySnapshotTextures(this._pendingSnapshot);
+  destroySnapshotTextures(this._snapshot);
+  if (defined(this._retiredTextures)) {
+    for (let i = 0; i < this._retiredTextures.length; i++) {
+      this._retiredTextures[i].texture.destroy();
+    }
   }
+  this._retiredTextures = [];
+  this._pendingSnapshot = undefined;
+  this._snapshot = undefined;
+  this.gaussianSplatTexture = undefined;
+  this.sphericalHarmonicsTexture = undefined;
 
   const drawCommand = this._drawCommand;
   if (defined(drawCommand)) {
@@ -559,41 +701,51 @@ GaussianSplatPrimitive.transformTile = function (tile) {
  * @param {FrameState} frameState
  * @private
  */
-GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
-  primitive._gaussianSplatTexturePending = true;
+GaussianSplatPrimitive.generateSplatTexture = function (
+  primitive,
+  frameState,
+  snapshot,
+) {
+  if (!defined(snapshot) || snapshot.state !== SnapshotState.BUILDING) {
+    return;
+  }
+  snapshot.state = SnapshotState.TEXTURE_PENDING;
   const promise = GaussianSplatTextureGenerator.generateFromAttributes({
     attributes: {
-      positions: new Float32Array(primitive._positions),
-      scales: new Float32Array(primitive._scales),
-      rotations: new Float32Array(primitive._rotations),
-      colors: new Uint8Array(primitive._colors),
+      positions: new Float32Array(snapshot.positions),
+      scales: new Float32Array(snapshot.scales),
+      rotations: new Float32Array(snapshot.rotations),
+      colors: new Uint8Array(snapshot.colors),
     },
-    count: primitive._numSplats,
+    count: snapshot.numSplats,
   });
   if (!defined(promise)) {
-    primitive._gaussianSplatTexturePending = false;
+    snapshot.state = SnapshotState.BUILDING;
     return;
   }
   promise
     .then((splatTextureData) => {
-      if (!primitive._gaussianSplatTexture) {
-        // First frame, so create the texture.
-        primitive.gaussianSplatTexture = createGaussianSplatTexture(
+      if (primitive._pendingSnapshot !== snapshot) {
+        snapshot.state = SnapshotState.BUILDING;
+        return;
+      }
+      if (!defined(snapshot.gaussianSplatTexture)) {
+        snapshot.gaussianSplatTexture = createGaussianSplatTexture(
           frameState.context,
           splatTextureData,
         );
       } else if (
-        primitive._lastTextureHeight !== splatTextureData.height ||
-        primitive._lastTextureWidth !== splatTextureData.width
+        snapshot.lastTextureHeight !== splatTextureData.height ||
+        snapshot.lastTextureWidth !== splatTextureData.width
       ) {
-        const oldTex = primitive.gaussianSplatTexture;
-        primitive._gaussianSplatTexture = createGaussianSplatTexture(
+        const oldTex = snapshot.gaussianSplatTexture;
+        snapshot.gaussianSplatTexture = createGaussianSplatTexture(
           frameState.context,
           splatTextureData,
         );
         oldTex.destroy();
       } else {
-        primitive.gaussianSplatTexture.copyFrom({
+        snapshot.gaussianSplatTexture.copyFrom({
           source: {
             width: splatTextureData.width,
             height: splatTextureData.height,
@@ -601,27 +753,45 @@ GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
           },
         });
       }
-      primitive._vertexArray = undefined;
-      primitive._lastTextureHeight = splatTextureData.height;
-      primitive._lastTextureWidth = splatTextureData.width;
+      snapshot.lastTextureHeight = splatTextureData.height;
+      snapshot.lastTextureWidth = splatTextureData.width;
 
-      primitive._hasGaussianSplatTexture = true;
-      primitive._needsGaussianSplatTexture = false;
-      primitive._gaussianSplatTexturePending = false;
+      if (defined(snapshot.shData) && snapshot.sphericalHarmonicsDegree > 0) {
+        const oldTex = snapshot.sphericalHarmonicsTexture;
+        const width = ContextLimits.maximumTextureSize;
+        const dims = snapshot.shCoefficientCount / 3;
+        const splatsPerRow = Math.floor(width / dims);
+        const floatsPerRow = splatsPerRow * (dims * 2);
+        const texBuf = new Uint32Array(
+          width * Math.ceil(snapshot.numSplats / splatsPerRow) * 2,
+        );
 
-      if (
-        !defined(primitive._indexes) ||
-        primitive._indexes.length < primitive._numSplats
-      ) {
-        primitive._indexes = new Uint32Array(primitive._numSplats);
+        let dataIndex = 0;
+        for (let i = 0; dataIndex < snapshot.shData.length; i += width * 2) {
+          texBuf.set(
+            snapshot.shData.subarray(dataIndex, dataIndex + floatsPerRow),
+            i,
+          );
+          dataIndex += floatsPerRow;
+        }
+        snapshot.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
+          frameState.context,
+          {
+            data: texBuf,
+            width: width,
+            height: Math.ceil(snapshot.numSplats / splatsPerRow),
+          },
+        );
+        if (defined(oldTex)) {
+          oldTex.destroy();
+        }
       }
-      for (let i = 0; i < primitive._numSplats; ++i) {
-        primitive._indexes[i] = i;
-      }
+
+      snapshot.state = SnapshotState.TEXTURE_READY;
     })
     .catch((error) => {
       console.error("Error generating Gaussian splat texture:", error);
-      primitive._gaussianSplatTexturePending = false;
+      snapshot.state = SnapshotState.BUILDING;
     });
 };
 
@@ -839,7 +1009,9 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
-  if (!tileset.show || tileset._selectedTiles.length === 0) {
+  releaseRetiredTextures(this, frameState.frameNumber);
+
+  if (!tileset.show) {
     return;
   }
 
@@ -851,6 +1023,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     this._dirty = true;
     return;
   }
+  const hasRootTransform = defined(this._rootTransform);
 
   if (frameState.passes.pick === true) {
     return;
@@ -861,31 +1034,35 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   }
 
   if (this._sorterState === GaussianSplatSortingState.IDLE) {
+    const selectedTilesChanged =
+      tileset._selectedTiles.length !== 0 &&
+      haveSelectedTilesChanged(this, tileset._selectedTiles);
+    const hasPendingWork =
+      this._dirty ||
+      selectedTilesChanged ||
+      defined(this._pendingSnapshot) ||
+      defined(this._pendingSortPromise) ||
+      !defined(this._drawCommand);
     if (
-      !this._dirty &&
+      !hasPendingWork &&
       Matrix4.equals(frameState.camera.viewMatrix, this._prevViewMatrix)
     ) {
-      // No need to update if the view matrix hasn't changed and the primitive isn't dirty.
       return;
     }
 
     if (
       tileset._selectedTiles.length !== 0 &&
-      (haveSelectedTilesChanged(this, tileset._selectedTiles) || this._dirty)
+      (selectedTilesChanged || this._dirty)
     ) {
       this._splatDataGeneration++;
       this._activeSort = undefined;
       this._sorterPromise = undefined;
       this._sorterState = GaussianSplatSortingState.IDLE;
-      this._numSplats = 0;
-      this._positions = undefined;
-      this._rotations = undefined;
-      this._scales = undefined;
-      this._colors = undefined;
-      this._indexes = undefined;
-      this._shData = undefined;
-      this._needsGaussianSplatTexture = true;
-      this._gaussianSplatTexturePending = false;
+      this._pendingSortPromise = undefined;
+      this._pendingSort = undefined;
+      if (defined(this._pendingSnapshot)) {
+        destroySnapshotTextures(this._pendingSnapshot);
+      }
 
       const tiles = tileset._selectedTiles;
       const totalElements = tiles.reduce(
@@ -922,10 +1099,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
       const aggregateShData = () => {
         let offset = 0;
+        let aggregate;
         for (const tile of tiles) {
-          const shData = tile.content.packedSphericalHarmonicsData;
+          const tileShData = tile.content.packedSphericalHarmonicsData;
           if (tile.content.sphericalHarmonicsDegree > 0) {
-            if (!defined(this._shData)) {
+            if (!defined(aggregate)) {
               let coefs;
               switch (tile.content.sphericalHarmonicsDegree) {
                 case 1:
@@ -937,33 +1115,36 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
                 case 3:
                   coefs = 45;
               }
-              this._shData = new Uint32Array(totalElements * (coefs * (2 / 3)));
+              aggregate = new Uint32Array(
+                totalElements * (coefs * (2 / 3)),
+              );
             }
-            this._shData.set(shData, offset);
-            offset += shData.length;
+            aggregate.set(tileShData, offset);
+            offset += tileShData.length;
           }
         }
+        return aggregate;
       };
 
-      this._positions = aggregateAttributeValues(
+      const positions = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
         (content) => content.positions,
         3,
       );
 
-      this._scales = aggregateAttributeValues(
+      const scales = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
         (content) => content.scales,
         3,
       );
 
-      this._rotations = aggregateAttributeValues(
+      const rotations = aggregateAttributeValues(
         ComponentDatatype.FLOAT,
         (content) => content.rotations,
         4,
       );
 
-      this._colors = aggregateAttributeValues(
+      const colors = aggregateAttributeValues(
         ComponentDatatype.UNSIGNED_BYTE,
         (content) =>
           ModelUtility.getAttributeBySemantic(
@@ -972,56 +1153,154 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           ),
       );
 
-      aggregateShData();
-      this._sphericalHarmonicsDegree =
+      const sphericalHarmonicsDegree =
         tiles[0].content.sphericalHarmonicsDegree;
+      const shCoefficientCount =
+        sphericalHarmonicsDegree > 0
+          ? tiles[0].content.sphericalHarmonicsCoefficientCount
+          : 0;
+      const shData = aggregateShData();
 
-      this._numSplats = totalElements;
+      this._pendingSnapshot = {
+        generation: this._splatDataGeneration,
+        positions: positions,
+        rotations: rotations,
+        scales: scales,
+        colors: colors,
+        shData: shData,
+        sphericalHarmonicsDegree: sphericalHarmonicsDegree,
+        shCoefficientCount: shCoefficientCount,
+        numSplats: totalElements,
+        indexes: undefined,
+        gaussianSplatTexture: undefined,
+        sphericalHarmonicsTexture: undefined,
+        lastTextureWidth: 0,
+        lastTextureHeight: 0,
+        state: SnapshotState.BUILDING,
+      };
+
       this.selectedTileLength = tileset._selectedTiles.length;
       this._selectedTileSet = new Set(tileset._selectedTiles);
       this._dirty = false;
+    }
+
+    if (defined(this._pendingSnapshot)) {
+      const pending = this._pendingSnapshot;
+      if (pending.state === SnapshotState.BUILDING) {
+        GaussianSplatPrimitive.generateSplatTexture(this, frameState, pending);
+        return;
+      }
+      if (pending.state === SnapshotState.TEXTURE_PENDING) {
+        return;
+      }
+      if (
+        pending.state === SnapshotState.TEXTURE_READY &&
+        !defined(pending.gaussianSplatTexture)
+      ) {
+        return;
+      }
+
+      if (!hasRootTransform) {
+        return;
+      }
+
+      Matrix4.clone(frameState.camera.viewMatrix, this._prevViewMatrix);
+      Matrix4.multiply(
+        frameState.camera.viewMatrix,
+        this._rootTransform,
+        scratchMatrix4A,
+      );
+
+      if (
+        pending.state === SnapshotState.TEXTURE_READY &&
+        !defined(this._pendingSortPromise)
+      ) {
+        const requestId = ++this._sortRequestId;
+        const dataGeneration = this._splatDataGeneration;
+        this._pendingSort = {
+          requestId: requestId,
+          dataGeneration: dataGeneration,
+          expectedCount: pending.numSplats,
+          snapshot: pending,
+        };
+        const sortPromise = GaussianSplatSorter.radixSortIndexes({
+          primitive: {
+            positions: new Float32Array(pending.positions),
+            modelView: Float32Array.from(scratchMatrix4A),
+            count: pending.numSplats,
+          },
+          sortType: "Index",
+        });
+        if (!defined(sortPromise)) {
+          this._pendingSortPromise = undefined;
+          this._pendingSort = undefined;
+          pending.state = SnapshotState.TEXTURE_READY;
+          return;
+        }
+        this._pendingSortPromise = sortPromise;
+        pending.state = SnapshotState.SORTING;
+      }
+
+      if (!defined(this._pendingSortPromise)) {
+        if (pending.state === SnapshotState.SORTING) {
+          pending.state = SnapshotState.TEXTURE_READY;
+        }
+        return;
+      }
+
+      const pendingSort = this._pendingSort;
+      this._pendingSortPromise.catch((err) => {
+        if (
+          !defined(pendingSort) ||
+          pendingSort.snapshot !== this._pendingSnapshot
+        ) {
+          return;
+        }
+        this._pendingSortPromise = undefined;
+        this._pendingSort = undefined;
+        if (pending.state === SnapshotState.SORTING) {
+          pending.state = SnapshotState.TEXTURE_READY;
+        }
+        this._sorterState = GaussianSplatSortingState.ERROR;
+        this._sorterError = err;
+      });
+      this._pendingSortPromise.then((sortedData) => {
+        if (
+          !defined(pendingSort) ||
+          pendingSort.snapshot !== this._pendingSnapshot
+        ) {
+          return;
+        }
+        const expectedCount = pendingSort.expectedCount;
+        const currentCount = pending.numSplats;
+        const sortedLen = sortedData?.length;
+        if (
+          expectedCount !== currentCount ||
+          sortedLen !== expectedCount
+        ) {
+          this._pendingSortPromise = undefined;
+          this._pendingSort = undefined;
+          if (pending.state === SnapshotState.SORTING) {
+            pending.state = SnapshotState.TEXTURE_READY;
+          }
+          return;
+        }
+        pending.indexes = sortedData;
+        pending.state = SnapshotState.READY;
+        this._pendingSortPromise = undefined;
+        this._pendingSort = undefined;
+        commitSnapshot(this, pending, frameState);
+        this._pendingSnapshot = undefined;
+        GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
+      });
+      return;
     }
 
     if (this._numSplats === 0) {
       return;
     }
 
-    if (this._needsGaussianSplatTexture) {
-      if (!this._gaussianSplatTexturePending) {
-        GaussianSplatPrimitive.generateSplatTexture(this, frameState);
-        if (defined(this._shData)) {
-          const oldTex = this.sphericalHarmonicsTexture;
-          const width = ContextLimits.maximumTextureSize;
-          const dims =
-            tileset._selectedTiles[0].content
-              .sphericalHarmonicsCoefficientCount / 3;
-          const splatsPerRow = Math.floor(width / dims);
-          const floatsPerRow = splatsPerRow * (dims * 2);
-          const texBuf = new Uint32Array(
-            width * Math.ceil(this._numSplats / splatsPerRow) * 2,
-          );
-
-          let dataIndex = 0;
-          for (let i = 0; dataIndex < this._shData.length; i += width * 2) {
-            texBuf.set(
-              this._shData.subarray(dataIndex, dataIndex + floatsPerRow),
-              i,
-            );
-            dataIndex += floatsPerRow;
-          }
-          this.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
-            frameState.context,
-            {
-              data: texBuf,
-              width: width,
-              height: Math.ceil(this._numSplats / splatsPerRow),
-            },
-          );
-          if (defined(oldTex)) {
-            oldTex.destroy();
-          }
-        }
-      }
+    if (!hasRootTransform) {
       return;
     }
 
