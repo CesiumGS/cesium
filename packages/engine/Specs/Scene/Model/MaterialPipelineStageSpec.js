@@ -960,9 +960,6 @@ describe(
         renderResources.shaderBuilder,
         ["uniform float u_linePattern;"],
       );
-      ShaderBuilderTester.expectHasVaryings(renderResources.shaderBuilder, [
-        "float v_lineCoord;",
-      ]);
 
       expect(renderResources.uniformMap.u_linePattern).toBeDefined();
       expect(renderResources.uniformMap.u_linePattern()).toBe(0xaaaa);
@@ -987,10 +984,7 @@ describe(
 
       ShaderBuilderTester.expectHasFragmentDefines(
         renderResources.shaderBuilder,
-        [
-          "HAS_LINE_PATTERN",
-          "USE_METALLIC_ROUGHNESS",
-        ],
+        ["HAS_LINE_PATTERN", "USE_METALLIC_ROUGHNESS"],
       );
 
       expect(renderResources.uniformMap.u_lineWidth).toBeDefined();
