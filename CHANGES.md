@@ -16,7 +16,7 @@
 
 #### Additions :tada:
 
-- Added support for [EXT_textureInfo_constant_lod](https://github.com/CesiumGS/glTF/pull/92) glTF extension. [13121](https://github.com/CesiumGS/cesium/pull/13121)
+- Added support for [EXT_textureInfo_constant_lod](https://github.com/CesiumGS/glTF/pull/92) glTF extension. [#13121](https://github.com/CesiumGS/cesium/pull/13121)
 
 ## 1.137 - 2026-01-05
 
