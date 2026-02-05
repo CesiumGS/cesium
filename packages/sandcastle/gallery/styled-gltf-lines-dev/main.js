@@ -6,7 +6,7 @@ const viewer = new Cesium.Viewer("cesiumContainer");
 // combined with EXT_mesh_primitive_edge_visibility for edge rendering.
 // The extension allows lines to have custom width (in screen pixels) and 16-bit dash patterns.
 const modelURL =
-  "../../SampleData/models/StyledLines/BENTLEY_materials_line_style.gltf";
+  "../../../Specs/Data/Models/glTF-2.0/StyledLines/BENTLEY_materials_line_style.gltf";
 
 const height = 0.0;
 const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
