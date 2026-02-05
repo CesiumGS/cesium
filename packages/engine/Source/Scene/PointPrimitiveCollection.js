@@ -24,6 +24,7 @@ import BlendingState from "./BlendingState.js";
 import BlendOption from "./BlendOption.js";
 import PointPrimitive from "./PointPrimitive.js";
 import SceneMode from "./SceneMode.js";
+import AttributeCompression from "../Core/AttributeCompression.js";
 
 const SHOW_INDEX = PointPrimitive.SHOW_INDEX;
 const POSITION_INDEX = PointPrimitive.POSITION_INDEX;
@@ -501,6 +502,7 @@ function createVAF(context, numberOfPointPrimitives, buffersUsage) {
 // instead of storing it in a vertex buffer.
 
 const writePositionScratch = new EncodedCartesian3();
+const writeColorScratch = new Color();
 
 function writePositionSizeAndOutline(
   pointPrimitiveCollection,
@@ -539,7 +541,6 @@ function writePositionSizeAndOutline(
   positionLowWriter(i, low.x, low.y, low.z, outlineWidth);
 }
 
-const LEFT_SHIFT16 = 65536.0; // 2^16
 const LEFT_SHIFT8 = 256.0; // 2^8
 
 function writeCompressedAttrib0(
@@ -551,31 +552,22 @@ function writeCompressedAttrib0(
   const i = pointPrimitive._index;
 
   const color = pointPrimitive.color;
-  const pickColor = pointPrimitive.getPickId(context).color;
   const outlineColor = pointPrimitive.outlineColor;
+  const pickColor = pointPrimitive.getPickId(context).color;
 
-  let red = Color.floatToByte(color.red);
-  let green = Color.floatToByte(color.green);
-  let blue = Color.floatToByte(color.blue);
-  const compressed0 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
-
-  red = Color.floatToByte(outlineColor.red);
-  green = Color.floatToByte(outlineColor.green);
-  blue = Color.floatToByte(outlineColor.blue);
-  const compressed1 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
-
-  red = Color.floatToByte(pickColor.red);
-  green = Color.floatToByte(pickColor.green);
-  blue = Color.floatToByte(pickColor.blue);
-  const compressed2 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
-
-  const compressed3 =
-    Color.floatToByte(color.alpha) * LEFT_SHIFT16 +
-    Color.floatToByte(outlineColor.alpha) * LEFT_SHIFT8 +
-    Color.floatToByte(pickColor.alpha);
+  // Pack all three alpha channels into an RGB-encoded component.
+  writeColorScratch.red = color.alpha;
+  writeColorScratch.green = outlineColor.alpha;
+  writeColorScratch.blue = pickColor.alpha;
 
   const writer = vafWriters[attributeLocations.compressedAttribute0];
-  writer(i, compressed0, compressed1, compressed2, compressed3);
+  writer(
+    i,
+    AttributeCompression.encodeRGB8(color),
+    AttributeCompression.encodeRGB8(outlineColor),
+    AttributeCompression.encodeRGB8(pickColor),
+    AttributeCompression.encodeRGB8(writeColorScratch),
+  );
 }
 
 function writeCompressedAttrib1(
