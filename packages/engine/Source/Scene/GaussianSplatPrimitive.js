@@ -47,6 +47,29 @@ const GaussianSplatSortingState = {
   ERROR: 4,
 };
 
+function haveSelectedTilesChanged(primitive, selectedTiles) {
+  const prevSet = primitive._selectedTileSet;
+  if (!defined(prevSet) || prevSet.size !== selectedTiles.length) {
+    return true;
+  }
+
+  for (let i = 0; i < selectedTiles.length; i++) {
+    if (!prevSet.has(selectedTiles[i])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function isActiveSort(primitive, activeSort) {
+  return (
+    defined(activeSort) &&
+    activeSort.requestId === primitive._sortRequestId &&
+    activeSort.dataGeneration === primitive._splatDataGeneration
+  );
+}
+
 function createSphericalHarmonicsTexture(context, shData) {
   const texture = new Texture({
     context: context,
@@ -230,6 +253,7 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this.selectedTileLength = 0;
+  this._selectedTileSet = new Set();
 
   /**
    * Indicates whether or not the primitive is ready for use.
@@ -298,6 +322,9 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._sorterPromise = undefined;
+  this._splatDataGeneration = 0;
+  this._sortRequestId = 0;
+  this._activeSort = undefined;
 
   /**
    * An error that occurred during the Gaussian splat sorting operation.
@@ -844,8 +871,12 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
     if (
       tileset._selectedTiles.length !== 0 &&
-      tileset._selectedTiles.length !== this.selectedTileLength
+      (haveSelectedTilesChanged(this, tileset._selectedTiles) || this._dirty)
     ) {
+      this._splatDataGeneration++;
+      this._activeSort = undefined;
+      this._sorterPromise = undefined;
+      this._sorterState = GaussianSplatSortingState.IDLE;
       this._numSplats = 0;
       this._positions = undefined;
       this._rotations = undefined;
@@ -947,6 +978,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
       this._numSplats = totalElements;
       this.selectedTileLength = tileset._selectedTiles.length;
+      this._selectedTileSet = new Set(tileset._selectedTiles);
+      this._dirty = false;
     }
 
     if (this._numSplats === 0) {
@@ -1000,7 +1033,15 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     );
 
     if (!defined(this._sorterPromise)) {
-      this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
+      const requestId = ++this._sortRequestId;
+      const dataGeneration = this._splatDataGeneration;
+      const expectedCount = this._numSplats;
+      this._activeSort = {
+        requestId: requestId,
+        dataGeneration: dataGeneration,
+        expectedCount: expectedCount,
+      };
+      const rawPromise = GaussianSplatSorter.radixSortIndexes({
         primitive: {
           positions: new Float32Array(this._positions),
           modelView: Float32Array.from(scratchMatrix4A),
@@ -1008,23 +1049,49 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         },
         sortType: "Index",
       });
+      this._sorterPromise = rawPromise;
     }
 
     if (!defined(this._sorterPromise)) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
+    const activeSort = this._activeSort;
     this._sorterPromise.catch((err) => {
+      if (!isActiveSort(this, activeSort)) {
+        return;
+      }
       this._sorterState = GaussianSplatSortingState.ERROR;
       this._sorterError = err;
     });
     this._sorterPromise.then((sortedData) => {
+      const isActive = isActiveSort(this, activeSort);
+      const expectedCount = activeSort?.expectedCount;
+      const currentCount = this._numSplats;
+      const sortedLen = sortedData?.length;
+      const isMismatch =
+        expectedCount !== currentCount || sortedLen !== expectedCount;
+      if (!isActive || isMismatch) {
+        if (isActive) {
+          this._sorterPromise = undefined;
+          this._sorterState = GaussianSplatSortingState.IDLE;
+        }
+        return;
+      }
       this._indexes = sortedData;
       this._sorterState = GaussianSplatSortingState.SORTED;
     });
   } else if (this._sorterState === GaussianSplatSortingState.WAITING) {
     if (!defined(this._sorterPromise)) {
-      this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
+      const requestId = ++this._sortRequestId;
+      const dataGeneration = this._splatDataGeneration;
+      const expectedCount = this._numSplats;
+      this._activeSort = {
+        requestId: requestId,
+        dataGeneration: dataGeneration,
+        expectedCount: expectedCount,
+      };
+      const rawPromise = GaussianSplatSorter.radixSortIndexes({
         primitive: {
           positions: new Float32Array(this._positions),
           modelView: Float32Array.from(scratchMatrix4A),
@@ -1032,21 +1099,39 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         },
         sortType: "Index",
       });
+      this._sorterPromise = rawPromise;
     }
     if (!defined(this._sorterPromise)) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
+    const activeSort = this._activeSort;
     this._sorterPromise.catch((err) => {
+      if (!isActiveSort(this, activeSort)) {
+        return;
+      }
       this._sorterState = GaussianSplatSortingState.ERROR;
       this._sorterError = err;
     });
     this._sorterPromise.then((sortedData) => {
+      const isActive = isActiveSort(this, activeSort);
+      const expectedCount = activeSort?.expectedCount;
+      const currentCount = this._numSplats;
+      const sortedLen = sortedData?.length;
+      const isMismatch =
+        expectedCount !== currentCount || sortedLen !== expectedCount;
+      if (!isActive || isMismatch) {
+        if (isActive) {
+          this._sorterPromise = undefined;
+          this._sorterState = GaussianSplatSortingState.IDLE;
+        }
+        return;
+      }
       this._indexes = sortedData;
       this._sorterState = GaussianSplatSortingState.SORTED;
     });
 
-    this._sorterState = GaussianSplatSortingState.SORTING; //set state to sorting
+    this._sorterState = GaussianSplatSortingState.SORTING; // set state to sorting
   } else if (this._sorterState === GaussianSplatSortingState.SORTING) {
     return; //still sorting, wait for next frame
   } else if (this._sorterState === GaussianSplatSortingState.SORTED) {
@@ -1055,6 +1140,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     this._sorterState = GaussianSplatSortingState.IDLE; //reset state for next frame
     this._dirty = false;
     this._sorterPromise = undefined; //reset promise for next frame
+    this._activeSort = undefined;
   } else if (this._sorterState === GaussianSplatSortingState.ERROR) {
     throw this._sorterError;
   }
