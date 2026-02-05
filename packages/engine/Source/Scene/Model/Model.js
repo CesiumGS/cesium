@@ -2049,6 +2049,7 @@ Model.prototype.update = function (frameState) {
   // (e.g. model matrix, back-face culling)
   updateSceneGraph(this, frameState);
   updateShowCreditsOnScreen(this);
+
   submitDrawCommands(this, frameState);
 };
 
