@@ -1243,47 +1243,48 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       }
 
       const pendingSort = this._pendingSort;
-      this._pendingSortPromise.catch((err) => {
-        if (
-          !defined(pendingSort) ||
-          pendingSort.snapshot !== this._pendingSnapshot
-        ) {
-          return;
-        }
-        this._pendingSortPromise = undefined;
-        this._pendingSort = undefined;
-        if (pending.state === SnapshotState.SORTING) {
-          pending.state = SnapshotState.TEXTURE_READY;
-        }
-        this._sorterState = GaussianSplatSortingState.ERROR;
-        this._sorterError = err;
-      });
-      this._pendingSortPromise.then((sortedData) => {
-        if (
-          !defined(pendingSort) ||
-          pendingSort.snapshot !== this._pendingSnapshot
-        ) {
-          return;
-        }
-        const expectedCount = pendingSort.expectedCount;
-        const currentCount = pending.numSplats;
-        const sortedLen = sortedData?.length;
-        if (expectedCount !== currentCount || sortedLen !== expectedCount) {
+      this._pendingSortPromise
+        .then((sortedData) => {
+          if (
+            !defined(pendingSort) ||
+            pendingSort.snapshot !== this._pendingSnapshot
+          ) {
+            return;
+          }
+          const expectedCount = pendingSort.expectedCount;
+          const currentCount = pending.numSplats;
+          const sortedLen = sortedData?.length;
+          if (expectedCount !== currentCount || sortedLen !== expectedCount) {
+            this._pendingSortPromise = undefined;
+            this._pendingSort = undefined;
+            if (pending.state === SnapshotState.SORTING) {
+              pending.state = SnapshotState.TEXTURE_READY;
+            }
+            return;
+          }
+          pending.indexes = sortedData;
+          pending.state = SnapshotState.READY;
+          this._pendingSortPromise = undefined;
+          this._pendingSort = undefined;
+          commitSnapshot(this, pending, frameState);
+          this._pendingSnapshot = undefined;
+          GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
+        })
+        .catch((err) => {
+          if (
+            !defined(pendingSort) ||
+            pendingSort.snapshot !== this._pendingSnapshot
+          ) {
+            return;
+          }
           this._pendingSortPromise = undefined;
           this._pendingSort = undefined;
           if (pending.state === SnapshotState.SORTING) {
             pending.state = SnapshotState.TEXTURE_READY;
           }
-          return;
-        }
-        pending.indexes = sortedData;
-        pending.state = SnapshotState.READY;
-        this._pendingSortPromise = undefined;
-        this._pendingSort = undefined;
-        commitSnapshot(this, pending, frameState);
-        this._pendingSnapshot = undefined;
-        GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
-      });
+          this._sorterState = GaussianSplatSortingState.ERROR;
+          this._sorterError = err;
+        });
       return;
     }
 
@@ -1327,30 +1328,31 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       return;
     }
     const activeSort = this._activeSort;
-    this._sorterPromise.catch((err) => {
-      if (!isActiveSort(this, activeSort)) {
-        return;
-      }
-      this._sorterState = GaussianSplatSortingState.ERROR;
-      this._sorterError = err;
-    });
-    this._sorterPromise.then((sortedData) => {
-      const isActive = isActiveSort(this, activeSort);
-      const expectedCount = activeSort?.expectedCount;
-      const currentCount = this._numSplats;
-      const sortedLen = sortedData?.length;
-      const isMismatch =
-        expectedCount !== currentCount || sortedLen !== expectedCount;
-      if (!isActive || isMismatch) {
-        if (isActive) {
-          this._sorterPromise = undefined;
-          this._sorterState = GaussianSplatSortingState.IDLE;
+    this._sorterPromise
+      .then((sortedData) => {
+        const isActive = isActiveSort(this, activeSort);
+        const expectedCount = activeSort?.expectedCount;
+        const currentCount = this._numSplats;
+        const sortedLen = sortedData?.length;
+        const isMismatch =
+          expectedCount !== currentCount || sortedLen !== expectedCount;
+        if (!isActive || isMismatch) {
+          if (isActive) {
+            this._sorterPromise = undefined;
+            this._sorterState = GaussianSplatSortingState.IDLE;
+          }
+          return;
         }
-        return;
-      }
-      this._indexes = sortedData;
-      this._sorterState = GaussianSplatSortingState.SORTED;
-    });
+        this._indexes = sortedData;
+        this._sorterState = GaussianSplatSortingState.SORTED;
+      })
+      .catch((err) => {
+        if (!isActiveSort(this, activeSort)) {
+          return;
+        }
+        this._sorterState = GaussianSplatSortingState.ERROR;
+        this._sorterError = err;
+      });
   } else if (this._sorterState === GaussianSplatSortingState.WAITING) {
     if (!defined(this._sorterPromise)) {
       const requestId = ++this._sortRequestId;
@@ -1376,30 +1378,31 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       return;
     }
     const activeSort = this._activeSort;
-    this._sorterPromise.catch((err) => {
-      if (!isActiveSort(this, activeSort)) {
-        return;
-      }
-      this._sorterState = GaussianSplatSortingState.ERROR;
-      this._sorterError = err;
-    });
-    this._sorterPromise.then((sortedData) => {
-      const isActive = isActiveSort(this, activeSort);
-      const expectedCount = activeSort?.expectedCount;
-      const currentCount = this._numSplats;
-      const sortedLen = sortedData?.length;
-      const isMismatch =
-        expectedCount !== currentCount || sortedLen !== expectedCount;
-      if (!isActive || isMismatch) {
-        if (isActive) {
-          this._sorterPromise = undefined;
-          this._sorterState = GaussianSplatSortingState.IDLE;
+    this._sorterPromise
+      .then((sortedData) => {
+        const isActive = isActiveSort(this, activeSort);
+        const expectedCount = activeSort?.expectedCount;
+        const currentCount = this._numSplats;
+        const sortedLen = sortedData?.length;
+        const isMismatch =
+          expectedCount !== currentCount || sortedLen !== expectedCount;
+        if (!isActive || isMismatch) {
+          if (isActive) {
+            this._sorterPromise = undefined;
+            this._sorterState = GaussianSplatSortingState.IDLE;
+          }
+          return;
         }
-        return;
-      }
-      this._indexes = sortedData;
-      this._sorterState = GaussianSplatSortingState.SORTED;
-    });
+        this._indexes = sortedData;
+        this._sorterState = GaussianSplatSortingState.SORTED;
+      })
+      .catch((err) => {
+        if (!isActiveSort(this, activeSort)) {
+          return;
+        }
+        this._sorterState = GaussianSplatSortingState.ERROR;
+        this._sorterError = err;
+      });
 
     this._sorterState = GaussianSplatSortingState.SORTING; // set state to sorting
   } else if (this._sorterState === GaussianSplatSortingState.SORTING) {
