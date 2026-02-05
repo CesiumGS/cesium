@@ -3396,6 +3396,40 @@ describe("Scene/Camera", function () {
     expect(ray.direction).toEqual(tempCamera.directionWC);
   });
 
+  it("gets a pick ray in orthographic in 2D infinite scroll mode off the map", function () {
+    const frustum = new OrthographicOffCenterFrustum();
+    frustum.left = -10.0;
+    frustum.right = 10.0;
+    frustum.bottom = -10.0;
+    frustum.top = 10.0;
+    frustum.near = 1.0;
+    frustum.far = 21.0;
+    camera.frustum = frustum;
+
+    // Put the camera into 2D infinite scroll mode
+    scene.mapMode2D = MapMode2D.INFINITE_SCROLL;
+    camera.update(SceneMode.SCENE2D);
+
+    const maxHorizontal = camera._maxCoord.x;
+
+    // Move camera position beyond the horizontal max so wrapping should occur
+    camera.position = new Cartesian3(0.0, maxHorizontal * 1.5 + 50.0, 1.0);
+    camera.update(SceneMode.SCENE2D);
+
+    const windowCoord = new Cartesian2(
+      scene.canvas.clientWidth * 0.5,
+      scene.canvas.clientHeight * 0.5,
+    );
+    const ray = camera.getPickRay(windowCoord);
+
+    const expectedY =
+      CesiumMath.mod(camera.positionWC.y + maxHorizontal, 2.0 * maxHorizontal) -
+      maxHorizontal;
+
+    expect(ray).toBeDefined();
+    expect(ray.origin.y).toEqualEpsilon(expectedY, CesiumMath.EPSILON10);
+  });
+
   it("gets magnitude in 2D", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const projection = new GeographicProjection(ellipsoid);

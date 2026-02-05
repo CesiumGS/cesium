@@ -156,14 +156,24 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
 
     CustomShaderPipelineStage.process(renderResources, primitive);
 
-    ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-      "float v_float;",
-      "vec2 v_vec2;",
-      "vec3 v_vec3;",
-      "vec4 v_vec4;",
-      "mat2 v_mat2x2;",
-      "mat3 v_mat3x3;",
-      "mat4 v_mat4x4;",
+    ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+      "out float v_float;",
+      "out vec2 v_vec2;",
+      "out vec3 v_vec3;",
+      "out vec4 v_vec4;",
+      "out mat2 v_mat2x2;",
+      "out mat3 v_mat3x3;",
+      "out mat4 v_mat4x4;",
+    ]);
+
+    ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+      "in float v_float;",
+      "in vec2 v_vec2;",
+      "in vec3 v_vec3;",
+      "in vec4 v_vec4;",
+      "in mat2 v_mat2x2;",
+      "in mat3 v_mat3x3;",
+      "in mat4 v_mat4x4;",
     ]);
   });
 
