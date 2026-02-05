@@ -417,6 +417,7 @@ function Model(options) {
   this._enableDebugWireframe = options.enableDebugWireframe ?? false;
   this._enableShowOutline = options.enableShowOutline ?? true;
   this._debugWireframe = options.debugWireframe ?? false;
+  this._cadWireframe = options.cadWireframe ?? false;
 
   // Warning for improper setup of debug wireframe
   if (
@@ -1201,6 +1202,28 @@ Object.defineProperties(Model.prototype, {
           "enableDebugWireframe must be set to true in Model.fromGltfAsync, otherwise debugWireframe will be ignored.",
         );
       }
+    },
+  },
+
+  /**
+   * When true, only renders edges for primitives with the EXT_mesh_primitive_edge_visibility
+   * extension, hiding the underlying surface geometry. Primitives without the extension
+   * are unaffected.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {boolean}
+   *
+   * @default false
+   *
+   * @private
+   */
+  cadWireframe: {
+    get: function () {
+      return this._cadWireframe;
+    },
+    set: function (value) {
+      this._cadWireframe = value;
     },
   },
 
@@ -2026,6 +2049,7 @@ Model.prototype.update = function (frameState) {
   // (e.g. model matrix, back-face culling)
   updateSceneGraph(this, frameState);
   updateShowCreditsOnScreen(this);
+
   submitDrawCommands(this, frameState);
 };
 
