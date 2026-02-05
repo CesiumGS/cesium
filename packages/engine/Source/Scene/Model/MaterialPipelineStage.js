@@ -409,6 +409,8 @@ function processTextureScale(
  * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
  * @param {string} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
  * @param {string} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
+ * @param {Texture} defaultTexture The default texture to use as a fallback if the texture is not yet loaded
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources
  *
  * @private
  */
@@ -584,7 +586,7 @@ function processMaterialUniforms(
  * @param {ModelComponents.SpecularGlossiness} specularGlossiness
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ShaderBuilder} shaderBuilder
- * @param {Texture} defaultTexture
+ * @param {Texture} defaultTexture The default texture to use as a fallback if the texture is not yet loaded
  * @param {boolean} disableTextures
  * @param {PrimitiveRenderResources|undefined} renderResources The render resources for the primitive
  * @private
@@ -952,7 +954,7 @@ function processClearcoatUniforms(
  * @param {ModelComponents.MetallicRoughness} metallicRoughness
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ShaderBuilder} shaderBuilder
- * @param {Texture} defaultTexture
+ * @param {Texture} defaultTexture The default texture to use as a fallback if the texture is not yet loaded
  * @param {boolean} disableTextures
  * @param {PrimitiveRenderResources|undefined} renderResources The render resources for the primitive
  * @private

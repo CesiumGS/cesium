@@ -31,11 +31,6 @@ function createModel(url, height) {
   viewer.trackedEntity = entity;
 }
 
-createModel(
-  "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod.gltf",
-  0,
-);
-
 const options = [
   {
     text: "Checkerboard",
@@ -51,7 +46,7 @@ const options = [
     onselect: function () {
       createModel(
         "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_NormalMap.gltf",
-        100,
+        0,
       );
     },
   },
@@ -60,7 +55,7 @@ const options = [
     onselect: function () {
       createModel(
         "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Grass.gltf",
-        100,
+        0,
       );
     },
   },
