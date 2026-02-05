@@ -18,6 +18,7 @@ import {
   Resource,
   ResourceCache,
   ShaderBuilder,
+  ShaderDestination,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
@@ -93,6 +94,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const clearcoatTestData =
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
+    const constantLodTestData =
+      "./Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_CheckerTransform.gltf";
 
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {
@@ -905,6 +908,85 @@ describe(
       expectUniformMap(uniformMap, {
         u_testTexture: mockTexture,
       });
+    });
+
+    it("processes constant LOD extension", function () {
+      const shaderBuilder = new ShaderBuilder();
+      const uniformMap = {};
+      const mockTexture = {};
+      const mockBoundingSphere = {
+        center: new Cartesian3(1.0, 2.0, 3.0),
+      };
+
+      // Add required function, outside a test this would already exist
+      shaderBuilder.addFunction(
+        "setDynamicVaryingsVS",
+        "void setDynamicVaryingsVS()\n{\n}",
+        ShaderDestination.VERTEX,
+      );
+
+      const renderResources = {
+        shaderBuilder: shaderBuilder,
+        uniformMap: uniformMap,
+        model: {
+          boundingSphere: mockBoundingSphere,
+        },
+      };
+
+      const constantLod = {
+        repetitions: 3.0,
+        offset: new Cartesian3(0.5, 0.5, 0.0),
+        minClampDistance: 0.0,
+        maxClampDistance: 100.0,
+      };
+      const textureReader = {
+        texture: mockTexture,
+        texCoord: 0,
+        constantLod: constantLod,
+      };
+
+      MaterialPipelineStage._processTexture(
+        shaderBuilder,
+        uniformMap,
+        textureReader,
+        "u_testTexture",
+        "TEST",
+        mockFrameState.context.defaultTexture,
+        renderResources,
+      );
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_CONSTANT_LOD",
+        "HAS_TEST_CONSTANT_LOD",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_TEST_TEXTURE",
+        "TEXCOORD_TEST v_texCoord_0",
+        "HAS_TEST_CONSTANT_LOD",
+        "HAS_CONSTANT_LOD",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec2 u_constantLodOffset;",
+        "uniform float u_constantLodDistance;",
+        "uniform mat4 u_constantLodWorldToEnu;",
+      ]);
+
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform sampler2D u_testTexture;",
+        "uniform vec3 u_testTextureConstantLodParams;",
+      ]);
+
+      const expectedUniforms = {
+        u_testTexture: mockTexture,
+        u_constantLodOffset: constantLod.offset,
+        u_testTextureConstantLodParams: new Cartesian3(
+          constantLod.minClampDistance,
+          constantLod.maxClampDistance,
+          constantLod.repetitions,
+        ),
+      };
+      expectUniformMap(uniformMap, expectedUniforms);
     });
   },
   "WebGL",
