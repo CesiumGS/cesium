@@ -155,11 +155,7 @@ function commitSnapshot(primitive, snapshot, frameState) {
       defined(primitive.gaussianSplatTexture) &&
       primitive.gaussianSplatTexture !== snapshot.gaussianSplatTexture
     ) {
-      retireTexture(
-        primitive,
-        primitive.gaussianSplatTexture,
-        frameNumber,
-      );
+      retireTexture(primitive, primitive.gaussianSplatTexture, frameNumber);
     }
     if (
       defined(primitive.sphericalHarmonicsTexture) &&
@@ -1115,9 +1111,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
                 case 3:
                   coefs = 45;
               }
-              aggregate = new Uint32Array(
-                totalElements * (coefs * (2 / 3)),
-              );
+              aggregate = new Uint32Array(totalElements * (coefs * (2 / 3)));
             }
             aggregate.set(tileShData, offset);
             offset += tileShData.length;
@@ -1274,10 +1268,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         const expectedCount = pendingSort.expectedCount;
         const currentCount = pending.numSplats;
         const sortedLen = sortedData?.length;
-        if (
-          expectedCount !== currentCount ||
-          sortedLen !== expectedCount
-        ) {
+        if (expectedCount !== currentCount || sortedLen !== expectedCount) {
           this._pendingSortPromise = undefined;
           this._pendingSort = undefined;
           if (pending.state === SnapshotState.SORTING) {
