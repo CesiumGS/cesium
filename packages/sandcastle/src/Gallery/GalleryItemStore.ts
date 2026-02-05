@@ -17,6 +17,7 @@ import {
   vectorSearch,
   type VectorSearchResult,
   onEmbeddingModelLoaded,
+  initializeEmbeddingSearch,
 } from "./EmbeddingSearch.ts";
 
 const galleryListPath = `gallery/list.json`;
@@ -144,7 +145,7 @@ export function useGalleryItemStore() {
     });
 
     if (vectorSearchResults && vectorSearchResults.length > 0) {
-      for (const vectorResult of vectorSearchResults!.reverse()) {
+      for (const vectorResult of vectorSearchResults.reverse()) {
         const exists = pagefindResults.find(
           (res) => res && res.id === vectorResult.id,
         );
@@ -221,6 +222,9 @@ export function useGalleryItemStore() {
       const request = await fetch(galleryListUrl.href);
       const { entries, searchOptions, legacyIds, defaultFilters } =
         await request.json();
+
+      initializeEmbeddingSearch({ entries, legacyIds });
+
       const items = entries.map((entry: GalleryItem) => {
         let entryUrl = entry.url;
         if (!entryUrl.endsWith("/")) {

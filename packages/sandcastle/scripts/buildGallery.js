@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { access, cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative } from "node:path";
 import { exit } from "node:process";
@@ -116,7 +117,6 @@ export async function buildGalleryList(options = {}) {
    * @property {number} lineCount
    * @property {string} description
    * @property {string[]} labels
-   * @property {number[]} [embedding] - Vector embedding for semantic search
    */
 
   /**
@@ -302,16 +302,36 @@ export async function buildGalleryList(options = {}) {
   // regardless of if titles match the directory names
   output.entries.sort((a, b) => a.title.localeCompare(b.title));
 
-  const embeddings = await generateEmbeddings(output.entries);
-  output.entries.forEach((entry, index) => {
-    entry.embedding = embeddings[index];
-  });
-
   const outputDirectory = join(rootDirectory, publicDirectory, "gallery");
+  const embeddingsPath = join(outputDirectory, "embeddings.json");
+
+  // Embeddings will be regenerated if the entries have changed
+  const entriesHash = createHash("sha256")
+    .update(JSON.stringify(output.entries))
+    .digest("hex");
+
+  let embeddingsMap;
+  if (await exists(embeddingsPath)) {
+    const existingData = await readFile(embeddingsPath, "utf-8");
+    const existingEmbeddings = JSON.parse(existingData);
+    if (existingEmbeddings?.id === entriesHash) {
+      embeddingsMap = existingEmbeddings;
+    }
+  }
+  if (!embeddingsMap) {
+    const embeddings = await generateEmbeddings(output.entries);
+
+    embeddingsMap = { id: entriesHash };
+    output.entries.forEach((entry, index) => {
+      embeddingsMap[entry.id] = embeddings[index];
+    });
+  }
+
   await rimraf(outputDirectory);
   await mkdir(outputDirectory, { recursive: true });
 
   await writeFile(join(outputDirectory, "list.json"), JSON.stringify(output));
+  await writeFile(embeddingsPath, JSON.stringify(embeddingsMap));
 
   await pagefindIndex.writeFiles({
     outputPath: join(outputDirectory, "pagefind"),

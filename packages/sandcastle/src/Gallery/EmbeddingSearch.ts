@@ -15,7 +15,6 @@ export interface VectorSearchResult {
   lineCount: number;
   description: string;
   labels: string[];
-  embedding?: number[];
 }
 
 interface GalleryListItem {
@@ -26,29 +25,32 @@ interface GalleryListItem {
   lineCount: number;
   description: string;
   labels: string[];
-  embedding?: number[];
 }
 
-interface GalleryList {
+export interface GalleryList {
   entries: GalleryListItem[];
   legacyIds: Record<string, string>;
 }
 
+type EmbeddingsMap = Record<string, number[]>;
+
 class EmbeddingSearch {
   private galleryList: GalleryList | null = null;
+  private embeddings: EmbeddingsMap | null = null;
   private tokenizer: PreTrainedTokenizer | null = null;
   private model: PreTrainedModel | null = null;
   private modelId: string = "avsolatorio/GIST-small-Embedding-v0";
   private onInitializedCallbacks: (() => void)[] = [];
 
-  async initialize(): Promise<void> {
-    if (this.galleryList && this.model && this.tokenizer) {
+  async initialize(galleryList: GalleryList): Promise<void> {
+    if (this.embeddings && this.model && this.tokenizer) {
       return;
     }
 
-    const response = await fetch("gallery/list.json");
-    this.galleryList = await response.json();
-    console.log(this.galleryList);
+    this.galleryList = galleryList;
+
+    const embeddingsResponse = await fetch("gallery/embeddings.json");
+    this.embeddings = await embeddingsResponse.json();
 
     this.tokenizer = await AutoTokenizer.from_pretrained(this.modelId);
     this.model = await AutoModel.from_pretrained(this.modelId, {
@@ -58,7 +60,7 @@ class EmbeddingSearch {
   }
 
   onInitialized(callback: () => void): void {
-    if (this.galleryList && this.model && this.tokenizer) {
+    if (this.galleryList && this.embeddings && this.model && this.tokenizer) {
       callback();
     } else {
       this.onInitializedCallbacks.push(callback);
@@ -91,8 +93,12 @@ class EmbeddingSearch {
     if (!query || query.trim().length === 0) {
       return [];
     }
-    if (!this.galleryList || !this.model || !this.tokenizer) {
-      console.log("Search occured before initialization completed.");
+    if (
+      !this.galleryList ||
+      !this.embeddings ||
+      !this.model ||
+      !this.tokenizer
+    ) {
       return [];
     }
 
@@ -105,7 +111,7 @@ class EmbeddingSearch {
     const queryEmbedding = sentence_embedding.tolist()[0];
 
     let itemsWithEmbeddings = this.galleryList.entries.filter(
-      (item) => item.embedding,
+      (item) => this.embeddings![item.id],
     );
 
     if (filters) {
@@ -118,7 +124,8 @@ class EmbeddingSearch {
     }
 
     const results = itemsWithEmbeddings.map((item) => {
-      const score = this.cosineSimilarity(queryEmbedding, item.embedding!);
+      const embedding = this.embeddings![item.id];
+      const score = this.cosineSimilarity(queryEmbedding, embedding);
       return {
         ...item,
         score,
@@ -134,10 +141,10 @@ class EmbeddingSearch {
 
 const embeddingSearch = new EmbeddingSearch();
 
-// Pre-load the model and gallery list at application startup
-// This happens in the background so the UI can load while the model downloads
-if (typeof window !== "undefined") {
-  embeddingSearch.initialize();
+export async function initializeEmbeddingSearch(
+  galleryList: GalleryList,
+): Promise<void> {
+  return embeddingSearch.initialize(galleryList);
 }
 
 export async function vectorSearch(
