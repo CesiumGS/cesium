@@ -923,13 +923,9 @@ describe(
 
       MaterialPipelineStage.process(renderResources, primitive, frameState);
 
-      ShaderBuilderTester.expectHasVertexDefines(
-        renderResources.shaderBuilder,
-        ["HAS_LINE_STYLE", "HAS_LINE_WIDTH"],
-      );
       ShaderBuilderTester.expectHasFragmentDefines(
         renderResources.shaderBuilder,
-        ["HAS_LINE_STYLE", "HAS_LINE_WIDTH", "USE_METALLIC_ROUGHNESS"],
+        ["USE_METALLIC_ROUGHNESS"],
       );
       ShaderBuilderTester.expectHasVertexUniforms(
         renderResources.shaderBuilder,
@@ -958,7 +954,7 @@ describe(
 
       ShaderBuilderTester.expectHasFragmentDefines(
         renderResources.shaderBuilder,
-        ["HAS_LINE_STYLE", "HAS_LINE_PATTERN", "USE_METALLIC_ROUGHNESS"],
+        ["HAS_LINE_PATTERN", "USE_METALLIC_ROUGHNESS"],
       );
       ShaderBuilderTester.expectHasFragmentUniforms(
         renderResources.shaderBuilder,
@@ -989,15 +985,9 @@ describe(
 
       MaterialPipelineStage.process(renderResources, primitive, frameState);
 
-      ShaderBuilderTester.expectHasVertexDefines(
-        renderResources.shaderBuilder,
-        ["HAS_LINE_STYLE", "HAS_LINE_WIDTH", "HAS_LINE_PATTERN"],
-      );
       ShaderBuilderTester.expectHasFragmentDefines(
         renderResources.shaderBuilder,
         [
-          "HAS_LINE_STYLE",
-          "HAS_LINE_WIDTH",
           "HAS_LINE_PATTERN",
           "USE_METALLIC_ROUGHNESS",
         ],

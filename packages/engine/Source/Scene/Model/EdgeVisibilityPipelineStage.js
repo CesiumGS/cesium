@@ -78,6 +78,12 @@ EdgeVisibilityPipelineStage.process = function (
   // Add a uniform to distinguish between original geometry pass and edge pass
   shaderBuilder.addUniform("bool", "u_isEdgePass", ShaderDestination.BOTH);
 
+  // Add line width uniform for edge expansion if not already added by MaterialPipelineStage
+  const material = primitive.material;
+  if (!defined(material) || !defined(material.lineWidth)) {
+    shaderBuilder.addUniform("float", "u_lineWidth", ShaderDestination.VERTEX);
+  }
+
   // Add edge type attribute and varying
   const edgeTypeLocation = shaderBuilder.addAttribute("float", "a_edgeType");
   shaderBuilder.addVarying("float", "v_edgeType", "flat");
@@ -160,13 +166,20 @@ EdgeVisibilityPipelineStage.process = function (
   let edgeCumDistLocation;
   const cumDistAttr = ModelUtility.getAttributeBySemantic(
     primitive,
-    "BENTLEY_materials_line_style:CUMULATIVE_DISTANCE"
+    "BENTLEY_materials_line_style:CUMULATIVE_DISTANCE",
   );
 
   if (defined(cumDistAttr)) {
     cumDistAttribute = cumDistAttr;
-    edgeCumDistLocation = shaderBuilder.addAttribute("float", "a_edgeCumulativeDistance");
-    shaderBuilder.addDefine("HAS_EDGE_CUMULATIVE_DISTANCE", undefined, ShaderDestination.VERTEX);
+    edgeCumDistLocation = shaderBuilder.addAttribute(
+      "float",
+      "a_edgeCumulativeDistance",
+    );
+    shaderBuilder.addDefine(
+      "HAS_EDGE_CUMULATIVE_DISTANCE",
+      undefined,
+      ShaderDestination.VERTEX,
+    );
   }
 
   // Generate paired face normals for each unique edge (used to classify silhouette edges in the shader).
@@ -234,7 +247,6 @@ EdgeVisibilityPipelineStage.process = function (
     };
   }
 
-  const material = primitive.material;
   const lineWidth =
     defined(material) && defined(material.lineWidth)
       ? material.lineWidth * frameState.pixelRatio
@@ -877,7 +889,9 @@ function createQuadEdgeGeometry(
   const edgeOffsetArray = new Float32Array(totalVerts);
 
   const needsCumulativeDistance = defined(cumDistAttribute);
-  const edgeCumDistArray = needsCumulativeDistance ? new Float32Array(totalVerts) : undefined;
+  const edgeCumDistArray = needsCumulativeDistance
+    ? new Float32Array(totalVerts)
+    : undefined;
   let srcCumDist;
   if (needsCumulativeDistance) {
     srcCumDist = defined(cumDistAttribute.typedArray)
