@@ -906,6 +906,7 @@ PathVisualizer.prototype.update = function (time) {
     const item = items[i];
     const entity = item.entity;
     const positionProperty = entity._position;
+    const pathGraphics = entity._path;
 
     const lastUpdater = item.updater;
 
@@ -914,10 +915,11 @@ PathVisualizer.prototype.update = function (time) {
     let frameToVisualize = ReferenceFrame.FIXED;
     let frameToVisualizeKey = frameToVisualize.toString();
     if (this._scene.mode === SceneMode.SCENE3D) {
-      if (defined(entity.relativeToId)) {
+      const relativeToId = Property.getValueOrUndefined(pathGraphics.relativeToId, time);
+      if (defined(relativeToId)) {
         isRelative = true;
-        frameToVisualize = this._entityCollection.getById(entity.relativeToId);
-        frameToVisualizeKey = entity.relativeToId;
+        frameToVisualize = this._entityCollection.getById(relativeToId);
+        frameToVisualizeKey = relativeToId;
       } else {
         frameToVisualize = positionProperty.referenceFrame;
         frameToVisualizeKey = frameToVisualize.toString();

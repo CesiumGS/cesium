@@ -17,6 +17,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | number} [resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position.
  * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to draw the path.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this path will be displayed.
+ * @property {string} [relativeToId] The id of another entity that this path should be visualized relative to.
  */
 
 /**
@@ -43,6 +44,8 @@ function PathGraphics(options) {
   this._materialSubscription = undefined;
   this._distanceDisplayCondition = undefined;
   this._distanceDisplayConditionSubscription = undefined;
+  this._relativeToId = undefined;
+  this._relativeToIdSubscription = undefined;
 
   this.merge(options ?? Frozen.EMPTY_OBJECT);
 }
@@ -114,6 +117,13 @@ Object.defineProperties(PathGraphics.prototype, {
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition",
   ),
+
+  /**
+   * Gets or sets the id of another entity that this path should be visualized relative to.
+   * @memberof PathGraphics.prototype
+   * @type {Property|undefined}
+   */
+  relativeToId: createPropertyDescriptor("relativeToId"),
 });
 
 /**
@@ -133,6 +143,7 @@ PathGraphics.prototype.clone = function (result) {
   result.resolution = this.resolution;
   result.material = this.material;
   result.distanceDisplayCondition = this.distanceDisplayCondition;
+  result.relativeToId = this.relativeToId;
   return result;
 };
 
@@ -157,5 +168,6 @@ PathGraphics.prototype.merge = function (source) {
   this.material = this.material ?? source.material;
   this.distanceDisplayCondition =
     this.distanceDisplayCondition ?? source.distanceDisplayCondition;
+  this.relativeToId = this.relativeToId ?? source.relativeToId;
 };
 export default PathGraphics;

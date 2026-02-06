@@ -3645,6 +3645,15 @@ function processPath(entity, packet, entityCollection, sourceUri) {
     sourceUri,
     entityCollection,
   );
+  processPacketData(
+    String,
+    path,
+    "relativeToId",
+    pathData.relativeToId,
+    interval,
+    sourceUri,
+    entityCollection,
+  );
 }
 
 function processPoint(entity, packet, entityCollection, sourceUri) {
