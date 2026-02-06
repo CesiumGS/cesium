@@ -56,6 +56,8 @@ const SnapshotState = {
   READY: "READY",
 };
 
+const DEFAULT_STABLE_FRAMES = 1;
+
 function haveSelectedTilesChanged(primitive, selectedTiles) {
   const prevSet = primitive._selectedTileSet;
   if (!defined(prevSet) || prevSet.size !== selectedTiles.length) {
@@ -295,6 +297,9 @@ function GaussianSplatPrimitive(options) {
   this._snapshot = undefined;
   this._pendingSnapshot = undefined;
   this._retiredTextures = [];
+  this._selectedTilesStableFrames = 0;
+  this._needsSnapshotRebuild = false;
+  this._snapshotRebuildStallFrames = 0;
 
   /**
    * The previous view matrix used to determine if the primitive needs to be updated.
@@ -931,10 +936,10 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   idxAttr.constant = 0;
   idxAttr.instanceDivisor = 1;
 
-  if (
+  const needsRebuild =
     !defined(primitive._vertexArray) ||
-    primitive._indexes.length > primitive._vertexArrayLen
-  ) {
+    primitive._indexes.length > primitive._vertexArrayLen;
+  if (needsRebuild) {
     const geometry = new Geometry({
       attributes: {
         screenQuadPosition: new GeometryAttribute({
@@ -1033,8 +1038,41 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     const selectedTilesChanged =
       tileset._selectedTiles.length !== 0 &&
       haveSelectedTilesChanged(this, tileset._selectedTiles);
+    if (tileset._selectedTiles.length === 0) {
+      this._selectedTilesStableFrames = 0;
+      this._needsSnapshotRebuild = false;
+      this._snapshotRebuildStallFrames = 0;
+    } else if (selectedTilesChanged) {
+      this._selectedTilesStableFrames = 0;
+    } else {
+      this._selectedTilesStableFrames++;
+    }
+    if (selectedTilesChanged || this._dirty) {
+      this._needsSnapshotRebuild = true;
+    }
+    const stableFramesTarget = defined(tileset._gaussianSplatStableFrames)
+      ? tileset._gaussianSplatStableFrames
+      : DEFAULT_STABLE_FRAMES;
+    const isStable = this._selectedTilesStableFrames >= stableFramesTarget;
+    const isBootstrap =
+      !defined(this._snapshot) &&
+      !defined(this._pendingSnapshot) &&
+      !defined(this._drawCommand);
+    const maxStallFrames = defined(tileset._gaussianSplatMaxStallFrames)
+      ? tileset._gaussianSplatMaxStallFrames
+      : 30;
+    if (this._needsSnapshotRebuild && tileset._selectedTiles.length !== 0) {
+      this._snapshotRebuildStallFrames++;
+    } else {
+      this._snapshotRebuildStallFrames = 0;
+    }
+    const allowRebuild =
+      isStable ||
+      isBootstrap ||
+      this._snapshotRebuildStallFrames >= maxStallFrames;
     const hasPendingWork =
       this._dirty ||
+      this._needsSnapshotRebuild ||
       selectedTilesChanged ||
       defined(this._pendingSnapshot) ||
       defined(this._pendingSortPromise) ||
@@ -1048,7 +1086,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
     if (
       tileset._selectedTiles.length !== 0 &&
-      (selectedTilesChanged || this._dirty)
+      this._needsSnapshotRebuild &&
+      allowRebuild
     ) {
       this._splatDataGeneration++;
       this._activeSort = undefined;
@@ -1176,6 +1215,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this.selectedTileLength = tileset._selectedTiles.length;
       this._selectedTileSet = new Set(tileset._selectedTiles);
       this._dirty = false;
+      this._needsSnapshotRebuild = false;
+      this._snapshotRebuildStallFrames = 0;
     }
 
     if (defined(this._pendingSnapshot)) {
