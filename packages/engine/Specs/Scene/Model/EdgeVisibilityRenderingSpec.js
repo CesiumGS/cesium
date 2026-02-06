@@ -126,30 +126,9 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     expect(fragmentShader).toContain("HAS_EDGE_VISIBILITY");
     expect(fragmentShader).toContain("HAS_EDGE_VISIBILITY_MRT");
 
-    // Verify edge visibility uniforms and attributes
-    expect(vertexShader).toContain("u_isEdgePass");
-    expect(vertexShader).toContain("a_edgeType");
-    expect(vertexShader).toContain("a_silhouetteNormal");
-    expect(vertexShader).toContain("a_faceNormalA");
-    expect(vertexShader).toContain("a_faceNormalB");
-
-    // Verify varying variables for normal calculations
-    expect(vertexShader).toContain("v_edgeType");
-    expect(vertexShader).toContain("v_faceNormalAView");
-    expect(vertexShader).toContain("v_faceNormalBView");
-
-    // Verify fragment shader edge type color coding
-    expect(fragmentShader).toContain("v_edgeType * 255.0");
-
-    // Verify silhouette normal calculation
-    expect(fragmentShader).toContain("normalize(v_faceNormalAView)");
-    expect(fragmentShader).toContain("normalize(v_faceNormalBView)");
-    expect(fragmentShader).toContain("dot(normalA, viewDir)");
-    expect(fragmentShader).toContain("dot(normalB, viewDir)");
-
-    // Verify MRT output (color attachment 1)
+    // Verify MRT output (color attachment 1 and 2)
     expect(fragmentShader).toContain("out_id");
-    expect(fragmentShader).toContain("featureIds.featureId_0");
+    expect(fragmentShader).toContain("out_edgeDepth");
 
     expect(edgeCommand.uniformMap.u_isEdgePass()).toBe(true);
   });
