@@ -37,12 +37,37 @@ import VertexFormat from "../Core/VertexFormat.js";
  * @constructor
  *
  * @param {EquirectangularPanorama.ConstructorOptions} options Object describing initialization options
- * @param
+ * @param {Matrix4} options.transform A 4x4 transformation matrix that defines the panorama’s position and orientation
+ * (for example, derived from a position and heading-pitch-roll).
+ * @param {string|HTMLImageElement|HTMLCanvasElement|ImageBitmap} [options.image] A URL to an image resource, or a preloaded image object.
  *
  * @example
- * // Equirectangular panorama
+ * const position = Cesium.Cartesian3.fromDegrees(
+ *   -75.1699,  // longitude
+ *   39.9522,   // latitude
+ *   100.0      // height in meters
+ * );
+ *
+ * const heading = Cesium.Math.toRadians(45.0); // rotation about up axis
+ * const tilt = Cesium.Math.toRadians(-30.0);   // pitch (negative looks down)
+ * const roll = Cesium.Math.toRadians(10.0);    // roll about forward axis
+ *
+ * const hpr = new Cesium.HeadingPitchRoll(
+ *   heading,
+ *   tilt,
+ *   roll
+ * );
+ *
+ * const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+ *   position,
+ *   hpr,
+ *   Cesium.Ellipsoid.WGS84,
+ *   Cesium.Transforms.eastNorthUpToFixedFrame
+ * );
+ *
  * scene.primitives.add(new Cesium.EquirectangularPanorama({
- *     image: 'path/to/image',
+ *   transform: modelMatrix,
+ *   image: 'path/to/image',
  * }));
  *
  */
