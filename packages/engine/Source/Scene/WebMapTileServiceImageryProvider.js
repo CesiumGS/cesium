@@ -40,11 +40,13 @@ const defaultParameters = Object.freeze({
  * @property {string|string[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
  *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
  *                          an array, each element in the array is a subdomain.
- * @property {boolean} [enablePickFeatures=true] If true, {@link WebMapTileServiceImageryProvider#pickFeatures} will invoke
+ * @property {boolean} [enablePickFeatures] If true, {@link WebMapTileServiceImageryProvider#pickFeatures} will invoke
  *                          the GetFeatureInfo operation on the WMTS server and return the features included in the response.  If false,
  *                          {@link WebMapTileServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
  *                          without communicating with the server.  Set this property to false if you know your WMTS server does not support
  *                          GetFeatureInfo or if you don't want this provider's features to be pickable.
+ *                          Defaults to true for KVP encoding. For RESTful encoding, defaults to true only when
+ *                          {@link WebMapTileServiceImageryProvider.ConstructorOptions#getFeatureInfoUrl} is specified, and false otherwise.
  * @property {GetFeatureInfoFormat[]} [getFeatureInfoFormats=WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
  *                          in which to try WMTS GetFeatureInfo requests.
  * @property {Resource|string} [getFeatureInfoUrl] The GetFeatureInfo URL of the WMTS service. If not specified, the value of <code>url</code> is used.
@@ -269,7 +271,9 @@ function WebMapTileServiceImageryProvider(options) {
     getFeatureInfoFormats:
       options.getFeatureInfoFormats ??
       WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats,
-    enablePickFeatures: options.enablePickFeatures,
+    enablePickFeatures:
+      options.enablePickFeatures ??
+      (this._useKvp || defined(options.getFeatureInfoUrl)),
     customTags: createCustomTags(this),
   });
 }

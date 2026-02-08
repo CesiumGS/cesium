@@ -776,6 +776,49 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
     });
 
+    it("defaults enablePickFeatures to true for KVP without getFeatureInfoUrl", function () {
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+      });
+      expect(provider.enablePickFeatures).toBe(true);
+    });
+
+    it("defaults enablePickFeatures to false for RESTful without getFeatureInfoUrl", function () {
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+        tileMatrixSetID: "someTMS",
+      });
+      expect(provider.enablePickFeatures).toBe(false);
+    });
+
+    it("defaults enablePickFeatures to true for RESTful when getFeatureInfoUrl is specified", function () {
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+        tileMatrixSetID: "someTMS",
+        getFeatureInfoUrl:
+          "http://wmts.invalid/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}/{j}/{i}?format={format}",
+      });
+      expect(provider.enablePickFeatures).toBe(true);
+    });
+
+    it("honors explicit enablePickFeatures for RESTful without getFeatureInfoUrl", function () {
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+        tileMatrixSetID: "someTMS",
+        enablePickFeatures: true,
+      });
+      expect(provider.enablePickFeatures).toBe(true);
+    });
+
     it("does not return undefined when enablePickFeatures is toggled to true", function () {
       const provider = new WebMapTileServiceImageryProvider({
         layer: "someLayer",
@@ -1008,6 +1051,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
         tileMatrixSetID: "someTMS",
         dimensions: { FOO: "BAR" },
         getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
+        getFeatureInfoUrl: "http://wmts.invalid/{FOO}?format={format}",
       });
 
       return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function () {
@@ -1041,6 +1085,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
         clock: clock,
         times: times,
         getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
+        getFeatureInfoUrl: "http://wmts.invalid/{Time}?format={format}",
       });
 
       return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function () {
