@@ -1,13 +1,13 @@
 import combine from "../Core/combine.js";
-import Credit from "../Core/Credit.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import ImageryProvider from "./ImageryProvider.js";
 import TimeDynamicImagery from "./TimeDynamicImagery.js";
+import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
+import GetFeatureInfoFormat from "./GetFeatureInfoFormat.js";
 
 const defaultParameters = Object.freeze({
   service: "WMTS",
@@ -40,6 +40,15 @@ const defaultParameters = Object.freeze({
  * @property {string|string[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
  *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
  *                          an array, each element in the array is a subdomain.
+ * @property {boolean} [enablePickFeatures=true] If true, {@link WebMapTileServiceImageryProvider#pickFeatures} will invoke
+ *                          the GetFeatureInfo operation on the WMTS server and return the features included in the response.  If false,
+ *                          {@link WebMapTileServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
+ *                          without communicating with the server.  Set this property to false if you know your WMTS server does not support
+ *                          GetFeatureInfo or if you don't want this provider's features to be pickable.
+ * @property {GetFeatureInfoFormat[]} [getFeatureInfoFormats=WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
+ *                          in which to try WMTS GetFeatureInfo requests.
+ * @property {Resource|string} [getFeatureInfoUrl] The GetFeatureInfo URL of the WMTS service. If not specified, the value of <code>url</code> is used.
+ * @property {object} [getFeatureInfoParameters] Additional parameters to include in GetFeatureInfo requests. Keys are lowercased internally.
  */
 
 /**
@@ -146,49 +155,82 @@ function WebMapTileServiceImageryProvider(options) {
   this._defaultMinificationFilter = undefined;
   this._defaultMagnificationFilter = undefined;
 
+  this._getFeatureInfoUrl = options.getFeatureInfoUrl ?? options.url;
+
   const resource = Resource.createIfNeeded(options.url);
+  const pickFeatureResource = Resource.createIfNeeded(this._getFeatureInfoUrl);
 
   const style = options.style;
   const tileMatrixSetID = options.tileMatrixSetID;
   const url = resource.url;
+  const format = options.format ?? "image/jpeg";
 
   const bracketMatch = url.match(/{/g);
   if (
     !defined(bracketMatch) ||
     (bracketMatch.length === 1 && /{s}/.test(url))
   ) {
-    resource.setQueryParameters(defaultParameters);
+    resource.setQueryParameters(defaultParameters, true);
     this._useKvp = true;
   } else {
-    const templateValues = {
-      style: style,
-      Style: style,
-      TileMatrixSet: tileMatrixSetID,
-    };
-
-    resource.setTemplateValues(templateValues);
     this._useKvp = false;
   }
 
+  if (this._useKvp) {
+    pickFeatureResource.setQueryParameters(
+      WebMapTileServiceImageryProvider.GetFeatureInfoDefaultParameters,
+      true,
+    );
+
+    if (defined(options.getFeatureInfoParameters)) {
+      pickFeatureResource.setQueryParameters(
+        objectToLowercase(options.getFeatureInfoParameters),
+      );
+    }
+
+    const pickFeatureParams = {
+      infoformat: "{format}",
+      i: "{i}",
+      j: "{j}",
+    };
+    pickFeatureResource.setQueryParameters(pickFeatureParams, true);
+  } else {
+    pickFeatureResource.setTemplateValues(
+      WebMapTileServiceImageryProvider.GetFeatureInfoDefaultParameters,
+      true,
+    );
+
+    if (defined(options.getFeatureInfoParameters)) {
+      pickFeatureResource.setTemplateValues(
+        objectToLowercase(options.getFeatureInfoParameters),
+      );
+    }
+  }
+
   this._resource = resource;
-  this._layer = options.layer;
-  this._style = style;
-  this._tileMatrixSetID = tileMatrixSetID;
   this._tileMatrixLabels = options.tileMatrixLabels;
-  this._format = options.format ?? "image/jpeg";
-  this._tileDiscardPolicy = options.tileDiscardPolicy;
-
-  this._tilingScheme = defined(options.tilingScheme)
-    ? options.tilingScheme
-    : new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid });
-  this._tileWidth = options.tileWidth ?? 256;
-  this._tileHeight = options.tileHeight ?? 256;
-
-  this._minimumLevel = options.minimumLevel ?? 0;
-  this._maximumLevel = options.maximumLevel;
-
-  this._rectangle = options.rectangle ?? this._tilingScheme.rectangle;
+  this._format = format;
   this._dimensions = options.dimensions;
+  this._tilematrixset = tileMatrixSetID;
+
+  const parameters = {};
+  parameters.tilematrix = "{TileMatrix}";
+  parameters.layer = options.layer;
+  parameters.style = style;
+  parameters.tilerow = "{TileRow}";
+  parameters.tilecol = "{TileCol}";
+  parameters.tilematrixset = tileMatrixSetID;
+
+  if (this._useKvp) {
+    resource.setQueryParameters(parameters, true);
+    resource.setQueryParameters({ format: format }, true);
+    pickFeatureResource.setQueryParameters({ format: format }, true);
+    pickFeatureResource.setQueryParameters(parameters, true);
+  } else {
+    resource.setTemplateValues(parameters);
+    resource.setTemplateValues({ format: format });
+    pickFeatureResource.setTemplateValues(parameters);
+  }
 
   const that = this;
   this._reload = undefined;
@@ -209,79 +251,55 @@ function WebMapTileServiceImageryProvider(options) {
 
   this._errorEvent = new Event();
 
-  const credit = options.credit;
-  this._credit = typeof credit === "string" ? new Credit(credit) : credit;
-
-  this._subdomains = options.subdomains;
-  if (Array.isArray(this._subdomains)) {
-    this._subdomains = this._subdomains.slice();
-  } else if (defined(this._subdomains) && this._subdomains.length > 0) {
-    this._subdomains = this._subdomains.split("");
-  } else {
-    this._subdomains = ["a", "b", "c"];
-  }
+  // Let UrlTemplateImageryProvider do the actual URL building.
+  this._tileProvider = new UrlTemplateImageryProvider({
+    url: resource,
+    pickFeaturesUrl: pickFeatureResource,
+    tilingScheme:
+      options.tilingScheme ??
+      new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid }),
+    rectangle: options.rectangle,
+    tileWidth: options.tileWidth,
+    tileHeight: options.tileHeight,
+    minimumLevel: options.minimumLevel,
+    maximumLevel: options.maximumLevel,
+    subdomains: options.subdomains,
+    tileDiscardPolicy: options.tileDiscardPolicy,
+    credit: options.credit,
+    getFeatureInfoFormats:
+      options.getFeatureInfoFormats ??
+      WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats,
+    enablePickFeatures: options.enablePickFeatures,
+    customTags: createCustomTags(this),
+  });
 }
 
 function requestImage(imageryProvider, col, row, level, request, interval) {
-  const labels = imageryProvider._tileMatrixLabels;
-  const tileMatrix = defined(labels) ? labels[level] : level.toString();
-  const subdomains = imageryProvider._subdomains;
-  const staticDimensions = imageryProvider._dimensions;
-  const dynamicIntervalData = defined(interval) ? interval.data : undefined;
+  const tileProvider = imageryProvider._tileProvider;
 
-  let resource;
-  let templateValues;
-  if (!imageryProvider._useKvp) {
-    templateValues = {
-      TileMatrix: tileMatrix,
-      TileRow: row.toString(),
-      TileCol: col.toString(),
-      s: subdomains[(col + row + level) % subdomains.length],
-    };
+  applyDimensions(imageryProvider, tileProvider._resource, interval);
 
-    resource = imageryProvider._resource.getDerivedResource({
-      request: request,
-    });
-    resource.setTemplateValues(templateValues);
+  return tileProvider.requestImage(col, row, level, request);
+}
 
-    if (defined(staticDimensions)) {
-      resource.setTemplateValues(staticDimensions);
-    }
+function pickFeatures(
+  imageryProvider,
+  x,
+  y,
+  level,
+  longitude,
+  latitude,
+  interval,
+) {
+  const tileProvider = imageryProvider._tileProvider;
 
-    if (defined(dynamicIntervalData)) {
-      resource.setTemplateValues(dynamicIntervalData);
-    }
-  } else {
-    // build KVP request
-    let query = {};
-    query.tilematrix = tileMatrix;
-    query.layer = imageryProvider._layer;
-    query.style = imageryProvider._style;
-    query.tilerow = row;
-    query.tilecol = col;
-    query.tilematrixset = imageryProvider._tileMatrixSetID;
-    query.format = imageryProvider._format;
+  applyDimensions(
+    imageryProvider,
+    tileProvider._pickFeaturesResource,
+    interval,
+  );
 
-    if (defined(staticDimensions)) {
-      query = combine(query, staticDimensions);
-    }
-
-    if (defined(dynamicIntervalData)) {
-      query = combine(query, dynamicIntervalData);
-    }
-
-    templateValues = {
-      s: subdomains[(col + row + level) % subdomains.length],
-    };
-
-    resource = imageryProvider._resource.getDerivedResource({
-      queryParameters: query,
-      request: request,
-    });
-    resource.setTemplateValues(templateValues);
-  }
-
-  return ImageryProvider.loadImage(imageryProvider, resource);
+  return tileProvider.pickFeatures(x, y, level, longitude, latitude);
 }
 
 Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
@@ -317,7 +335,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    */
   tileWidth: {
     get: function () {
-      return this._tileWidth;
+      return this._tileProvider.tileWidth;
     },
   },
 
@@ -329,7 +347,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    */
   tileHeight: {
     get: function () {
-      return this._tileHeight;
+      return this._tileProvider.tileHeight;
     },
   },
 
@@ -341,7 +359,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    */
   maximumLevel: {
     get: function () {
-      return this._maximumLevel;
+      return this._tileProvider.maximumLevel;
     },
   },
 
@@ -353,7 +371,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    */
   minimumLevel: {
     get: function () {
-      return this._minimumLevel;
+      return this._tileProvider.minimumLevel;
     },
   },
 
@@ -365,7 +383,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    */
   tilingScheme: {
     get: function () {
-      return this._tilingScheme;
+      return this._tileProvider.tilingScheme;
     },
   },
 
@@ -377,7 +395,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    */
   rectangle: {
     get: function () {
-      return this._rectangle;
+      return this._tileProvider.rectangle;
     },
   },
 
@@ -391,7 +409,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    */
   tileDiscardPolicy: {
     get: function () {
-      return this._tileDiscardPolicy;
+      return this._tileProvider.tileDiscardPolicy;
     },
   },
 
@@ -405,7 +423,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    */
   errorEvent: {
     get: function () {
-      return this._errorEvent;
+      return this._tileProvider.errorEvent;
     },
   },
 
@@ -430,7 +448,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    */
   credit: {
     get: function () {
-      return this._credit;
+      return this._tileProvider.credit;
     },
   },
 
@@ -449,6 +467,26 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
       return true;
     },
   },
+
+  /**
+   * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link WebMapTileServiceImageryProvider#pickFeatures} will
+   * invoke the <code>GetFeatureInfo</code> service on the WMS server and attempt to interpret the features included in the response.  If false,
+   * {@link WebMapTileServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+   * features) without communicating with the server.  Set this property to false if you know your data
+   * source does not support picking features or if you don't want this provider's features to be pickable.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {boolean}
+   * @default true
+   */
+  enablePickFeatures: {
+    get: function () {
+      return this._tileProvider.enablePickFeatures;
+    },
+    set: function (enablePickFeatures) {
+      this._tileProvider.enablePickFeatures = enablePickFeatures;
+    },
+  },
+
   /**
    * Gets or sets a clock that is used to get keep the time used for time dynamic parameters.
    * @memberof WebMapTileServiceImageryProvider.prototype
@@ -495,6 +533,18 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
       }
     },
   },
+
+  /**
+   * Gets the getFeatureInfo URL of the WMS server.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {Resource|string}
+   * @readonly
+   */
+  getFeatureInfoUrl: {
+    get: function () {
+      return this._getFeatureInfoUrl;
+    },
+  },
 });
 
 /**
@@ -510,7 +560,7 @@ WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
   y,
   level,
 ) {
-  return undefined;
+  return this._tileProvider.getTileCredits(x, y, level);
 };
 
 /**
@@ -553,15 +603,17 @@ WebMapTileServiceImageryProvider.prototype.requestImage = function (
 };
 
 /**
- * Picking features is not currently supported by this imagery provider, so this function simply returns
- * undefined.
+ * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+ * a tile.
  *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {number} longitude The longitude at which to pick features.
  * @param {number} latitude  The latitude at which to pick features.
- * @return {undefined} Undefined since picking is not supported.
+ * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+ *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+ *                   instances.  The array may be empty if no features are found at the given location.
  */
 WebMapTileServiceImageryProvider.prototype.pickFeatures = function (
   x,
@@ -570,6 +622,106 @@ WebMapTileServiceImageryProvider.prototype.pickFeatures = function (
   longitude,
   latitude,
 ) {
-  return undefined;
+  const timeDynamicImagery = this._timeDynamicImagery;
+  const currentInterval = defined(timeDynamicImagery)
+    ? timeDynamicImagery.currentInterval
+    : undefined;
+
+  return pickFeatures(this, x, y, level, longitude, latitude, currentInterval);
 };
+
+/**
+ * The default parameters to include in the WMTS URL to get feature information.  The values are as follows:
+ *     service=WMTS
+ *     version=1.0.0
+ *     request=GetFeatureInfo
+ *
+ * @constant
+ * @type {object}
+ */
+WebMapTileServiceImageryProvider.GetFeatureInfoDefaultParameters =
+  Object.freeze({
+    service: "WMTS",
+    version: "1.0.0",
+    request: "GetFeatureInfo",
+  });
+
+WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats = Object.freeze([
+  Object.freeze(new GetFeatureInfoFormat("json", "application/json")),
+  Object.freeze(new GetFeatureInfoFormat("xml", "text/xml")),
+  Object.freeze(new GetFeatureInfoFormat("text", "text/html")),
+]);
+
+function applyDimensions(imageryProvider, resource, interval) {
+  const staticDimensions = imageryProvider._dimensions;
+  const dynamicIntervalData = defined(interval) ? interval.data : undefined;
+
+  if (!imageryProvider._useKvp) {
+    if (defined(staticDimensions)) {
+      resource.setTemplateValues(staticDimensions);
+    }
+
+    if (defined(dynamicIntervalData)) {
+      resource.setTemplateValues(dynamicIntervalData);
+    }
+  } else {
+    // build KVP request
+    let query = {};
+
+    if (defined(staticDimensions)) {
+      query = combine(query, staticDimensions);
+    }
+
+    if (defined(dynamicIntervalData)) {
+      query = combine(query, dynamicIntervalData);
+    }
+
+    resource.setQueryParameters(query);
+  }
+}
+
+function createCustomTags(imageryProvider) {
+  function getTileMatrix(level) {
+    const labels = imageryProvider._tileMatrixLabels;
+    return defined(labels) ? labels[level] : level.toString();
+  }
+
+  return {
+    TileMatrix: function (provider, x, y, level) {
+      return getTileMatrix(level);
+    },
+    tilematrix: function (provider, x, y, level) {
+      return getTileMatrix(level);
+    },
+    TileRow: function (provider, x, y) {
+      return y.toString();
+    },
+    tilerow: function (provider, x, y) {
+      return y.toString();
+    },
+    TileCol: function (provider, x, y) {
+      return x.toString();
+    },
+    tilecol: function (provider, x, y) {
+      return x.toString();
+    },
+    TileMatrixSet: function (provider) {
+      return imageryProvider._tilematrixset;
+    },
+    tilematrixset: function (provider) {
+      return imageryProvider._tilematrixset;
+    },
+  };
+}
+
+function objectToLowercase(obj) {
+  const result = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      result[key.toLowerCase()] = obj[key];
+    }
+  }
+  return result;
+}
+
 export default WebMapTileServiceImageryProvider;
