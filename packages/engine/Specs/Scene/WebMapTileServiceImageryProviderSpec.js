@@ -21,6 +21,8 @@ import {
 } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import GetFeatureInfoFormat from "../../Source/Scene/GetFeatureInfoFormat.js";
+import ImageryLayerFeatureInfo from "../../Source/Scene/ImageryLayerFeatureInfo.js";
 
 describe("Scene/WebMapTileServiceImageryProvider", function () {
   beforeEach(function () {
@@ -615,6 +617,32 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       });
   });
 
+  it("hasAlphaChannel returns true", function () {
+    const provider = new WebMapTileServiceImageryProvider({
+      layer: "someLayer",
+      style: "someStyle",
+      url: "http://wmts.invalid",
+      tileMatrixSetID: "someTMS",
+    });
+    expect(provider.hasAlphaChannel).toBe(true);
+  });
+
+  it("dimensions setter does not trigger reload when set to the same reference", function () {
+    const dims = { FOO: "BAR" };
+    const provider = new WebMapTileServiceImageryProvider({
+      layer: "someLayer",
+      style: "someStyle",
+      url: "http://wmts.invalid/{FOO}",
+      tileMatrixSetID: "someTMS",
+      dimensions: dims,
+    });
+
+    provider._reload = jasmine.createSpy();
+
+    provider.dimensions = dims;
+    expect(provider._reload).not.toHaveBeenCalled();
+  });
+
   it("dimensions work with RESTful requests", function () {
     let lastUrl;
     Resource._Implementations.createImage = function (
@@ -675,6 +703,10 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
 
     const uri = new Uri("http://wmts.invalid/kvp");
     const query = {
+      FOO: "BAR",
+      service: "WMTS",
+      version: "1.0.0",
+      request: "GetTile",
       tilematrix: 0,
       layer: "someLayer",
       style: "someStyle",
@@ -682,10 +714,6 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       tilecol: 0,
       tilematrixset: "someTMS",
       format: "image/jpeg",
-      FOO: "BAR",
-      service: "WMTS",
-      version: "1.0.0",
-      request: "GetTile",
     };
 
     const provider = new WebMapTileServiceImageryProvider({
@@ -721,5 +749,481 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
         uri.query(objectToQuery(query));
         expect(lastUrl).toEqual(uri.toString());
       });
+  });
+
+  describe("pickFeatures", function () {
+    it("returns undefined if getFeatureInfoFormats is empty", function () {
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+        getFeatureInfoFormats: [],
+      });
+
+      expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+    });
+
+    it("returns undefined if enablePickFeatures is false", function () {
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+        enablePickFeatures: false,
+      });
+      expect(provider.enablePickFeatures).toBe(false);
+      expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+    });
+
+    it("does not return undefined when enablePickFeatures is toggled to true", function () {
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+      });
+
+      provider.enablePickFeatures = false;
+
+      spyOn(Resource.prototype, "fetchJson").and.returnValue(
+        Promise.resolve({
+          type: "FeatureCollection",
+          features: [],
+        }),
+      );
+
+      provider.enablePickFeatures = true;
+      expect(provider.enablePickFeatures).toBe(true);
+
+      const pickPromise = provider.pickFeatures(0, 0, 0, 0.0, 0.0);
+      expect(pickPromise).toBeDefined();
+
+      return pickPromise.then(function (features) {
+        expect(Array.isArray(features)).toBe(true);
+        expect(features.length).toBe(0);
+      });
+    });
+
+    it("getFeatureInfoUrl defaults to url when not specified", function () {
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+      });
+      expect(provider.getFeatureInfoUrl).toBe("http://wmts.invalid");
+    });
+
+    it("getFeatureInfoUrl returns custom value when specified", function () {
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+        getFeatureInfoUrl: "http://wmts.invalid/gfi",
+      });
+      expect(provider.getFeatureInfoUrl).toBe("http://wmts.invalid/gfi");
+    });
+
+    it("uses getFeatureInfoUrl for picking while tile requests use url", function () {
+      const tileUrl = "http://wmts.invalid/tiles";
+      const gfiUrl = "http://wmts.invalid/gfi";
+
+      spyOn(ImageryProvider, "loadImage");
+      let capturedGfiUrl;
+      spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+        capturedGfiUrl = this.getUrlComponent(true);
+        return Promise.resolve({ type: "FeatureCollection", features: [] });
+      });
+
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: tileUrl,
+        tileMatrixSetID: "someTMS",
+        getFeatureInfoUrl: gfiUrl,
+        getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
+      });
+
+      provider.requestImage(0, 0, 0);
+      const tileRequestUrl =
+        ImageryProvider.loadImage.calls.mostRecent().args[1].url;
+      expect(tileRequestUrl).toStartWith(tileUrl);
+      expect(tileRequestUrl).not.toContain("gfi");
+
+      return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function () {
+        expect(capturedGfiUrl).toStartWith(gfiUrl);
+        expect(capturedGfiUrl).not.toContain("/tiles");
+      });
+    });
+
+    it("builds correct GetFeatureInfo URL (KVP Encoding)", function () {
+      const expectedUrl = new URL("http://wmts.invalid");
+      expectedUrl.searchParams.set("service", "WMTS");
+      expectedUrl.searchParams.set("version", "1.0.0");
+      expectedUrl.searchParams.set("request", "GetFeatureInfo");
+      expectedUrl.searchParams.set("infoformat", "application/json");
+      expectedUrl.searchParams.set("i", "128");
+      expectedUrl.searchParams.set("j", "128");
+      expectedUrl.searchParams.set("format", "image/jpeg");
+      expectedUrl.searchParams.set("tilematrix", "0");
+      expectedUrl.searchParams.set("layer", "someLayer");
+      expectedUrl.searchParams.set("style", "someStyle");
+      expectedUrl.searchParams.set("tilerow", "0");
+      expectedUrl.searchParams.set("tilecol", "0");
+      expectedUrl.searchParams.set("tilematrixset", "someTMS");
+
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+      });
+
+      spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+        const url = this.getUrlComponent(true);
+        expect(url).toBe(expectedUrl.toString());
+        return Promise.resolve({ type: "FeatureCollection", features: [] });
+      });
+
+      return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function (features) {
+        expect(Array.isArray(features)).toBe(true);
+      });
+    });
+
+    it("builds correct GetFeatureInfo URL (RESTful template)", function () {
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid/rest/{layer}/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format={format}",
+        tileMatrixSetID: "someTMS",
+        tileMatrixLabels: ["someTMS:0"],
+        tilingScheme: new GeographicTilingScheme({
+          numberOfLevelZeroTilesX: 1,
+        }),
+        format: "image/png",
+        getFeatureInfoUrl:
+          "http://wmts.invalid/rest/{layer}/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}/{j}/{i}?format={format}",
+        getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
+      });
+
+      spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+        const url = this.getUrlComponent(true);
+        expect(url).toBe(
+          "http://wmts.invalid/rest/someLayer/someStyle/someTMS/someTMS%3A0/0/0/128/128?format=application%2Fjson",
+        );
+        return Promise.resolve({ type: "FeatureCollection", features: [] });
+      });
+
+      return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function (features) {
+        expect(Array.isArray(features)).toBe(true);
+      });
+    });
+
+    it("builds GetFeatureInfo request and parses JSON response", function () {
+      const tilingScheme = new GeographicTilingScheme({
+        numberOfLevelZeroTilesX: 1,
+      });
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+        tileMatrixLabels: ["level-zero"],
+        tilingScheme: tilingScheme,
+        format: "image/png",
+        getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
+      });
+
+      spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+        const url = this.getUrlComponent(true);
+        const uri = new Uri(url);
+        const params = queryToObject(uri.query());
+        expect(params.tilematrix).toBe("level-zero");
+
+        return Promise.resolve({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [0, 0],
+              },
+              properties: {
+                name: "Feature name",
+              },
+            },
+          ],
+        });
+      });
+
+      return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function (features) {
+        expect(Resource.prototype.fetchJson).toHaveBeenCalled();
+        expect(features.length).toBe(1);
+
+        const featureInfo = features[0];
+        expect(featureInfo).toBeInstanceOf(ImageryLayerFeatureInfo);
+        expect(featureInfo.name).toBe("Feature name");
+        expect(featureInfo.position.longitude).toBeCloseTo(0, 10);
+        expect(featureInfo.position.latitude).toBeCloseTo(0, 10);
+      });
+    });
+
+    it("includes dimensions in GetFeatureInfo KVP requests", function () {
+      let capturedUrl;
+      spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+        capturedUrl = this.getUrlComponent(true);
+        return Promise.resolve({ type: "FeatureCollection", features: [] });
+      });
+
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid/kvp",
+        tileMatrixSetID: "someTMS",
+        dimensions: { FOO: "BAR" },
+        getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
+      });
+
+      return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function () {
+        const uri = new Uri(capturedUrl);
+        const params = queryToObject(uri.query());
+        expect(params.FOO).toBe("BAR");
+      });
+    });
+
+    it("includes dimensions in GetFeatureInfo RESTful requests via template values", function () {
+      let capturedUrl;
+      spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+        capturedUrl = this.getUrlComponent(true);
+        return Promise.resolve({ type: "FeatureCollection", features: [] });
+      });
+
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid/{FOO}",
+        tileMatrixSetID: "someTMS",
+        dimensions: { FOO: "BAR" },
+        getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
+      });
+
+      return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function () {
+        expect(capturedUrl).toStartWith("http://wmts.invalid/BAR");
+      });
+    });
+
+    it("includes time-dynamic template values in GetFeatureInfo RESTful requests", function () {
+      let capturedUrl;
+      spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+        capturedUrl = this.getUrlComponent(true);
+        return Promise.resolve({ type: "FeatureCollection", features: [] });
+      });
+
+      const times = TimeIntervalCollection.fromIso8601({
+        iso8601: "2017-04-26/2017-04-30/P1D",
+        dataCallback: function (interval, index) {
+          return { Time: JulianDate.toIso8601(interval.start) };
+        },
+      });
+      const clock = new Clock({
+        currentTime: JulianDate.fromIso8601("2017-04-26"),
+        shouldAnimate: false,
+      });
+
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid/{Time}",
+        tileMatrixSetID: "someTMS",
+        clock: clock,
+        times: times,
+        getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
+      });
+
+      return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function () {
+        expect(decodeURIComponent(capturedUrl)).toContain(
+          "/2017-04-26T00:00:00Z",
+        );
+      });
+    });
+
+    it("includes both static dimensions and time-dynamic data in KVP GetFeatureInfo requests", function () {
+      let capturedUrl;
+      spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+        capturedUrl = this.getUrlComponent(true);
+        return Promise.resolve({ type: "FeatureCollection", features: [] });
+      });
+
+      const times = TimeIntervalCollection.fromIso8601({
+        iso8601: "2017-04-26/2017-04-30/P1D",
+        dataCallback: function (interval) {
+          return { Time: JulianDate.toIso8601(interval.start) };
+        },
+      });
+      const clock = new Clock({
+        currentTime: JulianDate.fromIso8601("2017-04-26"),
+        shouldAnimate: false,
+      });
+
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+        clock: clock,
+        times: times,
+        dimensions: { ELEVATION: "500" },
+        getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
+      });
+
+      return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function () {
+        const uri = new Uri(capturedUrl);
+        const params = queryToObject(uri.query());
+        expect(params.ELEVATION).toBe("500");
+        expect(params.Time).toBe("2017-04-26T00:00:00Z");
+      });
+    });
+
+    it("applies getFeatureInfoParameters with lowercased keys", function () {
+      let capturedUrl;
+      spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+        capturedUrl = this.getUrlComponent(true);
+        return Promise.resolve({ type: "FeatureCollection", features: [] });
+      });
+
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+        getFeatureInfoParameters: { CUSTOM_PARAM: "foo" },
+        getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
+      });
+
+      return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function () {
+        const uri = new Uri(capturedUrl);
+        const params = queryToObject(uri.query());
+        expect(params.custom_param).toBe("foo");
+      });
+    });
+
+    it("applies getFeatureInfoParameters as template values in RESTful requests", function () {
+      let capturedUrl;
+      spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+        capturedUrl = this.getUrlComponent(true);
+        return Promise.resolve({ type: "FeatureCollection", features: [] });
+      });
+
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+        tileMatrixSetID: "someTMS",
+        getFeatureInfoUrl:
+          "http://wmts.invalid/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}/{j}/{i}?format={format}&custom_key={custom_key}",
+        getFeatureInfoParameters: { CUSTOM_KEY: "custom_value" },
+        getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
+      });
+
+      return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function () {
+        expect(decodeURIComponent(capturedUrl)).toContain(
+          "custom_key=custom_value",
+        );
+      });
+    });
+
+    it("sets correct infoformat for XML and HTML requests", function () {
+      const providerXml = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+        getFeatureInfoFormats: [new GetFeatureInfoFormat("xml")],
+      });
+
+      spyOn(Resource.prototype, "fetchXML").and.callFake(function () {
+        const url = this.getUrlComponent(true);
+        const uri = new Uri(url);
+        const params = queryToObject(uri.query());
+        expect(params.infoformat).toBe("text/xml");
+        const parser = new DOMParser();
+        return Promise.resolve(
+          parser.parseFromString("<Foo/>", "application/xml"),
+        );
+      });
+
+      const providerHtml = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+        getFeatureInfoFormats: [new GetFeatureInfoFormat("html")],
+      });
+
+      spyOn(Resource.prototype, "fetchText").and.callFake(function () {
+        const url = this.getUrlComponent(true);
+        const uri = new Uri(url);
+        const params = queryToObject(uri.query());
+        expect(params.infoformat).toBe("text/html");
+        return Promise.resolve("<html><title>x</title></html>");
+      });
+
+      return providerXml
+        .pickFeatures(0, 0, 0, 0.0, 0.0)
+        .then(function () {
+          return providerHtml.pickFeatures(0, 0, 0, 0.0, 0.0);
+        })
+        .then(function () {
+          expect(true).toBe(true);
+        });
+    });
+
+    it("falls back to the next format when the first request fails", function () {
+      function fallbackProcessor(response) {
+        expect(response.custom).toBe(true);
+        const feature = new ImageryLayerFeatureInfo();
+        feature.name = "Fallback feature";
+        return [feature];
+      }
+
+      const formats = [
+        new GetFeatureInfoFormat("json"),
+        new GetFeatureInfoFormat("foo", "application/foo", fallbackProcessor),
+      ];
+
+      const provider = new WebMapTileServiceImageryProvider({
+        layer: "someLayer",
+        style: "someStyle",
+        url: "http://wmts.invalid",
+        tileMatrixSetID: "someTMS",
+        tilingScheme: new GeographicTilingScheme(),
+        getFeatureInfoFormats: formats,
+      });
+
+      spyOn(Resource.prototype, "fetchJson").and.returnValue(
+        Promise.reject(new Error("no json")),
+      );
+
+      spyOn(Resource.prototype, "fetch").and.callFake(function (options) {
+        const url = (options && options.url) || this.getUrlComponent(true);
+        const uri = new Uri(url);
+        const params = queryToObject(uri.query());
+        expect(params.infoformat).toBe("application/foo");
+        expect(options.responseType).toBe("application/foo");
+        return Promise.resolve({
+          custom: true,
+        });
+      });
+
+      return provider.pickFeatures(0, 0, 0, 0.0, 0.0).then(function (features) {
+        expect(Resource.prototype.fetchJson).toHaveBeenCalled();
+        expect(Resource.prototype.fetch).toHaveBeenCalled();
+        expect(features.length).toBe(1);
+        expect(features[0].name).toBe("Fallback feature");
+      });
+    });
   });
 });
