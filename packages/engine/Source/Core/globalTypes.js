@@ -9,8 +9,8 @@
  */
 
 /**
- * See `TYPE_ONLY_EXPORTS` in `build.js`. This file adds no runtime exports, and must only
- * define type definitions.
+ * This file is omitted from 'workspaceSourceFiles' in 'scripts/build.js', and
+ * must provide type-only exports exclusively, without runtime values.
  * @ignore
  */
 export default null;
