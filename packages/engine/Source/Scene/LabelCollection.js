@@ -604,7 +604,7 @@ function destroyLabel(labelCollection, label) {
  * @see Label
  * @see BillboardCollection
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=labels|Cesium Sandcastle Labels Demo}
  *
  * @example
  * // Create a label collection with two labels

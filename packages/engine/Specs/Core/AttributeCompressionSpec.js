@@ -5,6 +5,7 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  Color,
   defined,
   Math as CesiumMath,
 } from "../../index.js";
@@ -1263,6 +1264,40 @@ describe("Core/AttributeCompression", function () {
     for (let i = 0; i < input.length; i++) {
       expect(result[i]).toEqual(expected[i]);
     }
+  });
+
+  it("decodeRGB8 validates inputs", function () {
+    const { decodeRGB8 } = AttributeCompression;
+    expect(() => decodeRGB8()).toThrowDeveloperError();
+    expect(() => decodeRGB8(Color.WHITE)).toThrowDeveloperError();
+    expect(() => decodeRGB8(Color.WHITE, null)).toThrowDeveloperError();
+  });
+
+  it("decodeRGB8 decodes", function () {
+    const { decodeRGB8 } = AttributeCompression;
+    const color = new Color();
+    expect(decodeRGB8(0x000000, color)).toEqual(Color.BLACK);
+    expect(decodeRGB8(0xff0000, color)).toEqual(Color.RED);
+    expect(decodeRGB8(0x008000, color)).toEqual(Color.GREEN);
+    expect(decodeRGB8(0x0000ff, color)).toEqual(Color.BLUE);
+    expect(decodeRGB8(0xffffff, color)).toEqual(Color.WHITE);
+    expect(decodeRGB8(0xdda0dd, color)).toEqual(Color.PLUM);
+  });
+
+  it("encodeRGB8 validates inputs", function () {
+    const { encodeRGB8 } = AttributeCompression;
+    expect(() => encodeRGB8()).toThrowDeveloperError();
+    expect(() => encodeRGB8(0xffffff)).toThrowDeveloperError();
+  });
+
+  it("encodeRGB8 encodes", function () {
+    const { encodeRGB8 } = AttributeCompression;
+    expect(encodeRGB8(Color.BLACK)).toEqual(0x000000);
+    expect(encodeRGB8(Color.RED)).toEqual(0xff0000);
+    expect(encodeRGB8(Color.GREEN)).toEqual(0x008000);
+    expect(encodeRGB8(Color.BLUE)).toEqual(0x0000ff);
+    expect(encodeRGB8(Color.WHITE)).toEqual(0xffffff);
+    expect(encodeRGB8(Color.PLUM)).toEqual(0xdda0dd);
   });
 
   it("decodeRGB565 throws without typedArray", function () {

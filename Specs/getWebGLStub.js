@@ -112,6 +112,9 @@ function getWebGLStub(canvas, options) {
   stub.texParameteri = noop;
   stub.texImage2D = noop;
   stub.texSubImage2D = noop;
+  stub.texStorage3D = noop;
+  stub.texImage3D = noop;
+  stub.texSubImage3D = noop;
   stub.uniform1f = noop;
   stub.uniform1fv = noop;
   stub.uniform1i = noop;
@@ -232,6 +235,7 @@ function getParameterStub(options) {
   parameterStubValues[WebGLConstants.MAX_TEXTURE_IMAGE_UNITS] = 16;
   parameterStubValues[WebGLConstants.MAX_RENDERBUFFER_SIZE] = 16384;
   parameterStubValues[WebGLConstants.MAX_TEXTURE_SIZE] = 16384;
+  parameterStubValues[WebGLConstants.MAX_3D_TEXTURE_SIZE] = 2048;
   parameterStubValues[WebGLConstants.MAX_VARYING_VECTORS] = 30;
   parameterStubValues[WebGLConstants.MAX_VERTEX_ATTRIBS] = 16;
   parameterStubValues[WebGLConstants.MAX_VERTEX_TEXTURE_IMAGE_UNITS] = 16;

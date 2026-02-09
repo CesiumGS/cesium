@@ -7,7 +7,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -20,6 +20,8 @@ jobs:
         run: npm run markdownlint
       - name: format code
         run: npm run prettier-check
+      - name: tsc
+        run: npm run tsc
   deploy:
     runs-on: ubuntu-latest
     env:
@@ -32,7 +34,7 @@ jobs:
       GITHUB_REPO: ${{ github.repository }}
       GITHUB_SHA: ${{ github.sha }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
         uses: actions/setup-node@v6
         with:

@@ -738,7 +738,7 @@ function load(dataSource, entityCollection, data, options) {
  * @see {@link http://www.topografix.com/gpx.asp|Topografix GPX Standard}
  * @see {@link http://www.topografix.com/gpx/1/1/|Topografix GPX Documentation}
  *
- * @demo {@link http://sandcastle.cesium.com/index.html?src=GPX.html}
+ * @demo {@link http://sandcastle.cesium.com/index.html?id=gpx}
  *
  * @example
  * const viewer = new Cesium.Viewer('cesiumContainer');

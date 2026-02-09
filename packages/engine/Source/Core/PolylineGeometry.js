@@ -83,7 +83,7 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  *
  * @see PolylineGeometry#createGeometry
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=polyline|Cesium Sandcastle Polyline Demo}
  *
  * @example
  * // A polyline with two connected line segments

@@ -1,13 +1,30 @@
 # Change Log
 
+## 1.139 - 2026-03-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
+
+#### Additions :tada:
+
+- Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors [#13174](https://github.com/CesiumGS/cesium/pull/13174)
+
 ## 1.138 - 2026-02-02
 
 ### @cesium/engine
 
 #### Fixes :wrench:
 
-- Fixes jitter artifacts on Intel Arc GPUs [#12879](https://github.com/CesiumGS/cesium/issues/12879)
-- Fixed label sizing for some fonts and characters [#9767](https://github.com/CesiumGS/cesium/issues/9767)
+- Fixed jitter artifacts on Intel Arc GPUs. [#12879](https://github.com/CesiumGS/cesium/issues/12879)
+- Improved voxel memory usage by reworking `Megatexture` to use `Texture3D`. [#12570](https://github.com/CesiumGS/cesium/issues/12570)
+- Fixed multiple issues causing undefined pick results in 2D/CV scene modes. [#13083](https://github.com/CesiumGS/cesium/issues/13083)
+- Fixed label sizing for some fonts and characters. [#9767](https://github.com/CesiumGS/cesium/issues/9767)
+- Fixed a type error when accessing the ellipsoid of a viewer. [#13123](https://github.com/CesiumGS/cesium/pull/13123)
+- Fixed a bug where entities have not been clustered correctly. [#13064](https://github.com/CesiumGS/cesium/pull/13064)
+- Fixed error with `DynamicEnvironmentMapManager` when `ContextLimits.maximumCubeMapSize` is zero. [#12606](https://github.com/CesiumGS/cesium/pull/12606)
 
 ## 1.137 - 2026-01-05
 
@@ -21,6 +38,10 @@
 #### Deprecated :hourglass_flowing_sand:
 
 - Beginning in CesiumJS 1.140, billboards and labels will require device support for WebGL 2, or WebGL 1 with ANGLE_instanced_arrays and MAX_VERTEX_TEXTURE_IMAGE_UNITS > 0. For more information or to share feedback, please see [#13053](https://github.com/CesiumGS/cesium/issues/13053). [#13067](https://github.com/CesiumGS/cesium/issues/13067)
+
+#### Additions :tada:
+
+- Added support for the proposed [BENTLEY_materials_point_style](https://github.com/CesiumGS/glTF/pull/91) glTF extension. This allows point primitives to have a diameter property specified and respected when loaded via glTF.
 
 ## 1.136 - 2025-12-01
 

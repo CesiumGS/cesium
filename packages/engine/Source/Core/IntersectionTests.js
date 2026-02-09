@@ -67,7 +67,7 @@ const scratchQVec = new Cartesian3();
 /**
  * Computes the intersection of a ray and a triangle as a parametric distance along the input ray. The result is negative when the triangle is behind the ray.
  *
- * Implements {@link https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf|
+ * Implements {@link https://cadxfem.org/inf/Fast MinimumStorage RayTriangle Intersection.pdf|
  * Fast Minimum Storage Ray/Triangle Intersection} by Tomas Moller and Ben Trumbore.
  *
  * @memberof IntersectionTests
@@ -167,7 +167,7 @@ IntersectionTests.rayTriangleParametric = function (
 /**
  * Computes the intersection of a ray and a triangle as a Cartesian3 coordinate.
  *
- * Implements {@link https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf|
+ * Implements {@link https://cadxfem.org/inf/Fast MinimumStorage RayTriangle Intersection.pdf|
  * Fast Minimum Storage Ray/Triangle Intersection} by Tomas Moller and Ben Trumbore.
  *
  * @memberof IntersectionTests

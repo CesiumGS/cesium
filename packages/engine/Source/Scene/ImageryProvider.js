@@ -39,8 +39,8 @@ import Resource from "../Core/Resource.js";
  * @see WebMapServiceImageryProvider
  * @see WebMapTileServiceImageryProvider
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=imagery-layers|Cesium Sandcastle Imagery Layers Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=imagery-layers-manipulation|Cesium Sandcastle Imagery Manipulation Demo}
  */
 function ImageryProvider() {
   DeveloperError.throwInstantiationError();

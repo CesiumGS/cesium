@@ -30,7 +30,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {PlaneGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Plane.html|Cesium Sandcastle Plane Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=plane|Cesium Sandcastle Plane Demo}
  */
 function PlaneGraphics(options) {
   this._definitionChanged = new Event();

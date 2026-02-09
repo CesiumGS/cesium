@@ -1,0 +1,6 @@
+title: Styled glTF Points - Dev
+description: Use BENTLEY_materials_point_style to apply width to glTF points.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true
