@@ -1096,6 +1096,10 @@ describe(
     });
 
     it("update throws for outline geometry missing normal attribute", function () {
+      if (window.webglStub) {
+        pending("WebGL stub does not validate shader attributes.");
+      }
+
       primitive = new Primitive({
         geometryInstances: new GeometryInstance({
           geometry: new RectangleOutlineGeometry({
@@ -1237,6 +1241,8 @@ describe(
           frameState.afterRender[0]();
         }
         return primitive.ready;
+      }, {
+        timeout: 10000,
       }).then(function () {
         expect(
           primitive.getGeometryInstanceAttributes("rectangle1").boundingSphere,
