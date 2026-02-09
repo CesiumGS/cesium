@@ -68,6 +68,15 @@ class Feature3DCollection {
     this._positionF64 = null;
 
     this._allocatePositionBuffer();
+
+    // Potentially-dirty features are tracked as a contiguous range, with
+    // 'clean' features potentially within the range. Individual feature
+    // 'dirty' flags are source-of-truth.
+
+    /** @type {number} */
+    this._dirtyOffset = 0;
+    /** @type {number} */
+    this._dirtyCount = 0;
   }
 
   /**
@@ -166,6 +175,20 @@ class Feature3DCollection {
     result.show = options.show ?? true;
     result.setColor(options.color ?? Color.WHITE);
     return result;
+  }
+
+  /**
+   * Marks a feature at given index as 'dirty', to be updated on next render.
+   * @param {number} index
+   * @ignore
+   */
+  _makeDirty(index) {
+    if (index < this._dirtyOffset) {
+      this._dirtyCount += this._dirtyOffset - index;
+      this._dirtyOffset = index;
+    } else if (index >= this._dirtyOffset + this._dirtyCount) {
+      this._dirtyCount = index - this._dirtyOffset;
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////

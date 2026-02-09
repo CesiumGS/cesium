@@ -7,6 +7,7 @@ import Polygon3D from "./Polygon3D.js";
 import Frozen from "../Core/Frozen.js";
 import renderPolygons from "./renderPolygon3DCollection.js";
 
+/** @import Color from "../Core/Color.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "../Scene/FrameState.js" */
 

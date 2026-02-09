@@ -5,6 +5,7 @@ import Feature3DCollection from "./Feature3DCollection.js";
 import Polyline3D from "./Polyline3D.js";
 import renderPolylines from "./renderPolyline3DCollection.js";
 
+/** @import Color from "../Core/Color.js"; */
 /** @import FrameState from "../Scene/FrameState.js" */
 
 /**

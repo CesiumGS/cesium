@@ -5,7 +5,15 @@ import Point3D from "./Point3D.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import renderPoints from "./renderPoint3DCollection.js";
 
+/** @import Color from "../Core/Color.js"; */
 /** @import FrameState from "../Scene/FrameState.js" */
+
+/**
+ * @typedef {object} Point3DOptions
+ * @property {boolean} [show=true]
+ * @property {Color} [color=Color.WHITE]
+ * @property {Cartesian3} [position=Cartesian3.ZERO]
+ */
 
 /**
  * @extends Feature3DCollection<Point3D>

@@ -9,13 +9,6 @@ import assert from "../Core/assert.js";
 const { ERR_CAPACITY } = Feature3D;
 
 /**
- * @typedef {object} Point3DOptions
- * @property {boolean} [show=true]
- * @property {Color} [color=Color.WHITE]
- * @property {Cartesian3} [position=Cartesian3.ZERO]
- */
-
-/**
  * Point3D.
  *
  * Represented as one (1) position.
