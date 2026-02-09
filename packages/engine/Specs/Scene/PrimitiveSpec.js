@@ -1235,15 +1235,18 @@ describe(
         }),
       });
 
-      return pollToPromise(function () {
-        primitive.update(frameState);
-        if (frameState.afterRender.length > 0) {
-          frameState.afterRender[0]();
-        }
-        return primitive.ready;
-      }, {
-        timeout: 10000,
-      }).then(function () {
+      return pollToPromise(
+        function () {
+          primitive.update(frameState);
+          if (frameState.afterRender.length > 0) {
+            frameState.afterRender[0]();
+          }
+          return primitive.ready;
+        },
+        {
+          timeout: 10000,
+        },
+      ).then(function () {
         expect(
           primitive.getGeometryInstanceAttributes("rectangle1").boundingSphere,
         ).toBeDefined();
