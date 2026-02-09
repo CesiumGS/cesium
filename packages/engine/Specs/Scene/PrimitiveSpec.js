@@ -20,6 +20,7 @@ import {
   PrimitiveType,
   Rectangle,
   RectangleGeometry,
+  RectangleOutlineGeometry,
   ShowGeometryInstanceAttribute,
   Transforms,
   Camera,
@@ -1092,6 +1093,28 @@ describe(
       expect(function () {
         primitive.update(frameState);
       }).toThrowDeveloperError();
+    });
+
+    it("update throws for outline geometry missing normal attribute", function () {
+      primitive = new Primitive({
+        geometryInstances: new GeometryInstance({
+          geometry: new RectangleOutlineGeometry({
+            ellipsoid: ellipsoid,
+            rectangle: rectangle1,
+          }),
+          attributes: {
+            color: new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0),
+          },
+        }),
+        appearance: new PerInstanceColorAppearance(),
+        asynchronous: false,
+      });
+
+      expect(function () {
+        primitive.update(frameState);
+      }).toThrowDeveloperError(
+        "Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input 'normal', which was not computed as part of the Geometry.  Use the appearance's vertexFormat property when constructing the geometry.",
+      );
     });
 
     it("failed geometry throws on next update", async function () {
