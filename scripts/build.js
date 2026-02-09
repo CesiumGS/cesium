@@ -22,8 +22,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, "..");
 const packageJsonPath = path.join(projectRoot, "package.json");
 
-const TYPE_ONLY_EXPORTS = new Set(["global"]);
-
 export async function getVersion() {
   const data = await readFile(packageJsonPath, "utf8");
   const { version } = JSON.parse(data);
@@ -258,6 +256,7 @@ const workspaceSourceFiles = {
   engine: [
     "packages/engine/Source/**/*.js",
     "!packages/engine/Source/*.js",
+    "!packages/engine/Source/Core/globalTypes.js",
     "!packages/engine/Source/Workers/**",
     "packages/engine/Source/Workers/createTaskProcessorWorker.js",
     "!packages/engine/Source/ThirdParty/Workers/**.js",
@@ -284,11 +283,6 @@ function generateDeclaration(workspace, file) {
     assignmentName = `_shaders${assignmentName}`;
   }
   assignmentName = assignmentName.replace(/(\.|-)/g, "_");
-
-  if (TYPE_ONLY_EXPORTS.has(assignmentName)) {
-    return;
-  }
-
   return `export { ${assignmentName} } from '@${scope}/${workspace}';`;
 }
 
@@ -940,11 +934,6 @@ export async function createIndexJs(workspace) {
       assignmentName = `_shaders${assignmentName}`;
     }
     assignmentName = assignmentName.replace(/(\.|-)/g, "_");
-
-    if (TYPE_ONLY_EXPORTS.has(assignmentName)) {
-      return;
-    }
-
     contents += `export { default as ${assignmentName} } from './${moduleId}.js';${EOL}`;
   });
 

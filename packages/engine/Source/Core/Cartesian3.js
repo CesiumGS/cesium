@@ -5,7 +5,7 @@ import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 
-/** @import {TypedArray} from "./global.js"; */
+/** @import {TypedArray} from "./globalTypes.js"; */
 /** @import Cartesian4 from "./Cartesian4.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
 /** @import Spherical from "./Spherical.js"; */
