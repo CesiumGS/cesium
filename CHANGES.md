@@ -11,6 +11,7 @@
 #### Additions :tada:
 
 - Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors [#13174](https://github.com/CesiumGS/cesium/pull/13174)
+- Added GetFeatureInfo support to `WebMapTileServiceImageryProvider`, enabling `pickFeatures()` for both KVP and RESTful WMTS services. New options: `enablePickFeatures`, `getFeatureInfoFormats`, `getFeatureInfoUrl`, and `getFeatureInfoParameters`. [#13196](https://github.com/CesiumGS/cesium/pull/13196)
 
 ## 1.138 - 2026-02-02
 
