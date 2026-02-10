@@ -275,21 +275,18 @@ export function useGalleryItemStore() {
       // the default label filter for Showcases can be confusing when it doesn't
       // search everything after page load. Remove the filter on the first search only
       // to ensure we search everything
-      if (isFirstSearch) {
-        if (searchFilter === defaultSearchFilter) {
-          setSearchFilter(null);
-        }
+      if (
+        isFirstSearch &&
+        newSearchTerm !== null &&
+        newSearchTerm.trim() !== ""
+      ) {
+        setSearchFilter(null);
         setFirstSearch(false);
+        console.log("First search - removing default filter");
       }
       setSearchTerm(newSearchTerm);
     },
-    [
-      setSearchTerm,
-      isFirstSearch,
-      setSearchFilter,
-      searchFilter,
-      defaultSearchFilter,
-    ],
+    [setSearchTerm, isFirstSearch, setSearchFilter],
   );
 
   return {
