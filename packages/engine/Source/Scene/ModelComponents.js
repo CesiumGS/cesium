@@ -1520,6 +1520,11 @@ function PlanarFill() {
    * Specifies whether and when the interior fill is displayed in wireframe view mode.
    * 0 = NONE (never drawn), 1 = ALWAYS (always drawn), 2 = TOGGLE (drawn when fill display is enabled).
    *
+   * NOTE: This property is currently a NO-OP. CesiumJS does not yet have a proper
+   * wireframe rendering mode (debugWireframe is not a true wireframe mode). The
+   * value is loaded and stored for completeness, but it has no effect on rendering.
+   * This will be implemented when CesiumJS adds a proper wireframe view mode.
+   *
    * @type {number}
    * @default 0
    * @private

@@ -176,6 +176,12 @@ MaterialPipelineStage.process = function (
   // Configure background fill for BENTLEY_materials_planar_fill extension.
   // When backgroundFill is true, the fill is rendered using the view's background color
   // to create an invisible masking polygon. Lighting is forced to unlit above.
+  //
+  // NOTE: The wireframeFill property from BENTLEY_materials_planar_fill is intentionally
+  // not handled here. CesiumJS does not yet have a proper wireframe rendering mode
+  // (debugWireframe is not a true wireframe mode), so wireframeFill is loaded as a NO-OP.
+  // When a proper wireframe mode is added to CesiumJS, wireframeFill support should be
+  // implemented here to control fill visibility in that mode.
   if (hasBackgroundFill) {
     shaderBuilder.addDefine(
       "HAS_BACKGROUND_FILL",
