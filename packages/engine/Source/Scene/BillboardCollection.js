@@ -319,7 +319,7 @@ function BillboardCollection(options) {
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
   this._coarseDepthTestDistance =
-    options.coarseDepthTestDistance ?? Ellipsoid.default.minimumRadius / 10;
+    options.coarseDepthTestDistance ?? Ellipsoid.default.minimumRadius;
   this._threePointDepthTestDistance =
     options.threePointDepthTestDistance ??
     Ellipsoid.default.minimumRadius / 1000;
@@ -468,13 +468,13 @@ Object.defineProperties(BillboardCollection.prototype, {
   },
 
   /**
-   * The distance from the camera, beyond which, billboards are depth-tested against an approximation of 
-   * the globe ellipsoid rather than against the full globe depth buffer. When set to <code>0</code>, the 
-   * approximate depth test is always applied. When set to <code>Number.POSITIVE_INFINITY</code>, the 
+   * The distance from the camera, beyond which, billboards are depth-tested against an approximation of
+   * the globe ellipsoid rather than against the full globe depth buffer. When set to <code>0</code>, the
+   * approximate depth test is always applied. When set to <code>Number.POSITIVE_INFINITY</code>, the
    * approximate depth test is never applied.
    * <br/><br/>
-   * This setting only applies when a billboard's {@link Billboard#disableDepthTestDistance} value would 
-   * otherwise allow depth testing—i.e., distance from the camera to the billboard is less than a 
+   * This setting only applies when a billboard's {@link Billboard#disableDepthTestDistance} value would
+   * otherwise allow depth testing—i.e., distance from the camera to the billboard is less than a
    * billboard's {@link Billboard#disableDepthTestDistance} value.
    * @memberof BillboardCollection.prototype
    * @type {number}
@@ -492,14 +492,14 @@ Object.defineProperties(BillboardCollection.prototype, {
   },
 
   /**
-   * The distance from the camera, within which, billboards with a {@link Billboard#heightReference} value 
-   * of {@link HeightReference.CLAMP_TO_GROUND} or {@link HeightReference.CLAMP_TO_TERRAIN} are depth tested 
-   * against three key points. This ensures that if any key point of the billboard is visible, the whole 
-   * billboard will be visible. When set to <code>0</code>, this feature is disabled and portions of a 
+   * The distance from the camera, within which, billboards with a {@link Billboard#heightReference} value
+   * of {@link HeightReference.CLAMP_TO_GROUND} or {@link HeightReference.CLAMP_TO_TERRAIN} are depth tested
+   * against three key points. This ensures that if any key point of the billboard is visible, the whole
+   * billboard will be visible. When set to <code>0</code>, this feature is disabled and portions of a
    * billboards behind terrain be clipped.
    * <br/><br/>
-   * This setting only applies when a billboard's {@link Billboard#disableDepthTestDistance} value would 
-   * otherwise allow depth testing—i.e., distance from the camera to the billboard is less than a 
+   * This setting only applies when a billboard's {@link Billboard#disableDepthTestDistance} value would
+   * otherwise allow depth testing—i.e., distance from the camera to the billboard is less than a
    * billboard's {@link Billboard#disableDepthTestDistance} value.
    * @see {@link https://cesium.com/blog/2018/07/30/billboards-on-terrain-improvements/|Billboards and Labels on Terrain Improvements}
    * @memberof BillboardCollection.prototype

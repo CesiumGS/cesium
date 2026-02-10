@@ -845,9 +845,9 @@ Object.defineProperties(Billboard.prototype, {
   },
 
   /**
-   * Gets or sets the distance from the camera, beyond which, depth testing is disbaled—to, 
-   * for example, prevent clipping against terrain. When set to <code>undefined</code> or 
-   * <code>0</code>, the depth test is always applied. When set to 
+   * Gets or sets the distance from the camera, beyond which, depth testing is disbaled—to,
+   * for example, prevent clipping against terrain. When set to <code>undefined</code> or
+   * <code>0</code>, the depth test is always applied. When set to
    * <code>Number.POSITIVE_INFINITY</code>, the depth test is never applied.
    * @memberof Billboard.prototype
    * @type {number|undefined}

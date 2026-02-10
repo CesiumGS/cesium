@@ -1049,7 +1049,7 @@ Object.defineProperties(Label.prototype, {
 
   /**
    * Gets or sets the distance from the camera, beyond which, depth testing is disabled—to, for example, prevent clipping against terrain.
-   * When set to <code>undefined</code> or 
+   * When set to <code>undefined</code> or
    * <code>0</code>, the depth test is always applied. When set to Number.<code>POSITIVE_INFINITY</code>, the depth test is never applied.
    * @memberof Label.prototype
    * @type {number|undefined}

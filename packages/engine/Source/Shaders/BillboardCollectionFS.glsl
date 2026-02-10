@@ -131,16 +131,27 @@ void doThreePointDepthTest(float eyeDepth, bool applyTranslate) {
 }
 #endif
 
-// Extra manual depth testing is done to allow more control over how a billboard is occluded
-// by the globe when near and far from the camera.
-void doDepthTest(float globeDepth) {
+bool getDepthTestEnabled() {
     float temp = v_compressed.y;
     temp = temp * SHIFT_RIGHT1;
     float temp2 = (temp - floor(temp)) * SHIFT_LEFT1;
-    bool enableDepthCheck = temp2 != 0.0;
-    if (!enableDepthCheck) return;
+    return temp2 != 0.0;
+}
 
-    float eyeDepth = v_compressed.x;
+float getEyeDepthRelativeToEllipsoid(float eyeDepth, float distanceToEllipsoid) {
+    float depthDifferential = eyeDepth - distanceToEllipsoid;
+    float depthRatio = abs(depthDifferential / distanceToEllipsoid);
+    if (depthRatio < czm_epsilon3) {
+        // The approximations are imprecise, so use an epsilon check for small value differences and assume a value of 0.0
+        return 0.0;
+    }
+
+    return depthDifferential;
+}
+
+// Extra manual depth testing is done to allow more control over how a billboard is occluded
+// by the globe when near and far from the camera.
+void doDepthTest(float eyeDepth, float globeDepth) {
 
 #ifdef FS_THREE_POINT_DEPTH_CHECK
     // If the billboard is clamped to the ground and within a given distance, we do a 3-point depth test. This test is performed in the vertex shader, unless
@@ -157,35 +168,55 @@ void doDepthTest(float globeDepth) {
         return;
     }
 #endif
-
-    float distanceToEllipsoid = -v_splitDirectionAndEllipsoidDepthEC.y;
-    if (globeDepth == 0.0 || distanceToEllipsoid == -czm_infinity) {
+    bool useGlobeDepth = eyeDepth > -u_coarseDepthTestDistance;
+    if (useGlobeDepth && globeDepth == 0.0) {
         // Pixel is not on the globe, so there is no distance to compare against. Pass.
         return;
     }
-    
-    // If the camera is closer, compare against the globe depth texture that includes depth from the 3D tile pass.
-    bool useGlobeDepth = eyeDepth > -u_coarseDepthTestDistance;
-    if (useGlobeDepth && eyeDepth < globeDepth) {
-        discard;
-    }
 
-    // If the camera is farther away, compare against an approximation of the globe's ellipsoid.
-    // The approximations are imprecise, so use an epsilon check for small value differences.
-    float depthDifferential = eyeDepth - distanceToEllipsoid;
-    float depthRatio = abs(depthDifferential / distanceToEllipsoid);
-    if (depthRatio > czm_epsilon3 && depthDifferential < 0.0) {
+    // If the camera is close, compare against the globe depth texture that includes depth from the 3D tile pass.
+    if (useGlobeDepth && eyeDepth < globeDepth) {
         discard;
     }
 }
 
+void writeDepth(float eyeDepth, float globeDepth, float distanceToEllipsoid) {
+    // If we've made it here, the manual depth test above determined that this fragment should be visible.
+    // But the automatic depth test must still run in order to write the result to the depth buffer, and its results may
+    // disagree with our manual depth test's results. To prefer our manual results when in front of the globe, apply a small offset towards the camera.
+
+    float depthArg = v_depthFromNearPlusOne;
+
+    if (globeDepth != 0.0 && getEyeDepthRelativeToEllipsoid(eyeDepth, distanceToEllipsoid) > 0.0) { 
+        float globeDepthFromNearPlusOne = (-globeDepth - czm_currentFrustum.x) + 1.0;
+        float nudge = max(globeDepthFromNearPlusOne * 5e-6, czm_epsilon7);
+        float globeOnTop = max(1.0, globeDepthFromNearPlusOne - nudge);
+        depthArg = min(depthArg, globeOnTop);
+    }
+
+    czm_writeLogDepth(depthArg);
+}
+
 void main()
 {
-    if (v_splitDirectionAndEllipsoidDepthEC.x < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
-    if (v_splitDirectionAndEllipsoidDepthEC.x > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
-    vec2 fragSt = gl_FragCoord.xy / czm_viewport.zw;
-    float globeDepth = getGlobeDepthAtCoords(fragSt);
-    doDepthTest(globeDepth);
+    if (v_splitDirectionAndEllipsoidDepthEC.x < 0.0 && gl_FragCoord.x > czm_splitPosition) {
+        discard;
+    }
+    if (v_splitDirectionAndEllipsoidDepthEC.x > 0.0 && gl_FragCoord.x < czm_splitPosition) {
+        discard;
+    }
+
+    if (getDepthTestEnabled()) {
+        vec2 fragSt = gl_FragCoord.xy / czm_viewport.zw;
+        float eyeDepth = v_compressed.x;
+        float globeDepth = getGlobeDepthAtCoords(fragSt);
+        float distanceToEllipsoid = -v_splitDirectionAndEllipsoidDepthEC.y;
+        doDepthTest(eyeDepth, globeDepth);
+
+        #ifdef LOG_DEPTH
+        writeDepth(eyeDepth, globeDepth, distanceToEllipsoid);
+        #endif
+    }
 
     vec4 color = texture(u_atlas, v_textureCoordinates);
 
@@ -251,21 +282,4 @@ void main()
     color *= u_highlightColor;
 #endif
     out_FragColor = color;
-
-#ifdef LOG_DEPTH
-    // If we've made it here, the manual depth test above determined that this fragment should be visible.
-    // But the automatic depth test must still run in order to write the result to the depth buffer, and its results may
-    // disagree with our manual depth test's results. To prefer our manual results, fudge the depth of this fragment to
-    // always be on top of the globe.
-    float depthArg = v_depthFromNearPlusOne;
-
-    if (globeDepth != 0.0) { // On the globe
-        float globeDepthFromNearPlusOne = (-globeDepth - czm_currentFrustum.x) + 1.0;
-        float nudge = max(globeDepthFromNearPlusOne * 5e-6, czm_epsilon7);
-        float globeOnTop = max(1.0, globeDepthFromNearPlusOne - nudge);
-        depthArg = min(depthArg, globeOnTop);
-    }
-
-    czm_writeLogDepth(depthArg);
-#endif
 }
