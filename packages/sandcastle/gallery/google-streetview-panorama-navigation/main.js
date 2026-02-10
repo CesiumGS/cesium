@@ -34,6 +34,8 @@ async function loadPanorama(panoId) {
   const streetViewPanorama = await provider.loadPanoramaFromPanoId(panoId, 3);
   viewer.scene.primitives.add(streetViewPanorama);
   positionCameraInPano(panoIdMetadata);
+  removeOldPanoImage(streetViewPanorama);
+  removeOtherPanoLinks();
   plotPanoLinks(panoIdMetadata);
   initialPano = false;
 }
@@ -128,6 +130,20 @@ function removeOtherPanoLinks() {
   }
 }
 
+function removeOldPanoImage(newPanoPrimitive) {
+  const primitives = viewer.scene.primitives;
+  // Iterate in reverse to avoid index issues when removing
+  for (let i = primitives.length - 1; i >= 0; i--) {
+    const primitive = primitives.get(i);
+    const remove =
+      primitive instanceof Cesium.EquirectangularPanorama &&
+      primitive !== newPanoPrimitive;
+    if (remove) {
+      primitives.remove(primitive);
+    }
+  }
+}
+
 const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
 handler.setInputAction((movement) => {
@@ -135,29 +151,13 @@ handler.setInputAction((movement) => {
 
   if (Cesium.defined(picked) && Cesium.defined(picked.id)) {
     const entity = picked.id;
-
     if (entity.linkId) {
-      console.log("Clicked link:", entity.linkId);
-      console.log("Link data:", entity.linkData);
-
-      const primitives = viewer.scene.primitives;
-      // Iterate in reverse to avoid index issues when removing
-      for (let i = primitives.length - 1; i >= 0; i--) {
-        const primitive = primitives.get(i);
-        const remove = primitive instanceof Cesium.EquirectangularPanorama;
-        if (remove) {
-          primitives.remove(primitive);
-        }
-      }
-      removeOtherPanoLinks(entity.panoId);
-
       loadPanorama(entity.panoId);
     }
   }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 // load initial scene
-
 const longitude = -75.222071;
 const latitude = 40.027237;
 const height = 1; // in meters
