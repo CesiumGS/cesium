@@ -1259,7 +1259,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     );
   });
 
-  it("ignores far pickPosition for zoom in 3D when transform is set", function () {
+  it("ignores far pickPosition for zoom in on an object in 3D when transform is set", function () {
     setUp3D();
 
     scene.globe = new MockGlobe(scene.ellipsoid);
