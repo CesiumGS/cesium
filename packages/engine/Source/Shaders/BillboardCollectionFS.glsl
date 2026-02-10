@@ -9,7 +9,7 @@ uniform vec4 u_highlightColor;
 in vec2 v_textureCoordinates;
 in vec4 v_pickColor;
 in vec4 v_color;
-in vec2 v_splitDirectionAndEllipsoidDepthEC;
+flat in vec2 v_splitDirectionAndEllipsoidDepthEC;
 
 #ifdef SDF
 in vec4 v_outlineColor;
@@ -158,20 +158,23 @@ void doDepthTest(float globeDepth) {
     }
 #endif
 
-    // If we're far away, we just compare against a flat, camera-facing depth-plane at the ellipsoid's center.
-    // If we're close, we compare against the globe depth texture (which includes depth from the 3D tile pass).
-    bool useGlobeDepth = eyeDepth > -u_coarseDepthTestDistance;
-    if (useGlobeDepth && globeDepth == 0.0) {
-        // Pixel not on globe = instant pass
+    float distanceToEllipsoid = -v_splitDirectionAndEllipsoidDepthEC.y;
+    if (globeDepth == 0.0 || distanceToEllipsoid == -czm_infinity) {
+        // Pixel is not on the globe, so there is no distance to compare against. Pass.
         return;
     }
+    
+    // If the camera is closer, compare against the globe depth texture that includes depth from the 3D tile pass.
+    bool useGlobeDepth = eyeDepth > -u_coarseDepthTestDistance;
+    if (useGlobeDepth && eyeDepth < globeDepth) {
+        discard;
+    }
 
-    // If we're far away, we just compare against a flat, camera-facing depth-plane at the ellipsoid's center.
-    // If we're close, we compare against the globe depth texture (which includes depth from the 3D tile pass).
-    float distanceToEllipsoid = -v_splitDirectionAndEllipsoidDepthEC.y;
-
-    float testDistance = useGlobeDepth ? globeDepth : distanceToEllipsoid;
-    if (eyeDepth < testDistance) {
+    // If the camera is farther away, compare against an approximation of the globe's ellipsoid.
+    // The approximations are imprecise, so use an epsilon check for small value differences.
+    float depthDifferential = eyeDepth - distanceToEllipsoid;
+    float depthRatio = abs(depthDifferential / distanceToEllipsoid);
+    if (depthRatio > czm_epsilon3 && depthDifferential < 0.0) {
         discard;
     }
 }

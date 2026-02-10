@@ -594,11 +594,8 @@ function destroyLabel(labelCollection, label) {
  * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
  * @param {boolean} [options.show=true] Determines if the labels in the collection will be shown.
- * @param {number} [options.coarseDepthTestDistance] An eye-space distance, beyond which, labels in the collection are depth-tested against a camera-facing plane at the ellipsoid's center,
- * rather than against the full globe depth buffer. This setting is secondary to a billboard's disableDepthTestDistance value.
- * @param {number} [options.threePointDepthTestDistance] Within this distance, for labels in the collection that are clamped to the ground, three key points on each label will be depth tested.
- * If any key point is visible, the whole label will be visible. Settings this value to 0 disables this feature.
- *
+ * @param {number} [options.coarseDepthTestDistance] The distance from the camera, beyond which, labels are depth-tested against an approximation of the globe ellipsoid rather than against the full globe depth buffer. If unspecified, the default value is determined relative to the value of {@link Ellipsoid.default}.
+ * @param {number} [options.threePointDepthTestDistance] The distance from the camera, within which, lables with a {@link Label#heightReference} value of {@link HeightReference.CLAMP_TO_GROUND} or {@link HeightReference.CLAMP_TO_TERRAIN} are depth tested against three key points. This ensures that if any key point of the label is visible, the whole label will be visible. If unspecified, the default value is determined relative to the value of {@link Ellipsoid.default}.
  * @performance For best performance, prefer a few collections, each with many labels, to
  * many collections with only a few labels each.  Avoid having collections where some
  * labels change every frame and others do not; instead, create one or more collections
@@ -770,16 +767,20 @@ Object.defineProperties(LabelCollection.prototype, {
   },
 
   /**
-   * An eye-space distance, beyond which, labels are depth-tested against a camera-facing plane at the ellipsoid's center,
-   * rather than against the full globe depth buffer. This setting is secondary to a label's disableDepthTestDistance value.
-   *
-   * @private
+   * The distance from the camera, beyond which, labels are depth-tested against an approximation of
+   * the globe ellipsoid rather than against the full globe depth buffer. When set to <code>0</code>, the
+   * approximate depth test is always applied. When set to <code>Number.POSITIVE_INFINITY</code>, the
+   * approximate depth test is never applied.
+   * <br/><br/>
+   * This setting only applies when a label's {@link Label#disableDepthTestDistance} value would
+   * otherwise allow depth testing—i.e., distance from the camera to the label is less than the
+   * label's {@link Label#disableDepthTestDistance} value.
    * @memberof LabelCollection.prototype
    * @type {number}
    */
   coarseDepthTestDistance: {
     get: function () {
-      return this._coarseDepthTestDistance;
+      return this._backgroundBillboardCollection.coarseDepthTestDistance;
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
@@ -791,16 +792,22 @@ Object.defineProperties(LabelCollection.prototype, {
   },
 
   /**
-   * Within this distance, if labels in the collection are clamped to the ground, three key points on each label will be depth tested.
-   * If any key point is visible, the whole label will be visible. Settings this value to 0 disables this feature.
-   *
-   * @private
+   * The distance from the camera, within which, labels with a {@link Label#heightReference} value
+   * of {@link HeightReference.CLAMP_TO_GROUND} or {@link HeightReference.CLAMP_TO_TERRAIN} are depth tested
+   * against three key points. This ensures that if any key point of the label is visible, the whole
+   * label will be visible. When set to <code>0</code>, this feature is disabled and portions of a
+   * label behind terrain be clipped.
+   * <br/><br/>
+   * This setting only applies when a labels's {@link Label#disableDepthTestDistance} value would
+   * otherwise allow depth testing—i.e., distance from the camera to the label is less than the
+   * labels's {@link Label#disableDepthTestDistance} value.
+   * @see {@link https://cesium.com/blog/2018/07/30/billboards-on-terrain-improvements/|Billboards and Labels on Terrain Improvements}
    * @memberof LabelCollection.prototype
    * @type {number}
    */
   threePointDepthTestDistance: {
     get: function () {
-      return this._threePointDepthTestDistance;
+      return this._backgroundBillboardCollection.threePointDepthTestDistance;
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);

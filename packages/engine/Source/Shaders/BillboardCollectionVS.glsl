@@ -26,11 +26,11 @@ out vec4 v_textureCoordinateBounds;
 out vec4 v_originTextureCoordinateAndTranslate;
 out mat2 v_rotationMatrix;
 #endif
-out vec4 v_compressed;                                 // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
+out vec4 v_compressed;             // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
 
 out vec4 v_pickColor;
 out vec4 v_color;
-out vec2 v_splitDirectionAndEllipsoidDepthEC; // x: splitDirection, y: ellipsoid depth in eye coordinates
+flat out vec2 v_splitDirectionAndEllipsoidDepthEC;  // x: splitDirection, y: ellipsoid depth in eye coordinates
 #ifdef SDF
 out vec4 v_outlineColor;
 out float v_outlineWidth;
