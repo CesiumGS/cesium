@@ -2357,17 +2357,20 @@ function zoom3D(controller, startPosition, movement) {
     intersection = pickPosition(controller, windowPosition, zoomCVIntersection);
   }
 
-  if (!defined(controller._globe) && defined(intersection)) {
-    const targetDistance = camera.getMagnitude();
-    const pickDistance = Cartesian3.distance(ray.origin, intersection);
-    if (targetDistance < pickDistance) {
-      intersection = undefined;
-    }
-  }
-
   let distance;
   if (defined(intersection)) {
     distance = Cartesian3.distance(ray.origin, intersection);
+  }
+
+  if (!defined(controller._globe) && defined(distance)) {
+    const targetDistance = camera.getMagnitude();
+    if (targetDistance < distance) {
+      intersection = undefined;
+      distance = undefined;
+    }
+  }
+
+  if (defined(distance)) {
     preIntersectionDistance = distance;
   }
 
