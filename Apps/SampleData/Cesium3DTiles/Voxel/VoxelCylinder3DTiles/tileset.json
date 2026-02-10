@@ -18,7 +18,7 @@
   "statistics": {
     "classes": {
       "voxel": {
-        "count": 8,
+        "count": 24,
         "properties": {
           "a": {
             "min": 0.0,
@@ -47,8 +47,8 @@
         "3DTILES_content_voxels": {
           "dimensions": [
             2,
-            2,
-            2
+            4,
+            3
           ],
           "class": "voxel"
         }

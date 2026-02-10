@@ -146,7 +146,8 @@ describe(
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, []);
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, []);
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, []);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, []);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersFeatureIdStageVS,
         ]);
@@ -249,8 +250,11 @@ describe(
         ]);
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "float v_implicit_featureId_0;",
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out float v_implicit_featureId_0;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in float v_implicit_featureId_0;",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersFeatureIdStageVS,
@@ -371,8 +375,11 @@ describe(
         ]);
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "float v_implicit_featureId_1;",
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out float v_implicit_featureId_1;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in float v_implicit_featureId_1;",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersFeatureIdStageVS,
@@ -473,7 +480,8 @@ describe(
         ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
           "uniform sampler2D u_featureIdTexture_0;",
         ]);
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, []);
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, []);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, []);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersFeatureIdStageVS,
         ]);
@@ -552,7 +560,8 @@ describe(
         "uniform sampler2D u_featureIdTexture_0;",
         "uniform mat3 u_featureIdTexture_0Transform;",
       ]);
-      ShaderBuilderTester.expectHasVaryings(shaderBuilder, []);
+      ShaderBuilderTester.expectVertexVaryings(shaderBuilder, []);
+      ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, []);
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
         _shadersFeatureIdStageVS,
       ]);
@@ -668,7 +677,8 @@ describe(
           "uniform sampler2D u_featureIdTexture_5;",
           "uniform sampler2D u_featureIdTexture_6;",
         ]);
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, []);
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, []);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, []);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersFeatureIdStageVS,
         ]);
@@ -778,9 +788,13 @@ describe(
         ]);
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "float v_instanceFeatureId_0;",
-          "float v_implicit_instanceFeatureId_0;",
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out float v_instanceFeatureId_0;",
+          "out float v_implicit_instanceFeatureId_0;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in float v_instanceFeatureId_0;",
+          "in float v_implicit_instanceFeatureId_0;",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersFeatureIdStageVS,

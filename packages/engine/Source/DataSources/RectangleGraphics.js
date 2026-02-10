@@ -41,7 +41,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @param {RectangleGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @see Entity
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=rectangle|Cesium Sandcastle Rectangle Demo}
  */
 function RectangleGraphics(options) {
   this._definitionChanged = new Event();
