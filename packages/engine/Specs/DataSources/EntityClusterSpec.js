@@ -701,13 +701,12 @@ describe(
       );
     });
 
-    it("tracks previously clustered entities", function () {
+    it("has clusterMembershipChangedEvent property", function () {
       cluster = new EntityCluster();
-      cluster._initialize(scene);
-
-      expect(cluster._previouslyClusteredEntities).toBeDefined();
-      expect(Array.isArray(cluster._previouslyClusteredEntities)).toEqual(true);
-      expect(cluster._previouslyClusteredEntities.length).toEqual(0);
+      expect(cluster.clusterMembershipChangedEvent).toBeDefined();
+      expect(
+        typeof cluster.clusterMembershipChangedEvent.addEventListener,
+      ).toEqual("function");
     });
 
     it("fires allDeclusteredEvent when all clusters are removed", function () {
@@ -751,7 +750,9 @@ describe(
         expect(eventFired).toEqual(true);
         expect(receivedEntities).toBeDefined();
         expect(Array.isArray(receivedEntities)).toEqual(true);
-        expect(receivedEntities.length).toBeGreaterThan(0);
+        expect(receivedEntities.length).toEqual(2);
+        expect(receivedEntities).toContain(entity1);
+        expect(receivedEntities).toContain(entity2);
       });
     });
 
@@ -796,9 +797,19 @@ describe(
       });
     });
 
-    it("tracks previously clustered entities during clustering", function () {
+    it("fires clusterMembershipChangedEvent for entered and exited entities", function () {
       cluster = new EntityCluster();
       cluster._initialize(scene);
+
+      const membershipChanges = [];
+      cluster.clusterMembershipChangedEvent.addEventListener(
+        function (enteredEntities, exitedEntities) {
+          membershipChanges.push({
+            enteredEntities: enteredEntities,
+            exitedEntities: exitedEntities,
+          });
+        },
+      );
 
       const entity1 = new Entity();
       const point1 = cluster.getPoint(entity1);
@@ -822,48 +833,20 @@ describe(
 
       cluster.enabled = true;
       return updateUntilDone(cluster).then(function () {
-        const previouslyClusteredEntities =
-          cluster._previouslyClusteredEntities;
+        expect(membershipChanges.length).toEqual(1);
+        expect(membershipChanges[0].enteredEntities.length).toEqual(2);
+        expect(membershipChanges[0].enteredEntities).toContain(entity1);
+        expect(membershipChanges[0].enteredEntities).toContain(entity2);
+        expect(membershipChanges[0].exitedEntities.length).toEqual(0);
 
-        expect(Array.isArray(previouslyClusteredEntities)).toEqual(true);
-        expect(previouslyClusteredEntities.length).toBeGreaterThan(0);
-      });
-    });
+        cluster.enabled = false;
+        cluster.update(scene.frameState);
 
-    it("cleans up previously clustered entities array on destroy", function () {
-      cluster = new EntityCluster();
-      cluster._initialize(scene);
-
-      const entity = new Entity();
-      const point = cluster.getPoint(entity);
-      point.id = entity;
-      point.pixelSize = 1;
-      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
-        scene,
-        new Cartesian2(0.0, 0.0),
-        depth,
-      );
-
-      const entity2 = new Entity();
-      const point2 = cluster.getPoint(entity2);
-      point2.id = entity2;
-      point2.pixelSize = 1;
-      point2.position = SceneTransforms.drawingBufferToWorldCoordinates(
-        scene,
-        new Cartesian2(1.0, 1.0),
-        depth,
-      );
-
-      cluster.enabled = true;
-      return updateUntilDone(cluster).then(function () {
-        expect(cluster._previouslyClusteredEntities).toBeDefined();
-        expect(Array.isArray(cluster._previouslyClusteredEntities)).toEqual(
-          true,
-        );
-
-        cluster.destroy();
-
-        expect(cluster._previouslyClusteredEntities).toEqual([]);
+        expect(membershipChanges.length).toEqual(2);
+        expect(membershipChanges[1].enteredEntities.length).toEqual(0);
+        expect(membershipChanges[1].exitedEntities.length).toEqual(2);
+        expect(membershipChanges[1].exitedEntities).toContain(entity1);
+        expect(membershipChanges[1].exitedEntities).toContain(entity2);
       });
     });
   },

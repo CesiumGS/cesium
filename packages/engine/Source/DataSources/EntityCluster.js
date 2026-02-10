@@ -67,7 +67,8 @@ function EntityCluster(options) {
 
   this._clusterEvent = new Event();
   this._allDeclusteredEvent = new Event();
-  this._previouslyClusteredEntities = [];
+  this._clusterMembershipChangedEvent = new Event();
+  this._previousClusteredEntities = new Set();
 
   /**
    * Determines if entities in this collection will be shown.
@@ -142,7 +143,13 @@ function addNonClusteredItem(item, entityCluster) {
   }
 }
 
-function addCluster(position, numPoints, ids, entityCluster) {
+function addCluster(
+  position,
+  numPoints,
+  ids,
+  entityCluster,
+  currentClusteredEntities,
+) {
   const cluster = {
     billboard: entityCluster._clusterBillboardCollection.add(),
     label: entityCluster._clusterLabelCollection.add(),
@@ -159,7 +166,47 @@ function addCluster(position, numPoints, ids, entityCluster) {
     cluster.point.position =
       position;
 
+  for (let i = 0; i < ids.length; ++i) {
+    currentClusteredEntities.add(ids[i]);
+  }
+
   entityCluster._clusterEvent.raiseEvent(ids, cluster);
+}
+
+function updateClusterMembership(entityCluster, currentClusteredEntities) {
+  const previousClusteredEntities = entityCluster._previousClusteredEntities;
+
+  const enteredEntities = [];
+  currentClusteredEntities.forEach(function (entity) {
+    if (!previousClusteredEntities.has(entity)) {
+      enteredEntities.push(entity);
+    }
+  });
+
+  const exitedEntities = [];
+  previousClusteredEntities.forEach(function (entity) {
+    if (!currentClusteredEntities.has(entity)) {
+      exitedEntities.push(entity);
+    }
+  });
+
+  if (enteredEntities.length > 0 || exitedEntities.length > 0) {
+    entityCluster._clusterMembershipChangedEvent.raiseEvent(
+      enteredEntities,
+      exitedEntities,
+    );
+  }
+
+  if (
+    previousClusteredEntities.size > 0 &&
+    currentClusteredEntities.size === 0
+  ) {
+    entityCluster._allDeclusteredEvent.raiseEvent(
+      Array.from(previousClusteredEntities),
+    );
+  }
+
+  entityCluster._previousClusteredEntities = currentClusteredEntities;
 }
 
 function hasLabelIndex(entityCluster, entityId) {
@@ -233,6 +280,7 @@ function createDeclutterCallback(entityCluster) {
     const labelCollection = entityCluster._labelCollection;
     const billboardCollection = entityCluster._billboardCollection;
     const pointCollection = entityCluster._pointCollection;
+    const currentClusteredEntities = new Set();
 
     if (
       (!defined(labelCollection) &&
@@ -242,6 +290,9 @@ function createDeclutterCallback(entityCluster) {
         !entityCluster._clusterLabels &&
         !entityCluster._clusterPoints)
     ) {
+      entityCluster._previousClusters = [];
+      entityCluster._previousHeight = scene.camera.positionCartographic.height;
+      updateClusterMembership(entityCluster, currentClusteredEntities);
       return;
     }
 
@@ -388,7 +439,13 @@ function createDeclutterCallback(entityCluster) {
           }
 
           if (numPoints >= minimumClusterSize) {
-            addCluster(cluster.position, numPoints, ids, entityCluster);
+            addCluster(
+              cluster.position,
+              numPoints,
+              ids,
+              entityCluster,
+              currentClusteredEntities,
+            );
             newClusters.push(cluster);
 
             for (j = 0; j < neighborLength; ++j) {
@@ -469,7 +526,13 @@ function createDeclutterCallback(entityCluster) {
             1.0 / numPoints,
             clusterPosition,
           );
-          addCluster(position, numPoints, ids, entityCluster);
+          addCluster(
+            position,
+            numPoints,
+            ids,
+            entityCluster,
+            currentClusteredEntities,
+          );
           newClusters.push({
             position: position,
             width: totalBBox.width,
@@ -502,40 +565,9 @@ function createDeclutterCallback(entityCluster) {
       entityCluster._clusterPointCollection = undefined;
     }
 
-    const currentlyClusteredIds = [];
-
-    if (defined(clusteredLabelCollection)) {
-      for (let c = 0; c < clusteredLabelCollection.length; ++c) {
-        const clusterLabel = clusteredLabelCollection.get(c);
-        currentlyClusteredIds.push(...clusterLabel.id);
-      }
-    }
-
-    if (defined(clusteredBillboardCollection)) {
-      for (let c = 0; c < clusteredBillboardCollection.length; ++c) {
-        const clusterBillboard = clusteredBillboardCollection.get(c);
-        currentlyClusteredIds.push(...clusterBillboard.id);
-      }
-    }
-
-    if (defined(clusteredPointCollection)) {
-      for (let c = 0; c < clusteredPointCollection.length; ++c) {
-        const clusterPoint = clusteredPointCollection.get(c);
-        currentlyClusteredIds.push(...clusterPoint.id);
-      }
-    }
-
-    const hasActiveClusters = currentlyClusteredIds.length > 0;
-    const hadPreviouslyClusters =
-      entityCluster._previouslyClusteredEntities.length > 0;
-
-    if (!hasActiveClusters && hadPreviouslyClusters) {
-      entityCluster._allDeclusteredEvent.raiseEvent(
-        entityCluster._previouslyClusteredEntities,
-      );
-    }
-
-    entityCluster._previouslyClusteredEntities = currentlyClusteredIds;
+    entityCluster._previousClusters = newClusters;
+    entityCluster._previousHeight = currentHeight;
+    updateClusterMembership(entityCluster, currentClusteredEntities);
   };
 }
 
@@ -609,6 +641,16 @@ Object.defineProperties(EntityCluster.prototype, {
   allDeclusteredEvent: {
     get: function () {
       return this._allDeclusteredEvent;
+    },
+  },
+  /**
+   * Gets the event that will be raised when clustered entity membership changes.
+   * @memberof EntityCluster.prototype
+   * @type {Event<EntityCluster.clusterMembershipChangedCallback>}
+   */
+  clusterMembershipChangedEvent: {
+    get: function () {
+      return this._clusterMembershipChangedEvent;
     },
   },
   /**
@@ -910,9 +952,15 @@ function updateEnable(entityCluster) {
   entityCluster._clusterBillboardCollection = undefined;
   entityCluster._clusterPointCollection = undefined;
 
+  entityCluster._previousClusters = [];
+  entityCluster._previousHeight =
+    entityCluster._scene.camera.positionCartographic.height;
+
   disableCollectionClustering(entityCluster._labelCollection);
   disableCollectionClustering(entityCluster._billboardCollection);
   disableCollectionClustering(entityCluster._pointCollection);
+
+  updateClusterMembership(entityCluster, new Set());
 }
 
 /**
@@ -1037,7 +1085,7 @@ EntityCluster.prototype.destroy = function () {
 
   this._previousClusters = [];
   this._previousHeight = undefined;
-  this._previouslyClusteredEntities = [];
+  this._previousClusteredEntities = new Set();
 
   this._enabledDirty = false;
   this._pixelRangeDirty = false;
@@ -1065,6 +1113,18 @@ EntityCluster.prototype.destroy = function () {
  * });
  */
 /**
+ * An event listener function used when clustered entity membership changes.
+ * @callback EntityCluster.clusterMembershipChangedCallback
+ *
+ * @param {Entity[]} enteredEntities An array of entities that are now part of a cluster.
+ * @param {Entity[]} exitedEntities An array of entities that are no longer part of a cluster.
+ *
+ * @example
+ * dataSource.clustering.clusterMembershipChangedEvent.addEventListener(function(entered, exited) {
+ *     console.log('Entered clusters:', entered, 'Exited clusters:', exited);
+ * });
+ */
+/**
  * An event listener function used when all entities have been declustered.
  * @callback EntityCluster.declusterCallback
  *
@@ -1073,7 +1133,7 @@ EntityCluster.prototype.destroy = function () {
  *
  * @example
  * // Listen for decluster events
- * dataSource.clustering.declusterEvent.addEventListener(function(entities) {
+ * dataSource.clustering.allDeclusteredEvent.addEventListener(function(entities) {
  *     console.log('All clusters removed. Last entities declustered:', entities);
  * });
  */
