@@ -314,14 +314,17 @@ export async function buildGalleryList(options = {}) {
   if (await exists(embeddingsPath)) {
     const existingData = await readFile(embeddingsPath, "utf-8");
     const existingEmbeddings = JSON.parse(existingData);
-    if (existingEmbeddings?.id === entriesHash) {
+    if (
+      existingEmbeddings?.id === entriesHash &&
+      existingEmbeddings?.model === MODEL_ID
+    ) {
       embeddingsMap = existingEmbeddings;
     }
   }
   if (!embeddingsMap) {
     const embeddings = await generateEmbeddings(output.entries);
 
-    embeddingsMap = { id: entriesHash };
+    embeddingsMap = { id: entriesHash, model: MODEL_ID };
     output.entries.forEach((entry, index) => {
       embeddingsMap[entry.id] = embeddings[index];
     });
