@@ -69,4 +69,20 @@ describe("Point3DCollection", () => {
     Point3D.fromCollection(collection, 2, point);
     expect(point.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
   });
+
+  it("byteLength", () => {
+    let collection = new Point3DCollection({
+      maxFeatureCount: 1,
+      maxVertexCount: 1,
+    });
+
+    expect(collection.byteLength).toBe(16 + 24);
+
+    collection = new Point3DCollection({
+      maxFeatureCount: 128,
+      maxVertexCount: 128,
+    });
+
+    expect(collection.byteLength).toBe((16 + 24) * 128);
+  });
 });

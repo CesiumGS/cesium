@@ -84,4 +84,20 @@ describe("Polyline3DCollection", () => {
     Polyline3D.fromCollection(collection, 2, polyline);
     expect(polyline.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
   });
+
+  it("byteLength", () => {
+    let collection = new Polyline3DCollection({
+      maxFeatureCount: 1,
+      maxVertexCount: 1,
+    });
+
+    expect(collection.byteLength).toBe(28 + 24);
+
+    collection = new Polyline3DCollection({
+      maxFeatureCount: 128,
+      maxVertexCount: 128,
+    });
+
+    expect(collection.byteLength).toBe((28 + 24) * 128);
+  });
 });

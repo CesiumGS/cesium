@@ -130,9 +130,24 @@ class Polygon3DCollection extends Feature3DCollection {
     return result;
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  // RENDER
+
   /** @param {FrameState} frameState */
   update(frameState) {
     this._renderContext = renderPolygons(this, frameState, this._renderContext);
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // ACCESSORS
+
+  /** @type {number} */
+  get byteLength() {
+    return (
+      super.byteLength +
+      this._holeIndexBuffer.byteLength +
+      this._triangleIndexBuffer.byteLength
+    );
   }
 }
 export default Polygon3DCollection;

@@ -107,7 +107,11 @@ class Feature3D {
   }
 
   set _dirty(dirty) {
-    this._setUint8(Feature3D.Layout.DIRTY_U8, dirty ? 1 : 0);
+    // Avoid `._setUint8()` here, which would infinitely loop `._dirty = true`.
+    this._collection._featureView.setUint8(
+      this._byteOffset + Feature3D.Layout.DIRTY_U8,
+      dirty ? 1 : 0,
+    );
 
     // A 'dirty' feature is responsible for notifying the collection. Applying
     // updates and marking the feature 'clean' will be handled by the collection,

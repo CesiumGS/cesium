@@ -155,4 +155,24 @@ describe("Polygon3DCollection", () => {
     Polygon3D.fromCollection(collection, 2, polygon);
     expect(polygon.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
   });
+
+  it("byteLength", () => {
+    let collection = new Polygon3DCollection({
+      maxFeatureCount: 1,
+      maxVertexCount: 3,
+      maxHoleCount: 0,
+      maxTriangleCount: 1,
+    });
+
+    expect(collection.byteLength).toBe(40 + 72 + 12);
+
+    collection = new Polygon3DCollection({
+      maxFeatureCount: 128,
+      maxVertexCount: 1024,
+      maxHoleCount: 128,
+      maxTriangleCount: 1024,
+    });
+
+    expect(collection.byteLength).toBe(5120 + 24576 + 512 + 12288);
+  });
 });

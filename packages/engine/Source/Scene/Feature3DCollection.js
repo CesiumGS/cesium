@@ -50,7 +50,7 @@ class Feature3DCollection {
     /** @type {number} */
     this._featureCount = 0;
     /** @type {number} */
-    this._feaureCountMax = options.maxFeatureCount ?? Feature3D.DEFAULT_COUNT;
+    this._featureCountMax = options.maxFeatureCount ?? Feature3D.DEFAULT_COUNT;
     /** @type {ArrayBuffer} */
     this._featureBuffer = null;
     /** @type {DataView<ArrayBuffer>} */
@@ -104,7 +104,7 @@ class Feature3DCollection {
       this._getFeatureLayout()
     );
     const featureBufferByteLength =
-      this._feaureCountMax * featureLayout.__BYTE_LENGTH;
+      this._featureCountMax * featureLayout.__BYTE_LENGTH;
 
     this._featureBuffer = new ArrayBuffer(featureBufferByteLength);
     this._featureView = new DataView(this._featureBuffer);
@@ -205,6 +205,11 @@ class Feature3DCollection {
   /** @type {number} */
   get length() {
     return this._featureCount;
+  }
+
+  /** @type {number} */
+  get byteLength() {
+    return this._featureBuffer.byteLength + this._positionBuffer.byteLength;
   }
 }
 
