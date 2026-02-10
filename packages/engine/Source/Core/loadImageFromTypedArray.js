@@ -3,12 +3,18 @@ import defined from "./defined.js";
 import Resource from "./Resource.js";
 
 /**
+ * Loads an image from a typed array.
+ * @param {Object} options An object containing the following properties:
+ * @param {Uint8Array} options.uint8Array The typed array containing the image data.
+ * @param {string} options.format The MIME format of the image (e.g., "image/png").
+ * @param {Request} [options.request] The request object to use to fetch the image.
+ * @param {boolean} [options.flipY=false] Whether to flip the image vertically.
+ * @param {boolean} [options.skipColorSpaceConversion=false] Whether to skip color space conversion.
+ * @returns {Promise<HTMLImageElement|HTMLCanvasElement|ImageBitmap>|undefined} A promise that resolves to the loaded image. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  * @private
  */
 function loadImageFromTypedArray(options) {
-  const uint8Array = options.uint8Array;
-  const format = options.format;
-  const request = options.request;
+  const { uint8Array, format, request } = options;
   const flipY = options.flipY ?? false;
   const skipColorSpaceConversion = options.skipColorSpaceConversion ?? false;
   //>>includeStart('debug', pragmas.debug);

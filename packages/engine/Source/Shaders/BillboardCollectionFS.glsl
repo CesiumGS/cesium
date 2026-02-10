@@ -131,7 +131,9 @@ void doThreePointDepthTest(float eyeDepth, bool applyTranslate) {
 }
 #endif
 
-void doDepthTest() {
+// Extra manual depth testing is done to allow more control over how a billboard is occluded 
+// by the globe when near and far from the camera.
+void doDepthTest(float globeDepth) {
     float temp = v_compressed.y;
     temp = temp * SHIFT_RIGHT1;
     float temp2 = (temp - floor(temp)) * SHIFT_LEFT1;
@@ -156,14 +158,10 @@ void doDepthTest() {
     }
 #endif
 
-    // Automatic depth testing of billboards is disabled (@see BillboardCollection#update).
-    // Instead, we do one of two types of manual depth tests (potentially in addition to the test above), depending on the camera's distance to the billboard fragment.
     // If we're far away, we just compare against a flat, camera-facing depth-plane at the ellipsoid's center.
     // If we're close, we compare against the globe depth texture (which includes depth from the 3D tile pass).
-    vec2 fragSt = gl_FragCoord.xy / czm_viewport.zw;
-    float globeDepth = getGlobeDepthAtCoords(fragSt);
-    if (globeDepth == 0.0) return; // Not on globe
-    
+
+    if (globeDepth == 0.0) return; // Not on globe    
     float distanceToEllipsoidCenter = -length(czm_viewerPositionWC); // depth is negative by convention
     float testDistance = (eyeDepth > -u_coarseDepthTestDistance) ? globeDepth : distanceToEllipsoidCenter;
     if (eyeDepth < testDistance) {
@@ -175,7 +173,10 @@ void main()
 {
     if (v_splitDirection < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
     if (v_splitDirection > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
-    doDepthTest();
+    
+    vec2 fragSt = gl_FragCoord.xy / czm_viewport.zw;
+    float globeDepth = getGlobeDepthAtCoords(fragSt);
+    doDepthTest(globeDepth);
     
     vec4 color = texture(u_atlas, v_textureCoordinates);
 
@@ -243,6 +244,18 @@ void main()
     out_FragColor = color;
 
 #ifdef LOG_DEPTH
-    czm_writeLogDepth();
+    // If we've made it here, we passed our manual depth test, above. But the automatic depth test will
+    // still run, and some fragments of the billboard may clip against the globe. To prevent that,
+    // ensure the depth value we write out is in front of the globe depth.
+    float depthArg = v_depthFromNearPlusOne;
+
+    if (globeDepth != 0.0) { // On the globe
+        float globeDepthFromNearPlusOne = (-globeDepth - czm_currentFrustum.x) + 1.0;
+        float nudge = max(globeDepthFromNearPlusOne * 5e-6, czm_epsilon7);
+        float globeOnTop = max(1.0, globeDepthFromNearPlusOne - nudge);
+        depthArg = min(depthArg, globeOnTop);
+    }
+
+    czm_writeLogDepth(depthArg);
 #endif
 }
