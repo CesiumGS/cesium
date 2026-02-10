@@ -4,13 +4,15 @@
 
 ### @cesium/engine
 
-#### Fixes :wrench:
-
-- Fixes billboard depth testing near horizon [#13159](https://github.com/CesiumGS/cesium/issues/13159)
-
 #### Additions :tada:
 
+- Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors. [#13174](https://github.com/CesiumGS/cesium/pull/13174)
 - Exposes more depth testing options on `BillboardCollection` and `LabelCollection`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
+
+#### Fixes :wrench:
+
+- Fixes billboard depth testing near horizon. [#13159](https://github.com/CesiumGS/cesium/issues/13159)
+- Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
 
 ## 1.138 - 2026-02-02
 

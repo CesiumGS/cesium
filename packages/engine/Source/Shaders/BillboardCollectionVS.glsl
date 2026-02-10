@@ -219,32 +219,18 @@ void main()
     bool validAlignedAxis = false;
 #endif
 
-    vec4 pickColor;
-    vec4 color;
-
-    temp = compressedAttribute2.y;
-    temp = temp * SHIFT_RIGHT8;
-    pickColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    pickColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
-    pickColor.r = floor(temp);
-
-    temp = compressedAttribute2.x;
-    temp = temp * SHIFT_RIGHT8;
-    color.b = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    color.g = (temp - floor(temp)) * SHIFT_LEFT8;
-    color.r = floor(temp);
+    vec4 color = czm_decodeRGB8(compressedAttribute2.x);
+    vec4 pickColor = czm_decodeRGB8(compressedAttribute2.y);
 
     temp = compressedAttribute2.z * SHIFT_RIGHT8;
     bool sizeInMeters = floor((temp - floor(temp)) * SHIFT_LEFT7) > 0.0;
     temp = floor(temp) * SHIFT_RIGHT8;
 
     pickColor.a = (temp - floor(temp)) * SHIFT_LEFT8;
-    pickColor /= 255.0;
+    pickColor.a /= 255.0;
 
     color.a = floor(temp);
-    color /= 255.0;
+    color.a /= 255.0;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -340,7 +326,7 @@ void main()
 if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) && (enableDepthCheck == 1.0)) {
     float depthsilon = 10.0;
     vec2 depthOrigin;
-    // Horizontal origin for labels comes from a special attribute. If that value is 0, this is a billboard - use the regular origin. 
+    // Horizontal origin for labels comes from a special attribute. If that value is 0, this is a billboard - use the regular origin.
     // Otherwise, transform the label origin to -1, 0, 1 (right, center, left).
     depthOrigin.x = floor(compressedAttribute2.w - (temp2 * SHIFT_LEFT2));
     depthOrigin.x = czm_branchFreeTernary(depthOrigin.x == 0.0, origin.x, depthOrigin.x - 2.0);
@@ -426,15 +412,8 @@ if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &
 #endif
 
 #ifdef SDF
-    vec4 outlineColor;
+    vec4 outlineColor = czm_decodeRGB8(sdf.x);
     float outlineWidth;
-
-    temp = sdf.x;
-    temp = temp * SHIFT_RIGHT8;
-    outlineColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    outlineColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
-    outlineColor.r = floor(temp);
 
     temp = sdf.y;
     temp = temp * SHIFT_RIGHT8;
@@ -442,7 +421,7 @@ if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &
     temp = floor(temp) * SHIFT_RIGHT8;
     outlineWidth = (temp - floor(temp)) * SHIFT_LEFT8;
     outlineColor.a = floor(temp);
-    outlineColor /= 255.0;
+    outlineColor.a /= 255.0;
 
     v_outlineWidth = outlineWidth / 255.0;
     v_outlineColor = outlineColor;
