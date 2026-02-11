@@ -33,7 +33,7 @@ export const availableFonts: Record<AvailableFontId, FontDefinition> = {
   },
 };
 
-export type LeftPanel = "editor" | "gallery";
+export type LeftPanel = "editor" | "gallery" | "test-bench";
 
 export type Settings = {
   theme: "dark" | "light";

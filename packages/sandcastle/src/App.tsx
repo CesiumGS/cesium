@@ -52,6 +52,7 @@ import { MetadataPopover } from "./MetadataPopover.tsx";
 import { SharePopover } from "./SharePopover.tsx";
 import { SandcastlePopover } from "./SandcastlePopover.tsx";
 import { urlSpecifiesSandcastle } from "./Gallery/loadFromUrl.ts";
+import { TestBench } from "./TestBench.tsx";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -544,6 +545,13 @@ function App() {
           <Icon href={`${image}#icon-large`} size="large" />
         </AppBarButton>
         <AppBarButton
+          onClick={() => setLeftPanel("test-bench")}
+          active={leftPanel === "test-bench"}
+          label="Test Bench"
+        >
+          <Icon href={`${image}#icon-large`} size="large" />
+        </AppBarButton>
+        <AppBarButton
           onClick={() => setLeftPanel("editor")}
           active={leftPanel === "editor"}
           label="Editor"
@@ -616,6 +624,7 @@ function App() {
               readOnly={!initialized}
             />
           )}
+          {leftPanel === "test-bench" && <TestBench />}
           <StoreContext value={galleryItemStore}>
             <Gallery
               hidden={leftPanel !== "gallery"}
