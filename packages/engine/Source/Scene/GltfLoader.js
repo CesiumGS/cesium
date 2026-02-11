@@ -196,97 +196,94 @@ const GltfLoaderState = {
  * @param {boolean} [options.renameBatchIdSemantic=false] If <code>true</code>, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
  * @private
  */
-function GltfLoader(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-  const {
-    gltfResource,
-    typedArray,
-    releaseGltfJson = false,
-    asynchronous = true,
-    incrementallyLoadTextures = true,
-    upAxis = Axis.Y,
-    forwardAxis = Axis.Z,
-    loadAttributesAsTypedArray = false,
-    loadAttributesFor2D = false,
-    enablePick = false,
-    loadIndicesForWireframe = false,
-    loadPrimitiveOutline = true,
-    loadForClassification = false,
-    renameBatchIdSemantic = false,
-  } = options;
+class GltfLoader extends ResourceLoader {
+  constructor(options) {
+    super();
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltfResource", gltfResource);
-  //>>includeEnd('debug');
+    options = options ?? Frozen.EMPTY_OBJECT;
+    const {
+      gltfResource,
+      typedArray,
+      releaseGltfJson = false,
+      asynchronous = true,
+      incrementallyLoadTextures = true,
+      upAxis = Axis.Y,
+      forwardAxis = Axis.Z,
+      loadAttributesAsTypedArray = false,
+      loadAttributesFor2D = false,
+      enablePick = false,
+      loadIndicesForWireframe = false,
+      loadPrimitiveOutline = true,
+      loadForClassification = false,
+      renameBatchIdSemantic = false,
+    } = options;
 
-  const { baseResource = gltfResource.clone() } = options;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options.gltfResource", gltfResource);
+    //>>includeEnd('debug');
 
-  this._gltfJson = options.gltfJson;
-  this._gltfResource = gltfResource;
-  this._baseResource = baseResource;
-  this._typedArray = typedArray;
-  this._releaseGltfJson = releaseGltfJson;
-  this._asynchronous = asynchronous;
-  this._incrementallyLoadTextures = incrementallyLoadTextures;
-  this._upAxis = upAxis;
-  this._forwardAxis = forwardAxis;
-  this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
-  this._loadAttributesFor2D = loadAttributesFor2D;
-  this._enablePick = enablePick;
-  this._loadIndicesForWireframe = loadIndicesForWireframe;
-  this._loadPrimitiveOutline = loadPrimitiveOutline;
-  this._loadForClassification = loadForClassification;
-  this._renameBatchIdSemantic = renameBatchIdSemantic;
+    const { baseResource = gltfResource.clone() } = options;
 
-  // When loading EXT_feature_metadata, the feature tables and textures
-  // are now stored as arrays like the newer EXT_structural_metadata extension.
-  // This requires sorting the dictionary keys for a consistent ordering.
-  this._sortedPropertyTableIds = undefined;
-  this._sortedFeatureTextureIds = undefined;
+    this._gltfJson = options.gltfJson;
+    this._gltfResource = gltfResource;
+    this._baseResource = baseResource;
+    this._typedArray = typedArray;
+    this._releaseGltfJson = releaseGltfJson;
+    this._asynchronous = asynchronous;
+    this._incrementallyLoadTextures = incrementallyLoadTextures;
+    this._upAxis = upAxis;
+    this._forwardAxis = forwardAxis;
+    this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
+    this._loadAttributesFor2D = loadAttributesFor2D;
+    this._enablePick = enablePick;
+    this._loadIndicesForWireframe = loadIndicesForWireframe;
+    this._loadPrimitiveOutline = loadPrimitiveOutline;
+    this._loadForClassification = loadForClassification;
+    this._renameBatchIdSemantic = renameBatchIdSemantic;
 
-  this._gltfJsonLoader = undefined;
-  this._state = GltfLoaderState.NOT_LOADED;
-  this._textureState = GltfLoaderState.NOT_LOADED;
-  this._promise = undefined;
-  this._processError = undefined;
-  this._textureErrors = [];
+    // When loading EXT_feature_metadata, the feature tables and textures
+    // are now stored as arrays like the newer EXT_structural_metadata extension.
+    // This requires sorting the dictionary keys for a consistent ordering.
+    this._sortedPropertyTableIds = undefined;
+    this._sortedFeatureTextureIds = undefined;
 
-  // Information about whether to load primitives as typed arrays or buffers,
-  // and whether post-processing is needed after loading (e.g. for
-  // generating outlines)
-  this._primitiveLoadPlans = [];
+    this._gltfJsonLoader = undefined;
+    this._state = GltfLoaderState.NOT_LOADED;
+    this._textureState = GltfLoaderState.NOT_LOADED;
+    this._promise = undefined;
+    this._processError = undefined;
+    this._textureErrors = [];
 
-  // Loaders that need to be processed before the glTF becomes ready
-  this._loaderPromises = [];
-  this._textureLoaders = [];
-  this._texturesPromises = [];
-  this._textureCallbacks = [];
-  this._bufferViewLoaders = [];
-  this._geometryLoaders = [];
-  this._geometryCallbacks = [];
-  this._structuralMetadataLoader = undefined;
-  this._meshPrimitiveGpmLoader = undefined;
-  this._loadResourcesPromise = undefined;
-  this._resourcesLoaded = false;
-  this._texturesLoaded = false;
+    // Information about whether to load primitives as typed arrays or buffers,
+    // and whether post-processing is needed after loading (e.g. for
+    // generating outlines)
+    this._primitiveLoadPlans = [];
 
-  this._supportedImageFormats = undefined;
+    // Loaders that need to be processed before the glTF becomes ready
+    this._loaderPromises = [];
+    this._textureLoaders = [];
+    this._texturesPromises = [];
+    this._textureCallbacks = [];
+    this._bufferViewLoaders = [];
+    this._geometryLoaders = [];
+    this._geometryCallbacks = [];
+    this._structuralMetadataLoader = undefined;
+    this._meshPrimitiveGpmLoader = undefined;
+    this._loadResourcesPromise = undefined;
+    this._resourcesLoaded = false;
+    this._texturesLoaded = false;
 
-  // In some cases where geometry post-processing is needed (like generating
-  // outlines) new attributes are added that may have GPU resources attached.
-  // The GltfLoader will own the resources and store them here.
-  this._postProcessBuffers = [];
+    this._supportedImageFormats = undefined;
 
-  // Loaded results
-  this._components = undefined;
-}
+    // In some cases where geometry post-processing is needed (like generating
+    // outlines) new attributes are added that may have GPU resources attached.
+    // The GltfLoader will own the resources and store them here.
+    this._postProcessBuffers = [];
 
-if (defined(Object.create)) {
-  GltfLoader.prototype = Object.create(ResourceLoader.prototype);
-  GltfLoader.prototype.constructor = GltfLoader;
-}
+    // Loaded results
+    this._components = undefined;
+  }
 
-Object.defineProperties(GltfLoader.prototype, {
   /**
    * The cache key of the resource.
    *
@@ -296,11 +293,10 @@ Object.defineProperties(GltfLoader.prototype, {
    * @readonly
    * @private
    */
-  cacheKey: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get cacheKey() {
+    return undefined;
+  }
+
   /**
    * The loaded components.
    *
@@ -310,11 +306,10 @@ Object.defineProperties(GltfLoader.prototype, {
    * @readonly
    * @private
    */
-  components: {
-    get: function () {
-      return this._components;
-    },
-  },
+  get components() {
+    return this._components;
+  }
+
   /**
    * The loaded glTF json.
    *
@@ -324,14 +319,13 @@ Object.defineProperties(GltfLoader.prototype, {
    * @readonly
    * @private
    */
-  gltfJson: {
-    get: function () {
-      if (defined(this._gltfJsonLoader)) {
-        return this._gltfJsonLoader.gltf;
-      }
-      return this._gltfJson;
-    },
-  },
+  get gltfJson() {
+    if (defined(this._gltfJsonLoader)) {
+      return this._gltfJsonLoader.gltf;
+    }
+    return this._gltfJson;
+  }
+
   /**
    * Returns true if textures are loaded separately from the other glTF resources.
    *
@@ -341,11 +335,10 @@ Object.defineProperties(GltfLoader.prototype, {
    * @readonly
    * @private
    */
-  incrementallyLoadTextures: {
-    get: function () {
-      return this._incrementallyLoadTextures;
-    },
-  },
+  get incrementallyLoadTextures() {
+    return this._incrementallyLoadTextures;
+  }
+
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
@@ -355,12 +348,193 @@ Object.defineProperties(GltfLoader.prototype, {
    * @readonly
    * @private
    */
-  texturesLoaded: {
-    get: function () {
-      return this._texturesLoaded;
-    },
-  },
-});
+  get texturesLoaded() {
+    return this._texturesLoaded;
+  }
+
+  /**
+   * Loads the resource.
+   * @returns {Promise.<GltfLoader>} A promise which resolves to the loader when the resource loading is completed.
+   * @exception {RuntimeError} Unsupported glTF version
+   * @exception {RuntimeError} Unsupported glTF Extension
+   * @private
+   */
+  async load() {
+    if (defined(this._promise)) {
+      return this._promise;
+    }
+
+    this._promise = loadGltfJson(this);
+    return this._promise;
+  }
+
+  /**
+   * Process loaders other than textures
+   * @private
+   */
+  _process(frameState) {
+    if (this._state === GltfLoaderState.READY) {
+      return true;
+    }
+
+    if (this._state === GltfLoaderState.PROCESSING) {
+      processLoaders(this, frameState);
+    }
+
+    if (
+      this._resourcesLoaded &&
+      this._state === GltfLoaderState.POST_PROCESSING
+    ) {
+      postProcessGeometry(this, frameState.context);
+      this._state = GltfLoaderState.PROCESSED;
+    }
+
+    if (this._resourcesLoaded && this._state === GltfLoaderState.PROCESSED) {
+      // The buffer views can be unloaded once the data is copied.
+      unloadBufferViewLoaders(this);
+
+      // Similarly, if the glTF was loaded from a typed array, release the memory
+      this._typedArray = undefined;
+
+      this._state = GltfLoaderState.READY;
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Process textures other than textures
+   * @private
+   */
+  _processTextures(frameState) {
+    if (this._textureState === GltfLoaderState.READY) {
+      return true;
+    }
+
+    if (this._textureState !== GltfLoaderState.PROCESSING) {
+      return false;
+    }
+
+    let ready = true;
+    const textureLoaders = this._textureLoaders;
+    for (let i = 0; i < textureLoaders.length; ++i) {
+      const textureReady = textureLoaders[i].process(frameState);
+      if (textureReady && defined(this._textureCallbacks[i])) {
+        this._textureCallbacks[i]();
+        this._textureCallbacks[i] = undefined;
+      }
+
+      ready = ready && textureReady;
+    }
+
+    if (!ready) {
+      return false;
+    }
+
+    this._textureState = GltfLoaderState.READY;
+    this._texturesLoaded = true;
+    return true;
+  }
+
+  /**
+   * Processes the resource until it becomes ready.
+   *
+   * @param {FrameState} frameState The frame state.
+   * @private
+   */
+  process(frameState) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("frameState", frameState);
+    //>>includeEnd('debug');
+
+    if (
+      this._state === GltfLoaderState.LOADED &&
+      !defined(this._loadResourcesPromise)
+    ) {
+      this._loadResourcesPromise = loadResources(this, frameState)
+        .then(() => {
+          this._resourcesLoaded = true;
+        })
+        .catch((error) => {
+          this._processError = error;
+        });
+    }
+
+    if (defined(this._processError)) {
+      this._state = GltfLoaderState.FAILED;
+      const error = this._processError;
+      this._processError = undefined;
+      handleError(this, error);
+    }
+
+    // Pop the next error of the list in case there are multiple
+    const textureError = this._textureErrors.pop();
+    if (defined(textureError)) {
+      // There shouldn't be the need to completely unload in this case. Just throw the error.
+      const error = this.getError("Failed to load glTF texture", textureError);
+      error.name = "TextureError";
+      throw error;
+    }
+
+    if (this._state === GltfLoaderState.FAILED) {
+      return false;
+    }
+
+    let ready = false;
+    try {
+      ready = this._process(frameState);
+    } catch (error) {
+      this._state = GltfLoaderState.FAILED;
+      handleError(this, error);
+    }
+
+    // Since textures can be loaded independently and are handled through a separate promise, they are processed in their own function
+    let texturesReady = false;
+    try {
+      texturesReady = this._processTextures(frameState);
+    } catch (error) {
+      this._textureState = GltfLoaderState.FAILED;
+      handleError(this, error);
+    }
+
+    if (this._incrementallyLoadTextures) {
+      return ready;
+    }
+
+    return ready && texturesReady;
+  }
+
+  /**
+   * Returns whether the resource has been unloaded.
+   * @private
+   */
+  isUnloaded() {
+    return this._state === GltfLoaderState.UNLOADED;
+  }
+
+  /**
+   * Unloads the resource.
+   * @private
+   */
+  unload() {
+    if (defined(this._gltfJsonLoader) && !this._gltfJsonLoader.isDestroyed()) {
+      ResourceCache.unload(this._gltfJsonLoader);
+    }
+    this._gltfJsonLoader = undefined;
+
+    unloadTextures(this);
+    unloadBufferViewLoaders(this);
+    unloadGeometry(this);
+    unloadGeneratedAttributes(this);
+    unloadStructuralMetadata(this);
+    unloadMeshPrimitiveGpm(this);
+
+    this._components = undefined;
+    this._typedArray = undefined;
+    this._state = GltfLoaderState.UNLOADED;
+  }
+}
 
 /**
  * Loads the gltf object
@@ -432,22 +606,6 @@ async function loadResources(loader, frameState) {
 
   return promise;
 }
-
-/**
- * Loads the resource.
- * @returns {Promise.<GltfLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @exception {RuntimeError} Unsupported glTF version
- * @exception {RuntimeError} Unsupported glTF Extension
- * @private
- */
-GltfLoader.prototype.load = async function () {
-  if (defined(this._promise)) {
-    return this._promise;
-  }
-
-  this._promise = loadGltfJson(this);
-  return this._promise;
-};
 
 function handleError(gltfLoader, error) {
   gltfLoader.unload();
@@ -544,143 +702,6 @@ function gatherPostProcessBuffers(loader, primitiveLoadPlan) {
     buffers.push(indices.buffer);
   }
 }
-
-/**
- * Process loaders other than textures
- * @private
- */
-GltfLoader.prototype._process = function (frameState) {
-  if (this._state === GltfLoaderState.READY) {
-    return true;
-  }
-
-  if (this._state === GltfLoaderState.PROCESSING) {
-    processLoaders(this, frameState);
-  }
-
-  if (
-    this._resourcesLoaded &&
-    this._state === GltfLoaderState.POST_PROCESSING
-  ) {
-    postProcessGeometry(this, frameState.context);
-    this._state = GltfLoaderState.PROCESSED;
-  }
-
-  if (this._resourcesLoaded && this._state === GltfLoaderState.PROCESSED) {
-    // The buffer views can be unloaded once the data is copied.
-    unloadBufferViewLoaders(this);
-
-    // Similarly, if the glTF was loaded from a typed array, release the memory
-    this._typedArray = undefined;
-
-    this._state = GltfLoaderState.READY;
-    return true;
-  }
-
-  return false;
-};
-
-/**
- * Process textures other than textures
- * @private
- */
-GltfLoader.prototype._processTextures = function (frameState) {
-  if (this._textureState === GltfLoaderState.READY) {
-    return true;
-  }
-
-  if (this._textureState !== GltfLoaderState.PROCESSING) {
-    return false;
-  }
-
-  let ready = true;
-  const textureLoaders = this._textureLoaders;
-  for (let i = 0; i < textureLoaders.length; ++i) {
-    const textureReady = textureLoaders[i].process(frameState);
-    if (textureReady && defined(this._textureCallbacks[i])) {
-      this._textureCallbacks[i]();
-      this._textureCallbacks[i] = undefined;
-    }
-
-    ready = ready && textureReady;
-  }
-
-  if (!ready) {
-    return false;
-  }
-
-  this._textureState = GltfLoaderState.READY;
-  this._texturesLoaded = true;
-  return true;
-};
-
-/**
- * Processes the resource until it becomes ready.
- *
- * @param {FrameState} frameState The frame state.
- * @private
- */
-GltfLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
-
-  if (
-    this._state === GltfLoaderState.LOADED &&
-    !defined(this._loadResourcesPromise)
-  ) {
-    this._loadResourcesPromise = loadResources(this, frameState)
-      .then(() => {
-        this._resourcesLoaded = true;
-      })
-      .catch((error) => {
-        this._processError = error;
-      });
-  }
-
-  if (defined(this._processError)) {
-    this._state = GltfLoaderState.FAILED;
-    const error = this._processError;
-    this._processError = undefined;
-    handleError(this, error);
-  }
-
-  // Pop the next error of the list in case there are multiple
-  const textureError = this._textureErrors.pop();
-  if (defined(textureError)) {
-    // There shouldn't be the need to completely unload in this case. Just throw the error.
-    const error = this.getError("Failed to load glTF texture", textureError);
-    error.name = "TextureError";
-    throw error;
-  }
-
-  if (this._state === GltfLoaderState.FAILED) {
-    return false;
-  }
-
-  let ready = false;
-  try {
-    ready = this._process(frameState);
-  } catch (error) {
-    this._state = GltfLoaderState.FAILED;
-    handleError(this, error);
-  }
-
-  // Since textures can be loaded independently and are handled through a separate promise, they are processed in their own function
-  let texturesReady = false;
-  try {
-    texturesReady = this._processTextures(frameState);
-  } catch (error) {
-    this._textureState = GltfLoaderState.FAILED;
-    handleError(this, error);
-  }
-
-  if (this._incrementallyLoadTextures) {
-    return ready;
-  }
-
-  return ready && texturesReady;
-};
 
 function getVertexBufferLoader(
   loader,
@@ -2965,35 +2986,5 @@ function unloadMeshPrimitiveGpm(loader) {
     loader._meshPrimitiveGpmLoader = undefined;
   }
 }
-
-/**
- * Returns whether the resource has been unloaded.
- * @private
- */
-GltfLoader.prototype.isUnloaded = function () {
-  return this._state === GltfLoaderState.UNLOADED;
-};
-
-/**
- * Unloads the resource.
- * @private
- */
-GltfLoader.prototype.unload = function () {
-  if (defined(this._gltfJsonLoader) && !this._gltfJsonLoader.isDestroyed()) {
-    ResourceCache.unload(this._gltfJsonLoader);
-  }
-  this._gltfJsonLoader = undefined;
-
-  unloadTextures(this);
-  unloadBufferViewLoaders(this);
-  unloadGeometry(this);
-  unloadGeneratedAttributes(this);
-  unloadStructuralMetadata(this);
-  unloadMeshPrimitiveGpm(this);
-
-  this._components = undefined;
-  this._typedArray = undefined;
-  this._state = GltfLoaderState.UNLOADED;
-};
 
 export default GltfLoader;
