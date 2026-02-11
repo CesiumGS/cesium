@@ -16,6 +16,7 @@
   box-shadow: var(--stratakit-shadow-control-dialog-base);
 
   .sc-dialog-close {
+    display: flex;
     position: absolute;
     top: var(--stratakit-space-x4);
     right: var(--stratakit-space-x4);
