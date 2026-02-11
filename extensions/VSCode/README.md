@@ -89,6 +89,74 @@ Tutorials require a Cesium Ion access token to work properly. You have two optio
 
 See [ENV_SETUP.md](ENV_SETUP.md) for detailed instructions.
 
+## Testing the Extension
+
+### Prerequisites
+
+- Visual Studio Code 1.85.0 or higher
+- Node.js and npm installed
+- Cesium Ion access token ([get one here](https://ion.cesium.com/tokens))
+
+### Setup & Build
+
+1. **Navigate to the extension directory:**
+   ```bash
+   cd extensions/VSCode
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Compile the extension:**
+   ```bash
+   npm run compile
+   ```
+   This compiles TypeScript and copies necessary resources to the `out/` directory.
+
+### Running the Extension
+
+1. The `launch.json` is already configured with the **Run VS Code Extension"** configuration
+2. Press **F5** (or select **"Run VS Code Extension"** from the Debug dropdown) to launch the Extension Development Host
+3. A new VS Code window will open with the extension loaded (Cesium logo should be visible in the Activity Bar)
+
+### Manual Testing Checklist
+
+#### ✅ Tutorials Panel
+
+- [ ] Cesium icon appears in the Activity Bar
+- [ ] Tutorials panel opens when clicking the Cesium icon
+- [ ] Tutorials are organized by category
+- [ ] Search functionality filters tutorials correctly
+- [ ] Export button appears on tutorial items
+
+#### ✅ Tutorial Export
+
+- [ ] Export tutorial as npm project (creates Vite setup with proper structure)
+- [ ] Export tutorial as CDN format (creates simple HTML file)
+- [ ] `.env` file is created with token placeholder for npm projects
+- [ ] Token prompt appears if not configured
+
+#### ✅ Cesium Globe Viewer
+
+- [ ] "Render Cesium View" command appears in editor title bar for `.js`, `.html`, `.css` files
+- [ ] Globe renders correctly for npm projects (launches dev server)
+- [ ] Globe renders correctly for CDN projects
+- [ ] Live reload works when saving file changes
+
+#### ✅ Token Management
+
+- [ ] Token prompt appears when opening tutorial without configured token
+- [ ] "Set Cesium Ion Access Token" command works from Command Palette
+- [ ] Token persists across sessions
+
+#### ✅ Dev Server Integration
+
+- [ ] Vite dev server starts automatically for npm projects
+- [ ] Port is automatically detected and available
+- [ ] Server stops properly when closing the viewer
+
 ## Known Issues
 
 None at this time.
