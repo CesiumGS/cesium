@@ -63,8 +63,8 @@ import SceneMode from "./SceneMode.js";
  *
  * @param {Scene} scene The scene.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html|Cesium Sandcastle Camera Tutorial Example}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=camera|Cesium Sandcastle Camera Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=camera-tutorial|Cesium Sandcastle Camera Tutorial Example}
  * @demo {@link https://cesium.com/learn/cesiumjs-learn/cesiumjs-camera|Camera Tutorial}
  *
  * @example

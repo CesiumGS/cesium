@@ -1,15 +1,39 @@
 # Change Log
 
+## 1.138 - 2026-02-02
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixes jitter artifacts on Intel Arc GPUs [#12879](https://github.com/CesiumGS/cesium/issues/12879)
+- Fixed label sizing for some fonts and characters [#9767](https://github.com/CesiumGS/cesium/issues/9767)
+- Fixed a type error when accessing the ellipsoid of a viewer [#13123](https://github.com/CesiumGS/cesium/pull/13123)
+- Fixed a bug where entities have not been clustered correctly [#13064](https://github.com/CesiumGS/cesium/pull/13064)
+
+## 1.137 - 2026-01-05
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixes label positioning in workflows that delete and recreate clamped labels [#12949](https://github.com/CesiumGS/cesium/issues/12949)
+- Fixes texture coordinates in large billboard collections [#13042](https://github.com/CesiumGS/cesium/pull/13042)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- Beginning in CesiumJS 1.140, billboards and labels will require device support for WebGL 2, or WebGL 1 with ANGLE_instanced_arrays and MAX_VERTEX_TEXTURE_IMAGE_UNITS > 0. For more information or to share feedback, please see [#13053](https://github.com/CesiumGS/cesium/issues/13053). [#13067](https://github.com/CesiumGS/cesium/issues/13067)
+
 ## 1.136 - 2025-12-01
 
 ### @cesium/engine
 
 #### Fixes :wrench:
 
-- Fixed depth testing bug with billboards and labels clipping through models [#13012](https://github.com/CesiumGS/cesium/issues/13012)
+- Improved scaling of SVGs in billboards [#13020](https://github.com/CesiumGS/cesium/pull/13020)
 - Billboards using `imageSubRegion` now render as expected. [#12585](https://github.com/CesiumGS/cesium/issues/12585)
-- Improved scaling of SVGs in billboards [#13020](https://github.com/CesiumGS/cesium/issues/13020)
-- Fixed unexpected outline artifacts around billboards [#13038](https://github.com/CesiumGS/cesium/issues/13038)
+- Fixed depth testing bug with billboards and labels clipping through models [#13012](https://github.com/CesiumGS/cesium/issues/13012)
+- Fixed unexpected outline artifacts around billboards [#4525](https://github.com/CesiumGS/cesium/issues/4525)
 
 #### Additions :tada:
 
