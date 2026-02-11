@@ -542,14 +542,14 @@ function App() {
           active={leftPanel === "gallery"}
           label="Gallery"
         >
-          <Icon href={image} size="large" />
+          <Icon href={`${image}#icon-large`} size="large" />
         </AppBarButton>
         <AppBarButton
           onClick={() => setLeftPanel("editor")}
           active={leftPanel === "editor"}
           label="Editor"
         >
-          <Icon href={script} size="large" />
+          <Icon href={`${script}#icon-large`} size="large" />
         </AppBarButton>
         <Divider />
         <AppBarButton
@@ -559,14 +559,14 @@ function App() {
           }}
           label="New Sandcastle"
         >
-          <Icon href={add} size="large" />
+          <Icon href={`${add}#icon-large`} size="large" />
         </AppBarButton>
         <AppBarButton
           label="Documentation"
           onClick={openDocsPage}
           onAuxClick={openDocsPage}
         >
-          <Icon href={documentation} size="large" />
+          <Icon href={`${documentation}#icon-large`} size="large" />
         </AppBarButton>
         <div className="flex-spacer"></div>
         <Divider />
@@ -578,7 +578,10 @@ function App() {
           }
           label="Toggle theme"
         >
-          <Icon href={settings.theme === "dark" ? moon : sun} size="large" />
+          <Icon
+            href={`${settings.theme === "dark" ? moon : sun}#icon-large`}
+            size="large"
+          />
         </AppBarButton>
         <AppBarButton
           label="Settings"
@@ -586,7 +589,7 @@ function App() {
             setSettingsOpen(true);
           }}
         >
-          <Icon href={settingsIcon} size="large" />
+          <Icon href={`${settingsIcon}#icon-large`} size="large" />
         </AppBarButton>
         <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
       </div>

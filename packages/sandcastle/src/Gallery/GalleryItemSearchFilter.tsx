@@ -97,7 +97,7 @@ export default function GalleryItemSearchFilter() {
       const options = [...defaults, ...labels];
 
       return (
-        <DropdownMenu.Root key={type}>
+        <DropdownMenu.Provider key={type}>
           <DropdownMenu.Button
             id={type}
             className="filter-menu-button"
@@ -110,7 +110,7 @@ export default function GalleryItemSearchFilter() {
             <Divider />
             {options.map(renderOption)}
           </DropdownMenu.Content>
-        </DropdownMenu.Root>
+        </DropdownMenu.Provider>
       );
     },
     [
