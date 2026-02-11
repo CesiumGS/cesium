@@ -483,6 +483,7 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._drawCommand = undefined;
+  this._drawCommandModelMatrix = new Matrix4();
   /**
    * The root transform of the tileset.
    * This is used to transform the splats into world space.
@@ -1048,7 +1049,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const modelMatrix = Matrix4.multiply(
     tileset.modelMatrix,
     primitive._rootTransform,
-    scratchMatrix4B,
+    primitive._drawCommandModelMatrix,
   );
 
   const vertexArrayCache = primitive._vertexArray;
