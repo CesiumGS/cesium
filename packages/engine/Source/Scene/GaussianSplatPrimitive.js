@@ -56,7 +56,75 @@ const SnapshotState = {
   READY: "READY",
 };
 
-const DEFAULT_STABLE_FRAMES = 1;
+const DEFAULT_STABLE_FRAMES = 2;
+const DEFAULT_SORT_MIN_FRAME_INTERVAL = 3;
+const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.008726646259971648;
+const DEFAULT_SORT_MIN_POSITION_DELTA = 1.0;
+
+function shouldStartSteadySort(primitive, frameState) {
+  const tileset = primitive._tileset;
+  if (tileset._gaussianSplatSortGating === false) {
+    return true;
+  }
+
+  const minFrameInterval = defined(tileset._gaussianSplatSortMinFrameInterval)
+    ? Math.max(Math.floor(tileset._gaussianSplatSortMinFrameInterval), 0)
+    : DEFAULT_SORT_MIN_FRAME_INTERVAL;
+  const framesSinceLastSort =
+    primitive._lastSteadySortFrameNumber >= 0
+      ? frameState.frameNumber - primitive._lastSteadySortFrameNumber
+      : Number.POSITIVE_INFINITY;
+  if (
+    primitive._lastSteadySortFrameNumber >= 0 &&
+    framesSinceLastSort < minFrameInterval
+  ) {
+    return false;
+  }
+
+  const camera = frameState.camera;
+  if (
+    !defined(camera) ||
+    !primitive._hasLastSteadySortCameraPosition ||
+    !primitive._hasLastSteadySortCameraDirection
+  ) {
+    return true;
+  }
+
+  const minPositionDelta = defined(tileset._gaussianSplatSortMinPositionDelta)
+    ? Math.max(tileset._gaussianSplatSortMinPositionDelta, 0.0)
+    : DEFAULT_SORT_MIN_POSITION_DELTA;
+  const positionDelta = Cartesian3.distance(
+    camera.positionWC,
+    primitive._lastSteadySortCameraPosition,
+  );
+  if (positionDelta >= minPositionDelta) {
+    return true;
+  }
+
+  const minAngleRadians = defined(tileset._gaussianSplatSortMinAngleRadians)
+    ? Math.max(tileset._gaussianSplatSortMinAngleRadians, 0.0)
+    : DEFAULT_SORT_MIN_ANGLE_RADIANS;
+  const angleDelta = Cartesian3.angleBetween(
+    camera.directionWC,
+    primitive._lastSteadySortCameraDirection,
+  );
+  return angleDelta >= minAngleRadians;
+}
+
+function markSteadySortStart(primitive, frameState) {
+  primitive._lastSteadySortFrameNumber = frameState.frameNumber;
+  const camera = frameState.camera;
+  if (!defined(camera)) {
+    return;
+  }
+  Cartesian3.clone(camera.positionWC, primitive._lastSteadySortCameraPosition);
+  primitive._hasLastSteadySortCameraPosition = true;
+  Cartesian3.clone(
+    camera.directionWC,
+    primitive._lastSteadySortCameraDirection,
+  );
+  primitive._hasLastSteadySortCameraDirection = true;
+}
 
 function haveSelectedTilesChanged(primitive, selectedTiles) {
   const prevSet = primitive._selectedTileSet;
@@ -460,6 +528,11 @@ function GaussianSplatPrimitive(options) {
   this._activeSort = undefined;
   this._pendingSortPromise = undefined;
   this._pendingSort = undefined;
+  this._lastSteadySortFrameNumber = -1;
+  this._lastSteadySortCameraPosition = new Cartesian3();
+  this._hasLastSteadySortCameraPosition = false;
+  this._lastSteadySortCameraDirection = new Cartesian3();
+  this._hasLastSteadySortCameraDirection = false;
 
   /**
    * An error that occurred during the Gaussian splat sorting operation.
@@ -904,7 +977,10 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     return primitive.splitDirection;
   };
 
-  renderResources.instanceCount = primitive._numSplats;
+  const instanceCount = defined(primitive._indexes)
+    ? primitive._indexes.length
+    : primitive._numSplats;
+  renderResources.instanceCount = instanceCount;
   renderResources.count = 4;
   renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;
   shaderBuilder.addVertexLines(GaussianSplatVS);
@@ -1293,7 +1369,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
             return;
           }
           const expectedCount = pendingSort.expectedCount;
-          const currentCount = pending.numSplats;
+          const currentCount = expectedCount;
           const sortedLen = sortedData?.length;
           if (expectedCount !== currentCount || sortedLen !== expectedCount) {
             this._pendingSortPromise = undefined;
@@ -1345,6 +1421,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     );
 
     if (!defined(this._sorterPromise)) {
+      if (!shouldStartSteadySort(this, frameState)) {
+        return;
+      }
       const requestId = ++this._sortRequestId;
       const dataGeneration = this._splatDataGeneration;
       const expectedCount = this._numSplats;
@@ -1362,6 +1441,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         sortType: "Index",
       });
       this._sorterPromise = rawPromise;
+      if (defined(rawPromise)) {
+        markSteadySortStart(this, frameState);
+      }
     }
 
     if (!defined(this._sorterPromise)) {
@@ -1373,7 +1455,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       .then((sortedData) => {
         const isActive = isActiveSort(this, activeSort);
         const expectedCount = activeSort?.expectedCount;
-        const currentCount = this._numSplats;
+        const currentCount = expectedCount;
         const sortedLen = sortedData?.length;
         const isMismatch =
           expectedCount !== currentCount || sortedLen !== expectedCount;
@@ -1413,6 +1495,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         sortType: "Index",
       });
       this._sorterPromise = rawPromise;
+      if (defined(rawPromise)) {
+        markSteadySortStart(this, frameState);
+      }
     }
     if (!defined(this._sorterPromise)) {
       this._sorterState = GaussianSplatSortingState.WAITING;
@@ -1423,7 +1508,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       .then((sortedData) => {
         const isActive = isActiveSort(this, activeSort);
         const expectedCount = activeSort?.expectedCount;
-        const currentCount = this._numSplats;
+        const currentCount = expectedCount;
         const sortedLen = sortedData?.length;
         const isMismatch =
           expectedCount !== currentCount || sortedLen !== expectedCount;
