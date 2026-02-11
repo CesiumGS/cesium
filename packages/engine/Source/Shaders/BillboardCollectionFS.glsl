@@ -138,10 +138,10 @@ bool getDepthTestEnabled() {
     return temp2 != 0.0;
 }
 
-float getEyeDepthRelativeToEllipsoid(float eyeDepth, float distanceToEllipsoid) {
+float getRelativeEyeDepth(float eyeDepth, float distanceToEllipsoid, float epsilon) {
     float depthDifferential = eyeDepth - distanceToEllipsoid;
     float depthRatio = abs(depthDifferential / distanceToEllipsoid);
-    if (depthRatio < czm_epsilon3) {
+    if (depthRatio < epsilon) {
         // The approximations are imprecise, so use an epsilon check for small value differences and assume a value of 0.0
         return 0.0;
     }
@@ -175,19 +175,20 @@ void doDepthTest(float eyeDepth, float globeDepth) {
     }
 
     // If the camera is close, compare against the globe depth texture that includes depth from the 3D tile pass.
-    if (useGlobeDepth && eyeDepth < globeDepth) {
+    if (useGlobeDepth && getRelativeEyeDepth(eyeDepth, globeDepth, czm_epsilon1) < 0.0) {
         discard;
     }
 }
 
+#ifdef LOG_DEPTH
 void writeDepth(float eyeDepth, float globeDepth, float distanceToEllipsoid) {
     // If we've made it here, the manual depth test above determined that this fragment should be visible.
     // But the automatic depth test must still run in order to write the result to the depth buffer, and its results may
-    // disagree with our manual depth test's results. To prefer our manual results when in front of the globe, apply a small offset towards the camera.
+    // disagree with our manual depth test's results. To prefer our manual results when in front of the globe, apply an offset towards the camera.
 
     float depthArg = v_depthFromNearPlusOne;
 
-    if (globeDepth != 0.0 && getEyeDepthRelativeToEllipsoid(eyeDepth, distanceToEllipsoid) > 0.0) { 
+    if (globeDepth != 0.0 && getRelativeEyeDepth(eyeDepth, distanceToEllipsoid, czm_epsilon3) > 0.0) { 
         float globeDepthFromNearPlusOne = (-globeDepth - czm_currentFrustum.x) + 1.0;
         float nudge = max(globeDepthFromNearPlusOne * 5e-6, czm_epsilon7);
         float globeOnTop = max(1.0, globeDepthFromNearPlusOne - nudge);
@@ -196,6 +197,7 @@ void writeDepth(float eyeDepth, float globeDepth, float distanceToEllipsoid) {
 
     czm_writeLogDepth(depthArg);
 }
+#endif
 
 void main()
 {
