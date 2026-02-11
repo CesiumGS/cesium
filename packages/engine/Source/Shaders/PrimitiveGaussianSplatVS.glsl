@@ -142,6 +142,7 @@ highp vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
 void main() {
     uint texIdx = uint(a_splatIndex);
+    v_splatIndex = texIdx;
     ivec2 posCoord = ivec2((texIdx & 0x3ffu) << 1, texIdx >> 10);
     vec4 splatPosition = vec4( uintBitsToFloat(uvec4(texelFetch(u_splatAttributeTexture, posCoord, 0))) );
 
