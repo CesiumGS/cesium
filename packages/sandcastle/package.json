@@ -12,10 +12,10 @@
   "dependencies": {
     "@ariakit/react": "^0.4.17",
     "@monaco-editor/react": "^4.7.0",
-    "@stratakit/bricks": "^0.4.5",
-    "@stratakit/foundations": "^0.3.5",
+    "@stratakit/bricks": "^0.5.4",
+    "@stratakit/foundations": "^0.4.6",
     "@stratakit/icons": "^0.3.0",
-    "@stratakit/structures": "^0.4.5",
+    "@stratakit/structures": "^0.5.5",
     "allotment": "^1.20.4",
     "classnames": "^2.5.1",
     "dompurify": "^3.3.1",

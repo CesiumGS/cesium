@@ -493,7 +493,6 @@ function App() {
       className="sandcastle-root"
       density="dense"
       colorScheme={settings.theme}
-      synchronizeColorScheme
     >
       <header className="header">
         <a className="logo" href={getBaseUrl()}>

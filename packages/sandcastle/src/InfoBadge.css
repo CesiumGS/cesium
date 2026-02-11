@@ -3,6 +3,8 @@
 
   .🥝Label > & {
     margin-left: var(--stratakit-space-x1);
-    vertical-align: bottom;
+    svg {
+      vertical-align: bottom;
+    }
   }
 }
