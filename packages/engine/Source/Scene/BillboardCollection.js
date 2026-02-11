@@ -319,10 +319,10 @@ function BillboardCollection(options) {
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
   this._coarseDepthTestDistance =
-    options.coarseDepthTestDistance ?? Ellipsoid.default.minimumRadius;
+    options.coarseDepthTestDistance ?? Ellipsoid.default.minimumRadius / 10.0;
   this._threePointDepthTestDistance =
     options.threePointDepthTestDistance ??
-    Ellipsoid.default.minimumRadius / 1000;
+    Ellipsoid.default.minimumRadius / 1000.0;
 
   this._uniforms = {
     u_atlas: () => {
