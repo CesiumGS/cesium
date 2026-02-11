@@ -925,7 +925,6 @@ PathVisualizer.prototype.update = function (time) {
     if (this._scene.mode === SceneMode.SCENE3D) {
       const relativeTo = Property.getValueOrUndefined(pathGraphics.relativeTo, time);
       if (defined(relativeTo)) {
-        // Fixed case is already handled
         if (relativeTo === "Fixed") {
           frameToVisualize = ReferenceFrame.FIXED;
           frameToVisualizeKey = frameToVisualize.toString();
