@@ -143,7 +143,6 @@ See [ENV_SETUP.md](ENV_SETUP.md) for detailed instructions.
 - [ ] "Render Cesium View" command appears in editor title bar for `.js`, `.html`, `.css` files
 - [ ] Globe renders correctly for npm projects (launches dev server)
 - [ ] Globe renders correctly for CDN projects
-- [ ] Live reload works when saving file changes
 
 #### ✅ API Reference Panel
 
