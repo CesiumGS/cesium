@@ -54,6 +54,10 @@ export class FormatConverter {
             }
         );
 
+        // Create .env file with token
+        const envContent = `# Cesium Ion Access Token\n# Get your token at: https://ion.cesium.com/tokens\nVITE_CESIUM_TOKEN=${token || 'YOUR_CESIUM_ION_ACCESS_TOKEN'}\n`;
+        await this.writeFile(tutorialPath, '.env', envContent);
+
         // Create .gitignore
         await this.writeFile(tutorialPath, '.gitignore', 'node_modules/\ndist/\n.env\n');
     }

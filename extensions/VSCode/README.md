@@ -145,6 +145,13 @@ See [ENV_SETUP.md](ENV_SETUP.md) for detailed instructions.
 - [ ] Globe renders correctly for CDN projects
 - [ ] Live reload works when saving file changes
 
+#### ✅ API Reference Panel
+
+- [ ] API Reference panel appears in the Cesium sidebar
+- [ ] Search icon appears in the API Reference panel toolbar
+- [ ] Search functionality filters API documentation correctly
+- [ ] Clicking on API items opens the documentation correctly
+
 #### ✅ Token Management
 
 - [ ] Token prompt appears when opening tutorial without configured token
@@ -155,7 +162,6 @@ See [ENV_SETUP.md](ENV_SETUP.md) for detailed instructions.
 
 - [ ] Vite dev server starts automatically for npm projects
 - [ ] Port is automatically detected and available
-- [ ] Server stops properly when closing the viewer
 
 ## Known Issues
 

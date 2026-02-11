@@ -277,6 +277,14 @@ export class TutorialCommandHandler {
                 } else if (format.value === 'cdn' && isNpmFormat) {
                     // Convert copied npm files to CDN format
                     await this.formatConverter.convertNpmToCdn(tutorialPath);
+                } else if (format.value === 'cdn' && !isNpmFormat) {
+                    // Copied tutorial is already CDN format, but we need to inject the token
+                    const mainJsPath = vscode.Uri.joinPath(tutorialPath, constants.FILE_MAIN_JS);
+                    if (await FileSystemHelper.exists(mainJsPath)) {
+                        let jsCode = await FileSystemHelper.readFile(mainJsPath);
+                        jsCode = await this.tokenManager.injectAccessToken(jsCode);
+                        await FileSystemHelper.writeFile(mainJsPath, jsCode);
+                    }
                 }
             } else {
                 // Create files based on selected format
