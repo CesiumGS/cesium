@@ -58,10 +58,8 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.attributeArrays)) {
     const featureCountMax = collection._featureCountMax;
-    const stride = 4;
-
-    const positionHighAndShowArray = new Float32Array(featureCountMax * stride);
-    const positionLowAndColorArray = new Float32Array(featureCountMax * stride);
+    const positionHighAndShowArray = new Float32Array(featureCountMax * 4);
+    const positionLowAndColorArray = new Float32Array(featureCountMax * 4);
 
     renderContext.attributeArrays = {
       [Point3DAttributeLocations.positionHighAndShow]: positionHighAndShowArray,
@@ -84,7 +82,6 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
         Point3DAttributeLocations.positionLowAndColor
       ];
 
-    const stride = 4;
     const { _dirtyOffset, _dirtyCount } = collection;
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
@@ -99,15 +96,15 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
 
       point.getColor(color);
 
-      positionHighAndShowArray[i * stride] = encodedCartesian.high.x;
-      positionHighAndShowArray[i * stride + 1] = encodedCartesian.high.y;
-      positionHighAndShowArray[i * stride + 2] = encodedCartesian.high.z;
-      positionHighAndShowArray[i * stride + 3] = point.show ? 1 : 0;
+      positionHighAndShowArray[i * 4] = encodedCartesian.high.x;
+      positionHighAndShowArray[i * 4 + 1] = encodedCartesian.high.y;
+      positionHighAndShowArray[i * 4 + 2] = encodedCartesian.high.z;
+      positionHighAndShowArray[i * 4 + 3] = point.show ? 1 : 0;
 
-      positionLowAndColorArray[i * stride] = encodedCartesian.low.x;
-      positionLowAndColorArray[i * stride + 1] = encodedCartesian.low.y;
-      positionLowAndColorArray[i * stride + 2] = encodedCartesian.low.z;
-      positionLowAndColorArray[i * stride + 3] =
+      positionLowAndColorArray[i * 4] = encodedCartesian.low.x;
+      positionLowAndColorArray[i * 4 + 1] = encodedCartesian.low.y;
+      positionLowAndColorArray[i * 4 + 2] = encodedCartesian.low.z;
+      positionLowAndColorArray[i * 4 + 3] =
         AttributeCompression.encodeRGB8(color);
 
       point._dirty = false;
