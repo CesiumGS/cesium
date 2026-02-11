@@ -19,6 +19,7 @@ import {
   onEmbeddingModelLoaded,
   initializeEmbeddingSearch,
 } from "./EmbeddingSearch.ts";
+import { SettingsContext } from "../SettingsContext.ts";
 
 const galleryListPath = `gallery/list.json`;
 const pagefindUrl = `gallery/pagefind/pagefind.js`;
@@ -42,6 +43,9 @@ export type GalleryFilter = Record<string, string | string[]> | null;
 export type GalleryFilters = PagefindFilterCounts | null;
 
 export function useGalleryItemStore() {
+  const { settings } = useContext(SettingsContext);
+  const embeddingSearchEnabled = settings.embeddingSearch;
+
   // Pagefind library and config
   const pagefindRef = useRef<Pagefind>(null);
   const getPagefind = () => {
@@ -56,6 +60,7 @@ export function useGalleryItemStore() {
   const [galleryLoaded, setGalleryLoaded] = useState(false);
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [legacyIds, setLegacyIds] = useState<Record<string, string>>({});
+  const entriesRef = useRef<GalleryItem[]>([]);
 
   // Filters
   const [galleryFilters, setGalleryFilters] = useState<GalleryFilters>(null);
@@ -112,21 +117,36 @@ export function useGalleryItemStore() {
       }
 
       startSearch(() => setSearchResults(values));
+    };
+
+    performSearch();
+
+    // Debounce the embedding search by 100ms to avoid unnecessary work while typing
+    const embeddingTimeout = setTimeout(async () => {
+      if (abortController.signal.aborted) {
+        return;
+      }
 
       if (
+        embeddingSearchEnabled &&
         embeddingModelLoaded &&
         searchTerm !== null &&
         searchTerm.trim() !== ""
       ) {
         const vectorResults = await vectorSearch(searchTerm, 5, searchFilter);
-        startSearch(() => setVectorSearchResults(vectorResults));
+        if (!abortController.signal.aborted) {
+          startSearch(() => setVectorSearchResults(vectorResults));
+        }
       } else {
         startSearch(() => setVectorSearchResults(null));
       }
-    };
+    }, 100);
 
-    performSearch();
-  }, [searchTerm, searchFilter, embeddingModelLoaded]);
+    return () => {
+      abortController.abort();
+      clearTimeout(embeddingTimeout);
+    };
+  }, [searchTerm, searchFilter, embeddingModelLoaded, embeddingSearchEnabled]);
 
   const memoizedSearchResults = useMemo(() => {
     if (!searchResults) {
@@ -223,8 +243,6 @@ export function useGalleryItemStore() {
       const { entries, searchOptions, legacyIds, defaultFilters } =
         await request.json();
 
-      initializeEmbeddingSearch({ entries, legacyIds });
-
       const items = entries.map((entry: GalleryItem) => {
         let entryUrl = entry.url;
         if (!entryUrl.endsWith("/")) {
@@ -251,6 +269,8 @@ export function useGalleryItemStore() {
         };
       });
 
+      entriesRef.current = entries;
+
       // See https://react.dev/reference/react/useTransition#react-doesnt-treat-my-state-update-after-await-as-a-transition
       startTransition(() => {
         setItems(items);
@@ -263,6 +283,19 @@ export function useGalleryItemStore() {
 
     startTransition(fetchItemsAction);
   }, []);
+
+  useEffect(() => {
+    if (
+      embeddingSearchEnabled &&
+      !embeddingModelLoaded &&
+      entriesRef.current.length > 0
+    ) {
+      initializeEmbeddingSearch({
+        entries: entriesRef.current,
+        legacyIds,
+      });
+    }
+  }, [embeddingSearchEnabled, embeddingModelLoaded, legacyIds]);
 
   const useLoadFromUrl = useCallback(() => {
     const isGalleryLoaded = items.length > 0;
@@ -282,7 +315,6 @@ export function useGalleryItemStore() {
       ) {
         setSearchFilter(null);
         setFirstSearch(false);
-        console.log("First search - removing default filter");
       }
       setSearchTerm(newSearchTerm);
     },
