@@ -57,12 +57,11 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.attributeArrays)) {
-    const featureCount = collection._featureCount;
+    const featureCountMax = collection._featureCountMax;
     const stride = 4;
 
-    // TODO: Allocate for collection maximum, not current count.
-    const positionHighAndShowArray = new Float32Array(featureCount * stride);
-    const positionLowAndColorArray = new Float32Array(featureCount * stride);
+    const positionHighAndShowArray = new Float32Array(featureCountMax * stride);
+    const positionLowAndColorArray = new Float32Array(featureCountMax * stride);
 
     renderContext.attributeArrays = {
       [Point3DAttributeLocations.positionHighAndShow]: positionHighAndShowArray,
@@ -201,6 +200,7 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
     uniformMap: renderContext.uniformMap,
 
     owner: collection,
+    count: collection._featureCount,
     boundingVolume: collection._boundingVolume,
     debugShowBoundingVolume: collection.debugShowBoundingVolume,
   });
