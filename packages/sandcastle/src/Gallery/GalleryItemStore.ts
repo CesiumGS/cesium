@@ -121,7 +121,6 @@ export function useGalleryItemStore() {
 
     performSearch();
 
-    // Debounce the embedding search by 100ms to avoid unnecessary work while typing
     const embeddingTimeout = setTimeout(async () => {
       if (abortController.signal.aborted) {
         return;
