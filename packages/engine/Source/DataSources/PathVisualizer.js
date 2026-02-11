@@ -926,7 +926,10 @@ PathVisualizer.prototype.update = function (time) {
       const relativeTo = Property.getValueOrUndefined(pathGraphics.relativeTo, time);
       if (defined(relativeTo)) {
         // Fixed case is already handled
-        if (relativeTo === "Inertial") {
+        if (relativeTo === "Fixed") {
+          frameToVisualize = ReferenceFrame.FIXED;
+          frameToVisualizeKey = frameToVisualize.toString();
+        } else if (relativeTo === "Inertial") {
           frameToVisualize = ReferenceFrame.INERTIAL;
           frameToVisualizeKey = frameToVisualize.toString();
         } else {
