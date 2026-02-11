@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
+- Fix camera zoom issue when tracked entity set or after execute lookAt function [#12999](https://github.com/CesiumGS/cesium/pull/12999)
 
 #### Additions :tada:
 
