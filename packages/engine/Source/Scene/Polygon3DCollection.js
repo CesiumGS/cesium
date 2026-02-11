@@ -135,6 +135,8 @@ class Polygon3DCollection extends Feature3DCollection {
 
   /** @param {FrameState} frameState */
   update(frameState) {
+    super.update(frameState);
+
     this._renderContext = renderPolygons(this, frameState, this._renderContext);
   }
 

@@ -70,6 +70,8 @@ class Point3D extends Feature3D {
     this._collection._positionF64[vertexOffset * 3] = position.x;
     this._collection._positionF64[vertexOffset * 3 + 1] = position.y;
     this._collection._positionF64[vertexOffset * 3 + 2] = position.z;
+
+    collection._makeDirtyBoundingVolume();
   }
 }
 

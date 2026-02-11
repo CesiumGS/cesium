@@ -142,6 +142,8 @@ class Polygon3D extends Feature3D {
       positionF64[(vertexOffset + i) * 3 + 1] = positions[i * 3 + 1];
       positionF64[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
+
+    collection._makeDirtyBoundingVolume();
   }
 
   /** @returns {number} */
@@ -184,6 +186,8 @@ class Polygon3D extends Feature3D {
     for (let i = 0; i < dstCount; i++) {
       holeIndexU32[holeOffset + i] = holes[i];
     }
+
+    collection._makeDirtyBoundingVolume();
   }
 
   /** @returns {number} */
@@ -234,6 +238,8 @@ class Polygon3D extends Feature3D {
       dstIndices[(triangleOffset + i) * 3 + 1] = indices[i * 3 + 1];
       dstIndices[(triangleOffset + i) * 3 + 2] = indices[i * 3 + 2];
     }
+
+    collection._makeDirtyBoundingVolume();
   }
 }
 

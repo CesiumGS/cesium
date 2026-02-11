@@ -113,6 +113,8 @@ class Polyline3D extends Feature3D {
       positionF64[(vertexOffset + i) * 3 + 1] = positions[i * 3 + 1];
       positionF64[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
+
+    collection._makeDirtyBoundingVolume();
   }
 
   /////////////////////////////////////////////////////////////////////////////

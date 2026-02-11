@@ -49,6 +49,8 @@ class Point3DCollection extends Feature3DCollection {
 
   /** @param {FrameState} frameState */
   update(frameState) {
+    super.update(frameState);
+
     this._renderContext = renderPoints(this, frameState, this._renderContext);
   }
 }

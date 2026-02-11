@@ -54,6 +54,8 @@ class Polyline3DCollection extends Feature3DCollection {
 
   /** @param {FrameState} frameState */
   update(frameState) {
+    super.update(frameState);
+
     this._renderContext = renderPolylines(
       this,
       frameState,

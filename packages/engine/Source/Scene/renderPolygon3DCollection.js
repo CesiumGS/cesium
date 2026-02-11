@@ -164,8 +164,6 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
         },
       ],
     });
-
-    collection.updateBoundingVolume();
   }
 
   if (!defined(renderContext.renderState)) {

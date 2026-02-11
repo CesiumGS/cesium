@@ -77,6 +77,8 @@ class Feature3DCollection {
     this._dirtyOffset = 0;
     /** @type {number} */
     this._dirtyCount = 0;
+    /** @type {boolean} */
+    this._dirtyBoundingVolume = false;
   }
 
   /**
@@ -142,7 +144,8 @@ class Feature3DCollection {
     throw new DeveloperError(ERR_NOT_IMPLEMENTED);
   }
 
-  updateBoundingVolume() {
+  /** Rebuilds collection bounding volume. */
+  _updateBoundingVolume() {
     // Exclude unused space in the position buffer.
     const vertices = new Float64Array(
       this._positionF64.buffer,
@@ -155,6 +158,8 @@ class Feature3DCollection {
       4,
       this._boundingVolume,
     );
+
+    this._dirtyBoundingVolume = false;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -183,12 +188,23 @@ class Feature3DCollection {
    * @ignore
    */
   _makeDirty(index) {
-    if (index < this._dirtyOffset) {
+    if (this._dirtyCount === 0) {
+      this._dirtyCount = 1;
+      this._dirtyOffset = index;
+    } else if (index < this._dirtyOffset) {
       this._dirtyCount += this._dirtyOffset - index;
       this._dirtyOffset = index;
-    } else if (index >= this._dirtyOffset + this._dirtyCount) {
-      this._dirtyCount = index - this._dirtyOffset;
+    } else if (index + 1 > this._dirtyOffset + this._dirtyCount) {
+      this._dirtyCount = index + 1 - this._dirtyOffset;
     }
+  }
+
+  /**
+   * Marks collection bounding volume as 'dirty', to be updated on next render.
+   * @ignore
+   */
+  _makeDirtyBoundingVolume() {
+    this._dirtyBoundingVolume = true;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -196,7 +212,9 @@ class Feature3DCollection {
 
   /** @param {object} frameState */
   update(frameState) {
-    throw new DeveloperError(ERR_NOT_IMPLEMENTED);
+    if (this._dirtyBoundingVolume) {
+      this._updateBoundingVolume();
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
