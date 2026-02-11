@@ -16,7 +16,7 @@ import windowPopout from "@stratakit/icons/window-popout.svg";
 import play from "@stratakit/icons/play.svg";
 import textAlignLeft from "@stratakit/icons/text-align-left.svg";
 import search from "@stratakit/icons/search.svg";
-import close from "@stratakit/icons/close.svg";
+import dismiss from "@stratakit/icons/dismiss.svg";
 import documentation from "@stratakit/icons/documentation.svg";
 import info from "@stratakit/icons/info.svg";
 import copy from "@stratakit/icons/copy.svg";
@@ -42,7 +42,7 @@ export {
   play,
   textAlignLeft,
   search,
-  close,
+  dismiss,
   documentation,
   info,
   copy,
