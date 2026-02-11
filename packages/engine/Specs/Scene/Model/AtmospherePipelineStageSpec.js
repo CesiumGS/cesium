@@ -62,10 +62,16 @@ describe(
         "COMPUTE_POSITION_WC_ATMOSPHERE",
       ]);
 
-      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "vec3 v_atmosphereRayleighColor;",
-        "vec3 v_atmosphereMieColor;",
-        "float v_atmosphereOpacity;",
+      ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+        "out vec3 v_atmosphereRayleighColor;",
+        "out vec3 v_atmosphereMieColor;",
+        "out float v_atmosphereOpacity;",
+      ]);
+
+      ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+        "in vec3 v_atmosphereRayleighColor;",
+        "in vec3 v_atmosphereMieColor;",
+        "in float v_atmosphereOpacity;",
       ]);
 
       ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [

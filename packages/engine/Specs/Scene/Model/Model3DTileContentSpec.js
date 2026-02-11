@@ -1182,7 +1182,7 @@ describe(
         });
         scene.msaaSamples = 1;
         noAttenuationPixelCount = scene.logarithmicDepthBuffer ? 20 : 16;
-        const center = new Cartesian3.fromRadians(
+        const center = Cartesian3.fromRadians(
           centerLongitude,
           centerLatitude,
           5.0,
