@@ -3648,8 +3648,8 @@ function processPath(entity, packet, entityCollection, sourceUri) {
   processPacketData(
     String,
     path,
-    "relativeToId",
-    pathData.relativeToId,
+    "relativeTo",
+    pathData.relativeTo,
     interval,
     sourceUri,
     entityCollection,

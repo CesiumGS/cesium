@@ -184,6 +184,14 @@ function subSampleSampledProperty(
       referenceFrame,
       sampleScratch
     );
+
+    if (refEntity.orientation) {
+      // console.log(refEntity.orientation);
+      // console.log("orientation present");
+
+      // TODO use orientation to compute transform instead of VVLH in next if block
+    }
+
     if (defined(tmp) && defined(tmp2)) {
       result[r++] = Cartesian3.subtract(tmp, tmp2, tmp);
       if (defined(computeVvlhTransform(start, refPosition, rr))) {
@@ -915,11 +923,19 @@ PathVisualizer.prototype.update = function (time) {
     let frameToVisualize = ReferenceFrame.FIXED;
     let frameToVisualizeKey = frameToVisualize.toString();
     if (this._scene.mode === SceneMode.SCENE3D) {
-      const relativeToId = Property.getValueOrUndefined(pathGraphics.relativeToId, time);
-      if (defined(relativeToId)) {
-        isRelative = true;
-        frameToVisualize = this._entityCollection.getById(relativeToId);
-        frameToVisualizeKey = relativeToId;
+      const relativeTo = Property.getValueOrUndefined(pathGraphics.relativeTo, time);
+      if (defined(relativeTo)) {
+        // Fixed case is already handled
+        if (relativeTo === "Inertial") {
+          frameToVisualize = ReferenceFrame.INERTIAL;
+          frameToVisualizeKey = frameToVisualize.toString();
+        } else {
+          // Path should be relative to entity
+          // Current implementation uses VVLH, ignores entity orientation
+          isRelative = true;
+          frameToVisualize = this._entityCollection.getById(relativeTo);
+          frameToVisualizeKey = relativeTo;
+        }
       } else {
         frameToVisualize = positionProperty.referenceFrame;
         frameToVisualizeKey = frameToVisualize.toString();

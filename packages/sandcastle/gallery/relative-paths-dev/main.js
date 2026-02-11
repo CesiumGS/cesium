@@ -24,8 +24,8 @@ Cesium.CzmlDataSource.load("../../../Specs/Data/CZML/TwoSats.czml").then(
 Sandcastle.addDefaultToolbarButton("Satellite 1", function () {
   viewer.camera.frustum.fov = Cesium.Math.toRadians(55);
   if (Cesium.defined(sat1)) {
-    sat1._path.relativeToId = undefined;
-    sat2._path.relativeToId = sat1.id;
+    sat1.path.relativeTo = undefined;
+    sat2.path.relativeTo = sat1.id;
     viewer.trackedEntity = sat1;
   }
 });
@@ -33,8 +33,8 @@ Sandcastle.addDefaultToolbarButton("Satellite 1", function () {
 Sandcastle.addToolbarButton("Satellite 2", function () {
   viewer.camera.frustum.fov = Cesium.Math.toRadians(55);
   if (Cesium.defined(sat1)) {
-    sat2._path.relativeToId = undefined;
-    sat1._path.relativeToId = sat2.id;
+    sat2.path.relativeTo = undefined;
+    sat1.path.relativeTo = sat2.id;
     viewer.trackedEntity = sat2;
   }
 });
@@ -42,16 +42,16 @@ Sandcastle.addToolbarButton("Satellite 2", function () {
 Sandcastle.addDefaultToolbarButton("Both", function () {
   viewer.camera.frustum.fov = Cesium.Math.toRadians(55);
   if (Cesium.defined(sat1)) {
-    sat1._path.relativeToId = undefined;
-    sat2._path.relativeToId = undefined;
+    sat1.path.relativeTo = undefined;
+    sat2.path.relativeTo = undefined;
     viewer.trackedEntity = sat1;
   }
 });
 
 Sandcastle.addToolbarButton("Earth", function () {
   if (Cesium.defined(sat1)) {
-    sat1._path.relativeToId = undefined;
-    sat2._path.relativeToId = undefined;
+    sat1.path.relativeTo = undefined;
+    sat2.path.relativeTo = undefined;
     viewer.trackedEntity = undefined;
   }
 
