@@ -215,7 +215,7 @@ try {
     entity.name = entity.properties.text.getValue();
     entity.description = createPickedFeatureDescription(entity);
 
-    const flyToDestination = new Cesium.Cartesian3.fromArray(
+    const flyToDestination = Cesium.Cartesian3.fromArray(
       entity.properties.destination.getValue(),
     );
     const orientationArray = entity.properties.orientation.getValue();
