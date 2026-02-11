@@ -90,6 +90,10 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
       Point3D.fromCollection(collection, i, point);
 
+      if (!point._dirty) {
+        continue;
+      }
+
       point.getPosition(cartesian);
       EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
 
@@ -105,6 +109,8 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
       positionLowAndColorArray[i * stride + 2] = encodedCartesian.low.z;
       positionLowAndColorArray[i * stride + 3] =
         AttributeCompression.encodeRGB8(color);
+
+      point._dirty = false;
     }
   }
 
