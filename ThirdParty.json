@@ -12,7 +12,7 @@
     "license": [
       "BSD-3-Clause"
     ],
-    "version": "2.8.8",
+    "version": "2.8.16",
     "url": "https://www.npmjs.com/package/@zip.js/zip.js"
   },
   {
@@ -44,7 +44,7 @@
     "license": [
       "Apache-2.0"
     ],
-    "version": "3.3.0",
+    "version": "3.3.1",
     "url": "https://www.npmjs.com/package/dompurify",
     "notes": "dompurify is available as both MPL-2.0 OR Apache-2.0"
   },
@@ -133,7 +133,7 @@
     "license": [
       "MIT"
     ],
-    "version": "0.25.0",
+    "version": "1.0.1",
     "url": "https://www.npmjs.com/package/meshoptimizer"
   },
   {
@@ -158,7 +158,7 @@
     "license": [
       "BSD-3-Clause"
     ],
-    "version": "7.5.4",
+    "version": "8.0.0",
     "url": "https://www.npmjs.com/package/protobufjs"
   },
   {

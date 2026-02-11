@@ -10,6 +10,7 @@ import SceneMode from "../Scene/SceneMode.js";
 import Interval from "./Interval.js";
 import Check from "./Check.js";
 import DeveloperError from "./DeveloperError.js";
+import CesiumMath from "./Math.js";
 
 // Terrain picker can be 4 levels deep (0-3)
 const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
@@ -20,7 +21,7 @@ const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
  * @alias TerrainPicker
  * @constructor
  *
- * @param {Float32Array} vertices The terrain mesh's vertex buffer.
+ * @param {Float64Array} vertices The terrain mesh's vertex buffer.
  * @param {Uint8Array|Uint16Array|Uint32Array} indices The terrain mesh's index buffer.
  * @param {TerrainEncoding} encoding The terrain mesh's vertex encoding.
  *
@@ -35,7 +36,7 @@ function TerrainPicker(vertices, indices, encoding) {
 
   /**
    * The terrain mesh's vertex buffer.
-   * @type {Float32Array}
+   * @type {Float64Array}
    */
   this._vertices = vertices;
   /**
@@ -268,7 +269,7 @@ function createAABBForNode(x, y, level) {
 /**
  * Packs triangle vertex positions and index into provided buffers, for the worker to process.
  * (The worker does tests to organize triangles into child nodes of the quadtree.)
- * @param {Float32Array} trianglePositionsBuffer The buffer to pack triangle vertex positions into.
+ * @param {Float64Array} trianglePositionsBuffer The buffer to pack triangle vertex positions into.
  * @param {Uint32Array} triangleIndicesBuffer The buffer to pack triangle indices into.
  * @param {Cartesian3[]} trianglePositions The triangle's vertex positions.
  * @param {number} triangleIndex The triangle's index in the overall tile's index buffer.
@@ -424,7 +425,7 @@ function getClosestTriangleInNode(
   let triangleIndices;
   if (shouldBuildChildren) {
     // If the tree can be built deeper, prepare buffers to store triangle data for child nodes
-    trianglePositions = new Float32Array(triangleCount * 9); // 3 vertices per triangle * 3 floats per vertex
+    trianglePositions = new Float64Array(triangleCount * 9); // 3 vertices per triangle * 3 floats per vertex
     triangleIndices = new Uint32Array(triangleCount);
   }
 
@@ -434,6 +435,7 @@ function getClosestTriangleInNode(
       encoding,
       mode,
       projection,
+      ray,
       vertices,
       indices[3 * triIndex],
       scratchTrianglePoints[0],
@@ -442,6 +444,7 @@ function getClosestTriangleInNode(
       encoding,
       mode,
       projection,
+      ray,
       vertices,
       indices[3 * triIndex + 1],
       scratchTrianglePoints[1],
@@ -450,6 +453,7 @@ function getClosestTriangleInNode(
       encoding,
       mode,
       projection,
+      ray,
       vertices,
       indices[3 * triIndex + 2],
       scratchTrianglePoints[2],
@@ -502,7 +506,8 @@ const scratchCartographic = new Cartographic();
  * @param {TerrainEncoding} encoding The terrain encoding.
  * @param {SceneMode} mode The scene mode (2D/3D/Columbus View).
  * @param {MapProjection} projection The map projection.
- * @param {Float32Array} vertices The vertex buffer of the terrain mesh.
+ * @param {Ray} ray The pick ray being tested (used here as a reference to resolve antimeridian wrapping in 2D/Columbus View).
+ * @param {Float64Array} vertices The terrain mesh's vertex buffer.
  * @param {Number} index The index of the vertex to get.
  * @param {Cartesian3} result The decoded, exaggerated, and possibly projected vertex position.
  * @returns {Cartesian3} The result vertex position.
@@ -512,6 +517,7 @@ function getVertexPosition(
   encoding,
   mode,
   projection,
+  ray,
   vertices,
   index,
   result,
@@ -535,6 +541,14 @@ function getVertexPosition(
     result,
   );
 
+  // Due to wrapping in 2D/CV modes, near the antimeridian, the vertex
+  // position may correspond to the other side of the world from the ray origin.
+  // Compare the vertex position to the ray origin and adjust it accordingly.
+  // A spherical approximation is sufficient for cylindrical projections,
+  // like mercator and geographic.
+  const worldWidth = CesiumMath.TWO_PI * projection.ellipsoid.maximumRadius;
+  const k = Math.round((ray.origin.y - position.y) / worldWidth);
+  position.y += k * worldWidth;
   return position;
 }
 
@@ -544,7 +558,7 @@ function getVertexPosition(
  * @param {Matrix4} inverseTransform
  * @param {TerrainNode} node
  * @param {Uint32Array} triangleIndices
- * @param {Float32Array} trianglePositions
+ * @param {Float64Array} trianglePositions
  * @returns {Promise<void>} A promise that resolves when the triangles have been added to the child nodes.
  * @private
  */
@@ -596,7 +610,10 @@ async function addTrianglesToChildrenNodes(
   // Assign these to the child nodes
   const result = await incrementallyBuildTerrainPickerPromise;
   result.intersectingTrianglesArrays.forEach((buffer, index) => {
-    node.children[index].intersectingTriangles = new Uint32Array(buffer);
+    // Guard against case where tree is reset while waiting for worker
+    if (defined(node.children[index])) {
+      node.children[index].intersectingTriangles = new Uint32Array(buffer);
+    }
   });
 
   // The node's triangles have been distributed to its children
