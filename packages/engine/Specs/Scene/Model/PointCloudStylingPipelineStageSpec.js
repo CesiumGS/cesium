@@ -170,8 +170,11 @@ describe(
         scene.frameState,
       );
 
-      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "vec4 v_pointCloudColor;",
+      ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+        "out vec4 v_pointCloudColor;",
+      ]);
+      ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+        "in vec4 v_pointCloudColor;",
       ]);
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -217,8 +220,11 @@ describe(
         scene.frameState,
       );
 
-      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "vec4 v_pointCloudColor;",
+      ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+        "out vec4 v_pointCloudColor;",
+      ]);
+      ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+        "in vec4 v_pointCloudColor;",
       ]);
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [

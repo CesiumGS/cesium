@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  ContextLimits,
   Megatexture,
   MetadataComponentType,
   RuntimeError,
@@ -36,6 +37,91 @@ describe("Scene/Megatexture", function () {
     expect(megatexture.channelCount).toBe(channelCount);
     expect(megatexture.componentType).toBe(componentType);
     expect(megatexture.voxelCountPerTile).toEqual(dimensions);
+  });
+
+  it("3D texture dimensions are constrained by memory limit", function () {
+    const dimensions = new Cartesian3(23, 7, 13);
+    const bytesPerSample = 4;
+    const tileCount = (8 ** 5 - 1) / 7; // LODs 0 through 4 fully populated
+    const availableTextureMemoryBytes = 16 * 1024 * 1024;
+
+    // For consistent test results, temporarily set maximum 3D texture size
+    // to a value supported on all WebGL2 devices.
+    const maximum3DTextureSize = ContextLimits.maximum3DTextureSize;
+    ContextLimits._maximum3DTextureSize = 256;
+
+    const textureDimensions = Megatexture.get3DTextureDimension(
+      dimensions,
+      bytesPerSample,
+      availableTextureMemoryBytes,
+      tileCount,
+    );
+    // Expected texture size will not be large enough to contain tileCount
+    const expectedDimensions = new Cartesian3(69, 245, 247);
+    expect(textureDimensions).toEqual(expectedDimensions);
+    const actualMemoryUsage =
+      textureDimensions.x *
+      textureDimensions.y *
+      textureDimensions.z *
+      bytesPerSample;
+    // Expected texture size uses most of the available texture memory
+    expect(actualMemoryUsage).toBeLessThan(availableTextureMemoryBytes);
+    expect(actualMemoryUsage).toBeGreaterThanOrEqual(
+      availableTextureMemoryBytes * 0.8,
+    );
+
+    ContextLimits._maximum3DTextureSize = maximum3DTextureSize;
+  });
+
+  it("3D texture is large enough to fit the number of tiles, but not too much larger", function () {
+    const dimensions = new Cartesian3(23, 7, 13);
+    const bytesPerSample = 4;
+    const tileCount = (8 ** 5 - 1) / 7; // LODs 0 through 4 fully populated
+    const availableTextureMemoryBytes = 256 * 1024 * 1024;
+
+    // For consistent test results, temporarily set maximum 3D texture size
+    // to a value supported on all WebGL2 devices.
+    const maximum3DTextureSize = ContextLimits.maximum3DTextureSize;
+    ContextLimits._maximum3DTextureSize = 256;
+
+    const textureDimensions = Megatexture.get3DTextureDimension(
+      dimensions,
+      bytesPerSample,
+      availableTextureMemoryBytes,
+      tileCount,
+    );
+    const expectedDimensions = new Cartesian3(161, 252, 247);
+    expect(textureDimensions).toEqual(expectedDimensions);
+    const maximumTileCount =
+      (textureDimensions.x / dimensions.x) *
+      (textureDimensions.y / dimensions.y) *
+      (textureDimensions.z / dimensions.z);
+    expect(maximumTileCount).toBeGreaterThanOrEqual(tileCount);
+    expect(maximumTileCount).toBeLessThanOrEqual(tileCount * 1.25);
+
+    ContextLimits._maximum3DTextureSize = maximum3DTextureSize;
+  });
+
+  it("3D texture maximizes usage of small device limits", function () {
+    const dimensions = new Cartesian3(7, 17, 23);
+    const bytesPerSample = 1;
+    const tileCount = 6001;
+    const availableTextureMemoryBytes = 100000000;
+
+    // Temporarily set maximum 3D texture size to the WebGL2 minimum
+    const maximum3DTextureSize = ContextLimits.maximum3DTextureSize;
+    ContextLimits._maximum3DTextureSize = 256;
+
+    const textureDimensions = Megatexture.get3DTextureDimension(
+      dimensions,
+      bytesPerSample,
+      availableTextureMemoryBytes,
+      tileCount,
+    );
+    const expectedDimensions = new Cartesian3(252, 255, 253);
+    expect(textureDimensions).toEqual(expectedDimensions);
+
+    ContextLimits._maximum3DTextureSize = maximum3DTextureSize;
   });
 
   it("adds data to an existing megatexture", function () {
@@ -141,28 +227,6 @@ describe("Scene/Megatexture", function () {
     expect(function () {
       megatexture.remove(4);
     }).toThrowDeveloperError();
-  });
-
-  it("reports approximate memory size", function () {
-    const tileCount = 4;
-    const dimension = 16;
-    const dimensions = new Cartesian3(dimension, dimension, dimension);
-    const channelCount = 4;
-    const componentType = MetadataComponentType.FLOAT32;
-    const textureMemoryByteLength =
-      tileCount *
-      dimension ** 3 *
-      channelCount *
-      MetadataComponentType.getSizeInBytes(componentType);
-
-    expect(
-      Megatexture.getApproximateTextureMemoryByteLength(
-        tileCount,
-        dimensions,
-        channelCount,
-        componentType,
-      ),
-    ).toBe(textureMemoryByteLength);
   });
 
   it("destroys", function () {
