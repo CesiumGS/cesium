@@ -1007,6 +1007,13 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
     return vertexShaderSource;
   }
 
+  if (
+    !defined(primitive._attributeLocations) ||
+    !defined(primitive._attributeLocations.compressedAttributes)
+  ) {
+    return vertexShaderSource;
+  }
+
   const containsNormal =
     vertexShaderSource.search(/in\s+vec3\s+normal;/g) !== -1;
   const containsSt = vertexShaderSource.search(/in\s+vec2\s+st;/g) !== -1;

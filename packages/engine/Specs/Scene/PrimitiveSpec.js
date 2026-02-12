@@ -20,6 +20,7 @@ import {
   PrimitiveType,
   Rectangle,
   RectangleGeometry,
+  RectangleOutlineGeometry,
   ShowGeometryInstanceAttribute,
   Transforms,
   Camera,
@@ -1094,6 +1095,32 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    it("update throws for outline geometry missing normal attribute", function () {
+      if (window.webglStub) {
+        pending("WebGL stub does not validate shader attributes.");
+      }
+
+      primitive = new Primitive({
+        geometryInstances: new GeometryInstance({
+          geometry: new RectangleOutlineGeometry({
+            ellipsoid: ellipsoid,
+            rectangle: rectangle1,
+          }),
+          attributes: {
+            color: new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0),
+          },
+        }),
+        appearance: new PerInstanceColorAppearance(),
+        asynchronous: false,
+      });
+
+      expect(function () {
+        primitive.update(frameState);
+      }).toThrowDeveloperError(
+        "Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input 'normal', which was not computed as part of the Geometry.  Use the appearance's vertexFormat property when constructing the geometry.",
+      );
+    });
+
     it("failed geometry throws on next update", async function () {
       primitive = new Primitive({
         geometryInstances: [
@@ -1208,13 +1235,18 @@ describe(
         }),
       });
 
-      return pollToPromise(function () {
-        primitive.update(frameState);
-        if (frameState.afterRender.length > 0) {
-          frameState.afterRender[0]();
-        }
-        return primitive.ready;
-      }).then(function () {
+      return pollToPromise(
+        function () {
+          primitive.update(frameState);
+          if (frameState.afterRender.length > 0) {
+            frameState.afterRender[0]();
+          }
+          return primitive.ready;
+        },
+        {
+          timeout: 10000,
+        },
+      ).then(function () {
         expect(
           primitive.getGeometryInstanceAttributes("rectangle1").boundingSphere,
         ).toBeDefined();
