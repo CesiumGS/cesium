@@ -6,7 +6,14 @@
 
 #### Additions :tada:
 
-- Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors [#13174](https://github.com/CesiumGS/cesium/pull/13174)
+- Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors. [#13174](https://github.com/CesiumGS/cesium/pull/13174)
+- Added more depth testing options for billboards and labels with `BillboardCollection.coarseDepthTestDistance`, `BillboardCollection.threePointDepthTestDistance`, `LabelCollection.coarseDepthTestDistance`, and `LabelCollection.threePointDepthTestDistance`. [#12994](https://github.com/CesiumGS/cesium/pull/12994)
+
+#### Fixes :wrench:
+
+- Fixes depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
+- Fixes billboard depth testing near horizon. [#13159](https://github.com/CesiumGS/cesium/issues/13159)
+- Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
 
 ## 1.138 - 2026-02-02
 
