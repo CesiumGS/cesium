@@ -52,7 +52,9 @@ import { MetadataPopover } from "./MetadataPopover.tsx";
 import { SharePopover } from "./SharePopover.tsx";
 import { SandcastlePopover } from "./SandcastlePopover.tsx";
 import { urlSpecifiesSandcastle } from "./Gallery/loadFromUrl.ts";
-import { TestBench } from "./TestBench.tsx";
+// import { TestBench } from "./TestBench.tsx";
+import { MuiRoot } from "./MuiRoot.tsx";
+import { Button as MuiButton } from "@mui/material";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
@@ -496,45 +498,50 @@ function App() {
       colorScheme={settings.theme}
     >
       <header className="header">
-        <a className="logo" href={getBaseUrl()}>
-          <img
-            src={
-              settings.theme === "dark"
-                ? "./images/Cesium_Logo_overlay.png"
-                : "./images/Cesium_Logo_Color_Overlay.png"
+        <MuiRoot>
+          <a className="logo" href={getBaseUrl()}>
+            <img
+              src={
+                settings.theme === "dark"
+                  ? "./images/Cesium_Logo_overlay.png"
+                  : "./images/Cesium_Logo_Color_Overlay.png"
+              }
+              style={{ width: "118px" }}
+            />
+          </a>
+          <MetadataPopover title={title} description={description} />
+          <SharePopover code={codeState.code} html={codeState.html} />
+          <Divider aria-orientation="vertical" />
+          <MuiButton
+            onClick={() => openStandalone()}
+            endIcon={<Icon href={windowPopout} />}
+          >
+            Standalone
+          </MuiButton>
+          <div className="flex-spacer"></div>
+          <SandcastlePopover
+            disclosure={
+              <Text variant="body-md" className="metadata">
+                Feedback & Issues
+              </Text>
             }
-            style={{ width: "118px" }}
-          />
-        </a>
-        <MetadataPopover title={title} description={description} />
-        <SharePopover code={codeState.code} html={codeState.html} />
-        <Divider aria-orientation="vertical" />
-        <Button onClick={() => openStandalone()}>
-          Standalone <Icon href={windowPopout} />
-        </Button>
-        <div className="flex-spacer"></div>
-        <SandcastlePopover
-          disclosure={
-            <Text variant="body-md" className="metadata">
-              Feedback & Issues
-            </Text>
-          }
-          autoFocus={false}
-        >
-          <p>
-            Help us continue to improve Sandcastle. Report a problem or share
-            your thoughts in{" "}
-            <Anchor
-              href="https://github.com/CesiumGS/cesium/issues/12857"
-              target="_blank"
-            >
-              this issue
-            </Anchor>
-          </p>
-        </SandcastlePopover>
-        <div className="version">
-          {versionString && <pre>{versionString}</pre>}
-        </div>
+            autoFocus={false}
+          >
+            <p>
+              Help us continue to improve Sandcastle. Report a problem or share
+              your thoughts in{" "}
+              <Anchor
+                href="https://github.com/CesiumGS/cesium/issues/12857"
+                target="_blank"
+              >
+                this issue
+              </Anchor>
+            </p>
+          </SandcastlePopover>
+          <div className="version">
+            {versionString && <pre>{versionString}</pre>}
+          </div>
+        </MuiRoot>
       </header>
       <div className="application-bar">
         <AppBarButton
@@ -624,7 +631,8 @@ function App() {
               readOnly={!initialized}
             />
           )}
-          {leftPanel === "test-bench" && <TestBench />}
+          {/* {leftPanel === "test-bench" && <TestBench />} */}
+          {leftPanel === "test-bench" && "testing"}
           <StoreContext value={galleryItemStore}>
             <Gallery
               hidden={leftPanel !== "gallery"}

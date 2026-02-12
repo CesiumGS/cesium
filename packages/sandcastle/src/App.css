@@ -36,6 +36,10 @@
   );
 
   & > header {
+    .🥝MuiRoot {
+      display: contents;
+    }
+
     grid-area: header;
     display: flex;
     align-items: center;

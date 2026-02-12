@@ -1,13 +1,19 @@
-import { Button, Field, IconButton, TextBox } from "@stratakit/bricks";
+// import { Field, TextBox } from "@stratakit/bricks";
 import { SandcastlePopover } from "./SandcastlePopover";
-import { Icon } from "@stratakit/foundations";
+import { Icon } from "@stratakit/mui";
 import { checkmark, copy, share as shareIcon } from "./icons";
 import { makeCompressedBase64String } from "./Helpers";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { getBaseUrl } from "./util/getBaseUrl";
-import { PopoverDescription } from "@ariakit/react";
+// import { PopoverDescription } from "@ariakit/react";
 import "./SharePopover.css";
 import { sleep } from "./util/sleep";
+import {
+  Button,
+  IconButton,
+  // TextareaAutosize,
+  TextField,
+} from "@mui/material";
 
 export function SharePopover({ code, html }: { code: string; html: string }) {
   const latestCode = useRef("");
@@ -68,46 +74,73 @@ export function SharePopover({ code, html }: { code: string; html: string }) {
       className="share-popover"
       title="Share"
       disclosure={
-        <Button tone="accent" onClick={generateShareUrl}>
-          <Icon href={shareIcon} /> Share
+        <Button
+          color="primary"
+          onClick={generateShareUrl}
+          startIcon={<Icon href={shareIcon} />}
+        >
+          Share
         </Button>
       }
     >
       <div className="input-row">
-        <Field.Root>
-          <Field.Control
-            render={
-              <TextBox.Textarea
-                value={shareUrl}
-                readOnly
-                ref={(input: HTMLInputElement | null) => {
-                  inputRef.current = input;
-                  if (input) {
-                    // we "force" selection here to make sure the actual HTML has rendered
-                    input.select();
-                  }
-                }}
-                onFocus={(e) => {
-                  e.target.select();
-                  setWasCopied(false);
-                }}
-                autoFocus
-              ></TextBox.Textarea>
-            }
+        <div>
+          {/* <Field.Root>
+            <Field.Control
+              render={
+                <TextBox.Textarea
+                  value={shareUrl}
+                  readOnly
+                  ref={(input: HTMLInputElement | null) => {
+                    inputRef.current = input;
+                    if (input) {
+                      // we "force" selection here to make sure the actual HTML has rendered
+                      input.select();
+                    }
+                  }}
+                  onFocus={(e) => {
+                    e.target.select();
+                    setWasCopied(false);
+                  }}
+                  autoFocus
+                ></TextBox.Textarea>
+              }
+            />
+            <Field.Description>
+              <PopoverDescription>
+                Copy this link to share the current Sandcastle. Be sure to
+                re-share if you make any changes.
+              </PopoverDescription>
+            </Field.Description>
+          </Field.Root> */}
+          <TextField
+            value={shareUrl}
+            slotProps={{ input: { readOnly: true } }}
+            multiline
+            rows={1}
+            helperText="Copy this link to share the current Sandcastle. Be sure to
+                re-share if you make any changes."
+            inputRef={(input: HTMLInputElement | null) => {
+              inputRef.current = input;
+              if (input) {
+                // we "force" selection here to make sure the actual HTML has rendered
+                input.select();
+              }
+            }}
+            onFocus={(e) => {
+              e.target.select();
+              setWasCopied(false);
+            }}
+            autoFocus
           />
-          <Field.Description>
-            <PopoverDescription>
-              Copy this link to share the current Sandcastle. Be sure to
-              re-share if you make any changes.
-            </PopoverDescription>
-          </Field.Description>
-        </Field.Root>
+        </div>
         <IconButton
-          icon={isCopying || wasCopied ? checkmark : copy}
-          active={isCopying || wasCopied}
+          color={isCopying || wasCopied ? "success" : "default"}
           label="Copy to clipboard"
           onClick={copyShareUrl}
-        ></IconButton>
+        >
+          <Icon href={isCopying || wasCopied ? checkmark : copy} />
+        </IconButton>
       </div>
     </SandcastlePopover>
   );
