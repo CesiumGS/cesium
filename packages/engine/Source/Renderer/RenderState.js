@@ -455,8 +455,6 @@ let renderStateCache = {};
  *
  * @see DrawCommand
  * @see ClearCommand
- *
- * @private
  */
 RenderState.fromCache = function (renderState) {
   const partialKey = JSON.stringify(renderState);

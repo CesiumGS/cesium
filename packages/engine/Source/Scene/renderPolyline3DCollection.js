@@ -157,7 +157,6 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.renderState)) {
-    // @ts-expect-error TODO(donmccurdy): Will need to expose fromCache.
     renderContext.renderState = RenderState.fromCache({
       blending: BlendingState.DISABLED,
       depthMask: false,
