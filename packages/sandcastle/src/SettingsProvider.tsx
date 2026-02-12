@@ -24,8 +24,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           autoIteration: value.autoIteration ?? initialSettings.autoIteration,
           extendedThinking:
             value.extendedThinking ?? initialSettings.extendedThinking,
-          autoApplyChanges:
-            value.autoApplyChanges ?? initialSettings.autoApplyChanges,
           pinnedModels: value.pinnedModels ?? initialSettings.pinnedModels,
           customPromptAddendum:
             value.customPromptAddendum ?? initialSettings.customPromptAddendum,
@@ -62,8 +60,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             ...initialSettings.extendedThinking,
             ...parsedValue.extendedThinking,
           },
-          autoApplyChanges:
-            parsedValue.autoApplyChanges ?? initialSettings.autoApplyChanges,
           pinnedModels:
             parsedValue.pinnedModels ?? initialSettings.pinnedModels,
           customPromptAddendum:

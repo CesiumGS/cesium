@@ -47,7 +47,6 @@ export type Settings = {
     enabled: boolean;
     budget: number;
   };
-  autoApplyChanges: boolean;
   pinnedModels: string[];
   customPromptAddendum: string;
 };
@@ -71,7 +70,6 @@ export const initialSettings: Settings = {
     enabled: true,
     budget: 2048,
   },
-  autoApplyChanges: true,
   pinnedModels: [],
   customPromptAddendum: "",
 };

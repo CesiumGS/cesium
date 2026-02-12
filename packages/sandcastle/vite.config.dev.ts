@@ -105,6 +105,10 @@ export default defineConfig(({ command }) => {
             // Remove leading slash and serve from repo root
             req.url = url.substring(1);
             express.static(repoRoot)(req, res, next);
+          } else if (url && url.startsWith("/SampleData/")) {
+            // SampleData lives under Apps/ in the repo
+            req.url = `Apps${url}`;
+            express.static(repoRoot)(req, res, next);
           } else {
             next();
           }

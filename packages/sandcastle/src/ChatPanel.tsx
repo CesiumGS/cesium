@@ -1182,40 +1182,20 @@ export function ChatPanel({
 
                 updateToolCallResultOnContMsg(nextToolCall.id, result);
 
-                // Apply the diff to the editor only in auto-apply mode.
-                if (settings.autoApplyChanges) {
-                  if (result.status === "success" && result.output) {
-                    const { file, modifiedCode } = JSON.parse(result.output);
-                    if (file === "javascript") {
-                      onApplyCode(modifiedCode, undefined);
-                    } else {
-                      onApplyCode(undefined, modifiedCode);
-                    }
+                // Always auto-apply diffs to the editor.
+                if (result.status === "success" && result.output) {
+                  const { file, modifiedCode } = JSON.parse(result.output);
+                  if (file === "javascript") {
+                    onApplyCode(modifiedCode, undefined);
+                  } else {
+                    onApplyCode(undefined, modifiedCode);
+                  }
 
-                    if (onClearConsole) {
-                      onClearConsole();
-                    }
+                  if (onClearConsole) {
+                    onClearConsole();
                   }
-                  resultToSend = result;
-                } else {
-                  // Preview mode: mark as preview-only so the model doesn't assume code was applied.
-                  let previewResult = result;
-                  try {
-                    if (result.status === "success" && result.output) {
-                      const parsed = JSON.parse(result.output);
-                      previewResult = {
-                        ...result,
-                        output: JSON.stringify({
-                          ...parsed,
-                          previewOnly: true,
-                        }),
-                      };
-                    }
-                  } catch {
-                    // Ignore parse errors, use original result
-                  }
-                  resultToSend = previewResult;
                 }
+                resultToSend = result;
               } catch (error) {
                 const errorMsg =
                   error instanceof Error
@@ -1438,128 +1418,59 @@ export function ChatPanel({
               appendToolCall(chunk.toolCall, originalCodeSnapshot);
 
               if (chunk.toolCall.name === "apply_diff" && toolRegistry) {
-                console.log(
-                  `[ChatPanel] 🎯 Processing apply_diff tool call, auto-apply: ${settings.autoApplyChanges}`,
-                );
-                // Auto-apply if enabled, otherwise execute for preview
-                if (settings.autoApplyChanges) {
-                  // Auto-apply without approval
-                  try {
-                    console.log(
-                      "[ChatPanel] ⚙️ Executing tool (auto-apply mode)...",
-                    );
-                    const result = await toolRegistry.executeTool(
-                      chunk.toolCall,
-                    );
-                    console.log("[ChatPanel] ✅ Tool executed (auto-apply):", {
-                      status: result.status,
-                      hasOutput: !!result.output,
-                      error: result.error,
-                    });
+                console.log("[ChatPanel] 🎯 Processing apply_diff tool call");
+                // Always auto-apply
+                try {
+                  console.log("[ChatPanel] ⚙️ Executing tool (auto-apply)...");
+                  const result = await toolRegistry.executeTool(chunk.toolCall);
+                  console.log("[ChatPanel] ✅ Tool executed (auto-apply):", {
+                    status: result.status,
+                    hasOutput: !!result.output,
+                    error: result.error,
+                  });
 
-                    // Update the tool call in the message with the result (preserve originalCode)
-                    setMessages((prev) =>
-                      prev.map((msg) => ({
-                        ...msg,
-                        toolCalls: msg.toolCalls?.map((tc) =>
-                          tc.toolCall.id === chunk.toolCall.id
-                            ? { ...tc, result, originalCode: tc.originalCode }
-                            : tc,
-                        ),
-                      })),
-                    );
+                  // Update the tool call in the message with the result (preserve originalCode)
+                  setMessages((prev) =>
+                    prev.map((msg) => ({
+                      ...msg,
+                      toolCalls: msg.toolCalls?.map((tc) =>
+                        tc.toolCall.id === chunk.toolCall.id
+                          ? { ...tc, result, originalCode: tc.originalCode }
+                          : tc,
+                      ),
+                    })),
+                  );
 
-                    // Apply the diff to the editor
-                    if (result.status === "success" && result.output) {
-                      const { file, modifiedCode } = JSON.parse(result.output);
+                  // Apply the diff to the editor
+                  if (result.status === "success" && result.output) {
+                    const { file, modifiedCode } = JSON.parse(result.output);
 
-                      // CRITICAL: Update workingCodeRef immediately so subsequent tool calls
-                      // in the same chain see the modified code (fixes prompt/tool divergence)
-                      workingCodeRef.current = {
-                        ...workingCodeRef.current,
-                        [file]: modifiedCode,
-                      };
+                    // CRITICAL: Update workingCodeRef immediately so subsequent tool calls
+                    // in the same chain see the modified code (fixes prompt/tool divergence)
+                    workingCodeRef.current = {
+                      ...workingCodeRef.current,
+                      [file]: modifiedCode,
+                    };
 
-                      if (file === "javascript") {
-                        onApplyCode(modifiedCode, undefined);
-                      } else {
-                        onApplyCode(undefined, modifiedCode);
-                      }
-
-                      // Clear console errors after applying code
-                      if (onClearConsole) {
-                        onClearConsole();
-                      }
-                      // console.log('✅ Diff applied to editor (auto-apply)');
+                    if (file === "javascript") {
+                      onApplyCode(modifiedCode, undefined);
                     } else {
-                      //                     console.error('❌ Failed to apply diff:', result.error);
+                      onApplyCode(undefined, modifiedCode);
                     }
 
-                    // Continue the conversation after applying
-                    await continueAfterToolResult(chunk.toolCall, result);
-                  } catch {
-                    //                   console.error('❌ Tool execution failed:', error);
-                  } finally {
-                    // Unlock so React effects can sync workingCodeRef again
-                    toolChainActiveRef.current = false;
-                  }
-                } else {
-                  // Non-auto-apply: Execute tool and store result in message for user review
-                  try {
-                    console.log(
-                      "[ChatPanel] ⚙️ Executing tool (preview mode)...",
-                    );
-                    const result = await toolRegistry.executeTool(
-                      chunk.toolCall,
-                    );
-                    console.log("[ChatPanel] ✅ Tool executed (for review):", {
-                      status: result.status,
-                      hasOutput: !!result.output,
-                      error: result.error,
-                    });
-
-                    // CRITICAL: Update workingCodeRef even in preview mode
-                    // so subsequent chained tool calls see the modified code
-                    applyToolResultToWorkingCodeRef(result);
-
-                    // Update the tool call in the message with the result (preserve originalCode)
-                    setMessages((prev) =>
-                      prev.map((msg) => ({
-                        ...msg,
-                        toolCalls: msg.toolCalls?.map((tc) =>
-                          tc.toolCall.id === chunk.toolCall.id
-                            ? { ...tc, result, originalCode: tc.originalCode }
-                            : tc,
-                        ),
-                      })),
-                    );
-
-                    // Send tool_result so the model can continue (mark as preview-only)
-                    let previewResult = result;
-                    try {
-                      if (result.status === "success" && result.output) {
-                        const parsed = JSON.parse(result.output);
-                        previewResult = {
-                          ...result,
-                          output: JSON.stringify({
-                            ...parsed,
-                            previewOnly: true,
-                          }),
-                        };
-                      }
-                    } catch {
-                      // Ignore parse errors, use original result
+                    // Clear console errors after applying code
+                    if (onClearConsole) {
+                      onClearConsole();
                     }
-                    await continueAfterToolResult(
-                      chunk.toolCall,
-                      previewResult,
-                    );
-                  } catch (error) {
-                    console.error("❌ Tool execution failed:", error);
-                  } finally {
-                    // Unlock so React effects can sync workingCodeRef again
-                    toolChainActiveRef.current = false;
                   }
+
+                  // Continue the conversation after applying
+                  await continueAfterToolResult(chunk.toolCall, result);
+                } catch {
+                  //                   console.error('❌ Tool execution failed:', error);
+                } finally {
+                  // Unlock so React effects can sync workingCodeRef again
+                  toolChainActiveRef.current = false;
                 }
               }
               break;
@@ -1927,7 +1838,6 @@ export function ChatPanel({
       isCurrentlyStreaming,
       hasApiKey,
       selectedModel,
-      settings.autoApplyChanges,
       currentCode,
       iterationState.totalRequests,
       iterationState.recentErrorSignatures,
@@ -2485,16 +2395,6 @@ export function ChatPanel({
                 }
                 disabled={isLoading}
                 aria-label="Toggle Extended Thinking feature"
-              />
-            </Tooltip>
-            <Tooltip content="Automatically apply code changes without confirmation">
-              <Switch
-                checked={settings.autoApplyChanges}
-                onChange={(e) =>
-                  updateSettings({ autoApplyChanges: e.target.checked })
-                }
-                disabled={isLoading}
-                aria-label="Toggle Auto-Apply feature"
               />
             </Tooltip>
           </div>

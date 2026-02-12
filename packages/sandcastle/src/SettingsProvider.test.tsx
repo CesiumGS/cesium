@@ -181,7 +181,6 @@ describe("SettingsProvider", () => {
         theme: "dark",
         fontSize: 14,
         customPromptAddendum: "Always use const",
-        autoApplyChanges: true,
       };
 
       localStorage.setItem(

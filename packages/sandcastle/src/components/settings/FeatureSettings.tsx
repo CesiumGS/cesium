@@ -57,24 +57,6 @@ export function FeatureSettings() {
         />
       </Field.Root>
 
-      {/* Auto-Apply */}
-      <Field.Root layout="inline">
-        <Field.Label>Auto-Apply Changes</Field.Label>
-        <Field.Control
-          render={
-            <Switch
-              checked={settings.autoApplyChanges}
-              onChange={(e) =>
-                updateSettings({ autoApplyChanges: e.target.checked })
-              }
-            />
-          }
-        />
-        <Field.Description>
-          Automatically apply AI code changes without confirmation
-        </Field.Description>
-      </Field.Root>
-
       {/* Auto-Iteration */}
       <Text variant="body-lg" style={{ fontWeight: 600 }}>
         Auto-Iteration

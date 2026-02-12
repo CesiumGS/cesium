@@ -394,7 +394,7 @@ export function DiffPreview({
             />
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons - only show Apply/Reject when not already applied */}
           <div className="diff-preview-actions">
             <div className="diff-preview-actions-left">
               <Tooltip
@@ -412,31 +412,17 @@ export function DiffPreview({
               </Tooltip>
             </div>
 
-            <div className="diff-preview-actions-right">
-              <Button
-                onClick={handleReject}
-                variant="ghost"
-                disabled={isApplying || isApplied}
-                aria-label="Reject changes"
-              >
-                Reject <Kbd variant="solid">Esc</Kbd>
-              </Button>
-
-              {isApplied ? (
-                <Tooltip
-                  content="Changes have been applied successfully"
-                  placement="top"
+            {!isApplied && (
+              <div className="diff-preview-actions-right">
+                <Button
+                  onClick={handleReject}
+                  variant="ghost"
+                  disabled={isApplying}
+                  aria-label="Reject changes"
                 >
-                  <Button
-                    tone="accent"
-                    disabled
-                    aria-label="Changes applied"
-                    className="applied-button"
-                  >
-                    ✓ Changes Applied
-                  </Button>
-                </Tooltip>
-              ) : (
+                  Reject <Kbd variant="solid">Esc</Kbd>
+                </Button>
+
                 <Tooltip
                   content="Apply these changes to the editor"
                   placement="top"
@@ -460,8 +446,8 @@ export function DiffPreview({
                     )}
                   </Button>
                 </Tooltip>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </>
       )}
