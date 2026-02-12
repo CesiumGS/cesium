@@ -7,28 +7,16 @@ viewer.scene.terrainProvider = false;
 
 const googleStreetViewStaticApiKey = "key for Google Street View Static API";
 
-const setTransform = (posObj) => {
-  Cesium.Transforms.northDownEastToFixedFrame =
-    Cesium.Transforms.localFrameToFixedFrameGenerator("north", "down");
-
-  Cesium.Transforms.computeTemeToPseudoFixedMatrix = (time, result) =>
-    Cesium.Matrix4.getMatrix3(
-      Cesium.Transforms.northDownEastToFixedFrame(
-        posObj,
-        Cesium.Ellipsoid.default,
-      ),
-      result,
-    );
-
-  viewer.scene.camera.setView({
-    destination: posObj,
-    orientation: Cesium.HeadingPitchRoll.fromDegrees(0, 0, 0),
-  });
-};
-
 const cubeMapFromGoogle = (pos) => {
   const posString = pos.join(",");
   const posObj = Cesium.Cartesian3.fromDegrees(pos[1], pos[0], 0);
+
+  const matrix4 = Cesium.Transforms.localFrameToFixedFrameGenerator(
+    "north",
+    "down",
+  )(posObj, Cesium.Ellipsoid.default);
+
+  const transform = Cesium.Matrix4.getMatrix3(matrix4, new Cesium.Matrix3());
 
   //Sample Google API URL
   //https://maps.googleapis.com/maps/api/streetview?
@@ -65,15 +53,38 @@ const cubeMapFromGoogle = (pos) => {
       positiveZ,
       negativeZ,
     },
+    transform,
   });
-  setTransform(posObj);
-  viewer.scene.skyBox = cubeMapPanorama;
+  viewer.scene.camera.setView({
+    destination: posObj,
+    orientation: Cesium.HeadingPitchRoll.fromDegrees(0, 0, 0),
+  });
+  clearPrimitives();
+  viewer.scene.primitives.add(cubeMapPanorama);
+};
+
+const clearPrimitives = () => {
+  const primitives = viewer.scene.primitives;
+  for (let i = primitives.length - 1; i >= 0; i--) {
+    const primitive = primitives.get(i);
+    const remove = primitive instanceof Cesium.CubeMapPanorama;
+    if (remove) {
+      primitives.remove(primitive);
+    }
+  }
 };
 
 const cubeMapFromFiles = () => {
   const pos = [11.569967, 104.923323];
 
   const posObj = Cesium.Cartesian3.fromDegrees(pos[1], pos[0], 0);
+
+  const matrix4 = Cesium.Transforms.localFrameToFixedFrameGenerator(
+    "north",
+    "down",
+  )(posObj, Cesium.Ellipsoid.default);
+
+  const transform = Cesium.Matrix4.getMatrix3(matrix4, new Cesium.Matrix3());
 
   const cubeMapPanorama = new Cesium.CubeMapPanorama({
     sources: {
@@ -84,9 +95,14 @@ const cubeMapFromFiles = () => {
       positiveZ: "../../SampleData/cubemap/1080px-positiveZ.jpg",
       negativeZ: "../../SampleData/cubemap/1080px-negativeZ.jpg",
     },
+    transform,
   });
-  setTransform(posObj);
-  viewer.scene.skyBox = cubeMapPanorama;
+  viewer.scene.camera.setView({
+    destination: posObj,
+    orientation: Cesium.HeadingPitchRoll.fromDegrees(0, 0, 0),
+  });
+  clearPrimitives();
+  viewer.scene.primitives.add(cubeMapPanorama);
 };
 
 const locations = {
