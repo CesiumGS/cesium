@@ -951,8 +951,10 @@ describe(
       ]);
 
       // Get the actual texture and constant LOD data from the loaded primitive
-      const baseColorTexture = primitive.material.metallicRoughness.baseColorTexture.texture;
-      const constantLodData = primitive.material.metallicRoughness.baseColorTexture.constantLod;
+      const baseColorTexture =
+        primitive.material.metallicRoughness.baseColorTexture.texture;
+      const constantLodData =
+        primitive.material.metallicRoughness.baseColorTexture.constantLod;
 
       const expectedUniforms = {
         u_baseColorTexture: baseColorTexture,

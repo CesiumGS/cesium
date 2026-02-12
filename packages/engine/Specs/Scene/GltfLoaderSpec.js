@@ -4187,7 +4187,7 @@ describe(
       const { baseColorTexture } = material.metallicRoughness;
 
       expect(baseColorTexture).toBeDefined();
-      expect(baseColorTexture.texture.width).toBe(1024);
+      expect(baseColorTexture.texture.width).toBe(512);
       expect(baseColorTexture.constantLod).toBeDefined();
       expect(baseColorTexture.constantLod.repetitions).toBe(3.0);
       expect(baseColorTexture.constantLod.offset).toEqual(
