@@ -122,7 +122,6 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
   const panorama = new EquirectangularPanorama({
     image: canvas,
     transform,
-    repeatHorizontal: -1,
     credit,
   });
 

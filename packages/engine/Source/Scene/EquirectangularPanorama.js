@@ -16,12 +16,13 @@ import VertexFormat from "../Core/VertexFormat.js";
  *
  * Initialization options for the EquirectangularPanorama constructor
  *
- * @property {object} image 2:1 360 degrees equirectangular image path
- * @property {Matrix4} [transform=Matrix4.IDENTITY]  The 4x4 transformation matrix to place the panorama relative to the globe.
+ * @property {Matrix4} options.transform A 4x4 transformation matrix that defines the panorama’s position and orientation
+ * (for example, derived from a position and heading-pitch-roll).
+ * @property {string|HTMLImageElement|HTMLCanvasElement|ImageBitmap} [options.image] A URL to an image resource, or a preloaded image object.
  * @property {number} [radius=100000.0] The radius of the panorama in meters.
- * @param {number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
- * @param {number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices. * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
- * @param {Credit|string} [options.credit] A credit for the panorama, which is displayed on the canvas.
+ * @property {number} [options.repeatHorizontal=1.0] The number of times to repeat the texture horizontally.
+ * @property {number} [options.repeatVertical=1.0] The number of times to repeat the texture vertically.
+ * @property {Credit|string} [options.credit] A credit for the panorama, which is displayed on the canvas.
  */
 
 /**
@@ -31,9 +32,6 @@ import VertexFormat from "../Core/VertexFormat.js";
  * @constructor
  *
  * @param {EquirectangularPanorama.ConstructorOptions} options Object describing initialization options
- * @param {Matrix4} options.transform A 4x4 transformation matrix that defines the panorama’s position and orientation
- * (for example, derived from a position and heading-pitch-roll).
- * @param {string|HTMLImageElement|HTMLCanvasElement|ImageBitmap} [options.image] A URL to an image resource, or a preloaded image object.
  *
  * @example
  * const position = Cesium.Cartesian3.fromDegrees(
@@ -102,7 +100,7 @@ function EquirectangularPanorama(options) {
       type: "Image",
       uniforms: {
         image: this._image, // 2:1 360 degrees equirectangular image path
-        repeat: new Cartesian2(this._repeatHorizontal, this._repeatVertical), // flip horizontally
+        repeat: new Cartesian2(-this._repeatHorizontal, this._repeatVertical), // flip horizontally by default to match expected orientation of images inside a sphere, but allow user to override
       },
     },
   });

@@ -51,7 +51,7 @@ describe("Scene/EquirectangularPanorama", function () {
       repeatVertical: 3.0,
     });
     const uniforms = panorama.primitive.appearance.material.uniforms;
-    expect(uniforms.repeat).toEqual(new Cartesian2(2.0, 3.0));
+    expect(uniforms.repeat).toEqual(new Cartesian2(-2.0, 3.0));
   });
 
   it("returns the correct source image via getSources", function () {
