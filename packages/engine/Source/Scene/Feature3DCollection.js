@@ -6,8 +6,16 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
 import Feature3D from "./Feature3D.js";
+import assert from "../Core/assert.js";
 
-const { ERR_INSTANTIATION, ERR_NOT_IMPLEMENTED } = Feature3D;
+/** @import { TypedArray } from "../Core/globalTypes.js"; */
+
+const {
+  ERR_CAPACITY,
+  ERR_INSTANTIATION,
+  ERR_NOT_IMPLEMENTED,
+  ERR_MULTIPLE_OF_FOUR,
+} = Feature3D;
 
 /**
  * @typedef {object} Feature3DOptions
@@ -38,18 +46,6 @@ class Feature3DCollection {
 
     /** @type {boolean} */
     this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
-
-    /**
-     * @type {number}
-     * @protected
-     */
-    this._version = 0;
-
-    /**
-     * @type {number}
-     * @protected
-     */
-    this._nextFeatureId = 0;
 
     /**
      * @type {number}
@@ -146,11 +142,16 @@ class Feature3DCollection {
 
   /** @private */
   _allocateFeatureBuffer() {
-    const featureLayout = /** @type {typeof Feature3D.Layout} */ (
+    const layout = /** @type {typeof Feature3D.Layout} */ (
       this._getFeatureLayout()
     );
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(layout.__BYTE_LENGTH % 4 === 0, ERR_MULTIPLE_OF_FOUR);
+    //>>includeEnd('debug');
+
     const featureBufferByteLength =
-      this._featureCountMax * featureLayout.__BYTE_LENGTH;
+      this._featureCountMax * layout.__BYTE_LENGTH;
 
     this._featureBuffer = new ArrayBuffer(featureBufferByteLength);
     this._featureView = new DataView(this._featureBuffer);
@@ -175,7 +176,7 @@ class Feature3DCollection {
   /**
    * @param {Function} sortFn
    */
-  toSorted(sortFn) {
+  sort(sortFn) {
     throw new DeveloperError(ERR_NOT_IMPLEMENTED);
   }
 
@@ -185,15 +186,42 @@ class Feature3DCollection {
    * @template T extends Feature3D
    */
   static clone(collection, result) {
-    throw new DeveloperError(ERR_NOT_IMPLEMENTED);
+    //>>includeStart('debug', pragmas.debug);
+    assert(collection.featureCount <= result.featureCountMax, ERR_CAPACITY);
+    assert(collection.vertexCount <= result.vertexCountMax, ERR_CAPACITY);
+    //>>includeEnd('debug');
+
+    const layout = /** @type {typeof Feature3D.Layout} */ (
+      collection._getFeatureLayout()
+    );
+
+    this._copySubDataView(
+      collection._featureView,
+      result._featureView,
+      collection.featureCount * layout.__BYTE_LENGTH,
+    );
+
+    this._copySubArray(
+      collection._positionF64,
+      result._positionF64,
+      collection.vertexCount * 4,
+    );
+
+    result.show = collection.show;
+    result.debugShowBoundingVolume = collection.debugShowBoundingVolume;
+    result._featureCount = collection._featureCount;
+    result._positionCount = collection._positionCount;
+
+    result._dirtyOffset = 0;
+    result._dirtyCount = result.featureCount;
+
+    collection.boundingVolume.clone(result.boundingVolume);
+
+    return result;
   }
 
   /** Rebuilds collection bounding volume. */
   _updateBoundingVolume() {
-    // TODO: This approach works for all feature types today, but it might
-    // be more efficient to take a union of the per-feature bounding volumes
-    // on polyline and polygon types.
-
     // Exclude unused space in the position buffer.
     const vertices = new Float64Array(
       this._positionF64.buffer,
@@ -223,7 +251,7 @@ class Feature3DCollection {
       this._getFeatureClass()
     );
     result = FeatureClass.fromCollection(this, this._featureCount++, result);
-    result._setUint32(Feature3D.Layout.FEATURE_ID_U32, this._nextFeatureId++);
+    result._setUint32(Feature3D.Layout.FEATURE_ID_U32, this._featureCount - 1);
     result._dirty = true;
     result.show = options.show ?? true;
     result.setColor(options.color ?? Color.WHITE);
@@ -291,6 +319,35 @@ class Feature3DCollection {
   /** @type {number} */
   get vertexCountMax() {
     return this._positionCountMax;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // UTILS
+
+  /**
+   * @param {TypedArray} src
+   * @param {TypedArray} dst
+   * @param {number} count
+   * @ignore
+   */
+  static _copySubArray(src, dst, count) {
+    for (let i = 0; i < count; i++) {
+      dst[i] = src[i];
+    }
+  }
+
+  /**
+   * @param {DataView} src
+   * @param {DataView} dst
+   * @param {number} byteLength
+   * @ignore
+   */
+  static _copySubDataView(src, dst, byteLength) {
+    this._copySubArray(
+      new Uint32Array(src.buffer, src.byteOffset, src.byteLength / 4),
+      new Uint32Array(dst.buffer, dst.byteOffset, dst.byteLength / 4),
+      byteLength / 4,
+    );
   }
 }
 

@@ -104,8 +104,8 @@ class Polygon3D extends Feature3D {
   /////////////////////////////////////////////////////////////////////////////
   // GEOMETRY
 
-  /** @returns {number} */
-  getPositionCount() {
+  /** @type {number} */
+  get vertexCount() {
     return this._getUint32(Polygon3D.Layout.POSITION_COUNT_U32);
   }
 
@@ -152,8 +152,8 @@ class Polygon3D extends Feature3D {
     collection._makeDirtyBoundingVolume();
   }
 
-  /** @returns {number} */
-  getHoleCount() {
+  /** @type {number} */
+  get holeCount() {
     return this._getUint32(Polygon3D.Layout.HOLE_COUNT_U32);
   }
 
@@ -196,8 +196,8 @@ class Polygon3D extends Feature3D {
     collection._makeDirtyBoundingVolume();
   }
 
-  /** @returns {number} */
-  getTriangleCount() {
+  /** @type {number} */
+  get triangleCount() {
     return this._getUint32(Polygon3D.Layout.TRIANGLE_COUNT_U32);
   }
 

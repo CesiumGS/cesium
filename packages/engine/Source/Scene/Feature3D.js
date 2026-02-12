@@ -65,6 +65,7 @@ class Feature3D {
   static ERR_RESIZE =
     "Feature buffer range cannot be resized after initialization.";
   static ERR_CAPACITY = "Collection buffer capacity exceeded.";
+  static ERR_MULTIPLE_OF_FOUR = "Feature byte length must be a multiple of 4.";
 
   constructor() {}
 

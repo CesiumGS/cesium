@@ -6,10 +6,13 @@ import Feature3DCollection from "./Feature3DCollection.js";
 import Polygon3D from "./Polygon3D.js";
 import Frozen from "../Core/Frozen.js";
 import renderPolygons from "./renderPolygon3DCollection.js";
+import assert from "../Core/assert.js";
 
 /** @import Color from "../Core/Color.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "../Scene/FrameState.js" */
+
+const { ERR_CAPACITY } = Feature3D;
 
 /**
  * @typedef {object} Polygon3DOptions
@@ -157,6 +160,37 @@ class Polygon3DCollection extends Feature3DCollection {
     if (defined(options.triangles)) {
       result.setTriangles(options.triangles);
     }
+
+    return result;
+  }
+
+  /**
+   * @param {Polygon3DCollection} collection
+   * @param {Polygon3DCollection} result
+   * @returns {Polygon3DCollection}
+   */
+  static clone(collection, result) {
+    super.clone(collection, result);
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(collection.holeCount <= result.holeCountMax, ERR_CAPACITY);
+    assert(collection.triangleCount <= result.triangleCountMax, ERR_CAPACITY);
+    //>>includeEnd('debug');
+
+    this._copySubArray(
+      collection._holeIndexU32,
+      result._holeIndexU32,
+      collection.holeCount,
+    );
+
+    this._copySubArray(
+      collection._triangleIndexU32,
+      result._triangleIndexU32,
+      collection._triangleCount * 3,
+    );
+
+    result._holeCount = collection._holeCount;
+    result._triangleCount = collection._triangleCount;
 
     return result;
   }

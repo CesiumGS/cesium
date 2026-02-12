@@ -70,11 +70,11 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
     for (let i = 0, il = featureCount; i < il; i++) {
       Polygon3D.fromCollection(collection, i, polygon);
       vertexCountPerFeatureMax = Math.max(
-        polygon.getPositionCount(),
+        polygon.vertexCount,
         vertexCountPerFeatureMax,
       );
       triangleCountPerFeatureMax = Math.max(
-        polygon.getTriangleCount(),
+        polygon.triangleCount,
         triangleCountPerFeatureMax,
       );
     }
@@ -96,7 +96,7 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
       polygon.getPositions(cartesianArray);
       polygon.getColor(color);
 
-      for (let j = 0, jl = polygon.getTriangleCount(); j < jl; j++) {
+      for (let j = 0, jl = polygon.triangleCount; j < jl; j++) {
         indexArray[iOffset * 3] = polygonIndexArray[j * 3] + vOffset;
         indexArray[iOffset * 3 + 1] = polygonIndexArray[j * 3 + 1] + vOffset;
         indexArray[iOffset * 3 + 2] = polygonIndexArray[j * 3 + 2] + vOffset;
@@ -104,7 +104,7 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
         iOffset++;
       }
 
-      for (let j = 0, jl = polygon.getPositionCount(); j < jl; j++) {
+      for (let j = 0, jl = polygon.vertexCount; j < jl; j++) {
         Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
         EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
 

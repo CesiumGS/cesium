@@ -100,4 +100,56 @@ describe("Polyline3DCollection", () => {
 
     expect(collection.byteLength).toBe((28 + 24) * 128);
   });
+
+  it("clone", () => {
+    const polyline = new Polyline3D();
+
+    const src = new Polyline3DCollection({
+      maxFeatureCount: 2,
+      maxVertexCount: 6,
+    });
+
+    const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
+    const positions2 = new Float64Array([0, 1, 0, 0, 1, 1, 0, 1, 2]);
+    const positions3 = new Float64Array([0, 2, 0, 0, 2, 1, 0, 2, 2]);
+    const positionsScratch = new Float64Array(positions1.length);
+
+    src.add({ positions: positions1, color: Color.RED }, polyline);
+    src.add({ positions: positions2, color: Color.GREEN }, polyline);
+
+    const dst = new Polyline3DCollection({
+      maxFeatureCount: 3,
+      maxVertexCount: 9,
+    });
+
+    Polyline3DCollection.clone(src, dst);
+
+    expect(dst.featureCount).toBe(2);
+    expect(dst.featureCountMax).toBe(3);
+
+    dst.add({ positions: positions3, color: Color.BLUE }, polyline);
+
+    expect(dst.featureCount).toBe(3);
+
+    Polyline3D.fromCollection(dst, 0, polyline);
+    expect(polyline.getColor(color)).toEqualEpsilon(Color.RED, EPS);
+    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
+      positions1,
+      EPS,
+    );
+
+    Polyline3D.fromCollection(dst, 1, polyline);
+    expect(polyline.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
+    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
+      positions2,
+      EPS,
+    );
+
+    Polyline3D.fromCollection(dst, 2, polyline);
+    expect(polyline.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
+    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
+      positions3,
+      EPS,
+    );
+  });
 });
