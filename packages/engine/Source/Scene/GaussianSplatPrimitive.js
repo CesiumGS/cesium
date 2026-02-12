@@ -3,6 +3,13 @@ import Matrix4 from "../Core/Matrix4.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
+import {
+  cullSnapshotAttributes,
+  createSortPositionsForIndexes,
+  gatherSortCandidateIndexes,
+  getAggregateCullSettings,
+  remapSortedIndexes,
+} from "./GaussianSplatSortCulling.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import PixelFormat from "../Core/PixelFormat.js";
@@ -57,9 +64,17 @@ const SnapshotState = {
 };
 
 const DEFAULT_STABLE_FRAMES = 2;
-const DEFAULT_SORT_MIN_FRAME_INTERVAL = 3;
-const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.008726646259971648;
-const DEFAULT_SORT_MIN_POSITION_DELTA = 1.0;
+const DEFAULT_SORT_MIN_FRAME_INTERVAL = 4;
+const DEFAULT_SORT_MIN_FRAME_INTERVAL_MEDIUM = 8;
+const DEFAULT_SORT_MIN_FRAME_INTERVAL_LARGE = 14;
+const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.017453292519943295;
+const DEFAULT_SORT_MIN_ANGLE_RADIANS_MEDIUM = 0.02617993877991494;
+const DEFAULT_SORT_MIN_ANGLE_RADIANS_LARGE = 0.04363323129985824;
+const DEFAULT_SORT_MIN_POSITION_DELTA = 1.5;
+const DEFAULT_SORT_MIN_POSITION_DELTA_MEDIUM = 3.0;
+const DEFAULT_SORT_MIN_POSITION_DELTA_LARGE = 6.0;
+const DEFAULT_SORT_ADAPTIVE_MEDIUM_SPLATS = 400000;
+const DEFAULT_SORT_ADAPTIVE_LARGE_SPLATS = 1000000;
 
 function shouldStartSteadySort(primitive, frameState) {
   const tileset = primitive._tileset;
@@ -67,9 +82,29 @@ function shouldStartSteadySort(primitive, frameState) {
     return true;
   }
 
+  const adaptiveEnabled = tileset._gaussianSplatSortAdaptiveGating !== false;
+  const splatCount = primitive._numSplats;
+  const mediumCount = defined(tileset._gaussianSplatSortAdaptiveMediumSplats)
+    ? Math.max(Math.floor(tileset._gaussianSplatSortAdaptiveMediumSplats), 0)
+    : DEFAULT_SORT_ADAPTIVE_MEDIUM_SPLATS;
+  const largeCount = defined(tileset._gaussianSplatSortAdaptiveLargeSplats)
+    ? Math.max(Math.floor(tileset._gaussianSplatSortAdaptiveLargeSplats), 0)
+    : DEFAULT_SORT_ADAPTIVE_LARGE_SPLATS;
+  let defaultMinFrameInterval = DEFAULT_SORT_MIN_FRAME_INTERVAL;
+  let defaultMinPositionDelta = DEFAULT_SORT_MIN_POSITION_DELTA;
+  let defaultMinAngleRadians = DEFAULT_SORT_MIN_ANGLE_RADIANS;
+  if (adaptiveEnabled && splatCount >= largeCount) {
+    defaultMinFrameInterval = DEFAULT_SORT_MIN_FRAME_INTERVAL_LARGE;
+    defaultMinPositionDelta = DEFAULT_SORT_MIN_POSITION_DELTA_LARGE;
+    defaultMinAngleRadians = DEFAULT_SORT_MIN_ANGLE_RADIANS_LARGE;
+  } else if (adaptiveEnabled && splatCount >= mediumCount) {
+    defaultMinFrameInterval = DEFAULT_SORT_MIN_FRAME_INTERVAL_MEDIUM;
+    defaultMinPositionDelta = DEFAULT_SORT_MIN_POSITION_DELTA_MEDIUM;
+    defaultMinAngleRadians = DEFAULT_SORT_MIN_ANGLE_RADIANS_MEDIUM;
+  }
   const minFrameInterval = defined(tileset._gaussianSplatSortMinFrameInterval)
     ? Math.max(Math.floor(tileset._gaussianSplatSortMinFrameInterval), 0)
-    : DEFAULT_SORT_MIN_FRAME_INTERVAL;
+    : defaultMinFrameInterval;
   const framesSinceLastSort =
     primitive._lastSteadySortFrameNumber >= 0
       ? frameState.frameNumber - primitive._lastSteadySortFrameNumber
@@ -92,7 +127,7 @@ function shouldStartSteadySort(primitive, frameState) {
 
   const minPositionDelta = defined(tileset._gaussianSplatSortMinPositionDelta)
     ? Math.max(tileset._gaussianSplatSortMinPositionDelta, 0.0)
-    : DEFAULT_SORT_MIN_POSITION_DELTA;
+    : defaultMinPositionDelta;
   const positionDelta = Cartesian3.distance(
     camera.positionWC,
     primitive._lastSteadySortCameraPosition,
@@ -103,7 +138,7 @@ function shouldStartSteadySort(primitive, frameState) {
 
   const minAngleRadians = defined(tileset._gaussianSplatSortMinAngleRadians)
     ? Math.max(tileset._gaussianSplatSortMinAngleRadians, 0.0)
-    : DEFAULT_SORT_MIN_ANGLE_RADIANS;
+    : defaultMinAngleRadians;
   const angleDelta = Cartesian3.angleBetween(
     camera.directionWC,
     primitive._lastSteadySortCameraDirection,
@@ -1271,16 +1306,43 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           : 0;
       const shData = aggregateShData();
 
+      const cullSettings = getAggregateCullSettings(
+        tileset,
+        frameState,
+        hasRootTransform,
+        this._rootTransform,
+      );
+      let cullModelView;
+      if (cullSettings.enabled && cullSettings.minPixelRadius > 0.0) {
+        cullModelView = Matrix4.multiply(
+          frameState.camera.viewMatrix,
+          this._rootTransform,
+          scratchMatrix4B,
+        );
+      }
+
+      const culled = cullSnapshotAttributes(
+        positions,
+        scales,
+        rotations,
+        colors,
+        shData,
+        totalElements,
+        shCoefficientCount,
+        cullSettings,
+        cullModelView,
+      );
+
       this._pendingSnapshot = {
         generation: this._splatDataGeneration,
-        positions: positions,
-        rotations: rotations,
-        scales: scales,
-        colors: colors,
-        shData: shData,
+        positions: culled.positions,
+        rotations: culled.rotations,
+        scales: culled.scales,
+        colors: culled.colors,
+        shData: culled.shData,
         sphericalHarmonicsDegree: sphericalHarmonicsDegree,
         shCoefficientCount: shCoefficientCount,
-        numSplats: totalElements,
+        numSplats: culled.numSplats,
         indexes: undefined,
         gaussianSplatTexture: undefined,
         sphericalHarmonicsTexture: undefined,
@@ -1327,19 +1389,43 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         pending.state === SnapshotState.TEXTURE_READY &&
         !defined(this._pendingSortPromise)
       ) {
+        const activeIndexes = gatherSortCandidateIndexes(
+          pending.positions,
+          scratchMatrix4A,
+          pending.numSplats,
+          tileset,
+          frameState,
+        );
+        const sortCount = defined(activeIndexes)
+          ? activeIndexes.length
+          : pending.numSplats;
+        const sortPositions = createSortPositionsForIndexes(
+          pending.positions,
+          activeIndexes,
+        );
         const requestId = ++this._sortRequestId;
         const dataGeneration = this._splatDataGeneration;
         this._pendingSort = {
           requestId: requestId,
           dataGeneration: dataGeneration,
-          expectedCount: pending.numSplats,
+          expectedCount: sortCount,
+          activeIndexes: activeIndexes,
           snapshot: pending,
         };
+        if (sortCount === 0) {
+          pending.indexes = new Uint32Array(0);
+          pending.state = SnapshotState.READY;
+          this._pendingSort = undefined;
+          commitSnapshot(this, pending, frameState);
+          this._pendingSnapshot = undefined;
+          GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
+          return;
+        }
         const sortPromise = GaussianSplatSorter.radixSortIndexes({
           primitive: {
-            positions: new Float32Array(pending.positions),
+            positions: sortPositions,
             modelView: Float32Array.from(scratchMatrix4A),
-            count: pending.numSplats,
+            count: sortCount,
           },
           sortType: "Index",
         });
@@ -1380,7 +1466,10 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
             }
             return;
           }
-          pending.indexes = sortedData;
+          pending.indexes = remapSortedIndexes(
+            sortedData,
+            pendingSort.activeIndexes,
+          );
           pending.state = SnapshotState.READY;
           this._pendingSortPromise = undefined;
           this._pendingSort = undefined;
@@ -1425,19 +1514,39 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       if (!shouldStartSteadySort(this, frameState)) {
         return;
       }
+      const activeIndexes = gatherSortCandidateIndexes(
+        this._positions,
+        scratchMatrix4A,
+        this._numSplats,
+        tileset,
+        frameState,
+      );
+      const sortCount = defined(activeIndexes)
+        ? activeIndexes.length
+        : this._numSplats;
+      const sortPositions = createSortPositionsForIndexes(
+        this._positions,
+        activeIndexes,
+      );
       const requestId = ++this._sortRequestId;
       const dataGeneration = this._splatDataGeneration;
-      const expectedCount = this._numSplats;
+      const expectedCount = sortCount;
       this._activeSort = {
         requestId: requestId,
         dataGeneration: dataGeneration,
         expectedCount: expectedCount,
+        activeIndexes: activeIndexes,
       };
+      if (sortCount === 0) {
+        this._indexes = new Uint32Array(0);
+        this._sorterState = GaussianSplatSortingState.SORTED;
+        return;
+      }
       const rawPromise = GaussianSplatSorter.radixSortIndexes({
         primitive: {
-          positions: new Float32Array(this._positions),
+          positions: sortPositions,
           modelView: Float32Array.from(scratchMatrix4A),
-          count: this._numSplats,
+          count: sortCount,
         },
         sortType: "Index",
       });
@@ -1467,7 +1576,10 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           }
           return;
         }
-        this._indexes = sortedData;
+        this._indexes = remapSortedIndexes(
+          sortedData,
+          activeSort?.activeIndexes,
+        );
         this._sorterState = GaussianSplatSortingState.SORTED;
       })
       .catch((err) => {
@@ -1479,19 +1591,39 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       });
   } else if (this._sorterState === GaussianSplatSortingState.WAITING) {
     if (!defined(this._sorterPromise)) {
+      const activeIndexes = gatherSortCandidateIndexes(
+        this._positions,
+        scratchMatrix4A,
+        this._numSplats,
+        tileset,
+        frameState,
+      );
+      const sortCount = defined(activeIndexes)
+        ? activeIndexes.length
+        : this._numSplats;
+      const sortPositions = createSortPositionsForIndexes(
+        this._positions,
+        activeIndexes,
+      );
       const requestId = ++this._sortRequestId;
       const dataGeneration = this._splatDataGeneration;
-      const expectedCount = this._numSplats;
+      const expectedCount = sortCount;
       this._activeSort = {
         requestId: requestId,
         dataGeneration: dataGeneration,
         expectedCount: expectedCount,
+        activeIndexes: activeIndexes,
       };
+      if (sortCount === 0) {
+        this._indexes = new Uint32Array(0);
+        this._sorterState = GaussianSplatSortingState.SORTED;
+        return;
+      }
       const rawPromise = GaussianSplatSorter.radixSortIndexes({
         primitive: {
-          positions: new Float32Array(this._positions),
+          positions: sortPositions,
           modelView: Float32Array.from(scratchMatrix4A),
-          count: this._numSplats,
+          count: sortCount,
         },
         sortType: "Index",
       });
@@ -1520,7 +1652,10 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           }
           return;
         }
-        this._indexes = sortedData;
+        this._indexes = remapSortedIndexes(
+          sortedData,
+          activeSort?.activeIndexes,
+        );
         this._sorterState = GaussianSplatSortingState.SORTED;
       })
       .catch((err) => {
