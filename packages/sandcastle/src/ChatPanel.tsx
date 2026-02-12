@@ -34,11 +34,9 @@ import { detectOscillation } from "./AI/ErrorContext";
 import {
   settings as settingsIcon,
   cesiumLogo,
-  history as historyIcon,
   key as keyIcon,
   add as addIcon,
 } from "./icons";
-import { HistorySidebar } from "./components/history/HistorySidebar";
 import cesiumChatLogo from "./assets/cesium-chat-logo.png";
 import {
   initializeToolRegistry,
@@ -46,7 +44,6 @@ import {
   toolRegistry,
 } from "./AI/tools/toolRegistry";
 import "./ChatPanel.css";
-import { useHistory } from "./contexts/useHistory";
 import { useModel } from "./contexts/useModel";
 
 // Type for content blocks in conversation history
@@ -107,9 +104,6 @@ export function ChatPanel({
   const { settings, updateSettings } = useContext(SettingsContext);
   const autoIterationConfig: AutoIterationConfig = settings.autoIteration;
 
-  // Get history context
-  const history = useHistory();
-
   // Get model context
   const { models, currentModel, setCurrentModel, refreshModels } = useModel();
   const selectedModel =
@@ -121,7 +115,6 @@ export function ChatPanel({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
-  const [historySidebarOpen, setHistorySidebarOpen] = useState(false);
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(ApiKeyManager.hasAnyCredentials());
 
@@ -295,24 +288,6 @@ export function ChatPanel({
     };
   }, []);
 
-  // Load messages from history context when conversation changes
-  useEffect(() => {
-    // Only load messages if we're switching to a different conversation
-    // or if we have no messages currently loaded
-    if (messages.length === 0 || !history.currentConversationId) {
-      const historicMessages = history.getCurrentMessages();
-      if (historicMessages.length > 0) {
-        setMessages(historicMessages);
-      }
-    }
-  }, [history.currentConversationId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Save current conversation to history whenever messages change
-  useEffect(() => {
-    if (messages.length > 0) {
-      history.saveCurrentConversation(messages);
-    }
-  }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
   // PERFORMANCE OPTIMIZATION #6: Auto-hide completion messages with proper cleanup
   useEffect(() => {
     if (iterationStatus.completionMessage) {
@@ -1888,14 +1863,6 @@ export function ChatPanel({
   }, []);
 
   const handleNewChat = useCallback(() => {
-    // Save current conversation before creating new one
-    if (messages.length > 0) {
-      history.saveCurrentConversation(messages);
-    }
-
-    // Create new conversation and switch to it
-    history.createConversation();
-
     // Clear all messages to start a new chat
     setMessages([]);
     setInput("");
@@ -1920,7 +1887,7 @@ export function ChatPanel({
     lastErrorMessageRef.current = null;
     // Reset error detection timing gate for new chat
     lastErrorDetectionRunRef.current = 0;
-  }, [messages, history]);
+  }, []);
 
   const handleSubmitGuidance = useCallback(
     async (guidance: string) => {
@@ -2174,15 +2141,6 @@ export function ChatPanel({
               </Button>
             </Tooltip>
 
-            <Tooltip content="Chat History" placement="bottom">
-              <Button
-                variant="ghost"
-                onClick={() => setHistorySidebarOpen(true)}
-                aria-label="Open chat history"
-              >
-                <Icon href={historyIcon} />
-              </Button>
-            </Tooltip>
             <Tooltip content="API Key Settings" placement="bottom">
               <Button
                 variant="ghost"
@@ -2409,12 +2367,6 @@ export function ChatPanel({
         open={showApiKeyDialog}
         onClose={handleApiKeyDialogClose}
         onSuccess={handleApiKeySuccess}
-      />
-
-      {/* History Sidebar */}
-      <HistorySidebar
-        isOpen={historySidebarOpen}
-        onClose={() => setHistorySidebarOpen(false)}
       />
 
       {/* Note: Diff preview is now rendered inline in the chat message via ToolCallDisplay */}

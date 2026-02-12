@@ -64,7 +64,6 @@ import {
 } from "./ConsoleMirror.tsx";
 import { SettingsModal } from "./SettingsModal.tsx";
 import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
-import { HistoryProvider } from "./contexts/HistoryContext";
 import { MetadataPopover } from "./MetadataPopover.tsx";
 import { SharePopover } from "./SharePopover.tsx";
 import { SandcastlePopover } from "./SandcastlePopover.tsx";
@@ -744,248 +743,246 @@ function App() {
   };
 
   return (
-    <HistoryProvider>
-      <Root
-        id="root"
-        className="sandcastle-root"
-        density="dense"
-        colorScheme={settings.theme}
-        synchronizeColorScheme
-      >
-        <header className="header">
-          <a className="logo" href={getBaseUrl()}>
-            <img
-              src={
-                settings.theme === "dark"
-                  ? "./images/Cesium_Logo_overlay.png"
-                  : "./images/Cesium_Logo_Color_Overlay.png"
-              }
-              style={{ width: "118px" }}
-            />
-          </a>
-          <MetadataPopover title={title} description={description} />
-          <SharePopover code={codeState.code} html={codeState.html} />
-          <Divider aria-orientation="vertical" />
-          <Button onClick={() => openStandalone()}>
-            Standalone <Icon href={windowPopout} />
-          </Button>
-          <div className="flex-spacer"></div>
-          <SandcastlePopover
-            disclosure={
-              <Text variant="body-md" className="metadata">
-                Feedback & Issues
-              </Text>
+    <Root
+      id="root"
+      className="sandcastle-root"
+      density="dense"
+      colorScheme={settings.theme}
+      synchronizeColorScheme
+    >
+      <header className="header">
+        <a className="logo" href={getBaseUrl()}>
+          <img
+            src={
+              settings.theme === "dark"
+                ? "./images/Cesium_Logo_overlay.png"
+                : "./images/Cesium_Logo_Color_Overlay.png"
             }
-            autoFocus={false}
-          >
-            <p>
-              Help us continue to improve Sandcastle. Report a problem or share
-              your thoughts in{" "}
-              <Anchor
-                href="https://github.com/CesiumGS/cesium/issues/12857"
-                target="_blank"
-              >
-                this issue
-              </Anchor>
-            </p>
-          </SandcastlePopover>
-          <div className="version">
-            {versionString && <pre>{versionString}</pre>}
-          </div>
-        </header>
-        <div className="application-bar">
-          <AppBarButton
-            onClick={() => setLeftPanel("gallery")}
-            active={leftPanel === "gallery"}
-            label="Gallery"
-          >
-            <Icon href={image} size="large" />
-          </AppBarButton>
-          <AppBarButton
-            onClick={() => setLeftPanel("editor")}
-            active={leftPanel === "editor"}
-            label="Editor"
-          >
-            <Icon href={script} size="large" />
-          </AppBarButton>
-          <Divider />
-          <AppBarButton
-            label="Documentation"
-            onClick={openDocsPage}
-            onAuxClick={openDocsPage}
-          >
-            <Icon href={documentation} size="large" />
-          </AppBarButton>
-          <AppBarButton
-            label="Cesium Copilot"
-            onClick={() => setChatPanelOpen(!chatPanelOpen)}
-            active={chatPanelOpen}
-          >
-            <Icon href={aiSparkle} size="large" />
-          </AppBarButton>
-          <div className="flex-spacer"></div>
-          <Divider />
-          <AppBarButton
-            onClick={() =>
-              updateSettings({
-                theme: settings.theme === "dark" ? "light" : "dark",
-              })
-            }
-            label="Toggle theme"
-          >
-            <Icon href={settings.theme === "dark" ? moon : sun} size="large" />
-          </AppBarButton>
-          <AppBarButton
-            label="Settings"
-            onClick={() => {
-              setSettingsOpen(true);
-            }}
-          >
-            <Icon href={settingsIcon} size="large" />
-          </AppBarButton>
-          <AppBarButton
-            onClick={() => {
-              resetSandcastle();
-              setLeftPanel("editor");
-            }}
-            label="New Sandcastle"
-          >
-            <Icon href={add} size="large" />
-          </AppBarButton>
-          <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
-        </div>
-        <Allotment defaultSizes={[40, 60]} className="content">
-          <Allotment.Pane minSize={0} maxSize={800} className="left-panel">
-            {leftPanel === "editor" && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  height: "100%",
-                }}
-              >
-                <DiffReviewPanel
-                  diffs={inlineChanges.map((change) => ({
-                    id: change.id,
-                    diff: change.diff,
-                    language: change.language,
-                    originalCode: change.diff.search,
-                    modifiedCode: change.diff.replace,
-                    messageId: "", // Not needed for this use case
-                  }))}
-                  onAccept={(diffId) => {
-                    editorRef.current?.acceptInlineChange(diffId);
-                    setInlineChanges((prev) =>
-                      prev.filter((c) => c.id !== diffId),
-                    );
-                  }}
-                  onReject={(diffId) => {
-                    editorRef.current?.rejectInlineChange(diffId);
-                    setInlineChanges((prev) =>
-                      prev.filter((c) => c.id !== diffId),
-                    );
-                  }}
-                  onClose={() => {
-                    editorRef.current?.clearInlineChanges();
-                    setInlineChanges([]);
-                  }}
-                />
-                <SandcastleEditor
-                  ref={editorRef}
-                  darkTheme={settings.theme === "dark"}
-                  onJsChange={(value: string = "") =>
-                    dispatch({ type: "setCode", code: value })
-                  }
-                  onHtmlChange={(value: string = "") =>
-                    dispatch({ type: "setHtml", html: value })
-                  }
-                  onRun={() => runSandcastle()}
-                  js={
-                    !initialized || isLoadPending
-                      ? "// Loading..."
-                      : codeState.code
-                  }
-                  html={
-                    !initialized || isLoadPending
-                      ? "<!-- Loading... -->"
-                      : codeState.html
-                  }
-                  setJs={(newCode) =>
-                    dispatch({ type: "setCode", code: newCode })
-                  }
-                  readOnly={!initialized}
-                  onQueueInlineChange={(changes) => setInlineChanges(changes)}
-                />
-              </div>
-            )}
-            <StoreContext value={galleryItemStore}>
-              <Gallery
-                hidden={leftPanel !== "gallery"}
-                onRunCode={onRunCode}
-                onOpenCode={onOpenCode}
-              />
-            </StoreContext>
-          </Allotment.Pane>
-          <Allotment.Pane className="right-panel">
-            <RightSideAllotment
-              ref={rightSideRef}
-              consoleCollapsedHeight={consoleCollapsedHeight}
-              consoleExpanded={consoleExpanded}
-              setConsoleExpanded={setConsoleExpanded}
+            style={{ width: "118px" }}
+          />
+        </a>
+        <MetadataPopover title={title} description={description} />
+        <SharePopover code={codeState.code} html={codeState.html} />
+        <Divider aria-orientation="vertical" />
+        <Button onClick={() => openStandalone()}>
+          Standalone <Icon href={windowPopout} />
+        </Button>
+        <div className="flex-spacer"></div>
+        <SandcastlePopover
+          disclosure={
+            <Text variant="body-md" className="metadata">
+              Feedback & Issues
+            </Text>
+          }
+          autoFocus={false}
+        >
+          <p>
+            Help us continue to improve Sandcastle. Report a problem or share
+            your thoughts in{" "}
+            <Anchor
+              href="https://github.com/CesiumGS/cesium/issues/12857"
+              target="_blank"
             >
-              <Allotment.Pane minSize={200}>
-                {!initialized || isLoadPending ? (
-                  <BucketPlaceholder />
-                ) : (
-                  <Bucket
-                    code={codeState.committedCode}
-                    html={codeState.committedHtml}
-                    runNumber={codeState.runNumber}
-                    highlightLine={(lineNumber) => highlightLine(lineNumber)}
-                    appendConsole={appendConsole}
-                    resetConsole={resetConsole}
-                  />
-                )}
-              </Allotment.Pane>
-              <Allotment.Pane
-                preferredSize={consoleCollapsedHeight}
-                minSize={consoleCollapsedHeight}
-              >
-                <ConsoleMirror
-                  logs={consoleMessages}
-                  expanded={consoleExpanded}
-                  toggleExpanded={() => rightSideRef.current?.toggleExpanded()}
+              this issue
+            </Anchor>
+          </p>
+        </SandcastlePopover>
+        <div className="version">
+          {versionString && <pre>{versionString}</pre>}
+        </div>
+      </header>
+      <div className="application-bar">
+        <AppBarButton
+          onClick={() => setLeftPanel("gallery")}
+          active={leftPanel === "gallery"}
+          label="Gallery"
+        >
+          <Icon href={image} size="large" />
+        </AppBarButton>
+        <AppBarButton
+          onClick={() => setLeftPanel("editor")}
+          active={leftPanel === "editor"}
+          label="Editor"
+        >
+          <Icon href={script} size="large" />
+        </AppBarButton>
+        <Divider />
+        <AppBarButton
+          label="Documentation"
+          onClick={openDocsPage}
+          onAuxClick={openDocsPage}
+        >
+          <Icon href={documentation} size="large" />
+        </AppBarButton>
+        <AppBarButton
+          label="Cesium Copilot"
+          onClick={() => setChatPanelOpen(!chatPanelOpen)}
+          active={chatPanelOpen}
+        >
+          <Icon href={aiSparkle} size="large" />
+        </AppBarButton>
+        <div className="flex-spacer"></div>
+        <Divider />
+        <AppBarButton
+          onClick={() =>
+            updateSettings({
+              theme: settings.theme === "dark" ? "light" : "dark",
+            })
+          }
+          label="Toggle theme"
+        >
+          <Icon href={settings.theme === "dark" ? moon : sun} size="large" />
+        </AppBarButton>
+        <AppBarButton
+          label="Settings"
+          onClick={() => {
+            setSettingsOpen(true);
+          }}
+        >
+          <Icon href={settingsIcon} size="large" />
+        </AppBarButton>
+        <AppBarButton
+          onClick={() => {
+            resetSandcastle();
+            setLeftPanel("editor");
+          }}
+          label="New Sandcastle"
+        >
+          <Icon href={add} size="large" />
+        </AppBarButton>
+        <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
+      </div>
+      <Allotment defaultSizes={[40, 60]} className="content">
+        <Allotment.Pane minSize={0} maxSize={800} className="left-panel">
+          {leftPanel === "editor" && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+              }}
+            >
+              <DiffReviewPanel
+                diffs={inlineChanges.map((change) => ({
+                  id: change.id,
+                  diff: change.diff,
+                  language: change.language,
+                  originalCode: change.diff.search,
+                  modifiedCode: change.diff.replace,
+                  messageId: "", // Not needed for this use case
+                }))}
+                onAccept={(diffId) => {
+                  editorRef.current?.acceptInlineChange(diffId);
+                  setInlineChanges((prev) =>
+                    prev.filter((c) => c.id !== diffId),
+                  );
+                }}
+                onReject={(diffId) => {
+                  editorRef.current?.rejectInlineChange(diffId);
+                  setInlineChanges((prev) =>
+                    prev.filter((c) => c.id !== diffId),
+                  );
+                }}
+                onClose={() => {
+                  editorRef.current?.clearInlineChanges();
+                  setInlineChanges([]);
+                }}
+              />
+              <SandcastleEditor
+                ref={editorRef}
+                darkTheme={settings.theme === "dark"}
+                onJsChange={(value: string = "") =>
+                  dispatch({ type: "setCode", code: value })
+                }
+                onHtmlChange={(value: string = "") =>
+                  dispatch({ type: "setHtml", html: value })
+                }
+                onRun={() => runSandcastle()}
+                js={
+                  !initialized || isLoadPending
+                    ? "// Loading..."
+                    : codeState.code
+                }
+                html={
+                  !initialized || isLoadPending
+                    ? "<!-- Loading... -->"
+                    : codeState.html
+                }
+                setJs={(newCode) =>
+                  dispatch({ type: "setCode", code: newCode })
+                }
+                readOnly={!initialized}
+                onQueueInlineChange={(changes) => setInlineChanges(changes)}
+              />
+            </div>
+          )}
+          <StoreContext value={galleryItemStore}>
+            <Gallery
+              hidden={leftPanel !== "gallery"}
+              onRunCode={onRunCode}
+              onOpenCode={onOpenCode}
+            />
+          </StoreContext>
+        </Allotment.Pane>
+        <Allotment.Pane className="right-panel">
+          <RightSideAllotment
+            ref={rightSideRef}
+            consoleCollapsedHeight={consoleCollapsedHeight}
+            consoleExpanded={consoleExpanded}
+            setConsoleExpanded={setConsoleExpanded}
+          >
+            <Allotment.Pane minSize={200}>
+              {!initialized || isLoadPending ? (
+                <BucketPlaceholder />
+              ) : (
+                <Bucket
+                  code={codeState.committedCode}
+                  html={codeState.committedHtml}
+                  runNumber={codeState.runNumber}
+                  highlightLine={(lineNumber) => highlightLine(lineNumber)}
+                  appendConsole={appendConsole}
                   resetConsole={resetConsole}
                 />
-              </Allotment.Pane>
-            </RightSideAllotment>
-          </Allotment.Pane>
-          {chatPanelOpen && (
+              )}
+            </Allotment.Pane>
             <Allotment.Pane
-              minSize={250}
-              preferredSize={450}
-              className="chat-panel-pane"
+              preferredSize={consoleCollapsedHeight}
+              minSize={consoleCollapsedHeight}
             >
-              <ChatPanel
-                isOpen={chatPanelOpen}
-                onClose={() => setChatPanelOpen(false)}
-                codeContext={codeContext}
-                onApplyCode={handleApplyAiCode}
-                onApplyDiff={handleApplyAiDiff}
-                currentCode={codeContext}
-                onClearConsole={() => setConsoleMessages([])}
-                getCurrentConsoleErrors={() =>
-                  consoleMessages.map((msg) => ({
-                    type: msg.type,
-                    message: msg.message,
-                  }))
-                }
+              <ConsoleMirror
+                logs={consoleMessages}
+                expanded={consoleExpanded}
+                toggleExpanded={() => rightSideRef.current?.toggleExpanded()}
+                resetConsole={resetConsole}
               />
             </Allotment.Pane>
-          )}
-        </Allotment>
-      </Root>
-    </HistoryProvider>
+          </RightSideAllotment>
+        </Allotment.Pane>
+        {chatPanelOpen && (
+          <Allotment.Pane
+            minSize={250}
+            preferredSize={450}
+            className="chat-panel-pane"
+          >
+            <ChatPanel
+              isOpen={chatPanelOpen}
+              onClose={() => setChatPanelOpen(false)}
+              codeContext={codeContext}
+              onApplyCode={handleApplyAiCode}
+              onApplyDiff={handleApplyAiDiff}
+              currentCode={codeContext}
+              onClearConsole={() => setConsoleMessages([])}
+              getCurrentConsoleErrors={() =>
+                consoleMessages.map((msg) => ({
+                  type: msg.type,
+                  message: msg.message,
+                }))
+              }
+            />
+          </Allotment.Pane>
+        )}
+      </Allotment>
+    </Root>
   );
 }
 
