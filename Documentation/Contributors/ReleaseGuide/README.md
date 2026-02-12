@@ -18,12 +18,14 @@ The remainder of this guide exists to make that shared release ownership clear, 
 
 ## Release prep (the week before)
 
-1. **Update outdated npm dependencies**
+1. Ensure you've generated valid [end-to-end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`
+
+2. **Update outdated npm dependencies**
    - List outdated dependencies with [`npm outdated`](https://docs.npmjs.com/cli/v8/commands/npm-outdated):
      - Run `npm install`, then `npm outdated`
    - For each outdated dependency, if any:
      - Check against the [`dependencies` label](https://github.com/CesiumGS/cesium/issues?q=is%3Aissue+is%3Aopen+label%3Adependencies) for any known compatibility issues or specifics on pinned versions. Skip the dependency update if it is still incompatible.
-     - To increment a dependency, check out a new branch. Run `npm install <packagename>@latest` and verify the update.
+     - To increment a dependency, run `npm install <packagename>@latest` and verify the update. If code changes are required to migrate to the version, consider checking out a separate branch to make reviewing the updating easier.
      - If an update is incompatible, open a new issue tagged with the `dependencies` label
      - If an update can be resolved, commit the changes and open a PR for review
    - Update PRs should be merged before starting the release process
@@ -37,15 +39,13 @@ The remainder of this guide exists to make that shared release ownership clear, 
 
 <!-- markdownlint-disable MD029 -->
 
-2. **Check [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release).** Work with the team to ensure accountability for priority items—this can be done via the "CesiumJS" channel in Teams.
+3. **Check [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release).** Work with the team to ensure accountability for priority items—this can be done via the "CesiumJS" channel in Teams.
    - Ask the team if there are any items _not_ tagged with the `priority - next release` label that should be tagged
    - For any outstanding items, collaborate with the team to assign accountability
 
-3. **Check the [`remove in <version>` issues](https://github.com/CesiumGS/cesium/labels?q=remove)**
+4. **Check the [`remove in <version>` issues](https://github.com/CesiumGS/cesium/labels?q=remove)**
    - Search the codebase for any versioned deprecations and, if present, ensure a corresponding tagged issue exists for each
    - Open a PR to address each item scheduled for removal in the next release, if any
-
-4. Ensure you've generated valid [end-to-end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`
 
 5. Start thinking ahead about visuals or screenshots for the release blog post. If needed, start to prepare any supporting data, assets, or examples.
 
