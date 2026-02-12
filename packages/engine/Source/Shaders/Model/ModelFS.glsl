@@ -107,6 +107,16 @@ void main()
     // When picking metadata END
     //========================================================================
 
+    #if defined(HAS_LINE_PATTERN) && !defined(HAS_EDGE_VISIBILITY)
+    const float maskLength = 16.0;
+    float dashPosition = fract(v_lineCoord / maskLength);
+    float maskIndex = floor(dashPosition * maskLength);
+    float maskTest = floor(u_linePattern / pow(2.0, maskIndex));
+    if (mod(maskTest, 2.0) < 1.0) {
+        discard;
+    }
+    #endif
+
     #ifdef HAS_CLIPPING_PLANES
     modelClippingPlanesStage(color);
     #endif

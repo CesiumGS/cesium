@@ -8,6 +8,7 @@ import MaterialStageFS from "../../Shaders/Model/MaterialStageFS.js";
 import AlphaMode from "../AlphaMode.js";
 import ModelComponents from "../ModelComponents.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
 import LightingModel from "./LightingModel.js";
 import ModelUtility from "./ModelUtility.js";
 
@@ -182,6 +183,124 @@ MaterialPipelineStage.process = function (
     uniformMap.u_pointDiameter = function () {
       return material.pointDiameter * frameState.pixelRatio;
     };
+  }
+
+  // Configure and handle line style for LINES primitives (BENTLEY_materials_line_style extension).
+  if (defined(material.lineWidth)) {
+    shaderBuilder.addUniform("float", "u_lineWidth", ShaderDestination.VERTEX);
+    uniformMap.u_lineWidth = function () {
+      return material.lineWidth * frameState.pixelRatio;
+    };
+  }
+
+  if (defined(material.linePattern)) {
+    shaderBuilder.addDefine(
+      "HAS_LINE_PATTERN",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+    shaderBuilder.addUniform(
+      "float",
+      "u_linePattern",
+      ShaderDestination.FRAGMENT,
+    );
+    shaderBuilder.addVarying("float", "v_lineCoord");
+    uniformMap.u_linePattern = function () {
+      return material.linePattern;
+    };
+  }
+
+  // Use cumulative distance attribute (if present) for line patterning on line primitives.
+  const cumDistAttribute = ModelUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.CUMULATIVE_DISTANCE,
+  );
+  if (
+    defined(material.linePattern) &&
+    defined(cumDistAttribute) &&
+    (primitive.primitiveType === PrimitiveType.LINES ||
+      primitive.primitiveType === PrimitiveType.TRIANGLE_STRIP)
+  ) {
+    shaderBuilder.addDefine(
+      "HAS_LINE_CUMULATIVE_DISTANCE",
+      undefined,
+      ShaderDestination.VERTEX,
+    );
+
+    if (cumDistAttribute.normalized) {
+      shaderBuilder.addDefine(
+        "LINE_CUM_DIST_NORMALIZED",
+        undefined,
+        ShaderDestination.VERTEX,
+      );
+    }
+
+    shaderBuilder.addUniform(
+      "float",
+      "u_cumulativeDistanceMax",
+      ShaderDestination.VERTEX,
+    );
+    shaderBuilder.addUniform(
+      "float",
+      "u_pixelsPerWorld",
+      ShaderDestination.VERTEX,
+    );
+
+    const cumDistMax = defined(cumDistAttribute.max)
+      ? cumDistAttribute.max
+      : 1.0;
+    uniformMap.u_cumulativeDistanceMax = function () {
+      return cumDistMax;
+    };
+    uniformMap.u_pixelsPerWorld = function () {
+      // Match iTwin behavior: stable pattern scaling in orthographic views.
+      const frustum = frameState.camera.frustum;
+      let pixelsPerWorld = 1.0;
+      let worldWidth;
+      if (defined(frustum.right) && defined(frustum.left)) {
+        worldWidth = frustum.right - frustum.left;
+      } else if (defined(frustum.width)) {
+        worldWidth = frustum.width;
+      }
+      if (defined(worldWidth) && worldWidth > 0) {
+        pixelsPerWorld = frameState.context.drawingBufferWidth / worldWidth;
+      }
+
+      return pixelsPerWorld;
+    };
+
+    const cumDistVar =
+      ModelUtility.getAttributeInfo(cumDistAttribute).variableName;
+    shaderBuilder.addVertexLines(`
+#ifdef HAS_LINE_CUMULATIVE_DISTANCE
+void lineStyleStageVS(in ProcessedAttributes attributes)
+{
+    float cumDist = attributes.${cumDistVar};
+#ifdef LINE_CUM_DIST_NORMALIZED
+    cumDist *= u_cumulativeDistanceMax;
+#endif
+    const float textureCoordinateBase = 8192.0;
+    v_lineCoord = textureCoordinateBase + cumDist * u_pixelsPerWorld;
+}
+#endif
+`);
+  } else if (defined(material.linePattern)) {
+    shaderBuilder.addVertexLines(`
+#ifdef HAS_LINE_PATTERN
+void lineStyleStageVS(in ProcessedAttributes attributes)
+{
+    vec4 posClip = gl_Position;
+    vec2 screenPos = ((posClip.xy / posClip.w) * 0.5 + 0.5) * czm_viewport.zw;
+    
+    const float textureCoordinateBase = 8192.0;
+    if (czm_viewport.z > czm_viewport.w) {
+        v_lineCoord = textureCoordinateBase + screenPos.x;
+    } else {
+        v_lineCoord = textureCoordinateBase + screenPos.y;
+    }
+}
+#endif
+`);
   }
 
   shaderBuilder.addFragmentLines(MaterialStageFS);
