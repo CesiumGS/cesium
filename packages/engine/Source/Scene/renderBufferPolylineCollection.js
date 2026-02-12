@@ -2,7 +2,7 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Polyline3D from "./Polyline3D.js";
+import BufferPolyline from "./BufferPolyline.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import VertexArray from "../Renderer/VertexArray.js";
@@ -15,18 +15,18 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import Polyline3DCollectionVS from "../Shaders/Polyline3DCollectionVS.js";
-import Polyline3DCollectionFS from "../Shaders/Polyline3DCollectionFS.js";
+import BufferPolylineCollectionVS from "../Shaders/BufferPolylineCollectionVS.js";
+import BufferPolylineCollectionFS from "../Shaders/BufferPolylineCollectionFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 
 /** @import FrameState from "./FrameState.js"; */
-/** @import Polyline3DCollection from "./Polyline3DCollection.js"; */
+/** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 /** @import {TypedArray, TypedArrayConstructor} from "../Core/globalTypes.js"; */
 
 /** @type {{positionHighAndShow: number, positionLowAndColor: number}} */
-const Polyline3DAttributeLocations = {
+const BufferPolylineAttributeLocations = {
   /** @type {number} */
   positionHighAndShow: 0,
   /** @type {number} */
@@ -34,7 +34,7 @@ const Polyline3DAttributeLocations = {
 };
 
 /**
- * @typedef {object} Polyline3DRenderContext
+ * @typedef {object} BufferPolylineRenderContext
  * @property {VertexArray} [vertexArray]
  * @property {Record<number, TypedArray>} [attributeArrays]
  * @property {TypedArray} [indexArray]
@@ -46,18 +46,18 @@ const Polyline3DAttributeLocations = {
  */
 
 /**
- * @param {Polyline3DCollection} collection
+ * @param {BufferPolylineCollection} collection
  * @param {FrameState} frameState
- * @param {Polyline3DRenderContext} [renderContext]
- * @returns {Polyline3DRenderContext}
+ * @param {BufferPolylineRenderContext} [renderContext]
+ * @returns {BufferPolylineRenderContext}
  * @ignore
  */
-function renderPolyline3DCollection(collection, frameState, renderContext) {
+function renderBufferPolylineCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || {};
 
   if (!renderContext.firstDrawTimed) {
-    console.time("renderPolyline3DCollection::init");
+    console.time("renderBufferPolylineCollection::init");
   }
 
   if (
@@ -75,9 +75,9 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
     const indexArray = new Uint32Array((vertexCountMax - featureCount) * 2);
 
     renderContext.attributeArrays = {
-      [Polyline3DAttributeLocations.positionHighAndShow]:
+      [BufferPolylineAttributeLocations.positionHighAndShow]:
         positionHighAndShowArray,
-      [Polyline3DAttributeLocations.positionLowAndColor]:
+      [BufferPolylineAttributeLocations.positionLowAndColor]:
         positionLowAndColorArray,
     };
 
@@ -87,26 +87,26 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
   if (collection._dirtyCount > 0) {
     const { _dirtyOffset, _dirtyCount } = collection;
 
-    const polyline = new Polyline3D();
+    const polyline = new BufferPolyline();
     const color = new Color();
     const cartesian = new Cartesian3();
     const encodedCartesian = new EncodedCartesian3();
 
     const positionHighAndShowArray =
       renderContext.attributeArrays[
-        Polyline3DAttributeLocations.positionHighAndShow
+        BufferPolylineAttributeLocations.positionHighAndShow
       ];
 
     const positionLowAndColorArray =
       renderContext.attributeArrays[
-        Polyline3DAttributeLocations.positionLowAndColor
+        BufferPolylineAttributeLocations.positionLowAndColor
       ];
 
     const indexArray = renderContext.indexArray;
 
     let vertexCountPerFeatureMax = 0;
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
-      Polyline3D.fromCollection(collection, i, polyline);
+      BufferPolyline.fromCollection(collection, i, polyline);
       vertexCountPerFeatureMax = Math.max(
         polyline.getPositionCount(),
         vertexCountPerFeatureMax,
@@ -115,12 +115,14 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
     const cartesianArray = new Float64Array(vertexCountPerFeatureMax * 3);
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
-      Polyline3D.fromCollection(collection, i, polyline);
+      BufferPolyline.fromCollection(collection, i, polyline);
 
       polyline.getPositions(cartesianArray);
       polyline.getColor(color);
 
-      let vOffset = polyline._getUint32(Polyline3D.Layout.POSITION_OFFSET_U32);
+      let vOffset = polyline._getUint32(
+        BufferPolyline.Layout.POSITION_OFFSET_U32,
+      );
       let iOffset = (vOffset - i) * 2;
 
       for (let j = 0, jl = polyline.getPositionCount(); j < jl; j++) {
@@ -155,7 +157,7 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
 
     const positionHighBuffer = Buffer.createVertexBuffer({
       typedArray:
-        attributeArrays[Polyline3DAttributeLocations.positionHighAndShow],
+        attributeArrays[BufferPolylineAttributeLocations.positionHighAndShow],
       context,
       // @ts-expect-error TODO(donmccurdy): BufferUsage types incorrect.
       usage: BufferUsage.STATIC_DRAW,
@@ -163,7 +165,7 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
 
     const positionLowBuffer = Buffer.createVertexBuffer({
       typedArray:
-        attributeArrays[Polyline3DAttributeLocations.positionLowAndColor],
+        attributeArrays[BufferPolylineAttributeLocations.positionLowAndColor],
       context,
       // @ts-expect-error TODO(donmccurdy): BufferUsage types incorrect.
       usage: BufferUsage.STATIC_DRAW,
@@ -183,13 +185,13 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
       indexBuffer,
       attributes: [
         {
-          index: Polyline3DAttributeLocations.positionHighAndShow,
+          index: BufferPolylineAttributeLocations.positionHighAndShow,
           vertexBuffer: positionHighBuffer,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 4,
         },
         {
-          index: Polyline3DAttributeLocations.positionLowAndColor,
+          index: BufferPolylineAttributeLocations.positionLowAndColor,
           vertexBuffer: positionLowBuffer,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 4,
@@ -200,13 +202,13 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
     // TODO: Compute dirty vertex and index ranges.
     updateAttributeRange(
       renderContext,
-      Polyline3DAttributeLocations.positionHighAndShow,
+      BufferPolylineAttributeLocations.positionHighAndShow,
       0,
       collection.vertexCount,
     );
     updateAttributeRange(
       renderContext,
-      Polyline3DAttributeLocations.positionLowAndColor,
+      BufferPolylineAttributeLocations.positionLowAndColor,
       0,
       collection.vertexCount,
     );
@@ -232,18 +234,18 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.shaderProgram)) {
     const vertexShaderSource = new ShaderSource({
-      sources: [Polyline3DCollectionVS],
+      sources: [BufferPolylineCollectionVS],
     });
 
     const fragmentShaderSource = new ShaderSource({
-      sources: [Polyline3DCollectionFS],
+      sources: [BufferPolylineCollectionFS],
     });
 
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource,
       fragmentShaderSource,
-      attributeLocations: Polyline3DAttributeLocations,
+      attributeLocations: BufferPolylineAttributeLocations,
     });
   }
 
@@ -269,7 +271,7 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
   collection._dirtyOffset = 0;
 
   if (!renderContext.firstDrawTimed) {
-    console.timeEnd("renderPolyline3DCollection::init");
+    console.timeEnd("renderBufferPolylineCollection::init");
     renderContext.firstDrawTimed = true;
   }
 
@@ -277,7 +279,7 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
 }
 
 /**
- * @param {Polyline3DRenderContext} renderContext
+ * @param {BufferPolylineRenderContext} renderContext
  * @param {number} attributeIndex
  * @param {number} vertexOffset
  * @param {number} vertexCount
@@ -311,7 +313,7 @@ function updateAttributeRange(
 }
 
 /**
- * @param {Polyline3DRenderContext} renderContext
+ * @param {BufferPolylineRenderContext} renderContext
  * @param {number} indexOffset
  * @param {number} indexCount
  */
@@ -335,4 +337,4 @@ function updateIndexRange(renderContext, indexOffset, indexCount) {
   buffer.copyFromArrayView(rangeArrayView, byteOffset);
 }
 
-export default renderPolyline3DCollection;
+export default renderBufferPolylineCollection;

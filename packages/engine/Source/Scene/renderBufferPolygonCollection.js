@@ -2,7 +2,7 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Polygon3D from "./Polygon3D.js";
+import BufferPolygon from "./BufferPolygon.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import VertexArray from "../Renderer/VertexArray.js";
@@ -15,17 +15,17 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import Polygon3DCollectionVS from "../Shaders/Polygon3DCollectionVS.js";
-import Polygon3DCollectionFS from "../Shaders/Polygon3DCollectionFS.js";
+import BufferPolygonCollectionVS from "../Shaders/BufferPolygonCollectionVS.js";
+import BufferPolygonCollectionFS from "../Shaders/BufferPolygonCollectionFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 
 /** @import FrameState from "./FrameState.js"; */
-/** @import Polygon3DCollection from "./Polygon3DCollection.js"; */
+/** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
 /** @type {{positionHighAndShow: number, positionLowAndColor: number}} */
-const Polygon3DAttributeLocations = {
+const BufferPolygonAttributeLocations = {
   /** @type {number} */
   positionHighAndShow: 0,
   /** @type {number} */
@@ -33,7 +33,7 @@ const Polygon3DAttributeLocations = {
 };
 
 /**
- * @typedef {object} Polygon3DRenderContext
+ * @typedef {object} BufferPolygonRenderContext
  * @property {VertexArray} [vertexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
@@ -43,22 +43,22 @@ const Polygon3DAttributeLocations = {
  */
 
 /**
- * @param {Polygon3DCollection} collection
+ * @param {BufferPolygonCollection} collection
  * @param {FrameState} frameState
- * @param {Polygon3DRenderContext} [renderContext]
- * @returns {Polygon3DRenderContext}
+ * @param {BufferPolygonRenderContext} [renderContext]
+ * @returns {BufferPolygonRenderContext}
  * @ignore
  */
-function renderPolygon3DCollection(collection, frameState, renderContext) {
+function renderBufferPolygonCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || {};
 
   if (!renderContext.firstDrawTimed) {
-    console.time("renderPolygon3DCollection::init");
+    console.time("renderBufferPolygonCollection::init");
   }
 
   if (!defined(renderContext.vertexArray)) {
-    const polygon = new Polygon3D();
+    const polygon = new BufferPolygon();
     const color = new Color();
     const cartesian = new Cartesian3();
     const encodedCartesian = new EncodedCartesian3();
@@ -68,7 +68,7 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
     let vertexCountPerFeatureMax = 0;
     let triangleCountPerFeatureMax = 0;
     for (let i = 0, il = featureCount; i < il; i++) {
-      Polygon3D.fromCollection(collection, i, polygon);
+      BufferPolygon.fromCollection(collection, i, polygon);
       vertexCountPerFeatureMax = Math.max(
         polygon.vertexCount,
         vertexCountPerFeatureMax,
@@ -90,7 +90,7 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
     let iOffset = 0;
 
     for (let i = 0, il = featureCount; i < il; i++) {
-      Polygon3D.fromCollection(collection, i, polygon);
+      BufferPolygon.fromCollection(collection, i, polygon);
 
       polygon.getTriangles(polygonIndexArray);
       polygon.getPositions(cartesianArray);
@@ -151,13 +151,13 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
       indexBuffer,
       attributes: [
         {
-          index: Polygon3DAttributeLocations.positionHighAndShow,
+          index: BufferPolygonAttributeLocations.positionHighAndShow,
           vertexBuffer: positionHighBuffer,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 4,
         },
         {
-          index: Polygon3DAttributeLocations.positionLowAndColor,
+          index: BufferPolygonAttributeLocations.positionLowAndColor,
           vertexBuffer: positionLowBuffer,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 4,
@@ -181,18 +181,18 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.shaderProgram)) {
     const vertexShaderSource = new ShaderSource({
-      sources: [Polygon3DCollectionVS],
+      sources: [BufferPolygonCollectionVS],
     });
 
     const fragmentShaderSource = new ShaderSource({
-      sources: [Polygon3DCollectionFS],
+      sources: [BufferPolygonCollectionFS],
     });
 
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource,
       fragmentShaderSource,
-      attributeLocations: Polygon3DAttributeLocations,
+      attributeLocations: BufferPolygonAttributeLocations,
     });
   }
 
@@ -214,11 +214,11 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
   frameState.commandList.push(command);
 
   if (!renderContext.firstDrawTimed) {
-    console.timeEnd("renderPolygon3DCollection::init");
+    console.timeEnd("renderBufferPolygonCollection::init");
     renderContext.firstDrawTimed = true;
   }
 
   return renderContext;
 }
 
-export default renderPolygon3DCollection;
+export default renderBufferPolygonCollection;

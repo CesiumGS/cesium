@@ -1,21 +1,21 @@
 // @ts-check
 
 import defined from "../Core/defined.js";
-import Feature3D from "./Feature3D.js";
-import Feature3DCollection from "./Feature3DCollection.js";
-import Polygon3D from "./Polygon3D.js";
+import BufferFeature from "./BufferFeature.js";
+import BufferFeatureCollection from "./BufferFeatureCollection.js";
+import BufferPolygon from "./BufferPolygon.js";
 import Frozen from "../Core/Frozen.js";
-import renderPolygons from "./renderPolygon3DCollection.js";
+import renderPolygons from "./renderBufferPolygonCollection.js";
 import assert from "../Core/assert.js";
 
 /** @import Color from "../Core/Color.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
-/** @import FrameState from "../Scene/FrameState.js" */
+/** @import FrameState from "./FrameState.js" */
 
-const { ERR_CAPACITY } = Feature3D;
+const { ERR_CAPACITY } = BufferFeature;
 
 /**
- * @typedef {object} Polygon3DOptions
+ * @typedef {object} BufferPolygonOptions
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
  * @property {Float64Array} [positions]
@@ -25,16 +25,16 @@ const { ERR_CAPACITY } = Feature3D;
  */
 
 /**
- * @extends Feature3DCollection<Polygon3D>
+ * @extends BufferFeatureCollection<BufferPolygon>
  * @experimental
  */
-class Polygon3DCollection extends Feature3DCollection {
+class BufferPolygonCollection extends BufferFeatureCollection {
   /**
    * @param {object} options
-   * @param {number} [options.maxFeatureCount=Feature3D.DEFAULT_COUNT]
-   * @param {number} [options.maxVertexCount=Feature3D.DEFAULT_COUNT]
-   * @param {number} [options.maxHoleCount=Feature3D.DEFAULT_COUNT]
-   * @param {number} [options.maxTriangleCount=Feature3D.DEFAULT_COUNT]
+   * @param {number} [options.maxFeatureCount=BufferFeature.DEFAULT_COUNT]
+   * @param {number} [options.maxVertexCount=BufferFeature.DEFAULT_COUNT]
+   * @param {number} [options.maxHoleCount=BufferFeature.DEFAULT_COUNT]
+   * @param {number} [options.maxTriangleCount=BufferFeature.DEFAULT_COUNT]
    * @param {boolean} [options.show=true]
    * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]
    * @param {boolean} [options.debugShowBoundingVolume=false]
@@ -52,7 +52,7 @@ class Polygon3DCollection extends Feature3DCollection {
      * @type {number}
      * @protected
      */
-    this._holeCountMax = options.maxHoleCount ?? Feature3D.DEFAULT_COUNT;
+    this._holeCountMax = options.maxHoleCount ?? BufferFeature.DEFAULT_COUNT;
 
     /**
      * @type {ArrayBuffer}
@@ -77,7 +77,7 @@ class Polygon3DCollection extends Feature3DCollection {
      * @protected
      */
     this._triangleCountMax =
-      options.maxTriangleCount ?? Feature3D.DEFAULT_COUNT;
+      options.maxTriangleCount ?? BufferFeature.DEFAULT_COUNT;
 
     /**
      * @type {ArrayBuffer}
@@ -96,11 +96,11 @@ class Polygon3DCollection extends Feature3DCollection {
   }
 
   _getFeatureClass() {
-    return Polygon3D;
+    return BufferPolygon;
   }
 
   _getFeatureLayout() {
-    return Polygon3D.Layout;
+    return BufferPolygon.Layout;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -130,24 +130,24 @@ class Polygon3DCollection extends Feature3DCollection {
   // FEATURE LIFECYCLE
 
   /**
-   * @param {Polygon3DOptions} options
-   * @param {Polygon3D} result
+   * @param {BufferPolygonOptions} options
+   * @param {BufferPolygon} result
    * @override
    */
-  add(options, result = new Polygon3D()) {
+  add(options, result = new BufferPolygon()) {
     super.add(options, result);
 
     const vertexOffset = this._positionCount;
-    result._setUint32(Polygon3D.Layout.POSITION_OFFSET_U32, vertexOffset);
-    result._setUint32(Polygon3D.Layout.POSITION_COUNT_U32, 0);
+    result._setUint32(BufferPolygon.Layout.POSITION_OFFSET_U32, vertexOffset);
+    result._setUint32(BufferPolygon.Layout.POSITION_COUNT_U32, 0);
 
     const holeOffset = this._holeCount;
-    result._setUint32(Polygon3D.Layout.HOLE_OFFSET_U32, holeOffset);
-    result._setUint32(Polygon3D.Layout.HOLE_COUNT_U32, 0);
+    result._setUint32(BufferPolygon.Layout.HOLE_OFFSET_U32, holeOffset);
+    result._setUint32(BufferPolygon.Layout.HOLE_COUNT_U32, 0);
 
     const triangleOffset = this._triangleCount;
-    result._setUint32(Polygon3D.Layout.TRIANGLE_OFFSET_U32, triangleOffset);
-    result._setUint32(Polygon3D.Layout.TRIANGLE_COUNT_U32, 0);
+    result._setUint32(BufferPolygon.Layout.TRIANGLE_OFFSET_U32, triangleOffset);
+    result._setUint32(BufferPolygon.Layout.TRIANGLE_COUNT_U32, 0);
 
     if (defined(options.positions)) {
       result.setPositions(options.positions);
@@ -165,9 +165,9 @@ class Polygon3DCollection extends Feature3DCollection {
   }
 
   /**
-   * @param {Polygon3DCollection} collection
-   * @param {Polygon3DCollection} result
-   * @returns {Polygon3DCollection}
+   * @param {BufferPolygonCollection} collection
+   * @param {BufferPolygonCollection} result
+   * @returns {BufferPolygonCollection}
    */
   static clone(collection, result) {
     super.clone(collection, result);
@@ -237,4 +237,4 @@ class Polygon3DCollection extends Feature3DCollection {
     return this._triangleCountMax;
   }
 }
-export default Polygon3DCollection;
+export default BufferPolygonCollection;

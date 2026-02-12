@@ -2,15 +2,15 @@
 
 import Color from "../Core/Color.js";
 
-/** @import Feature3DCollection from './Feature3DCollection.js'; */
+/** @import BufferFeatureCollection from './BufferFeatureCollection.js'; */
 
 /**
  * @abstract
  * @experimental
  */
-class Feature3D {
+class BufferFeature {
   /**
-   * @type {Feature3DCollection<Feature3D>}
+   * @type {BufferFeatureCollection<BufferFeature>}
    * @protected
    */
   _collection = null;
@@ -75,15 +75,15 @@ class Feature3D {
   /**
    * @param {unknown} collection
    * @param {number} index
-   * @param {Feature3D} result
-   * @returns {Feature3D}
+   * @param {BufferFeature} result
+   * @returns {BufferFeature}
    */
   static fromCollection(collection, index, result) {
-    result._collection = /** @type {Feature3DCollection<Feature3D>} */ (
+    result._collection = /** @type {BufferFeatureCollection<BufferFeature>} */ (
       collection
     );
     result._index = index;
-    result._byteOffset = index * Feature3D.Layout.__BYTE_LENGTH;
+    result._byteOffset = index * BufferFeature.Layout.__BYTE_LENGTH;
     return result;
   }
 
@@ -100,16 +100,16 @@ class Feature3D {
 
   /** @type {number} */
   get featureId() {
-    return this._getUint32(Feature3D.Layout.FEATURE_ID_U32);
+    return this._getUint32(BufferFeature.Layout.FEATURE_ID_U32);
   }
 
   /** @type {boolean} */
   get show() {
-    return this._getUint8(Feature3D.Layout.SHOW_U8) === 1;
+    return this._getUint8(BufferFeature.Layout.SHOW_U8) === 1;
   }
 
   set show(show) {
-    this._setUint8(Feature3D.Layout.SHOW_U8, show ? 1 : 0);
+    this._setUint8(BufferFeature.Layout.SHOW_U8, show ? 1 : 0);
   }
 
   /**
@@ -117,13 +117,13 @@ class Feature3D {
    * @ignore
    */
   get _dirty() {
-    return this._getUint8(Feature3D.Layout.DIRTY_U8) === 1;
+    return this._getUint8(BufferFeature.Layout.DIRTY_U8) === 1;
   }
 
   set _dirty(dirty) {
     // Avoid `._setUint8()` here, which would infinitely loop `._dirty = true`.
     this._collection._featureView.setUint8(
-      this._byteOffset + Feature3D.Layout.DIRTY_U8,
+      this._byteOffset + BufferFeature.Layout.DIRTY_U8,
       dirty ? 1 : 0,
     );
 
@@ -140,14 +140,17 @@ class Feature3D {
    * @returns {Color}
    */
   getColor(result) {
-    return Color.fromRgba(this._getUint32(Feature3D.Layout.COLOR_U32), result);
+    return Color.fromRgba(
+      this._getUint32(BufferFeature.Layout.COLOR_U32),
+      result,
+    );
   }
 
   /**
    * @param {Color} color
    */
   setColor(color) {
-    this._setUint32(Feature3D.Layout.COLOR_U32, color.toRgba());
+    this._setUint32(BufferFeature.Layout.COLOR_U32, color.toRgba());
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -230,4 +233,4 @@ class Feature3D {
   }
 }
 
-export default Feature3D;
+export default BufferFeature;

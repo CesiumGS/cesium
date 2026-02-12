@@ -1,15 +1,15 @@
 // @ts-check
 
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Feature3D from "./Feature3D.js";
+import BufferFeature from "./BufferFeature.js";
 import assert from "../Core/assert.js";
 
-/** @import Polyline3DCollection from "../Scene/Polyline3DCollection.js"; */
+/** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 
-const { ERR_RESIZE, ERR_CAPACITY } = Feature3D;
+const { ERR_RESIZE, ERR_CAPACITY } = BufferFeature;
 
 /**
- * Polyline3D.
+ * BufferPolyline.
  *
  * Represented as two (2) or more positions.
  *
@@ -17,54 +17,54 @@ const { ERR_RESIZE, ERR_CAPACITY } = Feature3D;
  *
  * @experimental
  */
-class Polyline3D extends Feature3D {
+class BufferPolyline extends BufferFeature {
   static Layout = {
-    ...Feature3D.Layout,
+    ...BufferFeature.Layout,
 
     /**
      * Bounding sphere for polygon.
      * @type {number}
      */
-    BOUNDING_SPHERE: Feature3D.Layout.__BYTE_LENGTH,
+    BOUNDING_SPHERE: BufferFeature.Layout.__BYTE_LENGTH,
 
     /**
      * Width of polyline, 0–255.
      * @type {number}
      */
-    WIDTH_U8: Feature3D.Layout.__BYTE_LENGTH + BoundingSphere.packedLength,
+    WIDTH_U8: BufferFeature.Layout.__BYTE_LENGTH + BoundingSphere.packedLength,
 
     /**
      * Offset in position array to first vertex in polyline, number of VEC3 elements.
      * @type {number}
      */
     POSITION_OFFSET_U32:
-      Feature3D.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 4,
+      BufferFeature.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 4,
 
     /**
      * Count of positions (vertices) in this polyline, number of VEC3 elements.
      * @type {number}
      */
     POSITION_COUNT_U32:
-      Feature3D.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 8,
+      BufferFeature.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 8,
 
     /** @type {number} */
     __BYTE_LENGTH:
-      Feature3D.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 12,
+      BufferFeature.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 12,
   };
 
   /////////////////////////////////////////////////////////////////////////////
   // LIFECYCLE
 
   /**
-   * @param {Polyline3DCollection} collection
+   * @param {BufferPolylineCollection} collection
    * @param {number} index
-   * @param {Polyline3D} result
-   * @returns {Polyline3D}
+   * @param {BufferPolyline} result
+   * @returns {BufferPolyline}
    * @override
    */
-  static fromCollection(collection, index, result = new Polyline3D()) {
+  static fromCollection(collection, index, result = new BufferPolyline()) {
     super.fromCollection(collection, index, result);
-    result._byteOffset = index * Polyline3D.Layout.__BYTE_LENGTH;
+    result._byteOffset = index * BufferPolyline.Layout.__BYTE_LENGTH;
     return result;
   }
 
@@ -73,7 +73,7 @@ class Polyline3D extends Feature3D {
 
   /** @returns {number} */
   getPositionCount() {
-    return this._getUint32(Polyline3D.Layout.POSITION_COUNT_U32);
+    return this._getUint32(BufferPolyline.Layout.POSITION_COUNT_U32);
   }
 
   /**
@@ -82,8 +82,12 @@ class Polyline3D extends Feature3D {
    */
   getPositions(result) {
     const collection = this._collection;
-    const vertexOffset = this._getUint32(Polyline3D.Layout.POSITION_OFFSET_U32);
-    const vertexCount = this._getUint32(Polyline3D.Layout.POSITION_COUNT_U32);
+    const vertexOffset = this._getUint32(
+      BufferPolyline.Layout.POSITION_OFFSET_U32,
+    );
+    const vertexCount = this._getUint32(
+      BufferPolyline.Layout.POSITION_COUNT_U32,
+    );
     const positionF64 = collection._positionF64;
     for (let i = 0; i < vertexCount; i++) {
       result[i * 3] = positionF64[(vertexOffset + i) * 3];
@@ -96,8 +100,10 @@ class Polyline3D extends Feature3D {
   /** @param {Float64Array} positions */
   setPositions(positions) {
     const collection = this._collection;
-    const vertexOffset = this._getUint32(Polyline3D.Layout.POSITION_OFFSET_U32);
-    const srcCount = this._getUint32(Polyline3D.Layout.POSITION_COUNT_U32);
+    const vertexOffset = this._getUint32(
+      BufferPolyline.Layout.POSITION_OFFSET_U32,
+    );
+    const srcCount = this._getUint32(BufferPolyline.Layout.POSITION_COUNT_U32);
     const dstCount = positions.length / 3;
     const collectionCount = collection._positionCount + dstCount - srcCount;
 
@@ -107,7 +113,7 @@ class Polyline3D extends Feature3D {
     //>>includeEnd('debug');
 
     collection._positionCount = collectionCount;
-    this._setUint32(Polyline3D.Layout.POSITION_COUNT_U32, dstCount);
+    this._setUint32(BufferPolyline.Layout.POSITION_COUNT_U32, dstCount);
 
     const positionF64 = collection._positionF64;
     for (let i = 0; i < dstCount; i++) {
@@ -124,12 +130,12 @@ class Polyline3D extends Feature3D {
 
   /** @type {number} */
   get width() {
-    return this._getUint8(Polyline3D.Layout.WIDTH_U8);
+    return this._getUint8(BufferPolyline.Layout.WIDTH_U8);
   }
 
   set width(width) {
-    this._setUint8(Polyline3D.Layout.WIDTH_U8, width);
+    this._setUint8(BufferPolyline.Layout.WIDTH_U8, width);
   }
 }
 
-export default Polyline3D;
+export default BufferPolyline;

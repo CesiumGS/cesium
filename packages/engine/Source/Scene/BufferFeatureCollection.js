@@ -5,7 +5,7 @@ import Color from "../Core/Color.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
-import Feature3D from "./Feature3D.js";
+import BufferFeature from "./BufferFeature.js";
 import assert from "../Core/assert.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
@@ -15,10 +15,10 @@ const {
   ERR_INSTANTIATION,
   ERR_NOT_IMPLEMENTED,
   ERR_MULTIPLE_OF_FOUR,
-} = Feature3D;
+} = BufferFeature;
 
 /**
- * @typedef {object} Feature3DOptions
+ * @typedef {object} BufferFeatureOptions
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
  * @experimental
@@ -26,14 +26,14 @@ const {
 
 /**
  * @abstract
- * @template T extends Feature3D
+ * @template T extends BufferFeature
  * @experimental
  */
-class Feature3DCollection {
+class BufferFeatureCollection {
   /**
    * @param {object} options
-   * @param {number} [options.maxFeatureCount=Feature3D.DEFAULT_COUNT]
-   * @param {number} [options.maxVertexCount=Feature3D.DEFAULT_COUNT]
+   * @param {number} [options.maxFeatureCount=BufferFeature.DEFAULT_COUNT]
+   * @param {number} [options.maxVertexCount=BufferFeature.DEFAULT_COUNT]
    * @param {boolean} [options.show=true]
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
@@ -57,7 +57,8 @@ class Feature3DCollection {
      * @type {number}
      * @protected
      */
-    this._featureCountMax = options.maxFeatureCount ?? Feature3D.DEFAULT_COUNT;
+    this._featureCountMax =
+      options.maxFeatureCount ?? BufferFeature.DEFAULT_COUNT;
 
     /**
      * @type {ArrayBuffer}
@@ -81,7 +82,8 @@ class Feature3DCollection {
      * @type {number}
      * @protected
      */
-    this._positionCountMax = options.maxVertexCount ?? Feature3D.DEFAULT_COUNT;
+    this._positionCountMax =
+      options.maxVertexCount ?? BufferFeature.DEFAULT_COUNT;
 
     /**
      * @type {ArrayBuffer}
@@ -142,7 +144,7 @@ class Feature3DCollection {
 
   /** @private */
   _allocateFeatureBuffer() {
-    const layout = /** @type {typeof Feature3D.Layout} */ (
+    const layout = /** @type {typeof BufferFeature.Layout} */ (
       this._getFeatureLayout()
     );
 
@@ -181,9 +183,9 @@ class Feature3DCollection {
   }
 
   /**
-   * @param {Feature3DCollection<T>} collection
-   * @param {Feature3DCollection<T>} result
-   * @template T extends Feature3D
+   * @param {BufferFeatureCollection<T>} collection
+   * @param {BufferFeatureCollection<T>} result
+   * @template T extends BufferFeature
    */
   static clone(collection, result) {
     //>>includeStart('debug', pragmas.debug);
@@ -191,7 +193,7 @@ class Feature3DCollection {
     assert(collection.vertexCount <= result.vertexCountMax, ERR_CAPACITY);
     //>>includeEnd('debug');
 
-    const layout = /** @type {typeof Feature3D.Layout} */ (
+    const layout = /** @type {typeof BufferFeature.Layout} */ (
       collection._getFeatureLayout()
     );
 
@@ -242,16 +244,19 @@ class Feature3DCollection {
   // FEATURE LIFECYCLE
 
   /**
-   * @param {Feature3DOptions} options
-   * @param {Feature3D} result
-   * @returns {Feature3D}
+   * @param {BufferFeatureOptions} options
+   * @param {BufferFeature} result
+   * @returns {BufferFeature}
    */
   add(options = Frozen.EMPTY_OBJECT, result) {
-    const FeatureClass = /** @type {typeof Feature3D} */ (
+    const FeatureClass = /** @type {typeof BufferFeature} */ (
       this._getFeatureClass()
     );
     result = FeatureClass.fromCollection(this, this._featureCount++, result);
-    result._setUint32(Feature3D.Layout.FEATURE_ID_U32, this._featureCount - 1);
+    result._setUint32(
+      BufferFeature.Layout.FEATURE_ID_U32,
+      this._featureCount - 1,
+    );
     result._dirty = true;
     result.show = options.show ?? true;
     result.setColor(options.color ?? Color.WHITE);
@@ -351,4 +356,4 @@ class Feature3DCollection {
   }
 }
 
-export default Feature3DCollection;
+export default BufferFeatureCollection;

@@ -1,34 +1,34 @@
 import {
   Math as CesiumMath,
   Color,
-  Polyline3D,
-  Polyline3DCollection,
+  BufferPolyline,
+  BufferPolylineCollection,
 } from "../../index.js";
 
 const EPS = CesiumMath.EPSILON8;
 
-describe("Polyline3DCollection", () => {
+describe("BufferPolylineCollection", () => {
   const color = new Color();
 
   it("featureId", () => {
-    const collection = new Polyline3DCollection();
-    const polyline = new Polyline3D();
+    const collection = new BufferPolylineCollection();
+    const polyline = new BufferPolyline();
 
     collection.add({}, polyline);
     collection.add({}, polyline);
     collection.add({}, polyline);
 
-    Polyline3D.fromCollection(collection, 0, polyline);
+    BufferPolyline.fromCollection(collection, 0, polyline);
     expect(polyline.featureId).toBe(0);
-    Polyline3D.fromCollection(collection, 1, polyline);
+    BufferPolyline.fromCollection(collection, 1, polyline);
     expect(polyline.featureId).toBe(1);
-    Polyline3D.fromCollection(collection, 2, polyline);
+    BufferPolyline.fromCollection(collection, 2, polyline);
     expect(polyline.featureId).toBe(2);
   });
 
   it("positions", () => {
-    const collection = new Polyline3DCollection();
-    const polyline = new Polyline3D();
+    const collection = new BufferPolylineCollection();
+    const polyline = new BufferPolyline();
 
     const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
     const positions2 = new Float64Array([0, 1, 0, 0, 1, 1, 0, 1, 2]);
@@ -39,19 +39,19 @@ describe("Polyline3DCollection", () => {
     collection.add({ positions: positions2 }, polyline);
     collection.add({ positions: positions3 }, polyline);
 
-    Polyline3D.fromCollection(collection, 0, polyline);
+    BufferPolyline.fromCollection(collection, 0, polyline);
     expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
       positions1,
       EPS,
     );
 
-    Polyline3D.fromCollection(collection, 1, polyline);
+    BufferPolyline.fromCollection(collection, 1, polyline);
     expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
       positions2,
       EPS,
     );
 
-    Polyline3D.fromCollection(collection, 2, polyline);
+    BufferPolyline.fromCollection(collection, 2, polyline);
     expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
       positions3,
       EPS,
@@ -59,41 +59,45 @@ describe("Polyline3DCollection", () => {
   });
 
   it("show", () => {
-    const collection = new Polyline3DCollection();
-    const polyline = new Polyline3D();
+    const collection = new BufferPolylineCollection();
+    const polyline = new BufferPolyline();
 
     collection.add({ show: true }, polyline);
     collection.add({ show: false }, polyline);
 
-    expect(Polyline3D.fromCollection(collection, 0, polyline).show).toBe(true);
-    expect(Polyline3D.fromCollection(collection, 1, polyline).show).toBe(false);
+    expect(BufferPolyline.fromCollection(collection, 0, polyline).show).toBe(
+      true,
+    );
+    expect(BufferPolyline.fromCollection(collection, 1, polyline).show).toBe(
+      false,
+    );
   });
 
   it("color", () => {
-    const collection = new Polyline3DCollection();
-    const polyline = new Polyline3D();
+    const collection = new BufferPolylineCollection();
+    const polyline = new BufferPolyline();
 
     collection.add({ color: Color.RED }, polyline);
     collection.add({ color: Color.GREEN }, polyline);
     collection.add({ color: Color.BLUE }, polyline);
 
-    Polyline3D.fromCollection(collection, 0, polyline);
+    BufferPolyline.fromCollection(collection, 0, polyline);
     expect(polyline.getColor(color)).toEqualEpsilon(Color.RED, EPS);
-    Polyline3D.fromCollection(collection, 1, polyline);
+    BufferPolyline.fromCollection(collection, 1, polyline);
     expect(polyline.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
-    Polyline3D.fromCollection(collection, 2, polyline);
+    BufferPolyline.fromCollection(collection, 2, polyline);
     expect(polyline.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
   });
 
   it("byteLength", () => {
-    let collection = new Polyline3DCollection({
+    let collection = new BufferPolylineCollection({
       maxFeatureCount: 1,
       maxVertexCount: 1,
     });
 
     expect(collection.byteLength).toBe(28 + 24);
 
-    collection = new Polyline3DCollection({
+    collection = new BufferPolylineCollection({
       maxFeatureCount: 128,
       maxVertexCount: 128,
     });
@@ -102,9 +106,9 @@ describe("Polyline3DCollection", () => {
   });
 
   it("clone", () => {
-    const polyline = new Polyline3D();
+    const polyline = new BufferPolyline();
 
-    const src = new Polyline3DCollection({
+    const src = new BufferPolylineCollection({
       maxFeatureCount: 2,
       maxVertexCount: 6,
     });
@@ -117,12 +121,12 @@ describe("Polyline3DCollection", () => {
     src.add({ positions: positions1, color: Color.RED }, polyline);
     src.add({ positions: positions2, color: Color.GREEN }, polyline);
 
-    const dst = new Polyline3DCollection({
+    const dst = new BufferPolylineCollection({
       maxFeatureCount: 3,
       maxVertexCount: 9,
     });
 
-    Polyline3DCollection.clone(src, dst);
+    BufferPolylineCollection.clone(src, dst);
 
     expect(dst.featureCount).toBe(2);
     expect(dst.featureCountMax).toBe(3);
@@ -131,21 +135,21 @@ describe("Polyline3DCollection", () => {
 
     expect(dst.featureCount).toBe(3);
 
-    Polyline3D.fromCollection(dst, 0, polyline);
+    BufferPolyline.fromCollection(dst, 0, polyline);
     expect(polyline.getColor(color)).toEqualEpsilon(Color.RED, EPS);
     expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
       positions1,
       EPS,
     );
 
-    Polyline3D.fromCollection(dst, 1, polyline);
+    BufferPolyline.fromCollection(dst, 1, polyline);
     expect(polyline.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
     expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
       positions2,
       EPS,
     );
 
-    Polyline3D.fromCollection(dst, 2, polyline);
+    BufferPolyline.fromCollection(dst, 2, polyline);
     expect(polyline.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
     expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
       positions3,

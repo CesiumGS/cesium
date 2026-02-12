@@ -2,7 +2,7 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Point3D from "./Point3D.js";
+import BufferPoint from "./BufferPoint.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import VertexArray from "../Renderer/VertexArray.js";
@@ -15,17 +15,17 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import Point3DCollectionVS from "../Shaders/Point3DCollectionVS.js";
-import Point3DCollectionFS from "../Shaders/Point3DCollectionFS.js";
+import BufferPointCollectionVS from "../Shaders/BufferPointCollectionVS.js";
+import BufferPointCollectionFS from "../Shaders/BufferPointCollectionFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 
 /** @import FrameState from "./FrameState.js"; */
-/** @import Point3DCollection from "./Point3DCollection.js"; */
+/** @import BufferPointCollection from "./BufferPointCollection.js"; */
 /** @import {TypedArray, TypedArrayConstructor} from "../Core/globalTypes.js"; */
 
 /** @type {{positionHighAndShow: number, positionLowAndColor: number}} */
-const Point3DAttributeLocations = {
+const BufferPointAttributeLocations = {
   /** @type {number} */
   positionHighAndShow: 0,
   /** @type {number} */
@@ -33,7 +33,7 @@ const Point3DAttributeLocations = {
 };
 
 /**
- * @typedef {object} Point3DRenderContext
+ * @typedef {object} BufferPointRenderContext
  * @property {VertexArray} [vertexArray]
  * @property {Record<number, TypedArray>} [attributeArrays]
  * @property {RenderState} [renderState]
@@ -44,18 +44,18 @@ const Point3DAttributeLocations = {
  */
 
 /**
- * @param {Point3DCollection} collection
+ * @param {BufferPointCollection} collection
  * @param {FrameState} frameState
- * @param {Point3DRenderContext} [renderContext]
- * @returns {Point3DRenderContext}
+ * @param {BufferPointRenderContext} [renderContext]
+ * @returns {BufferPointRenderContext}
  * @ignore
  */
-function renderPoint3DCollection(collection, frameState, renderContext) {
+function renderBufferPointCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || {};
 
   if (!renderContext.firstDrawTimed) {
-    console.time("renderPoint3DCollection::init");
+    console.time("renderBufferPointCollection::init");
   }
 
   if (!defined(renderContext.attributeArrays)) {
@@ -64,30 +64,32 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
     const positionLowAndColorArray = new Float32Array(featureCountMax * 4);
 
     renderContext.attributeArrays = {
-      [Point3DAttributeLocations.positionHighAndShow]: positionHighAndShowArray,
-      [Point3DAttributeLocations.positionLowAndColor]: positionLowAndColorArray,
+      [BufferPointAttributeLocations.positionHighAndShow]:
+        positionHighAndShowArray,
+      [BufferPointAttributeLocations.positionLowAndColor]:
+        positionLowAndColorArray,
     };
   }
 
   if (collection._dirtyCount > 0) {
-    const point = new Point3D();
+    const point = new BufferPoint();
     const color = new Color();
     const cartesian = new Cartesian3();
     const encodedCartesian = new EncodedCartesian3();
 
     const positionHighAndShowArray =
       renderContext.attributeArrays[
-        Point3DAttributeLocations.positionHighAndShow
+        BufferPointAttributeLocations.positionHighAndShow
       ];
     const positionLowAndColorArray =
       renderContext.attributeArrays[
-        Point3DAttributeLocations.positionLowAndColor
+        BufferPointAttributeLocations.positionLowAndColor
       ];
 
     const { _dirtyOffset, _dirtyCount } = collection;
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
-      Point3D.fromCollection(collection, i, point);
+      BufferPoint.fromCollection(collection, i, point);
 
       if (!point._dirty) {
         continue;
@@ -118,7 +120,7 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
 
     const positionHighBuffer = Buffer.createVertexBuffer({
       typedArray:
-        attributeArrays[Point3DAttributeLocations.positionHighAndShow],
+        attributeArrays[BufferPointAttributeLocations.positionHighAndShow],
       context,
       // @ts-expect-error TODO(donmccurdy): BufferUsage types incorrect.
       usage: BufferUsage.STATIC_DRAW,
@@ -126,7 +128,7 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
 
     const positionLowBuffer = Buffer.createVertexBuffer({
       typedArray:
-        attributeArrays[Point3DAttributeLocations.positionLowAndColor],
+        attributeArrays[BufferPointAttributeLocations.positionLowAndColor],
       context,
       // @ts-expect-error TODO(donmccurdy): BufferUsage types incorrect.
       usage: BufferUsage.STATIC_DRAW,
@@ -136,13 +138,13 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
       context,
       attributes: [
         {
-          index: Point3DAttributeLocations.positionHighAndShow,
+          index: BufferPointAttributeLocations.positionHighAndShow,
           vertexBuffer: positionHighBuffer,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 4,
         },
         {
-          index: Point3DAttributeLocations.positionLowAndColor,
+          index: BufferPointAttributeLocations.positionLowAndColor,
           vertexBuffer: positionLowBuffer,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 4,
@@ -152,13 +154,13 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
   } else if (collection._dirtyCount > 0) {
     updateAttributeRange(
       renderContext,
-      Point3DAttributeLocations.positionHighAndShow,
+      BufferPointAttributeLocations.positionHighAndShow,
       collection._dirtyOffset,
       collection._dirtyCount,
     );
     updateAttributeRange(
       renderContext,
-      Point3DAttributeLocations.positionLowAndColor,
+      BufferPointAttributeLocations.positionLowAndColor,
       collection._dirtyOffset,
       collection._dirtyCount,
     );
@@ -179,18 +181,18 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.shaderProgram)) {
     const vertexShaderSource = new ShaderSource({
-      sources: [Point3DCollectionVS],
+      sources: [BufferPointCollectionVS],
     });
 
     const fragmentShaderSource = new ShaderSource({
-      sources: [Point3DCollectionFS],
+      sources: [BufferPointCollectionFS],
     });
 
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource,
       fragmentShaderSource,
-      attributeLocations: Point3DAttributeLocations,
+      attributeLocations: BufferPointAttributeLocations,
     });
   }
 
@@ -215,7 +217,7 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
   collection._dirtyOffset = 0;
 
   if (!renderContext.firstDrawTimed) {
-    console.timeEnd("renderPoint3DCollection::init");
+    console.timeEnd("renderBufferPointCollection::init");
     renderContext.firstDrawTimed = true;
   }
 
@@ -223,7 +225,7 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
 }
 
 /**
- * @param {Point3DRenderContext} renderContext
+ * @param {BufferPointRenderContext} renderContext
  * @param {number} attributeIndex
  * @param {number} vertexOffset
  * @param {number} vertexCount
@@ -256,4 +258,4 @@ function updateAttributeRange(
   buffer.copyFromArrayView(rangeArrayView, byteOffset);
 }
 
-export default renderPoint3DCollection;
+export default renderBufferPointCollection;

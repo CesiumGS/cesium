@@ -1,15 +1,15 @@
 // @ts-check
 
-import Feature3DCollection from "./Feature3DCollection.js";
-import Point3D from "./Point3D.js";
+import BufferFeatureCollection from "./BufferFeatureCollection.js";
+import BufferPoint from "./BufferPoint.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import renderPoints from "./renderPoint3DCollection.js";
+import renderPoints from "./renderBufferPointCollection.js";
 
 /** @import Color from "../Core/Color.js"; */
-/** @import FrameState from "../Scene/FrameState.js" */
+/** @import FrameState from "./FrameState.js" */
 
 /**
- * @typedef {object} Point3DOptions
+ * @typedef {object} BufferPointOptions
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
  * @property {Cartesian3} [position=Cartesian3.ZERO]
@@ -17,31 +17,31 @@ import renderPoints from "./renderPoint3DCollection.js";
  */
 
 /**
- * @extends Feature3DCollection<Point3D>
+ * @extends BufferFeatureCollection<BufferPoint>
  * @experimental
  */
-class Point3DCollection extends Feature3DCollection {
+class BufferPointCollection extends BufferFeatureCollection {
   /** @type {Record<string, unknown>} */
   _renderContext = null;
 
   _getFeatureClass() {
-    return Point3D;
+    return BufferPoint;
   }
 
   _getFeatureLayout() {
-    return Point3D.Layout;
+    return BufferPoint.Layout;
   }
 
   /**
-   * @param {Point3DOptions} options
-   * @param {Point3D} result
+   * @param {BufferPointOptions} options
+   * @param {BufferPoint} result
    * @override
    */
-  add(options, result = new Point3D()) {
+  add(options, result = new BufferPoint()) {
     super.add(options, result);
 
     result._setUint32(
-      Point3D.Layout.POSITION_OFFSET_U32,
+      BufferPoint.Layout.POSITION_OFFSET_U32,
       this._positionCount++,
     );
     result.setPosition(options.position ?? Cartesian3.ZERO);
@@ -57,4 +57,4 @@ class Point3DCollection extends Feature3DCollection {
   }
 }
 
-export default Point3DCollection;
+export default BufferPointCollection;
