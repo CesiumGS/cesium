@@ -1,14 +1,7 @@
-/* global process */
-import { Cartographic, createWorldTerrainAsync, Ion, sampleTerrain } from "@cesium/engine";
+import { Cartographic, createWorldTerrainAsync, sampleTerrain } from "@cesium/engine";
 import assert from "node:assert";
 
 // NodeJS smoke screen test
-
-// Use CESIUM_ACCESS_TOKEN env var if available
-if (process.env.CESIUM_ACCESS_TOKEN) {
-  Ion.defaultAccessToken = process.env.CESIUM_ACCESS_TOKEN;
-}
-
 async function test() {
   const provider = await createWorldTerrainAsync();
   const results = await sampleTerrain(provider, 11, [
