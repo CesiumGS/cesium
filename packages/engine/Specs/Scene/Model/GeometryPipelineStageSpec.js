@@ -218,10 +218,15 @@ describe(
         GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
         [],
       );
-      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "vec3 v_positionEC;",
-        "vec3 v_positionMC;",
-        "vec3 v_positionWC;",
+      ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+        "out vec3 v_positionEC;",
+        "out vec3 v_positionMC;",
+        "out vec3 v_positionWC;",
+      ]);
+      ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+        "in vec3 v_positionEC;",
+        "in vec3 v_positionMC;",
+        "in vec3 v_positionWC;",
       ]);
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
@@ -324,12 +329,19 @@ describe(
           GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
           ["    attributes.texCoord_0 = v_texCoord_0;"],
         );
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "vec3 v_normalEC;",
-          "vec2 v_texCoord_0;",
-          "vec3 v_positionEC;",
-          "vec3 v_positionMC;",
-          "vec3 v_positionWC;",
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out vec3 v_normalEC;",
+          "out vec2 v_texCoord_0;",
+          "out vec3 v_positionEC;",
+          "out vec3 v_positionMC;",
+          "out vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in vec3 v_normalEC;",
+          "in vec2 v_texCoord_0;",
+          "in vec3 v_positionEC;",
+          "in vec3 v_positionMC;",
+          "in vec3 v_positionWC;",
         ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_NORMALS",
@@ -544,14 +556,23 @@ describe(
           GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
           ["    attributes.texCoord_0 = v_texCoord_0;"],
         );
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "vec3 v_normalEC;",
-          "vec3 v_tangentEC;",
-          "vec3 v_bitangentEC;",
-          "vec2 v_texCoord_0;",
-          "vec3 v_positionEC;",
-          "vec3 v_positionMC;",
-          "vec3 v_positionWC;",
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out vec3 v_normalEC;",
+          "out vec3 v_tangentEC;",
+          "out vec3 v_bitangentEC;",
+          "out vec2 v_texCoord_0;",
+          "out vec3 v_positionEC;",
+          "out vec3 v_positionMC;",
+          "out vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in vec3 v_normalEC;",
+          "in vec3 v_tangentEC;",
+          "in vec3 v_bitangentEC;",
+          "in vec2 v_texCoord_0;",
+          "in vec3 v_positionEC;",
+          "in vec3 v_positionMC;",
+          "in vec3 v_positionWC;",
         ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_BITANGENTS",
@@ -673,12 +694,19 @@ describe(
             "    attributes.texCoord_1 = v_texCoord_1;",
           ],
         );
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "vec2 v_texCoord_0;",
-          "vec2 v_texCoord_1;",
-          "vec3 v_positionEC;",
-          "vec3 v_positionMC;",
-          "vec3 v_positionWC;",
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out vec2 v_texCoord_0;",
+          "out vec2 v_texCoord_1;",
+          "out vec3 v_positionEC;",
+          "out vec3 v_positionMC;",
+          "out vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in vec2 v_texCoord_0;",
+          "in vec2 v_texCoord_1;",
+          "in vec3 v_positionEC;",
+          "in vec3 v_positionMC;",
+          "in vec3 v_positionWC;",
         ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_TEXCOORD_0",
@@ -807,13 +835,21 @@ describe(
             "    attributes.texCoord_0 = v_texCoord_0;",
           ],
         );
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "vec3 v_normalEC;",
-          "vec4 v_color_0;",
-          "vec2 v_texCoord_0;",
-          "vec3 v_positionEC;",
-          "vec3 v_positionMC;",
-          "vec3 v_positionWC;",
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out vec3 v_normalEC;",
+          "out vec4 v_color_0;",
+          "out vec2 v_texCoord_0;",
+          "out vec3 v_positionEC;",
+          "out vec3 v_positionMC;",
+          "out vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in vec3 v_normalEC;",
+          "in vec4 v_color_0;",
+          "in vec2 v_texCoord_0;",
+          "in vec3 v_positionEC;",
+          "in vec3 v_positionMC;",
+          "in vec3 v_positionWC;",
         ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_NORMALS",
@@ -913,11 +949,17 @@ describe(
           GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
           ["    attributes.color_0 = v_color_0;"],
         );
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "vec4 v_color_0;",
-          "vec3 v_positionEC;",
-          "vec3 v_positionMC;",
-          "vec3 v_positionWC;",
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          `${scene.context.webgl2 ? "flat " : ""}out vec4 v_color_0;`,
+          "out vec3 v_positionEC;",
+          "out vec3 v_positionMC;",
+          "out vec3 v_positionWC;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          `${scene.context.webgl2 ? "flat " : ""}in vec4 v_color_0;`,
+          "in vec3 v_positionEC;",
+          "in vec3 v_positionMC;",
+          "in vec3 v_positionWC;",
         ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_COLOR_0",
@@ -1008,11 +1050,17 @@ describe(
         GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
         ["    attributes.temperature = v_temperature;"],
       );
-      ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "vec2 v_temperature;",
-        "vec3 v_positionEC;",
-        "vec3 v_positionMC;",
-        "vec3 v_positionWC;",
+      ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+        "out vec2 v_temperature;",
+        "out vec3 v_positionEC;",
+        "out vec3 v_positionMC;",
+        "out vec3 v_positionWC;",
+      ]);
+      ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+        "in vec2 v_temperature;",
+        "in vec3 v_positionEC;",
+        "in vec3 v_positionMC;",
+        "in vec3 v_positionWC;",
       ]);
       ShaderBuilderTester.expectHasAttributes(
         shaderBuilder,
@@ -1195,6 +1243,36 @@ describe(
           "PRIMITIVE_TYPE_POINTS",
         ]);
         verifyFeatureStruct(shaderBuilder);
+      });
+    });
+
+    it("uses flat varying qualifier for point primitive vertex attributes", function () {
+      return loadGltf(weather).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const renderResources = mockRenderResources(primitive);
+
+        GeometryPipelineStage.process(
+          renderResources,
+          primitive,
+          scene.frameState,
+        );
+
+        const shaderBuilder = renderResources.shaderBuilder;
+
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out vec3 v_positionEC;",
+          "out vec3 v_positionMC;",
+          "out vec3 v_positionWC;",
+          `${scene.context.webgl2 ? "flat " : ""}out float v_featureId_0;`,
+        ]);
+
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in vec3 v_positionEC;",
+          "in vec3 v_positionMC;",
+          "in vec3 v_positionWC;",
+          `${scene.context.webgl2 ? "flat " : ""}in float v_featureId_0;`,
+        ]);
       });
     });
 
@@ -1658,14 +1736,23 @@ describe(
               "    attributes.temperatures = v_temperatures;",
             ],
           );
-          ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-            "vec3 v_normalEC;",
-            "vec2 v_texCoord_0;",
-            "vec3 v_positionEC;",
-            "vec3 v_positionMC;",
-            "vec3 v_positionWC;",
-            "mat2 v_warp_matrix;",
-            "vec2 v_temperatures;",
+          ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+            "out vec3 v_normalEC;",
+            "out vec2 v_texCoord_0;",
+            "out vec3 v_positionEC;",
+            "out vec3 v_positionMC;",
+            "out vec3 v_positionWC;",
+            "out mat2 v_warp_matrix;",
+            "out vec2 v_temperatures;",
+          ]);
+          ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+            "in vec3 v_normalEC;",
+            "in vec2 v_texCoord_0;",
+            "in vec3 v_positionEC;",
+            "in vec3 v_positionMC;",
+            "in vec3 v_positionWC;",
+            "in mat2 v_warp_matrix;",
+            "in vec2 v_temperatures;",
           ]);
           ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
             "HAS_NORMALS",
