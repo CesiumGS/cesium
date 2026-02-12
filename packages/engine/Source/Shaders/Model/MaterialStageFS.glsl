@@ -67,7 +67,11 @@ NormalInfo getNormalInfo(ProcessedAttributes attributes)
         
         vec3 normalSample;
         #if defined(HAS_NORMAL_CONSTANT_LOD) && defined(HAS_CONSTANT_LOD)
-            normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams).rgb;
+            #ifdef HAS_NORMAL_TEXTURE_TRANSFORM
+                normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams, u_normalTextureTransform).rgb;
+            #else
+                normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams).rgb;
+            #endif
         #else
             normalSample = texture(u_normalTexture, normalTexCoords).rgb;
         #endif
@@ -119,7 +123,11 @@ vec3 getNormalFromTexture(ProcessedAttributes attributes, vec3 geometryNormal)
     
     vec3 normalSample;
     #if defined(HAS_NORMAL_CONSTANT_LOD) && defined(HAS_CONSTANT_LOD)
-        normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams).rgb;
+        #ifdef HAS_NORMAL_TEXTURE_TRANSFORM
+            normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams, u_normalTextureTransform).rgb;
+        #else
+            normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams).rgb;
+        #endif
     #else
         normalSample = texture(u_normalTexture, normalTexCoords).rgb;
     #endif
@@ -190,7 +198,11 @@ vec4 getBaseColorFromTexture()
 
     vec4 baseColorWithAlpha;
     #if defined(HAS_BASE_COLOR_CONSTANT_LOD) && defined(HAS_CONSTANT_LOD)
-        baseColorWithAlpha = czm_srgbToLinear(constantLodTextureLookup(u_baseColorTexture, u_baseColorTextureConstantLodParams));
+        #ifdef HAS_BASE_COLOR_TEXTURE_TRANSFORM
+            baseColorWithAlpha = czm_srgbToLinear(constantLodTextureLookup(u_baseColorTexture, u_baseColorTextureConstantLodParams, u_baseColorTextureTransform));
+        #else
+            baseColorWithAlpha = czm_srgbToLinear(constantLodTextureLookup(u_baseColorTexture, u_baseColorTextureConstantLodParams));
+        #endif
     #else
         baseColorWithAlpha = czm_srgbToLinear(texture(u_baseColorTexture, baseColorTexCoords));
     #endif

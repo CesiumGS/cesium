@@ -86,6 +86,15 @@ const options = [
       );
     },
   },
+  {
+    text: "Checkerboard with normal map and KHR_texture_transform",
+    onselect: function () {
+      createModel(
+        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_NormalMap_Transform.gltf",
+        0,
+      );
+    },
+  },
 ];
 
 Sandcastle.addToolbarMenu(options);
