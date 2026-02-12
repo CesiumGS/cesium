@@ -75,69 +75,73 @@ function saveCameraView(viewer) {
 
 function selectPanoCubeMap(position) {
   const carto = Cesium.Cartographic.fromCartesian(position);
+  provider.getPanoIds(carto).then((panoIdList) => {
+    const panoId = panoIdList[0];
+    provider.getPanoIdMetadata(panoId).then((panoIdMetadata) => {
+      const panoLat = panoIdMetadata.lat;
+      const panoLng = panoIdMetadata.lng;
+      const height = carto.height;
 
-  const panoLat = Cesium.Math.toDegrees(carto.latitude);
-  const panoLng = Cesium.Math.toDegrees(carto.longitude);
-  const height = carto.height;
-  const pos = [panoLat, panoLng]; //lat,lng Aukland
-  const posString = pos.join(",");
-  const posObj = Cesium.Cartesian3.fromDegrees(pos[1], pos[0], 0);
+      const baseUrl = "https://maps.googleapis.com/maps/api/streetview";
+      function pUrl(h, p) {
+        const r = new Cesium.Resource({
+          url: baseUrl,
+          queryParameters: {
+            size: "600x600",
+            pano: panoId,
+            heading: h,
+            pitch: p,
+            key: googleStreetViewStaticApiKey,
+          },
+        });
+        return r.url;
+      }
 
-  const baseUrl = "https://maps.googleapis.com/maps/api/streetview";
-  function pUrl(h, p) {
-    const r = new Cesium.Resource({
-      url: baseUrl,
-      queryParameters: {
-        size: "600x600",
-        location: posString,
-        heading: h,
-        pitch: p,
-        key: googleStreetViewStaticApiKey,
-      },
+      const positiveX = pUrl(0, 0);
+      const negativeX = pUrl(180, 0);
+      const positiveZ = pUrl(270, 0);
+      const negativeZ = pUrl(90, 0);
+      const positiveY = pUrl(-90, -90);
+      const negativeY = pUrl(-90, 90);
+
+      const ndeToFixedFrameTransform =
+        Cesium.Transforms.localFrameToFixedFrameGenerator("north", "down");
+
+      const pos = [panoLat, panoLng]; //lat,lng Aukland
+      const posObj = Cesium.Cartesian3.fromDegrees(pos[1], pos[0], 0);
+
+      const transform = Cesium.Matrix4.getMatrix3(
+        ndeToFixedFrameTransform(posObj, Cesium.Ellipsoid.default),
+        new Cesium.Matrix3(),
+      );
+
+      const cityPano = new Cesium.CubeMapPanorama({
+        sources: {
+          positiveX,
+          negativeX,
+          positiveY,
+          negativeY,
+          positiveZ,
+          negativeZ,
+        },
+        transform: transform,
+      });
+
+      viewer.scene.primitives.add(cityPano);
+
+      const lookPosition = Cesium.Cartesian3.fromDegrees(
+        panoLng,
+        panoLat,
+        height + 2,
+      );
+
+      const heading = Cesium.Math.toRadians(-90);
+
+      goToPanoView({
+        position: lookPosition,
+        heading,
+      });
     });
-    return r.url;
-  }
-
-  const positiveX = pUrl(0, 0);
-  const negativeX = pUrl(180, 0);
-  const positiveZ = pUrl(270, 0);
-  const negativeZ = pUrl(90, 0);
-  const positiveY = pUrl(-90, -90);
-  const negativeY = pUrl(-90, 90);
-
-  const ndeToFixedFrameTransform =
-    Cesium.Transforms.localFrameToFixedFrameGenerator("north", "down");
-
-  const transform = Cesium.Matrix4.getMatrix3(
-    ndeToFixedFrameTransform(posObj, Cesium.Ellipsoid.default),
-    new Cesium.Matrix3(),
-  );
-
-  const cityPano = new Cesium.CubeMapPanorama({
-    sources: {
-      positiveX,
-      negativeX,
-      positiveY,
-      negativeY,
-      positiveZ,
-      negativeZ,
-    },
-    transform: transform,
-  });
-
-  viewer.scene.primitives.add(cityPano);
-
-  const lookPosition = Cesium.Cartesian3.fromDegrees(
-    panoLng,
-    panoLat,
-    height + 2,
-  );
-
-  const heading = Cesium.Math.toRadians(-90);
-
-  goToPanoView({
-    position: lookPosition,
-    heading,
   });
 }
 
