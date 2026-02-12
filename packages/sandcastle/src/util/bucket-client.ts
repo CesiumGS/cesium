@@ -1,20 +1,28 @@
-// @ts-check
-import { originalWarn, wrapConsoleFunctions } from "../src/util/ConsoleWrapper";
-import { IframeBridge } from "../src/util/IframeBridge";
+/**
+ * This is the minimal JS that runs on the Viewer's bucket.html page
+ * This code handles reaching out to the surrounding app to request code to run.
+ */
+
+import { originalWarn, wrapConsoleFunctions } from "./ConsoleWrapper";
+import { BridgeToApp, IframeBridge } from "./IframeBridge";
 import DOMPurify from "dompurify";
 
-/** @import {BridgeToApp} from '../src/util/IframeBridge' */
+declare global {
+  interface Window {
+    // This is set by the bucket-client.js init() function
+    SANDCASTLE_OUTER_ORIGIN: string;
+  }
+}
 
-/* eslint-disable-next-line no-undef */
 const OUTER_ORIGIN = __OUTER_ORIGIN__;
 
 /**
  * Apply and run sandcastle code to the page
  *
- * @param {string} code the JS code to run
- * @param {string} html any HTML to add to the page, will be sanitized first
+ * @param code the JS code to run
+ * @param html any HTML to add to the page, will be sanitized first
  */
-function loadSandcastle(code, html) {
+function loadSandcastle(code: string, html: string) {
   if (document.body.dataset.sandcastleLoaded === "yes") {
     originalWarn(
       "A Sandcastle was already loaded on this page and conflicts could occur. Aborting",
@@ -40,8 +48,10 @@ function loadSandcastle(code, html) {
 }
 
 function initPage() {
-  /** @type {BridgeToApp} */
-  const bridge = new IframeBridge(OUTER_ORIGIN, window.parent);
+  // We set this so that the Sandcastle helper functions know where to send messages for the `highlight` message
+  window.SANDCASTLE_OUTER_ORIGIN = OUTER_ORIGIN;
+
+  const bridge: BridgeToApp = new IframeBridge(OUTER_ORIGIN, window.parent);
 
   wrapConsoleFunctions(bridge);
 

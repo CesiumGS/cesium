@@ -5,11 +5,12 @@ if (pos > 0 && pos < bucket.length - 1) {
   bucket = bucket.substring(pos + 1);
 }
 
-// TODO: this should be updated somehow. Need to dig into the gneration of the Sandcastle helpers
-// because we specifically wanted them isolated but now I want to build with vite
-// Maybe this gets set as a window global in the handshake from the client file? is that safe?
-// const OUTER_ORIGIN = __OUTER_ORIGIN__;
-const OUTER_ORIGIN = "*";
+declare global {
+  interface Window {
+    // This is set by the bucket-client.js init() function
+    SANDCASTLE_OUTER_ORIGIN: string;
+  }
+}
 
 type SelectOption = {
   text: string;
@@ -77,16 +78,19 @@ const Sandcastle = {
       const lineNumber = registered.get(key) ?? registered.get(key.primitive);
       if (lineNumber !== undefined) {
         window.parent.postMessage(
-          { type: "highlight", highlight: lineNumber },
-          OUTER_ORIGIN,
+          {
+            id: "sandcastle-bridge",
+            message: { type: "highlight", highlight: lineNumber },
+          },
+          window.SANDCASTLE_OUTER_ORIGIN,
         );
         return;
       }
     }
 
     window.parent.postMessage(
-      { type: "highlight", highlight: 0 },
-      OUTER_ORIGIN,
+      { id: "sandcastle-bridge", message: { type: "highlight", highlight: 0 } },
+      window.SANDCASTLE_OUTER_ORIGIN,
     );
   },
 
