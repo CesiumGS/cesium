@@ -18,8 +18,8 @@ import VertexFormat from "../Core/VertexFormat.js";
  *
  * @property {Matrix4} options.transform A 4x4 transformation matrix that defines the panorama’s position and orientation
  * (for example, derived from a position and heading-pitch-roll).
- * @property {string|HTMLImageElement|HTMLCanvasElement|ImageBitmap} [options.image] A URL to an image resource, or a preloaded image object.
- * @property {number} [radius=100000.0] The radius of the panorama in meters.
+ * @property {string|HTMLImageElement|HTMLCanvasElement|ImageBitmap} options.image A URL to an image resource, or a preloaded image object.
+ * @property {number} [options.radius=100000.0] The radius of the panorama in meters.
  * @property {number} [options.repeatHorizontal=1.0] The number of times to repeat the texture horizontally.
  * @property {number} [options.repeatVertical=1.0] The number of times to repeat the texture vertically.
  * @property {Credit|string} [options.credit] A credit for the panorama, which is displayed on the canvas.
