@@ -253,14 +253,19 @@ function getPropertyTablesInfo(
 
   // Each feature ID set can reference a property table.
   // For a given primitive, as we have here, the mapping is 1:1.
-  // (This isn't strictly enforced in the EXT_mesh_features schema, but would be considered ill-formed and ambiguous.)
+  // (This isn't strictly enforced in the EXT_mesh_features schema, but would be considered ill-formed and ambiguous.
+  // There _is_ a way to specify which featureID set to use for picking and styling in the Cesium3DTileset API, which we may want to respect here in the future).
   const tableToFeatureSetInfo = mapPropertyTablesToFeatureIdSets(
     renderResources,
     primitive,
   );
 
   return propertyTables
-    .filter((propertyTable) => defined(propertyTable.class))
+    .filter(
+      (propertyTable) =>
+        defined(propertyTable.class) &&
+        tableToFeatureSetInfo.has(String(propertyTable.id)),
+    )
     .flatMap((propertyTable) =>
       getPropertyTableInfo(propertyTable, tableToFeatureSetInfo, statistics),
     );
