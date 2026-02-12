@@ -136,7 +136,7 @@ class Polygon3D extends Feature3D {
 
     //>>includeStart('debug', pragmas.debug);
     assert(srcCount === dstCount || this._isResizable(), ERR_RESIZE);
-    assert(collectionCount <= collection.vertexCount, ERR_CAPACITY);
+    assert(collectionCount <= collection.vertexCountMax, ERR_CAPACITY);
     //>>includeEnd('debug');
 
     collection._positionCount = collectionCount;
