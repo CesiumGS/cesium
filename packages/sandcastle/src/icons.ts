@@ -27,6 +27,12 @@ import automagic from "@stratakit/icons/automagic.svg";
 import history from "@stratakit/icons/history.svg";
 import key from "@stratakit/icons/key.svg";
 import lock from "@stratakit/icons/lock.svg";
+import send from "@stratakit/icons/send.svg";
+import chevronDown from "@stratakit/icons/chevron-down.svg";
+import chevronUp from "@stratakit/icons/chevron-up.svg";
+import error from "@stratakit/icons/error.svg";
+import warning from "@stratakit/icons/warning.svg";
+import pin from "@stratakit/icons/pin.svg";
 import geminiLogo from "./assets/icons/gemini-logo.png";
 import cesiumLogo from "./assets/cesium-logo.svg";
 
@@ -60,6 +66,12 @@ export {
   history,
   key,
   lock,
+  send,
+  chevronDown,
+  chevronUp,
+  error,
+  warning,
+  pin,
   geminiLogo,
   cesiumLogo,
 };

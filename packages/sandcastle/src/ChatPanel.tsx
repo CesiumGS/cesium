@@ -7,15 +7,13 @@ import {
   useMemo,
   memo,
 } from "react";
-import { Button, Text, Tooltip } from "@stratakit/bricks";
+import { Button, Text, Tooltip, Switch } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
-import { Brain, Wand2 } from "lucide-react";
 import { ChatMessage as ChatMessageComponent } from "./ChatMessage";
 import { ApiKeyDialog } from "./ApiKeyDialog";
-import { GuidancePrompt } from "./GuidancePrompt";
-import { CompactToggle } from "./components/common/CompactToggle";
-import { PromptInput, ImagePreview } from "./components/common/PromptInput";
+import { unstable_Banner as Banner } from "@stratakit/structures";
+import { PromptInput } from "./components/common/PromptInput";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { ModelPicker } from "./components/controls/ModelPicker";
 import { ApiKeyManager } from "./AI/ApiKeyManager";
@@ -113,14 +111,7 @@ export function ChatPanel({
   const history = useHistory();
 
   // Get model context
-  const {
-    models,
-    currentModel,
-    pinnedModels,
-    setCurrentModel,
-    togglePin,
-    refreshModels,
-  } = useModel();
+  const { models, currentModel, setCurrentModel, refreshModels } = useModel();
   const selectedModel =
     currentModel ||
     AIClientFactory.getDefaultModel() ||
@@ -133,12 +124,6 @@ export function ChatPanel({
   const [historySidebarOpen, setHistorySidebarOpen] = useState(false);
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(ApiKeyManager.hasAnyCredentials());
-
-  // Image attachment state
-  const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
-  const [pendingAttachments, setPendingAttachments] = useState<
-    ImageAttachment[]
-  >([]);
 
   // Streaming state management
   const [isCurrentlyStreaming, setIsCurrentlyStreaming] =
@@ -645,91 +630,6 @@ export function ChatPanel({
   // ============================================================================
   // Image Handling Utilities
   // ============================================================================
-
-  /**
-   * Convert a File to base64 string
-   */
-  const fileToBase64 = useCallback((file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        // Remove the data URL prefix (e.g., "data:image/png;base64,")
-        const base64 = result.split(",")[1];
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }, []);
-
-  /**
-   * Get image dimensions
-   */
-  const getImageDimensions = useCallback(
-    (dataUrl: string): Promise<{ width: number; height: number }> => {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          resolve({ width: img.width, height: img.height });
-        };
-        img.src = dataUrl;
-      });
-    },
-    [],
-  );
-
-  /**
-   * Handle image selection
-   */
-  const handleImagesSelected = useCallback(
-    async (files: File[]) => {
-      const newPreviews: ImagePreview[] = [];
-      const newAttachments: ImageAttachment[] = [];
-
-      for (const file of files) {
-        const id = `img-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-        const dataUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.readAsDataURL(file);
-        });
-
-        const dimensions = await getImageDimensions(dataUrl);
-        const base64Data = await fileToBase64(file);
-
-        newPreviews.push({
-          id,
-          name: file.name,
-          size: file.size,
-          mimeType: file.type,
-          dataUrl,
-        });
-
-        newAttachments.push({
-          id,
-          name: file.name,
-          size: file.size,
-          mimeType: file.type,
-          base64Data,
-          width: dimensions.width,
-          height: dimensions.height,
-        });
-      }
-
-      setImagePreviews((prev) => [...prev, ...newPreviews]);
-      setPendingAttachments((prev) => [...prev, ...newAttachments]);
-    },
-    [fileToBase64, getImageDimensions],
-  );
-
-  /**
-   * Handle image removal
-   */
-  const handleImageRemoved = useCallback((id: string) => {
-    setImagePreviews((prev) => prev.filter((p) => p.id !== id));
-    setPendingAttachments((prev) => prev.filter((a) => a.id !== id));
-  }, []);
 
   // PERFORMANCE OPTIMIZATION #4: Wrap sendMessageWithContent in useCallback
   // This ensures the function reference stays stable
@@ -2055,21 +1955,15 @@ export function ChatPanel({
     const actualInput = textareaElement?.value || input;
     const trimmedInput = actualInput.trim();
 
-    // Allow sending if we have either text or attachments
-    if (!trimmedInput && pendingAttachments.length === 0) {
+    if (!trimmedInput) {
       return;
     }
 
-    // Clear input and attachments
     setInput("");
-    const attachmentsToSend =
-      pendingAttachments.length > 0 ? [...pendingAttachments] : undefined;
-    setImagePreviews([]);
-    setPendingAttachments([]);
 
     // PromptInput component handles textarea reset internally
-    await sendMessageWithContent(trimmedInput, attachmentsToSend);
-  }, [input, pendingAttachments, sendMessageWithContent]);
+    await sendMessageWithContent(trimmedInput);
+  }, [input, sendMessageWithContent]);
 
   const handleApiKeySuccess = useCallback(() => {
     setHasApiKey(ApiKeyManager.hasAnyCredentials());
@@ -2226,11 +2120,10 @@ export function ChatPanel({
               iterationState.escalationActive && !isLoading ? "block" : "none",
           }}
         >
-          <GuidancePrompt
-            consecutiveFailures={iterationState.consecutiveMistakes}
-            onSubmitGuidance={handleSubmitGuidance}
-            onSkip={handleSkipGuidance}
-            isSubmitting={isLoading}
+          <Banner
+            tone="info"
+            label="Help needed"
+            message="The AI has encountered repeated errors and needs your guidance."
           />
         </div>
 
@@ -2548,7 +2441,6 @@ export function ChatPanel({
                   onApplyDiff={stableOnApplyDiff}
                   currentCode={currentCode}
                   streamingDiffs={undefined}
-                  autoApplyChanges={settings.autoApplyChanges}
                 />
               )}
               components={{
@@ -2569,11 +2461,6 @@ export function ChatPanel({
             disabled={!hasApiKey || isLoading}
             isLoading={isLoading}
             ariaLabel="Chat message input"
-            imagePreviews={imagePreviews}
-            onImagesSelected={handleImagesSelected}
-            onImageRemoved={handleImageRemoved}
-            maxFileSizeMB={3.75}
-            maxImages={20}
           />
 
           {/* Feature Toggles Row - Below input */}
@@ -2581,42 +2468,42 @@ export function ChatPanel({
             <ModelPicker
               models={models}
               currentModel={currentModel}
-              pinnedModels={pinnedModels}
               onModelChange={setCurrentModel}
-              onTogglePin={togglePin}
             />
-            <CompactToggle
-              icon={Brain}
-              label="Extended Thinking"
-              enabled={settings.extendedThinking.enabled}
-              onChange={(enabled) =>
-                updateSettings({
-                  extendedThinking: { ...settings.extendedThinking, enabled },
-                })
-              }
-              tooltip={`Enable AI reasoning before responses (budget: ${settings.extendedThinking.budget} tokens)`}
-              disabled={isLoading}
-              ariaLabel="Toggle Extended Thinking feature"
-            />
-            <CompactToggle
-              icon={Wand2}
-              label="Auto-Apply"
-              enabled={settings.autoApplyChanges}
-              onChange={(enabled) =>
-                updateSettings({ autoApplyChanges: enabled })
-              }
-              tooltip="Automatically apply code changes without confirmation"
-              disabled={isLoading}
-              ariaLabel="Toggle Auto-Apply feature"
-            />
+            <Tooltip
+              content={`Enable AI reasoning before responses (budget: ${settings.extendedThinking.budget} tokens)`}
+            >
+              <Switch
+                checked={settings.extendedThinking.enabled}
+                onChange={(e) =>
+                  updateSettings({
+                    extendedThinking: {
+                      ...settings.extendedThinking,
+                      enabled: e.target.checked,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                aria-label="Toggle Extended Thinking feature"
+              />
+            </Tooltip>
+            <Tooltip content="Automatically apply code changes without confirmation">
+              <Switch
+                checked={settings.autoApplyChanges}
+                onChange={(e) =>
+                  updateSettings({ autoApplyChanges: e.target.checked })
+                }
+                disabled={isLoading}
+                aria-label="Toggle Auto-Apply feature"
+              />
+            </Tooltip>
           </div>
         </div>
-      </div>
 
-      <SettingsPanel
-        open={showSettingsPanel}
-        onClose={() => setShowSettingsPanel(false)}
-      />
+        {showSettingsPanel && (
+          <SettingsPanel onClose={() => setShowSettingsPanel(false)} />
+        )}
+      </div>
 
       <ApiKeyDialog
         open={showApiKeyDialog}

@@ -6,6 +6,7 @@
  */
 
 import React, { useEffect } from "react";
+import { Button } from "@stratakit/bricks";
 import type { DiffBlock } from "../AI/types";
 import "./DiffApprovalModal.css";
 
@@ -20,10 +21,6 @@ export interface DiffApprovalModalProps {
   onApply: () => void;
   /** Called when user rejects the change */
   onReject: () => void;
-  /** Whether to auto-apply all remaining diffs */
-  autoApplyAll: boolean;
-  /** Called when auto-apply checkbox changes */
-  onAutoApplyChange: (value: boolean) => void;
 }
 
 export const DiffApprovalModal: React.FC<DiffApprovalModalProps> = ({
@@ -32,8 +29,6 @@ export const DiffApprovalModal: React.FC<DiffApprovalModalProps> = ({
   language,
   onApply,
   onReject,
-  autoApplyAll,
-  onAutoApplyChange,
 }) => {
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -99,28 +94,13 @@ export const DiffApprovalModal: React.FC<DiffApprovalModalProps> = ({
         </div>
 
         <div className="diff-approval-footer">
-          <label className="diff-auto-apply-checkbox">
-            <input
-              type="checkbox"
-              checked={autoApplyAll}
-              onChange={(e) => onAutoApplyChange(e.target.checked)}
-            />
-            <span>Auto-apply remaining changes</span>
-          </label>
-
           <div className="diff-approval-actions">
-            <button
-              className="diff-approval-button diff-approval-reject"
-              onClick={onReject}
-            >
+            <Button variant="outline" onClick={onReject}>
               Reject
-            </button>
-            <button
-              className="diff-approval-button diff-approval-apply"
-              onClick={onApply}
-            >
+            </Button>
+            <Button tone="accent" onClick={onApply}>
               Apply
-            </button>
+            </Button>
           </div>
         </div>
 

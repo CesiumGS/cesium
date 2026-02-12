@@ -28,7 +28,6 @@
     "classnames": "^2.5.1",
     "dompurify": "^3.3.1",
     "fzf": "^0.5.2",
-    "lucide-react": "^0.548.0",
     "mdast-util-to-hast": "^13.2.1",
     "monaco-editor": "^0.52.2",
     "pako": "^2.1.0",

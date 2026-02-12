@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Button } from "@stratakit/bricks";
+import { Button, IconButton } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import type { ChatMessage as ChatMessageType, DiffBlock } from "./AI/types";
 import { EditParser } from "./AI/EditParser";
@@ -9,7 +9,7 @@ import { DiffApplier } from "./AI/DiffApplier";
 import { ThinkingBlock } from "./components/ThinkingBlock";
 import { StreamingDiffPreview } from "./StreamingDiffPreview";
 import { ToolCallDisplay } from "./components/ToolCallDisplay";
-import { useMemo, useState, memo, useEffect, useRef, useCallback } from "react";
+import { useMemo, useState, memo, useCallback } from "react";
 import { aiSparkle, developer, copy } from "./icons";
 import "./ChatMessage.css";
 
@@ -34,8 +34,6 @@ interface ChatMessageProps {
   currentCode?: { javascript: string; html: string };
   /** Map of diffIndex to partial streaming diffs */
   streamingDiffs?: Map<number, PartialDiff>;
-  /** Auto-apply code changes without user confirmation */
-  autoApplyChanges?: boolean;
 }
 
 /**
@@ -48,10 +46,8 @@ export const ChatMessage = memo(function ChatMessage({
   onApplyDiff,
   currentCode,
   streamingDiffs,
-  autoApplyChanges,
 }: ChatMessageProps) {
   const isUser = message.role === "user";
-  const autoAppliedRef = useRef(false);
 
   // State for tracking rejected diffs, applied diffs, and applying state
   const [rejectedDiffs, setRejectedDiffs] = useState<Set<string>>(new Set());
@@ -61,18 +57,6 @@ export const ChatMessage = memo(function ChatMessage({
     html: boolean;
   }>({ javascript: false, html: false });
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
-
-  // Snapshot of diff previews at creation time (preserves original vs modified for audit trail)
-  const [diffSnapshots, setDiffSnapshots] = useState<
-    Map<
-      string,
-      {
-        originalCode: string;
-        modifiedCode: string;
-        language: "javascript" | "html";
-      }
-    >
-  >(new Map());
 
   // Parse the message and clean markdown (removes raw diff blocks)
   const { cleanedMarkdown, parsedResponse } = useMemo(() => {
@@ -117,25 +101,20 @@ export const ChatMessage = memo(function ChatMessage({
     return allFences !== null && allFences.length % 2 !== 0;
   }, [cleanedMarkdown]);
 
-  // Compute modified code for diff previews AND create snapshots
   const computeModifiedCode = useMemo(() => {
     if (!currentCode) {
       return { javascript: "", html: "" };
     }
 
-    const result: { javascript: string; html: string } = {
+    const result = {
       javascript: currentCode.javascript,
       html: currentCode.html,
     };
 
-    const newSnapshots = new Map(diffSnapshots);
-
     for (const diffEdit of parsedResponse.diffEdits) {
-      // Filter out rejected diffs (keep applied diffs visible)
       const activeDiffs = diffEdit.diffs.filter(
         (diff) => !rejectedDiffs.has(JSON.stringify(diff)),
       );
-
       if (activeDiffs.length === 0) {
         continue;
       }
@@ -153,17 +132,6 @@ export const ChatMessage = memo(function ChatMessage({
       );
 
       if (applyResult.success && applyResult.modifiedCode) {
-        const snapshotKey = `${diffEdit.language}-${parsedResponse.diffEdits.indexOf(diffEdit)}`;
-
-        // Create snapshot only if it doesn't exist yet (preserve original state)
-        if (!diffSnapshots.has(snapshotKey)) {
-          newSnapshots.set(snapshotKey, {
-            originalCode: sourceCode,
-            modifiedCode: applyResult.modifiedCode,
-            language: diffEdit.language,
-          });
-        }
-
         if (diffEdit.language === "javascript") {
           result.javascript = applyResult.modifiedCode;
         } else {
@@ -172,13 +140,8 @@ export const ChatMessage = memo(function ChatMessage({
       }
     }
 
-    // Update snapshots if any new ones were created
-    if (newSnapshots.size > diffSnapshots.size) {
-      setDiffSnapshots(newSnapshots);
-    }
-
     return result;
-  }, [currentCode, parsedResponse.diffEdits, rejectedDiffs, diffSnapshots]);
+  }, [currentCode, parsedResponse.diffEdits, rejectedDiffs]);
 
   const handleApply = () => {
     if (!onApplyCode) {
@@ -260,60 +223,6 @@ export const ChatMessage = memo(function ChatMessage({
     }
   };
 
-  // Auto-apply changes when enabled
-  useEffect(() => {
-    // Only auto-apply if:
-    // 1. autoApplyChanges is enabled
-    // 2. onApplyDiff exists
-    // 3. We have diff edits
-    // 4. Streaming is complete
-    // 5. We haven't already auto-applied for this message
-    if (
-      !autoApplyChanges ||
-      !onApplyDiff ||
-      !parsedResponse.diffEdits ||
-      parsedResponse.diffEdits.length === 0 ||
-      autoAppliedRef.current ||
-      message.isStreaming
-    ) {
-      return;
-    }
-
-    // Check if streaming diffs are complete
-    const isStreaming = streamingDiffs && streamingDiffs.size > 0;
-    if (isStreaming) {
-      return;
-    }
-
-    // Mark as auto-applied to prevent re-applying
-    autoAppliedRef.current = true;
-
-    // Auto-apply all diff edits
-    parsedResponse.diffEdits.forEach((diffEdit) => {
-      const activeDiffs = diffEdit.diffs.filter(
-        (diff) => !rejectedDiffs.has(JSON.stringify(diff)),
-      );
-
-      if (activeDiffs.length > 0) {
-        const language = diffEdit.language;
-        // Automatically apply without user interaction
-        handleApplyDiff(
-          activeDiffs.map((d) => d.block),
-          language,
-          activeDiffs,
-        );
-      }
-    });
-  }, [
-    autoApplyChanges,
-    onApplyDiff,
-    parsedResponse.diffEdits,
-    streamingDiffs,
-    rejectedDiffs,
-    handleApplyDiff,
-    message.isStreaming,
-  ]);
-
   // Determine if there's any visible content to show
   const hasVisibleContent =
     isUser || // User messages always have content
@@ -341,18 +250,12 @@ export const ChatMessage = memo(function ChatMessage({
             {new Date(message.timestamp).toLocaleTimeString()}
           </span>
           {!isUser && (
-            <Button
+            <IconButton
+              label={copiedToClipboard ? "Copied!" : "Copy markdown"}
+              icon={copy}
               variant="ghost"
               onClick={handleCopyMarkdown}
-              aria-label={copiedToClipboard ? "Copied!" : "Copy markdown"}
-              title={
-                copiedToClipboard
-                  ? "Copied to clipboard!"
-                  : "Copy message as markdown"
-              }
-            >
-              <Icon href={copy} />
-            </Button>
+            />
           )}
         </div>
 
@@ -501,15 +404,8 @@ export const ChatMessage = memo(function ChatMessage({
               );
 
               const language = diffEdit.language;
-              const snapshotKey = `${language}-${index}`;
-              const snapshot = diffSnapshots.get(snapshotKey);
-
-              // Use snapshot if available (preserves original diff for audit trail)
-              // Otherwise fall back to computed values (for diffs not yet applied)
-              const originalCode =
-                snapshot?.originalCode ?? currentCode[language];
-              const modifiedCode =
-                snapshot?.modifiedCode ?? computeModifiedCode[language];
+              const originalCode = currentCode[language];
+              const modifiedCode = computeModifiedCode[language];
 
               return (
                 <DiffPreview

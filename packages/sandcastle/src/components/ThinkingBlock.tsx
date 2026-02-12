@@ -1,52 +1,41 @@
-import React, { useState } from "react";
-import { Brain } from "lucide-react";
-import "./ThinkingBlock.css";
+import { unstable_AccordionItem as AccordionItem } from "@stratakit/structures";
+import { Spinner } from "@stratakit/bricks";
 
 interface ThinkingBlockProps {
   content: string;
   isStreaming?: boolean;
 }
 
-export const ThinkingBlock: React.FC<ThinkingBlockProps> = ({
+export function ThinkingBlock({
   content,
   isStreaming = false,
-}) => {
-  // Start collapsed by default, allow user to expand to audit
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const handleToggle = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  // Add U+200E (LEFT-TO-RIGHT MARK) for proper RTL display
-  const displayContent = `\u200E${content}`;
-
+}: ThinkingBlockProps) {
   return (
-    <div className="thinking-block">
-      <div
-        className={`thinking-block-header ${isExpanded ? "expanded" : ""} ${isStreaming ? "streaming" : ""}`}
-        onClick={handleToggle}
-      >
-        <span className="thinking-icon">
-          <Brain size={16} />
-        </span>
-        <span className="thinking-label">Thinking</span>
-        {!isExpanded && (
-          <span className="thinking-preview">{displayContent}</span>
-        )}
-        <div className="thinking-actions">
-          {isStreaming && <span className="thinking-spinner">⋯</span>}
-          <span className={`thinking-chevron ${isExpanded ? "expanded" : ""}`}>
-            {isExpanded ? "▼" : "▶"}
-          </span>
-        </div>
-      </div>
-      {isExpanded && (
-        <div className="thinking-block-content">
-          {displayContent}
-          {isStreaming && <span className="thinking-cursor">▋</span>}
-        </div>
-      )}
-    </div>
+    <AccordionItem.Root defaultOpen={isStreaming}>
+      <AccordionItem.Header>
+        <AccordionItem.Button>
+          <AccordionItem.Marker />
+          <AccordionItem.Label>
+            {isStreaming ? "Thinking..." : "Thought process"}
+          </AccordionItem.Label>
+          {isStreaming && <Spinner size="small" />}
+        </AccordionItem.Button>
+      </AccordionItem.Header>
+      <AccordionItem.Content>
+        <pre
+          style={{
+            whiteSpace: "pre-wrap",
+            fontFamily: "var(--stratakit-font-family-mono)",
+            fontSize: "var(--stratakit-font-size-12)",
+            maxHeight: "400px",
+            overflow: "auto",
+            margin: 0,
+            padding: "var(--stratakit-space-x3)",
+          }}
+        >
+          {content}
+        </pre>
+      </AccordionItem.Content>
+    </AccordionItem.Root>
   );
-};
+}

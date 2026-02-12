@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { SettingsSidebar } from "./SettingsSidebar";
+import { Tabs } from "@stratakit/structures";
+import { Text, IconButton } from "@stratakit/bricks";
+import { close } from "../../icons";
 import { GeneralSettings } from "./GeneralSettings";
 import { ModelSettings } from "./ModelSettings";
 import { FeatureSettings } from "./FeatureSettings";
@@ -7,64 +8,49 @@ import { AdvancedSettings } from "./AdvancedSettings";
 import "./SettingsPanel.css";
 
 interface SettingsPanelProps {
-  open: boolean;
   onClose: () => void;
 }
 
-export type SettingsCategory = "general" | "models" | "features" | "advanced";
-
-export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
-  const [activeCategory, setActiveCategory] =
-    useState<SettingsCategory>("general");
-
-  // Handle Escape key to close
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
-
-  if (!open) {
-    return null;
-  }
-
+export function SettingsPanel({ onClose }: SettingsPanelProps) {
   return (
-    <div className="settings-overlay" onClick={onClose}>
-      <div className="settings-panel" onClick={(e) => e.stopPropagation()}>
-        <div className="settings-header">
-          <h2 className="settings-title">Settings</h2>
-          <button
-            className="settings-close-button"
-            onClick={onClose}
-            aria-label="Close settings"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="settings-content">
-          <SettingsSidebar
-            activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
-          />
-
-          <div className="settings-main">
-            {activeCategory === "general" && <GeneralSettings />}
-            {activeCategory === "models" && <ModelSettings />}
-            {activeCategory === "features" && <FeatureSettings />}
-            {activeCategory === "advanced" && <AdvancedSettings />}
-          </div>
-        </div>
+    <div className="settings-panel">
+      <div className="settings-panel-header">
+        <Text variant="headline-sm">Settings</Text>
+        <IconButton
+          label="Close settings"
+          icon={close}
+          variant="ghost"
+          onClick={onClose}
+        />
       </div>
+      <Tabs.Root defaultSelectedId="general">
+        <Tabs.TabList>
+          <Tabs.Tab id="general">General</Tabs.Tab>
+          <Tabs.Tab id="models">Models</Tabs.Tab>
+          <Tabs.Tab id="features">Features</Tabs.Tab>
+          <Tabs.Tab id="advanced">Advanced</Tabs.Tab>
+        </Tabs.TabList>
+        <Tabs.TabPanel tabId="general">
+          <div className="settings-tab-content">
+            <GeneralSettings />
+          </div>
+        </Tabs.TabPanel>
+        <Tabs.TabPanel tabId="models">
+          <div className="settings-tab-content">
+            <ModelSettings />
+          </div>
+        </Tabs.TabPanel>
+        <Tabs.TabPanel tabId="features">
+          <div className="settings-tab-content">
+            <FeatureSettings />
+          </div>
+        </Tabs.TabPanel>
+        <Tabs.TabPanel tabId="advanced">
+          <div className="settings-tab-content">
+            <AdvancedSettings />
+          </div>
+        </Tabs.TabPanel>
+      </Tabs.Root>
     </div>
   );
 }

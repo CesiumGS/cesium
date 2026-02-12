@@ -42,7 +42,7 @@
 .diff-review-item {
   background: var(--stratakit-color-bg-page-depth);
   border: 1px solid var(--stratakit-color-border-neutral-default);
-  border-radius: 6px;
+  border-radius: var(--stratakit-ext-radius-md);
   margin-bottom: 12px;
   overflow: hidden;
 }
@@ -95,7 +95,7 @@
 
 .diff-section {
   margin-bottom: 12px;
-  border-radius: 4px;
+  border-radius: var(--stratakit-ext-radius-sm);
   overflow: hidden;
 }
 
@@ -205,7 +205,7 @@
 
 .diff-review-content::-webkit-scrollbar-thumb {
   background: var(--stratakit-color-border-neutral-default);
-  border-radius: 4px;
+  border-radius: var(--stratakit-ext-radius-sm);
 }
 
 .diff-review-content::-webkit-scrollbar-thumb:hover {
@@ -222,5 +222,5 @@
 
 .diff-line::-webkit-scrollbar-thumb {
   background: var(--stratakit-color-border-neutral-default);
-  border-radius: 3px;
+  border-radius: var(--stratakit-ext-radius-xs);
 }
