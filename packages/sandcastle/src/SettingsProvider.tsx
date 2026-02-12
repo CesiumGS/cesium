@@ -1,58 +1,43 @@
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback } from "react";
 import {
   availableFonts,
   initialSettings,
   Settings,
   SettingsContext,
 } from "./SettingsContext";
-
-// Helper function to safely access localStorage
-function safeGetItem(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch (error) {
-    console.warn(`localStorage.getItem failed for key "${key}":`, error);
-    return null;
-  }
-}
-
-function safeSetItem(key: string, value: string): boolean {
-  try {
-    localStorage.setItem(key, value);
-    return true;
-  } catch (error) {
-    console.warn(`localStorage.setItem failed for key "${key}":`, error);
-    return false;
-  }
-}
+import { useLocalStorage } from "react-use";
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [isLocalStorageAvailable] = useState(() => {
-    try {
-      const test = "__localStorage_test__";
-      localStorage.setItem(test, test);
-      localStorage.removeItem(test);
-      return true;
-    } catch {
-      return false;
-    }
-  });
-
-  // Load settings from localStorage using lazy initialization
-  const [settings, setSettings] = useState<Settings>(() => {
-    if (!isLocalStorageAvailable) {
-      console.warn("localStorage is not available, using default settings");
-      return initialSettings;
-    }
-
-    try {
-      const stored = safeGetItem("sandcastle/settings");
-      if (stored) {
-        const parsedValue = JSON.parse(stored);
-
-        // Validate and sanitize loaded settings
+  const [settings, updateSettings] = useLocalStorage<Settings>(
+    "sandcastle/settings",
+    initialSettings,
+    {
+      raw: false,
+      serializer: (value) => {
+        // Build a new object so we always set only the settings we know about
+        return JSON.stringify({
+          theme: value.theme ?? initialSettings.theme,
+          fontFamily: value.fontFamily ?? initialSettings.fontFamily,
+          fontSize: value.fontSize ?? initialSettings.fontSize,
+          fontLigatures: value.fontLigatures ?? initialSettings.fontLigatures,
+          defaultPanel: value.defaultPanel ?? initialSettings.defaultPanel,
+          autoIteration: value.autoIteration ?? initialSettings.autoIteration,
+          extendedThinking:
+            value.extendedThinking ?? initialSettings.extendedThinking,
+          autoApplyChanges:
+            value.autoApplyChanges ?? initialSettings.autoApplyChanges,
+          pinnedModels: value.pinnedModels ?? initialSettings.pinnedModels,
+          customPromptAddendum:
+            value.customPromptAddendum ?? initialSettings.customPromptAddendum,
+        });
+      },
+      deserializer: (value) => {
+        // This allows us to guarantee all expected values are set AND any unknown
+        // values are removed from the settings object
+        const parsedValue = JSON.parse(value);
         let fontFamily = parsedValue.fontFamily ?? initialSettings.fontFamily;
         if (!(fontFamily in availableFonts)) {
+          // sanitize while loading to avoid removed fonts or user editied values
           fontFamily = "droid-sans";
         }
 
@@ -60,16 +45,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         if (Number.isNaN(fontSize)) {
           fontSize = initialSettings.fontSize;
         }
-
-        const autoIteration = {
-          ...initialSettings.autoIteration,
-          ...parsedValue.autoIteration,
-        };
-
-        const extendedThinking = {
-          ...initialSettings.extendedThinking,
-          ...parsedValue.extendedThinking,
-        };
 
         return {
           theme: parsedValue.theme ?? initialSettings.theme,
@@ -79,8 +54,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             parsedValue.fontLigatures ?? initialSettings.fontLigatures,
           defaultPanel:
             parsedValue.defaultPanel ?? initialSettings.defaultPanel,
-          autoIteration: autoIteration,
-          extendedThinking: extendedThinking,
+          autoIteration: {
+            ...initialSettings.autoIteration,
+            ...parsedValue.autoIteration,
+          },
+          extendedThinking: {
+            ...initialSettings.extendedThinking,
+            ...parsedValue.extendedThinking,
+          },
           autoApplyChanges:
             parsedValue.autoApplyChanges ?? initialSettings.autoApplyChanges,
           pinnedModels:
@@ -89,57 +70,27 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             parsedValue.customPromptAddendum ??
             initialSettings.customPromptAddendum,
         };
-      }
-    } catch (error) {
-      console.warn("Failed to load settings from localStorage:", error);
-    }
-
-    return initialSettings;
-  });
+      },
+    },
+  );
 
   const mergeSettings = useCallback(
     (newSettings: Partial<Settings>) => {
-      // Allow partial updates but make sure we don't lose settings keys
-      const mergedSettings = {
+      // allow partial updates but make sure we don't lose settings keys
+      // won't currently work with nested settings
+      updateSettings({
         ...initialSettings,
         ...settings,
         ...newSettings,
-      };
-
-      // Try to save to localStorage if available
-      if (isLocalStorageAvailable) {
-        const serialized = JSON.stringify({
-          theme: mergedSettings.theme ?? initialSettings.theme,
-          fontFamily: mergedSettings.fontFamily ?? initialSettings.fontFamily,
-          fontSize: mergedSettings.fontSize ?? initialSettings.fontSize,
-          fontLigatures:
-            mergedSettings.fontLigatures ?? initialSettings.fontLigatures,
-          defaultPanel:
-            mergedSettings.defaultPanel ?? initialSettings.defaultPanel,
-          autoIteration:
-            mergedSettings.autoIteration ?? initialSettings.autoIteration,
-          extendedThinking:
-            mergedSettings.extendedThinking ?? initialSettings.extendedThinking,
-          autoApplyChanges:
-            mergedSettings.autoApplyChanges ?? initialSettings.autoApplyChanges,
-          pinnedModels:
-            mergedSettings.pinnedModels ?? initialSettings.pinnedModels,
-          customPromptAddendum:
-            mergedSettings.customPromptAddendum ??
-            initialSettings.customPromptAddendum,
-        });
-        safeSetItem("sandcastle/settings", serialized);
-      }
-
-      setSettings(mergedSettings);
+      });
     },
-    [settings, isLocalStorageAvailable],
+    [updateSettings, settings],
   );
 
   return (
     <SettingsContext
       value={{
-        settings: settings,
+        settings: settings ?? initialSettings,
         updateSettings: mergeSettings,
       }}
     >
