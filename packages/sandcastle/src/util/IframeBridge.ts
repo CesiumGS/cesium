@@ -5,24 +5,6 @@ import { type ConsoleMessage } from "./ConsoleWrapper";
 // @ts-expect-error We know this global may exist
 const log = window.originalLog ?? console.log;
 
-type ReactDevToolsMessage = {
-  source: "react-devtools-bridge" | "react-devtools-content-script";
-};
-
-function isReactMessage(
-  event: MessageEvent,
-): event is MessageEvent<ReactDevToolsMessage> {
-  return "source" in event.data && event.data.source.includes("react-devtools");
-}
-
-type MonacoMessage = { vscodeScheduleAsyncWork: number };
-
-function isMonacoMessage(
-  event: MessageEvent,
-): event is MessageEvent<MonacoMessage> {
-  return "vscodeScheduleAsyncWork" in event.data;
-}
-
 /**
  * Generic type to give some structure to the Bridge messages by default if not specified
  */
@@ -40,6 +22,13 @@ export type MessageToBucket =
 export type BridgeToApp = IframeBridge<MessageToApp, MessageToBucket>;
 export type BridgeToBucket = IframeBridge<MessageToBucket, MessageToApp>;
 
+type MessageAugment<T> = { id: "sandcastle-bridge"; message: T };
+function isKnownMessageStructure<T>(
+  event: MessageEvent,
+): event is MessageEvent<MessageAugment<T>> {
+  return event.data?.id === "sandcastle-bridge" && event.data?.message;
+}
+
 export class IframeBridge<
   SendMessageType = MessageWithType,
   RecieveMessageType = MessageWithType,
@@ -48,7 +37,7 @@ export class IframeBridge<
   targetWindow: Window;
   #debugIdent?: string;
   #windowListener:
-    | ((event: MessageEvent<RecieveMessageType>) => void)
+    | ((event: MessageEvent<MessageAugment<RecieveMessageType>>) => void)
     | undefined;
 
   constructor(
@@ -69,25 +58,22 @@ export class IframeBridge<
       return;
     }
     log(`<<< ${this.#debugIdent} sending message:`, message);
-    this.targetWindow.postMessage(message, this.remoteOrigin);
+    this.targetWindow.postMessage(
+      { id: "sandcastle-bridge", message: message },
+      this.remoteOrigin,
+    );
   }
 
-  addEventListener(handler: (event: MessageEvent<RecieveMessageType>) => void) {
+  addEventListener(handler: (event: RecieveMessageType) => void) {
     this.#windowListener = (
-      e:
-        | MessageEvent<ReactDevToolsMessage>
-        | MessageEvent<RecieveMessageType>
-        | MessageEvent<MonacoMessage>,
+      e: MessageEvent<MessageAugment<RecieveMessageType>> | MessageEvent,
     ) => {
-      if (
-        typeof e.data !== "object" ||
-        isReactMessage(e) ||
-        isMonacoMessage(e)
-      ) {
-        // TODO: consider flipping this to check for _our_ format only instead of excluding others
-        // filter all of these, we don't care
+      if (!isKnownMessageStructure<RecieveMessageType>(e)) {
+        // completely ignore any message that doesn't have the structure we expect
+        // For example react devtools messages or monaco editor alerts
         return;
       }
+
       if (e.origin !== this.remoteOrigin) {
         // ignore messages from origins we don't recognize
         log(
@@ -107,7 +93,7 @@ export class IframeBridge<
 
       log(`>>> ${this.#debugIdent} recieved message:`, e);
 
-      handler(e);
+      handler(e.data.message);
     };
     window.addEventListener("message", this.#windowListener);
     return this.#windowListener;

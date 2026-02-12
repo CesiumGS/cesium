@@ -45,16 +45,14 @@ function initPage() {
 
   wrapConsoleFunctions(bridge);
 
-  bridge.addEventListener((e) => {
-    if (e.data.type === "reload") {
+  bridge.addEventListener((message) => {
+    if (message.type === "reload") {
       window.location.reload();
-    } else if (e.data.type === "runCode") {
-      loadSandcastle(e.data.code, e.data.html);
+    } else if (message.type === "runCode") {
+      loadSandcastle(message.code, message.html);
     }
   });
 
-  // TODO: likely want some sort of versioning for the handshake so the app and bucket
-  // can agree to speak the same "language"/protocol
   bridge.sendMessage({ type: "bucketReady" });
 }
 
