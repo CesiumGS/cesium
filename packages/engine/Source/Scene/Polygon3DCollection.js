@@ -18,10 +18,12 @@ import renderPolygons from "./renderPolygon3DCollection.js";
  * @property {Float64Array} [positions]
  * @property {Uint32Array} [holes]
  * @property {Uint32Array} [triangles]
+ * @experimental
  */
 
 /**
  * @extends Feature3DCollection<Polygon3D>
+ * @experimental
  */
 class Polygon3DCollection extends Feature3DCollection {
   /**

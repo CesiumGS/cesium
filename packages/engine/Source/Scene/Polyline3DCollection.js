@@ -14,10 +14,12 @@ import renderPolylines from "./renderPolyline3DCollection.js";
  * @property {Color} [color=Color.WHITE]
  * @property {Float64Array} [positions]
  * @property {number} [width=1]
+ * @experimental
  */
 
 /**
  * @extends Feature3DCollection<Polyline3D>
+ * @experimental
  */
 class Polyline3DCollection extends Feature3DCollection {
   /** @type {Record<string, unknown>} */

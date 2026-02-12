@@ -39,6 +39,7 @@ const Polygon3DAttributeLocations = {
  * @property {ShaderProgram} [shaderProgram]
  * @property {object} [uniformMap]
  * @property {boolean} [firstDrawTimed]
+ * @ignore
  */
 
 /**
@@ -46,6 +47,7 @@ const Polygon3DAttributeLocations = {
  * @param {FrameState} frameState
  * @param {Polygon3DRenderContext} [renderContext]
  * @returns {Polygon3DRenderContext}
+ * @ignore
  */
 function renderPolygon3DCollection(collection, frameState, renderContext) {
   const context = frameState.context;

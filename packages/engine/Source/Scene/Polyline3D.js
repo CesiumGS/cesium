@@ -14,6 +14,8 @@ const { ERR_RESIZE, ERR_CAPACITY } = Feature3D;
  * Represented as two (2) or more positions.
  *
  * See: https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.4
+ *
+ * @experimental
  */
 class Polyline3D extends Feature3D {
   static Layout = {

@@ -39,6 +39,7 @@ const Polyline3DAttributeLocations = {
  * @property {ShaderProgram} [shaderProgram]
  * @property {object} [uniformMap]
  * @property {boolean} [firstDrawTimed]
+ * @ignore
  */
 
 /**
@@ -46,6 +47,7 @@ const Polyline3DAttributeLocations = {
  * @param {FrameState} frameState
  * @param {Polyline3DRenderContext} [renderContext]
  * @returns {Polyline3DRenderContext}
+ * @ignore
  */
 function renderPolyline3DCollection(collection, frameState, renderContext) {
   const context = frameState.context;

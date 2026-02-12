@@ -13,11 +13,13 @@ const { ERR_INSTANTIATION, ERR_NOT_IMPLEMENTED } = Feature3D;
  * @typedef {object} Feature3DOptions
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
+ * @experimental
  */
 
 /**
  * @abstract
  * @template T extends Feature3D
+ * @experimental
  */
 class Feature3DCollection {
   /**

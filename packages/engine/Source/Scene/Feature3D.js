@@ -4,7 +4,10 @@ import Color from "../Core/Color.js";
 
 /** @import Feature3DCollection from './Feature3DCollection.js'; */
 
-/** @abstract */
+/**
+ * @abstract
+ * @experimental
+ */
 class Feature3D {
   /**
    * @type {Feature3DCollection<Feature3D>}

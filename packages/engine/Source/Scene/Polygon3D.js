@@ -18,6 +18,8 @@ const { ERR_CAPACITY, ERR_RESIZE } = Feature3D;
  * Holes and triangles are stored as indices into the positions array.
  *
  * See: https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.6
+ *
+ * @experimental
  */
 class Polygon3D extends Feature3D {
   /**

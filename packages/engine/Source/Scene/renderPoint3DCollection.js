@@ -40,6 +40,7 @@ const Point3DAttributeLocations = {
  * @property {ShaderProgram} [shaderProgram]
  * @property {object} [uniformMap]
  * @property {boolean} [firstDrawTimed]
+ * @ignore
  */
 
 /**
@@ -47,6 +48,7 @@ const Point3DAttributeLocations = {
  * @param {FrameState} frameState
  * @param {Point3DRenderContext} [renderContext]
  * @returns {Point3DRenderContext}
+ * @ignore
  */
 function renderPoint3DCollection(collection, frameState, renderContext) {
   const context = frameState.context;
@@ -222,7 +224,6 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
 }
 
 /**
- *
  * @param {Point3DRenderContext} renderContext
  * @param {number} attributeIndex
  * @param {number} vertexOffset

@@ -13,10 +13,12 @@ import renderPoints from "./renderPoint3DCollection.js";
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
  * @property {Cartesian3} [position=Cartesian3.ZERO]
+ * @experimental
  */
 
 /**
  * @extends Feature3DCollection<Point3D>
+ * @experimental
  */
 class Point3DCollection extends Feature3DCollection {
   /** @type {Record<string, unknown>} */

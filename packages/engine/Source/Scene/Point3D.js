@@ -14,6 +14,8 @@ const { ERR_CAPACITY } = Feature3D;
  * Represented as one (1) position.
  *
  * See: https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.2
+ *
+ * @experimental
  */
 class Point3D extends Feature3D {
   /** @ignore */
