@@ -7,6 +7,7 @@ import { cesiumPathReplace, insertImportMap } from "../vite-plugins.js";
 import typescriptCompile from "./typescriptCompile.js";
 
 /** @import { UserConfig, LogLevel } from 'vite' */
+/** @import {Target} from 'vite-plugin-static-copy*/
 
 /**
  * @typedef {Object} ImportObject
@@ -46,7 +47,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @param {string} options.cesiumVersion CesiumJS version to display in the top right
  * @param {string} [options.commitSha] Optional commit hash to display in the top right of the application
  * @param {ImportList} options.imports Set of imports to add to the import map for the iframe and standalone html pages. These paths should match the URL where it can be accessed within the current environment.
- * @param {{src: string, dest: string}[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolidate files for a singular static deployment (ie during production). Source paths should be absolute, dest paths should be relative to the page root. It is up to you to ensure these files exist BEFORE building sandcastle.
+ * @param {string} [options.outerOrigin="http://localhost:8080"] Origin of the outer application
+ * @param {string} [options.innerOrigin] Origin of the inner viewer bucket. Defaults to the outerOrigin if not provided
+ * @param {Target[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolidate files for a singular static deployment (ie during production). Source paths should be absolute, dest paths should be relative to the page root. It is up to you to ensure these files exist BEFORE building sandcastle.
+ * @param {boolean} [options.allowMissingFiles=false] Tell the vite-plugin-static-copy to ignore missing files in the copyExtraFiles list. This should not be used for full builds but can be helpful for the development server
  */
 export function createSandcastleConfig({
   outDir,
@@ -55,7 +59,10 @@ export function createSandcastleConfig({
   cesiumVersion,
   commitSha,
   imports,
+  outerOrigin = "http://localhost:8080",
+  innerOrigin,
   copyExtraFiles = [],
+  allowMissingFiles = false,
 }) {
   if (!cesiumVersion || cesiumVersion === "") {
     throw new Error("Must provide a CesiumJS version");
@@ -71,7 +78,15 @@ export function createSandcastleConfig({
     outDir: outDir,
   };
 
+  if (!innerOrigin || innerOrigin === outerOrigin) {
+    console.warn(
+      "WARNING: Currently ignoring missing static files. This may result in app failures if deployed without all files",
+    );
+  }
+
   const copyPlugin = viteStaticCopy({
+    // This also disables any console logging like the number of collected items which is a little annoying
+    silent: allowMissingFiles,
     targets: [
       { src: "templates/Sandcastle.(d.ts|js)", dest: "templates" },
       ...copyExtraFiles,
@@ -93,11 +108,17 @@ export function createSandcastleConfig({
   };
   /** @type {Object<string, string>} */
   const typePaths = {
-    Sandcastle: "../templates/Sandcastle.d.ts",
+    Sandcastle: "templates/Sandcastle.d.ts",
   };
   for (const [key, value] of Object.entries(imports)) {
     importMap[key] = value.path;
     typePaths[key] = value.typesPath;
+  }
+
+  if (!innerOrigin || innerOrigin === outerOrigin) {
+    console.warn(
+      "WARNING: If the inner and outer origin are the same there is no browser protection for secrets. Please check your config if this is not intended",
+    );
   }
 
   config.define = {
@@ -105,6 +126,8 @@ export function createSandcastleConfig({
     __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(typePaths),
     __CESIUM_VERSION__: JSON.stringify(`Cesium ${cesiumVersion}`),
     __COMMIT_SHA__: JSON.stringify(commitSha ?? undefined),
+    __OUTER_ORIGIN__: JSON.stringify(outerOrigin),
+    __INNER_ORIGIN__: JSON.stringify(innerOrigin ?? outerOrigin),
   };
 
   const plugins = config.plugins ?? [];
