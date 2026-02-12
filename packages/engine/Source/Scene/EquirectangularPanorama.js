@@ -4,9 +4,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Credit from "../Core/Credit.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
-import CesiumMath from "../Core/Math.js";
+import SphereGeometry from "../Core/SphereGeometry.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import Material from "./Material.js";
 import MaterialAppearance from "./MaterialAppearance.js";
@@ -21,10 +19,6 @@ import VertexFormat from "../Core/VertexFormat.js";
  * @property {object} image 2:1 360 degrees equirectangular image path
  * @property {Matrix4} [transform=Matrix4.IDENTITY]  The 4x4 transformation matrix to place the panorama relative to the globe.
  * @property {number} [radius=100000.0] The radius of the panorama in meters.
- * @param {number} [options.minimumClock=0.0] The minimum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
- * @param {number} [options.maximumClock=2*PI] The maximum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
- * @param {number} [options.minimumCone=0.0] The minimum angle measured from the positive z-axis and toward the negative z-axis.
- * @param {number} [options.maximumCone=PI] The maximum angle measured from the positive z-axis and toward the negative z-axis.
  * @param {number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
  * @param {number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices. * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  * @param {Credit|string} [options.credit] A credit for the panorama, which is displayed on the canvas.
@@ -90,21 +84,11 @@ function EquirectangularPanorama(options) {
   this._radius = options.radius || 100000.0;
   this._image = options.image;
   this._transform = options.transform || Matrix4.IDENTITY;
-  this._minimumClock = options.minimumClock || 0; //degrees
-  this._maximumClock = options.maximumClock || 360;
-  this._minimumCone = options.minimumCone || 0;
-  this._maximumCone = options.maximumCone || 180;
   this._repeatHorizontal = options.repeatHorizontal || 1.0;
   this._repeatVertical = options.repeatVertical || 1.0;
 
-  const geometry = new EllipsoidGeometry({
-    radii: new Cartesian3(this._radius, this._radius, this._radius),
-    minimumClock: CesiumMath.toRadians(this._minimumClock),
-    maximumClock: CesiumMath.toRadians(this._maximumClock),
-    minimumCone: CesiumMath.toRadians(this._minimumCone),
-    maximumCone: CesiumMath.toRadians(this._maximumCone),
-    stackPartitions: 32,
-    slicePartitions: 32,
+  const geometry = new SphereGeometry({
+    radius: this._radius,
     vertexFormat: VertexFormat.ALL,
   });
 
