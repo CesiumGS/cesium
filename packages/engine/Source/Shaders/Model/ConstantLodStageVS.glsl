@@ -7,6 +7,6 @@ float modelScale = (modelScaleX + modelScaleY + modelScaleZ) / 3.0;
 
 // Transform model position through ENU but as direction only (w=0) to avoid position-dependent rotation
 vec3 enuDir = (u_constantLodWorldToEnu * czm_model * vec4(v_positionMC, 0.0)).xyz;
-v_constantLodUvCustom.xy = (enuDir.xy + u_constantLodOffset) * vec2(1.0, -1.0) / modelScale;
+v_constantLodUvCustom.xy = (enuDir.yx + u_constantLodOffset) / modelScale;
 v_constantLodUvCustom.z = u_constantLodDistance / modelScale;
 #endif

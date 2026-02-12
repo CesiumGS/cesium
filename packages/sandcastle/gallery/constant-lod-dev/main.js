@@ -59,6 +59,33 @@ const options = [
       );
     },
   },
+  {
+    text: "Checkerboard with emissive",
+    onselect: function () {
+      createModel(
+        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_CheckerEmissive.gltf",
+        0,
+      );
+    },
+  },
+  {
+    text: "Checkerboard with emissive and no CLOD",
+    onselect: function () {
+      createModel(
+        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_CheckerEmissive_NoCLOD.gltf",
+        0,
+      );
+    },
+  },
+  {
+    text: "Checkerboard with KHR_texture_transform",
+    onselect: function () {
+      createModel(
+        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_CheckerTransform.gltf",
+        0,
+      );
+    },
+  },
 ];
 
 Sandcastle.addToolbarMenu(options);
