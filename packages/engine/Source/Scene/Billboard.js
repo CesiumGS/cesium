@@ -52,7 +52,7 @@ import isDataUri from "../Core/isDataUri.js";
  * @property {NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Specifying near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
  * @property {BoundingRectangle} [imageSubRegion] A {@link BoundingRectangle} Specifying the sub-region of the image to use for the billboard, rather than the entire image.
  * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} Specifying the distance from the camera at which this billboard will be displayed.
- * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+ * @property {number} [disableDepthTestDistance] The distance from the camera, beyond which, depth testing is disabled—to, for example, prevent clipping against terrain.
  * @property {SplitDirection} [splitDirection] A {@link SplitDirection} Specifying the split property of the billboard.
  */
 
@@ -845,10 +845,13 @@ Object.defineProperties(Billboard.prototype, {
   },
 
   /**
-   * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
-   * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+   * Gets or sets the distance from the camera, beyond which, depth testing is disbaled—to,
+   * for example, prevent clipping against terrain. When set to <code>undefined</code> or
+   * <code>0</code>, the depth test is always applied. When set to
+   * <code>Number.POSITIVE_INFINITY</code>, the depth test is never applied.
    * @memberof Billboard.prototype
-   * @type {number}
+   * @type {number|undefined}
+   * @default undefined
    */
   disableDepthTestDistance: {
     get: function () {
