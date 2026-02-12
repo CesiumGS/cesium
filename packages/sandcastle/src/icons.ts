@@ -33,7 +33,6 @@ import chevronUp from "@stratakit/icons/chevron-up.svg";
 import error from "@stratakit/icons/error.svg";
 import warning from "@stratakit/icons/warning.svg";
 import pin from "@stratakit/icons/pin.svg";
-import geminiLogo from "./assets/icons/gemini-logo.png";
 import cesiumLogo from "./assets/cesium-logo.svg";
 
 export {
@@ -72,6 +71,5 @@ export {
   error,
   warning,
   pin,
-  geminiLogo,
   cesiumLogo,
 };
