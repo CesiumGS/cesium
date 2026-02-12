@@ -2757,7 +2757,11 @@ function handleTileFailure(error, tileset, tile) {
     url = tile._contentResource.url;
   }
 
-  const message = defined(error.message) ? error.message : error.toString();
+  const message = defined(error)
+    ? defined(error.message)
+      ? error.message
+      : error.toString()
+    : "Unknown error";
   if (tileset.tileFailed.numberOfListeners > 0) {
     tileset.tileFailed.raiseEvent({
       url: url,
@@ -2766,7 +2770,9 @@ function handleTileFailure(error, tileset, tile) {
   } else {
     console.log(`A 3D tile failed to load: ${url}`);
     console.log(`Error: ${message}`);
-    console.log(error.stack);
+    if (defined(error) && defined(error.stack)) {
+      console.log(error.stack);
+    }
   }
 }
 
