@@ -57,7 +57,7 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.attributeArrays)) {
-    const featureCountMax = collection._featureCountMax;
+    const featureCountMax = collection.featureCountMax;
     const positionHighAndShowArray = new Float32Array(featureCountMax * 4);
     const positionLowAndColorArray = new Float32Array(featureCountMax * 4);
 
@@ -203,8 +203,8 @@ function renderPoint3DCollection(collection, frameState, renderContext) {
     uniformMap: renderContext.uniformMap,
 
     owner: collection,
-    count: collection._featureCount,
-    boundingVolume: collection._boundingVolume,
+    count: collection.featureCount,
+    boundingVolume: collection.boundingVolume,
     debugShowBoundingVolume: collection.debugShowBoundingVolume,
   });
 

@@ -61,9 +61,7 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
     const cartesian = new Cartesian3();
     const encodedCartesian = new EncodedCartesian3();
 
-    const featureCount = collection._featureCount;
-    const vertexCount = collection._positionCount;
-    const triangleCount = collection._triangleCount;
+    const { featureCount, vertexCount, triangleCount } = collection;
 
     let vertexCountPerFeatureMax = 0;
     let triangleCountPerFeatureMax = 0;
@@ -208,7 +206,7 @@ function renderPolygon3DCollection(collection, frameState, renderContext) {
     uniformMap: renderContext.uniformMap,
 
     owner: collection,
-    boundingVolume: collection._boundingVolume,
+    boundingVolume: collection.boundingVolume,
     debugShowBoundingVolume: collection.debugShowBoundingVolume,
   });
 

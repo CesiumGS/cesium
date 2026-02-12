@@ -28,46 +28,74 @@ class Feature3DCollection {
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
-    // Public.
-
     /** @type {boolean} */
     this.show = options.show ?? true;
+
+    /** @type {BoundingSphere} */
+    this.boundingVolume = new BoundingSphere();
 
     /** @type {boolean} */
     this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
-    // Protected.
-
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @protected
+     */
     this._version = 0;
 
-    /** @type {BoundingSphere} */
-    this._boundingVolume = new BoundingSphere();
-
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @protected
+     */
     this._nextFeatureId = 0;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @protected
+     */
     this._featureCount = 0;
-    /** @type {number} */
+
+    /**
+     * @type {number}
+     * @protected
+     */
     this._featureCountMax = options.maxFeatureCount ?? Feature3D.DEFAULT_COUNT;
-    /** @type {ArrayBuffer} */
+
+    /**
+     * @type {ArrayBuffer}
+     * @protected
+     */
     this._featureBuffer = null;
-    /** @type {DataView<ArrayBuffer>} */
+
+    /**
+     * @type {DataView<ArrayBuffer>}
+     * @ignore
+     */
     this._featureView = null;
 
-    this._allocateFeatureBuffer();
-
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     this._positionCount = 0;
-    /** @type {number} */
-    this._positionCountMax = options.maxVertexCount ?? Feature3D.DEFAULT_COUNT;
-    /** @type {ArrayBuffer} */
-    this._positionBuffer = null;
-    /** @type {Float64Array<ArrayBuffer>} */
-    this._positionF64 = null;
 
-    this._allocatePositionBuffer();
+    /**
+     * @type {number}
+     * @protected
+     */
+    this._positionCountMax = options.maxVertexCount ?? Feature3D.DEFAULT_COUNT;
+
+    /**
+     * @type {ArrayBuffer}
+     * @protected
+     */
+    this._positionBuffer = null;
+
+    /**
+     * @type {Float64Array<ArrayBuffer>}
+     * @ignore
+     */
+    this._positionF64 = null;
 
     // Potentially-dirty features are tracked as a contiguous range, with
     // 'clean' features potentially within the range. Individual feature
@@ -79,6 +107,9 @@ class Feature3DCollection {
     this._dirtyCount = 0;
     /** @type {boolean} */
     this._dirtyBoundingVolume = false;
+
+    this._allocateFeatureBuffer();
+    this._allocatePositionBuffer();
   }
 
   /**
@@ -146,6 +177,10 @@ class Feature3DCollection {
 
   /** Rebuilds collection bounding volume. */
   _updateBoundingVolume() {
+    // TODO: This approach works for all feature types today, but it might
+    // be more efficient to take a union of the per-feature bounding volumes
+    // on polyline and polygon types.
+
     // Exclude unused space in the position buffer.
     const vertices = new Float64Array(
       this._positionF64.buffer,
@@ -156,7 +191,7 @@ class Feature3DCollection {
       vertices,
       Cartesian3.ZERO,
       4,
-      this._boundingVolume,
+      this.boundingVolume,
     );
 
     this._dirtyBoundingVolume = false;
@@ -221,13 +256,28 @@ class Feature3DCollection {
   // ACCESSORS
 
   /** @type {number} */
-  get length() {
+  get featureCount() {
     return this._featureCount;
+  }
+
+  /** @type {number} */
+  get featureCountMax() {
+    return this._featureCountMax;
   }
 
   /** @type {number} */
   get byteLength() {
     return this._featureBuffer.byteLength + this._positionBuffer.byteLength;
+  }
+
+  /** @type {number} */
+  get vertexCount() {
+    return this._positionCount;
+  }
+
+  /** @type {number} */
+  get vertexCountMax() {
+    return this._positionCountMax;
   }
 }
 

@@ -20,9 +20,13 @@ const { ERR_CAPACITY, ERR_RESIZE } = Feature3D;
  * See: https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.6
  */
 class Polygon3D extends Feature3D {
-  /** @type {BoundingSphere} */
+  /**
+   * @type {BoundingSphere}
+   * @protected
+   */
   _boundingSphere = new BoundingSphere();
 
+  /** @ignore */
   static Layout = {
     ...Feature3D.Layout,
 
@@ -126,11 +130,11 @@ class Polygon3D extends Feature3D {
     const vertexOffset = this._getUint32(Polygon3D.Layout.POSITION_OFFSET_U32);
     const srcCount = this._getUint32(Polygon3D.Layout.POSITION_COUNT_U32);
     const dstCount = positions.length / 3;
-    const collectionCount = collection._positionCount + dstCount - srcCount;
+    const collectionCount = collection.vertexCount + dstCount - srcCount;
 
     //>>includeStart('debug', pragmas.debug);
     assert(srcCount === dstCount || this._isResizable(), ERR_RESIZE);
-    assert(collectionCount <= collection._positionCountMax, ERR_CAPACITY);
+    assert(collectionCount <= collection.vertexCount, ERR_CAPACITY);
     //>>includeEnd('debug');
 
     collection._positionCount = collectionCount;
@@ -172,11 +176,11 @@ class Polygon3D extends Feature3D {
     const holeOffset = this._getUint32(Polygon3D.Layout.HOLE_OFFSET_U32);
     const srcCount = this._getUint32(Polygon3D.Layout.HOLE_COUNT_U32);
     const dstCount = holes.length;
-    const collectionCount = collection._holeCount + dstCount - srcCount;
+    const collectionCount = collection.holeCount + dstCount - srcCount;
 
     //>>includeStart('debug', pragmas.debug);
     assert(srcCount === dstCount || this._isResizable(), ERR_RESIZE);
-    assert(collectionCount <= collection._holeCountMax, ERR_CAPACITY);
+    assert(collectionCount <= collection.holeCountMax, ERR_CAPACITY);
     //>>includeEnd('debug');
 
     collection._holeCount = collectionCount;
@@ -222,11 +226,11 @@ class Polygon3D extends Feature3D {
     );
     const srcCount = this._getUint32(Polygon3D.Layout.TRIANGLE_COUNT_U32);
     const dstCount = indices.length / 3;
-    const collectionCount = collection._triangleCount + dstCount - srcCount;
+    const collectionCount = collection.triangleCount + dstCount - srcCount;
 
     //>>includeStart('debug', pragmas.debug);
     assert(srcCount === dstCount || this._isResizable(), ERR_RESIZE);
-    assert(collectionCount <= collection._triangleCountMax, ERR_CAPACITY);
+    assert(collectionCount <= collection.triangleCountMax, ERR_CAPACITY);
     //>>includeEnd('debug');
 
     collection._triangleCount += dstCount - srcCount;

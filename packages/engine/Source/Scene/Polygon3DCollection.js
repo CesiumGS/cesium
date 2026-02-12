@@ -37,27 +37,56 @@ class Polygon3DCollection extends Feature3DCollection {
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     this._holeCount = 0;
-    /** @type {number} */
+
+    /**
+     * @type {number}
+     * @protected
+     */
     this._holeCountMax = options.maxHoleCount ?? Feature3D.DEFAULT_COUNT;
-    /** @type {ArrayBuffer} */
+
+    /**
+     * @type {ArrayBuffer}
+     * @protected
+     */
     this._holeIndexBuffer = null;
-    /** @type {Uint32Array<ArrayBuffer>} */
+
+    /**
+     * @type {Uint32Array<ArrayBuffer>}
+     * @ignore
+     */
     this._holeIndexU32 = null;
 
-    this._allocateHoleIndexBuffer();
-
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     this._triangleCount = 0;
-    /** @type {number} */
+
+    /**
+     * @type {number}
+     * @protected
+     */
     this._triangleCountMax =
       options.maxTriangleCount ?? Feature3D.DEFAULT_COUNT;
-    /** @type {ArrayBuffer} */
+
+    /**
+     * @type {ArrayBuffer}
+     * @protected
+     */
     this._triangleIndexBuffer = null;
-    /** @type {Uint32Array<ArrayBuffer>} */
+
+    /**
+     * @type {Uint32Array<ArrayBuffer>}
+     * @ignore
+     */
     this._triangleIndexU32 = null;
 
+    this._allocateHoleIndexBuffer();
     this._allocateTriangleIndexBuffer();
   }
 
@@ -150,6 +179,26 @@ class Polygon3DCollection extends Feature3DCollection {
       this._holeIndexBuffer.byteLength +
       this._triangleIndexBuffer.byteLength
     );
+  }
+
+  /** @type {number} */
+  get holeCount() {
+    return this._holeCount;
+  }
+
+  /** @type {number} */
+  get holeCountMax() {
+    return this._holeCountMax;
+  }
+
+  /** @type {number} */
+  get triangleCount() {
+    return this._triangleCount;
+  }
+
+  /** @type {number} */
+  get triangleCountMax() {
+    return this._triangleCountMax;
   }
 }
 export default Polygon3DCollection;

@@ -61,8 +61,7 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
     const cartesian = new Cartesian3();
     const encodedCartesian = new EncodedCartesian3();
 
-    const featureCount = collection._featureCount;
-    const vertexCount = collection._positionCount;
+    const { featureCount, vertexCount } = collection;
 
     let vertexCountPerFeatureMax = 0;
     for (let i = 0, il = featureCount; i < il; i++) {
@@ -197,7 +196,7 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
     uniformMap: renderContext.uniformMap,
 
     owner: collection,
-    boundingVolume: collection._boundingVolume,
+    boundingVolume: collection.boundingVolume,
     debugShowBoundingVolume: collection.debugShowBoundingVolume,
   });
 

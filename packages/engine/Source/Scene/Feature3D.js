@@ -6,15 +6,25 @@ import Color from "../Core/Color.js";
 
 /** @abstract */
 class Feature3D {
-  /** @type {Feature3DCollection<Feature3D>} */
+  /**
+   * @type {Feature3DCollection<Feature3D>}
+   * @protected
+   */
   _collection = null;
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @protected
+   */
   _index = -1;
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @protected
+   */
   _byteOffset = -1;
 
+  /** @ignore */
   static Layout = {
     /**
      * Integer ID of this feature, unique in collection.
@@ -46,11 +56,11 @@ class Feature3D {
 
   static DEFAULT_COUNT = 1024;
 
-  static ERR_NOT_IMPLEMENTED = "Not implemented.";
+  static ERR_NOT_IMPLEMENTED = "Not implemented."; // TODO(dev)
   static ERR_INSTANTIATION =
     "This function defines an interface and should not be called directly.";
   static ERR_RESIZE =
-    "Collection buffer size is immutable after initialization.";
+    "Feature buffer range cannot be resized after initialization.";
   static ERR_CAPACITY = "Collection buffer capacity exceeded.";
 
   constructor() {}
@@ -78,7 +88,7 @@ class Feature3D {
    * @protected
    */
   _isResizable() {
-    return this._index === this._collection._featureCount - 1;
+    return this._index === this._collection.featureCount - 1;
   }
 
   /////////////////////////////////////////////////////////////////////////////

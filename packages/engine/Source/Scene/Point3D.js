@@ -16,6 +16,7 @@ const { ERR_CAPACITY } = Feature3D;
  * See: https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.2
  */
 class Point3D extends Feature3D {
+  /** @ignore */
   static Layout = {
     ...Feature3D.Layout,
 
@@ -64,7 +65,7 @@ class Point3D extends Feature3D {
     const vertexOffset = this._getUint32(Point3D.Layout.POSITION_OFFSET_U32);
 
     //>>includeStart('debug', pragmas.debug);
-    assert(vertexOffset < collection._positionCountMax, ERR_CAPACITY);
+    assert(vertexOffset < collection.vertexCountMax, ERR_CAPACITY);
     //>>includeEnd('debug');
 
     this._collection._positionF64[vertexOffset * 3] = position.x;
