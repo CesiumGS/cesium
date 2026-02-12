@@ -3,6 +3,12 @@ import defined from "../Core/defined.js";
 const DEFAULT_CULL_MIN_ALPHA = 24 / 255;
 const DEFAULT_SORT_FRUSTUM_MARGIN = 1.05;
 const DEFAULT_SORT_DEPTH_BIAS = 0.25;
+const DEFAULT_OCTREE_MAX_DEPTH = 8;
+const DEFAULT_OCTREE_MAX_SPLATS_PER_NODE = 1000;
+const DEFAULT_OCTREE_MIN_SPLATS = 150000;
+const DEFAULT_OCTREE_FOV_BIAS = 0.6;
+const DEFAULT_OCTREE_RADIUS_SCALE = 1.0;
+const OCTREE_EPSILON = 1e-6;
 
 export function getAggregateCullSettings(
   tileset,
@@ -245,12 +251,309 @@ export function cullSnapshotAttributes(
   };
 }
 
+function shouldBuildSortOctree(tileset, count) {
+  if (!defined(tileset) || tileset._gaussianSplatSortOctree === false) {
+    return false;
+  }
+  const minSplats = defined(tileset._gaussianSplatSortOctreeMinSplats)
+    ? Math.max(Math.floor(tileset._gaussianSplatSortOctreeMinSplats), 0)
+    : DEFAULT_OCTREE_MIN_SPLATS;
+  return count >= minSplats;
+}
+
+export function buildSplatOctree(positions, count, tileset) {
+  if (!shouldBuildSortOctree(tileset, count)) {
+    return undefined;
+  }
+  if (!defined(positions) || count === 0) {
+    return undefined;
+  }
+
+  const maxDepth = defined(tileset._gaussianSplatSortOctreeMaxDepth)
+    ? Math.max(Math.floor(tileset._gaussianSplatSortOctreeMaxDepth), 1)
+    : DEFAULT_OCTREE_MAX_DEPTH;
+  const maxSplatsPerNode = defined(
+    tileset._gaussianSplatSortOctreeMaxSplatsPerNode,
+  )
+    ? Math.max(Math.floor(tileset._gaussianSplatSortOctreeMaxSplatsPerNode), 1)
+    : DEFAULT_OCTREE_MAX_SPLATS_PER_NODE;
+
+  let minX = positions[0];
+  let minY = positions[1];
+  let minZ = positions[2];
+  let maxX = minX;
+  let maxY = minY;
+  let maxZ = minZ;
+  for (let i = 1; i < count; i++) {
+    const base = i * 3;
+    const x = positions[base];
+    const y = positions[base + 1];
+    const z = positions[base + 2];
+    if (x < minX) {
+      minX = x;
+    } else if (x > maxX) {
+      maxX = x;
+    }
+    if (y < minY) {
+      minY = y;
+    } else if (y > maxY) {
+      maxY = y;
+    }
+    if (z < minZ) {
+      minZ = z;
+    } else if (z > maxZ) {
+      maxZ = z;
+    }
+  }
+
+  const rootIndexes = new Uint32Array(count);
+  for (let i = 0; i < count; i++) {
+    rootIndexes[i] = i;
+  }
+
+  const nodes = [];
+  const stack = [
+    {
+      minX: minX,
+      minY: minY,
+      minZ: minZ,
+      maxX: maxX,
+      maxY: maxY,
+      maxZ: maxZ,
+      depth: 0,
+      indexes: rootIndexes,
+    },
+  ];
+
+  while (stack.length > 0) {
+    const node = stack.pop();
+    const dx = node.maxX - node.minX;
+    const dy = node.maxY - node.minY;
+    const dz = node.maxZ - node.minZ;
+    const canSplit =
+      node.depth < maxDepth &&
+      node.indexes.length > maxSplatsPerNode &&
+      (dx > OCTREE_EPSILON || dy > OCTREE_EPSILON || dz > OCTREE_EPSILON);
+
+    if (!canSplit) {
+      nodes.push({
+        centerX: (node.minX + node.maxX) * 0.5,
+        centerY: (node.minY + node.maxY) * 0.5,
+        centerZ: (node.minZ + node.maxZ) * 0.5,
+        // Match GaussianSplats3D's node-size based thresholding using diagonal length.
+        radius: Math.sqrt(dx * dx + dy * dy + dz * dz),
+        indexes: node.indexes,
+      });
+      continue;
+    }
+
+    const midX = (node.minX + node.maxX) * 0.5;
+    const midY = (node.minY + node.maxY) * 0.5;
+    const midZ = (node.minZ + node.maxZ) * 0.5;
+    const childCounts = new Uint32Array(8);
+    for (let i = 0; i < node.indexes.length; i++) {
+      const index = node.indexes[i];
+      const base = index * 3;
+      const x = positions[base];
+      const y = positions[base + 1];
+      const z = positions[base + 2];
+      const childIndex =
+        (x >= midX ? 1 : 0) + (y >= midY ? 2 : 0) + (z >= midZ ? 4 : 0);
+      childCounts[childIndex]++;
+    }
+
+    const childIndexes = new Array(8);
+    const childOffsets = new Uint32Array(8);
+    for (let child = 0; child < 8; child++) {
+      if (childCounts[child] > 0) {
+        childIndexes[child] = new Uint32Array(childCounts[child]);
+      }
+    }
+
+    for (let i = 0; i < node.indexes.length; i++) {
+      const index = node.indexes[i];
+      const base = index * 3;
+      const x = positions[base];
+      const y = positions[base + 1];
+      const z = positions[base + 2];
+      const childIndex =
+        (x >= midX ? 1 : 0) + (y >= midY ? 2 : 0) + (z >= midZ ? 4 : 0);
+      const writeOffset = childOffsets[childIndex]++;
+      childIndexes[childIndex][writeOffset] = index;
+    }
+
+    for (let child = 0; child < 8; child++) {
+      const indexes = childIndexes[child];
+      if (!defined(indexes) || indexes.length === 0) {
+        continue;
+      }
+      stack.push({
+        minX: (child & 1) !== 0 ? midX : node.minX,
+        minY: (child & 2) !== 0 ? midY : node.minY,
+        minZ: (child & 4) !== 0 ? midZ : node.minZ,
+        maxX: (child & 1) !== 0 ? node.maxX : midX,
+        maxY: (child & 2) !== 0 ? node.maxY : midY,
+        maxZ: (child & 4) !== 0 ? node.maxZ : midZ,
+        depth: node.depth + 1,
+        indexes: indexes,
+      });
+    }
+  }
+
+  return {
+    count: count,
+    nodes: nodes,
+  };
+}
+
+function gatherSortCandidateIndexesFromOctree(
+  octree,
+  modelView,
+  frameState,
+  tileset,
+  stats,
+) {
+  const nodes = octree.nodes;
+  if (!defined(nodes) || nodes.length === 0) {
+    return undefined;
+  }
+
+  const frustum =
+    defined(frameState) && defined(frameState.camera)
+      ? frameState.camera.frustum
+      : undefined;
+  let fovy = defined(frustum) ? frustum.fovy : undefined;
+  if (
+    !defined(fovy) &&
+    defined(frustum) &&
+    defined(frustum.top) &&
+    defined(frustum.near) &&
+    frustum.near !== 0.0
+  ) {
+    fovy = 2.0 * Math.atan(frustum.top / frustum.near);
+  }
+  const aspectRatio = defined(frustum) ? frustum.aspectRatio : undefined;
+  if (!defined(fovy) || !defined(aspectRatio) || aspectRatio <= 0.0) {
+    return undefined;
+  }
+  const halfFovy = fovy * 0.5;
+  const halfFovx = Math.atan(Math.tan(halfFovy) * aspectRatio);
+  const cosHalfFovX = Math.cos(halfFovx);
+  const cosHalfFovY = Math.cos(halfFovy);
+
+  const fovBias =
+    defined(tileset) && defined(tileset._gaussianSplatSortOctreeFovBias)
+      ? tileset._gaussianSplatSortOctreeFovBias
+      : DEFAULT_OCTREE_FOV_BIAS;
+  const radiusScale =
+    defined(tileset) && defined(tileset._gaussianSplatSortOctreeRadiusScale)
+      ? tileset._gaussianSplatSortOctreeRadiusScale
+      : DEFAULT_OCTREE_RADIUS_SCALE;
+
+  const visibleNodes = [];
+  let activeCount = 0;
+  let culledBehindCount = 0;
+  let culledFrustumCount = 0;
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    const x =
+      modelView[0] * node.centerX +
+      modelView[4] * node.centerY +
+      modelView[8] * node.centerZ +
+      modelView[12];
+    const y =
+      modelView[1] * node.centerX +
+      modelView[5] * node.centerY +
+      modelView[9] * node.centerZ +
+      modelView[13];
+    const z =
+      modelView[2] * node.centerX +
+      modelView[6] * node.centerY +
+      modelView[10] * node.centerZ +
+      modelView[14];
+
+    const distance = Math.sqrt(x * x + y * y + z * z);
+    if (distance <= OCTREE_EPSILON) {
+      activeCount += node.indexes.length;
+      visibleNodes.push({
+        distance: 0.0,
+        indexes: node.indexes,
+      });
+      continue;
+    }
+
+    const invDistance = 1.0 / distance;
+    const nx = x * invDistance;
+    const ny = y * invDistance;
+    const nz = z * invDistance;
+    const yzLen = Math.sqrt(ny * ny + nz * nz);
+    const xzLen = Math.sqrt(nx * nx + nz * nz);
+    const cameraAngleYZDot = yzLen > OCTREE_EPSILON ? -nz / yzLen : 1.0;
+    const cameraAngleXZDot = xzLen > OCTREE_EPSILON ? -nz / xzLen : 1.0;
+    const outOfFovY = cameraAngleYZDot < cosHalfFovY - fovBias;
+    const outOfFovX = cameraAngleXZDot < cosHalfFovX - fovBias;
+    if ((outOfFovX || outOfFovY) && distance > node.radius * radiusScale) {
+      culledFrustumCount += node.indexes.length;
+      continue;
+    }
+
+    if (z > node.radius * radiusScale) {
+      culledBehindCount += node.indexes.length;
+      continue;
+    }
+
+    activeCount += node.indexes.length;
+    visibleNodes.push({
+      distance: distance,
+      indexes: node.indexes,
+    });
+  }
+
+  if (activeCount === 0) {
+    stats.inputCount = octree.count;
+    stats.activeCount = 0;
+    stats.culledBehindCount = culledBehindCount;
+    stats.culledFrustumCount = culledFrustumCount;
+    stats.octreeNodeCount = nodes.length;
+    stats.octree = true;
+    return new Uint32Array(0);
+  }
+
+  if (activeCount >= octree.count) {
+    stats.inputCount = octree.count;
+    stats.activeCount = octree.count;
+    stats.culledBehindCount = culledBehindCount;
+    stats.culledFrustumCount = culledFrustumCount;
+    stats.octreeNodeCount = nodes.length;
+    stats.octree = true;
+    return null;
+  }
+
+  visibleNodes.sort((a, b) => a.distance - b.distance);
+  const activeIndexes = new Uint32Array(activeCount);
+  let offset = 0;
+  for (let i = 0; i < visibleNodes.length; i++) {
+    const indexes = visibleNodes[i].indexes;
+    activeIndexes.set(indexes, offset);
+    offset += indexes.length;
+  }
+
+  stats.inputCount = octree.count;
+  stats.activeCount = activeCount;
+  stats.culledBehindCount = culledBehindCount;
+  stats.culledFrustumCount = culledFrustumCount;
+  stats.octreeNodeCount = nodes.length;
+  stats.octree = true;
+  return activeIndexes;
+}
+
 export function gatherSortCandidateIndexes(
   positions,
   modelView,
   count,
   tileset,
   frameState,
+  octree,
   stats,
 ) {
   const resultStats = defined(stats)
@@ -260,6 +563,8 @@ export function gatherSortCandidateIndexes(
         activeCount: count,
         culledBehindCount: 0,
         culledFrustumCount: 0,
+        octreeNodeCount: 0,
+        octree: false,
       };
   if (
     !defined(positions) ||
@@ -270,7 +575,25 @@ export function gatherSortCandidateIndexes(
     resultStats.activeCount = count;
     resultStats.culledBehindCount = 0;
     resultStats.culledFrustumCount = 0;
+    resultStats.octreeNodeCount = 0;
+    resultStats.octree = false;
     return undefined;
+  }
+
+  if (defined(octree) && shouldBuildSortOctree(tileset, count)) {
+    const octreeIndexes = gatherSortCandidateIndexesFromOctree(
+      octree,
+      modelView,
+      frameState,
+      tileset,
+      resultStats,
+    );
+    if (defined(octreeIndexes)) {
+      return octreeIndexes;
+    }
+    if (octreeIndexes === null) {
+      return undefined;
+    }
   }
 
   const depthBias =
@@ -346,6 +669,8 @@ export function gatherSortCandidateIndexes(
   resultStats.activeCount = activeCount;
   resultStats.culledBehindCount = culledBehindCount;
   resultStats.culledFrustumCount = culledFrustumCount;
+  resultStats.octreeNodeCount = 0;
+  resultStats.octree = false;
 
   if (activeCount === count) {
     return undefined;
@@ -412,6 +737,7 @@ export function remapSortedIndexes(sortedData, activeIndexes) {
 const GaussianSplatSortCulling = {
   getAggregateCullSettings: getAggregateCullSettings,
   cullSnapshotAttributes: cullSnapshotAttributes,
+  buildSplatOctree: buildSplatOctree,
   gatherSortCandidateIndexes: gatherSortCandidateIndexes,
   createSortPositionsForIndexes: createSortPositionsForIndexes,
   remapSortedIndexes: remapSortedIndexes,

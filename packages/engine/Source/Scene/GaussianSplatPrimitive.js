@@ -4,6 +4,7 @@ import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
 import {
+  buildSplatOctree,
   cullSnapshotAttributes,
   createSortPositionsForIndexes,
   gatherSortCandidateIndexes,
@@ -1332,6 +1333,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         cullSettings,
         cullModelView,
       );
+      const octree = buildSplatOctree(
+        culled.positions,
+        culled.numSplats,
+        tileset,
+      );
 
       this._pendingSnapshot = {
         generation: this._splatDataGeneration,
@@ -1348,6 +1354,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         sphericalHarmonicsTexture: undefined,
         lastTextureWidth: 0,
         lastTextureHeight: 0,
+        octree: octree,
         state: SnapshotState.BUILDING,
       };
 
@@ -1395,6 +1402,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           pending.numSplats,
           tileset,
           frameState,
+          pending.octree,
         );
         const sortCount = defined(activeIndexes)
           ? activeIndexes.length
@@ -1520,6 +1528,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         this._numSplats,
         tileset,
         frameState,
+        this._snapshot?.octree,
       );
       const sortCount = defined(activeIndexes)
         ? activeIndexes.length
@@ -1597,6 +1606,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         this._numSplats,
         tileset,
         frameState,
+        this._snapshot?.octree,
       );
       const sortCount = defined(activeIndexes)
         ? activeIndexes.length
