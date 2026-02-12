@@ -23,6 +23,7 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import Polyline3DCollection from "./Polyline3DCollection.js"; */
+/** @import {TypedArray, TypedArrayConstructor} from "../Core/globalTypes.js"; */
 
 /** @type {{positionHighAndShow: number, positionLowAndColor: number}} */
 const Polyline3DAttributeLocations = {
@@ -35,6 +36,8 @@ const Polyline3DAttributeLocations = {
 /**
  * @typedef {object} Polyline3DRenderContext
  * @property {VertexArray} [vertexArray]
+ * @property {Record<number, TypedArray>} [attributeArrays]
+ * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {object} [uniformMap]
@@ -57,36 +60,68 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
     console.time("renderPolyline3DCollection::init");
   }
 
-  if (!defined(renderContext.vertexArray)) {
+  if (
+    !defined(renderContext.attributeArrays) ||
+    !defined(renderContext.indexArray)
+  ) {
+    const { vertexCountMax, featureCount } = collection;
+    const positionHighAndShowArray = new Float32Array(vertexCountMax * 4);
+    const positionLowAndColorArray = new Float32Array(vertexCountMax * 4);
+
+    // gl.LINES requires `(vertexCount - featureCount) * 2` indices. Because
+    // `featureCount` can only increase, and adding more features reduces the
+    // number of gl.LINES that can fit within `vertexCountMax`, allocate the
+    // index buffer based on `featureCount`, not `featureCountMax`.
+    const indexArray = new Uint32Array((vertexCountMax - featureCount) * 2);
+
+    renderContext.attributeArrays = {
+      [Polyline3DAttributeLocations.positionHighAndShow]:
+        positionHighAndShowArray,
+      [Polyline3DAttributeLocations.positionLowAndColor]:
+        positionLowAndColorArray,
+    };
+
+    renderContext.indexArray = indexArray;
+  }
+
+  if (collection._dirtyCount > 0) {
+    const { _dirtyOffset, _dirtyCount } = collection;
+
     const polyline = new Polyline3D();
     const color = new Color();
     const cartesian = new Cartesian3();
     const encodedCartesian = new EncodedCartesian3();
 
-    const { featureCount, vertexCount } = collection;
+    const positionHighAndShowArray =
+      renderContext.attributeArrays[
+        Polyline3DAttributeLocations.positionHighAndShow
+      ];
+
+    const positionLowAndColorArray =
+      renderContext.attributeArrays[
+        Polyline3DAttributeLocations.positionLowAndColor
+      ];
+
+    const indexArray = renderContext.indexArray;
 
     let vertexCountPerFeatureMax = 0;
-    for (let i = 0, il = featureCount; i < il; i++) {
+    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
       Polyline3D.fromCollection(collection, i, polyline);
       vertexCountPerFeatureMax = Math.max(
         polyline.getPositionCount(),
         vertexCountPerFeatureMax,
       );
     }
-
     const cartesianArray = new Float64Array(vertexCountPerFeatureMax * 3);
-    const positionHighAndShowArray = new Float32Array(vertexCount * 4);
-    const positionLowAndColorArray = new Float32Array(vertexCount * 4);
-    const indexArray = new Uint32Array((vertexCount - featureCount) * 2);
 
-    let vOffset = 0;
-    let iOffset = 0;
-
-    for (let i = 0, il = featureCount; i < il; i++) {
+    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
       Polyline3D.fromCollection(collection, i, polyline);
 
       polyline.getPositions(cartesianArray);
       polyline.getColor(color);
+
+      let vOffset = polyline._getUint32(Polyline3D.Layout.POSITION_OFFSET_U32);
+      let iOffset = (vOffset - i) * 2;
 
       for (let j = 0, jl = polyline.getPositionCount(); j < jl; j++) {
         Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
@@ -103,7 +138,8 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
         positionLowAndColorArray[vOffset * 4 + 3] =
           AttributeCompression.encodeRGB8(color);
 
-        // TODO(donmccurdy): Illegible, explain/document this.
+        // Each vertex, excluding the first and last, is repeated twice, as
+        // the end of the previous line segment and the beginning of the next.
         indexArray[iOffset++] = vOffset;
         if (j > 0 && j + 1 < jl) {
           indexArray[iOffset++] = vOffset;
@@ -112,16 +148,22 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
         vOffset++;
       }
     }
+  }
+
+  if (!defined(renderContext.vertexArray)) {
+    const attributeArrays = renderContext.attributeArrays;
 
     const positionHighBuffer = Buffer.createVertexBuffer({
-      typedArray: positionHighAndShowArray,
+      typedArray:
+        attributeArrays[Polyline3DAttributeLocations.positionHighAndShow],
       context,
       // @ts-expect-error TODO(donmccurdy): BufferUsage types incorrect.
       usage: BufferUsage.STATIC_DRAW,
     });
 
     const positionLowBuffer = Buffer.createVertexBuffer({
-      typedArray: positionLowAndColorArray,
+      typedArray:
+        attributeArrays[Polyline3DAttributeLocations.positionLowAndColor],
       context,
       // @ts-expect-error TODO(donmccurdy): BufferUsage types incorrect.
       usage: BufferUsage.STATIC_DRAW,
@@ -129,7 +171,7 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
 
     const indexBuffer = Buffer.createIndexBuffer({
       context,
-      typedArray: indexArray,
+      typedArray: renderContext.indexArray,
       // @ts-expect-error TODO(donmccurdy): BufferUsage types incorrect.
       usage: BufferUsage.STATIC_DRAW,
       // @ts-expect-error TODO(donmccurdy): IndexDatatype types incorrect.
@@ -154,6 +196,25 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
         },
       ],
     });
+  } else if (collection._dirtyCount > 0) {
+    // TODO: Compute dirty vertex and index ranges.
+    updateAttributeRange(
+      renderContext,
+      Polyline3DAttributeLocations.positionHighAndShow,
+      0,
+      collection.vertexCount,
+    );
+    updateAttributeRange(
+      renderContext,
+      Polyline3DAttributeLocations.positionLowAndColor,
+      0,
+      collection.vertexCount,
+    );
+    updateIndexRange(
+      renderContext,
+      0,
+      (collection.vertexCount - collection.featureCount) * 2,
+    );
   }
 
   if (!defined(renderContext.renderState)) {
@@ -197,11 +258,15 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
     uniformMap: renderContext.uniformMap,
 
     owner: collection,
+    count: (collection.vertexCount - collection.featureCount) * 2,
     boundingVolume: collection.boundingVolume,
     debugShowBoundingVolume: collection.debugShowBoundingVolume,
   });
 
   frameState.commandList.push(command);
+
+  collection._dirtyCount = 0;
+  collection._dirtyOffset = 0;
 
   if (!renderContext.firstDrawTimed) {
     console.timeEnd("renderPolyline3DCollection::init");
@@ -209,6 +274,65 @@ function renderPolyline3DCollection(collection, frameState, renderContext) {
   }
 
   return renderContext;
+}
+
+/**
+ * @param {Polyline3DRenderContext} renderContext
+ * @param {number} attributeIndex
+ * @param {number} vertexOffset
+ * @param {number} vertexCount
+ */
+function updateAttributeRange(
+  renderContext,
+  attributeIndex,
+  vertexOffset,
+  vertexCount,
+) {
+  const attribute = renderContext.vertexArray.getAttribute(attributeIndex);
+  const buffer = /** @type {Buffer} */ (attribute.vertexBuffer);
+  const array = renderContext.attributeArrays[attributeIndex];
+  const elementsPerVertex = attribute.componentsPerAttribute;
+
+  const ArrayConstructor = /** @type {TypedArrayConstructor} */ (
+    array.constructor
+  );
+
+  const byteOffset =
+    vertexOffset * elementsPerVertex * ArrayConstructor.BYTES_PER_ELEMENT;
+
+  // Create a zero-copy ArrayView onto the 'dirty' range of the source array.
+  const rangeArrayView = new ArrayConstructor(
+    /** @type {ArrayBuffer} */ (array.buffer),
+    array.byteOffset + byteOffset,
+    vertexCount * elementsPerVertex,
+  );
+
+  buffer.copyFromArrayView(rangeArrayView, byteOffset);
+}
+
+/**
+ * @param {Polyline3DRenderContext} renderContext
+ * @param {number} indexOffset
+ * @param {number} indexCount
+ */
+function updateIndexRange(renderContext, indexOffset, indexCount) {
+  const buffer = /** @type {Buffer} */ (renderContext.vertexArray._indexBuffer);
+  const array = renderContext.indexArray;
+
+  const ArrayConstructor = /** @type {TypedArrayConstructor} */ (
+    array.constructor
+  );
+
+  const byteOffset = indexOffset * ArrayConstructor.BYTES_PER_ELEMENT;
+
+  // Create a zero-copy ArrayView onto the 'dirty' range of the source array.
+  const rangeArrayView = new ArrayConstructor(
+    /** @type {ArrayBuffer} */ (array.buffer),
+    array.byteOffset + byteOffset,
+    indexCount,
+  );
+
+  buffer.copyFromArrayView(rangeArrayView, byteOffset);
 }
 
 export default renderPolyline3DCollection;
