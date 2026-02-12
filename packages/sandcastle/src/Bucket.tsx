@@ -119,7 +119,6 @@ export function Bucket({
             iframeBridge.current = new IframeBridge(
               INNER_ORIGIN,
               iframe.contentWindow,
-              "App",
             );
           }
         }}

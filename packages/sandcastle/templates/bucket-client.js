@@ -41,7 +41,7 @@ function loadSandcastle(code, html) {
 
 function initPage() {
   /** @type {BridgeToApp} */
-  const bridge = new IframeBridge(OUTER_ORIGIN, window.parent, "Bucket");
+  const bridge = new IframeBridge(OUTER_ORIGIN, window.parent);
 
   wrapConsoleFunctions(bridge);
 
