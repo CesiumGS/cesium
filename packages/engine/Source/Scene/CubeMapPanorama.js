@@ -23,7 +23,6 @@ import BlendingState from "./BlendingState.js";
 import SceneMode from "./SceneMode.js";
 import Pass from "../Renderer/Pass.js";
 import Credit from "../Core/Credit.js";
-import Transforms from "../Core/Transforms.js";
 
 /**
  * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.
@@ -37,11 +36,21 @@ import Transforms from "../Core/Transforms.js";
  *
  * @param {object} options Object with the following properties:
  * @param {object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
+ * @param {Matrix4} [options.transform] A 4x4 transformation matrix that defines the panorama’s position and orientation
  * @param {boolean} [options.show=true] Determines if this primitive will be shown.
  * @param {Credit|string} [options.credit] A credit for the panorama, which is displayed on the canvas.
  *
  *
  * @example
+ * const modelMatrix = Cesium.Matrix4.getMatrix3(
+ *   Cesium.Transforms.localFrameToFixedFrameGenerator("north", "down")(
+ *     Cesium.Cartesian3.fromDegrees(longitude, latitude, height),
+ *     Cesium.Ellipsoid.default
+ *   ),
+ *   new Cesium.Matrix3()
+ * );
+ *
+ *
  * scene.primitives.add(new Cesium.CubeMapPanorama({
  *   sources : {
  *     positiveX : 'skybox_px.png',
@@ -51,6 +60,7 @@ import Transforms from "../Core/Transforms.js";
  *     positiveZ : 'skybox_pz.png',
  *     negativeZ : 'skybox_nz.png'
  *   }
+ *   transform: modelMatrix,
  * }));
  *
  * @see Scene#skyBox
@@ -356,17 +366,6 @@ CubeMapPanorama.createEarthSkyBox = function () {
       negativeZ: getDefaultSkyBoxUrl("mz"),
     },
   });
-};
-
-const scratchMatrix4 = new Matrix4();
-
-CubeMapPanorama.localNorthDownTemeRotation = function (position, ellipsoid) {
-  const generator = Transforms.localFrameToFixedFrameGenerator("north", "down");
-
-  return function (frameState, result) {
-    const m4 = generator(position, ellipsoid, scratchMatrix4);
-    return Matrix4.getMatrix3(m4, result);
-  };
 };
 
 export default CubeMapPanorama;
