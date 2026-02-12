@@ -103,11 +103,22 @@ class Feature3DCollection {
     // 'clean' features potentially within the range. Individual feature
     // 'dirty' flags are source-of-truth.
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     this._dirtyOffset = 0;
-    /** @type {number} */
+
+    /**
+     * @type {number}
+     * @ignore
+     */
     this._dirtyCount = 0;
-    /** @type {boolean} */
+
+    /**
+     * @type {boolean}
+     * @ignore
+     */
     this._dirtyBoundingVolume = false;
 
     this._allocateFeatureBuffer();
