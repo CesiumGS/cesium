@@ -1,3 +1,5 @@
+// @ts-check
+
 import WebGLConstants from "./WebGLConstants.js";
 
 /**
@@ -5,7 +7,7 @@ import WebGLConstants from "./WebGLConstants.js";
  *
  * @enum {number}
  */
-const PrimitiveType = {
+const PrimitiveType = Object.freeze({
   /**
    * Points primitive where each vertex (or index) is a separate point.
    *
@@ -65,43 +67,6 @@ const PrimitiveType = {
    * @constant
    */
   TRIANGLE_FAN: WebGLConstants.TRIANGLE_FAN,
-};
+});
 
-/**
- * @private
- */
-PrimitiveType.isLines = function (primitiveType) {
-  return (
-    primitiveType === PrimitiveType.LINES ||
-    primitiveType === PrimitiveType.LINE_LOOP ||
-    primitiveType === PrimitiveType.LINE_STRIP
-  );
-};
-
-/**
- * @private
- */
-PrimitiveType.isTriangles = function (primitiveType) {
-  return (
-    primitiveType === PrimitiveType.TRIANGLES ||
-    primitiveType === PrimitiveType.TRIANGLE_STRIP ||
-    primitiveType === PrimitiveType.TRIANGLE_FAN
-  );
-};
-
-/**
- * @private
- */
-PrimitiveType.validate = function (primitiveType) {
-  return (
-    primitiveType === PrimitiveType.POINTS ||
-    primitiveType === PrimitiveType.LINES ||
-    primitiveType === PrimitiveType.LINE_LOOP ||
-    primitiveType === PrimitiveType.LINE_STRIP ||
-    primitiveType === PrimitiveType.TRIANGLES ||
-    primitiveType === PrimitiveType.TRIANGLE_STRIP ||
-    primitiveType === PrimitiveType.TRIANGLE_FAN
-  );
-};
-
-export default Object.freeze(PrimitiveType);
+export default PrimitiveType;

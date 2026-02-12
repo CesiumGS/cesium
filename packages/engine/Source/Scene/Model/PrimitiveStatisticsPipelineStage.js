@@ -1,5 +1,6 @@
 import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import PrimitiveTypeUtils from "../../Core/PrimitiveTypeUtils.js";
 import ModelComponents from "../ModelComponents.js";
 import ModelUtility from "./ModelUtility.js";
 
@@ -60,7 +61,7 @@ function countGeometry(statistics, primitive) {
 
   if (primitiveType === PrimitiveType.POINTS) {
     statistics.pointsLength += indicesCount;
-  } else if (PrimitiveType.isTriangles(primitiveType)) {
+  } else if (PrimitiveTypeUtils.isTriangles(primitiveType)) {
     statistics.trianglesLength += countTriangles(primitiveType, indicesCount);
   }
 
