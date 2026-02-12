@@ -1,0 +1,396 @@
+{
+    "asset": {
+        "version": "2.0"
+    },
+    "extensionsUsed": [
+        "BENTLEY_materials_planar_fill",
+        "EXT_mesh_primitive_edge_visibility"
+    ],
+    "accessors": [
+        {
+            "bufferView": 0,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 4,
+            "type": "VEC3",
+            "max": [
+                5.0,
+                0.0,
+                5.0
+            ],
+            "min": [
+                -5.0,
+                0.0,
+                -5.0
+            ]
+        },
+        {
+            "bufferView": 1,
+            "byteOffset": 0,
+            "componentType": 5123,
+            "count": 6,
+            "type": "SCALAR",
+            "max": [
+                3
+            ],
+            "min": [
+                0
+            ]
+        },
+        {
+            "bufferView": 2,
+            "byteOffset": 0,
+            "componentType": 5121,
+            "count": 2,
+            "type": "SCALAR"
+        }
+    ],
+    "buffers": [
+        {
+            "byteLength": 60,
+            "uri": "data:application/octet-stream;base64,AACgwAAAAAAAAKDAAACgQAAAAAAAAKDAAACgwAAAAAAAAKBAAACgQAAAAAAAAKBAAAABAAIAAQADAAIA"
+        },
+        {
+            "byteLength": 2,
+            "uri": "data:application/octet-stream;base64,ogI="
+        }
+    ],
+    "bufferViews": [
+        {
+            "buffer": 0,
+            "byteOffset": 0,
+            "byteLength": 48,
+            "target": 34962
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 48,
+            "byteLength": 12,
+            "target": 34963
+        },
+        {
+            "buffer": 1,
+            "byteOffset": 0,
+            "byteLength": 2
+        }
+    ],
+    "materials": [
+        {
+            "name": "RedWireframeFillAlways",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 1
+                }
+            }
+        },
+        {
+            "name": "GreenBackgroundFillMask",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    0.0,
+                    1.0,
+                    0.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "backgroundFill": true
+                }
+            }
+        },
+        {
+            "name": "BlueBehindCoplanar",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "behind": true
+                }
+            }
+        },
+        {
+            "name": "YellowWireframeFillNone",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    1.0,
+                    1.0,
+                    0.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 0
+                }
+            }
+        },
+        {
+            "name": "CyanWireframeFillToggle",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    0.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 2
+                }
+            }
+        },
+        {
+            "name": "MagentaNoExtension",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    1.0,
+                    0.0,
+                    1.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            }
+        },
+        {
+            "name": "BlueBehindFalse",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    0.0,
+                    0.0,
+                    1.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "behind": false
+                }
+            }
+        }
+    ],
+    "meshes": [
+        {
+            "name": "RedPolygon",
+            "primitives": [
+                {
+                    "mode": 4,
+                    "material": 0,
+                    "indices": 1,
+                    "attributes": {
+                        "POSITION": 0
+                    },
+                    "extensions": {
+                        "EXT_mesh_primitive_edge_visibility": {
+                            "visibility": 2
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GreenPolygon",
+            "primitives": [
+                {
+                    "mode": 4,
+                    "material": 1,
+                    "indices": 1,
+                    "attributes": {
+                        "POSITION": 0
+                    },
+                    "extensions": {
+                        "EXT_mesh_primitive_edge_visibility": {
+                            "visibility": 2
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "BluePolygon",
+            "primitives": [
+                {
+                    "mode": 4,
+                    "material": 2,
+                    "indices": 1,
+                    "attributes": {
+                        "POSITION": 0
+                    },
+                    "extensions": {
+                        "EXT_mesh_primitive_edge_visibility": {
+                            "visibility": 2
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "YellowPolygon",
+            "primitives": [
+                {
+                    "mode": 4,
+                    "material": 3,
+                    "indices": 1,
+                    "attributes": {
+                        "POSITION": 0
+                    },
+                    "extensions": {
+                        "EXT_mesh_primitive_edge_visibility": {
+                            "visibility": 2
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "CyanPolygon",
+            "primitives": [
+                {
+                    "mode": 4,
+                    "material": 4,
+                    "indices": 1,
+                    "attributes": {
+                        "POSITION": 0
+                    },
+                    "extensions": {
+                        "EXT_mesh_primitive_edge_visibility": {
+                            "visibility": 2
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MagentaPolygon",
+            "primitives": [
+                {
+                    "mode": 4,
+                    "material": 5,
+                    "indices": 1,
+                    "attributes": {
+                        "POSITION": 0
+                    },
+                    "extensions": {
+                        "EXT_mesh_primitive_edge_visibility": {
+                            "visibility": 2
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "BluePolygon2",
+            "primitives": [
+                {
+                    "mode": 4,
+                    "material": 6,
+                    "indices": 1,
+                    "attributes": {
+                        "POSITION": 0
+                    },
+                    "extensions": {
+                        "EXT_mesh_primitive_edge_visibility": {
+                            "visibility": 2
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MagentaPolygon2",
+            "primitives": [
+                {
+                    "mode": 4,
+                    "material": 5,
+                    "indices": 1,
+                    "attributes": {
+                        "POSITION": 0
+                    },
+                    "extensions": {
+                        "EXT_mesh_primitive_edge_visibility": {
+                            "visibility": 2
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "nodes": [
+        {
+            "name": "RedPolygonNode",
+            "mesh": 0,
+            "translation": [-15.0, 0.0, 0.0]
+        },
+        {
+            "name": "GreenPolygonNode",
+            "mesh": 1
+        },
+        {
+            "name": "BluePolygonNode",
+            "mesh": 2,
+            "translation": [15.0, 0.0, 0.0]
+        },
+        {
+            "name": "YellowPolygonNode",
+            "mesh": 3,
+            "translation": [-15.0, 0.0, -15.0]
+        },
+        {
+            "name": "CyanPolygonNode",
+            "mesh": 4,
+            "translation": [-15.0, 0.0, -30.0]
+        },
+        {
+            "name": "MagentaPolygonNode",
+            "mesh": 5,
+            "translation": [20.0, 0.0, 0.0]
+        },
+        {
+            "name": "BluePolygonNode2",
+            "mesh": 6,
+            "translation": [15.0, 0.0, 15.0]
+        },
+        {
+            "name": "MagentaPolygonNode2",
+            "mesh": 7,
+            "translation": [20.0, 0.0, 15.0]
+        }
+    ],
+    "scenes": [
+        {
+            "nodes": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+            ]
+        }
+    ],
+    "scene": 0
+}
+
