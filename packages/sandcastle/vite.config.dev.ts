@@ -3,7 +3,6 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { createSandcastleConfig } from "./scripts/buildStatic.js";
 import { readFileSync } from "fs";
-import express from "express";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 function getCesiumVersion() {
@@ -72,50 +71,6 @@ export default defineConfig(({ command }) => {
       },
     ],
   });
-
-  // Allow Vite dev server to serve files from parent directories
-  config.server = {
-    ...config.server,
-    fs: {
-      allow: [
-        join(__dirname, "../../"), // Allow access to repository root
-      ],
-    },
-  };
-
-  // Add middleware to serve files from parent directories during development
-  config.plugins = [
-    ...(config.plugins || []),
-    {
-      name: "serve-parent-directories",
-      configureServer(server) {
-        const repoRoot = join(__dirname, "../../");
-
-        // Serve files from repository root
-        server.middlewares.use((req, res, next) => {
-          const url = req.url?.split("?")[0]; // Remove query params
-
-          if (
-            url &&
-            (url.startsWith("/Source/") ||
-              url.startsWith("/Build/") ||
-              url.startsWith("/Apps/") ||
-              url.startsWith("/packages/"))
-          ) {
-            // Remove leading slash and serve from repo root
-            req.url = url.substring(1);
-            express.static(repoRoot)(req, res, next);
-          } else if (url && url.startsWith("/SampleData/")) {
-            // SampleData lives under Apps/ in the repo
-            req.url = `Apps${url}`;
-            express.static(repoRoot)(req, res, next);
-          } else {
-            next();
-          }
-        });
-      },
-    },
-  ];
 
   return config;
 });
