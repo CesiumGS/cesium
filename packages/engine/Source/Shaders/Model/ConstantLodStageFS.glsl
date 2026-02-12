@@ -43,7 +43,7 @@ vec4 constantLodTextureLookup(sampler2D textureSampler, vec3 constantLodParams, 
         float clampedP = ceil(logDepth);
         vec2 tc = v_constantLodUvCustom.xy / pow(2.0, clampedP) * constantLodParams.z;
         // Apply texture transform to the final texture coordinates
-        tc = czm_textureTransform(tc, textureTransform);
+        tc = czm_computeTextureTransform(tc, textureTransform);
         return texture(textureSampler, tc);
     }
 
@@ -51,8 +51,8 @@ vec4 constantLodTextureLookup(sampler2D textureSampler, vec3 constantLodParams, 
     vec2 tc2 = v_constantLodUvCustom.xy / pow(2.0, p + 1.0) * constantLodParams.z;
     
     // Apply texture transform to both LOD texture coordinates before mixing
-    tc1 = czm_textureTransform(tc1, textureTransform);
-    tc2 = czm_textureTransform(tc2, textureTransform);
+    tc1 = czm_computeTextureTransform(tc1, textureTransform);
+    tc2 = czm_computeTextureTransform(tc2, textureTransform);
     
     return mix(texture(textureSampler, tc1), texture(textureSampler, tc2), f);
 }
