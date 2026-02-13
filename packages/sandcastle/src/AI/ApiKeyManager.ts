@@ -5,34 +5,37 @@ const CESIUM_ION_TOKEN_STORAGE_KEY = "sandcastle_cesium_ion_token";
 // Minimum valid length for Anthropic API keys (sk-ant- prefix + minimum key content)
 const MIN_ANTHROPIC_KEY_LENGTH = 20;
 
+// Use sessionStorage to reduce persistence of sensitive credentials.
+// Keys are cleared when the browser tab is closed, limiting the exposure window.
+const storage = typeof sessionStorage !== "undefined" ? sessionStorage : null;
+
 export class ApiKeyManager {
   // ============================================================================
   // Gemini API Key Management
   // ============================================================================
 
   /**
-   * Store Gemini API key in localStorage
+   * Store Gemini API key in sessionStorage
    */
   static saveApiKey(apiKey: string): void {
     if (!apiKey || apiKey.trim().length === 0) {
       throw new Error("API key cannot be empty");
     }
     try {
-      localStorage?.setItem(API_KEY_STORAGE_KEY, apiKey.trim());
+      storage?.setItem(API_KEY_STORAGE_KEY, apiKey.trim());
     } catch (error) {
-      console.warn("Failed to save API key to localStorage:", error);
-      // Don't throw - allow the app to continue even if localStorage fails
+      console.warn("Failed to save API key to sessionStorage:", error);
     }
   }
 
   /**
-   * Retrieve Gemini API key from localStorage
+   * Retrieve Gemini API key from sessionStorage
    */
   static getApiKey(): string | null {
     try {
-      return localStorage?.getItem(API_KEY_STORAGE_KEY) ?? null;
+      return storage?.getItem(API_KEY_STORAGE_KEY) ?? null;
     } catch (error) {
-      console.warn("Failed to retrieve API key from localStorage:", error);
+      console.warn("Failed to retrieve API key from sessionStorage:", error);
       return null;
     }
   }
@@ -51,13 +54,13 @@ export class ApiKeyManager {
   }
 
   /**
-   * Remove Gemini API key from localStorage
+   * Remove Gemini API key from sessionStorage
    */
   static clearApiKey(): void {
     try {
-      localStorage?.removeItem(API_KEY_STORAGE_KEY);
+      storage?.removeItem(API_KEY_STORAGE_KEY);
     } catch (error) {
-      console.warn("Failed to clear API key from localStorage:", error);
+      console.warn("Failed to clear API key from sessionStorage:", error);
     }
   }
 
@@ -78,28 +81,31 @@ export class ApiKeyManager {
   // ============================================================================
 
   /**
-   * Store Anthropic API key in localStorage
+   * Store Anthropic API key in sessionStorage
    */
   static saveAnthropicApiKey(apiKey: string): void {
     if (!apiKey || apiKey.trim().length === 0) {
       throw new Error("API key cannot be empty");
     }
     try {
-      localStorage?.setItem(ANTHROPIC_API_KEY_STORAGE_KEY, apiKey.trim());
+      storage?.setItem(ANTHROPIC_API_KEY_STORAGE_KEY, apiKey.trim());
     } catch (error) {
-      console.warn("Failed to save Anthropic API key to localStorage:", error);
+      console.warn(
+        "Failed to save Anthropic API key to sessionStorage:",
+        error,
+      );
     }
   }
 
   /**
-   * Retrieve Anthropic API key from localStorage
+   * Retrieve Anthropic API key from sessionStorage
    */
   static getAnthropicApiKey(): string | null {
     try {
-      return localStorage?.getItem(ANTHROPIC_API_KEY_STORAGE_KEY) ?? null;
+      return storage?.getItem(ANTHROPIC_API_KEY_STORAGE_KEY) ?? null;
     } catch (error) {
       console.warn(
-        "Failed to retrieve Anthropic API key from localStorage:",
+        "Failed to retrieve Anthropic API key from sessionStorage:",
         error,
       );
       return null;
@@ -120,14 +126,14 @@ export class ApiKeyManager {
   }
 
   /**
-   * Remove Anthropic API key from localStorage
+   * Remove Anthropic API key from sessionStorage
    */
   static clearAnthropicApiKey(): void {
     try {
-      localStorage?.removeItem(ANTHROPIC_API_KEY_STORAGE_KEY);
+      storage?.removeItem(ANTHROPIC_API_KEY_STORAGE_KEY);
     } catch (error) {
       console.warn(
-        "Failed to clear Anthropic API key from localStorage:",
+        "Failed to clear Anthropic API key from sessionStorage:",
         error,
       );
     }
@@ -149,28 +155,28 @@ export class ApiKeyManager {
   // ============================================================================
 
   /**
-   * Store Cesium Ion access token in localStorage
+   * Store Cesium Ion access token in sessionStorage
    */
   static saveCesiumIonToken(token: string): void {
     if (!token || token.trim().length === 0) {
       throw new Error("Cesium Ion token cannot be empty");
     }
     try {
-      localStorage?.setItem(CESIUM_ION_TOKEN_STORAGE_KEY, token.trim());
+      storage?.setItem(CESIUM_ION_TOKEN_STORAGE_KEY, token.trim());
     } catch (error) {
-      console.warn("Failed to save Cesium Ion token to localStorage:", error);
+      console.warn("Failed to save Cesium Ion token to sessionStorage:", error);
     }
   }
 
   /**
-   * Retrieve Cesium Ion access token from localStorage
+   * Retrieve Cesium Ion access token from sessionStorage
    */
   static getCesiumIonToken(): string | null {
     try {
-      return localStorage?.getItem(CESIUM_ION_TOKEN_STORAGE_KEY) ?? null;
+      return storage?.getItem(CESIUM_ION_TOKEN_STORAGE_KEY) ?? null;
     } catch (error) {
       console.warn(
-        "Failed to retrieve Cesium Ion token from localStorage:",
+        "Failed to retrieve Cesium Ion token from sessionStorage:",
         error,
       );
       return null;
@@ -191,14 +197,14 @@ export class ApiKeyManager {
   }
 
   /**
-   * Remove Cesium Ion token from localStorage
+   * Remove Cesium Ion token from sessionStorage
    */
   static clearCesiumIonToken(): void {
     try {
-      localStorage?.removeItem(CESIUM_ION_TOKEN_STORAGE_KEY);
+      storage?.removeItem(CESIUM_ION_TOKEN_STORAGE_KEY);
     } catch (error) {
       console.warn(
-        "Failed to clear Cesium Ion token from localStorage:",
+        "Failed to clear Cesium Ion token from sessionStorage:",
         error,
       );
     }

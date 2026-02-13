@@ -22,7 +22,7 @@ export function DiffAccordion({
   }, [diffContent]);
 
   return (
-    <AccordionItem.Root open={isExpanded} onOpenChange={onToggle}>
+    <AccordionItem.Root open={isExpanded} onChange={onToggle}>
       <AccordionItem.Header>
         <AccordionItem.Button>
           <AccordionItem.Marker />

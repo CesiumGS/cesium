@@ -97,6 +97,11 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
   return (
     <SandcastleDialog open={open} onClose={onClose} title="API Configuration">
       <div className="api-dialog-content">
+        <Banner
+          tone="attention"
+          label="Security Notice"
+          message="API keys are stored in your browser's session storage and sent directly to the provider from your browser. Keys are cleared when you close this tab. Do not use this on shared or untrusted devices."
+        />
         <Tabs.Root defaultSelectedId="anthropic">
           <Tabs.TabList>
             <Tabs.Tab id="anthropic">Anthropic</Tabs.Tab>

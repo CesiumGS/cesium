@@ -1,6 +1,7 @@
 import type {
   GeminiModel,
   GeminiResponse,
+  GeminiConversationMessage,
   CodeContext,
   GeminiClientOptions,
   StreamChunk,
@@ -11,6 +12,10 @@ import type {
 import { CESIUMJS_API_DEPRECATIONS } from "./prompts";
 
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
+
+// Stall timeout - resets whenever data is received from the stream.
+// Mirrors AnthropicClient's timeout behavior.
+const STALL_TIMEOUT_MS = 60000; // 60 seconds of inactivity before timeout
 
 // Debug flag for development logging
 const DEBUG = import.meta.env?.DEV ?? false;
@@ -103,6 +108,8 @@ export class GeminiClient {
    */
   async generateContent(prompt: string): Promise<GeminiResponse> {
     const url = `${GEMINI_API_BASE_URL}/models/${this.model}:generateContent`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), STALL_TIMEOUT_MS);
 
     try {
       const response = await fetch(url, {
@@ -122,6 +129,7 @@ export class GeminiClient {
             },
           ],
         }),
+        signal: controller.signal,
       });
 
       const data = await response.json();
@@ -159,6 +167,9 @@ export class GeminiClient {
 
       return data;
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return { error: { message: "Request timed out" } };
+      }
       return {
         error: {
           message:
@@ -167,6 +178,8 @@ export class GeminiClient {
               : "Failed to connect to Gemini API",
         },
       };
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
@@ -307,6 +320,18 @@ export class GeminiClient {
       }
     }
 
+    const controller = new AbortController();
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const resetStallTimeout = () => {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => controller.abort(), STALL_TIMEOUT_MS);
+    };
+
+    resetStallTimeout();
+
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -315,7 +340,10 @@ export class GeminiClient {
           "x-goog-api-key": this.apiKey,
         },
         body: JSON.stringify(requestBody),
+        signal: controller.signal,
       });
+
+      resetStallTimeout();
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -360,6 +388,8 @@ export class GeminiClient {
           }
           break;
         }
+
+        resetStallTimeout();
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
@@ -547,13 +577,21 @@ export class GeminiClient {
         thoughtTokens: thoughtsTokenCount > 0 ? thoughtsTokenCount : undefined,
       };
     } catch (error) {
-      yield {
-        type: "error",
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to connect to Gemini API",
-      };
+      if (error instanceof Error && error.name === "AbortError") {
+        yield { type: "error", error: "Request timed out" };
+      } else {
+        yield {
+          type: "error",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to connect to Gemini API",
+        };
+      }
+    } finally {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
     }
   }
 
@@ -825,7 +863,7 @@ User Request: ${userMessage}`;
     toolCall: ToolCall,
     result: ToolResult,
     systemPrompt: string,
-    conversationHistory: Array<{ parts: unknown[]; role?: string }>,
+    conversationHistory: GeminiConversationMessage[],
     tools?: ToolDefinition[],
   ): AsyncGenerator<StreamChunk> {
     // Build the function response
@@ -878,6 +916,18 @@ User Request: ${userMessage}`;
       requestBody.tools = [this.convertToolsToFunctionDeclarations(tools)];
     }
 
+    const controller = new AbortController();
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const resetStallTimeout = () => {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => controller.abort(), STALL_TIMEOUT_MS);
+    };
+
+    resetStallTimeout();
+
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -886,6 +936,7 @@ User Request: ${userMessage}`;
           "x-goog-api-key": this.apiKey,
         },
         body: JSON.stringify(requestBody),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -907,6 +958,8 @@ User Request: ${userMessage}`;
         return;
       }
 
+      resetStallTimeout();
+
       // Process SSE stream (same logic as generateWithContext)
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -918,6 +971,8 @@ User Request: ${userMessage}`;
         if (done) {
           break;
         }
+
+        resetStallTimeout();
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
@@ -1020,13 +1075,21 @@ User Request: ${userMessage}`;
         }
       }
     } catch (error) {
-      yield {
-        type: "error",
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error during tool result submission",
-      };
+      if (error instanceof Error && error.name === "AbortError") {
+        yield { type: "error", error: "Request timed out" };
+      } else {
+        yield {
+          type: "error",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Unknown error during tool result submission",
+        };
+      }
+    } finally {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
     }
   }
 

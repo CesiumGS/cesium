@@ -46,6 +46,7 @@ import {
   aiSparkle,
 } from "./icons.ts";
 import { ChatPanel } from "./ChatPanel.tsx";
+import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import { DiffReviewPanel } from "./DiffReviewPanel.tsx";
 import type {
   ApplyResult,
@@ -964,21 +965,23 @@ function App() {
             preferredSize={450}
             className="chat-panel-pane"
           >
-            <ChatPanel
-              isOpen={chatPanelOpen}
-              onClose={() => setChatPanelOpen(false)}
-              codeContext={codeContext}
-              onApplyCode={handleApplyAiCode}
-              onApplyDiff={handleApplyAiDiff}
-              currentCode={codeContext}
-              onClearConsole={() => setConsoleMessages([])}
-              getCurrentConsoleErrors={() =>
-                consoleMessages.map((msg) => ({
-                  type: msg.type,
-                  message: msg.message,
-                }))
-              }
-            />
+            <ErrorBoundary>
+              <ChatPanel
+                isOpen={chatPanelOpen}
+                onClose={() => setChatPanelOpen(false)}
+                codeContext={codeContext}
+                onApplyCode={handleApplyAiCode}
+                onApplyDiff={handleApplyAiDiff}
+                currentCode={codeContext}
+                onClearConsole={() => setConsoleMessages([])}
+                getCurrentConsoleErrors={() =>
+                  consoleMessages.map((msg) => ({
+                    type: msg.type,
+                    message: msg.message,
+                  }))
+                }
+              />
+            </ErrorBoundary>
           </Allotment.Pane>
         )}
       </Allotment>

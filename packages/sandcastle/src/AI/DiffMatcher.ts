@@ -767,8 +767,6 @@ export class DiffMatcher {
   public findClosestMatch(
     searchText: string,
     sourceCode: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    options?: MatchOptions,
   ): { confidence: number; matchedText: string; startLine: number } | null {
     if (!searchText || !sourceCode) {
       return null;

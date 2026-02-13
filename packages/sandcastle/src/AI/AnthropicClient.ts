@@ -268,7 +268,9 @@ export class AnthropicClient {
         };
       }
     } finally {
-      clearTimeout(timeoutId);
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
     }
   }
 
@@ -624,7 +626,9 @@ export class AnthropicClient {
         };
       }
     } finally {
-      clearTimeout(timeoutId);
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
     }
   }
 
