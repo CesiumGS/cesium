@@ -20,13 +20,13 @@ const GOOGLE_STREETVIEW_PARTITION_REFERENCE = {
 
 /**
  * <div class="notice">
- * This object is normally not instantiated directly, use {@link GoogleStreetViewProvider.fromUrl}.
+ * This object is normally not instantiated directly, use {@link GoogleStreetViewEquirectangularPanoramaProvider.fromUrl}.
  * </div>
  *
  *
  * Creates a {@link PanoramaProvider} which provides imagery from {@link https://developers.google.com/maps/documentation/tile/streetview|Google Street View Tiles API} to be displayed in a panorama.
  *
- * @alias GoogleStreetViewProvider
+ * @alias GoogleStreetViewEquirectangularPanoramaProvider
  * @constructor
  *
  * @see EquirectangularPanorama
@@ -34,14 +34,14 @@ const GOOGLE_STREETVIEW_PARTITION_REFERENCE = {
  * @demo {@link https://sandcastle.cesium.com/index.html?id=google-streetview-panorama-2|Cesium Sandcastle Google Streetview Panorama}
  *
  */
-function GoogleStreetViewProvider(options) {
+function GoogleStreetViewEquirectangularPanoramaProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   this._session = options.session;
   this._key = options.apiKey;
   this._skipColorSpaceConversion = options.skipColorSpaceConversion;
 }
 
-Object.defineProperties(GoogleStreetViewProvider.prototype, {});
+Object.defineProperties(GoogleStreetViewEquirectangularPanoramaProvider.prototype, {});
 
 /**
  * Gets the panorama primitive for a requested position and orientation.
@@ -57,7 +57,7 @@ Object.defineProperties(GoogleStreetViewProvider.prototype, {});
  *
  * @example
  *
- * const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
+ * const provider = await Cesium.GoogleStreetViewEquirectangularPanoramaProvider.fromUrl({
  *   apiKey: 'your Google Streetview Tiles api key'
  * })
  * const panoIds = provider.getPanoIds(position);
@@ -74,7 +74,7 @@ Object.defineProperties(GoogleStreetViewProvider.prototype, {});
  * viewer.scene.primitive.add(primitive);
  *
  */
-GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
+GoogleStreetViewEquirectangularPanoramaProvider.prototype.loadPanorama = async function (options) {
   const cartographic = options.cartographic;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.cartographic)) {
@@ -97,10 +97,10 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
     panoId = panoIds[0];
     const panoIdMetadata = this.getPanoIdMetadata(panoId);
     ({ heading, tilt } =
-      GoogleStreetViewProvider._parseMetadata(panoIdMetadata));
+      GoogleStreetViewEquirectangularPanoramaProvider._parseMetadata(panoIdMetadata));
   }
 
-  const tileMap = await GoogleStreetViewProvider.getGoogleStreetViewTileUrls({
+  const tileMap = await GoogleStreetViewEquirectangularPanoramaProvider.getGoogleStreetViewTileUrls({
     z: zoom,
     partition,
     panoId,
@@ -108,12 +108,12 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
     session: this._session,
   });
 
-  const canvas = await GoogleStreetViewProvider.stitchBitmapsFromTileMap(
+  const canvas = await GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(
     tileMap,
     this._skipColorSpaceConversion,
   );
 
-  const transform = GoogleStreetViewProvider._computePanoramaTransform(
+  const transform = GoogleStreetViewEquirectangularPanoramaProvider._computePanoramaTransform(
     cartographic,
     heading,
     tilt,
@@ -129,7 +129,7 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
 };
 
 /**
- * Gets the panorama primitive for a given panoId. Lookup a panoId using {@link GoogleStreetViewProvider#getPanoId}.
+ * Gets the panorama primitive for a given panoId. Lookup a panoId using {@link GoogleStreetViewEquirectangularPanoramaProvider#getPanoId}.
  *
  * @param {string} panoId
  * @param {string} zoom
@@ -138,21 +138,21 @@ GoogleStreetViewProvider.prototype.loadPanorama = async function (options) {
  *
  * @example
  *
- * const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
+ * const provider = await Cesium.GoogleStreetViewEquirectangularPanoramaProvider.fromUrl({
  *   apiKey: 'your Google Streetview Tiles api key'
  * })
  * const panoIds = provider.getPanoIds(position);
  * const primitive = await provider.loadPanoramaFromPanoId(panoIds[0]);
  * viewer.scene.primitive.add(primitive);
  */
-GoogleStreetViewProvider.prototype.loadPanoramaFromPanoId = async function (
+GoogleStreetViewEquirectangularPanoramaProvider.prototype.loadPanoramaFromPanoId = async function (
   panoId,
   zoom,
 ) {
   const panoIdMetadata = await this.getPanoIdMetadata(panoId);
 
   const { heading, tilt, cartographic } =
-    GoogleStreetViewProvider._parseMetadata(panoIdMetadata);
+    GoogleStreetViewEquirectangularPanoramaProvider._parseMetadata(panoIdMetadata);
 
   return this.loadPanorama({
     cartographic,
@@ -172,12 +172,12 @@ GoogleStreetViewProvider.prototype.loadPanoramaFromPanoId = async function (
  * 
  * @example
  * 
- * const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
+ * const provider = await Cesium.GoogleStreetViewEquirectangularPanoramaProvider.fromUrl({
  *   apiKey: 'your Google Streetview Tiles api key'
  * })
  * const panoIds = provider.getPanoIds(position);
  */
-GoogleStreetViewProvider.prototype.getPanoIds = async function (position) {
+GoogleStreetViewEquirectangularPanoramaProvider.prototype.getPanoIds = async function (position) {
   const longitude = CesiumMath.toDegrees(position.longitude);
   const latitude = CesiumMath.toDegrees(position.latitude);
 
@@ -208,7 +208,7 @@ GoogleStreetViewProvider.prototype.getPanoIds = async function (position) {
  * const panoIdMetadata = provider.getPanoIdMetadata(panoIds[0]);
  *
  */
-GoogleStreetViewProvider.prototype.getPanoIdMetadata = async function (panoId) {
+GoogleStreetViewEquirectangularPanoramaProvider.prototype.getPanoIdMetadata = async function (panoId) {
   const metadataResponse = await Resource.fetch({
     url: "https://tile.googleapis.com/v1/streetview/metadata",
     queryParameters: {
@@ -229,14 +229,14 @@ GoogleStreetViewProvider.prototype.getPanoIdMetadata = async function (panoId) {
  * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
- * @returns {Promise<GoogleStreetViewProvider>} A promise that resolves to the created GoogleStreetViewProvider.'
+ * @returns {Promise<GoogleStreetViewEquirectangularPanoramaProvider>} A promise that resolves to the created GoogleStreetViewEquirectangularPanoramaProvider.'
  *
  * @example
- * const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
+ * const provider = await Cesium.GoogleStreetViewEquirectangularPanoramaProvider.fromUrl({
  *   apiKey: 'your Google Streetview Tiles api key'
  * })
  */
-GoogleStreetViewProvider.fromUrl = async function (options) {
+GoogleStreetViewEquirectangularPanoramaProvider.fromUrl = async function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
@@ -256,13 +256,13 @@ GoogleStreetViewProvider.fromUrl = async function (options) {
   });
   const responseJson = JSON.parse(response);
 
-  return new GoogleStreetViewProvider({
+  return new GoogleStreetViewEquirectangularPanoramaProvider({
     ...responseJson,
     ...options,
   });
 };
 
-GoogleStreetViewProvider.getGoogleStreetViewTileUrls = async function (
+GoogleStreetViewEquirectangularPanoramaProvider.getGoogleStreetViewTileUrls = async function (
   options,
 ) {
   const { z, partition, panoId, key, session } = options;
@@ -271,7 +271,7 @@ GoogleStreetViewProvider.getGoogleStreetViewTileUrls = async function (
   for (let x = 0; x < partition * 2; x++) {
     for (let y = 0; y < partition; y++) {
       tileIdKey = `${z}/${x}/${y}`;
-      tileIds[tileIdKey] = GoogleStreetViewProvider._buildTileUrl({
+      tileIds[tileIdKey] = GoogleStreetViewEquirectangularPanoramaProvider._buildTileUrl({
         z,
         x,
         y,
@@ -284,7 +284,7 @@ GoogleStreetViewProvider.getGoogleStreetViewTileUrls = async function (
   return tileIds;
 };
 
-GoogleStreetViewProvider.loadBitmaps = async function (tiles) {
+GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps = async function (tiles) {
   const flipOptions = {
     flipY: false,
     skipColorSpaceConversion: true,
@@ -313,7 +313,7 @@ GoogleStreetViewProvider.loadBitmaps = async function (tiles) {
   return loaded;
 };
 
-GoogleStreetViewProvider.stitchBitmapsFromTileMap = async function (
+GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap = async function (
   tileMap,
   skipColorSpaceConversion,
 ) {
@@ -336,7 +336,7 @@ GoogleStreetViewProvider.stitchBitmapsFromTileMap = async function (
     }
   }
 
-  const bitmaps = await GoogleStreetViewProvider.loadBitmaps(tiles);
+  const bitmaps = await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps(tiles);
 
   if (bitmaps.length === 0) {
     throw new DeveloperError("No tiles could be loaded");
@@ -402,7 +402,7 @@ GoogleStreetViewProvider.stitchBitmapsFromTileMap = async function (
   return canvas;
 };
 
-GoogleStreetViewProvider._parseMetadata = function (panoIdMetadata) {
+GoogleStreetViewEquirectangularPanoramaProvider._parseMetadata = function (panoIdMetadata) {
   const cartographic = new Cartographic(
     panoIdMetadata.lng,
     panoIdMetadata.lat,
@@ -418,7 +418,7 @@ GoogleStreetViewProvider._parseMetadata = function (panoIdMetadata) {
   };
 };
 
-GoogleStreetViewProvider._computePanoramaTransform = function (
+GoogleStreetViewEquirectangularPanoramaProvider._computePanoramaTransform = function (
   cartographic,
   heading,
   tilt,
@@ -454,7 +454,7 @@ GoogleStreetViewProvider._computePanoramaTransform = function (
   return transform;
 };
 
-GoogleStreetViewProvider._buildTileUrl = function (options) {
+GoogleStreetViewEquirectangularPanoramaProvider._buildTileUrl = function (options) {
   const { z, x, y, panoId, key, session } = options;
   const tileApiUrl = `https://tile.googleapis.com/v1/streetview/tiles/${z}/${x}/${y}`;
   return new Resource({
@@ -468,4 +468,4 @@ GoogleStreetViewProvider._buildTileUrl = function (options) {
   }).url;
 };
 
-export default GoogleStreetViewProvider;
+export default GoogleStreetViewEquirectangularPanoramaProvider;

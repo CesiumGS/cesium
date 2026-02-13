@@ -25,9 +25,10 @@ try {
 
 const googleMapTilesApiKey = "Google Map Tiles API Key";
 
-const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
-  apiKey: googleMapTilesApiKey,
-});
+const provider =
+  await Cesium.GoogleStreetViewEquirectangularPanoramaProvider.fromUrl({
+    apiKey: googleMapTilesApiKey,
+  });
 
 async function loadPanorama(panoId) {
   const panoIdMetadata = await provider.getPanoIdMetadata(panoId);

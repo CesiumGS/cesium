@@ -48,9 +48,10 @@ const tileset = await Cesium.createGooglePhotorealistic3DTileset({
 tileset.show = false;
 viewer.scene.primitives.add(tileset);
 
-const provider = await Cesium.GoogleStreetViewProvider.fromUrl({
-  apiKey: googleMapTilesApiKey,
-});
+const provider =
+  await Cesium.GoogleStreetViewEquirectangularPanoramaProvider.fromUrl({
+    apiKey: googleMapTilesApiKey,
+  });
 
 let savedLng = 0;
 let savedLat = 0;
