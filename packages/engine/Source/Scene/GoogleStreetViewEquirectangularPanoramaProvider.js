@@ -41,7 +41,10 @@ function GoogleStreetViewEquirectangularPanoramaProvider(options) {
   this._skipColorSpaceConversion = options.skipColorSpaceConversion;
 }
 
-Object.defineProperties(GoogleStreetViewEquirectangularPanoramaProvider.prototype, {});
+Object.defineProperties(
+  GoogleStreetViewEquirectangularPanoramaProvider.prototype,
+  {},
+);
 
 /**
  * Gets the panorama primitive for a requested position and orientation.
@@ -74,59 +77,67 @@ Object.defineProperties(GoogleStreetViewEquirectangularPanoramaProvider.prototyp
  * viewer.scene.primitive.add(primitive);
  *
  */
-GoogleStreetViewEquirectangularPanoramaProvider.prototype.loadPanorama = async function (options) {
-  const cartographic = options.cartographic;
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.cartographic)) {
-    throw new DeveloperError("options.cartographic is required.");
-  }
-  //>>includeEnd('debug');
+GoogleStreetViewEquirectangularPanoramaProvider.prototype.loadPanorama =
+  async function (options) {
+    const cartographic = options.cartographic;
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(options.cartographic)) {
+      throw new DeveloperError("options.cartographic is required.");
+    }
+    //>>includeEnd('debug');
 
-  const credit = GoogleMaps.getDefaultCredit();
+    const credit = GoogleMaps.getDefaultCredit();
 
-  const zoom = options.zoom ?? 1;
-  const partition = GOOGLE_STREETVIEW_PARTITION_REFERENCE[zoom];
-  if (!partition) {
-    throw new DeveloperError(`Unsupported Street View zoom level: ${zoom}`);
-  }
+    const zoom = options.zoom ?? 1;
+    const partition = GOOGLE_STREETVIEW_PARTITION_REFERENCE[zoom];
+    if (!partition) {
+      throw new DeveloperError(`Unsupported Street View zoom level: ${zoom}`);
+    }
 
-  let { heading = 0, tilt = 0, panoId } = options;
+    let { heading = 0, tilt = 0, panoId } = options;
 
-  if (!defined(panoId)) {
-    const panoIds = await this.getPanoIds(cartographic);
-    panoId = panoIds[0];
-    const panoIdMetadata = this.getPanoIdMetadata(panoId);
-    ({ heading, tilt } =
-      GoogleStreetViewEquirectangularPanoramaProvider._parseMetadata(panoIdMetadata));
-  }
+    if (!defined(panoId)) {
+      const panoIds = await this.getPanoIds(cartographic);
+      panoId = panoIds[0];
+      const panoIdMetadata = this.getPanoIdMetadata(panoId);
+      ({ heading, tilt } =
+        GoogleStreetViewEquirectangularPanoramaProvider._parseMetadata(
+          panoIdMetadata,
+        ));
+    }
 
-  const tileMap = await GoogleStreetViewEquirectangularPanoramaProvider.getGoogleStreetViewTileUrls({
-    z: zoom,
-    partition,
-    panoId,
-    key: this._key,
-    session: this._session,
-  });
+    const tileMap =
+      await GoogleStreetViewEquirectangularPanoramaProvider.getGoogleStreetViewTileUrls(
+        {
+          z: zoom,
+          partition,
+          panoId,
+          key: this._key,
+          session: this._session,
+        },
+      );
 
-  const canvas = await GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(
-    tileMap,
-    this._skipColorSpaceConversion,
-  );
+    const canvas =
+      await GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(
+        tileMap,
+        this._skipColorSpaceConversion,
+      );
 
-  const transform = GoogleStreetViewEquirectangularPanoramaProvider._computePanoramaTransform(
-    cartographic,
-    heading,
-    tilt,
-  );
+    const transform =
+      GoogleStreetViewEquirectangularPanoramaProvider._computePanoramaTransform(
+        cartographic,
+        heading,
+        tilt,
+      );
 
-  const panorama = new EquirectangularPanorama({
-    image: canvas,
-    transform,
-    credit,
-  });
+    const panorama = new EquirectangularPanorama({
+      image: canvas,
+      transform,
+      credit,
+    });
 
-  return panorama;
-};
+    return panorama;
+  };
 
 /**
  * Gets the panorama primitive for a given panoId. Lookup a panoId using {@link GoogleStreetViewEquirectangularPanoramaProvider#getPanoId}.
@@ -145,23 +156,23 @@ GoogleStreetViewEquirectangularPanoramaProvider.prototype.loadPanorama = async f
  * const primitive = await provider.loadPanoramaFromPanoId(panoIds[0]);
  * viewer.scene.primitive.add(primitive);
  */
-GoogleStreetViewEquirectangularPanoramaProvider.prototype.loadPanoramaFromPanoId = async function (
-  panoId,
-  zoom,
-) {
-  const panoIdMetadata = await this.getPanoIdMetadata(panoId);
+GoogleStreetViewEquirectangularPanoramaProvider.prototype.loadPanoramaFromPanoId =
+  async function (panoId, zoom) {
+    const panoIdMetadata = await this.getPanoIdMetadata(panoId);
 
-  const { heading, tilt, cartographic } =
-    GoogleStreetViewEquirectangularPanoramaProvider._parseMetadata(panoIdMetadata);
+    const { heading, tilt, cartographic } =
+      GoogleStreetViewEquirectangularPanoramaProvider._parseMetadata(
+        panoIdMetadata,
+      );
 
-  return this.loadPanorama({
-    cartographic,
-    zoom,
-    heading,
-    tilt,
-    panoId,
-  });
-};
+    return this.loadPanorama({
+      cartographic,
+      zoom,
+      heading,
+      tilt,
+      panoId,
+    });
+  };
 
 /**
  * Gets the panoIds for the given cartographic location. See {@link https://developers.google.com/maps/documentation/tile/streetview#panoid-search}.
@@ -177,25 +188,26 @@ GoogleStreetViewEquirectangularPanoramaProvider.prototype.loadPanoramaFromPanoId
  * })
  * const panoIds = provider.getPanoIds(position);
  */
-GoogleStreetViewEquirectangularPanoramaProvider.prototype.getPanoIds = async function (position) {
-  const longitude = CesiumMath.toDegrees(position.longitude);
-  const latitude = CesiumMath.toDegrees(position.latitude);
+GoogleStreetViewEquirectangularPanoramaProvider.prototype.getPanoIds =
+  async function (position) {
+    const longitude = CesiumMath.toDegrees(position.longitude);
+    const latitude = CesiumMath.toDegrees(position.latitude);
 
-  const panoIdsResponse = await Resource.post({
-    url: "https://tile.googleapis.com/v1/streetview/panoIds",
-    queryParameters: {
-      key: this._key,
-      session: this._session,
-    },
-    data: JSON.stringify({
-      locations: [{ lat: latitude, lng: longitude }],
-      radius: 100,
-    }),
-  });
+    const panoIdsResponse = await Resource.post({
+      url: "https://tile.googleapis.com/v1/streetview/panoIds",
+      queryParameters: {
+        key: this._key,
+        session: this._session,
+      },
+      data: JSON.stringify({
+        locations: [{ lat: latitude, lng: longitude }],
+        radius: 100,
+      }),
+    });
 
-  const panoIdJson = JSON.parse(panoIdsResponse);
-  return panoIdJson.panoIds;
-};
+    const panoIdJson = JSON.parse(panoIdsResponse);
+    return panoIdJson.panoIds;
+  };
 
 /**
  * Gets metadata for panoId. See {@link https://developers.google.com/maps/documentation/tile/streetview#metadata_response} for response object.
@@ -208,19 +220,20 @@ GoogleStreetViewEquirectangularPanoramaProvider.prototype.getPanoIds = async fun
  * const panoIdMetadata = provider.getPanoIdMetadata(panoIds[0]);
  *
  */
-GoogleStreetViewEquirectangularPanoramaProvider.prototype.getPanoIdMetadata = async function (panoId) {
-  const metadataResponse = await Resource.fetch({
-    url: "https://tile.googleapis.com/v1/streetview/metadata",
-    queryParameters: {
-      key: this._key,
-      session: this._session,
-      panoId,
-    },
-    data: JSON.stringify({}),
-  });
+GoogleStreetViewEquirectangularPanoramaProvider.prototype.getPanoIdMetadata =
+  async function (panoId) {
+    const metadataResponse = await Resource.fetch({
+      url: "https://tile.googleapis.com/v1/streetview/metadata",
+      queryParameters: {
+        key: this._key,
+        session: this._session,
+        panoId,
+      },
+      data: JSON.stringify({}),
+    });
 
-  return JSON.parse(metadataResponse);
-};
+    return JSON.parse(metadataResponse);
+  };
 
 /**
  * Creates a {@link PanoramaProvider} which provides image tiles from the {@link https://developers.google.com/maps/documentation/tile/streetview|Google Street View Tiles API}.
@@ -236,7 +249,9 @@ GoogleStreetViewEquirectangularPanoramaProvider.prototype.getPanoIdMetadata = as
  *   apiKey: 'your Google Streetview Tiles api key'
  * })
  */
-GoogleStreetViewEquirectangularPanoramaProvider.fromUrl = async function (options) {
+GoogleStreetViewEquirectangularPanoramaProvider.fromUrl = async function (
+  options,
+) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
@@ -262,29 +277,31 @@ GoogleStreetViewEquirectangularPanoramaProvider.fromUrl = async function (option
   });
 };
 
-GoogleStreetViewEquirectangularPanoramaProvider.getGoogleStreetViewTileUrls = async function (
-  options,
-) {
-  const { z, partition, panoId, key, session } = options;
-  const tileIds = {};
-  let tileIdKey;
-  for (let x = 0; x < partition * 2; x++) {
-    for (let y = 0; y < partition; y++) {
-      tileIdKey = `${z}/${x}/${y}`;
-      tileIds[tileIdKey] = GoogleStreetViewEquirectangularPanoramaProvider._buildTileUrl({
-        z,
-        x,
-        y,
-        panoId,
-        key,
-        session,
-      });
+GoogleStreetViewEquirectangularPanoramaProvider.getGoogleStreetViewTileUrls =
+  async function (options) {
+    const { z, partition, panoId, key, session } = options;
+    const tileIds = {};
+    let tileIdKey;
+    for (let x = 0; x < partition * 2; x++) {
+      for (let y = 0; y < partition; y++) {
+        tileIdKey = `${z}/${x}/${y}`;
+        tileIds[tileIdKey] =
+          GoogleStreetViewEquirectangularPanoramaProvider._buildTileUrl({
+            z,
+            x,
+            y,
+            panoId,
+            key,
+            session,
+          });
+      }
     }
-  }
-  return tileIds;
-};
+    return tileIds;
+  };
 
-GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps = async function (tiles) {
+GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps = async function (
+  tiles,
+) {
   const flipOptions = {
     flipY: false,
     skipColorSpaceConversion: true,
@@ -313,96 +330,97 @@ GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps = async function (ti
   return loaded;
 };
 
-GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap = async function (
-  tileMap,
-  skipColorSpaceConversion,
+GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap =
+  async function (tileMap, skipColorSpaceConversion) {
+    // tileMap: Record<"z/x/y", string>
+
+    const tiles = Object.entries(tileMap).map(([key, src]) => {
+      const [z, x, y] = key.split("/").map(Number);
+      return { z, x, y, src };
+    });
+
+    if (tiles.length === 0) {
+      throw new DeveloperError("No tiles provided");
+    }
+
+    // Ensure all tiles have the same zoom level
+    const zoom = tiles[0].z;
+    for (const t of tiles) {
+      if (t.z !== zoom) {
+        throw new DeveloperError("All tiles must have the same zoom level");
+      }
+    }
+
+    const bitmaps =
+      await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps(tiles);
+
+    if (bitmaps.length === 0) {
+      throw new DeveloperError("No tiles could be loaded");
+    }
+
+    // Ensure all tiles have the same dimensions
+    const first = bitmaps[0].bitmap;
+    for (const t of bitmaps) {
+      if (t.bitmap.width !== first.width || t.bitmap.height !== first.height) {
+        throw new DeveloperError("All tiles must have the same dimensions");
+      }
+    }
+
+    const minX = Math.min(...bitmaps.map((t) => t.x));
+    const maxX = Math.max(...bitmaps.map((t) => t.x));
+    const minY = Math.min(...bitmaps.map((t) => t.y));
+    const maxY = Math.max(...bitmaps.map((t) => t.y));
+
+    const cols = maxX - minX + 1;
+    const rows = maxY - minY + 1;
+
+    const colWidths = Array(cols).fill(0);
+    const rowHeights = Array(rows).fill(0);
+
+    for (const t of bitmaps) {
+      const col = t.x - minX;
+      const row = t.y - minY;
+      colWidths[col] = Math.max(colWidths[col], t.bitmap.width);
+      rowHeights[row] = Math.max(rowHeights[row], t.bitmap.height);
+    }
+
+    const width = colWidths.reduce((a, b) => a + b, 0);
+    const height = rowHeights.reduce((a, b) => a + b, 0);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+
+    const xOffsets = [];
+    const yOffsets = [];
+
+    colWidths.reduce((acc, w, i) => {
+      xOffsets[i] = acc;
+      return acc + w;
+    }, 0);
+
+    rowHeights.reduce((acc, h, i) => {
+      yOffsets[i] = acc;
+      return acc + h;
+    }, 0);
+
+    for (const t of bitmaps) {
+      const col = t.x - minX;
+      const row = t.y - minY;
+      ctx.drawImage(t.bitmap, xOffsets[col], yOffsets[row]);
+    }
+
+    for (const t of bitmaps) {
+      t.bitmap.close();
+    }
+
+    return canvas;
+  };
+
+GoogleStreetViewEquirectangularPanoramaProvider._parseMetadata = function (
+  panoIdMetadata,
 ) {
-  // tileMap: Record<"z/x/y", string>
-
-  const tiles = Object.entries(tileMap).map(([key, src]) => {
-    const [z, x, y] = key.split("/").map(Number);
-    return { z, x, y, src };
-  });
-
-  if (tiles.length === 0) {
-    throw new DeveloperError("No tiles provided");
-  }
-
-  // Ensure all tiles have the same zoom level
-  const zoom = tiles[0].z;
-  for (const t of tiles) {
-    if (t.z !== zoom) {
-      throw new DeveloperError("All tiles must have the same zoom level");
-    }
-  }
-
-  const bitmaps = await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps(tiles);
-
-  if (bitmaps.length === 0) {
-    throw new DeveloperError("No tiles could be loaded");
-  }
-
-  // Ensure all tiles have the same dimensions
-  const first = bitmaps[0].bitmap;
-  for (const t of bitmaps) {
-    if (t.bitmap.width !== first.width || t.bitmap.height !== first.height) {
-      throw new DeveloperError("All tiles must have the same dimensions");
-    }
-  }
-
-  const minX = Math.min(...bitmaps.map((t) => t.x));
-  const maxX = Math.max(...bitmaps.map((t) => t.x));
-  const minY = Math.min(...bitmaps.map((t) => t.y));
-  const maxY = Math.max(...bitmaps.map((t) => t.y));
-
-  const cols = maxX - minX + 1;
-  const rows = maxY - minY + 1;
-
-  const colWidths = Array(cols).fill(0);
-  const rowHeights = Array(rows).fill(0);
-
-  for (const t of bitmaps) {
-    const col = t.x - minX;
-    const row = t.y - minY;
-    colWidths[col] = Math.max(colWidths[col], t.bitmap.width);
-    rowHeights[row] = Math.max(rowHeights[row], t.bitmap.height);
-  }
-
-  const width = colWidths.reduce((a, b) => a + b, 0);
-  const height = rowHeights.reduce((a, b) => a + b, 0);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-
-  const xOffsets = [];
-  const yOffsets = [];
-
-  colWidths.reduce((acc, w, i) => {
-    xOffsets[i] = acc;
-    return acc + w;
-  }, 0);
-
-  rowHeights.reduce((acc, h, i) => {
-    yOffsets[i] = acc;
-    return acc + h;
-  }, 0);
-
-  for (const t of bitmaps) {
-    const col = t.x - minX;
-    const row = t.y - minY;
-    ctx.drawImage(t.bitmap, xOffsets[col], yOffsets[row]);
-  }
-
-  for (const t of bitmaps) {
-    t.bitmap.close();
-  }
-
-  return canvas;
-};
-
-GoogleStreetViewEquirectangularPanoramaProvider._parseMetadata = function (panoIdMetadata) {
   const cartographic = new Cartographic(
     panoIdMetadata.lng,
     panoIdMetadata.lat,
@@ -418,43 +436,42 @@ GoogleStreetViewEquirectangularPanoramaProvider._parseMetadata = function (panoI
   };
 };
 
-GoogleStreetViewEquirectangularPanoramaProvider._computePanoramaTransform = function (
-  cartographic,
-  heading,
-  tilt,
+GoogleStreetViewEquirectangularPanoramaProvider._computePanoramaTransform =
+  function (cartographic, heading, tilt) {
+    const position = Cartesian3.fromDegrees(
+      cartographic.longitude,
+      cartographic.latitude,
+      cartographic.height,
+    );
+    const enuTransform = Transforms.eastNorthUpToFixedFrame(position);
+
+    const headingRad = CesiumMath.toRadians(-heading - 90);
+    const headingRotation = Matrix3.fromRotationZ(headingRad);
+
+    const tiltRad = CesiumMath.toRadians(tilt);
+    const tiltRotation = Matrix3.fromRotationY(tiltRad);
+    const combinedRotation = Matrix3.multiply(
+      headingRotation,
+      tiltRotation,
+      new Matrix3(),
+    );
+
+    const headingRotation4 = Matrix4.fromRotationTranslation(
+      combinedRotation, //headingRotation,
+      Cartesian3.ZERO,
+    );
+
+    const transform = Matrix4.multiply(
+      enuTransform,
+      headingRotation4,
+      new Matrix4(),
+    );
+    return transform;
+  };
+
+GoogleStreetViewEquirectangularPanoramaProvider._buildTileUrl = function (
+  options,
 ) {
-  const position = Cartesian3.fromDegrees(
-    cartographic.longitude,
-    cartographic.latitude,
-    cartographic.height,
-  );
-  const enuTransform = Transforms.eastNorthUpToFixedFrame(position);
-
-  const headingRad = CesiumMath.toRadians(-heading - 90);
-  const headingRotation = Matrix3.fromRotationZ(headingRad);
-
-  const tiltRad = CesiumMath.toRadians(tilt);
-  const tiltRotation = Matrix3.fromRotationY(tiltRad);
-  const combinedRotation = Matrix3.multiply(
-    headingRotation,
-    tiltRotation,
-    new Matrix3(),
-  );
-
-  const headingRotation4 = Matrix4.fromRotationTranslation(
-    combinedRotation, //headingRotation,
-    Cartesian3.ZERO,
-  );
-
-  const transform = Matrix4.multiply(
-    enuTransform,
-    headingRotation4,
-    new Matrix4(),
-  );
-  return transform;
-};
-
-GoogleStreetViewEquirectangularPanoramaProvider._buildTileUrl = function (options) {
   const { z, x, y, panoId, key, session } = options;
   const tileApiUrl = `https://tile.googleapis.com/v1/streetview/tiles/${z}/${x}/${y}`;
   return new Resource({
