@@ -1,7 +1,8 @@
 // @ts-check
 
 import { transform } from "lebab";
-import { glob, readFile, writeFile } from "node:fs/promises";
+import { globby } from "globby";
+import { readFile, writeFile } from "node:fs/promises";
 import { resolve, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,7 +29,7 @@ const pathsWithConstructorTags = [];
 
 console.log(bright(`Converting...\n`));
 
-for await (const path of glob(resolve(__dirname, "..", pattern))) {
+for (const path of await globby(resolve(__dirname, "..", pattern))) {
   console.log(dim(`  ${path}`));
 
   // Lowercase filenames are assumed to contain functions, not classes. If
