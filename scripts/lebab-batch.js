@@ -69,7 +69,7 @@ ${bright("Before")}
 
 ${red(`/**
  * Description of class.
- * @alias MyClass")}
+ * @alias MyClass
  * @extends {MyParentClass}
  * @constructor
  * @param {string} name
