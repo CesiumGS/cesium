@@ -8,9 +8,7 @@ export function FeatureSettings() {
   return (
     <>
       {/* Extended Thinking */}
-      <Text variant="body-lg" style={{ fontWeight: 600 }}>
-        Extended Thinking
-      </Text>
+      <Text variant="headline-sm">Extended Thinking</Text>
 
       <Field.Root layout="inline">
         <Field.Label>Enable Extended Thinking</Field.Label>
@@ -56,9 +54,7 @@ export function FeatureSettings() {
       </Field.Root>
 
       {/* Auto-Iteration */}
-      <Text variant="body-lg" style={{ fontWeight: 600 }}>
-        Auto-Iteration
-      </Text>
+      <Text variant="headline-sm">Auto-Iteration</Text>
 
       <Field.Root layout="inline">
         <Field.Label>Enable Auto-Iteration</Field.Label>

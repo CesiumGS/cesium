@@ -31,7 +31,12 @@ import type {
 } from "./AI/types";
 import { SettingsContext } from "./SettingsContext";
 import { detectOscillation } from "./AI/ErrorContext";
-import { settings as settingsIcon, cesiumLogo, add as addIcon } from "./icons";
+import {
+  settings as settingsIcon,
+  cesiumLogo,
+  add as addIcon,
+  close as closeIcon,
+} from "./icons";
 import cesiumChatLogo from "./assets/cesium-chat-logo.png";
 import {
   initializeToolRegistry,
@@ -1272,7 +1277,7 @@ export function ChatPanel({
         const isGemini = selectedModel.startsWith("gemini");
         const conversationHistory = isGemini
           ? previousMessages.map((msg) => ({
-              parts: [{ text: msg.content }], // Gemini format - TODO: Add image support for Gemini
+              parts: [{ text: msg.content }],
             }))
           : previousMessages
               .filter(
@@ -1828,12 +1833,7 @@ export function ChatPanel({
 
   // PERFORMANCE OPTIMIZATION #4: Stable callback functions
   const handleSendMessage = useCallback(async () => {
-    // Get the value from either React state or DOM (for programmatic testing)
-    const textareaElement = document.querySelector(
-      ".chat-input",
-    ) as HTMLTextAreaElement;
-    const actualInput = textareaElement?.value || input;
-    const trimmedInput = actualInput.trim();
+    const trimmedInput = input.trim();
 
     if (!trimmedInput) {
       return;
@@ -2149,7 +2149,7 @@ export function ChatPanel({
                 onClick={onClose}
                 aria-label="Close chat panel"
               >
-                ✕
+                <Icon href={closeIcon} />
               </Button>
             </Tooltip>
           </div>
@@ -2227,7 +2227,12 @@ export function ChatPanel({
               </div>
               {!hasApiKey && (
                 <div className="welcome-warning">
-                  <Text variant="body-md" style={{ color: "#f59e0b" }}>
+                  <Text
+                    variant="body-md"
+                    style={{
+                      color: "var(--stratakit-color-text-warning-base)",
+                    }}
+                  >
                     ⚠️ You need to set up your API key to get started.
                   </Text>
                   <Button

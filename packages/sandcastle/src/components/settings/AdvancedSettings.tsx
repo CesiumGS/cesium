@@ -64,20 +64,11 @@ export function AdvancedSettings() {
           Reset All Data
         </Button>
       ) : (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--stratakit-space-x2)",
-          }}
-        >
-          <Text
-            variant="body-md"
-            style={{ color: "var(--stratakit-color-text-critical-base)" }}
-          >
+        <div className="reset-confirmation">
+          <Text variant="body-md" className="reset-warning">
             Are you sure? This will delete all your settings and API keys.
           </Text>
-          <div style={{ display: "flex", gap: "var(--stratakit-space-x2)" }}>
+          <div className="reset-actions">
             <Button variant="solid" onClick={handleResetData}>
               Yes, Reset Everything
             </Button>

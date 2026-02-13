@@ -1,5 +1,4 @@
 import { unstable_AccordionItem as AccordionItem } from "@stratakit/structures";
-import { Spinner } from "@stratakit/bricks";
 
 interface ThinkingBlockProps {
   content: string;
@@ -18,7 +17,6 @@ export function ThinkingBlock({
           <AccordionItem.Label>
             {isStreaming ? "Thinking..." : "Thought process"}
           </AccordionItem.Label>
-          {isStreaming && <Spinner size="small" />}
         </AccordionItem.Button>
       </AccordionItem.Header>
       <AccordionItem.Content>

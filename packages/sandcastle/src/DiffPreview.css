@@ -260,14 +260,6 @@
   position: relative;
 }
 
-.diff-preview-actions .applied-button {
-  background: rgba(34, 197, 94, 0.15) !important;
-  color: var(--stratakit-color-text-success-base) !important;
-  border: 1px solid rgba(34, 197, 94, 0.3) !important;
-  cursor: default;
-  opacity: 0.9;
-}
-
 /* Spinner for loading state */
 .spinner {
   display: inline-block;

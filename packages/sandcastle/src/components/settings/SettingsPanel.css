@@ -27,3 +27,18 @@
   flex-direction: column;
   gap: var(--stratakit-space-x3);
 }
+
+.reset-confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-x2);
+}
+
+.reset-warning {
+  color: var(--stratakit-color-text-critical-base);
+}
+
+.reset-actions {
+  display: flex;
+  gap: var(--stratakit-space-x2);
+}

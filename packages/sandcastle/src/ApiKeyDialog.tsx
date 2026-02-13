@@ -4,6 +4,7 @@ import { Tabs, unstable_Banner as Banner } from "@stratakit/structures";
 import { SandcastleDialog } from "./SandcastleDialog";
 import { ApiKeyManager } from "./AI/ApiKeyManager";
 import { useModel } from "./contexts/useModel";
+import "./ApiKeyDialog.css";
 
 interface ApiKeyDialogProps {
   open: boolean;
@@ -95,13 +96,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
 
   return (
     <SandcastleDialog open={open} onClose={onClose} title="API Configuration">
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--stratakit-space-x4)",
-        }}
-      >
+      <div className="api-dialog-content">
         <Tabs.Root defaultSelectedId="anthropic">
           <Tabs.TabList>
             <Tabs.Tab id="anthropic">Anthropic</Tabs.Tab>
@@ -110,14 +105,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
           </Tabs.TabList>
 
           <Tabs.TabPanel tabId="anthropic">
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--stratakit-space-x3)",
-                paddingTop: "var(--stratakit-space-x3)",
-              }}
-            >
+            <div className="api-dialog-panel">
               <Field.Root>
                 <Field.Label>API Key</Field.Label>
                 <Field.Control
@@ -140,13 +128,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                   <Field.ErrorMessage>{anthropicError}</Field.ErrorMessage>
                 )}
               </Field.Root>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "var(--stratakit-space-x2)",
-                  justifyContent: "flex-end",
-                }}
-              >
+              <div className="api-dialog-actions">
                 <Button
                   tone="accent"
                   onClick={handleAnthropicSave}
@@ -175,14 +157,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
           </Tabs.TabPanel>
 
           <Tabs.TabPanel tabId="gemini">
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--stratakit-space-x3)",
-                paddingTop: "var(--stratakit-space-x3)",
-              }}
-            >
+            <div className="api-dialog-panel">
               <Field.Root>
                 <Field.Label>API Key</Field.Label>
                 <Field.Control
@@ -205,13 +180,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                   <Field.ErrorMessage>{geminiError}</Field.ErrorMessage>
                 )}
               </Field.Root>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "var(--stratakit-space-x2)",
-                  justifyContent: "flex-end",
-                }}
-              >
+              <div className="api-dialog-actions">
                 <Button
                   tone="accent"
                   onClick={handleGeminiSave}
@@ -240,14 +209,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
           </Tabs.TabPanel>
 
           <Tabs.TabPanel tabId="cesium">
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--stratakit-space-x3)",
-                paddingTop: "var(--stratakit-space-x3)",
-              }}
-            >
+            <div className="api-dialog-panel">
               <Field.Root>
                 <Field.Label>Access Token</Field.Label>
                 <Field.Control
@@ -278,13 +240,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                   message="Cesium Ion token saved!"
                 />
               )}
-              <div
-                style={{
-                  display: "flex",
-                  gap: "var(--stratakit-space-x2)",
-                  justifyContent: "flex-end",
-                }}
-              >
+              <div className="api-dialog-actions">
                 <Button
                   tone="accent"
                   onClick={handleCesiumSave}
