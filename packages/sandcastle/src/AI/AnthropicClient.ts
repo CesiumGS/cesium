@@ -8,7 +8,7 @@ import type {
   ToolCall,
   ToolResult,
 } from "./types";
-import { CESIUMJS_API_DEPRECATIONS } from "./prompts";
+import { buildDiffBasedPrompt, buildContextPrompt } from "./PromptBuilder";
 
 // API Configuration
 const ANTHROPIC_API_BASE_URL = "https://api.anthropic.com/v1";
@@ -99,11 +99,14 @@ export class AnthropicClient {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        return {
-          valid: false,
-          error: error.error?.message || `HTTP ${response.status}`,
-        };
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const error = await response.json();
+          errorMessage = error.error?.message || errorMessage;
+        } catch {
+          // Response body was not valid JSON
+        }
+        return { valid: false, error: errorMessage };
       }
 
       return { valid: true };
@@ -149,8 +152,8 @@ export class AnthropicClient {
     }
 
     const { systemPrompt, userPrompt } = useDiffFormat
-      ? this.buildDiffBasedPrompt(userMessage, context, customAddendum)
-      : this.buildContextPrompt(userMessage, context, customAddendum);
+      ? buildDiffBasedPrompt(userMessage, context, customAddendum)
+      : buildContextPrompt(userMessage, context, customAddendum);
 
     // Build messages array for Anthropic API
     const messages = this.buildMessages(
@@ -238,13 +241,14 @@ export class AnthropicClient {
       resetStallTimeout();
 
       if (!response.ok) {
-        const errorData = await response.json();
-        yield {
-          type: "error",
-          error:
-            errorData.error?.message ||
-            `HTTP error! status: ${response.status}`,
-        };
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error?.message || errorMessage;
+        } catch {
+          // Response body was not valid JSON
+        }
+        yield { type: "error", error: errorMessage };
         return;
       }
 
@@ -596,13 +600,14 @@ export class AnthropicClient {
       resetStallTimeout();
 
       if (!response.ok) {
-        const errorData = await response.json();
-        yield {
-          type: "error",
-          error:
-            errorData.error?.message ||
-            `HTTP error! status: ${response.status}`,
-        };
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error?.message || errorMessage;
+        } catch {
+          // Response body was not valid JSON
+        }
+        yield { type: "error", error: errorMessage };
         return;
       }
 
@@ -630,198 +635,6 @@ export class AnthropicClient {
         clearTimeout(timeoutId);
       }
     }
-  }
-
-  /**
-   * Build system and user prompts that encourage diff-based edits using the apply_diff tool
-   *
-   * @param userMessage - The user's request
-   * @param context - Current code context
-   * @param customAddendum - Optional custom system prompt addendum from user settings
-   * @returns Object with systemPrompt and userPrompt strings
-   */
-  private buildDiffBasedPrompt(
-    userMessage: string,
-    context: CodeContext,
-    customAddendum?: string,
-  ): { systemPrompt: string; userPrompt: string } {
-    const consoleSection = this.formatConsoleMessages(context.consoleMessages);
-
-    let systemPrompt = `You are an AI assistant helping with CesiumJS code in Sandcastle.
-
-# CODE EDITING INSTRUCTIONS
-
-## IMPORTANT: Use the apply_diff Tool
-
-You MUST use the \`apply_diff\` tool for ALL code changes. DO NOT output code directly as text.
-
-### How to Use apply_diff:
-
-Call the \`apply_diff\` function with:
-- **file**: Either "javascript" or "html"
-- **search**: The EXACT code to find (must match character-for-character)
-- **replace**: The new code to replace with
-
-### CRITICAL RULES:
-
-1. **Exact Matching Required:**
-   - \`search\` content must match the file EXACTLY
-   - Character-for-character including whitespace, tabs, spaces
-   - Include all comments, blank lines, formatting
-   - Never truncate lines mid-way through
-   - Each line must be complete
-
-2. **First Match Only:**
-   - Each tool call replaces only the FIRST occurrence
-   - Use multiple tool calls for multiple changes
-   - Make calls in the order they appear in the file
-
-3. **Include All Lines:**
-   - Include ALL lines in the section being edited, both changed AND unchanged
-   - Do NOT omit unchanged lines between changes
-   - Include the complete code section from start to end
-
-4. **Special Operations:**
-   - **Delete code:** Use empty string in \`replace\`
-   - **Add code:** Include anchor line in \`search\`
-
-### AUTO-FORMATTING AWARENESS:
-
-- After changes are applied, the editor may auto-format the code
-- This can modify indentation, quotes, line breaks, imports, etc.
-- For SUBSEQUENT edits, use the FORMATTED version as reference
-- CRITICAL: \`search\` must match the actual formatted code in the file
-
-## RESPONSE FORMAT:
-
-- Be concise and direct
-- Skip "I will..." preambles - just use the tool
-- Brief explanation (1-2 sentences) ONLY if the change needs context
-- Then immediately call apply_diff
-- No verbose descriptions of what you're about to do
-
-${CESIUMJS_API_DEPRECATIONS}`;
-
-    // Append custom addendum to system prompt if provided
-    if (customAddendum && customAddendum.trim()) {
-      systemPrompt += `
-
-# IMPORTANT USER INSTRUCTIONS
-
-${customAddendum.trim()}`;
-    }
-
-    const userPrompt = `Current JavaScript Code:
-\`\`\`javascript
-${context.javascript}
-\`\`\`
-
-Current HTML:
-\`\`\`html
-${context.html}
-\`\`\`
-${consoleSection}
-
-User Request: ${userMessage}`;
-
-    return { systemPrompt, userPrompt };
-  }
-
-  /**
-   * Build system and user prompts with code context (original format, backward compatible)
-   * This format requests full code blocks instead of diffs
-   *
-   * @param userMessage - The user's request
-   * @param context - Current code context
-   * @param customAddendum - Optional custom system prompt addendum from user settings
-   * @returns Object with systemPrompt and userPrompt strings
-   */
-  private buildContextPrompt(
-    userMessage: string,
-    context: CodeContext,
-    customAddendum?: string,
-  ): { systemPrompt: string; userPrompt: string } {
-    const consoleSection = this.formatConsoleMessages(context.consoleMessages);
-
-    let systemPrompt = `You are an AI assistant helping with CesiumJS code in Sandcastle.
-
-When suggesting code changes:
-1. Provide clear explanations
-2. If modifying existing code, use code blocks with the full modified sections
-3. If creating new code, provide complete, runnable examples
-4. Use CesiumJS best practices and the Cesium API correctly
-${CESIUMJS_API_DEPRECATIONS}`;
-
-    // Append custom addendum to system prompt if provided
-    if (customAddendum && customAddendum.trim()) {
-      systemPrompt += `
-
-# IMPORTANT USER INSTRUCTIONS
-
-${customAddendum.trim()}`;
-    }
-
-    const userPrompt = `Current JavaScript Code:
-\`\`\`javascript
-${context.javascript}
-\`\`\`
-
-Current HTML:
-\`\`\`html
-${context.html}
-\`\`\`
-${consoleSection}
-
-User Request: ${userMessage}`;
-
-    return { systemPrompt, userPrompt };
-  }
-
-  /**
-   * Format console messages for inclusion in the prompt
-   *
-   * @param consoleMessages - Array of console messages from the sandbox
-   * @returns Formatted console section or empty string if no messages
-   */
-  private formatConsoleMessages(
-    consoleMessages?: Array<{
-      type: "log" | "warn" | "error";
-      message: string;
-    }>,
-  ): string {
-    if (!consoleMessages || consoleMessages.length === 0) {
-      return "";
-    }
-
-    const logs = consoleMessages.filter((msg) => msg.type === "log");
-    const warnings = consoleMessages.filter((msg) => msg.type === "warn");
-    const errors = consoleMessages.filter((msg) => msg.type === "error");
-
-    let section = "\nConsole Output:\n";
-
-    if (errors.length > 0) {
-      section += "\nErrors:\n";
-      errors.forEach((error, index) => {
-        section += `  ${index + 1}. ${error.message}\n`;
-      });
-    }
-
-    if (warnings.length > 0) {
-      section += "\nWarnings:\n";
-      warnings.forEach((warning, index) => {
-        section += `  ${index + 1}. ${warning.message}\n`;
-      });
-    }
-
-    if (logs.length > 0) {
-      section += "\nLogs:\n";
-      logs.forEach((log, index) => {
-        section += `  ${index + 1}. ${log.message}\n`;
-      });
-    }
-
-    section += "\n";
-    return section;
   }
 
   /**

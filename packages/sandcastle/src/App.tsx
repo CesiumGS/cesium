@@ -534,9 +534,9 @@ function App() {
         editorRef.current?.applyAiEdit(html, "html");
       }
       // Auto-run after applying AI changes
-      setTimeout(() => runSandcastle(), 500);
+      setTimeout(() => dispatch({ type: "runSandcastle" }), 500);
     },
-    [],
+    [dispatch],
   );
 
   const handleApplyAiDiff = useCallback(
@@ -732,16 +732,30 @@ function App() {
     [codeState.code, codeState.html, appendConsole],
   );
 
-  const codeContext: CodeContext = {
-    javascript: codeState.code,
-    html: codeState.html,
-    consoleMessages: consoleMessages
-      .filter((msg) => msg.type !== "special")
-      .map((msg) => ({
-        type: msg.type as "log" | "warn" | "error",
+  const codeContext: CodeContext = useMemo(
+    () => ({
+      javascript: codeState.code,
+      html: codeState.html,
+      consoleMessages: consoleMessages
+        .filter((msg) => msg.type !== "special")
+        .map((msg) => ({
+          type: msg.type as "log" | "warn" | "error",
+          message: msg.message,
+        })),
+    }),
+    [codeState.code, codeState.html, consoleMessages],
+  );
+
+  const getCurrentConsoleErrors = useCallback(
+    () =>
+      consoleMessages.map((msg) => ({
+        type: msg.type,
         message: msg.message,
       })),
-  };
+    [consoleMessages],
+  );
+
+  const handleClearConsole = useCallback(() => setConsoleMessages([]), []);
 
   return (
     <Root
@@ -973,13 +987,8 @@ function App() {
                 onApplyCode={handleApplyAiCode}
                 onApplyDiff={handleApplyAiDiff}
                 currentCode={codeContext}
-                onClearConsole={() => setConsoleMessages([])}
-                getCurrentConsoleErrors={() =>
-                  consoleMessages.map((msg) => ({
-                    type: msg.type,
-                    message: msg.message,
-                  }))
-                }
+                onClearConsole={handleClearConsole}
+                getCurrentConsoleErrors={getCurrentConsoleErrors}
               />
             </ErrorBoundary>
           </Allotment.Pane>

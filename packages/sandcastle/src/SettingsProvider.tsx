@@ -1,4 +1,4 @@
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useMemo } from "react";
 import {
   availableFonts,
   initialSettings,
@@ -83,14 +83,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     [updateSettings, settings],
   );
 
-  return (
-    <SettingsContext
-      value={{
-        settings: settings ?? initialSettings,
-        updateSettings: mergeSettings,
-      }}
-    >
-      {children}
-    </SettingsContext>
+  const contextValue = useMemo(
+    () => ({
+      settings: settings ?? initialSettings,
+      updateSettings: mergeSettings,
+    }),
+    [settings, mergeSettings],
   );
+
+  return <SettingsContext value={contextValue}>{children}</SettingsContext>;
 }

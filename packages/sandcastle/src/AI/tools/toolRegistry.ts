@@ -14,6 +14,9 @@ import {
   type DiffBlock,
 } from "../types";
 
+// Debug flag for development logging
+const DEBUG = import.meta.env?.DEV ?? false;
+
 /**
  * Tool handler function signature
  */
@@ -40,7 +43,7 @@ export class ToolRegistry {
    * Register a new tool
    */
   registerTool(definition: ToolDefinition, handler: ToolHandler): void {
-    if (this.tools.has(definition.name)) {
+    if (this.tools.has(definition.name) && DEBUG) {
       console.warn(
         `Tool "${definition.name}" is already registered. Overwriting.`,
       );
@@ -51,8 +54,9 @@ export class ToolRegistry {
       handler,
     });
 
-    // Minimized logging - kept for tool call mechanics
-    console.log(`✅ Registered tool: ${definition.name}`);
+    if (DEBUG) {
+      console.log(`Registered tool: ${definition.name}`);
+    }
   }
 
   /**
@@ -84,8 +88,9 @@ export class ToolRegistry {
     }
 
     try {
-      // Tool call mechanics logging - KEEP
-      console.log(`🔧 Executing tool: ${toolCall.name}`, toolCall.input);
+      if (DEBUG) {
+        console.log(`Executing tool: ${toolCall.name}`, toolCall.input);
+      }
       const result = await tool.handler(toolCall.input);
       return {
         ...result,
@@ -115,15 +120,19 @@ function createApplyDiffHandler(
 
   return async (input: Record<string, unknown>): Promise<ToolResult> => {
     try {
-      console.log("[ToolRegistry] 🔧 apply_diff handler invoked with input:", {
-        hasFile: !!input.file,
-        hasSearch: !!input.search,
-        hasReplace: "replace" in input,
-        searchLength:
-          typeof input.search === "string" ? input.search.length : undefined,
-        replaceLength:
-          typeof input.replace === "string" ? input.replace.length : undefined,
-      });
+      if (DEBUG) {
+        console.log("[ToolRegistry] apply_diff handler invoked with input:", {
+          hasFile: !!input.file,
+          hasSearch: !!input.search,
+          hasReplace: "replace" in input,
+          searchLength:
+            typeof input.search === "string" ? input.search.length : undefined,
+          replaceLength:
+            typeof input.replace === "string"
+              ? input.replace.length
+              : undefined,
+        });
+      }
 
       // Validate input
       const { file, search, replace } = input;
@@ -133,7 +142,6 @@ function createApplyDiffHandler(
         typeof file !== "string" ||
         !["javascript", "html"].includes(file)
       ) {
-        console.log("[ToolRegistry] ❌ Invalid file parameter:", file);
         return {
           tool_call_id: "",
           status: "error",
@@ -142,10 +150,6 @@ function createApplyDiffHandler(
       }
 
       if (!search || typeof search !== "string") {
-        console.log(
-          "[ToolRegistry] ❌ Invalid search parameter:",
-          typeof search,
-        );
         return {
           tool_call_id: "",
           status: "error",
@@ -154,10 +158,6 @@ function createApplyDiffHandler(
       }
 
       if (replace === undefined || typeof replace !== "string") {
-        console.log(
-          "[ToolRegistry] ❌ Invalid replace parameter:",
-          typeof replace,
-        );
         return {
           tool_call_id: "",
           status: "error",
@@ -166,9 +166,7 @@ function createApplyDiffHandler(
       }
 
       // Get source code
-      console.log(`[ToolRegistry] 📄 Getting source code for file: ${file}`);
       const sourceCode = getSourceCode(file as "javascript" | "html");
-      console.log(`[ToolRegistry] 📊 Source code length: ${sourceCode.length}`);
 
       // Create diff block
       const diff: DiffBlock = {
@@ -176,34 +174,33 @@ function createApplyDiffHandler(
         replace,
         format: DiffFormat.SEARCH_REPLACE,
       };
-      console.log(`[ToolRegistry] 📋 Created diff block:`, {
-        format: diff.format,
-        searchPreview: `${search.substring(0, 100)}...`,
-        replacePreview: `${replace.substring(0, 100)}...`,
-      });
+
+      if (DEBUG) {
+        console.log("[ToolRegistry] Applying diff:", {
+          file,
+          sourceCodeLength: sourceCode.length,
+          searchPreview: `${search.substring(0, 100)}...`,
+          replacePreview: `${replace.substring(0, 100)}...`,
+        });
+      }
 
       // Apply diff using RooStyleDiffStrategy with middle-out search
       // This algorithm starts from the middle of the file and expands outward,
       // reducing false matches and improving performance on large files
-      console.log(
-        "[ToolRegistry] 🔄 Applying diff with RooStyle middle-out search...",
-      );
       const result = await strategy.applyDiff(sourceCode, diff, {
         minConfidence: 0.9, // Higher threshold now that prompt/tool code divergence is fixed
       });
 
-      console.log("[ToolRegistry] 📊 Diff application result:", {
-        success: result.success,
-        hasMatch: !!result.match,
-        matchStrategy: result.match?.strategy,
-        confidence: result.match?.confidence,
-        hasModifiedCode: !!result.modifiedCode,
-        error: result.error,
-      });
+      if (DEBUG) {
+        console.log("[ToolRegistry] Diff application result:", {
+          success: result.success,
+          matchStrategy: result.match?.strategy,
+          confidence: result.match?.confidence,
+          error: result.error,
+        });
+      }
 
       if (!result.success) {
-        console.log("[ToolRegistry] ❌ Diff application failed:", result.error);
-
         // Find closest match to help the model self-correct
         const closest = matcher.findClosestMatch(search, sourceCode);
         let errorMessage = result.error || "Failed to apply diff";
@@ -225,10 +222,11 @@ function createApplyDiffHandler(
         };
       }
 
-      // Log successful match with strategy used - tool call mechanics
-      console.log(
-        `[ToolRegistry] ✅ Diff applied successfully using ${result.match?.strategy || "unknown"} matching (confidence: ${((result.match?.confidence || 0) * 100).toFixed(1)}%)`,
-      );
+      if (DEBUG) {
+        console.log(
+          `[ToolRegistry] Diff applied using ${result.match?.strategy || "unknown"} matching (confidence: ${((result.match?.confidence || 0) * 100).toFixed(1)}%)`,
+        );
+      }
 
       // Get the OTHER file's current contents so the model knows what to search for
       // when making subsequent edits. This prevents the model from guessing file contents.

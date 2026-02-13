@@ -5,7 +5,6 @@ import {
   useContext,
   useCallback,
   useMemo,
-  memo,
 } from "react";
 import { Button, Text, Tooltip, Switch } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
@@ -701,9 +700,8 @@ export function ChatPanel({
     [onApplyDiff, onClearConsole],
   );
 
-  // Memoized Footer component
-  const MemoizedFooter = useMemo(() => {
-    return memo(() => (
+  const FooterComponent = useMemo(
+    () => () => (
       <>
         <div
           className="footer-guidance-wrapper"
@@ -786,18 +784,19 @@ export function ChatPanel({
           </div>
         </div>
       </>
-    ));
-  }, [
-    iterationState.escalationActive,
-    isLoading,
-    isCurrentlyStreaming,
-    iterationStatus.isIterating,
-    iterationStatus.currentIteration,
-    iterationStatus.isWaiting,
-    iterationStatus.completionMessage,
-    iterationStatus.completionType,
-    autoIterationConfig.maxIterations,
-  ]);
+    ),
+    [
+      iterationState.escalationActive,
+      isLoading,
+      isCurrentlyStreaming,
+      iterationStatus.isIterating,
+      iterationStatus.currentIteration,
+      iterationStatus.isWaiting,
+      iterationStatus.completionMessage,
+      iterationStatus.completionType,
+      autoIterationConfig.maxIterations,
+    ],
+  );
 
   const followOutputConfig = useCallback(
     (isAtBottom: boolean) => {
@@ -872,10 +871,9 @@ export function ChatPanel({
                 <button
                   className="example-button"
                   onClick={() => {
-                    const prompt =
-                      "Take me on a virtual tour around Old City Philadelphia using CesiumJS. I want to see all the major attractions marked on the map with pins. Create a beautiful, modern UI with elegant styling and smooth animations where I can easily cycle between different attractions using intuitive navigation controls (next/previous buttons, or numbered buttons for each attraction). Include information about each attraction that's displayed in a clean, readable format. The camera should fly smoothly from one location to another, showing each site from a nice bird's-eye perspective with all markers resting naturally on the ground.";
-                    setInput(prompt);
-                    setTimeout(() => handleSendMessage(), 100);
+                    sendMessageWithContent(
+                      "Take me on a virtual tour around Old City Philadelphia using CesiumJS. I want to see all the major attractions marked on the map with pins. Create a beautiful, modern UI with elegant styling and smooth animations where I can easily cycle between different attractions using intuitive navigation controls (next/previous buttons, or numbered buttons for each attraction). Include information about each attraction that's displayed in a clean, readable format. The camera should fly smoothly from one location to another, showing each site from a nice bird's-eye perspective with all markers resting naturally on the ground.",
+                    );
                   }}
                   disabled={!hasApiKey}
                 >
@@ -884,10 +882,9 @@ export function ChatPanel({
                 <button
                   className="example-button"
                   onClick={() => {
-                    const prompt =
-                      "Create an animated jogging path around the Grand Canyon with smooth camera following. Show a runner's route along the rim with distance markers, elevation profile, and a moving camera that follows the path smoothly. Make it visually stunning with a nice UI showing stats like distance, elevation gain, and current location.";
-                    setInput(prompt);
-                    setTimeout(() => handleSendMessage(), 100);
+                    sendMessageWithContent(
+                      "Create an animated jogging path around the Grand Canyon with smooth camera following. Show a runner's route along the rim with distance markers, elevation profile, and a moving camera that follows the path smoothly. Make it visually stunning with a nice UI showing stats like distance, elevation gain, and current location.",
+                    );
                   }}
                   disabled={!hasApiKey}
                 >
@@ -896,10 +893,9 @@ export function ChatPanel({
                 <button
                   className="example-button"
                   onClick={() => {
-                    const prompt =
-                      "Take me on a virtual tour of Ancient Rome's most famous ruins. Show the Colosseum, Roman Forum, Pantheon, and Trevi Fountain with historical markers. Include a timeline slider showing the approximate year each structure was built, and camera animations that orbit each landmark dramatically.";
-                    setInput(prompt);
-                    setTimeout(() => handleSendMessage(), 100);
+                    sendMessageWithContent(
+                      "Take me on a virtual tour of Ancient Rome's most famous ruins. Show the Colosseum, Roman Forum, Pantheon, and Trevi Fountain with historical markers. Include a timeline slider showing the approximate year each structure was built, and camera animations that orbit each landmark dramatically.",
+                    );
                   }}
                   disabled={!hasApiKey}
                 >
@@ -908,10 +904,9 @@ export function ChatPanel({
                 <button
                   className="example-button"
                   onClick={() => {
-                    const prompt =
-                      "Create an island-hopping tour of Hawaii showing Oahu, Maui, Big Island, and Kauai. Mark volcanoes, beaches, and sacred sites. Include distance/flight time between islands and smooth ocean-crossing camera transitions.";
-                    setInput(prompt);
-                    setTimeout(() => handleSendMessage(), 100);
+                    sendMessageWithContent(
+                      "Create an island-hopping tour of Hawaii showing Oahu, Maui, Big Island, and Kauai. Mark volcanoes, beaches, and sacred sites. Include distance/flight time between islands and smooth ocean-crossing camera transitions.",
+                    );
                   }}
                   disabled={!hasApiKey}
                 >
@@ -920,10 +915,9 @@ export function ChatPanel({
                 <button
                   className="example-button"
                   onClick={() => {
-                    const prompt =
-                      "Tour the world's major space launch facilities - Cape Canaveral, Baikonur, Kourou, Tanegashima, and Vandenberg. Show launch pad locations, recent launches, and orbital trajectories.";
-                    setInput(prompt);
-                    setTimeout(() => handleSendMessage(), 100);
+                    sendMessageWithContent(
+                      "Tour the world's major space launch facilities - Cape Canaveral, Baikonur, Kourou, Tanegashima, and Vandenberg. Show launch pad locations, recent launches, and orbital trajectories.",
+                    );
                   }}
                   disabled={!hasApiKey}
                 >
@@ -967,7 +961,7 @@ export function ChatPanel({
                 />
               )}
               components={{
-                Footer: MemoizedFooter,
+                Footer: FooterComponent,
               }}
             />
           )}

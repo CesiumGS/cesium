@@ -9,7 +9,7 @@ import type {
   ToolCall,
   ToolResult,
 } from "./types";
-import { CESIUMJS_API_DEPRECATIONS } from "./prompts";
+import { buildDiffBasedPrompt, buildContextPrompt } from "./PromptBuilder";
 
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -31,6 +31,30 @@ function unescapeGeminiContent(content: string): string {
     .replace(/\\"/g, '"')
     .replace(/\\r/g, "\r")
     .replace(/\\t/g, "\t");
+}
+
+/** Runtime type guard for Gemini function call parts */
+interface GeminiFunctionCallPart {
+  functionCall: {
+    name: string;
+    args?: Record<string, unknown>;
+    thoughtSignature?: string;
+    thought_signature?: string;
+  };
+  thoughtSignature?: string;
+  thought_signature?: string;
+}
+
+function isFunctionCallPart(part: unknown): part is GeminiFunctionCallPart {
+  if (typeof part !== "object" || part === null) {
+    return false;
+  }
+  const fc = (part as Record<string, unknown>).functionCall;
+  return (
+    typeof fc === "object" &&
+    fc !== null &&
+    typeof (fc as Record<string, unknown>).name === "string"
+  );
 }
 
 export class GeminiClient {
@@ -132,7 +156,17 @@ export class GeminiClient {
         signal: controller.signal,
       });
 
-      const data = await response.json();
+      let data: GeminiResponse;
+      try {
+        data = await response.json();
+      } catch {
+        return {
+          error: {
+            message: `HTTP error! status: ${response.status}`,
+            code: response.status,
+          },
+        };
+      }
 
       if (!response.ok) {
         return {
@@ -206,8 +240,8 @@ export class GeminiClient {
     attachments?: Array<{ mimeType: string; base64Data: string }>,
   ): AsyncGenerator<StreamChunk> {
     const { systemPrompt, userPrompt } = useDiffFormat
-      ? this.buildDiffBasedPrompt(userMessage, context, customAddendum)
-      : this.buildContextPrompt(userMessage, context, customAddendum);
+      ? buildDiffBasedPrompt(userMessage, context, customAddendum)
+      : buildContextPrompt(userMessage, context, customAddendum);
 
     const url = `${GEMINI_API_BASE_URL}/models/${this.model}:streamGenerateContent?alt=sse`;
 
@@ -332,6 +366,8 @@ export class GeminiClient {
 
     resetStallTimeout();
 
+    let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -346,13 +382,14 @@ export class GeminiClient {
       resetStallTimeout();
 
       if (!response.ok) {
-        const errorData = await response.json();
-        yield {
-          type: "error",
-          error:
-            errorData.error?.message ||
-            `HTTP error! status: ${response.status}`,
-        };
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error?.message || errorMessage;
+        } catch {
+          // Response body was not valid JSON
+        }
+        yield { type: "error", error: errorMessage };
         return;
       }
 
@@ -370,7 +407,7 @@ export class GeminiClient {
       let outputTokens = 0;
 
       // Process SSE stream
-      const reader = response.body.getReader();
+      reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
       let chunkNumber = 0;
@@ -442,86 +479,35 @@ export class GeminiClient {
               }
               for (let i = 0; i < parts.length; i++) {
                 const part = parts[i];
-                if (DEBUG) {
-                  console.log(`[GeminiClient] Part #${i + 1}:`, {
-                    hasThought: !!part.thought,
-                    hasText: !!part.text,
-                    hasFunctionCall: !!(part as { functionCall?: unknown })
-                      .functionCall,
-                    textLength: part.text?.length || 0,
-                  });
-                }
 
                 if (part.thought && part.text) {
-                  const unescapedReasoning = unescapeGeminiContent(part.text);
-                  if (DEBUG) {
-                    console.log(
-                      `[GeminiClient] Yielding reasoning: ${unescapedReasoning.substring(0, 100)}...`,
-                    );
-                  }
                   yield {
                     type: "reasoning",
-                    reasoning: unescapedReasoning,
+                    reasoning: unescapeGeminiContent(part.text),
                   };
-                } else if (
-                  (
-                    part as {
-                      functionCall?: {
-                        name: string;
-                        args: Record<string, unknown>;
-                      };
-                    }
-                  ).functionCall
-                ) {
-                  // Gemini function call format: { name: string, args: object }
-                  const functionCall = (
-                    part as {
-                      functionCall: {
-                        name: string;
-                        args: Record<string, unknown>;
-                      };
-                    }
-                  ).functionCall;
-
+                } else if (isFunctionCallPart(part)) {
+                  const { functionCall } = part;
                   const thoughtSignature =
-                    (part as { thoughtSignature?: string }).thoughtSignature ??
-                    (part as { thought_signature?: string })
-                      .thought_signature ??
-                    (functionCall as { thoughtSignature?: string })
-                      .thoughtSignature ??
+                    part.thoughtSignature ??
+                    part.thought_signature ??
+                    functionCall.thoughtSignature ??
                     (functionCall as { thought_signature?: string })
                       .thought_signature;
 
                   if (DEBUG) {
                     console.log(`[GeminiClient] Function call detected:`, {
                       name: functionCall.name,
-                      argsKeys: Object.keys(functionCall.args || {}),
                       hasThoughtSignature: !!thoughtSignature,
-                      searchLength:
-                        typeof functionCall.args?.search === "string"
-                          ? functionCall.args.search.length
-                          : undefined,
-                      replaceLength:
-                        typeof functionCall.args?.replace === "string"
-                          ? functionCall.args.replace.length
-                          : undefined,
                     });
-                  }
-                  const toolCall: ToolCall = {
-                    id: `call_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-                    name: functionCall.name,
-                    input: this.unescapeToolInputs(functionCall.args || {}),
-                    thoughtSignature,
-                  };
-                  if (DEBUG) {
-                    console.log(
-                      `[GeminiClient] Yielding tool_call:`,
-                      toolCall.name,
-                    );
                   }
                   yield {
                     type: "tool_call",
-                    toolCall,
+                    toolCall: {
+                      id: `call_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+                      name: functionCall.name,
+                      input: this.unescapeToolInputs(functionCall.args || {}),
+                      thoughtSignature,
+                    },
                   };
                   // IMPORTANT: Stop after the first tool call to avoid Gemini sending
                   // multiple functionCall parts in a single response, where later ones
@@ -529,15 +515,9 @@ export class GeminiClient {
                   stopAfterToolCall = true;
                   break;
                 } else if (part.text) {
-                  const unescapedText = unescapeGeminiContent(part.text);
-                  if (DEBUG) {
-                    console.log(
-                      `[GeminiClient] Yielding text: "${unescapedText.substring(0, 100)}..."`,
-                    );
-                  }
                   yield {
                     type: "text",
-                    text: unescapedText,
+                    text: unescapeGeminiContent(part.text),
                   };
                 }
               }
@@ -554,8 +534,11 @@ export class GeminiClient {
                 chunk.usageMetadata.candidatesTokenCount ?? outputTokens;
             }
           } catch (e) {
-            console.error("Error parsing SSE chunk:", e);
-            // Continue processing other chunks
+            const errorMsg = `Stream parsing error: ${e instanceof Error ? e.message : "Unknown error"}`;
+            if (DEBUG) {
+              console.error("[GeminiClient]", errorMsg);
+            }
+            yield { type: "error", error: errorMsg };
           }
         }
 
@@ -589,6 +572,7 @@ export class GeminiClient {
         };
       }
     } finally {
+      reader?.releaseLock();
       if (timeoutId !== null) {
         clearTimeout(timeoutId);
       }
@@ -607,207 +591,13 @@ export class GeminiClient {
     userMessage: string,
     context: CodeContext,
   ): Promise<GeminiResponse> {
-    const { systemPrompt, userPrompt } = this.buildDiffBasedPrompt(
+    const { systemPrompt, userPrompt } = buildDiffBasedPrompt(
       userMessage,
       context,
     );
     // For non-streaming API, concatenate system and user prompts
     const combinedPrompt = `${systemPrompt}\n\n${userPrompt}`;
     return this.generateContent(combinedPrompt);
-  }
-
-  /**
-   * Build system and user prompts that encourage diff-based edits using the apply_diff tool
-   *
-   * @param userMessage - The user's request
-   * @param context - Current code context
-   * @param customAddendum - Optional custom system prompt addendum from user settings
-   * @returns Object with systemPrompt and userPrompt strings
-   */
-  private buildDiffBasedPrompt(
-    userMessage: string,
-    context: CodeContext,
-    customAddendum?: string,
-  ): { systemPrompt: string; userPrompt: string } {
-    const consoleSection = this.formatConsoleMessages(context.consoleMessages);
-
-    let systemPrompt = `You are an AI assistant helping with CesiumJS code in Sandcastle.
-
-# CODE EDITING INSTRUCTIONS
-
-## IMPORTANT: Use the apply_diff Tool
-
-You MUST use the \`apply_diff\` tool for ALL code changes. DO NOT output code directly as text.
-
-### How to Use apply_diff:
-
-Call the \`apply_diff\` function with:
-- **file**: Either "javascript" or "html"
-- **search**: The EXACT code to find (must match character-for-character)
-- **replace**: The new code to replace with
-
-### CRITICAL RULES:
-
-1. **Exact Matching Required:**
-   - \`search\` content must match the file EXACTLY
-   - Character-for-character including whitespace, tabs, spaces
-   - Include all comments, blank lines, formatting
-   - Never truncate lines mid-way through
-   - Each line must be complete
-
-2. **First Match Only:**
-   - Each tool call replaces only the FIRST occurrence
-   - Use multiple tool calls for multiple changes
-   - Make calls in the order they appear in the file
-
-3. **Include All Lines:**
-   - Include ALL lines in the section being edited, both changed AND unchanged
-   - Do NOT omit unchanged lines between changes
-   - Include the complete code section from start to end
-
-4. **Special Operations:**
-   - **Delete code:** Use empty string in \`replace\`
-   - **Add code:** Include anchor line in \`search\`
-5. **One Tool Call per Response:**
-   - Make at most ONE \`apply_diff\` call
-   - After calling the tool, STOP and wait for the tool result
-
-### AUTO-FORMATTING AWARENESS:
-
-- After changes are applied, the editor may auto-format the code
-- This can modify indentation, quotes, line breaks, imports, etc.
-- For SUBSEQUENT edits, use the FORMATTED version as reference
-- CRITICAL: \`search\` must match the actual formatted code in the file
-
-## RESPONSE FORMAT:
-
-- Be concise and direct
-- Skip "I will..." preambles - just use the tool
-- Brief explanation (1-2 sentences) ONLY if the change needs context
-- Then immediately call apply_diff
-- No verbose descriptions of what you're about to do
-${CESIUMJS_API_DEPRECATIONS}`;
-
-    // Append custom addendum to system prompt if provided
-    if (customAddendum && customAddendum.trim()) {
-      systemPrompt += `
-
-# IMPORTANT USER INSTRUCTIONS
-
-${customAddendum.trim()}`;
-    }
-
-    const userPrompt = `Current JavaScript Code:
-\`\`\`javascript
-${context.javascript}
-\`\`\`
-
-Current HTML:
-\`\`\`html
-${context.html}
-\`\`\`
-${consoleSection}
-
-User Request: ${userMessage}`;
-
-    return { systemPrompt, userPrompt };
-  }
-
-  /**
-   * Build system and user prompts with code context (original format, backward compatible)
-   * This format requests full code blocks instead of diffs
-   *
-   * @param userMessage - The user's request
-   * @param context - Current code context
-   * @param customAddendum - Optional custom system prompt addendum from user settings
-   * @returns Object with systemPrompt and userPrompt strings
-   */
-  private buildContextPrompt(
-    userMessage: string,
-    context: CodeContext,
-    customAddendum?: string,
-  ): { systemPrompt: string; userPrompt: string } {
-    const consoleSection = this.formatConsoleMessages(context.consoleMessages);
-
-    let systemPrompt = `You are an AI assistant helping with CesiumJS code in Sandcastle.
-
-When suggesting code changes:
-1. Provide clear explanations
-2. If modifying existing code, use code blocks with the full modified sections
-3. If creating new code, provide complete, runnable examples
-4. Use CesiumJS best practices and the Cesium API correctly
-${CESIUMJS_API_DEPRECATIONS}`;
-
-    // Append custom addendum to system prompt if provided
-    if (customAddendum && customAddendum.trim()) {
-      systemPrompt += `
-
-# IMPORTANT USER INSTRUCTIONS
-
-${customAddendum.trim()}`;
-    }
-
-    const userPrompt = `Current JavaScript Code:
-\`\`\`javascript
-${context.javascript}
-\`\`\`
-
-Current HTML:
-\`\`\`html
-${context.html}
-\`\`\`
-${consoleSection}
-
-User Request: ${userMessage}`;
-
-    return { systemPrompt, userPrompt };
-  }
-
-  /**
-   * Format console messages for inclusion in the prompt
-   *
-   * @param consoleMessages - Array of console messages from the sandbox
-   * @returns Formatted console section or empty string if no messages
-   */
-  private formatConsoleMessages(
-    consoleMessages?: Array<{
-      type: "log" | "warn" | "error";
-      message: string;
-    }>,
-  ): string {
-    if (!consoleMessages || consoleMessages.length === 0) {
-      return "";
-    }
-
-    const logs = consoleMessages.filter((msg) => msg.type === "log");
-    const warnings = consoleMessages.filter((msg) => msg.type === "warn");
-    const errors = consoleMessages.filter((msg) => msg.type === "error");
-
-    let section = "\nConsole Output:\n";
-
-    if (errors.length > 0) {
-      section += "\nErrors:\n";
-      errors.forEach((error, index) => {
-        section += `  ${index + 1}. ${error.message}\n`;
-      });
-    }
-
-    if (warnings.length > 0) {
-      section += "\nWarnings:\n";
-      warnings.forEach((warning, index) => {
-        section += `  ${index + 1}. ${warning.message}\n`;
-      });
-    }
-
-    if (logs.length > 0) {
-      section += "\nLogs:\n";
-      logs.forEach((log, index) => {
-        section += `  ${index + 1}. ${log.message}\n`;
-      });
-    }
-
-    section += "\n";
-    return section;
   }
 
   /**
@@ -928,6 +718,8 @@ User Request: ${userMessage}`;
 
     resetStallTimeout();
 
+    let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+
     try {
       const response = await fetch(url, {
         method: "POST",
@@ -940,13 +732,14 @@ User Request: ${userMessage}`;
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        yield {
-          type: "error",
-          error:
-            errorData.error?.message ||
-            `HTTP error! status: ${response.status}`,
-        };
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error?.message || errorMessage;
+        } catch {
+          // Response body was not valid JSON
+        }
+        yield { type: "error", error: errorMessage };
         return;
       }
 
@@ -961,7 +754,7 @@ User Request: ${userMessage}`;
       resetStallTimeout();
 
       // Process SSE stream (same logic as generateWithContext)
-      const reader = response.body.getReader();
+      reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
       let stopAfterToolCall = false;
@@ -1011,17 +804,12 @@ User Request: ${userMessage}`;
                   continue;
                 }
 
-                const functionCall = (part as { functionCall?: unknown })
-                  .functionCall as
-                  | { name: string; args?: Record<string, unknown> }
-                  | undefined;
-                if (functionCall) {
+                if (isFunctionCallPart(part)) {
+                  const { functionCall } = part;
                   const thoughtSignature =
-                    (part as { thoughtSignature?: string }).thoughtSignature ??
-                    (part as { thought_signature?: string })
-                      .thought_signature ??
-                    (functionCall as { thoughtSignature?: string })
-                      .thoughtSignature ??
+                    part.thoughtSignature ??
+                    part.thought_signature ??
+                    functionCall.thoughtSignature ??
                     (functionCall as { thought_signature?: string })
                       .thought_signature;
 
@@ -1060,8 +848,12 @@ User Request: ${userMessage}`;
                 thoughtTokens: usageMetadata.thoughtsTokenCount || 0,
               };
             }
-          } catch (error) {
-            console.error("Failed to parse streaming chunk:", error);
+          } catch (e) {
+            const errorMsg = `Stream parsing error: ${e instanceof Error ? e.message : "Unknown error"}`;
+            if (DEBUG) {
+              console.error("[GeminiClient]", errorMsg);
+            }
+            yield { type: "error", error: errorMsg };
           }
         }
 
@@ -1087,6 +879,7 @@ User Request: ${userMessage}`;
         };
       }
     } finally {
+      reader?.releaseLock();
       if (timeoutId !== null) {
         clearTimeout(timeoutId);
       }
