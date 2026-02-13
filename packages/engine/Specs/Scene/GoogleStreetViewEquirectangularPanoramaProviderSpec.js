@@ -37,9 +37,10 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
         Promise.resolve(JSON.stringify({ session: "new-session" })),
       );
 
-      const result = await GoogleStreetViewEquirectangularPanoramaProvider.fromUrl({
-        apiKey: "abc",
-      });
+      const result =
+        await GoogleStreetViewEquirectangularPanoramaProvider.fromUrl({
+          apiKey: "abc",
+        });
 
       expect(result).toBeDefined();
       expect(result._session).toBe("new-session");
@@ -70,7 +71,7 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
     });
   });
 
-  xdescribe("getPanoIdMetadata", function () {
+  describe("getPanoIdMetadata", function () {
     it("fetches panoId metadata", async function () {
       const metadata = {
         lat: 40,
@@ -110,16 +111,18 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
         "getGoogleStreetViewTileUrls",
       ).and.returnValue(Promise.resolve(fakeTileMap));
 
-      spyOn(GoogleStreetViewEquirectangularPanoramaProvider, "loadBitmaps").and.callFake(
-        async (tiles) =>
-          tiles.map((t) => ({
-            ...t,
-            bitmap: {
-              width: 256,
-              height: 256,
-              close: jasmine.createSpy("close"),
-            },
-          })),
+      spyOn(
+        GoogleStreetViewEquirectangularPanoramaProvider,
+        "loadBitmaps",
+      ).and.callFake(async (tiles) =>
+        tiles.map((t) => ({
+          ...t,
+          bitmap: {
+            width: 256,
+            height: 256,
+            close: jasmine.createSpy("close"),
+          },
+        })),
       );
 
       spyOn(provider, "getPanoIds").and.returnValue(
@@ -199,13 +202,15 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
     describe("GoogleStreetViewEquirectangularPanoramaProvider.getStreetViewTileUrls", function () {
       it("creates tile URLs for given zoom and partition", async function () {
         const tileMap =
-          await GoogleStreetViewEquirectangularPanoramaProvider.getGoogleStreetViewTileUrls({
-            z: 2,
-            partition: 2,
-            panoId: "pano123",
-            key: "api-key",
-            session: "session-1",
-          });
+          await GoogleStreetViewEquirectangularPanoramaProvider.getGoogleStreetViewTileUrls(
+            {
+              z: 2,
+              partition: 2,
+              panoId: "pano123",
+              key: "api-key",
+              session: "session-1",
+            },
+          );
 
         expect(Object.keys(tileMap).length).toBe(8); // 2 * 2 * 2
         expect(tileMap["2/0/0"]).toContain(
@@ -244,7 +249,10 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
           { z: 2, x: 1, y: 0, src: "b.png" },
         ];
 
-        const result = await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps(tiles);
+        const result =
+          await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps(
+            tiles,
+          );
 
         expect(result.length).toBe(2);
         expect(result[0].bitmap).toBe(fakeBitmap);
@@ -267,7 +275,9 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
 
         const tiles = [{ src: "a.png" }];
 
-        await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps(tiles);
+        await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps(
+          tiles,
+        );
 
         expect(fetchSpy).toHaveBeenCalledWith({
           flipY: false,
@@ -285,7 +295,10 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
 
         const tiles = [{ src: "error.png" }];
 
-        const result = await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps(tiles);
+        const result =
+          await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps(
+            tiles,
+          );
 
         expect(result).toEqual([]);
       });
@@ -315,7 +328,10 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
 
         const tiles = [{ src: "good.png" }, { src: "bad.png" }];
 
-        const result = await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps(tiles);
+        const result =
+          await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps(
+            tiles,
+          );
 
         expect(result.length).toBe(1);
         expect(result[0].src).toBe("good.png");
@@ -323,7 +339,8 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
       });
 
       it("returns an empty array when given no tiles", async function () {
-        const result = await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps([]);
+        const result =
+          await GoogleStreetViewEquirectangularPanoramaProvider.loadBitmaps([]);
 
         expect(result).toEqual([]);
       });
@@ -350,7 +367,9 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
 
       it("throws if no tiles are provided", async function () {
         await expectAsync(
-          GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap({}),
+          GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(
+            {},
+          ),
         ).toBeRejectedWithError("No tiles provided");
       });
 
@@ -360,21 +379,24 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
           "3/0/0": "b.png",
         };
 
-        spyOn(GoogleStreetViewEquirectangularPanoramaProvider, "loadBitmaps").and.callFake(
-          async (tiles) => {
-            return tiles.map((t) => ({
-              ...t,
-              bitmap: {
-                width: 256,
-                height: 256,
-                close: jasmine.createSpy("close"),
-              },
-            }));
-          },
-        );
+        spyOn(
+          GoogleStreetViewEquirectangularPanoramaProvider,
+          "loadBitmaps",
+        ).and.callFake(async (tiles) => {
+          return tiles.map((t) => ({
+            ...t,
+            bitmap: {
+              width: 256,
+              height: 256,
+              close: jasmine.createSpy("close"),
+            },
+          }));
+        });
 
         await expectAsync(
-          GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(tileMap),
+          GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(
+            tileMap,
+          ),
         ).toBeRejectedWithError(DeveloperError);
       });
 
@@ -384,21 +406,24 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
           "2/1/0": "b.png",
         };
 
-        spyOn(GoogleStreetViewEquirectangularPanoramaProvider, "loadBitmaps").and.callFake(
-          async (tiles) => {
-            return tiles.map((t) => ({
-              ...t,
-              bitmap: {
-                width: t.src === "a.png" ? 256 : 128,
-                height: 256,
-                close: jasmine.createSpy("close"),
-              },
-            }));
-          },
-        );
+        spyOn(
+          GoogleStreetViewEquirectangularPanoramaProvider,
+          "loadBitmaps",
+        ).and.callFake(async (tiles) => {
+          return tiles.map((t) => ({
+            ...t,
+            bitmap: {
+              width: t.src === "a.png" ? 256 : 128,
+              height: 256,
+              close: jasmine.createSpy("close"),
+            },
+          }));
+        });
 
         await expectAsync(
-          GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(tileMap),
+          GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(
+            tileMap,
+          ),
         ).toBeRejectedWithError(DeveloperError);
       });
 
@@ -408,12 +433,15 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
           "2/1/0": "b.png",
         };
 
-        spyOn(GoogleStreetViewEquirectangularPanoramaProvider, "loadBitmaps").and.returnValue(
-          Promise.resolve([]),
-        );
+        spyOn(
+          GoogleStreetViewEquirectangularPanoramaProvider,
+          "loadBitmaps",
+        ).and.returnValue(Promise.resolve([]));
 
         await expectAsync(
-          GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(tileMap),
+          GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(
+            tileMap,
+          ),
         ).toBeRejectedWithDeveloperError("No tiles could be loaded");
       });
 
@@ -429,14 +457,15 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
           height: 50,
           close: jasmine.createSpy("close"),
         };
-        spyOn(GoogleStreetViewEquirectangularPanoramaProvider, "loadBitmaps").and.callFake(
-          async (tiles) => {
-            return tiles.map((t) => ({
-              ...t,
-              bitmap: t.src === "a.png" ? bitmap1 : bitmap2,
-            }));
-          },
-        );
+        spyOn(
+          GoogleStreetViewEquirectangularPanoramaProvider,
+          "loadBitmaps",
+        ).and.callFake(async (tiles) => {
+          return tiles.map((t) => ({
+            ...t,
+            bitmap: t.src === "a.png" ? bitmap1 : bitmap2,
+          }));
+        });
 
         const tileMap = {
           "2/0/0": "a.png",
@@ -444,7 +473,9 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
         };
 
         const canvas =
-          await GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(tileMap);
+          await GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(
+            tileMap,
+          );
 
         expect(canvas).toBeDefined();
         expect(document.createElement).toHaveBeenCalledWith("canvas");
@@ -465,14 +496,15 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
           close: jasmine.createSpy("close"),
         };
 
-        spyOn(GoogleStreetViewEquirectangularPanoramaProvider, "loadBitmaps").and.callFake(
-          async (tiles) => {
-            return tiles.map((t) => ({
-              ...t,
-              bitmap: t.src === "a.png" ? bitmap1 : bitmap2,
-            }));
-          },
-        );
+        spyOn(
+          GoogleStreetViewEquirectangularPanoramaProvider,
+          "loadBitmaps",
+        ).and.callFake(async (tiles) => {
+          return tiles.map((t) => ({
+            ...t,
+            bitmap: t.src === "a.png" ? bitmap1 : bitmap2,
+          }));
+        });
 
         const tileMap = {
           "1/0/0": "a.png",
@@ -480,7 +512,9 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
         };
 
         const canvas =
-          await GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(tileMap);
+          await GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(
+            tileMap,
+          );
 
         expect(canvas).toBeDefined();
         expect(canvas.width).toEqual(200);
@@ -494,14 +528,15 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
           close: jasmine.createSpy("close"),
         };
 
-        spyOn(GoogleStreetViewEquirectangularPanoramaProvider, "loadBitmaps").and.callFake(
-          async (tiles) => {
-            return tiles.map((t) => ({
-              ...t,
-              bitmap: sampleBitmap,
-            }));
-          },
-        );
+        spyOn(
+          GoogleStreetViewEquirectangularPanoramaProvider,
+          "loadBitmaps",
+        ).and.callFake(async (tiles) => {
+          return tiles.map((t) => ({
+            ...t,
+            bitmap: sampleBitmap,
+          }));
+        });
 
         const tileMap = {
           "2/0/0": "0.png",
@@ -515,7 +550,9 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
         };
 
         const canvas =
-          await GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(tileMap);
+          await GoogleStreetViewEquirectangularPanoramaProvider.stitchBitmapsFromTileMap(
+            tileMap,
+          );
 
         expect(canvas).toBeDefined();
         expect(sampleBitmap.close.calls.count()).toBe(8);
