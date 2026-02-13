@@ -7,8 +7,6 @@ export function FeatureSettings() {
 
   return (
     <>
-      <Text variant="headline-sm">Features</Text>
-
       {/* Extended Thinking */}
       <Text variant="body-lg" style={{ fontWeight: 600 }}>
         Extended Thinking

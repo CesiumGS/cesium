@@ -15,6 +15,10 @@
   border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
 }
 
+.settings-panel [role="tablist"] {
+  padding: var(--stratakit-space-x4) var(--stratakit-space-x4) 0;
+}
+
 .settings-tab-content {
   padding: var(--stratakit-space-x4);
   overflow-y: auto;

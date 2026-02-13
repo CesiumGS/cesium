@@ -1,6 +1,5 @@
 import { useState, useContext } from "react";
 import { Button, Text, Field, Switch, TextBox } from "@stratakit/bricks";
-import { ApiKeyManager } from "../../AI/ApiKeyManager";
 import { SettingsContext } from "../../SettingsContext";
 
 export function AdvancedSettings() {
@@ -18,8 +17,6 @@ export function AdvancedSettings() {
 
   return (
     <>
-      <Text variant="headline-sm">Advanced</Text>
-
       <Field.Root>
         <Field.Label>Custom System Prompt Addendum</Field.Label>
         <Field.Description>
@@ -41,10 +38,6 @@ export function AdvancedSettings() {
         />
       </Field.Root>
 
-      <Text variant="caption-md">
-        {settings.customPromptAddendum.length} characters
-      </Text>
-
       <Field.Root layout="inline">
         <Field.Label>Console Logging</Field.Label>
         <Field.Control
@@ -65,13 +58,6 @@ export function AdvancedSettings() {
           Enable detailed console logging for debugging (requires page reload)
         </Field.Description>
       </Field.Root>
-
-      <Text variant="mono-sm">Cesium Sandcastle Copilot v1.0.0</Text>
-
-      <Text variant="body-sm">
-        {ApiKeyManager.hasApiKey() && "Gemini API key stored"}
-        {!ApiKeyManager.hasAnyCredentials() && "No credentials stored"}
-      </Text>
 
       {!showConfirmReset ? (
         <Button variant="outline" onClick={handleResetData}>

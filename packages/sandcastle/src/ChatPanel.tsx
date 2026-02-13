@@ -31,12 +31,7 @@ import type {
 } from "./AI/types";
 import { SettingsContext } from "./SettingsContext";
 import { detectOscillation } from "./AI/ErrorContext";
-import {
-  settings as settingsIcon,
-  cesiumLogo,
-  key as keyIcon,
-  add as addIcon,
-} from "./icons";
+import { settings as settingsIcon, cesiumLogo, add as addIcon } from "./icons";
 import cesiumChatLogo from "./assets/cesium-chat-logo.png";
 import {
   initializeToolRegistry,
@@ -2125,9 +2120,6 @@ export function ChatPanel({
             </Text>
           </div>
 
-          {/* Model Selector - Moved to bottom controls */}
-          <div className="chat-header-center"></div>
-
           {/* Actions - Right */}
           <div className="chat-header-actions">
             <Tooltip content="Start a new chat" placement="bottom">
@@ -2141,16 +2133,6 @@ export function ChatPanel({
               </Button>
             </Tooltip>
 
-            <Tooltip content="API Key Settings" placement="bottom">
-              <Button
-                variant="ghost"
-                onClick={() => setShowApiKeyDialog(true)}
-                aria-label="Open API key settings"
-                title="API Key Settings"
-              >
-                <Icon href={keyIcon} />
-              </Button>
-            </Tooltip>
             <Tooltip content="Settings" placement="bottom">
               <Button
                 variant="ghost"
@@ -2181,43 +2163,6 @@ export function ChatPanel({
                 alt="Cesium Copilot Logo"
                 className="welcome-logo"
               />
-              <Text
-                variant="body-lg"
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: 600,
-                  marginBottom: "1rem",
-                }}
-              >
-                What can I do for you?
-              </Text>
-              <Text
-                variant="body-md"
-                style={{
-                  opacity: 0.9,
-                  marginBottom: "1rem",
-                }}
-              >
-                I can help you with CesiumJS code:
-              </Text>
-              <ul className="welcome-suggestions">
-                <li>Modify or improve your code</li>
-                <li>Fix errors or bugs</li>
-                <li>Explain CesiumJS features</li>
-                <li>Add new functionality</li>
-                <li>Optimize performance</li>
-              </ul>
-
-              <Text
-                variant="body-md"
-                style={{
-                  fontWeight: 600,
-                  marginTop: "1.5rem",
-                  marginBottom: "0.75rem",
-                }}
-              >
-                Things to Try:
-              </Text>
               <div className="welcome-examples">
                 <button
                   className="example-button"
@@ -2338,8 +2283,13 @@ export function ChatPanel({
               currentModel={currentModel}
               onModelChange={setCurrentModel}
             />
-            <Tooltip
-              content={`Enable AI reasoning before responses (budget: ${settings.extendedThinking.budget} tokens)`}
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--stratakit-space-x1)",
+                cursor: "pointer",
+              }}
             >
               <Switch
                 checked={settings.extendedThinking.enabled}
@@ -2352,9 +2302,10 @@ export function ChatPanel({
                   })
                 }
                 disabled={isLoading}
-                aria-label="Toggle Extended Thinking feature"
+                aria-label="Toggle Extended Thinking"
               />
-            </Tooltip>
+              <Text variant="caption-md">Thinking</Text>
+            </label>
           </div>
         </div>
 

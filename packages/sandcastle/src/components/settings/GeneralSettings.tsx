@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { Field, Select, Switch, Text } from "@stratakit/bricks";
+import { Field, Select, Switch } from "@stratakit/bricks";
 import { SettingsContext } from "../../SettingsContext";
 
 export function GeneralSettings() {
@@ -7,8 +7,6 @@ export function GeneralSettings() {
 
   return (
     <>
-      <Text variant="headline-sm">General</Text>
-
       <Field.Root>
         <Field.Label>Editor Font</Field.Label>
         <Field.Control
