@@ -40,36 +40,74 @@ const scratchMatrix4B = new Matrix4();
 const scratchMatrix4C = new Matrix4();
 const scratchMatrix4D = new Matrix4();
 
+/**
+ * Runtime state machine for steady-state re-sorting of an already committed snapshot.
+ *
+ * The transition points are in {@link GaussianSplatPrimitive#update}:
+ * - IDLE -> WAITING/SORTING when a new steady sort request is scheduled
+ * - WAITING -> SORTING when a sorter promise becomes available
+ * - SORTING -> SORTED when the active promise resolves with a valid result
+ * - SORTED -> IDLE after rebuilding the draw command with fresh indexes
+ * - Any state -> ERROR when the active sort promise rejects
+ *
+ * @private
+ */
 const GaussianSplatSortingState = {
+  // No steady sort request is in flight. update() may decide to start one.
   IDLE: 0,
+  // A steady sort was requested, but sorter capacity was unavailable this frame.
   WAITING: 1,
+  // A steady sort promise is in flight and results are pending.
   SORTING: 2,
+  // A valid sorted index buffer is available and waiting to be committed to draw command.
   SORTED: 3,
+  // The active sort request failed; update() throws the captured error.
   ERROR: 4,
 };
 
+/**
+ * Snapshot lifecycle for rebuilding aggregated splat data.
+ *
+ * Transition order:
+ * BUILDING -> TEXTURE_PENDING -> TEXTURE_READY -> SORTING -> READY
+ *
+ * The transition points are split across two functions:
+ * - {@link GaussianSplatPrimitive#update} drives BUILDING/SORTING/READY
+ * - {@link GaussianSplatPrimitive.generateSplatTexture} drives TEXTURE_PENDING/TEXTURE_READY
+ *
+ * A snapshot is committed only when it reaches READY, so all GPU resources
+ * and sorted indexes swap atomically as one unit.
+ *
+ * @private
+ */
 const SnapshotState = {
+  // CPU aggregation is complete and this snapshot is ready to start async texture generation.
   BUILDING: "BUILDING",
+  // Async texture generation/upload is in flight for this snapshot.
   TEXTURE_PENDING: "TEXTURE_PENDING",
+  // Attribute textures are ready; snapshot can now request index sorting.
   TEXTURE_READY: "TEXTURE_READY",
+  // Sort request is in flight for this snapshot generation.
   SORTING: "SORTING",
+  // Sorted indexes were validated for this generation and may be committed.
   READY: "READY",
 };
 
+// Two stable frames avoids rebuilding during brief selected-tile jitter.
 const DEFAULT_STABLE_FRAMES = 2;
+// If selection keeps changing, force a rebuild after ~0.5s at 60fps to guarantee progress.
+// Lower values react faster but can thrash on noisy LOD transitions.
+// Higher values reduce rebuild churn but keep stale snapshots visible longer.
+const DEFAULT_MAX_SNAPSHOT_STALL_FRAMES = 30;
+// Minimum delay between steady re-sort requests once the camera is moving.
 const DEFAULT_SORT_MIN_FRAME_INTERVAL = 3;
+// ~0.5 degree camera direction change threshold before triggering steady re-sort.
 const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.008726646259971648;
+// Minimum camera movement in world units before triggering steady re-sort.
 const DEFAULT_SORT_MIN_POSITION_DELTA = 1.0;
 
 function shouldStartSteadySort(primitive, frameState) {
-  const tileset = primitive._tileset;
-  if (tileset._gaussianSplatSortGating === false) {
-    return true;
-  }
-
-  const minFrameInterval = defined(tileset._gaussianSplatSortMinFrameInterval)
-    ? Math.max(Math.floor(tileset._gaussianSplatSortMinFrameInterval), 0)
-    : DEFAULT_SORT_MIN_FRAME_INTERVAL;
+  const minFrameInterval = DEFAULT_SORT_MIN_FRAME_INTERVAL;
   const framesSinceLastSort =
     primitive._lastSteadySortFrameNumber >= 0
       ? frameState.frameNumber - primitive._lastSteadySortFrameNumber
@@ -90,9 +128,7 @@ function shouldStartSteadySort(primitive, frameState) {
     return true;
   }
 
-  const minPositionDelta = defined(tileset._gaussianSplatSortMinPositionDelta)
-    ? Math.max(tileset._gaussianSplatSortMinPositionDelta, 0.0)
-    : DEFAULT_SORT_MIN_POSITION_DELTA;
+  const minPositionDelta = DEFAULT_SORT_MIN_POSITION_DELTA;
   const positionDelta = Cartesian3.distance(
     camera.positionWC,
     primitive._lastSteadySortCameraPosition,
@@ -101,9 +137,7 @@ function shouldStartSteadySort(primitive, frameState) {
     return true;
   }
 
-  const minAngleRadians = defined(tileset._gaussianSplatSortMinAngleRadians)
-    ? Math.max(tileset._gaussianSplatSortMinAngleRadians, 0.0)
-    : DEFAULT_SORT_MIN_ANGLE_RADIANS;
+  const minAngleRadians = DEFAULT_SORT_MIN_ANGLE_RADIANS;
   const angleDelta = Cartesian3.angleBetween(
     camera.directionWC,
     primitive._lastSteadySortCameraDirection,
@@ -1127,17 +1161,16 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     if (selectedTilesChanged || this._dirty) {
       this._needsSnapshotRebuild = true;
     }
-    const stableFramesTarget = defined(tileset._gaussianSplatStableFrames)
-      ? tileset._gaussianSplatStableFrames
-      : DEFAULT_STABLE_FRAMES;
+    const stableFramesTarget = DEFAULT_STABLE_FRAMES;
     const isStable = this._selectedTilesStableFrames >= stableFramesTarget;
     const isBootstrap =
       !defined(this._snapshot) &&
       !defined(this._pendingSnapshot) &&
       !defined(this._drawCommand);
-    const maxStallFrames = defined(tileset._gaussianSplatMaxStallFrames)
-      ? tileset._gaussianSplatMaxStallFrames
-      : 30;
+    // This prevents an indefinite wait if selected tiles never settle completely.
+    // In practice, this is the upper bound on "wait-for-stability" before forcing
+    // a rebuild to avoid visible starvation.
+    const maxStallFrames = DEFAULT_MAX_SNAPSHOT_STALL_FRAMES;
     if (this._needsSnapshotRebuild && tileset._selectedTiles.length !== 0) {
       this._snapshotRebuildStallFrames++;
     } else {
