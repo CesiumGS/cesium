@@ -28,47 +28,44 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
  *
  * @private
  */
-function GltfDracoLoader(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-  const resourceCache = options.resourceCache;
-  const gltf = options.gltf;
-  const primitive = options.primitive;
-  const draco = options.draco;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const cacheKey = options.cacheKey;
+class GltfDracoLoader extends ResourceLoader {
+  constructor(options) {
+    super();
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.func("options.resourceCache", resourceCache);
-  Check.typeOf.object("options.gltf", gltf);
-  Check.typeOf.object("options.primitive", primitive);
-  Check.typeOf.object("options.draco", draco);
-  Check.typeOf.object("options.gltfResource", gltfResource);
-  Check.typeOf.object("options.baseResource", baseResource);
-  //>>includeEnd('debug');
+    options = options ?? Frozen.EMPTY_OBJECT;
+    const resourceCache = options.resourceCache;
+    const gltf = options.gltf;
+    const primitive = options.primitive;
+    const draco = options.draco;
+    const gltfResource = options.gltfResource;
+    const baseResource = options.baseResource;
+    const cacheKey = options.cacheKey;
 
-  this._resourceCache = resourceCache;
-  this._gltfResource = gltfResource;
-  this._baseResource = baseResource;
-  this._gltf = gltf;
-  this._primitive = primitive;
-  this._draco = draco;
-  this._cacheKey = cacheKey;
-  this._bufferViewLoader = undefined;
-  this._bufferViewTypedArray = undefined;
-  this._decodePromise = undefined;
-  this._decodedData = undefined;
-  this._state = ResourceLoaderState.UNLOADED;
-  this._promise = undefined;
-  this._dracoError = undefined;
-}
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.func("options.resourceCache", resourceCache);
+    Check.typeOf.object("options.gltf", gltf);
+    Check.typeOf.object("options.primitive", primitive);
+    Check.typeOf.object("options.draco", draco);
+    Check.typeOf.object("options.gltfResource", gltfResource);
+    Check.typeOf.object("options.baseResource", baseResource);
+    //>>includeEnd('debug');
 
-if (defined(Object.create)) {
-  GltfDracoLoader.prototype = Object.create(ResourceLoader.prototype);
-  GltfDracoLoader.prototype.constructor = GltfDracoLoader;
-}
+    this._resourceCache = resourceCache;
+    this._gltfResource = gltfResource;
+    this._baseResource = baseResource;
+    this._gltf = gltf;
+    this._primitive = primitive;
+    this._draco = draco;
+    this._cacheKey = cacheKey;
+    this._bufferViewLoader = undefined;
+    this._bufferViewTypedArray = undefined;
+    this._decodePromise = undefined;
+    this._decodedData = undefined;
+    this._state = ResourceLoaderState.UNLOADED;
+    this._promise = undefined;
+    this._dracoError = undefined;
+  }
 
-Object.defineProperties(GltfDracoLoader.prototype, {
   /**
    * The cache key of the resource.
    *
@@ -78,11 +75,10 @@ Object.defineProperties(GltfDracoLoader.prototype, {
    * @readonly
    * @private
    */
-  cacheKey: {
-    get: function () {
-      return this._cacheKey;
-    },
-  },
+  get cacheKey() {
+    return this._cacheKey;
+  }
+
   /**
    * The decoded data.
    *
@@ -92,12 +88,122 @@ Object.defineProperties(GltfDracoLoader.prototype, {
    * @readonly
    * @private
    */
-  decodedData: {
-    get: function () {
-      return this._decodedData;
-    },
-  },
-});
+  get decodedData() {
+    return this._decodedData;
+  }
+
+  /**
+   * Loads the resource.
+   * @returns {Promise<GltfDracoLoader>} A promise which resolves to the loader when the resource loading is completed.
+   * @private
+   */
+  async load() {
+    if (defined(this._promise)) {
+      return this._promise;
+    }
+
+    this._state = ResourceLoaderState.LOADING;
+    this._promise = loadResources(this);
+    return this._promise;
+  }
+
+  /**
+   * Processes the resource until it becomes ready.
+   *
+   * @param {FrameState} frameState The frame state.
+   * @private
+   */
+  process(frameState) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("frameState", frameState);
+    //>>includeEnd('debug');
+
+    if (this._state === ResourceLoaderState.READY) {
+      return true;
+    }
+
+    if (this._state !== ResourceLoaderState.PROCESSING) {
+      return false;
+    }
+
+    if (defined(this._dracoError)) {
+      handleError(this, this._dracoError);
+    }
+
+    if (!defined(this._bufferViewTypedArray)) {
+      // Not ready to decode the Draco buffer
+      return false;
+    }
+
+    if (defined(this._decodePromise)) {
+      // Currently decoding
+      return false;
+    }
+
+    const draco = this._draco;
+    const primitive = this._primitive;
+    const gltf = this._gltf;
+    const bufferViews = gltf.bufferViews;
+    const bufferViewId = draco.bufferView;
+    const bufferView = bufferViews[bufferViewId];
+    const compressedAttributes = draco.attributes;
+
+    // Skip de-quantization transform if present for floating point attributes.
+    // They will stay quantized in memory and be dequantized in the shader.
+    const attributesToSkipTransform = [];
+
+    for (const attribute in primitive.attributes) {
+      if (primitive.attributes.hasOwnProperty(attribute)) {
+        const dracoAttributeType = getDracoAttributeType(attribute);
+        if (defined(dracoAttributeType)) {
+          const accessor = gltf.accessors[primitive.attributes[attribute]];
+          if (accessor.componentType === ComponentDatatype.FLOAT) {
+            if (!attributesToSkipTransform.includes(dracoAttributeType)) {
+              attributesToSkipTransform.push(dracoAttributeType);
+            }
+          }
+        }
+      }
+    }
+
+    const decodeOptions = {
+      // Need to make a copy of the typed array otherwise the underlying
+      // ArrayBuffer may be accessed on both the worker and the main thread. This
+      // leads to errors such as "ArrayBuffer at index 0 is already detached".
+      // PERFORMANCE_IDEA: Look into SharedArrayBuffer to get around this.
+      array: new Uint8Array(this._bufferViewTypedArray),
+      bufferView: bufferView,
+      compressedAttributes: compressedAttributes,
+      dequantizeInShader: true,
+      attributesToSkipTransform: attributesToSkipTransform,
+    };
+
+    const decodePromise = DracoLoader.decodeBufferView(decodeOptions);
+
+    if (!defined(decodePromise)) {
+      // Cannot schedule task this frame
+      return false;
+    }
+
+    this._decodePromise = processDecode(this, decodePromise);
+  }
+
+  /**
+   * Unloads the resource.
+   * @private
+   */
+  unload() {
+    if (defined(this._bufferViewLoader)) {
+      this._resourceCache.unload(this._bufferViewLoader);
+    }
+
+    this._bufferViewLoader = undefined;
+    this._bufferViewTypedArray = undefined;
+    this._decodedData = undefined;
+    this._gltf = undefined;
+    this._primitive = undefined;
+  }
+}
 
 async function loadResources(loader) {
   const resourceCache = loader._resourceCache;
@@ -126,21 +232,6 @@ async function loadResources(loader) {
     handleError(loader, error);
   }
 }
-
-/**
- * Loads the resource.
- * @returns {Promise<GltfDracoLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
- */
-GltfDracoLoader.prototype.load = async function () {
-  if (defined(this._promise)) {
-    return this._promise;
-  }
-
-  this._state = ResourceLoaderState.LOADING;
-  this._promise = loadResources(this);
-  return this._promise;
-};
 
 function handleError(dracoLoader, error) {
   dracoLoader.unload();
@@ -192,102 +283,5 @@ function getDracoAttributeType(attribute) {
 
   return undefined;
 }
-
-/**
- * Processes the resource until it becomes ready.
- *
- * @param {FrameState} frameState The frame state.
- * @private
- */
-GltfDracoLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
-
-  if (this._state === ResourceLoaderState.READY) {
-    return true;
-  }
-
-  if (this._state !== ResourceLoaderState.PROCESSING) {
-    return false;
-  }
-
-  if (defined(this._dracoError)) {
-    handleError(this, this._dracoError);
-  }
-
-  if (!defined(this._bufferViewTypedArray)) {
-    // Not ready to decode the Draco buffer
-    return false;
-  }
-
-  if (defined(this._decodePromise)) {
-    // Currently decoding
-    return false;
-  }
-
-  const draco = this._draco;
-  const primitive = this._primitive;
-  const gltf = this._gltf;
-  const bufferViews = gltf.bufferViews;
-  const bufferViewId = draco.bufferView;
-  const bufferView = bufferViews[bufferViewId];
-  const compressedAttributes = draco.attributes;
-
-  // Skip de-quantization transform if present for floating point attributes.
-  // They will stay quantized in memory and be dequantized in the shader.
-  const attributesToSkipTransform = [];
-
-  for (const attribute in primitive.attributes) {
-    if (primitive.attributes.hasOwnProperty(attribute)) {
-      const dracoAttributeType = getDracoAttributeType(attribute);
-      if (defined(dracoAttributeType)) {
-        const accessor = gltf.accessors[primitive.attributes[attribute]];
-        if (accessor.componentType === ComponentDatatype.FLOAT) {
-          if (!attributesToSkipTransform.includes(dracoAttributeType)) {
-            attributesToSkipTransform.push(dracoAttributeType);
-          }
-        }
-      }
-    }
-  }
-
-  const decodeOptions = {
-    // Need to make a copy of the typed array otherwise the underlying
-    // ArrayBuffer may be accessed on both the worker and the main thread. This
-    // leads to errors such as "ArrayBuffer at index 0 is already detached".
-    // PERFORMANCE_IDEA: Look into SharedArrayBuffer to get around this.
-    array: new Uint8Array(this._bufferViewTypedArray),
-    bufferView: bufferView,
-    compressedAttributes: compressedAttributes,
-    dequantizeInShader: true,
-    attributesToSkipTransform: attributesToSkipTransform,
-  };
-
-  const decodePromise = DracoLoader.decodeBufferView(decodeOptions);
-
-  if (!defined(decodePromise)) {
-    // Cannot schedule task this frame
-    return false;
-  }
-
-  this._decodePromise = processDecode(this, decodePromise);
-};
-
-/**
- * Unloads the resource.
- * @private
- */
-GltfDracoLoader.prototype.unload = function () {
-  if (defined(this._bufferViewLoader)) {
-    this._resourceCache.unload(this._bufferViewLoader);
-  }
-
-  this._bufferViewLoader = undefined;
-  this._bufferViewTypedArray = undefined;
-  this._decodedData = undefined;
-  this._gltf = undefined;
-  this._primitive = undefined;
-};
 
 export default GltfDracoLoader;

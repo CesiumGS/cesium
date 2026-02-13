@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- Cartesian2, Cartesian3, and Cartesian4 are now [ES6 Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes). This change should have no impact on most users, but note that using `new` on a static factory method, like `new Cartesian3.fromArray(...)`, will now throw an error. Omit `new` unless you are invoking a constructor directly, for these and all other factory methods, as more classes will be migrated to ES6 Classes soon. [#8359](https://github.com/CesiumGS/cesium/issues/8359)
+
 #### Additions :tada:
 
 - Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors. [#13174](https://github.com/CesiumGS/cesium/pull/13174)
