@@ -34,6 +34,18 @@ class BufferPolylineCollection extends BufferFeatureCollection {
   }
 
   /**
+   * @param {BufferPolylineCollection} collection
+   * @returns {BufferPolylineCollection}
+   * @override
+   */
+  static _cloneEmpty(collection) {
+    return new BufferPolylineCollection({
+      maxFeatureCount: collection.featureCountMax,
+      maxVertexCount: collection.vertexCountMax,
+    });
+  }
+
+  /**
    * @param {BufferPolylineOptions} options
    * @param {BufferPolyline} result
    * @override

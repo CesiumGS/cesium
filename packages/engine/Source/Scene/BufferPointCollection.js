@@ -33,6 +33,18 @@ class BufferPointCollection extends BufferFeatureCollection {
   }
 
   /**
+   * @param {BufferPointCollection} collection
+   * @returns {BufferPointCollection}
+   * @override
+   */
+  static _cloneEmpty(collection) {
+    return new BufferPointCollection({
+      maxFeatureCount: collection.featureCountMax,
+      maxVertexCount: collection.vertexCountMax,
+    });
+  }
+
+  /**
    * @param {BufferPointOptions} options
    * @param {BufferPoint} result
    * @override

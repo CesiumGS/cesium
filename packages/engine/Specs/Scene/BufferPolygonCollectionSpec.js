@@ -269,4 +269,54 @@ describe("BufferPolygonCollection", () => {
     ).toEqualEpsilon(positions3, EPS);
     expect(polygon.holeCount).toBe(1);
   });
+
+  it("sort", () => {
+    const collection = new BufferPolygonCollection({
+      maxFeatureCount: 3,
+      maxVertexCount: 8,
+    });
+
+    const positions1 = new Float64Array([10, 11, 12, 13, 14, 15, 16, 17, 18]);
+    const positions2 = new Float64Array([20, 21, 22, 23, 24, 25]);
+    const positions3 = new Float64Array([30, 31, 32, 33, 34, 35, 36, 37, 38]);
+
+    const holes2 = new Uint32Array([12, 24]);
+    const holes3 = new Uint32Array([16]);
+
+    const triangles1 = new Uint32Array([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    const triangles2 = new Uint32Array([0, 1, 2]);
+    const triangles3 = new Uint32Array([6, 7, 8, 0, 1, 2, 3, 4, 5]);
+
+    const point = new BufferPolygon();
+    collection.add({ positions: positions1, triangles: triangles1 }, point);
+    collection.add(
+      { positions: positions2, holes: holes2, triangles: triangles2 },
+      point,
+    );
+    collection.add(
+      { positions: positions3, holes: holes3, triangles: triangles3 },
+      point,
+    );
+
+    const remap = collection.sort((a, b) => a.holeCount - b.holeCount);
+
+    expect(collection.featureCount).toBe(3);
+    expect(collection.vertexCount).toBe(8);
+    expect(remap).toEqual([0, 2, 1]);
+    expect(collection.toJSON()).toEqual(
+      [
+        { featureId: 0, positions: Array.from(positions1), holes: [] },
+        {
+          featureId: 2,
+          positions: Array.from(positions3),
+          holes: Array.from(holes3),
+        },
+        {
+          featureId: 1,
+          positions: Array.from(positions2),
+          holes: Array.from(holes2),
+        },
+      ].map(jasmine.objectContaining),
+    );
+  });
 });

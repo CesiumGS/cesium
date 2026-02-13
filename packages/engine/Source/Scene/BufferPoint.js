@@ -8,6 +8,8 @@ import assert from "../Core/assert.js";
 
 const { ERR_CAPACITY } = BufferFeature;
 
+const scratchCartesian = new Cartesian3();
+
 /**
  * BufferPoint.
  *
@@ -45,6 +47,17 @@ class BufferPoint extends BufferFeature {
     return result;
   }
 
+  /**
+   * @param {BufferPoint} point
+   * @param {BufferPoint} result
+   * @return {BufferPoint}
+   */
+  static clone(point, result) {
+    super.clone(point, result);
+    result.setPosition(point.getPosition(scratchCartesian));
+    return result;
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // GEOMETRY
 
@@ -79,6 +92,17 @@ class BufferPoint extends BufferFeature {
     this._collection._positionF64[vertexOffset * 3 + 2] = position.z;
 
     collection._makeDirtyBoundingVolume();
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // DEBUG
+
+  /** @override */
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      position: Cartesian3.pack(this.getPosition(scratchCartesian), []),
+    };
   }
 }
 

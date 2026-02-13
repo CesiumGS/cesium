@@ -36,7 +36,6 @@ class BufferPolygonCollection extends BufferFeatureCollection {
    * @param {number} [options.maxHoleCount=BufferFeature.DEFAULT_COUNT]
    * @param {number} [options.maxTriangleCount=BufferFeature.DEFAULT_COUNT]
    * @param {boolean} [options.show=true]
-   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
@@ -101,6 +100,20 @@ class BufferPolygonCollection extends BufferFeatureCollection {
 
   _getFeatureLayout() {
     return BufferPolygon.Layout;
+  }
+
+  /**
+   * @param {BufferPolygonCollection} collection
+   * @returns {BufferPolygonCollection}
+   * @override
+   */
+  static _cloneEmpty(collection) {
+    return new BufferPolygonCollection({
+      maxFeatureCount: collection.featureCountMax,
+      maxVertexCount: collection.vertexCountMax,
+      maxHoleCount: collection.holeCountMax,
+      maxTriangleCount: collection.triangleCountMax,
+    });
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -193,6 +206,21 @@ class BufferPolygonCollection extends BufferFeatureCollection {
     result._triangleCount = collection._triangleCount;
 
     return result;
+  }
+
+  /**
+   * @param {BufferPolygonCollection} src
+   * @param {BufferPolygonCollection} dst
+   * @override
+   */
+  static _assignBuffers(src, dst) {
+    super._assignBuffers(src, dst);
+
+    dst._holeIndexBuffer = src._holeIndexBuffer;
+    dst._holeIndexU32 = src._holeIndexU32;
+
+    dst._triangleIndexBuffer = src._triangleIndexBuffer;
+    dst._triangleIndexU32 = src._triangleIndexU32;
   }
 
   /////////////////////////////////////////////////////////////////////////////

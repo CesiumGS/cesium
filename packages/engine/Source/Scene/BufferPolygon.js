@@ -101,6 +101,27 @@ class BufferPolygon extends BufferFeature {
     return result;
   }
 
+  /**
+   * @param {BufferPolygon} polygon
+   * @param {BufferPolygon} result
+   * @return {BufferPolygon}
+   * @override
+   */
+  static clone(polygon, result) {
+    super.clone(polygon, result);
+
+    // TODO(memory): Causes unnecessary memory allocation during sort(). Should
+    // `getPositions()` return ArrayView pointing into collection memory?
+    const scratchPositions = new Float64Array(polygon.vertexCount * 3);
+    const scratchHoles = new Uint32Array(polygon.holeCount);
+    const scratchTriangles = new Uint32Array(polygon.triangleCount * 3);
+
+    result.setPositions(polygon.getPositions(scratchPositions));
+    result.setHoles(polygon.getHoles(scratchHoles));
+    result.setTriangles(polygon.getTriangles(scratchTriangles));
+    return result;
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // GEOMETRY
 
@@ -262,6 +283,23 @@ class BufferPolygon extends BufferFeature {
     }
 
     collection._makeDirtyBoundingVolume();
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // DEBUG
+
+  /** @override */
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      positions: Array.from(
+        this.getPositions(new Float64Array(this.vertexCount * 3)),
+      ),
+      holes: Array.from(this.getHoles(new Uint32Array(this.holeCount))),
+      triangles: Array.from(
+        this.getHoles(new Uint32Array(this.triangleCount * 3)),
+      ),
+    };
   }
 }
 

@@ -87,13 +87,12 @@ describe("BufferPointCollection", () => {
   });
 
   it("clone", () => {
-    const point = new BufferPoint();
-
     const src = new BufferPointCollection({
       maxFeatureCount: 2,
       maxVertexCount: 2,
     });
 
+    const point = new BufferPoint();
     src.add({ position: Cartesian3.UNIT_X, color: Color.RED }, point);
     src.add({ position: Cartesian3.UNIT_Y, color: Color.GREEN }, point);
 
@@ -110,15 +109,42 @@ describe("BufferPointCollection", () => {
     dst.add({ position: Cartesian3.UNIT_Z, color: Color.BLUE }, point);
 
     expect(dst.featureCount).toBe(3);
+    expect(dst.toJSON()).toEqual(
+      [
+        { position: [1, 0, 0], color: "#ff0000" },
+        { position: [0, 1, 0], color: "#008000" },
+        { position: [0, 0, 1], color: "#0000ff" },
+      ].map(jasmine.objectContaining),
+    );
+  });
 
-    BufferPoint.fromCollection(dst, 0, point);
-    expect(point.getPosition(position)).toEqualEpsilon(Cartesian3.UNIT_X, EPS);
-    expect(point.getColor(color)).toEqualEpsilon(Color.RED, EPS);
-    BufferPoint.fromCollection(dst, 1, point);
-    expect(point.getPosition(position)).toEqualEpsilon(Cartesian3.UNIT_Y, EPS);
-    expect(point.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
-    BufferPoint.fromCollection(dst, 2, point);
-    expect(point.getPosition(position)).toEqualEpsilon(Cartesian3.UNIT_Z, EPS);
-    expect(point.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
+  it("sort", () => {
+    const collection = new BufferPointCollection({
+      maxFeatureCount: 3,
+      maxVertexCount: 3,
+    });
+
+    const point = new BufferPoint();
+    collection.add({ position: new Cartesian3(3, 0, 0) }, point);
+    collection.add({ position: new Cartesian3(1, 0, 0) }, point);
+    collection.add({ position: new Cartesian3(2, 0, 0) }, point);
+
+    const positionA = new Cartesian3();
+    const positionB = new Cartesian3();
+
+    const remap = collection.sort((a, b) => {
+      return a.getPosition(positionA).x - b.getPosition(positionB).x;
+    });
+
+    expect(collection.featureCount).toBe(3);
+    expect(collection.vertexCount).toBe(3);
+    expect(remap).toEqual([2, 0, 1]);
+    expect(collection.toJSON()).toEqual(
+      [
+        { featureId: 1, position: [1, 0, 0] },
+        { featureId: 2, position: [2, 0, 0] },
+        { featureId: 0, position: [3, 0, 0] },
+      ].map(jasmine.objectContaining),
+    );
   });
 });

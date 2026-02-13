@@ -4,6 +4,8 @@ import Color from "../Core/Color.js";
 
 /** @import BufferFeatureCollection from './BufferFeatureCollection.js'; */
 
+const scratchColor = new Color();
+
 /**
  * @abstract
  * @experimental
@@ -63,9 +65,10 @@ class BufferFeature {
   static ERR_INSTANTIATION =
     "This function defines an interface and should not be called directly.";
   static ERR_RESIZE =
-    "Feature buffer range cannot be resized after initialization.";
-  static ERR_CAPACITY = "Collection buffer capacity exceeded.";
-  static ERR_MULTIPLE_OF_FOUR = "Feature byte length must be a multiple of 4.";
+    "BufferFeature range cannot be resized after initialization.";
+  static ERR_CAPACITY = "BufferFeatureCollection capacity exceeded.";
+  static ERR_MULTIPLE_OF_FOUR =
+    "BufferFeature byte length must be a multiple of 4.";
 
   constructor() {}
 
@@ -88,6 +91,22 @@ class BufferFeature {
   }
 
   /**
+   * Copies data from source feature to result. If the result feature is not
+   * new (the last feature in the collection) then source and result features
+   * must have the same vertex counts.
+   *
+   * @param {BufferFeature} feature
+   * @param {BufferFeature} result
+   * @returns {BufferFeature}
+   */
+  static clone(feature, result) {
+    result.featureId = feature.featureId;
+    result.show = feature.show;
+    result.setColor(feature.getColor(scratchColor));
+    return result;
+  }
+
+  /**
    * @returns {boolean}
    * @protected
    */
@@ -101,6 +120,10 @@ class BufferFeature {
   /** @type {number} */
   get featureId() {
     return this._getUint32(BufferFeature.Layout.FEATURE_ID_U32);
+  }
+
+  set featureId(featureId) {
+    this._setUint32(BufferFeature.Layout.FEATURE_ID_U32, featureId);
   }
 
   /** @type {boolean} */
@@ -230,6 +253,26 @@ class BufferFeature {
       true,
     );
     this._dirty = true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // DEBUG
+
+  /**
+   * Returns a JSON-serializable object representing the feature. This encoding
+   * is not memory-efficient, and should generally be used for debugging and
+   * testing — not for production applications.
+   *
+   * @returns {Object}
+   * @experimental
+   */
+  toJSON() {
+    return {
+      featureId: this.featureId,
+      show: this.show,
+      color: this.getColor(scratchColor).toCssHexString(),
+      dirty: this._dirty,
+    };
   }
 }
 

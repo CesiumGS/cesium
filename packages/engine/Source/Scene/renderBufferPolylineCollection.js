@@ -108,7 +108,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
       BufferPolyline.fromCollection(collection, i, polyline);
       vertexCountPerFeatureMax = Math.max(
-        polyline.getPositionCount(),
+        polyline.vertexCount,
         vertexCountPerFeatureMax,
       );
     }
@@ -125,7 +125,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       );
       let iOffset = (vOffset - i) * 2;
 
-      for (let j = 0, jl = polyline.getPositionCount(); j < jl; j++) {
+      for (let j = 0, jl = polyline.vertexCount; j < jl; j++) {
         Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
         EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
 

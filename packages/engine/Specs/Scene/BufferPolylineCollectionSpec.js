@@ -156,4 +156,33 @@ describe("BufferPolylineCollection", () => {
       EPS,
     );
   });
+
+  it("sort", () => {
+    const collection = new BufferPolylineCollection({
+      maxFeatureCount: 3,
+      maxVertexCount: 6,
+    });
+
+    const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
+    const positions2 = new Float64Array([0, 1, 0]);
+    const positions3 = new Float64Array([0, 2, 0, 0, 2, 1]);
+
+    const point = new BufferPolyline();
+    collection.add({ positions: positions1 }, point);
+    collection.add({ positions: positions2 }, point);
+    collection.add({ positions: positions3 }, point);
+
+    const remap = collection.sort((a, b) => a.vertexCount - b.vertexCount);
+
+    expect(collection.featureCount).toBe(3);
+    expect(collection.vertexCount).toBe(6);
+    expect(remap).toEqual([2, 0, 1]);
+    expect(collection.toJSON()).toEqual(
+      [
+        { featureId: 1, positions: [0, 1, 0] },
+        { featureId: 2, positions: [0, 2, 0, 0, 2, 1] },
+        { featureId: 0, positions: [0, 0, 0, 0, 0, 1, 0, 0, 2] },
+      ].map(jasmine.objectContaining),
+    );
+  });
 });

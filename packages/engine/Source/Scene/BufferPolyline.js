@@ -3,6 +3,7 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferFeature from "./BufferFeature.js";
 import assert from "../Core/assert.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 
@@ -68,11 +69,27 @@ class BufferPolyline extends BufferFeature {
     return result;
   }
 
+  /**
+   * @param {BufferPolyline} polyline
+   * @param {BufferPolyline} result
+   * @return {BufferPolyline}
+   * @override
+   */
+  static clone(polyline, result) {
+    super.clone(polyline, result);
+    // TODO(memory): Causes unnecessary memory allocation during sort(). Should
+    // `getPositions()` return ArrayView pointing into collection memory?
+    const scratchPositions = new Float64Array(polyline.vertexCount * 3);
+    result.setPositions(polyline.getPositions(scratchPositions));
+    result.width = polyline.width;
+    return result;
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // GEOMETRY
 
-  /** @returns {number} */
-  getPositionCount() {
+  /** @type {number} */
+  get vertexCount() {
     return this._getUint32(BufferPolyline.Layout.POSITION_COUNT_U32);
   }
 
@@ -135,6 +152,19 @@ class BufferPolyline extends BufferFeature {
 
   set width(width) {
     this._setUint8(BufferPolyline.Layout.WIDTH_U8, width);
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // DEBUG
+
+  /** @override */
+  toJSON() {
+    const positions = this.getPositions(new Float64Array(this.vertexCount * 3));
+    return {
+      ...super.toJSON(),
+      positions: Array.from(positions),
+      width: this.width,
+    };
   }
 }
 

@@ -176,10 +176,55 @@ class BufferFeatureCollection {
   }
 
   /**
+   * Sorts features of the collection.
    * @param {Function} sortFn
+   * @param {Uint32Array} result
+   * @returns {Uint32Array} Mapping from previous index to new index.
    */
-  sort(sortFn) {
-    throw new DeveloperError(ERR_NOT_IMPLEMENTED);
+  sort(sortFn, result = new Uint32Array(this.featureCount)) {
+    const FeatureClass = /** @type {typeof BufferFeature} */ (
+      this._getFeatureClass()
+    );
+    const CollectionClass = /** @type {typeof BufferFeatureCollection} */ (
+      this.constructor
+    );
+
+    const { featureCount } = this;
+
+    const a = new FeatureClass();
+    const b = new FeatureClass();
+
+    // Mapping from NEW index to PREVIOUS index.
+    const dstSrcMap = new Uint32Array(featureCount);
+    for (let i = 0; i < featureCount; i++) {
+      dstSrcMap[i] = i;
+    }
+    dstSrcMap.sort((indexA, indexB) =>
+      sortFn(
+        FeatureClass.fromCollection(this, indexA, a),
+        FeatureClass.fromCollection(this, indexB, b),
+      ),
+    );
+
+    // Mapping from PREVIOUS index to NEW index.
+    for (let i = 0; i < featureCount; i++) {
+      result[dstSrcMap[i]] = i;
+    }
+
+    // Copy features to temporary collection, in sort order.
+    const tmp = CollectionClass._cloneEmpty(this);
+    for (let i = 0; i < featureCount; i++) {
+      const src = FeatureClass.fromCollection(this, dstSrcMap[i], a);
+      const dst = tmp.add({}, b);
+      FeatureClass.clone(src, dst);
+    }
+
+    // Assign buffers from temporary collection onto this one.
+    CollectionClass._assignBuffers(tmp, this);
+    this._dirtyOffset = 0;
+    this._dirtyCount = featureCount;
+
+    return result;
   }
 
   /**
@@ -222,7 +267,42 @@ class BufferFeatureCollection {
     return result;
   }
 
-  /** Rebuilds collection bounding volume. */
+  /**
+   * @param {BufferFeatureCollection<T>} collection
+   * @returns {BufferFeatureCollection<T>}
+   * @template T extends BufferFeature
+   * @protected
+   * @abstract
+   * @ignore
+   */
+  static _cloneEmpty(collection) {
+    throw new DeveloperError(ERR_INSTANTIATION);
+  }
+
+  /**
+   * Assigns buffers from source collection to target collection, without
+   * validation or side effects. Callers must handle any validation, dirty
+   * flag updates, etc.
+   *
+   * @param {BufferFeatureCollection<T>} src
+   * @param {BufferFeatureCollection<T>} dst
+   * @template T extends BufferFeature
+   * @protected
+   * @ignore
+   */
+  static _assignBuffers(src, dst) {
+    dst._featureBuffer = src._featureBuffer;
+    dst._featureView = src._featureView;
+
+    dst._positionBuffer = src._positionBuffer;
+    dst._positionF64 = src._positionF64;
+  }
+
+  /**
+   * Rebuilds collection bounding volume.
+   * @protected
+   * @ignore
+   */
   _updateBoundingVolume() {
     // Exclude unused space in the position buffer.
     const vertices = new Float64Array(
@@ -353,6 +433,35 @@ class BufferFeatureCollection {
       new Uint32Array(dst.buffer, dst.byteOffset, dst.byteLength / 4),
       byteLength / 4,
     );
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // DEBUG
+
+  /**
+   * Returns a JSON-serializable array representing the collection. This encoding
+   * is not memory-efficient, and should generally be used for debugging and
+   * testing — not for production applications.
+   *
+   * @example
+   * console.table(collection.toJSON());
+   *
+   * @returns {Object[]}
+   * @experimental
+   */
+  toJSON() {
+    const FeatureClass = /** @type {typeof BufferFeature} */ (
+      this._getFeatureClass()
+    );
+    const feature = new FeatureClass();
+
+    const results = [];
+    for (let i = 0, il = this.featureCount; i < il; i++) {
+      FeatureClass.fromCollection(this, i, feature);
+      results.push(feature.toJSON());
+    }
+
+    return results;
   }
 }
 
