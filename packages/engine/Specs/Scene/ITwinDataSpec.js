@@ -296,7 +296,6 @@ describe("ITwinData", () => {
         maximumScreenSpaceError: 4,
       });
     });
-
   });
 
   describe("createDataSourceForRealityDataId", () => {
