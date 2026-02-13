@@ -107,14 +107,13 @@ const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.008726646259971648;
 const DEFAULT_SORT_MIN_POSITION_DELTA = 1.0;
 
 function shouldStartSteadySort(primitive, frameState) {
-  const minFrameInterval = DEFAULT_SORT_MIN_FRAME_INTERVAL;
   const framesSinceLastSort =
     primitive._lastSteadySortFrameNumber >= 0
       ? frameState.frameNumber - primitive._lastSteadySortFrameNumber
       : Number.POSITIVE_INFINITY;
   if (
     primitive._lastSteadySortFrameNumber >= 0 &&
-    framesSinceLastSort < minFrameInterval
+    framesSinceLastSort < DEFAULT_SORT_MIN_FRAME_INTERVAL
   ) {
     return false;
   }
@@ -128,21 +127,19 @@ function shouldStartSteadySort(primitive, frameState) {
     return true;
   }
 
-  const minPositionDelta = DEFAULT_SORT_MIN_POSITION_DELTA;
   const positionDelta = Cartesian3.distance(
     camera.positionWC,
     primitive._lastSteadySortCameraPosition,
   );
-  if (positionDelta >= minPositionDelta) {
+  if (positionDelta >= DEFAULT_SORT_MIN_POSITION_DELTA) {
     return true;
   }
 
-  const minAngleRadians = DEFAULT_SORT_MIN_ANGLE_RADIANS;
   const angleDelta = Cartesian3.angleBetween(
     camera.directionWC,
     primitive._lastSteadySortCameraDirection,
   );
-  return angleDelta >= minAngleRadians;
+  return angleDelta >= DEFAULT_SORT_MIN_ANGLE_RADIANS;
 }
 
 function markSteadySortStart(primitive, frameState) {
@@ -1161,8 +1158,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     if (selectedTilesChanged || this._dirty) {
       this._needsSnapshotRebuild = true;
     }
-    const stableFramesTarget = DEFAULT_STABLE_FRAMES;
-    const isStable = this._selectedTilesStableFrames >= stableFramesTarget;
+    const isStable = this._selectedTilesStableFrames >= DEFAULT_STABLE_FRAMES;
     const isBootstrap =
       !defined(this._snapshot) &&
       !defined(this._pendingSnapshot) &&
@@ -1170,7 +1166,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     // This prevents an indefinite wait if selected tiles never settle completely.
     // In practice, this is the upper bound on "wait-for-stability" before forcing
     // a rebuild to avoid visible starvation.
-    const maxStallFrames = DEFAULT_MAX_SNAPSHOT_STALL_FRAMES;
     if (this._needsSnapshotRebuild && tileset._selectedTiles.length !== 0) {
       this._snapshotRebuildStallFrames++;
     } else {
@@ -1179,7 +1174,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     const allowRebuild =
       isStable ||
       isBootstrap ||
-      this._snapshotRebuildStallFrames >= maxStallFrames;
+      this._snapshotRebuildStallFrames >= DEFAULT_MAX_SNAPSHOT_STALL_FRAMES;
     const hasPendingWork =
       this._dirty ||
       this._needsSnapshotRebuild ||
