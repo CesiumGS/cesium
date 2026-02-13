@@ -572,6 +572,12 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
     return;
   }
 
+  // Skip surface rendering if cadWireframe mode is enabled and this primitive
+  // has edge visibility data. Only the edges will render (via pushEdgeCommands).
+  if (this._model.cadWireframe && this._needsEdgeCommands) {
+    return result;
+  }
+
   pushCommand(result, this._originalCommand, use2D);
 
   return result;
@@ -616,6 +622,17 @@ ModelDrawCommand.prototype.pushSilhouetteCommands = function (
 ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
   if (!defined(this._edgeCommand)) {
     return result;
+  }
+
+  // Use direct pass (renders to main framebuffer) when cadWireframe is enabled,
+  // otherwise use MRT pass (renders to edge framebuffer for compositing)
+  const edgePass = this._model.cadWireframe
+    ? Pass.CESIUM_3D_TILE_EDGES_DIRECT
+    : Pass.CESIUM_3D_TILE_EDGES;
+
+  this._edgeCommand.command.pass = edgePass;
+  if (defined(this._edgeCommand.derivedCommand2D)) {
+    this._edgeCommand.derivedCommand2D.command.pass = edgePass;
   }
 
   const use2D = shouldUse2DCommands(this, frameState);

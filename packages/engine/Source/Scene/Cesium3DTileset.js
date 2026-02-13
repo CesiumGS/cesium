@@ -958,6 +958,18 @@ function Cesium3DTileset(options) {
   }
 
   /**
+   * When true, only renders edges for primitives with the EXT_mesh_primitive_edge_visibility
+   * extension, hiding the underlying surface geometry. Primitives without the extension
+   * are unaffected. This allows CAD-like wireframe rendering for specific models.
+   *
+   * @type {boolean}
+   * @default false
+   *
+   * @private
+   */
+  this.cadWireframe = options.cadWireframe ?? false;
+
+  /**
    * This property is for debugging only; it is not optimized for production use.
    * <p>
    * When true, renders the bounding volume for each visible tile.  The bounding volume is
