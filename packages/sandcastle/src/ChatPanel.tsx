@@ -401,10 +401,6 @@ export function ChatPanel({
         !iterationState.escalationActive;
 
       if (shouldIterate) {
-        // console.log(
-        //   `🔄 Detected ${runtimeErrors.length} runtime error(s), auto-iterating (${iterationState.errorIterationCount + 1}/${autoIterationConfig.maxIterations})...`
-        // );
-
         // Mark that we've scheduled an iteration
         autoIterationScheduledRef.current = true;
 
@@ -479,9 +475,6 @@ export function ChatPanel({
         !iterationState.escalationActive &&
         !oscillationMessageShownRef.current
       ) {
-        // console.log(
-        //   "⚠️ Error oscillation detected (errors cycling between states). Stopping iteration to prevent infinite loop."
-        // );
         // Mark that we've shown the oscillation message
         oscillationMessageShownRef.current = true;
 
@@ -507,9 +500,6 @@ export function ChatPanel({
         };
         setMessages((prev) => [...prev, oscillationMessage]);
       } else if (isSameError) {
-        // console.log(
-        //   "⚠️ Same errors detected, stopping auto-iteration to prevent infinite loop"
-        // );
         setIterationStatus({
           isWaiting: false,
           isIterating: false,
@@ -520,9 +510,6 @@ export function ChatPanel({
       } else if (
         iterationState.errorIterationCount >= autoIterationConfig.maxIterations
       ) {
-        // console.log(
-        //   `Maximum iterations (${autoIterationConfig.maxIterations}) reached, stopping auto-iteration`
-        // );
         setIterationStatus({
           isWaiting: false,
           isIterating: false,
@@ -533,8 +520,6 @@ export function ChatPanel({
       }
     } else if (iterationState.lastErrorSignature !== "") {
       // No errors - reset iteration tracking if we had errors before
-      //         console.log("✅ No errors detected, resetting error iteration tracking");
-      // PERFORMANCE OPTIMIZATION #5: Batch state updates
       setIterationState((prev) => ({
         ...prev,
         lastErrorSignature: "",
@@ -644,7 +629,6 @@ export function ChatPanel({
       if (
         iterationState.totalRequests >= autoIterationConfig.maxTotalRequests
       ) {
-        //       console.log(`⚠️ Maximum total request limit reached (${autoIterationConfig.maxTotalRequests}). Stopping iteration.`);
         // Show notification to user
         const notificationMessage: ChatMessageType = {
           id: `msg-${Date.now()}-notification`,
@@ -1332,7 +1316,6 @@ export function ChatPanel({
             case "reasoning":
               // Append reasoning chunks to accumulate thinking content
               reasoning += chunk.reasoning;
-              // console.log(`[ChatPanel] 🧠 Reasoning chunk: ${chunk.reasoning.substring(0, 100)}...`);
               ensureAssistantMessage({ reasoning });
               break;
 
@@ -1442,7 +1425,7 @@ export function ChatPanel({
                   // Continue the conversation after applying
                   await continueAfterToolResult(chunk.toolCall, result);
                 } catch {
-                  //                   console.error('❌ Tool execution failed:', error);
+                  // Tool execution failed - error handled by caller
                 } finally {
                   // Unlock so React effects can sync workingCodeRef again
                   toolChainActiveRef.current = false;
@@ -1459,7 +1442,6 @@ export function ChatPanel({
 
             case "usage":
               thoughtTokens = chunk.thoughtTokens ?? 0;
-              //             console.log("Token usage:", chunk);
               break;
 
             case "error":
@@ -1607,10 +1589,6 @@ export function ChatPanel({
               // Calculate new iteration count locally to avoid stale closure
               const newIterationCount = iterationState.errorIterationCount + 1;
 
-              // console.log(
-              //   `🔄 Detected ${allErrors.length} error(s), auto-iterating (${newIterationCount}/${autoIterationConfig.maxIterations})...`
-              // );
-
               // PERFORMANCE OPTIMIZATION #5: Batch state updates
               setIterationState((prev) => ({
                 ...prev,
@@ -1680,9 +1658,6 @@ export function ChatPanel({
                 !iterationState.escalationActive &&
                 !oscillationMessageShownRef.current
               ) {
-                // console.log(
-                //   "⚠️ Error oscillation detected (errors cycling between states). Stopping iteration to prevent infinite loop."
-                // );
                 // Mark that we've shown the oscillation message
                 oscillationMessageShownRef.current = true;
 
@@ -1708,9 +1683,6 @@ export function ChatPanel({
                 };
                 setMessages((prev) => [...prev, oscillationMessage]);
               } else if (isSameError) {
-                // console.log(
-                //   "⚠️ Same errors detected, stopping auto-iteration to prevent infinite loop"
-                // );
                 setIterationStatus({
                   isWaiting: false,
                   isIterating: false,
@@ -1722,9 +1694,6 @@ export function ChatPanel({
                 iterationState.errorIterationCount >=
                 autoIterationConfig.maxIterations
               ) {
-                // console.log(
-                //   `⚠️ Maximum iterations (${autoIterationConfig.maxIterations}) reached, stopping auto-iteration`
-                // );
                 setIterationStatus({
                   isWaiting: false,
                   isIterating: false,
@@ -1742,8 +1711,6 @@ export function ChatPanel({
             }
           } else {
             // No errors - reset iteration tracking and show success
-            //           console.log("✅ No errors detected - execution successful!");
-            // PERFORMANCE OPTIMIZATION #5: Batch state updates
             setIterationState((prev) => ({
               ...prev,
               lastErrorSignature: "",
@@ -1767,7 +1734,6 @@ export function ChatPanel({
           }
         }
       } catch (error) {
-        //       console.error("Streaming error:", error);
         const errorContent =
           error instanceof Error
             ? error.message
@@ -1886,9 +1852,6 @@ export function ChatPanel({
 
   const handleSubmitGuidance = useCallback(
     async (guidance: string) => {
-      //     console.log("📝 User provided guidance:", guidance);
-
-      // PERFORMANCE OPTIMIZATION #5: Batch state updates
       setIterationState((prev) => ({
         ...prev,
         escalationActive: false,
@@ -1910,9 +1873,6 @@ export function ChatPanel({
   );
 
   const handleSkipGuidance = useCallback(() => {
-    //     console.log("⏭️ User chose to skip escalation - stopping iteration");
-
-    // PERFORMANCE OPTIMIZATION #5: Batch state updates
     setIterationState((prev) => ({
       ...prev,
       escalationActive: false,
