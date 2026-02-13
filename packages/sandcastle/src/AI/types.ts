@@ -46,17 +46,6 @@ export type AIProvider = "gemini" | "anthropic";
 export type AIModel = GeminiModel | ClaudeModel;
 
 /**
- * Model information for UI display
- */
-export interface ModelInfo {
-  id: AIModel;
-  displayName: string;
-  description: string;
-  provider: AIProvider;
-  badge: string;
-}
-
-/**
  * Represents an image attachment in a chat message
  */
 export interface ImageAttachment {

@@ -981,7 +981,6 @@ function App() {
           >
             <ErrorBoundary>
               <ChatPanel
-                isOpen={chatPanelOpen}
                 onClose={() => setChatPanelOpen(false)}
                 codeContext={codeContext}
                 onApplyCode={handleApplyAiCode}

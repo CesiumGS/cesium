@@ -82,6 +82,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  align-self: center;
   justify-content: center;
   padding: var(--stratakit-space-x6) var(--stratakit-space-x6);
   height: 100%;

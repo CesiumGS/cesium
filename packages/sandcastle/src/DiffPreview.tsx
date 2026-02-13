@@ -88,13 +88,6 @@ function calculateDiffStats(original: string, modified: string): DiffStats {
     }
   }
 
-  // Adjust stats: if line count differs, some are pure adds/removes
-  if (modifiedLines.length > originalLines.length) {
-    linesAdded += modifiedLines.length - originalLines.length;
-  } else if (originalLines.length > modifiedLines.length) {
-    linesRemoved += originalLines.length - modifiedLines.length;
-  }
-
   return { linesAdded, linesRemoved, linesModified };
 }
 
@@ -123,6 +116,8 @@ export function DiffPreview({
   );
   const editorRef = useRef<editor.IStandaloneDiffEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const disposableRef = useRef<{ dispose: () => void } | null>(null);
 
   // Keep diff expanded when applied (for audit trail)
   useEffect(() => {
@@ -157,7 +152,8 @@ export function DiffPreview({
 
     // Show success animation briefly
     setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
+    clearTimeout(successTimeoutRef.current);
+    successTimeoutRef.current = setTimeout(() => setShowSuccess(false), 2000);
   }, [isApplying, currentModifiedCode, modifiedCode, onModify, onApply]);
 
   // Handle reject button click
@@ -204,14 +200,12 @@ export function DiffPreview({
       // Listen for content changes in the modified editor
       if (onModify) {
         const modifiedEditor = editor.getModifiedEditor();
-        const disposable = modifiedEditor.onDidChangeModelContent(() => {
+        disposableRef.current?.dispose();
+        disposableRef.current = modifiedEditor.onDidChangeModelContent(() => {
           const newValue = modifiedEditor.getValue();
           setCurrentModifiedCode(newValue);
           onModify(newValue);
         });
-
-        // Store disposable for cleanup
-        return () => disposable.dispose();
       }
     },
     [onModify],
@@ -220,6 +214,8 @@ export function DiffPreview({
   // Cleanup: Reset editor models before disposal to prevent Monaco "TextModel disposed..." error
   useEffect(() => {
     return () => {
+      clearTimeout(successTimeoutRef.current);
+      disposableRef.current?.dispose();
       try {
         if (editorRef.current) {
           // Detach models first to avoid "TextModel got disposed..." errors

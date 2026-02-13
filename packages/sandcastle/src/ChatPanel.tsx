@@ -54,7 +54,6 @@ type MessageContentBlock =
     };
 
 interface ChatPanelProps {
-  isOpen: boolean;
   onClose: () => void;
   codeContext: CodeContext;
   onApplyCode: (javascript?: string, html?: string) => void;
@@ -68,7 +67,6 @@ interface ChatPanelProps {
 }
 
 export function ChatPanel({
-  isOpen,
   onClose,
   codeContext,
   onApplyCode,
@@ -77,7 +75,6 @@ export function ChatPanel({
   onClearConsole,
   getCurrentConsoleErrors,
 }: ChatPanelProps) {
-  void isOpen;
   const { settings, updateSettings } = useContext(SettingsContext);
   const autoIterationConfig: AutoIterationConfig = settings.autoIteration;
 
@@ -119,7 +116,7 @@ export function ChatPanel({
     (prompt: string) => {
       // Add user feedback message then send
       const userFeedbackMessage: ChatMessageType = {
-        id: `msg-${Date.now()}-user-feedback`,
+        id: crypto.randomUUID(),
         role: "user",
         content: prompt,
         timestamp: Date.now(),
@@ -165,23 +162,14 @@ export function ChatPanel({
     updateToolCallResult,
   });
 
-  // Monitor for API key changes
+  // Monitor for API key changes from other tabs
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "sandcastle_gemini_api_key") {
-        setHasApiKey(ApiKeyManager.hasAnyCredentials());
-      }
+    const handleStorageChange = () => {
+      setHasApiKey(ApiKeyManager.hasAnyCredentials());
     };
     window.addEventListener("storage", handleStorageChange);
-    const checkInterval = setInterval(() => {
-      const currentHasApiKey = ApiKeyManager.hasAnyCredentials();
-      setHasApiKey((prev) =>
-        prev !== currentHasApiKey ? currentHasApiKey : prev,
-      );
-    }, 1000);
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      clearInterval(checkInterval);
     };
   }, []);
 
@@ -214,7 +202,7 @@ export function ChatPanel({
         iterationState.totalRequests >= autoIterationConfig.maxTotalRequests
       ) {
         const notificationMessage: ChatMessageType = {
-          id: `msg-${Date.now()}-notification`,
+          id: crypto.randomUUID(),
           role: "assistant",
           content: `Maximum request limit (${autoIterationConfig.maxTotalRequests}) reached for this conversation. Please review the output or start a new chat.`,
           timestamp: Date.now(),
@@ -226,7 +214,7 @@ export function ChatPanel({
       incrementTotalRequests();
 
       const userMessage: ChatMessageType = {
-        id: `msg-${Date.now()}-user`,
+        id: crypto.randomUUID(),
         role: "user",
         content: messageContent || "(Image message)",
         timestamp: Date.now(),
@@ -251,7 +239,7 @@ export function ChatPanel({
           return;
         }
         const msg: ChatMessageType = {
-          id: `msg-${Date.now()}-assistant`,
+          id: crypto.randomUUID(),
           role: "assistant",
           content: "",
           timestamp: Date.now(),
@@ -270,7 +258,7 @@ export function ChatPanel({
 
         if (!assistantMessageId) {
           const msg: ChatMessageType = {
-            id: `msg-${Date.now()}-assistant`,
+            id: crypto.randomUUID(),
             role: "assistant",
             content: accumulatedText,
             timestamp: Date.now(),
@@ -527,7 +515,7 @@ export function ChatPanel({
         if (!assistantMessageId) {
           if (finalContent || reasoning || streamError) {
             const msg: ChatMessageType = {
-              id: `msg-${Date.now()}-assistant`,
+              id: crypto.randomUUID(),
               role: "assistant",
               content: finalContent,
               timestamp: Date.now(),
@@ -589,7 +577,7 @@ export function ChatPanel({
             : "Failed to get response from AI";
         if (!assistantMessageId) {
           addMessage({
-            id: `msg-${Date.now()}-assistant`,
+            id: crypto.randomUUID(),
             role: "assistant",
             content: errorContent,
             timestamp: Date.now(),

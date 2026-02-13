@@ -48,7 +48,8 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
     }, []);
 
     useEffect(() => {
-      requestAnimationFrame(() => autoResizeTextarea());
+      const id = requestAnimationFrame(() => autoResizeTextarea());
+      return () => cancelAnimationFrame(id);
     }, [value, autoResizeTextarea]);
 
     const handleInputChange = useCallback(

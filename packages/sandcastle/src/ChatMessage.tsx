@@ -9,7 +9,7 @@ import { DiffApplier } from "./AI/DiffApplier";
 import { ThinkingBlock } from "./components/ThinkingBlock";
 import { StreamingDiffPreview } from "./StreamingDiffPreview";
 import { ToolCallDisplay } from "./components/ToolCallDisplay";
-import { useMemo, useState, memo, useCallback } from "react";
+import { useMemo, useState, memo, useCallback, useRef, useEffect } from "react";
 import { aiSparkle, developer, copy } from "./icons";
 import "./ChatMessage.css";
 
@@ -57,6 +57,11 @@ export const ChatMessage = memo(function ChatMessage({
     html: boolean;
   }>({ javascript: false, html: false });
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => clearTimeout(copiedTimeoutRef.current);
+  }, []);
 
   // Parse the message and clean markdown (removes raw diff blocks)
   const { cleanedMarkdown, parsedResponse } = useMemo(() => {
@@ -216,8 +221,11 @@ export const ChatMessage = memo(function ChatMessage({
     try {
       await navigator.clipboard.writeText(message.content);
       setCopiedToClipboard(true);
-      // Reset the copied state after 2 seconds
-      setTimeout(() => setCopiedToClipboard(false), 2000);
+      clearTimeout(copiedTimeoutRef.current);
+      copiedTimeoutRef.current = setTimeout(
+        () => setCopiedToClipboard(false),
+        2000,
+      );
     } catch (error) {
       console.error("Failed to copy to clipboard:", error);
     }

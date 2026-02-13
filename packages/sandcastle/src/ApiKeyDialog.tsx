@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button, Field, TextBox } from "@stratakit/bricks";
 import { Tabs, unstable_Banner as Banner } from "@stratakit/structures";
 import { SandcastleDialog } from "./SandcastleDialog";
@@ -16,21 +16,23 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
   const { refreshModels } = useModel();
 
   // Anthropic state
-  const [anthropicKey, setAnthropicKey] = useState(
-    ApiKeyManager.getAnthropicApiKey() || "",
-  );
+  const [anthropicKey, setAnthropicKey] = useState("");
   const [anthropicError, setAnthropicError] = useState<string | null>(null);
 
   // Gemini state
-  const [apiKey, setApiKey] = useState(ApiKeyManager.getApiKey() || "");
+  const [apiKey, setApiKey] = useState("");
   const [geminiError, setGeminiError] = useState<string | null>(null);
 
   // Cesium Ion state
-  const [cesiumToken, setCesiumToken] = useState(
-    ApiKeyManager.getCesiumIonToken() || "",
-  );
+  const [cesiumToken, setCesiumToken] = useState("");
   const [cesiumError, setCesiumError] = useState<string | null>(null);
   const [cesiumSuccess, setCesiumSuccess] = useState(false);
+
+  const cesiumSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => clearTimeout(cesiumSuccessTimeoutRef.current);
+  }, []);
 
   const handleAnthropicSave = () => {
     if (!anthropicKey.trim()) {
@@ -87,7 +89,11 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
       ApiKeyManager.saveCesiumIonToken(cesiumToken);
       setCesiumSuccess(true);
       setCesiumError(null);
-      setTimeout(() => setCesiumSuccess(false), 2000);
+      clearTimeout(cesiumSuccessTimeoutRef.current);
+      cesiumSuccessTimeoutRef.current = setTimeout(
+        () => setCesiumSuccess(false),
+        2000,
+      );
       onSuccess();
     } catch (err) {
       setCesiumError(err instanceof Error ? err.message : "Failed to save");
@@ -122,7 +128,11 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                         setAnthropicKey(e.target.value);
                         setAnthropicError(null);
                       }}
-                      placeholder="sk-ant-..."
+                      placeholder={
+                        ApiKeyManager.hasAnthropicApiKey()
+                          ? "Key saved \u2022 enter new key to replace"
+                          : "sk-ant-..."
+                      }
                     />
                   }
                 />
@@ -174,7 +184,11 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                         setApiKey(e.target.value);
                         setGeminiError(null);
                       }}
-                      placeholder="AIza..."
+                      placeholder={
+                        ApiKeyManager.hasApiKey()
+                          ? "Key saved \u2022 enter new key to replace"
+                          : "AIza..."
+                      }
                     />
                   }
                 />
@@ -227,7 +241,11 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                         setCesiumError(null);
                         setCesiumSuccess(false);
                       }}
-                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      placeholder={
+                        ApiKeyManager.hasCesiumIonToken()
+                          ? "Token saved \u2022 enter new token to replace"
+                          : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      }
                     />
                   }
                 />

@@ -70,10 +70,7 @@ export class ApiKeyManager {
   static validateApiKeyFormat(apiKey: string): boolean {
     // Gemini API keys typically start with "AI" and are 39 characters
     // This is a basic check - actual validation happens on API call
-    return (
-      apiKey.trim().length > 0 &&
-      (apiKey.startsWith("AI") || apiKey.length > 20)
-    );
+    return apiKey.startsWith("AI") && apiKey.trim().length >= 30;
   }
 
   // ============================================================================
