@@ -23,21 +23,18 @@ import ModelUtility from "./Model/ModelUtility.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfJsonLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
- * @param {object} [options.gltfJson] The parsed glTF JSON contents.
- * @param {string} [options.cacheKey] The cache key of the resource.
- *
  * @private
  */
 class GltfJsonLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
+   * @param {object} [options.gltfJson] The parsed glTF JSON contents.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   */
   constructor(options) {
     super();
 
