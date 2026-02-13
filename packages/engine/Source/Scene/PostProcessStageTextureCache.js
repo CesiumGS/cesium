@@ -381,6 +381,11 @@ PostProcessStageTextureCache.prototype.update = function (context) {
  * @param {Context} context The context.
  */
 PostProcessStageTextureCache.prototype.clear = function (context) {
+  // If the canvas is temporarily 0x0 (e.g. during startup/layout), clearing post-process
+  // framebuffers can trigger WebGL errors due to 0-sized attachments.
+  if (context.drawingBufferWidth < 1 || context.drawingBufferHeight < 1) {
+    return;
+  }
   const framebuffers = this._framebuffers;
   for (let i = 0; i < framebuffers.length; ++i) {
     framebuffers[i].clear.execute(context);
