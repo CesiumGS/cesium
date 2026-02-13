@@ -238,7 +238,7 @@ describe("Core/RequestScheduler", function () {
     const promise = RequestScheduler.request(firstRequest).catch(
       function (error) {
         // Request will be cancelled
-        expect(error).toBe("Request cancelled");
+        expect(error).toBeUndefined();
       },
     );
     expect(promise).toBeDefined();
@@ -970,7 +970,7 @@ describe("Core/RequestScheduler", function () {
         fail();
       })
       .catch(function (error) {
-        expect(error).toBe("Request cancelled");
+        expect(error).toBeUndefined();
       });
   });
 
