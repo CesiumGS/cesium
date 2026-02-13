@@ -733,8 +733,9 @@ PostProcessStageLibrary.createAutoExposureStage = function () {
 };
 
 /**
- * Creates a temporal accumulation stage (EMA) useful for reducing stochastic noise.
- * This is not a motion-vector TAA implementation.
+ * Creates a temporal anti-aliasing stage useful for reducing stochastic noise.
+ * It generates a motion-vector buffer from depth + previous view-projection
+ * and applies neighborhood clamping to reduce ghosting.
  *
  * @param {object} [options] Options passed to {@link TemporalAntiAliasingStage}.
  * @return {TemporalAntiAliasingStage} The stage.

@@ -6,11 +6,13 @@ import createGuid from "../Core/createGuid.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import Matrix4 from "../Core/Matrix4.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import RenderState from "../Renderer/RenderState.js";
 import TemporalAntiAliasing from "../Shaders/PostProcessStages/TemporalAntiAliasing.js";
+import TemporalAntiAliasingVelocity from "../Shaders/PostProcessStages/TemporalAntiAliasingVelocity.js";
 
 function computePixelDatatype(context) {
   if (context.halfFloatingPointTexture) {
@@ -28,18 +30,21 @@ function computeRelativeDistance(a, b) {
 }
 
 /**
- * A simple temporal accumulation stage (EMA) to reduce stochastic noise.
- * This is not a full motion-vector TAA; history is reset when the camera changes
- * beyond user-controlled thresholds.
+ * A temporal anti-aliasing stage that uses depth reprojection plus neighborhood
+ * clamping to reduce ghosting versus plain EMA accumulation.
+ *
+ * Motion is reconstructed from current depth and previous view-projection
+ * (camera motion only; no per-object motion vectors), then used to sample
+ * history at a reprojected UV.
  *
  * @alias TemporalAntiAliasingStage
  * @constructor
  *
  * @param {object} [options]
  * @param {string} [options.name=createGuid()] The unique name of this stage.
- * @param {number} [options.feedback=0.9] History weight in [0, 1]. Higher = smoother but more ghosting.
+ * @param {number} [options.feedback=0.96] History weight in [0, 1]. Higher = smoother but more ghosting.
  * @param {number} [options.resetDistance=0.001] Relative camera-position threshold to reset history.
- * @param {number} [options.resetDot=0.999] Camera-direction dot threshold to reset history.
+ * @param {number} [options.resetDot=0.995] Camera-direction dot threshold to reset history.
  *
  * @private
  */
@@ -47,9 +52,9 @@ function TemporalAntiAliasingStage(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   const {
     name = createGuid(),
-    feedback = 0.9,
+    feedback = 0.98,
     resetDistance = 0.001,
-    resetDot = 0.999,
+    resetDot = 0.995,
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -70,16 +75,21 @@ function TemporalAntiAliasingStage(options) {
   this._pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
   this._clearColor = Color.BLACK;
 
-  this._uniformMap = undefined;
-  this._command = undefined;
+  this._velocityUniformMap = undefined;
+  this._resolveUniformMap = undefined;
+  this._velocityCommand = undefined;
+  this._resolveCommand = undefined;
   this._renderState = undefined;
 
   this._colorTexture = undefined;
   this._historyTexture = undefined;
+  this._depthTexture = undefined;
+  this._velocityTexture = undefined;
   this._outputTexture = undefined;
 
   // History ping-pong for temporal accumulation.
   this._framebuffers = [new FramebufferManager(), new FramebufferManager()];
+  this._velocityFramebuffer = new FramebufferManager();
   this._pingPong = 0;
   this._width = undefined;
   this._height = undefined;
@@ -88,6 +98,8 @@ function TemporalAntiAliasingStage(options) {
   this._frameState = undefined;
   this._lastCameraPositionWC = new Cartesian3();
   this._lastCameraDirectionWC = new Cartesian3();
+  this._previousViewProjection = new Matrix4();
+  this._hasPreviousViewProjection = false;
   this._hasLastCamera = false;
   this._needsReset = true;
 
@@ -120,20 +132,34 @@ Object.defineProperties(TemporalAntiAliasingStage.prototype, {
 });
 
 function destroyResources(stage) {
-  if (defined(stage._command)) {
-    stage._command.shaderProgram =
-      stage._command.shaderProgram && stage._command.shaderProgram.destroy();
-    stage._command = undefined;
+  if (defined(stage._velocityCommand)) {
+    stage._velocityCommand.shaderProgram =
+      stage._velocityCommand.shaderProgram &&
+      stage._velocityCommand.shaderProgram.destroy();
+    stage._velocityCommand = undefined;
+  }
+
+  if (defined(stage._resolveCommand)) {
+    stage._resolveCommand.shaderProgram =
+      stage._resolveCommand.shaderProgram &&
+      stage._resolveCommand.shaderProgram.destroy();
+    stage._resolveCommand = undefined;
   }
 
   if (defined(stage._framebuffers)) {
     stage._framebuffers[0].destroy();
     stage._framebuffers[1].destroy();
   }
+  if (defined(stage._velocityFramebuffer)) {
+    stage._velocityFramebuffer.destroy();
+  }
 
   stage._historyTexture = undefined;
+  stage._depthTexture = undefined;
+  stage._velocityTexture = undefined;
   stage._colorTexture = undefined;
   stage._outputTexture = undefined;
+  stage._hasPreviousViewProjection = false;
   stage._ready = false;
 }
 
@@ -166,35 +192,68 @@ function ensureFramebuffers(stage, context, width, height) {
     pixelDatatype,
     PixelFormat.RGBA,
   );
+  stage._velocityFramebuffer.update(
+    context,
+    width,
+    height,
+    1,
+    PixelDatatype.UNSIGNED_BYTE,
+    PixelFormat.RGBA,
+  );
 
   stage._renderState = undefined;
   stage._needsReset = true;
 }
 
-function ensureCommand(stage, context) {
-  if (defined(stage._command)) {
+function ensureCommands(stage, context) {
+  if (defined(stage._velocityCommand) && defined(stage._resolveCommand)) {
     return;
   }
 
-  stage._uniformMap = {
+  stage._velocityUniformMap = {
+    depthTexture: function () {
+      return stage._depthTexture;
+    },
+    u_previousViewProjection: function () {
+      return stage._previousViewProjection;
+    },
+    u_hasPreviousViewProjection: function () {
+      return stage._hasPreviousViewProjection && !stage._needsReset ? 1.0 : 0.0;
+    },
+  };
+
+  stage._resolveUniformMap = {
     colorTexture: function () {
       return stage._colorTexture;
     },
     historyTexture: function () {
       return stage._historyTexture;
     },
+    velocityTexture: function () {
+      return stage._velocityTexture;
+    },
     u_feedback: function () {
       return stage.feedback;
     },
     u_reset: function () {
-      return stage._needsReset ? 1.0 : 0.0;
+      return stage._needsReset || !stage._hasPreviousViewProjection ? 1.0 : 0.0;
     },
   };
 
-  stage._command = context.createViewportQuadCommand(TemporalAntiAliasing, {
-    uniformMap: stage._uniformMap,
-    owner: stage,
-  });
+  stage._velocityCommand = context.createViewportQuadCommand(
+    TemporalAntiAliasingVelocity,
+    {
+      uniformMap: stage._velocityUniformMap,
+      owner: stage,
+    },
+  );
+  stage._resolveCommand = context.createViewportQuadCommand(
+    TemporalAntiAliasing,
+    {
+      uniformMap: stage._resolveUniformMap,
+      owner: stage,
+    },
+  );
 }
 
 function shouldResetHistory(stage, frameState) {
@@ -228,7 +287,7 @@ function shouldResetHistory(stage, frameState) {
 
 TemporalAntiAliasingStage.prototype.update = function (context, useLogDepth) {
   // We don't need log depth defines; keep signature for compatibility.
-  ensureCommand(this, context);
+  ensureCommands(this, context);
   this._ready = true;
 };
 
@@ -266,8 +325,8 @@ TemporalAntiAliasingStage.prototype.execute = function (
 
   this._colorTexture = colorTexture;
   this._historyTexture = readFbo.getColorTexture(0);
-
-  this._command.framebuffer = writeFbo.framebuffer;
+  this._depthTexture = depthTexture;
+  this._velocityTexture = this._velocityFramebuffer.getColorTexture(0);
 
   if (
     !defined(this._renderState) ||
@@ -283,9 +342,13 @@ TemporalAntiAliasingStage.prototype.execute = function (
       ),
     });
   }
-  this._command.renderState = this._renderState;
+  this._velocityCommand.framebuffer = this._velocityFramebuffer.framebuffer;
+  this._velocityCommand.renderState = this._renderState;
+  this._velocityCommand.execute(context);
 
-  this._command.execute(context);
+  this._resolveCommand.framebuffer = writeFbo.framebuffer;
+  this._resolveCommand.renderState = this._renderState;
+  this._resolveCommand.execute(context);
 
   this._outputTexture = writeFbo.getColorTexture(0);
   this._pingPong = writeIndex;
@@ -296,6 +359,11 @@ TemporalAntiAliasingStage.prototype.execute = function (
       frameState.camera.directionWC,
       this._lastCameraDirectionWC,
     );
+    Matrix4.clone(
+      context.uniformState.viewProjection,
+      this._previousViewProjection,
+    );
+    this._hasPreviousViewProjection = true;
     this._hasLastCamera = true;
   }
 
