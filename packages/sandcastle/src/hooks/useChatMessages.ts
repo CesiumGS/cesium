@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { ChatMessage as ChatMessageType, ToolResult } from "../AI/types";
 
 export function useChatMessages() {
@@ -9,6 +9,15 @@ export function useChatMessages() {
 
   // RAF batching for streaming updates
   const rafIdRef = useRef<number | null>(null);
+
+  // Cancel pending RAF on unmount
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, []);
 
   const addMessage = useCallback((message: ChatMessageType) => {
     setMessages((prev) => [...prev, message]);

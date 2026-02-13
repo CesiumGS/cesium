@@ -16,6 +16,8 @@ import {
   type MatchOptions,
 } from "./types";
 
+const DEBUG = import.meta.env?.DEV ?? false;
+
 /**
  * Result of indentation detection
  */
@@ -59,15 +61,17 @@ export class RooStyleDiffStrategy {
     error?: string;
   }> {
     try {
-      console.log(
-        "[RooStyleDiffStrategy] 🚀 applyDiff called with middle-out search",
-      );
-      console.log(
-        "[RooStyleDiffStrategy] Source length:",
-        sourceCode.length,
-        "lines:",
-        sourceCode.split("\n").length,
-      );
+      if (DEBUG) {
+        console.log(
+          "[RooStyleDiffStrategy] applyDiff called with middle-out search",
+        );
+        console.log(
+          "[RooStyleDiffStrategy] Source length:",
+          sourceCode.length,
+          "lines:",
+          sourceCode.split("\n").length,
+        );
+      }
 
       // 1. Find the code to replace using middle-out search
       const match = await this.middleOutSearch(

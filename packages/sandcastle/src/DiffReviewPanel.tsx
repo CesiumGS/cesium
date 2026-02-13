@@ -52,12 +52,15 @@ export function DiffReviewPanel({
 
   const handleAccept = async (diffId: string) => {
     setApplyingDiffs(new Set(applyingDiffs).add(diffId));
-    await onAccept(diffId);
-    setApplyingDiffs((prev) => {
-      const next = new Set(prev);
-      next.delete(diffId);
-      return next;
-    });
+    try {
+      await onAccept(diffId);
+    } finally {
+      setApplyingDiffs((prev) => {
+        const next = new Set(prev);
+        next.delete(diffId);
+        return next;
+      });
+    }
   };
 
   return (

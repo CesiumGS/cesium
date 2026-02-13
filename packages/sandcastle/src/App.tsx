@@ -70,6 +70,8 @@ import { SharePopover } from "./SharePopover.tsx";
 import { SandcastlePopover } from "./SandcastlePopover.tsx";
 import { urlSpecifiesSandcastle } from "./Gallery/loadFromUrl.ts";
 
+const DEBUG = import.meta.env?.DEV ?? false;
+
 const defaultJsCode = `import * as Cesium from "cesium";
 
 const viewer = new Cesium.Viewer("cesiumContainer");
@@ -239,6 +241,16 @@ function App() {
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
   const [inlineChanges, setInlineChanges] = useState<InlineChange[]>([]);
   const editorRef = useRef<SandcastleEditorRef>(null);
+  const autoRunTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const activeWorkerRef = useRef<Worker | null>(null);
+  const diffApplierRef = useRef<DiffApplier | null>(null);
+  useEffect(
+    () => () => {
+      clearTimeout(autoRunTimeoutRef.current);
+      activeWorkerRef.current?.terminate();
+    },
+    [],
+  );
 
   const [title, setTitle] = useState("New Sandcastle");
   const [description, setDescription] = useState("");
@@ -534,7 +546,11 @@ function App() {
         editorRef.current?.applyAiEdit(html, "html");
       }
       // Auto-run after applying AI changes
-      setTimeout(() => dispatch({ type: "runSandcastle" }), 500);
+      clearTimeout(autoRunTimeoutRef.current);
+      autoRunTimeoutRef.current = setTimeout(
+        () => dispatch({ type: "runSandcastle" }),
+        500,
+      );
     },
     [dispatch],
   );
@@ -563,20 +579,24 @@ function App() {
       // For large operations (>5 diffs), offload to worker to prevent UI freeze
       if (typeof Worker !== "undefined" && diffs.length > 5) {
         try {
-          console.log(
-            `🚀 Using Web Worker for ${diffs.length} diffs to prevent UI freeze`,
-          );
+          if (DEBUG) {
+            console.log(
+              `Using Web Worker for ${diffs.length} diffs to prevent UI freeze`,
+            );
+          }
 
-          // Create worker dynamically
+          // Create worker dynamically and track in ref for cleanup on unmount
           const worker = new Worker(
             new URL("./AI/workers/diffWorker.ts", import.meta.url),
             { type: "module" },
           );
+          activeWorkerRef.current = worker;
 
           // Wait for worker result
           result = await new Promise<ApplyResult>((resolve, reject) => {
             const timeout = setTimeout(() => {
               worker.terminate();
+              activeWorkerRef.current = null;
               reject(new Error("Worker timeout after 30 seconds"));
             }, 30000);
 
@@ -588,11 +608,13 @@ function App() {
                 reject(new Error(e.data.error));
               }
               worker.terminate();
+              activeWorkerRef.current = null;
             };
 
             worker.onerror = (error) => {
               clearTimeout(timeout);
               worker.terminate();
+              activeWorkerRef.current = null;
               reject(error);
             };
 
@@ -604,35 +626,41 @@ function App() {
             });
           });
 
-          console.log(`✅ Worker completed in ${Date.now() - startTime}ms`);
+          if (DEBUG) {
+            console.log(`Worker completed in ${Date.now() - startTime}ms`);
+          }
         } catch (workerError) {
           // Fallback to main thread if worker fails
-          console.warn(
-            "⚠️ Worker failed, falling back to main thread:",
-            workerError,
-          );
-          const matcher = new DiffMatcher();
-          const applier = new DiffApplier(matcher);
-          result = await applier.applyDiffsWithProgress(
+          if (DEBUG) {
+            console.warn(
+              "Worker failed, falling back to main thread:",
+              workerError,
+            );
+          }
+          if (!diffApplierRef.current) {
+            diffApplierRef.current = new DiffApplier(new DiffMatcher());
+          }
+          result = await diffApplierRef.current.applyDiffsWithProgress(
             currentCode,
             diffs,
             (current, total, message) => {
-              if (total > 5 && current % 3 === 0) {
-                console.log(`📊 Progress: ${message} (${current}/${total})`);
+              if (DEBUG && total > 5 && current % 3 === 0) {
+                console.log(`Progress: ${message} (${current}/${total})`);
               }
             },
           );
         }
       } else {
         // Use main thread with progress for smaller operations or when workers unavailable
-        const matcher = new DiffMatcher();
-        const applier = new DiffApplier(matcher);
-        result = await applier.applyDiffsWithProgress(
+        if (!diffApplierRef.current) {
+          diffApplierRef.current = new DiffApplier(new DiffMatcher());
+        }
+        result = await diffApplierRef.current.applyDiffsWithProgress(
           currentCode,
           diffs,
           (current, total, message) => {
-            if (total > 5 && current % 3 === 0) {
-              console.log(`📊 Progress: ${message} (${current}/${total})`);
+            if (DEBUG && total > 5 && current % 3 === 0) {
+              console.log(`Progress: ${message} (${current}/${total})`);
             }
           },
         );
@@ -652,7 +680,11 @@ function App() {
         appendConsole("log", `✓ ${summary}`);
 
         // Auto-run after applying AI changes
-        setTimeout(() => runSandcastle(), 500);
+        clearTimeout(autoRunTimeoutRef.current);
+        autoRunTimeoutRef.current = setTimeout(
+          () => dispatch({ type: "runSandcastle" }),
+          500,
+        );
 
         const executionTime = Date.now() - startTime;
         return {
@@ -700,7 +732,11 @@ function App() {
         }
 
         // Auto-run after applying partial changes
-        setTimeout(() => runSandcastle(), 500);
+        clearTimeout(autoRunTimeoutRef.current);
+        autoRunTimeoutRef.current = setTimeout(
+          () => dispatch({ type: "runSandcastle" }),
+          500,
+        );
       }
 
       // Show validation details if available

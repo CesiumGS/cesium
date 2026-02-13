@@ -97,8 +97,9 @@ export class ToolRegistry {
         tool_call_id: toolCall.id,
       };
     } catch (error) {
-      // Minimized error logging
-      // console.error(`❌ Tool execution error for ${toolCall.name}:`, error);
+      if (DEBUG) {
+        console.warn(`Tool execution error for ${toolCall.name}:`, error);
+      }
       return {
         tool_call_id: toolCall.id,
         status: "error",
@@ -249,8 +250,9 @@ function createApplyDiffHandler(
         }),
       };
     } catch (error) {
-      // Minimized error logging
-      // console.error('applyDiff handler error:', error);
+      if (DEBUG) {
+        console.warn("applyDiff handler error:", error);
+      }
       return {
         tool_call_id: "",
         status: "error",

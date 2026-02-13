@@ -20,6 +20,9 @@ const STALL_TIMEOUT_MS = 60000; // 60 seconds of inactivity before timeout
 // Debug flag for development logging
 const DEBUG = import.meta.env?.DEV ?? false;
 
+const DEFAULT_THINKING_BUDGET_TOKENS = 16000;
+const MAX_OUTPUT_TOKENS = 65536;
+
 /**
  * Unescape Gemini's double-escaped content
  * See: https://discuss.ai.google.dev/t/function-call-string-property-is-double-escaped/37867
@@ -70,7 +73,8 @@ export class GeminiClient {
     this.apiKey = apiKey;
     this.model = model;
     this.options = {
-      thinkingBudgetTokens: options.thinkingBudgetTokens ?? 16000,
+      thinkingBudgetTokens:
+        options.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS,
       temperature: options.temperature ?? 0,
     };
   }
@@ -252,10 +256,10 @@ export class GeminiClient {
     const hasTools = tools && tools.length > 0;
     const thinkingBudget = hasTools
       ? 0
-      : (this.options.thinkingBudgetTokens ?? 16000);
+      : (this.options.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS);
     const requestConfig: Record<string, unknown> = {
       temperature: this.options.temperature ?? 0,
-      maxOutputTokens: 65536, // Maximum output to prevent premature truncation
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
     };
 
     if (thinkingBudget > 0) {
@@ -676,7 +680,7 @@ export class GeminiClient {
 
     const requestConfig: Record<string, unknown> = {
       temperature: this.options.temperature ?? 0,
-      maxOutputTokens: 65536, // Maximum output to prevent premature truncation
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
     };
 
     // IMPORTANT: Disable thinking mode when tools are provided to avoid
@@ -685,7 +689,7 @@ export class GeminiClient {
     const hasTools = tools && tools.length > 0;
     const thinkingBudget = hasTools
       ? 0
-      : (this.options.thinkingBudgetTokens ?? 16000);
+      : (this.options.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS);
     if (thinkingBudget > 0) {
       requestConfig.thinkingConfig = {
         thinkingBudget: thinkingBudget,

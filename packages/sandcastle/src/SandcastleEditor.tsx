@@ -102,6 +102,19 @@ function SandcastleEditor({
   const [currentChangeIndex, setCurrentChangeIndex] = useState(0);
   const decorationsRef = useRef<string[]>([]);
 
+  // Refs to avoid stale closures in Monaco commands (registered once at mount)
+  const inlineChangesRef = useRef(inlineChanges);
+  const currentChangeIndexRef = useRef(currentChangeIndex);
+  const acceptChangeRef = useRef<(id: string) => void>(() => {});
+  const rejectChangeRef = useRef<(id: string) => void>(() => {});
+
+  useEffect(() => {
+    inlineChangesRef.current = inlineChanges;
+  }, [inlineChanges]);
+  useEffect(() => {
+    currentChangeIndexRef.current = currentChangeIndex;
+  }, [currentChangeIndex]);
+
   const {
     settings: { fontFamily, fontSize, fontLigatures },
   } = useContext(SettingsContext);
@@ -267,6 +280,13 @@ function SandcastleEditor({
     setCurrentChangeIndex(0);
   };
 
+  // Keep command refs fresh to avoid stale closures in Monaco commands.
+  // These functions are recreated every render, so we sync unconditionally.
+  useEffect(() => {
+    acceptChangeRef.current = acceptInlineChange;
+    rejectChangeRef.current = rejectInlineChange;
+  });
+
   // Notify parent component when inline changes are queued
   useEffect(() => {
     onQueueInlineChange?.(inlineChanges);
@@ -325,12 +345,14 @@ function SandcastleEditor({
       },
     });
 
-    // Add inline change commands
+    // Add inline change commands (use refs to avoid stale closures)
     monaco.editor.addCommand({
       id: "accept-inline-change",
       run: () => {
-        if (inlineChanges.length > 0 && inlineChanges[currentChangeIndex]) {
-          acceptInlineChange(inlineChanges[currentChangeIndex].id);
+        const changes = inlineChangesRef.current;
+        const idx = currentChangeIndexRef.current;
+        if (changes.length > 0 && changes[idx]) {
+          acceptChangeRef.current(changes[idx].id);
         }
       },
     });
@@ -338,8 +360,10 @@ function SandcastleEditor({
     monaco.editor.addCommand({
       id: "reject-inline-change",
       run: () => {
-        if (inlineChanges.length > 0 && inlineChanges[currentChangeIndex]) {
-          rejectInlineChange(inlineChanges[currentChangeIndex].id);
+        const changes = inlineChangesRef.current;
+        const idx = currentChangeIndexRef.current;
+        if (changes.length > 0 && changes[idx]) {
+          rejectChangeRef.current(changes[idx].id);
         }
       },
     });

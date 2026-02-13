@@ -5,6 +5,7 @@ import {
   useContext,
   useCallback,
   useMemo,
+  memo,
 } from "react";
 import { Button, Text, Tooltip, Switch } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
@@ -33,6 +34,7 @@ import {
   cesiumLogo,
   add as addIcon,
   close as closeIcon,
+  key as keyIcon,
 } from "./icons";
 import cesiumChatLogo from "./assets/cesium-chat-logo.png";
 import "./ChatPanel.css";
@@ -66,6 +68,130 @@ interface ChatPanelProps {
   getCurrentConsoleErrors?: () => Array<{ type: string; message: string }>;
 }
 
+const BRAND_TEXT_STYLE: React.CSSProperties = {
+  fontWeight: 600,
+  color: "var(--stratakit-color-text-accent-strong)",
+};
+
+const TOGGLE_LABEL_STYLE: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--stratakit-space-x1)",
+  cursor: "pointer",
+};
+
+interface ChatFooterContext {
+  escalationActive: boolean;
+  isLoading: boolean;
+  isCurrentlyStreaming: boolean;
+  isIterating: boolean;
+  currentIteration: number;
+  isWaiting: boolean;
+  completionMessage: string | null;
+  completionType: string | null;
+  maxIterations: number;
+}
+
+const ChatFooter = memo(function ChatFooter({
+  context,
+}: {
+  context?: ChatFooterContext;
+}) {
+  if (!context) {
+    return null;
+  }
+  const {
+    escalationActive,
+    isLoading,
+    isCurrentlyStreaming,
+    isIterating,
+    currentIteration,
+    isWaiting,
+    completionMessage,
+    completionType,
+    maxIterations,
+  } = context;
+
+  return (
+    <>
+      <div
+        className="footer-guidance-wrapper"
+        style={{
+          display: escalationActive && !isLoading ? "block" : "none",
+        }}
+      >
+        <Banner
+          tone="info"
+          label="Help needed"
+          message="The AI has encountered repeated errors and needs your guidance."
+        />
+      </div>
+
+      <div
+        className="footer-loading-wrapper"
+        style={{
+          display: isLoading || isCurrentlyStreaming ? "block" : "none",
+        }}
+      >
+        <div className="chat-loading">
+          <div className="loading-dots">
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+            <div className="loading-dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="footer-iteration-badge-wrapper"
+        style={{
+          display: isIterating && currentIteration > 0 ? "block" : "none",
+        }}
+      >
+        <div className="iteration-status-badge">
+          <span className="iteration-icon"></span>
+          <span className="iteration-text">
+            Auto-fix {currentIteration}/{maxIterations}
+          </span>
+        </div>
+      </div>
+
+      <div
+        className="footer-waiting-wrapper"
+        style={{
+          display: isWaiting ? "block" : "none",
+        }}
+      >
+        <div className="iteration-waiting">
+          <div className="loading-spinner small" />
+          <Text variant="body-sm" style={{ opacity: 0.7 }}>
+            Checking for errors...
+          </Text>
+        </div>
+      </div>
+
+      <div
+        className="footer-completion-wrapper"
+        style={{
+          display: completionMessage ? "block" : "none",
+        }}
+      >
+        <div
+          className={`iteration-completion iteration-completion-${completionType}`}
+        >
+          <span className="completion-icon">
+            {completionType === "success" && "✓"}
+            {completionType === "max-iterations" && "⚠️"}
+            {completionType === "oscillation" && "🔄"}
+            {completionType === "max-requests" && "🛑"}
+          </span>
+          <Text variant="body-sm">{completionMessage}</Text>
+        </div>
+      </div>
+    </>
+  );
+});
+
 export function ChatPanel({
   onClose,
   codeContext,
@@ -89,6 +215,7 @@ export function ChatPanel({
   const [hasApiKey, setHasApiKey] = useState(ApiKeyManager.hasAnyCredentials());
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const messagesRef = useRef<ChatMessageType[]>([]);
 
   // === Custom Hooks ===
   const {
@@ -108,6 +235,9 @@ export function ChatPanel({
     resetChat,
     cancelPendingRaf,
   } = useChatMessages();
+
+  // Keep messagesRef in sync so sendMessageWithContent doesn't need messages as a dep
+  messagesRef.current = messages;
 
   // sendMessageWithContent ref for auto-iteration callback
   const sendMessageRef = useRef<(msg: string) => void>(() => {});
@@ -289,8 +419,8 @@ export function ChatPanel({
         const toolsToPass = getTools();
         const contextForThisRequest = getWorkingCode();
 
-        // Build conversation history
-        const previousMessages = messages.filter(
+        // Build conversation history (use ref to avoid dep on messages)
+        const previousMessages = messagesRef.current.filter(
           (msg) => msg.id !== userMessage.id,
         );
 
@@ -465,8 +595,18 @@ export function ChatPanel({
                     accumulatedText,
                     toolsToPass,
                   );
-                } catch {
-                  // Tool execution failed
+                } catch (error) {
+                  const errorContent =
+                    error instanceof Error
+                      ? error.message
+                      : "Tool execution failed";
+                  if (assistantMessageId) {
+                    updateMessage(assistantMessageId, {
+                      content: `Error during tool execution: ${errorContent}`,
+                      error: true,
+                      isStreaming: false,
+                    });
+                  }
                 } finally {
                   unlockToolChain();
                 }
@@ -608,7 +748,6 @@ export function ChatPanel({
       autoIterationConfig.maxTotalRequests,
       autoIterationConfig.waitTimeMs,
       getCurrentConsoleErrors,
-      messages,
       settings.customPromptAddendum,
       addMessage,
       updateMessage,
@@ -688,91 +827,18 @@ export function ChatPanel({
     [onApplyDiff, onClearConsole],
   );
 
-  const FooterComponent = useMemo(
-    () => () => (
-      <>
-        <div
-          className="footer-guidance-wrapper"
-          style={{
-            display:
-              iterationState.escalationActive && !isLoading ? "block" : "none",
-          }}
-        >
-          <Banner
-            tone="info"
-            label="Help needed"
-            message="The AI has encountered repeated errors and needs your guidance."
-          />
-        </div>
-
-        <div
-          className="footer-loading-wrapper"
-          style={{
-            display: isLoading || isCurrentlyStreaming ? "block" : "none",
-          }}
-        >
-          <div className="chat-loading">
-            <div className="loading-dots">
-              <div className="loading-dot"></div>
-              <div className="loading-dot"></div>
-              <div className="loading-dot"></div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="footer-iteration-badge-wrapper"
-          style={{
-            display:
-              iterationStatus.isIterating &&
-              iterationStatus.currentIteration > 0
-                ? "block"
-                : "none",
-          }}
-        >
-          <div className="iteration-status-badge">
-            <span className="iteration-icon"></span>
-            <span className="iteration-text">
-              Auto-fix {iterationStatus.currentIteration}/
-              {autoIterationConfig.maxIterations}
-            </span>
-          </div>
-        </div>
-
-        <div
-          className="footer-waiting-wrapper"
-          style={{
-            display: iterationStatus.isWaiting ? "block" : "none",
-          }}
-        >
-          <div className="iteration-waiting">
-            <div className="loading-spinner small" />
-            <Text variant="body-sm" style={{ opacity: 0.7 }}>
-              Checking for errors...
-            </Text>
-          </div>
-        </div>
-
-        <div
-          className="footer-completion-wrapper"
-          style={{
-            display: iterationStatus.completionMessage ? "block" : "none",
-          }}
-        >
-          <div
-            className={`iteration-completion iteration-completion-${iterationStatus.completionType}`}
-          >
-            <span className="completion-icon">
-              {iterationStatus.completionType === "success" && "✓"}
-              {iterationStatus.completionType === "max-iterations" && "⚠️"}
-              {iterationStatus.completionType === "oscillation" && "🔄"}
-              {iterationStatus.completionType === "max-requests" && "🛑"}
-            </span>
-            <Text variant="body-sm">{iterationStatus.completionMessage}</Text>
-          </div>
-        </div>
-      </>
-    ),
+  const footerContext = useMemo<ChatFooterContext>(
+    () => ({
+      escalationActive: iterationState.escalationActive,
+      isLoading,
+      isCurrentlyStreaming,
+      isIterating: iterationStatus.isIterating,
+      currentIteration: iterationStatus.currentIteration,
+      isWaiting: iterationStatus.isWaiting,
+      completionMessage: iterationStatus.completionMessage,
+      completionType: iterationStatus.completionType,
+      maxIterations: autoIterationConfig.maxIterations,
+    }),
     [
       iterationState.escalationActive,
       isLoading,
@@ -802,13 +868,7 @@ export function ChatPanel({
         <div className="chat-panel-header">
           <div className="chat-header-brand">
             <Icon href={cesiumLogo} className="brand-logo" />
-            <Text
-              variant="body-lg"
-              style={{
-                fontWeight: 600,
-                color: "var(--stratakit-color-text-accent-strong)",
-              }}
-            >
+            <Text variant="body-lg" style={BRAND_TEXT_STYLE}>
               Cesium Copilot
             </Text>
           </div>
@@ -822,6 +882,16 @@ export function ChatPanel({
                 aria-label="Start a new chat"
               >
                 <Icon href={addIcon} />
+              </Button>
+            </Tooltip>
+
+            <Tooltip content="API Key Settings" placement="bottom">
+              <Button
+                variant="ghost"
+                onClick={() => setShowApiKeyDialog(true)}
+                aria-label="Open API key settings"
+              >
+                <Icon href={keyIcon} />
               </Button>
             </Tooltip>
 
@@ -948,8 +1018,9 @@ export function ChatPanel({
                   streamingDiffs={undefined}
                 />
               )}
+              context={footerContext}
               components={{
-                Footer: FooterComponent,
+                Footer: ChatFooter,
               }}
             />
           )}
@@ -972,14 +1043,7 @@ export function ChatPanel({
               currentModel={currentModel}
               onModelChange={setCurrentModel}
             />
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--stratakit-space-x1)",
-                cursor: "pointer",
-              }}
-            >
+            <label style={TOGGLE_LABEL_STYLE}>
               <Switch
                 checked={settings.extendedThinking.enabled}
                 onChange={(e) =>

@@ -66,17 +66,18 @@ export function useToolChainExecution({
     workingCodeRef.current = currentCode ?? codeContext;
   }, [currentCode, codeContext]);
 
-  // Initialize tool registry once
+  // Initialize tool registry once on mount
+  const registryInitializedRef = useRef(false);
   useEffect(() => {
-    if (!toolRegistry) {
+    if (!registryInitializedRef.current && !toolRegistry) {
+      registryInitializedRef.current = true;
       const registry = initializeToolRegistry((file: "javascript" | "html") => {
         const ctx = workingCodeRef.current;
         return file === "javascript" ? ctx.javascript : ctx.html;
       });
       setToolRegistry(registry);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolRegistry]);
+  }, []);
 
   const getTools = useCallback((): ToolDefinition[] | undefined => {
     return toolRegistry ? toolRegistry.getAllTools() : undefined;
@@ -117,8 +118,11 @@ export function useToolChainExecution({
             }
             onClearConsole?.();
           }
-        } catch {
-          // Ignore parse errors
+        } catch (e) {
+          console.warn(
+            "[useToolChainExecution] Failed to parse tool result output:",
+            e,
+          );
         }
       }
 
@@ -217,7 +221,7 @@ export function useToolChainExecution({
             return;
           }
           const contMsg: ChatMessageType = {
-            id: `msg-${Date.now()}-assistant`,
+            id: crypto.randomUUID(),
             role: "assistant",
             content: "",
             timestamp: Date.now(),
@@ -293,7 +297,7 @@ export function useToolChainExecution({
           if (!contMsgId) {
             if (finalContent || contReasoning || streamError || nextToolCall) {
               const contMsg: ChatMessageType = {
-                id: `msg-${Date.now()}-assistant`,
+                id: crypto.randomUUID(),
                 role: "assistant",
                 content: finalContent,
                 timestamp: Date.now(),
@@ -314,11 +318,18 @@ export function useToolChainExecution({
               error: !!streamError,
             });
           }
-        } catch {
-          const errorContent = contText || "Error continuing conversation";
+        } catch (error) {
+          console.warn(
+            "[useToolChainExecution] Error in tool chain continuation:",
+            error,
+          );
+          const detail =
+            error instanceof Error ? error.message : "Unknown error";
+          const errorContent =
+            contText || `Error continuing conversation: ${detail}`;
           if (!contMsgId) {
             const contMsg: ChatMessageType = {
-              id: `msg-${Date.now()}-assistant`,
+              id: crypto.randomUUID(),
               role: "assistant",
               content: errorContent,
               timestamp: Date.now(),
@@ -402,9 +413,13 @@ export function useToolChainExecution({
         currentResult = nextResult;
       }
 
-      console.warn(
-        `[useToolChainExecution] Stopping chained tool calls after ${MAX_CHAINED_TOOL_CALLS} iterations`,
-      );
+      addMessage({
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: `Reached maximum tool chain limit (${MAX_CHAINED_TOOL_CALLS} calls). Some changes may not have been applied.`,
+        timestamp: Date.now(),
+        isStreaming: false,
+      });
     },
     [
       addMessage,

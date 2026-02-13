@@ -12,7 +12,7 @@
  * - Lightweight and fast
  */
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { Button, Tooltip, Kbd } from "@stratakit/bricks";
 import "./SimpleDiffPreview.css";
 
@@ -154,6 +154,11 @@ export function SimpleDiffPreview({
 }: SimpleDiffPreviewProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const [showSuccess, setShowSuccess] = useState(false);
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => clearTimeout(successTimeoutRef.current);
+  }, []);
 
   // Calculate diff
   const diff = useMemo(
@@ -174,7 +179,8 @@ export function SimpleDiffPreview({
 
     // Show success animation briefly
     setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
+    clearTimeout(successTimeoutRef.current);
+    successTimeoutRef.current = setTimeout(() => setShowSuccess(false), 2000);
   }, [isApplying, onApply]);
 
   // Handle reject button click

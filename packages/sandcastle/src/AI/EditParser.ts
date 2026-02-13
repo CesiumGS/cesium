@@ -121,18 +121,6 @@ export class EditParser {
       "$1",
     );
 
-    // Minimized logging
-    // if (beforeLength !== afterLength) {
-    //   console.log('[EditParser] Preprocessing removed markdown artifacts:', {
-    //     beforeLength,
-    //     afterLength,
-    //     removed: beforeLength - afterLength
-    //   });
-    // }
-
-    // Note: We don't need to unescape HTML entities since Gemini isn't producing them
-    // in our SEARCH/REPLACE format (confirmed via testing)
-
     return processed;
   }
 
@@ -244,10 +232,6 @@ export class EditParser {
    * @returns Parsed response containing code blocks and/or diff edits
    */
   static parseResponse(response: string): ParsedResponse {
-    // Log raw response for debugging
-    // console.log('[EditParser] Parsing response, length:', response.length);
-    // console.log('[EditParser] First 300 chars:', response.substring(0, 300));
-
     const result: ParsedResponse = {
       codeBlocks: [],
       diffEdits: [],
@@ -256,8 +240,6 @@ export class EditParser {
     // Extract explanation (text before first code block or diff)
     const firstCodeBlock = response.search(/```/);
     const firstDiff = response.search(/<<<SEARCH>>>|^---\s+/m);
-
-    // console.log('[EditParser] Found code block at:', firstCodeBlock, 'diff at:', firstDiff);
 
     let explanationEnd = -1;
     if (firstCodeBlock !== -1 && firstDiff !== -1) {
@@ -358,83 +340,19 @@ export class EditParser {
   }
 
   /**
-   * Infer the programming language from a diff block based on content and context
-   *
-   * @param diff - The parsed diff to analyze
-   * @param fullResponse - The full AI response for additional context
-   * @returns The inferred language ("javascript" or "html")
+   * Infer the programming language from a parsed diff based on content and context
    */
   private static inferLanguageFromDiff(
     diff: ParsedDiff,
     fullResponse: string,
   ): "javascript" | "html" {
-    const searchContent = diff.block.search.toLowerCase();
-    const replaceContent = diff.block.replace.toLowerCase();
-    const combined = `${searchContent} ${replaceContent}`;
-
-    // HTML indicators
-    const htmlIndicators = [
-      /<[a-z][\s\S]*>/i, // HTML tags
-      /<!doctype/i,
-      /<html/i,
-      /<head/i,
-      /<body/i,
-      /<div/i,
-      /<span/i,
-      /<button/i,
-      /<input/i,
-      /<form/i,
-    ];
-
-    // JavaScript indicators
-    const jsIndicators = [
-      /\bconst\b/,
-      /\blet\b/,
-      /\bvar\b/,
-      /\bfunction\b/,
-      /\bclass\b/,
-      /\bimport\b/,
-      /\bexport\b/,
-      /\bconsole\./,
-      /\breturn\b/,
-      /=>/,
-      /\bviewer\b/i, // CesiumJS specific
-      /\bCesium\./,
-    ];
-
-    // Count matches
-    let htmlScore = 0;
-    let jsScore = 0;
-
-    for (const indicator of htmlIndicators) {
-      if (indicator.test(combined)) {
-        htmlScore++;
-      }
-    }
-
-    for (const indicator of jsIndicators) {
-      if (indicator.test(combined)) {
-        jsScore++;
-      }
-    }
-
-    // Check context in the full response
-    const contextBefore = fullResponse
-      .substring(
-        Math.max(0, fullResponse.indexOf(diff.raw) - 200),
-        fullResponse.indexOf(diff.raw),
-      )
-      .toLowerCase();
-
-    if (contextBefore.includes("html") || contextBefore.includes("markup")) {
-      htmlScore += 2;
-    }
-    if (contextBefore.includes("javascript") || contextBefore.includes("js")) {
-      jsScore += 2;
-    }
-
-    // Default to JavaScript if scores are equal (most common in CesiumJS context)
-    return htmlScore > jsScore ? "html" : "javascript";
+    const contextPos = fullResponse.indexOf(diff.raw);
+    return this.scoreLanguage(
+      diff.block.search,
+      diff.block.replace,
+      fullResponse,
+      contextPos,
+    );
   }
 
   /**
@@ -502,8 +420,6 @@ export class EditParser {
           return { error: chunk.error };
 
         default:
-          // Unknown chunk type - log but don't fail
-          // console.warn("[EditParser] Unknown chunk type:", chunk);
           return {};
       }
     } catch (error) {
@@ -604,72 +520,78 @@ export class EditParser {
   }
 
   /**
-   * Infer language from a DiffBlock (similar to inferLanguageFromDiff but works with DiffBlock)
-   *
-   * @param diffBlock - The diff block to analyze
-   * @param fullResponse - The full AI response for additional context
-   * @returns The inferred language ("javascript" or "html")
+   * Infer language from a DiffBlock (delegates to shared scoreLanguage)
    */
   private static inferLanguageFromDiffBlock(
     diffBlock: DiffBlock,
     fullResponse: string,
   ): "javascript" | "html" {
-    const searchContent = diffBlock.search.toLowerCase();
-    const replaceContent = diffBlock.replace.toLowerCase();
-    const combined = `${searchContent} ${replaceContent}`;
+    const contextPos = fullResponse.indexOf(diffBlock.search.substring(0, 100));
+    return this.scoreLanguage(
+      diffBlock.search,
+      diffBlock.replace,
+      fullResponse,
+      contextPos,
+    );
+  }
 
-    // HTML indicators
-    const htmlIndicators = [
-      /<[a-z][\s\S]*>/i, // HTML tags
-      /<!doctype/i,
-      /<html/i,
-      /<head/i,
-      /<body/i,
-      /<div/i,
-      /<span/i,
-      /<button/i,
-      /<input/i,
-      /<form/i,
-    ];
+  private static readonly HTML_INDICATORS = [
+    /<[a-z][\s\S]*>/i,
+    /<!doctype/i,
+    /<html/i,
+    /<head/i,
+    /<body/i,
+    /<div/i,
+    /<span/i,
+    /<button/i,
+    /<input/i,
+    /<form/i,
+  ];
 
-    // JavaScript indicators
-    const jsIndicators = [
-      /\bconst\b/,
-      /\blet\b/,
-      /\bvar\b/,
-      /\bfunction\b/,
-      /\bclass\b/,
-      /\bimport\b/,
-      /\bexport\b/,
-      /\bconsole\./,
-      /\breturn\b/,
-      /=>/,
-      /\bviewer\b/i, // CesiumJS specific
-      /\bCesium\./,
-    ];
+  private static readonly JS_INDICATORS = [
+    /\bconst\b/,
+    /\blet\b/,
+    /\bvar\b/,
+    /\bfunction\b/,
+    /\bclass\b/,
+    /\bimport\b/,
+    /\bexport\b/,
+    /\bconsole\./,
+    /\breturn\b/,
+    /=>/,
+    /\bviewer\b/i,
+    /\bCesium\./,
+  ];
 
-    // Count matches
+  /**
+   * Shared language scoring logic for both ParsedDiff and DiffBlock inputs.
+   * Scores content against HTML and JS indicators, plus surrounding context.
+   */
+  private static scoreLanguage(
+    search: string,
+    replace: string,
+    fullResponse: string,
+    contextPos: number,
+  ): "javascript" | "html" {
+    const combined = `${search.toLowerCase()} ${replace.toLowerCase()}`;
+
     let htmlScore = 0;
     let jsScore = 0;
 
-    for (const indicator of htmlIndicators) {
+    for (const indicator of this.HTML_INDICATORS) {
       if (indicator.test(combined)) {
         htmlScore++;
       }
     }
-
-    for (const indicator of jsIndicators) {
+    for (const indicator of this.JS_INDICATORS) {
       if (indicator.test(combined)) {
         jsScore++;
       }
     }
 
-    // Check context in the full response
-    const searchPattern = diffBlock.search.substring(0, 100); // Use first 100 chars as pattern
-    const contextStart = fullResponse.indexOf(searchPattern);
-    if (contextStart > 0) {
+    if (contextPos > 0) {
       const contextBefore = fullResponse
-        .substring(Math.max(0, contextStart - 200), contextStart)
+        .substring(Math.max(0, contextPos - 200), contextPos)
         .toLowerCase();
 
       if (contextBefore.includes("html") || contextBefore.includes("markup")) {
@@ -683,7 +605,6 @@ export class EditParser {
       }
     }
 
-    // Default to JavaScript if scores are equal (most common in CesiumJS context)
     return htmlScore > jsScore ? "html" : "javascript";
   }
 }

@@ -13,6 +13,8 @@ import {
   AppliedDiff,
 } from "./types";
 
+const DEBUG = import.meta.env?.DEV ?? false;
+
 /**
  * DiffApplier implements an order-invariant algorithm for applying multiple diffs to source code.
  * Inspired by Cline's breakthrough innovation, this class can correctly apply a series of
@@ -74,123 +76,13 @@ export class DiffApplier {
       ...options,
     };
 
-    // Step 1: Match all diffs to their positions
     const matchResults = this.matchAllDiffs(sourceCode, diffs, opts);
-
-    // Separate successful matches from failures
-    const successful: Array<{
-      diff: DiffBlock;
-      inputIndex: number;
-      match: MatchResult;
-    }> = [];
-    const errors: DiffError[] = [];
-    const unmatchedDiffs: UnmatchedDiff[] = [];
-
-    matchResults.forEach(({ diff, inputIndex, match, error }) => {
-      if (match) {
-        successful.push({ diff, inputIndex, match });
-      } else if (error) {
-        errors.push(error);
-        unmatchedDiffs.push({
-          diff,
-          inputIndex,
-          reason: error.message,
-        });
-      }
-    });
-
-    // Step 2: Sort by position (ascending order) for conflict detection
-    const sorted = this.sortDiffsByPosition(successful);
-
-    // Step 3: Detect conflicts BEFORE deduplication
-    // This ensures we properly detect and report duplicate matches as conflicts
-    const conflicts = this.detectConflicts(sorted);
-
-    // Step 4: ROBUSTNESS: Deduplicate diffs with identical search patterns or overlapping matches
-    // This prevents the catastrophic bug where duplicate diffs create infinite replacements
-    const deduplicated = this.deduplicateMatches(
-      successful,
-      errors,
-      unmatchedDiffs,
+    return this.processMatchResults(
+      matchResults,
+      sourceCode,
+      diffs.length,
+      opts,
     );
-
-    // Step 5: Re-sort deduplicated matches
-    const sortedDeduplicated = this.sortDiffsByPosition(deduplicated);
-
-    // Step 6: If in strict mode and there are errors, fail early
-    if (opts.strict && errors.length > 0) {
-      return {
-        success: false,
-        appliedDiffs: [],
-        errors,
-        validation: {
-          valid: false,
-          conflicts,
-          unmatchedDiffs,
-          totalDiffs: diffs.length,
-          matchedDiffs: deduplicated.length,
-        },
-      };
-    }
-
-    if (conflicts.length > 0 && !opts.allowOverlaps) {
-      // Add conflict errors
-      conflicts.forEach((conflict) => {
-        errors.push({
-          type: DiffErrorType.CONFLICT,
-          message: conflict.description,
-          context: `Conflict type: ${conflict.type}`,
-        });
-      });
-
-      if (opts.strict) {
-        return {
-          success: false,
-          appliedDiffs: [],
-          errors,
-          validation: {
-            valid: false,
-            conflicts,
-            unmatchedDiffs,
-            totalDiffs: diffs.length,
-            matchedDiffs: successful.length,
-          },
-        };
-      }
-    }
-
-    // Step 7: Validation result
-    const validation: ValidationResult = {
-      valid: errors.length === 0 && conflicts.length === 0,
-      conflicts,
-      unmatchedDiffs,
-      totalDiffs: diffs.length,
-      matchedDiffs: deduplicated.length,
-    };
-
-    // If dry-run, return validation without modifying code
-    if (opts.dryRun) {
-      return {
-        success: validation.valid,
-        appliedDiffs: [],
-        errors,
-        validation,
-      };
-    }
-
-    // Step 8: Apply diffs in reverse order (bottom-to-top)
-    const result = this.applyDiffsInOrder(sourceCode, sortedDeduplicated, opts);
-
-    // Combine all errors
-    const allErrors = [...errors, ...result.errors];
-
-    return {
-      success: allErrors.length === 0,
-      modifiedCode: result.modifiedCode,
-      appliedDiffs: result.appliedDiffs,
-      errors: allErrors,
-      validation,
-    };
   }
 
   /**
@@ -330,7 +222,29 @@ export class DiffApplier {
 
     onProgress?.(diffs.length, diffs.length, "Applying changes...");
 
-    // Continue with the standard applyDiffs logic
+    return this.processMatchResults(
+      matchResults,
+      sourceCode,
+      diffs.length,
+      opts,
+    );
+  }
+
+  /**
+   * Shared post-matching pipeline: categorize, sort, detect conflicts,
+   * deduplicate, validate, and apply diffs.
+   */
+  private processMatchResults(
+    matchResults: Array<{
+      diff: DiffBlock;
+      inputIndex: number;
+      match: MatchResult | null;
+      error?: DiffError;
+    }>,
+    sourceCode: string,
+    totalDiffs: number,
+    opts: Required<ApplyOptions>,
+  ): ApplyResult {
     const successful: Array<{
       diff: DiffBlock;
       inputIndex: number;
@@ -344,31 +258,19 @@ export class DiffApplier {
         successful.push({ diff, inputIndex, match });
       } else if (error) {
         errors.push(error);
-        unmatchedDiffs.push({
-          diff,
-          inputIndex,
-          reason: error.message,
-        });
+        unmatchedDiffs.push({ diff, inputIndex, reason: error.message });
       }
     });
 
-    // Sort by position for conflict detection
     const sorted = this.sortDiffsByPosition(successful);
-
-    // Detect conflicts BEFORE deduplication
     const conflicts = this.detectConflicts(sorted);
-
-    // ROBUSTNESS: Deduplicate diffs with identical search patterns or overlapping matches
     const deduplicated = this.deduplicateMatches(
       successful,
       errors,
       unmatchedDiffs,
     );
-
-    // Re-sort deduplicated matches
     const sortedDeduplicated = this.sortDiffsByPosition(deduplicated);
 
-    // Rest of the logic follows the original applyDiffs method
     if (opts.strict && errors.length > 0) {
       return {
         success: false,
@@ -378,7 +280,7 @@ export class DiffApplier {
           valid: false,
           conflicts,
           unmatchedDiffs,
-          totalDiffs: diffs.length,
+          totalDiffs,
           matchedDiffs: deduplicated.length,
         },
       };
@@ -402,7 +304,7 @@ export class DiffApplier {
             valid: false,
             conflicts,
             unmatchedDiffs,
-            totalDiffs: diffs.length,
+            totalDiffs,
             matchedDiffs: successful.length,
           },
         };
@@ -413,7 +315,7 @@ export class DiffApplier {
       valid: errors.length === 0 && conflicts.length === 0,
       conflicts,
       unmatchedDiffs,
-      totalDiffs: diffs.length,
+      totalDiffs,
       matchedDiffs: deduplicated.length,
     };
 
@@ -540,11 +442,17 @@ export class DiffApplier {
       return null;
     }
 
+    const startTime = Date.now();
+    const TIMEOUT_MS = 2000;
     let bestScore = 0;
     let bestLocation = "";
-    const stepSize = Math.max(1, Math.floor(searchLen / 20)); // Sample every 5%
+    const stepSize = Math.max(1, Math.floor(searchLen / 20));
 
     for (let i = 0; i <= sourceCode.length - searchLen; i += stepSize) {
+      if (i % 100 === 0 && Date.now() - startTime > TIMEOUT_MS) {
+        break;
+      }
+
       const candidate = sourceCode.slice(i, i + searchLen);
       const similarity = this.matcher.calculateSimilarity(
         searchText,
@@ -553,14 +461,12 @@ export class DiffApplier {
 
       if (similarity > bestScore) {
         bestScore = similarity;
-        // Extract a line preview for context
         const lines = sourceCode.slice(0, i).split("\n");
         const lineNum = lines.length;
         const lineContent = candidate.split("\n")[0].slice(0, 50);
         bestLocation = `line ${lineNum}: ${lineContent}...`;
       }
 
-      // If we found a very close match, we can stop early
       if (bestScore >= 0.95) {
         break;
       }
@@ -649,13 +555,11 @@ export class DiffApplier {
       const previousPositionIndex = seenPositions.get(positionKey);
 
       if (previousPatternIndex !== undefined) {
-        // Duplicate search pattern detected!
-        console.warn(
-          `⚠️ DUPLICATE DIFF: Skipping diff ${match.inputIndex} - identical search pattern already seen in diff ${previousPatternIndex}`,
-        );
-        console.warn(
-          `   Search pattern: "${match.diff.search.slice(0, 100)}..."`,
-        );
+        if (DEBUG) {
+          console.warn(
+            `DUPLICATE DIFF: Skipping diff ${match.inputIndex} - identical search pattern already seen in diff ${previousPatternIndex}`,
+          );
+        }
 
         errors.push({
           type: DiffErrorType.CONFLICT,
@@ -675,10 +579,11 @@ export class DiffApplier {
       }
 
       if (previousPositionIndex !== undefined) {
-        // Same position range detected!
-        console.warn(
-          `⚠️ OVERLAPPING DIFF: Skipping diff ${match.inputIndex} - same position range already matched by diff ${previousPositionIndex}`,
-        );
+        if (DEBUG) {
+          console.warn(
+            `OVERLAPPING DIFF: Skipping diff ${match.inputIndex} - same position range already matched by diff ${previousPositionIndex}`,
+          );
+        }
 
         errors.push({
           type: DiffErrorType.CONFLICT,
@@ -703,11 +608,13 @@ export class DiffApplier {
       deduplicated.push(match);
     }
 
-    const skippedCount = matches.length - deduplicated.length;
-    if (skippedCount > 0) {
-      console.warn(
-        `🛡️ PROTECTION: Skipped ${skippedCount} duplicate/overlapping diff(s) to prevent code corruption`,
-      );
+    if (DEBUG) {
+      const skippedCount = matches.length - deduplicated.length;
+      if (skippedCount > 0) {
+        console.warn(
+          `Skipped ${skippedCount} duplicate/overlapping diff(s) to prevent code corruption`,
+        );
+      }
     }
 
     return deduplicated;
@@ -733,53 +640,50 @@ export class DiffApplier {
   ): Conflict[] {
     const conflicts: Conflict[] = [];
 
-    for (let i = 0; i < sorted.length; i++) {
-      for (let j = i + 1; j < sorted.length; j++) {
-        const a = sorted[i];
-        const b = sorted[j];
+    // Since the array is sorted by startPos, only adjacent pairs can overlap
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const a = sorted[i];
+      const b = sorted[i + 1];
 
+      // Check for duplicate matches (same exact region)
+      if (
+        a.match.startPos === b.match.startPos &&
+        a.match.endPos === b.match.endPos
+      ) {
+        conflicts.push({
+          type: ConflictType.DUPLICATE_MATCH,
+          diffs: [
+            {
+              diff: a.diff,
+              inputIndex: a.inputIndex,
+              matchResult: a.match,
+            },
+            {
+              diff: b.diff,
+              inputIndex: b.inputIndex,
+              matchResult: b.match,
+            },
+          ],
+          description: `Diffs at input indices ${a.inputIndex} and ${b.inputIndex} match the same region (lines ${a.match.startLine}-${a.match.endLine})`,
+        });
+      } else if (this.regionsOverlap(a.match, b.match)) {
         // Check for overlapping regions
-        if (this.regionsOverlap(a.match, b.match)) {
-          conflicts.push({
-            type: ConflictType.OVERLAPPING_REGIONS,
-            diffs: [
-              {
-                diff: a.diff,
-                inputIndex: a.inputIndex,
-                matchResult: a.match,
-              },
-              {
-                diff: b.diff,
-                inputIndex: b.inputIndex,
-                matchResult: b.match,
-              },
-            ],
-            description: `Diffs at input indices ${a.inputIndex} and ${b.inputIndex} have overlapping regions (lines ${a.match.startLine}-${a.match.endLine} and ${b.match.startLine}-${b.match.endLine})`,
-          });
-        }
-
-        // Check for duplicate matches (same exact region)
-        if (
-          a.match.startPos === b.match.startPos &&
-          a.match.endPos === b.match.endPos
-        ) {
-          conflicts.push({
-            type: ConflictType.DUPLICATE_MATCH,
-            diffs: [
-              {
-                diff: a.diff,
-                inputIndex: a.inputIndex,
-                matchResult: a.match,
-              },
-              {
-                diff: b.diff,
-                inputIndex: b.inputIndex,
-                matchResult: b.match,
-              },
-            ],
-            description: `Diffs at input indices ${a.inputIndex} and ${b.inputIndex} match the same region (lines ${a.match.startLine}-${a.match.endLine})`,
-          });
-        }
+        conflicts.push({
+          type: ConflictType.OVERLAPPING_REGIONS,
+          diffs: [
+            {
+              diff: a.diff,
+              inputIndex: a.inputIndex,
+              matchResult: a.match,
+            },
+            {
+              diff: b.diff,
+              inputIndex: b.inputIndex,
+              matchResult: b.match,
+            },
+          ],
+          description: `Diffs at input indices ${a.inputIndex} and ${b.inputIndex} have overlapping regions (lines ${a.match.startLine}-${a.match.endLine} and ${b.match.startLine}-${b.match.endLine})`,
+        });
       }
     }
 

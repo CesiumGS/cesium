@@ -2,6 +2,15 @@ import { distance } from "fastest-levenshtein";
 import { MatchStrategy, MatchResult, MatchOptions } from "./types";
 import { normalizeString } from "./utils/textNormalization";
 
+/** Maximum time allowed for fuzzy matching before returning best result found */
+const FUZZY_MATCH_TIMEOUT_MS = 2000;
+
+/** Source code length above which we use coarser step sizes for performance */
+const LARGE_FILE_THRESHOLD = 10000;
+
+/** Confidence at or above which we consider a match near-perfect and stop searching */
+const NEAR_PERFECT_CONFIDENCE = 0.99;
+
 /**
  * DiffMatcher implements intelligent fuzzy matching for applying code diffs.
  * Inspired by Aider's multi-strategy matching approach, it tries multiple
@@ -303,8 +312,6 @@ export class DiffMatcher {
       return null;
     }
 
-    // PERFORMANCE: Add timeout protection to prevent browser freezing
-    const maxExecutionTime = 2000; // 2 seconds max
     const startTime = Date.now();
 
     let bestMatch: {
@@ -313,17 +320,16 @@ export class DiffMatcher {
       confidence: number;
     } | null = null;
 
-    // PERFORMANCE: Increase step size for large files to reduce iterations
     const stepSize =
-      sourceCode.length > 10000
-        ? Math.max(10, Math.floor(searchLen / 5)) // Larger steps for big files
-        : Math.max(1, Math.floor(searchLen / 10)); // Fine-grained for smaller files
+      sourceCode.length > LARGE_FILE_THRESHOLD
+        ? Math.max(10, Math.floor(searchLen / 5))
+        : Math.max(1, Math.floor(searchLen / 10));
 
     for (let i = 0; i <= sourceCode.length - searchLen; i += stepSize) {
       // PERFORMANCE: Check timeout every 100 iterations to prevent infinite hangs
-      if (i % 100 === 0 && Date.now() - startTime > maxExecutionTime) {
+      if (i % 100 === 0 && Date.now() - startTime > FUZZY_MATCH_TIMEOUT_MS) {
         console.warn(
-          `⚠️ Fuzzy match timeout after ${maxExecutionTime}ms - returning best match found so far`,
+          `Fuzzy match timeout after ${FUZZY_MATCH_TIMEOUT_MS}ms - returning best match found so far`,
         );
         break;
       }
@@ -341,33 +347,30 @@ export class DiffMatcher {
           confidence,
         };
 
-        // If we found a perfect or near-perfect match, stop searching
-        if (confidence >= 0.99) {
+        if (confidence >= NEAR_PERFECT_CONFIDENCE) {
           break;
         }
       }
     }
 
     // Also try with slight length variations (±10%)
-    // PERFORMANCE: Only do this if we haven't exceeded timeout
     if (
       (!bestMatch || bestMatch.confidence < 0.95) &&
-      Date.now() - startTime < maxExecutionTime
+      Date.now() - startTime < FUZZY_MATCH_TIMEOUT_MS
     ) {
       const minLen = Math.floor(searchLen * 0.9);
       const maxLen = Math.floor(searchLen * 1.1);
 
       for (let len = minLen; len <= maxLen; len++) {
-        // Check timeout for length variation loop as well
-        if (Date.now() - startTime > maxExecutionTime) {
+        if (Date.now() - startTime > FUZZY_MATCH_TIMEOUT_MS) {
           console.warn(
-            `⚠️ Fuzzy match timeout during length variation - stopping early`,
+            `Fuzzy match timeout during length variation - stopping early`,
           );
           break;
         }
 
         if (len === searchLen) {
-          continue; // Already tried this
+          continue;
         }
 
         for (
@@ -388,13 +391,13 @@ export class DiffMatcher {
               confidence,
             };
 
-            if (confidence >= 0.99) {
+            if (confidence >= NEAR_PERFECT_CONFIDENCE) {
               break;
             }
           }
         }
 
-        if (bestMatch && bestMatch.confidence >= 0.99) {
+        if (bestMatch && bestMatch.confidence >= NEAR_PERFECT_CONFIDENCE) {
           break;
         }
       }
@@ -598,10 +601,8 @@ export class DiffMatcher {
           return withSpaces.trim().replace(/\s+/g, " ");
         })
         .join("\n")
-        // Collapse multiple consecutive blank lines to single blank line
-        .replace(/\n{3,}/g, "\n\n")
-        // Also handle case where AI omits blank lines entirely
-        .replace(/\n\n+/g, "\n")
+        // Collapse multiple consecutive newlines to a single newline
+        .replace(/\n{2,}/g, "\n")
     );
   }
 

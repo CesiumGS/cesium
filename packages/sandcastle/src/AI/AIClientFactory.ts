@@ -16,6 +16,22 @@ import type {
   ConversationHistory,
 } from "./types";
 
+/** Single source of truth for supported Gemini models */
+const GEMINI_MODELS: readonly GeminiModel[] = [
+  "gemini-3-flash-preview",
+  "gemini-3-pro-preview",
+] as const;
+
+/** Single source of truth for supported Claude models (order = display priority) */
+const CLAUDE_MODELS: readonly ClaudeModel[] = [
+  "claude-sonnet-4-5-20250929",
+  "claude-opus-4-5-20251101",
+  "claude-haiku-4-5-20251001",
+] as const;
+
+const DEFAULT_GEMINI_MODEL: GeminiModel = "gemini-3-flash-preview";
+const DEFAULT_CLAUDE_MODEL: ClaudeModel = "claude-sonnet-4-5-20250929";
+
 /**
  * Unified interface for AI clients
  * Provides a consistent API across different providers
@@ -52,22 +68,11 @@ export class AIClientFactory {
    * Determine which provider a model belongs to
    */
   static getProviderForModel(model: AIModel): AIProvider {
-    const geminiModels: GeminiModel[] = [
-      "gemini-3-flash-preview",
-      "gemini-3-pro-preview",
-    ];
-
-    const claudeModels: ClaudeModel[] = [
-      "claude-opus-4-5-20251101",
-      "claude-sonnet-4-5-20250929",
-      "claude-haiku-4-5-20251001",
-    ];
-
-    if (geminiModels.includes(model as GeminiModel)) {
+    if ((GEMINI_MODELS as readonly string[]).includes(model)) {
       return "gemini";
     }
 
-    if (claudeModels.includes(model as ClaudeModel)) {
+    if ((CLAUDE_MODELS as readonly string[]).includes(model)) {
       return "anthropic";
     }
 
@@ -153,16 +158,12 @@ export class AIClientFactory {
 
     // Add Claude models first if Anthropic API key is available (preferred)
     if (ApiKeyManager.hasAnthropicApiKey()) {
-      availableModels.push(
-        "claude-sonnet-4-5-20250929",
-        "claude-opus-4-5-20251101",
-        "claude-haiku-4-5-20251001",
-      );
+      availableModels.push(...CLAUDE_MODELS);
     }
 
     // Add Gemini models if API key is available
     if (ApiKeyManager.hasApiKey()) {
-      availableModels.push("gemini-3-flash-preview", "gemini-3-pro-preview");
+      availableModels.push(...GEMINI_MODELS);
     }
 
     return availableModels;
@@ -178,17 +179,16 @@ export class AIClientFactory {
       return null;
     }
 
-    // Prefer Claude Sonnet 4.5 as default when Anthropic is configured
+    // Prefer Claude Sonnet as default when Anthropic is configured
     if (ApiKeyManager.hasAnthropicApiKey()) {
-      return "claude-sonnet-4-5-20250929";
+      return DEFAULT_CLAUDE_MODEL;
     }
 
     // Fall back to Gemini Flash as default
-    if (availableModels.includes("gemini-3-flash-preview")) {
-      return "gemini-3-flash-preview";
+    if (availableModels.includes(DEFAULT_GEMINI_MODEL)) {
+      return DEFAULT_GEMINI_MODEL;
     }
 
-    // Otherwise return first available
     return availableModels[0];
   }
 

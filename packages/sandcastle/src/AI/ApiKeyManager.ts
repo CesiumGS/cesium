@@ -21,8 +21,12 @@ export class ApiKeyManager {
     if (!apiKey || apiKey.trim().length === 0) {
       throw new Error("API key cannot be empty");
     }
+    if (!storage) {
+      console.warn("sessionStorage unavailable — API key will not persist");
+      return;
+    }
     try {
-      storage?.setItem(API_KEY_STORAGE_KEY, apiKey.trim());
+      storage.setItem(API_KEY_STORAGE_KEY, apiKey.trim());
     } catch (error) {
       console.warn("Failed to save API key to sessionStorage:", error);
     }
@@ -84,8 +88,12 @@ export class ApiKeyManager {
     if (!apiKey || apiKey.trim().length === 0) {
       throw new Error("API key cannot be empty");
     }
+    if (!storage) {
+      console.warn("sessionStorage unavailable — API key will not persist");
+      return;
+    }
     try {
-      storage?.setItem(ANTHROPIC_API_KEY_STORAGE_KEY, apiKey.trim());
+      storage.setItem(ANTHROPIC_API_KEY_STORAGE_KEY, apiKey.trim());
     } catch (error) {
       console.warn(
         "Failed to save Anthropic API key to sessionStorage:",
@@ -158,8 +166,12 @@ export class ApiKeyManager {
     if (!token || token.trim().length === 0) {
       throw new Error("Cesium Ion token cannot be empty");
     }
+    if (!storage) {
+      console.warn("sessionStorage unavailable — token will not persist");
+      return;
+    }
     try {
-      storage?.setItem(CESIUM_ION_TOKEN_STORAGE_KEY, token.trim());
+      storage.setItem(CESIUM_ION_TOKEN_STORAGE_KEY, token.trim());
     } catch (error) {
       console.warn("Failed to save Cesium Ion token to sessionStorage:", error);
     }

@@ -453,7 +453,11 @@ export class AnthropicClient {
       };
     } catch (error) {
       // Cancel the reader to stop the stream on unexpected errors
-      await reader.cancel();
+      try {
+        await reader.cancel();
+      } catch {
+        // Don't mask the original error
+      }
       throw error;
     } finally {
       // Ensure the reader is released to prevent memory leaks

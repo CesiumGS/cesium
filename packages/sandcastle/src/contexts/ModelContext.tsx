@@ -2,6 +2,8 @@ import {
   createContext,
   useState,
   useCallback,
+  useMemo,
+  useRef,
   ReactNode,
   useEffect,
 } from "react";
@@ -96,14 +98,20 @@ export function ModelProvider({ children }: { children: ReactNode }) {
   );
   const [pinnedModels, setPinnedModels] = useState<string[]>(loadPinnedModels);
 
+  // Use ref for currentModel to keep refreshModels stable
+  const currentModelRef = useRef(currentModel);
+  useEffect(() => {
+    currentModelRef.current = currentModel;
+  }, [currentModel]);
+
   // Refresh models - exposed via context for same-tab updates
   const refreshModels = useCallback(() => {
     setModels(getAllModels());
     const defaultModel = AIClientFactory.getDefaultModel();
-    if (defaultModel && !currentModel) {
+    if (defaultModel && !currentModelRef.current) {
       setCurrentModelState(defaultModel);
     }
-  }, [currentModel]);
+  }, []);
 
   // Listen for storage events (when credentials are updated in another tab)
   useEffect(() => {
@@ -129,17 +137,27 @@ export function ModelProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const contextValue = useMemo(
+    () => ({
+      models,
+      currentModel,
+      pinnedModels,
+      setCurrentModel,
+      togglePin,
+      refreshModels,
+    }),
+    [
+      models,
+      currentModel,
+      pinnedModels,
+      setCurrentModel,
+      togglePin,
+      refreshModels,
+    ],
+  );
+
   return (
-    <ModelContext.Provider
-      value={{
-        models,
-        currentModel,
-        pinnedModels,
-        setCurrentModel,
-        togglePin,
-        refreshModels,
-      }}
-    >
+    <ModelContext.Provider value={contextValue}>
       {children}
     </ModelContext.Provider>
   );
