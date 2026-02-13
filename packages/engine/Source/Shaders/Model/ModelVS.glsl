@@ -95,7 +95,7 @@ void main()
     Metadata metadata;
     MetadataClass metadataClass;
     MetadataStatistics metadataStatistics;
-    metadataStage(metadata, metadataClass, metadataStatistics, attributes);
+    metadataStage(featureIds, metadata, metadataClass, metadataStatistics, attributes);
 
     #ifdef HAS_VERTICAL_EXAGGERATION
     verticalExaggerationStage(attributes);
@@ -145,7 +145,7 @@ void main()
         #else
         gl_PointSize = 1.0;
         #endif
-        
+
         gl_PointSize *= show;
     #endif
 
