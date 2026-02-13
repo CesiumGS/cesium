@@ -28,6 +28,7 @@
 - Fixed jitter artifacts on Intel Arc GPUs. [#12879](https://github.com/CesiumGS/cesium/issues/12879)
 - Improved voxel memory usage by reworking `Megatexture` to use `Texture3D`. [#12570](https://github.com/CesiumGS/cesium/issues/12570)
 - Fixed multiple issues causing undefined pick results in 2D/CV scene modes. [#13083](https://github.com/CesiumGS/cesium/issues/13083)
+- Fix scene `sampleHeightMostDetailed` does not work when a tileset is added by primitive collection [#13097](https://github.com/CesiumGS/cesium/issues/13097)
 - Fixed label sizing for some fonts and characters. [#9767](https://github.com/CesiumGS/cesium/issues/9767)
 - Fixed a type error when accessing the ellipsoid of a viewer. [#13123](https://github.com/CesiumGS/cesium/pull/13123)
 - Fixed a bug where entities have not been clustered correctly. [#13064](https://github.com/CesiumGS/cesium/pull/13064)
