@@ -286,33 +286,29 @@ function getPropertyTableInfo(
   const shaderDestination =
     featureSetInfo.shaderDestination ?? ShaderDestination.BOTH;
 
-  const classProperties = propertyTable.class?.properties ?? {};
+  const properties = propertyTable.properties;
   const infoArray = [];
 
-  for (const propertyId in classProperties) {
-    if (!classProperties.hasOwnProperty(propertyId)) {
-      continue;
-    }
+  for (const propertyId in properties) {
+    if (properties.hasOwnProperty(propertyId)) {
+      const property = properties[propertyId];
+      const classProperty = property.classProperty;
 
-    const property = propertyTable.properties[propertyId];
-    if (!defined(property)) {
-      continue;
-    }
+      if (!classProperty.isGpuCompatible(NUM_CHANNELS)) {
+        continue;
+      }
 
-    if (!property.classProperty.isGpuCompatible(NUM_CHANNELS)) {
-      continue;
+      infoArray.push({
+        metadataVariable: sanitizeGlslIdentifier(propertyId),
+        property,
+        type: property.classProperty.type,
+        glslType: property.classProperty.getGlslType(),
+        propertyStatistics: classStatistics?.properties[propertyId],
+        shaderDestination: shaderDestination,
+        propertyTable: propertyTable,
+        featureIdVariableName: featureSetInfo.variableName,
+      });
     }
-
-    infoArray.push({
-      metadataVariable: sanitizeGlslIdentifier(propertyId),
-      property,
-      type: property.classProperty.type,
-      glslType: property.classProperty.getGlslType(),
-      propertyStatistics: classStatistics?.properties[propertyId],
-      shaderDestination: shaderDestination,
-      propertyTable: propertyTable,
-      featureIdVariableName: featureSetInfo.variableName,
-    });
   }
 
   return infoArray;
