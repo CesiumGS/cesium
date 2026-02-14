@@ -1,0 +1,12 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cesium logo - simplified globe/sphere design -->
+  <circle cx="12" cy="12" r="10" stroke="#4FC3F7" stroke-width="1.5" fill="none"/>
+  <circle cx="12" cy="12" r="7" stroke="#4FC3F7" stroke-width="1" fill="none" opacity="0.6"/>
+  <circle cx="12" cy="12" r="4" stroke="#4FC3F7" stroke-width="0.75" fill="none" opacity="0.4"/>
+  <path d="M2 12C2 6.477 6.477 2 12 2" stroke="#4FC3F7" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M12 2C17.523 2 22 6.477 22 12" stroke="#4FC3F7" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+  <path d="M22 12C22 17.523 17.523 22 12 22" stroke="#4FC3F7" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <path d="M12 22C6.477 22 2 17.523 2 12" stroke="#4FC3F7" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+  <ellipse cx="12" cy="12" rx="10" ry="4" stroke="#4FC3F7" stroke-width="1" fill="none" opacity="0.5"/>
+  <circle cx="12" cy="12" r="1.5" fill="#4FC3F7"/>
+</svg>

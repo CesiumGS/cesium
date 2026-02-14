@@ -102,6 +102,7 @@ export function createSandcastleConfig({
 
   config.define = {
     ...config.define,
+    __PAGE_BASE_URL__: JSON.stringify(basePath),
     __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(typePaths),
     __CESIUM_VERSION__: JSON.stringify(`Cesium ${cesiumVersion}`),
     __COMMIT_SHA__: JSON.stringify(commitSha ?? undefined),

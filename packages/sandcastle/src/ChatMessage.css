@@ -1,0 +1,211 @@
+.chat-message {
+  display: flex;
+  flex-direction: row;
+  gap: var(--stratakit-space-x3);
+  padding: var(--stratakit-space-x3);
+  margin: var(--stratakit-space-x2) 0;
+  border-radius: var(--stratakit-ext-radius-sm);
+}
+
+.user-message {
+  background: var(--stratakit-color-bg-depth-plus-1);
+  margin-left: 0;
+}
+
+.ai-message {
+  background: var(--stratakit-color-bg-path-base);
+  margin-right: 0;
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--stratakit-font-size-12);
+  opacity: 0.7;
+  gap: var(--stratakit-space-x2);
+}
+
+.message-header button {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  margin-left: auto;
+}
+
+.chat-message:hover .message-header button {
+  opacity: 1;
+}
+
+.message-header button:hover {
+  opacity: 1;
+}
+
+.message-role {
+  font-weight: 600;
+}
+
+.message-time {
+  font-family: var(--stratakit-font-family-mono);
+}
+
+.message-content {
+  color: var(--stratakit-color-text-neutral-primary);
+  line-height: 1.5;
+}
+
+.message-content p {
+  margin: var(--stratakit-space-x2) 0;
+}
+
+.message-content p:first-child {
+  margin-top: 0;
+}
+
+.message-content p:last-child {
+  margin-bottom: 0;
+}
+
+.message-content pre {
+  background: var(--stratakit-color-bg-page-depth);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-ext-radius-xs);
+  padding: var(--stratakit-space-x3);
+  overflow-x: auto;
+  margin: var(--stratakit-space-x2) 0;
+}
+
+.message-content code {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: 0.875em;
+}
+
+.message-content pre code {
+  background: none;
+  padding: 0;
+  border: none;
+}
+
+.message-content .inline-code {
+  background: var(--stratakit-color-bg-depth-plus-1);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--stratakit-ext-radius-xs);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+
+.message-content ul,
+.message-content ol {
+  margin: var(--stratakit-space-x2) 0;
+  padding-left: var(--stratakit-space-x5);
+}
+
+/* Hide task list checkboxes (CES-9 fix: defense-in-depth)
+ * Prevents checkbox artifacts from appearing during streaming
+ * when remark-gfm misinterprets "[ ]" patterns as task lists */
+.message-content input[type="checkbox"] {
+  display: none;
+}
+
+.message-content li {
+  margin: var(--stratakit-space-x1) 0;
+}
+
+.message-error {
+  color: var(--stratakit-color-text-critical-base);
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-x2);
+}
+
+.message-actions {
+  display: flex;
+  gap: var(--stratakit-space-x2);
+  margin-top: var(--stratakit-space-x2);
+  padding-top: var(--stratakit-space-x2);
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+
+.message-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.message-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-x2);
+  width: 100%;
+  min-width: 0; /* Allow flex items to shrink below content size */
+  overflow: hidden; /* Prevent overflow from children */
+}
+
+/* Diff preview container */
+.message-diff-previews {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-x4);
+  margin-top: var(--stratakit-space-x4);
+  padding-top: var(--stratakit-space-x4);
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+
+/* Ensure diff previews have proper spacing */
+.message-diff-previews .diff-preview {
+  margin: 0;
+}
+
+/* Error state for missing context */
+.message-diff-previews + .message-error {
+  margin-top: var(--stratakit-space-x2);
+}
+
+/* Tool Calls Section */
+.message-tool-calls {
+  margin-top: var(--stratakit-space-x3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-x2);
+}
+
+/* Image Attachments Section */
+.message-attachments {
+  margin-top: var(--stratakit-space-x3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-x3);
+}
+
+.message-attachment-image {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-x1);
+  max-width: 100%;
+}
+
+.message-attachment-image img {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: var(--stratakit-ext-radius-xs);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  background: var(--stratakit-color-bg-depth-plus-1);
+}
+
+.message-attachment-info {
+  font-size: var(--stratakit-font-size-12);
+  color: var(--stratakit-color-text-neutral-tertiary);
+  font-family: var(--stratakit-font-family-mono);
+}
+
+/* Responsive layout adjustments */
+@media (max-width: 768px) {
+  .message-diff-previews {
+    gap: var(--stratakit-space-x3);
+    margin-top: var(--stratakit-space-x3);
+    padding-top: var(--stratakit-space-x3);
+  }
+
+  .message-attachment-image img {
+    max-height: 300px;
+  }
+}

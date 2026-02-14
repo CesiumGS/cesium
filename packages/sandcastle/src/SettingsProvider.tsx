@@ -1,4 +1,4 @@
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useMemo } from "react";
 import {
   availableFonts,
   initialSettings,
@@ -21,6 +21,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           fontSize: value.fontSize ?? initialSettings.fontSize,
           fontLigatures: value.fontLigatures ?? initialSettings.fontLigatures,
           defaultPanel: value.defaultPanel ?? initialSettings.defaultPanel,
+          autoIteration: value.autoIteration ?? initialSettings.autoIteration,
+          extendedThinking:
+            value.extendedThinking ?? initialSettings.extendedThinking,
+          pinnedModels: value.pinnedModels ?? initialSettings.pinnedModels,
+          customPromptAddendum:
+            value.customPromptAddendum ?? initialSettings.customPromptAddendum,
         });
       },
       deserializer: (value) => {
@@ -46,6 +52,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             parsedValue.fontLigatures ?? initialSettings.fontLigatures,
           defaultPanel:
             parsedValue.defaultPanel ?? initialSettings.defaultPanel,
+          autoIteration: {
+            ...initialSettings.autoIteration,
+            ...parsedValue.autoIteration,
+          },
+          extendedThinking: {
+            ...initialSettings.extendedThinking,
+            ...parsedValue.extendedThinking,
+          },
+          pinnedModels:
+            parsedValue.pinnedModels ?? initialSettings.pinnedModels,
+          customPromptAddendum:
+            parsedValue.customPromptAddendum ??
+            initialSettings.customPromptAddendum,
         };
       },
     },
@@ -64,14 +83,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     [updateSettings, settings],
   );
 
-  return (
-    <SettingsContext
-      value={{
-        settings: settings ?? initialSettings,
-        updateSettings: mergeSettings,
-      }}
-    >
-      {children}
-    </SettingsContext>
+  const contextValue = useMemo(
+    () => ({
+      settings: settings ?? initialSettings,
+      updateSettings: mergeSettings,
+    }),
+    [settings, mergeSettings],
   );
+
+  return <SettingsContext value={contextValue}>{children}</SettingsContext>;
 }

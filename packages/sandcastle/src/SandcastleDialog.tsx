@@ -27,11 +27,13 @@ export function SandcastleDialog(
   props: {
     children: ReactNode;
     className?: string;
+    title?: string;
   } & DialogProps,
 ) {
-  const { children, className, ...rest } = props;
+  const { children, className, title, ...rest } = props;
   return (
     <Dialog {...rest} className={classNames("sc-dialog", className)}>
+      {title && <SandcastleDialogHeading>{title}</SandcastleDialogHeading>}
       {children}
       <DialogDismiss className="sc-dialog-close">
         <Icon href={close} />

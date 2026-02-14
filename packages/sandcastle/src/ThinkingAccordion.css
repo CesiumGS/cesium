@@ -1,0 +1,89 @@
+.thinking-block {
+  border-left: 3px solid var(--vscode-descriptionForeground);
+  padding-left: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+  overflow: hidden;
+  padding: 8px 0;
+}
+
+.thinking-block.collapsed {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.thinking-block.collapsed:hover {
+  border-left-color: var(--vscode-textLink-activeForeground);
+}
+
+.thinking-preview {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+
+.thinking-block.expanded {
+  background: var(--vscode-editorWidget-background);
+  border-radius: 4px;
+  padding: 12px;
+  border-left: none;
+}
+
+.thinking-header {
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.thinking-content {
+  font-style: italic;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.diff-accordion {
+  border-radius: 4px;
+  border: 1px solid var(--vscode-editorGroup-border);
+  background: var(--vscode-editor-background);
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.diff-header {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+}
+
+.diff-header:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.language-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vscode-descriptionForeground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.edit-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+}

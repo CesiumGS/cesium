@@ -1,0 +1,44 @@
+.prompt-input-container {
+  display: flex;
+  gap: var(--stratakit-space-x2);
+  align-items: flex-end;
+  width: 100%;
+}
+
+.prompt-input-textarea {
+  flex: 1;
+  padding: var(--stratakit-space-x3);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-ext-radius-sm);
+  background: var(--stratakit-color-bg-elevation-level-1);
+  color: var(--stratakit-color-text-neutral-primary);
+  font-family: var(--stratakit-font-family-sans);
+  font-size: var(--stratakit-font-size-14);
+  line-height: 1.5;
+  resize: none;
+  min-height: 44px;
+  max-height: 250px;
+  overflow-y: hidden;
+  transition: height 0.1s ease;
+  box-sizing: border-box;
+}
+
+.prompt-input-textarea:focus {
+  outline: none;
+  border-color: var(--stratakit-color-border-accent-base);
+}
+
+.prompt-input-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.prompt-input-textarea::placeholder {
+  color: var(--stratakit-color-text-neutral-tertiary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt-input-textarea {
+    transition: none;
+  }
+}
