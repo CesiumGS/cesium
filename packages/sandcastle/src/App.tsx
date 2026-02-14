@@ -1012,6 +1012,7 @@ function App() {
         {chatPanelOpen && (
           <Allotment.Pane
             minSize={250}
+            maxSize={800}
             preferredSize={450}
             className="chat-panel-pane"
           >
