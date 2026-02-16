@@ -1,0 +1,392 @@
+/**
+ * DiffPreview Component Styles
+ *
+ * Dark theme compatible styles matching the Sandcastle UI design system.
+ * Uses stratakit CSS variables for consistency.
+ */
+
+.diff-preview {
+  display: flex;
+  flex-direction: column;
+  background: var(--stratakit-color-bg-path-base);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-ext-radius-md);
+  overflow: hidden;
+  margin: var(--stratakit-space-x3) 0;
+  transition: all 0.2s ease;
+}
+
+.diff-preview.collapsed {
+  background: var(--stratakit-color-bg-depth-plus-1);
+}
+
+.diff-preview.success {
+  border-color: var(--stratakit-color-border-accent-base);
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+  animation: successPulse 0.5s ease;
+}
+
+@keyframes successPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(74, 158, 255, 0.3);
+  }
+}
+
+/* Header */
+.diff-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--stratakit-space-x3);
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+  background: var(--stratakit-color-bg-depth-plus-1);
+  user-select: none;
+}
+
+/* Applied state banner */
+.diff-preview-applied-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-x2);
+  padding: var(--stratakit-space-x2-5) var(--stratakit-space-x3);
+  background: linear-gradient(
+    135deg,
+    rgba(74, 158, 255, 0.15) 0%,
+    rgba(59, 130, 246, 0.1) 100%
+  );
+  border-bottom: 1px solid rgba(74, 158, 255, 0.3);
+  color: var(--stratakit-color-text-neutral-primary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.applied-banner-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--stratakit-ext-radius-full);
+  background: rgba(74, 158, 255, 0.3);
+  color: var(--stratakit-color-text-accent-base);
+  font-size: 0.75rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.applied-banner-text {
+  color: var(--stratakit-color-text-accent-base);
+  letter-spacing: 0.01em;
+}
+
+/* Applied read-only state for diff editor */
+.diff-preview-editor.applied-read-only {
+  opacity: 0.92;
+  border: 1px solid rgba(74, 158, 255, 0.2);
+  border-radius: var(--stratakit-ext-radius-sm);
+}
+
+/* Controls section */
+.diff-preview-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-x3);
+}
+
+.diff-preview.collapsed .diff-preview-header {
+  border-bottom: none;
+}
+
+.diff-preview-title {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-x2);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+
+.diff-preview-collapse-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--stratakit-ext-radius-sm);
+  transition: all 0.2s ease;
+}
+
+.diff-preview-collapse-btn:hover {
+  background: var(--stratakit-color-bg-depth-plus-1);
+  color: var(--stratakit-color-text-neutral-primary);
+}
+
+.diff-preview-collapse-btn:focus {
+  outline: 2px solid var(--stratakit-color-border-accent-base);
+  outline-offset: 2px;
+}
+
+.collapse-icon {
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.collapse-icon.collapsed {
+  transform: rotate(-90deg);
+}
+
+.diff-preview-filename {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: 0.875rem;
+}
+
+/* Stats */
+.diff-preview-stats {
+  display: flex;
+  gap: var(--stratakit-space-x3);
+  font-family: var(--stratakit-font-family-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Mode toggle */
+.diff-preview-mode-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.mode-toggle-button {
+  padding: var(--stratakit-space-x1) var(--stratakit-space-x2);
+  font-size: 0.875rem;
+  line-height: 1;
+  min-width: 32px;
+  justify-content: center;
+}
+
+.stat-added,
+.stat-removed,
+.stat-modified {
+  padding: var(--stratakit-space-x05) var(--stratakit-space-x2);
+  border-radius: var(--stratakit-ext-radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-x1);
+}
+
+.stat-added {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--stratakit-color-text-success-base);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.stat-removed {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--stratakit-color-text-critical-base);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.stat-modified {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--stratakit-color-text-warning-base);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+/* Editor container */
+.diff-preview-editor {
+  position: relative;
+  min-height: 200px;
+  background: var(--stratakit-color-bg-page-depth);
+}
+
+.diff-preview-editor.large-diff {
+  min-height: 400px;
+}
+
+/* Mode-specific editor styles */
+.diff-preview-editor.side-by-side-mode {
+  /* Default side-by-side styling */
+}
+
+.diff-preview-editor.inline-mode {
+  /* Inline mode takes more vertical space but less horizontal */
+  max-width: 100%;
+}
+
+/* Monaco diff editor overrides */
+.diff-preview-editor .monaco-diff-editor {
+  border-radius: 0;
+}
+
+.diff-preview-editor .monaco-editor {
+  background: var(--stratakit-color-bg-page-depth);
+}
+
+.diff-preview-editor .monaco-editor .margin {
+  background: var(--stratakit-color-bg-depth-plus-1);
+}
+
+/* Action buttons */
+.diff-preview-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--stratakit-space-x3);
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+  background: var(--stratakit-color-bg-depth-plus-1);
+  gap: var(--stratakit-space-x2);
+}
+
+.diff-preview-actions-left,
+.diff-preview-actions-right {
+  display: flex;
+  gap: var(--stratakit-space-x2);
+  align-items: center;
+}
+
+.diff-preview-actions button {
+  transition: all 0.2s ease;
+}
+
+.diff-preview-actions .apply-button {
+  position: relative;
+}
+
+/* Spinner for loading state */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--stratakit-color-text-neutral-emphasis);
+  border-radius: var(--stratakit-ext-radius-full);
+  animation: spin 0.6s linear infinite;
+  margin-right: var(--stratakit-space-x1);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Success message */
+.diff-preview-success {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(34, 197, 94, 0.95);
+  color: var(--stratakit-color-text-neutral-emphasis);
+  padding: var(--stratakit-space-x3) var(--stratakit-space-x6);
+  border-radius: var(--stratakit-ext-radius-md);
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .diff-preview-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--stratakit-space-x2);
+  }
+
+  .diff-preview-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--stratakit-space-x2);
+  }
+
+  .diff-preview-stats {
+    align-self: flex-start;
+  }
+
+  .diff-preview-mode-toggle {
+    align-self: flex-end;
+  }
+
+  .diff-preview-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .diff-preview-actions-left,
+  .diff-preview-actions-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .diff-preview-editor {
+    min-height: 250px;
+  }
+
+  .diff-preview-editor.large-diff {
+    min-height: 350px;
+  }
+
+  .diff-preview-editor.inline-mode {
+    min-height: 350px;
+  }
+
+  .diff-preview-editor.inline-mode.large-diff {
+    min-height: 450px;
+  }
+}
+
+/* Accessibility improvements */
+.diff-preview button:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-base);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .diff-preview {
+    border-width: 2px;
+  }
+
+  .stat-added,
+  .stat-removed,
+  .stat-modified {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .diff-preview,
+  .collapse-icon,
+  .diff-preview-actions button,
+  .spinner {
+    animation: none;
+    transition: none;
+  }
+
+  .collapse-icon.collapsed {
+    transform: none;
+  }
+}

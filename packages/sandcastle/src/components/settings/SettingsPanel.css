@@ -1,0 +1,44 @@
+.settings-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: var(--stratakit-color-bg-page-depth);
+}
+
+.settings-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--stratakit-space-x4);
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+
+.settings-panel [role="tablist"] {
+  padding: var(--stratakit-space-x4) var(--stratakit-space-x4) 0;
+}
+
+.settings-tab-content {
+  padding: var(--stratakit-space-x4);
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-x3);
+}
+
+.reset-confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-x2);
+}
+
+.reset-warning {
+  color: var(--stratakit-color-text-critical-base);
+}
+
+.reset-actions {
+  display: flex;
+  gap: var(--stratakit-space-x2);
+}
