@@ -31,6 +31,16 @@ GoogleMaps.mapTilesApiEndpoint = new Resource({
   url: "https://tile.googleapis.com/",
 });
 
+/**
+ * Gets or sets the default Google Street View Static API endpoint.
+ *
+ * @type {string|Resource}
+ * @default https://maps.googleapis.com/maps/api/streetview
+ */
+GoogleMaps.streetViewStaticApiEndpoint = new Resource({
+  url: "https://maps.googleapis.com/maps/api/streetview",
+});
+
 GoogleMaps.getDefaultCredit = function () {
   return new Credit(
     `<img alt=\"Google\" src=\"https://assets.ion.cesium.com/google-credit.png\" style=\"vertical-align:-6px\">`,
