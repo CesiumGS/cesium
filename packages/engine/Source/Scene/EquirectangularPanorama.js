@@ -10,6 +10,9 @@ import Material from "./Material.js";
 import MaterialAppearance from "./MaterialAppearance.js";
 import Primitive from "./Primitive.js";
 import VertexFormat from "../Core/VertexFormat.js";
+import destroyObject from "../Core/destroyObject.js";
+
+const DEFAULT_RADIUS = 100000.0;
 
 /**
  * @typedef {object} EquirectangularPanorama.ConstructorOptions
@@ -70,6 +73,10 @@ function EquirectangularPanorama(options) {
   if (!defined(options.image)) {
     throw new DeveloperError("options.image is required.");
   }
+
+  if (defined(options.transform) && !(options.transform instanceof Matrix4)) {
+    throw new DeveloperError("options.transform must be a Matrix4.");
+  }
   //>>includeEnd('debug');
 
   // Credit specified by the user.
@@ -79,11 +86,17 @@ function EquirectangularPanorama(options) {
   }
   this._credit = credit;
 
-  this._radius = options.radius || 100000.0;
+  this._radius = defined(options.radius) ? options.radius : DEFAULT_RADIUS;
   this._image = options.image;
-  this._transform = options.transform || Matrix4.IDENTITY;
-  this._repeatHorizontal = options.repeatHorizontal || 1.0;
-  this._repeatVertical = options.repeatVertical || 1.0;
+  this._transform = defined(options.transform)
+    ? options.transform
+    : Matrix4.IDENTITY;
+  this._repeatHorizontal = defined(options.repeatHorizontal)
+    ? options.repeatHorizontal
+    : 1.0;
+  this._repeatVertical = defined(options.repeatVertical)
+    ? options.repeatVertical
+    : 1.0;
 
   const geometry = new SphereGeometry({
     radius: this._radius,
@@ -128,7 +141,7 @@ function EquirectangularPanorama(options) {
 Object.defineProperties(EquirectangularPanorama.prototype, {
   /**
    * Gets the primitive object.
-   * @memberof Panorama.prototype
+   * @memberof EquirectangularPanorama.prototype
    * @type {object}
    * @readonly
    */
@@ -137,34 +150,55 @@ Object.defineProperties(EquirectangularPanorama.prototype, {
       return this._primitive;
     },
   },
+
+  /**
+   * Gets the radius of the panorama.
+   * @memberof EquirectangularPanorama.prototype
+   * @type {number}
+   * @readonly
+   */
+  radius: {
+    get: function () {
+      return this._radius;
+    },
+  },
+
+  /**
+   * Gets the source image of the panorama.
+   * @memberof EquirectangularPanorama.prototype
+   * @type {string}
+   * @readonly
+   */
+  image: {
+    get: function () {
+      return this._image;
+    },
+  },
+
+  /**
+   * Gets the transform of the panorama.
+   * @memberof EquirectangularPanorama.prototype
+   * @type {Matrix4}
+   * @readonly
+   */
+  transform: {
+    get: function () {
+      return this._transform;
+    },
+  },
+
+  /**
+   * Gets the credits of the panorama.
+   * @memberof EquirectangularPanorama.prototype
+   * @type {Credit}
+   * @readonly
+   */
+  credit: {
+    get: function () {
+      return defined(this._credit) ? this._credit : undefined;
+    },
+  },
 });
-
-/**
- * Gets the source image for the panorama
- *
- * @returns {object} The source image for the panorama.
- */
-EquirectangularPanorama.prototype.getSources = function () {
-  return this._image;
-};
-
-/**
- * Gets the transform for the panorama
- *
- * @returns {Matrix4} The transform for the panorama.
- */
-EquirectangularPanorama.prototype.getTransform = function () {
-  return this._transform;
-};
-
-/**
- * Gets the credits for the panorama
- *
- * @returns {Credit[]} The credits for the panorama.
- */
-EquirectangularPanorama.prototype.getCredits = function () {
-  return this._credit;
-};
 
 // Proxy update/destroy/etc to the primitive
 EquirectangularPanorama.prototype.update = function (frameState) {
@@ -172,7 +206,8 @@ EquirectangularPanorama.prototype.update = function (frameState) {
 };
 
 EquirectangularPanorama.prototype.destroy = function () {
-  return this._primitive.destroy();
+  this._primitive = this._primitive && this._primitive.destroy();
+  return destroyObject(this);
 };
 
 EquirectangularPanorama.prototype.isDestroyed = function () {
