@@ -80,29 +80,37 @@ function saveCameraView(viewer) {
 }
 
 function selectPanoCubeMap(position) {
-  const carto = Cesium.Cartographic.fromCartesian(position);
-  cubeMapProvider.getPanoIds(carto).then((panoIdObject) => {
-    console.log("cubeMapprovider ", cubeMapProvider);
-    const { panoId, latitude, longitude } = panoIdObject;
-    const height = carto.height;
-
-    cubeMapProvider.loadPanoramaFromPanoId(panoId).then((cityPano) => {
-      viewer.scene.primitives.add(cityPano);
-
-      const lookPosition = Cesium.Cartesian3.fromDegrees(
+  const positionCartographic = Cesium.Cartographic.fromCartesian(position);
+  cubeMapProvider
+    .getNearestPanoId(positionCartographic)
+    .then((panoIdObject) => {
+      const { panoId, latitude, longitude } = panoIdObject;
+      const height = positionCartographic.height;
+      const panoCartographic = Cesium.Cartographic.fromDegrees(
         longitude,
         latitude,
-        height + 2,
+        0,
       );
 
-      const heading = Cesium.Math.toRadians(-90);
+      cubeMapProvider
+        .loadPanorama({ cartographic: panoCartographic, panoId })
+        .then((cityPano) => {
+          viewer.scene.primitives.add(cityPano);
 
-      goToPanoView({
-        position: lookPosition,
-        heading,
-      });
+          const lookPosition = Cesium.Cartesian3.fromDegrees(
+            longitude,
+            latitude,
+            height + 2,
+          );
+
+          const heading = Cesium.Math.toRadians(-90);
+
+          goToPanoView({
+            position: lookPosition,
+            heading,
+          });
+        });
     });
-  });
 }
 
 function selectPano(position) {
