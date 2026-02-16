@@ -677,7 +677,7 @@ function App() {
 
         // Show success notification with summary
         const summary = `Applied ${result.appliedDiffs.length} change${result.appliedDiffs.length === 1 ? "" : "s"} successfully`;
-        appendConsole("log", `✓ ${summary}`);
+        appendConsole("log", summary);
 
         // Auto-run after applying AI changes
         clearTimeout(autoRunTimeoutRef.current);
@@ -701,7 +701,7 @@ function App() {
       const totalCount = diffs.length;
       const errorMessage = `Failed to apply ${failedCount} of ${totalCount} diff${totalCount === 1 ? "" : "s"}`;
 
-      appendConsole("error", `✗ ${errorMessage}`);
+      appendConsole("error", errorMessage);
 
       // Collect error messages to return
       const errorMessages = result.errors.map(
@@ -720,7 +720,7 @@ function App() {
       if (result.appliedDiffs.length > 0 && result.modifiedCode) {
         appendConsole(
           "log",
-          `✓ Successfully applied ${result.appliedDiffs.length} change${result.appliedDiffs.length === 1 ? "" : "s"}`,
+          `Successfully applied ${result.appliedDiffs.length} change${result.appliedDiffs.length === 1 ? "" : "s"}`,
         );
 
         if (language === "javascript") {
@@ -744,13 +744,13 @@ function App() {
         if (result.validation.conflicts.length > 0) {
           appendConsole(
             "warn",
-            `⚠ Detected ${result.validation.conflicts.length} conflict${result.validation.conflicts.length === 1 ? "" : "s"}`,
+            `Detected ${result.validation.conflicts.length} conflict${result.validation.conflicts.length === 1 ? "" : "s"}`,
           );
         }
         if (result.validation.unmatchedDiffs.length > 0) {
           appendConsole(
             "warn",
-            `⚠ Could not match ${result.validation.unmatchedDiffs.length} diff${result.validation.unmatchedDiffs.length === 1 ? "" : "s"}`,
+            `Could not match ${result.validation.unmatchedDiffs.length} diff${result.validation.unmatchedDiffs.length === 1 ? "" : "s"}`,
           );
         }
       }
