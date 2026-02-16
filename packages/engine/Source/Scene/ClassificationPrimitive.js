@@ -447,6 +447,13 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
     return vertexShaderSource;
   }
 
+  if (
+    !defined(primitive._attributeLocations) ||
+    !defined(primitive._attributeLocations.compressedAttributes)
+  ) {
+    return vertexShaderSource;
+  }
+
   if (vertexShaderSource.search(/in\s+vec3\s+extrudeDirection;/g) !== -1) {
     const attributeName = "compressedAttributes";
 
