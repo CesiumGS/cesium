@@ -115,6 +115,7 @@
     "build-ts": "gulp buildTs",
     "build-third-party": "gulp buildThirdParty",
     "build-apps": "gulp -f gulpfile.apps.js buildApps",
+    "build-cesium-viewer": "gulp -f gulpfile.apps.js buildCesiumViewer",
     "build-sandcastle": "gulp -f gulpfile.apps.js buildSandcastle",
     "clean": "gulp clean",
     "cloc": "gulp cloc",

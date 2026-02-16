@@ -47,6 +47,11 @@ export async function buildSandcastleApp({
   const version = await getVersion();
   let config;
   if (outputToBuildDir) {
+    // TODO: these will not work for all scenarios yet
+    const outerOrigin =
+      process.env.SANDCASTLE_ORIGIN ?? "https://dev-sandcastle.cesium.com";
+    const innerOrigin = outerOrigin;
+
     const cesiumSource = join(__dirname, "../Build/CesiumUnminified");
     const cesiumBaseUrl = "Build/CesiumUnminified";
 
@@ -55,9 +60,8 @@ export async function buildSandcastleApp({
       basePath: "./",
       cesiumBaseUrl: "/Build/CesiumUnminified",
       cesiumVersion: version,
-      // TODO: gotta figure out what these should be
-      // outerOrigin: "http://localhost:8080",
-      // innerOrigin: "http://localhost:8081",
+      outerOrigin,
+      innerOrigin,
       imports: {
         cesium: {
           path: "/js/Cesium.js",
@@ -104,8 +108,9 @@ export async function buildSandcastleApp({
     let innerOrigin = "http://localhost:8081";
 
     if (process.env.CI) {
-      outerOrigin = "https://ci-builds.cesium.com";
-      innerOrigin = "https://ci-builds.cesium.com";
+      outerOrigin =
+        process.env.SANDCASTLE_ORIGIN ?? "https://ci-builds.cesium.com";
+      innerOrigin = outerOrigin;
     }
 
     config = createSandcastleConfig({

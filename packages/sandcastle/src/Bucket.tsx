@@ -9,7 +9,8 @@ import {
 } from "./util/IframeBridge";
 
 const INNER_ORIGIN = __INNER_ORIGIN__;
-// using pathname lets this adapt to deployed locations like CI
+// This constructs urls like `[__INNER_ORIGIN__]/[pathname]/templates/bucket.html`
+// using location.pathname lets this adapt to deployed locations like CI
 const bucketUrl = `${new URL(`${location.pathname.replace(/[^\/]+.html/, "")}templates/bucket.html`, __INNER_ORIGIN__)}`;
 
 export function Bucket({
