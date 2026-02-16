@@ -314,45 +314,29 @@ function commitSnapshot(primitive, snapshot, frameState) {
 
   const frameNumber = defined(frameState) ? frameState.frameNumber : 0;
   const currentSnapshot = primitive._snapshot;
-  if (defined(currentSnapshot)) {
-    if (
-      defined(currentSnapshot.gaussianSplatTexture) &&
-      currentSnapshot.gaussianSplatTexture !== snapshot.gaussianSplatTexture
-    ) {
-      retireTexture(
-        primitive,
-        currentSnapshot.gaussianSplatTexture,
-        frameNumber,
-      );
-    }
-    if (
-      defined(currentSnapshot.sphericalHarmonicsTexture) &&
-      currentSnapshot.sphericalHarmonicsTexture !==
-        snapshot.sphericalHarmonicsTexture
-    ) {
-      retireTexture(
-        primitive,
-        currentSnapshot.sphericalHarmonicsTexture,
-        frameNumber,
-      );
-    }
-  } else {
-    if (
-      defined(primitive.gaussianSplatTexture) &&
-      primitive.gaussianSplatTexture !== snapshot.gaussianSplatTexture
-    ) {
-      retireTexture(primitive, primitive.gaussianSplatTexture, frameNumber);
-    }
-    if (
-      defined(primitive.sphericalHarmonicsTexture) &&
-      primitive.sphericalHarmonicsTexture !== snapshot.sphericalHarmonicsTexture
-    ) {
-      retireTexture(
-        primitive,
-        primitive.sphericalHarmonicsTexture,
-        frameNumber,
-      );
-    }
+  const splatTexture = defined(currentSnapshot) ? currentSnapshot.gaussianSplatTexture : primitive.gaussianSplatTexture;
+  if (
+    defined(splatTexture &&
+    splatTexture !== snapshot.gaussianSplatTexture
+  ) {
+    retireTexture(
+      primitive,
+      splatTexture,
+      frameNumber,
+    );
+  }
+  
+  const sphericalHarmonicsTexture = defined(currentSnapshot) ? currentSnapshot.sphericalHarmonicsTexture) : primitive.sphericalHarmonicsTexture;
+  if (
+    defined(sphericalHarmonicsTexture) &&
+    sphericalHarmonicsTexture !==
+      snapshot.sphericalHarmonicsTexture
+  ) {
+    retireTexture(
+      primitive,
+      sphericalHarmonicsTexture,
+      frameNumber,
+    );
   }
 
   primitive._snapshot = snapshot;
