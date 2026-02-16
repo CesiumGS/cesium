@@ -41,7 +41,6 @@ const BufferPolylineAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {object} [uniformMap]
- * @property {boolean} [firstDrawTimed]
  * @ignore
  */
 
@@ -55,10 +54,6 @@ const BufferPolylineAttributeLocations = {
 function renderBufferPolylineCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || {};
-
-  if (!renderContext.firstDrawTimed) {
-    console.time("renderBufferPolylineCollection::init");
-  }
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -275,11 +270,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
   collection._dirtyCount = 0;
   collection._dirtyOffset = 0;
-
-  if (!renderContext.firstDrawTimed) {
-    console.timeEnd("renderBufferPolylineCollection::init");
-    renderContext.firstDrawTimed = true;
-  }
 
   return renderContext;
 }

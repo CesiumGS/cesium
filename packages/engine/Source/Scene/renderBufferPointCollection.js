@@ -39,7 +39,6 @@ const BufferPointAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {object} [uniformMap]
- * @property {boolean} [firstDrawTimed]
  * @ignore
  */
 
@@ -53,10 +52,6 @@ const BufferPointAttributeLocations = {
 function renderBufferPointCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || {};
-
-  if (!renderContext.firstDrawTimed) {
-    console.time("renderBufferPointCollection::init");
-  }
 
   if (!defined(renderContext.attributeArrays)) {
     const featureCountMax = collection.primitiveCountMax;
@@ -217,11 +212,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
   collection._dirtyCount = 0;
   collection._dirtyOffset = 0;
-
-  if (!renderContext.firstDrawTimed) {
-    console.timeEnd("renderBufferPointCollection::init");
-    renderContext.firstDrawTimed = true;
-  }
 
   return renderContext;
 }

@@ -41,7 +41,6 @@ const BufferPolygonAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {object} [uniformMap]
- * @property {boolean} [firstDrawTimed]
  * @ignore
  */
 
@@ -55,10 +54,6 @@ const BufferPolygonAttributeLocations = {
 function renderBufferPolygonCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || {};
-
-  if (!renderContext.firstDrawTimed) {
-    console.time("renderBufferPolygonCollection::init");
-  }
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -288,11 +283,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
   collection._dirtyCount = 0;
   collection._dirtyOffset = 0;
-
-  if (!renderContext.firstDrawTimed) {
-    console.timeEnd("renderBufferPolygonCollection::init");
-    renderContext.firstDrawTimed = true;
-  }
 
   return renderContext;
 }
