@@ -60,3 +60,16 @@ Sandcastle.addToolbarButton("Earth", function () {
     destination: Cesium.Cartesian3.fromDegrees(-150, 60, 1e8),
   });
 });
+
+Sandcastle.addToolbarButton("Test", function () {
+  if (Cesium.defined(sat1)) {
+    sat1.path.relativeTo = undefined;
+    sat2.path.relativeTo = "Fixed";
+    viewer.trackedEntity = undefined;
+  }
+
+  viewer.camera.frustum.fov = Cesium.Math.toRadians(15);
+  viewer.scene.camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(-150, 60, 1e8),
+  });
+});
