@@ -12,6 +12,8 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
 import CubeMapPanorama from "./CubeMapPanorama.js";
 
+const DEFAULT_TILE_SIZE = 600;
+
 /**
  * <div class="notice">
  * This object is normally not instantiated directly, use {@link GoogleStreetViewCubeMapPanoramaProvider.fromUrl}.
@@ -31,13 +33,19 @@ import CubeMapPanorama from "./CubeMapPanorama.js";
 function GoogleStreetViewCubeMapPanoramaProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   this._signature = options.signature;
-  this._key = options.apiKey;
+  this._key = defined(options.apiKey)
+    ? options.apiKey
+    : GoogleMaps.defaultApiKey;
 
-  this._baseResource = Resource.createIfNeeded(options.url ?? GoogleMaps.streetViewStaticApiEndpoint);
+  this._baseResource = Resource.createIfNeeded(
+    options.url ?? GoogleMaps.streetViewStaticApiEndpoint,
+  );
 
   this._metadataResource = this._baseResource.getDerivedResource({
     url: "streetview/metadata",
   });
+
+  this._tileSize = options.tileSize ?? DEFAULT_TILE_SIZE;
 }
 
 Object.defineProperties(GoogleStreetViewCubeMapPanoramaProvider.prototype, {});
@@ -47,6 +55,7 @@ Object.defineProperties(GoogleStreetViewCubeMapPanoramaProvider.prototype, {});
  * @param {object} options Object with the following properties:
  * @param {Cartographic} options.cartographic The position to place the panorama in the scene.
  * @param {string} [options.panoId] The panoramaId identifier for the image in the Google API. If not provided this will be looked up for the provided cartographic location.
+ * @param {number} [options.tileSize] - Optional tile size override (square).
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
  * @returns {CubeMapPanorama} The panorama primitive textured with imagery.
@@ -73,6 +82,9 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
     }
     //>>includeEnd('debug');
 
+    const tileSize = options.tileSize ?? this._tileSize;
+    const tileSizeString = `${tileSize}x${tileSize}`;
+
     let { panoId } = options;
 
     if (!defined(panoId)) {
@@ -91,17 +103,17 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
     const pUrl = (h, p) => {
       const resource = this._baseResource.getDerivedResource({
         queryParameters: {
-          size: "600x600",
+          size: tileSizeString,
           pano: panoId,
           heading: h,
           pitch: p,
           key: this._key,
           ...(defined(this._signature) && { signature: this._signature }),
-        }
+        },
       });
 
       return resource.url;
-    }
+    };
 
     const positiveX = pUrl(0, 0);
     const negativeX = pUrl(180, 0);
@@ -139,8 +151,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
 /**
  * Gets the panorama primitive for a given panoId. Lookup a panoId using {@link GoogleStreetViewCubeMapPanoramaProvider#getNearestPanoId}.
  *
- * @param {string} panoId
- * @param {string} zoom
+ * @param {string} panoId The panoramaId identifier for the image in the Google API.
  *
  * @returns {CubeMapPanorama} The panorama primitive textured with imagery.
  *
@@ -155,6 +166,12 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
  */
 GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanoramaFromPanoId =
   async function (panoId) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(panoId)) {
+      throw new DeveloperError("panoId is required.");
+    }
+    //>>includeEnd('debug');
+
     const panoIdMetadata = await this.getPanoIdMetadata(panoId);
 
     const { cartographic } =
@@ -169,7 +186,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanoramaFromPanoId =
 /**
  * Gets the panoIds for the given cartographic location. See {@link https://developers.google.com/maps/documentation/tile/streetview#panoid-search}.
 
- * @param {Cartographic} position
+ * @param {Cartographic} position The position to search for the nearest panoId.
  * 
  * @returns {Object} an object containing a panoId, latitude, and longitude of the closest panorama
  * 
@@ -182,6 +199,12 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanoramaFromPanoId =
  */
 GoogleStreetViewCubeMapPanoramaProvider.prototype.getNearestPanoId =
   async function (position) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(position)) {
+      throw new DeveloperError("position is required.");
+    }
+    //>>includeEnd('debug');
+
     const longitude = CesiumMath.toDegrees(position.longitude);
     const latitude = CesiumMath.toDegrees(position.latitude);
 
@@ -192,15 +215,14 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getNearestPanoId =
       queryParameters: {
         key: this._key,
         location: posString,
-      }
+      },
     });
 
-    const panoIdsResponse = await resource.fetch();
-    const panoIdObject = JSON.parse(panoIdsResponse);
+    const panoIdObject = await resource.fetchJson();
 
     if (panoIdObject.status !== "OK") {
       throw new DeveloperError(
-        `StreetView metadata error: ${panoIdObject.status}`
+        `StreetView metadata error: ${panoIdObject.status}`,
       );
     }
     return {
@@ -227,15 +249,14 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getPanoIdMetadata =
       queryParameters: {
         key: this._key,
         pano: panoId,
-      }
+      },
     });
 
-    const metadataResponse = await resource.fetch();
+    const panoIdObject = await resource.fetchJson();
 
-    const panoIdObject = JSON.parse(metadataResponse);
     if (panoIdObject.status !== "OK") {
       throw new DeveloperError(
-        `StreetView metadata error: ${panoIdObject.status}`
+        `StreetView metadata error: ${panoIdObject.status}`,
       );
     }
     return panoIdObject;
@@ -246,6 +267,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getPanoIdMetadata =
  * @param {object} options Object with the following properties:
  * @param {string} [options.apiKey=GoogleMaps.defaultApiKey] Your API key to access Google Street View Tiles. See {@link https://developers.google.com/maps/documentation/javascript/get-api-key} for instructions on how to create your own key.
  * @param {string|Resource} [options.url=GoogleMaps.streetViewStaticApiEndpoint] The URL to access Google Street View Tiles. See {@link https://developers.google.com/maps/documentation/streetview/overview} for more information.
+ * @param {number} [options.tileSize=600] Default width and height (in pixels) of each square tile.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
  * @returns {Promise<GoogleStreetViewCubeMapPanoramaProvider>} A promise that resolves to the created GoogleStreetViewCubeMapPanoramaProvider.'
