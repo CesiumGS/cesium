@@ -737,8 +737,8 @@ PostProcessStageLibrary.createAutoExposureStage = function () {
  * It generates a motion-vector buffer from depth + previous view-projection
  * and applies neighborhood clamping to reduce ghosting.
  *
- * @param {object} [options] Options passed to {@link TemporalAntiAliasingStage}.
- * @return {TemporalAntiAliasingStage} The stage.
+ * @param {object} [options] Options passed to the temporal anti-aliasing stage.
+ * @return {object} The stage.
  */
 PostProcessStageLibrary.createTemporalAntiAliasingStage = function (options) {
   return new TemporalAntiAliasingStage(options);
