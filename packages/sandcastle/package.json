@@ -3,9 +3,7 @@
   "private": true,
   "version": "0.0.5",
   "type": "module",
-  "files": [
-    "scripts/buildGallery.js"
-  ],
+  "main": "index.js",
   "scripts": {
     "dev": "npm run build-gallery && vite --config vite.config.dev.ts",
     "build": "echo 'Sandcastle cannot be built directly. Use the exported buildStatic() function instead'",
