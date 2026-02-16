@@ -22,6 +22,7 @@ import ReferenceProperty from "./ReferenceProperty.js";
 import SampledPositionProperty from "./SampledPositionProperty.js";
 import ScaledPositionProperty from "./ScaledPositionProperty.js";
 import TimeIntervalCollectionPositionProperty from "./TimeIntervalCollectionPositionProperty.js";
+import Quaternion from "../Core/Quaternion.js";
 
 const update3DMatrix3Scratch1 = new Matrix3();
 const update3DMatrix3Scratch2 = new Matrix3();
@@ -186,13 +187,26 @@ function subSampleSampledProperty(
     );
 
     if (refEntity.orientation) {
-      // console.log(refEntity.orientation);
-      // console.log("orientation present");
+      console.log("orientation present");
+      const orientation = new Quaternion();
 
-      // TODO use orientation to compute transform instead of VVLH in next if block
-    }
+      // Get orientation of entity at start time
+      // Then multiply tmp by the transform to get it into the entity's reference frame
+      if (
+        defined(refEntity.orientation.getValue(start, orientation)) &&
+        (defined(tmp) && defined(tmp2))
+      ) {
+        console.log(orientation);
 
-    if (defined(tmp) && defined(tmp2)) {
+        Cartesian3.subtract(tmp, tmp2, tmp);
+
+        Quaternion.conjugate(orientation, orientation);
+        const rotation = Matrix3.fromQuaternion(orientation, q);
+        Matrix3.multiplyByVector(rotation, tmp, tmp);
+
+        result[r++] = tmp;
+      }
+    } else if (defined(tmp) && defined(tmp2)) {
       result[r++] = Cartesian3.subtract(tmp, tmp2, tmp);
       if (defined(computeVvlhTransform(start, refPosition, rr))) {
         Matrix4.inverse(rr, rr);
