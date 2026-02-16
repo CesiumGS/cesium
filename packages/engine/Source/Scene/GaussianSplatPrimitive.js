@@ -106,6 +106,23 @@ const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.008726646259971648;
 // Minimum camera movement in world units before triggering steady re-sort.
 const DEFAULT_SORT_MIN_POSITION_DELTA = 1.0;
 
+/**
+ * Determines whether the camera has moved or rotated enough since the last
+ * steady sort to justify scheduling a new one.
+ *
+ * Returns {@code true} when any of the following hold:
+ * - No previous steady sort has been recorded yet.
+ * - The camera position has moved by at least {@link DEFAULT_SORT_MIN_POSITION_DELTA} world units.
+ * - The camera direction has changed by at least {@link DEFAULT_SORT_MIN_ANGLE_RADIANS} radians.
+ *
+ * A minimum frame interval ({@link DEFAULT_SORT_MIN_FRAME_INTERVAL}) is
+ * enforced to prevent re-sorting every single frame.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive to check.
+ * @param {FrameState} frameState The current frame state.
+ * @returns {boolean} Whether a new steady sort should begin.
+ * @private
+ */
 function shouldStartSteadySort(primitive, frameState) {
   const framesSinceLastSort =
     primitive._lastSteadySortFrameNumber >= 0
@@ -142,6 +159,14 @@ function shouldStartSteadySort(primitive, frameState) {
   return angleDelta >= DEFAULT_SORT_MIN_ANGLE_RADIANS;
 }
 
+/**
+ * Records the frame number and camera pose at the start of a steady sort so
+ * that {@link shouldStartSteadySort} can later compute deltas.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive to update.
+ * @param {FrameState} frameState The current frame state.
+ * @private
+ */
 function markSteadySortStart(primitive, frameState) {
   primitive._lastSteadySortFrameNumber = frameState.frameNumber;
   const camera = frameState.camera;
@@ -157,6 +182,16 @@ function markSteadySortStart(primitive, frameState) {
   primitive._hasLastSteadySortCameraDirection = true;
 }
 
+/**
+ * Checks whether the set of currently selected tiles differs from the set
+ * recorded on the primitive. This is used to detect LOD transitions that
+ * require a snapshot rebuild.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive.
+ * @param {Cesium3DTile[]} selectedTiles The tiles selected this frame.
+ * @returns {boolean} {@code true} if the tile set has changed.
+ * @private
+ */
 function haveSelectedTilesChanged(primitive, selectedTiles) {
   const prevSet = primitive._selectedTileSet;
   if (!defined(prevSet) || prevSet.size !== selectedTiles.length) {
@@ -172,6 +207,15 @@ function haveSelectedTilesChanged(primitive, selectedTiles) {
   return false;
 }
 
+/**
+ * Returns whether the given sort result still matches the primitive's current
+ * sort request and data generation, i.e. it has not been superseded.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive.
+ * @param {object} activeSort The sort result to validate.
+ * @returns {boolean} {@code true} if the sort result is still current.
+ * @private
+ */
 function isActiveSort(primitive, activeSort) {
   return (
     defined(activeSort) &&
@@ -180,6 +224,13 @@ function isActiveSort(primitive, activeSort) {
   );
 }
 
+/**
+ * Destroys the GPU textures owned by a snapshot, if any, and clears the
+ * references so they are not used after destruction.
+ *
+ * @param {object|undefined} snapshot The snapshot whose textures should be destroyed.
+ * @private
+ */
 function destroySnapshotTextures(snapshot) {
   if (!defined(snapshot)) {
     return;
@@ -194,6 +245,16 @@ function destroySnapshotTextures(snapshot) {
   }
 }
 
+/**
+ * Schedules a GPU texture for deferred destruction. The texture is kept alive
+ * for one additional frame so that any in-flight draw commands that reference
+ * it can finish before the underlying GPU resource is released.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {Texture|undefined} texture The texture to retire.
+ * @param {number} frameNumber The frame number at which the texture was retired.
+ * @private
+ */
 function retireTexture(primitive, texture, frameNumber) {
   if (!defined(texture)) {
     return;
@@ -205,6 +266,15 @@ function retireTexture(primitive, texture, frameNumber) {
   });
 }
 
+/**
+ * Destroys any retired textures whose grace period (one frame) has elapsed.
+ * Called once per frame to reclaim GPU memory from textures that were replaced
+ * by a newer snapshot.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {number} frameNumber The current frame number.
+ * @private
+ */
 function releaseRetiredTextures(primitive, frameNumber) {
   const retired = primitive._retiredTextures;
   if (!defined(retired) || retired.length === 0) {
@@ -222,6 +292,21 @@ function releaseRetiredTextures(primitive, frameNumber) {
   primitive._retiredTextures = next;
 }
 
+/**
+ * Atomically promotes a fully-built snapshot to be the active splat data for
+ * the primitive. This includes swapping attribute arrays, GPU textures, and
+ * sorted indexes, as well as retiring any previously active textures so they
+ * can be safely destroyed after the current frame finishes.
+ *
+ * The snapshot <b>must</b> be in the {@link SnapshotState.READY} state;
+ * otherwise a {@link DeveloperError} is thrown.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {object} snapshot The snapshot to commit.
+ * @param {FrameState} frameState The current frame state.
+ * @throws {DeveloperError} If the snapshot is not READY.
+ * @private
+ */
 function commitSnapshot(primitive, snapshot, frameState) {
   if (!defined(snapshot.indexes) || snapshot.state !== SnapshotState.READY) {
     throw new DeveloperError("Committing snapshot before it is READY.");
@@ -296,6 +381,17 @@ function commitSnapshot(primitive, snapshot, frameState) {
   primitive._dirty = false;
 }
 
+/**
+ * Creates a GPU texture that stores packed spherical harmonics coefficient
+ * data for all splats. The texture uses a two-channel unsigned-integer format
+ * ({@link PixelFormat.RG_INTEGER}) and nearest-neighbor sampling.
+ *
+ * @param {Context} context The WebGL context.
+ * @param {object} shData An object with {@code width}, {@code height}, and
+ *   {@code data} (an {@code ArrayBufferView}) describing the packed SH data.
+ * @returns {Texture} The created texture.
+ * @private
+ */
 function createSphericalHarmonicsTexture(context, shData) {
   const texture = new Texture({
     context: context,
@@ -315,6 +411,19 @@ function createSphericalHarmonicsTexture(context, shData) {
   return texture;
 }
 
+/**
+ * Creates a GPU texture that stores the packed Gaussian splat attributes
+ * (positions, scales, rotations, colors). The texture uses an RGBA
+ * unsigned-integer format ({@link PixelFormat.RGBA_INTEGER}) and
+ * nearest-neighbor sampling.
+ *
+ * @param {Context} context The WebGL context.
+ * @param {object} splatTextureData An object with {@code width},
+ *   {@code height}, and {@code data} (an {@code ArrayBufferView}) describing
+ *   the packed splat attribute data.
+ * @returns {Texture} The created texture.
+ * @private
+ */
 function createGaussianSplatTexture(context, splatTextureData) {
   return new Texture({
     context: context,
@@ -396,6 +505,15 @@ function GaussianSplatPrimitive(options) {
   this._snapshot = undefined;
   this._pendingSnapshot = undefined;
   this._retiredTextures = [];
+
+  /**
+   * Scratch buffer re-used across frames for aggregating packed spherical
+   * harmonics data so that a fresh typed-array allocation is avoided on
+   * every tile-selection change.
+   * @type {undefined|Uint32Array}
+   * @private
+   */
+  this._scratchAggregateShBuffer = undefined;
   this._selectedTilesStableFrames = 0;
   this._needsSnapshotRebuild = false;
   this._snapshotRebuildStallFrames = 0;
@@ -1238,28 +1356,55 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       };
 
       const aggregateShData = () => {
+        // Determine the SH degree from the first tile with SH data so we can
+        // pre-allocate the aggregate buffer once, outside the tile loop.
+        let coefs = 0;
+        for (const tile of tiles) {
+          if (tile.content.sphericalHarmonicsDegree > 0) {
+            switch (tile.content.sphericalHarmonicsDegree) {
+              case 1:
+                coefs = 9;
+                break;
+              case 2:
+                coefs = 24;
+                break;
+              case 3:
+                coefs = 45;
+                break;
+            }
+            break;
+          }
+        }
+
+        if (coefs === 0) {
+          return undefined;
+        }
+
+        const requiredLength = totalElements * (coefs * (2 / 3));
+
+        // Re-use the class-level scratch buffer when it is already large
+        // enough, avoiding a fresh allocation (and eventual GC) every frame.
+        if (
+          !defined(this._scratchAggregateShBuffer) ||
+          this._scratchAggregateShBuffer.length < requiredLength
+        ) {
+          this._scratchAggregateShBuffer = new Uint32Array(requiredLength);
+        }
+        const aggregate = this._scratchAggregateShBuffer;
+
         let offset = 0;
-        let aggregate;
         for (const tile of tiles) {
           const tileShData = tile.content.packedSphericalHarmonicsData;
           if (tile.content.sphericalHarmonicsDegree > 0) {
-            if (!defined(aggregate)) {
-              let coefs;
-              switch (tile.content.sphericalHarmonicsDegree) {
-                case 1:
-                  coefs = 9;
-                  break;
-                case 2:
-                  coefs = 24;
-                  break;
-                case 3:
-                  coefs = 45;
-              }
-              aggregate = new Uint32Array(totalElements * (coefs * (2 / 3)));
-            }
             aggregate.set(tileShData, offset);
             offset += tileShData.length;
           }
+        }
+
+        // Return a correctly-sized view so downstream consumers see the
+        // exact element count they expect.
+        if (offset < aggregate.length) {
+          return aggregate.subarray(0, offset);
         }
         return aggregate;
       };
