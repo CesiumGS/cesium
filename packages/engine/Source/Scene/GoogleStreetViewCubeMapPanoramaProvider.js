@@ -32,7 +32,12 @@ function GoogleStreetViewCubeMapPanoramaProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   this._signature = options.signature;
   this._key = options.apiKey;
-  this._skipColorSpaceConversion = options.skipColorSpaceConversion;
+
+  this._baseResource = Resource.createIfNeeded(options.url ?? GoogleMaps.streetViewStaticApiEndpoint);
+
+  this._metadataResource = this._baseResource.getDerivedResource({
+    url: "streetview/metadata",
+  });
 }
 
 Object.defineProperties(GoogleStreetViewCubeMapPanoramaProvider.prototype, {});
@@ -80,31 +85,30 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
     const panoLat = CesiumMath.toDegrees(cartographic.latitude);
     const panoLng = CesiumMath.toDegrees(cartographic.longitude);
     //const height = cartographic.height;
-    const pos = [panoLat, panoLng]; //lat,lng Aukland
+    const pos = [panoLat, panoLng];
     const posObj = Cartesian3.fromDegrees(pos[1], pos[0], 0);
 
-    const baseUrl = "https://maps.googleapis.com/maps/api/streetview";
-    function pUrl(that, h, p) {
-      const r = new Resource({
-        url: baseUrl,
+    const pUrl = (h, p) => {
+      const resource = this._baseResource.getDerivedResource({
         queryParameters: {
           size: "600x600",
           pano: panoId,
           heading: h,
           pitch: p,
-          key: that._key,
-          ...(defined(that._signature) && { signature: that._signature }),
-        },
+          key: this._key,
+          ...(defined(this._signature) && { signature: this._signature }),
+        }
       });
-      return r.url;
+
+      return resource.url;
     }
 
-    const positiveX = pUrl(this, 0, 0);
-    const negativeX = pUrl(this, 180, 0);
-    const positiveZ = pUrl(this, 270, 0);
-    const negativeZ = pUrl(this, 90, 0);
-    const positiveY = pUrl(this, -90, -90);
-    const negativeY = pUrl(this, -90, 90);
+    const positiveX = pUrl(0, 0);
+    const negativeX = pUrl(180, 0);
+    const positiveZ = pUrl(270, 0);
+    const negativeZ = pUrl(90, 0);
+    const positiveY = pUrl(-90, -90);
+    const negativeY = pUrl(-90, 90);
 
     const ndeToFixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
@@ -184,16 +188,21 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getNearestPanoId =
     const pos = [latitude, longitude]; //lat,lng Aukland
     const posString = pos.join(",");
 
-    const panoIdsResponse = await Resource.fetch({
-      url: "https://maps.googleapis.com/maps/api/streetview/metadata",
+    const resource = this._metadataResource.getDerivedResource({
       queryParameters: {
         key: this._key,
         location: posString,
-      },
-      data: JSON.stringify({}),
+      }
     });
 
+    const panoIdsResponse = await resource.fetch();
     const panoIdObject = JSON.parse(panoIdsResponse);
+
+    if (panoIdObject.status !== "OK") {
+      throw new DeveloperError(
+        `StreetView metadata error: ${panoIdObject.status}`
+      );
+    }
     return {
       panoId: panoIdObject.pano_id,
       latitude: panoIdObject.location.lat,
@@ -214,23 +223,29 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getNearestPanoId =
  */
 GoogleStreetViewCubeMapPanoramaProvider.prototype.getPanoIdMetadata =
   async function (panoId) {
-    const metadataResponse = await Resource.fetch({
-      url: "https://maps.googleapis.com/maps/api/streetview/metadata",
+    const resource = this._metadataResource.getDerivedResource({
       queryParameters: {
         key: this._key,
         pano: panoId,
-      },
-      data: JSON.stringify({}),
+      }
     });
 
-    return JSON.parse(metadataResponse);
+    const metadataResponse = await resource.fetch();
+
+    const panoIdObject = JSON.parse(metadataResponse);
+    if (panoIdObject.status !== "OK") {
+      throw new DeveloperError(
+        `StreetView metadata error: ${panoIdObject.status}`
+      );
+    }
+    return panoIdObject;
   };
 
 /**
  * Creates a {@link PanoramaProvider} which provides image tiles from the {@link https://developers.google.com/maps/documentation/tile/streetview|Google Street View Tiles API}.
  * @param {object} options Object with the following properties:
  * @param {string} [options.apiKey=GoogleMaps.defaultApiKey] Your API key to access Google Street View Tiles. See {@link https://developers.google.com/maps/documentation/javascript/get-api-key} for instructions on how to create your own key.
- * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the image will be ignored.
+ * @param {string|Resource} [options.url=GoogleMaps.streetViewStaticApiEndpoint] The URL to access Google Street View Tiles. See {@link https://developers.google.com/maps/documentation/streetview/overview} for more information.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
  * @returns {Promise<GoogleStreetViewCubeMapPanoramaProvider>} A promise that resolves to the created GoogleStreetViewCubeMapPanoramaProvider.'
@@ -299,42 +314,6 @@ GoogleStreetViewCubeMapPanoramaProvider._parseMetadata = function (
   return {
     cartographic,
   };
-};
-
-GoogleStreetViewCubeMapPanoramaProvider._computePanoramaTransform = function (
-  cartographic,
-  heading,
-  tilt,
-) {
-  const position = Cartesian3.fromDegrees(
-    cartographic.longitude,
-    cartographic.latitude,
-    cartographic.height,
-  );
-  const enuTransform = Transforms.eastNorthUpToFixedFrame(position);
-
-  const headingRad = CesiumMath.toRadians(-heading - 90);
-  const headingRotation = Matrix3.fromRotationZ(headingRad);
-
-  const tiltRad = CesiumMath.toRadians(tilt);
-  const tiltRotation = Matrix3.fromRotationY(tiltRad);
-  const combinedRotation = Matrix3.multiply(
-    headingRotation,
-    tiltRotation,
-    new Matrix3(),
-  );
-
-  const headingRotation4 = Matrix4.fromRotationTranslation(
-    combinedRotation, //headingRotation,
-    Cartesian3.ZERO,
-  );
-
-  const transform = Matrix4.multiply(
-    enuTransform,
-    headingRotation4,
-    new Matrix4(),
-  );
-  return transform;
 };
 
 export default GoogleStreetViewCubeMapPanoramaProvider;
