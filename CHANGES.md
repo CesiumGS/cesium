@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.140 - 2026-04-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added experimental, performance-focused vector primitive APIs: `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13212](https://github.com/CesiumGS/cesium/pull/13212)
+
 ## 1.139 - 2026-03-02
 
 ### @cesium/engine
