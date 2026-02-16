@@ -27,7 +27,7 @@ const DEFAULT_TILE_SIZE = 600;
  *
  * @see CubeMapPanorama
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?id=google-streetview-panorama-2|Cesium Sandcastle Google Streetview Panorama}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=google-streetview-panorama|Cesium Sandcastle Google Streetview Panorama}
  *
  */
 function GoogleStreetViewCubeMapPanoramaProvider(options) {
@@ -65,10 +65,13 @@ Object.defineProperties(GoogleStreetViewCubeMapPanoramaProvider.prototype, {});
  * const provider = await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
  *   apiKey: 'your Google Streetview Static api key'
  * })
+ *
  * const panoIdObject = provider.getNearestPanoId(position);
+ * const position = Cartographic.fromDegrees(panoIdObject.location.lng, panoIdObject.location.lat, 0);
+ *
  * const primitive = await provider.loadPanorama({
- *   position,
- *   panoId:panoIdObject.panoId
+ *   cartographic: position,
+ *   panoId: panoIdObject.panoId
  * });
  * viewer.scene.primitive.add(primitive);
  *
