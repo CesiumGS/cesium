@@ -32,7 +32,6 @@ const DEFAULT_TILE_SIZE = 600;
  */
 function GoogleStreetViewCubeMapPanoramaProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  this._signature = options.signature;
   this._key = defined(options.apiKey)
     ? options.apiKey
     : GoogleMaps.defaultApiKey;
@@ -56,6 +55,7 @@ Object.defineProperties(GoogleStreetViewCubeMapPanoramaProvider.prototype, {});
  * @param {Cartographic} options.cartographic The position to place the panorama in the scene.
  * @param {string} [options.panoId] The panoramaId identifier for the image in the Google API. If not provided this will be looked up for the provided cartographic location.
  * @param {number} [options.tileSize] - Optional tile size override (square).
+ * @param {string} [options.signature] - Optional signature for signed URLs. See {@link https://developers.google.com/maps/documentation/streetview/digital-signature} for more information.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
  * @returns {CubeMapPanorama} The panorama primitive textured with imagery.
@@ -88,6 +88,8 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
     const tileSize = options.tileSize ?? this._tileSize;
     const tileSizeString = `${tileSize}x${tileSize}`;
 
+    const signature = options.signature;
+
     let { panoId } = options;
 
     if (!defined(panoId)) {
@@ -103,12 +105,48 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
       0,
     );
 
-    const positiveX = this._buildFaceUrl(0, 0, tileSizeString, panoId);
-    const negativeX = this._buildFaceUrl(180, 0, tileSizeString, panoId);
-    const positiveZ = this._buildFaceUrl(270, 0, tileSizeString, panoId);
-    const negativeZ = this._buildFaceUrl(90, 0, tileSizeString, panoId);
-    const positiveY = this._buildFaceUrl(-90, -90, tileSizeString, panoId);
-    const negativeY = this._buildFaceUrl(-90, 90, tileSizeString, panoId);
+    const positiveX = this._buildFaceUrl({
+      heading: 180,
+      pitch: 0,
+      tileSizeString,
+      panoId,
+      signature,
+    });
+    const negativeX = this._buildFaceUrl({
+      heading: 180,
+      pitch: 0,
+      tileSizeString,
+      panoId,
+      signature,
+    });
+    const positiveZ = this._buildFaceUrl({
+      heading: 270,
+      pitch: 0,
+      tileSizeString,
+      panoId,
+      signature,
+    });
+    const negativeZ = this._buildFaceUrl({
+      heading: 90,
+      pitch: 0,
+      tileSizeString,
+      panoId,
+      signature,
+    });
+    const positiveY = this._buildFaceUrl({
+      heading: -90,
+      pitch: -90,
+      tileSizeString,
+      panoId,
+      signature,
+    });
+    const negativeY = this._buildFaceUrl({
+      heading: -90,
+      pitch: 90,
+      tileSizeString,
+      panoId,
+      signature,
+    });
 
     const northDownEastToFixedFrameTransform =
       Transforms.localFrameToFixedFrameGenerator("north", "down");
@@ -132,41 +170,6 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
     });
 
     return panorama;
-  };
-
-/**
- * Gets the panorama primitive for a given panoId. Lookup a panoId using {@link GoogleStreetViewCubeMapPanoramaProvider#getNearestPanoId}.
- *
- * @param {string} panoId The panoramaId identifier for the image in the Google API.
- *
- * @returns {CubeMapPanorama} The panorama primitive textured with imagery.
- *
- * @example
- *
- * const provider = await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
- *   apiKey: 'your Google Streetview Static api key'
- * })
- * const panoIdObject = provider.getNearestPanoId(position);
- * const primitive = await provider.loadPanoramaFromPanoId(panoIdObject.panoId);
- * viewer.scene.primitive.add(primitive);
- */
-GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanoramaFromPanoId =
-  async function (panoId) {
-    //>>includeStart('debug', pragmas.debug);
-    if (!defined(panoId)) {
-      throw new DeveloperError("panoId is required.");
-    }
-    //>>includeEnd('debug');
-
-    const panoIdMetadata = await this.getPanoIdMetadata(panoId);
-
-    const { cartographic } =
-      GoogleStreetViewCubeMapPanoramaProvider._parseMetadata(panoIdMetadata);
-
-    return this.loadPanorama({
-      cartographic,
-      panoId,
-    });
   };
 
 /**
@@ -249,11 +252,9 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getPanoIdMetadata =
   };
 
 GoogleStreetViewCubeMapPanoramaProvider.prototype._buildFaceUrl = function (
-  heading,
-  pitch,
-  tileSizeString,
-  panoId,
+  options,
 ) {
+  const { heading, pitch, tileSizeString, panoId, signature } = options;
   const resource = this._baseResource.getDerivedResource({
     queryParameters: {
       size: tileSizeString,
@@ -261,7 +262,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype._buildFaceUrl = function (
       heading,
       pitch,
       key: this._key,
-      ...(defined(this._signature) && { signature: this._signature }),
+      ...(defined(signature) && { signature }),
     },
   });
 
