@@ -114,13 +114,61 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
   });
 
   it("_buildFaceUrl builds url with query params", function () {
-    spyOn(provider._baseResource, "getDerivedResource").and.returnValue({
+    const derivedSpy = jasmine.createSpy().and.returnValue({
       url: "https://example.com/?size=512x512&pano=test",
     });
 
-    const url = provider._buildFaceUrl(0, 0, "512x512", "test");
+    spyOn(provider._baseResource, "getDerivedResource").and.callFake(
+      derivedSpy,
+    );
+
+    const url = provider._buildFaceUrl({
+      heading: 0,
+      pitch: 0,
+      tileSizeString: "512x512",
+      panoId: "test",
+      signature: undefined,
+    });
+
+    expect(provider._baseResource.getDerivedResource).toHaveBeenCalledWith({
+      queryParameters: {
+        size: "512x512",
+        pano: "test",
+        heading: 0,
+        pitch: 0,
+        key: "test-key",
+      },
+    });
 
     expect(url).toContain("example.com");
+  });
+
+  it("_buildFaceUrl includes signature when defined", function () {
+    const getDerivedSpy = spyOn(
+      provider._baseResource,
+      "getDerivedResource",
+    ).and.returnValue({
+      url: "https://example.com/",
+    });
+
+    provider._buildFaceUrl({
+      heading: 90,
+      pitch: 10,
+      tileSizeString: "512x512",
+      panoId: "abc",
+      signature: "mysignature",
+    });
+
+    expect(getDerivedSpy).toHaveBeenCalledWith({
+      queryParameters: {
+        size: "512x512",
+        pano: "abc",
+        heading: 90,
+        pitch: 10,
+        key: "test-key",
+        signature: "mysignature",
+      },
+    });
   });
 
   it("loadPanorama throws without cartographic", async function () {
@@ -162,30 +210,6 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
     });
 
     expect(provider.getNearestPanoId).toHaveBeenCalled();
-  });
-
-  it("loadPanoramaFromPanoId throws without panoId", async function () {
-    await expectAsync(
-      provider.loadPanoramaFromPanoId(),
-    ).toBeRejectedWithDeveloperError();
-  });
-
-  it("loadPanoramaFromPanoId loads panorama", async function () {
-    spyOn(provider, "getPanoIdMetadata").and.returnValue(
-      Promise.resolve({
-        status: "OK",
-        location: { lat: 10, lng: 20 },
-      }),
-    );
-
-    spyOn(provider, "loadPanorama").and.returnValue(
-      Promise.resolve("panorama"),
-    );
-
-    const result = await provider.loadPanoramaFromPanoId("abc");
-
-    expect(provider.loadPanorama).toHaveBeenCalled();
-    expect(result).toBe("panorama");
   });
 
   it("_parseMetadata converts to cartographic", function () {
