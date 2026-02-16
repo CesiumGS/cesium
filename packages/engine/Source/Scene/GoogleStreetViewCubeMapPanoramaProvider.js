@@ -20,7 +20,7 @@ const DEFAULT_TILE_SIZE = 600;
  * </div>
  *
  *
- * Creates a {@link PanoramaProvider} which provides imagery from {@link https://developers.google.com/maps/documentation/tile/streetview|Google Street View Tiles API} to be displayed in a panorama.
+ * Creates a {@link PanoramaProvider} which provides imagery from {@link https://developers.google.com/maps/documentation/streetview|Google Street View Static API} to be displayed in a panorama.
  *
  * @alias GoogleStreetViewCubeMapPanoramaProvider
  * @constructor
@@ -63,7 +63,7 @@ Object.defineProperties(GoogleStreetViewCubeMapPanoramaProvider.prototype, {});
  * @example
  *
  * const provider = await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
- *   apiKey: 'your Google Streetview Tiles api key'
+ *   apiKey: 'your Google Streetview Static api key'
  * })
  * const panoIdObject = provider.getNearestPanoId(position);
  * const primitive = await provider.loadPanorama({
@@ -94,41 +94,24 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
 
     const credit = GoogleMaps.getDefaultCredit();
 
-    const panoLat = CesiumMath.toDegrees(cartographic.latitude);
-    const panoLng = CesiumMath.toDegrees(cartographic.longitude);
-    //const height = cartographic.height;
-    const pos = [panoLat, panoLng];
-    const posObj = Cartesian3.fromDegrees(pos[1], pos[0], 0);
-
-    const pUrl = (h, p) => {
-      const resource = this._baseResource.getDerivedResource({
-        queryParameters: {
-          size: tileSizeString,
-          pano: panoId,
-          heading: h,
-          pitch: p,
-          key: this._key,
-          ...(defined(this._signature) && { signature: this._signature }),
-        },
-      });
-
-      return resource.url;
-    };
-
-    const positiveX = pUrl(0, 0);
-    const negativeX = pUrl(180, 0);
-    const positiveZ = pUrl(270, 0);
-    const negativeZ = pUrl(90, 0);
-    const positiveY = pUrl(-90, -90);
-    const negativeY = pUrl(-90, 90);
-
-    const ndeToFixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
-      "north",
-      "down",
+    const posObj = Cartesian3.fromDegrees(
+      CesiumMath.toDegrees(cartographic.longitude),
+      CesiumMath.toDegrees(cartographic.latitude),
+      0,
     );
 
+    const positiveX = this._buildFaceUrl(0, 0, tileSizeString, panoId);
+    const negativeX = this._buildFaceUrl(180, 0, tileSizeString, panoId);
+    const positiveZ = this._buildFaceUrl(270, 0, tileSizeString, panoId);
+    const negativeZ = this._buildFaceUrl(90, 0, tileSizeString, panoId);
+    const positiveY = this._buildFaceUrl(-90, -90, tileSizeString, panoId);
+    const negativeY = this._buildFaceUrl(-90, 90, tileSizeString, panoId);
+
+    const northDownEastToFixedFrameTransform =
+      Transforms.localFrameToFixedFrameGenerator("north", "down");
+
     const transform = Matrix4.getMatrix3(
-      ndeToFixedFrameTransform(posObj, Ellipsoid.default),
+      northDownEastToFixedFrameTransform(posObj, Ellipsoid.default),
       new Matrix3(),
     );
 
@@ -158,7 +141,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
  * @example
  *
  * const provider = await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
- *   apiKey: 'your Google Streetview Tiles api key'
+ *   apiKey: 'your Google Streetview Static api key'
  * })
  * const panoIdObject = provider.getNearestPanoId(position);
  * const primitive = await provider.loadPanoramaFromPanoId(panoIdObject.panoId);
@@ -193,7 +176,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanoramaFromPanoId =
  * @example
  * 
  * const provider = await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
- *   apiKey: 'your Google Streetview Tiles api key'
+ *   apiKey: 'your Google Streetview Static api key'
  * })
  * const panoIds = provider.getNearestPanoId(position);
  */
@@ -205,10 +188,10 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getNearestPanoId =
     }
     //>>includeEnd('debug');
 
-    const longitude = CesiumMath.toDegrees(position.longitude);
-    const latitude = CesiumMath.toDegrees(position.latitude);
-
-    const pos = [latitude, longitude]; //lat,lng Aukland
+    const pos = [
+      CesiumMath.toDegrees(position.latitude),
+      CesiumMath.toDegrees(position.longitude),
+    ];
     const posString = pos.join(",");
 
     const resource = this._metadataResource.getDerivedResource({
@@ -222,7 +205,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getNearestPanoId =
 
     if (panoIdObject.status !== "OK") {
       throw new DeveloperError(
-        `StreetView metadata error: ${panoIdObject.status}`,
+        `GoogleStreetViewCubeMapPanoramaProvider metadata error: ${panoIdObject.status}`,
       );
     }
     return {
@@ -256,17 +239,37 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getPanoIdMetadata =
 
     if (panoIdObject.status !== "OK") {
       throw new DeveloperError(
-        `StreetView metadata error: ${panoIdObject.status}`,
+        `GoogleStreetViewCubeMapPanoramaProvider metadata error: ${panoIdObject.status}`,
       );
     }
     return panoIdObject;
   };
 
+GoogleStreetViewCubeMapPanoramaProvider.prototype._buildFaceUrl = function (
+  heading,
+  pitch,
+  tileSizeString,
+  panoId,
+) {
+  const resource = this._baseResource.getDerivedResource({
+    queryParameters: {
+      size: tileSizeString,
+      pano: panoId,
+      heading,
+      pitch,
+      key: this._key,
+      ...(defined(this._signature) && { signature: this._signature }),
+    },
+  });
+
+  return resource.url;
+};
+
 /**
- * Creates a {@link PanoramaProvider} which provides image tiles from the {@link https://developers.google.com/maps/documentation/tile/streetview|Google Street View Tiles API}.
+ * Creates a {@link PanoramaProvider} which provides cube face images from the {@link https://developers.google.com/maps/documentation/streetview|Google Street View Static API}.
  * @param {object} options Object with the following properties:
- * @param {string} [options.apiKey=GoogleMaps.defaultApiKey] Your API key to access Google Street View Tiles. See {@link https://developers.google.com/maps/documentation/javascript/get-api-key} for instructions on how to create your own key.
- * @param {string|Resource} [options.url=GoogleMaps.streetViewStaticApiEndpoint] The URL to access Google Street View Tiles. See {@link https://developers.google.com/maps/documentation/streetview/overview} for more information.
+ * @param {string} [options.apiKey=GoogleMaps.defaultApiKey] Your API key to access Google Street View Static API. See {@link https://developers.google.com/maps/documentation/javascript/get-api-key} for instructions on how to create your own key.
+ * @param {string|Resource} [options.url=GoogleMaps.streetViewStaticApiEndpoint] The URL to access Google Street View Static API. See {@link https://developers.google.com/maps/documentation/streetview/overview} for more information.
  * @param {number} [options.tileSize=600] Default width and height (in pixels) of each square tile.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
@@ -274,7 +277,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getPanoIdMetadata =
  *
  * @example
  * const provider = await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
- *   apiKey: 'your Google Streetview Tiles api key'
+ *   apiKey: 'your Google Streetview Static api key'
  * })
  */
 GoogleStreetViewCubeMapPanoramaProvider.fromUrl = async function (options) {
@@ -302,28 +305,6 @@ GoogleStreetViewCubeMapPanoramaProvider.fromUrl = async function (options) {
     ...options,
   });
 };
-
-GoogleStreetViewCubeMapPanoramaProvider.getGoogleStreetViewTileUrls =
-  async function (options) {
-    const { z, partition, panoId, key, session } = options;
-    const tileIds = {};
-    let tileIdKey;
-    for (let x = 0; x < partition * 2; x++) {
-      for (let y = 0; y < partition; y++) {
-        tileIdKey = `${z}/${x}/${y}`;
-        tileIds[tileIdKey] =
-          GoogleStreetViewCubeMapPanoramaProvider._buildTileUrl({
-            z,
-            x,
-            y,
-            panoId,
-            key,
-            session,
-          });
-      }
-    }
-    return tileIds;
-  };
 
 GoogleStreetViewCubeMapPanoramaProvider._parseMetadata = function (
   panoIdMetadata,
