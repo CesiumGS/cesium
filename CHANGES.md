@@ -11,13 +11,20 @@
 
 ### @cesium/engine
 
-#### Fixes :wrench:
+#### Breaking Changes :mega:
 
-- Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
+- Cartesian2, Cartesian3, and Cartesian4 are now [ES6 Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes). This change should have no impact on most users, but note that using `new` on a static factory method, like `new Cartesian3.fromArray(...)`, will now throw an error. Omit `new` unless you are invoking a constructor directly, for these and all other factory methods, as more classes will be migrated to ES6 Classes soon. [#8359](https://github.com/CesiumGS/cesium/issues/8359)
 
 #### Additions :tada:
 
-- Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors [#13174](https://github.com/CesiumGS/cesium/pull/13174)
+- Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors. [#13174](https://github.com/CesiumGS/cesium/pull/13174)
+- Added more depth testing options for billboards and labels with `BillboardCollection.coarseDepthTestDistance`, `BillboardCollection.threePointDepthTestDistance`, `LabelCollection.coarseDepthTestDistance`, and `LabelCollection.threePointDepthTestDistance`. [#12994](https://github.com/CesiumGS/cesium/pull/12994)
+
+#### Fixes :wrench:
+
+- Fixes depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
+- Fixes billboard depth testing near horizon. [#13159](https://github.com/CesiumGS/cesium/issues/13159)
+- Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
 
 ## 1.138 - 2026-02-02
 
