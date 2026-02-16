@@ -27,24 +27,21 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
 
   it("fromUrl throws without apiKey", async function () {
     await expectAsync(
-      GoogleStreetViewCubeMapPanoramaProvider.fromUrl({})
+      GoogleStreetViewCubeMapPanoramaProvider.fromUrl({}),
     ).toBeRejectedWithDeveloperError();
   });
 
   it("fromUrl creates provider", async function () {
-    const result =
-      await GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
-        apiKey: "abc",
-      });
+    const result = await GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
+      apiKey: "abc",
+    });
 
-    expect(result).toBeInstanceOf(
-      GoogleStreetViewCubeMapPanoramaProvider
-    );
+    expect(result).toBeInstanceOf(GoogleStreetViewCubeMapPanoramaProvider);
   });
 
   it("getNearestPanoId throws without position", async function () {
     await expectAsync(
-      provider.getNearestPanoId()
+      provider.getNearestPanoId(),
     ).toBeRejectedWithDeveloperError();
   });
 
@@ -58,12 +55,11 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
       },
     };
 
-    spyOn(provider._metadataResource, "getDerivedResource")
-      .and.returnValue({
-        fetchJson: jasmine
-          .createSpy()
-          .and.returnValue(Promise.resolve(mockResponse)),
-      });
+    spyOn(provider._metadataResource, "getDerivedResource").and.returnValue({
+      fetchJson: jasmine
+        .createSpy()
+        .and.returnValue(Promise.resolve(mockResponse)),
+    });
 
     const position = Cartographic.fromDegrees(20, 10);
 
@@ -75,19 +71,16 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
   });
 
   it("getNearestPanoId throws on non-OK status", async function () {
-    spyOn(provider._metadataResource, "getDerivedResource")
-      .and.returnValue({
-        fetchJson: jasmine
-          .createSpy()
-          .and.returnValue(
-            Promise.resolve({ status: "ZERO_RESULTS" })
-          ),
-      });
+    spyOn(provider._metadataResource, "getDerivedResource").and.returnValue({
+      fetchJson: jasmine
+        .createSpy()
+        .and.returnValue(Promise.resolve({ status: "ZERO_RESULTS" })),
+    });
 
     const position = Cartographic.fromDegrees(0, 0);
 
     await expectAsync(
-      provider.getNearestPanoId(position)
+      provider.getNearestPanoId(position),
     ).toBeRejectedWithDeveloperError();
   });
 
@@ -97,12 +90,11 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
       location: { lat: 1, lng: 2 },
     };
 
-    spyOn(provider._metadataResource, "getDerivedResource")
-      .and.returnValue({
-        fetchJson: jasmine
-          .createSpy()
-          .and.returnValue(Promise.resolve(mockResponse)),
-      });
+    spyOn(provider._metadataResource, "getDerivedResource").and.returnValue({
+      fetchJson: jasmine
+        .createSpy()
+        .and.returnValue(Promise.resolve(mockResponse)),
+    });
 
     const result = await provider.getPanoIdMetadata("abc");
 
@@ -110,45 +102,36 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
   });
 
   it("getPanoIdMetadata throws on error status", async function () {
-    spyOn(provider._metadataResource, "getDerivedResource")
-      .and.returnValue({
-        fetchJson: jasmine
-          .createSpy()
-          .and.returnValue(
-            Promise.resolve({ status: "INVALID_REQUEST" })
-          ),
-      });
+    spyOn(provider._metadataResource, "getDerivedResource").and.returnValue({
+      fetchJson: jasmine
+        .createSpy()
+        .and.returnValue(Promise.resolve({ status: "INVALID_REQUEST" })),
+    });
 
     await expectAsync(
-      provider.getPanoIdMetadata("abc")
+      provider.getPanoIdMetadata("abc"),
     ).toBeRejectedWithDeveloperError();
   });
 
   it("_buildFaceUrl builds url with query params", function () {
-    spyOn(provider._baseResource, "getDerivedResource")
-      .and.returnValue({
-        url: "https://example.com/?size=512x512&pano=test",
-      });
+    spyOn(provider._baseResource, "getDerivedResource").and.returnValue({
+      url: "https://example.com/?size=512x512&pano=test",
+    });
 
-    const url = provider._buildFaceUrl(
-      0,
-      0,
-      "512x512",
-      "test"
-    );
+    const url = provider._buildFaceUrl(0, 0, "512x512", "test");
 
     expect(url).toContain("example.com");
   });
 
   it("loadPanorama throws without cartographic", async function () {
     await expectAsync(
-      provider.loadPanorama({})
+      provider.loadPanorama({}),
     ).toBeRejectedWithDeveloperError();
   });
 
   it("loadPanorama builds CubeMapPanorama", async function () {
     spyOn(provider, "_buildFaceUrl").and.returnValue(
-      "https://example.com/image.jpg"
+      "https://example.com/image.jpg",
     );
 
     spyOn(CubeMapPanorama.prototype, "constructor");
@@ -165,11 +148,11 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
 
   it("loadPanorama calls getNearestPanoId if panoId not provided", async function () {
     spyOn(provider, "getNearestPanoId").and.returnValue(
-      Promise.resolve({ panoId: "abc" })
+      Promise.resolve({ panoId: "abc" }),
     );
 
     spyOn(provider, "_buildFaceUrl").and.returnValue(
-      "https://example.com/image.jpg"
+      "https://example.com/image.jpg",
     );
 
     const cartographic = Cartographic.fromDegrees(20, 10);
@@ -183,7 +166,7 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
 
   it("loadPanoramaFromPanoId throws without panoId", async function () {
     await expectAsync(
-      provider.loadPanoramaFromPanoId()
+      provider.loadPanoramaFromPanoId(),
     ).toBeRejectedWithDeveloperError();
   });
 
@@ -192,16 +175,14 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
       Promise.resolve({
         status: "OK",
         location: { lat: 10, lng: 20 },
-      })
+      }),
     );
 
     spyOn(provider, "loadPanorama").and.returnValue(
-      Promise.resolve("panorama")
+      Promise.resolve("panorama"),
     );
 
-    const result = await provider.loadPanoramaFromPanoId(
-      "abc"
-    );
+    const result = await provider.loadPanoramaFromPanoId("abc");
 
     expect(provider.loadPanorama).toHaveBeenCalled();
     expect(result).toBe("panorama");
@@ -216,9 +197,7 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
     };
 
     const result =
-      GoogleStreetViewCubeMapPanoramaProvider._parseMetadata(
-        metadata
-      );
+      GoogleStreetViewCubeMapPanoramaProvider._parseMetadata(metadata);
 
     expect(result.cartographic.latitude).toBeDefined();
   });
