@@ -18,7 +18,6 @@ const baseConfig = {
   define: {
     __COMMIT_SHA__: JSON.stringify(undefined),
     __CESIUM_VERSION__: JSON.stringify(undefined),
-    __PAGE_BASE_URL__: JSON.stringify(""),
     __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(undefined),
   },
   build: {
