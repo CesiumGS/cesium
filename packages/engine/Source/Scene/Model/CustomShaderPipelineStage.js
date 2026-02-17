@@ -709,7 +709,10 @@ function addLinesToShader(shaderBuilder, customShader, generatedCode) {
  *
  * @param {StructuralMetadata} structuralMetadata the structural metadata for the primitive being processed
  * @param {ModelComponents.Primitive} primitive the primitive being processed by this stage
- * @returns
+ *
+ * @returns {Set<string>} a set of all property IDs the primitive references
+ *
+ * @private
  */
 function getAllPropertyIds(primitive, structuralMetadata) {
   const usedPropertyTextures = primitive.propertyTextureIds;
@@ -748,6 +751,7 @@ function getAllPropertyIds(primitive, structuralMetadata) {
  * @param {Set<string>} primitivePropertyIds the set of all metadata property IDs used in the primitive being processed
  *
  * @returns {boolean} true if all metadata properties used in the shader exist on the primitive, false otherwise
+ *
  * @private
  */
 function checkMetadataCompatibility(
