@@ -47,14 +47,34 @@ import assert from "../Core/assert.js";
  * @see BufferPolygonCollection
  */
 class BufferPrimitiveCollection {
-  static DEFAULT_COUNT = 1024;
+  /**
+   * Default capacity of buffers on new collections. A quantity of elements: number of
+   * vertices for the vertex buffer, number of primitives for the primitive buffer, etc.
+   * This value is arbitrary — and cannot be changed after collection creation! — so it
+   * highly recommended to provide specific per-buffer capacities in the collection constructor.
+   * @type {number}
+   * @readonly
+   * @static
+   */
+  static DEFAULT_CAPACITY = 1024;
 
+  /** @ignore */
   static Error = {
     ERR_RESIZE: "BufferPrimitive range cannot be resized after initialization.",
     ERR_CAPACITY: "BufferPrimitiveCollection capacity exceeded.",
     ERR_MULTIPLE_OF_FOUR:
       "BufferPrimitive byte length must be a multiple of 4.",
   };
+
+  /**
+   * Resources managed by the collection's renderer. Collections may have multiple renderer
+   * implementations, so the collection should be ignorant of the renderer's implementation
+   * and context data. A collection only has one renderer active at a time.
+   *
+   * @type {Record<string, unknown>}
+   * @ignore
+   */
+  _renderContext = null;
 
   /**
    * @param {object} options
@@ -102,7 +122,7 @@ class BufferPrimitiveCollection {
      * @ignore
      */
     this._primitiveCountMax =
-      options.primitiveCountMax ?? BufferPrimitiveCollection.DEFAULT_COUNT;
+      options.primitiveCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
      * @type {ArrayBuffer}
@@ -129,7 +149,7 @@ class BufferPrimitiveCollection {
      * @ignore
      */
     this._positionCountMax =
-      options.vertexCountMax ?? BufferPrimitiveCollection.DEFAULT_COUNT;
+      options.vertexCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
      * @type {ArrayBuffer}
@@ -202,7 +222,10 @@ class BufferPrimitiveCollection {
   /////////////////////////////////////////////////////////////////////////////
   // COLLECTION LIFECYCLE
 
-  /** @private */
+  /**
+   * @private
+   * @ignore
+   */
   _allocatePrimitiveBuffer() {
     const layout = this._getPrimitiveLayout();
 
@@ -218,7 +241,10 @@ class BufferPrimitiveCollection {
     this._primitiveView = new DataView(this._primitiveBuffer);
   }
 
-  /** @private */
+  /**
+   * @private
+   * @ignore
+   */
   _allocatePositionBuffer() {
     const positionBufferByteLength =
       this._positionCountMax * 3 * Float64Array.BYTES_PER_ELEMENT;
@@ -494,6 +520,7 @@ class BufferPrimitiveCollection {
   /**
    * Number of primitives added to the collection.
    * @type {number}
+   * @readonly
    */
   get primitiveCount() {
     return this._primitiveCount;
@@ -503,6 +530,8 @@ class BufferPrimitiveCollection {
    * Maximum number of primitives that may be added to the collection, including
    * those already added and counted in {@link primitiveCount}.
    * @type {number}
+   * @readonly
+   * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}
    */
   get primitiveCountMax() {
     return this._primitiveCountMax;
@@ -513,6 +542,7 @@ class BufferPrimitiveCollection {
    * space allocated by {@link primitiveCountMax}, even if no primitives have
    * yet been added in that space.
    * @type {number}
+   * @readonly
    */
   get sizeInBytes() {
     return this._primitiveBuffer.byteLength + this._positionBuffer.byteLength;
@@ -521,6 +551,7 @@ class BufferPrimitiveCollection {
   /**
    * Number of vertices added to the collection.
    * @type {number}
+   * @readonly
    */
   get vertexCount() {
     return this._positionCount;
@@ -530,6 +561,8 @@ class BufferPrimitiveCollection {
    * Maximum number of vertices that may be added to the collection, including
    * those already added and counted in {@link vertexCount}.
    * @type {number}
+   * @readonly
+   * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}
    */
   get vertexCountMax() {
     return this._positionCountMax;

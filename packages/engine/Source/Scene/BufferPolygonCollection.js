@@ -48,13 +48,15 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
     /**
      * @type {number}
      * @protected
+     * @ignore
      */
     this._holeCountMax =
-      options.holeCountMax ?? BufferPrimitiveCollection.DEFAULT_COUNT;
+      options.holeCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
      * @type {ArrayBuffer}
      * @protected
+     * @ignore
      */
     this._holeIndexBuffer = null;
 
@@ -73,13 +75,15 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
     /**
      * @type {number}
      * @protected
+     * @ignore
      */
     this._triangleCountMax =
-      options.triangleCountMax ?? BufferPrimitiveCollection.DEFAULT_COUNT;
+      options.triangleCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
      * @type {ArrayBuffer}
      * @protected
+     * @ignore
      */
     this._triangleIndexBuffer = null;
 
@@ -109,6 +113,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @param {BufferPolygonCollection} collection
    * @returns {BufferPolygonCollection}
    * @override
+   * @ignore
    */
   static _cloneEmpty(collection) {
     return new BufferPolygonCollection({
@@ -124,6 +129,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
 
   /**
    * @private
+   * @ignore
    */
   _allocateHoleIndexBuffer() {
     const holeIndexBufferByteLength =
@@ -134,6 +140,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
 
   /**
    * @private
+   * @ignore
    */
   _allocateTriangleIndexBuffer() {
     const triangleIndexBufferByteLength =
@@ -216,6 +223,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @param {BufferPolygonCollection} src
    * @param {BufferPolygonCollection} dst
    * @override
+   * @ignore
    */
   static _assignBuffers(src, dst) {
     super._assignBuffers(src, dst);
@@ -243,7 +251,10 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   /////////////////////////////////////////////////////////////////////////////
   // ACCESSORS
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   get sizeInBytes() {
     return (
       super.sizeInBytes +
@@ -252,22 +263,36 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
     );
   }
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   get holeCount() {
     return this._holeCount;
   }
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}
+   */
   get holeCountMax() {
     return this._holeCountMax;
   }
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   get triangleCount() {
     return this._triangleCount;
   }
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}
+   */
   get triangleCountMax() {
     return this._triangleCountMax;
   }

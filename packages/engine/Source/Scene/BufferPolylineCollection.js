@@ -22,9 +22,6 @@ import renderPolylines from "./renderBufferPolylineCollection.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class BufferPolylineCollection extends BufferPrimitiveCollection {
-  /** @type {Record<string, unknown>} */
-  _renderContext = null;
-
   _getCollectionClass() {
     return BufferPolylineCollection;
   }

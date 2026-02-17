@@ -28,6 +28,7 @@ class BufferPoint extends BufferPrimitive {
    */
   _collection = null;
 
+  /** @ignore */
   static Layout = {
     ...BufferPrimitive.Layout,
 
@@ -56,34 +57,42 @@ class BufferPoint extends BufferPrimitive {
   // GEOMETRY
 
   /**
-   * @param {Cartesian3} result
+   * @type {number}
+   * @readonly
+   */
+  get vertexOffset() {
+    return this._getUint32(BufferPoint.Layout.POSITION_OFFSET_U32);
+  }
+
+  /**
+   * @type {number}
+   * @readonly
+   */
+  get vertexCount() {
+    return 1;
+  }
+
+  /**
+   * @param {Cartesian3} [result]
    * @returns {Cartesian3}
    */
   getPosition(result) {
-    const vertexOffset = this._getUint32(
-      BufferPoint.Layout.POSITION_OFFSET_U32,
-    );
-    return Cartesian3.fromArray(
-      this._collection._positionF64,
-      vertexOffset * 3,
-      result,
-    );
+    const positionF64 = this._collection._positionF64;
+    return Cartesian3.fromArray(positionF64, this.vertexOffset * 3, result);
   }
 
   /** @param {Cartesian3} position */
   setPosition(position) {
-    const collection = /** @type {BufferPointCollection} */ (this._collection);
-    const vertexOffset = this._getUint32(
-      BufferPoint.Layout.POSITION_OFFSET_U32,
-    );
+    const collection = this._collection;
+    const vertexOffset = this.vertexOffset;
 
     //>>includeStart('debug', pragmas.debug);
     assert(vertexOffset < collection.vertexCountMax, ERR_CAPACITY);
     //>>includeEnd('debug');
 
-    this._collection._positionF64[vertexOffset * 3] = position.x;
-    this._collection._positionF64[vertexOffset * 3 + 1] = position.y;
-    this._collection._positionF64[vertexOffset * 3 + 2] = position.z;
+    collection._positionF64[vertexOffset * 3] = position.x;
+    collection._positionF64[vertexOffset * 3 + 1] = position.y;
+    collection._positionF64[vertexOffset * 3 + 2] = position.z;
 
     collection._makeDirtyBoundingVolume();
   }
@@ -95,7 +104,7 @@ class BufferPoint extends BufferPrimitive {
   toJSON() {
     return {
       ...super.toJSON(),
-      position: Cartesian3.pack(this.getPosition(scratchCartesian), []),
+      position: Cartesian3.pack(this.getPosition(), []),
     };
   }
 }

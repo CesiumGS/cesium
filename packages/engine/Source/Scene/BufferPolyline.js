@@ -27,6 +27,7 @@ class BufferPolyline extends BufferPrimitive {
    */
   _collection = null;
 
+  /** @ignore */
   static Layout = {
     ...BufferPrimitive.Layout,
 
@@ -81,12 +82,18 @@ class BufferPolyline extends BufferPrimitive {
   /////////////////////////////////////////////////////////////////////////////
   // GEOMETRY
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   get vertexOffset() {
     return this._getUint32(BufferPolyline.Layout.POSITION_OFFSET_U32);
   }
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   get vertexCount() {
     return this._getUint32(BufferPolyline.Layout.POSITION_COUNT_U32);
   }

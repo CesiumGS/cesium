@@ -34,9 +34,11 @@ class BufferPolygon extends BufferPrimitive {
   /**
    * @type {BoundingSphere}
    * @protected
+   * @ignore
    */
   _boundingSphere = new BoundingSphere();
 
+  /** @ignore */
   static Layout = {
     ...BufferPrimitive.Layout,
 
@@ -113,12 +115,18 @@ class BufferPolygon extends BufferPrimitive {
   /////////////////////////////////////////////////////////////////////////////
   // GEOMETRY
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   get vertexOffset() {
     return this._getUint32(BufferPolygon.Layout.POSITION_OFFSET_U32);
   }
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   get vertexCount() {
     return this._getUint32(BufferPolygon.Layout.POSITION_COUNT_U32);
   }
@@ -177,12 +185,18 @@ class BufferPolygon extends BufferPrimitive {
     collection._makeDirtyBoundingVolume();
   }
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   get holeOffset() {
     return this._getUint32(BufferPolygon.Layout.HOLE_OFFSET_U32);
   }
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   get holeCount() {
     return this._getUint32(BufferPolygon.Layout.HOLE_COUNT_U32);
   }
@@ -236,12 +250,18 @@ class BufferPolygon extends BufferPrimitive {
     collection._makeDirtyBoundingVolume();
   }
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   get triangleOffset() {
     return this._getUint32(BufferPolygon.Layout.TRIANGLE_OFFSET_U32);
   }
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   * @readonly
+   */
   get triangleCount() {
     return this._getUint32(BufferPolygon.Layout.TRIANGLE_COUNT_U32);
   }
