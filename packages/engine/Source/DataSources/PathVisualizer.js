@@ -32,6 +32,51 @@ const update3DCartesian3Scratch1 = new Cartesian3();
 const update3DCartesian3Scratch2 = new Cartesian3();
 const update3DCartesian3Scratch3 = new Cartesian3();
 
+const transformOrientationScratch = new Quaternion();
+const transformVvlhScratch = new Matrix4();
+const transformRotationScratch = new Matrix3();
+
+/**
+ * Transforms a path entity's position into the local frame of the reference entity.
+ * If the reference entity has an orientation, uses that orientation to define the local frame.
+ * Otherwise, falls back to a VVLH (Vehicle Velocity Local Horizontal) frame derived from the reference entity's velocity.
+ *
+ * @param {JulianDate} time The time at which to evaluate the orientation or VVLH frame.
+ * @param {Cartesian3} pathEntityPos The position of the path entity in the FIXED reference frame.
+ * @param {Cartesian3} refEntityPos The position of the reference entity in the FIXED reference frame.
+ * @param {Entity} refEntity The reference entity whose frame to transform into.
+ * @param {Cartesian3} result The object onto which to store the result.
+ * @returns {Cartesian3 | undefined} The transformed position in the reference entity's local frame, or undefined if either input position is undefined.
+ */
+function transformToEntityFrame(time, pathEntityPos, refEntityPos, refEntity, result) {
+  if (!defined(pathEntityPos) || !defined(refEntityPos)) {
+    return undefined;
+  }
+
+  Cartesian3.subtract(pathEntityPos, refEntityPos, result);
+  if (defined(refEntity.orientation)) {
+    if (refEntity.orientation.getValue(time, transformOrientationScratch)) {
+      Quaternion.conjugate(transformOrientationScratch, transformOrientationScratch);
+      Matrix3.fromQuaternion(transformOrientationScratch, transformRotationScratch);
+      Matrix3.multiplyByVector(transformRotationScratch, result, result);
+    }
+  } else if (defined(computeVvlhTransform(time, refEntity.position, transformVvlhScratch))) {
+    Matrix4.inverse(transformVvlhScratch, transformVvlhScratch);
+    Matrix4.getRotation(transformVvlhScratch, transformRotationScratch);
+    Matrix3.multiplyByVector(transformRotationScratch, result, result);
+  }
+  // TODO verify what happens in neither of above 2 cases
+  return result;
+}
+
+/**
+ * TODO
+ * 
+ * @param {*} time 
+ * @param {*} positionProperty 
+ * @param {*} result 
+ * @returns 
+ */
 function computeVvlhTransform(time, positionProperty, result) {
   const cartesian = positionProperty.getValue(time, update3DCartesian3Scratch0);
   if (defined(cartesian)) {
@@ -137,9 +182,6 @@ const scratchTimeInterval = new TimeInterval();
 const subSampleCompositePropertyScratch = new TimeInterval();
 const subSampleIntervalPropertyScratch = new TimeInterval();
 
-const rr = new Matrix4();
-const q = new Matrix3();
-
 function EntityData(entity) {
   this.entity = entity;
   this.polyline = undefined;
@@ -186,33 +228,10 @@ function subSampleSampledProperty(
       sampleScratch
     );
 
-    if (refEntity.orientation) {
-      console.log("orientation present");
-      const orientation = new Quaternion();
-
-      // Get orientation of entity at start time
-      // Then multiply tmp by the transform to get it into the entity's reference frame
-      if (
-        defined(refEntity.orientation.getValue(start, orientation)) &&
-        (defined(tmp) && defined(tmp2))
-      ) {
-        console.log(orientation);
-
-        Cartesian3.subtract(tmp, tmp2, tmp);
-
-        Quaternion.conjugate(orientation, orientation);
-        const rotation = Matrix3.fromQuaternion(orientation, q);
-        Matrix3.multiplyByVector(rotation, tmp, tmp);
-
-        result[r++] = tmp;
-      }
-    } else if (defined(tmp) && defined(tmp2)) {
-      result[r++] = Cartesian3.subtract(tmp, tmp2, tmp);
-      if (defined(computeVvlhTransform(start, refPosition, rr))) {
-        Matrix4.inverse(rr, rr);
-        Matrix4.getRotation(rr, q, q);
-        Matrix3.multiplyByVector(q, tmp, tmp);
-      }
+    // Transform to frame of reference - either reference entity's orientation, or VVLH
+    tmp = transformToEntityFrame(start, tmp, tmp2, refEntity, tmp);
+    if (defined(tmp)) {
+      result[r++] = tmp;
     }
   }
 
@@ -251,12 +270,8 @@ function subSampleSampledProperty(
           sampleScratch
         );
         if (defined(tmp) && defined(tmp2)) {
-          result[r++] = Cartesian3.subtract(tmp, tmp2, tmp);
-          if (defined(computeVvlhTransform(updateTime, refPosition, rr))) {
-            Matrix4.inverse(rr, rr);
-            Matrix4.getRotation(rr, q, q);
-            Matrix3.multiplyByVector(q, tmp, tmp);
-          }
+          tmp = transformToEntityFrame(updateTime, tmp, tmp2, refEntity, tmp);
+          result[r++] = tmp;
         }
       }
       steppedOnNow = true;
@@ -282,12 +297,8 @@ function subSampleSampledProperty(
           sampleScratch
         );
         if (defined(tmp) && defined(tmp2)) {
-          result[r++] = Cartesian3.subtract(tmp, tmp2, tmp);
-          if (defined(computeVvlhTransform(current, refPosition, rr))) {
-            Matrix4.inverse(rr, rr);
-            Matrix4.getRotation(rr, q, q);
-            Matrix3.multiplyByVector(q, tmp, tmp);
-          }
+          tmp = transformToEntityFrame(current, tmp, tmp2, refEntity, tmp);
+          result[r++] = tmp;
         }
       }
     }
@@ -334,12 +345,8 @@ function subSampleSampledProperty(
       sampleScratch
     );
     if (defined(tmp) && defined(tmp2)) {
-      result[r++] = Cartesian3.subtract(tmp, tmp2, tmp);
-      if (defined(computeVvlhTransform(stop, refPosition, rr))) {
-        Matrix4.inverse(rr, rr);
-        Matrix4.getRotation(rr, q, q);
-        Matrix3.multiplyByVector(q, tmp, tmp);
-      }
+      tmp = transformToEntityFrame(stop, tmp, tmp2, refEntity, tmp);
+      result[r++] = tmp;
     }
   }
 
@@ -694,6 +701,8 @@ function subSample(
 }
 
 const toFixedScratch = new Matrix3();
+const updateOrientationScratch = new Quaternion();
+const updateRotationScratch = new Matrix3();
 function PolylineUpdater(scene, referenceFrame) {
   this._unusedIndexes = [];
   this._polylineCollection = new PolylineCollection();
@@ -715,12 +724,26 @@ PolylineUpdater.prototype.update = function (time) {
       this._polylineCollection.modelMatrix
     );
   } else if (frame instanceof Entity) {
-    //data._getModelMatrix(time, this._polylineCollection.modelMatrix);
-    computeVvlhTransform(
-      time,
-      frame.position,
-      this._polylineCollection.modelMatrix
-    );
+    const position = frame.position.getValue(time);
+
+    // Use the reference frame entity's orientation if it has one
+    if (defined(frame.orientation)) {
+      if (defined(frame.orientation.getValue(time, updateOrientationScratch))) {
+        // Calculate the model matrix that places the body-frame path points into the world
+        Matrix3.fromQuaternion(updateOrientationScratch, updateRotationScratch);
+        Matrix4.fromRotationTranslation(
+          updateRotationScratch,
+          position,
+          this._polylineCollection.modelMatrix
+        );
+      }
+    } else {
+      computeVvlhTransform(
+        time,
+        frame.position,
+        this._polylineCollection.modelMatrix
+      );
+    }
   }
 };
 

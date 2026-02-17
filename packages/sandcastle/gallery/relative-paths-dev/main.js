@@ -7,19 +7,31 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 
 let sat1;
 let sat2;
+let sat3;
+let sat4;
 
-Cesium.CzmlDataSource.load("../../../Specs/Data/CZML/TwoSats.czml").then(
-  function (ds) {
-    viewer.dataSources.add(ds);
-    sat1 = ds.entities.getById("Satellite/Satellite1");
-    sat2 = ds.entities.getById("Satellite/Satellite2");
+Promise.all([
+  Cesium.CzmlDataSource.load("../../../Specs/Data/CZML/TwoSats.czml"),
+  Cesium.CzmlDataSource.load(
+    "../../../Specs/Data/CZML/TwoSatsOrientation.czml",
+  ),
+]).then(function ([ds, dsOrient]) {
+  viewer.dataSources.add(ds);
+  sat1 = ds.entities.getById("Satellite/Satellite1");
+  sat2 = ds.entities.getById("Satellite/Satellite2");
+  sat1.viewFrom = new Cesium.Cartesian3(-2000.0, -40000.0, 2000.0);
+  sat2.viewFrom = new Cesium.Cartesian3(-2000.0, -40000.0, 2000.0);
+  sat1.path.relativeTo = sat2.id;
+  sat2.path.relativeTo = undefined;
+  viewer.trackedEntity = sat2;
 
-    sat1.viewFrom = new Cesium.Cartesian3(-2000.0, -40000.0, 2000.0);
-    sat2.viewFrom = new Cesium.Cartesian3(-2000.0, -40000.0, 2000.0);
-
-    viewer.trackedEntity = sat1;
-  },
-);
+  viewer.dataSources.add(dsOrient);
+  sat3 = dsOrient.entities.getById("Satellite/Satellite1");
+  sat4 = dsOrient.entities.getById("Satellite/Satellite2");
+  sat3.path.relativeTo = sat4.id;
+  sat4.path.relativeTo = undefined;
+  sat3.path.material = new Cesium.ColorMaterialProperty(Cesium.Color.YELLOW);
+});
 
 Sandcastle.addDefaultToolbarButton("Satellite 1", function () {
   viewer.camera.frustum.fov = Cesium.Math.toRadians(55);
