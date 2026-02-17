@@ -9,8 +9,8 @@ import {
 } from "./util/IframeBridge";
 
 const INNER_ORIGIN = __INNER_ORIGIN__;
-// using pathname lets this adapt to deployed locations like CI
-// TODO: We need to decide if the deployed location on a separate origin has the same structure or not
+// This constructs urls like `[__INNER_ORIGIN__]/[pathname]/templates/bucket.html`
+// using location.pathname lets this adapt to deployed locations like CI
 const bucketUrl = `${new URL(`${location.pathname.replace(/[^\/]+.html/, "")}templates/bucket.html`, __INNER_ORIGIN__)}`;
 
 export function Bucket({
@@ -56,12 +56,12 @@ export function Bucket({
   }, [bucketReady, code, html, runNumber]);
 
   useEffect(() => {
-    const messageHandler = function (e: MessageEvent<MessageToApp>) {
+    const messageHandler = function (message: MessageToApp) {
       if (!iframeBridge.current) {
         return;
       }
 
-      if (e.data.type === "bucketReady") {
+      if (message.type === "bucketReady") {
         // The iframe (bucket.html) sends this message on load.
         // We send the code in response to make sure the page is ready to receive it
         setBucketReady(true);
@@ -74,30 +74,30 @@ export function Bucket({
           code: embedInSandcastleTemplate(code, isFirefox),
           html,
         });
-      } else if (e.data.type === "consoleClear") {
+      } else if (message.type === "consoleClear") {
         resetConsole({ showMessage: true });
-      } else if (e.data.type === "consoleLog") {
+      } else if (message.type === "consoleLog") {
         // Console log messages from the iframe display in Sandcastle.
-        appendConsole("log", e.data.log);
-      } else if (e.data.type === "consoleError") {
+        appendConsole("log", message.log);
+      } else if (message.type === "consoleError") {
         // Console error messages from the iframe display in Sandcastle
-        let errorMsg = e.data.error;
-        const lineNumber = e.data.lineNumber;
+        let errorMsg = message.error;
+        const lineNumber = message.lineNumber;
         if (lineNumber) {
           errorMsg += ` (on line ${lineNumber}`;
 
-          if (e.data.url) {
-            errorMsg += ` of ${e.data.url}`;
+          if (message.url) {
+            errorMsg += ` of ${message.url}`;
           }
           errorMsg += ")";
         }
         appendConsole("error", errorMsg);
-      } else if (e.data.type === "consoleWarn") {
+      } else if (message.type === "consoleWarn") {
         // Console warning messages from the iframe display in Sandcastle.
-        appendConsole("warn", e.data.warn);
-      } else if (e.data.type === "highlight") {
+        appendConsole("warn", message.warn);
+      } else if (message.type === "highlight") {
         // Hovering objects in the embedded Cesium window.
-        highlightLine(e.data.highlight);
+        highlightLine(message.highlight);
       }
     };
 
@@ -120,7 +120,6 @@ export function Bucket({
             iframeBridge.current = new IframeBridge(
               INNER_ORIGIN,
               iframe.contentWindow,
-              "App",
             );
           }
         }}

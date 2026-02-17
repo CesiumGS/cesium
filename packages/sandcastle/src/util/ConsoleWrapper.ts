@@ -189,6 +189,15 @@ export const originalLog = console.log;
 export const originalWarn = console.warn;
 export const originalError = console.error;
 
+declare global {
+  interface Window {
+    originalClear: typeof console.clear;
+    originalLog: typeof console.log;
+    originalWarn: typeof console.warn;
+    originalError: typeof console.error;
+  }
+}
+
 window.originalClear = originalClear;
 window.originalLog = originalLog;
 window.originalWarn = originalWarn;

@@ -22,7 +22,7 @@ import {
   buildWidgets,
 } from "./scripts/build.js";
 
-const argv = yargs(process.argv)
+const argv = await yargs(process.argv)
   .options({
     port: {
       default: 8080,
@@ -399,29 +399,25 @@ const throttle = (callback) => {
     function () {
       if (argv.public) {
         console.log(
-          "Cesium development server running publicly.  Connect to http://localhost:%d/",
-          server.address().port,
+          `Cesium development server running publicly.  Connect to http://localhost:${server.address()?.port}/`,
         );
       } else {
         console.log(
-          "Cesium development server running locally.  Connect to http://localhost:%d/",
-          server.address().port,
+          `Cesium development server running locally.  Connect to http://localhost:${server.address()?.port}/`,
         );
       }
     },
   );
 
-  server.on("error", function (e) {
+  server.on("error", function (/** @type {NodeJS.ErrnoException} */ e) {
     if (e.code === "EADDRINUSE") {
       console.log(
-        "Error: Port %d is already in use, select a different port.",
-        argv.port,
+        `Error: Port ${argv.port} is already in use, select a different port.`,
       );
-      console.log("Example: node server.js --port %d", argv.port + 1);
+      console.log(`Example: node server.js --port ${argv.port + 1}`);
     } else if (e.code === "EACCES") {
       console.log(
-        "Error: This process does not have permission to listen on port %d.",
-        argv.port,
+        `Error: This process does not have permission to listen on port ${argv.port}.`,
       );
       if (argv.port < 1024) {
         console.log("Try a port number higher than 1024.");
@@ -435,44 +431,38 @@ const throttle = (callback) => {
     console.log("Cesium development server stopped.");
   });
 
-  // TODO: this really could just be a second call to `app.listen` with a different port. We should discuss how we want
-  // the local development env to work.
-  const sandcastleApp = express();
-  // TODO: this mimics the other server, can they be combined, is this even the way way want to set this up?
-  sandcastleApp.use(express.static("."));
-  // TODO: these should be hooked up to the same self-rebuilding bundles as the main server so devs can test their changes
-  sandcastleApp.use(express.static("./Apps/Sandcastle2"));
-  sandcastleApp.use("/Build", express.static("./Build"));
-  sandcastleApp.use("/Source", express.static("./Source"));
-  sandcastleApp.use(
-    "/packages/engine/Build/Unminified",
-    express.static("./packages/engine/Build/Unminified"),
-  );
-  sandcastleApp.use(
-    "/packages/widgets/Build/Unminified",
-    express.static("./packages/widgets/Build/Unminified"),
-  );
-
-  const sandcastleServer = sandcastleApp.listen(8081, "localhost", function () {
-    console.log(
-      "Sandcastle viewer server running locally.  Connect to http://localhost:%d/",
-      sandcastleServer.address().port,
-    );
+  const sandcastleServer = app.listen(8081, "localhost", function () {
+    // This "mirror" server runs on a separate port to create origin separation between
+    // the main Sandcastle app and the viewer page for security
+    // We use the same express `app` to reuse the auto re-building of assets when the source changes
+    console.log("Sandcastle mirror server running on port 8081");
   });
 
+  sandcastleServer.on(
+    "error",
+    function (/** @type {NodeJS.ErrnoException} */ e) {
+      if (e.code === "EADDRINUSE") {
+        console.log(
+          "Error: Port 8081 is already in use, please free it and try again",
+        );
+      } else if (e.code === "EACCES") {
+        console.log(
+          "Error: This process does not have permission to listen on port 8081.",
+        );
+      }
+
+      throw e;
+    },
+  );
+
   sandcastleServer.on("close", function () {
-    console.log("Sandcastle viewer server stopped.");
-    process.exit(0);
+    console.log("Sandcastle mirror server stopped.");
   });
 
   let isFirstSig = true;
   process.on("SIGINT", function () {
     if (isFirstSig) {
       console.log("\nCesium development servers shutting down.");
-
-      server.close(() => {
-        sandcastleServer.close();
-      });
 
       if (!production) {
         contexts.esm.dispose();
@@ -481,6 +471,10 @@ const throttle = (callback) => {
         contexts.specs.dispose();
         contexts.testWorkers.dispose();
       }
+
+      server.close(() => {
+        sandcastleServer.close(() => process.exit(0));
+      });
 
       isFirstSig = false;
     } else {
