@@ -84,6 +84,11 @@ class BufferPolyline extends BufferPrimitive {
   // GEOMETRY
 
   /** @type {number} */
+  get vertexOffset() {
+    return this._getUint32(BufferPolyline.Layout.POSITION_OFFSET_U32);
+  }
+
+  /** @type {number} */
   get vertexCount() {
     return this._getUint32(BufferPolyline.Layout.POSITION_COUNT_U32);
   }
@@ -93,14 +98,8 @@ class BufferPolyline extends BufferPrimitive {
    * return {Float64Array}
    */
   getPositions(result) {
-    const collection = this._collection;
-    const vertexOffset = this._getUint32(
-      BufferPolyline.Layout.POSITION_OFFSET_U32,
-    );
-    const vertexCount = this._getUint32(
-      BufferPolyline.Layout.POSITION_COUNT_U32,
-    );
-    const positionF64 = collection._positionF64;
+    const { vertexOffset, vertexCount } = this;
+    const positionF64 = this._collection._positionF64;
     for (let i = 0; i < vertexCount; i++) {
       result[i * 3] = positionF64[(vertexOffset + i) * 3];
       result[i * 3 + 1] = positionF64[(vertexOffset + i) * 3 + 1];
@@ -112,10 +111,8 @@ class BufferPolyline extends BufferPrimitive {
   /** @param {Float64Array} positions */
   setPositions(positions) {
     const collection = this._collection;
-    const vertexOffset = this._getUint32(
-      BufferPolyline.Layout.POSITION_OFFSET_U32,
-    );
-    const srcCount = this._getUint32(BufferPolyline.Layout.POSITION_COUNT_U32);
+    const vertexOffset = this.vertexOffset;
+    const srcCount = this.vertexCount;
     const dstCount = positions.length / 3;
     const collectionCount = collection._positionCount + dstCount - srcCount;
 

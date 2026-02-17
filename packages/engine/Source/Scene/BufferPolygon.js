@@ -120,6 +120,11 @@ class BufferPolygon extends BufferPrimitive {
   // GEOMETRY
 
   /** @type {number} */
+  get vertexOffset() {
+    return this._getUint32(BufferPolygon.Layout.POSITION_OFFSET_U32);
+  }
+
+  /** @type {number} */
   get vertexCount() {
     return this._getUint32(BufferPolygon.Layout.POSITION_COUNT_U32);
   }
@@ -129,14 +134,8 @@ class BufferPolygon extends BufferPrimitive {
    * return {Float64Array}
    */
   getPositions(result) {
-    const collection = this._collection;
-    const vertexOffset = this._getUint32(
-      BufferPolygon.Layout.POSITION_OFFSET_U32,
-    );
-    const vertexCount = this._getUint32(
-      BufferPolygon.Layout.POSITION_COUNT_U32,
-    );
-    const positionF64 = collection._positionF64;
+    const { vertexOffset, vertexCount } = this;
+    const positionF64 = this._collection._positionF64;
     for (let i = 0; i < vertexCount; i++) {
       result[i * 3] = positionF64[(vertexOffset + i) * 3];
       result[i * 3 + 1] = positionF64[(vertexOffset + i) * 3 + 1];
@@ -148,10 +147,8 @@ class BufferPolygon extends BufferPrimitive {
   /** @param {Float64Array} positions */
   setPositions(positions) {
     const collection = this._collection;
-    const vertexOffset = this._getUint32(
-      BufferPolygon.Layout.POSITION_OFFSET_U32,
-    );
-    const srcCount = this._getUint32(BufferPolygon.Layout.POSITION_COUNT_U32);
+    const vertexOffset = this.vertexOffset;
+    const srcCount = this.vertexCount;
     const dstCount = positions.length / 3;
     const collectionCount = collection.vertexCount + dstCount - srcCount;
 
@@ -174,6 +171,11 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /** @type {number} */
+  get holeOffset() {
+    return this._getUint32(BufferPolygon.Layout.HOLE_OFFSET_U32);
+  }
+
+  /** @type {number} */
   get holeCount() {
     return this._getUint32(BufferPolygon.Layout.HOLE_COUNT_U32);
   }
@@ -183,10 +185,8 @@ class BufferPolygon extends BufferPrimitive {
    * @returns {Uint32Array}
    */
   getHoles(result) {
-    const collection = this._collection;
-    const holeOffset = this._getUint32(BufferPolygon.Layout.HOLE_OFFSET_U32);
-    const holeCount = this._getUint32(BufferPolygon.Layout.HOLE_COUNT_U32);
-    const holeIndexU32 = collection._holeIndexU32;
+    const { holeOffset, holeCount } = this;
+    const holeIndexU32 = this._collection._holeIndexU32;
     for (let i = 0; i < holeCount; i++) {
       result[i] = holeIndexU32[holeOffset + i];
     }
@@ -196,8 +196,8 @@ class BufferPolygon extends BufferPrimitive {
   /** @param {Uint32Array} holes */
   setHoles(holes) {
     const collection = this._collection;
-    const holeOffset = this._getUint32(BufferPolygon.Layout.HOLE_OFFSET_U32);
-    const srcCount = this._getUint32(BufferPolygon.Layout.HOLE_COUNT_U32);
+    const holeOffset = this.holeOffset;
+    const srcCount = this.holeCount;
     const dstCount = holes.length;
     const collectionCount = collection.holeCount + dstCount - srcCount;
 
@@ -218,6 +218,11 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /** @type {number} */
+  get triangleOffset() {
+    return this._getUint32(BufferPolygon.Layout.TRIANGLE_OFFSET_U32);
+  }
+
+  /** @type {number} */
   get triangleCount() {
     return this._getUint32(BufferPolygon.Layout.TRIANGLE_COUNT_U32);
   }
@@ -227,14 +232,8 @@ class BufferPolygon extends BufferPrimitive {
    * @returns {Uint32Array}
    */
   getTriangles(result) {
-    const collection = this._collection;
-    const triangleOffset = this._getUint32(
-      BufferPolygon.Layout.TRIANGLE_OFFSET_U32,
-    );
-    const triangleCount = this._getUint32(
-      BufferPolygon.Layout.TRIANGLE_COUNT_U32,
-    );
-    const indices = collection._triangleIndexU32;
+    const { triangleOffset, triangleCount } = this;
+    const indices = this._collection._triangleIndexU32;
     for (let i = 0; i < triangleCount; i++) {
       result[i * 3] = indices[(triangleOffset + i) * 3];
       result[i * 3 + 1] = indices[(triangleOffset + i) * 3 + 1];
@@ -246,10 +245,8 @@ class BufferPolygon extends BufferPrimitive {
   /** @param {Uint32Array} indices */
   setTriangles(indices) {
     const collection = this._collection;
-    const triangleOffset = this._getUint32(
-      BufferPolygon.Layout.TRIANGLE_OFFSET_U32,
-    );
-    const srcCount = this._getUint32(BufferPolygon.Layout.TRIANGLE_COUNT_U32);
+    const triangleOffset = this.triangleOffset;
+    const srcCount = this.triangleCount;
     const dstCount = indices.length / 3;
     const collectionCount = collection.triangleCount + dstCount - srcCount;
 

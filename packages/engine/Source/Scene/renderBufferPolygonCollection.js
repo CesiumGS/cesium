@@ -44,6 +44,12 @@ const BufferPolygonAttributeLocations = {
  * @ignore
  */
 
+// Scratch variables.
+const polygon = new BufferPolygon();
+const color = new Color();
+const cartesian = new Cartesian3();
+const encodedCartesian = new EncodedCartesian3();
+
 /**
  * @param {BufferPolygonCollection} collection
  * @param {FrameState} frameState
@@ -75,11 +81,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
   if (collection._dirtyCount > 0) {
     const { _dirtyOffset, _dirtyCount } = collection;
-
-    const polygon = new BufferPolygon();
-    const color = new Color();
-    const cartesian = new Cartesian3();
-    const encodedCartesian = new EncodedCartesian3();
 
     let vertexCountPerFeatureMax = 0;
     let triangleCountPerFeatureMax = 0;
@@ -211,25 +212,26 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       ],
     });
   } else if (collection._dirtyCount > 0) {
-    // TODO: Compute dirty vertex and index ranges.
+    const { indexOffset, indexCount, vertexOffset, vertexCount } =
+      getPolygonDirtyRanges(collection);
     const { positionHighAndShow, positionLowAndColor } =
       BufferPolygonAttributeLocations;
     renderContext.vertexArray.copyAttributeFromRange(
       positionHighAndShow,
       renderContext.attributeArrays[positionHighAndShow],
-      0,
-      collection.vertexCount,
+      vertexOffset,
+      vertexCount,
     );
     renderContext.vertexArray.copyAttributeFromRange(
       positionLowAndColor,
       renderContext.attributeArrays[positionLowAndColor],
-      0,
-      collection.vertexCount,
+      vertexOffset,
+      vertexCount,
     );
     renderContext.vertexArray.copyIndexFromRange(
       renderContext.indexArray,
-      0,
-      collection.triangleCount * 3,
+      indexOffset,
+      indexCount,
     );
   }
 
@@ -285,6 +287,26 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   collection._dirtyOffset = 0;
 
   return renderContext;
+}
+
+/**
+ * Computes dirty ranges for attribute and index buffers in a collection.
+ * @param {BufferPolygonCollection} collection
+ * @returns {{indexOffset: number, indexCount: number, vertexOffset: number, vertexCount: number}}
+ */
+function getPolygonDirtyRanges(collection) {
+  const { _dirtyOffset, _dirtyCount } = collection;
+
+  collection.get(_dirtyOffset, polygon);
+  const vertexOffset = polygon.vertexOffset;
+  const indexOffset = polygon.triangleOffset * 3;
+
+  collection.get(_dirtyOffset + _dirtyCount - 1, polygon);
+  const vertexCount = polygon.vertexOffset + polygon.vertexCount - vertexOffset;
+  const indexCount =
+    (polygon.triangleOffset + polygon.triangleCount) * 3 - indexOffset;
+
+  return { indexOffset, indexCount, vertexOffset, vertexCount };
 }
 
 export default renderBufferPolygonCollection;

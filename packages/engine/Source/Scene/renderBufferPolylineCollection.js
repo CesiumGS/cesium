@@ -23,7 +23,7 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
-/** @import {TypedArray, TypedArrayConstructor} from "../Core/globalTypes.js"; */
+/** @import {TypedArray} from "../Core/globalTypes.js"; */
 
 /** @type {{positionHighAndShow: number, positionLowAndColor: number}} */
 const BufferPolylineAttributeLocations = {
@@ -44,6 +44,12 @@ const BufferPolylineAttributeLocations = {
  * @ignore
  */
 
+// Scratch variables.
+const polyline = new BufferPolyline();
+const color = new Color();
+const cartesian = new Cartesian3();
+const encodedCartesian = new EncodedCartesian3();
+
 /**
  * @param {BufferPolylineCollection} collection
  * @param {FrameState} frameState
@@ -63,10 +69,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     const positionHighAndShowArray = new Float32Array(vertexCountMax * 4);
     const positionLowAndColorArray = new Float32Array(vertexCountMax * 4);
 
-    // gl.LINES requires `(vertexCount - primitiveCount) * 2` indices. Because
-    // `primitiveCount` can only increase, and adding more features reduces the
-    // number of gl.LINES that can fit within `vertexCountMax`, allocate the
-    // index buffer based on `primitiveCount`, not `primitiveCountMax`.
+    // gl.LINES uses `(vertexCount - primitiveCount) * 2` indices. Number of
+    // primitives can only increase, which _decreases_ gl.LINES capacity, so we
+    // use `primitiveCount` here, not `primitiveCountMax`.
     renderContext.indexArray = new Uint32Array(
       (vertexCountMax - primitiveCount) * 2,
     );
@@ -81,11 +86,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
   if (collection._dirtyCount > 0) {
     const { _dirtyOffset, _dirtyCount } = collection;
-
-    const polyline = new BufferPolyline();
-    const color = new Color();
-    const cartesian = new Cartesian3();
-    const encodedCartesian = new EncodedCartesian3();
 
     const positionHighAndShowArray =
       renderContext.attributeArrays[
@@ -119,9 +119,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       polyline.getPositions(cartesianArray);
       polyline.getColor(color);
 
-      let vOffset = polyline._getUint32(
-        BufferPolyline.Layout.POSITION_OFFSET_U32,
-      );
+      let vOffset = polyline.vertexOffset;
       let iOffset = (vOffset - i) * 2;
 
       for (let j = 0, jl = polyline.vertexCount; j < jl; j++) {
@@ -198,25 +196,26 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       ],
     });
   } else if (collection._dirtyCount > 0) {
-    // TODO: Compute dirty vertex and index ranges.
+    const { indexOffset, indexCount, vertexOffset, vertexCount } =
+      getPolylineDirtyRanges(collection);
     const { positionHighAndShow, positionLowAndColor } =
       BufferPolylineAttributeLocations;
     renderContext.vertexArray.copyAttributeFromRange(
       positionHighAndShow,
       renderContext.attributeArrays[positionHighAndShow],
-      0,
-      collection.vertexCount,
+      vertexOffset,
+      vertexCount,
     );
     renderContext.vertexArray.copyAttributeFromRange(
       positionLowAndColor,
       renderContext.attributeArrays[positionLowAndColor],
-      0,
-      collection.vertexCount,
+      vertexOffset,
+      vertexCount,
     );
     renderContext.vertexArray.copyIndexFromRange(
       renderContext.indexArray,
-      0,
-      (collection.vertexCount - collection.primitiveCount) * 2,
+      indexOffset,
+      indexCount,
     );
   }
 
@@ -272,6 +271,26 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
   collection._dirtyOffset = 0;
 
   return renderContext;
+}
+
+/**
+ * Computes dirty ranges for attribute and index buffers in a collection.
+ * @param {BufferPolylineCollection} collection
+ * @returns {{indexOffset: number, indexCount: number, vertexOffset: number, vertexCount: number}}
+ */
+function getPolylineDirtyRanges(collection) {
+  const { _dirtyOffset, _dirtyCount } = collection;
+
+  collection.get(_dirtyOffset, polyline);
+  const vertexOffset = polyline.vertexOffset;
+  const indexOffset = (vertexOffset - _dirtyOffset) * 2;
+
+  collection.get(_dirtyOffset + _dirtyCount - 1, polyline);
+  const vertexCount =
+    polyline.vertexOffset + polyline.vertexCount - vertexOffset;
+  const indexCount = (vertexCount - _dirtyCount) * 2;
+
+  return { indexOffset, indexCount, vertexOffset, vertexCount };
 }
 
 export default renderBufferPolylineCollection;
