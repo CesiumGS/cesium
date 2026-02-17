@@ -5,6 +5,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
 import Frozen from "../Core/Frozen.js";
 import assert from "../Core/assert.js";
+import renderPolygons from "./renderBufferPolygonCollection.js";
 
 /** @import Color from "../Core/Color.js"; */
 /** @import FrameState from "./FrameState.js" */
@@ -294,6 +295,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    */
   update(frameState) {
     super.update(frameState);
+
+    this._renderContext = renderPolygons(this, frameState, this._renderContext);
   }
 
   /////////////////////////////////////////////////////////////////////////////
