@@ -5,6 +5,7 @@ import Resource from "../../Source/Core/Resource.js";
 import Cartographic from "../../Source/Core/Cartographic.js";
 import GoogleMaps from "../../Source/Core/GoogleMaps.js";
 import CesiumMath from "../../Source/Core/Math.js";
+import PanoramaProvider from "../../Source/Scene/PanoramaProvider.js";
 
 describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
   let provider;
@@ -14,6 +15,12 @@ describe("Scene/GoogleStreetViewEquirectangularPanoramaProvider", function () {
       apiKey: "test-key",
       session: "test-session",
     });
+  });
+
+  it("conforms to PanoramaProvider interface", function () {
+    expect(
+      GoogleStreetViewEquirectangularPanoramaProvider,
+    ).toConformToInterface(PanoramaProvider);
   });
 
   afterEach(function () {
