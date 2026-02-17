@@ -106,13 +106,13 @@ const cubeMapFromFiles = () => {
 };
 
 const locations = {
-  Aukland: [-36.8509, 174.7645],
+  Auckland: [-36.8509, 174.7645],
   Switzerland: [46.414382, 10.013988],
 };
 cubeMapFromFiles();
 
-Sandcastle.addToolbarButton("Google Maps Aukland", function () {
-  cubeMapFromGoogle(locations["Aukland"]);
+Sandcastle.addToolbarButton("Google Maps Auckland", function () {
+  cubeMapFromGoogle(locations["Auckland"]);
 });
 
 Sandcastle.addToolbarButton("Google Maps Switzerland", function () {
