@@ -106,7 +106,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
     );
 
     const positiveX = this._buildFaceUrl({
-      heading: 180,
+      heading: 0,
       pitch: 0,
       tileSizeString,
       panoId,
