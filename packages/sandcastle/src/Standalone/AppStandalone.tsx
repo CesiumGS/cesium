@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { useGalleryItemStore } from "./Gallery/GalleryItemStore";
-import { Bucket, BucketPlaceholder } from "./Bucket";
+import { useGalleryItemStore } from "../Gallery/GalleryItemStore";
+import { Bucket, BucketPlaceholder } from "../Bucket";
 import { Root } from "@stratakit/foundations";
 import {
   ConsoleMessage,
   ConsoleMessageType,
   ConsoleMirror,
-} from "./ConsoleMirror";
+} from "../ConsoleMirror";
 import { Allotment } from "allotment";
 
 import "allotment/dist/style.css";
@@ -14,13 +14,13 @@ import "./AppStandalone.css";
 import {
   ViewerConsoleStack,
   ViewerConsoleStackRef,
-} from "./ViewerConsoleStack";
-import { usePageTitle } from "./util/usePageTitle";
+} from "../ViewerConsoleStack";
+import { usePageTitle } from "../util/usePageTitle";
 import {
   defaultHtmlCode,
   defaultJsCode,
   useCodeState,
-} from "./util/useCodeState";
+} from "../util/useCodeState";
 
 function AppStandalone() {
   const galleryItemStore = useGalleryItemStore();
