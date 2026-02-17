@@ -148,6 +148,9 @@ describe(
       // Force the pending-snapshot TEXTURE_READY path deterministically.
       // This validates "unavailable sorter -> keep TEXTURE_READY -> retry next frame"
       // without depending on async texture generation timing.
+      const fakeTexture = {
+        destroy: function () {},
+      };
       gsPrim._pendingSnapshot = {
         generation: gsPrim._splatDataGeneration,
         positions: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
@@ -159,7 +162,7 @@ describe(
         shCoefficientCount: 0,
         numSplats: 2,
         indexes: undefined,
-        gaussianSplatTexture: {},
+        gaussianSplatTexture: fakeTexture,
         sphericalHarmonicsTexture: undefined,
         lastTextureWidth: 1,
         lastTextureHeight: 1,
