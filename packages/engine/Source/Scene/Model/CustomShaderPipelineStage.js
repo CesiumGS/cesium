@@ -715,6 +715,10 @@ function addLinesToShader(shaderBuilder, customShader, generatedCode) {
  * @private
  */
 function getAllPropertyIds(primitive, structuralMetadata) {
+  if (!defined(structuralMetadata)) {
+    return new Set();
+  }
+
   const usedPropertyTextures = primitive.propertyTextureIds;
   const usedPropertyAttributes = primitive.propertyAttributeIds;
   const usedPropertyTables = defined(primitive.featureIds)
