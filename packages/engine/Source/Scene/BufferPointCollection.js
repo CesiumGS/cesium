@@ -4,6 +4,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPoint from "./BufferPoint.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Frozen from "../Core/Frozen.js";
+import renderPoints from "./renderBufferPointCollection.js";
 
 /** @import Color from "../Core/Color.js"; */
 /** @import FrameState from "./FrameState.js" */
@@ -116,6 +117,8 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    */
   update(frameState) {
     super.update(frameState);
+
+    this._renderContext = renderPoints(this, frameState, this._renderContext);
   }
 }
 
