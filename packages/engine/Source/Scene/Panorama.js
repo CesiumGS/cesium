@@ -1,13 +1,7 @@
 import DeveloperError from "../Core/DeveloperError.js";
 
 /**
- *
- * See the documentation for each Panorama class for more information about how they return images.
- */
-
-/**
- * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an
- * interface and is not intended to be instantiated directly.
+ * Displays panorama imagery in a scene. This type describes an interface and is not intended to be instantiated directly.
  *
  * @alias Panorama
  * @constructor
@@ -45,41 +39,34 @@ Object.defineProperties(Panorama.prototype, {
   },
 
   /**
-   * Gets the height of each tile, in pixels.
+   * Gets the transform of the panorama.
    * @memberof Panorama.prototype
-   * @type {boolean}
+   * @type {Matrix4}
    * @readonly
    */
-  debugShowExtents: {
+  transform: {
+    get: DeveloperError.throwInstantiationError,
+  },
+
+  /**
+   * Gets the credits of the panorama.
+   * @memberof Panorama.prototype
+   * @type {Credit}
+   * @readonly
+   */
+  credit: {
+    get: DeveloperError.throwInstantiationError,
+  },
+
+  /**
+   * Gets the source imagery of the panorama.
+   * @memberof Panorama.prototype
+   * @type {object|string}
+   * @readonly
+   */
+  source: {
     get: DeveloperError.throwInstantiationError,
   },
 });
-
-/**
- * Gets the sources for the panorama
- *
- * @returns {object} The source images for the panorama.
- */
-Panorama.prototype.getSources = function () {
-  DeveloperError.throwInstantiationError();
-};
-
-/**
- * Gets the transform for the panorama
- *
- * @returns {Matrix4} The transform for the panorama.
- */
-Panorama.prototype.getTransform = function () {
-  DeveloperError.throwInstantiationError();
-};
-
-/**
- * Gets the credits for the panorama
- *
- * @returns {Credit[]} The credits for the panorama.
- */
-Panorama.prototype.getCredits = function () {
-  DeveloperError.throwInstantiationError();
-};
 
 export default Panorama;

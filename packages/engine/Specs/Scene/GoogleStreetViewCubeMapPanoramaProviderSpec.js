@@ -1,6 +1,7 @@
 import GoogleStreetViewCubeMapPanoramaProvider from "../../Source/Scene/GoogleStreetViewCubeMapPanoramaProvider.js";
 import Cartographic from "../../Source/Core/Cartographic.js";
 import CubeMapPanorama from "../../Source/Scene/CubeMapPanorama.js";
+import PanoramaProvider from "../../Source/Scene/PanoramaProvider.js";
 
 describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
   let provider;
@@ -11,6 +12,12 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
       url: "https://example.com/",
       tileSize: 512,
     });
+  });
+
+  it("conforms to PanoramaProvider interface", function () {
+    expect(GoogleStreetViewCubeMapPanoramaProvider).toConformToInterface(
+      PanoramaProvider,
+    );
   });
 
   it("constructs with apiKey", function () {
