@@ -136,8 +136,10 @@ function shouldStartSteadySort(primitive, frameState) {
   }
 
   const camera = frameState.camera;
+  if (!defined(camera)) {
+    return false;
+  }
   if (
-    !defined(camera) ||
     !primitive._hasLastSteadySortCameraPosition ||
     !primitive._hasLastSteadySortCameraDirection
   ) {
@@ -1235,6 +1237,10 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   if (this.splitDirection !== tileset.splitDirection) {
     this.splitDirection = tileset.splitDirection;
   }
+  const camera = frameState.camera;
+  if (!defined(camera)) {
+    return;
+  }
 
   if (this._sorterState === GaussianSplatSortingState.IDLE) {
     const selectedTilesChanged =
@@ -1278,7 +1284,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       !defined(this._drawCommand);
     if (
       !hasPendingWork &&
-      Matrix4.equals(frameState.camera.viewMatrix, this._prevViewMatrix)
+      Matrix4.equals(camera.viewMatrix, this._prevViewMatrix)
     ) {
       return;
     }
@@ -1465,12 +1471,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         return;
       }
 
-      Matrix4.clone(frameState.camera.viewMatrix, this._prevViewMatrix);
-      Matrix4.multiply(
-        frameState.camera.viewMatrix,
-        this._rootTransform,
-        scratchMatrix4A,
-      );
+      Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
+      Matrix4.multiply(camera.viewMatrix, this._rootTransform, scratchMatrix4A);
 
       if (
         pending.state === SnapshotState.TEXTURE_READY &&
@@ -1563,12 +1565,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       return;
     }
 
-    Matrix4.clone(frameState.camera.viewMatrix, this._prevViewMatrix);
-    Matrix4.multiply(
-      frameState.camera.viewMatrix,
-      this._rootTransform,
-      scratchMatrix4A,
-    );
+    Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
+    Matrix4.multiply(camera.viewMatrix, this._rootTransform, scratchMatrix4A);
 
     if (!defined(this._sorterPromise)) {
       if (!shouldStartSteadySort(this, frameState)) {
