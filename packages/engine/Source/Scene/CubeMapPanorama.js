@@ -25,10 +25,10 @@ import Pass from "../Renderer/Pass.js";
 import Credit from "../Core/Credit.js";
 
 /**
- * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.
+ * A general-purpose cube map panorama rendered as a box surrounding the scene.
  * <p>
- * This is only supported in 3D.  The sky box is faded out when morphing to 2D or Columbus view.  The size of
- * the sky box must not exceed {@link Scene#maximumCubeMapSize}.
+ * This is only supported in 3D.  The cube map panorama is faded out when morphing to 2D or Columbus view.  The size of
+ * the cube map panorama must not exceed {@link Scene#maximumCubeMapSize}.
  * </p>
  *
  * @alias CubeMapPanorama
@@ -53,18 +53,17 @@ import Credit from "../Core/Credit.js";
  *
  * scene.primitives.add(new Cesium.CubeMapPanorama({
  *   sources : {
- *     positiveX : 'skybox_px.png',
- *     negativeX : 'skybox_nx.png',
- *     positiveY : 'skybox_py.png',
- *     negativeY : 'skybox_ny.png',
- *     positiveZ : 'skybox_pz.png',
- *     negativeZ : 'skybox_nz.png'
+ *     positiveX : 'cubemap_px.png',
+ *     negativeX : 'cubemap_nx.png',
+ *     positiveY : 'cubemap_py.png',
+ *     negativeY : 'cubemap_ny.png',
+ *     positiveZ : 'cubemap_pz.png',
+ *     negativeZ : 'cubemap_nz.png'
  *   }
  *   transform: modelMatrix,
  * }));
  *
  * @see Scene#skyBox
- * @see Transforms.computeTemeToPseudoFixedMatrix
  */
 function CubeMapPanorama(options) {
   /**
@@ -82,7 +81,7 @@ function CubeMapPanorama(options) {
   this._transform = options.transform ?? undefined;
 
   /**
-   * Determines if the sky box will be shown.
+   * Determines if the cube map panorama will be shown.
    *
    * @type {boolean}
    * @default true
@@ -113,34 +112,43 @@ function CubeMapPanorama(options) {
   this._credit = credit;
 }
 
-Object.defineProperties(CubeMapPanorama.prototype, {});
+Object.defineProperties(CubeMapPanorama.prototype, {
+  /**
+   * Gets the source images of the panorama.
+   * @memberof CubeMapPanorama.prototype
+   * @type {object}
+   * @readonly
+   */
+  sources: {
+    get: function () {
+      return this._image;
+    },
+  },
 
-/**
- * Gets the source images for the panorama
- *
- * @returns {object} The source images for the panorama.
- */
-CubeMapPanorama.prototype.getSources = function () {
-  return this._sources;
-};
+  /**
+   * Gets the transform of the panorama.
+   * @memberof CubeMapPanorama.prototype
+   * @type {Matrix4}
+   * @readonly
+   */
+  transform: {
+    get: function () {
+      return this._transform;
+    },
+  },
 
-/**
- * Gets the transform for the panorama
- *
- * @returns {Matrix4} The transform for the panorama.
- */
-CubeMapPanorama.prototype.getTransform = function () {
-  return this._transform;
-};
-
-/**
- * Gets the credits for the panorama
- *
- * @returns {Credit[]} The credits for the panorama.
- */
-CubeMapPanorama.prototype.getCredits = function () {
-  return this.credit;
-};
+  /**
+   * Gets the credits of the panorama.
+   * @memberof CubeMapPanorama.prototype
+   * @type {Credit}
+   * @readonly
+   */
+  credit: {
+    get: function () {
+      return defined(this._credit) ? this._credit : undefined;
+    },
+  },
+});
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -165,7 +173,7 @@ CubeMapPanorama.prototype.update = function (frameState, useHdr) {
     return undefined;
   }
 
-  // The sky box is only rendered during the render pass; it is not pickable, it doesn't cast shadows, etc.
+  // The cube map panorama is only rendered during the render pass; it is not pickable, it doesn't cast shadows, etc.
   if (!passes.render) {
     return undefined;
   }
@@ -331,9 +339,9 @@ CubeMapPanorama.prototype.isDestroyed = function () {
  *
  *
  * @example
- * skyBox = skyBox && skyBox.destroy();
+ * cubeMapPanorama = cubeMapPanorama && cubeMapPanorama.destroy();
  *
- * @see SkyBox#isDestroyed
+ * @see CubeMapPanorama#isDestroyed
  */
 CubeMapPanorama.prototype.destroy = function () {
   const command = this._command;
@@ -349,8 +357,8 @@ function getDefaultSkyBoxUrl(suffix) {
 }
 
 /**
- * Creates a skybox instance with the default starmap for the Earth.
- * @return {CubeMapPanorama} The default skybox for the Earth
+ * Creates a cube map panorama instance with the default starmap for the Earth.
+ * @return {CubeMapPanorama} The default skybox for the Earth rendered as a cube map panorama
  *
  * @example
  * viewer.scene.skyBox = Cesium.CubeMapPanorama.createEarthSkyBox();

@@ -29,7 +29,7 @@ const DEFAULT_RADIUS = 100000.0;
  */
 
 /**
- * Provides equirectangular imagery to be displayed on the surface of an ellipsoid.
+ * Provides equirectangular imagery to be displayed on the surface of a sphere.
  *
  * @alias EquirectangularPanorama
  * @constructor
