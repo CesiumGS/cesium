@@ -317,15 +317,8 @@ function commitSnapshot(primitive, snapshot, frameState) {
   const splatTexture = defined(currentSnapshot)
     ? currentSnapshot.gaussianSplatTexture
     : primitive.gaussianSplatTexture;
-  if (
-    defined(splatTexture) &&
-    splatTexture !== snapshot.gaussianSplatTexture
-  ) {
-    retireTexture(
-      primitive,
-      splatTexture,
-      frameNumber,
-    );
+  if (defined(splatTexture) && splatTexture !== snapshot.gaussianSplatTexture) {
+    retireTexture(primitive, splatTexture, frameNumber);
   }
 
   const sphericalHarmonicsTexture = defined(currentSnapshot)
@@ -335,11 +328,7 @@ function commitSnapshot(primitive, snapshot, frameState) {
     defined(sphericalHarmonicsTexture) &&
     sphericalHarmonicsTexture !== snapshot.sphericalHarmonicsTexture
   ) {
-    retireTexture(
-      primitive,
-      sphericalHarmonicsTexture,
-      frameNumber,
-    );
+    retireTexture(primitive, sphericalHarmonicsTexture, frameNumber);
   }
 
   primitive._snapshot = snapshot;
