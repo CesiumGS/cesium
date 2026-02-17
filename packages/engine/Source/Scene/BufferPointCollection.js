@@ -29,10 +29,6 @@ class BufferPointCollection extends BufferPrimitiveCollection {
     return BufferPoint;
   }
 
-  _getPrimitiveLayout() {
-    return BufferPoint.Layout;
-  }
-
   /**
    * @param {BufferPointCollection} collection
    * @returns {BufferPointCollection}

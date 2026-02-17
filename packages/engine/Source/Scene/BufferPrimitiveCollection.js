@@ -5,10 +5,10 @@ import Color from "../Core/Color.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
-import BufferPrimitive from "./BufferPrimitive.js";
 import assert from "../Core/assert.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
+/** @import BufferPrimitive from "./BufferPrimitive.js"; */
 
 /**
  * @typedef {object} BufferPrimitiveOptions
@@ -210,15 +210,6 @@ class BufferPrimitiveCollection {
     DeveloperError.throwInstantiationError();
   }
 
-  /**
-   * @protected
-   * @return {typeof BufferPrimitive.Layout}
-   * @ignore
-   */
-  _getPrimitiveLayout() {
-    DeveloperError.throwInstantiationError();
-  }
-
   /////////////////////////////////////////////////////////////////////////////
   // COLLECTION LIFECYCLE
 
@@ -227,7 +218,7 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   _allocatePrimitiveBuffer() {
-    const layout = this._getPrimitiveLayout();
+    const layout = this._getPrimitiveClass().Layout;
 
     //>>includeStart('debug', pragmas.debug);
     const { ERR_MULTIPLE_OF_FOUR } = BufferPrimitiveCollection.Error;
@@ -336,7 +327,7 @@ class BufferPrimitiveCollection {
     assert(collection.vertexCount <= result.vertexCountMax, ERR_CAPACITY);
     //>>includeEnd('debug');
 
-    const layout = collection._getPrimitiveLayout();
+    const layout = collection._getPrimitiveClass().Layout;
 
     this._copySubDataView(
       collection._primitiveView,
@@ -442,7 +433,7 @@ class BufferPrimitiveCollection {
   get(index, result) {
     result._collection = this;
     result._index = index;
-    result._byteOffset = index * this._getPrimitiveLayout().__BYTE_LENGTH;
+    result._byteOffset = index * this._getPrimitiveClass().Layout.__BYTE_LENGTH;
     return result;
   }
 
@@ -469,13 +460,10 @@ class BufferPrimitiveCollection {
    */
   add(options = Frozen.EMPTY_OBJECT, result) {
     result = this.get(this._primitiveCount++, result);
-    result._setUint32(
-      BufferPrimitive.Layout.FEATURE_ID_U32,
-      this._primitiveCount - 1,
-    );
-    result._dirty = true;
+    result.featureId = this._primitiveCount - 1;
     result.show = options.show ?? true;
     result.setColor(options.color ?? Color.WHITE);
+    result._dirty = true;
     return result;
   }
 

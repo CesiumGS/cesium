@@ -105,10 +105,6 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
     return BufferPolygon;
   }
 
-  _getPrimitiveLayout() {
-    return BufferPolygon.Layout;
-  }
-
   /**
    * @param {BufferPolygonCollection} collection
    * @returns {BufferPolygonCollection}

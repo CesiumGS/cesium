@@ -30,10 +30,6 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     return BufferPolyline;
   }
 
-  _getPrimitiveLayout() {
-    return BufferPolyline.Layout;
-  }
-
   /**
    * @param {BufferPolylineCollection} collection
    * @returns {BufferPolylineCollection}
