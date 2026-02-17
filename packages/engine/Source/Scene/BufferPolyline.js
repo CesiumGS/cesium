@@ -1,6 +1,5 @@
 // @ts-check
 
-import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferPrimitive from "./BufferPrimitive.js";
 import assert from "../Core/assert.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
@@ -32,35 +31,25 @@ class BufferPolyline extends BufferPrimitive {
     ...BufferPrimitive.Layout,
 
     /**
-     * Bounding sphere for polygon.
-     * @type {number}
-     */
-    BOUNDING_SPHERE: BufferPrimitive.Layout.__BYTE_LENGTH,
-
-    /**
-     * Width of polyline, 0–255.
-     * @type {number}
-     */
-    WIDTH_U8:
-      BufferPrimitive.Layout.__BYTE_LENGTH + BoundingSphere.packedLength,
-
-    /**
      * Offset in position array to first vertex in polyline, number of VEC3 elements.
      * @type {number}
      */
-    POSITION_OFFSET_U32:
-      BufferPrimitive.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 4,
+    POSITION_OFFSET_U32: BufferPrimitive.Layout.__BYTE_LENGTH,
 
     /**
      * Count of positions (vertices) in this polyline, number of VEC3 elements.
      * @type {number}
      */
-    POSITION_COUNT_U32:
-      BufferPrimitive.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 8,
+    POSITION_COUNT_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 4,
+
+    /**
+     * Width of polyline, 0–255.
+     * @type {number}
+     */
+    WIDTH_U8: BufferPrimitive.Layout.__BYTE_LENGTH + 8,
 
     /** @type {number} */
-    __BYTE_LENGTH:
-      BufferPrimitive.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 12,
+    __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 12,
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -169,10 +158,9 @@ class BufferPolyline extends BufferPrimitive {
 
   /** @override */
   toJSON() {
-    const positions = this.getPositions(new Float64Array(this.vertexCount * 3));
     return {
       ...super.toJSON(),
-      positions: Array.from(positions),
+      positions: Array.from(this.getPositions()),
       width: this.width,
     };
   }

@@ -2,7 +2,6 @@
 
 import assert from "../Core/assert.js";
 import BufferPrimitive from "./BufferPrimitive.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import defined from "../Core/defined.js";
 
@@ -31,68 +30,48 @@ class BufferPolygon extends BufferPrimitive {
    */
   _collection = null;
 
-  /**
-   * @type {BoundingSphere}
-   * @protected
-   * @ignore
-   */
-  _boundingSphere = new BoundingSphere();
-
   /** @ignore */
   static Layout = {
     ...BufferPrimitive.Layout,
 
     /**
-     * Bounding sphere for polygon.
-     * @type {number}
-     */
-    BOUNDING_SPHERE: BufferPrimitive.Layout.__BYTE_LENGTH,
-
-    /**
      * Offset in position array to first vertex in polygon, number of VEC3 elements.
      * @type {number}
      */
-    POSITION_OFFSET_U32:
-      BufferPrimitive.Layout.__BYTE_LENGTH + BoundingSphere.packedLength,
+    POSITION_OFFSET_U32: BufferPrimitive.Layout.__BYTE_LENGTH,
 
     /**
      * Count of positions (vertices) in this polygon, number of VEC3 elements.
      * @type {number}
      */
-    POSITION_COUNT_U32:
-      BufferPrimitive.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 4,
+    POSITION_COUNT_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 4,
 
     /**
      * Offset in holes array to first hole in polygon, number of integer elements.
      * @type {number}
      */
-    HOLE_OFFSET_U32:
-      BufferPrimitive.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 8,
+    HOLE_OFFSET_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 8,
 
     /**
      * Count of holes (indices) in this polygon, number of integer elements.
      * @type {number}
      */
-    HOLE_COUNT_U32:
-      BufferPrimitive.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 12,
+    HOLE_COUNT_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 12,
 
     /**
      * Offset in triangles array to first triangle in polygon, number of VEC3 elements.
      * @type {number}
      */
-    TRIANGLE_OFFSET_U32:
-      BufferPrimitive.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 16,
+    TRIANGLE_OFFSET_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 16,
 
     /**
      * Count of triangles (3x uint32) in this polygon, number of VEC3 elements.
      * @type {number}
      */
-    TRIANGLE_COUNT_U32:
-      BufferPrimitive.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 20,
+    TRIANGLE_COUNT_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 20,
 
     /** @type {number} */
-    __BYTE_LENGTH:
-      BufferPrimitive.Layout.__BYTE_LENGTH + BoundingSphere.packedLength + 24,
+    __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 24,
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -326,13 +305,9 @@ class BufferPolygon extends BufferPrimitive {
   toJSON() {
     return {
       ...super.toJSON(),
-      positions: Array.from(
-        this.getPositions(new Float64Array(this.vertexCount * 3)),
-      ),
-      holes: Array.from(this.getHoles(new Uint32Array(this.holeCount))),
-      triangles: Array.from(
-        this.getHoles(new Uint32Array(this.triangleCount * 3)),
-      ),
+      positions: Array.from(this.getPositions()),
+      holes: Array.from(this.getHoles()),
+      triangles: Array.from(this.getHoles()),
     };
   }
 }

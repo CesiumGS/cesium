@@ -91,14 +91,14 @@ describe("BufferPolylineCollection", () => {
       vertexCountMax: 1,
     });
 
-    expect(collection.sizeInBytes).toBe(28 + 24);
+    expect(collection.sizeInBytes).toBe(24 + 24);
 
     collection = new BufferPolylineCollection({
       primitiveCountMax: 128,
       vertexCountMax: 128,
     });
 
-    expect(collection.sizeInBytes).toBe((28 + 24) * 128);
+    expect(collection.sizeInBytes).toBe((24 + 24) * 128);
   });
 
   it("clone", () => {

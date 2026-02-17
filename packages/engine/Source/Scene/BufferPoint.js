@@ -42,6 +42,9 @@ class BufferPoint extends BufferPrimitive {
     __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 4,
   };
 
+  /////////////////////////////////////////////////////////////////////////////
+  // LIFECYCLE
+
   /**
    * @param {BufferPoint} point
    * @param {BufferPoint} result

@@ -164,7 +164,7 @@ describe("BufferPolygonCollection", () => {
       triangleCountMax: 1,
     });
 
-    expect(collection.sizeInBytes).toBe(40 + 72 + 12);
+    expect(collection.sizeInBytes).toBe(36 + 72 + 12);
 
     collection = new BufferPolygonCollection({
       primitiveCountMax: 128,
@@ -173,7 +173,7 @@ describe("BufferPolygonCollection", () => {
       triangleCountMax: 1024,
     });
 
-    expect(collection.sizeInBytes).toBe(5120 + 24576 + 512 + 12288);
+    expect(collection.sizeInBytes).toBe(4608 + 24576 + 512 + 12288);
   });
 
   it("clone", () => {

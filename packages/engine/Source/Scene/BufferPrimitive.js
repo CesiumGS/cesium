@@ -10,7 +10,9 @@ const scratchColor = new Color();
  * View bound to the underlying buffer data of a {@link BufferPrimitiveCollection}. Abstract.
  *
  * <p>BufferPrimitive instances are intended to be reused when iterating over large collections,
- * and temporarily bound to a primitive index while performing read/write operations on that primitive.</p>
+ * and temporarily bound to a primitive index while performing read/write operations on that primitive,
+ * before being rebound to the next primitive, using the
+ * {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweight pattern}.</p>
  *
  * @example
  * const primitive = new BufferPrimitive();
@@ -34,24 +36,43 @@ const scratchColor = new Color();
  */
 class BufferPrimitive {
   /**
+   * Collecton containing the primitive(s) for which this instance currently
+   * provides a view.
+   *
    * @type {BufferPrimitiveCollection<BufferPrimitive>}
    * @ignore
    */
   _collection = null;
 
   /**
+   * Index of the primitive for which this instance currently provides a view.
+   *
    * @type {number}
    * @ignore
    */
   _index = -1;
 
   /**
+   * Byte offset, into the collection's primitive buffer, of the primitive for
+   * which this instance currently provides a view.
+   *
    * @type {number}
    * @ignore
    */
   _byteOffset = -1;
 
-  /** @ignore */
+  /**
+   * Binary layout for this primitive type in collection's primitive buffer.
+   * Each `Layout.MY_KEY_U32` entry is an offset in bytes, relative to the
+   * start offset of the primitive, with the suffix indicating the data type
+   * stored at that offset.
+   *
+   * The final entry, `__BYTE_LENGTH`, is not a pointer into a buffer — its
+   * literal value is the total byte length of one primitive in the primitive
+   * buffer, exclusive of other buffers.
+   *
+   * @ignore
+   */
   static Layout = {
     /**
      * Feature ID associated with the primitive; not required to be unique.
@@ -77,7 +98,11 @@ class BufferPrimitive {
      */
     COLOR_U32: 8,
 
-    /** @type {number} */
+    /**
+     * Byte length of one primitive in the primitive buffer, exclusive of
+     * other buffers. Literal value, not a pointer.
+     * @type {number}
+     */
     __BYTE_LENGTH: 12,
   };
 
@@ -101,6 +126,10 @@ class BufferPrimitive {
   }
 
   /**
+   * Returns true if this primitive's memory footprint is resizable. Only the
+   * newest (most recently created) primitive in a collection can be resized,
+   * to guarantee fast and stable performance.
+   *
    * @returns {boolean}
    * @protected
    * @ignore
@@ -112,7 +141,10 @@ class BufferPrimitive {
   /////////////////////////////////////////////////////////////////////////////
   // ACCESSORS
 
-  /** @type {number} */
+  /**
+   * Feature ID associated with the primitive; not required to be unique.
+   * @type {number}
+   */
   get featureId() {
     return this._getUint32(BufferPrimitive.Layout.FEATURE_ID_U32);
   }
@@ -121,7 +153,10 @@ class BufferPrimitive {
     this._setUint32(BufferPrimitive.Layout.FEATURE_ID_U32, featureId);
   }
 
-  /** @type {boolean} */
+  /**
+   * Whether primitive is shown.
+   * @type {boolean}
+   */
   get show() {
     return this._getUint8(BufferPrimitive.Layout.SHOW_U8) === 1;
   }
@@ -131,8 +166,16 @@ class BufferPrimitive {
   }
 
   /**
+   * Whether the primitive requires an update on next render. Renderers should
+   * _not_ iterate over all primitives each frame, but must instead inspect
+   * only the dirty range of the parent collection. This flag is managed
+   * automatically, by primitive setters and collection renderers.
+   *
    * @type {boolean}
    * @ignore
+   *
+   * @see BufferPrimitiveCollection#_dirtyOffset
+   * @see BufferPrimitiveCollection#_dirtyCount
    */
   get _dirty() {
     return this._getUint8(BufferPrimitive.Layout.DIRTY_U8) === 1;
@@ -154,6 +197,7 @@ class BufferPrimitive {
   }
 
   /**
+   * Returns the color of primitive.
    * @param {Color} result
    * @returns {Color}
    */
@@ -165,6 +209,7 @@ class BufferPrimitive {
   }
 
   /**
+   * Updates the color of primitive.
    * @param {Color} color
    */
   setColor(color) {
@@ -172,7 +217,7 @@ class BufferPrimitive {
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // DATAVIEW ACCESSORS
+  // BUFFER ACCESSORS
 
   /**
    * @param {number} itemByteOffset

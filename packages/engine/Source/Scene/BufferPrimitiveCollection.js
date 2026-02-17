@@ -22,8 +22,8 @@ import assert from "../Core/assert.js";
  *
  * To get the full performance benefit of using a BufferPrimitiveCollection containing "N" primitives,
  * be careful to avoid allocating "N" instances of any related JavaScript object. {@link BufferPrimitive},
- * {@link Color}, {@link Cartesian3}, and other objects can all be reused when working with large collections. See
- * {@linkcode BufferPrimitiveCollection#add} and {@linkcode BufferPrimitiveCollection#get}.
+ * {@link Color}, {@link Cartesian3}, and other objects can all be reused when working with large collections,
+ * using the {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweight pattern}.
  *
  * @abstract
  * @template T extends BufferPrimitive
@@ -48,10 +48,12 @@ import assert from "../Core/assert.js";
  */
 class BufferPrimitiveCollection {
   /**
-   * Default capacity of buffers on new collections. A quantity of elements: number of
-   * vertices for the vertex buffer, number of primitives for the primitive buffer, etc.
-   * This value is arbitrary — and cannot be changed after collection creation! — so it
-   * highly recommended to provide specific per-buffer capacities in the collection constructor.
+   * Default capacity of buffers on new collections. A quantity of elements:
+   * number of vertices in the vertex buffer, primitives in the primitive
+   * buffer, etc. This value is arbitrary, and collections cannot be resized,
+   * so specific per-buffer capacities should be provided in the collection
+   * constructor when available.
+   *
    * @type {number}
    * @readonly
    * @static
@@ -71,7 +73,7 @@ class BufferPrimitiveCollection {
    * implementations, so the collection should be ignorant of the renderer's implementation
    * and context data. A collection only has one renderer active at a time.
    *
-   * @type {Record<string, unknown>}
+   * @type {unknown}
    * @ignore
    */
   _renderContext = null;
