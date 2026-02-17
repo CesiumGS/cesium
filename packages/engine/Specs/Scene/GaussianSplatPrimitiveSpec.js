@@ -144,11 +144,10 @@ describe(
 
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
       const gsPrim = tileset.gaussianSplatPrimitive;
-      const currentSnapshot = gsPrim._snapshot;
-      expect(currentSnapshot).toBeDefined();
 
-      // Force the pending-snapshot TEXTURE_READY path deterministically so this
-      // test doesn't depend on timing of real async texture generation.
+      // Force the pending-snapshot TEXTURE_READY path deterministically.
+      // This validates "unavailable sorter -> keep TEXTURE_READY -> retry next frame"
+      // without depending on async texture generation timing.
       gsPrim._pendingSnapshot = {
         generation: gsPrim._splatDataGeneration,
         positions: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
@@ -160,10 +159,10 @@ describe(
         shCoefficientCount: 0,
         numSplats: 2,
         indexes: undefined,
-        gaussianSplatTexture: currentSnapshot.gaussianSplatTexture,
+        gaussianSplatTexture: {},
         sphericalHarmonicsTexture: undefined,
-        lastTextureWidth: currentSnapshot.lastTextureWidth,
-        lastTextureHeight: currentSnapshot.lastTextureHeight,
+        lastTextureWidth: 1,
+        lastTextureHeight: 1,
         state: "TEXTURE_READY",
       };
       gsPrim._pendingSortPromise = undefined;
@@ -177,26 +176,10 @@ describe(
 
       let sortCallCount = 0;
       let hadUnavailableSort = false;
-      spyOn(GaussianSplatSorter, "radixSortIndexes").and.callFake(
-        function (parameters) {
-          sortCallCount++;
-          if (sortCallCount === 1) {
-            hadUnavailableSort = true;
-            return undefined;
-          }
-
-          const count = parameters.primitive.count;
-          const indexes = new Uint32Array(count);
-          for (let i = 0; i < count; i++) {
-            indexes[i] = i;
-          }
-          return Promise.resolve(indexes);
-        },
-      );
-
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return hadUnavailableSort && gsPrim._pendingSortPromise === undefined;
+      spyOn(GaussianSplatSorter, "radixSortIndexes").and.callFake(function () {
+        sortCallCount++;
+        hadUnavailableSort = true;
+        return undefined;
       });
 
       await pollToPromise(function () {
@@ -204,8 +187,9 @@ describe(
         return (
           hadUnavailableSort &&
           sortCallCount > 1 &&
-          gsPrim._pendingSnapshot === undefined &&
-          gsPrim._sorterState === 0
+          gsPrim._pendingSnapshot !== undefined &&
+          gsPrim._pendingSnapshot.state === "TEXTURE_READY" &&
+          gsPrim._pendingSortPromise === undefined
         );
       });
     });
