@@ -135,11 +135,7 @@ export function createSandcastleConfig({
     ...plugins,
     copyPlugin,
     cesiumPathReplace(cesiumBaseUrl),
-    insertImportMap(importMap, [
-      "bucket.html",
-      "standalone.html",
-      "standalone-old.html",
-    ]),
+    insertImportMap(importMap, ["bucket.html", "standalone.html"]),
   ];
 
   return defineConfig(config);

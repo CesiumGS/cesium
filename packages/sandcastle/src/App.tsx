@@ -190,21 +190,6 @@ function App() {
     setDescription("");
   }
 
-  function openStandaloneOld() {
-    const base64String = makeCompressedBase64String({
-      code: codeState.code,
-      html: codeState.html,
-    });
-
-    let url = getBaseUrl();
-    url =
-      `${url.replace("index.html", "")}standalone-old.html` +
-      `#c=${base64String}`;
-
-    window.open(url, "_blank");
-    window.focus();
-  }
-
   function openStandalone() {
     const searchParams = new URLSearchParams(window.location.search);
 
@@ -368,10 +353,6 @@ function App() {
         <Divider aria-orientation="vertical" />
         <Button onClick={() => openStandalone()}>
           Standalone <Icon href={windowPopout} />
-        </Button>
-        <Button onClick={() => openStandaloneOld()}>
-          Standalone (old)
-          <Icon href={windowPopout} />
         </Button>
         <div className="flex-spacer"></div>
         <SandcastlePopover
