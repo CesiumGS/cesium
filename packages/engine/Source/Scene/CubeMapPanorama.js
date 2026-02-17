@@ -114,18 +114,6 @@ function CubeMapPanorama(options) {
 
 Object.defineProperties(CubeMapPanorama.prototype, {
   /**
-   * Gets the source images of the panorama.
-   * @memberof CubeMapPanorama.prototype
-   * @type {object}
-   * @readonly
-   */
-  sources: {
-    get: function () {
-      return this._image;
-    },
-  },
-
-  /**
    * Gets the transform of the panorama.
    * @memberof CubeMapPanorama.prototype
    * @type {Matrix4}
