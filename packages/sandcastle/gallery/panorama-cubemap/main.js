@@ -7,7 +7,21 @@ viewer.scene.terrainProvider = false;
 
 const googleStreetViewStaticApiKey = "key for Google Street View Static API";
 
+function validateGoogleApiKey(key) {
+  // Validate API key
+  if (
+    !Cesium.defined(googleStreetViewStaticApiKey) ||
+    googleStreetViewStaticApiKey.trim() === "" ||
+    googleStreetViewStaticApiKey === "key for Google Street View Static API"
+  ) {
+    throw new Cesium.DeveloperError(
+      "A valid Google Street View Static API key must be provided.",
+    );
+  }
+}
+
 const cubeMapFromGoogle = (pos) => {
+  validateGoogleApiKey(googleStreetViewStaticApiKey);
   const posString = pos.join(",");
   const posObj = Cesium.Cartesian3.fromDegrees(pos[1], pos[0], 0);
 

@@ -29,7 +29,7 @@ const DEFAULT_RADIUS = 100000.0;
  */
 
 /**
- * Provides equirectangular imagery to be displayed on the surface of a sphere.
+ * A {@link Panorama} that displays imagery in equirectangular format in a scene.
  *
  * @alias EquirectangularPanorama
  * @constructor

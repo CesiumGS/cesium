@@ -27,35 +27,21 @@ describe("Scene/Panorama", function () {
       }).toThrowDeveloperError();
     });
 
-    it("debugShowExtents throws DeveloperError", function () {
+    it("transform throws DeveloperError", function () {
       expect(function () {
-        return panorama.debugShowExtents;
-      }).toThrowDeveloperError();
-    });
-  });
-
-  describe("abstract methods", function () {
-    let panorama;
-
-    beforeEach(function () {
-      panorama = Object.create(Panorama.prototype);
-    });
-
-    it("getSources throws DeveloperError", function () {
-      expect(function () {
-        panorama.getSources();
+        return panorama.transform;
       }).toThrowDeveloperError();
     });
 
-    it("getTransform throws DeveloperError", function () {
+    it("credit throws DeveloperError", function () {
       expect(function () {
-        panorama.getTransform();
+        return panorama.credit;
       }).toThrowDeveloperError();
     });
 
-    it("getCredits throws DeveloperError", function () {
+    it("source throws DeveloperError", function () {
       expect(function () {
-        panorama.getCredits();
+        return panorama.source;
       }).toThrowDeveloperError();
     });
   });

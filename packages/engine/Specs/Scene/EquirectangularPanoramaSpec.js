@@ -2,8 +2,13 @@ import EquirectangularPanorama from "../../Source/Scene/EquirectangularPanorama.
 import Credit from "../../Source/Core/Credit.js";
 import Matrix4 from "../../Source/Core/Matrix4.js";
 import Cartesian2 from "../../Source/Core/Cartesian2.js";
+import Panorama from "../../Source/Scene/Panorama.js";
 
 describe("Scene/EquirectangularPanorama", function () {
+  it("conforms to Panorama interface", function () {
+    expect(EquirectangularPanorama).toConformToInterface(Panorama);
+  });
+
   it("throws if options.image is not provided", function () {
     expect(function () {
       return new EquirectangularPanorama({});

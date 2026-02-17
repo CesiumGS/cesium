@@ -25,7 +25,7 @@ import Pass from "../Renderer/Pass.js";
 import Credit from "../Core/Credit.js";
 
 /**
- * A general-purpose cube map panorama rendered as a box surrounding the scene.
+ * A {@link Panorama} that displays imagery in cube map format in a scene.
  * <p>
  * This is only supported in 3D.  The cube map panorama is faded out when morphing to 2D or Columbus view.  The size of
  * the cube map panorama must not exceed {@link Scene#maximumCubeMapSize}.

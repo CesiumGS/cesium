@@ -2,6 +2,7 @@ import CubeMapPanorama from "../../Source/Scene/CubeMapPanorama.js";
 import SceneMode from "../../Source/Scene/SceneMode.js";
 import Matrix4 from "../../Source/Core/Matrix4.js";
 import Credit from "../../Source/Core/Credit.js";
+import Panorama from "../../Source/Scene/Panorama.js";
 
 describe("Scene/CubeMapPanorama", function () {
   let frameState;
@@ -32,14 +33,18 @@ describe("Scene/CubeMapPanorama", function () {
     };
   });
 
+  it("conforms to Panorama interface", function () {
+    expect(CubeMapPanorama).toConformToInterface(Panorama);
+  });
+
   it("constructs with default values", function () {
     const panorama = new CubeMapPanorama({
       sources: validSources,
     });
 
     expect(panorama.show).toBe(true);
-    expect(panorama.getSources()).toBeUndefined();
-    expect(panorama.getTransform()).toBeUndefined();
+    expect(panorama.source).toBeUndefined();
+    expect(panorama.transform).toBeUndefined();
     expect(panorama.isDestroyed()).toBe(false);
   });
 
@@ -51,7 +56,7 @@ describe("Scene/CubeMapPanorama", function () {
       transform: transform,
     });
 
-    expect(panorama.getTransform()).toBe(transform);
+    expect(panorama.transform).toBe(transform);
   });
 
   it("creates Credit from string", function () {
