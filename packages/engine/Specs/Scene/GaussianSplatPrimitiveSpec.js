@@ -196,7 +196,7 @@ describe(
 
         expect(gsPrim._sortRequestId).toBeGreaterThan(initialSortRequestId + 1);
         expect(gsPrim._pendingSnapshot).toBeDefined();
-        expect(gsPrim._pendingSnapshot.state).toBe("TEXTURE_READY");
+        expect(gsPrim._pendingSnapshot.state).toBe("SORTING");
         expect(gsPrim._pendingSortPromise).toBeUndefined();
       } finally {
         GaussianSplatSorter._sorterTaskProcessor = originalSorterTaskProcessor;
