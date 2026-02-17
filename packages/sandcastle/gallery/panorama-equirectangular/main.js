@@ -18,9 +18,18 @@ const transform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
 const image =
   "https://upload.wikimedia.org/wikipedia/commons/0/08/Laon_Cathedral_Interior_360x180%2C_Picardy%2C_France_-_Diliff.jpg";
 
+const credit = new Cesium.Credit(
+  "Photo by DAVID ILIFF. " +
+    "Interior of Laon Cathedral, France. " +
+    "Licensed under " +
+    '<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank">' +
+    "CC BY-SA 3.0</a>.",
+);
+
 const panorama = new Cesium.EquirectangularPanorama({
   transform,
   image,
+  credit,
 });
 
 // Add the primitive to the scene
