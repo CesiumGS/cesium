@@ -3,6 +3,7 @@
 import defined from "../Core/defined.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
+import renderPolylines from "./renderBufferPolylineCollection.js";
 
 /** @import Color from "../Core/Color.js"; */
 /** @import FrameState from "./FrameState.js" */
@@ -69,6 +70,12 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    */
   update(frameState) {
     super.update(frameState);
+
+    this._renderContext = renderPolylines(
+      this,
+      frameState,
+      this._renderContext,
+    );
   }
 }
 
