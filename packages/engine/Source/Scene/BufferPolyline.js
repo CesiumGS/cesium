@@ -4,6 +4,7 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferPrimitive from "./BufferPrimitive.js";
 import assert from "../Core/assert.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
+import defined from "../Core/defined.js";
 
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 
@@ -72,10 +73,7 @@ class BufferPolyline extends BufferPrimitive {
    */
   static clone(polyline, result) {
     super.clone(polyline, result);
-    // TODO(memory): Causes unnecessary memory allocation during sort(). Should
-    // `getPositions()` return ArrayView pointing into collection memory?
-    const scratchPositions = new Float64Array(polyline.vertexCount * 3);
-    result.setPositions(polyline.getPositions(scratchPositions));
+    result.setPositions(polyline.getPositions());
     result.width = polyline.width;
     return result;
   }
@@ -94,12 +92,25 @@ class BufferPolyline extends BufferPrimitive {
   }
 
   /**
-   * @param {Float64Array} result
+   * Returns an array view of this polyline's vertex positions. If 'result'
+   * argument is given, vertex positions are written to that array and returned.
+   * Otherwise, returns an ArrayView on collection memory — changes to this array
+   * will not trigger render updates, which requires `.setPositions()`.
+   *
+   * @param {Float64Array} [result]
    * return {Float64Array}
    */
   getPositions(result) {
     const { vertexOffset, vertexCount } = this;
     const positionF64 = this._collection._positionF64;
+
+    if (!defined(result)) {
+      const byteOffset =
+        positionF64.byteOffset +
+        vertexOffset * 3 * Float64Array.BYTES_PER_ELEMENT;
+      return new Float64Array(positionF64.buffer, byteOffset, vertexCount * 3);
+    }
+
     for (let i = 0; i < vertexCount; i++) {
       result[i * 3] = positionF64[(vertexOffset + i) * 3];
       result[i * 3 + 1] = positionF64[(vertexOffset + i) * 3 + 1];

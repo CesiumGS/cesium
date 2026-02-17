@@ -4,6 +4,7 @@ import assert from "../Core/assert.js";
 import BufferPrimitive from "./BufferPrimitive.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
+import defined from "../Core/defined.js";
 
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
@@ -103,16 +104,9 @@ class BufferPolygon extends BufferPrimitive {
    */
   static clone(polygon, result) {
     super.clone(polygon, result);
-
-    // TODO(memory): Causes unnecessary memory allocation during sort(). Should
-    // `getPositions()` return ArrayView pointing into collection memory?
-    const scratchPositions = new Float64Array(polygon.vertexCount * 3);
-    const scratchHoles = new Uint32Array(polygon.holeCount);
-    const scratchTriangles = new Uint32Array(polygon.triangleCount * 3);
-
-    result.setPositions(polygon.getPositions(scratchPositions));
-    result.setHoles(polygon.getHoles(scratchHoles));
-    result.setTriangles(polygon.getTriangles(scratchTriangles));
+    result.setPositions(polygon.getPositions());
+    result.setHoles(polygon.getHoles());
+    result.setTriangles(polygon.getTriangles());
     return result;
   }
 
@@ -130,12 +124,25 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
-   * @param {Float64Array} result
+   * Returns an array view of this polygon's vertex positions. If 'result'
+   * argument is given, vertex positions are written to that array and returned.
+   * Otherwise, returns an ArrayView on collection memory — changes to this array
+   * will not trigger render updates, which requires `.setPositions()`.
+   *
+   * @param {Float64Array} [result]
    * return {Float64Array}
    */
   getPositions(result) {
     const { vertexOffset, vertexCount } = this;
     const positionF64 = this._collection._positionF64;
+
+    if (!defined(result)) {
+      const byteOffset =
+        positionF64.byteOffset +
+        vertexOffset * 3 * Float64Array.BYTES_PER_ELEMENT;
+      return new Float64Array(positionF64.buffer, byteOffset, vertexCount * 3);
+    }
+
     for (let i = 0; i < vertexCount; i++) {
       result[i * 3] = positionF64[(vertexOffset + i) * 3];
       result[i * 3 + 1] = positionF64[(vertexOffset + i) * 3 + 1];
@@ -181,12 +188,24 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
-   * @param {Uint32Array} result
+   * Returns an array view of this polygon's hole indices. If 'result'
+   * argument is given, hole indices are written to that array and returned.
+   * Otherwise, returns an ArrayView on collection memory — changes to this array
+   * will not trigger render updates, which requires `.setHoles()`.
+   *
+   * @param {Uint32Array} [result]
    * @returns {Uint32Array}
    */
   getHoles(result) {
     const { holeOffset, holeCount } = this;
     const holeIndexU32 = this._collection._holeIndexU32;
+
+    if (!defined(result)) {
+      const byteOffset =
+        holeIndexU32.byteOffset + holeOffset * Uint32Array.BYTES_PER_ELEMENT;
+      return new Uint32Array(holeIndexU32.buffer, byteOffset, holeCount);
+    }
+
     for (let i = 0; i < holeCount; i++) {
       result[i] = holeIndexU32[holeOffset + i];
     }
@@ -228,12 +247,24 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
-   * @param {Uint32Array} result
+   * Returns an array view of this polygon's triangle indices. If 'result'
+   * argument is given, triangle indices are written to that array and returned.
+   * Otherwise, returns an ArrayView on collection memory — changes to this array
+   * will not trigger render updates, which requires `.setTriangles()`.
+   *
+   * @param {Uint32Array} [result]
    * @returns {Uint32Array}
    */
   getTriangles(result) {
     const { triangleOffset, triangleCount } = this;
     const indices = this._collection._triangleIndexU32;
+
+    if (!defined(result)) {
+      const byteOffset =
+        indices.byteOffset + triangleOffset * 3 * Uint32Array.BYTES_PER_ELEMENT;
+      return new Uint32Array(indices.buffer, byteOffset, triangleCount * 3);
+    }
+
     for (let i = 0; i < triangleCount; i++) {
       result[i * 3] = indices[(triangleOffset + i) * 3];
       result[i * 3 + 1] = indices[(triangleOffset + i) * 3 + 1];
