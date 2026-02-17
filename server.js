@@ -129,6 +129,8 @@ const throttle = (callback) => {
       await buildSandcastleApp({
         outputToBuildDir: false,
         includeDevelopment: true,
+        outerOrigin: "http://localhost:8080",
+        innerOrigin: "http://localhost:8081",
       });
       console.log(
         `Sandcastle built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
