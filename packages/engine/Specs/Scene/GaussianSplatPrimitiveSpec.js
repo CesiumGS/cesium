@@ -5,6 +5,7 @@ import {
   RequestScheduler,
   HeadingPitchRange,
   GaussianSplat3DTileContent,
+  Matrix4,
   Transforms,
 } from "../../index.js";
 import GaussianSplatSorter from "../../Source/Scene/GaussianSplatSorter.js";
@@ -174,6 +175,7 @@ describe(
       gsPrim._sorterState = 0;
       gsPrim._dirty = false;
       gsPrim._needsSnapshotRebuild = false;
+      gsPrim._rootTransform = gsPrim._rootTransform ?? Matrix4.IDENTITY;
       gsPrim._selectedTileSet = new Set(tileset._selectedTiles);
       gsPrim._selectedTilesStableFrames = 2;
 
@@ -185,16 +187,23 @@ describe(
         return undefined;
       });
 
-      await pollToPromise(function () {
+      for (let i = 0; i < 20; i++) {
         scene.renderForSpecs();
-        return (
+        if (
           hadUnavailableSort &&
           sortCallCount > 1 &&
           gsPrim._pendingSnapshot !== undefined &&
           gsPrim._pendingSnapshot.state === "TEXTURE_READY" &&
           gsPrim._pendingSortPromise === undefined
-        );
-      });
+        ) {
+          break;
+        }
+      }
+      expect(hadUnavailableSort).toBe(true);
+      expect(sortCallCount).toBeGreaterThan(1);
+      expect(gsPrim._pendingSnapshot).toBeDefined();
+      expect(gsPrim._pendingSnapshot.state).toBe("TEXTURE_READY");
+      expect(gsPrim._pendingSortPromise).toBeUndefined();
     });
 
     it("Check Spherical Harmonic specular on a Gaussian splats tileset", async function () {
