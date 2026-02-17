@@ -80,8 +80,8 @@ class BufferPrimitiveCollection {
 
   /**
    * @param {object} options
-   * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_COUNT]
-   * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_COUNT]
+   * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
+   * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
@@ -298,7 +298,7 @@ class BufferPrimitiveCollection {
     }
 
     // Assign buffers from temporary collection onto this one.
-    CollectionClass._assignBuffers(tmp, this);
+    CollectionClass._replaceBuffers(tmp, this);
     this._dirtyOffset = 0;
     this._dirtyCount = primitiveCount;
 
@@ -315,8 +315,8 @@ class BufferPrimitiveCollection {
    * capacity, and efficiently transferring features to the new collection.
    *
    * @example
-   * const result = new BufferPrimitiveCollection({ /* larger allocation *\/ });
-   * BufferPrimitiveCollection.clone(collection, result);
+   * const result = new BufferPrimitiveCollection({ ... }); // allocate larger 'result' collection
+   * BufferPrimitiveCollection.clone(collection, result);   // copy primitives from 'collection' into 'result'
    *
    * @param {BufferPrimitiveCollection<T>} collection
    * @param {BufferPrimitiveCollection<T>} result
@@ -340,7 +340,7 @@ class BufferPrimitiveCollection {
     this._copySubArray(
       collection._positionF64,
       result._positionF64,
-      collection.vertexCount * 4,
+      collection.vertexCount * 3,
     );
 
     result.show = collection.show;
@@ -357,6 +357,9 @@ class BufferPrimitiveCollection {
   }
 
   /**
+   * Returns an empty collection with the same buffer sizes as this collection.
+   * Internal utility for operations requiring a working copy of memory.
+   *
    * @param {BufferPrimitiveCollection<T>} collection
    * @returns {BufferPrimitiveCollection<T>}
    * @template T extends BufferPrimitive
@@ -379,7 +382,7 @@ class BufferPrimitiveCollection {
    * @protected
    * @ignore
    */
-  static _assignBuffers(src, dst) {
+  static _replaceBuffers(src, dst) {
     dst._primitiveBuffer = src._primitiveBuffer;
     dst._primitiveView = src._primitiveView;
 
@@ -446,16 +449,6 @@ class BufferPrimitiveCollection {
    * calls, prefer to reuse a single BufferPrimitive instance rather than
    * allocating a new instance on each call.
    *
-   * @example
-   * const primitive = new BufferPrimitive();
-   * const colors = [Color.RED, Color.GREEN, Color.BLUE];
-   *
-   * for (const color of colors) {
-   *   collection.add({color}, primitive);
-   *
-   *   primitive.featureId = 123;
-   * }
-   *
    * @param {BufferPrimitiveOptions} options
    * @param {BufferPrimitive} result
    * @returns {BufferPrimitive}
@@ -508,7 +501,8 @@ class BufferPrimitiveCollection {
   // ACCESSORS
 
   /**
-   * Number of primitives added to the collection.
+   * Number of primitives in collection. Must be <= {@link primitiveCountMax}.
+   *
    * @type {number}
    * @readonly
    */
@@ -517,8 +511,9 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Maximum number of primitives that may be added to the collection, including
-   * those already added and counted in {@link primitiveCount}.
+   * Maximum number of primitives this collection can contain. Must be >=
+   * {@link primitiveCount}.
+   *
    * @type {number}
    * @readonly
    * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}
@@ -530,7 +525,8 @@ class BufferPrimitiveCollection {
   /**
    * Total byte length of buffers owned by this collection. Includes any unused
    * space allocated by {@link primitiveCountMax}, even if no primitives have
-   * yet been added in that space.
+   * yet been added in that space
+   *
    * @type {number}
    * @readonly
    */
@@ -539,7 +535,8 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Number of vertices added to the collection.
+   * Number of vertices in collection. Must be <= {@link vertexCountMax}.
+   *
    * @type {number}
    * @readonly
    */
@@ -548,8 +545,9 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Maximum number of vertices that may be added to the collection, including
-   * those already added and counted in {@link vertexCount}.
+   * Maximum number of vertices this collection can contain. Must be >=
+   * {@link vertexCount}.
+   *
    * @type {number}
    * @readonly
    * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}
@@ -565,6 +563,7 @@ class BufferPrimitiveCollection {
    * @param {TypedArray} src
    * @param {TypedArray} dst
    * @param {number} count
+   * @protected
    * @ignore
    */
   static _copySubArray(src, dst, count) {
@@ -577,6 +576,7 @@ class BufferPrimitiveCollection {
    * @param {DataView} src
    * @param {DataView} dst
    * @param {number} byteLength
+   * @protected
    * @ignore
    */
   static _copySubDataView(src, dst, byteLength) {
@@ -607,8 +607,7 @@ class BufferPrimitiveCollection {
 
     const results = [];
     for (let i = 0, il = this.primitiveCount; i < il; i++) {
-      this.get(i, primitive);
-      results.push(primitive.toJSON());
+      results.push(this.get(i, primitive).toJSON());
     }
 
     return results;

@@ -28,10 +28,10 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 class BufferPolygonCollection extends BufferPrimitiveCollection {
   /**
    * @param {object} options
-   * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_COUNT]
-   * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_COUNT]
-   * @param {number} [options.holeCountMax=BufferPrimitiveCollection.DEFAULT_COUNT]
-   * @param {number} [options.triangleCountMax=BufferPrimitiveCollection.DEFAULT_COUNT]
+   * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
+   * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
+   * @param {number} [options.holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
+   * @param {number} [options.triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
@@ -104,21 +104,6 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
     return BufferPolygon;
   }
 
-  /**
-   * @param {BufferPolygonCollection} collection
-   * @returns {BufferPolygonCollection}
-   * @override
-   * @ignore
-   */
-  static _cloneEmpty(collection) {
-    return new BufferPolygonCollection({
-      primitiveCountMax: collection.primitiveCountMax,
-      vertexCountMax: collection.vertexCountMax,
-      holeCountMax: collection.holeCountMax,
-      triangleCountMax: collection.triangleCountMax,
-    });
-  }
-
   /////////////////////////////////////////////////////////////////////////////
   // COLLECTION LIFECYCLE
 
@@ -142,6 +127,68 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
       this._triangleCountMax * 3 * Uint32Array.BYTES_PER_ELEMENT;
     this._triangleIndexBuffer = new ArrayBuffer(triangleIndexBufferByteLength);
     this._triangleIndexU32 = new Uint32Array(this._triangleIndexBuffer);
+  }
+
+  /**
+   * @param {BufferPolygonCollection} collection
+   * @param {BufferPolygonCollection} result
+   * @returns {BufferPolygonCollection}
+   */
+  static clone(collection, result) {
+    super.clone(collection, result);
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(collection.holeCount <= result.holeCountMax, ERR_CAPACITY);
+    assert(collection.triangleCount <= result.triangleCountMax, ERR_CAPACITY);
+    //>>includeEnd('debug');
+
+    this._copySubArray(
+      collection._holeIndexU32,
+      result._holeIndexU32,
+      collection.holeCount,
+    );
+
+    this._copySubArray(
+      collection._triangleIndexU32,
+      result._triangleIndexU32,
+      collection._triangleCount * 3,
+    );
+
+    result._holeCount = collection._holeCount;
+    result._triangleCount = collection._triangleCount;
+
+    return result;
+  }
+
+  /**
+   * @param {BufferPolygonCollection} collection
+   * @returns {BufferPolygonCollection}
+   * @override
+   * @ignore
+   */
+  static _cloneEmpty(collection) {
+    return new BufferPolygonCollection({
+      primitiveCountMax: collection.primitiveCountMax,
+      vertexCountMax: collection.vertexCountMax,
+      holeCountMax: collection.holeCountMax,
+      triangleCountMax: collection.triangleCountMax,
+    });
+  }
+
+  /**
+   * @param {BufferPolygonCollection} src
+   * @param {BufferPolygonCollection} dst
+   * @override
+   * @ignore
+   */
+  static _replaceBuffers(src, dst) {
+    super._replaceBuffers(src, dst);
+
+    dst._holeIndexBuffer = src._holeIndexBuffer;
+    dst._holeIndexU32 = src._holeIndexU32;
+
+    dst._triangleIndexBuffer = src._triangleIndexBuffer;
+    dst._triangleIndexU32 = src._triangleIndexU32;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -181,53 +228,6 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
     }
 
     return result;
-  }
-
-  /**
-   * @param {BufferPolygonCollection} collection
-   * @param {BufferPolygonCollection} result
-   * @returns {BufferPolygonCollection}
-   */
-  static clone(collection, result) {
-    super.clone(collection, result);
-
-    //>>includeStart('debug', pragmas.debug);
-    assert(collection.holeCount <= result.holeCountMax, ERR_CAPACITY);
-    assert(collection.triangleCount <= result.triangleCountMax, ERR_CAPACITY);
-    //>>includeEnd('debug');
-
-    this._copySubArray(
-      collection._holeIndexU32,
-      result._holeIndexU32,
-      collection.holeCount,
-    );
-
-    this._copySubArray(
-      collection._triangleIndexU32,
-      result._triangleIndexU32,
-      collection._triangleCount * 3,
-    );
-
-    result._holeCount = collection._holeCount;
-    result._triangleCount = collection._triangleCount;
-
-    return result;
-  }
-
-  /**
-   * @param {BufferPolygonCollection} src
-   * @param {BufferPolygonCollection} dst
-   * @override
-   * @ignore
-   */
-  static _assignBuffers(src, dst) {
-    super._assignBuffers(src, dst);
-
-    dst._holeIndexBuffer = src._holeIndexBuffer;
-    dst._holeIndexU32 = src._holeIndexU32;
-
-    dst._triangleIndexBuffer = src._triangleIndexBuffer;
-    dst._triangleIndexU32 = src._triangleIndexU32;
   }
 
   /////////////////////////////////////////////////////////////////////////////
