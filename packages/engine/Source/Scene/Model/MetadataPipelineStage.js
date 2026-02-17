@@ -1009,10 +1009,10 @@ function propertyDestination(propertyId, model) {
   const metadataUsedInFragment = customShader.usedVariablesFragment.metadataSet;
   const metadataUsedInVertex = customShader.usedVariablesVertex.metadataSet;
 
-  const fragmentDestination = metadataUsedInFragment.has(propertyId)
+  const fragmentDestination = metadataUsedInFragment.hasOwnProperty(propertyId)
     ? ShaderDestination.FRAGMENT
     : ShaderDestination.NONE;
-  const vertexDestination = metadataUsedInVertex.has(propertyId)
+  const vertexDestination = metadataUsedInVertex.hasOwnProperty(propertyId)
     ? ShaderDestination.VERTEX
     : ShaderDestination.NONE;
 
