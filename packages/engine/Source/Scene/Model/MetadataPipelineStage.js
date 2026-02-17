@@ -174,6 +174,7 @@ function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
     infoArray[i] = {
       metadataVariable: sanitizeGlslIdentifier(propertyId),
       property,
+      classProperty: property.classProperty,
       type: property.classProperty.type,
       glslType,
       variableName,
@@ -229,6 +230,7 @@ function getPropertyTextureInfo(propertyTexture, statistics) {
     infoArray[i] = {
       metadataVariable: sanitizeGlslIdentifier(propertyId),
       property,
+      classProperty: property.classProperty,
       type: property.classProperty.type,
       glslType: property.classProperty.getGlslType(),
       propertyStatistics: classStatistics?.properties[propertyId],
@@ -278,8 +280,8 @@ function getPropertyTableInfo(
 ) {
   const { sanitizeGlslIdentifier } = ModelUtility;
 
-  const classId = propertyTable.class.id;
-  const classStatistics = statistics?.classes[classId];
+  const classDefinition = propertyTable.class;
+  const classStatistics = statistics?.classes[classDefinition.id];
   const featureSetInfo =
     tableToFeatureSetInfo.get(String(propertyTable.id)) ?? {};
 
@@ -287,28 +289,29 @@ function getPropertyTableInfo(
     featureSetInfo.shaderDestination ?? ShaderDestination.BOTH;
 
   const properties = propertyTable.properties;
+  const classProperties = classDefinition.properties;
   const infoArray = [];
 
-  for (const propertyId in properties) {
-    if (properties.hasOwnProperty(propertyId)) {
-      const property = properties[propertyId];
-      const classProperty = property.classProperty;
-
-      if (!classProperty.isGpuCompatible(NUM_CHANNELS)) {
-        continue;
-      }
-
-      infoArray.push({
-        metadataVariable: sanitizeGlslIdentifier(propertyId),
-        property,
-        type: property.classProperty.type,
-        glslType: property.classProperty.getGlslType(),
-        propertyStatistics: classStatistics?.properties[propertyId],
-        shaderDestination: shaderDestination,
-        propertyTable: propertyTable,
-        featureIdVariableName: featureSetInfo.variableName,
-      });
+  // See note in {@link parseStructuralMetadata.collectGpuCompatiblePropertyBufferViews} about
+  // why we iterate over the class definition properties rather than the property table properties.
+  for (const [propertyId, classProperty] of Object.entries(classProperties)) {
+    if (!classProperty.isGpuCompatible(NUM_CHANNELS)) {
+      continue;
     }
+
+    const property = properties[propertyId];
+
+    infoArray.push({
+      metadataVariable: sanitizeGlslIdentifier(propertyId),
+      property: property,
+      classProperty: classProperty,
+      type: classProperty.type,
+      glslType: classProperty.getGlslType(),
+      propertyStatistics: classStatistics?.properties[propertyId],
+      shaderDestination: shaderDestination,
+      propertyTable: propertyTable,
+      featureIdVariableName: featureSetInfo.variableName,
+    });
   }
 
   return infoArray;
@@ -375,7 +378,7 @@ function mapPropertyTablesToFeatureIdSets(renderResources, primitive) {
 }
 
 /**
- * Declare <type>MetadataClass structs in the shader for each PropertyAttributeProperty, PropertyTextureProperty, and PropertyTableProperty
+ * Declare <type>MetadataClass structs in the shader for each PropertyAttributeProperty, PropertyTextureProperty, and MetadataTableProperty
  * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
  * @param {object[]} propertyInfos Information about the PropertyAttributeProperties, PropertyTextureProperties, and PropertyTableProperties
  * @private
@@ -665,13 +668,13 @@ function addPropertyTexturePropertyMetadata(
 /**
  * Add fields to the MetadataClass struct, and metadataClass value expressions
  * to the initializeMetadata function, for a PropertyAttributeProperty,
- * PropertyTextureProperty, or PropertyTableProperty
+ * PropertyTextureProperty, or MetadataTableProperty
  * @param {ShaderBuilder} shaderBuilder The shader builder for the primitive
- * @param {object} propertyInfo Info about the PropertyAttributeProperty, PropertyTextureProperty, or PropertyTableProperty
+ * @param {object} propertyInfo Info about the PropertyAttributeProperty, PropertyTextureProperty, or MetadataTableProperty
  * @private
  */
 function addPropertyMetadataClass(shaderBuilder, propertyInfo) {
-  const { classProperty } = propertyInfo.property;
+  const classProperty = propertyInfo.classProperty;
   const { metadataVariable, glslType, shaderDestination } = propertyInfo;
 
   // Construct assignment statements to set values in the metadataClass struct
@@ -841,7 +844,7 @@ function addPropertyTablePropertyMetadata(
   const featureIdExpression = `featureIds.${featureIdVariableName}`;
   const texCoordExpression = `ivec2(${featureIdExpression}, ${propertyIndex})`;
   const textureSampleExpression = `texelFetch(${textureUniformName}, ${texCoordExpression}, 0)`;
-  const classProperty = property.classProperty;
+  const classProperty = propertyInfo.classProperty;
 
   const unpackedVariable = classProperty.unpackTextureInShader(
     textureSampleExpression,
@@ -856,7 +859,8 @@ function addPropertyTablePropertyMetadata(
     glslType: glslType,
     metadataVariable: metadataVariable,
     shaderDestination: shaderDestination,
-    property: property,
+    // If the property is on the schema but not used by this primitive, value transforms come from class schema property
+    property: property ?? classProperty,
   });
 
   const finalAssignment = `metadata.${metadataVariable} = ${transformedValue};`;
@@ -910,7 +914,7 @@ function getStructAssignments(fieldNames, values, struct, type) {
  * @param {string} options.glslType The GLSL type of the variable
  * @param {ShaderDestination} options.shaderDestination Which shader(s) use this variable
  * @param {PrimitiveRenderResources} options.renderResources The render resources for this primitive
- * @param {(PropertyAttributeProperty|PropertyTextureProperty)} options.property The property from which the value is derived
+ * @param {(PropertyAttributeProperty|PropertyTextureProperty|MetadataTableProperty|MetadataClassProperty)} options.property The property from which the value is derived
  * @returns {string} A wrapped GLSL value expression
  * @private
  */
@@ -930,6 +934,8 @@ function addValueTransformUniforms(options) {
   shaderBuilder.addUniform(glslType, offsetUniformName, shaderDestination);
   shaderBuilder.addUniform(glslType, scaleUniformName, shaderDestination);
 
+  // Note: if property is an instance of MetadataClassProperty, offset and scale will be the default values set on the class definition.
+  // Otherwise, the spec allows them to be overridden per-property instance.
   const { offset, scale } = property;
   uniformMap[offsetUniformName] = () => offset;
   uniformMap[scaleUniformName] = () => scale;
