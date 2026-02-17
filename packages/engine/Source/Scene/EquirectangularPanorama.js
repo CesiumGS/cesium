@@ -202,6 +202,10 @@ Object.defineProperties(EquirectangularPanorama.prototype, {
 
 // Proxy update/destroy/etc to the primitive
 EquirectangularPanorama.prototype.update = function (frameState) {
+  if (defined(this._credit)) {
+    frameState.creditDisplay.addCreditToNextFrame(this._credit);
+  }
+
   return this._primitive.update(frameState);
 };
 
