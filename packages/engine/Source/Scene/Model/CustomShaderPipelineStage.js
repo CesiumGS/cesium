@@ -717,9 +717,9 @@ function addLinesToShader(shaderBuilder, customShader, generatedCode) {
 function getAllPropertyIds(primitive, structuralMetadata) {
   const usedPropertyTextures = primitive.propertyTextureIds;
   const usedPropertyAttributes = primitive.propertyAttributeIds;
-  const usedPropertyTables = primitive.featureIds.map(
-    (featureId) => featureId.propertyTableId,
-  );
+  const usedPropertyTables = defined(primitive.featureIds)
+    ? primitive.featureIds.map((featureId) => featureId.propertyTableId)
+    : [];
 
   const primitivePropertyIds = new Set();
 
