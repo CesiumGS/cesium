@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 
+/**
+ * Hook to easily update the page title based on the specific Sandcastle that's loaded.
+ * Handles adding an asterisk * when the code state is dirty
+ */
 export function usePageTitle() {
   const [title, setPageTitle] = useState("New Sandcastle");
   const [isDirty, setIsDirty] = useState(false);

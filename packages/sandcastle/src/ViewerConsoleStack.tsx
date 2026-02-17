@@ -12,6 +12,14 @@ export type ViewerConsoleStackRef = {
   toggleExpanded: () => void;
 };
 
+/**
+ * This component is meant to wrap the Viewer Bucket and Console Mirror.
+ * This handles the automatic "snapping" of the console Allotment area to the collapsed height.
+ * It also includes logic for returning to the same expanded height when toggled directly.
+ *
+ * Allotment does have a built-in snap feature but it's "snap to zero" which completely closes
+ * the panel. We specifically want it to snap to a set height to continue to display the console header
+ */
 export function ViewerConsoleStack({
   ref,
   children,
