@@ -144,6 +144,36 @@ describe(
 
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
       const gsPrim = tileset.gaussianSplatPrimitive;
+      const currentSnapshot = gsPrim._snapshot;
+      expect(currentSnapshot).toBeDefined();
+
+      // Force the pending-snapshot TEXTURE_READY path deterministically so this
+      // test doesn't depend on timing of real async texture generation.
+      gsPrim._pendingSnapshot = {
+        generation: gsPrim._splatDataGeneration,
+        positions: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
+        rotations: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]),
+        scales: new Float32Array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+        colors: new Uint8Array([255, 255, 255, 255, 255, 255, 255, 255]),
+        shData: undefined,
+        sphericalHarmonicsDegree: 0,
+        shCoefficientCount: 0,
+        numSplats: 2,
+        indexes: undefined,
+        gaussianSplatTexture: currentSnapshot.gaussianSplatTexture,
+        sphericalHarmonicsTexture: undefined,
+        lastTextureWidth: currentSnapshot.lastTextureWidth,
+        lastTextureHeight: currentSnapshot.lastTextureHeight,
+        state: "TEXTURE_READY",
+      };
+      gsPrim._pendingSortPromise = undefined;
+      gsPrim._pendingSort = undefined;
+      gsPrim._sorterPromise = undefined;
+      gsPrim._sorterState = 0;
+      gsPrim._dirty = false;
+      gsPrim._needsSnapshotRebuild = false;
+      gsPrim._selectedTileSet = new Set(tileset._selectedTiles);
+      gsPrim._selectedTilesStableFrames = 2;
 
       let sortCallCount = 0;
       let hadUnavailableSort = false;
@@ -163,6 +193,11 @@ describe(
           return Promise.resolve(indexes);
         },
       );
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return hadUnavailableSort && gsPrim._pendingSortPromise === undefined;
+      });
 
       await pollToPromise(function () {
         scene.renderForSpecs();
