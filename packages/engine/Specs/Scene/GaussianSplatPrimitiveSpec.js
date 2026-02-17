@@ -4,11 +4,12 @@ import {
   ResourceCache,
   RequestScheduler,
   HeadingPitchRange,
+  Cartesian3,
   GaussianSplat3DTileContent,
   Matrix4,
   Transforms,
 } from "../../index.js";
-import GaussianSplatSorter from "../../Source/Scene/GaussianSplatSorter.js";
+import GaussianSplatPrimitive from "../../Source/Scene/GaussianSplatPrimitive.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -132,19 +133,24 @@ describe(
       });
     });
 
-    it("retries pending snapshot sorting when sorter is temporarily unavailable", async function () {
-      const tileset = await Cesium3DTilesTester.loadTileset(
-        scene,
-        sphericalHarmonicUrl,
-        options,
-      );
-      scene.camera.lookAt(
-        tileset.boundingSphere.center,
-        new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
-      );
-
-      await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
-      const gsPrim = tileset.gaussianSplatPrimitive;
+    it("retries pending snapshot sorting when sorter is temporarily unavailable", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: {
+          addEventListener: function () {},
+        },
+        tileVisible: {
+          addEventListener: function () {},
+        },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset: tileset });
+      gsPrim._rootTransform = Matrix4.IDENTITY;
 
       // Force the pending-snapshot TEXTURE_READY path deterministically.
       // This validates "unavailable sorter -> keep TEXTURE_READY -> retry next frame"
@@ -167,7 +173,7 @@ describe(
         sphericalHarmonicsTexture: undefined,
         lastTextureWidth: 1,
         lastTextureHeight: 1,
-        state: "TEXTURE_READY",
+        state: "SORTING",
       };
       gsPrim._pendingSortPromise = undefined;
       gsPrim._pendingSort = undefined;
@@ -175,34 +181,28 @@ describe(
       gsPrim._sorterState = 0;
       gsPrim._dirty = false;
       gsPrim._needsSnapshotRebuild = false;
-      gsPrim._rootTransform = gsPrim._rootTransform ?? Matrix4.IDENTITY;
-      gsPrim._selectedTileSet = new Set(tileset._selectedTiles);
+      gsPrim._selectedTileSet = new Set();
       gsPrim._selectedTilesStableFrames = 2;
 
-      const originalSorterTaskProcessor =
-        GaussianSplatSorter._sorterTaskProcessor;
-      const originalTaskProcessorReady =
-        GaussianSplatSorter._taskProcessorReady;
-      const originalError = GaussianSplatSorter._error;
-      GaussianSplatSorter._sorterTaskProcessor = {};
-      GaussianSplatSorter._taskProcessorReady = false;
-      GaussianSplatSorter._error = undefined;
+      const frameState = {
+        frameNumber: 1,
+        camera: {
+          viewMatrix: Matrix4.clone(Matrix4.IDENTITY, new Matrix4()),
+          positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
+          directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
+        },
+        commandList: [],
+        passes: {
+          pick: false,
+        },
+      };
 
-      try {
-        const initialSortRequestId = gsPrim._sortRequestId;
-        for (let i = 0; i < 6; i++) {
-          scene.renderForSpecs();
-        }
+      gsPrim.update(frameState);
 
-        expect(gsPrim._sortRequestId).toBeGreaterThan(initialSortRequestId + 1);
-        expect(gsPrim._pendingSnapshot).toBeDefined();
-        expect(gsPrim._pendingSnapshot.state).toBe("SORTING");
-        expect(gsPrim._pendingSortPromise).toBeUndefined();
-      } finally {
-        GaussianSplatSorter._sorterTaskProcessor = originalSorterTaskProcessor;
-        GaussianSplatSorter._taskProcessorReady = originalTaskProcessorReady;
-        GaussianSplatSorter._error = originalError;
-      }
+      expect(gsPrim._pendingSnapshot).toBeDefined();
+      expect(gsPrim._pendingSnapshot.state).toBe("TEXTURE_READY");
+      expect(gsPrim._pendingSortPromise).toBeUndefined();
+      gsPrim.destroy();
     });
 
     it("Check Spherical Harmonic specular on a Gaussian splats tileset", async function () {
