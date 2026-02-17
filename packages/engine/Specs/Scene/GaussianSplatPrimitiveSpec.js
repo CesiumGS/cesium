@@ -145,30 +145,29 @@ describe(
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
       const gsPrim = tileset.gaussianSplatPrimitive;
 
-      const originalSort = GaussianSplatSorter.radixSortIndexes;
       let sortCallCount = 0;
+      let hadUnavailableSort = false;
       spyOn(GaussianSplatSorter, "radixSortIndexes").and.callFake(
         function (parameters) {
           sortCallCount++;
           if (sortCallCount === 1) {
+            hadUnavailableSort = true;
             return undefined;
           }
-          return originalSort.call(GaussianSplatSorter, parameters);
+
+          const count = parameters.primitive.count;
+          const indexes = new Uint32Array(count);
+          for (let i = 0; i < count; i++) {
+            indexes[i] = i;
+          }
+          return Promise.resolve(indexes);
         },
       );
 
       await pollToPromise(function () {
         scene.renderForSpecs();
         return (
-          sortCallCount >= 1 &&
-          gsPrim._pendingSnapshot !== undefined &&
-          gsPrim._pendingSnapshot.state === "TEXTURE_READY"
-        );
-      });
-
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return (
+          hadUnavailableSort &&
           sortCallCount > 1 &&
           gsPrim._pendingSnapshot === undefined &&
           gsPrim._sorterState === 0

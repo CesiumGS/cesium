@@ -18,7 +18,7 @@
 - Fixes depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
 - Fixes billboard depth testing near horizon. [#13159](https://github.com/CesiumGS/cesium/issues/13159)
 - Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
-- Fixed Gaussian splat race conditions in snapshot/sort updates by enforcing explicit snapshot states, preventing stale async results from causing flickering, WebGL draw errors, and unstable LOD transition performance. [#13016](https://github.com/CesiumGS/cesium/issues/13016)
+- Fixed Gaussian splat race conditions in snapshot/sort updates by enforcing explicit snapshot states, preventing stale async results from causing flickering, WebGL draw errors, and unstable LOD transition performance. [#13016](https://github.com/CesiumGS/cesium/issues/13016) [#12965](https://github.com/CesiumGS/cesium/issues/12965)
 - Fixed flashing when rendering multiple Gaussian splat primitives by storing draw-command model matrices per primitive (`_drawCommandModelMatrix`) instead of reusing shared scratch matrices. [#12967](https://github.com/CesiumGS/cesium/issues/12967)
 
 ## 1.138 - 2026-02-02
