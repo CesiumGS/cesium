@@ -7,6 +7,7 @@ import {
   GaussianSplat3DTileContent,
   Transforms,
 } from "../../index.js";
+import GaussianSplatSorter from "../../Source/Scene/GaussianSplatSorter.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -127,6 +128,51 @@ describe(
         expect(rgba[samplePosition + 0]).toBe(0);
         expect(rgba[samplePosition + 1]).toBe(0);
         expect(rgba[samplePosition + 2]).toBe(0);
+      });
+    });
+
+    it("retries pending snapshot sorting when sorter is temporarily unavailable", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        sphericalHarmonicUrl,
+        options,
+      );
+      scene.camera.lookAt(
+        tileset.boundingSphere.center,
+        new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+      );
+
+      await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
+      const gsPrim = tileset.gaussianSplatPrimitive;
+
+      const originalSort = GaussianSplatSorter.radixSortIndexes;
+      let sortCallCount = 0;
+      spyOn(GaussianSplatSorter, "radixSortIndexes").and.callFake(
+        function (parameters) {
+          sortCallCount++;
+          if (sortCallCount === 1) {
+            return undefined;
+          }
+          return originalSort.call(GaussianSplatSorter, parameters);
+        },
+      );
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return (
+          sortCallCount >= 1 &&
+          gsPrim._pendingSnapshot !== undefined &&
+          gsPrim._pendingSnapshot.state === "TEXTURE_READY"
+        );
+      });
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return (
+          sortCallCount > 1 &&
+          gsPrim._pendingSnapshot === undefined &&
+          gsPrim._sorterState === 0
+        );
       });
     });
 
