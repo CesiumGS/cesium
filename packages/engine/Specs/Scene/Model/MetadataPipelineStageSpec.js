@@ -9,6 +9,8 @@ import {
   HeadingPitchRange,
   Cartesian3,
   Transforms,
+  CustomShader,
+  defined,
 } from "../../../index.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -81,9 +83,110 @@ describe(
         model: {
           statistics: new ModelStatistics(),
           structuralMetadata: components.structuralMetadata,
+          customShader: mockCustomShader(components.structuralMetadata),
         },
         uniformMap: {},
       };
+    }
+
+    // The MetadataPipelineStage only adds metadata properties to the shader that are
+    // in use (e.g. by a custom shader, or a point cloud style). This mock adds all
+    // properties in the structural metadata to a mock custom shader.
+    function mockCustomShader(structuralMetadata) {
+      if (!defined(structuralMetadata)) {
+        return undefined;
+      }
+
+      const vertexShaderLines = [];
+      const fragmentShaderLines = [];
+      const fragmentShaderLineTemplate = (propertyName, glslType, index) =>
+        `\t${glslType} value${index} = fsInput.metadata.${propertyName};`;
+      const vertexShaderLineTemplate = (propertyName, glslType, index) =>
+        `\t${glslType} value${index} = vsInput.metadata.${propertyName};`;
+
+      const propertyAttributes = structuralMetadata.propertyAttributes;
+      const propertyTextures = structuralMetadata.propertyTextures;
+      const propertyTables = structuralMetadata.propertyTables;
+      let propertyNum = 0;
+
+      for (let i = 0; i < propertyAttributes.length; i++) {
+        for (const [propertyName, property] of Object.entries(
+          propertyAttributes[i].properties,
+        )) {
+          const classProperty = property.classProperty;
+          vertexShaderLines.push(
+            vertexShaderLineTemplate(
+              propertyName,
+              classProperty.getGlslType(),
+              propertyNum,
+            ),
+          );
+          fragmentShaderLines.push(
+            fragmentShaderLineTemplate(
+              propertyName,
+              classProperty.getGlslType(),
+              propertyNum,
+            ),
+          );
+          propertyNum++;
+        }
+      }
+
+      // Property textures are only in the fragment shader
+      for (let i = 0; i < propertyTextures.length; i++) {
+        for (const [propertyName, property] of Object.entries(
+          propertyTextures[i].properties,
+        )) {
+          const classProperty = property.classProperty;
+          fragmentShaderLines.push(
+            fragmentShaderLineTemplate(
+              propertyName,
+              classProperty.getGlslType(),
+              propertyNum,
+            ),
+          );
+          propertyNum++;
+        }
+      }
+
+      for (let i = 0; i < propertyTables.length; i++) {
+        for (const [propertyName, property] of Object.entries(
+          propertyTables[i].properties,
+        )) {
+          const classProperty = property.classProperty;
+          vertexShaderLines.push(
+            vertexShaderLineTemplate(
+              propertyName,
+              classProperty.getGlslType(),
+              propertyNum,
+            ),
+          );
+          fragmentShaderLines.push(
+            fragmentShaderLineTemplate(
+              propertyName,
+              classProperty.getGlslType(),
+              propertyNum,
+            ),
+          );
+          propertyNum++;
+        }
+      }
+
+      const vertexShaderBody = vertexShaderLines.join("\n");
+      const fragmentShaderBody = fragmentShaderLines.join("\n");
+
+      return new CustomShader({
+        vertexShaderText: `
+          void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
+          ${vertexShaderBody}
+          }
+        `,
+        fragmentShaderText: `
+          void fragmentMain(FragmentInput fsInput, inout czm_modelFragmentOutput fsOutput) {
+          ${fragmentShaderBody}
+          }
+        `,
+      });
     }
 
     function checkMetadataClassStructs(shaderBuilder, metadataTypes) {
@@ -675,6 +778,7 @@ describe(
 
         const model = tileset.root.children[1].content._model;
         expect(model).toBeDefined();
+        model.customShader = mockCustomShader(model.structuralMetadata);
 
         const shaderBuilder = new ShaderBuilder();
         const renderResources = {
