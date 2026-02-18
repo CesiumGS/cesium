@@ -17,32 +17,29 @@ import CesiumMath from "../Core/Math.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfVertexBufferLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {object} options.gltf The glTF JSON.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
- * @param {object} [options.primitive] The primitive containing the Draco extension.
- * @param {object} [options.draco] The Draco extension object.
- * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
- * @param {number} [options.accessorId] The accessor id.
- * @param {string} [options.cacheKey] The cache key of the resource.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
- * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
- *
- * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
- * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
- * @exception {DeveloperError} When options.draco is defined options.accessorId must also be defined.
- *
  * @private
  */
 class GltfVertexBufferLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {object} options.gltf The glTF JSON.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
+   * @param {object} [options.primitive] The primitive containing the Draco extension.
+   * @param {object} [options.draco] The Draco extension object.
+   * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
+   * @param {number} [options.accessorId] The accessor id.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
+   * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
+   *
+   * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
+   * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
+   * @exception {DeveloperError} When options.draco is defined options.accessorId must also be defined.
+   */
   constructor(options) {
     super();
 
