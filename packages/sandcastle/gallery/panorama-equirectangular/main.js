@@ -7,7 +7,7 @@ viewer.scene.globe.show = false;
 // Define the sphere's geographic location (longitude, latitude, height)
 const longitude = -122.4175;
 const latitude = 37.655;
-const height = 100; // in meters
+const height = 100;
 
 // Convert to Cartesian3 position
 const position = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
@@ -36,16 +36,16 @@ const panorama = new Cesium.EquirectangularPanorama({
 viewer.scene.primitives.add(panorama);
 
 // Lock the camera to this position
-viewer.scene.camera.lookAtTransform(
-  transform,
+viewer.scene.camera.lookAt(
+  position,
   new Cesium.HeadingPitchRange(
-    0, // heading
-    0, // pitch
-    10, // small offset to allow rotation
+    0,
+    0,
+    2, // small offset to allow rotation
   ),
 );
 
-// Allow camera to rotate, tilt, and zoom
+// Allow camera to rotate and tilt, but disable zoom and translation to keep the user in the panorama
 const controller = viewer.scene.screenSpaceCameraController;
 controller.enableRotate = true;
 controller.enableZoom = false;
