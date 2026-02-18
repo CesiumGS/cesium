@@ -112,7 +112,7 @@ function parseFont(label) {
  * @property {NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} specifying near and far pixel offset scaling properties of the label based on the label's distance from the camera.
  * @property {NearFarScalar} [scaleByDistance] A {@link NearFarScalar} specifying near and far scaling properties of the label based on the label's distance from the camera.
  * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} specifying at what distance from the camera that this label will be displayed.
- * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+ * @property {number} [disableDepthTestDistance] The distance from the camera, beyond which, depth testing is disabled—to, for example, prevent clipping against terrain.
  */
 
 /**
@@ -134,7 +134,7 @@ function parseFont(label) {
  * @see LabelCollection
  * @see LabelCollection#add
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=labels|Cesium Sandcastle Labels Demo}
  */
 function Label(options, labelCollection) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -1048,10 +1048,12 @@ Object.defineProperties(Label.prototype, {
   },
 
   /**
-   * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
-   * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+   * Gets or sets the distance from the camera, beyond which, depth testing is disabled—to, for example, prevent clipping against terrain.
+   * When set to <code>undefined</code> or
+   * <code>0</code>, the depth test is always applied. When set to Number.<code>POSITIVE_INFINITY</code>, the depth test is never applied.
    * @memberof Label.prototype
-   * @type {number}
+   * @type {number|undefined}
+   * @default undefined
    */
   disableDepthTestDistance: {
     get: function () {

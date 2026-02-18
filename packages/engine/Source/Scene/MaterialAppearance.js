@@ -29,7 +29,7 @@ import Material from "./Material.js";
      * @param {object} [options.renderState] Optional render state to override the default render state.
      *
      * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
-     * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?id=materials|Cesium Sandcastle Material Appearance Demo}
      *
      * @example
      * const primitive = new Cesium.Primitive({
