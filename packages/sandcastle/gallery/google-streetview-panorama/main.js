@@ -171,6 +171,40 @@ function disablePicking() {
   handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
 
+const minFov = Cesium.Math.toRadians(20.0);
+const maxFov = Cesium.Math.toRadians(100.0);
+const zoomSpeed = 0.05;
+
+// Function to enable narrowing the field of view with the mouse wheel when in panorama view
+function enableFieldOfViewAdjustment() {
+  handler.setInputAction(function (movement) {
+    const camera = viewer.camera;
+    const frustum = camera.frustum;
+
+    let fov = frustum.fov;
+    console.log("fov before", Cesium.Math.toDegrees(fov));
+
+    // Wheel direction
+    const delta = movement;
+
+    if (delta > 0) {
+      fov *= 1.0 + zoomSpeed; // zoom out
+    } else {
+      fov *= 1.0 - zoomSpeed; // zoom in
+    }
+
+    // Clamp FOV
+    fov = Cesium.Math.clamp(fov, minFov, maxFov);
+
+    frustum.fov = fov;
+  }, Cesium.ScreenSpaceEventType.WHEEL);
+}
+
+// Function to disable field of view adjustment
+function disableFieldOfViewAdjustment() {
+  handler.removeInputAction(Cesium.ScreenSpaceEventType.WHEEL);
+}
+
 function goToPanoView(options) {
   const { position, heading } = options;
 
@@ -187,6 +221,7 @@ function goToPanoView(options) {
   );
 
   viewer.scene.screenSpaceCameraController.enableZoom = false;
+  enableFieldOfViewAdjustment();
   streetviewOverlay.show = false;
   disablePicking();
   removeTopModal();
@@ -209,6 +244,7 @@ function returnToMap() {
   tileset.show = true;
   streetviewOverlay.show = true;
   viewer.scene.screenSpaceCameraController.enableZoom = true;
+  disableFieldOfViewAdjustment();
   const primitives = viewer.scene.primitives;
   // Iterate in reverse to avoid index issues when removing
   for (let i = primitives.length - 1; i >= 0; i--) {
