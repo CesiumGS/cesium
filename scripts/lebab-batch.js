@@ -81,7 +81,10 @@ function MyClass(name) {
 
 ${bright("After")}
 
-${green("/** Description of class. */")}
+${green(`/**
+  * Description of class.
+  * @extends {MyParentClass}
+  */`)}
 class MyClass extends MyParentClass {
   ${green(`/**
    * @param {string} name
