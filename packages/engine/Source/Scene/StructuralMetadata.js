@@ -35,9 +35,9 @@ function StructuralMetadata(options) {
   this._propertyTableCount = defined(propertyTables)
     ? propertyTables.length
     : 0;
-  this._propertyTables = propertyTables;
-  this._propertyTextures = options.propertyTextures;
-  this._propertyAttributes = options.propertyAttributes;
+  this._propertyTables = propertyTables ?? [];
+  this._propertyTextures = options.propertyTextures ?? [];
+  this._propertyAttributes = options.propertyAttributes ?? [];
   this._statistics = options.statistics;
   this._extras = options.extras;
   this._extensions = options.extensions;

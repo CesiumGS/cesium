@@ -51,6 +51,7 @@
               "poloidalAngle": {
                 "description": "poloidal angle in radians in [-pi, pi]. This is a test of offset/scale with property attribute override",
                 "type": "SCALAR",
+                "componentType": "FLOAT32",
                 "scale": 0.05263157894736842
               }
             }
