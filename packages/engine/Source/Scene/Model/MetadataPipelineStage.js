@@ -1,4 +1,5 @@
 import Matrix3 from "../../Core/Matrix3.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
 import defined from "../../Core/defined.js";
 import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
@@ -87,24 +88,28 @@ MetadataPipelineStage.process = function (
   const { structuralMetadata = {}, content } = model;
   const statistics = content?.tileset.metadataExtension?.statistics;
   const webgl2 = frameState.context.webgl2;
+  const usedMetadataProperties = collectMetadataUsedByOtherStages(
+    model,
+    primitive,
+  );
 
   const propertyAttributesInfo = getPropertyAttributesInfo(
     structuralMetadata.propertyAttributes,
     primitive,
     statistics,
-    model,
+    usedMetadataProperties,
   );
   const propertyTexturesInfo = getPropertyTexturesInfo(
     structuralMetadata.propertyTextures,
     statistics,
-    model,
+    usedMetadataProperties,
   );
   const propertyTablesInfo = getPropertyTablesInfo(
     structuralMetadata.propertyTables,
     primitive,
     renderResources,
     statistics,
-    model,
+    usedMetadataProperties,
   );
 
   // Declare <type>MetadataClass and <type>MetadataStatistics structs as needed
@@ -139,7 +144,7 @@ MetadataPipelineStage.process = function (
  * @param {PropertyAttribute[]} propertyAttributes The PropertyAttributes with properties to be described
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @param {object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
- * @param {Model} model The model
+ * @param {object} usedMetadataProperties Metadata properties used in the primitive's shader by other stages
  * @returns {object[]} An array of objects containing information about each PropertyAttributeProperty
  * @private
  */
@@ -147,13 +152,18 @@ function getPropertyAttributesInfo(
   propertyAttributes,
   primitive,
   statistics,
-  model,
+  usedMetadataProperties,
 ) {
   if (!defined(propertyAttributes)) {
     return [];
   }
   return propertyAttributes.flatMap((propertyAttribute) =>
-    getPropertyAttributeInfo(propertyAttribute, primitive, statistics, model),
+    getPropertyAttributeInfo(
+      propertyAttribute,
+      primitive,
+      statistics,
+      usedMetadataProperties,
+    ),
   );
 }
 
@@ -162,6 +172,7 @@ function getPropertyAttributesInfo(
  * @param {PropertyAttribute} propertyAttribute The PropertyAttribute with properties to be described
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @param {object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
+ * @param {object} usedMetadataProperties Metadata properties used in the primitive's shader by other stages
  * @returns {object[]} An array of objects containing information about each PropertyAttributeProperty
  * @private
  */
@@ -169,7 +180,7 @@ function getPropertyAttributeInfo(
   propertyAttribute,
   primitive,
   statistics,
-  model,
+  usedMetadataProperties,
 ) {
   const { getAttributeByName, getAttributeInfo, sanitizeGlslIdentifier } =
     ModelUtility;
@@ -186,7 +197,7 @@ function getPropertyAttributeInfo(
     const { glslType, variableName } = getAttributeInfo(modelAttribute);
 
     const propertyShaderDestination = ShaderDestination.intersection(
-      propertyDestination(propertyId, model),
+      propertyDestination(propertyId, usedMetadataProperties),
       ShaderDestination.BOTH,
     );
     if (propertyShaderDestination === ShaderDestination.NONE) {
@@ -213,16 +224,20 @@ function getPropertyAttributeInfo(
  * return as a flattened Array
  * @param {PropertyTexture[]} propertyTextures The PropertyTextures with properties to be described
  * @param {object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
- * @param {Model} model The model
+ * @param {object} usedMetadataProperties Metadata properties used in the primitive's shader by other stages
  * @returns {object[]} An array of objects containing information about each PropertyTextureProperty
  * @private
  */
-function getPropertyTexturesInfo(propertyTextures, statistics, model) {
+function getPropertyTexturesInfo(
+  propertyTextures,
+  statistics,
+  usedMetadataProperties,
+) {
   if (!defined(propertyTextures)) {
     return [];
   }
   return propertyTextures.flatMap((propertyTexture) =>
-    getPropertyTextureInfo(propertyTexture, statistics, model),
+    getPropertyTextureInfo(propertyTexture, statistics, usedMetadataProperties),
   );
 }
 
@@ -230,11 +245,15 @@ function getPropertyTexturesInfo(propertyTextures, statistics, model) {
  * Collect info about the properties of a single PropertyTexture
  * @param {PropertyTexture} propertyTexture The PropertyTexture with properties to be described
  * @param {object} [statistics] Statistics about the properties (if the model is from a 3DTiles tileset)
- * @param {Model} model The model
+ * @param {object} usedMetadataProperties Metadata properties used in the primitive's shader by other stages
  * @returns {object[]} An array of objects containing information about each PropertyTextureProperty
  * @private
  */
-function getPropertyTextureInfo(propertyTexture, statistics, model) {
+function getPropertyTextureInfo(
+  propertyTexture,
+  statistics,
+  usedMetadataProperties,
+) {
   const { sanitizeGlslIdentifier } = ModelUtility;
 
   const classId = propertyTexture.class.id;
@@ -252,7 +271,7 @@ function getPropertyTextureInfo(propertyTexture, statistics, model) {
     const [propertyId, property] = propertiesArray[i];
 
     const propertyShaderDestination = ShaderDestination.intersection(
-      propertyDestination(propertyId, model),
+      propertyDestination(propertyId, usedMetadataProperties),
       ShaderDestination.FRAGMENT,
     );
     if (propertyShaderDestination === ShaderDestination.NONE) {
@@ -280,7 +299,7 @@ function getPropertyTablesInfo(
   primitive,
   renderResources,
   statistics,
-  model,
+  usedMetadataProperties,
 ) {
   if (!defined(propertyTables)) {
     return [];
@@ -306,7 +325,7 @@ function getPropertyTablesInfo(
         propertyTable,
         tableToFeatureSetInfo,
         statistics,
-        model,
+        usedMetadataProperties,
       ),
     );
 }
@@ -315,7 +334,7 @@ function getPropertyTableInfo(
   propertyTable,
   tableToFeatureSetInfo,
   statistics,
-  model,
+  usedMetadataProperties,
 ) {
   const { sanitizeGlslIdentifier } = ModelUtility;
 
@@ -342,7 +361,7 @@ function getPropertyTableInfo(
 
     const property = properties[propertyId];
     const propertyShaderDestination = ShaderDestination.intersection(
-      propertyDestination(propertyId, model),
+      propertyDestination(propertyId, usedMetadataProperties),
       shaderDestination,
     );
     if (propertyShaderDestination === ShaderDestination.NONE) {
@@ -991,28 +1010,106 @@ function addValueTransformUniforms(options) {
   return `czm_valueTransform(${offsetUniformName}, ${scaleUniformName}, ${valueExpression})`;
 }
 
+function collectMetadataUsedByOtherStages(model, primitive) {
+  const usedInVertex = new Set();
+  const usedInFragment = new Set();
+
+  collectMetadataUsedInCustomShader(model, usedInVertex, usedInFragment);
+  collectMetadataUsedInPointCloudStyling(
+    model,
+    primitive,
+    usedInVertex,
+    usedInFragment,
+  );
+
+  return {
+    usedInVertex,
+    usedInFragment,
+  };
+}
+
+function collectMetadataUsedInCustomShader(
+  model,
+  usedInVertex,
+  usedInFragment,
+) {
+  const customShader = model.customShader;
+  if (!defined(customShader)) {
+    return;
+  }
+
+  const fragmentMetadataSet = customShader.usedVariablesFragment?.metadataSet;
+  if (defined(fragmentMetadataSet)) {
+    for (const propertyId in fragmentMetadataSet) {
+      if (fragmentMetadataSet.hasOwnProperty(propertyId)) {
+        usedInFragment.add(propertyId);
+      }
+    }
+  }
+
+  const vertexMetadataSet = customShader.usedVariablesVertex?.metadataSet;
+  if (defined(vertexMetadataSet)) {
+    for (const propertyId in vertexMetadataSet) {
+      if (vertexMetadataSet.hasOwnProperty(propertyId)) {
+        usedInVertex.add(propertyId);
+      }
+    }
+  }
+}
+
+function collectMetadataUsedInPointCloudStyling(
+  model,
+  primitive,
+  usedInVertex,
+  usedInFragment,
+) {
+  const style = model.style;
+  const hasPointCloudStyle =
+    defined(style) && primitive.primitiveType === PrimitiveType.POINTS;
+  if (!hasPointCloudStyle) {
+    return;
+  }
+
+  const color = style.color;
+  if (defined(color)) {
+    color.getVariables().forEach((propertyId) => {
+      usedInVertex.add(propertyId);
+      usedInFragment.add(propertyId);
+    });
+  }
+
+  const show = style.show;
+  if (defined(show)) {
+    show.getVariables().forEach((propertyId) => {
+      usedInVertex.add(propertyId);
+      usedInFragment.add(propertyId);
+    });
+  }
+
+  // Only used in vertex shader
+  const pointSize = style.pointSize;
+  if (defined(pointSize)) {
+    pointSize.getVariables().forEach((propertyId) => {
+      usedInVertex.add(propertyId);
+    });
+  }
+}
+
 /**
- * Determines the shader destination(s) for a given property based on its use in the model's custom shader.
- * (Currently this is the only place metadata are used, but could be extended)
+ * Determines the shader destination(s) for a given property based on its use in other pipeline stages.
  *
  * @param {object} propertyId The ID of the property to check
- * @param {object} model The model to check against
+ * @param {object} usedMetadataProperties Metadata properties used in the primitive's shader by other stages
  * @returns {ShaderDestination} The shader destination(s) for the property
  * @private
  */
-function propertyDestination(propertyId, model) {
-  const customShader = model.customShader;
-  if (!defined(customShader)) {
-    return ShaderDestination.NONE;
-  }
-
-  const metadataUsedInFragment = customShader.usedVariablesFragment.metadataSet;
-  const metadataUsedInVertex = customShader.usedVariablesVertex.metadataSet;
-
-  const fragmentDestination = metadataUsedInFragment.hasOwnProperty(propertyId)
+function propertyDestination(propertyId, usedMetadataProperties) {
+  const fragmentDestination = usedMetadataProperties.usedInFragment.has(
+    propertyId,
+  )
     ? ShaderDestination.FRAGMENT
     : ShaderDestination.NONE;
-  const vertexDestination = metadataUsedInVertex.hasOwnProperty(propertyId)
+  const vertexDestination = usedMetadataProperties.usedInVertex.has(propertyId)
     ? ShaderDestination.VERTEX
     : ShaderDestination.NONE;
 
