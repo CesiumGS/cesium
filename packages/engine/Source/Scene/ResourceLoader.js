@@ -10,11 +10,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  * This type describes an interface and is not intended to be instantiated directly.
  * </p>
  *
- * @alias ResourceLoader
- * @constructor
- *
  * @see ResourceCache
- *
  * @private
  */
 class ResourceLoader {

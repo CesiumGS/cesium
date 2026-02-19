@@ -3,6 +3,15 @@ on:
   push:
     branches:
       - "cesium.com"
+env:
+  PROD: true
+  AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: us-east-1
+  BRANCH: ${{ github.ref_name }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_REPO: ${{ github.repository }}
+  GITHUB_SHA: ${{ github.sha }}
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -24,15 +33,38 @@ jobs:
         run: npm run tsc
   deploy:
     runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v6
+      - name: install node 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: npm install
+        run: npm install
+      - name: build website release
+        run: npm run website-release
+      - name: build cesium viewer
+        run: npm run build-cesium-viewer
+      - name: deploy to cesium.com
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        # Download zip from the Github release and unzip to Build/release/
+        # Publish that unzipped code to the bucket for https://cesium.com/downloads/cesiumjs/releases/[version]/... urls
+        #     TODO: the origin for the archive version of sandcastle will be wrong right now
+        # Publish the documentation files to the bucket for https://cesium.com/learn/cesiumjs/ref-doc/
+        # Publish the simple viewer app to the bucket for https://cesium.com/cesiumjs/cesium-viewer/
+        # Publish sandcastle to the bucket for https://sandcastle.cesium.com/
+        run: |
+          curl -LO $(curl https://api.github.com/repos/CesiumGS/cesium/releases/latest -H "Authorization: ${GITHUB_TOKEN}" | jq -r '.assets[0].browser_download_url')
+          unzip Cesium-$(cat package.json | jq -r '.version' | sed 's/\.0$//').zip -d Build/release/ -x "Apps"
+          aws s3 sync Build/release/ s3://cesium-website/cesiumjs/releases/$(cat package.json | jq -r '.version' | sed 's/\.0$//')/ --cache-control "public, max-age=1800" --delete
+          aws s3 sync Build/Documentation/ s3://cesium-website/cesiumjs/ref-doc/ --cache-control "public, max-age=1800" --delete
+          aws s3 sync Build/CesiumViewer/ s3://cesium-website/cesiumjs/cesium-viewer/ --cache-control "public, max-age=1800" --delete
+  deploy-sandcastle:
+    runs-on: ubuntu-latest
+    needs: [lint]
     env:
-      PROD: true
-      AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: us-east-1
-      BRANCH: ${{ github.ref_name }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GITHUB_REPO: ${{ github.repository }}
-      GITHUB_SHA: ${{ github.sha }}
+      SANDCASTLE_ORIGIN: https://sandcastle.cesium.com
     steps:
       - uses: actions/checkout@v6
       - name: install node 22
@@ -46,18 +78,9 @@ jobs:
       - name: build types
         run: npm run build-ts
       - name: build apps
-        run: npm run build-apps
+        run: npm run build-sandcastle
       - name: deploy to cesium.com
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        # Download zip from the Github release and unzip to Build/release/
-        # Publish that unzipped code to the bucket for https://cesium.com/downloads/cesiumjs/releases/[version]/... urls
-        # Publish the documentation files to the bucket for https://cesium.com/learn/cesiumjs/ref-doc/
-        # Publish the simple viewer app to the bucket for https://cesium.com/cesiumjs/cesium-viewer/
         # Publish sandcastle to the bucket for https://sandcastle.cesium.com/
         run: |
-          curl -LO $(curl https://api.github.com/repos/CesiumGS/cesium/releases/latest -H "Authorization: ${GITHUB_TOKEN}" | jq -r '.assets[0].browser_download_url')
-          unzip Cesium-$(cat package.json | jq -r '.version' | sed 's/\.0$//').zip -d Build/release/ -x "Apps"
-          aws s3 sync Build/release/ s3://cesium-website/cesiumjs/releases/$(cat package.json | jq -r '.version' | sed 's/\.0$//')/ --cache-control "public, max-age=1800" --delete
-          aws s3 sync Build/Documentation/ s3://cesium-website/cesiumjs/ref-doc/ --cache-control "public, max-age=1800" --delete
-          aws s3 sync Build/CesiumViewer/ s3://cesium-website/cesiumjs/cesium-viewer/ --cache-control "public, max-age=1800" --delete
           aws s3 sync Build/Sandcastle2/ s3://cesium-sandcastle-website/ --cache-control "public, max-age=1800" --delete
