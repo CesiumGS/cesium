@@ -34,15 +34,6 @@ import destroyObject from "../Core/destroyObject.js";
  * @see Transforms.computeTemeToPseudoFixedMatrix
  */
 function SkyBox(options) {
-  /**
-   * The sources used to create the cube map faces: an object
-   * with <code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>,
-   * <code>negativeY</code>, <code>positiveZ</code>, and <code>negativeZ</code> properties.
-   * These can be either URLs or <code>Image</code> objects.
-   *
-   * @type {object}
-   * @default undefined
-   */
   this._sources = options.sources;
 
   /**
@@ -62,7 +53,7 @@ function SkyBox(options) {
 Object.defineProperties(SkyBox.prototype, {
   /**
    * Gets or sets the the primitive object.
-   * @memberof Panorama.prototype
+   * @memberof SkyBox.prototype
    * @type {object}
    */
   sources: {

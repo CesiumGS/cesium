@@ -25,6 +25,8 @@ describe("Scene/EquirectangularPanorama", function () {
     expect(panorama.transform).toBe(Matrix4.IDENTITY);
 
     expect(panorama.credit).toBeUndefined();
+
+    expect(panorama.show).toBe(true);
   });
 
   it("respects a user-provided transform", function () {
@@ -66,13 +68,8 @@ describe("Scene/EquirectangularPanorama", function () {
       repeatVertical: 3.0,
     });
 
-    const uniforms = panorama.primitive.appearance.material.uniforms;
+    const uniforms = panorama._primitive.appearance.material.uniforms;
 
     expect(uniforms.repeat).toEqual(new Cartesian2(-2.0, 3.0));
-  });
-
-  it("primitive getter returns the underlying primitive", function () {
-    const panorama = new EquirectangularPanorama({ image: "test.png" });
-    expect(panorama.primitive).toBeDefined();
   });
 });

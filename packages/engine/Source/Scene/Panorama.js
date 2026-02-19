@@ -10,7 +10,8 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @see EquirectangularPanorama
  * @see CubeMapPanorama
  *
- * @demo {@link https://sandcastle.cesium.com/Apps/Sandcastle2/index.html?id=google-streetview-panorama-2|Cesium Sandcastle Google Streetview Panorama}
+ * 
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=panorama|Cesium Sandcastle Panorama}
  */
 function Panorama() {
   DeveloperError.throwInstantiationError();
@@ -24,17 +25,6 @@ Object.defineProperties(Panorama.prototype, {
    * @readonly
    */
   show: {
-    get: DeveloperError.throwInstantiationError,
-  },
-
-  /**
-   * The alpha blending value of this layer, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof Panorama.prototype
-   * @type {number}
-   * @readonly
-   */
-  alpha: {
     get: DeveloperError.throwInstantiationError,
   },
 
@@ -55,16 +45,6 @@ Object.defineProperties(Panorama.prototype, {
    * @readonly
    */
   credit: {
-    get: DeveloperError.throwInstantiationError,
-  },
-
-  /**
-   * Gets the source imagery of the panorama.
-   * @memberof Panorama.prototype
-   * @type {object|string}
-   * @readonly
-   */
-  source: {
     get: DeveloperError.throwInstantiationError,
   },
 });
