@@ -24,6 +24,8 @@ export default defineConfig(({ command }) => {
     basePath: "",
     cesiumBaseUrl: "/Build/CesiumUnminified",
     cesiumVersion: getCesiumVersion(),
+    outerOrigin: "http://localhost:5173",
+    innerOrigin: "http://localhost:5173",
     imports: {
       cesium: {
         path: "/Source/Cesium.js",
@@ -70,6 +72,7 @@ export default defineConfig(({ command }) => {
         dest: "packages/widgets/Build/Unminified",
       },
     ],
+    allowMissingFiles: true,
   });
 
   return config;
