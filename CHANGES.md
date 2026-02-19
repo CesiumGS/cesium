@@ -15,9 +15,10 @@
 
 #### Fixes :wrench:
 
-- Fixes depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
-- Fixes billboard depth testing near horizon. [#13159](https://github.com/CesiumGS/cesium/issues/13159)
+- Fixed depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
+- Fixed billboard depth testing near horizon. [#13159](https://github.com/CesiumGS/cesium/issues/13159)
 - Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
+- Fixed coordinate switching bug in `OpenCageGeocoderService`. [#13138](https://github.com/CesiumGS/cesium/issues/13138)
 
 ## 1.138 - 2026-02-02
 
