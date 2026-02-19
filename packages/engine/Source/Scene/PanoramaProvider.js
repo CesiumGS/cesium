@@ -12,8 +12,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @see EquirectangularPanorama
  * @see CubeMapPanorama
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?id=panorama-equirectangular|Cesium Sandcastle Equirectangular Panorama Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?id=panorama-cubemap|Cesium Sandcastle Cube Map Panorama Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=panorama|Cesium Sandcastle Panorama}
  */
 function PanoramaProvider() {
   DeveloperError.throwInstantiationError();
