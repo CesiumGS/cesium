@@ -1,4 +1,3 @@
-import buildModuleUrl from "../Core/buildModuleUrl.js";
 import BoxGeometry from "../Core/BoxGeometry.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
@@ -25,21 +24,28 @@ import Pass from "../Renderer/Pass.js";
 import Credit from "../Core/Credit.js";
 
 /**
+ * @typedef {object} CubeMapPanorama.ConstructorOptions
+ *
+ * Initialization options for the CubeMapPanorama constructor
+ *
+ * @property {object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
+ * @property {Matrix4} [options.transform] A 4x4 transformation matrix that defines the panorama’s position and orientation
+ * @property {boolean} [options.show=true] Determines if this primitive will be shown.
+ * @property {Credit|string} [options.credit] A credit for the panorama, which is displayed on the canvas.
+ *
+ */
+
+/**
  * A {@link Panorama} that displays imagery in cube map format in a scene.
  * <p>
  * This is only supported in 3D.  The cube map panorama is faded out when morphing to 2D or Columbus view.  The size of
- * the cube map panorama must not exceed {@link Scene#maximumCubeMapSize}.
+ * the cube map panorama must not exceed {@link Scene#maximumSkyBoxSize}.
  * </p>
  *
  * @alias CubeMapPanorama
  * @constructor
  *
- * @param {object} options Object with the following properties:
- * @param {object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
- * @param {Matrix4} [options.transform] A 4x4 transformation matrix that defines the panorama’s position and orientation
- * @param {boolean} [options.show=true] Determines if this primitive will be shown.
- * @param {Credit|string} [options.credit] A credit for the panorama, which is displayed on the canvas.
- *
+ * @param {CubeMapPanorama.ConstructorOptions} options Object describing initialization options
  *
  * @example
  * const modelMatrix = Cesium.Matrix4.getMatrix3(
@@ -63,7 +69,9 @@ import Credit from "../Core/Credit.js";
  *   transform: modelMatrix,
  * }));
  *
- * @see Scene#skyBox
+ * @see SkyBox
+ * 
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=panorama|Cesium Sandcastle Panorama}
  */
 function CubeMapPanorama(options) {
   /**
@@ -338,30 +346,6 @@ CubeMapPanorama.prototype.destroy = function () {
     command.shaderProgram && command.shaderProgram.destroy();
   this._cubeMap = this._cubeMap && this._cubeMap.destroy();
   return destroyObject(this);
-};
-
-function getDefaultSkyBoxUrl(suffix) {
-  return buildModuleUrl(`Assets/Textures/SkyBox/tycho2t3_80_${suffix}.jpg`);
-}
-
-/**
- * Creates a cube map panorama instance with the default starmap for the Earth.
- * @return {CubeMapPanorama} The default skybox for the Earth rendered as a cube map panorama
- *
- * @example
- * viewer.scene.skyBox = Cesium.CubeMapPanorama.createEarthSkyBox();
- */
-CubeMapPanorama.createEarthSkyBox = function () {
-  return new CubeMapPanorama({
-    sources: {
-      positiveX: getDefaultSkyBoxUrl("px"),
-      negativeX: getDefaultSkyBoxUrl("mx"),
-      positiveY: getDefaultSkyBoxUrl("py"),
-      negativeY: getDefaultSkyBoxUrl("my"),
-      positiveZ: getDefaultSkyBoxUrl("pz"),
-      negativeZ: getDefaultSkyBoxUrl("mz"),
-    },
-  });
 };
 
 export default CubeMapPanorama;

@@ -65,6 +65,7 @@ const DEFAULT_RADIUS = 100000.0;
  *   image: 'path/to/image',
  * }));
  *
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=panorama|Cesium Sandcastle Panorama}
  */
 function EquirectangularPanorama(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -140,18 +141,6 @@ function EquirectangularPanorama(options) {
 
 Object.defineProperties(EquirectangularPanorama.prototype, {
   /**
-   * Gets the primitive object.
-   * @memberof EquirectangularPanorama.prototype
-   * @type {object}
-   * @readonly
-   */
-  primitive: {
-    get: function () {
-      return this._primitive;
-    },
-  },
-
-  /**
    * Gets the radius of the panorama.
    * @memberof EquirectangularPanorama.prototype
    * @type {number}
@@ -166,7 +155,7 @@ Object.defineProperties(EquirectangularPanorama.prototype, {
   /**
    * Gets the source image of the panorama.
    * @memberof EquirectangularPanorama.prototype
-   * @type {string}
+   * @type {string|HTMLImageElement|HTMLCanvasElement|ImageBitmap}
    * @readonly
    */
   image: {
@@ -198,9 +187,35 @@ Object.defineProperties(EquirectangularPanorama.prototype, {
       return defined(this._credit) ? this._credit : undefined;
     },
   },
+
+  /**
+   * Determines if the equirectangular panorama will be shown.
+   * @memberof EquirectangularPanorama.prototype
+   * @type {boolean}
+   */
+  show: {
+    get: function () {
+      return defined(this._primitive) ? this._primitive.show : undefined;
+    },
+    set: function (value) {
+      if (defined(this._primitive)) {
+        this._primitive.show = value;
+      }
+    },
+  },
 });
 
 // Proxy update/destroy/etc to the primitive
+
+/**
+ * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+ * get the draw commands needed to render this primitive.
+ * <p>
+ * Do not call this function directly.  This is documented just to
+ * list the exceptions that may be propagated when the scene is rendered:
+ * </p>
+ *
+ */
 EquirectangularPanorama.prototype.update = function (frameState) {
   if (defined(this._credit)) {
     frameState.creditDisplay.addCreditToNextFrame(this._credit);
@@ -209,10 +224,37 @@ EquirectangularPanorama.prototype.update = function (frameState) {
   return this._primitive.update(frameState);
 };
 
+/**
+ * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+ * <br /><br />
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
+ * @example
+ * equirectangularPanorama = equirectangularPanorama && equirectangularPanorama.destroy();
+ *
+ * @see EquirectangularPanorama#isDestroyed
+ */
 EquirectangularPanorama.prototype.destroy = function () {
   this._primitive = this._primitive && this._primitive.destroy();
   return destroyObject(this);
 };
+
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
+ * @see EquirectangularPanorama#destroy
+ */
 
 EquirectangularPanorama.prototype.isDestroyed = function () {
   return this._primitive.isDestroyed();
