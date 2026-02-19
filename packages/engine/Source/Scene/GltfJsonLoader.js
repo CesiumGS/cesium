@@ -23,53 +23,47 @@ import ModelUtility from "./Model/ModelUtility.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfJsonLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
- * @param {object} [options.gltfJson] The parsed glTF JSON contents.
- * @param {string} [options.cacheKey] The cache key of the resource.
- *
  * @private
  */
-function GltfJsonLoader(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-  const resourceCache = options.resourceCache;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const typedArray = options.typedArray;
-  const gltfJson = options.gltfJson;
-  const cacheKey = options.cacheKey;
+class GltfJsonLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
+   * @param {object} [options.gltfJson] The parsed glTF JSON contents.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   */
+  constructor(options) {
+    super();
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.func("options.resourceCache", resourceCache);
-  Check.typeOf.object("options.gltfResource", gltfResource);
-  Check.typeOf.object("options.baseResource", baseResource);
-  //>>includeEnd('debug');
+    options = options ?? Frozen.EMPTY_OBJECT;
+    const resourceCache = options.resourceCache;
+    const gltfResource = options.gltfResource;
+    const baseResource = options.baseResource;
+    const typedArray = options.typedArray;
+    const gltfJson = options.gltfJson;
+    const cacheKey = options.cacheKey;
 
-  this._resourceCache = resourceCache;
-  this._gltfResource = gltfResource;
-  this._baseResource = baseResource;
-  this._typedArray = typedArray;
-  this._gltfJson = gltfJson;
-  this._cacheKey = cacheKey;
-  this._gltf = undefined;
-  this._bufferLoaders = [];
-  this._state = ResourceLoaderState.UNLOADED;
-  this._promise = undefined;
-}
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.func("options.resourceCache", resourceCache);
+    Check.typeOf.object("options.gltfResource", gltfResource);
+    Check.typeOf.object("options.baseResource", baseResource);
+    //>>includeEnd('debug');
 
-if (defined(Object.create)) {
-  GltfJsonLoader.prototype = Object.create(ResourceLoader.prototype);
-  GltfJsonLoader.prototype.constructor = GltfJsonLoader;
-}
+    this._resourceCache = resourceCache;
+    this._gltfResource = gltfResource;
+    this._baseResource = baseResource;
+    this._typedArray = typedArray;
+    this._gltfJson = gltfJson;
+    this._cacheKey = cacheKey;
+    this._gltf = undefined;
+    this._bufferLoaders = [];
+    this._state = ResourceLoaderState.UNLOADED;
+    this._promise = undefined;
+  }
 
-Object.defineProperties(GltfJsonLoader.prototype, {
   /**
    * The cache key of the resource.
    *
@@ -79,11 +73,10 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    * @readonly
    * @private
    */
-  cacheKey: {
-    get: function () {
-      return this._cacheKey;
-    },
-  },
+  get cacheKey() {
+    return this._cacheKey;
+  }
+
   /**
    * The glTF JSON.
    *
@@ -93,38 +86,62 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    * @readonly
    * @private
    */
-  gltf: {
-    get: function () {
-      return this._gltf;
-    },
-  },
-});
+  get gltf() {
+    return this._gltf;
+  }
 
-/**
- * Loads the resource.
- * @returns {Promise<GltfJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
- */
-GltfJsonLoader.prototype.load = async function () {
-  if (defined(this._promise)) {
+  /**
+   * Loads the resource.
+   * @returns {Promise<GltfJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
+   * @private
+   */
+  async load() {
+    if (defined(this._promise)) {
+      return this._promise;
+    }
+
+    this._state = ResourceLoaderState.LOADING;
+
+    if (defined(this._gltfJson)) {
+      this._promise = processGltfJson(this, this._gltfJson);
+      return this._promise;
+    }
+
+    if (defined(this._typedArray)) {
+      this._promise = processGltfTypedArray(this, this._typedArray);
+      return this._promise;
+    }
+
+    this._promise = loadFromUri(this);
     return this._promise;
   }
 
-  this._state = ResourceLoaderState.LOADING;
+  /**
+   * Unloads the resource.
+   * @private
+   */
+  unload() {
+    const bufferLoaders = this._bufferLoaders;
+    const bufferLoadersLength = bufferLoaders.length;
+    for (let i = 0; i < bufferLoadersLength; ++i) {
+      bufferLoaders[i] =
+        !bufferLoaders[i].isDestroyed() &&
+        this._resourceCache.unload(bufferLoaders[i]);
+    }
+    this._bufferLoaders.length = 0;
 
-  if (defined(this._gltfJson)) {
-    this._promise = processGltfJson(this, this._gltfJson);
-    return this._promise;
+    this._gltf = undefined;
   }
 
-  if (defined(this._typedArray)) {
-    this._promise = processGltfTypedArray(this, this._typedArray);
-    return this._promise;
+  /**
+   * Exposed for testing
+   *
+   * @private
+   */
+  _fetchGltf() {
+    return this._gltfResource.fetchArrayBuffer();
   }
-
-  this._promise = loadFromUri(this);
-  return this._promise;
-};
+}
 
 async function loadFromUri(gltfJsonLoader) {
   let typedArray;
@@ -284,31 +301,5 @@ async function processGltfTypedArray(gltfJsonLoader, typedArray) {
 
   return processGltfJson(gltfJsonLoader, gltf);
 }
-
-/**
- * Unloads the resource.
- * @private
- */
-GltfJsonLoader.prototype.unload = function () {
-  const bufferLoaders = this._bufferLoaders;
-  const bufferLoadersLength = bufferLoaders.length;
-  for (let i = 0; i < bufferLoadersLength; ++i) {
-    bufferLoaders[i] =
-      !bufferLoaders[i].isDestroyed() &&
-      this._resourceCache.unload(bufferLoaders[i]);
-  }
-  this._bufferLoaders.length = 0;
-
-  this._gltf = undefined;
-};
-
-/**
- * Exposed for testing
- *
- * @private
- */
-GltfJsonLoader.prototype._fetchGltf = function () {
-  return this._gltfResource.fetchArrayBuffer();
-};
 
 export default GltfJsonLoader;
