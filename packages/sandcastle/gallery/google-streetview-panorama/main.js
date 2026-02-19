@@ -182,7 +182,6 @@ function enableFieldOfViewAdjustment() {
     const frustum = camera.frustum;
 
     let fov = frustum.fov;
-    console.log("fov before", Cesium.Math.toDegrees(fov));
 
     // Wheel direction
     const delta = movement;

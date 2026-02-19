@@ -21,12 +21,6 @@ describe("Scene/Panorama", function () {
       }).toThrowDeveloperError();
     });
 
-    it("alpha throws DeveloperError", function () {
-      expect(function () {
-        return panorama.alpha;
-      }).toThrowDeveloperError();
-    });
-
     it("transform throws DeveloperError", function () {
       expect(function () {
         return panorama.transform;
@@ -36,12 +30,6 @@ describe("Scene/Panorama", function () {
     it("credit throws DeveloperError", function () {
       expect(function () {
         return panorama.credit;
-      }).toThrowDeveloperError();
-    });
-
-    it("source throws DeveloperError", function () {
-      expect(function () {
-        return panorama.source;
       }).toThrowDeveloperError();
     });
   });

@@ -70,7 +70,7 @@ import Credit from "../Core/Credit.js";
  * }));
  *
  * @see SkyBox
- * 
+ *
  * @demo {@link https://sandcastle.cesium.com/index.html?id=panorama|Cesium Sandcastle Panorama}
  */
 function CubeMapPanorama(options) {

@@ -109,6 +109,37 @@ const clearPrimitives = () => {
 // Display the equirectangular panorama by default
 equirectangularFromFile();
 
+// Enable narrowing the field of view with the mouse wheel when in panorama view to simulate zooming in and out of the panorama.
+const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+const minFov = Cesium.Math.toRadians(20.0);
+const maxFov = Cesium.Math.toRadians(100.0);
+const zoomSpeed = 0.05;
+
+function enableFieldOfViewAdjustment() {
+  handler.setInputAction(function (movement) {
+    const camera = viewer.camera;
+    const frustum = camera.frustum;
+
+    let fov = frustum.fov;
+
+    // Wheel direction
+    const delta = movement;
+
+    if (delta > 0) {
+      fov *= 1.0 + zoomSpeed; // zoom out
+    } else {
+      fov *= 1.0 - zoomSpeed; // zoom in
+    }
+
+    // Clamp FOV
+    fov = Cesium.Math.clamp(fov, minFov, maxFov);
+
+    frustum.fov = fov;
+  }, Cesium.ScreenSpaceEventType.WHEEL);
+}
+enableFieldOfViewAdjustment();
+
 // Create dropdown menu to select panorama display type
 const options = [
   {

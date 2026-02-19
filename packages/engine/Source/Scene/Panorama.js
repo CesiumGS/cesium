@@ -10,7 +10,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @see EquirectangularPanorama
  * @see CubeMapPanorama
  *
- * 
+ *
  * @demo {@link https://sandcastle.cesium.com/index.html?id=panorama|Cesium Sandcastle Panorama}
  */
 function Panorama() {
