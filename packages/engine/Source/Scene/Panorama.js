@@ -9,6 +9,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  *
  * @see EquirectangularPanorama
  * @see CubeMapPanorama
+ * @see GoogleStreetViewCubeMapPanoramaProvider
  *
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?id=panorama|Cesium Sandcastle Panorama}
@@ -22,10 +23,10 @@ Object.defineProperties(Panorama.prototype, {
    * Determines if the panorama will be shown.
    * @memberof Panorama.prototype
    * @type {boolean}
-   * @readonly
    */
   show: {
     get: DeveloperError.throwInstantiationError,
+    set: DeveloperError.throwInstantiationError,
   },
 
   /**
