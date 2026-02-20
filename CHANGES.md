@@ -16,6 +16,7 @@
 - Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors. [#13174](https://github.com/CesiumGS/cesium/pull/13174)
 - Added more depth testing options for billboards and labels with `BillboardCollection.coarseDepthTestDistance`, `BillboardCollection.threePointDepthTestDistance`, `LabelCollection.coarseDepthTestDistance`, and `LabelCollection.threePointDepthTestDistance`. [#12994](https://github.com/CesiumGS/cesium/pull/12994)
 - Added support for more metadata types via property textures in custom shaders. See this [issue](https://github.com/CesiumGS/cesium/issues/10248) for the current state of supported types. [#13135](https://github.com/CesiumGS/cesium/pull/13135)
+- Added panorama support via new `EquirectangularPanorama` and `CubeMapPanorama` classes, along with `GoogleStreetViewCubeMapPanoramaProvider` for loading cube map faces from the Google Street View Static API and rendering them in a cube map panorama. [#13153](https://github.com/CesiumGS/cesium/pull/13153/)
 
 #### Fixes :wrench:
 

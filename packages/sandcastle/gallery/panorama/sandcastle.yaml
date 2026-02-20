@@ -1,0 +1,4 @@
+title: Panorama
+description: Display a streetview panorama from an equirectangular image or cube map images.
+labels:
+  - Imagery
