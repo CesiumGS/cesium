@@ -6,10 +6,12 @@
 
 #### Breaking Changes :mega:
 
+- Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
 - Cartesian2, Cartesian3, and Cartesian4 are now [ES6 Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes). This change should have no impact on most users, but note that using `new` on a static factory method, like `new Cartesian3.fromArray(...)`, will now throw an error. Omit `new` unless you are invoking a constructor directly, for these and all other factory methods, as more classes will be migrated to ES6 Classes soon. [#8359](https://github.com/CesiumGS/cesium/issues/8359)
 - [Custom Shaders](https://cesium.com/learn/cesiumjs/ref-doc/CustomShader.html?classFilter=customsh) that rely on metadata derived from the [EXT_structural_metadata extension](https://github.com/CesiumGS/glTF/tree/proposal-EXT_structural_metadata/extensions/2.0/Vendor/EXT_structural_metadata) no longer cast
   unsigned integer metadata types to signed integers. Any existing custom shaders that assign UINT-type metadata to local integers (e.g. `int myMetadata = vsInput.metadata.myUintMetadata`) will no longer compile. Variable assignments must be changed to reflect the underlying signedness of the metadata type.
   [#13135](https://github.com/CesiumGS/cesium/pull/13135)
+- Fixed camera zoom behavior when the camera transform is set (for example, when tracking entities or using `lookAt`). [#12999](https://github.com/CesiumGS/cesium/pull/12999)
 
 #### Additions :tada:
 
