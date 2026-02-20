@@ -22,10 +22,10 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
-/** @import {TypedArray, TypedArrayConstructor} from "../Core/globalTypes.js"; */
+/** @import {TypedArray} from "../Core/globalTypes.js"; */
 
 /**
- * @typedef {'positionHighAndShow' | 'positionLowAndColor'} BufferPointAttribute
+ * @typedef {'positionHighAndShow' | 'positionLowAndColor' | 'pixelSizeAndOutline'} BufferPointAttribute
  * @ignore
  */
 
@@ -36,6 +36,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 const BufferPointAttributeLocations = {
   positionHighAndShow: 0,
   positionLowAndColor: 1,
+  pixelSizeAndOutline: 2,
 };
 
 /**
@@ -65,6 +66,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     renderContext.attributeArrays = {
       positionHighAndShow: new Float32Array(featureCountMax * 4),
       positionLowAndColor: new Float32Array(featureCountMax * 4),
+      pixelSizeAndOutline: new Float32Array(featureCountMax * 4),
     };
   }
 
@@ -78,6 +80,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
     const positionHighAndShowArray = attributeArrays.positionHighAndShow;
     const positionLowAndColorArray = attributeArrays.positionLowAndColor;
+    const pixelSizeAndOutlineArray = attributeArrays.pixelSizeAndOutline;
 
     const { _dirtyOffset, _dirtyCount } = collection;
 
@@ -91,8 +94,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       point.getPosition(cartesian);
       EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
 
-      point.getColor(color);
-
       positionHighAndShowArray[i * 4] = encodedCartesian.high.x;
       positionHighAndShowArray[i * 4 + 1] = encodedCartesian.high.y;
       positionHighAndShowArray[i * 4 + 2] = encodedCartesian.high.z;
@@ -101,8 +102,15 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       positionLowAndColorArray[i * 4] = encodedCartesian.low.x;
       positionLowAndColorArray[i * 4 + 1] = encodedCartesian.low.y;
       positionLowAndColorArray[i * 4 + 2] = encodedCartesian.low.z;
-      positionLowAndColorArray[i * 4 + 3] =
-        AttributeCompression.encodeRGB8(color);
+      positionLowAndColorArray[i * 4 + 3] = AttributeCompression.encodeRGB8(
+        point.getColor(color),
+      );
+
+      pixelSizeAndOutlineArray[i * 4] = point.pixelSize;
+      pixelSizeAndOutlineArray[i * 4 + 1] = point.outlineWidth;
+      pixelSizeAndOutlineArray[i * 4 + 2] = AttributeCompression.encodeRGB8(
+        point.outlineWidth > 0 ? point.getOutlineColor(color) : color,
+      );
 
       point._dirty = false;
     }
@@ -125,6 +133,13 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       usage: BufferUsage.STATIC_DRAW,
     });
 
+    const pixelSizeAndOutlineBuffer = Buffer.createVertexBuffer({
+      typedArray: attributeArrays.pixelSizeAndOutline,
+      context,
+      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+      usage: BufferUsage.STATIC_DRAW,
+    });
+
     renderContext.vertexArray = new VertexArray({
       context,
       attributes: [
@@ -137,6 +152,12 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         {
           index: BufferPointAttributeLocations.positionLowAndColor,
           vertexBuffer: positionLowBuffer,
+          componentDatatype: ComponentDatatype.FLOAT,
+          componentsPerAttribute: 4,
+        },
+        {
+          index: BufferPointAttributeLocations.pixelSizeAndOutline,
+          vertexBuffer: pixelSizeAndOutlineBuffer,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 4,
         },
@@ -155,11 +176,17 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       collection._dirtyOffset,
       collection._dirtyCount,
     );
+    renderContext.vertexArray.copyAttributeFromRange(
+      BufferPointAttributeLocations.pixelSizeAndOutline,
+      renderContext.attributeArrays.pixelSizeAndOutline,
+      collection._dirtyOffset,
+      collection._dirtyCount,
+    );
   }
 
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
-      blending: BlendingState.DISABLED,
+      blending: BlendingState.ALPHA_BLEND,
       depthMask: false,
       depthTest: { enabled: true },
       polygonOffset: { enabled: false },
