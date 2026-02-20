@@ -273,12 +273,6 @@ function processConstantLod(
       ShaderDestination.VERTEX,
     );
 
-    shaderBuilder.addUniform(
-      "mat4",
-      "u_constantLodWorldToEnu",
-      ShaderDestination.VERTEX,
-    );
-
     shaderBuilder.addFragmentLines(ConstantLodStageFS);
 
     const constantLodLines = ConstantLodStageVS.split("\n").filter((line) => {
@@ -305,22 +299,6 @@ function processConstantLod(
   if (!defined(uniformMap.u_constantLodOffset)) {
     uniformMap.u_constantLodOffset = function () {
       return constantLod.offset;
-    };
-
-    const enuMatrixInverse = Matrix4.clone(Matrix4.IDENTITY);
-    let matrixComputed = false;
-
-    uniformMap.u_constantLodWorldToEnu = function () {
-      if (!matrixComputed) {
-        const boundingSphere = renderResources.model.boundingSphere;
-        if (defined(boundingSphere)) {
-          const modelCenter = boundingSphere.center;
-          const enuFrame = Transforms.eastNorthUpToFixedFrame(modelCenter);
-          Matrix4.inverse(enuFrame, enuMatrixInverse);
-          matrixComputed = true;
-        }
-      }
-      return matrixComputed ? enuMatrixInverse : Matrix4.IDENTITY;
     };
   }
 }

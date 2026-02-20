@@ -940,8 +940,7 @@ describe(
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
         "uniform vec2 u_constantLodOffset;",
-        "uniform float u_constantLodDistance;",
-        "uniform mat4 u_constantLodWorldToEnu;",
+        "uniform float u_constantLodDistance;"
       ]);
 
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
