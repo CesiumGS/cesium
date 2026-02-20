@@ -4,9 +4,12 @@ import {
   ResourceCache,
   RequestScheduler,
   HeadingPitchRange,
+  Cartesian3,
   GaussianSplat3DTileContent,
+  Matrix4,
   Transforms,
 } from "../../index.js";
+import GaussianSplatPrimitive from "../../Source/Scene/GaussianSplatPrimitive.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -128,6 +131,78 @@ describe(
         expect(rgba[samplePosition + 1]).toBe(0);
         expect(rgba[samplePosition + 2]).toBe(0);
       });
+    });
+
+    it("retries pending snapshot sorting when sorter is temporarily unavailable", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: {
+          addEventListener: function () {},
+        },
+        tileVisible: {
+          addEventListener: function () {},
+        },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset: tileset });
+      gsPrim._rootTransform = Matrix4.IDENTITY;
+
+      // Force the pending-snapshot TEXTURE_READY path deterministically.
+      // This validates "unavailable sorter -> keep TEXTURE_READY -> retry next frame"
+      // without depending on async texture generation timing.
+      const fakeTexture = {
+        destroy: function () {},
+      };
+      gsPrim._pendingSnapshot = {
+        generation: gsPrim._splatDataGeneration,
+        positions: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
+        rotations: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]),
+        scales: new Float32Array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+        colors: new Uint8Array([255, 255, 255, 255, 255, 255, 255, 255]),
+        shData: undefined,
+        sphericalHarmonicsDegree: 0,
+        shCoefficientCount: 0,
+        numSplats: 2,
+        indexes: undefined,
+        gaussianSplatTexture: fakeTexture,
+        sphericalHarmonicsTexture: undefined,
+        lastTextureWidth: 1,
+        lastTextureHeight: 1,
+        state: "SORTING",
+      };
+      gsPrim._pendingSortPromise = undefined;
+      gsPrim._pendingSort = undefined;
+      gsPrim._sorterPromise = undefined;
+      gsPrim._sorterState = 0;
+      gsPrim._dirty = false;
+      gsPrim._needsSnapshotRebuild = false;
+      gsPrim._selectedTileSet = new Set();
+      gsPrim._selectedTilesStableFrames = 2;
+
+      const frameState = {
+        frameNumber: 1,
+        camera: {
+          viewMatrix: Matrix4.clone(Matrix4.IDENTITY, new Matrix4()),
+          positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
+          directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
+        },
+        commandList: [],
+        passes: {
+          pick: false,
+        },
+      };
+
+      gsPrim.update(frameState);
+
+      expect(gsPrim._pendingSnapshot).toBeDefined();
+      expect(gsPrim._pendingSnapshot.state).toBe("TEXTURE_READY");
+      expect(gsPrim._pendingSortPromise).toBeUndefined();
+      gsPrim.destroy();
     });
 
     it("Check Spherical Harmonic specular on a Gaussian splats tileset", async function () {
