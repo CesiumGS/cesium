@@ -213,35 +213,61 @@ function collectGpuCompatiblePropertyBufferViews(
   numFeatures,
 ) {
   const bufferViewsForThisTable = [];
+  const classProperties = classDefinition.properties;
 
-  for (const propertyId in properties) {
-    if (properties.hasOwnProperty(propertyId)) {
-      const property = properties[propertyId];
-      const bufferView = bufferViews[property.values];
-      const classProperty = classDefinition.properties[propertyId];
-
-      // Certain properties like strings, dynamic-sized arrays, and 64-bit types cannot be represented easily on the GPU.
-      if (!classProperty.isGpuCompatible(NUM_CHANNELS)) {
-        continue;
-      }
-
-      const bufferViewLength = bufferView.length;
-      const bytesPerElement = classProperty.bytesPerElement();
-      const numBufferElements = bufferViewLength / bytesPerElement;
-      if (numBufferElements !== numFeatures) {
-        throw new RuntimeError(
-          `Property with ID: "${propertyId}" has (${numBufferElements}), which does not match number of features in the property table: (${numFeatures}).`,
-        );
-      }
-
-      bufferViewsForThisTable.push({
-        view: bufferView,
-        bytesPerElement: bytesPerElement,
-      });
+  // It's possible for a primitive in a tileset to only use a subset of the class properties defined in the schema.
+  // For instance, the Design Tiler merges classes together by default, and omits properties in primitives that aren't used.
+  // To make the default values available to the GPU, and to avoid compiling different versions of the shader for each primitive,
+  // we iterate over _all_ class properties here - not just the properties in the property table.
+  for (const [propertyId, classProperty] of Object.entries(classProperties)) {
+    // Certain properties like strings, dynamic-sized arrays, and 64-bit types cannot be represented natively on the GPU.
+    if (!classProperty.isGpuCompatible(NUM_CHANNELS)) {
+      continue;
     }
+
+    const property = properties[propertyId];
+    const bufferView = defined(property)
+      ? bufferViews[property.values]
+      : createNoDataBufferView(classProperty, numFeatures);
+
+    const bufferViewLength = bufferView.length;
+    const bytesPerElement = classProperty.bytesPerElement();
+    const numBufferElements = bufferViewLength / bytesPerElement;
+    if (numBufferElements !== numFeatures) {
+      throw new RuntimeError(
+        `Property with ID: "${propertyId}" has (${numBufferElements}), which does not match number of features in the property table: (${numFeatures}).`,
+      );
+    }
+
+    bufferViewsForThisTable.push({
+      view: bufferView,
+      bytesPerElement: bytesPerElement,
+    });
   }
 
   return bufferViewsForThisTable;
+}
+
+/**
+ * When a property is part of a tileset class schema but not used in a property table,
+ * we create a buffer view filled with the property's noData value.
+ *
+ * @param {MetadataClassProperty} classProperty The class property definition.
+ * @param {number} numFeatures The number of features in the property table.
+ *
+ * @returns {Uint8Array} A buffer view filled with the property's noData value.
+ *
+ * @private
+ */
+function createNoDataBufferView(classProperty, numFeatures) {
+  const noDataValue = classProperty.noData;
+  const bufferView = new Uint8Array(
+    numFeatures * classProperty.bytesPerElement(),
+  );
+  for (let i = 0; i < numFeatures; i++) {
+    bufferView.set(noDataValue, i * classProperty.bytesPerElement());
+  }
+  return bufferView;
 }
 
 // Make one big buffer view to load into the texture
