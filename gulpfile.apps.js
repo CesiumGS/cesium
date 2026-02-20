@@ -158,7 +158,7 @@ async function buildLegacySandcastle() {
   return Promise.all(streams.map((s) => finished(s)));
 }
 
-async function buildCesiumViewer() {
+export async function buildCesiumViewer() {
   const cesiumViewerOutputDirectory = isProduction
     ? "Build/CesiumViewer"
     : "Build/Apps/CesiumViewer";
