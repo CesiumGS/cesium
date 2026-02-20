@@ -321,7 +321,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
   return (
     <div className="editor-container">
       <div className="header">
-        <Tabs.Root>
+        <Tabs.Provider>
           <Tabs.TabList tone="accent">
             <Tabs.Tab id="js" onClick={() => setActiveTab("js")}>
               Javascript
@@ -330,7 +330,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
               HTML/CSS
             </Tabs.Tab>
           </Tabs.TabList>
-        </Tabs.Root>
+        </Tabs.Provider>
         <div className="flex-spacer"></div>
         <div className="editor-actions">
           <Tooltip content="Format" placement="bottom">
@@ -342,7 +342,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
               <Icon href={textAlignLeft} />
             </Button>
           </Tooltip>
-          <DropdownMenu.Root>
+          <DropdownMenu.Provider>
             <DropdownMenu.Button disabled={activeTab !== "js"}>
               Insert
             </DropdownMenu.Button>
@@ -351,7 +351,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
               <DropdownMenu.Item label="Toggle" onClick={() => addToggle()} />
               <DropdownMenu.Item label="Menu" onClick={() => addMenu()} />
             </DropdownMenu.Content>
-          </DropdownMenu.Root>
+          </DropdownMenu.Provider>
           <Tooltip content="Run Sandcastle" placement="bottom">
             <Button tone="accent" onClick={() => onRunSandcastle()}>
               <Icon href={play} /> Run <Kbd variant="solid">F8</Kbd>
