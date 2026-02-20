@@ -14,80 +14,71 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfStructuralMetadataLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {object} options.gltf The glTF JSON.
- * @param {string} [options.extension] The <code>EXT_structural_metadata</code> extension object. If this is undefined, then extensionLegacy must be defined.
- * @param {string} [options.extensionLegacy] The legacy <code>EXT_feature_metadata</code> extension for backwards compatibility.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
- * @param {FrameState} options.frameState The frame state.
- * @param {string} [options.cacheKey] The cache key of the resource.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function GltfStructuralMetadataLoader(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-  const {
-    gltf,
-    extension,
-    extensionLegacy,
-    gltfResource,
-    baseResource,
-    supportedImageFormats,
-    frameState,
-    cacheKey,
-    asynchronous = true,
-  } = options;
+class GltfStructuralMetadataLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {object} options.gltf The glTF JSON.
+   * @param {string} [options.extension] The <code>EXT_structural_metadata</code> extension object. If this is undefined, then extensionLegacy must be defined.
+   * @param {string} [options.extensionLegacy] The legacy <code>EXT_feature_metadata</code> extension for backwards compatibility.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
+   * @param {FrameState} options.frameState The frame state.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   */
+  constructor(options) {
+    super();
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltf", gltf);
-  Check.typeOf.object("options.gltfResource", gltfResource);
-  Check.typeOf.object("options.baseResource", baseResource);
-  Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
-  Check.typeOf.object("options.frameState", frameState);
+    options = options ?? Frozen.EMPTY_OBJECT;
+    const {
+      gltf,
+      extension,
+      extensionLegacy,
+      gltfResource,
+      baseResource,
+      supportedImageFormats,
+      frameState,
+      cacheKey,
+      asynchronous = true,
+    } = options;
 
-  if (!defined(options.extension) && !defined(options.extensionLegacy)) {
-    throw new DeveloperError(
-      "One of options.extension or options.extensionLegacy must be specified",
-    );
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options.gltf", gltf);
+    Check.typeOf.object("options.gltfResource", gltfResource);
+    Check.typeOf.object("options.baseResource", baseResource);
+    Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
+    Check.typeOf.object("options.frameState", frameState);
+
+    if (!defined(options.extension) && !defined(options.extensionLegacy)) {
+      throw new DeveloperError(
+        "One of options.extension or options.extensionLegacy must be specified",
+      );
+    }
+    //>>includeEnd('debug');
+
+    this._gltfResource = gltfResource;
+    this._baseResource = baseResource;
+    this._gltf = gltf;
+    this._extension = extension;
+    this._extensionLegacy = extensionLegacy;
+    this._supportedImageFormats = supportedImageFormats;
+    this._frameState = frameState;
+    this._cacheKey = cacheKey;
+    this._asynchronous = asynchronous;
+    this._bufferViewLoaders = [];
+    this._bufferViewIds = [];
+    this._textureLoaders = [];
+    this._textureIds = [];
+    this._schemaLoader = undefined;
+    this._structuralMetadata = undefined;
+    this._state = ResourceLoaderState.UNLOADED;
+    this._promise = undefined;
   }
-  //>>includeEnd('debug');
 
-  this._gltfResource = gltfResource;
-  this._baseResource = baseResource;
-  this._gltf = gltf;
-  this._extension = extension;
-  this._extensionLegacy = extensionLegacy;
-  this._supportedImageFormats = supportedImageFormats;
-  this._frameState = frameState;
-  this._cacheKey = cacheKey;
-  this._asynchronous = asynchronous;
-  this._bufferViewLoaders = [];
-  this._bufferViewIds = [];
-  this._textureLoaders = [];
-  this._textureIds = [];
-  this._schemaLoader = undefined;
-  this._structuralMetadata = undefined;
-  this._state = ResourceLoaderState.UNLOADED;
-  this._promise = undefined;
-}
-
-if (defined(Object.create)) {
-  GltfStructuralMetadataLoader.prototype = Object.create(
-    ResourceLoader.prototype,
-  );
-  GltfStructuralMetadataLoader.prototype.constructor =
-    GltfStructuralMetadataLoader;
-}
-
-Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
   /**
    * The cache key of the resource.
    *
@@ -97,11 +88,10 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
    * @readonly
    * @private
    */
-  cacheKey: {
-    get: function () {
-      return this._cacheKey;
-    },
-  },
+  get cacheKey() {
+    return this._cacheKey;
+  }
+
   /**
    * The parsed structural metadata
    *
@@ -111,12 +101,123 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
    * @readonly
    * @private
    */
-  structuralMetadata: {
-    get: function () {
-      return this._structuralMetadata;
-    },
-  },
-});
+  get structuralMetadata() {
+    return this._structuralMetadata;
+  }
+
+  /**
+   * Loads the resource.
+   * @returns {Promise<GltfStructuralMetadataLoader>} A promise which resolves to the loader when the resource loading is completed.
+   * @private
+   */
+  load() {
+    if (defined(this._promise)) {
+      return this._promise;
+    }
+
+    this._state = ResourceLoaderState.LOADING;
+    this._promise = loadResources(this);
+    return this._promise;
+  }
+
+  /**
+   * Processes the resource until it becomes ready.
+   *
+   * @param {FrameState} frameState The frame state.
+   * @private
+   */
+  process(frameState) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("frameState", frameState);
+    //>>includeEnd('debug');
+
+    if (this._state === ResourceLoaderState.READY) {
+      return true;
+    }
+
+    if (this._state !== ResourceLoaderState.LOADED) {
+      return false;
+    }
+
+    const textureLoaders = this._textureLoaders;
+    const textureLoadersLength = textureLoaders.length;
+    let ready = true;
+    for (let i = 0; i < textureLoadersLength; ++i) {
+      const textureLoader = textureLoaders[i];
+      const textureReady = textureLoader.process(frameState);
+      ready = ready && textureReady;
+    }
+
+    if (!ready) {
+      return false;
+    }
+
+    const schema = this._schemaLoader.schema;
+    const bufferViews = {};
+    for (let i = 0; i < this._bufferViewIds.length; ++i) {
+      const bufferViewId = this._bufferViewIds[i];
+      const bufferViewLoader = this._bufferViewLoaders[i];
+      if (!bufferViewLoader.isDestroyed()) {
+        // Copy the typed array and let the underlying ArrayBuffer be freed
+        const bufferViewTypedArray = new Uint8Array(
+          bufferViewLoader.typedArray,
+        );
+        bufferViews[bufferViewId] = bufferViewTypedArray;
+      }
+    }
+
+    const textures = {};
+    for (let i = 0; i < this._textureIds.length; ++i) {
+      const textureId = this._textureIds[i];
+      const textureLoader = textureLoaders[i];
+      if (!textureLoader.isDestroyed()) {
+        textures[textureId] = textureLoader.texture;
+      }
+    }
+    if (defined(this._extension)) {
+      this._structuralMetadata = parseStructuralMetadata({
+        extension: this._extension,
+        schema: schema,
+        bufferViews: bufferViews,
+        textures: textures,
+        context: frameState.context,
+      });
+    } else {
+      this._structuralMetadata = parseFeatureMetadataLegacy({
+        extension: this._extensionLegacy,
+        schema: schema,
+        bufferViews: bufferViews,
+        textures: textures,
+      });
+    }
+
+    // Buffer views can be unloaded after the data has been copied
+    unloadBufferViews(this);
+
+    this._state = ResourceLoaderState.READY;
+    return true;
+  }
+
+  /**
+   * Unloads the resource.
+   * @private
+   */
+  unload() {
+    unloadBufferViews(this);
+    unloadTextures(this);
+
+    if (defined(this._schemaLoader)) {
+      ResourceCache.unload(this._schemaLoader);
+    }
+    this._schemaLoader = undefined;
+
+    if (defined(this._structuralMetadata)) {
+      this._structuralMetadata.destroy();
+    }
+
+    this._structuralMetadata = undefined;
+  }
+}
 
 async function loadResources(loader) {
   try {
@@ -145,21 +246,6 @@ async function loadResources(loader) {
     throw loader.getError(errorMessage, error);
   }
 }
-
-/**
- * Loads the resource.
- * @returns {Promise<GltfStructuralMetadataLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
- */
-GltfStructuralMetadataLoader.prototype.load = function () {
-  if (defined(this._promise)) {
-    return this._promise;
-  }
-
-  this._state = ResourceLoaderState.LOADING;
-  this._promise = loadResources(this);
-  return this._promise;
-};
 
 function gatherBufferViewIdsFromProperties(properties, bufferViewIdSet) {
   for (const propertyId in properties) {
@@ -391,82 +477,6 @@ async function loadSchema(structuralMetadataLoader) {
   }
 }
 
-/**
- * Processes the resource until it becomes ready.
- *
- * @param {FrameState} frameState The frame state.
- * @private
- */
-GltfStructuralMetadataLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
-
-  if (this._state === ResourceLoaderState.READY) {
-    return true;
-  }
-
-  if (this._state !== ResourceLoaderState.LOADED) {
-    return false;
-  }
-
-  const textureLoaders = this._textureLoaders;
-  const textureLoadersLength = textureLoaders.length;
-  let ready = true;
-  for (let i = 0; i < textureLoadersLength; ++i) {
-    const textureLoader = textureLoaders[i];
-    const textureReady = textureLoader.process(frameState);
-    ready = ready && textureReady;
-  }
-
-  if (!ready) {
-    return false;
-  }
-
-  const schema = this._schemaLoader.schema;
-  const bufferViews = {};
-  for (let i = 0; i < this._bufferViewIds.length; ++i) {
-    const bufferViewId = this._bufferViewIds[i];
-    const bufferViewLoader = this._bufferViewLoaders[i];
-    if (!bufferViewLoader.isDestroyed()) {
-      // Copy the typed array and let the underlying ArrayBuffer be freed
-      const bufferViewTypedArray = new Uint8Array(bufferViewLoader.typedArray);
-      bufferViews[bufferViewId] = bufferViewTypedArray;
-    }
-  }
-
-  const textures = {};
-  for (let i = 0; i < this._textureIds.length; ++i) {
-    const textureId = this._textureIds[i];
-    const textureLoader = textureLoaders[i];
-    if (!textureLoader.isDestroyed()) {
-      textures[textureId] = textureLoader.texture;
-    }
-  }
-  if (defined(this._extension)) {
-    this._structuralMetadata = parseStructuralMetadata({
-      extension: this._extension,
-      schema: schema,
-      bufferViews: bufferViews,
-      textures: textures,
-      context: frameState.context,
-    });
-  } else {
-    this._structuralMetadata = parseFeatureMetadataLegacy({
-      extension: this._extensionLegacy,
-      schema: schema,
-      bufferViews: bufferViews,
-      textures: textures,
-    });
-  }
-
-  // Buffer views can be unloaded after the data has been copied
-  unloadBufferViews(this);
-
-  this._state = ResourceLoaderState.READY;
-  return true;
-};
-
 function unloadBufferViews(structuralMetadataLoader) {
   const bufferViewLoaders = structuralMetadataLoader._bufferViewLoaders;
   const bufferViewLoadersLength = bufferViewLoaders.length;
@@ -486,25 +496,5 @@ function unloadTextures(structuralMetadataLoader) {
   structuralMetadataLoader._textureLoaders.length = 0;
   structuralMetadataLoader._textureIds.length = 0;
 }
-
-/**
- * Unloads the resource.
- * @private
- */
-GltfStructuralMetadataLoader.prototype.unload = function () {
-  unloadBufferViews(this);
-  unloadTextures(this);
-
-  if (defined(this._schemaLoader)) {
-    ResourceCache.unload(this._schemaLoader);
-  }
-  this._schemaLoader = undefined;
-
-  if (defined(this._structuralMetadata)) {
-    this._structuralMetadata.destroy();
-  }
-
-  this._structuralMetadata = undefined;
-};
 
 export default GltfStructuralMetadataLoader;
