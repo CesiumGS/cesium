@@ -910,7 +910,7 @@ describe(
       });
     });
 
-    it("processes constant LOD extension", async function () {
+    it("processes EXT_textureInfo_constant_lod extension", async function () {
       const gltfLoader = await loadGltf(constantLodTestData);
 
       const primitive = gltfLoader.components.nodes[0].primitives[0];
