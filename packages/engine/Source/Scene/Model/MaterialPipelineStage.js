@@ -2,8 +2,6 @@ import defined from "../../Core/defined.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Transforms from "../../Core/Transforms.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Pass from "../../Renderer/Pass.js";
 import MaterialStageFS from "../../Shaders/Model/MaterialStageFS.js";
