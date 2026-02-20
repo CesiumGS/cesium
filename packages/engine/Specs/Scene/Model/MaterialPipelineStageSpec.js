@@ -44,6 +44,7 @@ describe(
         defaultNormalTexture: {},
         defaultEmissiveTexture: {},
       },
+      pixelRatio: 1.0,
     };
 
     afterEach(function () {

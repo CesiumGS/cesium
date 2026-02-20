@@ -37,17 +37,15 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
 /**
  * Loads a .pnts point cloud and transcodes it into a {@link ModelComponents}
  *
- * @alias PntsLoader
- * @constructor
- * @augments ResourceLoader
  * @private
- *
- * @param {object} options An object containing the following properties
- * @param {ArrayBuffer} options.arrayBuffer The array buffer of the pnts contents
- * @param {number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
- * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
 class PntsLoader extends ResourceLoader {
+  /**
+   * @param {object} options An object containing the following properties
+   * @param {ArrayBuffer} options.arrayBuffer The array buffer of the pnts contents
+   * @param {number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
+   * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+   */
   constructor(options) {
     super();
 
