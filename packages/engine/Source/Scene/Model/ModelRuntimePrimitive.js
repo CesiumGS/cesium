@@ -2,6 +2,7 @@ import Check from "../../Core/Check.js";
 import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import PrimitiveTypeUtils from "../../Core/PrimitiveTypeUtils.js";
 import SceneMode from "../SceneMode.js";
 import AlphaPipelineStage from "./AlphaPipelineStage.js";
 import BatchTexturePipelineStage from "./BatchTexturePipelineStage.js";
@@ -228,7 +229,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   const generateWireframeIndices =
     model.debugWireframe &&
-    PrimitiveType.isTriangles(primitive.primitiveType) &&
+    PrimitiveTypeUtils.isTriangles(primitive.primitiveType) &&
     // Generating index buffers for wireframes is always possible in WebGL2.
     // However, this will only work in WebGL1 if the model was constructed with
     // enableDebugWireframe set to true.
