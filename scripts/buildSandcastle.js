@@ -1,3 +1,5 @@
+// @ts-check
+
 import { dirname, join } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { getVersion } from "./build.js";
