@@ -14,6 +14,7 @@ import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
+import createContext from "../../../../../Specs/createContext.js";
 
 describe(
   "Scene/Model/MetadataPipelineStage",
@@ -26,20 +27,25 @@ describe(
       "./Data/Models/glTF-2.0/PropertyTextureWithVectorProperties/glTF/PropertyTextureWithVectorProperties.gltf";
     const propertyTextureWithTextureTransformUrl =
       "./Data/Models/glTF-2.0/PropertyTextureWithTextureTransform/glTF/PropertyTextureWithTextureTransform.gltf";
+    const propertyTextureWith32BitTypes =
+      "./Data/Models/glTF-2.0/PropertyTextureWith32BitTypes/glTF/PropertyTextureWith32BitTypes.gltf";
     const boxTexturedBinary =
       "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
     const tilesetWithMetadataStatistics =
       "./Data/Cesium3DTiles/Metadata/PropertyAttributesPointCloud/tileset.json";
 
     let scene;
+    let context;
     const gltfLoaders = [];
 
     beforeAll(function () {
       scene = createScene();
+      context = createContext();
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
+      context.destroyForSpecs();
     });
 
     function cleanup(resourcesArray) {
@@ -272,6 +278,10 @@ describe(
     });
 
     it("Adds property textures to the shader", function () {
+      if (!context.webgl2) {
+        return;
+      }
+
       return loadGltf(simplePropertyTexture).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const node = components.nodes[0];
@@ -283,7 +293,7 @@ describe(
 
         const shaderBuilder = renderResources.shaderBuilder;
 
-        const metadataTypes = ["int", "float"];
+        const metadataTypes = ["uint", "float"];
         checkMetadataClassStructs(shaderBuilder, metadataTypes);
 
         ShaderBuilderTester.expectHasVertexStruct(
@@ -297,9 +307,9 @@ describe(
           MetadataPipelineStage.STRUCT_ID_METADATA_FS,
           MetadataPipelineStage.STRUCT_NAME_METADATA,
           [
+            "    uint insideTemperature;",
+            "    uint outsideTemperature;",
             "    float insulation;",
-            "    int insideTemperature;",
-            "    int outsideTemperature;",
           ],
         );
         ShaderBuilderTester.expectHasVertexFunctionUnordered(
@@ -313,9 +323,24 @@ describe(
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
           [
-            "    metadata.insulation = texture(u_propertyTexture_1, attributes.texCoord_0).b;",
-            "    metadata.insideTemperature = int(255.0 * texture(u_propertyTexture_1, attributes.texCoord_0).r);",
-            "    metadata.outsideTemperature = int(255.0 * texture(u_propertyTexture_1, attributes.texCoord_0).g);",
+            "    uint insideTemperature_unpackedValue;",
+            "    uint insideTemperature_rawBits;",
+            "    float insideTemperature_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).r;",
+            "    insideTemperature_rawBits = czm_unpackTexture(insideTemperature_rawChannels);",
+            "    insideTemperature_unpackedValue = ((insideTemperature_rawBits));",
+            "    metadata.insideTemperature = insideTemperature_unpackedValue;",
+            "    uint outsideTemperature_unpackedValue;",
+            "    uint outsideTemperature_rawBits;",
+            "    float outsideTemperature_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).g;",
+            "    outsideTemperature_rawBits = czm_unpackTexture(outsideTemperature_rawChannels);",
+            "    outsideTemperature_unpackedValue = ((outsideTemperature_rawBits));",
+            "    metadata.outsideTemperature = outsideTemperature_unpackedValue;",
+            "    float insulation_unpackedValue;",
+            "    uint insulation_rawBits;",
+            "    float insulation_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).b;",
+            "    insulation_rawBits = czm_unpackTexture(insulation_rawChannels);",
+            "    insulation_unpackedValue = float((insulation_rawBits)) * 0.00392156862745098;",
+            "    metadata.insulation = insulation_unpackedValue;",
             "    metadataClass.insulation.defaultValue = float(1);",
           ],
         );
@@ -343,6 +368,10 @@ describe(
     });
 
     it("Adds property texture transform to the shader", async function () {
+      if (!context.webgl2) {
+        return;
+      }
+
       const gltfLoader = await loadGltf(propertyTextureWithTextureTransformUrl);
       const components = gltfLoader.components;
       const node = components.nodes[0];
@@ -399,6 +428,10 @@ describe(
     });
 
     it("Handles property textures with vector values", function () {
+      if (!context.webgl2) {
+        return;
+      }
+
       return loadGltf(propertyTextureWithVectorProperties).then(
         function (gltfLoader) {
           const components = gltfLoader.components;
@@ -411,7 +444,7 @@ describe(
 
           const shaderBuilder = renderResources.shaderBuilder;
 
-          const metadataTypes = ["vec2", "int", "ivec3", "vec3"];
+          const metadataTypes = ["vec2", "uint", "uvec3", "vec3"];
           checkMetadataClassStructs(shaderBuilder, metadataTypes);
 
           ShaderBuilderTester.expectHasVertexStruct(
@@ -426,8 +459,8 @@ describe(
             MetadataPipelineStage.STRUCT_NAME_METADATA,
             [
               "    vec2 vec2Property;",
-              "    int uint8Property;",
-              "    ivec3 uint8vec3Property;",
+              "    uint uint8Property;",
+              "    uvec3 uint8vec3Property;",
               "    vec3 arrayProperty;",
               "    vec2 valueTransformProperty;",
             ],
@@ -441,8 +474,8 @@ describe(
             MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
             [
               "    vec2MetadataClass vec2Property;",
-              "    intMetadataClass uint8Property;",
-              "    ivec3MetadataClass uint8vec3Property;",
+              "    uintMetadataClass uint8Property;",
+              "    uvec3MetadataClass uint8vec3Property;",
               "    vec3MetadataClass arrayProperty;",
               "    vec2MetadataClass valueTransformProperty;",
             ],
@@ -461,15 +494,52 @@ describe(
             MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
             MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
             [
-              "    metadata.vec2Property = texture(u_propertyTexture_1, attributes.texCoord_0).gb;",
-              "    metadata.uint8Property = int(255.0 * texture(u_propertyTexture_1, attributes.texCoord_0).r);",
-              "    metadata.uint8vec3Property = ivec3(255.0 * texture(u_propertyTexture_1, attributes.texCoord_0).rgb);",
-              "    metadata.arrayProperty = texture(u_propertyTexture_1, attributes.texCoord_0).rgb;",
-              "    metadata.valueTransformProperty = czm_valueTransform(u_valueTransformProperty_offset, u_valueTransformProperty_scale, texture(u_propertyTexture_1, attributes.texCoord_0).rg);",
-              "    metadataClass.uint8vec3Property.defaultValue = ivec3(255,0,0);",
-              "    metadataClass.uint8vec3Property.maxValue = ivec3(30,17,50);",
-              "    metadataClass.uint8vec3Property.minValue = ivec3(10,10,10);",
-              "    metadataClass.uint8vec3Property.noData = ivec3(19,13,50);",
+              "    vec2 vec2Property_unpackedValue;",
+              "    uint vec2Property_rawBits;",
+              "    vec2 vec2Property_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).gb;",
+              "    vec2Property_rawBits = czm_unpackTexture(vec2Property_rawChannels);",
+              "    vec2Property_unpackedValue[0] = float((vec2Property_rawBits)) * 0.00392156862745098;",
+              "    vec2Property_rawBits = czm_unpackTexture(vec2Property_rawChannels);",
+              "    vec2Property_unpackedValue[1] = float((vec2Property_rawBits)) * 0.00392156862745098;",
+              "    metadata.vec2Property = vec2Property_unpackedValue;",
+              "    uint uint8Property_unpackedValue;",
+              "    uint uint8Property_rawBits;",
+              "    float uint8Property_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).r;",
+              "    uint8Property_rawBits = czm_unpackTexture(uint8Property_rawChannels);",
+              "    uint8Property_unpackedValue = ((uint8Property_rawBits));",
+              "    metadata.uint8Property = uint8Property_unpackedValue;",
+              "    uvec3 uint8vec3Property_unpackedValue;",
+              "    uint uint8vec3Property_rawBits;",
+              "    vec3 uint8vec3Property_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).rgb;",
+              "    uint8vec3Property_rawBits = czm_unpackTexture(uint8vec3Property_rawChannels);",
+              "    uint8vec3Property_unpackedValue[0] = ((uint8vec3Property_rawBits));",
+              "    uint8vec3Property_rawBits = czm_unpackTexture(uint8vec3Property_rawChannels);",
+              "    uint8vec3Property_unpackedValue[1] = ((uint8vec3Property_rawBits));",
+              "    uint8vec3Property_rawBits = czm_unpackTexture(uint8vec3Property_rawChannels);",
+              "    uint8vec3Property_unpackedValue[2] = ((uint8vec3Property_rawBits));",
+              "    metadata.uint8vec3Property = uint8vec3Property_unpackedValue;",
+              "    metadataClass.uint8vec3Property.noData = uvec3(19,13,50);",
+              "    metadataClass.uint8vec3Property.defaultValue = uvec3(255,0,0);",
+              "    metadataClass.uint8vec3Property.minValue = uvec3(10,10,10);",
+              "    metadataClass.uint8vec3Property.maxValue = uvec3(30,17,50);",
+              "    vec3 arrayProperty_unpackedValue;",
+              "    uint arrayProperty_rawBits;",
+              "    vec3 arrayProperty_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).rgb;",
+              "    arrayProperty_rawBits = czm_unpackTexture(arrayProperty_rawChannels);",
+              "    arrayProperty_unpackedValue[0] = float((arrayProperty_rawBits)) * 0.00392156862745098;",
+              "    arrayProperty_rawBits = czm_unpackTexture(arrayProperty_rawChannels);",
+              "    arrayProperty_unpackedValue[1] = float((arrayProperty_rawBits)) * 0.00392156862745098;",
+              "    arrayProperty_rawBits = czm_unpackTexture(arrayProperty_rawChannels);",
+              "    arrayProperty_unpackedValue[2] = float((arrayProperty_rawBits)) * 0.00392156862745098;",
+              "    metadata.arrayProperty = arrayProperty_unpackedValue;",
+              "    vec2 valueTransformProperty_unpackedValue;",
+              "    uint valueTransformProperty_rawBits;",
+              "    vec2 valueTransformProperty_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).rg;",
+              "    valueTransformProperty_rawBits = czm_unpackTexture(valueTransformProperty_rawChannels);",
+              "    valueTransformProperty_unpackedValue[0] = float((valueTransformProperty_rawBits)) * 0.00392156862745098;",
+              "    valueTransformProperty_rawBits = czm_unpackTexture(valueTransformProperty_rawChannels);",
+              "    valueTransformProperty_unpackedValue[1] = float((valueTransformProperty_rawBits)) * 0.00392156862745098;",
+              "    metadata.valueTransformProperty = czm_valueTransform(u_valueTransformProperty_offset, u_valueTransformProperty_scale, valueTransformProperty_unpackedValue);",
             ],
           );
           ShaderBuilderTester.expectHasVertexFunctionUnordered(
@@ -501,6 +571,83 @@ describe(
           expect(uniformMap.u_valueTransformProperty_scale()).toEqual(
             new Cartesian2(2, 2),
           );
+        },
+      );
+    });
+
+    it("Handles property textures that use multiple channels to represent higher-precision types", function () {
+      if (!context.webgl2) {
+        return;
+      }
+
+      return loadGltf(propertyTextureWith32BitTypes).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[0];
+          const primitive = node.primitives[0];
+          const frameState = scene.frameState;
+          const renderResources = mockRenderResources(components);
+
+          MetadataPipelineStage.process(renderResources, primitive, frameState);
+
+          const shaderBuilder = renderResources.shaderBuilder;
+
+          checkMetadataClassStructs(shaderBuilder, ["float"]);
+
+          ShaderBuilderTester.expectHasVertexStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_VS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA,
+            [],
+          );
+          ShaderBuilderTester.expectHasFragmentStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_FS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA,
+            ["    float insideTemperature;"],
+          );
+
+          // Check for the MetadataClass struct, containing the specific fields
+          // required by this test dataset
+          ShaderBuilderTester.expectHasFragmentStruct(
+            shaderBuilder,
+            MetadataPipelineStage.STRUCT_ID_METADATA_CLASS_FS,
+            MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
+            ["    floatMetadataClass insideTemperature;"],
+          );
+
+          ShaderBuilderTester.expectHasVertexFunctionUnordered(
+            shaderBuilder,
+            MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
+            MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
+            [],
+          );
+
+          // Check that the correct values are assigned to the metadata and metadataClass structs
+          ShaderBuilderTester.expectHasFragmentFunctionUnordered(
+            shaderBuilder,
+            MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
+            MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
+            [
+              "    float insideTemperature_unpackedValue;",
+              "    uint insideTemperature_rawBits;",
+              "    vec4 insideTemperature_rawChannels = texture(u_propertyTexture_0, attributes.texCoord_0).rgba;",
+              "    insideTemperature_rawBits = czm_unpackTexture(insideTemperature_rawChannels.rgba);",
+              "    insideTemperature_unpackedValue = (uintBitsToFloat(insideTemperature_rawBits));",
+              "    metadata.insideTemperature = insideTemperature_unpackedValue;",
+            ],
+          );
+
+          ShaderBuilderTester.expectHasVertexFunctionUnordered(
+            shaderBuilder,
+            MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS,
+            MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS,
+            [],
+          );
+          ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+          ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+            "uniform sampler2D u_propertyTexture_0;",
+          ]);
         },
       );
     });
