@@ -143,13 +143,19 @@ MaterialPipelineStage.process = function (
   const disablePointCloudNormals =
     defined(model.pointCloudShading) && !model.pointCloudShading.normalShading;
 
+  // When backgroundFill is true (BENTLEY_materials_planar_fill), the primitive
+  // must be unlit so it matches the background color exactly.
+  const hasBackgroundFill =
+    defined(material.planarFill) && material.planarFill.backgroundFill;
+
   // Classification models will be rendered as unlit.
   const lightingOptions = renderResources.lightingOptions;
   if (
     material.unlit ||
     !hasNormals ||
     hasClassification ||
-    disablePointCloudNormals
+    disablePointCloudNormals ||
+    hasBackgroundFill
   ) {
     lightingOptions.lightingModel = LightingModel.UNLIT;
   } else {
@@ -165,6 +171,23 @@ MaterialPipelineStage.process = function (
     alphaOptions.pass = Pass.TRANSLUCENT;
   } else if (material.alphaMode === AlphaMode.MASK) {
     alphaOptions.alphaCutoff = material.alphaCutoff;
+  }
+
+  // Configure background fill for BENTLEY_materials_planar_fill extension.
+  // When backgroundFill is true, the fill is rendered using the view's background color
+  // to create an invisible masking polygon. Lighting is forced to unlit above.
+  //
+  // NOTE: The wireframeFill property from BENTLEY_materials_planar_fill is intentionally
+  // not handled here. CesiumJS does not yet have a proper wireframe rendering mode
+  // (debugWireframe is not a true wireframe mode), so wireframeFill is loaded as a NO-OP.
+  // When a proper wireframe mode is added to CesiumJS, wireframeFill support should be
+  // implemented here to control fill visibility in that mode.
+  if (hasBackgroundFill) {
+    shaderBuilder.addDefine(
+      "HAS_BACKGROUND_FILL",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
   }
 
   // Configure and handle point diameter for POINTS primitives (BENTLEY_materials_point_style extension).
