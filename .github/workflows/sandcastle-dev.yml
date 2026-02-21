@@ -15,7 +15,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_REPO: ${{ github.repository }}
       GITHUB_SHA: ${{ github.sha }}
-      SANDCASTLE_ORIGIN: https://dev-sandcastle.cesium.com
     steps:
       - uses: actions/checkout@v6
       - name: install node 22
@@ -29,7 +28,7 @@ jobs:
       - name: build types
         run: npm run build-ts
       - name: build prod sandcastle
-        run: npm run build-sandcastle
+        run: npm run build-sandcastle -- --outer-origin="https://dev-sandcastle.cesium.com"
       - name: deploy to dev-sandcastle.cesium.com
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: |

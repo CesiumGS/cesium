@@ -72,7 +72,6 @@ export default defineConfig(({ command }) => {
         dest: "packages/widgets/Build/Unminified",
       },
     ],
-    allowMissingFiles: true,
   });
 
   return config;
