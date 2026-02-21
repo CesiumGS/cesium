@@ -98,6 +98,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {PolylineVolumeGraphics | PolylineVolumeGraphics.ConstructorOptions} [polylineVolume] A polylineVolume to associate with this entity.
  * @property {RectangleGraphics | RectangleGraphics.ConstructorOptions} [rectangle] A rectangle to associate with this entity.
  * @property {WallGraphics | WallGraphics.ConstructorOptions} [wall] A wall to associate with this entity.
+ * @property {boolean} [asynchronous=true] Determines if the underlying primitives will be created asynchronously or block until ready.
  */
 
 /**
@@ -121,6 +122,7 @@ function Entity(options) {
 
   this._availability = undefined;
   this._id = id;
+  this._asynchronous = options.asynchronous ?? true;
   this._definitionChanged = new Event();
   this._name = options.name;
   this._show = options.show ?? true;
@@ -247,6 +249,16 @@ Object.defineProperties(Entity.prototype, {
   id: {
     get: function () {
       return this._id;
+    },
+  },
+  /**
+   * Gets whether the underlying primitives should be created asynchronously or block until ready.
+   * @memberof Entity.prototype
+   * @type {boolean}
+   */
+  asynchronous: {
+    get: function () {
+      return this._asynchronous;
     },
   },
   /**
