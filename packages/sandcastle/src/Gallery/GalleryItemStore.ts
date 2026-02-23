@@ -37,11 +37,6 @@ export type GalleryItem = {
   codeExerpts?: string;
 };
 
-export interface GalleryList {
-  entries: GalleryItem[];
-  legacyIds: Record<string, string>;
-}
-
 export type HighlightedGalleryItem = ReturnType<typeof applyHighlightToItem>;
 
 export type GalleryFilter = Record<string, string | string[]> | null;
@@ -294,10 +289,7 @@ export function useGalleryItemStore() {
       !embeddingModelLoaded &&
       entriesRef.current.length > 0
     ) {
-      initializeEmbeddingSearch({
-        entries: entriesRef.current,
-        legacyIds,
-      });
+      initializeEmbeddingSearch(entriesRef.current);
     }
   }, [embeddingSearchEnabled, embeddingModelLoaded, legacyIds]);
 

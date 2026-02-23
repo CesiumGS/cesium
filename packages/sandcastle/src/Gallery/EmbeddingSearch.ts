@@ -4,7 +4,7 @@ import {
   PreTrainedModel,
   PreTrainedTokenizer,
 } from "@huggingface/transformers";
-import { GalleryList } from "./GalleryItemStore";
+import { GalleryItem } from "./GalleryItemStore";
 
 export interface VectorSearchResult {
   score: number;
@@ -26,8 +26,8 @@ type Embeddings = {
 };
 
 class EmbeddingSearch {
-  private galleryList: GalleryList | null = null;
-  private embeddings: EmbeddingsMap | null = null;
+  private galleryList: GalleryItem[] | null = null;
+  private embeddings: Record<string, number[]> | null = null;
   private tokenizer: PreTrainedTokenizer | null = null;
   private model: PreTrainedModel | null = null;
   private onInitializedCallbacks: (() => void)[] = [];
@@ -41,7 +41,7 @@ class EmbeddingSearch {
     );
   }
 
-  async initialize(galleryList: GalleryList): Promise<void> {
+  async initialize(galleryList: GalleryItem[]): Promise<void> {
     if (this.isInitialized) {
       return;
     }
@@ -49,11 +49,13 @@ class EmbeddingSearch {
     this.galleryList = galleryList;
 
     const embeddingsResponse = await fetch("gallery/embeddings.json");
-    const embeddingsData = await embeddingsResponse.json();
+    const embeddingsData: Embeddings = await embeddingsResponse.json();
 
     const modelId = embeddingsData.model;
-    const dtype = embeddingsData.dtype;
-    this.embeddings = embeddingsData;
+    const dtype = embeddingsData.dtype as NonNullable<
+      Parameters<typeof AutoModel.from_pretrained>[1]
+    >["dtype"];
+    this.embeddings = embeddingsData.embeddings;
 
     this.tokenizer = await AutoTokenizer.from_pretrained(modelId);
     this.model = await AutoModel.from_pretrained(modelId, {
@@ -108,7 +110,7 @@ class EmbeddingSearch {
     const { sentence_embedding } = await this.model!(inputs);
     const queryEmbedding = sentence_embedding.tolist()[0];
 
-    let itemsWithEmbeddings = this.galleryList!.entries.filter(
+    let itemsWithEmbeddings = this.galleryList!.filter(
       (item) => this.embeddings![item.id],
     );
 
@@ -140,7 +142,7 @@ class EmbeddingSearch {
 const embeddingSearch = new EmbeddingSearch();
 
 export async function initializeEmbeddingSearch(
-  galleryList: GalleryList,
+  galleryList: GalleryItem[],
 ): Promise<void> {
   return embeddingSearch.initialize(galleryList);
 }

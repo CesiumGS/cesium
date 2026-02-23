@@ -23,6 +23,7 @@ const requiredMetadataKeys = ["title", "description"];
 const galleryItemConfig = /sandcastle\.(yml|yaml)/;
 
 const MODEL_ID = "avsolatorio/GIST-small-Embedding-v0";
+const MODEL_DTYPE = "q8";
 
 function itemToText(title, description, labels) {
   const text = `Title: ${title}
@@ -35,7 +36,7 @@ function itemToText(title, description, labels) {
 async function generateEmbeddings(items) {
   const tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
   const model = await AutoModel.from_pretrained(MODEL_ID, {
-    dtype: "q8",
+    dtype: MODEL_DTYPE,
   });
 
   const texts = items.map((item) =>
@@ -316,7 +317,8 @@ export async function buildGalleryList(options = {}) {
     const existingEmbeddings = JSON.parse(existingData);
     if (
       existingEmbeddings?.id === entriesHash &&
-      existingEmbeddings?.model === MODEL_ID
+      existingEmbeddings?.model === MODEL_ID &&
+      existingEmbeddings?.dtype === MODEL_DTYPE
     ) {
       embeddingsMap = existingEmbeddings;
     }
@@ -324,9 +326,14 @@ export async function buildGalleryList(options = {}) {
   if (!embeddingsMap) {
     const embeddings = await generateEmbeddings(output.entries);
 
-    embeddingsMap = { id: entriesHash, model: MODEL_ID };
+    embeddingsMap = {
+      id: entriesHash,
+      model: MODEL_ID,
+      dtype: MODEL_DTYPE,
+      embeddings: {},
+    };
     output.entries.forEach((entry, index) => {
-      embeddingsMap[entry.id] = embeddings[index];
+      embeddingsMap.embeddings[entry.id] = embeddings[index];
     });
   }
 
