@@ -33,15 +33,13 @@ import addAllToArray from "../../Core/addAllToArray.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GeoJsonLoader
- * @constructor
- * @augments ResourceLoader
  * @private
- *
- * @param {object} options Object with the following properties:
- * @param {object} options.geoJson The GeoJson object.
  */
 class GeoJsonLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {object} options.geoJson The GeoJson object.
+   */
   constructor(options) {
     super();
 

@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 import { IconButton, TextBox } from "@stratakit/bricks";
-import { close, search as searchIcon } from "../icons.ts";
+import { dismiss, search as searchIcon } from "../icons.ts";
 
 import { useGalleryItemContext } from "./GalleryItemStore.ts";
 
@@ -52,7 +52,7 @@ export function GalleryItemSearchInput() {
       <IconButton
         className="gallery-search-input-clear-btn"
         hidden={inputValue === ""}
-        icon={close}
+        icon={dismiss}
         label="Clear"
         onClick={clearSearch}
       ></IconButton>

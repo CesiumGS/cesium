@@ -18,23 +18,20 @@ import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js"
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfTextureLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {object} options.gltf The glTF JSON.
- * @param {object} options.textureInfo The texture info object.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
- * @param {string} [options.cacheKey] The cache key of the resource.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- *
  * @private
  */
 class GltfTextureLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {object} options.gltf The glTF JSON.
+   * @param {object} options.textureInfo The texture info object.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   */
   constructor(options) {
     super();
 
@@ -173,7 +170,7 @@ class GltfTextureLoader extends ResourceLoader {
       const jobScheduler = frameState.jobScheduler;
       if (!jobScheduler.execute(textureJob, JobType.TEXTURE)) {
         // Job scheduler is full. Try again next frame.
-        return;
+        return false;
       }
       texture = textureJob.texture;
     } else {
