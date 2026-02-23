@@ -15,8 +15,9 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_REPO: ${{ github.repository }}
       GITHUB_SHA: ${{ github.sha }}
+      SANDCASTLE_ORIGIN: https://dev-sandcastle.cesium.com
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
         uses: actions/setup-node@v6
         with:

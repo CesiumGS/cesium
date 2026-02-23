@@ -23,8 +23,9 @@ jobs:
       GITHUB_REPO: ${{ github.repository }}
       GITHUB_SHA: ${{ github.sha }}
       DEPLOYED_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
+      SANDCASTLE_ORIGIN: https://ci-builds.cesium.com
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
         uses: actions/setup-node@v6
         with:

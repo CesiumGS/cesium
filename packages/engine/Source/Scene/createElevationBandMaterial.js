@@ -435,7 +435,7 @@ function createLayeredEntries(layers) {
  * @param {createElevationBandMaterialBand[]} options.layers A list of bands ordered from lowest to highest precedence.
  * @returns {Material} A new {@link Material} instance.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Elevation%20Band%20Material.html|Cesium Sandcastle Elevation Band Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=elevation-band-material|Cesium Sandcastle Elevation Band Demo}
  *
  * @example
  * scene.globe.material = Cesium.createElevationBandMaterial({

@@ -51,7 +51,7 @@ const defaultParameters = Object.freeze({
  *
  * @param {WebMapTileServiceImageryProvider.ConstructorOptions} options Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=web-map-tile-service-with-time|Cesium Sandcastle Web Map Tile Service with Time Demo}
  *
  * @example
  * // Example 1. USGS shaded relief tiles (KVP)

@@ -35,6 +35,7 @@ function ProceduralSingleTileVoxelProvider(shape) {
   this.types = [Cesium.MetadataType.VEC4];
   this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
   this.globalTransform = globalTransform;
+  this.availableLevels = 1;
 }
 
 const scratchColor = new Cesium.Color();
@@ -91,37 +92,7 @@ function ProceduralMultiTileVoxelProvider(shape) {
   this.types = [Cesium.MetadataType.VEC4];
   this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
   this.globalTransform = globalTransform;
-
   this.availableLevels = 2;
-  this._allVoxelData = new Array(this.availableLevels);
-
-  const allVoxelData = this._allVoxelData;
-  const channelCount = Cesium.MetadataType.getComponentCount(this.types[0]);
-  const { dimensions } = this;
-
-  for (let level = 0; level < this.availableLevels; level++) {
-    const dimAtLevel = Math.pow(2, level);
-    const voxelCountX = dimensions.x * dimAtLevel;
-    const voxelCountY = dimensions.y * dimAtLevel;
-    const voxelCountZ = dimensions.z * dimAtLevel;
-    const voxelsPerLevel = voxelCountX * voxelCountY * voxelCountZ;
-    const levelData = (allVoxelData[level] = new Array(
-      voxelsPerLevel * channelCount,
-    ));
-
-    for (let z = 0; z < voxelCountX; z++) {
-      for (let y = 0; y < voxelCountY; y++) {
-        const indexZY = z * voxelCountY * voxelCountX + y * voxelCountX;
-        for (let x = 0; x < voxelCountZ; x++) {
-          const index = (indexZY + x) * channelCount;
-          levelData[index + 0] = x / (voxelCountX - 1);
-          levelData[index + 1] = y / (voxelCountY - 1);
-          levelData[index + 2] = z / (voxelCountZ - 1);
-          levelData[index + 3] = 0.5;
-        }
-      }
-    }
-  }
 }
 
 ProceduralMultiTileVoxelProvider.prototype.requestData = function (options) {
@@ -141,53 +112,43 @@ ProceduralMultiTileVoxelProvider.prototype.requestData = function (options) {
     dimensions.y + paddingBefore.y + paddingAfter.y,
     dimensions.z + paddingBefore.z + paddingAfter.z,
   );
-  const dimAtLevel = Math.pow(2, tileLevel);
-  const dimensionsGlobal = Cesium.Cartesian3.fromElements(
-    dimensions.x * dimAtLevel,
-    dimensions.y * dimAtLevel,
-    dimensions.z * dimAtLevel,
-  );
-  const minimumGlobalCoord = Cesium.Cartesian3.ZERO;
+  const dimAtLevel = 2 ** tileLevel;
   const maximumGlobalCoord = new Cesium.Cartesian3(
-    dimensionsGlobal.x - 1,
-    dimensionsGlobal.y - 1,
-    dimensionsGlobal.z - 1,
+    dimensions.x * dimAtLevel - 1,
+    dimensions.y * dimAtLevel - 1,
+    dimensions.z * dimAtLevel - 1,
   );
-  let coordGlobal = new Cesium.Cartesian3();
-
-  const dataGlobal = this._allVoxelData;
   const dataTile = new Float32Array(
     paddedDimensions.x * paddedDimensions.y * paddedDimensions.z * channelCount,
   );
-
+  const firstSampleCoordinate = Cesium.Cartesian3.fromElements(
+    tileX * dimensions.x - paddingBefore.x,
+    tileY * dimensions.y - paddingBefore.y,
+    tileZ * dimensions.z - paddingBefore.z,
+  );
+  const coordLocal = new Cesium.Cartesian3();
+  let coordGlobal = new Cesium.Cartesian3();
   for (let z = 0; z < paddedDimensions.z; z++) {
     const indexZ = z * paddedDimensions.y * paddedDimensions.x;
     for (let y = 0; y < paddedDimensions.y; y++) {
       const indexZY = indexZ + y * paddedDimensions.x;
       for (let x = 0; x < paddedDimensions.x; x++) {
         const indexTile = indexZY + x;
-
         coordGlobal = Cesium.Cartesian3.clamp(
-          Cesium.Cartesian3.fromElements(
-            tileX * dimensions.x + (x - paddingBefore.x),
-            tileY * dimensions.y + (y - paddingBefore.y),
-            tileZ * dimensions.z + (z - paddingBefore.z),
+          Cesium.Cartesian3.add(
+            firstSampleCoordinate,
+            Cesium.Cartesian3.fromElements(x, y, z, coordLocal),
             coordGlobal,
           ),
-          minimumGlobalCoord,
+          Cesium.Cartesian3.ZERO,
           maximumGlobalCoord,
           coordGlobal,
         );
-
-        const indexGlobal =
-          coordGlobal.z * dimensionsGlobal.y * dimensionsGlobal.x +
-          coordGlobal.y * dimensionsGlobal.x +
-          coordGlobal.x;
-
-        for (let c = 0; c < channelCount; c++) {
-          dataTile[indexTile * channelCount + c] =
-            dataGlobal[tileLevel][indexGlobal * channelCount + c];
-        }
+        const index = indexTile * channelCount;
+        dataTile[index + 0] = coordGlobal.x / maximumGlobalCoord.x;
+        dataTile[index + 1] = coordGlobal.y / maximumGlobalCoord.y;
+        dataTile[index + 2] = coordGlobal.z / maximumGlobalCoord.z;
+        dataTile[index + 3] = 0.75;
       }
     }
   }
@@ -220,7 +181,7 @@ const customShaderColor = new Cesium.CustomShader({
       float transparency = 1.0 - fsInput.metadata.color.a;
 
       // To mimic light scattering, use exponential decay
-      float thickness = fsInput.voxel.travelDistance * 16.0;
+      float thickness = fsInput.voxel.travelDistance / 1000000.0;
       material.alpha = 1.0 - pow(transparency, thickness);
   }`,
 });
