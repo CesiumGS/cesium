@@ -4,6 +4,7 @@ import {
   PreTrainedModel,
   PreTrainedTokenizer,
 } from "@huggingface/transformers";
+import { GalleryList } from "./GalleryItemStore";
 
 export interface VectorSearchResult {
   score: number;
@@ -17,50 +18,52 @@ export interface VectorSearchResult {
   labels: string[];
 }
 
-interface GalleryListItem {
-  url: string;
+type Embeddings = {
   id: string;
-  title: string;
-  thumbnail: string;
-  lineCount: number;
-  description: string;
-  labels: string[];
-}
-
-export interface GalleryList {
-  entries: GalleryListItem[];
-  legacyIds: Record<string, string>;
-}
-
-type EmbeddingsMap = Record<string, number[]>;
+  model: string;
+  dtype: string;
+  embeddings: Record<string, number[]>;
+};
 
 class EmbeddingSearch {
   private galleryList: GalleryList | null = null;
   private embeddings: EmbeddingsMap | null = null;
   private tokenizer: PreTrainedTokenizer | null = null;
   private model: PreTrainedModel | null = null;
-  private modelId: string = "avsolatorio/GIST-small-Embedding-v0";
   private onInitializedCallbacks: (() => void)[] = [];
 
+  get isInitialized(): boolean {
+    return (
+      !!this.galleryList &&
+      !!this.embeddings &&
+      !!this.model &&
+      !!this.tokenizer
+    );
+  }
+
   async initialize(galleryList: GalleryList): Promise<void> {
-    if (this.embeddings && this.model && this.tokenizer) {
+    if (this.isInitialized) {
       return;
     }
 
     this.galleryList = galleryList;
 
     const embeddingsResponse = await fetch("gallery/embeddings.json");
-    this.embeddings = await embeddingsResponse.json();
+    const embeddingsData = await embeddingsResponse.json();
 
-    this.tokenizer = await AutoTokenizer.from_pretrained(this.modelId);
-    this.model = await AutoModel.from_pretrained(this.modelId, {
-      dtype: "q8",
+    const modelId = embeddingsData.model;
+    const dtype = embeddingsData.dtype;
+    this.embeddings = embeddingsData;
+
+    this.tokenizer = await AutoTokenizer.from_pretrained(modelId);
+    this.model = await AutoModel.from_pretrained(modelId, {
+      dtype,
     });
     this.onInitializedCallbacks.forEach((callback) => callback());
   }
 
   onInitialized(callback: () => void): void {
-    if (this.galleryList && this.embeddings && this.model && this.tokenizer) {
+    if (this.isInitialized) {
       callback();
     } else {
       this.onInitializedCallbacks.push(callback);
@@ -93,24 +96,19 @@ class EmbeddingSearch {
     if (!query || query.trim().length === 0) {
       return [];
     }
-    if (
-      !this.galleryList ||
-      !this.embeddings ||
-      !this.model ||
-      !this.tokenizer
-    ) {
+    if (!this.isInitialized) {
       return [];
     }
 
-    const inputs = await this.tokenizer([query.trim()], {
+    const inputs = await this.tokenizer!([query.trim()], {
       padding: true,
       truncation: true,
     });
 
-    const { sentence_embedding } = await this.model(inputs);
+    const { sentence_embedding } = await this.model!(inputs);
     const queryEmbedding = sentence_embedding.tolist()[0];
 
-    let itemsWithEmbeddings = this.galleryList.entries.filter(
+    let itemsWithEmbeddings = this.galleryList!.entries.filter(
       (item) => this.embeddings![item.id],
     );
 

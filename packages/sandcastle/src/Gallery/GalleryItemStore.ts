@@ -37,6 +37,11 @@ export type GalleryItem = {
   codeExerpts?: string;
 };
 
+export interface GalleryList {
+  entries: GalleryItem[];
+  legacyIds: Record<string, string>;
+}
+
 export type HighlightedGalleryItem = ReturnType<typeof applyHighlightToItem>;
 
 export type GalleryFilter = Record<string, string | string[]> | null;
