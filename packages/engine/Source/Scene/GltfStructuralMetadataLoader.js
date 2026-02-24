@@ -180,6 +180,7 @@ class GltfStructuralMetadataLoader extends ResourceLoader {
         schema: schema,
         bufferViews: bufferViews,
         textures: textures,
+        context: frameState.context,
       });
     } else {
       this._structuralMetadata = parseFeatureMetadataLegacy({
@@ -209,6 +210,10 @@ class GltfStructuralMetadataLoader extends ResourceLoader {
       ResourceCache.unload(this._schemaLoader);
     }
     this._schemaLoader = undefined;
+
+    if (defined(this._structuralMetadata)) {
+      this._structuralMetadata.destroy();
+    }
 
     this._structuralMetadata = undefined;
   }

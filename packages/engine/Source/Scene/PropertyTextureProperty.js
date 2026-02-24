@@ -6,7 +6,6 @@ import MetadataType from "./MetadataType.js";
 import MetadataComponentType, {
   ScalarCategories,
 } from "./MetadataComponentType.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * A property in a property texture.
@@ -193,44 +192,6 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
     },
   },
 });
-
-PropertyTextureProperty.prototype.isGpuCompatible = function () {
-  const classProperty = this._classProperty;
-  const type = classProperty.type;
-  const componentType = classProperty.componentType;
-  const textureChannelsString = this._textureReader.channels;
-
-  if (classProperty.isVariableLengthArray) {
-    oneTimeWarning(
-      `Property texture property "${classProperty.id}" is a variable-length array, which is not supported.`,
-    );
-    return false;
-  }
-
-  if (type === MetadataType.STRING) {
-    oneTimeWarning(
-      `Property texture property "${classProperty.id}" is a string type, which is not supported.`,
-    );
-    return false;
-  }
-
-  // For all other properties, make sure the components fit in the sampled channels.
-  // (Note that it's possible to treat 64-bit types as two 32-bit components, but for now that's not supported)
-  const componentCount = MetadataType.getComponentCount(type);
-  const arrayLength = classProperty.isArray ? classProperty.arrayLength : 1;
-  const bytesPerComponent = MetadataComponentType.getSizeInBytes(componentType);
-  if (
-    componentCount * arrayLength * bytesPerComponent >
-    this._channels.length
-  ) {
-    oneTimeWarning(
-      `Property texture property "${classProperty.id}" with type ${type} and component type ${componentType} does not fit in the ${textureChannelsString} channels.`,
-    );
-    return false;
-  }
-
-  return true;
-};
 
 const floatTypesByComponentCount = [undefined, "float", "vec2", "vec3", "vec4"];
 
