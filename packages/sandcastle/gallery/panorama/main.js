@@ -126,10 +126,10 @@ function enableFieldOfViewAdjustment() {
     // Wheel direction
     const delta = movement;
 
-    if (delta > 0) {
-      fov *= 1.0 + zoomSpeed; // zoom out
+    if (delta < 0) {
+      fov *= 1.0 + zoomSpeed; // zoom in
     } else {
-      fov *= 1.0 - zoomSpeed; // zoom in
+      fov *= 1.0 - zoomSpeed; // zoom out
     }
 
     // Clamp FOV

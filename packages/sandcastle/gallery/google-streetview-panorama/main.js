@@ -186,7 +186,7 @@ function enableFieldOfViewAdjustment() {
     // Wheel direction
     const delta = movement;
 
-    if (delta > 0) {
+    if (delta < 0) {
       fov *= 1.0 + zoomSpeed; // zoom out
     } else {
       fov *= 1.0 - zoomSpeed; // zoom in
@@ -305,7 +305,7 @@ function setPanoViewToolBar() {
   }
 
   photorealisticTilesToggle = createButton(
-    "Toggle Photorealistic Tiles",
+    "Toggle Google Photorealistic 3D Tiles",
     function () {
       if (selectedViewType === ViewType.MapView) {
         return;

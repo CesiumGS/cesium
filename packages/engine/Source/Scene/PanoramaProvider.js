@@ -36,7 +36,7 @@ PanoramaProvider.fromUrl = function (options) {
  * @param {object} options Input options to create the panorama primitive.
  * @returns {Panorama} The panorama primitive for displaying panoramas in a scene.
  */
-PanoramaProvider.loadPanorama = function (options) {
+PanoramaProvider.prototype.loadPanorama = function (options) {
   DeveloperError.throwInstantiationError();
 };
 
