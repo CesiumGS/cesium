@@ -2,6 +2,7 @@ import GoogleStreetViewCubeMapPanoramaProvider from "../../Source/Scene/GoogleSt
 import Cartographic from "../../Source/Core/Cartographic.js";
 import CubeMapPanorama from "../../Source/Scene/CubeMapPanorama.js";
 import PanoramaProvider from "../../Source/Scene/PanoramaProvider.js";
+import GoogleMaps from "../../Source/Core/GoogleMaps.js";
 
 describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
   let provider;
@@ -32,10 +33,11 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
     expect(p._tileSize).toBe(600);
   });
 
-  it("fromUrl throws without apiKey", async function () {
-    await expectAsync(
-      GoogleStreetViewCubeMapPanoramaProvider.fromUrl({}),
-    ).toBeRejectedWithDeveloperError();
+  it("fromUrl uses default apiKey when none is provided", async function () {
+    const provider = await GoogleStreetViewCubeMapPanoramaProvider.fromUrl({});
+
+    expect(provider).toBeDefined();
+    expect(provider.apiKey).toBe(GoogleMaps.defaultApiKey);
   });
 
   it("fromUrl creates provider", async function () {
