@@ -3,19 +3,12 @@ import * as Cesium from "cesium";
 const HEIGHT_THRESHOLD = 9000;
 
 const googleStreetViewStaticApiKey = "key for Google Street View Static API";
-const googleMapTilesApiKey = "key for Google Map Tiles API";
 
 const ViewType = Object.freeze({
   MapView: 0,
   PanoView: 1,
 });
 let selectedViewType = ViewType.MapView;
-
-const PanoType = Object.freeze({
-  Equirectangular: 0,
-  CubeMap: 1,
-});
-let selectedPanoType = PanoType.Equirectangular;
 
 const streetviewOverlay = Cesium.ImageryLayer.fromProviderAsync(
   Cesium.Google2DImageryProvider.fromIonAssetId({
@@ -47,11 +40,6 @@ const tileset = await Cesium.createGooglePhotorealistic3DTileset({
 });
 tileset.show = false;
 viewer.scene.primitives.add(tileset);
-
-const provider =
-  await Cesium.GoogleStreetViewEquirectangularPanoramaProvider.fromUrl({
-    apiKey: googleMapTilesApiKey,
-  });
 
 const cubeMapProvider =
   await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
@@ -113,35 +101,6 @@ function selectPanoCubeMap(position) {
     });
 }
 
-function selectPano(position) {
-  const carto = Cesium.Cartographic.fromCartesian(position);
-  provider.getPanoIds(carto).then((panoIdList) => {
-    const panoId = panoIdList[0];
-    provider.getPanoIdMetadata(panoId).then((panoIdMetadata) => {
-      const panoLat = panoIdMetadata.lat;
-      const panoLng = panoIdMetadata.lng;
-      const height = carto.height;
-
-      provider.loadPanoramaFromPanoId(panoId, 3).then((streetViewPanorama) => {
-        viewer.scene.primitives.add(streetViewPanorama);
-
-        const lookPosition = Cesium.Cartesian3.fromDegrees(
-          panoLng,
-          panoLat,
-          height + 2,
-        );
-
-        const heading = Cesium.Math.toRadians(panoIdMetadata.heading);
-
-        goToPanoView({
-          position: lookPosition,
-          heading,
-        });
-      });
-    });
-  });
-}
-
 const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
 // Function to enable picking
@@ -157,11 +116,7 @@ function enablePicking() {
     saveCameraView(viewer);
     position = viewer.scene.pickPosition(click.position);
     if (Cesium.defined(position)) {
-      if (selectedPanoType === PanoType.CubeMap) {
-        selectPanoCubeMap(position);
-      } else {
-        selectPano(position);
-      }
+      selectPanoCubeMap(position);
     }
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
@@ -276,28 +231,6 @@ function createButton(label, onClick) {
   return btn;
 }
 
-function createDropdown(options, initialIndex = 0) {
-  const select = document.createElement("select");
-  select.className = "cesium-button";
-
-  options.forEach((opt, index) => {
-    const option = document.createElement("option");
-    option.text = opt.text;
-    option.value = index;
-    select.add(option);
-  });
-
-  // Set initial selection
-  select.selectedIndex = initialIndex;
-
-  select.onchange = () => {
-    options[select.selectedIndex].onselect();
-  };
-
-  toolbar.appendChild(select);
-  return select;
-}
-
 function setPanoViewToolBar() {
   if (Cesium.defined(panoTypeDropdown)) {
     panoTypeDropdown.remove();
@@ -333,24 +266,6 @@ function setMapViewToolBar() {
     returnToMapButton.remove();
     returnToMapButton = undefined;
   }
-
-  panoTypeDropdown = createDropdown(
-    [
-      {
-        text: "Equirectangular Panorama Tiles",
-        onselect: function () {
-          selectedPanoType = PanoType.Equirectangular;
-        },
-      },
-      {
-        text: "Cube Map Panorama",
-        onselect: function () {
-          selectedPanoType = PanoType.CubeMap;
-        },
-      },
-    ],
-    selectedPanoType,
-  );
 }
 
 enablePicking();

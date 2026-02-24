@@ -286,26 +286,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype._buildFaceUrl = function (
  */
 GoogleStreetViewCubeMapPanoramaProvider.fromUrl = async function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
-
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.apiKey)) {
-    throw new DeveloperError("options.apiKey is required.");
-  }
-  //>>includeEnd('debug');
-
-  // const response = await Resource.post({
-  //   url: "https://tile.googleapis.com/v1/createSession",
-  //   queryParameters: { key: options.apiKey },
-  //   data: JSON.stringify({
-  //     mapType: "streetview",
-  //     language: "en-US",
-  //     region: "US",
-  //   }),
-  // });
-  // const responseJson = JSON.parse(response);
-
   return new GoogleStreetViewCubeMapPanoramaProvider({
-    // ...responseJson,
     ...options,
   });
 };
