@@ -294,7 +294,7 @@ CubeMapPanorama.prototype.update = function (frameState, useHdr) {
     return undefined;
   }
 
-  if (this.show && defined(this._credit)) {
+  if (this.show && defined(this._credit) && !(this._returnCommand)) {
     const creditDisplay = frameState.creditDisplay;
     creditDisplay.addCreditToNextFrame(this._credit);
   }
