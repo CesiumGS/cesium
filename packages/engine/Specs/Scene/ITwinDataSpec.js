@@ -279,6 +279,23 @@ describe("ITwinData", () => {
         cacheBytes: 500000000,
       });
     });
+
+    it("creates a tileset for realitydata type GaussianSplat3DTiles", async () => {
+      const tilesetUrl =
+        "https://example.com/root/document/path.json?auth=token";
+      getUrlSpy.and.resolveTo(tilesetUrl);
+
+      await ITwinData.createTilesetForRealityDataId({
+        iTwinId: "itwin-id-1",
+        realityDataId: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.GaussianSplat3DTiles,
+        rootDocument: "root/document/path.json",
+      });
+
+      expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl, {
+        maximumScreenSpaceError: 4,
+      });
+    });
   });
 
   describe("createDataSourceForRealityDataId", () => {
