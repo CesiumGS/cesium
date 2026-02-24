@@ -1,19 +1,15 @@
 import {
   MouseEventHandler,
-  ReactElement,
   ReactNode,
-  RefObject,
   useCallback,
   useContext,
   useEffect,
-  useImperativeHandle,
   useMemo,
-  useReducer,
   useRef,
   useState,
   useTransition,
 } from "react";
-import { Allotment, AllotmentHandle } from "allotment";
+import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 import "./App.css";
 
@@ -52,108 +48,21 @@ import { MetadataPopover } from "./MetadataPopover.tsx";
 import { SharePopover } from "./SharePopover.tsx";
 import { SandcastlePopover } from "./SandcastlePopover.tsx";
 import { urlSpecifiesSandcastle } from "./Gallery/loadFromUrl.ts";
-
-const defaultJsCode = `import * as Cesium from "cesium";
-
-const viewer = new Cesium.Viewer("cesiumContainer");
-`;
-const defaultHtmlCode = `<style>
-  @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-`;
+import {
+  ViewerConsoleStack,
+  ViewerConsoleStackRef,
+} from "./ViewerConsoleStack.tsx";
+import { usePageTitle } from "./util/usePageTitle.ts";
+import {
+  defaultHtmlCode,
+  defaultJsCode,
+  useCodeState,
+} from "./util/useCodeState.ts";
 
 const cesiumVersion = __CESIUM_VERSION__;
 const versionString = __COMMIT_SHA__
   ? `Commit: ${__COMMIT_SHA__.replaceAll(/['"]/g, "").substring(0, 7)} - ${cesiumVersion}`
   : cesiumVersion;
-
-type RightSideRef = {
-  toggleExpanded: () => void;
-};
-
-function RightSideAllotment({
-  ref,
-  children,
-  consoleCollapsedHeight,
-  consoleExpanded,
-  setConsoleExpanded,
-}: {
-  ref: RefObject<RightSideRef | null>;
-  children: ReactElement<typeof Allotment.Pane>[];
-  consoleCollapsedHeight: number;
-  consoleExpanded: boolean;
-  setConsoleExpanded: (expanded: boolean) => void;
-}) {
-  const rightSideRef = useRef<AllotmentHandle>(null);
-  const rightSideSizes = useRef<number[]>([0, 0]);
-
-  const [previousConsoleHeight, setPreviousConsoleHeight] = useState<
-    number | undefined
-  >(undefined);
-  const toggleExpanded = useCallback(() => {
-    const [top, bottom] = rightSideSizes.current;
-    const totalHeight = top + bottom;
-    if (!consoleExpanded) {
-      const targetHeight = previousConsoleHeight ?? 200;
-      rightSideRef.current?.resize([totalHeight - targetHeight, targetHeight]);
-    } else {
-      setPreviousConsoleHeight(bottom);
-      rightSideRef.current?.resize([
-        totalHeight - consoleCollapsedHeight,
-        consoleCollapsedHeight,
-      ]);
-    }
-    setConsoleExpanded(!consoleExpanded);
-  }, [
-    consoleExpanded,
-    previousConsoleHeight,
-    consoleCollapsedHeight,
-    setConsoleExpanded,
-  ]);
-
-  useImperativeHandle(ref, () => {
-    return {
-      toggleExpanded: () => toggleExpanded(),
-    };
-  });
-
-  return (
-    <Allotment
-      vertical
-      ref={rightSideRef}
-      defaultSizes={[100, 0]}
-      onChange={(sizes) => {
-        if (previousConsoleHeight) {
-          // Unset this because we just dragged
-          setPreviousConsoleHeight(undefined);
-        }
-        rightSideSizes.current = sizes;
-      }}
-      onDragEnd={(sizes) => {
-        const [, consoleSize] = sizes;
-        if (consoleSize <= consoleCollapsedHeight && consoleExpanded) {
-          setConsoleExpanded(false);
-        } else if (consoleSize > consoleCollapsedHeight && !consoleExpanded) {
-          setConsoleExpanded(true);
-        }
-      }}
-      onReset={() => {
-        const [top, bottom] = rightSideSizes.current;
-        const totalHeight = top + bottom;
-        rightSideRef.current?.resize([
-          totalHeight - consoleCollapsedHeight,
-          consoleCollapsedHeight,
-        ]);
-        setConsoleExpanded(false);
-      }}
-    >
-      {children}
-    </Allotment>
-  );
-}
 
 function AppBarButton({
   children,
@@ -186,17 +95,9 @@ function AppBarButton({
   );
 }
 
-export type SandcastleAction =
-  | { type: "reset" }
-  | { type: "resetDirty" }
-  | { type: "setCode"; code: string }
-  | { type: "setHtml"; html: string }
-  | { type: "runSandcastle" }
-  | { type: "setAndRun"; code?: string; html?: string };
-
 function App() {
   const { settings, updateSettings } = useContext(SettingsContext);
-  const rightSideRef = useRef<RightSideRef>(null);
+  const rightSideRef = useRef<ViewerConsoleStackRef>(null);
   const consoleCollapsedHeight = 33;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
 
@@ -208,92 +109,19 @@ function App() {
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const [title, setTitle] = useState("New Sandcastle");
+  const [sandcastleTitle, setSandcastleTitle] = useState("New Sandcastle");
   const [description, setDescription] = useState("");
+  const { setPageTitle, setIsDirty } = usePageTitle();
 
-  type CodeState = {
-    code: string;
-    html: string;
-    committedCode: string;
-    committedHtml: string;
-    runNumber: number;
-    dirty: boolean;
-  };
-
-  const initialState: CodeState = {
-    code: defaultJsCode,
-    html: defaultHtmlCode,
-    committedCode: defaultJsCode,
-    committedHtml: defaultHtmlCode,
-    runNumber: 0,
-    dirty: false,
-  };
-
-  const [codeState, dispatch] = useReducer(function reducer(
-    state: CodeState,
-    action: SandcastleAction,
-  ): CodeState {
-    switch (action.type) {
-      case "reset": {
-        return { ...initialState };
-      }
-      case "setCode": {
-        return {
-          ...state,
-          code: action.code,
-          dirty: true,
-        };
-      }
-      case "setHtml": {
-        return {
-          ...state,
-          html: action.html,
-          dirty: true,
-        };
-      }
-      case "runSandcastle": {
-        return {
-          ...state,
-          committedCode: state.code,
-          committedHtml: state.html,
-          runNumber: state.runNumber + 1,
-        };
-      }
-      case "setAndRun": {
-        return {
-          code: action.code ?? state.code,
-          html: action.html ?? state.html,
-          committedCode: action.code ?? state.code,
-          committedHtml: action.html ?? state.html,
-          runNumber: state.runNumber + 1,
-          dirty: false,
-        };
-      }
-      case "resetDirty": {
-        return {
-          ...state,
-          dirty: false,
-        };
-      }
-    }
-  }, initialState);
+  const [codeState, dispatch] = useCodeState();
 
   useEffect(() => {
-    const host = window.location.host;
-    let envString = "";
-    if (host.includes("localhost") && host !== "localhost:8080") {
-      // this helps differentiate tabs for local sandcastle development or other testing
-      envString = `${host.replace("localhost:", "")} `;
-    }
+    setIsDirty(codeState.dirty);
+  }, [setIsDirty, codeState.dirty]);
 
-    const dirtyIndicator = codeState.dirty ? "*" : "";
-    if (title === "" || title === "New Sandcastle") {
-      // No need to clutter the window/tab with a name if not viewing a named gallery demo
-      document.title = `${envString}Sandcastle${dirtyIndicator} | CesiumJS`;
-    } else {
-      document.title = `${envString}${title}${dirtyIndicator} | Sandcastle | CesiumJS`;
-    }
-  }, [title, codeState.dirty]);
+  useEffect(() => {
+    setPageTitle(sandcastleTitle);
+  }, [setPageTitle, sandcastleTitle]);
 
   const confirmLeave = useCallback(() => {
     if (!codeState.dirty) {
@@ -358,19 +186,26 @@ function App() {
 
     window.history.pushState({}, "", getBaseUrl());
 
-    setTitle("New Sandcastle");
+    setSandcastleTitle("New Sandcastle");
     setDescription("");
   }
 
   function openStandalone() {
-    const base64String = makeCompressedBase64String({
-      code: codeState.code,
-      html: codeState.html,
-    });
+    const searchParams = new URLSearchParams(window.location.search);
 
-    let url = getBaseUrl();
-    url =
-      `${url.replace("index.html", "")}standalone.html` + `#c=${base64String}`;
+    const standaloneUrl = `${getBaseUrl().replace("index.html", "")}standalone.html`;
+
+    const url = new URL(standaloneUrl);
+    const currentId = searchParams.get("id");
+    if (currentId && !codeState.dirty) {
+      url.searchParams.set("id", currentId);
+    } else {
+      const base64String = makeCompressedBase64String({
+        code: codeState.code,
+        html: codeState.html,
+      });
+      url.hash = `c=${base64String}`;
+    }
 
     window.open(url, "_blank");
     window.focus();
@@ -401,7 +236,7 @@ function App() {
             if (isLoadPending) {
               return;
             }
-            setTitle(title);
+            setSandcastleTitle(title);
             dispatch({
               type: "setAndRun",
               code: code ?? defaultJsCode,
@@ -431,7 +266,14 @@ function App() {
     };
     window.addEventListener("popstate", stateLoad);
     return () => window.removeEventListener("popstate", stateLoad);
-  }, [initialized, isLoadPending, loadFromUrl, confirmLeave, appendConsole]);
+  }, [
+    initialized,
+    isLoadPending,
+    loadFromUrl,
+    confirmLeave,
+    appendConsole,
+    dispatch,
+  ]);
 
   useEffect(() => {
     // if the code has been edited listen for navigation away and warn
@@ -468,7 +310,7 @@ function App() {
           window.history.pushState({}, "", `${getBaseUrl()}?id=${id}`);
         }
 
-        setTitle(title);
+        setSandcastleTitle(title);
         dispatch({
           type: "setAndRun",
           code: code ?? defaultJsCode,
@@ -480,7 +322,7 @@ function App() {
         console.error(message);
       }
     },
-    [confirmLeave, appendConsole],
+    [confirmLeave, appendConsole, dispatch],
   );
 
   const onOpenCode = useCallback(() => {
@@ -493,7 +335,6 @@ function App() {
       className="sandcastle-root"
       density="dense"
       colorScheme={settings.theme}
-      synchronizeColorScheme
     >
       <header className="header">
         <a className="logo" href={getBaseUrl()}>
@@ -506,7 +347,7 @@ function App() {
             style={{ width: "118px" }}
           />
         </a>
-        <MetadataPopover title={title} description={description} />
+        <MetadataPopover title={sandcastleTitle} description={description} />
         <SharePopover code={codeState.code} html={codeState.html} />
         <Divider aria-orientation="vertical" />
         <Button onClick={() => openStandalone()}>
@@ -542,14 +383,14 @@ function App() {
           active={leftPanel === "gallery"}
           label="Gallery"
         >
-          <Icon href={image} size="large" />
+          <Icon href={`${image}#icon-large`} size="large" />
         </AppBarButton>
         <AppBarButton
           onClick={() => setLeftPanel("editor")}
           active={leftPanel === "editor"}
           label="Editor"
         >
-          <Icon href={script} size="large" />
+          <Icon href={`${script}#icon-large`} size="large" />
         </AppBarButton>
         <Divider />
         <AppBarButton
@@ -559,14 +400,14 @@ function App() {
           }}
           label="New Sandcastle"
         >
-          <Icon href={add} size="large" />
+          <Icon href={`${add}#icon-large`} size="large" />
         </AppBarButton>
         <AppBarButton
           label="Documentation"
           onClick={openDocsPage}
           onAuxClick={openDocsPage}
         >
-          <Icon href={documentation} size="large" />
+          <Icon href={`${documentation}#icon-large`} size="large" />
         </AppBarButton>
         <div className="flex-spacer"></div>
         <Divider />
@@ -578,7 +419,10 @@ function App() {
           }
           label="Toggle theme"
         >
-          <Icon href={settings.theme === "dark" ? moon : sun} size="large" />
+          <Icon
+            href={`${settings.theme === "dark" ? moon : sun}#icon-large`}
+            size="large"
+          />
         </AppBarButton>
         <AppBarButton
           label="Settings"
@@ -586,7 +430,7 @@ function App() {
             setSettingsOpen(true);
           }}
         >
-          <Icon href={settingsIcon} size="large" />
+          <Icon href={`${settingsIcon}#icon-large`} size="large" />
         </AppBarButton>
         <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
       </div>
@@ -623,7 +467,7 @@ function App() {
           </StoreContext>
         </Allotment.Pane>
         <Allotment.Pane className="right-panel">
-          <RightSideAllotment
+          <ViewerConsoleStack
             ref={rightSideRef}
             consoleCollapsedHeight={consoleCollapsedHeight}
             consoleExpanded={consoleExpanded}
@@ -654,7 +498,7 @@ function App() {
                 resetConsole={resetConsole}
               />
             </Allotment.Pane>
-          </RightSideAllotment>
+          </ViewerConsoleStack>
         </Allotment.Pane>
       </Allotment>
     </Root>

@@ -14,25 +14,22 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfStructuralMetadataLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {object} options.gltf The glTF JSON.
- * @param {string} [options.extension] The <code>EXT_structural_metadata</code> extension object. If this is undefined, then extensionLegacy must be defined.
- * @param {string} [options.extensionLegacy] The legacy <code>EXT_feature_metadata</code> extension for backwards compatibility.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
- * @param {FrameState} options.frameState The frame state.
- * @param {string} [options.cacheKey] The cache key of the resource.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class GltfStructuralMetadataLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {object} options.gltf The glTF JSON.
+   * @param {string} [options.extension] The <code>EXT_structural_metadata</code> extension object. If this is undefined, then extensionLegacy must be defined.
+   * @param {string} [options.extensionLegacy] The legacy <code>EXT_feature_metadata</code> extension for backwards compatibility.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
+   * @param {FrameState} options.frameState The frame state.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   */
   constructor(options) {
     super();
 
@@ -183,6 +180,7 @@ class GltfStructuralMetadataLoader extends ResourceLoader {
         schema: schema,
         bufferViews: bufferViews,
         textures: textures,
+        context: frameState.context,
       });
     } else {
       this._structuralMetadata = parseFeatureMetadataLegacy({
@@ -212,6 +210,10 @@ class GltfStructuralMetadataLoader extends ResourceLoader {
       ResourceCache.unload(this._schemaLoader);
     }
     this._schemaLoader = undefined;
+
+    if (defined(this._structuralMetadata)) {
+      this._structuralMetadata.destroy();
+    }
 
     this._structuralMetadata = undefined;
   }

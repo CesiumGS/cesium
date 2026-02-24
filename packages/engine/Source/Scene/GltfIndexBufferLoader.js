@@ -17,25 +17,23 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfIndexBufferLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {object} options.gltf The glTF JSON.
- * @param {number} options.accessorId The accessor ID corresponding to the index buffer.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {object} [options.primitive] The primitive containing the Draco extension.
- * @param {object} [options.draco] The Draco extension object.
- * @param {string} [options.cacheKey] The cache key of the resource.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.loadBuffer=false] Load the index buffer as a GPU index buffer.
- * @param {boolean} [options.loadTypedArray=false] Load the index buffer as a typed array.
  * @private
  */
 class GltfIndexBufferLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {object} options.gltf The glTF JSON.
+   * @param {number} options.accessorId The accessor ID corresponding to the index buffer.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {object} [options.primitive] The primitive containing the Draco extension.
+   * @param {object} [options.draco] The Draco extension object.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   * @param {boolean} [options.loadBuffer=false] Load the index buffer as a GPU index buffer.
+   * @param {boolean} [options.loadTypedArray=false] Load the index buffer as a typed array.
+   */
   constructor(options) {
     super();
 
