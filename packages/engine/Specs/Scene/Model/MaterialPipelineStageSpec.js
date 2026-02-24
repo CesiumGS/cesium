@@ -996,7 +996,7 @@ describe(
       expect(renderResources.uniformMap.u_linePattern).toBeDefined();
       expect(renderResources.uniformMap.u_linePattern()).toBe(0xf0f0);
     });
-    
+
     it("adds point diameter uniforms for BENTLEY_materials_point_style extension", async function () {
       const gltfLoader = await loadGltf(pointStyleTestData);
       const primitive = gltfLoader.components.nodes[0].primitives[0];
