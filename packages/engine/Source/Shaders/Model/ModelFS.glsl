@@ -29,7 +29,7 @@ SelectedFeature selectedFeature;
 
 void main()
 {
-    #ifdef PRIMITIVE_TYPE_POINTS
+    #if defined(PRIMITIVE_TYPE_POINTS) && defined(HAS_POINT_DIAMETER)
     // Render points as circles
     float distanceToCenter = length(gl_PointCoord - vec2(0.5));
     if (distanceToCenter > 0.5) {

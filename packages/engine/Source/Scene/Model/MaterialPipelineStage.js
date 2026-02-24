@@ -173,7 +173,7 @@ MaterialPipelineStage.process = function (
     shaderBuilder.addDefine(
       "HAS_POINT_DIAMETER",
       undefined,
-      ShaderDestination.VERTEX,
+      ShaderDestination.BOTH,
     );
     shaderBuilder.addUniform(
       "float",
