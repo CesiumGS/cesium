@@ -259,6 +259,8 @@ export async function tsc() {
   } else if (argv.workspace) {
     workspaces = argv.workspace;
   } else {
+    execSync(`npx tsc --project tsconfig.json`, { stdio: "inherit" });
+
     workspaces = getWorkspaces(true);
   }
 

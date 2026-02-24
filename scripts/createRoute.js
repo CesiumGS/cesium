@@ -22,7 +22,7 @@ function formatTimeSinceInSeconds(start) {
 function serveResult(result, fileName, res, next) {
   let bundle, error;
   try {
-    for (const out of result.outputFiles || []) {
+    for (const out of result.outputFiles ?? []) {
       if (path.basename(out.path) === fileName) {
         bundle = out.text;
       }
