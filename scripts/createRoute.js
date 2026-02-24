@@ -12,7 +12,6 @@ function formatTimeSinceInSeconds(start) {
 }
 
 /**
- *
  * @param {BuildResult} result
  * @param {string} fileName
  * @param {Response} res
@@ -46,7 +45,6 @@ function serveResult(result, fileName, res, next) {
 }
 
 /**
- *
  * @param {Express} app
  * @param {string} name
  * @param {string} route
