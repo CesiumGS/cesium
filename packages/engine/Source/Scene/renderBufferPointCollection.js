@@ -115,7 +115,9 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
       outlineWidthAndOutlineColorArray[i * 2] = point.outlineWidth;
       outlineWidthAndOutlineColorArray[i * 2 + 1] =
-        AttributeCompression.encodeRGB8(point.getOutlineColor(color));
+        AttributeCompression.encodeRGB8(
+          point.outlineWidth > 0 ? point.getOutlineColor(color) : color,
+        );
 
       point._dirty = false;
     }
