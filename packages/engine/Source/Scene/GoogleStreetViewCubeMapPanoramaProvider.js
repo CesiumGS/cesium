@@ -11,6 +11,7 @@ import Frozen from "../Core/Frozen.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
 import CubeMapPanorama from "./CubeMapPanorama.js";
+import Credit from "../Core/Credit.js";
 
 const DEFAULT_TILE_SIZE = 600;
 
