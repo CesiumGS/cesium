@@ -25,7 +25,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 
 /**
- * @typedef {'positionHighAndShow' | 'positionLowAndColor' | 'pixelSizeAndOutline'} BufferPointAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'showPixelSizeAndColor' | 'outlineWidthAndOutlineColor'} BufferPointAttribute
  * @ignore
  */
 
@@ -34,9 +34,10 @@ import AttributeCompression from "../Core/AttributeCompression.js";
  * @ignore
  */
 const BufferPointAttributeLocations = {
-  positionHighAndShow: 0,
-  positionLowAndColor: 1,
-  pixelSizeAndOutline: 2,
+  positionHigh: 0,
+  positionLow: 1,
+  showPixelSizeAndColor: 2,
+  outlineWidthAndOutlineColor: 3,
 };
 
 /**
@@ -64,9 +65,10 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     const featureCountMax = collection.primitiveCountMax;
 
     renderContext.attributeArrays = {
-      positionHighAndShow: new Float32Array(featureCountMax * 4),
-      positionLowAndColor: new Float32Array(featureCountMax * 4),
-      pixelSizeAndOutline: new Float32Array(featureCountMax * 4),
+      positionHigh: new Float32Array(featureCountMax * 3),
+      positionLow: new Float32Array(featureCountMax * 3),
+      showPixelSizeAndColor: new Float32Array(featureCountMax * 3),
+      outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
     };
   }
 
@@ -78,9 +80,11 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     const cartesian = new Cartesian3();
     const encodedCartesian = new EncodedCartesian3();
 
-    const positionHighAndShowArray = attributeArrays.positionHighAndShow;
-    const positionLowAndColorArray = attributeArrays.positionLowAndColor;
-    const pixelSizeAndOutlineArray = attributeArrays.pixelSizeAndOutline;
+    const positionHighArray = attributeArrays.positionHigh;
+    const positionLowArray = attributeArrays.positionLow;
+    const showPixelSizeAndColorArray = attributeArrays.showPixelSizeAndColor;
+    const outlineWidthAndOutlineColorArray =
+      attributeArrays.outlineWidthAndOutlineColor;
 
     const { _dirtyOffset, _dirtyCount } = collection;
 
@@ -94,23 +98,24 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       point.getPosition(cartesian);
       EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
 
-      positionHighAndShowArray[i * 4] = encodedCartesian.high.x;
-      positionHighAndShowArray[i * 4 + 1] = encodedCartesian.high.y;
-      positionHighAndShowArray[i * 4 + 2] = encodedCartesian.high.z;
-      positionHighAndShowArray[i * 4 + 3] = point.show ? 1 : 0;
+      positionHighArray[i * 3] = encodedCartesian.high.x;
+      positionHighArray[i * 3 + 1] = encodedCartesian.high.y;
+      positionHighArray[i * 3 + 2] = encodedCartesian.high.z;
+      positionHighArray[i * 3 + 3] = point.show ? 1 : 0;
 
-      positionLowAndColorArray[i * 4] = encodedCartesian.low.x;
-      positionLowAndColorArray[i * 4 + 1] = encodedCartesian.low.y;
-      positionLowAndColorArray[i * 4 + 2] = encodedCartesian.low.z;
-      positionLowAndColorArray[i * 4 + 3] = AttributeCompression.encodeRGB8(
+      positionLowArray[i * 3] = encodedCartesian.low.x;
+      positionLowArray[i * 3 + 1] = encodedCartesian.low.y;
+      positionLowArray[i * 3 + 2] = encodedCartesian.low.z;
+
+      showPixelSizeAndColorArray[i * 3] = point.show ? 1 : 0;
+      showPixelSizeAndColorArray[i * 3 + 1] = point.pixelSize;
+      showPixelSizeAndColorArray[i * 3 + 2] = AttributeCompression.encodeRGB8(
         point.getColor(color),
       );
 
-      pixelSizeAndOutlineArray[i * 4] = point.pixelSize;
-      pixelSizeAndOutlineArray[i * 4 + 1] = point.outlineWidth;
-      pixelSizeAndOutlineArray[i * 4 + 2] = AttributeCompression.encodeRGB8(
-        point.outlineWidth > 0 ? point.getOutlineColor(color) : color,
-      );
+      outlineWidthAndOutlineColorArray[i * 2] = point.outlineWidth;
+      outlineWidthAndOutlineColorArray[i * 2 + 1] =
+        AttributeCompression.encodeRGB8(point.getOutlineColor(color));
 
       point._dirty = false;
     }
@@ -119,69 +124,67 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   if (!defined(renderContext.vertexArray)) {
     const { attributeArrays } = renderContext;
 
-    const positionHighBuffer = Buffer.createVertexBuffer({
-      typedArray: attributeArrays.positionHighAndShow,
-      context,
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      usage: BufferUsage.STATIC_DRAW,
-    });
-
-    const positionLowBuffer = Buffer.createVertexBuffer({
-      typedArray: attributeArrays.positionLowAndColor,
-      context,
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      usage: BufferUsage.STATIC_DRAW,
-    });
-
-    const pixelSizeAndOutlineBuffer = Buffer.createVertexBuffer({
-      typedArray: attributeArrays.pixelSizeAndOutline,
-      context,
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      usage: BufferUsage.STATIC_DRAW,
-    });
-
     renderContext.vertexArray = new VertexArray({
       context,
       attributes: [
         {
-          index: BufferPointAttributeLocations.positionHighAndShow,
-          vertexBuffer: positionHighBuffer,
+          index: BufferPointAttributeLocations.positionHigh,
           componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 4,
+          componentsPerAttribute: 3,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.positionHigh,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
         },
         {
-          index: BufferPointAttributeLocations.positionLowAndColor,
-          vertexBuffer: positionLowBuffer,
+          index: BufferPointAttributeLocations.positionLow,
           componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 4,
+          componentsPerAttribute: 3,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.positionLow,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
         },
         {
-          index: BufferPointAttributeLocations.pixelSizeAndOutline,
-          vertexBuffer: pixelSizeAndOutlineBuffer,
+          index: BufferPointAttributeLocations.showPixelSizeAndColor,
           componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 4,
+          componentsPerAttribute: 3,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.showPixelSizeAndColor,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
+        },
+        {
+          index: BufferPointAttributeLocations.outlineWidthAndOutlineColor,
+          componentDatatype: ComponentDatatype.FLOAT,
+          componentsPerAttribute: 2,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.outlineWidthAndOutlineColor,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
         },
       ],
     });
   } else if (collection._dirtyCount > 0) {
-    renderContext.vertexArray.copyAttributeFromRange(
-      BufferPointAttributeLocations.positionHighAndShow,
-      renderContext.attributeArrays.positionHighAndShow,
-      collection._dirtyOffset,
-      collection._dirtyCount,
-    );
-    renderContext.vertexArray.copyAttributeFromRange(
-      BufferPointAttributeLocations.positionLowAndColor,
-      renderContext.attributeArrays.positionLowAndColor,
-      collection._dirtyOffset,
-      collection._dirtyCount,
-    );
-    renderContext.vertexArray.copyAttributeFromRange(
-      BufferPointAttributeLocations.pixelSizeAndOutline,
-      renderContext.attributeArrays.pixelSizeAndOutline,
-      collection._dirtyOffset,
-      collection._dirtyCount,
-    );
+    for (const key in BufferPointAttributeLocations) {
+      if (Object.hasOwn(BufferPointAttributeLocations, key)) {
+        const attribute = /** @type {BufferPointAttribute} */ (key);
+        renderContext.vertexArray.copyAttributeFromRange(
+          BufferPointAttributeLocations[attribute],
+          renderContext.attributeArrays[attribute],
+          collection._dirtyOffset,
+          collection._dirtyCount,
+        );
+      }
+    }
   }
 
   if (!defined(renderContext.renderState)) {
