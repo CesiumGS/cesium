@@ -21,12 +21,12 @@ import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 
-/** @import {TypedArray, TypedArrayConstructor} from "../Core/globalTypes.js"; */
+/** @import {TypedArray} from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
 /**
- * @typedef {'positionHighAndShow' | 'positionLowAndColor'} BufferPolygonAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'showAndColor'} BufferPolygonAttribute
  * @ignore
  */
 
@@ -35,8 +35,9 @@ import IndexDatatype from "../Core/IndexDatatype.js";
  * @ignore
  */
 const BufferPolygonAttributeLocations = {
-  positionHighAndShow: 0,
-  positionLowAndColor: 1,
+  positionHigh: 0,
+  positionLow: 1,
+  showAndColor: 2,
 };
 
 /**
@@ -75,8 +76,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
     renderContext.indexArray = new Uint32Array(triangleCountMax * 3);
     renderContext.attributeArrays = {
-      positionHighAndShow: new Float32Array(vertexCountMax * 4),
-      positionLowAndColor: new Float32Array(vertexCountMax * 4),
+      positionHigh: new Float32Array(vertexCountMax * 3),
+      positionLow: new Float32Array(vertexCountMax * 3),
+      showAndColor: new Float32Array(vertexCountMax * 2),
     };
   }
 
@@ -85,8 +87,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     const { _dirtyOffset, _dirtyCount } = collection;
 
     const indexArray = renderContext.indexArray;
-    const positionHighAndShowArray = attributeArrays.positionHighAndShow;
-    const positionLowAndColorArray = attributeArrays.positionLowAndColor;
+    const positionHighArray = attributeArrays.positionHigh;
+    const positionLowArray = attributeArrays.positionLow;
+    const showAndColorArray = attributeArrays.showAndColor;
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
       collection.get(i, polygon);
@@ -95,9 +98,12 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         continue;
       }
 
+      const show = polygon.show;
       const polygonIndexArray = polygon.getTriangles();
       const cartesianArray = polygon.getPositions();
-      polygon.getColor(color);
+      const encodedColor = AttributeCompression.encodeRGB8(
+        polygon.getColor(color),
+      );
 
       let vOffset = polygon._getUint32(
         BufferPolygon.Layout.POSITION_OFFSET_U32,
@@ -118,16 +124,16 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
         EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
 
-        positionHighAndShowArray[vOffset * 4] = encodedCartesian.high.x;
-        positionHighAndShowArray[vOffset * 4 + 1] = encodedCartesian.high.y;
-        positionHighAndShowArray[vOffset * 4 + 2] = encodedCartesian.high.z;
-        positionHighAndShowArray[vOffset * 4 + 3] = polygon.show ? 1 : 0;
+        positionHighArray[vOffset * 3] = encodedCartesian.high.x;
+        positionHighArray[vOffset * 3 + 1] = encodedCartesian.high.y;
+        positionHighArray[vOffset * 3 + 2] = encodedCartesian.high.z;
 
-        positionLowAndColorArray[vOffset * 4] = encodedCartesian.low.x;
-        positionLowAndColorArray[vOffset * 4 + 1] = encodedCartesian.low.y;
-        positionLowAndColorArray[vOffset * 4 + 2] = encodedCartesian.low.z;
-        positionLowAndColorArray[vOffset * 4 + 3] =
-          AttributeCompression.encodeRGB8(color);
+        positionLowArray[vOffset * 3] = encodedCartesian.low.x;
+        positionLowArray[vOffset * 3 + 1] = encodedCartesian.low.y;
+        positionLowArray[vOffset * 3 + 2] = encodedCartesian.low.z;
+
+        showAndColorArray[vOffset * 2] = show ? 1 : 0;
+        showAndColorArray[vOffset * 2 + 1] = encodedColor;
 
         vOffset++;
       }
@@ -139,71 +145,75 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   if (!defined(renderContext.vertexArray)) {
     const { attributeArrays } = renderContext;
 
-    const indexArray = renderContext.indexArray;
-    const positionHighAndShowArray = attributeArrays.positionHighAndShow;
-    const positionLowAndColorArray = attributeArrays.positionLowAndColor;
-
-    const positionHighBuffer = Buffer.createVertexBuffer({
-      typedArray: positionHighAndShowArray,
-      context,
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      usage: BufferUsage.STATIC_DRAW,
-    });
-
-    const positionLowBuffer = Buffer.createVertexBuffer({
-      typedArray: positionLowAndColorArray,
-      context,
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      usage: BufferUsage.STATIC_DRAW,
-    });
-
-    const indexBuffer = Buffer.createIndexBuffer({
-      context,
-      typedArray: indexArray,
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      usage: BufferUsage.STATIC_DRAW,
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      indexDatatype: IndexDatatype.UNSIGNED_INT,
-    });
-
     renderContext.vertexArray = new VertexArray({
       context,
-      indexBuffer,
+
+      indexBuffer: Buffer.createIndexBuffer({
+        context,
+        typedArray: renderContext.indexArray,
+        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+        usage: BufferUsage.STATIC_DRAW,
+        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+        indexDatatype: IndexDatatype.UNSIGNED_INT,
+      }),
+
       attributes: [
         {
-          index: BufferPolygonAttributeLocations.positionHighAndShow,
-          vertexBuffer: positionHighBuffer,
+          index: BufferPolygonAttributeLocations.positionHigh,
           componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 4,
+          componentsPerAttribute: 3,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.positionHigh,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
         },
         {
-          index: BufferPolygonAttributeLocations.positionLowAndColor,
-          vertexBuffer: positionLowBuffer,
+          index: BufferPolygonAttributeLocations.positionLow,
           componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 4,
+          componentsPerAttribute: 3,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.positionLow,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
+        },
+        {
+          index: BufferPolygonAttributeLocations.showAndColor,
+          componentDatatype: ComponentDatatype.FLOAT,
+          componentsPerAttribute: 2,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.showAndColor,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
         },
       ],
     });
   } else if (collection._dirtyCount > 0) {
     const { indexOffset, indexCount, vertexOffset, vertexCount } =
       getPolygonDirtyRanges(collection);
-    renderContext.vertexArray.copyAttributeFromRange(
-      BufferPolygonAttributeLocations.positionHighAndShow,
-      renderContext.attributeArrays.positionHighAndShow,
-      vertexOffset,
-      vertexCount,
-    );
-    renderContext.vertexArray.copyAttributeFromRange(
-      BufferPolygonAttributeLocations.positionLowAndColor,
-      renderContext.attributeArrays.positionLowAndColor,
-      vertexOffset,
-      vertexCount,
-    );
+
     renderContext.vertexArray.copyIndexFromRange(
       renderContext.indexArray,
       indexOffset,
       indexCount,
     );
+
+    for (const key in BufferPolygonAttributeLocations) {
+      if (Object.hasOwn(BufferPolygonAttributeLocations, key)) {
+        const attribute = /** @type {BufferPolygonAttribute} */ (key);
+        renderContext.vertexArray.copyAttributeFromRange(
+          BufferPolygonAttributeLocations[attribute],
+          renderContext.attributeArrays[attribute],
+          vertexOffset,
+          vertexCount,
+        );
+      }
+    }
   }
 
   if (!defined(renderContext.renderState)) {
