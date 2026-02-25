@@ -267,6 +267,12 @@ function createNoDataBufferView(classProperty, numFeatures) {
   const metadataComponentCount = MetadataType.getComponentCount(classProperty.type);
   const metadataArrayLength = classProperty.isArray ? classProperty.arrayLength : 1;
 
+  // Special case: noData enum values are specified as strings, so we need to convert them to numbers here.
+  if (classProperty.type === MetadataType.ENUM) {
+    const enumDefinition = classProperty.enumType;
+    noData = enumDefinition.valuesByName[noData];
+  }
+
   // Wrap noData in an array (up to two times) so we can treat it uniformly in the loop below.
   if (metadataComponentCount === 1) {
     noData = [noData];
