@@ -1,0 +1,19 @@
+{
+  "name": "{{TUTORIAL_SLUG}}",
+  "version": "1.0.0",
+  "description": "{{TUTORIAL_DESCRIPTION}}",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@zip.js/zip.js": "^2.8.11",
+    "cesium": "^1.135.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vite-plugin-cesium": "^1.2.22"
+  }
+}

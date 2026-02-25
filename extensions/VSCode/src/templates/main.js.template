@@ -1,0 +1,8 @@
+import * as Cesium from 'cesium';
+import 'cesium/Build/Cesium/Widgets/widgets.css';
+
+// Set your Cesium Ion access token from .env file
+// Get your token at: https://ion.cesium.com/tokens
+Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_TOKEN || 'YOUR_CESIUM_ION_ACCESS_TOKEN';
+
+{{TUTORIAL_CODE}}

@@ -1,0 +1,6 @@
+{
+  "name": "Google 2D Tiles",
+  "slug": "google-2d-tiles",
+  "category": "Beginner",
+  "description": "Global imagery data from Google Maps using Cesium Ion"
+}
