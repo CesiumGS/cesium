@@ -24,18 +24,24 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
 /** @import {TypedArray, TypedArrayConstructor} from "../Core/globalTypes.js"; */
 
-/** @type {{positionHighAndShow: number, positionLowAndColor: number}} */
+/**
+ * @typedef {'positionHighAndShow' | 'positionLowAndColor'} BufferPointAttribute
+ * @ignore
+ */
+
+/**
+ * @type {Record<BufferPointAttribute, number>}
+ * @ignore
+ */
 const BufferPointAttributeLocations = {
-  /** @type {number} */
   positionHighAndShow: 0,
-  /** @type {number} */
   positionLowAndColor: 1,
 };
 
 /**
  * @typedef {object} BufferPointRenderContext
  * @property {VertexArray} [vertexArray]
- * @property {Record<number, TypedArray>} [attributeArrays]
+ * @property {Record<BufferPointAttribute, TypedArray>} [attributeArrays]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {object} [uniformMap]
@@ -55,31 +61,23 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.attributeArrays)) {
     const featureCountMax = collection.primitiveCountMax;
-    const positionHighAndShowArray = new Float32Array(featureCountMax * 4);
-    const positionLowAndColorArray = new Float32Array(featureCountMax * 4);
 
     renderContext.attributeArrays = {
-      [BufferPointAttributeLocations.positionHighAndShow]:
-        positionHighAndShowArray,
-      [BufferPointAttributeLocations.positionLowAndColor]:
-        positionLowAndColorArray,
+      positionHighAndShow: new Float32Array(featureCountMax * 4),
+      positionLowAndColor: new Float32Array(featureCountMax * 4),
     };
   }
 
   if (collection._dirtyCount > 0) {
+    const { attributeArrays } = renderContext;
+
     const point = new BufferPoint();
     const color = new Color();
     const cartesian = new Cartesian3();
     const encodedCartesian = new EncodedCartesian3();
 
-    const positionHighAndShowArray =
-      renderContext.attributeArrays[
-        BufferPointAttributeLocations.positionHighAndShow
-      ];
-    const positionLowAndColorArray =
-      renderContext.attributeArrays[
-        BufferPointAttributeLocations.positionLowAndColor
-      ];
+    const positionHighAndShowArray = attributeArrays.positionHighAndShow;
+    const positionLowAndColorArray = attributeArrays.positionLowAndColor;
 
     const { _dirtyOffset, _dirtyCount } = collection;
 
@@ -111,19 +109,17 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.vertexArray)) {
-    const attributeArrays = renderContext.attributeArrays;
+    const { attributeArrays } = renderContext;
 
     const positionHighBuffer = Buffer.createVertexBuffer({
-      typedArray:
-        attributeArrays[BufferPointAttributeLocations.positionHighAndShow],
+      typedArray: attributeArrays.positionHighAndShow,
       context,
       // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
       usage: BufferUsage.STATIC_DRAW,
     });
 
     const positionLowBuffer = Buffer.createVertexBuffer({
-      typedArray:
-        attributeArrays[BufferPointAttributeLocations.positionLowAndColor],
+      typedArray: attributeArrays.positionLowAndColor,
       context,
       // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
       usage: BufferUsage.STATIC_DRAW,
@@ -147,17 +143,15 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       ],
     });
   } else if (collection._dirtyCount > 0) {
-    const { positionHighAndShow, positionLowAndColor } =
-      BufferPointAttributeLocations;
     renderContext.vertexArray.copyAttributeFromRange(
-      positionHighAndShow,
-      renderContext.attributeArrays[positionHighAndShow],
+      BufferPointAttributeLocations.positionHighAndShow,
+      renderContext.attributeArrays.positionHighAndShow,
       collection._dirtyOffset,
       collection._dirtyCount,
     );
     renderContext.vertexArray.copyAttributeFromRange(
-      positionLowAndColor,
-      renderContext.attributeArrays[positionLowAndColor],
+      BufferPointAttributeLocations.positionLowAndColor,
+      renderContext.attributeArrays.positionLowAndColor,
       collection._dirtyOffset,
       collection._dirtyCount,
     );

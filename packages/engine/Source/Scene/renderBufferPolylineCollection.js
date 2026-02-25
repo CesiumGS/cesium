@@ -25,18 +25,24 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 
-/** @type {{positionHighAndShow: number, positionLowAndColor: number}} */
+/**
+ * @typedef {'positionHighAndShow' | 'positionLowAndColor'} BufferPolylineAttribute
+ * @ignore
+ */
+
+/**
+ * @type {Record<BufferPolylineAttribute, number>}
+ * @ignore
+ */
 const BufferPolylineAttributeLocations = {
-  /** @type {number} */
   positionHighAndShow: 0,
-  /** @type {number} */
   positionLowAndColor: 1,
 };
 
 /**
  * @typedef {object} BufferPolylineRenderContext
  * @property {VertexArray} [vertexArray]
- * @property {Record<number, TypedArray>} [attributeArrays]
+ * @property {Record<BufferPolylineAttribute, TypedArray>} [attributeArrays]
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
@@ -66,8 +72,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     !defined(renderContext.indexArray)
   ) {
     const { vertexCountMax, primitiveCount } = collection;
-    const positionHighAndShowArray = new Float32Array(vertexCountMax * 4);
-    const positionLowAndColorArray = new Float32Array(vertexCountMax * 4);
 
     // gl.LINES uses `(vertexCount - primitiveCount) * 2` indices. Number of
     // primitives can only increase, which _decreases_ gl.LINES capacity, so we
@@ -77,27 +81,18 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     );
 
     renderContext.attributeArrays = {
-      [BufferPolylineAttributeLocations.positionHighAndShow]:
-        positionHighAndShowArray,
-      [BufferPolylineAttributeLocations.positionLowAndColor]:
-        positionLowAndColorArray,
+      positionHighAndShow: new Float32Array(vertexCountMax * 4),
+      positionLowAndColor: new Float32Array(vertexCountMax * 4),
     };
   }
 
   if (collection._dirtyCount > 0) {
     const { _dirtyOffset, _dirtyCount } = collection;
-
-    const positionHighAndShowArray =
-      renderContext.attributeArrays[
-        BufferPolylineAttributeLocations.positionHighAndShow
-      ];
-
-    const positionLowAndColorArray =
-      renderContext.attributeArrays[
-        BufferPolylineAttributeLocations.positionLowAndColor
-      ];
+    const { attributeArrays } = renderContext;
 
     const indexArray = renderContext.indexArray;
+    const positionHighAndShowArray = attributeArrays.positionHighAndShow;
+    const positionLowAndColorArray = attributeArrays.positionLowAndColor;
 
     let vertexCountPerFeatureMax = 0;
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
@@ -153,16 +148,14 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     const attributeArrays = renderContext.attributeArrays;
 
     const positionHighBuffer = Buffer.createVertexBuffer({
-      typedArray:
-        attributeArrays[BufferPolylineAttributeLocations.positionHighAndShow],
+      typedArray: attributeArrays.positionHighAndShow,
       context,
       // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
       usage: BufferUsage.STATIC_DRAW,
     });
 
     const positionLowBuffer = Buffer.createVertexBuffer({
-      typedArray:
-        attributeArrays[BufferPolylineAttributeLocations.positionLowAndColor],
+      typedArray: attributeArrays.positionLowAndColor,
       context,
       // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
       usage: BufferUsage.STATIC_DRAW,
@@ -198,17 +191,15 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
   } else if (collection._dirtyCount > 0) {
     const { indexOffset, indexCount, vertexOffset, vertexCount } =
       getPolylineDirtyRanges(collection);
-    const { positionHighAndShow, positionLowAndColor } =
-      BufferPolylineAttributeLocations;
     renderContext.vertexArray.copyAttributeFromRange(
-      positionHighAndShow,
-      renderContext.attributeArrays[positionHighAndShow],
+      BufferPolylineAttributeLocations.positionHighAndShow,
+      renderContext.attributeArrays.positionHighAndShow,
       vertexOffset,
       vertexCount,
     );
     renderContext.vertexArray.copyAttributeFromRange(
-      positionLowAndColor,
-      renderContext.attributeArrays[positionLowAndColor],
+      BufferPolylineAttributeLocations.positionLowAndColor,
+      renderContext.attributeArrays.positionLowAndColor,
       vertexOffset,
       vertexCount,
     );
