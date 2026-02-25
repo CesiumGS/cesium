@@ -61,6 +61,7 @@ const {
   Specular,
   Anisotropy,
   Clearcoat,
+  PlanarFill,
   Material,
 } = ModelComponents;
 
@@ -1757,6 +1758,33 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
 }
 
 /**
+ * Load properties for the BENTLEY_materials_planar_fill extension.
+ *
+ * Note: The wireframeFill property is loaded but is currently a NO-OP in the
+ * rendering pipeline. CesiumJS does not yet have a proper wireframe rendering
+ * mode, so this value is stored for completeness but has no effect on rendering.
+ * See MaterialPipelineStage.js for more details.
+ *
+ * @param {object} planarFillInfo The contents of the BENTLEY_materials_planar_fill extension in the parsed glTF JSON
+ * @returns {ModelComponents.PlanarFill}
+ * @private
+ */
+function loadPlanarFill(planarFillInfo) {
+  const {
+    wireframeFill = PlanarFill.DEFAULT_WIREFRAME_FILL,
+    backgroundFill = false,
+    behind = false,
+  } = planarFillInfo;
+
+  const planarFill = new PlanarFill();
+  planarFill.wireframeFill = wireframeFill;
+  planarFill.backgroundFill = backgroundFill;
+  planarFill.behind = behind;
+
+  return planarFill;
+}
+
+/**
  * Load textures and parse factors and flags for a glTF material
  *
  * @param {GltfLoader} loader
@@ -1774,6 +1802,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   const pbrAnisotropy = extensions.KHR_materials_anisotropy;
   const pbrClearcoat = extensions.KHR_materials_clearcoat;
   const pbrMetallicRoughness = gltfMaterial.pbrMetallicRoughness;
+  const planarFill = extensions.BENTLEY_materials_planar_fill;
 
   material.unlit = defined(extensions.KHR_materials_unlit);
 
@@ -1829,6 +1858,11 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   material.alphaMode = gltfMaterial.alphaMode;
   material.alphaCutoff = gltfMaterial.alphaCutoff;
   material.doubleSided = gltfMaterial.doubleSided;
+
+  // BENTLEY_materials_planar_fill extension
+  if (defined(planarFill)) {
+    material.planarFill = loadPlanarFill(planarFill);
+  }
 
   // BENTLEY_materials_point_style extension
   const pointStyleExtension = extensions.BENTLEY_materials_point_style;
