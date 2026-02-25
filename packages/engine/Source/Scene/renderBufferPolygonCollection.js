@@ -84,23 +84,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     const { attributeArrays } = renderContext;
     const { _dirtyOffset, _dirtyCount } = collection;
 
-    let vertexCountPerFeatureMax = 0;
-    let triangleCountPerFeatureMax = 0;
-    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
-      collection.get(i, polygon);
-      vertexCountPerFeatureMax = Math.max(
-        polygon.vertexCount,
-        vertexCountPerFeatureMax,
-      );
-      triangleCountPerFeatureMax = Math.max(
-        polygon.triangleCount,
-        triangleCountPerFeatureMax,
-      );
-    }
-
-    const cartesianArray = new Float64Array(vertexCountPerFeatureMax * 3);
-    const polygonIndexArray = new Uint32Array(triangleCountPerFeatureMax * 3);
-
     const indexArray = renderContext.indexArray;
     const positionHighAndShowArray = attributeArrays.positionHighAndShow;
     const positionLowAndColorArray = attributeArrays.positionLowAndColor;
@@ -112,8 +95,8 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         continue;
       }
 
-      polygon.getTriangles(polygonIndexArray);
-      polygon.getPositions(cartesianArray);
+      const polygonIndexArray = polygon.getTriangles();
+      const cartesianArray = polygon.getPositions();
       polygon.getColor(color);
 
       let vOffset = polygon._getUint32(

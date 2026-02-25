@@ -94,16 +94,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     const positionHighAndShowArray = attributeArrays.positionHighAndShow;
     const positionLowAndColorArray = attributeArrays.positionLowAndColor;
 
-    let vertexCountPerFeatureMax = 0;
-    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
-      collection.get(i, polyline);
-      vertexCountPerFeatureMax = Math.max(
-        polyline.vertexCount,
-        vertexCountPerFeatureMax,
-      );
-    }
-    const cartesianArray = new Float64Array(vertexCountPerFeatureMax * 3);
-
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
       collection.get(i, polyline);
 
@@ -111,7 +101,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         continue;
       }
 
-      polyline.getPositions(cartesianArray);
+      const cartesianArray = polyline.getPositions();
       polyline.getColor(color);
 
       let vOffset = polyline.vertexOffset;
