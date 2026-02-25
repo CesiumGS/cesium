@@ -1,6 +1,7 @@
-in vec4 positionHighAndShow;
-in vec4 positionLowAndColor;
-in vec4 pixelSizeAndOutline;
+in vec3 positionHigh;
+in vec3 positionLow;
+in vec3 showPixelSizeAndColor;
+in vec2 outlineWidthAndOutlineColor;
 
 out vec4 v_color;
 out vec4 v_outlineColor;
@@ -9,13 +10,11 @@ out float v_innerRadiusFrac;
 void main()
 {
     // Unpack attributes.
-    vec3 positionHigh = positionHighAndShow.xyz;
-    vec3 positionLow = positionLowAndColor.xyz;
-    float show = positionHighAndShow.w;
-    vec4 color = czm_decodeRGB8(positionLowAndColor.w);
-    float pixelSize = pixelSizeAndOutline.x;
-    float outlineWidth = pixelSizeAndOutline.y;
-    vec4 outlineColor = czm_decodeRGB8(pixelSizeAndOutline.z);
+    float show = showPixelSizeAndColor.x;
+    float pixelSize = showPixelSizeAndColor.y;
+    vec4 color = czm_decodeRGB8(showPixelSizeAndColor.z);
+    float outlineWidth = outlineWidthAndOutlineColor.x;
+    vec4 outlineColor = czm_decodeRGB8(outlineWidthAndOutlineColor.y);
 
     ///////////////////////////////////////////////////////////////////////////
 
