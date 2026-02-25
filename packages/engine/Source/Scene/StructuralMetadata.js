@@ -1,3 +1,4 @@
+import { destroyObject } from "@cesium/engine";
 import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
@@ -247,11 +248,11 @@ StructuralMetadata.prototype.getPropertyAttribute = function (
  */
 StructuralMetadata.prototype.destroy = function () {
   const propertyTables = this._propertyTables;
-  if (defined(propertyTables)) {
-    for (let i = 0; i < propertyTables.length; i++) {
-      propertyTables[i].destroy();
-    }
+  for (let i = 0; i < propertyTables.length; i++) {
+    propertyTables[i] = propertyTables[i] && propertyTables[i].destroy();
   }
+
+  return destroyObject(this);
 };
 
 export default StructuralMetadata;

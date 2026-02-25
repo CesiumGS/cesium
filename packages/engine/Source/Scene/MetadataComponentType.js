@@ -175,18 +175,21 @@ MetadataComponentType.typeInfo = {
  * @private
  */
 MetadataComponentType.getMinimum = function (type) {
+  const typeInfo = MetadataComponentType.typeInfo[type];
+
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
+  if (!defined(typeInfo)) {
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
+  }
   //>>includeEnd('debug');
 
-  return MetadataComponentType.typeInfo[type].minimumValue;
+  return typeInfo.minimumValue;
 };
 
 /**
  * Gets the maximum value for the numeric type.
  * <p>
- * Returns a BigInt for the INT64 and UINT64 types if BigInt is supported on this platform.
- * Otherwise an approximate number is returned.
+ * Returns a BigInt for the INT64 and UINT64 types.
  * </p>
  *
  * @param {MetadataComponentType} type The type.
@@ -195,11 +198,15 @@ MetadataComponentType.getMinimum = function (type) {
  * @private
  */
 MetadataComponentType.getMaximum = function (type) {
+  const typeInfo = MetadataComponentType.typeInfo[type];
+
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
+  if (!defined(typeInfo)) {
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
+  }
   //>>includeEnd('debug');
 
-  return MetadataComponentType.typeInfo[type].maximumValue;
+  return typeInfo.maximumValue;
 };
 
 /**
@@ -211,14 +218,12 @@ MetadataComponentType.getMaximum = function (type) {
  * @private
  */
 MetadataComponentType.isIntegerType = function (type) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
-  //>>includeEnd('debug');
-
   const typeInfo = MetadataComponentType.typeInfo[type];
+  //>>includeStart('debug', pragmas.debug);
   if (!defined(typeInfo)) {
-    return false;
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
   }
+  //>>includeEnd('debug');
 
   return typeInfo.category !== ScalarCategories.FLOAT;
 };
@@ -232,14 +237,12 @@ MetadataComponentType.isIntegerType = function (type) {
  * @private
  */
 MetadataComponentType.isUnsignedIntegerType = function (type) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
-  //>>includeEnd('debug');
-
   const typeInfo = MetadataComponentType.typeInfo[type];
+  //>>includeStart('debug', pragmas.debug);
   if (!defined(typeInfo)) {
-    return false;
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
   }
+  //>>includeEnd('debug');
 
   return typeInfo.category === ScalarCategories.UNSIGNED_INTEGER;
 };
@@ -253,14 +256,13 @@ MetadataComponentType.isUnsignedIntegerType = function (type) {
  * @private
  */
 MetadataComponentType.isVectorCompatible = function (type) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
-  //>>includeEnd('debug');
-
   const typeInfo = MetadataComponentType.typeInfo[type];
+
+  //>>includeStart('debug', pragmas.debug);
   if (!defined(typeInfo)) {
-    return false;
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
   }
+  //>>includeEnd('debug');
 
   return typeInfo.vectorCompatible;
 };
@@ -271,14 +273,12 @@ MetadataComponentType.isVectorCompatible = function (type) {
  * @returns {ScalarCategories} The category.
  */
 MetadataComponentType.category = function (type) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
-  //>>includeEnd('debug');
-
   const typeInfo = MetadataComponentType.typeInfo[type];
+  //>>includeStart('debug', pragmas.debug);
   if (!defined(typeInfo)) {
-    return undefined;
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
   }
+  //>>includeEnd('debug');
 
   return typeInfo.category;
 };
@@ -466,5 +466,31 @@ MetadataComponentType.toComponentDatatype = function (type) {
       return ComponentDatatype.DOUBLE;
   }
 };
+
+/**
+ * Gets a function for setting values of the given component type on a DataView.
+ *
+ * @param {DataView} view The DataView.
+ * @param {MetadataComponentType} componentType The component type.
+ * @returns {Function} The setter function.
+ *
+ * @private
+ */
+MetadataComponentType.getDataViewSetter = function (view, componentType) {
+  const setters = {
+    [MetadataComponentType.UINT8]: view.setUint8.bind(view),
+    [MetadataComponentType.INT8]: view.setInt8.bind(view),
+    [MetadataComponentType.UINT16]: (offset, value) => view.setUint16(offset, value, true /* little-endian */),
+    [MetadataComponentType.INT16]: (offset, value) => view.setInt16(offset, value, true),
+    [MetadataComponentType.UINT32]: (offset, value) => view.setUint32(offset, value, true),
+    [MetadataComponentType.INT32]: (offset, value) => view.setInt32(offset, value, true),
+    [MetadataComponentType.FLOAT32]: (offset, value) => view.setFloat32(offset, value, true),
+    [MetadataComponentType.FLOAT64]: (offset, value) => view.setFloat64(offset, value, true),
+    [MetadataComponentType.UINT64]: (offset, value) => view.setBigUint64(offset, BigInt(value), true),
+    [MetadataComponentType.INT64]: (offset, value) => view.setBigInt64(offset, BigInt(value), true),
+  };
+
+  return setters[componentType];
+}
 
 export default Object.freeze(MetadataComponentType);

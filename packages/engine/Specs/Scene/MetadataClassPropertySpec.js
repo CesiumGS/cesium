@@ -2664,17 +2664,17 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.validate(8.0)).toBe("value 8 must be an array");
   });
 
-  it("validate returns error message if type is a vector and the component type is not vector-compatibile", function () {
+  it("validate returns error message if type is a vector and the component type is not vector-compatible", function () {
     const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "VEC2",
-        componentType: "STRING",
+        componentType: "INT64",
       },
     });
 
     expect(property.validate(8.0)).toBe(
-      "componentType STRING is incompatible with vector type VEC2",
+      "componentType INT64 is incompatible with vector type VEC2",
     );
   });
 
