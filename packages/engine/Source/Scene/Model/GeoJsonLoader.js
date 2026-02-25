@@ -33,31 +33,26 @@ import addAllToArray from "../../Core/addAllToArray.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GeoJsonLoader
- * @constructor
- * @augments ResourceLoader
  * @private
- *
- * @param {object} options Object with the following properties:
- * @param {object} options.geoJson The GeoJson object.
  */
-function GeoJsonLoader(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class GeoJsonLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {object} options.geoJson The GeoJson object.
+   */
+  constructor(options) {
+    super();
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.geoJson", options.geoJson);
-  //>>includeEnd('debug');
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  this._geoJson = options.geoJson;
-  this._components = undefined;
-}
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options.geoJson", options.geoJson);
+    //>>includeEnd('debug');
 
-if (defined(Object.create)) {
-  GeoJsonLoader.prototype = Object.create(ResourceLoader.prototype);
-  GeoJsonLoader.prototype.constructor = GeoJsonLoader;
-}
+    this._geoJson = options.geoJson;
+    this._components = undefined;
+  }
 
-Object.defineProperties(GeoJsonLoader.prototype, {
   /**
    * The cache key of the resource.
    *
@@ -67,11 +62,10 @@ Object.defineProperties(GeoJsonLoader.prototype, {
    * @readonly
    * @private
    */
-  cacheKey: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get cacheKey() {
+    return undefined;
+  }
+
   /**
    * The loaded components.
    *
@@ -81,41 +75,47 @@ Object.defineProperties(GeoJsonLoader.prototype, {
    * @readonly
    * @private
    */
-  components: {
-    get: function () {
-      return this._components;
-    },
-  },
-});
+  get components() {
+    return this._components;
+  }
 
-/**
- * Loads the resource.
- * @returns {Promise<GeoJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
- */
-GeoJsonLoader.prototype.load = function () {
-  return Promise.resolve(this);
-};
+  /**
+   * Loads the resource.
+   * @returns {Promise<GeoJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
+   * @private
+   */
+  load() {
+    return Promise.resolve(this);
+  }
 
-/**
- * Processes the resource until it becomes ready.
- *
- * @param {FrameState} frameState The frame state.
- * @private
- */
-GeoJsonLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
+  /**
+   * Processes the resource until it becomes ready.
+   *
+   * @param {FrameState} frameState The frame state.
+   * @private
+   */
+  process(frameState) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("frameState", frameState);
+    //>>includeEnd('debug');
 
-  if (defined(this._components)) {
+    if (defined(this._components)) {
+      return true;
+    }
+
+    this._components = parse(this._geoJson, frameState);
+    this._geoJson = undefined;
     return true;
   }
 
-  this._components = parse(this._geoJson, frameState);
-  this._geoJson = undefined;
-  return true;
-};
+  /**
+   * Unloads the resource.
+   * @private
+   */
+  unload() {
+    this._components = undefined;
+  }
+}
 
 function ParsedFeature() {
   this.lines = undefined;
@@ -685,13 +685,5 @@ function parse(geoJson, frameState) {
 
   return components;
 }
-
-/**
- * Unloads the resource.
- * @private
- */
-GeoJsonLoader.prototype.unload = function () {
-  this._components = undefined;
-};
 
 export default GeoJsonLoader;
