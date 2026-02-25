@@ -1,8 +1,10 @@
+import { GoogleMaps } from "@cesium/engine";
 import * as Cesium from "cesium";
 
 const HEIGHT_THRESHOLD = 9000;
 
-const googleStreetViewStaticApiKey = "key for Google Street View Static API";
+GoogleMaps.defaultStreetViewStaticApiKey =
+  "key for Google Street View Static API";
 
 const ViewType = Object.freeze({
   MapView: 0,
@@ -42,9 +44,7 @@ tileset.show = false;
 viewer.scene.primitives.add(tileset);
 
 const cubeMapProvider =
-  await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
-    apiKey: googleStreetViewStaticApiKey,
-  });
+  await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl();
 
 let savedLng = 0;
 let savedLat = 0;

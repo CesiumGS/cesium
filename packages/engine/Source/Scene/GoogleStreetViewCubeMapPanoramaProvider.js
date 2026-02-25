@@ -11,7 +11,6 @@ import Frozen from "../Core/Frozen.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
 import CubeMapPanorama from "./CubeMapPanorama.js";
-import Credit from "../Core/Credit.js";
 
 const DEFAULT_TILE_SIZE = 600;
 
@@ -273,7 +272,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype._buildFaceUrl = function (
 /**
  * Creates a {@link PanoramaProvider} which provides cube face images from the {@link https://developers.google.com/maps/documentation/streetview|Google Street View Static API}.
  * @param {object} options Object with the following properties:
- * @param {string} [options.apiKey=GoogleMaps.defaultApiKey] Your API key to access Google Street View Static API. See {@link https://developers.google.com/maps/documentation/javascript/get-api-key} for instructions on how to create your own key.
+ * @param {string} [options.apiKey=GoogleMaps.defaultStreetViewStaticApiKey] Your API key to access Google Street View Static API. See {@link https://developers.google.com/maps/documentation/javascript/get-api-key} for instructions on how to create your own key. If undefined, defaults to {@link GoogleMaps.defaultStreetViewStaticApiKey}. If that value is unavailable, falls back to {@link GoogleMaps.defaultApiKey}.
  * @param {string|Resource} [options.url=GoogleMaps.streetViewStaticApiEndpoint] The URL to access Google Street View Static API. See {@link https://developers.google.com/maps/documentation/streetview/overview} for more information.
  * @param {number} [options.tileSize=600] Default width and height (in pixels) of each square tile.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
@@ -286,7 +285,21 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype._buildFaceUrl = function (
  * })
  */
 GoogleStreetViewCubeMapPanoramaProvider.fromUrl = async function (options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+  options = options ?? {};
+  options.apiKey =
+    options.apiKey ??
+    GoogleMaps.defaultStreetViewStaticApiKey ??
+    GoogleMaps.defaultApiKey;
+  if (
+    !defined(options.apiKey) &&
+    !defined(GoogleMaps.defaultStreetViewStaticApiKey) &&
+    !defined(GoogleMaps.defaultApiKey)
+  ) {
+    throw new DeveloperError(
+      "options.apiKey, GoogleMaps.defaultStreetViewStaticApiKey or GoogleMaps.defaultApiKey is required.",
+    );
+  }
+
   return new GoogleStreetViewCubeMapPanoramaProvider({
     ...options,
   });

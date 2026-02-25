@@ -13,6 +13,8 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
       url: "https://example.com/",
       tileSize: 512,
     });
+
+    GoogleMaps.defaultStreetViewStaticApiKey = "test-key";
   });
 
   it("conforms to PanoramaProvider interface", function () {
@@ -37,7 +39,7 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
     const provider = await GoogleStreetViewCubeMapPanoramaProvider.fromUrl({});
 
     expect(provider).toBeDefined();
-    expect(provider.apiKey).toBe(GoogleMaps.defaultApiKey);
+    expect(provider._key).toBe(GoogleMaps.defaultStreetViewStaticApiKey);
   });
 
   it("fromUrl creates provider", async function () {
