@@ -25,7 +25,7 @@ const GEMINI_MODELS: readonly GeminiModel[] = [
 /** Single source of truth for supported Claude models (order = display priority) */
 const CLAUDE_MODELS: readonly ClaudeModel[] = [
   "claude-sonnet-4-5-20250929",
-  "claude-opus-4-5-20251101",
+  "claude-opus-4-6",
   "claude-haiku-4-5-20251001",
 ] as const;
 
@@ -151,6 +151,13 @@ export class AIClientFactory {
   }
 
   /**
+   * Get all model IDs in display order (Claude first, then Gemini)
+   */
+  static getAllModelIds(): AIModel[] {
+    return [...CLAUDE_MODELS, ...GEMINI_MODELS];
+  }
+
+  /**
    * Get all available models (those with valid credentials)
    */
   static getAvailableModels(): AIModel[] {
@@ -197,44 +204,16 @@ export class AIClientFactory {
    */
   static getModelInfo(model: AIModel): {
     displayName: string;
-    description: string;
     provider: AIProvider;
-    badge: string;
   } {
     const provider = this.getProviderForModel(model);
 
-    const modelInfo: Record<
-      AIModel,
-      { displayName: string; description: string; badge: string }
-    > = {
-      // Claude models
-      "claude-opus-4-5-20251101": {
-        displayName: "Claude Opus 4.5",
-        description:
-          "Premium model with maximum intelligence ($5/$25 per MTok)",
-        badge: "🎭 Opus",
-      },
-      "claude-sonnet-4-5-20250929": {
-        displayName: "Claude Sonnet 4.5",
-        description: "Best for complex agents and coding ($3/$15 per MTok)",
-        badge: "🎵 Sonnet",
-      },
-      "claude-haiku-4-5-20251001": {
-        displayName: "Claude Haiku 4.5",
-        description: "Fastest with near-frontier intelligence ($1/$5 per MTok)",
-        badge: "⚡ Haiku",
-      },
-      // Gemini models
-      "gemini-3-flash-preview": {
-        displayName: "Gemini 3 Flash",
-        description: "Pro-grade reasoning at Flash speed ($0.50/$3 per MTok)",
-        badge: "⚡ Flash",
-      },
-      "gemini-3-pro-preview": {
-        displayName: "Gemini 3 Pro",
-        description: "State-of-the-art reasoning & multimodal",
-        badge: "🧠 Pro",
-      },
+    const modelInfo: Record<AIModel, { displayName: string }> = {
+      "claude-opus-4-6": { displayName: "Claude Opus 4.6" },
+      "claude-sonnet-4-5-20250929": { displayName: "Claude Sonnet 4.5" },
+      "claude-haiku-4-5-20251001": { displayName: "Claude Haiku 4.5" },
+      "gemini-3-flash-preview": { displayName: "Gemini 3 Flash" },
+      "gemini-3-pro-preview": { displayName: "Gemini 3 Pro" },
     };
 
     return {

@@ -16,7 +16,6 @@ import type { AIModel } from "../AI/types";
 export interface ModelInfo {
   id: AIModel;
   displayName: string;
-  description: string;
   provider: "gemini" | "anthropic";
   isAvailable: boolean;
 }
@@ -41,24 +40,13 @@ const STORAGE_KEY = "cesium-copilot-pinned-models";
  * Claude models are listed first (preferred when available)
  */
 function getAllModels(): ModelInfo[] {
-  const allModelIds: AIModel[] = [
-    // Claude models (preferred)
-    "claude-sonnet-4-5-20250929",
-    "claude-opus-4-5-20251101",
-    "claude-haiku-4-5-20251001",
-    // Gemini models
-    "gemini-3-flash-preview",
-    "gemini-3-pro-preview",
-  ];
-
-  return allModelIds.map((id) => {
+  return AIClientFactory.getAllModelIds().map((id) => {
     const info = AIClientFactory.getModelInfo(id);
     const isAvailable = AIClientFactory.canUseModel(id);
 
     return {
       id,
       displayName: info.displayName,
-      description: info.description,
       provider: info.provider,
       isAvailable,
     };
