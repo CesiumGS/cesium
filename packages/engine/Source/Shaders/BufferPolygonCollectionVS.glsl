@@ -1,15 +1,13 @@
-in vec4 positionHighAndShow;
-in vec4 positionLowAndColor;
+in vec3 positionHigh;
+in vec3 positionLow;
+in vec2 showAndColor;
 
 out vec4 v_color;
 
 void main()
 {
-    // Unpack attributes.
-    vec3 positionHigh = positionHighAndShow.xyz;
-    vec3 positionLow = positionLowAndColor.xyz;
-    float show = positionHighAndShow.w;
-    vec4 color = czm_decodeRGB8(positionLowAndColor.w);
+    float show = showAndColor.x;
+    vec4 color = czm_decodeRGB8(showAndColor.y);
 
     ///////////////////////////////////////////////////////////////////////////
 
