@@ -16,6 +16,8 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
+import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataType from "./MetadataType.js";
 
 /**
  * Parse the <code>EXT_structural_metadata</code> glTF extension to create a
@@ -260,14 +262,34 @@ function collectGpuCompatiblePropertyBufferViews(
  * @private
  */
 function createNoDataBufferView(classProperty, numFeatures) {
-  const noDataValue = classProperty.noData;
-  const bufferView = new Uint8Array(
-    numFeatures * classProperty.bytesPerElement(),
-  );
-  for (let i = 0; i < numFeatures; i++) {
-    bufferView.set(noDataValue, i * classProperty.bytesPerElement());
+  // noData can be a number, an array of numbers (e.g. for vecN types), or a nested array of numbers (e.g. for arrays of vecN types).
+  let noData = classProperty.noData;
+  const metadataComponentCount = MetadataType.getComponentCount(classProperty.type);
+  const metadataArrayLength = classProperty.isArray ? classProperty.arrayLength : 1;
+
+  // Wrap noData in an array (up to two times) so we can treat it uniformly in the loop below.
+  if (metadataComponentCount === 1) {
+    noData = [noData];
   }
-  return bufferView;
+
+  if (metadataArrayLength === 1) {
+    noData = [noData];
+  }
+
+  const bytesPerElement = classProperty.bytesPerElement();
+  const buffer = new ArrayBuffer(bytesPerElement * numFeatures);
+  const view = new DataView(buffer);
+  const setter = MetadataComponentType.getDataViewSetter(view, classProperty.componentType);
+
+  for (let i = 0; i < numFeatures; i++) {
+    for (let j = 0; j < metadataArrayLength; j++) {
+      for (let k = 0; k < metadataComponentCount; k++) {
+        setter((bytesPerElement * i) + j + k, noData[j][k]);
+      }
+    }
+  }
+
+  return new Uint8Array(buffer);
 }
 
 // Make one big buffer view to load into the texture

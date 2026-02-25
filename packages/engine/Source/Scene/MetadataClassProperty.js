@@ -33,8 +33,8 @@ import MetadataComponentType, {
  * @param {number|number[]|number[][]} [options.max] A number or an array of numbers storing the maximum allowable value of this property. Only defined when type is a numeric type.
  * @param {number|number[]|number[][]} [options.offset] The offset to be added to property values as part of the value transform.
  * @param {number|number[]|number[][]} [options.scale] The scale to be multiplied to property values as part of the value transform.
- * @param {boolean|number|string|Array} [options.noData] The no-data sentinel value that represents null values.
- * @param {boolean|number|string|Array} [options.default] A default value to use when an entity's property value is not defined.
+ * @param {number|string|Array} [options.noData] The no-data sentinel value that represents null values.
+ * @param {number|string|Array} [options.default] A default value to use when an entity's property value is not defined.
  * @param {boolean} [options.required=false] Whether the property is required.
  * @param {string} [options.name] The name of the property.
  * @param {string} [options.description] The description of the property.
@@ -371,7 +371,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * The no-data sentinel value that represents null values
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {boolean|number|string|Array}
+   * @type {number|string|Array}
    * @readonly
    */
   noData: {
@@ -384,7 +384,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * A default value to use when an entity's property value is not defined.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {boolean|number|string|Array}
+   * @type {number|string|Array}
    * @readonly
    */
   default: {
