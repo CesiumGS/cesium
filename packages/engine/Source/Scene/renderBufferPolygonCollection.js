@@ -25,18 +25,24 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
-/** @type {{positionHighAndShow: number, positionLowAndColor: number}} */
+/**
+ * @typedef {'positionHighAndShow' | 'positionLowAndColor'} BufferPolygonAttribute
+ * @ignore
+ */
+
+/**
+ * @type {Record<BufferPolygonAttribute, number>}
+ * @ignore
+ */
 const BufferPolygonAttributeLocations = {
-  /** @type {number} */
   positionHighAndShow: 0,
-  /** @type {number} */
   positionLowAndColor: 1,
 };
 
 /**
  * @typedef {object} BufferPolygonRenderContext
  * @property {VertexArray} [vertexArray]
- * @property {Record<number, TypedArray>} [attributeArrays]
+ * @property {Record<BufferPolygonAttribute, TypedArray>} [attributeArrays]
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
@@ -66,20 +72,16 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     !defined(renderContext.indexArray)
   ) {
     const { vertexCountMax, triangleCountMax } = collection;
-    const positionHighAndShowArray = new Float32Array(vertexCountMax * 4);
-    const positionLowAndColorArray = new Float32Array(vertexCountMax * 4);
 
     renderContext.indexArray = new Uint32Array(triangleCountMax * 3);
-
     renderContext.attributeArrays = {
-      [BufferPolygonAttributeLocations.positionHighAndShow]:
-        positionHighAndShowArray,
-      [BufferPolygonAttributeLocations.positionLowAndColor]:
-        positionLowAndColorArray,
+      positionHighAndShow: new Float32Array(vertexCountMax * 4),
+      positionLowAndColor: new Float32Array(vertexCountMax * 4),
     };
   }
 
   if (collection._dirtyCount > 0) {
+    const { attributeArrays } = renderContext;
     const { _dirtyOffset, _dirtyCount } = collection;
 
     let vertexCountPerFeatureMax = 0;
@@ -100,16 +102,8 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     const polygonIndexArray = new Uint32Array(triangleCountPerFeatureMax * 3);
 
     const indexArray = renderContext.indexArray;
-
-    const positionHighAndShowArray =
-      renderContext.attributeArrays[
-        BufferPolygonAttributeLocations.positionHighAndShow
-      ];
-
-    const positionLowAndColorArray =
-      renderContext.attributeArrays[
-        BufferPolygonAttributeLocations.positionLowAndColor
-      ];
+    const positionHighAndShowArray = attributeArrays.positionHighAndShow;
+    const positionLowAndColorArray = attributeArrays.positionLowAndColor;
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
       collection.get(i, polygon);
@@ -158,17 +152,11 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.vertexArray)) {
+    const { attributeArrays } = renderContext;
+
     const indexArray = renderContext.indexArray;
-
-    const positionHighAndShowArray =
-      renderContext.attributeArrays[
-        BufferPolygonAttributeLocations.positionHighAndShow
-      ];
-
-    const positionLowAndColorArray =
-      renderContext.attributeArrays[
-        BufferPolygonAttributeLocations.positionLowAndColor
-      ];
+    const positionHighAndShowArray = attributeArrays.positionHighAndShow;
+    const positionLowAndColorArray = attributeArrays.positionLowAndColor;
 
     const positionHighBuffer = Buffer.createVertexBuffer({
       typedArray: positionHighAndShowArray,
@@ -214,17 +202,15 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   } else if (collection._dirtyCount > 0) {
     const { indexOffset, indexCount, vertexOffset, vertexCount } =
       getPolygonDirtyRanges(collection);
-    const { positionHighAndShow, positionLowAndColor } =
-      BufferPolygonAttributeLocations;
     renderContext.vertexArray.copyAttributeFromRange(
-      positionHighAndShow,
-      renderContext.attributeArrays[positionHighAndShow],
+      BufferPolygonAttributeLocations.positionHighAndShow,
+      renderContext.attributeArrays.positionHighAndShow,
       vertexOffset,
       vertexCount,
     );
     renderContext.vertexArray.copyAttributeFromRange(
-      positionLowAndColor,
-      renderContext.attributeArrays[positionLowAndColor],
+      BufferPolygonAttributeLocations.positionLowAndColor,
+      renderContext.attributeArrays.positionLowAndColor,
       vertexOffset,
       vertexCount,
     );
