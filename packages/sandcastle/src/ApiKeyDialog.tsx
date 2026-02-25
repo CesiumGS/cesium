@@ -102,7 +102,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
 
   return (
     <SandcastleDialog open={open} onClose={onClose} title="API Configuration">
-      <div className="api-dialog-content">
+      <form className="api-dialog-content" onSubmit={(e) => e.preventDefault()}>
         <Banner
           tone="attention"
           label="Security Notice"
@@ -291,7 +291,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
             </div>
           </Tabs.TabPanel>
         </Tabs.Root>
-      </div>
+      </form>
     </SandcastleDialog>
   );
 }

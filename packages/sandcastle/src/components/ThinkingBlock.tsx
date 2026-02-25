@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import { unstable_AccordionItem as AccordionItem } from "@stratakit/structures";
 
 interface ThinkingBlockProps {
@@ -9,6 +10,14 @@ export function ThinkingBlock({
   content,
   isStreaming = false,
 }: ThinkingBlockProps) {
+  const preRef = useRef<HTMLPreElement>(null);
+
+  useEffect(() => {
+    if (isStreaming && preRef.current) {
+      preRef.current.scrollTop = preRef.current.scrollHeight;
+    }
+  }, [content, isStreaming]);
+
   return (
     <AccordionItem.Root defaultOpen={isStreaming}>
       <AccordionItem.Header>
@@ -21,6 +30,7 @@ export function ThinkingBlock({
       </AccordionItem.Header>
       <AccordionItem.Content>
         <pre
+          ref={preRef}
           style={{
             whiteSpace: "pre-wrap",
             fontFamily: "var(--stratakit-font-family-mono)",

@@ -412,8 +412,15 @@ export function ChatPanel({
         | null = null;
 
       try {
+        const thinkingBudget = settings.extendedThinking.enabled
+          ? settings.extendedThinking.budget
+          : 0;
         const client = AIClientFactory.createClient(selectedModel, {
-          geminiOptions: { temperature: 0 },
+          geminiOptions: {
+            temperature: 0,
+            thinkingBudgetTokens: thinkingBudget,
+          },
+          anthropicOptions: { thinkingBudgetTokens: thinkingBudget },
         });
 
         const toolsToPass = getTools();
@@ -861,6 +868,19 @@ export function ChatPanel({
     },
     [isCurrentlyStreaming],
   );
+
+  // Virtuoso's followOutput only fires when new items are appended.
+  // During streaming, we update the *content* of the last message (same array length),
+  // so we need to manually scroll to bottom when the message grows.
+  useEffect(() => {
+    if (isCurrentlyStreaming && virtuosoRef.current) {
+      virtuosoRef.current.scrollToIndex({
+        index: messages.length - 1,
+        align: "end",
+        behavior: "smooth",
+      });
+    }
+  }, [messages, isCurrentlyStreaming]);
 
   return (
     <>
