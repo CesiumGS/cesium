@@ -24,6 +24,7 @@
 - Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
 - Fixed Gaussian splat race conditions in snapshot/sort updates by enforcing explicit snapshot states, preventing stale async results from causing flickering, WebGL draw errors, and unstable LOD transition performance. [#13016](https://github.com/CesiumGS/cesium/issues/13016) [#12965](https://github.com/CesiumGS/cesium/issues/12965)
 - Fixed flashing when rendering multiple Gaussian splat primitives by storing draw-command model matrices per primitive (`_drawCommandModelMatrix`) instead of reusing shared scratch matrices. [#12967](https://github.com/CesiumGS/cesium/issues/12967)
+- Fixed shader cache lookup for day/night alpha in Columbus View. [#13216](https://github.com/CesiumGS/cesium/pull/13216)
 - Fixed a point-rendering regression which caused points to render as circles rather than squares. Such points now will only render as circles when their width is specified via the [BENTLEY_materials_point_style](https://github.com/CesiumGS/glTF/pull/91) glTF extension (which requires that such points be circular). [#13217](https://github.com/CesiumGS/cesium/issues/13217)
 
 ## 1.138 - 2026-02-02

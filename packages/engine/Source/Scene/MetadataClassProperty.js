@@ -1188,4 +1188,57 @@ MetadataClassProperty.valueTransformInPlace = function (
   return values;
 };
 
+/**
+ * Determines the byte size of a single property element.
+ * For example, if the metadata type is VEC3 and the component type is FLOAT32, this would return 12 bytes.
+ *
+ * @returns {number} The byte size of a single property element.
+ *
+ * @private
+ */
+MetadataClassProperty.prototype.bytesPerElement = function () {
+  const type = this.type;
+  const valueType = this.valueType;
+  const componentCount = MetadataType.getComponentCount(type);
+  const arrayLength = this.isArray ? this.arrayLength : 1;
+  const bytesPerComponent = MetadataComponentType.getSizeInBytes(valueType);
+  return componentCount * arrayLength * bytesPerComponent;
+};
+
+/**
+ * Determines whether this property can be stored in a texture, given the property's datatype and the number of
+ * texture channels dedicated property value.
+ *
+ * @param {Number} channelsLength The number of texture channels to pack each property value into
+ * @returns {boolean} true if the property can be stored in a texture with the given number of channels, false otherwise
+ *
+ * @private
+ */
+MetadataClassProperty.prototype.isGpuCompatible = function (channelsLength) {
+  const type = this.type;
+
+  if (this.isVariableLengthArray) {
+    return false;
+  }
+
+  if (type === MetadataType.STRING) {
+    return false;
+  }
+
+  // For the time being, boolean properties are not considered GPU compatible, because they are
+  // packed as bitstreams and the texture-unpacking logic does not currently support this.
+  if (type === MetadataType.BOOLEAN) {
+    return false;
+  }
+
+  // For all other properties, make sure the components fit in the sampled channels.
+  // (Note that it's possible to treat 64-bit types as two 32-bit components, but for now that's not supported)
+  const elementSizeInBytes = this.bytesPerElement();
+  if (elementSizeInBytes > channelsLength) {
+    return false;
+  }
+
+  return true;
+};
+
 export default MetadataClassProperty;

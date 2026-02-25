@@ -161,39 +161,43 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   }
 
   const sceneMode = frameState.mode;
+  // Bitwise OR uses 32-bit integers; bits 0-31 are packed below.
+  // Flags beyond bit 31 use arithmetic to avoid silent wrap-around
+  // (x << 32 === x << 0 in JavaScript).
   const flags =
-    sceneMode |
-    (applyBrightness << 2) |
-    (applyContrast << 3) |
-    (applyHue << 4) |
-    (applySaturation << 5) |
-    (applyGamma << 6) |
-    (applyAlpha << 7) |
-    (hasWaterMask << 8) |
-    (showReflectiveOcean << 9) |
-    (showOceanWaves << 10) |
-    (enableLighting << 11) |
-    (dynamicAtmosphereLighting << 12) |
-    (dynamicAtmosphereLightingFromSun << 13) |
-    (showGroundAtmosphere << 14) |
-    (perFragmentGroundAtmosphere << 15) |
-    (hasVertexNormals << 16) |
-    (useWebMercatorProjection << 17) |
-    (enableFog << 18) |
-    (quantization << 19) |
-    (applySplit << 20) |
-    (enableClippingPlanes << 21) |
-    (enableClippingPolygons << 22) |
-    (cartographicLimitRectangleFlag << 23) |
-    (imageryCutoutFlag << 24) |
-    (colorCorrect << 25) |
-    (highlightFillTile << 26) |
-    (colorToAlpha << 27) |
-    (hasGeodeticSurfaceNormals << 28) |
-    (hasExaggeration << 29) |
-    (showUndergroundColor << 30) |
-    (translucent << 31) |
-    (applyDayNightAlpha << 32);
+    ((sceneMode |
+      (applyBrightness << 2) |
+      (applyContrast << 3) |
+      (applyHue << 4) |
+      (applySaturation << 5) |
+      (applyGamma << 6) |
+      (applyAlpha << 7) |
+      (hasWaterMask << 8) |
+      (showReflectiveOcean << 9) |
+      (showOceanWaves << 10) |
+      (enableLighting << 11) |
+      (dynamicAtmosphereLighting << 12) |
+      (dynamicAtmosphereLightingFromSun << 13) |
+      (showGroundAtmosphere << 14) |
+      (perFragmentGroundAtmosphere << 15) |
+      (hasVertexNormals << 16) |
+      (useWebMercatorProjection << 17) |
+      (enableFog << 18) |
+      (quantization << 19) |
+      (applySplit << 20) |
+      (enableClippingPlanes << 21) |
+      (enableClippingPolygons << 22) |
+      (cartographicLimitRectangleFlag << 23) |
+      (imageryCutoutFlag << 24) |
+      (colorCorrect << 25) |
+      (highlightFillTile << 26) |
+      (colorToAlpha << 27) |
+      (hasGeodeticSurfaceNormals << 28) |
+      (hasExaggeration << 29) |
+      (showUndergroundColor << 30) |
+      (translucent << 31)) >>>
+      0) +
+    (applyDayNightAlpha ? 0x100000000 : 0);
 
   let currentClippingShaderState = 0;
   if (defined(clippingPlanes) && clippingPlanes.length > 0) {
