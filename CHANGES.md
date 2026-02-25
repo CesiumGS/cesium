@@ -16,6 +16,7 @@
 - Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors. [#13174](https://github.com/CesiumGS/cesium/pull/13174)
 - Added more depth testing options for billboards and labels with `BillboardCollection.coarseDepthTestDistance`, `BillboardCollection.threePointDepthTestDistance`, `LabelCollection.coarseDepthTestDistance`, and `LabelCollection.threePointDepthTestDistance`. [#12994](https://github.com/CesiumGS/cesium/pull/12994)
 - Added support for more metadata types via property textures in custom shaders. See this [issue](https://github.com/CesiumGS/cesium/issues/10248) for the current state of supported types. [#13135](https://github.com/CesiumGS/cesium/pull/13135)
+- Added support for accessing metadata from property tables (from the [EXT_structural_metadata extension](https://github.com/CesiumGS/glTF/tree/proposal-EXT_structural_metadata/extensions/2.0/Vendor/EXT_structural_metadata)) in [custom shaders](https://cesium.com/learn/cesiumjs/ref-doc/CustomShader.html?classFilter=customsh). [#13124](https://github.com/CesiumGS/cesium/issues/13124)
 
 #### Fixes :wrench:
 

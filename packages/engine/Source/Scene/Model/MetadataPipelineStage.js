@@ -896,6 +896,8 @@ function getStructAssignments(fieldNames, values, struct, type) {
   function constructAssignment(field) {
     const value = values[field.specName];
     if (defined(value)) {
+      // Note: template literals will coerce arrays to strings, if needed (e.g. if the metadata type is a vecN or an array, or even an array of vecN)
+      // In any case, the resulting string ends up as a flattened, comma-separated list. For example: [[1,2], [3,4]] will end up as vec4(1,2,3,4), which is valid GLSL.
       return `${struct}.${field.shaderName} = ${type}(${value});`;
     }
   }
