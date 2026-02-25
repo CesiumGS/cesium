@@ -131,6 +131,8 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
         vOffset++;
       }
+
+      polygon._dirty = false;
     }
   }
 
