@@ -727,8 +727,8 @@ function getAllPropertyIds(primitive, structuralMetadata) {
 
   const primitivePropertyIds = new Set();
 
-  function addUsedPropertyIds(propertyContainerId, propertyContainers) {
-    for (const id of propertyContainerId) {
+  function addUsedPropertyIds(propertyContainerIds, propertyContainers) {
+    for (const id of propertyContainerIds) {
       const propertyContainer = propertyContainers[id];
       Object.keys(propertyContainer.properties).forEach((propertyId) =>
         primitivePropertyIds.add(propertyId),
