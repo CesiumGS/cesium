@@ -265,8 +265,12 @@ function collectGpuCompatiblePropertyBufferViews(
 function createNoDataBufferView(classProperty, numFeatures) {
   // noData can be a number, an array of numbers (e.g. for vecN types), or a nested array of numbers (e.g. for arrays of vecN types).
   let noData = classProperty.noData;
-  const metadataComponentCount = MetadataType.getComponentCount(classProperty.type);
-  const metadataArrayLength = classProperty.isArray ? classProperty.arrayLength : 1;
+  const metadataComponentCount = MetadataType.getComponentCount(
+    classProperty.type,
+  );
+  const metadataArrayLength = classProperty.isArray
+    ? classProperty.arrayLength
+    : 1;
 
   // Special case: noData enum values are specified as strings, so we need to convert them to numbers here.
   if (classProperty.type === MetadataType.ENUM) {
@@ -286,12 +290,15 @@ function createNoDataBufferView(classProperty, numFeatures) {
   const bytesPerElement = classProperty.bytesPerElement();
   const buffer = new ArrayBuffer(bytesPerElement * numFeatures);
   const view = new DataView(buffer);
-  const setter = MetadataComponentType.getDataViewSetter(view, classProperty.componentType);
+  const setter = MetadataComponentType.getDataViewSetter(
+    view,
+    classProperty.componentType,
+  );
 
   for (let i = 0; i < numFeatures; i++) {
     for (let j = 0; j < metadataArrayLength; j++) {
       for (let k = 0; k < metadataComponentCount; k++) {
-        setter((bytesPerElement * i) + j + k, noData[j][k]);
+        setter(bytesPerElement * i + j + k, noData[j][k]);
       }
     }
   }
