@@ -343,7 +343,64 @@ viewer.camera.changed.addEventListener(() => {
   }
 });
 
+// City extents (west, south, east, north)
+const cityRectangles = {
+  "Los Angeles": [-118.5, 34.0, -118.47, 34.03],
+  "New York": [-74.02, 40.7, -73.97, 40.75],
+  London: [-0.15, 51.5, -0.1, 51.53],
+  Tokyo: [139.74, 35.67, 139.79, 35.71],
+};
+
+function createCityDropdown() {
+  const select = document.createElement("select");
+  select.className = "cesium-button";
+
+  // Default option
+  const defaultOption = document.createElement("option");
+  defaultOption.textContent = "Select City";
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  select.appendChild(defaultOption);
+
+  // Add city options
+  Object.keys(cityRectangles).forEach((cityName) => {
+    const option = document.createElement("option");
+    option.value = cityName;
+    option.textContent = cityName;
+    select.appendChild(option);
+  });
+
+  select.onchange = function () {
+    const rectangle = cityRectangles[this.value];
+
+    if (!rectangle) {
+      return;
+    }
+
+    // Ensure we're in map view
+    if (selectedViewType === ViewType.PanoView) {
+      returnToMap();
+    }
+
+    viewer.scene.camera.flyTo({
+      duration: 0,
+      destination: Cesium.Rectangle.fromDegrees(
+        rectangle[0],
+        rectangle[1],
+        rectangle[2],
+        rectangle[3],
+      ),
+    });
+  };
+
+  toolbar.appendChild(select);
+}
+
+createCityDropdown();
+
 viewer.scene.camera.flyTo({
   duration: 0,
-  destination: new Cesium.Rectangle.fromDegrees(-118.5, 34.0, -118.47, 34.03),
+  destination: new Cesium.Rectangle.fromDegrees(
+    ...cityRectangles["Los Angeles"],
+  ),
 });
