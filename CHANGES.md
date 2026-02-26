@@ -39,6 +39,10 @@
 - Fixed a bug where entities have not been clustered correctly. [#13064](https://github.com/CesiumGS/cesium/pull/13064)
 - Fixed error with `DynamicEnvironmentMapManager` when `ContextLimits.maximumCubeMapSize` is zero. [#12606](https://github.com/CesiumGS/cesium/pull/12606)
 
+#### Additions :tada:
+
+- Adds a `CESIUM_CSP_STYLE_NONCE` global for setting a nonce on style tags created by CesiumJS to comply with Content Security Policy (CSP) requirements.
+
 ## 1.137 - 2026-01-05
 
 ### @cesium/engine
