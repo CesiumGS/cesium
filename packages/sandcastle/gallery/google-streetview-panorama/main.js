@@ -1,10 +1,7 @@
-import { GoogleMaps } from "@cesium/engine";
 import * as Cesium from "cesium";
 
-const HEIGHT_THRESHOLD = 9000;
-
-GoogleMaps.defaultStreetViewStaticApiKey =
-  "key for Google Street View Static API";
+const HEIGHT_THRESHOLD = 7000;
+const PANO_SEARCH_RADIUS = 5;
 
 const ViewType = Object.freeze({
   MapView: 0,
@@ -43,8 +40,18 @@ const tileset = await Cesium.createGooglePhotorealistic3DTileset({
 tileset.show = false;
 viewer.scene.primitives.add(tileset);
 
+const ionResponse = await Cesium.Resource.fetchJson({
+  url: `${Cesium.Ion.defaultServer}/experimental/panoramas/google`,
+  headers: {
+    Authorization: `Bearer ${Cesium.Ion.defaultAccessToken}`,
+  },
+});
+
 const cubeMapProvider =
-  await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl();
+  await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
+    apiKey: ionResponse.options.key,
+    url: ionResponse.options.url,
+  });
 
 let savedLng = 0;
 let savedLat = 0;
@@ -70,7 +77,7 @@ function saveCameraView(viewer) {
 function selectPanoCubeMap(position) {
   const positionCartographic = Cesium.Cartographic.fromCartesian(position);
   cubeMapProvider
-    .getNearestPanoId(positionCartographic)
+    .getNearestPanoId(positionCartographic, PANO_SEARCH_RADIUS)
     .then((panoIdObject) => {
       const { panoId, latitude, longitude } = panoIdObject;
       const height = positionCartographic.height;
@@ -336,4 +343,7 @@ viewer.camera.changed.addEventListener(() => {
   }
 });
 
-showTopModal("Zoom in closer to select Streetview imagery");
+viewer.scene.camera.flyTo({
+  duration: 0,
+  destination: new Cesium.Rectangle.fromDegrees(-118.5, 34.0, -118.47, 34.03),
+});

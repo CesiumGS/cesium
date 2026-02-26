@@ -176,6 +176,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
  * Gets the panoIds for the given cartographic location. See {@link https://developers.google.com/maps/documentation/tile/streetview#panoid-search}.
 
  * @param {Cartographic} position The position to search for the nearest panoId.
+ * @param {number} [radius=50] The radius in meters to search for the nearest panoId.
  * 
  * @returns {Object} an object containing a panoId, latitude, and longitude of the closest panorama
  * 
@@ -187,7 +188,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
  * const panoIds = provider.getNearestPanoId(position);
  */
 GoogleStreetViewCubeMapPanoramaProvider.prototype.getNearestPanoId =
-  async function (position) {
+  async function (position, radius) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(position)) {
       throw new DeveloperError("position is required.");
@@ -204,6 +205,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getNearestPanoId =
       queryParameters: {
         key: this._key,
         location: posString,
+        radius: radius ?? 50,
       },
     });
 
