@@ -196,9 +196,9 @@ function getPropertyAttributeInfo(
     const modelAttribute = getAttributeByName(primitive, property.attribute);
     const { glslType, variableName } = getAttributeInfo(modelAttribute);
 
-    const propertyShaderDestination = ShaderDestination.intersection(
-      propertyDestination(propertyId, usedMetadataProperties),
-      ShaderDestination.BOTH,
+    const propertyShaderDestination = propertyDestination(
+      propertyId,
+      usedMetadataProperties,
     );
     if (propertyShaderDestination === ShaderDestination.NONE) {
       continue;
@@ -842,7 +842,11 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
   );
 }
 
-function processPropertyTableProperty(renderResources, propertyInfo, webgl2) {
+function processPropertyTableProperty(
+  renderResources,
+  propertyInfo,
+  webgl2,
+) {
   addPropertyTablePropertyMetadata(renderResources, propertyInfo, webgl2);
   addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
   addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
@@ -1041,21 +1045,17 @@ function collectMetadataUsedInCustomShader(
     return;
   }
 
-  const fragmentMetadataSet = customShader.usedVariablesFragment?.metadataSet;
-  if (defined(fragmentMetadataSet)) {
-    for (const propertyId in fragmentMetadataSet) {
-      if (fragmentMetadataSet.hasOwnProperty(propertyId)) {
-        usedInFragment.add(propertyId);
-      }
+  const fragmentMetadataSet = customShader.usedVariablesFragment?.metadataSet ?? {};
+  for (const propertyId in fragmentMetadataSet) {
+    if (fragmentMetadataSet.hasOwnProperty(propertyId)) {
+      usedInFragment.add(propertyId);
     }
   }
 
-  const vertexMetadataSet = customShader.usedVariablesVertex?.metadataSet;
-  if (defined(vertexMetadataSet)) {
-    for (const propertyId in vertexMetadataSet) {
-      if (vertexMetadataSet.hasOwnProperty(propertyId)) {
-        usedInVertex.add(propertyId);
-      }
+  const vertexMetadataSet = customShader.usedVariablesVertex?.metadataSet ?? {};
+  for (const propertyId in vertexMetadataSet) {
+    if (vertexMetadataSet.hasOwnProperty(propertyId)) {
+      usedInVertex.add(propertyId);
     }
   }
 }
@@ -1073,28 +1073,22 @@ function collectMetadataUsedInPointCloudStyling(
     return;
   }
 
-  const color = style.color;
-  if (defined(color)) {
-    color.getVariables().forEach((propertyId) => {
-      usedInVertex.add(propertyId);
-      usedInFragment.add(propertyId);
-    });
+  const colorVariables = style.color?.getVariables() ?? [];
+  for (const propertyId of colorVariables) {
+    usedInVertex.add(propertyId);
+    usedInFragment.add(propertyId);
   }
 
-  const show = style.show;
-  if (defined(show)) {
-    show.getVariables().forEach((propertyId) => {
-      usedInVertex.add(propertyId);
-      usedInFragment.add(propertyId);
-    });
+  const showVariables = style.show?.getVariables() ?? [];
+  for (const propertyId of showVariables) {
+    usedInVertex.add(propertyId);
+    usedInFragment.add(propertyId);
   }
 
   // Only used in vertex shader
-  const pointSize = style.pointSize;
-  if (defined(pointSize)) {
-    pointSize.getVariables().forEach((propertyId) => {
-      usedInVertex.add(propertyId);
-    });
+  const pointSizeVariables = style.pointSize?.getVariables() ?? [];
+  for (const propertyId of pointSizeVariables) {
+    usedInVertex.add(propertyId);
   }
 }
 
