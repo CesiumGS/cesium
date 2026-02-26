@@ -379,7 +379,9 @@ function createCityDropdown() {
 
     // Ensure we're in map view
     if (selectedViewType === ViewType.PanoView) {
+      viewer.scene.skyBox = Cesium.SkyBox.createEarthSkyBox();
       returnToMap();
+      enablePicking();
     }
 
     viewer.scene.camera.flyTo({
