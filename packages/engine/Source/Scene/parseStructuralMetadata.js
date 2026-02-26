@@ -200,6 +200,7 @@ function createTextureForPropertyTable(
     pixelFormat: PixelFormat.RGBA,
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
     sampler: sampler,
+    flipY: false,
     source: {
       width: numFeatures,
       height: numGpuCompatibleProperties,
