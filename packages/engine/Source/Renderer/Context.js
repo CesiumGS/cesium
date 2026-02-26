@@ -1738,6 +1738,7 @@ Context.prototype.destroy = function () {
     }
   }
 
+  this._gl.getExtension("WEBGL_lose_context")?.loseContext();
   this._shaderCache = this._shaderCache.destroy();
   this._textureCache = this._textureCache.destroy();
   this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
