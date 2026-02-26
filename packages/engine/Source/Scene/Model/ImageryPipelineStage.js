@@ -924,6 +924,9 @@ class ImageryPipelineStage {
   }
 
   /**
+   * XXX_DRAPING: This should essentially do the same as _localizeCartographicRectanglesToCartesianRectangle,
+   * but whether or not this should (or has to) operate on the so-called "native" rectangles has to be checked.
+   *
    * Compute the translation and scale that has to be applied to
    * the texture coordinates for mapping the given imagery to
    * the geometry.
