@@ -13,6 +13,7 @@ import loadKTX2 from "../Core/loadKTX2.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
+import PrimitiveTypeUtils from "../Core/PrimitiveTypeUtils.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import ViewportQuadVS from "../Shaders/ViewportQuadVS.js";
@@ -1319,7 +1320,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
   const instanceCount = drawCommand.instanceCount;
 
   //>>includeStart('debug', pragmas.debug);
-  if (!PrimitiveType.validate(primitiveType)) {
+  if (!PrimitiveTypeUtils.validate(primitiveType)) {
     throw new DeveloperError(
       "drawCommand.primitiveType is required and must be valid.",
     );

@@ -7,7 +7,7 @@ import Axis from "../Axis.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import CullFace from "../CullFace.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
+import PrimitiveTypeUtils from "../../Core/PrimitiveTypeUtils.js";
 import Matrix3 from "../../Core/Matrix3.js";
 
 /**
@@ -299,7 +299,7 @@ const scratchMatrix3 = new Matrix3();
  * @private
  */
 ModelUtility.getCullFace = function (modelMatrix, primitiveType) {
-  if (!PrimitiveType.isTriangles(primitiveType)) {
+  if (!PrimitiveTypeUtils.isTriangles(primitiveType)) {
     return CullFace.BACK;
   }
 
