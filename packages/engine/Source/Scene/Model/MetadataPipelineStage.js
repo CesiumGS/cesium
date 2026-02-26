@@ -368,7 +368,11 @@ function getPropertyTableInfo(
       propertyDestination(propertyId, usedMetadataProperties),
       shaderDestination,
     );
+
     if (propertyShaderDestination === ShaderDestination.NONE) {
+      // Still need to increment the index to stay aligned with the rows of the metadata texture.
+      // The texture includes metadata whether or not it's used in the shader.
+      propertyInfoIndex++;
       continue;
     }
 
