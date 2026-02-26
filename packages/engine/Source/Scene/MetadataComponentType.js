@@ -480,17 +480,25 @@ MetadataComponentType.getDataViewSetter = function (view, componentType) {
   const setters = {
     [MetadataComponentType.UINT8]: view.setUint8.bind(view),
     [MetadataComponentType.INT8]: view.setInt8.bind(view),
-    [MetadataComponentType.UINT16]: (offset, value) => view.setUint16(offset, value, true /* little-endian */),
-    [MetadataComponentType.INT16]: (offset, value) => view.setInt16(offset, value, true),
-    [MetadataComponentType.UINT32]: (offset, value) => view.setUint32(offset, value, true),
-    [MetadataComponentType.INT32]: (offset, value) => view.setInt32(offset, value, true),
-    [MetadataComponentType.FLOAT32]: (offset, value) => view.setFloat32(offset, value, true),
-    [MetadataComponentType.FLOAT64]: (offset, value) => view.setFloat64(offset, value, true),
-    [MetadataComponentType.UINT64]: (offset, value) => view.setBigUint64(offset, BigInt(value), true),
-    [MetadataComponentType.INT64]: (offset, value) => view.setBigInt64(offset, BigInt(value), true),
+    [MetadataComponentType.UINT16]: (offset, value) =>
+      view.setUint16(offset, value, true /* little-endian */),
+    [MetadataComponentType.INT16]: (offset, value) =>
+      view.setInt16(offset, value, true),
+    [MetadataComponentType.UINT32]: (offset, value) =>
+      view.setUint32(offset, value, true),
+    [MetadataComponentType.INT32]: (offset, value) =>
+      view.setInt32(offset, value, true),
+    [MetadataComponentType.FLOAT32]: (offset, value) =>
+      view.setFloat32(offset, value, true),
+    [MetadataComponentType.FLOAT64]: (offset, value) =>
+      view.setFloat64(offset, value, true),
+    [MetadataComponentType.UINT64]: (offset, value) =>
+      view.setBigUint64(offset, BigInt(value), true),
+    [MetadataComponentType.INT64]: (offset, value) =>
+      view.setBigInt64(offset, BigInt(value), true),
   };
 
   return setters[componentType];
-}
+};
 
 export default Object.freeze(MetadataComponentType);

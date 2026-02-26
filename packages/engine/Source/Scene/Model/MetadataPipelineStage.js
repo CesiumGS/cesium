@@ -771,11 +771,7 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
   );
 }
 
-function processPropertyTableProperty(
-  renderResources,
-  propertyInfo,
-  webgl2,
-) {
+function processPropertyTableProperty(renderResources, propertyInfo, webgl2) {
   addPropertyTablePropertyMetadata(renderResources, propertyInfo, webgl2);
   addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
   addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
