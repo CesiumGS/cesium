@@ -126,7 +126,7 @@ MetadataPipelineStage.process = function (
   }
   for (let i = 0; i < propertyTablesInfo.length; i++) {
     const info = propertyTablesInfo[i];
-    processPropertyTableProperty(renderResources, info, webgl2, i);
+    processPropertyTableProperty(renderResources, info, webgl2);
   }
 };
 
@@ -292,6 +292,10 @@ function getPropertyTableInfo(
   const classProperties = classDefinition.properties;
   const infoArray = [];
 
+  // This is the per-table index of the property info, which is used to index into the property table texture
+  // during a texelFetch.
+  let propertyInfoIndex = 0;
+
   // See note in {@link parseStructuralMetadata.collectGpuCompatiblePropertyBufferViews} about
   // why we iterate over the class definition properties rather than the property table properties.
   for (const [propertyId, classProperty] of Object.entries(classProperties)) {
@@ -311,7 +315,10 @@ function getPropertyTableInfo(
       shaderDestination: shaderDestination,
       propertyTable: propertyTable,
       featureIdVariableName: featureSetInfo.variableName,
+      propertyInfoIndex: propertyInfoIndex,
     });
+
+    propertyInfoIndex++;
   }
 
   return infoArray;
@@ -768,14 +775,8 @@ function processPropertyTableProperty(
   renderResources,
   propertyInfo,
   webgl2,
-  propertyIndex,
 ) {
-  addPropertyTablePropertyMetadata(
-    renderResources,
-    propertyInfo,
-    webgl2,
-    propertyIndex,
-  );
+  addPropertyTablePropertyMetadata(renderResources, propertyInfo, webgl2);
   addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
   addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
 }
@@ -784,7 +785,6 @@ function addPropertyTablePropertyMetadata(
   renderResources,
   propertyInfo,
   webgl2,
-  propertyIndex,
 ) {
   const { shaderBuilder, uniformMap } = renderResources;
   const {
@@ -793,6 +793,7 @@ function addPropertyTablePropertyMetadata(
     property,
     featureIdVariableName,
     propertyTable,
+    propertyInfoIndex,
   } = propertyInfo;
 
   if (!webgl2) {
@@ -842,7 +843,7 @@ function addPropertyTablePropertyMetadata(
   }
 
   const featureIdExpression = `featureIds.${featureIdVariableName}`;
-  const texCoordExpression = `ivec2(${featureIdExpression}, ${propertyIndex})`;
+  const texCoordExpression = `ivec2(${featureIdExpression}, ${propertyInfoIndex})`;
   const textureSampleExpression = `texelFetch(${textureUniformName}, ${texCoordExpression}, 0)`;
   const classProperty = propertyInfo.classProperty;
 
