@@ -842,11 +842,7 @@ function addPropertyMetadataStatistics(shaderBuilder, propertyInfo) {
   );
 }
 
-function processPropertyTableProperty(
-  renderResources,
-  propertyInfo,
-  webgl2,
-) {
+function processPropertyTableProperty(renderResources, propertyInfo, webgl2) {
   addPropertyTablePropertyMetadata(renderResources, propertyInfo, webgl2);
   addPropertyMetadataClass(renderResources.shaderBuilder, propertyInfo);
   addPropertyMetadataStatistics(renderResources.shaderBuilder, propertyInfo);
@@ -1045,7 +1041,8 @@ function collectMetadataUsedInCustomShader(
     return;
   }
 
-  const fragmentMetadataSet = customShader.usedVariablesFragment?.metadataSet ?? {};
+  const fragmentMetadataSet =
+    customShader.usedVariablesFragment?.metadataSet ?? {};
   for (const propertyId in fragmentMetadataSet) {
     if (fragmentMetadataSet.hasOwnProperty(propertyId)) {
       usedInFragment.add(propertyId);
