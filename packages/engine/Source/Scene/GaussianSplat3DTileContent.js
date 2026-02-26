@@ -800,13 +800,9 @@ GaussianSplat3DTileContent.prototype.isDestroyed = function () {
 GaussianSplat3DTileContent.prototype.destroy = function () {
   this.splatPrimitive = undefined;
 
-  if (
-    defined(this._tileset.gaussianSplatPrimitive) &&
-    !this._tileset.gaussianSplatPrimitive.isDestroyed()
-  ) {
-    this._tileset.gaussianSplatPrimitive.destroy();
-  }
-  this._tileset.gaussianSplatPrimitive = undefined;
+  // NOTE: gaussianSplatPrimitive is shared across all tiles in the tileset and
+  // must NOT be destroyed here. Only the tileset itself should destroy it when
+  // the entire tileset is torn down.
 
   this._tile = undefined;
   this._tileset = undefined;
