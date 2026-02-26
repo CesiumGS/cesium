@@ -199,9 +199,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    */
   geometryByteLength: {
     get: function () {
-      return this.gltfPrimitive.attributes.reduce((totalLength, attribute) => {
-        return totalLength + attribute.byteLength;
-      }, 0);
+      return 0;
     },
   },
   /**
@@ -213,9 +211,12 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    */
   texturesByteLength: {
     get: function () {
-      const texture = this._tileset.gaussianSplatPrimitive.gaussianSplatTexture;
-      const selectedTileLength =
-        this._tileset.gaussianSplatPrimitive.selectedTileLength;
+      const primitive = this._tileset?.gaussianSplatPrimitive;
+      if (!defined(primitive)) {
+        return 0;
+      }
+      const texture = primitive.gaussianSplatTexture;
+      const selectedTileLength = primitive.selectedTileLength;
       if (!defined(texture) || selectedTileLength === 0) {
         return 0;
       }
