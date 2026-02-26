@@ -33,7 +33,7 @@ GoogleMaps.mapTilesApiEndpoint = new Resource({
 
 GoogleMaps.getDefaultCredit = function () {
   return new Credit(
-    `<img src="https://assets.ion.cesium.com/google-credit.png" style="vertical-align: -5px" alt="Google">`,
+    `<img alt=\"Google\" src=\"https://assets.ion.cesium.com/google-credit.png\" style=\"vertical-align:-6px\">`,
     true,
   );
 };
