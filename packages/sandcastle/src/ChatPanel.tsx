@@ -961,7 +961,7 @@ export function ChatPanel({
                   className="example-button"
                   onClick={() => {
                     sendMessageWithContent(
-                      "Create an animated jogging path around the Grand Canyon with smooth camera following. Show a runner's route along the rim with distance markers, elevation profile, and a moving camera that follows the path smoothly. Make it visually stunning with a nice UI showing stats like distance, elevation gain, and current location.",
+                      "Create an animated jogging path around the Grand Canyon with smooth camera following. Use the Cesium Man glTF asset (available at ../../SampleData/models/CesiumMan/Cesium_Man.glb) as the runner. Show the runner's route along the rim with distance markers, elevation profile, and a moving camera that follows the path smoothly. Make it visually stunning with a nice UI showing stats like distance, elevation gain, and current location.",
                     );
                   }}
                   disabled={!hasApiKey}

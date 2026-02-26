@@ -19,8 +19,10 @@ The following APIs have been deprecated and replaced. ALWAYS use the new APIs:
 | Deprecated (DO NOT USE) | Current API |
 |------------------------|-------------|
 | \`Cesium.createWorldTerrain()\` | \`Cesium.Terrain.fromWorldTerrain()\` |
-| \`Cesium.createWorldTerrainAsync()\` | \`Cesium.Terrain.fromWorldTerrain()\` or \`await Cesium.createWorldTerrainAsync()\` for TerrainProvider |
+| \`Cesium.createWorldTerrainAsync()\` | \`Cesium.Terrain.fromWorldTerrain()\` |
 | \`viewer.terrainProvider = ...\` | \`viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain())\` |
+| \`viewer.scene.terrainProvider\` | Use \`terrain.readyEvent\` — see below |
+| \`viewer.scene.globe.terrainProvider\` | Use \`terrain.readyEvent\` — see below |
 
 ### Correct Usage Examples:
 
@@ -42,25 +44,28 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
 \`\`\`
 
-### CRITICAL: Terrain Sampling (sampleTerrain / sampleTerrainMostDetailed)
+### CRITICAL: Terrain Provider Access — NEVER read terrainProvider directly
 
-When using \`Cesium.Terrain.fromWorldTerrain()\`, the terrain loads **asynchronously**.
-\`viewer.scene.terrainProvider\` is \`undefined\` until the terrain is ready.
+\`Cesium.Terrain.fromWorldTerrain()\` loads the terrain provider **asynchronously**.
+Until it finishes loading, \`viewer.scene.terrainProvider\` and \`viewer.scene.globe.terrainProvider\`
+are either \`undefined\` or a default placeholder — NOT the real terrain provider.
 
-**WRONG - will throw "terrainProvider is required":**
+**NEVER do any of these — they WILL throw "terrainProvider is required":**
 \`\`\`javascript
-const terrain = Cesium.Terrain.fromWorldTerrain();
-const viewer = new Cesium.Viewer("cesiumContainer", { terrain });
-// ERROR: terrain not ready yet!
+// ALL of these are WRONG:
+viewer.scene.terrainProvider                // undefined until ready
+viewer.scene.globe.terrainProvider          // undefined until ready
+const tp = viewer.scene.terrainProvider;    // saving a ref at module level is WRONG
 await Cesium.sampleTerrainMostDetailed(viewer.scene.terrainProvider, positions);
+await Cesium.sampleTerrainMostDetailed(viewer.scene.globe.terrainProvider, positions);
 \`\`\`
 
-**CORRECT - wait for terrain.readyEvent:**
+**CORRECT — always wait for terrain.readyEvent before accessing the provider:**
 \`\`\`javascript
 const terrain = Cesium.Terrain.fromWorldTerrain();
 const viewer = new Cesium.Viewer("cesiumContainer", { terrain });
 
-// Wait for terrain to be ready before sampling
+// The ONLY safe way to get the terrain provider:
 terrain.readyEvent.addEventListener(async (terrainProvider) => {
   try {
     await Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
@@ -71,13 +76,24 @@ terrain.readyEvent.addEventListener(async (terrainProvider) => {
 });
 \`\`\`
 
-**ALTERNATIVE - use createWorldTerrainAsync for immediate access:**
+If you need the terrain provider in multiple places, store the reference from readyEvent:
 \`\`\`javascript
-const viewer = new Cesium.Viewer("cesiumContainer");
-const terrainProvider = await Cesium.createWorldTerrainAsync();
-viewer.scene.terrainProvider = terrainProvider;
-// Now safe to sample immediately
-await Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
+const terrain = Cesium.Terrain.fromWorldTerrain();
+const viewer = new Cesium.Viewer("cesiumContainer", { terrain });
+
+let readyTerrainProvider;
+terrain.readyEvent.addEventListener((provider) => {
+  readyTerrainProvider = provider;
+});
+
+// Later, in any function that needs terrain sampling:
+async function samplePositions(positions) {
+  if (!readyTerrainProvider) {
+    console.log("Terrain not ready yet");
+    return;
+  }
+  await Cesium.sampleTerrainMostDetailed(readyTerrainProvider, positions);
+}
 \`\`\`
 
 ## 3D Tiles / Google Photorealistic
