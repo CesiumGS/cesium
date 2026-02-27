@@ -1,8 +1,10 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import CesiumMath from "../Core/Math.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import Entity from "./Entity.js";
 import JulianDate from "../Core/JulianDate.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -20,6 +22,158 @@ import ReferenceProperty from "./ReferenceProperty.js";
 import SampledPositionProperty from "./SampledPositionProperty.js";
 import ScaledPositionProperty from "./ScaledPositionProperty.js";
 import TimeIntervalCollectionPositionProperty from "./TimeIntervalCollectionPositionProperty.js";
+import Quaternion from "../Core/Quaternion.js";
+
+const update3DMatrix3Scratch1 = new Matrix3();
+const update3DMatrix3Scratch2 = new Matrix3();
+const update3DMatrix3Scratch3 = new Matrix3();
+const update3DCartesian3Scratch0 = new Cartesian3();
+const update3DCartesian3Scratch1 = new Cartesian3();
+const update3DCartesian3Scratch2 = new Cartesian3();
+const update3DCartesian3Scratch3 = new Cartesian3();
+
+const transformOrientationScratch = new Quaternion();
+const transformVvlhScratch = new Matrix4();
+const transformRotationScratch = new Matrix3();
+
+/**
+ * Transforms a path entity's position into the local frame of the reference entity.
+ * If the reference entity has an orientation, uses that orientation to define the local frame.
+ * Otherwise, falls back to a VVLH (Vehicle Velocity Local Horizontal) frame derived from the reference entity's velocity.
+ *
+ * @param {JulianDate} time The time at which to evaluate the orientation or VVLH frame.
+ * @param {Cartesian3} pathEntityPos The position of the path entity in the FIXED reference frame.
+ * @param {Cartesian3} refEntityPos The position of the reference entity in the FIXED reference frame.
+ * @param {Entity} refEntity The reference entity whose frame to transform into.
+ * @param {Cartesian3} result The object onto which to store the result.
+ * @returns {Cartesian3 | undefined} The transformed position in the reference entity's local frame, or undefined if either input position is undefined.
+ */
+function transformToEntityFrame(time, pathEntityPos, refEntityPos, refEntity, result) {
+  if (!defined(pathEntityPos) || !defined(refEntityPos)) {
+    return undefined;
+  }
+
+  Cartesian3.subtract(pathEntityPos, refEntityPos, result);
+  if (defined(refEntity.orientation)) {
+    if (refEntity.orientation.getValue(time, transformOrientationScratch)) {
+      Quaternion.conjugate(transformOrientationScratch, transformOrientationScratch);
+      Matrix3.fromQuaternion(transformOrientationScratch, transformRotationScratch);
+      Matrix3.multiplyByVector(transformRotationScratch, result, result);
+    }
+  } else if (defined(computeVvlhTransform(time, refEntity.position, transformVvlhScratch))) {
+    Matrix4.inverse(transformVvlhScratch, transformVvlhScratch);
+    Matrix4.getRotation(transformVvlhScratch, transformRotationScratch);
+    Matrix3.multiplyByVector(transformRotationScratch, result, result);
+  }
+  // TODO verify what happens in neither of above 2 cases
+  return result;
+}
+
+/**
+ * TODO
+ * 
+ * @param {*} time 
+ * @param {*} positionProperty 
+ * @param {*} result 
+ * @returns 
+ */
+function computeVvlhTransform(time, positionProperty, result) {
+  const cartesian = positionProperty.getValue(time, update3DCartesian3Scratch0);
+  if (defined(cartesian)) {
+    // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
+    // Slower moving vehicles will most likely default to east-north-up, while faster ones will be LVLH.
+    const deltaTime = JulianDate.addSeconds(time, 0.01, new JulianDate());
+    const deltaCartesian = positionProperty.getValue(
+      deltaTime,
+      update3DCartesian3Scratch1
+    );
+    if (
+      defined(deltaCartesian) &&
+      !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON16)
+    ) {
+      let toInertial = Transforms.computeFixedToIcrfMatrix(
+        time,
+        update3DMatrix3Scratch1
+      );
+      let toInertialDelta = Transforms.computeFixedToIcrfMatrix(
+        deltaTime,
+        update3DMatrix3Scratch2
+      );
+      let toFixed;
+
+      if (!defined(toInertial) || !defined(toInertialDelta)) {
+        toFixed = Transforms.computeTemeToPseudoFixedMatrix(
+          time,
+          update3DMatrix3Scratch3
+        );
+        toInertial = Matrix3.transpose(toFixed, update3DMatrix3Scratch1);
+        toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(
+          deltaTime,
+          update3DMatrix3Scratch2
+        );
+        Matrix3.transpose(toInertialDelta, toInertialDelta);
+      } else {
+        toFixed = Matrix3.transpose(toInertial, update3DMatrix3Scratch3);
+      }
+
+      // Z along the position
+      const zBasis = update3DCartesian3Scratch2;
+      Cartesian3.normalize(cartesian, zBasis);
+      Cartesian3.normalize(deltaCartesian, deltaCartesian);
+
+      Matrix3.multiplyByVector(toInertial, zBasis, zBasis);
+      Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, deltaCartesian);
+
+      // Y is along the angular momentum vector (e.g. "orbit normal")
+      const yBasis = Cartesian3.cross(
+        zBasis,
+        deltaCartesian,
+        update3DCartesian3Scratch3
+      );
+      if (
+        !Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON16)
+      ) {
+        // X is along the cross of y and z (right handed basis / in the direction of motion)
+        const xBasis = Cartesian3.cross(
+          yBasis,
+          zBasis,
+          update3DCartesian3Scratch1
+        );
+
+        Matrix3.multiplyByVector(toFixed, xBasis, xBasis);
+        Matrix3.multiplyByVector(toFixed, yBasis, yBasis);
+        Matrix3.multiplyByVector(toFixed, zBasis, zBasis);
+
+        Cartesian3.normalize(xBasis, xBasis);
+        Cartesian3.normalize(yBasis, yBasis);
+        Cartesian3.normalize(zBasis, zBasis);
+
+        if (!defined(result)) {
+          result = new Matrix4();
+        }
+
+        result[0] = xBasis.x;
+        result[1] = xBasis.y;
+        result[2] = xBasis.z;
+        result[3] = 0.0;
+        result[4] = yBasis.x;
+        result[5] = yBasis.y;
+        result[6] = yBasis.z;
+        result[7] = 0.0;
+        result[8] = zBasis.x;
+        result[9] = zBasis.y;
+        result[10] = zBasis.z;
+        result[11] = 0.0;
+        result[12] = cartesian.x;
+        result[13] = cartesian.y;
+        result[14] = cartesian.z;
+        result[15] = 1.0;
+        return result;
+      }
+    }
+  }
+  return undefined;
+}
 
 const defaultResolution = 60.0;
 const defaultWidth = 1.0;
@@ -35,6 +189,7 @@ function EntityData(entity) {
   this.updater = undefined;
 }
 
+const sampleScratch = new Cartesian3();
 function subSampleSampledProperty(
   property,
   start,
@@ -46,12 +201,38 @@ function subSampleSampledProperty(
   startingIndex,
   result,
 ) {
+  let refEntity;
+  let refPosition;
+
+  let entityFrame = false;
+  if (referenceFrame instanceof Entity) {
+    refEntity = referenceFrame;
+    refPosition = refEntity.position;
+    referenceFrame = ReferenceFrame.FIXED;
+    entityFrame = true;
+  }
+
   let r = startingIndex;
   //Always step exactly on start (but only use it if it exists.)
   let tmp;
+  let tmp2;
   tmp = property.getValueInReferenceFrame(start, referenceFrame, result[r]);
-  if (defined(tmp)) {
-    result[r++] = tmp;
+  if (!entityFrame) {
+    if (defined(tmp)) {
+      result[r++] = tmp;
+    }
+  } else {
+    tmp2 = refPosition.getValueInReferenceFrame(
+      start,
+      referenceFrame,
+      sampleScratch
+    );
+
+    // Transform to frame of reference - either reference entity's orientation, or VVLH
+    tmp = transformToEntityFrame(start, tmp, tmp2, refEntity, tmp);
+    if (defined(tmp)) {
+      result[r++] = tmp;
+    }
   }
 
   let steppedOnNow =
@@ -78,8 +259,20 @@ function subSampleSampledProperty(
         referenceFrame,
         result[r],
       );
-      if (defined(tmp)) {
-        result[r++] = tmp;
+      if (!entityFrame) {
+        if (defined(tmp)) {
+          result[r++] = tmp;
+        }
+      } else {
+        tmp2 = refPosition.getValueInReferenceFrame(
+          updateTime,
+          referenceFrame,
+          sampleScratch
+        );
+        if (defined(tmp) && defined(tmp2)) {
+          tmp = transformToEntityFrame(updateTime, tmp, tmp2, refEntity, tmp);
+          result[r++] = tmp;
+        }
       }
       steppedOnNow = true;
     }
@@ -93,8 +286,20 @@ function subSampleSampledProperty(
         referenceFrame,
         result[r],
       );
-      if (defined(tmp)) {
-        result[r++] = tmp;
+      if (!entityFrame) {
+        if (defined(tmp)) {
+          result[r++] = tmp;
+        }
+      } else {
+        tmp2 = refPosition.getValueInReferenceFrame(
+          current,
+          referenceFrame,
+          sampleScratch
+        );
+        if (defined(tmp) && defined(tmp2)) {
+          tmp = transformToEntityFrame(current, tmp, tmp2, refEntity, tmp);
+          result[r++] = tmp;
+        }
       }
     }
 
@@ -129,8 +334,20 @@ function subSampleSampledProperty(
 
   //Always step exactly on stop (but only use it if it exists.)
   tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[r]);
-  if (defined(tmp)) {
-    result[r++] = tmp;
+  if (!entityFrame) {
+    if (defined(tmp)) {
+      result[r++] = tmp;
+    }
+  } else {
+    tmp2 = refPosition.getValueInReferenceFrame(
+      stop,
+      referenceFrame,
+      sampleScratch
+    );
+    if (defined(tmp) && defined(tmp2)) {
+      tmp = transformToEntityFrame(stop, tmp, tmp2, refEntity, tmp);
+      result[r++] = tmp;
+    }
   }
 
   return r;
@@ -484,6 +701,8 @@ function subSample(
 }
 
 const toFixedScratch = new Matrix3();
+const updateOrientationScratch = new Quaternion();
+const updateRotationScratch = new Matrix3();
 function PolylineUpdater(scene, referenceFrame) {
   this._unusedIndexes = [];
   this._polylineCollection = new PolylineCollection();
@@ -493,16 +712,38 @@ function PolylineUpdater(scene, referenceFrame) {
 }
 
 PolylineUpdater.prototype.update = function (time) {
-  if (this._referenceFrame === ReferenceFrame.INERTIAL) {
-    const toFixed = Transforms.computeIcrfToCentralBodyFixedMatrix(
-      time,
-      toFixedScratch,
-    );
+  const frame = this._referenceFrame;
+  if (frame === ReferenceFrame.INERTIAL) {
+    let toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
+    if (!defined(toFixed)) {
+      toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, toFixedScratch);
+    }
     Matrix4.fromRotationTranslation(
       toFixed,
       Cartesian3.ZERO,
-      this._polylineCollection.modelMatrix,
+      this._polylineCollection.modelMatrix
     );
+  } else if (frame instanceof Entity) {
+    const position = frame.position.getValue(time);
+
+    // Use the reference frame entity's orientation if it has one
+    if (defined(frame.orientation)) {
+      if (defined(frame.orientation.getValue(time, updateOrientationScratch))) {
+        // Calculate the model matrix that places the body-frame path points into the world
+        Matrix3.fromQuaternion(updateOrientationScratch, updateRotationScratch);
+        Matrix4.fromRotationTranslation(
+          updateRotationScratch,
+          position,
+          this._polylineCollection.modelMatrix
+        );
+      }
+    } else {
+      computeVvlhTransform(
+        time,
+        frame.position,
+        this._polylineCollection.modelMatrix
+      );
+    }
   }
 };
 
@@ -710,15 +951,37 @@ PathVisualizer.prototype.update = function (time) {
     const item = items[i];
     const entity = item.entity;
     const positionProperty = entity._position;
+    const pathGraphics = entity._path;
 
     const lastUpdater = item.updater;
 
+    let isRelative = false;
+
     let frameToVisualize = ReferenceFrame.FIXED;
+    let frameToVisualizeKey = frameToVisualize.toString();
     if (this._scene.mode === SceneMode.SCENE3D) {
-      frameToVisualize = positionProperty.referenceFrame;
+      const relativeTo = Property.getValueOrUndefined(pathGraphics.relativeTo, time);
+      if (defined(relativeTo)) {
+        if (relativeTo === "Fixed") {
+          frameToVisualize = ReferenceFrame.FIXED;
+          frameToVisualizeKey = frameToVisualize.toString();
+        } else if (relativeTo === "Inertial") {
+          frameToVisualize = ReferenceFrame.INERTIAL;
+          frameToVisualizeKey = frameToVisualize.toString();
+        } else {
+          // Path should be relative to entity
+          // Current implementation uses VVLH, ignores entity orientation
+          isRelative = true;
+          frameToVisualize = this._entityCollection.getById(relativeTo);
+          frameToVisualizeKey = relativeTo;
+        }
+      } else {
+        frameToVisualize = positionProperty.referenceFrame;
+        frameToVisualizeKey = frameToVisualize.toString();
+      }
     }
 
-    let currentUpdater = this._updaters[frameToVisualize];
+    let currentUpdater = this._updaters[frameToVisualizeKey];
 
     if (lastUpdater === currentUpdater && defined(currentUpdater)) {
       currentUpdater.updateObject(time, item);
@@ -729,10 +992,14 @@ PathVisualizer.prototype.update = function (time) {
       lastUpdater.removeObject(item);
     }
 
+    if (isRelative && !defined(frameToVisualize)) {
+      continue;
+    }
+
     if (!defined(currentUpdater)) {
       currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
       currentUpdater.update(time);
-      this._updaters[frameToVisualize] = currentUpdater;
+      this._updaters[frameToVisualizeKey] = currentUpdater;
     }
 
     item.updater = currentUpdater;
