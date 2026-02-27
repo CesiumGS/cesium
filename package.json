@@ -152,16 +152,6 @@
   "engines": {
     "node": ">=20.19.0"
   },
-  "lint-staged": {
-    "*.{js,cjs,mjs,ts,tsx,css,html}": [
-      "eslint --cache --quiet",
-      "prettier --write"
-    ],
-    "*.md": [
-      "markdownlint",
-      "prettier --write"
-    ]
-  },
   "workspaces": [
     "packages/engine",
     "packages/widgets",
