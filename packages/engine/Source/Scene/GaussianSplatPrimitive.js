@@ -924,8 +924,8 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
   isStable: {
     get: function () {
       return (
-        (!this._dirty && !defined(this._pendingSnapshot)) ||
-        this._pendingSnapshot.state === SnapshotState.READY
+        !this._dirty && (!defined(this._pendingSnapshot) ||
+        this._pendingSnapshot.state === SnapshotState.READY)
       );
     },
   },
