@@ -916,18 +916,6 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
 
   /**
    * Indicates whether the primitive has completed loading and sorting.
-   *
-   * Returns <code>true</code> when there is no in-progress rebuild (<code>_dirty</code> is
-   * false) AND one of the following is true:
-   * <ul>
-   *   <li>No pending snapshot exists and no steady-sort is in flight.</li>
-   *   <li>The pending snapshot has reached {@link SnapshotState.READY} and been committed.</li>
-   *   <li>The pending snapshot is stuck in {@link SnapshotState.BUILDING} because GPU
-   *       texture generation is unavailable (e.g. under a WebGL stub).  In that
-   *       case no real work is in flight and no more progress will occur, so the
-   *       primitive is treated as stable.</li>
-   * </ul>
-   *
    * @memberof GaussianSplatPrimitive.prototype
    * @type {boolean}
    * @private
@@ -935,29 +923,10 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
    */
   isStable: {
     get: function () {
-      if (this._dirty) {
-        return false;
-      }
-      if (!defined(this._pendingSnapshot)) {
-        return !defined(this._sorterPromise);
-      }
-      const state = this._pendingSnapshot.state;
-      if (state === SnapshotState.READY) {
-        return true;
-      }
-      // Under WebGL stub (or when the GPU texture generator is otherwise
-      // unavailable), generateSplatTexture resets the snapshot back to
-      // BUILDING on every frame because generateFromAttributes returns
-      // undefined.  No sort promise is ever launched in that case, so
-      // nothing more can happen – treat the primitive as stable so that
-      // tests and callers are not blocked indefinitely.
-      if (
-        state === SnapshotState.BUILDING &&
-        !defined(this._pendingSortPromise)
-      ) {
-        return true;
-      }
-      return false;
+      return (
+        (!this._dirty && !defined(this._pendingSnapshot)) ||
+        this._pendingSnapshot.state === SnapshotState.READY
+      );
     },
   },
 
