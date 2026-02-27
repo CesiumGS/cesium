@@ -108,7 +108,7 @@
     "yargs": "^18.0.0"
   },
   "scripts": {
-    "prepare": "gulp prepare && husky && node scripts/isCI.js || playwright install --with-deps",
+    "prepare": "gulp prepare && husky && node scripts/isCI.js || node scripts/supportsPlaywright.js || playwright install --with-deps",
     "start": "node server.js",
     "start-public": "node server.js --public",
     "build": "gulp build",
