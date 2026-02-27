@@ -8,7 +8,8 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
-const { ERR_CAPACITY, ERR_RESIZE } = BufferPrimitiveCollection.Error;
+const { ERR_CAPACITY, ERR_RESIZE, ERR_OUT_OF_RANGE } =
+  BufferPrimitiveCollection.Error;
 
 /**
  * View bound to the underlying buffer data of a {@link BufferPolygonCollection}.
@@ -151,7 +152,7 @@ class BufferPolygon extends BufferPrimitive {
    * return {Float64Array}
    */
   getPositions(result) {
-    return this._getPositionsRange(this.vertexOffset, this.vertexCount, result);
+    return this._getPositionsRange(0, this.vertexCount, result);
   }
 
   /** @param {Float64Array} positions */
@@ -216,11 +217,7 @@ class BufferPolygon extends BufferPrimitive {
    * @returns {Float64Array}
    */
   getOuterPositions(result) {
-    return this._getPositionsRange(
-      this.outerVertexOffset,
-      this.outerVertexCount,
-      result,
-    );
+    return this._getPositionsRange(0, this.outerVertexCount, result);
   }
 
   /**
@@ -350,9 +347,11 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
-   * Internal helper for accessing vertex positions. If 'result' argument is
-   * given, the requested range of vertices are written to the result array
-   * and returned. Otherwise, returns an ArrayView on collection memory.
+   * Internal helper for accessing vertex positions. 'vertexOffset' argument
+   * is relative to the start of the polygon's vertex block, with 0 being
+   * the first vertex in the polygon. If 'result' argument is given, the
+   * requested range of vertices are written to the result array and returned.
+   * Otherwise, returns an ArrayView on collection memory.
    *
    * @param {number} vertexOffset
    * @param {number} vertexCount
@@ -361,19 +360,29 @@ class BufferPolygon extends BufferPrimitive {
    * @private
    */
   _getPositionsRange(vertexOffset, vertexCount, result) {
+    const collection = this._collection;
     const positionF64 = this._collection._positionF64;
+
+    const collectionVertexOffset = this.vertexOffset + vertexOffset;
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(collectionVertexOffset >= 0, ERR_OUT_OF_RANGE);
+    assert(collectionVertexOffset < collection.vertexCount, ERR_OUT_OF_RANGE);
+    assert(vertexCount > 0, ERR_OUT_OF_RANGE);
+    assert(vertexCount <= this.vertexCount, ERR_OUT_OF_RANGE);
+    //>>includeEnd('debug');
 
     if (!defined(result)) {
       const byteOffset =
         positionF64.byteOffset +
-        vertexOffset * 3 * Float64Array.BYTES_PER_ELEMENT;
+        collectionVertexOffset * 3 * Float64Array.BYTES_PER_ELEMENT;
       return new Float64Array(positionF64.buffer, byteOffset, vertexCount * 3);
     }
 
     for (let i = 0; i < vertexCount; i++) {
-      result[i * 3] = positionF64[(vertexOffset + i) * 3];
-      result[i * 3 + 1] = positionF64[(vertexOffset + i) * 3 + 1];
-      result[i * 3 + 2] = positionF64[(vertexOffset + i) * 3 + 2];
+      result[i * 3] = positionF64[(collectionVertexOffset + i) * 3];
+      result[i * 3 + 1] = positionF64[(collectionVertexOffset + i) * 3 + 1];
+      result[i * 3 + 2] = positionF64[(collectionVertexOffset + i) * 3 + 2];
     }
     return result;
   }

@@ -54,6 +54,7 @@ class BufferPrimitiveCollection {
     ERR_CAPACITY: "BufferPrimitiveCollection capacity exceeded.",
     ERR_MULTIPLE_OF_FOUR:
       "BufferPrimitive byte length must be a multiple of 4.",
+    ERR_OUT_OF_RANGE: "BufferPrimitive buffer access out of range.",
   };
 
   /**

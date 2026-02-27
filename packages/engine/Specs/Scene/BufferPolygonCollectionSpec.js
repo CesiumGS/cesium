@@ -32,15 +32,34 @@ describe("BufferPolygonCollection", () => {
 
     collection.get(0, polygon);
     expect(polygon.vertexCount, 3);
-    expect(polygon.getPositions(new Float64Array(9))).toEqual(positions1);
+    expect(polygon.getPositions()).toEqual(positions1);
 
     collection.get(1, polygon);
     expect(polygon.vertexCount, 3);
-    expect(polygon.getPositions(new Float64Array(9))).toEqual(positions2);
+    expect(polygon.getPositions()).toEqual(positions2);
 
     collection.get(2, polygon);
     expect(polygon.vertexCount, 4);
-    expect(polygon.getPositions(new Float64Array(12))).toEqual(positions3);
+    expect(polygon.getPositions()).toEqual(positions3);
+  });
+
+  it("outerPositions", () => {
+    const collection = new BufferPolygonCollection();
+    const polygon = new BufferPolygon();
+
+    const positions = new Float64Array([
+      ...createBoxPositions(2), // outer loop
+      ...createBoxPositions(1), // hole
+    ]);
+    const holes = new Uint32Array([3]);
+
+    collection.add({ positions, holes }, polygon);
+
+    expect(polygon.vertexCount, 6);
+    expect(polygon.holeCount, 1);
+    expect(polygon.outerVertexCount, 3);
+    expect(polygon.getPositions()).toEqual(positions);
+    expect(polygon.getOuterPositions()).toEqual(createBoxPositions(2));
   });
 
   it("holes", () => {
@@ -71,7 +90,8 @@ describe("BufferPolygonCollection", () => {
 
     collection.get(2, polygon);
     expect(polygon.holeCount, 1);
-    expect(polygon.getHoles(new Uint32Array(1))).toEqual(holes3);
+    expect(polygon.getHoles()).toEqual(holes3);
+    expect(polygon.getHolePositions(0)).toEqual(createBoxPositions(1));
   });
 
   it("triangles", () => {
@@ -96,15 +116,15 @@ describe("BufferPolygonCollection", () => {
 
     collection.get(0, polygon);
     expect(polygon.triangleCount, 2);
-    expect(polygon.getTriangles(new Uint32Array(6))).toEqual(triangles1);
+    expect(polygon.getTriangles()).toEqual(triangles1);
 
     collection.get(1, polygon);
     expect(polygon.triangleCount, 1);
-    expect(polygon.getTriangles(new Uint32Array(3))).toEqual(triangles2);
+    expect(polygon.getTriangles()).toEqual(triangles2);
 
     collection.get(2, polygon);
     expect(polygon.triangleCount, 1);
-    expect(polygon.getTriangles(new Uint32Array(3))).toEqual(triangles3);
+    expect(polygon.getTriangles()).toEqual(triangles3);
   });
 
   it("show", () => {
@@ -219,25 +239,19 @@ describe("BufferPolygonCollection", () => {
 
     dst.get(0, polygon);
     expect(polygon.getColor(color)).toEqual(Color.RED);
-    expect(polygon.getPositions(new Float64Array(positions1.length))).toEqual(
-      positions1,
-    );
+    expect(polygon.getPositions()).toEqual(positions1);
     expect(polygon.holeCount).toBe(0);
     expect(polygon.triangleCount).toBe(2);
 
     dst.get(1, polygon);
     expect(polygon.getColor(color)).toEqual(Color.GREEN);
-    expect(polygon.getPositions(new Float64Array(positions2.length))).toEqual(
-      positions2,
-    );
+    expect(polygon.getPositions()).toEqual(positions2);
     expect(polygon.holeCount).toBe(0);
     expect(polygon.triangleCount).toBe(2);
 
     dst.get(2, polygon);
     expect(polygon.getColor(color)).toEqual(Color.BLUE);
-    expect(polygon.getPositions(new Float64Array(positions3.length))).toEqual(
-      positions3,
-    );
+    expect(polygon.getPositions()).toEqual(positions3);
     expect(polygon.holeCount).toBe(1);
     expect(polygon.triangleCount).toBe(2);
   });
