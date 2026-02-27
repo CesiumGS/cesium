@@ -238,9 +238,7 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
       "https://example.com/image.jpg",
     );
 
-    spyOn(Resource, "fetchImage").and.returnValue(
-      Promise.resolve(),
-    );
+    spyOn(Resource, "fetchImage").and.returnValue(Promise.resolve());
 
     const cartographic = Cartographic.fromDegrees(20, 10);
 
@@ -262,9 +260,7 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
       "https://example.com/image.jpg",
     );
 
-    spyOn(Resource, "fetchImage").and.returnValue(
-      Promise.resolve(),
-    );
+    spyOn(Resource, "fetchImage").and.returnValue(Promise.resolve());
 
     const cartographic = Cartographic.fromDegrees(20, 10);
 
