@@ -915,6 +915,22 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
   },
 
   /**
+   * Indicates whether the primitive has completed loading and sorting.
+   * @memberof GaussianSplatPrimitive.prototype
+   * @type {boolean}
+   * @private
+   * @readonly
+   */
+  isStable: {
+    get: function () {
+      return (
+        (!this._dirty && !defined(this._pendingSnapshot)) ||
+        this._pendingSnapshot.state === SnapshotState.READY
+      );
+    },
+  },
+
+  /**
    * The {@link SplitDirection} to apply to this point.
    * @memberof GaussianSplatPrimitive.prototype
    * @type {SplitDirection}

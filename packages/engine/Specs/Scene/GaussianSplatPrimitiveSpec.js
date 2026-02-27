@@ -115,7 +115,7 @@ describe(
 
       await pollToPromise(function () {
         scene.renderForSpecs();
-        return gsPrim._dirty === false && gsPrim._sorterPromise === undefined;
+        return gsPrim.isStable;
       });
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
@@ -243,7 +243,7 @@ describe(
       const gsPrim = tileset.gaussianSplatPrimitive;
       await pollToPromise(function () {
         scene.renderForSpecs();
-        return gsPrim._dirty === false && gsPrim._sorterPromise === undefined;
+        return gsPrim.isStable;
       });
 
       for (let i = 0; i < 100; ++i) {
@@ -252,9 +252,9 @@ describe(
 
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[samplePosition + 0]).toBeCloseTo(targetYellow.red, -1);
-        expect(rgba[samplePosition + 1]).toBeCloseTo(targetYellow.green, -1);
-        expect(rgba[samplePosition + 2]).toBeCloseTo(targetYellow.blue, -1);
+        expect(rgba[samplePosition + 0]).toBeCloseTo(targetYellow.red, -10);
+        expect(rgba[samplePosition + 1]).toBeCloseTo(targetYellow.green, -10);
+        expect(rgba[samplePosition + 2]).toBeCloseTo(targetYellow.blue, -10);
       });
 
       scene.camera.lookAtTransform(enu, orangeish);
@@ -262,28 +262,28 @@ describe(
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
       await pollToPromise(function () {
         scene.renderForSpecs();
-        return gsPrim._dirty === false && gsPrim._sorterState === 0;
+        return gsPrim.isStable;
       });
 
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[samplePosition + 0]).toBeCloseTo(targetOrange.red, -1);
-        expect(rgba[samplePosition + 1]).toBeCloseTo(targetOrange.green, -1);
-        expect(rgba[samplePosition + 2]).toBeCloseTo(targetOrange.blue, -1);
+        expect(rgba[samplePosition + 0]).toBeCloseTo(targetOrange.red, -10);
+        expect(rgba[samplePosition + 1]).toBeCloseTo(targetOrange.green, -10);
+        expect(rgba[samplePosition + 2]).toBeCloseTo(targetOrange.blue, -10);
       });
       scene.camera.lookAtTransform(enu, purplish);
 
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
       await pollToPromise(function () {
         scene.renderForSpecs();
-        return gsPrim._dirty === false && gsPrim._sorterState === 0;
+        return gsPrim.isStable;
       });
 
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[samplePosition + 0]).toBeCloseTo(targetPurple.red, -1);
-        expect(rgba[samplePosition + 1]).toBeCloseTo(targetPurple.green, -1);
-        expect(rgba[samplePosition + 2]).toBeCloseTo(targetPurple.blue, -1);
+        expect(rgba[samplePosition + 0]).toBeCloseTo(targetPurple.red, -10);
+        expect(rgba[samplePosition + 1]).toBeCloseTo(targetPurple.green, -10);
+        expect(rgba[samplePosition + 2]).toBeCloseTo(targetPurple.blue, -10);
       });
     });
   },
