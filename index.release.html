@@ -33,13 +33,13 @@
         color: blue;
       }
 
-      .section:nth-child(odd) {
-        background-color: #f5f7f9;
-      }
-
       .section {
         border: none;
         padding: 20px 40px;
+
+        &:nth-child(odd) {
+          background-color: #f5f7f9;
+        }
       }
 
       .section > * {
