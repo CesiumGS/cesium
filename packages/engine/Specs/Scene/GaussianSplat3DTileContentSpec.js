@@ -248,8 +248,9 @@ describe(
       expect(gaussianSplatPrimitive).toBeDefined();
       expect(gaussianSplatPrimitive.isDestroyed()).toBe(false);
 
-      // Simulate tile eviction: directly destroy the tile content
+      // Simulate LRU cache tile eviction: destroy just this tile content.
       content.destroy();
+      tile._content = undefined;
 
       // The shared gaussianSplatPrimitive must still be alive after a single
       // tile content is destroyed, because other tiles in the tileset still
