@@ -9,7 +9,7 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
 
   beforeEach(function () {
     provider = new GoogleStreetViewCubeMapPanoramaProvider({
-      apiKey: "test-key",
+      key: "test-key",
       url: "https://example.com/",
       tileSize: 512,
     });
@@ -23,19 +23,19 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
     );
   });
 
-  it("constructs with apiKey", function () {
+  it("constructs with key", function () {
     expect(provider._key).toBe("test-key");
     expect(provider._tileSize).toBe(512);
   });
 
   it("defaults tileSize to 600", function () {
     const p = new GoogleStreetViewCubeMapPanoramaProvider({
-      apiKey: "test-key",
+      key: "test-key",
     });
     expect(p._tileSize).toBe(600);
   });
 
-  it("fromUrl uses default apiKey when none is provided", async function () {
+  it("fromUrl uses default key when none is provided", async function () {
     const provider = await GoogleStreetViewCubeMapPanoramaProvider.fromUrl({});
 
     expect(provider).toBeDefined();
@@ -44,7 +44,7 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
 
   it("fromUrl creates provider", async function () {
     const result = await GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
-      apiKey: "abc",
+      key: "abc",
     });
 
     expect(result).toBeInstanceOf(GoogleStreetViewCubeMapPanoramaProvider);

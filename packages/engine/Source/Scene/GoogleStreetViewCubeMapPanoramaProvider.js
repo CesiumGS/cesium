@@ -32,8 +32,8 @@ const DEFAULT_TILE_SIZE = 600;
  */
 function GoogleStreetViewCubeMapPanoramaProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  this._key = defined(options.apiKey)
-    ? options.apiKey
+  this._key = defined(options.key)
+    ? options.key
     : GoogleMaps.defaultApiKey;
 
   this._baseResource = Resource.createIfNeeded(
@@ -63,7 +63,7 @@ Object.defineProperties(GoogleStreetViewCubeMapPanoramaProvider.prototype, {});
  * @example
  *
  * const provider = await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
- *   apiKey: 'your Google Streetview Static api key'
+ *   key: 'your Google Streetview Static api key'
  * })
  *
  * const panoIdObject = provider.getNearestPanoId(position);
@@ -183,7 +183,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
  * @example
  * 
  * const provider = await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
- *   apiKey: 'your Google Streetview Static api key'
+ *   key: 'your Google Streetview Static api key'
  * })
  * const panoIds = provider.getNearestPanoId(position);
  */
@@ -274,7 +274,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype._buildFaceUrl = function (
 /**
  * Creates a {@link PanoramaProvider} which provides cube face images from the {@link https://developers.google.com/maps/documentation/streetview|Google Street View Static API}.
  * @param {object} options Object with the following properties:
- * @param {string} [options.apiKey=GoogleMaps.defaultStreetViewStaticApiKey] Your API key to access Google Street View Static API. See {@link https://developers.google.com/maps/documentation/javascript/get-api-key} for instructions on how to create your own key. If undefined, defaults to {@link GoogleMaps.defaultStreetViewStaticApiKey}. If that value is unavailable, falls back to {@link GoogleMaps.defaultApiKey}.
+ * @param {string} [options.key=GoogleMaps.defaultStreetViewStaticApiKey] Your API key to access Google Street View Static API. See {@link https://developers.google.com/maps/documentation/javascript/get-api-key} for instructions on how to create your own key. If undefined, defaults to {@link GoogleMaps.defaultStreetViewStaticApiKey}. If that value is unavailable, falls back to {@link GoogleMaps.defaultApiKey}.
  * @param {string|Resource} [options.url=GoogleMaps.streetViewStaticApiEndpoint] The URL to access Google Street View Static API. See {@link https://developers.google.com/maps/documentation/streetview/overview} for more information.
  * @param {number} [options.tileSize=600] Default width and height (in pixels) of each square tile.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
@@ -283,22 +283,22 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype._buildFaceUrl = function (
  *
  * @example
  * const provider = await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
- *   apiKey: 'your Google Streetview Static api key'
+ *   key: 'your Google Streetview Static api key'
  * })
  */
 GoogleStreetViewCubeMapPanoramaProvider.fromUrl = async function (options) {
   options = options ?? {};
-  options.apiKey =
-    options.apiKey ??
+  options.key =
+    options.key ??
     GoogleMaps.defaultStreetViewStaticApiKey ??
     GoogleMaps.defaultApiKey;
   if (
-    !defined(options.apiKey) &&
+    !defined(options.key) &&
     !defined(GoogleMaps.defaultStreetViewStaticApiKey) &&
     !defined(GoogleMaps.defaultApiKey)
   ) {
     throw new DeveloperError(
-      "options.apiKey, GoogleMaps.defaultStreetViewStaticApiKey or GoogleMaps.defaultApiKey is required.",
+      "options.key, GoogleMaps.defaultStreetViewStaticApiKey or GoogleMaps.defaultApiKey is required.",
     );
   }
 

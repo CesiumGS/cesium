@@ -44,12 +44,12 @@ const DEFAULT_RADIUS = 100000.0;
  * );
  *
  * const heading = Cesium.Math.toRadians(45.0); // rotation about up axis
- * const tilt = Cesium.Math.toRadians(-30.0);   // pitch (negative looks down)
+ * const pitch = Cesium.Math.toRadians(-30.0);   // pitch (negative looks down)
  * const roll = Cesium.Math.toRadians(10.0);    // roll about forward axis
  *
  * const hpr = new Cesium.HeadingPitchRoll(
  *   heading,
- *   tilt,
+ *   pitch,
  *   roll
  * );
  *
