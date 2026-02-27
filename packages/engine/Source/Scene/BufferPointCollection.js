@@ -4,14 +4,18 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPoint from "./BufferPoint.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Frozen from "../Core/Frozen.js";
+import Color from "../Core/Color.js";
+import renderPoints from "./renderBufferPointCollection.js";
 
-/** @import Color from "../Core/Color.js"; */
 /** @import FrameState from "./FrameState.js" */
 
 /**
  * @typedef {object} BufferPointOptions
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
+ * @property {number} [pixelSize=1.0]
+ * @property {Color} [outlineColor=Color.WHITE]
+ * @property {number} [outlineWidth=0.0]
  * @property {Cartesian3} [position=Cartesian3.ZERO]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -103,6 +107,9 @@ class BufferPointCollection extends BufferPrimitiveCollection {
       this._positionCount++,
     );
     result.setPosition(options.position ?? Cartesian3.ZERO);
+    result.pixelSize = options.pixelSize ?? 1.0;
+    result.outlineWidth = options.outlineWidth ?? 0.0;
+    result.setOutlineColor(options.outlineColor ?? Color.WHITE);
 
     return result;
   }
@@ -116,6 +123,8 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    */
   update(frameState) {
     super.update(frameState);
+
+    this._renderContext = renderPoints(this, frameState, this._renderContext);
   }
 }
 
