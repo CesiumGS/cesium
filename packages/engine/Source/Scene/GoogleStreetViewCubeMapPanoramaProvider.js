@@ -32,9 +32,7 @@ const DEFAULT_TILE_SIZE = 600;
  */
 function GoogleStreetViewCubeMapPanoramaProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  this._key = defined(options.key)
-    ? options.key
-    : GoogleMaps.defaultApiKey;
+  this._key = defined(options.key) ? options.key : GoogleMaps.defaultApiKey;
 
   this._baseResource = Resource.createIfNeeded(
     options.url ?? GoogleMaps.streetViewStaticApiEndpoint,
