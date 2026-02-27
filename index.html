@@ -6,106 +6,156 @@
     <style>
       body {
         font-family: sans-serif;
+        margin: 0;
+        padding: 0;
       }
+
+      h2 {
+        margin-top: 0;
+      }
+
+      a,
+      a:visited {
+        color: blue;
+      }
+
       li {
         margin-top: 5px;
       }
-      .outer > li {
-        margin-top: 1.4em;
-      }
+
       .smallFont {
         font-size: 60%;
+      }
+
+      .section {
+        border: none;
+        padding: 20px 40px;
+
+        &:nth-child(odd) {
+          background-color: #f5f7f9;
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #121212;
+          color: white;
+        }
+
+        .section:nth-child(odd) {
+          background: #1c1f24;
+        }
+
+        a,
+        a:visited {
+          color: #92b2e5;
+        }
       }
     </style>
   </head>
 
   <body>
-    <ul class="outer">
-      <li>
-        Apps
-        <ul>
-          <li>
-            <a href="Apps/CesiumViewer/index.html">Cesium Viewer</a>
-            (<a href="Build/Apps/CesiumViewer/index.html">built version</a>)
-          </li>
-          <li>
-            <a href="Apps/HelloWorld.html">Hello World</a>
-          </li>
-          <li>
-            <a href="Apps/Sandcastle2/index.html">Sandcastle</a>
-            <ul>
-              <li>
-                <a href="Apps/Sandcastle/index.html">Legacy Sandcastle</a>
-              </li>
-            </ul>
-          </li>
-          <li>
-            <a href="Apps/CesiumViewer/index.html?inspector=true"
-              >Cesium Inspector</a
-            >
-            (with
-            <a href="Apps/Sandcastle/gallery/Cesium%20Inspector.html"
-              >example primitives</a
-            >) (with
-            <a
-              href="Apps/CesiumViewer/index.html?source=../SampleData/simple.czml&inspector=true"
-              >simple CZML</a
-            >)
-          </li>
-          <li>
-            <a href="Apps/TimelineDemo/index.html">Timeline Demo</a>
-          </li>
-        </ul>
-      </li>
-      <li>
-        Tests
-        <ul>
-          <li>
-            <a href="Specs/SpecRunner.html">Run all tests</a>
-            <span class="smallFont"
-              >(<a href="Specs/SpecRunner.html?webglValidation"
-                >Run with WebGL validation</a
-              >)</span
-            >
-            <span class="smallFont"
-              >(<a href="Specs/SpecRunner.html?webglStub">Run with WebGL stub</a
-              >)</span
-            >
-          </li>
+    <div class="section">
+      <a href="https://cesium.com/cesiumjs/">
+        <picture>
+          <source
+            srcset="
+              ./packages/sandcastle/public/images/Cesium_Logo_Color_Overlay_Light.png
+            "
+            media="(prefers-color-scheme: dark)"
+          />
+          <img
+            src="./packages/sandcastle/public/images/Cesium_Logo_Color_Overlay.png"
+            style="width: 400px"
+          />
+        </picture>
+      </a>
+    </div>
+    <div class="section">
+      <h2>Apps</h2>
+      <ul>
+        <li>
+          <a href="Apps/CesiumViewer/index.html">Cesium Viewer</a>
+          (<a href="Build/Apps/CesiumViewer/index.html">built version</a>)
+        </li>
+        <li>
+          <a href="Apps/HelloWorld.html">Hello World</a>
+        </li>
+        <li>
+          <a href="Apps/Sandcastle2/index.html">Sandcastle</a>
+          <ul>
+            <li>
+              <a href="Apps/Sandcastle/index.html">Legacy Sandcastle</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a href="Apps/CesiumViewer/index.html?inspector=true"
+            >Cesium Inspector</a
+          >
+          (with
+          <a href="Apps/Sandcastle/gallery/Cesium%20Inspector.html"
+            >example primitives</a
+          >) (with
+          <a
+            href="Apps/CesiumViewer/index.html?source=../SampleData/simple.czml&inspector=true"
+            >simple CZML</a
+          >)
+        </li>
+        <li>
+          <a href="Apps/TimelineDemo/index.html">Timeline Demo</a>
+        </li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2>Tests</h2>
+      <ul>
+        <li>
+          <a href="Specs/SpecRunner.html">Run all tests</a>
+          <span class="smallFont"
+            >(<a href="Specs/SpecRunner.html?webglValidation"
+              >Run with WebGL validation</a
+            >)</span
+          >
+          <span class="smallFont"
+            >(<a href="Specs/SpecRunner.html?webglStub">Run with WebGL stub</a
+            >)</span
+          >
+        </li>
 
-          <li>
-            <a href="Specs/SpecRunner.html?category=none"
-              >Select a test to run</a
-            >
-          </li>
-          <li>
-            <a href="Specs/SpecRunner.html?category=WebGL"
-              >Run only WebGL tests</a
-            >
-          </li>
-          <li>
-            <a href="Specs/SpecRunner.html?not=WebGL"
-              >Run only non-WebGL tests</a
-            >
-          </li>
-          <li>
-            <a href="Specs/SpecRunner.html?built=true"
-              >Run all tests against combined file</a
-            >
-            <span class="smallFont"
-              >(<a href="Specs/SpecRunner.html?built=true&release=true"
-                >Run all tests against combined file with debug code removed</a
-              >)</span
-            >
-          </li>
-          <li>
-            <a href="Build/Coverage/index.html">View coverage results</a>
-          </li>
-        </ul>
-      </li>
-      <li>
-        <a href="Build/Documentation/index.html">Documentation</a>
-      </li>
-    </ul>
+        <li>
+          <a href="Specs/SpecRunner.html?category=none">Select a test to run</a>
+        </li>
+        <li>
+          <a href="Specs/SpecRunner.html?category=WebGL"
+            >Run only WebGL tests</a
+          >
+        </li>
+        <li>
+          <a href="Specs/SpecRunner.html?not=WebGL">Run only non-WebGL tests</a>
+        </li>
+        <li>
+          <a href="Specs/SpecRunner.html?built=true"
+            >Run all tests against combined file</a
+          >
+          <span class="smallFont"
+            >(<a href="Specs/SpecRunner.html?built=true&release=true"
+              >Run all tests against combined file with debug code removed</a
+            >)</span
+          >
+        </li>
+        <li>
+          <a href="Build/Coverage/index.html">View coverage results</a>
+        </li>
+      </ul>
+    </div>
+    <div class="section">
+      <h2>Documentation</h2>
+      <ul>
+        <li>
+          <a href="Build/Documentation/index.html">Documentation</a>
+        </li>
+      </ul>
+    </div>
   </body>
 </html>

@@ -341,7 +341,7 @@ function App() {
           <img
             src={
               settings.theme === "dark"
-                ? "./images/Cesium_Logo_overlay.png"
+                ? "./images/Cesium_Logo_Color_Overlay_Light.png"
                 : "./images/Cesium_Logo_Color_Overlay.png"
             }
             style={{ width: "118px" }}
