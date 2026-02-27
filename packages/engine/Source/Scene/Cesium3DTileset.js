@@ -2264,6 +2264,65 @@ Cesium3DTileset.fromUrl = async function (url, options) {
   return tileset;
 };
 
+Cesium3DTileset.fromGltfModel = function async(model) {
+  // Map model -> tileset for prototype
+  if (model.loader.gltfJson.asset.version !== "2.1") {
+    // TODO throw an error!
+    return;
+  }
+
+  const tilesetJson = () => {
+    const { scene, scenes, references, nodes } = model.loader.gltfJson;
+    const children = [];
+
+    for (const nodeId of scenes[scene].nodes) {
+      const node = nodes[nodeId];
+      const reference = references[node.reference];
+
+      const translation = Cartesian3.fromArray(node.translation);
+      const transform = Matrix4.fromTranslation(translation);
+      const packedTransform = Matrix4.pack(transform, []);
+
+      const child = {
+        boundingVolume: {
+          sphere: [0, 0, 0, 2.0],
+        },
+        contents: [reference],
+        geometricError: 1,
+        transform: packedTransform,
+      };
+
+      children.push(child);
+    }
+
+    const json = {
+      asset: { version: "1.0" },
+      geometricError: 0,
+      root: {
+        boundingVolume: {
+          sphere: [0, 0, 0, 20.0],
+        },
+        children: children,
+        geometricError: 1,
+        refine: "REPLACE",
+      },
+    };
+
+    return json;
+  };
+
+  const resource = model._resource.clone();
+
+  const tileset = new Cesium3DTileset();
+  tileset._resource = resource;
+  tileset._url = resource.url;
+  tileset._geometricError = tilesetJson.geometricError;
+  tileset._scaledGeometricError = tilesetJson.geometricError;
+  tileset._root = tileset.loadTileset(resource, tilesetJson());
+
+  return tileset;
+};
+
 /**
  * Provides a hook to override the method used to request the tileset json
  * useful when fetching tilesets from remote servers

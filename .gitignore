@@ -42,6 +42,7 @@ yarn.lock
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/shelf
+.idea/copilot*
 
 # Used in the CLA checking GitHub workflow
 GoogleConfig.json
