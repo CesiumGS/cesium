@@ -1,11 +1,8 @@
 import {
-  Math as CesiumMath,
   Color,
   BufferPolyline,
   BufferPolylineCollection,
 } from "../../index.js";
-
-const EPS = CesiumMath.EPSILON8;
 
 describe("BufferPolylineCollection", () => {
   const color = new Color();
@@ -40,22 +37,13 @@ describe("BufferPolylineCollection", () => {
     collection.add({ positions: positions3 }, polyline);
 
     collection.get(0, polyline);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions1,
-      EPS,
-    );
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions1);
 
     collection.get(1, polyline);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions2,
-      EPS,
-    );
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions2);
 
     collection.get(2, polyline);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions3,
-      EPS,
-    );
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions3);
   });
 
   it("show", () => {
@@ -78,11 +66,11 @@ describe("BufferPolylineCollection", () => {
     collection.add({ color: Color.BLUE }, polyline);
 
     collection.get(0, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.RED, EPS);
+    expect(polyline.getColor(color)).toEqual(Color.RED);
     collection.get(1, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
+    expect(polyline.getColor(color)).toEqual(Color.GREEN);
     collection.get(2, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
+    expect(polyline.getColor(color)).toEqual(Color.BLUE);
   });
 
   it("byteLength", () => {
@@ -132,25 +120,16 @@ describe("BufferPolylineCollection", () => {
     expect(dst.primitiveCount).toBe(3);
 
     dst.get(0, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.RED, EPS);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions1,
-      EPS,
-    );
+    expect(polyline.getColor(color)).toEqual(Color.RED);
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions1);
 
     dst.get(1, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions2,
-      EPS,
-    );
+    expect(polyline.getColor(color)).toEqual(Color.GREEN);
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions2);
 
     dst.get(2, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions3,
-      EPS,
-    );
+    expect(polyline.getColor(color)).toEqual(Color.BLUE);
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions3);
   });
 
   it("sort", () => {

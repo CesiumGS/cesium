@@ -1,12 +1,9 @@
 import {
-  Math as CesiumMath,
   Cartesian3,
   Color,
   BufferPoint,
   BufferPointCollection,
 } from "../../index.js";
-
-const EPS = CesiumMath.EPSILON8;
 
 describe("BufferPointCollection", () => {
   const position = new Cartesian3();
@@ -34,13 +31,13 @@ describe("BufferPointCollection", () => {
     collection.add({ position: Cartesian3.UNIT_Z }, point);
 
     collection.get(0, point);
-    expect(point.getPosition(position)).toEqualEpsilon(Cartesian3.UNIT_X, EPS);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_X);
 
     collection.get(1, point);
-    expect(point.getPosition(position)).toEqualEpsilon(Cartesian3.UNIT_Y, EPS);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_Y);
 
     collection.get(2, point);
-    expect(point.getPosition(position)).toEqualEpsilon(Cartesian3.UNIT_Z, EPS);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_Z);
   });
 
   it("show", () => {
@@ -63,11 +60,11 @@ describe("BufferPointCollection", () => {
     collection.add({ color: Color.BLUE }, point);
 
     collection.get(0, point);
-    expect(point.getColor(color)).toEqualEpsilon(Color.RED, EPS);
+    expect(point.getColor(color)).toEqual(Color.RED);
     collection.get(1, point);
-    expect(point.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
+    expect(point.getColor(color)).toEqual(Color.GREEN);
     collection.get(2, point);
-    expect(point.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
+    expect(point.getColor(color)).toEqual(Color.BLUE);
   });
 
   it("byteLength", () => {
