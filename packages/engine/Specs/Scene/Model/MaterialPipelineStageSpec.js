@@ -910,6 +910,93 @@ describe(
       });
     });
 
+    it("processes BENTLEY_materials_line_style with lineWidth", function () {
+      const renderResources = mockRenderResources();
+
+      const material = new ModelComponents.Material();
+      material.lineWidth = 3.0;
+
+      const primitive = new ModelComponents.Primitive();
+      primitive.material = material;
+
+      const frameState = {
+        context: scene.context,
+        pixelRatio: 2.0,
+      };
+
+      MaterialPipelineStage.process(renderResources, primitive, frameState);
+
+      ShaderBuilderTester.expectHasFragmentDefines(
+        renderResources.shaderBuilder,
+        ["USE_METALLIC_ROUGHNESS"],
+      );
+      ShaderBuilderTester.expectHasVertexUniforms(
+        renderResources.shaderBuilder,
+        ["uniform float u_lineWidth;"],
+      );
+
+      expect(renderResources.uniformMap.u_lineWidth).toBeDefined();
+      expect(renderResources.uniformMap.u_lineWidth()).toBe(6.0); // 3.0 * 2.0 pixelRatio
+    });
+
+    it("processes BENTLEY_materials_line_style with linePattern", function () {
+      const renderResources = mockRenderResources();
+
+      const material = new ModelComponents.Material();
+      material.linePattern = 0xaaaa; // dotted pattern
+
+      const primitive = new ModelComponents.Primitive();
+      primitive.material = material;
+
+      const frameState = {
+        context: scene.context,
+        pixelRatio: 1.0,
+      };
+
+      MaterialPipelineStage.process(renderResources, primitive, frameState);
+
+      ShaderBuilderTester.expectHasFragmentDefines(
+        renderResources.shaderBuilder,
+        ["HAS_LINE_PATTERN", "USE_METALLIC_ROUGHNESS"],
+      );
+      ShaderBuilderTester.expectHasFragmentUniforms(
+        renderResources.shaderBuilder,
+        ["uniform float u_linePattern;"],
+      );
+
+      expect(renderResources.uniformMap.u_linePattern).toBeDefined();
+      expect(renderResources.uniformMap.u_linePattern()).toBe(0xaaaa);
+    });
+
+    it("processes BENTLEY_materials_line_style with both lineWidth and linePattern", function () {
+      const renderResources = mockRenderResources();
+
+      const material = new ModelComponents.Material();
+      material.lineWidth = 2.5;
+      material.linePattern = 0xf0f0; // dashed pattern
+
+      const primitive = new ModelComponents.Primitive();
+      primitive.material = material;
+
+      const frameState = {
+        context: scene.context,
+        pixelRatio: 1.5,
+      };
+
+      MaterialPipelineStage.process(renderResources, primitive, frameState);
+
+      ShaderBuilderTester.expectHasFragmentDefines(
+        renderResources.shaderBuilder,
+        ["HAS_LINE_PATTERN", "USE_METALLIC_ROUGHNESS"],
+      );
+
+      expect(renderResources.uniformMap.u_lineWidth).toBeDefined();
+      expect(renderResources.uniformMap.u_lineWidth()).toBe(3.75); // 2.5 * 1.5
+
+      expect(renderResources.uniformMap.u_linePattern).toBeDefined();
+      expect(renderResources.uniformMap.u_linePattern()).toBe(0xf0f0);
+    });
+
     it("adds point diameter uniforms for BENTLEY_materials_point_style extension", async function () {
       const gltfLoader = await loadGltf(pointStyleTestData);
       const primitive = gltfLoader.components.nodes[0].primitives[0];

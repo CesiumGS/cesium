@@ -630,6 +630,14 @@ function Primitive() {
    * @private
    */
   this.modelPrimitiveImagery = undefined;
+
+  /**
+   * Data loaded from the EXT_mesh_primitive_edge_visibility extension.
+   *
+   * @type {Object}
+   * @private
+   */
+  this.edgeVisibility = undefined;
 }
 
 /**
@@ -1633,6 +1641,27 @@ function Material() {
    * @private
    */
   this.pointDiameter = undefined;
+
+  /**
+   * The line width in pixels for LINES primitives. This is set by the
+   * BENTLEY_materials_line_style extension.
+   *
+   * @type {number}
+   * @default undefined
+   * @private
+   */
+  this.lineWidth = undefined;
+
+  /**
+   * The line dash pattern for LINES primitives. This is set by the
+   * BENTLEY_materials_line_style extension. Encoded as a 16-bit unsigned integer
+   * where each bit represents a pixel (1=on, 0=off).
+   *
+   * @type {number}
+   * @default undefined
+   * @private
+   */
+  this.linePattern = undefined;
 }
 
 /**
