@@ -170,7 +170,7 @@ class GltfTextureLoader extends ResourceLoader {
       const jobScheduler = frameState.jobScheduler;
       if (!jobScheduler.execute(textureJob, JobType.TEXTURE)) {
         // Job scheduler is full. Try again next frame.
-        return;
+        return false;
       }
       texture = textureJob.texture;
     } else {

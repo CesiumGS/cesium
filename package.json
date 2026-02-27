@@ -57,6 +57,7 @@
   "devDependencies": {
     "@cesium/eslint-config": "^13.0.0",
     "@playwright/test": "^1.41.1",
+    "@types/express": "^5.0.6",
     "chokidar": "^5.0.0",
     "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
@@ -92,7 +93,7 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-sourcemap-loader": "^0.4.0",
     "karma-spec-reporter": "^0.0.36",
-    "lebab": "^3.2.7",
+    "lebab": "^3.2.8",
     "markdownlint-cli": "^0.47.0",
     "merge-stream": "^2.0.0",
     "mkdirp": "^3.0.1",

@@ -95,7 +95,11 @@ CustomShaderPipelineStage.process = function (
 
   // Generate lines of code for the shader, but don't add them to the shader
   // yet.
-  const generatedCode = generateShaderLines(customShader, primitive);
+  const generatedCode = generateShaderLines(
+    customShader,
+    primitive,
+    renderResources,
+  );
 
   // In some corner cases, the primitive may not be compatible with the
   // shader. In this case, skip the custom shader.
@@ -221,14 +225,26 @@ function inferAttributeDefaults(attributeName) {
  * @private
  * @param {CustomShader} customShader
  * @param {Object<string, ModelComponents.Attribute>} attributesByName
+ * @param {Set<string>} primitivePropertyIds all property IDs referenced by the primitive being processed, across all its property textures, property attributes, and property tables.
  * @returns {object}
  */
-function generateVertexShaderLines(customShader, attributesByName) {
+function generateVertexShaderLines(
+  customShader,
+  attributesByName,
+  primitivePropertyIds,
+) {
   if (!defined(customShader.vertexShaderText)) {
     return { enabled: false };
   }
 
-  const primitiveAttributes = customShader.usedVariablesVertex.attributeSet;
+  const usedVariables = customShader.usedVariablesVertex;
+  if (
+    !checkMetadataCompatibility(usedVariables.metadataSet, primitivePropertyIds)
+  ) {
+    return { enabled: false };
+  }
+
+  const primitiveAttributes = usedVariables.attributeSet;
   const addToShader = getPrimitiveAttributesUsedInShader(
     attributesByName,
     primitiveAttributes,
@@ -318,14 +334,28 @@ function generatePositionBuiltins(customShader) {
  * @private
  * @param {CustomShader} customShader
  * @param {Object<string, ModelComponents.Attribute>} attributesByName
+ * @param {PrimitiveRenderResources} renderResources
+ * @param {ModelComponents.Primitive} primitive
+ * @param {Set<string>} primitivePropertyIds all property IDs referenced by the primitive being processed, across all its property textures, property attributes, and property tables.
  * @returns {object}
  */
-function generateFragmentShaderLines(customShader, attributesByName) {
+function generateFragmentShaderLines(
+  customShader,
+  attributesByName,
+  primitivePropertyIds,
+) {
   if (!defined(customShader.fragmentShaderText)) {
     return { enabled: false };
   }
 
-  const primitiveAttributes = customShader.usedVariablesFragment.attributeSet;
+  const usedVariables = customShader.usedVariablesFragment;
+  if (
+    !checkMetadataCompatibility(usedVariables.metadataSet, primitivePropertyIds)
+  ) {
+    return { enabled: false };
+  }
+
+  const primitiveAttributes = usedVariables.attributeSet;
   const addToShader = getPrimitiveAttributesUsedInShader(
     attributesByName,
     primitiveAttributes,
@@ -477,16 +507,26 @@ function getAttributesNeedingDefaults(
  * @private
  * @param {CustomShader} customShader
  * @param {ModelComponents.Primitive} primitive
+ * @param {PrimitiveRenderResources} renderResources
  * @returns {object}
  */
-function generateShaderLines(customShader, primitive) {
+function generateShaderLines(customShader, primitive, renderResources) {
   // Attempt to generate vertex and fragment shader lines before adding any
   // code to the shader.
   const attributesByName = getAttributesByName(primitive.attributes);
-  const vertexLines = generateVertexShaderLines(customShader, attributesByName);
+  const primitivePropertyIds = getAllPropertyIds(
+    primitive,
+    renderResources.model.structuralMetadata,
+  );
+  const vertexLines = generateVertexShaderLines(
+    customShader,
+    attributesByName,
+    primitivePropertyIds,
+  );
   const fragmentLines = generateFragmentShaderLines(
     customShader,
     attributesByName,
+    primitivePropertyIds,
   );
 
   // positionWC must be computed in the vertex shader
@@ -662,6 +702,81 @@ function addLinesToShader(shaderBuilder, customShader, generatedCode) {
 
     shaderBuilder.addFragmentLines(shaderLines);
   }
+}
+
+/**
+ * Get all property IDs a given primitive references (whether or not used in the shader).
+ *
+ * @param {StructuralMetadata} structuralMetadata the structural metadata for the primitive being processed
+ * @param {ModelComponents.Primitive} primitive the primitive being processed by this stage
+ *
+ * @returns {Set<string>} a set of all property IDs the primitive references
+ *
+ * @private
+ */
+function getAllPropertyIds(primitive, structuralMetadata) {
+  if (!defined(structuralMetadata)) {
+    return new Set();
+  }
+
+  const usedPropertyTextures = primitive.propertyTextureIds;
+  const usedPropertyAttributes = primitive.propertyAttributeIds;
+  const usedPropertyTables = defined(primitive.featureIds)
+    ? primitive.featureIds.map((featureId) => featureId.propertyTableId)
+    : [];
+
+  const primitivePropertyIds = new Set();
+
+  function addUsedPropertyIds(propertyContainerIds, propertyContainers) {
+    for (const id of propertyContainerIds) {
+      const propertyContainer = propertyContainers[id];
+      Object.keys(propertyContainer.properties).forEach((propertyId) =>
+        primitivePropertyIds.add(propertyId),
+      );
+    }
+  }
+
+  addUsedPropertyIds(usedPropertyTextures, structuralMetadata.propertyTextures);
+  addUsedPropertyIds(
+    usedPropertyAttributes,
+    structuralMetadata.propertyAttributes,
+  );
+  addUsedPropertyIds(usedPropertyTables, structuralMetadata.propertyTables);
+
+  return primitivePropertyIds;
+}
+
+/**
+ * Because all primitives in a tileset share the same shader, but not necessarily the same
+ * metadata schema, not all primitives will be compatible with the custom shader. This is expected-
+ * it should not cause a fatal error (compilation failure), but instead should disable the custom shader for this primitive.
+ *
+ * @param {Object<string, boolean>} metadataPropertiesUsedInShader the set of metadata properties used in the shader (see CustomShader.js)
+ * @param {Set<string>} primitivePropertyIds the set of all metadata property IDs used in the primitive being processed
+ *
+ * @returns {boolean} true if all metadata properties used in the shader exist on the primitive, false otherwise
+ *
+ * @private
+ */
+function checkMetadataCompatibility(
+  metadataPropertiesUsedInShader,
+  primitivePropertyIds,
+) {
+  for (const propertyName in metadataPropertiesUsedInShader) {
+    if (!metadataPropertiesUsedInShader.hasOwnProperty(propertyName)) {
+      continue;
+    }
+
+    if (!primitivePropertyIds.has(propertyName)) {
+      CustomShaderPipelineStage._oneTimeWarning(
+        "CustomShaderPipelineStage.checkMetadataCompatibility",
+        `A custom shader uses metadata property "${propertyName}" which is not present at least one primitive's structural metadata. Disabling the custom shader for this primitive.`,
+      );
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export default CustomShaderPipelineStage;

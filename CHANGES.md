@@ -16,13 +16,20 @@
 - Added `AttributeCompression.encodeRGB8` and `decodeRGB8` for packing colors. [#13174](https://github.com/CesiumGS/cesium/pull/13174)
 - Added more depth testing options for billboards and labels with `BillboardCollection.coarseDepthTestDistance`, `BillboardCollection.threePointDepthTestDistance`, `LabelCollection.coarseDepthTestDistance`, and `LabelCollection.threePointDepthTestDistance`. [#12994](https://github.com/CesiumGS/cesium/pull/12994)
 - Added support for more metadata types via property textures in custom shaders. See this [issue](https://github.com/CesiumGS/cesium/issues/10248) for the current state of supported types. [#13135](https://github.com/CesiumGS/cesium/pull/13135)
+- Added support for accessing metadata from property tables (from the [EXT_structural_metadata extension](https://github.com/CesiumGS/glTF/tree/proposal-EXT_structural_metadata/extensions/2.0/Vendor/EXT_structural_metadata)) in [custom shaders](https://cesium.com/learn/cesiumjs/ref-doc/CustomShader.html?classFilter=customsh). [#13124](https://github.com/CesiumGS/cesium/issues/13124)
 
 #### Fixes :wrench:
 
 - Fixes depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
 - Fixes billboard depth testing near horizon. [#13159](https://github.com/CesiumGS/cesium/issues/13159)
 - Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
+- Fixed shader cache lookup for day/night alpha in Columbus View. [#13216](https://github.com/CesiumGS/cesium/pull/13216)
 - Fixed a point-rendering regression which caused points to render as circles rather than squares. Such points now will only render as circles when their width is specified via the [BENTLEY_materials_point_style](https://github.com/CesiumGS/glTF/pull/91) glTF extension (which requires that such points be circular). [#13217](https://github.com/CesiumGS/cesium/issues/13217)
+
+### @cesium/sandcastle
+
+- Modified Sandcastle application to use a hybrid text and semantic, embedding based search [#13090](https://github.com/CesiumGS/cesium/pull/13090)
+- Updated Sandcastle Gallery creation process to leverage MIT licensed Huggingface model to vectorize each sandcastle for embedding search [#13090](https://github.com/CesiumGS/cesium/pull/13090)
 
 ## 1.138 - 2026-02-02
 
