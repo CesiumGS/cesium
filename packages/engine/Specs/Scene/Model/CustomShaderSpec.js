@@ -234,11 +234,11 @@ describe("Scene/Model/CustomShader", function () {
       vertexShaderText: [
         "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
         "{",
-        "    float value = vsInput.metadata.temperature;",                    // should match "temperature"
-        "    float value2 = vsInput.metadataClass.testProperty.noData;",      // should match "testProperty"
-        "    float value3 = vsInput.metadataStatistics.testStatistic.mean;",  // should match "testStatistic"
+        "    float value = vsInput.metadata.temperature;", // should match "temperature"
+        "    float value2 = vsInput.metadataClass.testProperty.noData;", // should match "testProperty"
+        "    float value3 = vsInput.metadataStatistics.testStatistic.mean;", // should match "testStatistic"
         "}",
-      ].join("\n")
+      ].join("\n"),
     });
 
     const expectedVertexVariables = {

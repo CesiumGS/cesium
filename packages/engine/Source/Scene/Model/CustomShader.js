@@ -303,7 +303,8 @@ function findUsedVariables(customShader) {
   //  - vsInput.metadata.<property>
   //  - vsInput.metadataClass.<property>
   //  - vsInput.metadataStatistics.<property>
-  const metadataRegex = /[vf]sInput\.(?:metadata|metadataClass|metadataStatistics)\.(\w+)/g;
+  const metadataRegex =
+    /[vf]sInput\.(?:metadata|metadataClass|metadataStatistics)\.(\w+)/g;
   let attributeSet;
 
   const vertexShaderText = customShader.vertexShaderText;
