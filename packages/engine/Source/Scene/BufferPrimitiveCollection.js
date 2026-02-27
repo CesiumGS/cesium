@@ -530,7 +530,7 @@ class BufferPrimitiveCollection {
    * @type {number}
    * @readonly
    */
-  get sizeInBytes() {
+  get byteLength() {
     return this._primitiveBuffer.byteLength + this._positionBuffer.byteLength;
   }
 

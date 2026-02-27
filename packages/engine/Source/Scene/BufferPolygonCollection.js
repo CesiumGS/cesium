@@ -248,9 +248,9 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @type {number}
    * @readonly
    */
-  get sizeInBytes() {
+  get byteLength() {
     return (
-      super.sizeInBytes +
+      super.byteLength +
       this._holeIndexBuffer.byteLength +
       this._triangleIndexBuffer.byteLength
     );

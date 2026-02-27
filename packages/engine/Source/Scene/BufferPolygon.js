@@ -1,9 +1,10 @@
 // @ts-check
 
 import assert from "../Core/assert.js";
+import Check from "../Core/Check.js";
+import defined from "../Core/defined.js";
 import BufferPrimitive from "./BufferPrimitive.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
-import defined from "../Core/defined.js";
 
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
@@ -17,6 +18,9 @@ const { ERR_CAPACITY, ERR_RESIZE } = BufferPrimitiveCollection.Error;
  * define one or more internal linear rings ("holes") within the polygon.
  * Stores a precomputed triangulation, including one or more triangles.
  * Holes and triangles are stored as indices into the positions array.
+ *
+ * TODO(donmccurdy): Do we actually want to store that first vertex again? If
+ * so, may need to update the unit tests accordingly.
  *
  * See: https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.6
  *
@@ -120,22 +124,7 @@ class BufferPolygon extends BufferPrimitive {
    * return {Float64Array}
    */
   getPositions(result) {
-    const { vertexOffset, vertexCount } = this;
-    const positionF64 = this._collection._positionF64;
-
-    if (!defined(result)) {
-      const byteOffset =
-        positionF64.byteOffset +
-        vertexOffset * 3 * Float64Array.BYTES_PER_ELEMENT;
-      return new Float64Array(positionF64.buffer, byteOffset, vertexCount * 3);
-    }
-
-    for (let i = 0; i < vertexCount; i++) {
-      result[i * 3] = positionF64[(vertexOffset + i) * 3];
-      result[i * 3 + 1] = positionF64[(vertexOffset + i) * 3 + 1];
-      result[i * 3 + 2] = positionF64[(vertexOffset + i) * 3 + 2];
-    }
-    return result;
+    return this._getPositionsRange(this.vertexOffset, this.vertexCount, result);
   }
 
   /** @param {Float64Array} positions */
@@ -162,6 +151,37 @@ class BufferPolygon extends BufferPrimitive {
     }
 
     collection._makeDirtyBoundingVolume();
+  }
+
+  /**
+   * @type {number}
+   * @readonly
+   */
+  get outerVertexOffset() {
+    return this.vertexOffset;
+  }
+
+  /**
+   * @type {number}
+   * @readonly
+   */
+  get outerVertexCount() {
+    if (this.holeCount > 0) {
+      return this.getHoles()[0];
+    }
+    return this.vertexCount;
+  }
+
+  /**
+   * @param {Float64Array} [result]
+   * @returns {Float64Array}
+   */
+  getOuterPositions(result) {
+    return this._getPositionsRange(
+      this.outerVertexOffset,
+      this.outerVertexCount,
+      result,
+    );
   }
 
   /**
@@ -227,6 +247,67 @@ class BufferPolygon extends BufferPrimitive {
     }
 
     collection._makeDirtyBoundingVolume();
+  }
+
+  /**
+   * @param {number} holeIndex
+   * @returns {number}
+   */
+  getHoleVertexCount(holeIndex) {
+    const holes = this.getHoles();
+
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("holeIndex", holeIndex, 0);
+    Check.typeOf.number.lessThan("holeIndex", holeIndex, holes.length);
+    //>>includeEnd('debug');
+
+    const holeVertexOffset = holes[holeIndex];
+    return holeIndex === holes.length - 1
+      ? this.vertexCount - holeVertexOffset
+      : holes[holeIndex + 1] - holeVertexOffset;
+  }
+
+  /**
+   * @param {number} holeIndex
+   * @param {Float64Array} [result]
+   * return {Float64Array}
+   */
+  getHolePositions(holeIndex, result) {
+    const holes = this.getHoles();
+
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("holeIndex", holeIndex, 0);
+    Check.typeOf.number.lessThan("holeIndex", holeIndex, holes.length);
+    //>>includeEnd('debug');
+
+    const holeVertexOffset = holes[holeIndex];
+    const holeVertexCount = this.getHoleVertexCount(holeIndex);
+    return this._getPositionsRange(holeVertexOffset, holeVertexCount, result);
+  }
+
+  /**
+   * @param {number} vertexOffset
+   * @param {number} vertexCount
+   * @param {Float64Array} [result]
+   * @returns {Float64Array}
+   * @private
+   */
+  _getPositionsRange(vertexOffset, vertexCount, result) {
+    const positionF64 = this._collection._positionF64;
+
+    if (!defined(result)) {
+      const byteOffset =
+        positionF64.byteOffset +
+        vertexOffset * 3 * Float64Array.BYTES_PER_ELEMENT;
+      return new Float64Array(positionF64.buffer, byteOffset, vertexCount * 3);
+    }
+
+    for (let i = 0; i < vertexCount; i++) {
+      result[i * 3] = positionF64[(vertexOffset + i) * 3];
+      result[i * 3 + 1] = positionF64[(vertexOffset + i) * 3 + 1];
+      result[i * 3 + 2] = positionF64[(vertexOffset + i) * 3 + 2];
+    }
+    return result;
   }
 
   /**
@@ -307,7 +388,7 @@ class BufferPolygon extends BufferPrimitive {
       ...super.toJSON(),
       positions: Array.from(this.getPositions()),
       holes: Array.from(this.getHoles()),
-      triangles: Array.from(this.getHoles()),
+      triangles: Array.from(this.getTriangles()),
     };
   }
 }
