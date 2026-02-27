@@ -70,20 +70,20 @@ describe("BufferPointCollection", () => {
     expect(point.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
   });
 
-  it("sizeInBytes", () => {
+  it("byteLength", () => {
     let collection = new BufferPointCollection({
       primitiveCountMax: 1,
       vertexCountMax: 1,
     });
 
-    expect(collection.sizeInBytes).toBe(16 + 24);
+    expect(collection.byteLength).toBe(16 + 24);
 
     collection = new BufferPointCollection({
       primitiveCountMax: 128,
       vertexCountMax: 128,
     });
 
-    expect(collection.sizeInBytes).toBe((16 + 24) * 128);
+    expect(collection.byteLength).toBe((16 + 24) * 128);
   });
 
   it("clone", () => {

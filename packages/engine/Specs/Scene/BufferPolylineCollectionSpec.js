@@ -85,20 +85,20 @@ describe("BufferPolylineCollection", () => {
     expect(polyline.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
   });
 
-  it("sizeInBytes", () => {
+  it("byteLength", () => {
     let collection = new BufferPolylineCollection({
       primitiveCountMax: 1,
       vertexCountMax: 1,
     });
 
-    expect(collection.sizeInBytes).toBe(24 + 24);
+    expect(collection.byteLength).toBe(24 + 24);
 
     collection = new BufferPolylineCollection({
       primitiveCountMax: 128,
       vertexCountMax: 128,
     });
 
-    expect(collection.sizeInBytes).toBe((24 + 24) * 128);
+    expect(collection.byteLength).toBe((24 + 24) * 128);
   });
 
   it("clone", () => {
