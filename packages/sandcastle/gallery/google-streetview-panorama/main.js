@@ -47,11 +47,11 @@ const ionResponse = await Cesium.Resource.fetchJson({
   },
 });
 
+Cesium.GoogleMaps.defaultStreetViewStaticApiKey = ionResponse.options.key;
+Cesium.GoogleMaps.streetViewStaticApiEndpoint = ionResponse.options.url;
+
 const cubeMapProvider =
-  await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
-    apiKey: ionResponse.options.key,
-    url: ionResponse.options.url,
-  });
+  await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl();
 
 let savedLng = 0;
 let savedLat = 0;
