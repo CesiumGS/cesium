@@ -216,10 +216,82 @@ function Cesium3DTileset(options) {
   this._modelUpAxis = undefined;
   this._modelForwardAxis = undefined;
   this._cache = new Cesium3DTilesetCache();
-  this._processingQueue = [];
-  this._selectedTiles = [];
+
   this._emptyTiles = [];
+
+  /**
+   * The tiles that are 'selected' by the traversal.
+   *
+   * During the 'Cesium3DTileset.update' call, the tile traversal is
+   * executed. This includes the execution of the 'selectTiles'
+   * function of the traversal (which exists in different forms,
+   * depending on the traversal - but it's not really an interface,
+   * just different functions).
+   *
+   * The 'selectTiles' function will first clear this list of
+   * selected tiles, and then fill it with the tiles that are
+   * 'selected'.
+   *
+   * (This usually/roughly  means that they are in the view frustum
+   * and have the right level of detail, but the details may vary)
+   *
+   * Some of these tiles may also be moved into the '_requestedTiles'
+   * as part of the traversal.
+   */
+  this._selectedTiles = [];
+
+  /**
+   * Tiles that are 'requested' according to the traversal.
+   *
+   * This is usually a subset of the '_selectedTiles': The list
+   * of requested tiles is cleared at the beginning of the traversal,
+   * and then some tiles that are 'selected' will also be added to
+   * these 'requested' tiles.
+   *
+   * There is no clear definition of what a 'requested' tile is.
+   * It roughly means that ~"their content has to be loaded".
+   * The tiles are added to this list, usually in a function
+   * called 'loadTile', which is literally saying that the tile
+   * is added to this list "if appropriate".
+   *
+   * The important point is that AFTER the traversal, the
+   * contents of these tiles will be loaded, meaning that
+   * 'Cesium3DTile.requestContent' will be called for them,
+   * and they will be added to the '_requestedTilesInFlight'.
+   *
+   * (Once the content is loaded, the tiles will be added to
+   * the '_processingQueue');
+   */
   this._requestedTiles = [];
+
+  /**
+   * The tiles for which a content request is currently "in flight".
+   *
+   * This list is filled with tiles from the '_requestedTiles'
+   * in each frame. Tiles are removed from this list after each
+   * frame (when 'cancelOutOfViewRequests' is called), if their
+   * '_contentState' is no longer 'LOADING'.
+   *
+   * So a tile being in this list roughly means that its content
+   * is currently being loaded.
+   */
+  this._requestedTilesInFlight = [];
+
+  /**
+   * The tiles that are currently being processed.
+   *
+   * These are the tiles that have been 'selected' and 'requested'
+   * and whose content was eventually obtained. Before the next
+   * rendering pass, these tiles will be "processed", meaning that
+   * their 'Cesium3DTile.process' method will be called.
+   *
+   * This mainly means that the 'Cesium3DTileContent.update' function
+   * of their content is called, loading data and creating WebGL
+   * resources and doing other random stuff, which eventually leads
+   * to the tile moving from the 'PROCESSING' state into the 'READY' state.
+   */
+  this._processingQueue = [];
+
   this._selectedTilesToStyle = [];
   this._loadTimestamp = undefined;
   this._timeSinceLoad = 0.0;
@@ -275,8 +347,6 @@ function Cesium3DTileset(options) {
   for (let i = 0; i < Cesium3DTilePass.NUMBER_OF_PASSES; ++i) {
     this._statisticsPerPass[i] = new Cesium3DTilesetStatistics();
   }
-
-  this._requestedTilesInFlight = [];
 
   this._maximumPriority = {
     foveatedFactor: -Number.MAX_VALUE,
@@ -1077,6 +1147,17 @@ function Cesium3DTileset(options) {
     instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
   }
   this._instanceFeatureIdLabel = instanceFeatureIdLabel;
+
+  /**
+   * The function that determines which inner contents of a dynamic
+   * contents object are currently active.
+   *
+   * See the setter of this property for details.
+   *
+   * @type {Function|undefined}
+   * @private
+   */
+  this._dynamicContentPropertyProvider = undefined;
 }
 
 Object.defineProperties(Cesium3DTileset.prototype, {
@@ -2103,6 +2184,34 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       this._instanceFeatureIdLabel = value;
     },
   },
+
+  /**
+   * The function that provides the properties based on which inner
+   * contents of a dynamic content should be active.
+   *
+   * This is a function that returns a plain JSON object. This object corresponds
+   * to one 'key' of a dynamic content definition. It will cause the content
+   * with this key to be the currently active content, namely, when the
+   * "update" function of that content is called.
+   *
+   * @memberof Cesium3DTileset.prototype
+   * @readonly
+   * @type {Function|undefined}
+   * @private
+   */
+  dynamicContentPropertyProvider: {
+    get: function () {
+      return this._dynamicContentPropertyProvider;
+    },
+    set: function (value) {
+      if (defined(value) && !defined(this._dynamicContentsDimensions)) {
+        console.log(
+          "This tileset does not contain the 3DTILES_dynamic extension. The given function will not have an effect.",
+        );
+      }
+      this._dynamicContentPropertyProvider = value;
+    },
+  },
 });
 
 /**
@@ -2261,6 +2370,20 @@ Cesium3DTileset.fromUrl = async function (url, options) {
     tileset._initialClippingPlanesOriginMatrix,
   );
 
+  // Extract the information about the "dimensions" of the dynamic contents,
+  // if present.
+  // XXX_DYNAMIC This should probably not be done here, but ...
+  // maybe in the constructor or so...? The lifecycle, though:
+  // The JSON is essentially "lost" after this function returns,
+  // because it is not passed to the constructor for some reason.
+  const hasDynamicContents = hasExtension(tilesetJson, "3DTILES_dynamic");
+  if (hasDynamicContents) {
+    const dynamicContentsExtension = tilesetJson.extensions["3DTILES_dynamic"];
+    tileset._dynamicContentsDimensions = dynamicContentsExtension.dimensions;
+  } else {
+    tileset._dynamicContentsDimensions = undefined;
+  }
+
   return tileset;
 };
 
@@ -2361,6 +2484,54 @@ Cesium3DTileset.prototype.loadTileset = function (
 
   return rootTile;
 };
+
+/**
+ * XXX_DYNAMIC A draft for a convenience function for the dynamic content
+ * properties provider. Whether or not this should be offered depends on
+ * how much we want to specialize all this for single ISO8601 date strings.
+ * We could even omit the "timeDimensionName" if this was a fixed, specified
+ * string like "isoTimeStamp" or so.
+ *
+ * ---
+ *
+ * Set the function that determines which dynamic content is currently active,
+ * based on the ISO8601 string representation of the current time of the given
+ * clock.
+ *
+ * @param {string} timeDimensionName The name of the property that will
+ * contain the ISO8601 date string of the current time of the clock
+ * @param {Clock} clock The clock that provides the current time
+ */
+Cesium3DTileset.prototype.setDefaultTimeDynamicContentPropertyProvider =
+  function (timeDimensionName, clock) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("timeDimensionName", timeDimensionName);
+    Check.typeOf.object("clock", clock);
+    //>>includeEnd('debug');
+
+    const dimensions = this._dynamicContentsDimensions;
+    if (defined(dimensions)) {
+      const dimensionNames = dimensions.map((d) => d.name);
+      if (!dimensionNames.includes(timeDimensionName)) {
+        console.log(
+          `The time dimension name ${timeDimensionName} is not a valid dimension name. Valid dimension names are`,
+          dimensionNames,
+        );
+      }
+    }
+
+    const dynamicContentPropertyProvider = () => {
+      const currentTime = clock.currentTime;
+      if (!defined(currentTime)) {
+        return undefined;
+      }
+      const currentTimeString = JulianDate.toIso8601(currentTime);
+      return {
+        [timeDimensionName]: currentTimeString,
+      };
+    };
+    this.dynamicContentPropertyProvider = dynamicContentPropertyProvider;
+  };
 
 /**
  * Make a {@link Cesium3DTile} for a specific tile. If the tile's header has implicit

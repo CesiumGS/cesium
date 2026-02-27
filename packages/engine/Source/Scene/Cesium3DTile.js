@@ -21,16 +21,12 @@ import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
-import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
-import findContentMetadata from "./findContentMetadata.js";
-import findGroupMetadata from "./findGroupMetadata.js";
 import findTileMetadata from "./findTileMetadata.js";
 import hasExtension from "./hasExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
@@ -43,6 +39,8 @@ import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
 import VerticalExaggeration from "../Core/VerticalExaggeration.js";
+import finishContent from "./finishContent.js";
+import Dynamic3DTileContent from "./Dynamic3DTileContent.js";
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -61,19 +59,6 @@ import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 function Cesium3DTile(tileset, baseResource, header, parent) {
   this._tileset = tileset;
   this._header = header;
-
-  const hasContentsArray = defined(header.contents);
-  const hasMultipleContents =
-    (hasContentsArray && header.contents.length > 1) ||
-    hasExtension(header, "3DTILES_multiple_contents");
-
-  // In the 1.0 schema, content is stored in tile.content instead of tile.contents
-  const contentHeader =
-    hasContentsArray && !hasMultipleContents
-      ? header.contents[0]
-      : header.content;
-
-  this._contentHeader = contentHeader;
 
   /**
    * The local transform of this tile.
@@ -131,22 +116,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   );
   this._boundingVolume2D = undefined;
 
-  let contentBoundingVolume;
-
-  if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
-    // Non-leaf tiles may have a content bounding-volume, which is a tight-fit bounding volume
-    // around only the features in the tile.  This box is useful for culling for rendering,
-    // but not for culling for traversing the tree since it does not guarantee spatial coherence, i.e.,
-    // since it only bounds features in the tile, not the entire tile, children may be
-    // outside of this box.
-    contentBoundingVolume = this.createBoundingVolume(
-      contentHeader.boundingVolume,
-      computedTransform,
-    );
-  }
-  this._contentBoundingVolume = contentBoundingVolume;
-  this._contentBoundingVolume2D = undefined;
-
   let viewerRequestVolume;
   if (defined(header.viewerRequestVolume)) {
     viewerRequestVolume = this.createBoundingVolume(
@@ -178,27 +147,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   this.updateGeometricErrorScale();
 
-  let refine;
-  if (defined(header.refine)) {
-    if (header.refine === "replace" || header.refine === "add") {
-      Cesium3DTile._deprecationWarning(
-        "lowercase-refine",
-        `This tile uses a lowercase refine "${
-          header.refine
-        }". Instead use "${header.refine.toUpperCase()}".`,
-      );
-    }
-    refine =
-      header.refine.toUpperCase() === "REPLACE"
-        ? Cesium3DTileRefine.REPLACE
-        : Cesium3DTileRefine.ADD;
-  } else if (defined(parent)) {
-    // Inherit from parent tile if omitted.
-    refine = parent.refine;
-  } else {
-    refine = Cesium3DTileRefine.REPLACE;
-  }
-
   /**
    * Specifies the type of refinement that is used when traversing this tile for rendering.
    *
@@ -206,7 +154,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @readonly
    * @private
    */
-  this.refine = refine;
+  this.refine = determineRefine(header.refine, parent);
 
   /**
    * Gets the tile's children.
@@ -229,58 +177,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.parent = parent;
 
-  let content;
-  let hasEmptyContent = false;
-  let contentState;
-  let contentResource;
-  let serverKey;
-
-  baseResource = Resource.createIfNeeded(baseResource);
-
-  if (hasMultipleContents) {
-    contentState = Cesium3DTileContentState.UNLOADED;
-    // Each content may have its own URI, but they all need to be resolved
-    // relative to the tileset, so the base resource is used.
-    contentResource = baseResource.clone();
-  } else if (defined(contentHeader)) {
-    let contentHeaderUri = contentHeader.uri;
-    if (defined(contentHeader.url)) {
-      Cesium3DTile._deprecationWarning(
-        "contentUrl",
-        'This tileset JSON uses the "content.url" property which has been deprecated. Use "content.uri" instead.',
-      );
-      contentHeaderUri = contentHeader.url;
-    }
-    if (contentHeaderUri === "") {
-      Cesium3DTile._deprecationWarning(
-        "contentUriEmpty",
-        "content.uri property is an empty string, which creates a circular dependency, making this tileset invalid. Omit the content property instead",
-      );
-      content = new Empty3DTileContent(tileset, this);
-      hasEmptyContent = true;
-      contentState = Cesium3DTileContentState.READY;
-    } else {
-      contentState = Cesium3DTileContentState.UNLOADED;
-      contentResource = baseResource.getDerivedResource({
-        url: contentHeaderUri,
-      });
-      serverKey = RequestScheduler.getServerKey(
-        contentResource.getUrlComponent(),
-      );
-    }
-  } else {
-    content = new Empty3DTileContent(tileset, this);
-    hasEmptyContent = true;
-    contentState = Cesium3DTileContentState.READY;
-  }
-
-  this._content = content;
-  this._contentResource = contentResource;
-  this._contentState = contentState;
-  this._expiredContent = undefined;
-
-  this._serverKey = serverKey;
-
   /**
    * When <code>true</code>, the tile has no content.
    *
@@ -289,7 +185,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    *
    * @private
    */
-  this.hasEmptyContent = hasEmptyContent;
+  this.hasEmptyContent = false;
 
   /**
    * When <code>true</code>, the tile's content points to an external tileset.
@@ -334,7 +230,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    *
    * @private
    */
-  this.hasRenderableContent = !hasEmptyContent;
+  this.hasRenderableContent = false;
 
   /**
    * When <code>true</code>, the tile contains content metadata from implicit tiling. This flag is set
@@ -362,7 +258,17 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    *
    * @private
    */
-  this.hasMultipleContents = hasMultipleContents;
+  this.hasMultipleContents = false;
+
+  // Initialize the content-related properties
+  this._contentBoundingVolume = undefined;
+  this._contentBoundingVolume2D = undefined;
+  this._content = undefined;
+  this._contentResource = undefined;
+  this._contentState = undefined;
+  this._expiredContent = undefined;
+  this._serverKey = undefined;
+  initializeContent(this, baseResource, header);
 
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
@@ -483,7 +389,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.implicitSubtree = undefined;
 
-  // Members that are updated every frame for tree traversal and rendering optimizations:
+  // Members that are updated every frame for tree traversal and rendering optimizations.
   this._distanceToCamera = 0.0;
   this._centerZDepth = 0.0;
   this._screenSpaceError = 0.0;
@@ -533,6 +439,161 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._colorDirty = false;
 
   this._request = undefined;
+}
+
+/**
+ * Initialize the content-related properties of the given tile.
+ *
+ * This assumes that the <code>_tileset</code> and the
+ * <code>computedTransform</code> of the given tile have
+ * already been set.
+ *
+ * It will initialize the following properties of the tile, based
+ * on the given resource and header information:
+ *
+ * - _contentHeader
+ * - _contentBoundingVolume
+ * - _contentBoundingVolume2D
+ * - _content
+ * - _contentResource
+ * - _contentState
+ * - _expiredContent
+ * - _serverKey
+ * - hasEmptyContent
+ * - hasRenderableContent
+ * - hasMultipleContents
+ *
+ * The exact meaning of these properties has to be derived from
+ * the code. This function was just introduced as first cleanup.
+ *
+ * @param {Cesium3DTile} tile The tile
+ * @param {Resource} baseResource The base resource for the tileset
+ * @param {object} header The JSON header for the tile
+ */
+function initializeContent(tile, baseResource, header) {
+  const hasContentsArray = defined(header.contents);
+  const hasMultipleContents =
+    (hasContentsArray && header.contents.length > 1) ||
+    hasExtension(header, "3DTILES_multiple_contents");
+
+  // In the 1.0 schema, content is stored in tile.content instead of tile.contents
+  const contentHeader =
+    hasContentsArray && !hasMultipleContents
+      ? header.contents[0]
+      : header.content;
+
+  let contentBoundingVolume;
+
+  if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
+    // Non-leaf tiles may have a content bounding-volume, which is a tight-fit bounding volume
+    // around only the features in the tile.  This box is useful for culling for rendering,
+    // but not for culling for traversing the tree since it does not guarantee spatial coherence, i.e.,
+    // since it only bounds features in the tile, not the entire tile, children may be
+    // outside of this box.
+    contentBoundingVolume = tile.createBoundingVolume(
+      contentHeader.boundingVolume,
+      tile.computedTransform,
+    );
+  }
+
+  let content;
+  let contentState;
+  let contentResource;
+  let serverKey;
+  let hasEmptyContent = false;
+
+  baseResource = Resource.createIfNeeded(baseResource);
+
+  if (hasMultipleContents) {
+    contentState = Cesium3DTileContentState.UNLOADED;
+    // Each content may have its own URI, but they all need to be resolved
+    // relative to the tileset, so the base resource is used.
+    contentResource = baseResource.clone();
+  } else if (defined(contentHeader)) {
+    let contentHeaderUri = contentHeader.uri;
+    if (defined(contentHeader.url)) {
+      Cesium3DTile._deprecationWarning(
+        "contentUrl",
+        'This tileset JSON uses the "content.url" property which has been deprecated. Use "content.uri" instead.',
+      );
+      contentHeaderUri = contentHeader.url;
+    }
+    if (contentHeaderUri === "") {
+      Cesium3DTile._deprecationWarning(
+        "contentUriEmpty",
+        "content.uri property is an empty string, which creates a circular dependency, making this tileset invalid. Omit the content property instead",
+      );
+      content = new Empty3DTileContent(tile._tileset, tile);
+      hasEmptyContent = true;
+      contentState = Cesium3DTileContentState.READY;
+    } else {
+      contentState = Cesium3DTileContentState.UNLOADED;
+      contentResource = baseResource.getDerivedResource({
+        url: contentHeaderUri,
+      });
+      serverKey = RequestScheduler.getServerKey(
+        contentResource.getUrlComponent(),
+      );
+    }
+  } else {
+    content = new Empty3DTileContent(tile._tileset, tile);
+    hasEmptyContent = true;
+    contentState = Cesium3DTileContentState.READY;
+  }
+
+  tile._contentHeader = contentHeader;
+  tile._contentBoundingVolume = contentBoundingVolume;
+  tile._contentBoundingVolume2D = undefined;
+  tile._content = content;
+  tile._contentResource = contentResource;
+  tile._contentState = contentState;
+  tile._expiredContent = undefined;
+  tile._serverKey = serverKey;
+  tile.hasEmptyContent = hasEmptyContent;
+  tile.hasRenderableContent = !hasEmptyContent;
+  tile.hasMultipleContents = hasMultipleContents;
+}
+
+/**
+ * Returns the value for the 'refine' property of a tile.
+ *
+ * If the given value from the header is one of the known, deprecated
+ * lowercase values ("add" or "remove"), then a deprecation warning
+ * will be printed, and the corresponding constant will be returned.
+ *
+ * If the value is <code>undefined</code>, and the parent is not
+ * <code>undefined</code>, then the value from the parent will
+ * be inherited and returned.
+ *
+ * Otherwise, <code>REPLACE</code> is returned as the default.
+ *
+ * @param {string|undefined} headerRefine The refine value from the JSON
+ * @param {Cesium3DTile|undefined} parent The parent tile
+ * @returns {number} The <code>Cesium3DTileRefine</code> value
+ */
+function determineRefine(headerRefine, parent) {
+  // Note: This will not create a warning for strings like "RePlAcE",
+  // but still handle them by uppercasing them.
+  if (defined(headerRefine)) {
+    if (headerRefine === "replace" || headerRefine === "add") {
+      Cesium3DTile._deprecationWarning(
+        "lowercase-refine",
+        `This tile uses a lowercase refine "${
+          headerRefine
+        }". Instead use "${headerRefine.toUpperCase()}".`,
+      );
+    }
+    const refine =
+      headerRefine.toUpperCase() === "REPLACE"
+        ? Cesium3DTileRefine.REPLACE
+        : Cesium3DTileRefine.ADD;
+    return refine;
+  }
+  if (defined(parent)) {
+    // Inherit from parent tile if omitted.
+    return parent.refine;
+  }
+  return Cesium3DTileRefine.REPLACE;
 }
 
 // This can be overridden for testing purposes
@@ -1128,11 +1189,9 @@ Cesium3DTile.prototype.requestContent = function () {
   if (this.hasEmptyContent) {
     return;
   }
-
   if (this.hasMultipleContents) {
     return requestMultipleContents(this);
   }
-
   return requestSingleContent(this);
 };
 
@@ -1170,7 +1229,13 @@ function requestMultipleContents(tile) {
     tile._content = multipleContents;
   }
 
-  const promise = multipleContents.requestInnerContents();
+  // XXX_DYNAMIC_MULTIPLE Pragmatically claim that everything is done
+  // (which, in fact, does not have to concern the tile...)
+  tile._contentState = Cesium3DTileContentState.READY;
+  return Promise.resolve(tile._content);
+
+  /*
+  const promise = multipleContents.requestInnerContents(); 
 
   if (!defined(promise)) {
     // Request could not all be scheduled this frame
@@ -1202,6 +1267,7 @@ function requestMultipleContents(tile) {
       tile._contentState = Cesium3DTileContentState.FAILED;
       throw error;
     });
+  */
 }
 
 async function processArrayBuffer(
@@ -1350,52 +1416,12 @@ async function makeContent(tile, arrayBuffer) {
     tile.hasRenderableContent = false;
   }
 
-  let content;
-  const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
   if (tile.isDestroyed()) {
     return;
   }
-
-  if (defined(preprocessed.binaryPayload)) {
-    content = await Promise.resolve(
-      contentFactory(
-        tileset,
-        tile,
-        tile._contentResource,
-        preprocessed.binaryPayload.buffer,
-        0,
-      ),
-    );
-  } else {
-    // JSON formats
-    content = await Promise.resolve(
-      contentFactory(
-        tileset,
-        tile,
-        tile._contentResource,
-        preprocessed.jsonPayload,
-      ),
-    );
-  }
-
+  const resource = tile._contentResource;
   const contentHeader = tile._contentHeader;
-
-  if (tile.hasImplicitContentMetadata) {
-    const subtree = tile.implicitSubtree;
-    const coordinates = tile.implicitCoordinates;
-    content.metadata = subtree.getContentMetadataView(coordinates, 0);
-  } else if (!tile.hasImplicitContent) {
-    content.metadata = findContentMetadata(tileset, contentHeader);
-  }
-
-  const groupMetadata = findGroupMetadata(tileset, contentHeader);
-  if (defined(groupMetadata)) {
-    content.group = new Cesium3DContentGroup({
-      metadata: groupMetadata,
-    });
-  }
-
-  return content;
+  return finishContent(tile, resource, preprocessed, contentHeader, 0);
 }
 
 /**
@@ -1405,7 +1431,12 @@ async function makeContent(tile, arrayBuffer) {
  * @private
  */
 Cesium3DTile.prototype.cancelRequests = function () {
+  // XXX_DYNAMIC: This actually happens sometimes, but only when the tile is
+  // in the "LOADING" state. Now... what do do with dynamic tiles?
+  console.log("Cesium3DTile.cancelRequests is called");
   if (this.hasMultipleContents) {
+    this._content.cancelRequests();
+  } else if (this._content instanceof Dynamic3DTileContent) {
     this._content.cancelRequests();
   } else {
     this._request.cancel();
