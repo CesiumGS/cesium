@@ -38,7 +38,6 @@ import PrimitivePipeline from "./PrimitivePipeline.js";
 import PrimitiveState from "./PrimitiveState.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
-import Credit from "../Core/Credit.js";
 
 /**
  * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
@@ -78,7 +77,6 @@ import Credit from "../Core/Credit.js";
  * @param {boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
  * @param {boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
- * @param {Credit|string} [options.credit] A credit for the primitive, which is displayed on the canvas.
  * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from light sources.
  *
  * @example
@@ -354,13 +352,6 @@ function Primitive(options) {
   this._recomputeBoundingSpheres = false;
   this._batchTableBoundingSpheresUpdated = false;
   this._batchTableBoundingSphereAttributeIndices = undefined;
-
-  // Credit specified by the user.
-  let credit = options.credit;
-  if (typeof credit === "string") {
-    credit = new Credit(credit);
-  }
-  this._credit = credit;
 }
 
 Object.defineProperties(Primitive.prototype, {
@@ -2234,11 +2225,6 @@ Primitive.prototype.update = function (frameState) {
     this.debugShowBoundingVolume,
     twoPasses,
   );
-
-  if (this.show && defined(this.credit)) {
-    const creditDisplay = frameState.creditDisplay;
-    creditDisplay.addCreditToNextFrame(this._credit);
-  }
 };
 
 const offsetBoundingSphereScratch1 = new BoundingSphere();
