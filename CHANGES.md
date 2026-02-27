@@ -26,6 +26,11 @@
 - Fixed shader cache lookup for day/night alpha in Columbus View. [#13216](https://github.com/CesiumGS/cesium/pull/13216)
 - Fixed a point-rendering regression which caused points to render as circles rather than squares. Such points now will only render as circles when their width is specified via the [BENTLEY_materials_point_style](https://github.com/CesiumGS/glTF/pull/91) glTF extension (which requires that such points be circular). [#13217](https://github.com/CesiumGS/cesium/issues/13217)
 
+### @cesium/sandcastle
+
+- Modified Sandcastle application to use a hybrid text and semantic, embedding based search [#13090](https://github.com/CesiumGS/cesium/pull/13090)
+- Updated Sandcastle Gallery creation process to leverage MIT licensed Huggingface model to vectorize each sandcastle for embedding search [#13090](https://github.com/CesiumGS/cesium/pull/13090)
+
 ## 1.138 - 2026-02-02
 
 ### @cesium/engine
