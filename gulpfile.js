@@ -260,7 +260,7 @@ export async function tsc() {
     workspaces = argv.workspace;
   } else {
     execSync(
-      `npm exec --package=typescript --no -- tsc --project tsconfig.json`,
+      `npm exec --package=typescript --offline -- tsc --project tsconfig.json`,
       { stdio: "inherit" },
     );
 
@@ -275,7 +275,7 @@ export async function tsc() {
     const tsconfigPath = `packages/${directory}/tsconfig.json`;
     if (existsSync(tsconfigPath)) {
       execSync(
-        `npm exec --package=typescript --no -- tsc --project ${tsconfigPath}`,
+        `npm exec --package=typescript --offline -- tsc --project ${tsconfigPath}`,
         { stdio: "inherit" },
       );
     }
