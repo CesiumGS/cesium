@@ -29,6 +29,13 @@ function FrameState(context, creditDisplay, jobScheduler) {
   this.commandList = [];
 
   /**
+   * An array of panorama rendering commands.
+   *
+   * @type {DrawCommand[]}
+   */
+  this.panoramaCommandList = [];
+
+  /**
    * An array of shadow maps.
    * @type {ShadowMap[]}
    */
