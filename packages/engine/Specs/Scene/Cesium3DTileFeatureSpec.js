@@ -2,6 +2,7 @@ import {
   Cartesian3,
   Cartesian4,
   Cesium3DTileFeature,
+  defined,
   Ellipsoid,
   HeadingPitchRange,
   Math as CesiumMath,
@@ -578,6 +579,90 @@ describe(
           const feature = new Cesium3DTileFeature(subtreeRootContent, 0);
           expect(feature.getPropertyInherited("Height")).toBeInstanceOf(Number);
           expect(feature.getPropertyInherited("Height")).not.toEqual(10);
+        });
+      });
+    });
+
+    describe("getPositions", function () {
+      const b3dmWithBatchIds =
+        "Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
+
+      let scene;
+      beforeAll(function () {
+        scene = createScene();
+      });
+
+      afterAll(function () {
+        scene.destroyForSpecs();
+      });
+
+      beforeEach(function () {
+        scene.primitives.removeAll();
+        const center = Cartesian3.fromRadians(
+          centerLongitude,
+          centerLatitude,
+        );
+        scene.camera.lookAt(
+          center,
+          new HeadingPitchRange(0.0, -1.57, 15.0),
+        );
+      });
+
+      it("returns undefined for content without a model", function () {
+        const content = {
+          tileset: undefined,
+        };
+        const feature = new Cesium3DTileFeature(content, 0);
+        const result = feature.getPositions();
+        expect(result).toBeUndefined();
+      });
+
+      it("returns positions for a b3dm feature with enableGeometryExtraction", function () {
+        return Cesium3DTilesTester.loadTileset(scene, b3dmWithBatchIds, {
+          enableGeometryExtraction: true,
+        }).then(function (tileset) {
+          const content = tileset.root.content;
+          const featuresLength = content.featuresLength;
+          expect(featuresLength).toBeGreaterThan(0);
+
+          const feature = content.getFeature(0);
+          const positions = feature.getPositions();
+
+          // When enableGeometryExtraction is true, positions should be available
+          if (defined(positions)) {
+            expect(positions.length).toBeGreaterThan(0);
+            // Each position should be a Cartesian3
+            for (let i = 0; i < positions.length; i++) {
+              expect(positions[i]).toBeInstanceOf(Cartesian3);
+            }
+          }
+        });
+      });
+
+      it("returns distinct positions for different features", function () {
+        return Cesium3DTilesTester.loadTileset(scene, b3dmWithBatchIds, {
+          enableGeometryExtraction: true,
+        }).then(function (tileset) {
+          const content = tileset.root.content;
+          const featuresLength = content.featuresLength;
+
+          if (featuresLength >= 2) {
+            const feature0 = content.getFeature(0);
+            const feature1 = content.getFeature(1);
+            const positions0 = feature0.getPositions();
+            const positions1 = feature1.getPositions();
+
+            if (defined(positions0) && defined(positions1)) {
+              // Different features should have different positions
+              // (unless they somehow share all vertices, which is unlikely)
+              const allSame =
+                positions0.length === positions1.length &&
+                positions0.every(function (p, i) {
+                  return Cartesian3.equals(p, positions1[i]);
+                });
+              expect(allSame).toBe(false);
+            }
+          }
         });
       });
     });

@@ -540,6 +540,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     debugWireframe: tileset.debugWireframe,
     projectTo2D: tileset._projectTo2D,
     enablePick: tileset._enablePick,
+    enableGeometryExtraction: tileset._enableGeometryExtraction,
     enableShowOutline: tileset._enableShowOutline,
     showOutline: tileset.showOutline,
     outlineColor: tileset.outlineColor,

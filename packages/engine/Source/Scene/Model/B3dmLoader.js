@@ -50,6 +50,7 @@ class B3dmLoader extends ResourceLoader {
    * @param {boolean} [options.loadAttributesAsTypedArray=false] If <code>true</code>, load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
    * @param {boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
    * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
+   * @param {boolean} [options.enableGeometryExtraction=false] If <code>true</code>, load the positions buffer, feature ID attribute buffers, and index buffer as typed arrays to enable geometry extraction from tile features.
    * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
    * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
    * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
@@ -72,6 +73,7 @@ class B3dmLoader extends ResourceLoader {
       options.loadAttributesAsTypedArray ?? false;
     const loadAttributesFor2D = options.loadAttributesFor2D ?? false;
     const enablePick = options.enablePick ?? false;
+    const enableGeometryExtraction = options.enableGeometryExtraction ?? false;
     const loadIndicesForWireframe = options.loadIndicesForWireframe ?? false;
     const loadPrimitiveOutline = options.loadPrimitiveOutline ?? true;
     const loadForClassification = options.loadForClassification ?? false;
@@ -95,6 +97,7 @@ class B3dmLoader extends ResourceLoader {
     this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
     this._loadAttributesFor2D = loadAttributesFor2D;
     this._enablePick = enablePick;
+    this._enableGeometryExtraction = enableGeometryExtraction;
     this._loadIndicesForWireframe = loadIndicesForWireframe;
     this._loadPrimitiveOutline = loadPrimitiveOutline;
     this._loadForClassification = loadForClassification;
@@ -207,6 +210,7 @@ class B3dmLoader extends ResourceLoader {
       loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
       loadAttributesFor2D: this._loadAttributesFor2D,
       enablePick: this._enablePick,
+      enableGeometryExtraction: this._enableGeometryExtraction,
       loadIndicesForWireframe: this._loadIndicesForWireframe,
       loadPrimitiveOutline: this._loadPrimitiveOutline,
       loadForClassification: this._loadForClassification,

@@ -190,6 +190,7 @@ class GltfLoader extends ResourceLoader {
    * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
    * @param {boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
    * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
+   * @param {boolean} [options.enableGeometryExtraction=false] If <code>true</code>, load the positions buffer, feature ID attribute buffers, and index buffer as typed arrays to enable geometry extraction from tile features.
    * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
    * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
    * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
@@ -210,6 +211,7 @@ class GltfLoader extends ResourceLoader {
       loadAttributesAsTypedArray = false,
       loadAttributesFor2D = false,
       enablePick = false,
+      enableGeometryExtraction = false,
       loadIndicesForWireframe = false,
       loadPrimitiveOutline = true,
       loadForClassification = false,
@@ -234,6 +236,7 @@ class GltfLoader extends ResourceLoader {
     this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
     this._loadAttributesFor2D = loadAttributesFor2D;
     this._enablePick = enablePick;
+    this._enableGeometryExtraction = enableGeometryExtraction;
     this._loadIndicesForWireframe = loadIndicesForWireframe;
     this._loadPrimitiveOutline = loadPrimitiveOutline;
     this._loadForClassification = loadForClassification;
@@ -1347,6 +1350,10 @@ function loadVertexAttribute(
   const loadTypedArrayForPicking =
     isPositionAttribute && loader._enablePick && !frameState.context.webgl2;
 
+  const loadTypedArrayForGeometryExtraction =
+    (isPositionAttribute || isFeatureIdAttribute) &&
+    loader._enableGeometryExtraction;
+
   const loadTypedArrayForClassification =
     loader._loadForClassification && isFeatureIdAttribute;
 
@@ -1358,6 +1365,7 @@ function loadVertexAttribute(
     outputTypedArrayOnly ||
     loadTypedArrayFor2D ||
     loadTypedArrayForPicking ||
+    loadTypedArrayForGeometryExtraction ||
     loadTypedArrayForClassification;
 
   // Determine what to load right now:
@@ -1428,6 +1436,8 @@ function loadInstancedAttribute(
     !frameState.context.instancedArrays;
   const loadTypedArrayForPicking =
     loader._enablePick && !frameState.context.webgl2;
+  const loadTypedArrayForGeometryExtraction =
+    loader._enableGeometryExtraction && isTranslationAttribute;
 
   const loadBuffer = !loadAsTypedArrayOnly;
 
@@ -1438,7 +1448,10 @@ function loadInstancedAttribute(
   const loadFor2D = loader._loadAttributesFor2D && !frameState.scene3DOnly;
   const loadTranslationAsTypedArray =
     isTranslationAttribute &&
-    (!hasTranslationMinMax || loadFor2D || loadTypedArrayForPicking);
+    (!hasTranslationMinMax ||
+      loadFor2D ||
+      loadTypedArrayForPicking ||
+      loadTypedArrayForGeometryExtraction);
 
   const loadTypedArray = loadAsTypedArrayOnly || loadTranslationAsTypedArray;
 
@@ -1486,6 +1499,9 @@ function loadIndices(
     (loader._loadIndicesForWireframe || loader._enablePick) &&
     !frameState.context.webgl2;
 
+  // Load the index buffer as a typed array for geometry extraction.
+  const loadForGeometryExtraction = loader._enableGeometryExtraction;
+
   // Load the index buffer as a typed array to batch features together for classification.
   const loadForClassification = loader._loadForClassification && hasFeatureIds;
 
@@ -1496,6 +1512,7 @@ function loadIndices(
   const outputTypedArray =
     loadAttributesAsTypedArray ||
     loadForCpuOperations ||
+    loadForGeometryExtraction ||
     loadForClassification ||
     hasEdgeVisibility;
 

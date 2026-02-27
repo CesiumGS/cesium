@@ -1,5 +1,6 @@
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
+import ModelGeometryExtractor from "./Model/ModelGeometryExtractor.js";
 
 /**
  * A feature of a {@link Cesium3DTileset}.
@@ -441,4 +442,55 @@ Cesium3DTileFeature.prototype.isClass = function (className) {
 Cesium3DTileFeature.prototype.getExactClassName = function () {
   return this._content.batchTable.getExactClassName(this._batchId);
 };
+
+/**
+ * Returns an array of world-space (ECEF) {@link Cartesian3} positions for all
+ * vertices belonging to this feature.
+ * <p>
+ * This requires that the tileset was created with
+ * <code>enableGeometryExtraction: true</code> to retain vertex data on the CPU.
+ * If vertex data is not available, this method returns <code>undefined</code>.
+ * </p>
+ * <p>
+ * This method is only supported for model-based tile content (B3DM, I3DM, glTF).
+ * For other content types (e.g., point clouds, vector tiles), it returns <code>undefined</code>.
+ * </p>
+ *
+ * @param {Cartesian3[]} [result] An array into which to store the results.
+ * @returns {Cartesian3[]|undefined} An array of world-space positions, or <code>undefined</code>
+ *   if geometry extraction is not available for this feature.
+ *
+ * @example
+ * const tileset = await Cesium.Cesium3DTileset.fromUrl(url, {
+ *   enableGeometryExtraction: true,
+ * });
+ * // After picking a feature:
+ * const positions = feature.getPositions();
+ * if (Cesium.defined(positions)) {
+ *   console.log(`Feature has ${positions.length} vertices`);
+ * }
+ */
+Cesium3DTileFeature.prototype.getPositions = function (result) {
+
+  const content = this._content;
+
+  // Only model-based content (Model3DTileContent) has a _model property
+  if (!defined(content._model)) {
+    return undefined;
+  }
+
+  const model = content._model;
+  const tileset = content.tileset;
+  const featureIdLabel = defined(tileset)
+    ? tileset.featureIdLabel
+    : "featureId_0";
+
+  return ModelGeometryExtractor.getPositionsForFeature({
+    model: model,
+    featureId: this._batchId,
+    featureIdLabel: featureIdLabel,
+    result: result,
+  });
+};
+
 export default Cesium3DTileFeature;
