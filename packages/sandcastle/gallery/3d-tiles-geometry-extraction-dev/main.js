@@ -14,7 +14,10 @@ const tileset = await Cesium.Cesium3DTileset.fromUrl(
   },
 );
 */
-const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2533124);
+// const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2533124);
+const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
+  enableGeometryExtraction: true,
+});
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
@@ -81,21 +84,19 @@ function computeConvexHull(cartographics) {
   // Sort by polar angle
   points.sort(function (a, b) {
     if (a === pivot) {
-        return -1;
+      return -1;
     }
     if (b === pivot) {
-        return 1;
+      return 1;
     }
     const cross =
       (a.x - pivot.x) * (b.y - pivot.y) - (a.y - pivot.y) * (b.x - pivot.x);
     if (cross === 0) {
       // Collinear — keep closer point first
       const da =
-        (a.x - pivot.x) * (a.x - pivot.x) +
-        (a.y - pivot.y) * (a.y - pivot.y);
+        (a.x - pivot.x) * (a.x - pivot.x) + (a.y - pivot.y) * (a.y - pivot.y);
       const db =
-        (b.x - pivot.x) * (b.x - pivot.x) +
-        (b.y - pivot.y) * (b.y - pivot.y);
+        (b.x - pivot.x) * (b.x - pivot.x) + (b.y - pivot.y) * (b.y - pivot.y);
       return da - db;
     }
     return -cross;
