@@ -1843,10 +1843,6 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   return material;
 }
 
-function loadExternalReferences() {
-  // TODO
-}
-
 // for EXT_mesh_features
 function loadFeatureIdAttribute(featureIds, positionalLabel) {
   const featureIdAttribute = new FeatureIdAttribute();
@@ -2828,8 +2824,7 @@ function parse(loader, frameState) {
     loader._sortedPropertyTableIds = Object.keys(allPropertyTableIds).sort();
     loader._sortedFeatureTextureIds = Object.keys(allFeatureTextureIds).sort();
   }
-
-  const externalReferences = loadExternalReferences(gltf);
+  
   const nodes = loadNodes(loader, frameState);
   const skins = loadSkins(loader, nodes);
   const animations = loadAnimations(loader, nodes);
