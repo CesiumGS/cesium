@@ -103,48 +103,53 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
       0,
     );
 
-    const positiveX = this._buildFaceUrl({
-      heading: 0,
-      pitch: 0,
-      tileSizeString,
-      panoId,
-      signature,
-    });
-    const negativeX = this._buildFaceUrl({
-      heading: 180,
-      pitch: 0,
-      tileSizeString,
-      panoId,
-      signature,
-    });
-    const positiveZ = this._buildFaceUrl({
-      heading: 270,
-      pitch: 0,
-      tileSizeString,
-      panoId,
-      signature,
-    });
-    const negativeZ = this._buildFaceUrl({
-      heading: 90,
-      pitch: 0,
-      tileSizeString,
-      panoId,
-      signature,
-    });
-    const positiveY = this._buildFaceUrl({
-      heading: -90,
-      pitch: -90,
-      tileSizeString,
-      panoId,
-      signature,
-    });
-    const negativeY = this._buildFaceUrl({
-      heading: -90,
-      pitch: 90,
-      tileSizeString,
-      panoId,
-      signature,
-    });
+    const facePromises = [
+      this._loadFaceImage({
+        heading: 0,
+        pitch: 0,
+        tileSizeString,
+        panoId,
+        signature,
+      }),
+      this._loadFaceImage({
+        heading: 180,
+        pitch: 0,
+        tileSizeString,
+        panoId,
+        signature,
+      }),
+      this._loadFaceImage({
+        heading: -90,
+        pitch: -90,
+        tileSizeString,
+        panoId,
+        signature,
+      }),
+      this._loadFaceImage({
+        heading: -90,
+        pitch: 90,
+        tileSizeString,
+        panoId,
+        signature,
+      }),
+      this._loadFaceImage({
+        heading: 270,
+        pitch: 0,
+        tileSizeString,
+        panoId,
+        signature,
+      }),
+      this._loadFaceImage({
+        heading: 90,
+        pitch: 0,
+        tileSizeString,
+        panoId,
+        signature,
+      }),
+    ];
+
+    const [positiveX, negativeX, positiveY, negativeY, positiveZ, negativeZ] =
+      await Promise.all(facePromises);
 
     const northDownEastToFixedFrameTransform =
       Transforms.localFrameToFixedFrameGenerator("north", "down");
@@ -249,6 +254,21 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.getPanoIdMetadata =
       );
     }
     return panoIdObject;
+  };
+
+GoogleStreetViewCubeMapPanoramaProvider.prototype._loadFaceImage =
+  async function (options) {
+    const url = this._buildFaceUrl(options);
+
+    try {
+      return await Resource.fetchImage({
+        url,
+        preferImageBitmap: true,
+        flipY: true,
+      });
+    } catch (error) {
+      throw new DeveloperError(`Failed to load Street View face image: ${url}`);
+    }
   };
 
 GoogleStreetViewCubeMapPanoramaProvider.prototype._buildFaceUrl = function (

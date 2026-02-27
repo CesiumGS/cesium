@@ -171,6 +171,7 @@ function goToPanoView(options) {
 
   selectedViewType = ViewType.PanoView;
   viewer.scene.globe.show = false;
+  tileset.show = false;
 
   viewer.scene.camera.lookAt(
     position,

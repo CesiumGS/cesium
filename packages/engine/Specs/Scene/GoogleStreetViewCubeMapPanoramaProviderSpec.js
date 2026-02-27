@@ -3,6 +3,7 @@ import Cartographic from "../../Source/Core/Cartographic.js";
 import CubeMapPanorama from "../../Source/Scene/CubeMapPanorama.js";
 import PanoramaProvider from "../../Source/Scene/PanoramaProvider.js";
 import GoogleMaps from "../../Source/Core/GoogleMaps.js";
+import Resource from "../../Source/Core/Resource.js";
 
 describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
   let provider;
@@ -182,6 +183,50 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
     });
   });
 
+  it("_loadFaceImage uses Resource.fetchImage", async function () {
+    spyOn(provider, "_buildFaceUrl").and.returnValue(
+      "https://example.com/image.jpg",
+    );
+
+    const fetchSpy = spyOn(Resource, "fetchImage").and.returnValue(
+      Promise.resolve({ test: true }),
+    );
+
+    const result = await provider._loadFaceImage({
+      heading: 0,
+      pitch: 0,
+      tileSizeString: "512x512",
+      panoId: "abc",
+    });
+
+    expect(fetchSpy).toHaveBeenCalledWith({
+      url: "https://example.com/image.jpg",
+      preferImageBitmap: true,
+      flipY: true,
+    });
+
+    expect(result.test).toBe(true);
+  });
+
+  it("_loadFaceImage throws on fetch failure", async function () {
+    spyOn(provider, "_buildFaceUrl").and.returnValue(
+      "https://example.com/image.jpg",
+    );
+
+    spyOn(Resource, "fetchImage").and.returnValue(
+      Promise.reject(new Error("network error")),
+    );
+
+    await expectAsync(
+      provider._loadFaceImage({
+        heading: 0,
+        pitch: 0,
+        tileSizeString: "512x512",
+        panoId: "abc",
+      }),
+    ).toBeRejectedWithDeveloperError();
+  });
+
   it("loadPanorama throws without cartographic", async function () {
     await expectAsync(
       provider.loadPanorama({}),
@@ -193,7 +238,9 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
       "https://example.com/image.jpg",
     );
 
-    spyOn(CubeMapPanorama.prototype, "constructor");
+    spyOn(Resource, "fetchImage").and.returnValue(
+      Promise.resolve(),
+    );
 
     const cartographic = Cartographic.fromDegrees(20, 10);
 
@@ -202,7 +249,8 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
       panoId: "abc",
     });
 
-    expect(panorama).toBeDefined();
+    expect(Resource.fetchImage).toHaveBeenCalledTimes(6);
+    expect(panorama).toBeInstanceOf(CubeMapPanorama);
   });
 
   it("loadPanorama calls getNearestPanoId if panoId not provided", async function () {
@@ -212,6 +260,10 @@ describe("Scene/GoogleStreetViewCubeMapPanoramaProvider", function () {
 
     spyOn(provider, "_buildFaceUrl").and.returnValue(
       "https://example.com/image.jpg",
+    );
+
+    spyOn(Resource, "fetchImage").and.returnValue(
+      Promise.resolve(),
     );
 
     const cartographic = Cartographic.fromDegrees(20, 10);
