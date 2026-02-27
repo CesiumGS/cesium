@@ -22,6 +22,43 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  */
 
 /**
+ * Collection of polygons held in ArrayBuffer storage for performance and memory optimization.
+ *
+ * <p>Default buffer memory allocation is arbitrary, and collections cannot be resized,
+ * so specific per-buffer capacities should be provided in the collection
+ * constructor when available.</p>
+ *
+ * @example
+ * import earcut from "earcut";
+ *
+ * const collection = new BufferPolygonCollection({
+ *   primitiveCountMax: 1024,
+ *   vertexCountMax: 4096,
+ *   holeCountMax: 1024,
+ *   triangleCountMax: 2048,
+ * });
+ *
+ * const polygon = new BufferPolygon();
+ * const positions = [ ... ];
+ * const holes = [ ... ];
+ *
+ * // Create a new polygon, temporarily bound to 'polygon' local variable.
+ * collection.add({
+ *   positions: new Float64Array(positions),
+ *   holes: new Uint32Array(holes),
+ *   triangles: new Uint32Array(earcut(positions, holes, 3)),
+ *   color: Color.WHITE,
+ * }, polygon);
+ *
+ * // Iterate over all polygons in collection, temporarily binding 'polygon'
+ * // local variable to each, and updating polygon color.
+ * for (let i = 0; i < collection.primitiveCount; i++) {
+ *   collection.get(i, polygon);
+ *   polygon.setColor(Color.RED);
+ * }
+ *
+ * @see BufferPolygon
+ * @see BufferPrimitiveCollection
  * @extends BufferPrimitiveCollection<BufferPolygon>
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -130,6 +167,18 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   }
 
   /**
+   * Duplicates the contents of this collection into the result collection.
+   * Result collection is not resized, and must contain enough space for all
+   * primitives in the source collection. Existing polygons in the result
+   * collection will be overwritten.
+   *
+   * <p>Useful when allocating more space for a collection that has reached its
+   * capacity, and efficiently transferring polygons to the new collection.</p>
+   *
+   * @example
+   * const result = new BufferPolygonCollection({ ... }); // allocate larger 'result' collection
+   * BufferPolygonCollection.clone(collection, result);   // copy polygons from 'collection' into 'result'
+   *
    * @param {BufferPolygonCollection} collection
    * @param {BufferPolygonCollection} result
    * @returns {BufferPolygonCollection}
@@ -195,6 +244,12 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   // PRIMITIVE LIFECYCLE
 
   /**
+   * Adds a new polygon to the collection, with the specified options. A
+   * {@link BufferPolygon} instance is linked to the new polygon, using
+   * the 'result' argument if given, or a new instance if not. For repeated
+   * calls, prefer to reuse a single BufferPolygon instance rather than
+   * allocating a new instance on each call.
+   *
    * @param {BufferPolygonOptions} options
    * @param {BufferPolygon} result
    * @returns {BufferPolygon}
@@ -245,8 +300,13 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   // ACCESSORS
 
   /**
+   * Total byte length of buffers owned by this collection. Includes any unused
+   * space allocated by {@link primitiveCountMax}, even if no polygons have
+   * yet been added in that space.
+   *
    * @type {number}
    * @readonly
+   * @override
    */
   get byteLength() {
     return (
@@ -257,6 +317,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   }
 
   /**
+   * Number of holes in collection. Must be <= {@link holeCountMax}.
+   *
    * @type {number}
    * @readonly
    */
@@ -265,6 +327,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   }
 
   /**
+   * Maximum number of holes in collection. Must be >= {@link holeCount}.
+   *
    * @type {number}
    * @readonly
    * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}
@@ -274,6 +338,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   }
 
   /**
+   * Number of triangles in collection. Must be <= {@link triangleCountMax}.
+   *
    * @type {number}
    * @readonly
    */
@@ -282,6 +348,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   }
 
   /**
+   * Maximum number of triangles in collection. Must be >= {@link triangleCount}.
+   *
    * @type {number}
    * @readonly
    * @default {@link BufferPrimitiveCollection.DEFAULT_CAPACITY}

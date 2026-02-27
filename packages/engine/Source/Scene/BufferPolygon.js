@@ -11,19 +11,23 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 const { ERR_CAPACITY, ERR_RESIZE } = BufferPrimitiveCollection.Error;
 
 /**
- * BufferPolygon.
+ * View bound to the underlying buffer data of a {@link BufferPolygonCollection}.
  *
- * Represented as one (1) external linear ring of four (4) or more
- * positions, where first and last position are the same. May optionally
- * define one or more internal linear rings ("holes") within the polygon.
- * Stores a precomputed triangulation, including one or more triangles.
- * Holes and triangles are stored as indices into the positions array.
+ * <p>BufferPolygon instances are {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweights}:
+ * a single BufferPolygon instance can be temporarily bound to any conceptual
+ * "polygon" in a BufferPolygonCollection, allowing very large collections to be
+ * iterated and updated with a minimal memory footprint.</p>
  *
- * TODO(donmccurdy): Do we actually want to store that first vertex again? If
- * so, may need to update the unit tests accordingly.
+ * <p>Represented as one (1) external linear ring of three (3) or more positions.
+ * May optionally define one or more internal linear rings ("holes") within the
+ * polygon. Each hole is represented as a single index into the positions array,
+ * where the vertex at that index is the start of an internal linear ring that
+ * continues along the following vertices until reaching either the vertex
+ * index of the next hole, or the end of the vertex list. Stores a precomputed
+ * triangulation, represented as three vertex indices per triangle.</p>
  *
- * See: https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.6
- *
+ * @see BufferPolygonCollection
+ * @see BufferPrimitive
  * @extends BufferPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -39,42 +43,54 @@ class BufferPolygon extends BufferPrimitive {
     ...BufferPrimitive.Layout,
 
     /**
-     * Offset in position array to first vertex in polygon, number of VEC3 elements.
+     * Offset in collection position array to first vertex in polygon, number
+     * of VEC3 elements.
      * @type {number}
+     * @ignore
      */
     POSITION_OFFSET_U32: BufferPrimitive.Layout.__BYTE_LENGTH,
 
     /**
      * Count of positions (vertices) in this polygon, number of VEC3 elements.
      * @type {number}
+     * @ignore
      */
     POSITION_COUNT_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 4,
 
     /**
-     * Offset in holes array to first hole in polygon, number of integer elements.
+     * Offset in collection holes array to first hole in polygon, number of
+     * integer elements.
      * @type {number}
+     * @ignore
      */
     HOLE_OFFSET_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 8,
 
     /**
-     * Count of holes (indices) in this polygon, number of integer elements.
+     * Count of holes (indices) in this polygon.
      * @type {number}
+     * @ignore
      */
     HOLE_COUNT_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 12,
 
     /**
-     * Offset in triangles array to first triangle in polygon, number of VEC3 elements.
+     * Offset in collection triangles array to first triangle in polygon,
+     * number of VEC3 elements.
      * @type {number}
+     * @ignore
      */
     TRIANGLE_OFFSET_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 16,
 
     /**
-     * Count of triangles (3x uint32) in this polygon, number of VEC3 elements.
+     * Count of triangles in this polygon, number of VEC3 elements.
      * @type {number}
+     * @ignore
      */
     TRIANGLE_COUNT_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 20,
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 24,
   };
 
@@ -82,6 +98,10 @@ class BufferPolygon extends BufferPrimitive {
   // LIFECYCLE
 
   /**
+   * Copies data from source polygon to result. If the result polygon is not
+   * new (the last polygon in the collection) then source and result polygons
+   * must have the same vertex counts, hole counts, and triangle counts.
+   *
    * @param {BufferPolygon} polygon
    * @param {BufferPolygon} result
    * @return {BufferPolygon}
@@ -99,14 +119,21 @@ class BufferPolygon extends BufferPrimitive {
   // GEOMETRY
 
   /**
+   * Offset in collection position array to first vertex in polygon, number
+   * of VEC3 elements.
+   *
    * @type {number}
    * @readonly
+   * @ignore
    */
   get vertexOffset() {
     return this._getUint32(BufferPolygon.Layout.POSITION_OFFSET_U32);
   }
 
   /**
+   * Count of positions (vertices) in this polygon, including both outer ring and
+   * internal rings (holes), number of VEC3 elements.
+   *
    * @type {number}
    * @readonly
    */
@@ -154,6 +181,9 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
+   * Offset in collection position array to first vertex in polygon's outer
+   * linear ring, number of VEC3 elements.
+   *
    * @type {number}
    * @readonly
    */
@@ -162,6 +192,9 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
+   * Count of positions (vertices) in this polygon's outer linear ring, number
+   * of VEC3 elements.
+   *
    * @type {number}
    * @readonly
    */
@@ -173,6 +206,12 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
+   * Returns an array view of this polygon's outer linear ring vertex positions.
+   * If 'result' argument is given, vertex positions are written to that array
+   * and returned. Otherwise, returns an ArrayView on collection memory —
+   * changes to this array will not trigger render updates, which requires
+   * `.setPositions()`.
+   *
    * @param {Float64Array} [result]
    * @returns {Float64Array}
    */
@@ -185,14 +224,20 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
+   * Offset in collection holes array to first hole in polygon, number of
+   * integer elements.
+   *
    * @type {number}
    * @readonly
+   * @ignore
    */
   get holeOffset() {
     return this._getUint32(BufferPolygon.Layout.HOLE_OFFSET_U32);
   }
 
   /**
+   * Count of holes (indices) in this polygon.
+   *
    * @type {number}
    * @readonly
    */
@@ -201,10 +246,14 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
-   * Returns an array view of this polygon's hole indices. If 'result'
-   * argument is given, hole indices are written to that array and returned.
-   * Otherwise, returns an ArrayView on collection memory — changes to this array
-   * will not trigger render updates, which requires `.setHoles()`.
+   * Gets this polygon's hole indices, with each hole represented as a single
+   * offset into this polygon's positions array. Each hole implicitly
+   * continues along an internal linear ring from that vertex offset until
+   * reaching either the end of the positions array, or the next hole offset.
+   *
+   * If 'result' argument is given, hole indices are written to that array and
+   * returned. Otherwise, returns an ArrayView on collection memory — changes
+   * to this array will not trigger render updates, which requires `.setHoles()`.
    *
    * @param {Uint32Array} [result]
    * @returns {Uint32Array}
@@ -225,7 +274,14 @@ class BufferPolygon extends BufferPrimitive {
     return result;
   }
 
-  /** @param {Uint32Array} holes */
+  /**
+   * Sets this polygon's hole indices, with holes represented as a single
+   * offset into this polygon's positions array. Each hole implicitly
+   * continues along an internal linear ring from that vertex offset until
+   * reaching either the end of the positions array, or the next hole offset.
+   *
+   * @param {Uint32Array} holes
+   */
   setHoles(holes) {
     const collection = this._collection;
     const holeOffset = this.holeOffset;
@@ -250,6 +306,8 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
+   * Returns the number of (VEC3) vertices in the specified hole.
+   *
    * @param {number} holeIndex
    * @returns {number}
    */
@@ -268,6 +326,12 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
+   * Returns an array view of the inner linear ring vertex positions for the
+   * specified hole. If 'result' argument is given, vertex positions are written
+   * to that array and returned. Otherwise, returns an ArrayView on collection
+   * memory — changes to this array will not trigger render updates, which
+   * requires `.setPositions()`.
+   *
    * @param {number} holeIndex
    * @param {Float64Array} [result]
    * return {Float64Array}
@@ -286,6 +350,10 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
+   * Internal helper for accessing vertex positions. If 'result' argument is
+   * given, the requested range of vertices are written to the result array
+   * and returned. Otherwise, returns an ArrayView on collection memory.
+   *
    * @param {number} vertexOffset
    * @param {number} vertexCount
    * @param {Float64Array} [result]
@@ -311,14 +379,19 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
+   * Offset in collection triangles array to first triangle in polygon,
+   * number of VEC3 elements.
    * @type {number}
    * @readonly
+   * @ignore
    */
   get triangleOffset() {
     return this._getUint32(BufferPolygon.Layout.TRIANGLE_OFFSET_U32);
   }
 
   /**
+   * Count of triangles in this polygon, number of VEC3 elements.
+   *
    * @type {number}
    * @readonly
    */
@@ -327,10 +400,13 @@ class BufferPolygon extends BufferPrimitive {
   }
 
   /**
-   * Returns an array view of this polygon's triangle indices. If 'result'
-   * argument is given, triangle indices are written to that array and returned.
-   * Otherwise, returns an ArrayView on collection memory — changes to this array
-   * will not trigger render updates, which requires `.setTriangles()`.
+   * Returns an array view of this polygon's triangle indices, represented as
+   * three vertex indices per triangle.
+   *
+   * If 'result' argument is given, triangle indices are written to that array
+   * and returned. Otherwise, returns an ArrayView on collection memory —
+   * changes to this array will not trigger render updates, which requires
+   * `.setTriangles()`.
    *
    * @param {Uint32Array} [result]
    * @returns {Uint32Array}
@@ -353,7 +429,12 @@ class BufferPolygon extends BufferPrimitive {
     return result;
   }
 
-  /** @param {Uint32Array} indices */
+  /**
+   * Sets this polygon's triangle indices, represented as three vertex indices
+   * per triangle.
+   *
+   * @param {Uint32Array} indices
+   */
   setTriangles(indices) {
     const collection = this._collection;
     const triangleOffset = this.triangleOffset;
@@ -382,7 +463,14 @@ class BufferPolygon extends BufferPrimitive {
   /////////////////////////////////////////////////////////////////////////////
   // DEBUG
 
-  /** @override */
+  /**
+   * Returns a JSON-serializable object representing the polygon. This encoding
+   * is not memory-efficient, and should generally be used for debugging and
+   * testing.
+   *
+   * @returns {Object} JSON-serializable object.
+   * @override
+   */
   toJSON() {
     return {
       ...super.toJSON(),

@@ -17,6 +17,35 @@ import BufferPolyline from "./BufferPolyline.js";
  */
 
 /**
+ * Collection of polylines held in ArrayBuffer storage for performance and memory optimization.
+ *
+ * <p>Default buffer memory allocation is arbitrary, and collections cannot be resized,
+ * so specific per-buffer capacities should be provided in the collection
+ * constructor when available.</p>
+ *
+ * @example
+ * const collection = new BufferPolylineCollection({
+ *   primitiveCountMax: 1024,
+ *   vertexCountMax: 4096,
+ * });
+ *
+ * const polyline = new BufferPolyline();
+ *
+ * // Create a new polyline, temporarily bound to 'polyline' local variable.
+ * collection.add({
+ *   positions: new Float64Array([ ... ]),
+ *   color: Color.WHITE,
+ * }, polyline);
+ *
+ * // Iterate over all polylines in collection, temporarily binding 'polyline'
+ * // local variable to each, and updating polyline color.
+ * for (let i = 0; i < collection.primitiveCount; i++) {
+ *   collection.get(i, polyline);
+ *   polyline.setColor(Color.RED);
+ * }
+ *
+ * @see BufferPolyline
+ * @see BufferPrimitiveCollection
  * @extends BufferPrimitiveCollection<BufferPolyline>
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -29,10 +58,14 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     return BufferPolyline;
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  // COLLECTION LIFECYCLE
+
   /**
    * @param {BufferPolylineCollection} collection
    * @returns {BufferPolylineCollection}
    * @override
+   * @ignore
    */
   static _cloneEmpty(collection) {
     return new BufferPolylineCollection({
@@ -41,7 +74,16 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     });
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  // PRIMITIVE LIFECYCLE
+
   /**
+   * Adds a new polyline to the collection, with the specified options. A
+   * {@link BufferPolyline} instance is linked to the new polyline, using
+   * the 'result' argument if given, or a new instance if not. For repeated
+   * calls, prefer to reuse a single BufferPolyline instance rather than
+   * allocating a new instance on each call.
+   *
    * @param {BufferPolylineOptions} options
    * @param {BufferPolyline} result
    * @returns {BufferPolyline}
@@ -62,6 +104,9 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
 
     return result;
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // RENDER
 
   /**
    * @param {FrameState} frameState

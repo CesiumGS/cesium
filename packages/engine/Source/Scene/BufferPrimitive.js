@@ -4,6 +4,10 @@ import Color from "../Core/Color.js";
 
 /** @import BufferPrimitiveCollection from './BufferPrimitiveCollection.js'; */
 
+/**
+ * @type {Color}
+ * @ignore
+ */
 const scratchColor = new Color();
 
 /**
@@ -13,18 +17,6 @@ const scratchColor = new Color();
  * and temporarily bound to a primitive index while performing read/write operations on that primitive,
  * before being rebound to the next primitive, using the
  * {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweight pattern}.</p>
- *
- * @example
- * const primitive = new BufferPrimitive();
- * const collection = new BufferPrimitiveCollection({ ... });
- * collection.add({ ... }, primitive);
- * collection.add({ ... }, primitive);
- * collection.add({ ... }, primitive);
- *
- * for (let i = 0; i < collection.primitiveCount; i++) {
- *   collection.get(i, primitive);
- *   primitive.setColor( ... );
- * }
  *
  * @see BufferPrimitiveCollection
  * @see BufferPoint
@@ -77,24 +69,28 @@ class BufferPrimitive {
     /**
      * Feature ID associated with the primitive; not required to be unique.
      * @type {number}
+     * @ignore
      */
     FEATURE_ID_U32: 0,
 
     /**
      * Boolean (0 or 1) flag indicating whether primitive is shown.
      * @type {number}
+     * @ignore
      */
     SHOW_U8: 4,
 
     /**
      * Boolean (0 or 1) flag indicating whether primitive is dirty.
      * @type {number}
+     * @ignore
      */
     DIRTY_U8: 5,
 
     /**
      * Color of primitive, as integer RGBA.
      * @type {number}
+     * @ignore
      */
     COLOR_U32: 8,
 
@@ -102,6 +98,7 @@ class BufferPrimitive {
      * Byte length of one primitive in the primitive buffer, exclusive of
      * other buffers. Literal value, not a pointer.
      * @type {number}
+     * @ignore
      */
     __BYTE_LENGTH: 12,
   };
@@ -301,7 +298,7 @@ class BufferPrimitive {
   /**
    * Returns a JSON-serializable object representing the primitive. This encoding
    * is not memory-efficient, and should generally be used for debugging and
-   * testing — not for production applications.
+   * testing.
    *
    * @returns {Object} JSON-serializable object.
    */

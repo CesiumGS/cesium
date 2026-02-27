@@ -10,12 +10,17 @@ import defined from "../Core/defined.js";
 const { ERR_RESIZE, ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 
 /**
- * BufferPolyline.
+ * View bound to the underlying buffer data of a {@link BufferPolylineCollection}.
+ *
+ * <p>BufferPolyline instances are {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweights}:
+ * a single BufferPolyline instance can be temporarily bound to any conceptual
+ * "polyline" in a BufferPolylineCollection, allowing very large collections to be
+ * iterated and updated with a minimal memory footprint.</p>
  *
  * Represented as two (2) or more positions.
  *
- * See: https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.4
- *
+ * @see BufferPolylineCollection
+ * @see BufferPrimitive
  * @extends BufferPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -33,22 +38,28 @@ class BufferPolyline extends BufferPrimitive {
     /**
      * Offset in position array to first vertex in polyline, number of VEC3 elements.
      * @type {number}
+     * @ignore
      */
     POSITION_OFFSET_U32: BufferPrimitive.Layout.__BYTE_LENGTH,
 
     /**
      * Count of positions (vertices) in this polyline, number of VEC3 elements.
      * @type {number}
+     * @ignore
      */
     POSITION_COUNT_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 4,
 
     /**
-     * Width of polyline, 0–255.
+     * Width of polyline, 0–255px.
      * @type {number}
+     * @ignore
      */
     WIDTH_U8: BufferPrimitive.Layout.__BYTE_LENGTH + 8,
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 12,
   };
 
@@ -56,6 +67,10 @@ class BufferPolyline extends BufferPrimitive {
   // LIFECYCLE
 
   /**
+   * Copies data from source polyline to result. If the result polyline is not
+   * new (the last polyline in the collection) then source and result polylines
+   * must have the same vertex counts.
+   *
    * @param {BufferPolyline} polyline
    * @param {BufferPolyline} result
    * @return {BufferPolyline}
@@ -72,14 +87,20 @@ class BufferPolyline extends BufferPrimitive {
   // GEOMETRY
 
   /**
+   * Offset in collection position array to first vertex in polyline, number
+   * of VEC3 elements.
+   *
    * @type {number}
    * @readonly
+   * @ignore
    */
   get vertexOffset() {
     return this._getUint32(BufferPolyline.Layout.POSITION_OFFSET_U32);
   }
 
   /**
+   * Count of positions (vertices) in this polyline, number of VEC3 elements.
+   *
    * @type {number}
    * @readonly
    */
@@ -144,7 +165,10 @@ class BufferPolyline extends BufferPrimitive {
   /////////////////////////////////////////////////////////////////////////////
   // ACCESSORS
 
-  /** @type {number} */
+  /**
+   * Width of polyline, 0–255px.
+   * @type {number}
+   */
   get width() {
     return this._getUint8(BufferPolyline.Layout.WIDTH_U8);
   }
@@ -156,7 +180,14 @@ class BufferPolyline extends BufferPrimitive {
   /////////////////////////////////////////////////////////////////////////////
   // DEBUG
 
-  /** @override */
+  /**
+   * Returns a JSON-serializable object representing the polyline. This encoding
+   * is not memory-efficient, and should generally be used for debugging and
+   * testing.
+   *
+   * @returns {Object} JSON-serializable object.
+   * @override
+   */
   toJSON() {
     return {
       ...super.toJSON(),

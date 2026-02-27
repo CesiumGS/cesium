@@ -20,26 +20,14 @@ import assert from "../Core/assert.js";
 /**
  * Collection of primitives held in ArrayBuffer storage for performance and memory optimization.
  *
- * To get the full performance benefit of using a BufferPrimitiveCollection containing "N" primitives,
+ * <p>To get the full performance benefit of using a BufferPrimitiveCollection containing "N" primitives,
  * be careful to avoid allocating "N" instances of any related JavaScript object. {@link BufferPrimitive},
  * {@link Color}, {@link Cartesian3}, and other objects can all be reused when working with large collections,
- * using the {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweight pattern}.
+ * using the {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweight pattern}.</p>
  *
  * @abstract
  * @template T extends BufferPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
- * @example
- * const primitive = new BufferPrimitive();
- * const collection = new BufferPrimitiveCollection({ ... });
- * collection.add({ ... }, primitive);
- * collection.add({ ... }, primitive);
- * collection.add({ ... }, primitive);
- *
- * for (let i = 0; i < collection.primitiveCount; i++) {
- *   collection.get(i, primitive);
- *   primitive.setColor( ... );
- * }
  *
  * @see BufferPrimitive
  * @see BufferPointCollection
@@ -311,8 +299,8 @@ class BufferPrimitiveCollection {
    * primitives in the source collection. Existing primitives in the result
    * collection will be overwritten.
    *
-   * Useful when allocating more space for a collection that has reached its
-   * capacity, and efficiently transferring features to the new collection.
+   * <p>Useful when allocating more space for a collection that has reached its
+   * capacity, and efficiently transferring features to the new collection.</p>
    *
    * @example
    * const result = new BufferPrimitiveCollection({ ... }); // allocate larger 'result' collection
@@ -525,7 +513,7 @@ class BufferPrimitiveCollection {
   /**
    * Total byte length of buffers owned by this collection. Includes any unused
    * space allocated by {@link primitiveCountMax}, even if no primitives have
-   * yet been added in that space
+   * yet been added in that space.
    *
    * @type {number}
    * @readonly
@@ -593,7 +581,7 @@ class BufferPrimitiveCollection {
   /**
    * Returns a JSON-serializable array representing the collection. This encoding
    * is not memory-efficient, and should generally be used for debugging and
-   * testing — not for production applications.
+   * testing.
    *
    * @example
    * console.table(collection.toJSON());
