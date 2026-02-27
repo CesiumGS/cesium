@@ -21,8 +21,10 @@ describe("BufferPolygonCollection", () => {
     const polygon = new BufferPolygon();
 
     const positions1 = new Float64Array([10, 11, 12, 13, 14, 15, 16, 17, 18]);
-    const positions2 = new Float64Array([20, 21, 22, 23, 24, 25]);
-    const positions3 = new Float64Array([30, 31, 32, 33, 34, 35, 36, 37, 38]);
+    const positions2 = new Float64Array([20, 21, 22, 23, 24, 25, 26, 27, 28]);
+    const positions3 = new Float64Array([
+      30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
+    ]);
 
     collection.add({ positions: positions1 }, polygon);
     collection.add({ positions: positions2 }, polygon);
@@ -33,38 +35,39 @@ describe("BufferPolygonCollection", () => {
     expect(polygon.getPositions(new Float64Array(9))).toEqual(positions1);
 
     collection.get(1, polygon);
-    expect(polygon.vertexCount, 2);
-    expect(polygon.getPositions(new Float64Array(6))).toEqual(positions2);
+    expect(polygon.vertexCount, 3);
+    expect(polygon.getPositions(new Float64Array(9))).toEqual(positions2);
 
     collection.get(2, polygon);
-    expect(polygon.vertexCount, 3);
-    expect(polygon.getPositions(new Float64Array(9))).toEqual(positions3);
+    expect(polygon.vertexCount, 4);
+    expect(polygon.getPositions(new Float64Array(12))).toEqual(positions3);
   });
 
   it("holes", () => {
     const collection = new BufferPolygonCollection({
-      maxPositionCount: 8,
-      holeCountMax: 3,
+      vertexCountMax: 12,
+      holeCountMax: 1,
     });
     const polygon = new BufferPolygon();
 
-    const positions1 = new Float64Array([10, 11, 12, 13, 14, 15, 16, 17, 18]);
-    const positions2 = new Float64Array([20, 21, 22, 23, 24, 25]);
-    const positions3 = new Float64Array([30, 31, 32, 33, 34, 35, 36, 37, 38]);
+    const positions1 = createBoxPositions(1);
+    const positions2 = createBoxPositions(2);
+    const positions3 = new Float64Array([
+      ...createBoxPositions(2), // outer loop
+      ...createBoxPositions(1), // hole
+    ]);
 
-    const holes2 = new Uint32Array([12, 24]);
-    const holes3 = new Uint32Array([16]);
+    const holes3 = new Uint32Array([3]);
 
     collection.add({ positions: positions1 }, polygon);
-    collection.add({ positions: positions2, holes: holes2 }, polygon);
+    collection.add({ positions: positions2 }, polygon);
     collection.add({ positions: positions3, holes: holes3 }, polygon);
 
     collection.get(0, polygon);
     expect(polygon.holeCount, 0);
 
     collection.get(1, polygon);
-    expect(polygon.holeCount, 2);
-    expect(polygon.getHoles(new Uint32Array(2))).toEqual(holes2);
+    expect(polygon.holeCount, 0);
 
     collection.get(2, polygon);
     expect(polygon.holeCount, 1);
@@ -73,7 +76,7 @@ describe("BufferPolygonCollection", () => {
 
   it("triangles", () => {
     const collection = new BufferPolygonCollection({
-      maxPositionCount: (24 + 30 + 15) / 3,
+      vertexCountMax: (24 + 30 + 15) / 3,
       holeCountMax: 0,
       triangleCountMax: 4,
     });
@@ -156,21 +159,23 @@ describe("BufferPolygonCollection", () => {
 
     const src = new BufferPolygonCollection({
       primitiveCountMax: 2,
-      vertexCountMax: 8,
-      holeCountMax: 2,
+      vertexCountMax: 6,
+      holeCountMax: 0,
       triangleCountMax: 4,
     });
 
-    const positions1 = new Float64Array([10, 11, 12, 13, 14, 15, 16, 17, 18]);
-    const positions2 = new Float64Array([20, 21, 22, 23, 24, 25]);
-    const positions3 = new Float64Array([30, 31, 32, 33, 34, 35, 36, 37, 38]);
+    const positions1 = createBoxPositions(3);
+    const positions2 = createBoxPositions(2.5);
+    const positions3 = new Float64Array([
+      ...createBoxPositions(3),
+      ...createBoxPositions(0.5),
+    ]);
 
-    const holes2 = new Uint32Array([12, 24]);
-    const holes3 = new Uint32Array([16]);
+    const holes3 = new Uint32Array([3]);
 
-    const triangles1 = new Uint32Array([0, 1, 2, 3, 4, 5, 6, 7, 8]);
-    const triangles2 = new Uint32Array([0, 1, 2]);
-    const triangles3 = new Uint32Array([6, 7, 8, 0, 1, 2, 3, 4, 5]);
+    const triangles1 = new Uint32Array([0, 1, 2, 2, 1, 3]);
+    const triangles2 = new Uint32Array([2, 1, 3, 0, 1, 2]);
+    const triangles3 = new Uint32Array([0, 1, 2, 2, 1, 3]); // hack: doesn't consider the hole.
 
     src.add(
       { positions: positions1, triangles: triangles1, color: Color.RED },
@@ -180,7 +185,6 @@ describe("BufferPolygonCollection", () => {
     src.add(
       {
         positions: positions2,
-        holes: holes2,
         triangles: triangles2,
         color: Color.GREEN,
       },
@@ -189,9 +193,9 @@ describe("BufferPolygonCollection", () => {
 
     const dst = new BufferPolygonCollection({
       primitiveCountMax: 3,
-      vertexCountMax: 11,
-      holeCountMax: 3,
-      triangleCountMax: 7,
+      vertexCountMax: 12,
+      holeCountMax: 1,
+      triangleCountMax: 6,
     });
 
     BufferPolygonCollection.clone(src, dst);
@@ -210,8 +214,8 @@ describe("BufferPolygonCollection", () => {
     );
 
     expect(dst.primitiveCount).toBe(3);
-    expect(dst.holeCount).toBe(3);
-    expect(dst.triangleCount).toBe(7);
+    expect(dst.holeCount).toBe(1);
+    expect(dst.triangleCount).toBe(6);
 
     dst.get(0, polygon);
     expect(polygon.getColor(color)).toEqual(Color.RED);
@@ -219,13 +223,15 @@ describe("BufferPolygonCollection", () => {
       positions1,
     );
     expect(polygon.holeCount).toBe(0);
+    expect(polygon.triangleCount).toBe(2);
 
     dst.get(1, polygon);
     expect(polygon.getColor(color)).toEqual(Color.GREEN);
     expect(polygon.getPositions(new Float64Array(positions2.length))).toEqual(
       positions2,
     );
-    expect(polygon.holeCount).toBe(2);
+    expect(polygon.holeCount).toBe(0);
+    expect(polygon.triangleCount).toBe(2);
 
     dst.get(2, polygon);
     expect(polygon.getColor(color)).toEqual(Color.BLUE);
@@ -233,6 +239,7 @@ describe("BufferPolygonCollection", () => {
       positions3,
     );
     expect(polygon.holeCount).toBe(1);
+    expect(polygon.triangleCount).toBe(2);
   });
 
   it("sort", () => {
@@ -285,3 +292,16 @@ describe("BufferPolygonCollection", () => {
     );
   });
 });
+
+/**
+ * @param {number} scale
+ * @returns {Float64Array}
+ */
+function createBoxPositions(scale) {
+  // prettier-ignore
+  return new Float64Array([
+    scale, -scale, 0,
+    -scale, -scale, 0,
+    -scale, scale, 0,
+  ]);
+}
