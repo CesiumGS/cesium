@@ -15,6 +15,7 @@
   },
   "plugins": [
     "./Tools/jsdoc/cesiumTags",
+    "./Tools/jsdoc/cesiumTypes",
     "tsd-jsdoc/dist/plugin"
   ],
   "templates": {
