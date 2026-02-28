@@ -28,6 +28,7 @@
 - Fixed flashing when rendering multiple Gaussian splat primitives by storing draw-command model matrices per primitive (`_drawCommandModelMatrix`) instead of reusing shared scratch matrices. [#12967](https://github.com/CesiumGS/cesium/issues/12967)
 - Fixed shader cache lookup for day/night alpha in Columbus View. [#13216](https://github.com/CesiumGS/cesium/pull/13216)
 - Fixed a point-rendering regression which caused points to render as circles rather than squares. Such points now will only render as circles when their width is specified via the [BENTLEY_materials_point_style](https://github.com/CesiumGS/glTF/pull/91) glTF extension (which requires that such points be circular). [#13217](https://github.com/CesiumGS/cesium/issues/13217)
+- Fixed scene `sampleHeightMostDetailed` does not work when a tileset is added by primitive collection. [#13097](https://github.com/CesiumGS/cesium/issues/13097)
 - Fixes a regex expression used to find metadata variables in `CustomShader`s, which did not escape a period. Also extends the regex to find used metadata from `metadataClass` and `metadataStatistics`. [#13231](https://github.com/CesiumGS/cesium/pull/13231).
 
 ### @cesium/sandcastle

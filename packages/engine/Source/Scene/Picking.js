@@ -1005,7 +1005,7 @@ function updateMostDetailedRayPick(picking, scene, rayPick) {
   const tilesetsLength = tilesets.length;
   for (let i = 0; i < tilesetsLength; ++i) {
     const tileset = tilesets[i];
-    if (tileset.show && scene.primitives.contains(tileset)) {
+    if (tileset.show) {
       // Only update tilesets that are still contained in the scene's primitive collection and are still visible
       // Update tilesets continually until all tilesets are ready. This way tiles are never removed from the cache.
       tileset.updateForPass(frameState, tilesetPassState);
