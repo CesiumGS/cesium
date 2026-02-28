@@ -18,6 +18,7 @@ import {
   Resource,
   ResourceCache,
   ShaderBuilder,
+  ShaderDestination,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
@@ -96,6 +97,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
     const pointStyleTestData =
       "./Data/Models/glTF-2.0/StyledPoints/points-r5-g8-b14-y10.gltf";
+    const constantLodTestData =
+      "./Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Checker.gltf";
 
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {
@@ -952,6 +955,63 @@ describe(
         "USE_METALLIC_ROUGHNESS",
       ]);
       expect(uniformMap.u_pointDiameter).toBeUndefined();
+    });
+
+    it("processes EXT_textureInfo_constant_lod extension", async function () {
+      const gltfLoader = await loadGltf(constantLodTestData);
+
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder, uniformMap } = renderResources;
+
+      // Add required function, outside a test this would already exist
+      shaderBuilder.addFunction(
+        "setDynamicVaryingsVS",
+        "void setDynamicVaryingsVS()\n{\n}",
+        ShaderDestination.VERTEX,
+      );
+      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+        "HAS_CONSTANT_LOD",
+        "HAS_BASE_COLOR_CONSTANT_LOD",
+      ]);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_TEXTURE",
+        "HAS_BASE_COLOR_CONSTANT_LOD",
+        "HAS_METALLIC_FACTOR",
+        "TEXCOORD_BASE_COLOR v_texCoord_0",
+        "HAS_CONSTANT_LOD",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform vec2 u_constantLodOffset;",
+        "uniform float u_constantLodDistance;",
+      ]);
+
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform float u_metallicFactor;",
+        "uniform sampler2D u_baseColorTexture;",
+        "uniform vec3 u_baseColorTextureConstantLodParams;",
+      ]);
+
+      // Get the actual texture and constant LOD data from the loaded primitive
+      const baseColorTexture =
+        primitive.material.metallicRoughness.baseColorTexture.texture;
+      const constantLodData =
+        primitive.material.metallicRoughness.baseColorTexture.constantLod;
+
+      const expectedUniforms = {
+        u_baseColorTexture: baseColorTexture,
+        u_constantLodOffset: constantLodData.offset,
+        u_baseColorTextureConstantLodParams: new Cartesian3(
+          constantLodData.minClampDistance,
+          constantLodData.maxClampDistance,
+          constantLodData.repetitions,
+        ),
+      };
+      expectUniformMap(uniformMap, expectedUniforms);
     });
   },
   "WebGL",

@@ -5,6 +5,8 @@ import Matrix3 from "../../Core/Matrix3.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Pass from "../../Renderer/Pass.js";
 import MaterialStageFS from "../../Shaders/Model/MaterialStageFS.js";
+import ConstantLodStageVS from "../../Shaders/Model/ConstantLodStageVS.js";
+import ConstantLodStageFS from "../../Shaders/Model/ConstantLodStageFS.js";
 import AlphaMode from "../AlphaMode.js";
 import ModelComponents from "../ModelComponents.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -60,6 +62,23 @@ MaterialPipelineStage.process = function (
   const material = primitive.material;
   const { model, uniformMap, shaderBuilder } = renderResources;
 
+  if (!defined(uniformMap.u_constantLodDistance)) {
+    uniformMap.u_constantLodDistance = function () {
+      const boundingSphere = model.boundingSphere;
+      const camera = frameState.camera;
+
+      if (defined(boundingSphere) && defined(camera)) {
+        const distance = Cartesian3.distance(
+          camera.positionWC,
+          boundingSphere.center,
+        );
+        return Math.max(distance, 0.1);
+      }
+
+      return 100.0;
+    };
+  }
+
   // Classification models only use position and feature ID attributes,
   // so textures should be disabled to avoid compile errors.
   const hasClassification = defined(model.classificationType);
@@ -77,6 +96,7 @@ MaterialPipelineStage.process = function (
     defaultNormalTexture,
     defaultEmissiveTexture,
     disableTextures,
+    renderResources,
   );
 
   if (defined(material.specularGlossiness)) {
@@ -86,6 +106,7 @@ MaterialPipelineStage.process = function (
       shaderBuilder,
       defaultTexture,
       disableTextures,
+      renderResources,
     );
   } else {
     if (
@@ -130,6 +151,7 @@ MaterialPipelineStage.process = function (
       shaderBuilder,
       defaultTexture,
       disableTextures,
+      renderResources,
     );
   }
 
@@ -194,6 +216,90 @@ MaterialPipelineStage.process = function (
     );
   }
 };
+
+/**
+ * Process constant LOD extension for a texture
+ *
+ * @param {ShaderBuilder} shaderBuilder The shader builder to modify
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
+ * @param {string} uniformName The name of the sampler uniform
+ * @param {string} defineName The name of the texture for use in the defines
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources
+ * @private
+ */
+function processConstantLod(
+  shaderBuilder,
+  uniformMap,
+  textureReader,
+  uniformName,
+  defineName,
+  renderResources,
+) {
+  const constantLod = textureReader.constantLod;
+
+  if (!defined(constantLod)) {
+    return;
+  }
+
+  // renderResources is required for constant LOD to transform from ECEF/world coordinates to ENU
+  if (!defined(renderResources)) {
+    return;
+  }
+
+  const constantLodDefine = `HAS_${defineName}_CONSTANT_LOD`;
+  shaderBuilder.addDefine(constantLodDefine, undefined, ShaderDestination.BOTH);
+
+  if (!defined(uniformMap.u_constantLodOffset)) {
+    shaderBuilder.addDefine(
+      "HAS_CONSTANT_LOD",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+
+    shaderBuilder.addVarying("vec3", "v_constantLodUvCustom");
+
+    shaderBuilder.addUniform(
+      "vec2",
+      "u_constantLodOffset",
+      ShaderDestination.VERTEX,
+    );
+
+    shaderBuilder.addUniform(
+      "float",
+      "u_constantLodDistance",
+      ShaderDestination.VERTEX,
+    );
+
+    shaderBuilder.addFragmentLines(ConstantLodStageFS);
+
+    const constantLodLines = ConstantLodStageVS.split("\n").filter((line) => {
+      return !line.trim().startsWith("//") || line.includes("#");
+    });
+    shaderBuilder.addFunctionLines("setDynamicVaryingsVS", constantLodLines);
+  }
+
+  const paramsUniformName = `${uniformName}ConstantLodParams`;
+  shaderBuilder.addUniform(
+    "vec3",
+    paramsUniformName,
+    ShaderDestination.FRAGMENT,
+  );
+
+  uniformMap[paramsUniformName] = function () {
+    return new Cartesian3(
+      constantLod.minClampDistance,
+      constantLod.maxClampDistance,
+      constantLod.repetitions,
+    );
+  };
+
+  if (!defined(uniformMap.u_constantLodOffset)) {
+    uniformMap.u_constantLodOffset = function () {
+      return constantLod.offset;
+    };
+  }
+}
 
 /**
  * Process a single texture transformation and add it to the shader and uniform map.
@@ -279,6 +385,8 @@ function processTextureScale(
  * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
  * @param {string} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
  * @param {string} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
+ * @param {Texture} defaultTexture The default texture to use as a fallback if the texture is not yet loaded
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources
  *
  * @private
  */
@@ -289,6 +397,7 @@ function processTexture(
   uniformName,
   defineName,
   defaultTexture,
+  renderResources,
 ) {
   // Add a uniform for the texture itself
   shaderBuilder.addUniform(
@@ -340,6 +449,16 @@ function processTexture(
       defineName,
     );
   }
+
+  // Process constant LOD extension if present
+  processConstantLod(
+    shaderBuilder,
+    uniformMap,
+    textureReader,
+    uniformName,
+    defineName,
+    renderResources,
+  );
 }
 
 function processMaterialUniforms(
@@ -350,6 +469,7 @@ function processMaterialUniforms(
   defaultNormalTexture,
   defaultEmissiveTexture,
   disableTextures,
+  renderResources,
 ) {
   const { emissiveFactor, emissiveTexture, normalTexture, occlusionTexture } =
     material;
@@ -384,14 +504,43 @@ function processMaterialUniforms(
     }
   }
 
+  // Extract base color constant LOD to apply to normal texture
+  let baseColorConstantLod;
+  if (
+    defined(material.metallicRoughness) &&
+    defined(material.metallicRoughness.baseColorTexture) &&
+    defined(material.metallicRoughness.baseColorTexture.constantLod)
+  ) {
+    baseColorConstantLod =
+      material.metallicRoughness.baseColorTexture.constantLod;
+  } else if (
+    defined(material.specularGlossiness) &&
+    defined(material.specularGlossiness.diffuseTexture) &&
+    defined(material.specularGlossiness.diffuseTexture.constantLod)
+  ) {
+    baseColorConstantLod =
+      material.specularGlossiness.diffuseTexture.constantLod;
+  }
+
   if (defined(normalTexture) && !disableTextures) {
+    // If normal texture AND base color have constant LOD, use base color's constant LOD properties to keep textures in sync
+    let normalTextureToProcess = normalTexture;
+    if (defined(normalTexture.constantLod) && defined(baseColorConstantLod)) {
+      normalTextureToProcess = Object.create(
+        Object.getPrototypeOf(normalTexture),
+      );
+      Object.assign(normalTextureToProcess, normalTexture);
+      normalTextureToProcess.constantLod = baseColorConstantLod;
+    }
+
     processTexture(
       shaderBuilder,
       uniformMap,
-      normalTexture,
+      normalTextureToProcess,
       "u_normalTexture",
       "NORMAL",
       defaultNormalTexture,
+      renderResources,
     );
   }
 
@@ -413,8 +562,9 @@ function processMaterialUniforms(
  * @param {ModelComponents.SpecularGlossiness} specularGlossiness
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ShaderBuilder} shaderBuilder
- * @param {Texture} defaultTexture
+ * @param {Texture} defaultTexture The default texture to use as a fallback if the texture is not yet loaded
  * @param {boolean} disableTextures
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources for the primitive
  * @private
  */
 function processSpecularGlossinessUniforms(
@@ -423,6 +573,7 @@ function processSpecularGlossinessUniforms(
   shaderBuilder,
   defaultTexture,
   disableTextures,
+  renderResources,
 ) {
   const {
     diffuseTexture,
@@ -446,6 +597,7 @@ function processSpecularGlossinessUniforms(
       "u_diffuseTexture",
       "DIFFUSE",
       defaultTexture,
+      renderResources,
     );
   }
 
@@ -778,8 +930,9 @@ function processClearcoatUniforms(
  * @param {ModelComponents.MetallicRoughness} metallicRoughness
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ShaderBuilder} shaderBuilder
- * @param {Texture} defaultTexture
+ * @param {Texture} defaultTexture The default texture to use as a fallback if the texture is not yet loaded
  * @param {boolean} disableTextures
+ * @param {PrimitiveRenderResources|undefined} renderResources The render resources for the primitive
  * @private
  */
 function processMetallicRoughnessUniforms(
@@ -788,6 +941,7 @@ function processMetallicRoughnessUniforms(
   shaderBuilder,
   defaultTexture,
   disableTextures,
+  renderResources,
 ) {
   shaderBuilder.addDefine(
     "USE_METALLIC_ROUGHNESS",
@@ -804,6 +958,7 @@ function processMetallicRoughnessUniforms(
       "u_baseColorTexture",
       "BASE_COLOR",
       defaultTexture,
+      renderResources,
     );
   }
 
