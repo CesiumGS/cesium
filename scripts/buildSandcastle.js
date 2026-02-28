@@ -1,3 +1,5 @@
+// @ts-check
+
 import { dirname, join } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { getVersion } from "./build.js";
@@ -38,20 +40,19 @@ export async function getSandcastleConfig() {
  * @param {object} options
  * @param {boolean} options.outputToBuildDir control whether sandcastle should be built and bundled together completely static into the Build directory
  * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
+ * @param {string} options.outerOrigin The origin of the surrounding application
+ * @param {string} options.innerOrigin The origin of the inner viewer iframe
  */
 export async function buildSandcastleApp({
   outputToBuildDir,
   includeDevelopment,
+  outerOrigin,
+  innerOrigin,
 }) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const version = await getVersion();
   let config;
   if (outputToBuildDir) {
-    // TODO: these will not work for all scenarios yet
-    const outerOrigin =
-      process.env.SANDCASTLE_ORIGIN ?? "https://dev-sandcastle.cesium.com";
-    const innerOrigin = outerOrigin;
-
     const cesiumSource = join(__dirname, "../Build/CesiumUnminified");
     const cesiumBaseUrl = "Build/CesiumUnminified";
 
@@ -104,15 +105,6 @@ export async function buildSandcastleApp({
       ],
     });
   } else {
-    let outerOrigin = "http://localhost:8080";
-    let innerOrigin = "http://localhost:8081";
-
-    if (process.env.CI) {
-      outerOrigin =
-        process.env.SANDCASTLE_ORIGIN ?? "https://ci-builds.cesium.com";
-      innerOrigin = outerOrigin;
-    }
-
     config = createSandcastleConfig({
       outDir: join(__dirname, "../Apps/Sandcastle2"),
       basePath: "./",

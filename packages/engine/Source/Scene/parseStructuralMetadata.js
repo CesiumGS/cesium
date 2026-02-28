@@ -16,6 +16,8 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
+import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataType from "./MetadataType.js";
 
 /**
  * Parse the <code>EXT_structural_metadata</code> glTF extension to create a
@@ -198,6 +200,7 @@ function createTextureForPropertyTable(
     pixelFormat: PixelFormat.RGBA,
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
     sampler: sampler,
+    flipY: false,
     source: {
       width: numFeatures,
       height: numGpuCompatibleProperties,
@@ -213,35 +216,94 @@ function collectGpuCompatiblePropertyBufferViews(
   numFeatures,
 ) {
   const bufferViewsForThisTable = [];
+  const classProperties = classDefinition.properties;
 
-  for (const propertyId in properties) {
-    if (properties.hasOwnProperty(propertyId)) {
-      const property = properties[propertyId];
-      const bufferView = bufferViews[property.values];
-      const classProperty = classDefinition.properties[propertyId];
-
-      // Certain properties like strings, dynamic-sized arrays, and 64-bit types cannot be represented easily on the GPU.
-      if (!classProperty.isGpuCompatible(NUM_CHANNELS)) {
-        continue;
-      }
-
-      const bufferViewLength = bufferView.length;
-      const bytesPerElement = classProperty.bytesPerElement();
-      const numBufferElements = bufferViewLength / bytesPerElement;
-      if (numBufferElements !== numFeatures) {
-        throw new RuntimeError(
-          `Property with ID: "${propertyId}" has (${numBufferElements}), which does not match number of features in the property table: (${numFeatures}).`,
-        );
-      }
-
-      bufferViewsForThisTable.push({
-        view: bufferView,
-        bytesPerElement: bytesPerElement,
-      });
+  // It's possible for a primitive in a tileset to only use a subset of the class properties defined in the schema.
+  // For instance, the Design Tiler merges classes together by default, and omits properties in primitives that aren't used.
+  // To make the default values available to the GPU, and to avoid compiling different versions of the shader for each primitive,
+  // we iterate over _all_ class properties here - not just the properties in the property table.
+  for (const [propertyId, classProperty] of Object.entries(classProperties)) {
+    // Certain properties like strings, dynamic-sized arrays, and 64-bit types cannot be represented natively on the GPU.
+    if (!classProperty.isGpuCompatible(NUM_CHANNELS)) {
+      continue;
     }
+
+    const property = properties[propertyId];
+    const bufferView = defined(property)
+      ? bufferViews[property.values]
+      : createNoDataBufferView(classProperty, numFeatures);
+
+    const bufferViewLength = bufferView.length;
+    const bytesPerElement = classProperty.bytesPerElement();
+    const numBufferElements = bufferViewLength / bytesPerElement;
+    if (numBufferElements !== numFeatures) {
+      throw new RuntimeError(
+        `Property with ID: "${propertyId}" has (${numBufferElements}), which does not match number of features in the property table: (${numFeatures}).`,
+      );
+    }
+
+    bufferViewsForThisTable.push({
+      view: bufferView,
+      bytesPerElement: bytesPerElement,
+    });
   }
 
   return bufferViewsForThisTable;
+}
+
+/**
+ * When a property is part of a tileset class schema but not used in a property table,
+ * we create a buffer view filled with the property's noData value.
+ *
+ * @param {MetadataClassProperty} classProperty The class property definition.
+ * @param {number} numFeatures The number of features in the property table.
+ *
+ * @returns {Uint8Array} A buffer view filled with the property's noData value.
+ *
+ * @private
+ */
+function createNoDataBufferView(classProperty, numFeatures) {
+  // noData can be a number, an array of numbers (e.g. for vecN types), or a nested array of numbers (e.g. for arrays of vecN types).
+  let noData = classProperty.noData;
+  const metadataComponentCount = MetadataType.getComponentCount(
+    classProperty.type,
+  );
+  const metadataArrayLength = classProperty.isArray
+    ? classProperty.arrayLength
+    : 1;
+
+  // Special case: noData enum values are specified as strings, so we need to convert them to numbers here.
+  if (classProperty.type === MetadataType.ENUM) {
+    const enumDefinition = classProperty.enumType;
+    noData = enumDefinition.valuesByName[noData];
+  }
+
+  // Wrap noData in an array (up to two times) so we can treat it uniformly in the loop below.
+  if (metadataComponentCount === 1) {
+    noData = [noData];
+  }
+
+  if (metadataArrayLength === 1) {
+    noData = [noData];
+  }
+
+  const bytesPerElement = classProperty.bytesPerElement();
+  const buffer = new ArrayBuffer(bytesPerElement * numFeatures);
+  const view = new DataView(buffer);
+  const setter = MetadataComponentType.getDataViewSetter(
+    view,
+    classProperty.componentType,
+  );
+
+  for (let i = 0; i < numFeatures; i++) {
+    for (let j = 0; j < metadataArrayLength; j++) {
+      for (let k = 0; k < metadataComponentCount; k++) {
+        setter(bytesPerElement * i + j + k, noData[j][k]);
+      }
+    }
+  }
+
+  return new Uint8Array(buffer);
 }
 
 // Make one big buffer view to load into the texture

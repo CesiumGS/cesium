@@ -5,12 +5,13 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "npm run build-gallery && vite --config vite.config.dev.ts",
+    "dev": "tsc -b && npm run build-gallery && vite --config vite.config.dev.ts",
     "build": "echo 'Sandcastle cannot be built directly. Use the exported buildStatic() function instead'",
     "build-gallery": "node scripts/buildGallery.js"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.17",
+    "@huggingface/transformers": "^3.8.1",
     "@monaco-editor/react": "^4.7.0",
     "@stratakit/bricks": "^0.5.4",
     "@stratakit/foundations": "^0.4.6",
@@ -32,7 +33,7 @@
   "devDependencies": {
     "@types/pako": "^2.0.3",
     "@types/prettier": "^2.7.3",
-    "@types/react": "^19.0.10",
+    "@types/react": "^19.2.7",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^5.0.4",
     "globby": "^16.0.0",
