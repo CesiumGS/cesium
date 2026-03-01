@@ -36,7 +36,6 @@ import ContextLimits from "../Renderer/ContextLimits.js";
 import Transforms from "../Core/Transforms.js";
 
 const scratchMatrix4A = new Matrix4();
-const scratchMatrix4B = new Matrix4();
 const scratchMatrix4C = new Matrix4();
 const scratchMatrix4D = new Matrix4();
 
@@ -1172,12 +1171,12 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     computedModelMatrix,
   );
 
-  const toGlobal = Matrix4.multiply(
-    tile.tileset.modelMatrix,
-    rootTransform,
-    scratchMatrix4B,
-  );
-  const toLocal = Matrix4.inverse(toGlobal, scratchMatrix4C);
+  // toLocal is inverse(rootTransform) only. tileset.modelMatrix is already
+  // factored into computedModelMatrix via tile.computedTransform, so its effect
+  // is baked directly into the splat values rather than split into the draw
+  // command's modelMatrix. This keeps czm_view * modelMatrix numerically small,
+  // avoiding float32 precision loss at ECEF-scale translations.
+  const toLocal = Matrix4.inverse(rootTransform, scratchMatrix4C);
   const transform = Matrix4.multiplyTransformation(
     toLocal,
     computedModelMatrix,
@@ -1390,14 +1389,13 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   };
 
   uniformMap.u_inverseModelRotation = function () {
-    const tileset = primitive._tileset;
-    const modelMatrix = Matrix4.multiply(
-      tileset.modelMatrix,
-      primitive._rootTransform,
-      scratchMatrix4A,
-    );
+    // The draw command's modelMatrix is rootTransform only; tileset.modelMatrix
+    // is baked into the splat positions. Inverting rootTransform alone keeps
+    // SH view directions consistent with the baked data. Including
+    // tileset.modelMatrix here would double-count its rotation, causing
+    // incorrect SH colors when a transform is applied to the tileset.
     const inverseModelRotation = Matrix4.getRotation(
-      Matrix4.inverse(modelMatrix, scratchMatrix4C),
+      Matrix4.inverse(primitive._rootTransform, scratchMatrix4C),
       scratchMatrix4D,
     );
     return inverseModelRotation;
@@ -1475,8 +1473,11 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   primitive._vertexArrayLen = primitive._indexes.length;
 
-  const modelMatrix = Matrix4.multiply(
-    tileset.modelMatrix,
+  // The draw command uses rootTransform as its modelMatrix. tileset.modelMatrix
+  // is baked into the splat positions by transformTile and must not appear here
+  // as well. This keeps czm_view * modelMatrix numerically small (ENU frame),
+  // avoiding float32 precision loss from ECEF-scale translations.
+  const modelMatrix = Matrix4.clone(
     primitive._rootTransform,
     primitive._drawCommandModelMatrix,
   );
@@ -1607,6 +1608,17 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       }
 
       const tiles = tileset._selectedTiles;
+
+      // Rebuild the ENU origin from the current tileset world center so that
+      // baked splat positions remain in a numerically small (meter-scale) local
+      // frame, regardless of the current tileset.modelMatrix value.
+      this._rootTransform = Transforms.eastNorthUpToFixedFrame(
+        tileset.boundingSphere.center,
+      );
+      for (const tile of tiles) {
+        GaussianSplatPrimitive.transformTile(tile);
+      }
+
       const totalElements = tiles.reduce(
         (total, tile) => total + tile.content.pointsLength,
         0,

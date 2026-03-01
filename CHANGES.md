@@ -21,6 +21,7 @@
 
 #### Fixes :wrench:
 
+- Fixed Gaussian splat orientation and transform application when `Cesium3DTileset.modelMatrix` is modified, ensuring splat positions and spherical harmonic lighting update correctly. [#12749](https://github.com/CesiumGS/cesium/issues/12749) [#12682](https://github.com/CesiumGS/cesium/issues/12682)
 - Fixed memory leak when rendering Gaussian splat 3D tilesets.
 - Fixes depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
 - Fixes billboard depth testing near horizon. [#13159](https://github.com/CesiumGS/cesium/issues/13159)

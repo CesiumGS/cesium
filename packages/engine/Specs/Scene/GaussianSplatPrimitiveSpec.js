@@ -8,6 +8,7 @@ import {
   GaussianSplat3DTileContent,
   Matrix4,
   Transforms,
+  VertexAttributeSemantic,
 } from "../../index.js";
 import GaussianSplatPrimitive from "../../Source/Scene/GaussianSplatPrimitive.js";
 
@@ -202,6 +203,70 @@ describe(
       expect(gsPrim._pendingSnapshot).toBeDefined();
       expect(gsPrim._pendingSnapshot.state).toBe("TEXTURE_READY");
       expect(gsPrim._pendingSortPromise).toBeUndefined();
+      gsPrim.destroy();
+    });
+
+    it("transformTile bakes tileset transform into splat positions", function () {
+      const tilesetMock = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: { center: Cartesian3.ZERO },
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset: tilesetMock });
+      tilesetMock.gaussianSplatPrimitive = gsPrim;
+
+      // Override axis correction and rootTransform to identity so the test
+      // isolates the computedTransform baking behavior.
+      gsPrim._axisCorrectionMatrix = Matrix4.clone(Matrix4.IDENTITY);
+      gsPrim._rootTransform = Matrix4.clone(Matrix4.IDENTITY);
+
+      // computedTransform represents the product of tileset.modelMatrix and
+      // tile transforms.  The baked output position should equal the transformed
+      // input, not be cancelled by toLocal.
+      const translation = new Cartesian3(5, 3, 1);
+      const computedTransform = Matrix4.fromTranslation(
+        translation,
+        new Matrix4(),
+      );
+
+      const srcPositions = new Float32Array([0, 0, 0]);
+      const srcRotations = new Float32Array([0, 0, 0, 1]);
+      const srcScales = new Float32Array([1, 1, 1]);
+      const outPositions = new Float32Array(3);
+      const outRotations = new Float32Array(4);
+      const outScales = new Float32Array(3);
+
+      const tile = {
+        computedTransform: computedTransform,
+        tileset: tilesetMock,
+        content: {
+          gltfPrimitive: {
+            attributes: [
+              { semantic: VertexAttributeSemantic.POSITION, typedArray: srcPositions },
+              { semantic: VertexAttributeSemantic.ROTATION, typedArray: srcRotations },
+              { semantic: VertexAttributeSemantic.SCALE, typedArray: srcScales },
+            ],
+          },
+          worldTransform: Matrix4.clone(Matrix4.IDENTITY),
+          positions: outPositions,
+          rotations: outRotations,
+          scales: outScales,
+        },
+      };
+
+      GaussianSplatPrimitive.transformTile(tile);
+
+      // The translated position must be baked into the output values.
+      expect(outPositions[0]).toBeCloseTo(translation.x, 5);
+      expect(outPositions[1]).toBeCloseTo(translation.y, 5);
+      expect(outPositions[2]).toBeCloseTo(translation.z, 5);
+
       gsPrim.destroy();
     });
 
