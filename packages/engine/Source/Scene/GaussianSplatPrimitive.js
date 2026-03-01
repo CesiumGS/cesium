@@ -435,14 +435,14 @@ async function processGeneratedSplatTextureData(
     // height) until it fits. The flat data layout is width-independent: splat i
     // is always at flat uint32 position i*8, so the same WASM buffer can be
     // reused unchanged—only the texture dimensions and the shader uniforms change.
-    let optimalWidth = splatTextureData.width;   // initial value is always 2048 from WASM; may be doubled below
+    let optimalWidth = splatTextureData.width; // initial value is always 2048 from WASM; may be doubled below
     let optimalHeight = splatTextureData.height;
     while (optimalHeight > maxTex && optimalWidth < maxTex) {
       optimalWidth *= 2;
       optimalHeight = Math.ceil(snapshot.numSplats / (optimalWidth / 2));
     }
     const splatRowShift = Math.log2(optimalWidth / 2); // e.g. 10→2048, 11→4096
-    const splatRowMask = (optimalWidth / 2) - 1;       // e.g. 0x3ff→2048, 0x7ff→4096
+    const splatRowMask = optimalWidth / 2 - 1; // e.g. 0x3ff→2048, 0x7ff→4096
 
     // Hard cap: even at maximum width the height may still exceed the GPU limit
     // (requires > maxTex * (maxTex/2) splats, e.g. >134M on a 16384-limit GPU).
@@ -454,10 +454,24 @@ async function processGeneratedSplatTextureData(
       optimalHeight = maxTex;
       const splatsPerRow = optimalWidth / 2;
       snapshot.numSplats = maxTex * splatsPerRow;
+      // Also truncate the CPU-side attribute arrays so that downstream
+      // consumers (sorter, draw command) see a consistent splat count.
+      // positions/scales: 3 components per splat
+      // rotations/colors: 4 components per splat
+      snapshot.positions = snapshot.positions.subarray(
+        0,
+        snapshot.numSplats * 3,
+      );
+      snapshot.rotations = snapshot.rotations.subarray(
+        0,
+        snapshot.numSplats * 4,
+      );
+      snapshot.scales = snapshot.scales.subarray(0, snapshot.numSplats * 3);
+      snapshot.colors = snapshot.colors.subarray(0, snapshot.numSplats * 4);
       console.warn(
-        `[GaussianSplat] ${originalCount} splats exceed the maximum texture capacity ` +
-        `(${maxTex}×${splatsPerRow} = ${snapshot.numSplats} splats at width=${optimalWidth}). ` +
-        `Rendering only the first ${snapshot.numSplats} splats to avoid a WebGL crash.`,
+        `[GaussianSplat][HARD CAP] ${originalCount} splats exceed the maximum texture capacity ` +
+          `(${maxTex}×${splatsPerRow} = ${snapshot.numSplats} splats at width=${optimalWidth}). ` +
+          `Rendering only the first ${snapshot.numSplats} splats to avoid a WebGL crash.`,
       );
     }
 
@@ -528,7 +542,7 @@ async function processGeneratedSplatTextureData(
       if (_shHeight > width) {
         console.warn(
           `[GaussianSplat][SHTexture] ${snapshot.numSplats} splats require SH height ${_shHeight} > maxTex ${width}. ` +
-          `Disabling spherical harmonics for this snapshot (color-only fallback).`,
+            `Disabling spherical harmonics for this snapshot (color-only fallback).`,
         );
         snapshot.sphericalHarmonicsDegree = 0;
         if (defined(oldTex)) {
@@ -990,8 +1004,8 @@ function GaussianSplatPrimitive(options) {
    * @type {number}
    * @private
    */
-  this._splatRowMask = 0x3ff;   // default: width=2048, splatsPerRow=1024
-  this._splatRowShift = 10;     // default: width=2048
+  this._splatRowMask = 0x3ff; // default: width=2048, splatsPerRow=1024
+  this._splatRowShift = 10; // default: width=2048
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
