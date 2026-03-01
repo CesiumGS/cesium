@@ -142,7 +142,15 @@ highp vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
 void main() {
     uint texIdx = uint(a_splatIndex);
-    ivec2 posCoord = ivec2((texIdx & 0x3ffu) << 1, texIdx >> 10);
+    // u_splatRowMask and u_splatRowShift are set by JS to match the actual
+    // texture width chosen to accommodate the current splat count without
+    // exceeding the GPU's maximumTextureSize.
+    // Default (width=2048): rowMask=0x3ff (1023), rowShift=10
+    // For width=4096:       rowMask=0x7ff (2047), rowShift=11
+    // For width=8192:       rowMask=0xfff (4095), rowShift=12
+    uint rowMask = uint(u_splatRowMask);
+    uint rowShift = uint(u_splatRowShift);
+    ivec2 posCoord = ivec2(int((texIdx & rowMask) << 1), int(texIdx >> rowShift));
     vec4 splatPosition = vec4( uintBitsToFloat(uvec4(texelFetch(u_splatAttributeTexture, posCoord, 0))) );
 
     vec4 splatViewPos = czm_modelView * vec4(splatPosition.xyz, 1.0);
@@ -155,7 +163,7 @@ void main() {
         return;
     }
 
-    ivec2 covCoord = ivec2(((texIdx & 0x3ffu) << 1) | 1u, texIdx >> 10);
+    ivec2 covCoord = ivec2(int(((texIdx & rowMask) << 1) | 1u), int(texIdx >> rowShift));
     uvec4 covariance = uvec4(texelFetch(u_splatAttributeTexture, covCoord, 0));
 
     gl_Position = clipPosition;
