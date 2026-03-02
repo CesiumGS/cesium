@@ -40,13 +40,21 @@ function updateStatus() {
   statusEl.textContent = `Footprints: ${generator.footprintCount}`;
 }
 
-generator.footprintsGenerated.addEventListener(function () {
+generator.footprintsGenerated.addEventListener(function (tile) {
+  console.log(
+    `footprintsGenerated — tile: ${tile?.content?.url ?? "unknown"}, total: ${generator.footprintCount}`,
+  );
   updateStatus();
 });
 
 // One-shot generate
 btnGenerate.addEventListener("click", function () {
+  const start = performance.now();
   generator.generate();
+  const elapsed = (performance.now() - start).toFixed(2);
+  console.log(
+    `generate() took ${elapsed} ms — ${generator.footprintCount} footprints`,
+  );
   updateStatus();
 });
 

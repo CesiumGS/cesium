@@ -253,23 +253,33 @@ function extractPerFeatureFootprints(
   const filterFn = generator._filterFeature;
   const result = new Map();
 
-  for (let i = 0; i < featuresLength; i++) {
-    const feature = content.getFeature(i);
+  // Retrieve all positions grouped by feature ID in a single pass
+  const positionsMap = content.getPositions();
+  if (!defined(positionsMap) || positionsMap.size === 0) {
+    return undefined;
+  }
 
-    // Apply the user filter
-    if (typeof filterFn === "function" && !filterFn(feature)) {
+  for (const [featureId, positions] of positionsMap) {
+    if (featureId < 0 || featureId >= featuresLength) {
       continue;
     }
 
-    const positions = feature.getPositions();
-    if (!defined(positions) || positions.length < 3) {
+    // Apply the user filter
+    if (typeof filterFn === "function") {
+      const feature = content.getFeature(featureId);
+      if (!filterFn(feature)) {
+        continue;
+      }
+    }
+
+    if (positions.length < 3) {
       continue;
     }
 
     const hierarchy =
       PolygonBoundaryExtractor.convexHullFromPositions(positions);
     if (defined(hierarchy)) {
-      result.set(i, hierarchy);
+      result.set(featureId, hierarchy);
     }
   }
 

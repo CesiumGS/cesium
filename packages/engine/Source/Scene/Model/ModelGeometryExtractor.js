@@ -13,7 +13,7 @@ const scratchModelMatrix = new Matrix4();
 const scratchComputedModelMatrix = new Matrix4();
 
 /**
- * Extracts vertex positions for a specific feature from a loaded Model.
+ * Extracts vertex positions from a loaded Model.
  * <p>
  * This requires that the model was loaded with <code>enableGeometryExtraction: true</code>
  * so that vertex data is retained on the CPU.
@@ -25,19 +25,19 @@ const scratchComputedModelMatrix = new Matrix4();
 const ModelGeometryExtractor = {};
 
 /**
- * Returns an array of unique world-space (ECEF) {@link Cartesian3} positions for
- * all vertices belonging to the given feature ID within the model.
+ * Returns a Map keyed by feature ID, where each value is an array of
+ * world-space (ECEF) {@link Cartesian3} positions for all vertices
+ * belonging to that feature within the model.
  *
  * @param {object} options Object with the following properties:
  * @param {Model} options.model The model from which to extract positions.
- * @param {number} options.featureId The feature ID (batch ID) to extract positions for.
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
- * @param {Cartesian3[]} [options.result] An array to store the result positions.
- * @returns {Cartesian3[]} An array of world-space Cartesian3 positions for the feature, or an empty array if none found.
+ * @param {Map<number, Cartesian3[]>} [options.result] A Map to store the result.
+ * @returns {Map<number, Cartesian3[]>} A Map from feature ID to an array of world-space Cartesian3 positions.
  *
  * @private
  */
-ModelGeometryExtractor.getPositionsForFeature = function (options) {
+ModelGeometryExtractor.getPositionsForModel = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options)) {
     throw new DeveloperError("options is required.");
@@ -45,16 +45,12 @@ ModelGeometryExtractor.getPositionsForFeature = function (options) {
   if (!defined(options.model)) {
     throw new DeveloperError("options.model is required.");
   }
-  if (!defined(options.featureId) && options.featureId !== 0) {
-    throw new DeveloperError("options.featureId is required.");
-  }
   //>>includeEnd('debug');
 
   const model = options.model;
-  const featureId = options.featureId;
   const featureIdLabel = options.featureIdLabel ?? "featureId_0";
-  const result = options.result ?? [];
-  result.length = 0;
+  const result = options.result ?? new Map();
+  result.clear();
 
   if (!model._ready) {
     return result;
@@ -103,7 +99,6 @@ ModelGeometryExtractor.getPositionsForFeature = function (options) {
       scratchComputedModelMatrix,
     );
 
-    // Gather instance transforms if applicable
     const instanceTransforms = getInstanceTransforms(
       runtimeNode,
       node,
@@ -117,9 +112,8 @@ ModelGeometryExtractor.getPositionsForFeature = function (options) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[p];
       const primitive = runtimePrimitive.primitive;
 
-      extractPositionsFromPrimitive(
+      extractAllPositionsFromPrimitive(
         primitive,
-        featureId,
         featureIdLabel,
         instanceTransforms,
         result,
@@ -297,8 +291,8 @@ function readPositionData(positionAttribute) {
 
   const numComponents = AttributeType.getNumberOfComponents(attributeType);
 
-  let elementStride = numComponents;
-  let offset = 0;
+  const elementStride = numComponents;
+  const offset = 0;
 
   return {
     vertices: vertices,
@@ -372,12 +366,12 @@ function decodeAndTransformVertex(
 }
 
 /**
- * Extracts positions from a single primitive for the target feature ID.
+ * Extracts positions from a single primitive grouped by feature ID.
+ * Populates the result Map with feature ID keys and position arrays.
  * @private
  */
-function extractPositionsFromPrimitive(
+function extractAllPositionsFromPrimitive(
   primitive,
-  targetFeatureId,
   featureIdLabel,
   instanceTransforms,
   result,
@@ -392,19 +386,15 @@ function extractPositionsFromPrimitive(
 
   const vertexCount = positionAttribute.count;
 
-  // Find the matching feature ID mapping
   const featureIdMapping = findFeatureIdMapping(primitive, featureIdLabel);
 
-  // Read vertex positions
   const posData = readPositionData(positionAttribute);
   if (!defined(posData.vertices)) {
     return;
   }
 
-  // Read indices (optional - non-indexed geometry is also valid)
   const indices = readIndices(primitive);
 
-  // If there are no feature IDs, all vertices belong to feature 0 (or no filtering)
   let featureIdData;
   if (defined(featureIdMapping)) {
     featureIdData = getPerVertexFeatureIds(
@@ -414,59 +404,60 @@ function extractPositionsFromPrimitive(
     );
   }
 
-  // Collect unique vertex indices belonging to the target feature
-  const vertexIndicesSet = new Set();
+  // Group unique vertex indices by feature ID
+  const featureVerticesMap = new Map();
 
   if (defined(indices)) {
     const indicesLength = indices.length;
     for (let i = 0; i < indicesLength; i++) {
       const vertexIndex = indices[i];
+      const fid = defined(featureIdData)
+        ? getFeatureIdValue(featureIdData, vertexIndex)
+        : 0;
 
-      if (defined(featureIdData)) {
-        const vid = getFeatureIdValue(featureIdData, vertexIndex);
-        if (vid !== targetFeatureId) {
-          continue;
-        }
-      } else if (targetFeatureId !== 0) {
-        // No feature ID data and looking for non-zero feature: skip
-        continue;
+      let vertexSet = featureVerticesMap.get(fid);
+      if (!defined(vertexSet)) {
+        vertexSet = new Set();
+        featureVerticesMap.set(fid, vertexSet);
       }
-
-      vertexIndicesSet.add(vertexIndex);
+      vertexSet.add(vertexIndex);
     }
   } else {
-    // Non-indexed geometry: iterate over all vertices
     for (let i = 0; i < vertexCount; i++) {
-      if (defined(featureIdData)) {
-        const vid = getFeatureIdValue(featureIdData, i);
-        if (vid !== targetFeatureId) {
-          continue;
-        }
-      } else if (targetFeatureId !== 0) {
-        continue;
-      }
+      const fid = defined(featureIdData)
+        ? getFeatureIdValue(featureIdData, i)
+        : 0;
 
-      vertexIndicesSet.add(i);
+      let vertexSet = featureVerticesMap.get(fid);
+      if (!defined(vertexSet)) {
+        vertexSet = new Set();
+        featureVerticesMap.set(fid, vertexSet);
+      }
+      vertexSet.add(i);
     }
   }
 
-  if (vertexIndicesSet.size === 0) {
-    return;
-  }
+  // Transform each vertex and append to the result map
+  for (const [featureId, vertexIndicesSet] of featureVerticesMap) {
+    let positions = result.get(featureId);
+    if (!defined(positions)) {
+      positions = [];
+      result.set(featureId, positions);
+    }
 
-  // Transform each unique vertex by all instance transforms and add to result
-  for (const vertexIndex of vertexIndicesSet) {
-    for (let t = 0; t < instanceTransforms.length; t++) {
-      const worldPos = decodeAndTransformVertex(
-        posData.vertices,
-        vertexIndex,
-        posData.offset,
-        posData.elementStride,
-        posData.quantization,
-        instanceTransforms[t],
-        scratchPosition,
-      );
-      result.push(Cartesian3.clone(worldPos));
+    for (const vertexIndex of vertexIndicesSet) {
+      for (let t = 0; t < instanceTransforms.length; t++) {
+        const worldPos = decodeAndTransformVertex(
+          posData.vertices,
+          vertexIndex,
+          posData.offset,
+          posData.elementStride,
+          posData.quantization,
+          instanceTransforms[t],
+          scratchPosition,
+        );
+        positions.push(Cartesian3.clone(worldPos));
+      }
     }
   }
 }

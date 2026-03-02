@@ -7,6 +7,7 @@ import Ellipsoid from "../../Core/Ellipsoid.js";
 import Pass from "../../Renderer/Pass.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
 import Model from "./Model.js";
+import ModelGeometryExtractor from "./ModelGeometryExtractor.js";
 
 /**
  * Represents the contents of a glTF, glb or
@@ -226,6 +227,13 @@ Model3DTileContent.prototype.getFeature = function (featureId) {
   }
   //>>includeEnd('debug');
   return featureTable.getFeature(featureId);
+};
+
+Model3DTileContent.prototype.getPositions = function (featureIdLabel) {
+  return ModelGeometryExtractor.getPositionsForModel({
+    model: this._model,
+    featureIdLabel: featureIdLabel,
+  });
 };
 
 Model3DTileContent.prototype.hasProperty = function (featureId, name) {

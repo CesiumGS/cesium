@@ -485,12 +485,28 @@ Cesium3DTileFeature.prototype.getPositions = function (result) {
     ? tileset.featureIdLabel
     : "featureId_0";
 
-  return ModelGeometryExtractor.getPositionsForFeature({
+  const positionsMap = ModelGeometryExtractor.getPositionsForModel({
     model: model,
-    featureId: this._batchId,
     featureIdLabel: featureIdLabel,
-    result: result,
   });
+
+  const positions = positionsMap.get(this._batchId);
+  if (!defined(positions)) {
+    if (defined(result)) {
+      result.length = 0;
+      return result;
+    }
+    return [];
+  }
+
+  if (defined(result)) {
+    result.length = positions.length;
+    for (let i = 0; i < positions.length; i++) {
+      result[i] = positions[i];
+    }
+    return result;
+  }
+  return positions;
 };
 
 export default Cesium3DTileFeature;

@@ -302,6 +302,18 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
 };
 
 /**
+ * Returns a Map keyed by feature ID where each value is an array of
+ * world-space {@link Cartesian3} positions for all vertices belonging
+ * to that feature within this content.
+ *
+ * @param {string} [featureIdLabel="featureId_0"] The label of the feature ID set to match against.
+ * @returns {Map<number, Cartesian3[]>} A Map from feature ID to an array of world-space Cartesian3 positions.
+ */
+Cesium3DTileContent.prototype.getPositions = function (featureIdLabel) {
+  DeveloperError.throwInstantiationError();
+};
+
+/**
      * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
      * <p>
      * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
