@@ -2,7 +2,7 @@ import globals from "globals";
 import html from "eslint-plugin-html";
 import configCesium from "@cesium/eslint-config";
 import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
+import { reactRefresh } from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default [
@@ -141,7 +141,7 @@ export default [
     },
     plugins: {
       "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
+      "react-refresh": reactRefresh.plugin,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
