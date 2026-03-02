@@ -27,7 +27,6 @@ const generator = new Cesium.Cesium3DTilesetFootprintGenerator({
   hullMethod: "convexHull",
   material: Cesium.Color.RED.withAlpha(0.8),
   classificationType: Cesium.ClassificationType.TERRAIN,
-  simplificationTolerance: 0,
 });
 
 // --- UI controls ---

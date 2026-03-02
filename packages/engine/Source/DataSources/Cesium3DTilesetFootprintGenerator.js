@@ -5,7 +5,6 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import PolygonBoundaryExtractor from "../Core/PolygonBoundaryExtractor.js";
-import PolygonSimplifier from "../Core/PolygonSimplifier.js";
 import ClassificationType from "../Scene/ClassificationType.js";
 import FootprintPolygonBuilder from "../Scene/FootprintPolygonBuilder.js";
 
@@ -16,20 +15,14 @@ import FootprintPolygonBuilder from "../Scene/FootprintPolygonBuilder.js";
  *
  * @property {Cesium3DTileset} tileset The source tileset. Must have `enablePick: true`
  *   (or `enableGeometryExtraction: true` when available) so that CPU-side vertex data is retained.
- * @property {EntityCollection} [entityCollection] Where to add generated entities.
- *   Required when `useBatchedPrimitive` is false (the default).
- * @property {PrimitiveCollection} [primitiveCollection] Where to add batched ground primitives.
- *   Required when `useBatchedPrimitive` is true.
+ * @property {EntityCollection} entityCollection Where to add generated entities.
  * @property {string} [hullMethod='convexHull'] The footprint extraction method.
  *   One of `'convexHull'` or `'boundary'`. `'boundary'` requires index buffers
  *   and produces accurate concave footprints. `'convexHull'` is faster but always convex.
- * @property {number} [simplificationTolerance=0] Douglas-Peucker simplification
- *   tolerance in radians. Set to 0 to disable simplification.
  * @property {Color} [material=Color.WHITE.withAlpha(0.5)] Default polygon fill color.
  * @property {ClassificationType} [classificationType=ClassificationType.TERRAIN] Classification type.
  * @property {Cesium3DTilesetFootprintGenerator.FilterCallback} [filterFeature] A predicate to skip features.
  * @property {Cesium3DTilesetFootprintGenerator.StyleCallback} [styleFeature] Per-feature styling function.
- * @property {boolean} [useBatchedPrimitive=false] Use GroundPrimitive batching instead of Entity API.
  */
 
 /**
@@ -90,22 +83,19 @@ function Cesium3DTilesetFootprintGenerator(options) {
 
   this._tileset = options.tileset;
   this._entityCollection = options.entityCollection;
-  this._primitiveCollection = options.primitiveCollection;
 
   this._hullMethod = options.hullMethod ?? "convexHull";
-  this._simplificationTolerance = options.simplificationTolerance ?? 0;
   this._material = options.material ?? Color.WHITE.withAlpha(0.5);
   this._classificationType =
     options.classificationType ?? ClassificationType.TERRAIN;
   this._filterFeature = options.filterFeature;
   this._styleFeature = options.styleFeature;
-  this._useBatchedPrimitive = options.useBatchedPrimitive ?? false;
 
   /**
-   * Map from a deduplication key (string) to the entity or primitive that
+   * Map from a deduplication key (string) to the entity that
    * was created for it. Used to avoid duplicates across LODs and to clean
    * up on tile unload.
-   * @type {Map<string, { entity: Entity|undefined, tileKeys: Set<string> }>}
+   * @type {Map<string, { entity: Entity, tileKeys: Set<string> }>}
    * @private
    */
   this._footprintMap = new Map();
@@ -118,13 +108,6 @@ function Cesium3DTilesetFootprintGenerator(options) {
    * @private
    */
   this._tileToFootprintKeys = new Map();
-
-  /**
-   * Batched ground primitives keyed by tile key.
-   * @type {Map<string, GroundPrimitive>}
-   * @private
-   */
-  this._tilePrimitives = new Map();
 
   this._tileLoadListener = undefined;
   this._tileUnloadListener = undefined;
@@ -287,7 +270,7 @@ function extractPerFeatureFootprints(
 }
 
 /**
- * Creates footprint entities/primitives for the given hierarchies and
+ * Creates footprint entities for the given hierarchies and
  * registers them in the tracking maps.
  *
  * @param {Cesium3DTilesetFootprintGenerator} generator
@@ -298,122 +281,60 @@ function extractPerFeatureFootprints(
 function createFootprintsForTile(generator, tile, featureHierarchies) {
   const tileKey = getTileKey(tile);
   const footprintKeys = [];
-  const simplificationTolerance = generator._simplificationTolerance;
 
-  // Optionally simplify
-  if (simplificationTolerance > 0) {
-    for (const [fid, hierarchy] of featureHierarchies) {
-      const simplified = PolygonSimplifier.simplifyHierarchy(
-        hierarchy,
-        simplificationTolerance,
-      );
-      featureHierarchies.set(fid, simplified);
-    }
+  const entityCollection = generator._entityCollection;
+  if (!defined(entityCollection)) {
+    return;
   }
 
-  if (generator._useBatchedPrimitive) {
-    // Batch mode: create a single GroundPrimitive for the tile
-    const styleFeatureFn = buildStyleFn(generator, tile);
-    const primitive = FootprintPolygonBuilder.createBatchedGroundPrimitive(
-      featureHierarchies,
-      {
-        color: generator._material,
-        classificationType: generator._classificationType,
-        styleFeature: styleFeatureFn,
-      },
-    );
+  for (const [fid, hierarchy] of featureHierarchies) {
+    const key = getFeatureKey(tileKey, fid);
+    footprintKeys.push(key);
 
-    if (defined(primitive) && defined(generator._primitiveCollection)) {
-      generator._primitiveCollection.add(primitive);
-      generator._tilePrimitives.set(tileKey, primitive);
+    // Deduplication: if a footprint for this key already exists, just
+    // record this tile as an additional source.
+    if (generator._footprintMap.has(key)) {
+      generator._footprintMap.get(key).tileKeys.add(tileKey);
+      continue;
     }
 
-    for (const [fid] of featureHierarchies) {
-      const key = getFeatureKey(tileKey, fid);
-      footprintKeys.push(key);
-      generator._footprintMap.set(key, {
-        entity: undefined,
-        tileKeys: new Set([tileKey]),
-      });
-    }
-  } else {
-    // Entity mode: one entity per feature
-    const entityCollection = generator._entityCollection;
-    if (!defined(entityCollection)) {
-      return;
-    }
+    const entityOptions = {
+      material: generator._material,
+      classificationType: generator._classificationType,
+      id: key,
+      properties: { tilesetFeatureId: fid },
+    };
 
-    for (const [fid, hierarchy] of featureHierarchies) {
-      const key = getFeatureKey(tileKey, fid);
-      footprintKeys.push(key);
-
-      // Deduplication: if a footprint for this key already exists, just
-      // record this tile as an additional source.
-      if (generator._footprintMap.has(key)) {
-        generator._footprintMap.get(key).tileKeys.add(tileKey);
-        continue;
-      }
-
-      const entityOptions = {
-        material: generator._material,
-        classificationType: generator._classificationType,
-        id: key,
-        properties: { tilesetFeatureId: fid },
-      };
-
-      // Per-feature styling
-      if (typeof generator._styleFeature === "function") {
-        const content = tile.content;
-        if (defined(content) && fid < content.featuresLength) {
-          const feature = content.getFeature(fid);
-          const style = generator._styleFeature(feature);
-          if (defined(style)) {
-            if (defined(style.material)) {
-              entityOptions.material = style.material;
-            }
-            if (defined(style.name)) {
-              entityOptions.name = style.name;
-            }
+    // Per-feature styling
+    if (typeof generator._styleFeature === "function") {
+      const content = tile.content;
+      if (defined(content) && fid < content.featuresLength) {
+        const feature = content.getFeature(fid);
+        const style = generator._styleFeature(feature);
+        if (defined(style)) {
+          if (defined(style.material)) {
+            entityOptions.material = style.material;
+          }
+          if (defined(style.name)) {
+            entityOptions.name = style.name;
           }
         }
       }
-
-      const entity = FootprintPolygonBuilder.createEntity(
-        hierarchy,
-        entityOptions,
-      );
-      entityCollection.add(entity);
-
-      generator._footprintMap.set(key, {
-        entity: entity,
-        tileKeys: new Set([tileKey]),
-      });
     }
+
+    const entity = FootprintPolygonBuilder.createEntity(
+      hierarchy,
+      entityOptions,
+    );
+    entityCollection.add(entity);
+
+    generator._footprintMap.set(key, {
+      entity: entity,
+      tileKeys: new Set([tileKey]),
+    });
   }
 
   generator._tileToFootprintKeys.set(tileKey, footprintKeys);
-}
-
-/**
- * Builds a style function wrapper for batched primitive mode.
- * @param {Cesium3DTilesetFootprintGenerator} generator
- * @param {Cesium3DTile} tile
- * @returns {function|undefined}
- * @private
- */
-function buildStyleFn(generator, tile) {
-  if (typeof generator._styleFeature !== "function") {
-    return undefined;
-  }
-
-  const content = tile.content;
-  return function (featureId) {
-    if (!defined(content) || featureId >= content.featuresLength) {
-      return undefined;
-    }
-    const feature = content.getFeature(featureId);
-    return generator._styleFeature(feature);
-  };
 }
 
 /**
@@ -427,15 +348,6 @@ function buildStyleFn(generator, tile) {
  */
 function removeFootprintsForTile(generator, tile) {
   const tileKey = getTileKey(tile);
-
-  // Remove batched primitive if in batch mode
-  if (generator._useBatchedPrimitive) {
-    const primitive = generator._tilePrimitives.get(tileKey);
-    if (defined(primitive) && defined(generator._primitiveCollection)) {
-      generator._primitiveCollection.remove(primitive);
-    }
-    generator._tilePrimitives.delete(tileKey);
-  }
 
   const footprintKeys = generator._tileToFootprintKeys.get(tileKey);
   if (!defined(footprintKeys)) {
@@ -618,7 +530,6 @@ Cesium3DTilesetFootprintGenerator.prototype.setStyle = function (
  * Remove all generated footprints and reset tracking state.
  */
 Cesium3DTilesetFootprintGenerator.prototype.clear = function () {
-  // Remove all entities
   if (defined(this._entityCollection)) {
     for (const [, record] of this._footprintMap) {
       if (defined(record.entity)) {
@@ -627,16 +538,8 @@ Cesium3DTilesetFootprintGenerator.prototype.clear = function () {
     }
   }
 
-  // Remove all batched primitives
-  if (defined(this._primitiveCollection)) {
-    for (const [, primitive] of this._tilePrimitives) {
-      this._primitiveCollection.remove(primitive);
-    }
-  }
-
   this._footprintMap.clear();
   this._tileToFootprintKeys.clear();
-  this._tilePrimitives.clear();
 };
 
 /**

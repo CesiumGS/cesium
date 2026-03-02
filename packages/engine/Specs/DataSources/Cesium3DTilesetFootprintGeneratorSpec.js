@@ -6,7 +6,6 @@ import {
   defined,
   EntityCollection,
   Event,
-  PrimitiveCollection,
 } from "../../index.js";
 
 describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
@@ -44,6 +43,16 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
       url: "mock://tileset/tile.b3dm",
       getFeature: function (index) {
         return features[index];
+      },
+      getPositions: function () {
+        const map = new Map();
+        for (let j = 0; j < features.length; j++) {
+          const pos = features[j].getPositions();
+          if (defined(pos)) {
+            map.set(j, pos);
+          }
+        }
+        return map;
       },
       _tile: null,
     };
@@ -104,14 +113,13 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
         tileset: tileset,
         entityCollection: entities,
         hullMethod: "boundary",
-        simplificationTolerance: 0.001,
+
         material: Color.RED,
         classificationType: ClassificationType.BOTH,
       });
 
       expect(generator.tileset).toBe(tileset);
       expect(generator._hullMethod).toEqual("boundary");
-      expect(generator._simplificationTolerance).toEqual(0.001);
       expect(generator._material).toEqual(Color.RED);
       expect(generator._classificationType).toEqual(ClassificationType.BOTH);
     });
@@ -124,8 +132,6 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
       });
 
       expect(generator._hullMethod).toEqual("convexHull");
-      expect(generator._simplificationTolerance).toEqual(0);
-      expect(generator._useBatchedPrimitive).toEqual(false);
     });
 
     it("throws without options", function () {
@@ -424,22 +430,6 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
       };
       generator.setStyle(styleFn);
       expect(generator._styleFeature).toBe(styleFn);
-    });
-  });
-
-  describe("useBatchedPrimitive mode", function () {
-    it("creates primitives instead of entities", function () {
-      const tileset = createMockTileset();
-      const primitives = new PrimitiveCollection();
-      const generator = new Cesium3DTilesetFootprintGenerator({
-        tileset: tileset,
-        primitiveCollection: primitives,
-        useBatchedPrimitive: true,
-      });
-
-      generator.generate();
-
-      expect(generator.footprintCount).toBeGreaterThan(0);
     });
   });
 
