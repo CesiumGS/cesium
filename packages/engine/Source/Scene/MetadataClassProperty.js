@@ -1344,15 +1344,15 @@ MetadataClassProperty.prototype.unpackTextureInShader = function (
   const castFunction =
     uintBitsToScalarType[MetadataComponentType.category(valueType)];
   const hasMultipleComponents = componentCount > 1;
-  const usesMultipleChannelsPerComponent = channelsPerComponent > 1;
 
   // Unpack each component of the output property from the raw channel values
   // E.g. if the output type is a vec2, and 4 channels are given, unpack x from `rg` and y from `ba`
   for (let i = 0; i < componentCount; i++) {
-    let subChannels = "";
-    if (usesMultipleChannelsPerComponent) {
-      subChannels = `.${channelsString.slice(i * channelsPerComponent, (i + 1) * channelsPerComponent)}`;
-    }
+    const channelSlice = channelsString.slice(
+      i * channelsPerComponent,
+      (i + 1) * channelsPerComponent,
+    );
+    const subChannels = numChannels > 1 ? `.${channelSlice}` : "";
     const assignRawBitsLine = `${rawBitsName} = czm_unpackTexture(${rawChannelsName}${subChannels});`;
 
     let indexExpression = "";
