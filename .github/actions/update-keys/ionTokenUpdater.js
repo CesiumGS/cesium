@@ -1,0 +1,153 @@
+import { exit } from "process";
+import { readFile } from "fs/promises";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { add, differenceInCalendarDays, format, setDate } from "date-fns";
+
+const TOKEN_CONTROLLER_TOKEN = process.env.TOKEN_CONTROLLER_TOKEN;
+
+if (!TOKEN_CONTROLLER_TOKEN) {
+  console.error("Missing token for the ion key updater");
+  exit(1);
+}
+
+const BASE_URL = "https://api.cesium.com";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const projectRoot = join(__dirname, "../../../");
+const packageJsonPath = join(projectRoot, "package.json");
+
+export async function getNextVersion() {
+  const data = await readFile(packageJsonPath, "utf8");
+  const { version } = JSON.parse(data);
+  const majorMinor = version.match(/^(.*)\.(.*)\./);
+  const major = majorMinor[1];
+  const minor = Number(majorMinor[2]) + 1; // We want the next release, not current release
+  return `${major}.${minor}`;
+}
+
+/**
+ * @returns {Promise<{items: Token[], total: number}>}
+ */
+async function getTokens() {
+  const resp = await fetch(`${BASE_URL}/v2/tokens`, {
+    headers: {
+      Authorization: `Bearer ${TOKEN_CONTROLLER_TOKEN}`,
+    },
+  });
+  return resp.json();
+}
+
+/**
+ * @typedef {object} Token
+ * @property {string} id
+ * @property {string} name
+ * @property {string} token
+ * @property {boolean} isDefault
+ * @property {string} dateAdded
+ * @property {string} dateModified
+ * @property {string} dateLastUsed
+ * @property {string[]} scopes
+ * @property {string[]} allowedUrls
+ * @property {number[]} [assetIds]
+ */
+
+/**
+ * @typedef {object} KnownToken
+ * @property {Token} token
+ * @property {string} version
+ * @property {string} dateToDelete
+ */
+
+/**
+ * We want a filtered list of "known" tokens that we control. There are a lot of other
+ * tokens in the account that have other purposes and we don't want to disrupt those
+ *
+ * @returns {Promise<Token[]>}
+ */
+export async function getKnownTokens() {
+  const tokens = await getTokens();
+
+  const namePattern =
+    /(?<version>1.\d+) Release - Delete on (?<date>\w+ \d+, \d+)/;
+  const knownTokens = tokens.items.filter((token) =>
+    namePattern.test(token.name),
+  );
+  return knownTokens;
+}
+
+/**
+ * @param {number} olderThanDays
+ */
+// eslint-disable-next-line
+async function deleteOldTokens(olderThanDays) {
+  // TODO: figure out how we want to manage this
+  throw new Error("don't call");
+
+  // eslint-disable-next-line
+  const existingTokens = await getKnownTokens();
+  const today = new Date();
+  for (const token of existingTokens) {
+    const dateAdded = new Date(token.dateAdded);
+    // const msToDays = 1000 / 60 / 60 / 24;
+    // const daysDiff = Math.round(
+    //   (today.getTime() - dateAdded.getTime()) / msToDays,
+    // );
+    const daysDiff = differenceInCalendarDays(today, dateAdded);
+    console.log("Checking token", token.id, token.name);
+    console.log("  days old:", daysDiff);
+    if (daysDiff > olderThanDays) {
+      console.log("  deleting");
+      try {
+        const resp = await fetch(`${BASE_URL}/v2/tokens/${token.id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${TOKEN_CONTROLLER_TOKEN}`,
+          },
+        });
+        if (!resp.ok) {
+          throw new Error(`Response status: ${resp.status}`);
+        }
+      } catch (error) {
+        console.error(error);
+        exit(1);
+      }
+    }
+  }
+}
+
+/**
+ * @param {string} version
+ * @returns {Promise<Token>}
+ */
+export async function createNewToken(version) {
+  const existingTokens = await getKnownTokens();
+  const tokenForVersion = existingTokens.find((token) =>
+    token.name.includes(version),
+  );
+  if (tokenForVersion) {
+    // Protection just in case this gets run multiple times for a release
+    return tokenForVersion;
+  }
+
+  // Add 3 months then round down to the first of that month
+  // We do 3 months since this is intended to be run in the week BEFORE a release
+  const dateToDelete = setDate(add(new Date(), { months: 3 }), 1);
+  const deleteDateString = format(dateToDelete, "MMMM d, yyyy");
+
+  const resp = await fetch(`${BASE_URL}/v2/tokens`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${TOKEN_CONTROLLER_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: `${version} Release - Delete on ${deleteDateString}`,
+      scopes: ["assets:read", "geocode"],
+    }),
+  });
+  if (!resp.ok) {
+    throw new Error(`Response status: ${resp.status}`);
+  }
+  return resp.json();
+}
