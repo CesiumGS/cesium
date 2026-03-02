@@ -1348,7 +1348,7 @@ MetadataClassProperty.prototype.unpackTextureInShader = function (
   // Unpack each component of the output property from the raw channel values
   // E.g. if the output type is a vec2, and 4 channels are given, unpack x from `rg` and y from `ba`
   for (let i = 0; i < componentCount; i++) {
-    const channelSlice = channelsString.slice(
+    const channelSlice = "rgba".slice(
       i * channelsPerComponent,
       (i + 1) * channelsPerComponent,
     );
