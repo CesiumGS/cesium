@@ -7,8 +7,9 @@ import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import AttributeType from "../Scene/AttributeType.js";
 
-const RIGHT_SHIFT = 1.0 / 256.0;
-const LEFT_SHIFT = 256.0;
+const RIGHT_SHIFT8 = 1.0 / 256.0;
+const LEFT_SHIFT16 = 65536.0;
+const LEFT_SHIFT8 = 256.0;
 
 /**
  * Attribute compression and decompression functions.
@@ -96,9 +97,9 @@ function forceUint8(value) {
  */
 AttributeCompression.octEncodeToCartesian4 = function (vector, result) {
   AttributeCompression.octEncodeInRange(vector, 65535, octEncodeScratch);
-  result.x = forceUint8(octEncodeScratch.x * RIGHT_SHIFT);
+  result.x = forceUint8(octEncodeScratch.x * RIGHT_SHIFT8);
   result.y = forceUint8(octEncodeScratch.x);
-  result.z = forceUint8(octEncodeScratch.y * RIGHT_SHIFT);
+  result.z = forceUint8(octEncodeScratch.y * RIGHT_SHIFT8);
   result.w = forceUint8(octEncodeScratch.y);
   return result;
 };
@@ -193,8 +194,8 @@ AttributeCompression.octDecodeFromCartesian4 = function (encoded, result) {
   }
   //>>includeEnd('debug');
 
-  const xOct16 = x * LEFT_SHIFT + y;
-  const yOct16 = z * LEFT_SHIFT + w;
+  const xOct16 = x * LEFT_SHIFT8 + y;
+  const yOct16 = z * LEFT_SHIFT8 + w;
   return AttributeCompression.octDecodeInRange(xOct16, yOct16, 65535, result);
 };
 
@@ -476,6 +477,52 @@ AttributeCompression.dequantize = function (
   }
 
   return dequantizedTypedArray;
+};
+
+/**
+ * Encodes RGB values at 8-bit precision into a single float, equivalent
+ * to 0xFFFFFF representation in JavaScript. Perceptually near-lossless
+ * in the "srgb" color space; "srgb-linear" and wide-gamut color spaces
+ * benefit from 10+ bit precision.
+ *
+ * @param {Color} color
+ * @returns {number}
+ */
+AttributeCompression.encodeRGB8 = function (color) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("color", color);
+  //>>includeEnd('debug');
+
+  return (
+    Math.round(CesiumMath.clamp(color.red * 255, 0, 255)) * LEFT_SHIFT16 +
+    Math.round(CesiumMath.clamp(color.green * 255, 0, 255)) * LEFT_SHIFT8 +
+    Math.round(CesiumMath.clamp(color.blue * 255, 0, 255))
+  );
+};
+
+/**
+ * Decodes RGB values at 8-bit precision from a signle float, equivalent
+ * to 0xFFFFFF representation in JavaScript. Perceptually near-lossless
+ * in the "srgb" color space; "srgb-linear" and wide-gamut color spaces
+ * benefit from 10+ bit precision.
+ *
+ * @param {number} encoded
+ * @param {Color} result
+ * @returns {Color}
+ */
+AttributeCompression.decodeRGB8 = function (encoded, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("encoded", encoded);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  encoded = Math.floor(encoded);
+
+  result.red = ((encoded >> 16) & 255) / 255;
+  result.green = ((encoded >> 8) & 255) / 255;
+  result.blue = (encoded & 255) / 255;
+
+  return result;
 };
 
 /**

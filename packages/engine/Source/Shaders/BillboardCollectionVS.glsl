@@ -26,11 +26,11 @@ out vec4 v_textureCoordinateBounds;
 out vec4 v_originTextureCoordinateAndTranslate;
 out mat2 v_rotationMatrix;
 #endif
-out vec4 v_compressed;                                 // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
+out vec4 v_compressed;             // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
 
 out vec4 v_pickColor;
 out vec4 v_color;
-out float v_splitDirection;
+flat out vec2 v_splitDirectionAndEllipsoidDepthEC;  // x: splitDirection, y: ellipsoid depth in eye coordinates
 #ifdef SDF
 out vec4 v_outlineColor;
 out float v_outlineWidth;
@@ -219,32 +219,18 @@ void main()
     bool validAlignedAxis = false;
 #endif
 
-    vec4 pickColor;
-    vec4 color;
-
-    temp = compressedAttribute2.y;
-    temp = temp * SHIFT_RIGHT8;
-    pickColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    pickColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
-    pickColor.r = floor(temp);
-
-    temp = compressedAttribute2.x;
-    temp = temp * SHIFT_RIGHT8;
-    color.b = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    color.g = (temp - floor(temp)) * SHIFT_LEFT8;
-    color.r = floor(temp);
+    vec4 color = czm_decodeRGB8(compressedAttribute2.x);
+    vec4 pickColor = czm_decodeRGB8(compressedAttribute2.y);
 
     temp = compressedAttribute2.z * SHIFT_RIGHT8;
     bool sizeInMeters = floor((temp - floor(temp)) * SHIFT_LEFT7) > 0.0;
     temp = floor(temp) * SHIFT_RIGHT8;
 
     pickColor.a = (temp - floor(temp)) * SHIFT_LEFT8;
-    pickColor /= 255.0;
+    pickColor.a /= 255.0;
 
     color.a = floor(temp);
-    color /= 255.0;
+    color.a /= 255.0;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -322,13 +308,25 @@ void main()
     }
 #endif
 
+    v_splitDirectionAndEllipsoidDepthEC.y = czm_infinity;
+    vec3 ellipsoidCenter = czm_view[3].xyz;
+    vec3 rayDirection = normalize(positionEC.xyz);
+    czm_ray ray = czm_ray(vec3(0.0), rayDirection);
+    vec3 ellipsoid_inverseRadii = czm_ellipsoidInverseRadii;
+    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoidCenter, ellipsoid_inverseRadii);
+
+    if (!czm_isEmpty(intersection))
+    {
+        v_splitDirectionAndEllipsoidDepthEC.y = intersection.start;
+    }
+
     v_compressed.y = enableDepthCheck;
 
 #ifdef VS_THREE_POINT_DEPTH_CHECK
 if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) && (enableDepthCheck == 1.0)) {
     float depthsilon = 10.0;
     vec2 depthOrigin;
-    // Horizontal origin for labels comes from a special attribute. If that value is 0, this is a billboard - use the regular origin. 
+    // Horizontal origin for labels comes from a special attribute. If that value is 0, this is a billboard - use the regular origin.
     // Otherwise, transform the label origin to -1, 0, 1 (right, center, left).
     depthOrigin.x = floor(compressedAttribute2.w - (temp2 * SHIFT_LEFT2));
     depthOrigin.x = czm_branchFreeTernary(depthOrigin.x == 0.0, origin.x, depthOrigin.x - 2.0);
@@ -414,15 +412,8 @@ if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &
 #endif
 
 #ifdef SDF
-    vec4 outlineColor;
+    vec4 outlineColor = czm_decodeRGB8(sdf.x);
     float outlineWidth;
-
-    temp = sdf.x;
-    temp = temp * SHIFT_RIGHT8;
-    outlineColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    outlineColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
-    outlineColor.r = floor(temp);
 
     temp = sdf.y;
     temp = temp * SHIFT_RIGHT8;
@@ -430,7 +421,7 @@ if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &
     temp = floor(temp) * SHIFT_RIGHT8;
     outlineWidth = (temp - floor(temp)) * SHIFT_LEFT8;
     outlineColor.a = floor(temp);
-    outlineColor /= 255.0;
+    outlineColor.a /= 255.0;
 
     v_outlineWidth = outlineWidth / 255.0;
     v_outlineColor = outlineColor;
@@ -441,5 +432,5 @@ if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &
 
     v_color = color;
     v_color.a *= translucency;
-    v_splitDirection = splitDirection;
+    v_splitDirectionAndEllipsoidDepthEC.x = splitDirection;
 }

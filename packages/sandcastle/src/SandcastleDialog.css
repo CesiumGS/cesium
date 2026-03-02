@@ -13,9 +13,10 @@
   border-radius: var(--stratakit-ext-radius-lg);
   background-color: var(--stratakit-color-bg-page-base);
   padding: var(--stratakit-space-x4);
-  box-shadow: var(--stratakit-shadow-dialog-base);
+  box-shadow: var(--stratakit-shadow-control-dialog-base);
 
   .sc-dialog-close {
+    display: flex;
     position: absolute;
     top: var(--stratakit-space-x4);
     right: var(--stratakit-space-x4);

@@ -1,3 +1,5 @@
+// @ts-check
+
 // Logic and values based on is-ci https://github.com/watson/is-ci/blob/master/bin.js
 // which uses ci-info under the hood https://github.com/watson/ci-info/blob/master/index.js
 // This just extracts the specific parts we need without adding more dependencies

@@ -1,5 +1,5 @@
 ﻿<!doctype html>
-<html lang="en" data-color-scheme="dark">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -7,141 +7,29 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <title>Cesium Demo</title>
-    <!-- This is very important and makes this file ACT as if it's next to the
-     bucket.html file. Routes should be relative to there -->
-    <base href="./templates/" />
-    <script>
-      window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
-    </script>
-    <link
-      rel="stylesheet"
-      href="__CESIUM_BASE_URL__/Widgets/widgets.css"
-      vite-ignore
-    />
-    <link
-      rel="stylesheet"
-      href="__CESIUM_BASE_URL__/Widgets/lighter.css"
-      vite-ignore
-    />
+    <title>Sandcastle | CesiumJS</title>
     <style>
-      /*
-      * Minimal styles copied from the bucket.css stylesheet to avoid FOUC and reflow
-      */
-      html {
-        height: 100%;
+      /* Load fonts for itwin-ui */
+      @font-face {
+        font-family: InterVariable;
+        font-style: normal;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url("/fonts/InterVariable.woff2") format("woff2");
       }
 
-      body {
-        font-family: sans-serif;
-        font-size: 9pt;
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-
-        /* Matches --stratakit-color-text-neutral-primary */
-        color: oklch(99.06% 0.002 247.84);
-
-        /* Matches --stratakit-color-border-neutral-muted */
-        --ring-color: oklch(32.63% 0.014 268.32);
-        /* Matches --stratakit-color-bg-page-depth */
-        --bg-dark: oklch(22.52% 0.005 268.32);
-        /* Matches --stratakit-color-bg-path-base */
-        --bg-lighter: oklch(24.37% 0.006 268.32);
-
-        --_rings: repeating-radial-gradient(
-          circle at center,
-          var(--ring-color) 1px,
-          var(--ring-color) 3px,
-          transparent 3px,
-          transparent 25px
-        );
-        --_gradient: linear-gradient(
-          180deg,
-          var(--bg-lighter) 0%,
-          var(--bg-dark) 100%
-        );
-
-        background-image: var(--_rings), var(--_gradient);
-      }
-
-      #loadingOverlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        opacity: 0.9;
-        width: 100%;
-        height: 100%;
-        display: none;
-      }
-
-      #loadingOverlay h1 {
-        text-align: center;
-        position: relative;
-        top: 50%;
-        margin-top: -0.5em;
-        font-size: 2em;
-        font-weight: bold;
-      }
-
-      .sandcastle-loading #loadingOverlay {
-        display: block;
-      }
-
-      .sandcastle-loading #toolbar {
-        display: none;
+      @font-face {
+        font-family: InterVariable;
+        font-style: italic;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url("/fonts/InterVariable-Italic.woff2") format("woff2");
       }
     </style>
-    <script type="module">
-      import { unstable_loadStyles } from "@stratakit/foundations";
-
-      unstable_loadStyles(document);
-    </script>
-    <link
-      rel="stylesheet"
-      href="../styles/stratakit-mimic/styles.css"
-      vite-ignore
-    />
+    <link rel="stylesheet" href="/styles/stratakit-ext-tokens.css" />
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
-    <script type="module">
-      import {
-        embedInSandcastleTemplate,
-        decodeBase64Data,
-      } from "/src/Helpers.ts";
-      import DOMPurify from "dompurify";
-
-      if (window.location.hash.indexOf("#c=") === 0) {
-        const base64String = window.location.hash.substr(3);
-        const data = decodeBase64Data(base64String);
-        const { code, html } = data;
-
-        // Add the HTML content
-        const sanitized = DOMPurify.sanitize(html, {
-          ADD_TAGS: ["style"],
-          FORCE_BODY: true,
-        });
-        const htmlElement = document.createElement("div");
-        htmlElement.innerHTML = sanitized;
-        document.body.appendChild(htmlElement);
-
-        // Add the JavaScript
-        const scriptElement = document.createElement("script");
-        scriptElement.type = "module";
-        const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
-        document.head.appendChild(scriptElement);
-        scriptElement.innerHTML = embedInSandcastleTemplate(code, isFirefox);
-      }
-    </script>
-    <script
-      type="text/javascript"
-      src="../Sandcastle-client.js"
-      vite-ignore
-    ></script>
+  <body>
+    <div id="app-container"></div>
+    <script type="module" src="/src/Standalone/main-standalone.tsx"></script>
   </body>
 </html>
