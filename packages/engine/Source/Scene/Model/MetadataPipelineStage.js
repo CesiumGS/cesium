@@ -97,7 +97,6 @@ MetadataPipelineStage.process = function (
     structuralMetadata.propertyAttributes,
     primitive,
     statistics,
-    usedMetadataProperties,
   );
   const propertyTexturesInfo = getPropertyTexturesInfo(
     structuralMetadata.propertyTextures,
@@ -108,6 +107,7 @@ MetadataPipelineStage.process = function (
     primitive,
     renderResources,
     statistics,
+    usedMetadataProperties,
   );
 
   // Declare <type>MetadataClass and <type>MetadataStatistics structs as needed
@@ -337,6 +337,10 @@ function getPropertyTableInfo(
       continue;
     }
 
+    // For performance reasons, since property tables can be quite large, only include properties that are used by other pipeline stages in the shader.
+    // Note: we could do this for property textures and attributes as well - but since users can call the `pickMetadata`
+    // API with an arbitrary metadata property, we'd need to rebuild every model's shaders each time such a call is made. Since property textures
+    // and attributes tend to be less numerous than property tables anyway, it's more important to optimize table usage in this way.
     const property = properties[propertyId];
     const propertyShaderDestination = ShaderDestination.intersection(
       propertyDestination(propertyId, usedMetadataProperties),
