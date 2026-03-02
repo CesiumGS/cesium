@@ -6,7 +6,9 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import PolygonBoundaryExtractor from "../Core/PolygonBoundaryExtractor.js";
 import ClassificationType from "../Scene/ClassificationType.js";
-import FootprintPolygonBuilder from "../Scene/FootprintPolygonBuilder.js";
+import HeightReference from "../Scene/HeightReference.js";
+import Entity from "./Entity.js";
+import PolygonGraphics from "./PolygonGraphics.js";
 
 /**
  * @typedef {object} Cesium3DTilesetFootprintGenerator.ConstructorOptions
@@ -19,18 +21,14 @@ import FootprintPolygonBuilder from "../Scene/FootprintPolygonBuilder.js";
  * @property {string} [hullMethod='convexHull'] The footprint extraction method.
  *   One of `'convexHull'` or `'boundary'`. `'boundary'` requires index buffers
  *   and produces accurate concave footprints. `'convexHull'` is faster but always convex.
- * @property {Color} [material=Color.WHITE.withAlpha(0.5)] Default polygon fill color.
- * @property {ClassificationType} [classificationType=ClassificationType.TERRAIN] Classification type.
  * @property {Cesium3DTilesetFootprintGenerator.FilterCallback} [filterFeature] A predicate to skip features.
- * @property {Cesium3DTilesetFootprintGenerator.StyleCallback} [styleFeature] Per-feature styling function.
+ * @property {Cesium3DTilesetFootprintGenerator.CreateEntityCallback} [createEntity] Custom entity factory. When
+ *   provided, this replaces the default entity creation, giving full
+ *   control over the entity that is created for each feature footprint.
+ *   Receives the polygon hierarchy, the source feature, and the tile.
  */
 
-/**
- * @typedef {object} Cesium3DTilesetFootprintGenerator.StyleOverrides
- * @property {Color} [material] Override polygon fill color.
- * @property {Color} [color] Override polygon color (alternative to material).
- * @property {string} [name] Override entity name.
- */
+
 
 /**
  * A callback that decides whether a feature should have a footprint generated.
@@ -40,10 +38,15 @@ import FootprintPolygonBuilder from "../Scene/FootprintPolygonBuilder.js";
  */
 
 /**
- * A callback that returns per-feature style overrides.
- * @callback Cesium3DTilesetFootprintGenerator.StyleCallback
- * @param {Cesium3DTileFeature} feature The tile feature.
- * @returns {Cesium3DTilesetFootprintGenerator.StyleOverrides|undefined}
+ * A callback that creates an entity from a polygon hierarchy, the source
+ * feature, and its tile.  When provided, this replaces the default entity
+ * creation.
+ *
+ * @callback Cesium3DTilesetFootprintGenerator.CreateEntityCallback
+ * @param {PolygonHierarchy} hierarchy The polygon hierarchy for the footprint.
+ * @param {Cesium3DTileFeature} feature The tile feature this footprint was extracted from.
+ * @param {Cesium3DTile} tile The tile that contains the feature.
+ * @returns {Entity} The created entity.
  */
 
 /**
@@ -92,11 +95,8 @@ function Cesium3DTilesetFootprintGenerator(options) {
   this._entityCollection = options.entityCollection;
 
   this._hullMethod = options.hullMethod ?? "convexHull";
-  this._material = options.material ?? Color.WHITE.withAlpha(0.5);
-  this._classificationType =
-    options.classificationType ?? ClassificationType.TERRAIN;
   this._filterFeature = options.filterFeature;
-  this._styleFeature = options.styleFeature;
+  this._createEntity = options.createEntity;
 
   /**
    * Map from a deduplication key (string) to the entity that
@@ -191,6 +191,30 @@ function getTileKey(tile) {
  */
 function getFeatureKey(tileKey, featureId) {
   return `${tileKey}#${featureId}`;
+}
+
+/**
+ * Creates a default footprint entity with a terrain-clamped polygon.
+ *
+ * @param {PolygonHierarchy} hierarchy The polygon outer ring and holes.
+ * @param {Cesium3DTileFeature} feature The tile feature.
+ * @param {Cesium3DTile} tile The tile that contains the feature.
+ * @returns {Entity} A new entity with the polygon draping on terrain.
+ * @private
+ */
+function createDefaultEntity(hierarchy, feature, tile) {
+  const tileKey = getTileKey(tile);
+  const featureId = feature.featureId;
+  return new Entity({
+    id: getFeatureKey(tileKey, featureId),
+    polygon: new PolygonGraphics({
+      hierarchy: hierarchy,
+      heightReference: HeightReference.CLAMP_TO_GROUND,
+      material: Color.WHITE.withAlpha(0.5),
+      classificationType: ClassificationType.TERRAIN,
+    }),
+    properties: { tilesetFeatureId: featureId },
+  });
 }
 
 /**
@@ -294,6 +318,8 @@ function createFootprintsForTile(generator, tile, featureHierarchies) {
     return;
   }
 
+  const content = tile.content;
+
   for (const [fid, hierarchy] of featureHierarchies) {
     const key = getFeatureKey(tileKey, fid);
     footprintKeys.push(key);
@@ -305,34 +331,11 @@ function createFootprintsForTile(generator, tile, featureHierarchies) {
       continue;
     }
 
-    const entityOptions = {
-      material: generator._material,
-      classificationType: generator._classificationType,
-      id: key,
-      properties: { tilesetFeatureId: fid },
-    };
+    const feature = content.getFeature(fid);
 
-    // Per-feature styling
-    if (typeof generator._styleFeature === "function") {
-      const content = tile.content;
-      if (defined(content) && fid < content.featuresLength) {
-        const feature = content.getFeature(fid);
-        const style = generator._styleFeature(feature);
-        if (defined(style)) {
-          if (defined(style.material)) {
-            entityOptions.material = style.material;
-          }
-          if (defined(style.name)) {
-            entityOptions.name = style.name;
-          }
-        }
-      }
-    }
-
-    const entity = FootprintPolygonBuilder.createEntity(
-      hierarchy,
-      entityOptions,
-    );
+    const entity = defined(generator._createEntity)
+      ? generator._createEntity(hierarchy, feature, tile)
+      : createDefaultEntity(hierarchy, feature, tile);
     entityCollection.add(entity);
 
     generator._footprintMap.set(key, {
@@ -518,20 +521,6 @@ Cesium3DTilesetFootprintGenerator.prototype.getFootprintForFeature =
     const record = this._footprintMap.get(key);
     return defined(record) ? record.entity : undefined;
   };
-
-/**
- * Updates the style function and reapplies it to all existing entity footprints.
- *
- * @param {Cesium3DTilesetFootprintGenerator.StyleCallback} styleFunction The new style callback.
- */
-Cesium3DTilesetFootprintGenerator.prototype.setStyle = function (
-  styleFunction,
-) {
-  this._styleFeature = styleFunction;
-  // Note: reapplying styles to existing entities would require re-creating
-  // them. For the initial implementation, styles only affect newly created
-  // footprints. A full restyle can be done via clear() + generate().
-};
 
 /**
  * Remove all generated footprints and reset tracking state.

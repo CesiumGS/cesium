@@ -25,8 +25,18 @@ const generator = new Cesium.Cesium3DTilesetFootprintGenerator({
   tileset: tileset,
   entityCollection: viewer.entities,
   hullMethod: "convexHull",
-  material: Cesium.Color.RED.withAlpha(0.8),
-  classificationType: Cesium.ClassificationType.TERRAIN,
+  createEntity: function (hierarchy, feature, tile) {
+    return new Cesium.Entity({
+      id: `${tile.content.url}#${feature.featureId}`,
+      polygon: new Cesium.PolygonGraphics({
+        hierarchy: hierarchy,
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+        material: Cesium.Color.RED.withAlpha(0.5),
+        classificationType: Cesium.ClassificationType.TERRAIN,
+      }),
+      properties: { name: feature.getProperty("name") },
+    });
+  },
 });
 
 // --- UI controls ---

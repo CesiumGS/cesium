@@ -1,8 +1,6 @@
 import {
   Cesium3DTilesetFootprintGenerator,
   Cartesian3,
-  ClassificationType,
-  Color,
   defined,
   EntityCollection,
   Event,
@@ -113,15 +111,10 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
         tileset: tileset,
         entityCollection: entities,
         hullMethod: "boundary",
-
-        material: Color.RED,
-        classificationType: ClassificationType.BOTH,
       });
 
       expect(generator.tileset).toBe(tileset);
       expect(generator._hullMethod).toEqual("boundary");
-      expect(generator._material).toEqual(Color.RED);
-      expect(generator._classificationType).toEqual(ClassificationType.BOTH);
     });
 
     it("uses default option values", function () {
@@ -414,22 +407,6 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
       generator.destroy();
       expect(generator.isDestroyed()).toBe(true);
       expect(tileset.tileLoad.numberOfListeners).toEqual(0);
-    });
-  });
-
-  describe("setStyle", function () {
-    it("updates the style callback", function () {
-      const tileset = createMockTileset();
-      const generator = new Cesium3DTilesetFootprintGenerator({
-        tileset: tileset,
-        entityCollection: new EntityCollection(),
-      });
-
-      const styleFn = function () {
-        return { material: Color.RED };
-      };
-      generator.setStyle(styleFn);
-      expect(generator._styleFeature).toBe(styleFn);
     });
   });
 
