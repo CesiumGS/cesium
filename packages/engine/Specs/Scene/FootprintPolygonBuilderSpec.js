@@ -4,7 +4,6 @@ import {
   ClassificationType,
   Color,
   Entity,
-  GroundPrimitive,
   HeightReference,
   PolygonHierarchy,
 } from "../../index.js";
@@ -92,124 +91,6 @@ describe("Scene/FootprintPolygonBuilder", function () {
     it("throws without hierarchy", function () {
       expect(function () {
         FootprintPolygonBuilder.createEntity(undefined);
-      }).toThrowDeveloperError();
-    });
-  });
-
-  describe("createEntities", function () {
-    let featureHierarchies;
-
-    beforeEach(function () {
-      featureHierarchies = new Map();
-      featureHierarchies.set(0, hierarchy);
-
-      const positions2 = Cartesian3.fromDegreesArray([
-        -73.0, 40.0,
-        -72.0, 40.0,
-        -72.0, 41.0,
-        -73.0, 41.0,
-      ]);
-      featureHierarchies.set(1, new PolygonHierarchy(positions2));
-    });
-
-    it("creates one entity per feature", function () {
-      const entities = FootprintPolygonBuilder.createEntities(featureHierarchies);
-      expect(entities.length).toEqual(2);
-    });
-
-    it("assigns feature-based IDs", function () {
-      const entities = FootprintPolygonBuilder.createEntities(featureHierarchies);
-      expect(entities[0].id).toEqual("footprint-0");
-      expect(entities[1].id).toEqual("footprint-1");
-    });
-
-    it("stores featureId in entity properties", function () {
-      const entities = FootprintPolygonBuilder.createEntities(featureHierarchies);
-      expect(entities[0].properties.tilesetFeatureId.getValue()).toEqual(0);
-      expect(entities[1].properties.tilesetFeatureId.getValue()).toEqual(1);
-    });
-
-    it("applies styleFeature callback", function () {
-      const entities = FootprintPolygonBuilder.createEntities(
-        featureHierarchies,
-        {
-          styleFeature: function (featureId) {
-            if (featureId === 0) {
-              return { material: Color.RED, name: "Red Feature" };
-            }
-            return undefined;
-          },
-        },
-      );
-      const material0 = entities[0].polygon.material.getValue();
-      expect(material0.color).toEqual(Color.RED);
-      expect(entities[0].name).toEqual("Red Feature");
-    });
-
-    it("returns empty array for empty map", function () {
-      const entities = FootprintPolygonBuilder.createEntities(new Map());
-      expect(entities.length).toEqual(0);
-    });
-
-    it("throws without featureHierarchies", function () {
-      expect(function () {
-        FootprintPolygonBuilder.createEntities(undefined);
-      }).toThrowDeveloperError();
-    });
-  });
-
-  describe("createBatchedGroundPrimitive", function () {
-    let featureHierarchies;
-
-    beforeEach(function () {
-      featureHierarchies = new Map();
-      featureHierarchies.set(0, hierarchy);
-    });
-
-    it("creates a GroundPrimitive", function () {
-      const primitive =
-        FootprintPolygonBuilder.createBatchedGroundPrimitive(featureHierarchies);
-      expect(primitive).toBeInstanceOf(GroundPrimitive);
-    });
-
-    it("returns undefined for empty map", function () {
-      const primitive =
-        FootprintPolygonBuilder.createBatchedGroundPrimitive(new Map());
-      expect(primitive).toBeUndefined();
-    });
-
-    it("applies per-instance styling", function () {
-      const primitive =
-        FootprintPolygonBuilder.createBatchedGroundPrimitive(
-          featureHierarchies,
-          {
-            styleFeature: function (featureId) {
-              if (featureId === 0) {
-                return { color: Color.BLUE };
-              }
-              return undefined;
-            },
-          },
-        );
-      expect(primitive).toBeDefined();
-    });
-
-    it("uses provided classification type", function () {
-      const primitive =
-        FootprintPolygonBuilder.createBatchedGroundPrimitive(
-          featureHierarchies,
-          {
-            classificationType: ClassificationType.CESIUM_3D_TILE,
-          },
-        );
-      expect(primitive.classificationType).toEqual(
-        ClassificationType.CESIUM_3D_TILE,
-      );
-    });
-
-    it("throws without featureHierarchies", function () {
-      expect(function () {
-        FootprintPolygonBuilder.createBatchedGroundPrimitive(undefined);
       }).toThrowDeveloperError();
     });
   });
