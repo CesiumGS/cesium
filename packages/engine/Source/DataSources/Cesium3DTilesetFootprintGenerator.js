@@ -26,6 +26,13 @@ import FootprintPolygonBuilder from "../Scene/FootprintPolygonBuilder.js";
  */
 
 /**
+ * @typedef {object} Cesium3DTilesetFootprintGenerator.StyleOverrides
+ * @property {Color} [material] Override polygon fill color.
+ * @property {Color} [color] Override polygon color (alternative to material).
+ * @property {string} [name] Override entity name.
+ */
+
+/**
  * A callback that decides whether a feature should have a footprint generated.
  * @callback Cesium3DTilesetFootprintGenerator.FilterCallback
  * @param {Cesium3DTileFeature} feature The tile feature.
@@ -36,7 +43,7 @@ import FootprintPolygonBuilder from "../Scene/FootprintPolygonBuilder.js";
  * A callback that returns per-feature style overrides.
  * @callback Cesium3DTilesetFootprintGenerator.StyleCallback
  * @param {Cesium3DTileFeature} feature The tile feature.
- * @returns {{ material?: Color, color?: Color, name?: string }|undefined}
+ * @returns {Cesium3DTilesetFootprintGenerator.StyleOverrides|undefined}
  */
 
 /**
