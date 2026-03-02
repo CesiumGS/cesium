@@ -3697,7 +3697,8 @@ describe(
         }
         const schemaId = undefined;
         const className = "exampleClass";
-        const propertyName = "example_fixed_length_normalized_UINT8_SCALAR_array";
+        const propertyName =
+          "example_fixed_length_normalized_UINT8_SCALAR_array";
         const classPropertyOffset = undefined;
         const classPropertyScale = undefined;
         const metadataPropertyOffset = undefined;
@@ -4224,7 +4225,7 @@ describe(
         );
         scene.destroyForSpecs();
       });
-    })
+    });
   },
   "WebGL",
 );

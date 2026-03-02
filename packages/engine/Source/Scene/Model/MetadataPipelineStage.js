@@ -146,20 +146,12 @@ MetadataPipelineStage.process = function (
  * @returns {object[]} An array of objects containing information about each PropertyAttributeProperty
  * @private
  */
-function getPropertyAttributesInfo(
-  propertyAttributes,
-  primitive,
-  statistics,
-) {
+function getPropertyAttributesInfo(propertyAttributes, primitive, statistics) {
   if (!defined(propertyAttributes)) {
     return [];
   }
   return propertyAttributes.flatMap((propertyAttribute) =>
-    getPropertyAttributeInfo(
-      propertyAttribute,
-      primitive,
-      statistics,
-    ),
+    getPropertyAttributeInfo(propertyAttribute, primitive, statistics),
   );
 }
 
@@ -171,11 +163,7 @@ function getPropertyAttributesInfo(
  * @returns {object[]} An array of objects containing information about each PropertyAttributeProperty
  * @private
  */
-function getPropertyAttributeInfo(
-  propertyAttribute,
-  primitive,
-  statistics,
-) {
+function getPropertyAttributeInfo(propertyAttribute, primitive, statistics) {
   const { getAttributeByName, getAttributeInfo, sanitizeGlslIdentifier } =
     ModelUtility;
 
@@ -213,10 +201,7 @@ function getPropertyAttributeInfo(
  * @returns {object[]} An array of objects containing information about each PropertyTextureProperty
  * @private
  */
-function getPropertyTexturesInfo(
-  propertyTextures,
-  statistics,
-) {
+function getPropertyTexturesInfo(propertyTextures, statistics) {
   if (!defined(propertyTextures)) {
     return [];
   }
@@ -232,10 +217,7 @@ function getPropertyTexturesInfo(
  * @returns {object[]} An array of objects containing information about each PropertyTextureProperty
  * @private
  */
-function getPropertyTextureInfo(
-  propertyTexture,
-  statistics,
-) {
+function getPropertyTextureInfo(propertyTexture, statistics) {
   const { sanitizeGlslIdentifier } = ModelUtility;
 
   const classId = propertyTexture.class.id;

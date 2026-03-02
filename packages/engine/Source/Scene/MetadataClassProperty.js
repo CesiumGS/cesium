@@ -1352,7 +1352,7 @@ MetadataClassProperty.prototype.unpackTextureInShader = function (
       i * channelsPerComponent,
       (i + 1) * channelsPerComponent,
     );
-    const subChannels = (numChannels > 1) ? `.${channelSlice}` : "";
+    const subChannels = numChannels > 1 ? `.${channelSlice}` : "";
     const assignRawBitsLine = `${rawBitsName} = czm_unpackTexture(${rawChannelsName}${subChannels});`;
 
     let indexExpression = "";
