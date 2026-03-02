@@ -21,9 +21,10 @@
 
 #### Fixes :wrench:
 
-- Fixes depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
-- Fixes billboard depth testing near horizon. [#13159](https://github.com/CesiumGS/cesium/issues/13159)
+- Fixed depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
+- Fixed billboard depth testing near horizon. [#13159](https://github.com/CesiumGS/cesium/issues/13159)
 - Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
+- Fixed coordinate switching bug in `OpenCageGeocoderService`. [#13138](https://github.com/CesiumGS/cesium/issues/13138)
 - Fixed Gaussian splat race conditions in snapshot/sort updates by enforcing explicit snapshot states, preventing stale async results from causing flickering, WebGL draw errors, and unstable LOD transition performance. [#13016](https://github.com/CesiumGS/cesium/issues/13016) [#12965](https://github.com/CesiumGS/cesium/issues/12965)
 - Fixed flashing when rendering multiple Gaussian splat primitives by storing draw-command model matrices per primitive (`_drawCommandModelMatrix`) instead of reusing shared scratch matrices. [#12967](https://github.com/CesiumGS/cesium/issues/12967)
 - Fixed shader cache lookup for day/night alpha in Columbus View. [#13216](https://github.com/CesiumGS/cesium/pull/13216)
