@@ -3,6 +3,7 @@ import { finished } from "stream/promises";
 
 import gulp from "gulp";
 import gulpReplace from "gulp-replace";
+import yargs from "yargs";
 import { buildSandcastleApp } from "./scripts/buildSandcastle.js";
 import { mkdirp } from "mkdirp";
 import { bundleWorkers, defaultESBuildOptions } from "./scripts/build.js";
@@ -239,9 +240,38 @@ export async function buildCesiumViewer() {
 }
 
 export async function buildSandcastle() {
+  const argv = await yargs(process.argv.slice(5))
+    .options({
+      "outer-origin": {
+        type: "string",
+        description:
+          "The outer origin for the Sandcastle App. Defaults to localhost:8080 if not specified",
+      },
+      "inner-origin": {
+        type: "string",
+        description:
+          "The inner origin for the Sandcastle viewer iframe. Defaults to the outer-origin if not specified or localhost:8081 if neither are specified",
+      },
+    })
+    .help(false)
+    .version(false)
+    .strict()
+    .parse();
+
+  let outerOrigin = argv.outerOrigin ?? "http://localhost:8080";
+  let innerOrigin =
+    argv.innerOrigin ?? argv.outerOrigin ?? "http://localhost:8081";
+
+  if (process.env.SANDCASTLE_ORIGIN) {
+    outerOrigin = process.env.SANDCASTLE_ORIGIN;
+    innerOrigin = outerOrigin;
+  }
+
   return buildSandcastleApp({
     outputToBuildDir: isProduction,
     includeDevelopment: !isProduction,
+    outerOrigin,
+    innerOrigin,
   });
 }
 
