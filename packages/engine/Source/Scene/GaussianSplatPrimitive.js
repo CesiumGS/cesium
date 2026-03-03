@@ -1,5 +1,6 @@
 import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
+import Matrix3 from "../Core/Matrix3.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
@@ -38,6 +39,8 @@ import Transforms from "../Core/Transforms.js";
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4C = new Matrix4();
 const scratchMatrix4D = new Matrix4();
+const scratchMatrix3 = new Matrix3();
+const scratchTransformQuat = new Quaternion();
 
 /**
  * Runtime state machine for steady-state re-sorting of an already committed snapshot.
@@ -1219,6 +1222,39 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const positions = tile.content.positions;
   const rotations = tile.content.rotations;
   const scales = tile.content.scales;
+
+  // Extract the rotation quaternion from transform once, before the per-splat
+  // loop. The columns of transform's upper-left 3x3 have magnitude ≈ 1 (rigid
+  // body placement), so normalizing is numerically stable. We cannot decompose
+  // the per-splat combined matrix (transform × TRS_i) instead, because each
+  // splat's scale can be very small, causing catastrophic cancellation when
+  // dividing to recover a pure rotation matrix.
+  const col0Len = Math.sqrt(
+    transform[0] * transform[0] +
+      transform[1] * transform[1] +
+      transform[2] * transform[2],
+  );
+  const col1Len = Math.sqrt(
+    transform[4] * transform[4] +
+      transform[5] * transform[5] +
+      transform[6] * transform[6],
+  );
+  const col2Len = Math.sqrt(
+    transform[8] * transform[8] +
+      transform[9] * transform[9] +
+      transform[10] * transform[10],
+  );
+  scratchMatrix3[0] = transform[0] / col0Len;
+  scratchMatrix3[1] = transform[1] / col0Len;
+  scratchMatrix3[2] = transform[2] / col0Len;
+  scratchMatrix3[3] = transform[4] / col1Len;
+  scratchMatrix3[4] = transform[5] / col1Len;
+  scratchMatrix3[5] = transform[6] / col1Len;
+  scratchMatrix3[6] = transform[8] / col2Len;
+  scratchMatrix3[7] = transform[9] / col2Len;
+  scratchMatrix3[8] = transform[10] / col2Len;
+  Quaternion.fromRotationMatrix(scratchMatrix3, scratchTransformQuat);
+  Quaternion.normalize(scratchTransformQuat, scratchTransformQuat);
   const attributePositions = ModelUtility.getAttributeBySemantic(
     gltfPrimitive,
     VertexAttributeSemantic.POSITION,
@@ -1261,8 +1297,11 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     Matrix4.multiplyTransformation(transform, scratchMatrix4C, scratchMatrix4C);
 
     Matrix4.getTranslation(scratchMatrix4C, position);
-    Matrix4.getRotation(scratchMatrix4C, rotation);
     Matrix4.getScale(scratchMatrix4C, scale);
+    // rotation still holds the original splat quaternion from attributeRotations.
+    // Apply the transform's rotation by left-multiplying the transform quaternion.
+    Quaternion.multiply(scratchTransformQuat, rotation, rotation);
+    Quaternion.normalize(rotation, rotation);
 
     positions[i * 3] = position.x;
     positions[i * 3 + 1] = position.y;
