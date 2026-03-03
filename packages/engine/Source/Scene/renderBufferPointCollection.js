@@ -46,7 +46,6 @@ const BufferPointAttributeLocations = {
  * @property {Record<BufferPointAttribute, TypedArray>} [attributeArrays]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
- * @property {object} [uniformMap]
  * @ignore
  */
 
@@ -192,42 +191,29 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
       blending: BlendingState.ALPHA_BLEND,
-      depthMask: false,
       depthTest: { enabled: true },
-      polygonOffset: { enabled: false },
     });
-  }
-
-  if (!defined(renderContext.uniformMap)) {
-    renderContext.uniformMap = {};
   }
 
   if (!defined(renderContext.shaderProgram)) {
-    const vertexShaderSource = new ShaderSource({
-      sources: [BufferPointCollectionVS],
-    });
-
-    const fragmentShaderSource = new ShaderSource({
-      sources: [BufferPointCollectionFS],
-    });
-
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
-      vertexShaderSource,
-      fragmentShaderSource,
+      vertexShaderSource: new ShaderSource({
+        sources: [BufferPointCollectionVS],
+      }),
+      fragmentShaderSource: new ShaderSource({
+        sources: [BufferPointCollectionFS],
+      }),
       attributeLocations: BufferPointAttributeLocations,
     });
   }
 
   const command = new DrawCommand({
-    primitiveType: PrimitiveType.POINTS,
-    pass: Pass.OPAQUE,
-
     vertexArray: renderContext.vertexArray,
     renderState: renderContext.renderState,
     shaderProgram: renderContext.shaderProgram,
-    uniformMap: renderContext.uniformMap,
-
+    primitiveType: PrimitiveType.POINTS,
+    pass: Pass.OPAQUE,
     owner: collection,
     count: collection.primitiveCount,
     boundingVolume: collection.boundingVolume,
