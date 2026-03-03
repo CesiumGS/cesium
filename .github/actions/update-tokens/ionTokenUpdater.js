@@ -4,9 +4,9 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { add, differenceInCalendarDays, format, setDate } from "date-fns";
 
-const TOKEN_CONTROLLER_TOKEN = process.env.TOKEN_CONTROLLER_TOKEN;
+const ION_TOKEN_CONTROLLER_TOKEN = process.env.ION_TOKEN_CONTROLLER_TOKEN;
 
-if (!TOKEN_CONTROLLER_TOKEN) {
+if (!ION_TOKEN_CONTROLLER_TOKEN) {
   console.error("Missing token for the ion key updater");
   exit(1);
 }
@@ -32,7 +32,7 @@ export async function getNextVersion() {
 async function getTokens() {
   const resp = await fetch(`${BASE_URL}/v2/tokens`, {
     headers: {
-      Authorization: `Bearer ${TOKEN_CONTROLLER_TOKEN}`,
+      Authorization: `Bearer ${ION_TOKEN_CONTROLLER_TOKEN}`,
     },
   });
   return resp.json();
@@ -102,7 +102,7 @@ async function deleteOldTokens(olderThanDays) {
         const resp = await fetch(`${BASE_URL}/v2/tokens/${token.id}`, {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${TOKEN_CONTROLLER_TOKEN}`,
+            Authorization: `Bearer ${ION_TOKEN_CONTROLLER_TOKEN}`,
           },
         });
         if (!resp.ok) {
@@ -138,7 +138,7 @@ export async function createNewToken(version) {
   const resp = await fetch(`${BASE_URL}/v2/tokens`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${TOKEN_CONTROLLER_TOKEN}`,
+      Authorization: `Bearer ${ION_TOKEN_CONTROLLER_TOKEN}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({

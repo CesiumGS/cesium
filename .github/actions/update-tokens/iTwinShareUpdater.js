@@ -1,7 +1,7 @@
 import { exit } from "node:process";
 
-const CLIENT_ID = process.env.ITWIN_CLIENT_ID;
-const CLIENT_SECRET = process.env.ITWIN_CLIENT_SECRET;
+const CLIENT_ID = process.env.ITWIN_SERVICE_APP_CLIENT_ID;
+const CLIENT_SECRET = process.env.ITWIN_SERVICE_APP_CLIENT_SECRET;
 
 if (!CLIENT_ID || !CLIENT_SECRET) {
   console.error("Missing client id or secret");

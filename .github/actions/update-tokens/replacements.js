@@ -30,6 +30,8 @@ function propertySelector(name) {
 // const phillyItwin = "535a24a3-9b29-4e23-bb5d-9cedb524c743";
 const testItwin = "671839a6-f6a9-4eb6-8e91-801441e0e3f2";
 
+const DRY_RUN = true;
+
 /**
  * Use https://astexplorer.net/ and the tester at https://estools.github.io/esquery/ to generate
  * valid selectors. The selctor should be to the exact Literal to replace not the whole assignment.
@@ -48,25 +50,18 @@ export const replacements = [
     filePath: join(__dirname, "../../../packages/engine/Source/Core/Ion.js"),
     selector: variableDeclaration("defaultAccessToken"),
     // automatible through https://cesium.com/learn/ion/rest-api/#operation/postTokens
-    newValue: async () => {
-      try {
-        const newToken = await createNewToken(await getNextVersion());
-        return newToken.token;
-      } catch (error) {
-        console.error(error);
-        // Just skip updating if there was an error
-        return undefined;
-      }
-    },
-  },
-  {
-    filePath: join(
-      __dirname,
-      "../../../packages/engine/Source/Scene/ArcGisMapService.js",
-    ),
-    selector: variableDeclaration("defaultAccessToken"),
-    // potentially automatible with https://developers.arcgis.com/arcgis-rest-js/authentication/tutorials/create-an-api-key/api/
-    newValue: "fake-key",
+    newValue: DRY_RUN
+      ? "fake-key"
+      : async () => {
+          try {
+            const newToken = await createNewToken(await getNextVersion());
+            return newToken.token;
+          } catch (error) {
+            console.error(error);
+            // Just skip updating if there was an error
+            return undefined;
+          }
+        },
   },
   {
     filePath: join(
@@ -76,19 +71,21 @@ export const replacements = [
     selector: propertySelector("Cesium.ITwinPlatform.defaultShareKey"),
     // automatible with the Share key API https://developer.bentley.com/apis/access-control-v2/operations/get-itwin-share/
     // Need to get an auth token using the client id + secret first
-    newValue: async (existingValue) => {
-      try {
-        // const newToken = await getNewKeyForItwin(featureSeriviceItwin, {
-        const newToken = await getNewKeyForItwin(testItwin, {
-          neverDeleteKey: existingValue,
-        });
-        return newToken;
-      } catch (error) {
-        console.error(error);
-        // Just skip updating if there was an error
-        return undefined;
-      }
-    },
+    newValue: DRY_RUN
+      ? "fake-key"
+      : async (existingValue) => {
+          try {
+            // const newToken = await getNewKeyForItwin(featureSeriviceItwin, {
+            const newToken = await getNewKeyForItwin(testItwin, {
+              neverDeleteKey: existingValue,
+            });
+            return newToken;
+          } catch (error) {
+            console.error(error);
+            // Just skip updating if there was an error
+            return undefined;
+          }
+        },
   },
   {
     filePath: join(
@@ -96,18 +93,20 @@ export const replacements = [
       "../../../packages/sandcastle/gallery/imodel-mesh-export-service/main.js",
     ),
     selector: propertySelector("Cesium.ITwinPlatform.defaultShareKey"),
-    newValue: async (existingValue) => {
-      try {
-        // const newToken = await getNewKeyForItwin(phillyItwin, {
-        const newToken = await getNewKeyForItwin(testItwin, {
-          neverDeleteKey: existingValue,
-        });
-        return newToken;
-      } catch (error) {
-        console.error(error);
-        // Just skip updating if there was an error
-        return undefined;
-      }
-    },
+    newValue: DRY_RUN
+      ? "fake-key"
+      : async (existingValue) => {
+          try {
+            // const newToken = await getNewKeyForItwin(phillyItwin, {
+            const newToken = await getNewKeyForItwin(testItwin, {
+              neverDeleteKey: existingValue,
+            });
+            return newToken;
+          } catch (error) {
+            console.error(error);
+            // Just skip updating if there was an error
+            return undefined;
+          }
+        },
   },
 ];
