@@ -394,7 +394,7 @@ class BufferPrimitiveCollection {
     BoundingSphere.fromVertices(
       vertices,
       Cartesian3.ZERO,
-      4,
+      3,
       this.boundingVolume,
     );
 
@@ -443,6 +443,11 @@ class BufferPrimitiveCollection {
    * @returns {BufferPrimitive}
    */
   add(options = Frozen.EMPTY_OBJECT, result) {
+    //>>includeStart('debug', pragmas.debug);
+    const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
+    assert(this.primitiveCount < this.primitiveCountMax, ERR_CAPACITY);
+    //>>includeEnd('debug');
+
     result = this.get(this._primitiveCount++, result);
     result.featureId = this._primitiveCount - 1;
     result.show = options.show ?? true;
