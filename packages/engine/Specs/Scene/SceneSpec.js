@@ -3120,1111 +3120,1112 @@ describe(
 
       expect(actualHeight).toEqual(expectedHeight);
     });
+
+    describe("pickMetadata", () => {
+      // When using a WebGL stub, the functionality of reading metadata
+      // values back from the frame buffer is not supported. So nearly
+      // all the tests have to be skipped.
+      const webglStub = !!window.webglStub;
+
+      const defaultDate = JulianDate.fromDate(
+        new Date("January 1, 2014 12:00:00 UTC"),
+      );
+
+      it("throws without windowPosition", async function () {
+        const windowPosition = undefined; // For spec
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_UINT8_SCALAR";
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+        expect(() => {
+          scene.pickMetadata(windowPosition, schemaId, className, propertyName);
+        }).toThrowDeveloperError();
+        scene.destroyForSpecs();
+      });
+
+      it("throws without className", async function () {
+        const windowPosition = new Cartesian2();
+        const schemaId = undefined;
+        const className = undefined; // For spec
+        const propertyName = "example_UINT8_SCALAR";
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+        expect(() => {
+          scene.pickMetadata(windowPosition, schemaId, className, propertyName);
+        }).toThrowDeveloperError();
+        scene.destroyForSpecs();
+      });
+
+      it("throws without propertyName", async function () {
+        const windowPosition = new Cartesian2();
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = undefined; // For spec
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+        expect(() => {
+          scene.pickMetadata(windowPosition, schemaId, className, propertyName);
+        }).toThrowDeveloperError();
+        scene.destroyForSpecs();
+      });
+
+      it("returns undefined for class name that does not exist", async function () {
+        const schemaId = undefined;
+        const className = "exampleClass_THAT_DOES_NOT_EXIST"; // For spec
+        const propertyName = "example_UINT8_SCALAR";
+        const gltf = createPropertyTextureGltfScalar();
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        const windowPosition = new Cartesian2(
+          Math.floor(canvasSizeX / 2),
+          Math.floor(canvasSizeY / 2),
+        );
+        const actualMetadataValue = scene.pickMetadata(
+          windowPosition,
+          schemaId,
+          className,
+          propertyName,
+        );
+        expect(actualMetadataValue).toBeUndefined();
+        scene.destroyForSpecs();
+      });
+
+      it("returns undefined when there is no object with metadata", async function () {
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_UINT8_SCALAR";
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        fitCameraToUnitSquare(scene.camera);
+
+        const windowPosition = new Cartesian2(
+          Math.floor(canvasSizeX / 2),
+          Math.floor(canvasSizeY / 2),
+        );
+        const actualMetadataValue = scene.pickMetadata(
+          windowPosition,
+          schemaId,
+          className,
+          propertyName,
+        );
+        expect(actualMetadataValue).toBeUndefined();
+        scene.destroyForSpecs();
+      });
+
+      it("pickMetadataSchema returns undefined when there is no object with metadata", async function () {
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        fitCameraToUnitSquare(scene.camera);
+
+        const windowPosition = new Cartesian2(
+          Math.floor(canvasSizeX / 2),
+          Math.floor(canvasSizeY / 2),
+        );
+        const metadataSchema = scene.pickMetadataSchema(windowPosition);
+
+        expect(metadataSchema).toBeUndefined();
+        scene.destroyForSpecs();
+      });
+
+      it("pickMetadataSchema picks the metadata schema object", async function () {
+        if (webglStub) {
+          return;
+        }
+
+        const gltf = createPropertyTextureGltfScalar();
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const windowPosition = new Cartesian2(
+          Math.floor(canvasSizeX / 2),
+          Math.floor(canvasSizeY / 2),
+        );
+
+        // The pickMetadataSchema call should return the schema that
+        // was defined in createPropertyTextureGltfScalar
+        const metadataSchema = scene.pickMetadataSchema(windowPosition);
+
+        expect(metadataSchema).toBeDefined();
+        expect(metadataSchema.id).toEqual("ExampleSchema");
+        expect(metadataSchema.classes).toBeDefined();
+        scene.destroyForSpecs();
+      });
+
+      it("picks UINT8 SCALAR from a property texture", async function () {
+        if (webglStub) {
+          return;
+        }
+
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_UINT8_SCALAR";
+        const gltf = createPropertyTextureGltfScalar();
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          2,
+        );
+        const expectedMetadataValue0 = 0;
+        const expectedMetadataValue1 = 127;
+        const expectedMetadataValue2 = 255;
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+
+      it("picks normalized UINT8 SCALAR from a property texture", async function () {
+        if (webglStub) {
+          return;
+        }
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_normalized_UINT8_SCALAR";
+        const classPropertyOffset = undefined;
+        const classPropertyScale = undefined;
+        const metadataPropertyOffset = undefined;
+        const metadataPropertyScale = undefined;
+        const gltf = createPropertyTextureGltfNormalizedScalar(
+          classPropertyOffset,
+          classPropertyScale,
+          metadataPropertyOffset,
+          metadataPropertyScale,
+        );
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          2,
+        );
+        const expectedMetadataValue0 = 0.0;
+        const expectedMetadataValue1 = 0.5;
+        const expectedMetadataValue2 = 1.0;
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+
+      it("picks normalized UINT8 SCALAR from a property texture with offset and scale in class property", async function () {
+        if (webglStub) {
+          return;
+        }
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_normalized_UINT8_SCALAR";
+        const classPropertyOffset = 100.0;
+        const classPropertyScale = 2.0;
+        const metadataPropertyOffset = undefined;
+        const metadataPropertyScale = undefined;
+        const gltf = createPropertyTextureGltfNormalizedScalar(
+          classPropertyOffset,
+          classPropertyScale,
+          metadataPropertyOffset,
+          metadataPropertyScale,
+        );
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          2,
+        );
+        const expectedMetadataValue0 =
+          classPropertyOffset + classPropertyScale * 0.0;
+        const expectedMetadataValue1 =
+          classPropertyOffset + classPropertyScale * 0.5;
+        const expectedMetadataValue2 =
+          classPropertyOffset + classPropertyScale * 1.0;
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+
+      it("picks normalized UINT8 SCALAR from a property texture with offset and scale in property texture property", async function () {
+        if (webglStub) {
+          return;
+        }
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_normalized_UINT8_SCALAR";
+        const classPropertyOffset = 100.0;
+        const classPropertyScale = 200.0;
+        // These should override the values from the class property:
+        const metadataPropertyOffset = 200.0;
+        const metadataPropertyScale = 3.0;
+        const gltf = createPropertyTextureGltfNormalizedScalar(
+          classPropertyOffset,
+          classPropertyScale,
+          metadataPropertyOffset,
+          metadataPropertyScale,
+        );
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          2,
+        );
+        const expectedMetadataValue0 =
+          metadataPropertyOffset + metadataPropertyScale * 0.0;
+        const expectedMetadataValue1 =
+          metadataPropertyOffset + metadataPropertyScale * 0.5;
+        const expectedMetadataValue2 =
+          metadataPropertyOffset + metadataPropertyScale * 1.0;
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+
+      it("picks fixed length UINT8 SCALAR array from a property texture", async function () {
+        if (webglStub) {
+          return;
+        }
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_fixed_length_UINT8_SCALAR_array";
+        const gltf = createPropertyTextureGltfScalarArray();
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          1,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          2,
+          2,
+        );
+        const expectedMetadataValue0 = [0, 0, 0];
+        const expectedMetadataValue1 = [127, 0, 127];
+        const expectedMetadataValue2 = [255, 0, 255];
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+
+      it("picks fixed length normalized UINT8 SCALAR array from a property texture", async function () {
+        if (webglStub) {
+          return;
+        }
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName =
+          "example_fixed_length_normalized_UINT8_SCALAR_array";
+        const classPropertyOffset = undefined;
+        const classPropertyScale = undefined;
+        const metadataPropertyOffset = undefined;
+        const metadataPropertyScale = undefined;
+        const gltf = createPropertyTextureGltfNormalizedScalarArray(
+          classPropertyOffset,
+          classPropertyScale,
+          metadataPropertyOffset,
+          metadataPropertyScale,
+        );
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          1,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          2,
+          2,
+        );
+        const expectedMetadataValue0 = [0, 0, 0];
+        const expectedMetadataValue1 = [0.5, 0, 0.5];
+        const expectedMetadataValue2 = [1.0, 0, 1.0];
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+
+      it("picks UINT8 VEC2 from a property texture", async function () {
+        if (webglStub) {
+          return;
+        }
+
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_UINT8_VEC2";
+        const gltf = createPropertyTextureGltfVec2();
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          1,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          2,
+          2,
+        );
+        const expectedMetadataValue0 = new Cartesian2(0, 0);
+        const expectedMetadataValue1 = new Cartesian2(127, 0);
+        const expectedMetadataValue2 = new Cartesian2(255, 0);
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+
+      it("picks normalized UINT8 VEC2 from a property texture", async function () {
+        if (webglStub) {
+          return;
+        }
+
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_normalized_UINT8_VEC2";
+        const classPropertyOffset = undefined;
+        const classPropertyScale = undefined;
+        const metadataPropertyOffset = undefined;
+        const metadataPropertyScale = undefined;
+        const gltf = createPropertyTextureGltfNormalizedVec2(
+          classPropertyOffset,
+          classPropertyScale,
+          metadataPropertyOffset,
+          metadataPropertyScale,
+        );
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          1,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          2,
+          2,
+        );
+
+        const expectedMetadataValue0 = new Cartesian2(0.0, 0.0);
+        const expectedMetadataValue1 = new Cartesian2(0.5, 0.0);
+        const expectedMetadataValue2 = new Cartesian2(1.0, 0.0);
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+
+      it("picks normalized UINT8 VEC2 from a property texture with offset and scale in class property", async function () {
+        if (webglStub) {
+          return;
+        }
+
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_normalized_UINT8_VEC2";
+        const classPropertyOffset = [100.0, 200.0];
+        const classPropertyScale = [2.0, 3.0];
+        const metadataPropertyOffset = undefined;
+        const metadataPropertyScale = undefined;
+        const gltf = createPropertyTextureGltfNormalizedVec2(
+          classPropertyOffset,
+          classPropertyScale,
+          metadataPropertyOffset,
+          metadataPropertyScale,
+        );
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          1,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          2,
+          2,
+        );
+
+        const expectedMetadataValue0 = new Cartesian2(
+          classPropertyOffset[0] + classPropertyScale[0] * 0.0,
+          classPropertyOffset[1] + classPropertyScale[1] * 0.0,
+        );
+        const expectedMetadataValue1 = new Cartesian2(
+          classPropertyOffset[0] + classPropertyScale[0] * 0.5,
+          classPropertyOffset[1] + classPropertyScale[1] * 0.0,
+        );
+        const expectedMetadataValue2 = new Cartesian2(
+          classPropertyOffset[0] + classPropertyScale[0] * 1.0,
+          classPropertyOffset[1] + classPropertyScale[1] * 0.0,
+        );
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+
+      it("picks normalized UINT8 VEC2 from a property texture with offset and scale in property texture property", async function () {
+        if (webglStub) {
+          return;
+        }
+
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_normalized_UINT8_VEC2";
+        const classPropertyOffset = [100.0, 200.0];
+        const classPropertyScale = [2.0, 3.0];
+        // These should override the values from the class property:
+        const metadataPropertyOffset = [300.0, 400.0];
+        const metadataPropertyScale = [4.0, 5.0];
+        const gltf = createPropertyTextureGltfNormalizedVec2(
+          classPropertyOffset,
+          classPropertyScale,
+          metadataPropertyOffset,
+          metadataPropertyScale,
+        );
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          1,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          2,
+          2,
+        );
+
+        const expectedMetadataValue0 = new Cartesian2(
+          metadataPropertyOffset[0] + metadataPropertyScale[0] * 0.0,
+          metadataPropertyOffset[1] + metadataPropertyScale[1] * 0.0,
+        );
+        const expectedMetadataValue1 = new Cartesian2(
+          metadataPropertyOffset[0] + metadataPropertyScale[0] * 0.5,
+          metadataPropertyOffset[1] + metadataPropertyScale[1] * 0.0,
+        );
+        const expectedMetadataValue2 = new Cartesian2(
+          metadataPropertyOffset[0] + metadataPropertyScale[0] * 1.0,
+          metadataPropertyOffset[1] + metadataPropertyScale[1] * 0.0,
+        );
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+
+      it("picks UINT8 VEC3 from a property texture", async function () {
+        if (webglStub) {
+          return;
+        }
+
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_UINT8_VEC3";
+        const gltf = createPropertyTextureGltfVec3();
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          1,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          2,
+          2,
+        );
+        const expectedMetadataValue0 = new Cartesian3(0, 0, 0);
+        const expectedMetadataValue1 = new Cartesian3(127, 0, 127);
+        const expectedMetadataValue2 = new Cartesian3(255, 0, 255);
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+
+      it("picks UINT8 VEC4 from a property texture", async function () {
+        if (webglStub) {
+          return;
+        }
+
+        const schemaId = undefined;
+        const className = "exampleClass";
+        const propertyName = "example_UINT8_VEC4";
+        const gltf = createPropertyTextureGltfVec4();
+
+        const canvasSizeX = textureSizeX * canvasScaling;
+        const canvasSizeY = textureSizeY * canvasScaling;
+        const scene = createScene({
+          canvas: createCanvas(canvasSizeX, canvasSizeY),
+          contextOptions: {
+            requestWebgl1: false,
+          },
+        });
+
+        await loadAsModel(scene, gltf);
+        fitCameraToUnitSquare(scene.camera);
+
+        scene.initializeFrame();
+        scene.render(defaultDate);
+
+        const actualMetadataValue0 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          0,
+          0,
+        );
+        const actualMetadataValue1 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          1,
+          1,
+        );
+        const actualMetadataValue2 = pickMetadataAt(
+          scene,
+          schemaId,
+          className,
+          propertyName,
+          2,
+          2,
+        );
+
+        const expectedMetadataValue0 = new Cartesian4(0, 0, 0, 0);
+        const expectedMetadataValue1 = new Cartesian4(127, 0, 127, 0);
+        const expectedMetadataValue2 = new Cartesian4(255, 0, 255, 0);
+
+        expect(actualMetadataValue0).toEqualEpsilon(
+          expectedMetadataValue0,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue1).toEqualEpsilon(
+          expectedMetadataValue1,
+          propertyValueEpsilon,
+        );
+        expect(actualMetadataValue2).toEqualEpsilon(
+          expectedMetadataValue2,
+          propertyValueEpsilon,
+        );
+        scene.destroyForSpecs();
+      });
+    });
   },
-
-  describe("pickMetadata", () => {
-    // When using a WebGL stub, the functionality of reading metadata
-    // values back from the frame buffer is not supported. So nearly
-    // all the tests have to be skipped.
-    const webglStub = !!window.webglStub;
-
-    const defaultDate = JulianDate.fromDate(
-      new Date("January 1, 2014 12:00:00 UTC"),
-    );
-
-    it("throws without windowPosition", async function () {
-      const windowPosition = undefined; // For spec
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_UINT8_SCALAR";
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-      expect(() => {
-        scene.pickMetadata(windowPosition, schemaId, className, propertyName);
-      }).toThrowDeveloperError();
-      scene.destroyForSpecs();
-    });
-
-    it("throws without className", async function () {
-      const windowPosition = new Cartesian2();
-      const schemaId = undefined;
-      const className = undefined; // For spec
-      const propertyName = "example_UINT8_SCALAR";
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-      expect(() => {
-        scene.pickMetadata(windowPosition, schemaId, className, propertyName);
-      }).toThrowDeveloperError();
-      scene.destroyForSpecs();
-    });
-
-    it("throws without propertyName", async function () {
-      const windowPosition = new Cartesian2();
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = undefined; // For spec
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-      expect(() => {
-        scene.pickMetadata(windowPosition, schemaId, className, propertyName);
-      }).toThrowDeveloperError();
-      scene.destroyForSpecs();
-    });
-
-    it("returns undefined for class name that does not exist", async function () {
-      const schemaId = undefined;
-      const className = "exampleClass_THAT_DOES_NOT_EXIST"; // For spec
-      const propertyName = "example_UINT8_SCALAR";
-      const gltf = createPropertyTextureGltfScalar();
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      const windowPosition = new Cartesian2(
-        Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2),
-      );
-      const actualMetadataValue = scene.pickMetadata(
-        windowPosition,
-        schemaId,
-        className,
-        propertyName,
-      );
-      expect(actualMetadataValue).toBeUndefined();
-      scene.destroyForSpecs();
-    });
-
-    it("returns undefined when there is no object with metadata", async function () {
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_UINT8_SCALAR";
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      fitCameraToUnitSquare(scene.camera);
-
-      const windowPosition = new Cartesian2(
-        Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2),
-      );
-      const actualMetadataValue = scene.pickMetadata(
-        windowPosition,
-        schemaId,
-        className,
-        propertyName,
-      );
-      expect(actualMetadataValue).toBeUndefined();
-      scene.destroyForSpecs();
-    });
-
-    it("pickMetadataSchema returns undefined when there is no object with metadata", async function () {
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      fitCameraToUnitSquare(scene.camera);
-
-      const windowPosition = new Cartesian2(
-        Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2),
-      );
-      const metadataSchema = scene.pickMetadataSchema(windowPosition);
-
-      expect(metadataSchema).toBeUndefined();
-      scene.destroyForSpecs();
-    });
-
-    it("pickMetadataSchema picks the metadata schema object", async function () {
-      if (webglStub) {
-        return;
-      }
-
-      const gltf = createPropertyTextureGltfScalar();
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const windowPosition = new Cartesian2(
-        Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2),
-      );
-
-      // The pickMetadataSchema call should return the schema that
-      // was defined in createPropertyTextureGltfScalar
-      const metadataSchema = scene.pickMetadataSchema(windowPosition);
-
-      expect(metadataSchema).toBeDefined();
-      expect(metadataSchema.id).toEqual("ExampleSchema");
-      expect(metadataSchema.classes).toBeDefined();
-      scene.destroyForSpecs();
-    });
-
-    it("picks UINT8 SCALAR from a property texture", async function () {
-      if (webglStub) {
-        return;
-      }
-
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_UINT8_SCALAR";
-      const gltf = createPropertyTextureGltfScalar();
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        2,
-      );
-      const expectedMetadataValue0 = 0;
-      const expectedMetadataValue1 = 127;
-      const expectedMetadataValue2 = 255;
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-
-    it("picks normalized UINT8 SCALAR from a property texture", async function () {
-      if (webglStub) {
-        return;
-      }
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_normalized_UINT8_SCALAR";
-      const classPropertyOffset = undefined;
-      const classPropertyScale = undefined;
-      const metadataPropertyOffset = undefined;
-      const metadataPropertyScale = undefined;
-      const gltf = createPropertyTextureGltfNormalizedScalar(
-        classPropertyOffset,
-        classPropertyScale,
-        metadataPropertyOffset,
-        metadataPropertyScale,
-      );
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        2,
-      );
-      const expectedMetadataValue0 = 0.0;
-      const expectedMetadataValue1 = 0.5;
-      const expectedMetadataValue2 = 1.0;
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-
-    it("picks normalized UINT8 SCALAR from a property texture with offset and scale in class property", async function () {
-      if (webglStub) {
-        return;
-      }
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_normalized_UINT8_SCALAR";
-      const classPropertyOffset = 100.0;
-      const classPropertyScale = 2.0;
-      const metadataPropertyOffset = undefined;
-      const metadataPropertyScale = undefined;
-      const gltf = createPropertyTextureGltfNormalizedScalar(
-        classPropertyOffset,
-        classPropertyScale,
-        metadataPropertyOffset,
-        metadataPropertyScale,
-      );
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        2,
-      );
-      const expectedMetadataValue0 =
-        classPropertyOffset + classPropertyScale * 0.0;
-      const expectedMetadataValue1 =
-        classPropertyOffset + classPropertyScale * 0.5;
-      const expectedMetadataValue2 =
-        classPropertyOffset + classPropertyScale * 1.0;
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-
-    it("picks normalized UINT8 SCALAR from a property texture with offset and scale in property texture property", async function () {
-      if (webglStub) {
-        return;
-      }
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_normalized_UINT8_SCALAR";
-      const classPropertyOffset = 100.0;
-      const classPropertyScale = 200.0;
-      // These should override the values from the class property:
-      const metadataPropertyOffset = 200.0;
-      const metadataPropertyScale = 3.0;
-      const gltf = createPropertyTextureGltfNormalizedScalar(
-        classPropertyOffset,
-        classPropertyScale,
-        metadataPropertyOffset,
-        metadataPropertyScale,
-      );
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        2,
-      );
-      const expectedMetadataValue0 =
-        metadataPropertyOffset + metadataPropertyScale * 0.0;
-      const expectedMetadataValue1 =
-        metadataPropertyOffset + metadataPropertyScale * 0.5;
-      const expectedMetadataValue2 =
-        metadataPropertyOffset + metadataPropertyScale * 1.0;
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-
-    it("picks fixed length UINT8 SCALAR array from a property texture", async function () {
-      if (webglStub) {
-        return;
-      }
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_fixed_length_UINT8_SCALAR_array";
-      const gltf = createPropertyTextureGltfScalarArray();
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        1,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        2,
-        2,
-      );
-      const expectedMetadataValue0 = [0, 0, 0];
-      const expectedMetadataValue1 = [127, 0, 127];
-      const expectedMetadataValue2 = [255, 0, 255];
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-
-    it("picks fixed length normalized UINT8 SCALAR array from a property texture", async function () {
-      if (webglStub) {
-        return;
-      }
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_fixed_length_normalized_UINT8_SCALAR_array";
-      const classPropertyOffset = undefined;
-      const classPropertyScale = undefined;
-      const metadataPropertyOffset = undefined;
-      const metadataPropertyScale = undefined;
-      const gltf = createPropertyTextureGltfNormalizedScalarArray(
-        classPropertyOffset,
-        classPropertyScale,
-        metadataPropertyOffset,
-        metadataPropertyScale,
-      );
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        1,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        2,
-        2,
-      );
-      const expectedMetadataValue0 = [0, 0, 0];
-      const expectedMetadataValue1 = [0.5, 0, 0.5];
-      const expectedMetadataValue2 = [1.0, 0, 1.0];
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-
-    it("picks UINT8 VEC2 from a property texture", async function () {
-      if (webglStub) {
-        return;
-      }
-
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_UINT8_VEC2";
-      const gltf = createPropertyTextureGltfVec2();
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        1,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        2,
-        2,
-      );
-      const expectedMetadataValue0 = new Cartesian2(0, 0);
-      const expectedMetadataValue1 = new Cartesian2(127, 0);
-      const expectedMetadataValue2 = new Cartesian2(255, 0);
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-
-    it("picks normalized UINT8 VEC2 from a property texture", async function () {
-      if (webglStub) {
-        return;
-      }
-
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_normalized_UINT8_VEC2";
-      const classPropertyOffset = undefined;
-      const classPropertyScale = undefined;
-      const metadataPropertyOffset = undefined;
-      const metadataPropertyScale = undefined;
-      const gltf = createPropertyTextureGltfNormalizedVec2(
-        classPropertyOffset,
-        classPropertyScale,
-        metadataPropertyOffset,
-        metadataPropertyScale,
-      );
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        1,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        2,
-        2,
-      );
-
-      const expectedMetadataValue0 = new Cartesian2(0.0, 0.0);
-      const expectedMetadataValue1 = new Cartesian2(0.5, 0.0);
-      const expectedMetadataValue2 = new Cartesian2(1.0, 0.0);
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-
-    it("picks normalized UINT8 VEC2 from a property texture with offset and scale in class property", async function () {
-      if (webglStub) {
-        return;
-      }
-
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_normalized_UINT8_VEC2";
-      const classPropertyOffset = [100.0, 200.0];
-      const classPropertyScale = [2.0, 3.0];
-      const metadataPropertyOffset = undefined;
-      const metadataPropertyScale = undefined;
-      const gltf = createPropertyTextureGltfNormalizedVec2(
-        classPropertyOffset,
-        classPropertyScale,
-        metadataPropertyOffset,
-        metadataPropertyScale,
-      );
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        1,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        2,
-        2,
-      );
-
-      const expectedMetadataValue0 = new Cartesian2(
-        classPropertyOffset[0] + classPropertyScale[0] * 0.0,
-        classPropertyOffset[1] + classPropertyScale[1] * 0.0,
-      );
-      const expectedMetadataValue1 = new Cartesian2(
-        classPropertyOffset[0] + classPropertyScale[0] * 0.5,
-        classPropertyOffset[1] + classPropertyScale[1] * 0.0,
-      );
-      const expectedMetadataValue2 = new Cartesian2(
-        classPropertyOffset[0] + classPropertyScale[0] * 1.0,
-        classPropertyOffset[1] + classPropertyScale[1] * 0.0,
-      );
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-
-    it("picks normalized UINT8 VEC2 from a property texture with offset and scale in property texture property", async function () {
-      if (webglStub) {
-        return;
-      }
-
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_normalized_UINT8_VEC2";
-      const classPropertyOffset = [100.0, 200.0];
-      const classPropertyScale = [2.0, 3.0];
-      // These should override the values from the class property:
-      const metadataPropertyOffset = [300.0, 400.0];
-      const metadataPropertyScale = [4.0, 5.0];
-      const gltf = createPropertyTextureGltfNormalizedVec2(
-        classPropertyOffset,
-        classPropertyScale,
-        metadataPropertyOffset,
-        metadataPropertyScale,
-      );
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        1,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        2,
-        2,
-      );
-
-      const expectedMetadataValue0 = new Cartesian2(
-        metadataPropertyOffset[0] + metadataPropertyScale[0] * 0.0,
-        metadataPropertyOffset[1] + metadataPropertyScale[1] * 0.0,
-      );
-      const expectedMetadataValue1 = new Cartesian2(
-        metadataPropertyOffset[0] + metadataPropertyScale[0] * 0.5,
-        metadataPropertyOffset[1] + metadataPropertyScale[1] * 0.0,
-      );
-      const expectedMetadataValue2 = new Cartesian2(
-        metadataPropertyOffset[0] + metadataPropertyScale[0] * 1.0,
-        metadataPropertyOffset[1] + metadataPropertyScale[1] * 0.0,
-      );
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-
-    it("picks UINT8 VEC3 from a property texture", async function () {
-      if (webglStub) {
-        return;
-      }
-
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_UINT8_VEC3";
-      const gltf = createPropertyTextureGltfVec3();
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        1,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        2,
-        2,
-      );
-      const expectedMetadataValue0 = new Cartesian3(0, 0, 0);
-      const expectedMetadataValue1 = new Cartesian3(127, 0, 127);
-      const expectedMetadataValue2 = new Cartesian3(255, 0, 255);
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-
-    it("picks UINT8 VEC4 from a property texture", async function () {
-      if (webglStub) {
-        return;
-      }
-
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_UINT8_VEC4";
-      const gltf = createPropertyTextureGltfVec4();
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        1,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        2,
-        2,
-      );
-
-      const expectedMetadataValue0 = new Cartesian4(0, 0, 0, 0);
-      const expectedMetadataValue1 = new Cartesian4(127, 0, 127, 0);
-      const expectedMetadataValue2 = new Cartesian4(255, 0, 255, 0);
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-  }),
   "WebGL",
 );

@@ -119,9 +119,8 @@ OpenCageGeocoderService.prototype.geocode = async function (query) {
           bounds.northeast.lat,
         );
       } else {
-        const lon = resultObject.geometry.lat;
-        const lat = resultObject.geometry.lng;
-        destination = Cartesian3.fromDegrees(lon, lat);
+        const { lng, lat } = resultObject.geometry;
+        destination = Cartesian3.fromDegrees(lng, lat);
       }
 
       return {

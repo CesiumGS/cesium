@@ -395,29 +395,6 @@ function getComponentCount(classProperty) {
 }
 
 /**
- * Returns the type that the given class property has in a GLSL shader.
- *
- * It returns the same string as `PropertyTextureProperty.prototype.getGlslType`
- * for a property texture property with the given class property
- *
- * @param {MetadataClassProperty} classProperty The class property
- * @returns {string} The GLSL shader type string for the property
- */
-function getGlslType(classProperty) {
-  const componentCount = getComponentCount(classProperty);
-  if (classProperty.normalized) {
-    if (componentCount === 1) {
-      return "float";
-    }
-    return `vec${componentCount}`;
-  }
-  if (componentCount === 1) {
-    return "int";
-  }
-  return `ivec${componentCount}`;
-}
-
-/**
  * Returns a shader statement that applies the inverse of the
  * value transform to the given value, based on the given offset
  * and scale.
@@ -547,7 +524,7 @@ function getPickMetadataShaderProgram(
 
   const metadataProperty = pickedMetadataInfo.metadataProperty;
   const classProperty = pickedMetadataInfo.classProperty;
-  const glslType = getGlslType(classProperty);
+  const glslType = classProperty.getGlslType();
 
   // Define the components that will go into the output `metadataValues`.
   // This will be the 'color' that is written into the frame buffer,
