@@ -20,21 +20,24 @@ tileset.style = new Cesium.Cesium3DTileStyle({
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
+// Collect clipping polygons from footprints
+const clippingPolygons = [];
+
 // Create the footprint generator
 const generator = new Cesium.Cesium3DTilesetFootprintGenerator({
   tileset: tileset,
   entityCollection: viewer.entities,
   hullMethod: "convexHull",
   createEntity: function (hierarchy, feature, tile) {
+    clippingPolygons.push(
+      new Cesium.ClippingPolygon({
+        positions: hierarchy.positions,
+      }),
+    );
+
+    // Still return an entity (invisible) so the generator tracks it
     return new Cesium.Entity({
       id: `${tile.content.url}#${feature.featureId}`,
-      polygon: new Cesium.PolygonGraphics({
-        hierarchy: hierarchy,
-        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-        material: Cesium.Color.RED.withAlpha(0.5),
-        classificationType: Cesium.ClassificationType.TERRAIN,
-      }),
-      properties: { name: feature.getProperty("name") },
     });
   },
 });
@@ -42,11 +45,18 @@ const generator = new Cesium.Cesium3DTilesetFootprintGenerator({
 // --- UI controls ---
 const statusEl = document.getElementById("status");
 const btnGenerate = document.getElementById("btnGenerate");
-const btnAutoUpdate = document.getElementById("btnAutoUpdate");
 const btnClear = document.getElementById("btnClear");
 
 function updateStatus() {
   statusEl.textContent = `Footprints: ${generator.footprintCount}`;
+}
+
+function updateClippingPolygons() {
+  // Apply clipping polygons to the globe
+  viewer.scene.globe.clippingPolygons = new Cesium.ClippingPolygonCollection({
+    polygons: clippingPolygons,
+    inverse: false, // false = cut holes where buildings are
+  });
 }
 
 generator.footprintsGenerated.addEventListener(function (tile) {
@@ -56,33 +66,25 @@ generator.footprintsGenerated.addEventListener(function (tile) {
   updateStatus();
 });
 
-// One-shot generate
+// One-shot generate — builds footprints then applies as terrain cutouts
 btnGenerate.addEventListener("click", function () {
+  clippingPolygons.length = 0;
+
   const start = performance.now();
   generator.generate();
   const elapsed = (performance.now() - start).toFixed(2);
   console.log(
     `generate() took ${elapsed} ms — ${generator.footprintCount} footprints`,
   );
-  updateStatus();
-});
 
-// Toggle auto-update
-let autoUpdating = false;
-btnAutoUpdate.addEventListener("click", function () {
-  if (!autoUpdating) {
-    generator.startAutoUpdate();
-    btnAutoUpdate.textContent = "Stop Auto-Update";
-    autoUpdating = true;
-  } else {
-    generator.stopAutoUpdate();
-    btnAutoUpdate.textContent = "Start Auto-Update";
-    autoUpdating = false;
-  }
+  updateClippingPolygons();
+  updateStatus();
 });
 
 // Clear
 btnClear.addEventListener("click", function () {
   generator.clear();
+  clippingPolygons.length = 0;
+  viewer.scene.globe.clippingPolygons = undefined;
   updateStatus();
 });

@@ -149,18 +149,9 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
       });
       expect(generator.footprintCount).toEqual(0);
     });
-
-    it("reports isAutoUpdating as false initially", function () {
-      const tileset = createMockTileset();
-      const generator = new Cesium3DTilesetFootprintGenerator({
-        tileset: tileset,
-        entityCollection: new EntityCollection(),
-      });
-      expect(generator.isAutoUpdating).toEqual(false);
-    });
   });
 
-  describe("generate", function () {
+  describe("filterFeature", function () {
     it("creates footprints for loaded tiles", function () {
       const root = createMockTile({ featuresLength: 2 });
       const tileset = createMockTileset({ root: root });
@@ -254,100 +245,6 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
     });
   });
 
-  describe("startAutoUpdate / stopAutoUpdate", function () {
-    it("subscribes to tileLoad and tileUnload", function () {
-      const tileset = createMockTileset();
-      const generator = new Cesium3DTilesetFootprintGenerator({
-        tileset: tileset,
-        entityCollection: new EntityCollection(),
-      });
-
-      generator.startAutoUpdate();
-
-      expect(generator.isAutoUpdating).toBe(true);
-      expect(tileset.tileLoad.numberOfListeners).toEqual(1);
-      expect(tileset.tileUnload.numberOfListeners).toEqual(1);
-    });
-
-    it("creates footprint when tile loads", function () {
-      const tileset = createMockTileset();
-      const entities = new EntityCollection();
-      const generator = new Cesium3DTilesetFootprintGenerator({
-        tileset: tileset,
-        entityCollection: entities,
-      });
-
-      generator.startAutoUpdate();
-
-      // Simulate tile load
-      const tile = createMockTile({ featuresLength: 1 });
-      tile.content.url = "mock://tileset/new-tile.b3dm";
-      tileset.tileLoad.raiseEvent(tile);
-
-      expect(generator.footprintCount).toBeGreaterThan(0);
-    });
-
-    it("removes footprint when tile unloads", function () {
-      const tileset = createMockTileset();
-      const entities = new EntityCollection();
-      const generator = new Cesium3DTilesetFootprintGenerator({
-        tileset: tileset,
-        entityCollection: entities,
-      });
-
-      generator.startAutoUpdate();
-
-      const tile = createMockTile({ featuresLength: 1 });
-      tile.content.url = "mock://tileset/unload-tile.b3dm";
-      tileset.tileLoad.raiseEvent(tile);
-      const countBefore = generator.footprintCount;
-      expect(countBefore).toBeGreaterThan(0);
-
-      tileset.tileUnload.raiseEvent(tile);
-      expect(generator.footprintCount).toBeLessThan(countBefore);
-    });
-
-    it("stopAutoUpdate removes listeners", function () {
-      const tileset = createMockTileset();
-      const generator = new Cesium3DTilesetFootprintGenerator({
-        tileset: tileset,
-        entityCollection: new EntityCollection(),
-      });
-
-      generator.startAutoUpdate();
-      generator.stopAutoUpdate();
-
-      expect(generator.isAutoUpdating).toBe(false);
-      expect(tileset.tileLoad.numberOfListeners).toEqual(0);
-      expect(tileset.tileUnload.numberOfListeners).toEqual(0);
-    });
-
-    it("startAutoUpdate is idempotent", function () {
-      const tileset = createMockTileset();
-      const generator = new Cesium3DTilesetFootprintGenerator({
-        tileset: tileset,
-        entityCollection: new EntityCollection(),
-      });
-
-      generator.startAutoUpdate();
-      generator.startAutoUpdate();
-
-      expect(tileset.tileLoad.numberOfListeners).toEqual(1);
-    });
-
-    it("stopAutoUpdate is safe when not started", function () {
-      const tileset = createMockTileset();
-      const generator = new Cesium3DTilesetFootprintGenerator({
-        tileset: tileset,
-        entityCollection: new EntityCollection(),
-      });
-
-      expect(function () {
-        generator.stopAutoUpdate();
-      }).not.toThrow();
-    });
-  });
-
   describe("filterFeature", function () {
     it("skips features rejected by the filter", function () {
       const tileset = createMockTileset();
@@ -401,12 +298,10 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
         entityCollection: new EntityCollection(),
       });
 
-      generator.startAutoUpdate();
       expect(generator.isDestroyed()).toBe(false);
 
       generator.destroy();
       expect(generator.isDestroyed()).toBe(true);
-      expect(tileset.tileLoad.numberOfListeners).toEqual(0);
     });
   });
 

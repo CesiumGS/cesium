@@ -52,12 +52,8 @@ import PolygonGraphics from "./PolygonGraphics.js";
 /**
  * Generates 2D terrain-draped polygon footprints from a {@link Cesium3DTileset}.
  *
- * The generator can work in two modes:
- * - **One-shot** via {@link Cesium3DTilesetFootprintGenerator#generate}: processes
- *   all currently-loaded tiles and creates footprints.
- * - **Auto-update** via {@link Cesium3DTilesetFootprintGenerator#startAutoUpdate}:
- *   subscribes to `tileLoad` / `tileUnload` events and creates/removes footprints
- *   as tiles stream in and out of the view.
+ * Call {@link Cesium3DTilesetFootprintGenerator#generate} to process all
+ * currently-loaded tiles and create footprint polygons.
  *
  * @alias Cesium3DTilesetFootprintGenerator
  * @constructor
@@ -73,17 +69,6 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * });
  * // One-shot after all tiles load
  * tileset.allTilesLoaded.addEventListener(() => generator.generate());
- *
- * @example
- * // Auto-update mode
- * const generator = new Cesium.Cesium3DTilesetFootprintGenerator({
- *   tileset: tileset,
- *   entityCollection: viewer.entities,
- * });
- * generator.startAutoUpdate();
- * // Later:
- * generator.stopAutoUpdate();
- * generator.destroy();
  */
 function Cesium3DTilesetFootprintGenerator(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -100,9 +85,8 @@ function Cesium3DTilesetFootprintGenerator(options) {
 
   /**
    * Map from a deduplication key (string) to the entity that
-   * was created for it. Used to avoid duplicates across LODs and to clean
-   * up on tile unload.
-   * @type {Map<string, { entity: Entity, tileKeys: Set<string> }>}
+   * was created for it. Used to avoid duplicates across LODs.
+   * @type {Map<string, { entity: Entity }>}
    * @private
    */
   this._footprintMap = new Map();
@@ -116,9 +100,6 @@ function Cesium3DTilesetFootprintGenerator(options) {
    */
   this._tileToFootprintKeys = new Map();
 
-  this._tileLoadListener = undefined;
-  this._tileUnloadListener = undefined;
-  this._isAutoUpdating = false;
   this._isDestroyed = false;
 
   /**
@@ -139,18 +120,6 @@ Object.defineProperties(Cesium3DTilesetFootprintGenerator.prototype, {
   tileset: {
     get: function () {
       return this._tileset;
-    },
-  },
-
-  /**
-   * Whether auto-update mode is active.
-   * @memberof Cesium3DTilesetFootprintGenerator.prototype
-   * @type {boolean}
-   * @readonly
-   */
-  isAutoUpdating: {
-    get: function () {
-      return this._isAutoUpdating;
     },
   },
 
@@ -327,7 +296,6 @@ function createFootprintsForTile(generator, tile, featureHierarchies) {
     // Deduplication: if a footprint for this key already exists, just
     // record this tile as an additional source.
     if (generator._footprintMap.has(key)) {
-      generator._footprintMap.get(key).tileKeys.add(tileKey);
       continue;
     }
 
@@ -340,7 +308,6 @@ function createFootprintsForTile(generator, tile, featureHierarchies) {
 
     generator._footprintMap.set(key, {
       entity: entity,
-      tileKeys: new Set([tileKey]),
     });
   }
 
@@ -348,47 +315,7 @@ function createFootprintsForTile(generator, tile, featureHierarchies) {
 }
 
 /**
- * Removes all footprints that were sourced from a specific tile.
- * Implements deduplication-aware removal: a footprint is only deleted
- * if no other loaded tile still references it.
- *
- * @param {Cesium3DTilesetFootprintGenerator} generator
- * @param {Cesium3DTile} tile
- * @private
- */
-function removeFootprintsForTile(generator, tile) {
-  const tileKey = getTileKey(tile);
-
-  const footprintKeys = generator._tileToFootprintKeys.get(tileKey);
-  if (!defined(footprintKeys)) {
-    return;
-  }
-
-  for (let i = 0; i < footprintKeys.length; i++) {
-    const key = footprintKeys[i];
-    const record = generator._footprintMap.get(key);
-    if (!defined(record)) {
-      continue;
-    }
-
-    record.tileKeys.delete(tileKey);
-
-    // Only remove the entity if no other tile references this footprint
-    if (record.tileKeys.size === 0) {
-      if (defined(record.entity) && defined(generator._entityCollection)) {
-        generator._entityCollection.remove(record.entity);
-      }
-      generator._footprintMap.delete(key);
-    }
-  }
-
-  generator._tileToFootprintKeys.delete(tileKey);
-}
-
-/**
  * Process all currently loaded tiles and create footprint polygons for them.
- * This is a one-shot operation. For dynamic updates, use
- * {@link Cesium3DTilesetFootprintGenerator#startAutoUpdate}.
  */
 Cesium3DTilesetFootprintGenerator.prototype.generate = function () {
   //>>includeStart('debug', pragmas.debug);
@@ -448,64 +375,6 @@ Cesium3DTilesetFootprintGenerator.prototype._processTile = function (tile) {
 };
 
 /**
- * Subscribe to `tileLoad` and `tileUnload` events on the tileset to
- * dynamically create and remove footprint polygons as tiles stream
- * in and out of the view.
- */
-Cesium3DTilesetFootprintGenerator.prototype.startAutoUpdate = function () {
-  //>>includeStart('debug', pragmas.debug);
-  if (this._isDestroyed) {
-    throw new DeveloperError(
-      "This object was destroyed, i.e., destroy() was called.",
-    );
-  }
-  //>>includeEnd('debug');
-
-  if (this._isAutoUpdating) {
-    return;
-  }
-
-  const that = this;
-
-  this._tileLoadListener = this._tileset.tileLoad.addEventListener(
-    function (tile) {
-      that._processTile(tile);
-    },
-  );
-
-  this._tileUnloadListener = this._tileset.tileUnload.addEventListener(
-    function (tile) {
-      removeFootprintsForTile(that, tile);
-    },
-  );
-
-  this._isAutoUpdating = true;
-};
-
-/**
- * Unsubscribe from tile events. Existing footprints remain until
- * {@link Cesium3DTilesetFootprintGenerator#clear} or
- * {@link Cesium3DTilesetFootprintGenerator#destroy} is called.
- */
-Cesium3DTilesetFootprintGenerator.prototype.stopAutoUpdate = function () {
-  if (!this._isAutoUpdating) {
-    return;
-  }
-
-  if (defined(this._tileLoadListener)) {
-    this._tileLoadListener();
-    this._tileLoadListener = undefined;
-  }
-
-  if (defined(this._tileUnloadListener)) {
-    this._tileUnloadListener();
-    this._tileUnloadListener = undefined;
-  }
-
-  this._isAutoUpdating = false;
-};
-
-/**
  * Returns the footprint entity for a given feature, if one has been generated.
  *
  * @param {Cesium3DTileFeature} feature The tile feature.
@@ -558,7 +427,6 @@ Cesium3DTilesetFootprintGenerator.prototype.isDestroyed = function () {
  * @see Cesium3DTilesetFootprintGenerator#isDestroyed
  */
 Cesium3DTilesetFootprintGenerator.prototype.destroy = function () {
-  this.stopAutoUpdate();
   this.clear();
   return destroyObject(this);
 };
