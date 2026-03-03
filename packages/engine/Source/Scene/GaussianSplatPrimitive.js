@@ -435,7 +435,7 @@ async function processGeneratedSplatTextureData(
     // (each splat occupies 2 side-by-side texels). The WASM buffer layout is
     // width-independent, so the raw data is reused as-is.
     const optimalWidth = maxTex;
-    const optimalHeight = Math.ceil(snapshot.numSplats / (maxTex / 2));
+    let optimalHeight = Math.ceil(snapshot.numSplats / (maxTex / 2));
     const splatRowShift = Math.log2(maxTex / 2);
     const splatRowMask = maxTex / 2 - 1;
 
