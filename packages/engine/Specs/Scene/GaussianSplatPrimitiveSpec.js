@@ -248,9 +248,18 @@ describe(
         content: {
           gltfPrimitive: {
             attributes: [
-              { semantic: VertexAttributeSemantic.POSITION, typedArray: srcPositions },
-              { semantic: VertexAttributeSemantic.ROTATION, typedArray: srcRotations },
-              { semantic: VertexAttributeSemantic.SCALE, typedArray: srcScales },
+              {
+                semantic: VertexAttributeSemantic.POSITION,
+                typedArray: srcPositions,
+              },
+              {
+                semantic: VertexAttributeSemantic.ROTATION,
+                typedArray: srcRotations,
+              },
+              {
+                semantic: VertexAttributeSemantic.SCALE,
+                typedArray: srcScales,
+              },
             ],
           },
           worldTransform: Matrix4.clone(Matrix4.IDENTITY),
