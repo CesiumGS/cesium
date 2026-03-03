@@ -19,7 +19,7 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * @property {Cesium3DTilesetFootprintGenerator.CreateEntityCallback} [createEntity] Custom entity factory. When
  *   provided, this replaces the default entity creation, giving full
  *   control over the entity that is created for each feature footprint.
- *   Receives the polygon hierarchy, the source feature, and the tile.
+ *   Receives the polygon hierarchy, the source feature, the tile, and the entity collection.
  * @property {Cesium3DTilesetFootprintGenerator.FootprintsGeneratedCallback} [footprintsGenerated] Optional callback
  *   invoked after footprints are created for each tile. Receives the tile and
  *   the array of entities created from it.
@@ -41,7 +41,7 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * @param {PolygonHierarchy} hierarchy The polygon hierarchy for the footprint.
  * @param {Cesium3DTileFeature} feature The tile feature this footprint was extracted from.
  * @param {Cesium3DTile} tile The tile that contains the feature.
- * @returns {Entity} The created entity.
+ * @param {EntityCollection} entityCollection The entity collection where entities are added.
  */
 
 /**
@@ -101,22 +101,26 @@ function getFeatureKey(tileKey, featureId) {
  * @param {PolygonHierarchy} hierarchy The polygon outer ring and holes.
  * @param {Cesium3DTileFeature} feature The tile feature.
  * @param {Cesium3DTile} tile The tile that contains the feature.
- * @returns {Entity} A new entity with the polygon draping on terrain.
+ * @param {EntityCollection} entityCollection The entity collection where entities are added.
  * @private
  */
-function createDefaultEntity(hierarchy, feature, tile) {
+function createDefaultEntity(hierarchy, feature, tile, entityCollection) {
   const tileKey = getTileKey(tile);
   const featureId = feature.featureId;
-  return new Entity({
-    id: getFeatureKey(tileKey, featureId),
-    polygon: new PolygonGraphics({
-      hierarchy: hierarchy,
-      heightReference: HeightReference.CLAMP_TO_GROUND,
-      material: Color.WHITE.withAlpha(0.5),
-      classificationType: ClassificationType.TERRAIN,
+  entityCollection.add(
+    new Entity({
+      id: getFeatureKey(tileKey, featureId),
+      polygon: new PolygonGraphics({
+        hierarchy: hierarchy,
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        fill: false,
+        outline: true,
+        outlineColor: Color.WHITE,
+        classificationType: ClassificationType.TERRAIN,
+      }),
+      properties: { tilesetFeatureId: featureId },
     }),
-    properties: { tilesetFeatureId: featureId },
-  });
+  );
 }
 
 /**
@@ -197,7 +201,7 @@ function extractFootprintsFromTile(tile, filterFeature) {
  *   filterFeature: function (feature) {
  *     return feature.getProperty('height') > 10;
  *   },
- *   createEntity: function (hierarchy, feature, tile) {
+ *   createEntity: function (hierarchy, feature, tile, entityCollection) {
  *     return new Cesium.Entity({
  *       polygon: new Cesium.PolygonGraphics({ hierarchy: hierarchy }),
  *     });
@@ -239,7 +243,7 @@ Cesium3DTilesetFootprintGenerator.generate = function (options) {
         const hierarchies = extractFootprintsFromTile(tile, filterFeature);
         if (defined(hierarchies) && hierarchies.size > 0) {
           const content = tile.content;
-          const tileEntities = [];
+          let tileCount = 0;
 
           for (const [fid, hierarchy] of hierarchies) {
             const key = getFeatureKey(tileKey, fid);
@@ -252,20 +256,21 @@ Cesium3DTilesetFootprintGenerator.generate = function (options) {
 
             const feature = content.getFeature(fid);
 
-            const entity = defined(createEntity)
-              ? createEntity(hierarchy, feature, tile)
-              : createDefaultEntity(hierarchy, feature, tile);
+            if (defined(createEntity)) {
+              createEntity(hierarchy, feature, tile, entityCollection);
+            } else {
+              createDefaultEntity(hierarchy, feature, tile, entityCollection);
+            }
 
-            entityCollection.add(entity);
-            tileEntities.push(entity);
+            tileCount++;
             count++;
           }
 
           if (
             typeof footprintsGenerated === "function" &&
-            tileEntities.length > 0
+            tileCount > 0
           ) {
-            footprintsGenerated(tile, tileEntities.length);
+            footprintsGenerated(tile, tileCount);
           }
         }
       }
@@ -316,34 +321,29 @@ Cesium3DTilesetFootprintGenerator.generateForTile = function (options) {
     return 0;
   }
 
-  const createdEntities = [];
+  let createdCount = 0;
   const content = tile.content;
-  const tileKey = getTileKey(tile);
 
   for (const [fid, hierarchy] of hierarchies) {
     const feature = content.getFeature(fid);
 
-    const entity = defined(createEntity)
-      ? createEntity(hierarchy, feature, tile)
-      : createDefaultEntity(hierarchy, feature, tile);
-
-    // Ensure a stable ID for potential later lookup
-    if (!defined(entity.id)) {
-      entity.id = getFeatureKey(tileKey, fid);
+    if (defined(createEntity)) {
+      createEntity(hierarchy, feature, tile, entityCollection);
+    } else {
+      createDefaultEntity(hierarchy, feature, tile, entityCollection);
     }
 
-    entityCollection.add(entity);
-    createdEntities.push(entity);
+    createdCount++;
   }
 
   if (
     typeof footprintsGenerated === "function" &&
-    createdEntities.length > 0
+    createdCount > 0
   ) {
-    footprintsGenerated(tile, createdEntities.length);
+    footprintsGenerated(tile, createdCount);
   }
 
-  return createdEntities.length;
+  return createdCount;
 };
 
 export default Cesium3DTilesetFootprintGenerator;

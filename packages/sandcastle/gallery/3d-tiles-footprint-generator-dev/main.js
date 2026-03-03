@@ -14,9 +14,6 @@ viewer.scene.globe.depthTestAgainstTerrain = true;
 const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
   enableGeometryExtraction: true,
 });
-tileset.style = new Cesium.Cesium3DTileStyle({
-  color: "color('white', 0.5)", // 50% transparent
-});
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
@@ -26,7 +23,10 @@ const clippingPolygons = [];
 // --- UI controls ---
 const statusEl = document.getElementById("status");
 const btnGenerate = document.getElementById("btnGenerate");
+const btnGenerateFootprints = document.getElementById("btnGenerateFootprints");
+const btnGenerateDefault = document.getElementById("btnGenerateDefault");
 const btnClear = document.getElementById("btnClear");
+const btnToggleMesh = document.getElementById("btnToggleMesh");
 
 let footprintCount = 0;
 
@@ -42,6 +42,34 @@ function updateClippingPolygons() {
   });
 }
 
+function addClip(hierarchy, _feature, _tile, _entityCollection) {
+  clippingPolygons.push(
+    new Cesium.ClippingPolygon({
+      positions: hierarchy.positions,
+    }),
+  );
+}
+
+function addPolygonGraphics(hierarchy, feature, _tile, entityCollection) {
+  entityCollection.add(
+    new Cesium.Entity({
+      polygon: new Cesium.PolygonGraphics({
+        hierarchy: hierarchy,
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+        material: Cesium.Color.CYAN.withAlpha(0.4),
+        classificationType: Cesium.ClassificationType.TERRAIN,
+      }),
+      properties: { featureId: feature.featureId },
+    }),
+  );
+}
+
+function onFootprintsGenerated(tile, count) {
+  console.log(
+    `footprintsGenerated — tile: ${tile?.content?.url ?? "unknown"}, count: ${count}`,
+  );
+}
+
 // One-shot generate — builds footprints then applies as terrain cutouts
 btnGenerate.addEventListener("click", function () {
   clippingPolygons.length = 0;
@@ -50,29 +78,45 @@ btnGenerate.addEventListener("click", function () {
   const count = Cesium.Cesium3DTilesetFootprintGenerator.generate({
     tileset: tileset,
     entityCollection: viewer.entities,
-    createEntity: function (hierarchy, feature, tile) {
-      clippingPolygons.push(
-        new Cesium.ClippingPolygon({
-          positions: hierarchy.positions,
-        }),
-      );
-
-      // Still return an entity (invisible) so it is tracked
-      return new Cesium.Entity({
-        id: `${tile.content.url}#${feature.featureId}`,
-      });
-    },
-    footprintsGenerated: function (tile, count) {
-      console.log(
-        `footprintsGenerated — tile: ${tile?.content?.url ?? "unknown"}, count: ${count}`,
-      );
-    },
+    createEntity: addClip,
+    footprintsGenerated: onFootprintsGenerated,
   });
   footprintCount = count;
   const elapsed = (performance.now() - start).toFixed(2);
   console.log(`generate() took ${elapsed} ms — ${count} footprints`);
 
   updateClippingPolygons();
+  updateStatus();
+});
+
+// Generate 2D footprint entities
+btnGenerateFootprints.addEventListener("click", function () {
+  const start = performance.now();
+  const count = Cesium.Cesium3DTilesetFootprintGenerator.generate({
+    tileset: tileset,
+    entityCollection: viewer.entities,
+    createEntity: addPolygonGraphics,
+    footprintsGenerated: onFootprintsGenerated,
+  });
+  footprintCount = count;
+  const elapsed = (performance.now() - start).toFixed(2);
+  console.log(`generate() took ${elapsed} ms — ${count} footprints`);
+
+  updateStatus();
+});
+
+// Generate using default entity creation
+btnGenerateDefault.addEventListener("click", function () {
+  const start = performance.now();
+  const count = Cesium.Cesium3DTilesetFootprintGenerator.generate({
+    tileset: tileset,
+    entityCollection: viewer.entities,
+    footprintsGenerated: onFootprintsGenerated,
+  });
+  footprintCount = count;
+  const elapsed = (performance.now() - start).toFixed(2);
+  console.log(`generate() took ${elapsed} ms — ${count} footprints`);
+
   updateStatus();
 });
 
@@ -83,4 +127,10 @@ btnClear.addEventListener("click", function () {
   clippingPolygons.length = 0;
   viewer.scene.globe.clippingPolygons = undefined;
   updateStatus();
+});
+
+// Toggle mesh visibility
+btnToggleMesh.addEventListener("click", function () {
+  tileset.show = !tileset.show;
+  btnToggleMesh.textContent = tileset.show ? "Hide Mesh" : "Show Mesh";
 });
