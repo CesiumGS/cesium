@@ -388,10 +388,13 @@ function commitSnapshot(primitive, snapshot, frameState) {
   primitive.sphericalHarmonicsTexture = snapshot.sphericalHarmonicsTexture;
   primitive._lastTextureWidth = snapshot.lastTextureWidth;
   primitive._lastTextureHeight = snapshot.lastTextureHeight;
-  // Row-addressing params must be committed together with the texture so the
-  // shader always reads the mask/shift that matches the texture in use.
+  // Commit row-addressing params alongside the texture; the shader must
+  // always see the mask/shift that matches the active texture layout.
   primitive._splatRowMask = snapshot.splatRowMask ?? 0x3ff;
   primitive._splatRowShift = snapshot.splatRowShift ?? 10;
+  // Above 1.0 when the previous snapshot hit the hard cap; used in
+  // _wrappedUpdate to inflate traversal SSE and reduce tile load.
+  primitive._splatBudgetSSEScale = snapshot.splatBudgetSSEScale ?? 1.0;
   primitive._hasGaussianSplatTexture = defined(snapshot.gaussianSplatTexture);
   primitive._needsGaussianSplatTexture = false;
   primitive._gaussianSplatTexturePending = false;
@@ -427,36 +430,31 @@ async function processGeneratedSplatTextureData(
     const splatTextureData = await promise;
     const maxTex = ContextLimits.maximumTextureSize;
 
-    // --- Dynamic texture width selection (fixes >16M splat crash) ---
-    // The WASM always produces a 2048-wide texture (1024 splats/row). When the
-    // splat count is large, the height can exceed the GPU's maximumTextureSize,
-    // crashing WebGL. Solution: widen the texture (double the width, halving the
-    // height) until it fits. The flat data layout is width-independent: splat i
-    // is always at flat uint32 position i*8, so the same WASM buffer can be
-    // reused unchanged—only the texture dimensions and the shader uniforms change.
-    let optimalWidth = splatTextureData.width; // initial value is always 2048 from WASM; may be doubled below
+    // The WASM always outputs a 2048-wide texture. For large splat counts the
+    // height can exceed maximumTextureSize, causing a WebGL error. Iteratively
+    // double the width (halving the height) until the texture fits. The packed
+    // layout is width-independent—splat i occupies 8 uint32s at offset i*8—so
+    // the WASM buffer is reused as-is; only the dimensions and uniforms change.
+    let optimalWidth = splatTextureData.width; // starts at 2048; doubled below if needed
     let optimalHeight = splatTextureData.height;
     while (optimalHeight > maxTex && optimalWidth < maxTex) {
       optimalWidth *= 2;
       optimalHeight = Math.ceil(snapshot.numSplats / (optimalWidth / 2));
     }
-    const splatRowShift = Math.log2(optimalWidth / 2); // e.g. 10→2048, 11→4096
-    const splatRowMask = optimalWidth / 2 - 1; // e.g. 0x3ff→2048, 0x7ff→4096
+    const splatRowShift = Math.log2(optimalWidth / 2); // 10 for width=2048, 11 for width=4096, …
+    const splatRowMask = optimalWidth / 2 - 1; // 0x3ff for width=2048, 0x7ff for width=4096, …
 
-    // Hard cap: even at maximum width the height may still exceed the GPU limit
-    // (requires > maxTex * (maxTex/2) splats, e.g. >134M on a 16384-limit GPU).
-    // Rather than crashing, clamp the height to maxTex and truncate the splat
-    // count so the texture stays within hardware limits. The last few splats
-    // are silently dropped; this is preferable to a WebGL crash.
+    // If the height still exceeds the GPU limit at maximum width (this requires
+    // more than maxTex*(maxTex/2) splats, e.g. >134M on a 16384-limit GPU),
+    // clamp to maxTex rows and drop the excess splats. Losing tail splats is
+    // acceptable; a WebGL context loss would take down the entire viewer.
     if (optimalHeight > maxTex) {
       const originalCount = snapshot.numSplats;
       optimalHeight = maxTex;
       const splatsPerRow = optimalWidth / 2;
       snapshot.numSplats = maxTex * splatsPerRow;
-      // Also truncate the CPU-side attribute arrays so that downstream
-      // consumers (sorter, draw command) see a consistent splat count.
-      // positions/scales: 3 components per splat
-      // rotations/colors: 4 components per splat
+      // Truncate the CPU attribute arrays to match; the sorter and draw
+      // command require these to be consistent with numSplats.
       snapshot.positions = snapshot.positions.subarray(
         0,
         snapshot.numSplats * 3,
@@ -467,15 +465,30 @@ async function processGeneratedSplatTextureData(
       );
       snapshot.scales = snapshot.scales.subarray(0, snapshot.numSplats * 3);
       snapshot.colors = snapshot.colors.subarray(0, snapshot.numSplats * 4);
+      // SH data is sized independently of the attribute arrays above
+      // and must be truncated separately to keep it in sync with numSplats.
+      if (defined(snapshot.shData)) {
+        const shPerSplat = snapshot.shData.length / originalCount;
+        snapshot.shData = snapshot.shData.subarray(
+          0,
+          Math.floor(snapshot.numSplats * shPerSplat),
+        );
+      }
+      // Scale SSE up next frame in proportion to the number of dropped splats
+      // so the traversal naturally loads fewer tiles.
+      snapshot.splatBudgetSSEScale = originalCount / snapshot.numSplats;
       console.warn(
         `[GaussianSplat][HARD CAP] ${originalCount} splats exceed the maximum texture capacity ` +
-          `(${maxTex}×${splatsPerRow} = ${snapshot.numSplats} splats at width=${optimalWidth}). ` +
-          `Rendering only the first ${snapshot.numSplats} splats to avoid a WebGL crash.`,
+          `(${maxTex}\u00d7${splatsPerRow} = ${snapshot.numSplats} splats at width=${optimalWidth}). ` +
+          `Rendering only the first ${snapshot.numSplats} splats to avoid a WebGL crash. ` +
+          `Increasing maximumScreenSpaceError by ${snapshot.splatBudgetSSEScale.toFixed(2)}x next frame.`,
       );
+    } else {
+      // Within budget; clear any SSE inflation carried over from a previous cap.
+      snapshot.splatBudgetSSEScale = 1.0;
     }
 
-    // Build a correctly-sized buffer for the chosen dimensions. The raw WASM
-    // output may be a different size, so we subarray or zero-pad as needed.
+    // Trim or zero-pad the WASM output to exactly match the chosen dimensions.
     const requiredLen = optimalWidth * optimalHeight * 4;
     let effectiveData;
     if (requiredLen <= splatTextureData.data.length) {
@@ -490,8 +503,8 @@ async function processGeneratedSplatTextureData(
       data: effectiveData,
     };
 
-    // Store row addressing params on the snapshot; they will be committed to
-    // the primitive in commitSnapshot and forwarded to the shader as uniforms.
+    // Persist row-addressing params to the snapshot so commitSnapshot can
+    // forward them to the shader as uniforms alongside the new texture.
     snapshot.splatRowMask = splatRowMask;
     snapshot.splatRowShift = splatRowShift;
 
@@ -1005,6 +1018,16 @@ function GaussianSplatPrimitive(options) {
    */
   this._splatRowMask = 0x3ff; // default: width=2048, splatsPerRow=1024
   this._splatRowShift = 10; // default: width=2048
+
+  /**
+   * Multiplier applied to maximumScreenSpaceError during tile traversal when
+   * the previous snapshot exceeded the splat texture budget. A value above 1.0
+   * biases traversal toward coarser LODs, lowering the total splat count.
+   * Resets to 1.0 once the splat count is within budget.
+   * @type {number}
+   * @private
+   */
+  this._splatBudgetSSEScale = 1.0;
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -1057,14 +1080,25 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
 });
 
 /**
- * Since we aren't visible at the scene level, we need to wrap the tileset update
- * so we not only get called but ensure we update immediately after the tileset.
+ * Replaces the tileset's own update function so this primitive is updated
+ * immediately after the tileset traversal, within the same frame. When
+ * _splatBudgetSSEScale is above 1.0, maximumScreenSpaceError is inflated
+ * for the duration of the traversal to reduce the number of tiles selected.
  * @param {FrameState} frameState
  * @private
- *
  */
 GaussianSplatPrimitive.prototype._wrappedUpdate = function (frameState) {
-  this._baseTilesetUpdate.call(this._tileset, frameState);
+  const tileset = this._tileset;
+  if (this._splatBudgetSSEScale !== 1.0) {
+    // Inflate SSE for this traversal only; the original value is restored
+    // immediately so the user-visible tileset property is never permanently changed.
+    const originalSSE = tileset.maximumScreenSpaceError;
+    tileset.maximumScreenSpaceError *= this._splatBudgetSSEScale;
+    this._baseTilesetUpdate.call(tileset, frameState);
+    tileset.maximumScreenSpaceError = originalSSE;
+  } else {
+    this._baseTilesetUpdate.call(tileset, frameState);
+  }
   this.update(frameState);
 };
 
