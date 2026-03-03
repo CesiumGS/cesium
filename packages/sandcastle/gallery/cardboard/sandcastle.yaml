@@ -1,6 +1,7 @@
 legacyId: Cardboard.html
 title: Cardboard
-description: Configure viewer to add a button enabling look at a mobile device with cardboard.
+description: Set up a split screen rendering suitable for viewing on a mobile device with a cardboard VR headset.
 labels:
   - Camera
+  - VR
 thumbnail: thumbnail.jpg
