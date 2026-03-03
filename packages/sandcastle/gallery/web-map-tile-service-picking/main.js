@@ -8,7 +8,7 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 const kvpProvider = new Cesium.WebMapTileServiceImageryProvider({
   url: "https://wmts.marine.copernicus.eu/teroWmts",
   layer:
-    "NWSHELF_ANALYSISFORECAST_PHY_004_013/cmems_mod_nws_phy_anfc_0.027deg-2D_PT15M-i_202411/uo",
+    "NWSHELF_ANALYSISFORECAST_PHY_004_013/cmems_mod_nws_phy-cur_anfc_1.5km-3D_PT1H-i_202511/ubar",
   style: "cmap:balance",
   tileMatrixSetID: "EPSG:3857",
   format: "image/png",
