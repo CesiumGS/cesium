@@ -52,7 +52,6 @@ const BufferPolylineAttributeLocations = {
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
- * @property {object} [uniformMap]
  * @ignore
  */
 
@@ -346,43 +345,29 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
       blending: BlendingState.DISABLED,
-      depthMask: false,
       depthTest: { enabled: true },
-      polygonOffset: { enabled: false },
     });
-  }
-
-  if (!defined(renderContext.uniformMap)) {
-    renderContext.uniformMap = {};
   }
 
   if (!defined(renderContext.shaderProgram)) {
-    const vertexShaderSource = new ShaderSource({
-      sources: [PolylineCommon, BufferPolylineCollectionVS],
-    });
-
-    const fragmentShaderSource = new ShaderSource({
-      sources: [BufferPolylineCollectionFS],
-    });
-
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
-      vertexShaderSource,
-      fragmentShaderSource,
+      vertexShaderSource: new ShaderSource({
+        sources: [PolylineCommon, BufferPolylineCollectionVS],
+      }),
+      fragmentShaderSource: new ShaderSource({
+        sources: [BufferPolylineCollectionFS],
+      }),
       attributeLocations: BufferPolylineAttributeLocations,
     });
   }
 
   const command = new DrawCommand({
-    primitiveType: PrimitiveType.TRIANGLES,
-    pass: Pass.OPAQUE,
-
     vertexArray: renderContext.vertexArray,
-
     renderState: renderContext.renderState,
     shaderProgram: renderContext.shaderProgram,
-    uniformMap: renderContext.uniformMap,
-
+    primitiveType: PrimitiveType.TRIANGLES,
+    pass: Pass.OPAQUE,
     owner: collection,
     count: (collection.vertexCount - collection.primitiveCount) * 6,
     boundingVolume: collection.boundingVolume,

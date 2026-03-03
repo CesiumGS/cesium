@@ -47,7 +47,6 @@ const BufferPolygonAttributeLocations = {
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
- * @property {object} [uniformMap]
  * @ignore
  */
 
@@ -219,43 +218,29 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
       blending: BlendingState.DISABLED,
-      depthMask: false,
       depthTest: { enabled: true },
-      polygonOffset: { enabled: false },
     });
-  }
-
-  if (!defined(renderContext.uniformMap)) {
-    renderContext.uniformMap = {};
   }
 
   if (!defined(renderContext.shaderProgram)) {
-    const vertexShaderSource = new ShaderSource({
-      sources: [BufferPolygonCollectionVS],
-    });
-
-    const fragmentShaderSource = new ShaderSource({
-      sources: [BufferPolygonCollectionFS],
-    });
-
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
-      vertexShaderSource,
-      fragmentShaderSource,
+      vertexShaderSource: new ShaderSource({
+        sources: [BufferPolygonCollectionVS],
+      }),
+      fragmentShaderSource: new ShaderSource({
+        sources: [BufferPolygonCollectionFS],
+      }),
       attributeLocations: BufferPolygonAttributeLocations,
     });
   }
 
   const command = new DrawCommand({
-    primitiveType: PrimitiveType.TRIANGLES,
-    pass: Pass.OPAQUE,
-
     vertexArray: renderContext.vertexArray,
-
     renderState: renderContext.renderState,
     shaderProgram: renderContext.shaderProgram,
-    uniformMap: renderContext.uniformMap,
-
+    primitiveType: PrimitiveType.TRIANGLES,
+    pass: Pass.OPAQUE,
     owner: collection,
     count: collection.triangleCount * 3,
     boundingVolume: collection.boundingVolume,
