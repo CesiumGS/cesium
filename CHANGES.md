@@ -29,15 +29,16 @@
 
 #### Fixes :wrench:
 
-- Fixed Gaussian splat race conditions in snapshot/sort updates, to prevent flickering, WebGL draw errors, and unstable LOD transition performance. [#13016](https://github.com/CesiumGS/cesium/issues/13016) [#12965](https://github.com/CesiumGS/cesium/issues/12965)
-- Fixed flashing when rendering multiple Gaussian splat primitives by storing draw-command model matrices per primitive (`_drawCommandModelMatrix`). [#12967](https://github.com/CesiumGS/cesium/issues/12967)
-- Fixed depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150](https://github.com/CesiumGS/cesium/issues/13150)
-- Fixed billboard depth testing near horizon. [#13159](https://github.com/CesiumGS/cesium/issues/13159)
-- Fixed shader cache lookup for day/night alpha in Columbus View. [#13216](https://github.com/CesiumGS/cesium/pull/13216)
-- Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
-- Fixed a point-rendering regression which caused points to render as circles rather than squares. Such points now will only render as circles when their width is specified via the [BENTLEY_materials_point_style](https://github.com/CesiumGS/glTF/pull/91) glTF extension (which requires that such points be circular). [#13217](https://github.com/CesiumGS/cesium/issues/13217)
-- Fixed a coordinate switching bug in `OpenCageGeocoderService`. [#13138](https://github.com/CesiumGS/cesium/issues/13138)
-- Fixed a regex expression used to find metadata variables in `CustomShader`s, and extended it to work with `metadataClass` and `metadataStatistics`. [#13231](https://github.com/CesiumGS/cesium/pull/13231).
+- Fixed memory leak when rendering Gaussian splat 3D tilesets. [#13229](https://github.com/CesiumGS/cesium/pull/13229/)
+- Fixed Gaussian splat race conditions in snapshot/sort updates by enforcing explicit snapshot states, preventing stale async results from causing flickering, WebGL draw errors, and unstable LOD transition performance. [#13016](https://github.com/CesiumGS/cesium/pull/13016) [#12965](https://github.com/CesiumGS/cesium/pull/12965)
+- Fixed flashing when rendering multiple Gaussian splat primitives by storing draw-command model matrices per primitive (`_drawCommandModelMatrix`). [#12967]
+- Fixed depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150]
+- Fixed billboard depth testing near horizon. [#13159]
+- Fixed shader cache lookup for day/night alpha in Columbus View. [#13216]
+- Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170]
+- Fixed a point-rendering regression which caused points to render as circles rather than squares. Such points now will only render as circles when their width is specified via the [BENTLEY_materials_point_style](https://github.com/CesiumGS/glTF/pull/91) glTF extension. [#13217]
+- Fixed a coordinate switching bug in `OpenCageGeocoderService`. [#13138]
+- Fixed a regex expression used to find metadata variables in `CustomShader`s, and extended it to work with `metadataClass` and `metadataStatistics`. [#13231]
 
 ### @cesium/sandcastle
 
