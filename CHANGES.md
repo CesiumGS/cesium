@@ -11,6 +11,7 @@
 #### Fixes :wrench:
 
 - Fixed memory leak when rendering Gaussian splat 3D tilesets. [#13229](https://github.com/CesiumGS/cesium/pull/13229/)
+- Fixes update height callback in QuadtreePrimitive. [#13249](https://github.com/CesiumGS/cesium/issues/13249)
 
 ## 1.139 - 2026-03-02
 

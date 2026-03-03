@@ -1541,6 +1541,7 @@ function updateHeights(primitive, frameState) {
               position,
               scratchCartographic,
             );
+            positionCarto.height = position.height; // Preserve the original height
             data.callback(positionCarto);
           }
           data.level = tile.level;
