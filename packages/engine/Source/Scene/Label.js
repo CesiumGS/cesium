@@ -1188,19 +1188,22 @@ Object.defineProperties(Label.prototype, {
   },
 
   /**
-   * When <code>true</code>, this label is ready to render, i.e., the glyphs have been mapped and the WebGL resources are created. This property is expose for testing purposes.
-   * @memberof Billboard.prototype
+   * When <code>true</code>, this label is ready to render, i.e., the glyphs have been mapped and the WebGL resources are created. This property is exposed for testing purposes.
+   * @memberof Label.prototype
    * @type {boolean}
    * @readonly
    * @private
    */
   ready: {
-    get: function() {
+    get: function () {
       if (this._rebindAllGlyphs || this._repositionAllGlyphs) {
         return false;
       }
 
-      if (defined(this._backgroundBillboard) && !this._backgroundBillboard.ready) {
+      if (
+        defined(this._backgroundBillboard) &&
+        !this._backgroundBillboard.ready
+      ) {
         return false;
       }
 
@@ -1213,8 +1216,8 @@ Object.defineProperties(Label.prototype, {
       }
 
       return true;
-    }
-  }
+    },
+  },
 });
 
 Label.prototype._updateClamping = function () {
