@@ -360,7 +360,7 @@ DerivedCommand.createPickDerivedCommand = function (
  *
  * @param {string[]} defines The define directive identifiers
  * @param {string} defineName The name (identifier) of the define directive
- * @param {any} newDefineValue The new value whose string representation
+ * @param {unknown} newDefineValue The new value whose string representation
  * will become the token string for the define directive
  * @private
  */
