@@ -75,7 +75,7 @@ function transformToEntityFrame(time, pathEntityPos, refEntityPos, refEntity, re
  * @param {*} time 
  * @param {*} positionProperty 
  * @param {*} result 
- * @returns 
+ * @returns {Matrix4} The VVLH transform
  */
 function computeVvlhTransform(time, positionProperty, result) {
   const cartesian = positionProperty.getValue(time, update3DCartesian3Scratch0);
