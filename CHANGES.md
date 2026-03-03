@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- Billboards and labels now require device support for WebGL 2, or WebGL 1 with ANGLE_instanced_arrays and MAX_VERTEX_TEXTURE_IMAGE_UNITS > 0. [#13053](https://github.com/CesiumGS/cesium/issues/13053) [#13253](https://github.com/CesiumGS/cesium/pull/13253)
+
 #### Additions :tada:
 
 - Added experimental, performance-focused vector primitive APIs: `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13212](https://github.com/CesiumGS/cesium/pull/13212)
