@@ -8,6 +8,10 @@
 
 - Added experimental, performance-focused vector primitive APIs: `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13212](https://github.com/CesiumGS/cesium/pull/13212)
 
+#### Fixes :wrench:
+
+- Fixed memory leak when rendering Gaussian splat 3D tilesets. [#13229](https://github.com/CesiumGS/cesium/pull/13229/)
+
 ## 1.139 - 2026-03-02
 
 ### @cesium/engine
@@ -29,7 +33,6 @@
 
 #### Fixes :wrench:
 
-- Fixed memory leak when rendering Gaussian splat 3D tilesets. [#13229](https://github.com/CesiumGS/cesium/pull/13229/)
 - Fixed Gaussian splat race conditions in snapshot/sort updates by enforcing explicit snapshot states, preventing stale async results from causing flickering, WebGL draw errors, and unstable LOD transition performance. [#13016](https://github.com/CesiumGS/cesium/pull/13016) [#12965](https://github.com/CesiumGS/cesium/pull/12965)
 - Fixed flashing when rendering multiple Gaussian splat primitives by storing draw-command model matrices per primitive (`_drawCommandModelMatrix`). [#12967]
 - Fixed depth-testing when `Billboard.disableDepthTestDistance` is `0`. [#13150]
