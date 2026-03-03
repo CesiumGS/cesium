@@ -26,6 +26,7 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
 /**
+ * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
  * @typedef {'positionHigh' | 'positionLow' | 'showAndColor'} BufferPolygonAttribute
  * @ignore
  */
@@ -97,28 +98,27 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         continue;
       }
 
-      const show = polygon.show;
+      let tOffset = polygon.triangleOffset;
+      let vOffset = polygon.vertexOffset;
+
       const polygonIndexArray = polygon.getTriangles();
+
+      // Update index.
+      for (let j = 0, jl = polygon.triangleCount; j < jl; j++) {
+        indexArray[tOffset * 3] = vOffset + polygonIndexArray[j * 3];
+        indexArray[tOffset * 3 + 1] = vOffset + polygonIndexArray[j * 3 + 1];
+        indexArray[tOffset * 3 + 2] = vOffset + polygonIndexArray[j * 3 + 2];
+
+        tOffset++;
+      }
+
+      const show = polygon.show;
       const cartesianArray = polygon.getPositions();
       const encodedColor = AttributeCompression.encodeRGB8(
         polygon.getColor(color),
       );
 
-      let vOffset = polygon._getUint32(
-        BufferPolygon.Layout.POSITION_OFFSET_U32,
-      );
-      let iOffset = polygon._getUint32(
-        BufferPolygon.Layout.TRIANGLE_OFFSET_U32,
-      );
-
-      for (let j = 0, jl = polygon.triangleCount; j < jl; j++) {
-        indexArray[iOffset * 3] = polygonIndexArray[j * 3] + vOffset;
-        indexArray[iOffset * 3 + 1] = polygonIndexArray[j * 3 + 1] + vOffset;
-        indexArray[iOffset * 3 + 2] = polygonIndexArray[j * 3 + 2] + vOffset;
-
-        iOffset++;
-      }
-
+      // Update vertex arrays.
       for (let j = 0, jl = polygon.vertexCount; j < jl; j++) {
         Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
         EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
@@ -258,7 +258,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 /**
  * Computes dirty ranges for attribute and index buffers in a collection.
  * @param {BufferPolygonCollection} collection
- * @returns {{indexOffset: number, indexCount: number, vertexOffset: number, vertexCount: number}}
  */
 function getPolygonDirtyRanges(collection) {
   const { _dirtyOffset, _dirtyCount } = collection;

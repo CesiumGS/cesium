@@ -25,6 +25,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 
 /**
+ * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
  * @typedef {'positionHigh' | 'positionLow' | 'showPixelSizeAndColor' | 'outlineWidthAndOutlineColor'} BufferPointAttribute
  * @ignore
  */
@@ -48,6 +49,12 @@ const BufferPointAttributeLocations = {
  * @property {ShaderProgram} [shaderProgram]
  * @ignore
  */
+
+// Scratch variables.
+const point = new BufferPoint();
+const color = new Color();
+const cartesian = new Cartesian3();
+const encodedCartesian = new EncodedCartesian3();
 
 /**
  * @param {BufferPointCollection} collection
@@ -73,11 +80,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
   if (collection._dirtyCount > 0) {
     const { attributeArrays } = renderContext;
-
-    const point = new BufferPoint();
-    const color = new Color();
-    const cartesian = new Cartesian3();
-    const encodedCartesian = new EncodedCartesian3();
 
     const positionHighArray = attributeArrays.positionHigh;
     const positionLowArray = attributeArrays.positionLow;

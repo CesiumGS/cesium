@@ -27,6 +27,7 @@ import PolylineCommon from "../Shaders/PolylineCommon.js";
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 
 /**
+ * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
  * @typedef {'positionHigh' | 'positionLow' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPositionHigh' | 'nextPositionLow' | 'showColorWidthAndTexCoord'} BufferPolylineAttribute
  * @ignore
  */
@@ -61,23 +62,23 @@ const color = new Color();
 const cartesian = new Cartesian3();
 const prevCartesian = new Cartesian3();
 const nextCartesian = new Cartesian3();
-const encodedCartesian = new EncodedCartesian3();
-const prevEncodedCartesian = new EncodedCartesian3();
-const nextEncodedCartesian = new EncodedCartesian3();
+const cartesianEnc = new EncodedCartesian3();
+const prevCartesianEnc = new EncodedCartesian3();
+const nextCartesianEnc = new EncodedCartesian3();
 
 /**
  * Renders line segments as quads, each composed of two triangles. Writes each
  * vertex twice, extruding the pairs in opposing directions outward.
  *
  * Tips:
- * - Number of segments in a polyline primitive = `vertexCount - 1`
- * - Number of segments in a collection = `vertexCount - primitiveCount`
- * - Number of rendered vertices = `vertexCount * 2`
- * - Number of indices = `segmentCount * 6`
+ * - # segments in polyline primitive = vertexCount - 1
+ * - # segments in collection = vertexCount - primitiveCount
+ * - # vertices rendered = vertexCount * 2
+ * - # indices = segmentCount * 6
  *
- * 0 - 1 - 4 - 6 - 8
+ * 0 - 2 - 4 - 6 - 8
  * | \ | \ | \ | \ | ...
- * 3 - 2 - 5 - 7 - 9
+ * 1 - 3 - 5 - 7 - 9
  *
  * @param {BufferPolylineCollection} collection
  * @param {FrameState} frameState
@@ -172,44 +173,45 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           iOffset += 6;
         }
 
-        EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
-        EncodedCartesian3.fromCartesian(prevCartesian, prevEncodedCartesian);
-        EncodedCartesian3.fromCartesian(nextCartesian, nextEncodedCartesian);
+        EncodedCartesian3.fromCartesian(cartesian, cartesianEnc);
+        EncodedCartesian3.fromCartesian(prevCartesian, prevCartesianEnc);
+        EncodedCartesian3.fromCartesian(nextCartesian, nextCartesianEnc);
+
+        const encodedColor = AttributeCompression.encodeRGB8(color);
 
         // TODO(donmccurdy): Diverging from PolylineCollection.js, which writes
         // internal vertices to buffer 4x, not 2x. Not sure that's needed?
         for (let k = 0; k < 2; k++) {
           // Position.
-          positionHighArray[vOffset * 3] = encodedCartesian.high.x;
-          positionHighArray[vOffset * 3 + 1] = encodedCartesian.high.y;
-          positionHighArray[vOffset * 3 + 2] = encodedCartesian.high.z;
+          positionHighArray[vOffset * 3] = cartesianEnc.high.x;
+          positionHighArray[vOffset * 3 + 1] = cartesianEnc.high.y;
+          positionHighArray[vOffset * 3 + 2] = cartesianEnc.high.z;
 
-          positionLowArray[vOffset * 3] = encodedCartesian.low.x;
-          positionLowArray[vOffset * 3 + 1] = encodedCartesian.low.y;
-          positionLowArray[vOffset * 3 + 2] = encodedCartesian.low.z;
+          positionLowArray[vOffset * 3] = cartesianEnc.low.x;
+          positionLowArray[vOffset * 3 + 1] = cartesianEnc.low.y;
+          positionLowArray[vOffset * 3 + 2] = cartesianEnc.low.z;
 
           // Previous position.
-          prevPositionHighArray[vOffset * 3] = prevEncodedCartesian.high.x;
-          prevPositionHighArray[vOffset * 3 + 1] = prevEncodedCartesian.high.y;
-          prevPositionHighArray[vOffset * 3 + 2] = prevEncodedCartesian.high.z;
+          prevPositionHighArray[vOffset * 3] = prevCartesianEnc.high.x;
+          prevPositionHighArray[vOffset * 3 + 1] = prevCartesianEnc.high.y;
+          prevPositionHighArray[vOffset * 3 + 2] = prevCartesianEnc.high.z;
 
-          prevPositionLowArray[vOffset * 3] = prevEncodedCartesian.low.x;
-          prevPositionLowArray[vOffset * 3 + 1] = prevEncodedCartesian.low.y;
-          prevPositionLowArray[vOffset * 3 + 2] = prevEncodedCartesian.low.z;
+          prevPositionLowArray[vOffset * 3] = prevCartesianEnc.low.x;
+          prevPositionLowArray[vOffset * 3 + 1] = prevCartesianEnc.low.y;
+          prevPositionLowArray[vOffset * 3 + 2] = prevCartesianEnc.low.z;
 
           // Next position.
-          nextPositionHighArray[vOffset * 3] = nextEncodedCartesian.high.x;
-          nextPositionHighArray[vOffset * 3 + 1] = nextEncodedCartesian.high.y;
-          nextPositionHighArray[vOffset * 3 + 2] = nextEncodedCartesian.high.z;
+          nextPositionHighArray[vOffset * 3] = nextCartesianEnc.high.x;
+          nextPositionHighArray[vOffset * 3 + 1] = nextCartesianEnc.high.y;
+          nextPositionHighArray[vOffset * 3 + 2] = nextCartesianEnc.high.z;
 
-          nextPositionLowArray[vOffset * 3] = nextEncodedCartesian.low.x;
-          nextPositionLowArray[vOffset * 3 + 1] = nextEncodedCartesian.low.y;
-          nextPositionLowArray[vOffset * 3 + 2] = nextEncodedCartesian.low.z;
+          nextPositionLowArray[vOffset * 3] = nextCartesianEnc.low.x;
+          nextPositionLowArray[vOffset * 3 + 1] = nextCartesianEnc.low.y;
+          nextPositionLowArray[vOffset * 3 + 2] = nextCartesianEnc.low.z;
 
           // Properties.
           showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 1] =
-            AttributeCompression.encodeRGB8(color);
+          showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
           showColorWidthAndTexCoordArray[vOffset * 4 + 2] = width;
           showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1); // texcoord.s
 
@@ -385,7 +387,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 /**
  * Computes dirty ranges for attribute and index buffers in a collection.
  * @param {BufferPolylineCollection} collection
- * @returns {{indexOffset: number, indexCount: number, vertexOffset: number, vertexCount: number}}
  */
 function getPolylineDirtyRanges(collection) {
   const { _dirtyOffset, _dirtyCount } = collection;
