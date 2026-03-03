@@ -9,7 +9,7 @@ import {
 import createScene from "../../../../../../../Specs/createScene.js";
 import loaderProcess from "../../../../../../../Specs/loaderProcess.js";
 import waitForLoaderProcess from "../../../../../../../Specs/waitForLoaderProcess.js";
-import loadAndZoomToModelAsync from "../../loadAndZoomToModelAsync.js"
+import loadAndZoomToModelAsync from "../../loadAndZoomToModelAsync.js";
 
 /**
  * The JSON representation of the NGA_gpm_local extension object
