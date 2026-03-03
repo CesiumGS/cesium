@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.140 - 2026-04-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixes a regression with the NGA-GPM local extension and custom shaders. [#13247](https://github.com/CesiumGS/cesium/pull/13247)
+
 ## 1.139 - 2026-03-02
 
 ### @cesium/engine
