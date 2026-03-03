@@ -30,8 +30,6 @@ function propertySelector(name) {
 // const phillyItwin = "535a24a3-9b29-4e23-bb5d-9cedb524c743";
 const testItwin = "671839a6-f6a9-4eb6-8e91-801441e0e3f2";
 
-const DRY_RUN = true;
-
 /**
  * Use https://astexplorer.net/ and the tester at https://estools.github.io/esquery/ to generate
  * valid selectors. The selctor should be to the exact Literal to replace not the whole assignment.
@@ -44,69 +42,75 @@ const DRY_RUN = true;
  * @property {string | NewValueFunction | undefined} newValue the new value to place in the literal. If undefined then skip this replacement
  */
 
-/** @type {Replacement[]} */
-export const replacements = [
-  {
+/**
+ * Generate a list of replacements for different files
+ * @returns {Replacement[]}
+ */
+export function getReplacements() {
+  /** @type {Replacement[]} */
+  const replacements = [];
+
+  // Ion token replacement
+  replacements.push({
     filePath: join(__dirname, "../../../packages/engine/Source/Core/Ion.js"),
     selector: variableDeclaration("defaultAccessToken"),
     // automatible through https://cesium.com/learn/ion/rest-api/#operation/postTokens
-    newValue: DRY_RUN
-      ? "fake-key"
-      : async () => {
-          try {
-            const newToken = await createNewToken(await getNextVersion());
-            return newToken.token;
-          } catch (error) {
-            console.error(error);
-            // Just skip updating if there was an error
-            return undefined;
-          }
-        },
-  },
-  {
-    filePath: join(
-      __dirname,
-      "../../../packages/sandcastle/gallery/itwin-feature-service/main.js",
-    ),
-    selector: propertySelector("Cesium.ITwinPlatform.defaultShareKey"),
-    // automatible with the Share key API https://developer.bentley.com/apis/access-control-v2/operations/get-itwin-share/
-    // Need to get an auth token using the client id + secret first
-    newValue: DRY_RUN
-      ? "fake-key"
-      : async (existingValue) => {
-          try {
-            // const newToken = await getNewKeyForItwin(featureSeriviceItwin, {
-            const newToken = await getNewKeyForItwin(testItwin, {
-              neverDeleteKey: existingValue,
-            });
-            return newToken;
-          } catch (error) {
-            console.error(error);
-            // Just skip updating if there was an error
-            return undefined;
-          }
-        },
-  },
-  {
-    filePath: join(
-      __dirname,
-      "../../../packages/sandcastle/gallery/imodel-mesh-export-service/main.js",
-    ),
-    selector: propertySelector("Cesium.ITwinPlatform.defaultShareKey"),
-    newValue: DRY_RUN
-      ? "fake-key"
-      : async (existingValue) => {
-          try {
-            // const newToken = await getNewKeyForItwin(phillyItwin, {
-            const newToken = await getNewKeyForItwin(testItwin, {
-              neverDeleteKey: existingValue,
-            });
-            return newToken;
-          } catch (error) {
-            console.error(error);
-            // Just skip updating if there was an error
-            return undefined;
-          }
-        },
-  },
-];
+    newValue: async () => {
+      try {
+        const newToken = await createNewToken(await getNextVersion());
+        return newToken.token;
+      } catch (error) {
+        console.error(error);
+        // Just skip updating if there was an error
+        return undefined;
+      }
+    },
+  });
+
+  // ITwin key replacements
+  replacements.push(
+    {
+      filePath: join(
+        __dirname,
+        "../../../packages/sandcastle/gallery/itwin-feature-service/main.js",
+      ),
+      selector: propertySelector("Cesium.ITwinPlatform.defaultShareKey"),
+      // automatible with the Share key API https://developer.bentley.com/apis/access-control-v2/operations/get-itwin-share/
+      // Need to get an auth token using the client id + secret first
+      newValue: async (existingValue) => {
+        try {
+          // const newToken = await getNewKeyForItwin(featureSeriviceItwin, {
+          const newToken = await getNewKeyForItwin(testItwin, {
+            neverDeleteKey: existingValue,
+          });
+          return newToken;
+        } catch (error) {
+          console.error(error);
+          // Just skip updating if there was an error
+          return undefined;
+        }
+      },
+    },
+    {
+      filePath: join(
+        __dirname,
+        "../../../packages/sandcastle/gallery/imodel-mesh-export-service/main.js",
+      ),
+      selector: propertySelector("Cesium.ITwinPlatform.defaultShareKey"),
+      newValue: async (existingValue) => {
+        try {
+          // const newToken = await getNewKeyForItwin(phillyItwin, {
+          const newToken = await getNewKeyForItwin(testItwin, {
+            neverDeleteKey: existingValue,
+          });
+          return newToken;
+        } catch (error) {
+          console.error(error);
+          // Just skip updating if there was an error
+          return undefined;
+        }
+      },
+    },
+  );
+  return replacements;
+}

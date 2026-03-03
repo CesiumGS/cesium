@@ -5,9 +5,24 @@ import * as prettier from "prettier";
 import * as babelPlugin from "prettier/plugins/babel";
 import * as estreePlugin from "prettier/plugins/estree";
 import esquery from "esquery";
-import { replacements } from "./replacements.js";
+import { getReplacements } from "./replacements.js";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 
 /** @import {Replacement, NewValueFunction} from './replacements.js' */
+
+const argv = await yargs(hideBin(process.argv))
+  .options({
+    update: {
+      type: "boolean",
+      description:
+        "Use to force an update. By default this will behave as a dry run and replace with placeholders",
+    },
+  })
+  .help(false)
+  .version(false)
+  .strict()
+  .parse();
 
 /**
  * Replace the value of a variable assignment's literal in an AST
@@ -43,6 +58,11 @@ async function replaceVariableValue(ast, selector, newValue) {
     throw new Error(
       "Selected node that is not a Literal. See above for the node that was selected",
     );
+  }
+
+  if (!argv.update) {
+    foundNodes[0].value = "fake-new-value";
+    return;
   }
 
   const existingValue = foundNodes[0].value;
@@ -98,9 +118,8 @@ async function processReplacement(replacement) {
   writeFileSync(filePath, await formatCode(output));
 }
 
-// TODO: Automate through PR creation in CI https://github.com/marketplace/actions/create-pull-request
-// using a schedule https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
+// TODO: Automate through PR creation in CI
 
-for (const replacement of replacements) {
+for (const replacement of getReplacements()) {
   await processReplacement(replacement);
 }
