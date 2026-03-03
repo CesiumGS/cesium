@@ -23,32 +23,15 @@ viewer.zoomTo(tileset);
 // Collect clipping polygons from footprints
 const clippingPolygons = [];
 
-// Create the footprint generator
-const generator = new Cesium.Cesium3DTilesetFootprintGenerator({
-  tileset: tileset,
-  entityCollection: viewer.entities,
-  hullMethod: "convexHull",
-  createEntity: function (hierarchy, feature, tile) {
-    clippingPolygons.push(
-      new Cesium.ClippingPolygon({
-        positions: hierarchy.positions,
-      }),
-    );
-
-    // Still return an entity (invisible) so the generator tracks it
-    return new Cesium.Entity({
-      id: `${tile.content.url}#${feature.featureId}`,
-    });
-  },
-});
-
 // --- UI controls ---
 const statusEl = document.getElementById("status");
 const btnGenerate = document.getElementById("btnGenerate");
 const btnClear = document.getElementById("btnClear");
 
+let footprintCount = 0;
+
 function updateStatus() {
-  statusEl.textContent = `Footprints: ${generator.footprintCount}`;
+  statusEl.textContent = `Footprints: ${footprintCount}`;
 }
 
 function updateClippingPolygons() {
@@ -59,23 +42,35 @@ function updateClippingPolygons() {
   });
 }
 
-generator.footprintsGenerated.addEventListener(function (tile) {
-  console.log(
-    `footprintsGenerated — tile: ${tile?.content?.url ?? "unknown"}, total: ${generator.footprintCount}`,
-  );
-  updateStatus();
-});
-
 // One-shot generate — builds footprints then applies as terrain cutouts
 btnGenerate.addEventListener("click", function () {
   clippingPolygons.length = 0;
 
   const start = performance.now();
-  generator.generate();
+  const count = Cesium.Cesium3DTilesetFootprintGenerator.generate({
+    tileset: tileset,
+    entityCollection: viewer.entities,
+    createEntity: function (hierarchy, feature, tile) {
+      clippingPolygons.push(
+        new Cesium.ClippingPolygon({
+          positions: hierarchy.positions,
+        }),
+      );
+
+      // Still return an entity (invisible) so it is tracked
+      return new Cesium.Entity({
+        id: `${tile.content.url}#${feature.featureId}`,
+      });
+    },
+    footprintsGenerated: function (tile, count) {
+      console.log(
+        `footprintsGenerated — tile: ${tile?.content?.url ?? "unknown"}, count: ${count}`,
+      );
+    },
+  });
+  footprintCount = count;
   const elapsed = (performance.now() - start).toFixed(2);
-  console.log(
-    `generate() took ${elapsed} ms — ${generator.footprintCount} footprints`,
-  );
+  console.log(`generate() took ${elapsed} ms — ${count} footprints`);
 
   updateClippingPolygons();
   updateStatus();
@@ -83,7 +78,8 @@ btnGenerate.addEventListener("click", function () {
 
 // Clear
 btnClear.addEventListener("click", function () {
-  generator.clear();
+  viewer.entities.removeAll();
+  footprintCount = 0;
   clippingPolygons.length = 0;
   viewer.scene.globe.clippingPolygons = undefined;
   updateStatus();
