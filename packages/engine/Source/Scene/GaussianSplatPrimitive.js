@@ -38,7 +38,6 @@ import Transforms from "../Core/Transforms.js";
 
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4C = new Matrix4();
-const scratchMatrix4D = new Matrix4();
 const scratchMatrix3 = new Matrix3();
 const scratchTransformQuat = new Quaternion();
 
@@ -952,6 +951,15 @@ function GaussianSplatPrimitive(options) {
   );
 
   /**
+   * Cached inverse rotation for SH evaluation, updated each snapshot rebuild.
+   * Converts a world-space view direction to the original GLB Y-up model space
+   * so that spherical harmonic coefficients are evaluated in the correct frame.
+   * @type {Matrix3}
+   * @private
+   */
+  this._shInverseRotation = new Matrix3();
+
+  /**
    * Indicates whether or not the primitive has been destroyed.
    * @type {boolean}
    * @private
@@ -1437,16 +1445,12 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   };
 
   uniformMap.u_inverseModelRotation = function () {
-    // The draw command's modelMatrix is rootTransform only; tileset.modelMatrix
-    // is baked into the splat positions. Inverting rootTransform alone keeps
-    // SH view directions consistent with the baked data. Including
-    // tileset.modelMatrix here would double-count its rotation, causing
-    // incorrect SH colors when a transform is applied to the tileset.
-    const inverseModelRotation = Matrix4.getRotation(
-      Matrix4.inverse(primitive._rootTransform, scratchMatrix4C),
-      scratchMatrix4D,
-    );
-    return inverseModelRotation;
+    // SH coefficients are encoded in the GLB Y-up training space. To evaluate
+    // them the world-space view direction must be rotated by
+    //   inverse(computedTransform × axisCorrectionMatrix × worldTransform).
+    // This matrix is pre-computed each snapshot rebuild and stored on the
+    // primitive so the uniform closure just returns the cached value.
+    return primitive._shInverseRotation;
   };
 
   uniformMap.u_splitDirection = function () {
@@ -1663,6 +1667,31 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       this._rootTransform = Transforms.eastNorthUpToFixedFrame(
         tileset.boundingSphere.center,
       );
+
+      // Compute the SH inverse rotation from the first tile's coordinate frame.
+      // SH coefficients are encoded in the GLB Y-up training space. To evaluate
+      // them correctly the view direction must be transformed by
+      //   inverse(computedTransform × axisCorrectionMatrix × worldTransform).
+      // All tiles in a typical GS tileset share the same root coordinate frame,
+      // so using the first tile is sufficient.
+      {
+        const ft = tiles[0];
+        const shFwd = Matrix4.multiplyTransformation(
+          ft.computedTransform,
+          this._axisCorrectionMatrix,
+          scratchMatrix4C,
+        );
+        Matrix4.multiplyTransformation(
+          shFwd,
+          ft.content.worldTransform ?? Matrix4.IDENTITY,
+          shFwd,
+        );
+        Matrix4.getRotation(
+          Matrix4.inverse(shFwd, shFwd),
+          this._shInverseRotation,
+        );
+      }
+
       for (const tile of tiles) {
         GaussianSplatPrimitive.transformTile(tile);
       }
