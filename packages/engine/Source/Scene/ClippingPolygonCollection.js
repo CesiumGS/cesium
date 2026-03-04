@@ -731,6 +731,7 @@ function createSignedDistanceTextureCommand(collection) {
 
 const scratchRectangleTile = new Rectangle();
 const scratchRectangleIntersection = new Rectangle();
+const scratchRectanglePolygon = new Rectangle();
 /**
  * Determines the type intersection with the polygons of this ClippingPolygonCollection instance and the specified {@link TileBoundingVolume}.
  * @private
@@ -750,30 +751,31 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
       intersection = Intersect.INSIDE;
     }
 
+    let tileBoundingRectangle = tileBoundingVolume.rectangle;
+    if (
+      !defined(tileBoundingRectangle) &&
+      defined(tileBoundingVolume.boundingVolume?.computeCorners)
+    ) {
+      const points = tileBoundingVolume.boundingVolume.computeCorners();
+      tileBoundingRectangle = Rectangle.fromCartesianArray(
+        points,
+        ellipsoid,
+        scratchRectangleTile,
+      );
+    }
+
+    if (!defined(tileBoundingRectangle)) {
+      tileBoundingRectangle = Rectangle.fromBoundingSphere(
+        tileBoundingVolume.boundingSphere,
+        ellipsoid,
+        scratchRectangleTile,
+      );
+    }
+
     for (let i = 0; i < length; ++i) {
       const polygon = polygons[i];
 
-      const polygonBoundingRectangle = polygon.computeRectangle();
-      let tileBoundingRectangle = tileBoundingVolume.rectangle;
-      if (
-        !defined(tileBoundingRectangle) &&
-        defined(tileBoundingVolume.boundingVolume?.computeCorners)
-      ) {
-        const points = tileBoundingVolume.boundingVolume.computeCorners();
-        tileBoundingRectangle = Rectangle.fromCartesianArray(
-          points,
-          ellipsoid,
-          scratchRectangleTile,
-        );
-      }
-
-      if (!defined(tileBoundingRectangle)) {
-        tileBoundingRectangle = Rectangle.fromBoundingSphere(
-          tileBoundingVolume.boundingSphere,
-          ellipsoid,
-          scratchRectangleTile,
-        );
-      }
+      const polygonBoundingRectangle = polygon.computeRectangle(scratchRectanglePolygon);
 
       const result = Rectangle.simpleIntersection(
         tileBoundingRectangle,
@@ -782,7 +784,7 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
       );
 
       if (defined(result)) {
-        intersection = Intersect.INTERSECTING;
+        return Intersect.INTERSECTING;
       }
     }
 
