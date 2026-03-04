@@ -12,6 +12,7 @@
 
 - Fixed memory leak when rendering Gaussian splat 3D tilesets. [#13229](https://github.com/CesiumGS/cesium/pull/13229/)
 - Fixes a regression with the NGA-GPM local extension and custom shaders. [#13247](https://github.com/CesiumGS/cesium/pull/13247)
+- Fixed voxel raymarcher skipping zero step size when shape is infinitely thin. [#XXXXX](https://github.com/CesiumGS/cesium/pull/XXXXX)                                                                                                                                
 
 ## 1.139 - 2026-03-02
 
