@@ -23,7 +23,7 @@ export function ModelPicker({
   );
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Provider>
       <DropdownMenu.Button
         render={
           <Button variant="ghost">
@@ -48,6 +48,6 @@ export function ModelPicker({
           />
         ))}
       </DropdownMenu.Content>
-    </DropdownMenu.Root>
+    </DropdownMenu.Provider>
   );
 }

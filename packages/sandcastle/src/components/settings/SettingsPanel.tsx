@@ -21,7 +21,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           onClick={onClose}
         />
       </div>
-      <Tabs.Root defaultSelectedId="features">
+      <Tabs.Provider defaultSelectedId="features">
         <Tabs.TabList>
           <Tabs.Tab id="features">Features</Tabs.Tab>
           <Tabs.Tab id="advanced">Advanced</Tabs.Tab>
@@ -36,7 +36,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             <AdvancedSettings />
           </div>
         </Tabs.TabPanel>
-      </Tabs.Root>
+      </Tabs.Provider>
     </div>
   );
 }
