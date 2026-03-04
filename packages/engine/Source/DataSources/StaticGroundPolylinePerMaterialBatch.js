@@ -139,12 +139,13 @@ Batch.prototype.update = function (time) {
         }
       }
 
+      const AppearanceType = this.appearanceType;
+
       primitive = new GroundPolylinePrimitive({
         show: false,
         asynchronous: this._asynchronous,
         geometryInstances: geometries.slice(),
-        // eslint-disable-next-line new-cap
-        appearance: new this.appearanceType(),
+        appearance: new AppearanceType(),
         classificationType: this.classificationType,
       });
 

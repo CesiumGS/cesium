@@ -157,12 +157,13 @@ Batch.prototype.update = function (time) {
         this.material,
       );
 
+      const AppearanceType = this.appearanceType;
+
       primitive = new GroundPrimitive({
         show: false,
         asynchronous: true,
         geometryInstances: geometries.slice(),
-        // eslint-disable-next-line new-cap
-        appearance: new this.appearanceType({
+        appearance: new AppearanceType({
           material: this.material,
           // translucent and closed properties overridden
         }),
