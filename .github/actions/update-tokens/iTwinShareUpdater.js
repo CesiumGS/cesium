@@ -1,4 +1,8 @@
+import { add, getMonth, setDate } from "date-fns";
+import { readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import { exit } from "node:process";
+import { fileURLToPath } from "node:url";
 
 const CLIENT_ID = process.env.ITWIN_SERVICE_APP_CLIENT_ID;
 const CLIENT_SECRET = process.env.ITWIN_SERVICE_APP_CLIENT_SECRET;
@@ -10,6 +14,17 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
 
 const IMS_URL = "https://ims.bentley.com";
 const ITWIN_API_URL = "https://api.bentley.com";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const projectRoot = join(__dirname, "../../../");
+const packageJsonPath = join(projectRoot, "package.json");
+export async function getCurrentMinorVersion() {
+  const data = await readFile(packageJsonPath, "utf8");
+  const { version } = JSON.parse(data);
+  const majorMinor = version.match(/^(.*)\.(.*)\./);
+  const minor = Number(majorMinor[2]);
+  return minor;
+}
 
 /**
  * @typedef {object} Share
@@ -35,6 +50,7 @@ const ITWIN_API_URL = "https://api.bentley.com";
  * @param {string} accessToken
  */
 export async function getMyInfo(accessToken) {
+  // TODO: remove
   const resp = await fetch(`${ITWIN_API_URL}/users/me`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -50,6 +66,7 @@ export async function getMyInfo(accessToken) {
  * @returns {Promise<Itwin[]>}
  */
 export async function getItwinsWithAccess(accessToken) {
+  // TODO: remove
   const resp = await fetch(`${ITWIN_API_URL}/itwins`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -114,12 +131,54 @@ export async function getShares(itwinId, accessToken) {
 }
 
 /**
+ * The iTwin API doesn't provide any way to save metadata with a share key.
+ * We would like a way to match keys to release versions to avoid creating duplicates
+ * or deleting keys that may still be in use. This could be because the GH job was re-run
+ * or we do a patch release where the key doesn't have to change
+ *
+ * @param {Share[]} shares
+ * @param {number} currentMajorVersion
+ */
+export function mapSharesToVersion(shares, currentMajorVersion) {
+  // Tokens should last for 2 releases per our Release Guide/cycle
+  // If current version is 1.139 and it's 2026-03-25
+  // 1.138 should expire 2026-04-01   Current month + 1 === currentVersion - 1 (nextToExpire)
+  // 1.139 should expire 2026-05-01   Current month + 2 === currentVersion     (nextToExpire + 1)
+  // 1.140 should expire 2026-06-01   Current month + 3 === currentVersion + 1 (nextToExpire + 2)
+
+  const today = new Date();
+
+  const nextToExpire = currentMajorVersion - 1;
+  /** @type {Record<number, Share>} */
+  const keyPerVersion = {};
+  for (const share of shares) {
+    const expiration = new Date(share.expiration);
+    const monthsApart = getMonth(expiration) - getMonth(today);
+    if (monthsApart === 0) {
+      throw new Error("Unknown version for share key");
+    }
+    const forVersion = nextToExpire + monthsApart - 1;
+    if (keyPerVersion[forVersion]) {
+      throw new Error("Found multiple keys per version");
+    }
+    keyPerVersion[forVersion] = share;
+  }
+  return keyPerVersion;
+}
+
+/**
  * @param {string} itwinId
  * @param {string} contractName Should be "SandCastle"
+ * @param {string} expiration
  * @param {string} accessToken
  * @returns {Promise<Share>}
  */
-export async function createShare(itwinId, contractName, accessToken) {
+export async function createShare(
+  itwinId,
+  contractName,
+  expiration,
+  accessToken,
+) {
   const resp = await fetch(
     `${ITWIN_API_URL}/accesscontrol/itwins/${itwinId}/shares`,
     {
@@ -132,7 +191,7 @@ export async function createShare(itwinId, contractName, accessToken) {
       body: JSON.stringify({
         shareContract: contractName,
         // setting this to null will default to the max length. For the SandCastle contract that's 365 days
-        expiration: null,
+        expiration: expiration,
       }),
     },
   );
@@ -197,7 +256,13 @@ export async function getNewKeyForItwin(
   }
 
   const existingShares = await getShares(itwinId, accessToken);
-  console.log(existingShares);
+  const currentVersion = await getCurrentMinorVersion();
+  const sharePerVersion = mapSharesToVersion(existingShares, currentVersion);
+
+  if (sharePerVersion[currentVersion + 1]) {
+    // If a share key already exists for the target version then just reuse it
+    return sharePerVersion[currentVersion + 1].shareKey;
+  }
 
   console.log("Generating new key for itwin", itwinId);
 
@@ -211,7 +276,7 @@ export async function getNewKeyForItwin(
     const sorted = existingShares.toSorted((a, b) =>
       a.expiration.localeCompare(b.expiration),
     );
-    while (sorted.length > limitNumber) {
+    while (sorted.length >= limitNumber) {
       const last = sorted.pop();
 
       if (last?.shareKey === neverDeleteKey) {
@@ -223,6 +288,12 @@ export async function getNewKeyForItwin(
     }
   }
 
-  const newShare = await createShare(itwinId, "SandCastle", accessToken);
+  const expiration = setDate(add(new Date(), { months: 3 }), 1);
+  const newShare = await createShare(
+    itwinId,
+    "SandCastle",
+    expiration.toISOString(),
+    accessToken,
+  );
   return newShare.shareKey;
 }
