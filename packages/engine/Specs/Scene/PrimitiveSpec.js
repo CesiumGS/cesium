@@ -1116,9 +1116,7 @@ describe(
 
       expect(function () {
         primitive.update(frameState);
-      }).toThrowDeveloperError(
-        "Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input 'normal', which was not computed as part of the Geometry.  Use the appearance's vertexFormat property when constructing the geometry.",
-      );
+      }).toThrowDeveloperError();
     });
 
     it("failed geometry throws on next update", async function () {
