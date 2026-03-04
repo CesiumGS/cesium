@@ -1,18 +1,9 @@
-import {
-  useState,
-  useRef,
-  useEffect,
-  useContext,
-  useCallback,
-  useMemo,
-  memo,
-} from "react";
+import { useState, useRef, useEffect, useContext, useCallback } from "react";
 import { Button, Text, Tooltip, Switch } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { ChatMessage as ChatMessageComponent } from "./ChatMessage";
 import { ApiKeyDialog } from "./ApiKeyDialog";
-import { unstable_Banner as Banner } from "@stratakit/structures";
 import { PromptInput } from "./components/common/PromptInput";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { ModelPicker } from "./components/controls/ModelPicker";
@@ -24,7 +15,6 @@ import type {
   ConversationHistory,
   DiffBlock,
   ExecutionResult,
-  AutoIterationConfig,
   ToolCall,
   ImageAttachment,
 } from "./AI/types";
@@ -40,7 +30,6 @@ import cesiumChatLogo from "./assets/cesium-chat-logo.png";
 import "./ChatPanel.css";
 import { useModel } from "./contexts/useModel";
 import { useChatMessages } from "./hooks/useChatMessages";
-import { useAutoIteration } from "./hooks/useAutoIteration";
 import { useToolChainExecution } from "./hooks/useToolChainExecution";
 
 // Type for message content blocks that can include images
@@ -65,7 +54,6 @@ interface ChatPanelProps {
   ) => ExecutionResult | Promise<ExecutionResult>;
   currentCode?: CodeContext;
   onClearConsole?: () => void;
-  getCurrentConsoleErrors?: () => Array<{ type: string; message: string }>;
 }
 
 const BRAND_TEXT_STYLE: React.CSSProperties = {
@@ -80,118 +68,6 @@ const TOGGLE_LABEL_STYLE: React.CSSProperties = {
   cursor: "pointer",
 };
 
-interface ChatFooterContext {
-  escalationActive: boolean;
-  isLoading: boolean;
-  isCurrentlyStreaming: boolean;
-  isIterating: boolean;
-  currentIteration: number;
-  isWaiting: boolean;
-  completionMessage: string | null;
-  completionType: string | null;
-  maxIterations: number;
-}
-
-const ChatFooter = memo(function ChatFooter({
-  context,
-}: {
-  context?: ChatFooterContext;
-}) {
-  if (!context) {
-    return null;
-  }
-  const {
-    escalationActive,
-    isLoading,
-    isCurrentlyStreaming,
-    isIterating,
-    currentIteration,
-    isWaiting,
-    completionMessage,
-    completionType,
-    maxIterations,
-  } = context;
-
-  return (
-    <>
-      <div
-        className="footer-guidance-wrapper"
-        style={{
-          display: escalationActive && !isLoading ? "block" : "none",
-        }}
-      >
-        <Banner
-          tone="info"
-          label="Help needed"
-          message="The AI has encountered repeated errors and needs your guidance."
-        />
-      </div>
-
-      <div
-        className="footer-loading-wrapper"
-        style={{
-          display: isLoading || isCurrentlyStreaming ? "block" : "none",
-        }}
-      >
-        <div className="chat-loading">
-          <div className="loading-dots">
-            <div className="loading-dot"></div>
-            <div className="loading-dot"></div>
-            <div className="loading-dot"></div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="footer-iteration-badge-wrapper"
-        style={{
-          display: isIterating && currentIteration > 0 ? "block" : "none",
-        }}
-      >
-        <div className="iteration-status-badge">
-          <span className="iteration-icon"></span>
-          <span className="iteration-text">
-            Auto-fix {currentIteration}/{maxIterations}
-          </span>
-        </div>
-      </div>
-
-      <div
-        className="footer-waiting-wrapper"
-        style={{
-          display: isWaiting ? "block" : "none",
-        }}
-      >
-        <div className="iteration-waiting">
-          <div className="loading-spinner small" />
-          <Text variant="body-sm" style={{ opacity: 0.7 }}>
-            Checking for errors...
-          </Text>
-        </div>
-      </div>
-
-      <div
-        className="footer-completion-wrapper"
-        style={{
-          display: completionMessage ? "block" : "none",
-        }}
-      >
-        <div
-          className={`iteration-completion iteration-completion-${completionType}`}
-        >
-          <span className="completion-icon">
-            {completionType === "success" && "✓"}
-            {completionType === "max-iterations" && "⚠️"}
-            {completionType === "oscillation" && "🔄"}
-            {completionType === "max-requests" && "🛑"}
-          </span>
-          <Text variant="body-sm">{completionMessage}</Text>
-        </div>
-      </div>
-    </>
-  );
-});
-
 export function ChatPanel({
   onClose,
   codeContext,
@@ -199,10 +75,8 @@ export function ChatPanel({
   onApplyDiff,
   currentCode,
   onClearConsole,
-  getCurrentConsoleErrors,
 }: ChatPanelProps) {
   const { settings, updateSettings } = useContext(SettingsContext);
-  const autoIterationConfig: AutoIterationConfig = settings.autoIteration;
 
   const { models, currentModel, setCurrentModel, refreshModels } = useModel();
   const selectedModel =
@@ -240,41 +114,6 @@ export function ChatPanel({
 
   // Keep messagesRef in sync so sendMessageWithContent doesn't need messages as a dep
   messagesRef.current = messages;
-
-  // sendMessageWithContent ref for auto-iteration callback
-  const sendMessageRef = useRef<(msg: string) => void>(() => {});
-
-  const triggerFollowUp = useCallback(
-    (prompt: string) => {
-      // Add user feedback message then send
-      const userFeedbackMessage: ChatMessageType = {
-        id: crypto.randomUUID(),
-        role: "user",
-        content: prompt,
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, userFeedbackMessage]);
-      sendMessageRef.current(prompt);
-    },
-    [setMessages],
-  );
-
-  const {
-    iterationState,
-    iterationStatus,
-    cancelPendingIteration,
-    incrementTotalRequests,
-    resetIteration,
-    checkPostResponseErrors,
-    setWaiting,
-  } = useAutoIteration({
-    messages,
-    isLoading,
-    isCurrentlyStreaming,
-    currentCode,
-    autoIterationConfig,
-    triggerFollowUp,
-  });
 
   const {
     workingCodeRef,
@@ -330,21 +169,6 @@ export function ChatPanel({
         setShowApiKeyDialog(true);
         return;
       }
-
-      if (
-        iterationState.totalRequests >= autoIterationConfig.maxTotalRequests
-      ) {
-        const notificationMessage: ChatMessageType = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: `Maximum request limit (${autoIterationConfig.maxTotalRequests}) reached for this conversation. Please review the output or start a new chat.`,
-          timestamp: Date.now(),
-        };
-        addMessage(notificationMessage);
-        return;
-      }
-
-      incrementTotalRequests();
 
       const userMessage: ChatMessageType = {
         id: crypto.randomUUID(),
@@ -715,46 +539,6 @@ export function ChatPanel({
             error: !!streamError && !accumulatedText,
           });
         }
-
-        // Post-response error checking for auto-iteration
-        if (wasUserStoppedRef.current) {
-          // User stopped: finalize current assistant content only, skip auto-iteration
-        } else {
-          const errorsBefore =
-            currentCode?.consoleMessages?.filter(
-              (msg) => msg.type === "error",
-            ) || [];
-          const errorSignatureBefore = errorsBefore
-            .map((err) => err.message)
-            .join("|");
-
-          if (currentCode) {
-            setWaiting(true);
-
-            await new Promise((resolve) =>
-              setTimeout(resolve, autoIterationConfig.waitTimeMs),
-            );
-
-            if (wasUserStoppedRef.current) {
-              setWaiting(false);
-              return;
-            }
-
-            const runtimeErrors = getCurrentConsoleErrors
-              ? getCurrentConsoleErrors().filter((msg) => msg.type === "error")
-              : currentCode?.consoleMessages?.filter(
-                  (msg) => msg.type === "error",
-                ) || [];
-
-            const allErrors = runtimeErrors.map((err) => err.message);
-
-            checkPostResponseErrors(
-              allErrors,
-              errorSignatureBefore,
-              iterationStatus.isIterating,
-            );
-          }
-        }
       } catch (error) {
         const errorContent =
           error instanceof Error
@@ -790,11 +574,6 @@ export function ChatPanel({
       hasApiKey,
       selectedModel,
       currentCode,
-      iterationState.totalRequests,
-      iterationStatus.isIterating,
-      autoIterationConfig.maxTotalRequests,
-      autoIterationConfig.waitTimeMs,
-      getCurrentConsoleErrors,
       settings.customPromptAddendum,
       addMessage,
       updateMessage,
@@ -802,7 +581,6 @@ export function ChatPanel({
       setMessages,
       setIsLoading,
       setIsCurrentlyStreaming,
-      incrementTotalRequests,
       getTools,
       getWorkingCode,
       executeToolCall,
@@ -812,15 +590,8 @@ export function ChatPanel({
       workingCodeRef,
       createBatchedUpdater,
       cancelPendingRaf,
-      checkPostResponseErrors,
-      setWaiting,
     ],
   );
-
-  // Keep ref in sync for auto-iteration callback
-  useEffect(() => {
-    sendMessageRef.current = sendMessageWithContent;
-  }, [sendMessageWithContent]);
 
   // === Handlers ===
   const handleSendMessage = useCallback(async () => {
@@ -835,9 +606,7 @@ export function ChatPanel({
   const handleStop = useCallback(() => {
     wasUserStoppedRef.current = true;
     abortControllerRef.current?.abort();
-    cancelPendingIteration();
-    setWaiting(false);
-  }, [cancelPendingIteration, setWaiting]);
+  }, []);
 
   const handleApiKeySuccess = useCallback(() => {
     setHasApiKey(ApiKeyManager.hasAnyCredentials());
@@ -851,8 +620,7 @@ export function ChatPanel({
 
   const handleNewChat = useCallback(() => {
     resetChat();
-    resetIteration();
-  }, [resetChat, resetIteration]);
+  }, [resetChat]);
 
   const stableOnApplyCode = useCallback(
     (javascript?: string, html?: string) => {
@@ -879,31 +647,6 @@ export function ChatPanel({
       };
     },
     [onApplyDiff, onClearConsole],
-  );
-
-  const footerContext = useMemo<ChatFooterContext>(
-    () => ({
-      escalationActive: iterationState.escalationActive,
-      isLoading,
-      isCurrentlyStreaming,
-      isIterating: iterationStatus.isIterating,
-      currentIteration: iterationStatus.currentIteration,
-      isWaiting: iterationStatus.isWaiting,
-      completionMessage: iterationStatus.completionMessage,
-      completionType: iterationStatus.completionType,
-      maxIterations: autoIterationConfig.maxIterations,
-    }),
-    [
-      iterationState.escalationActive,
-      isLoading,
-      isCurrentlyStreaming,
-      iterationStatus.isIterating,
-      iterationStatus.currentIteration,
-      iterationStatus.isWaiting,
-      iterationStatus.completionMessage,
-      iterationStatus.completionType,
-      autoIterationConfig.maxIterations,
-    ],
   );
 
   const followOutputConfig = useCallback(
@@ -1085,10 +828,6 @@ export function ChatPanel({
                   streamingDiffs={undefined}
                 />
               )}
-              context={footerContext}
-              components={{
-                Footer: ChatFooter,
-              }}
             />
           )}
         </div>

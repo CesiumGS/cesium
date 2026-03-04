@@ -377,7 +377,6 @@ function App() {
 
   const handleApplyAiCode = useCallback(
     (javascript?: string, html?: string) => {
-      // Clear old console messages to avoid confusing auto-fix
       setConsoleMessages([]);
 
       if (javascript) {
@@ -405,7 +404,6 @@ function App() {
     ): Promise<ExecutionResult> => {
       const startTime = Date.now();
 
-      // Clear old console messages to avoid confusing auto-fix
       setConsoleMessages([]);
 
       // Show initial progress message
@@ -623,15 +621,6 @@ function App() {
         })),
     }),
     [codeState.code, codeState.html, consoleMessages],
-  );
-
-  const getCurrentConsoleErrors = useCallback(
-    () =>
-      consoleMessages.map((msg) => ({
-        type: msg.type,
-        message: msg.message,
-      })),
-    [consoleMessages],
   );
 
   const handleClearConsole = useCallback(() => setConsoleMessages([]), []);
@@ -869,7 +858,6 @@ function App() {
                 onApplyDiff={handleApplyAiDiff}
                 currentCode={codeContext}
                 onClearConsole={handleClearConsole}
-                getCurrentConsoleErrors={getCurrentConsoleErrors}
               />
             </ErrorBoundary>
           </Allotment.Pane>

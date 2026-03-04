@@ -23,7 +23,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           defaultPanel: value.defaultPanel ?? initialSettings.defaultPanel,
           embeddingSearch:
             value.embeddingSearch ?? initialSettings.embeddingSearch,
-          autoIteration: value.autoIteration ?? initialSettings.autoIteration,
           extendedThinking:
             value.extendedThinking ?? initialSettings.extendedThinking,
           pinnedModels: value.pinnedModels ?? initialSettings.pinnedModels,
@@ -56,10 +55,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             parsedValue.defaultPanel ?? initialSettings.defaultPanel,
           embeddingSearch:
             parsedValue.embeddingSearch ?? initialSettings.embeddingSearch,
-          autoIteration: {
-            ...initialSettings.autoIteration,
-            ...parsedValue.autoIteration,
-          },
           extendedThinking: {
             ...initialSettings.extendedThinking,
             ...parsedValue.extendedThinking,

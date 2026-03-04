@@ -630,24 +630,6 @@ export interface InlineChange {
   source?: string;
 }
 
-// ============================================================================
-// Auto-Iteration Types
-// ============================================================================
-
-/**
- * Detailed information about a console error
- */
-export interface ConsoleError {
-  /** Error message text */
-  message: string;
-  /** Type of console message */
-  type: "error" | "warn";
-  /** Stack trace if available */
-  stack?: string;
-  /** Timestamp when error occurred */
-  timestamp?: number;
-}
-
 /**
  * Complete execution result including both diff application and runtime errors
  */
@@ -657,49 +639,11 @@ export interface ExecutionResult {
   /** Errors that occurred during diff application */
   diffErrors: string[];
   /** Runtime console errors that occurred after execution */
-  consoleErrors: ConsoleError[];
+  consoleErrors: Array<{ message: string; type: string }>;
   /** Number of diffs that were successfully applied */
   appliedCount: number;
   /** Timestamp when execution completed */
   timestamp: number;
   /** Time taken to execute in milliseconds */
   executionTimeMs?: number;
-}
-
-/**
- * Configuration options for auto-iteration behavior
- */
-export interface AutoIterationConfig {
-  /** Whether auto-iteration is enabled */
-  enabled: boolean;
-  /** Maximum number of iterations per error (default: 3) */
-  maxIterations: number;
-  /** Maximum total requests across entire conversation (default: 20) */
-  maxTotalRequests: number;
-  /** Number of consecutive mistakes before escalating to user (default: 3) */
-  escalationThreshold: number;
-  /** Time to wait after code execution before checking errors in ms (default: 3500) */
-  waitTimeMs: number;
-  /** Whether to detect error oscillation patterns (A→B→A) (default: true) */
-  detectOscillation: boolean;
-  /** Whether to include stack traces in error context (default: true) */
-  includeStackTraces: boolean;
-}
-
-/**
- * Runtime state tracking for auto-iteration
- */
-export interface IterationState {
-  /** Number of error-triggered iterations in current sequence */
-  errorIterationCount: number;
-  /** Number of consecutive mistakes/failures */
-  consecutiveMistakes: number;
-  /** Total number of AI requests in current conversation */
-  totalRequests: number;
-  /** Signature of the last error encountered */
-  lastErrorSignature: string;
-  /** Recent error signatures for oscillation detection */
-  recentErrorSignatures: string[];
-  /** Whether escalation UI is currently active */
-  escalationActive: boolean;
 }

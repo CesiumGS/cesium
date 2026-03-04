@@ -1,5 +1,4 @@
 import { createContext } from "react";
-import type { AutoIterationConfig } from "./AI/types";
 
 export type AvailableFontId =
   | "droid-sans"
@@ -43,7 +42,6 @@ export type Settings = {
   fontLigatures: boolean;
   defaultPanel: LeftPanel;
   embeddingSearch: boolean;
-  autoIteration: AutoIterationConfig;
   extendedThinking: {
     enabled: boolean;
     budget: number;
@@ -59,15 +57,6 @@ export const initialSettings: Settings = {
   fontLigatures: false,
   defaultPanel: "gallery",
   embeddingSearch: true,
-  autoIteration: {
-    enabled: true,
-    maxIterations: 3,
-    maxTotalRequests: 20,
-    escalationThreshold: 3,
-    waitTimeMs: 5000,
-    detectOscillation: true,
-    includeStackTraces: true,
-  },
   extendedThinking: {
     enabled: true,
     budget: 2048,
