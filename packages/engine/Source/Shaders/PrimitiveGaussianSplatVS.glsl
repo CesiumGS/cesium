@@ -142,12 +142,11 @@ highp vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
 void main() {
     uint texIdx = uint(a_splatIndex);
-    // u_splatRowMask and u_splatRowShift are set by JS to match the actual
-    // texture width chosen to accommodate the current splat count without
-    // exceeding the GPU's maximumTextureSize.
-    // Default (width=2048): rowMask=0x3ff (1023), rowShift=10
-    // For width=4096:       rowMask=0x7ff (2047), rowShift=11
-    // For width=8192:       rowMask=0xfff (4095), rowShift=12
+    // u_splatRowMask and u_splatRowShift encode the row width of the splat
+    // attribute texture. The texture width is always maximumTextureSize, which
+    // varies by GPU, so these are passed as uniforms rather than constants.
+    //   rowMask  = maximumTextureSize/2 - 1
+    //   rowShift = log2(maximumTextureSize/2)
     uint rowMask = uint(u_splatRowMask);
     uint rowShift = uint(u_splatRowShift);
     ivec2 posCoord = ivec2(int((texIdx & rowMask) << 1), int(texIdx >> rowShift));

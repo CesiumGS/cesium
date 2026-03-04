@@ -770,7 +770,7 @@ function checkMetadataCompatibility(
     if (!primitivePropertyIds.has(propertyName)) {
       CustomShaderPipelineStage._oneTimeWarning(
         "CustomShaderPipelineStage.checkMetadataCompatibility",
-        `A custom shader uses metadata property "${propertyName}" which is not present at least one primitive's structural metadata. Disabling the custom shader for this primitive.`,
+        `A custom shader uses metadata property "${propertyName}" which is not present for all primitives in the tileset. Disabling the custom shader for these primitives.`,
       );
       return false;
     }
