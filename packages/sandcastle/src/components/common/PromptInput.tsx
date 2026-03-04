@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useEffect } from "react";
 import { IconButton } from "@stratakit/bricks";
-import { send } from "../../icons";
+import { send, stop } from "../../icons";
 import "./PromptInput.css";
 
 export interface PromptInputProps {
@@ -10,6 +10,8 @@ export interface PromptInputProps {
   placeholder?: string;
   disabled?: boolean;
   isLoading?: boolean;
+  isStreaming?: boolean;
+  onStop?: () => void;
   ariaLabel?: string;
 }
 
@@ -21,6 +23,8 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
     placeholder = "Type a message...",
     disabled = false,
     isLoading = false,
+    isStreaming = false,
+    onStop,
     ariaLabel = "Message input",
   }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -100,12 +104,16 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
           aria-label={ariaLabel}
           aria-multiline="true"
         />
-        <IconButton
-          label="Send message"
-          icon={send}
-          onClick={handleSendClick}
-          disabled={!value.trim() || disabled || isLoading}
-        />
+        {isStreaming && onStop ? (
+          <IconButton label="Stop generating" icon={stop} onClick={onStop} />
+        ) : (
+          <IconButton
+            label="Send message"
+            icon={send}
+            onClick={handleSendClick}
+            disabled={!value.trim() || disabled || isLoading}
+          />
+        )}
       </div>
     );
   },

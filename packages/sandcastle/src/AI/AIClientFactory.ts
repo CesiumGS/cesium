@@ -45,6 +45,7 @@ export interface AIClient {
     tools?: ToolDefinition[],
     conversationHistory?: ConversationHistory,
     attachments?: Array<{ mimeType: string; base64Data: string }>,
+    abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk>;
 
   submitToolResult?(
@@ -53,6 +54,7 @@ export interface AIClient {
     systemPrompt: string,
     conversationHistory: ConversationHistory,
     tools?: ToolDefinition[],
+    abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk>;
 
   setModel(model: AIModel): void;

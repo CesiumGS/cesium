@@ -144,6 +144,7 @@ export class AnthropicClient {
     tools?: ToolDefinition[],
     conversationHistory?: AnthropicMessage[],
     attachments?: Array<{ mimeType: string; base64Data: string }>,
+    abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
     // Input validation
     if (!userMessage || userMessage.trim().length === 0) {
@@ -212,6 +213,16 @@ export class AnthropicClient {
     const controller = new AbortController();
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
+    if (abortSignal) {
+      if (abortSignal.aborted) {
+        yield { type: "error", error: "Request stopped by user" };
+        return;
+      }
+      abortSignal.addEventListener("abort", () => controller.abort(), {
+        once: true,
+      });
+    }
+
     // Stall timeout resets whenever data is received
     const resetStallTimeout = () => {
       if (timeoutId !== null) {
@@ -261,7 +272,12 @@ export class AnthropicClient {
       yield* this.processSSEStream(response.body, resetStallTimeout);
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
-        yield { type: "error", error: "Request timed out" };
+        yield {
+          type: "error",
+          error: abortSignal?.aborted
+            ? "Request stopped by user"
+            : "Request timed out",
+        };
       } else {
         yield {
           type: "error",
@@ -523,6 +539,7 @@ export class AnthropicClient {
     systemPrompt: string,
     conversationHistory: AnthropicMessage[],
     tools?: ToolDefinition[],
+    abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
     // Build updated messages including tool result
     // Handle undefined values explicitly to ensure proper content is always sent
@@ -575,6 +592,16 @@ export class AnthropicClient {
     const controller = new AbortController();
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
+    if (abortSignal) {
+      if (abortSignal.aborted) {
+        yield { type: "error", error: "Request stopped by user" };
+        return;
+      }
+      abortSignal.addEventListener("abort", () => controller.abort(), {
+        once: true,
+      });
+    }
+
     // Stall timeout resets whenever data is received
     const resetStallTimeout = () => {
       if (timeoutId !== null) {
@@ -624,7 +651,12 @@ export class AnthropicClient {
       yield* this.processSSEStream(response.body, resetStallTimeout);
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
-        yield { type: "error", error: "Request timed out" };
+        yield {
+          type: "error",
+          error: abortSignal?.aborted
+            ? "Request stopped by user"
+            : "Request timed out",
+        };
       } else {
         yield {
           type: "error",

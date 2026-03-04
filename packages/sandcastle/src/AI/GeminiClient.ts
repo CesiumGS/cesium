@@ -242,6 +242,7 @@ export class GeminiClient {
     tools?: ToolDefinition[],
     conversationHistory?: Array<{ parts: Array<{ text: string }> }>,
     attachments?: Array<{ mimeType: string; base64Data: string }>,
+    abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
     const { systemPrompt, userPrompt } = useDiffFormat
       ? buildDiffBasedPrompt(userMessage, context, customAddendum)
@@ -360,6 +361,16 @@ export class GeminiClient {
 
     const controller = new AbortController();
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    if (abortSignal) {
+      if (abortSignal.aborted) {
+        yield { type: "error", error: "Request stopped by user" };
+        return;
+      }
+      abortSignal.addEventListener("abort", () => controller.abort(), {
+        once: true,
+      });
+    }
 
     const resetStallTimeout = () => {
       if (timeoutId !== null) {
@@ -565,7 +576,12 @@ export class GeminiClient {
       };
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
-        yield { type: "error", error: "Request timed out" };
+        yield {
+          type: "error",
+          error: abortSignal?.aborted
+            ? "Request stopped by user"
+            : "Request timed out",
+        };
       } else {
         yield {
           type: "error",
@@ -659,6 +675,7 @@ export class GeminiClient {
     systemPrompt: string,
     conversationHistory: GeminiConversationMessage[],
     tools?: ToolDefinition[],
+    abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
     // Build the function response
     const functionResponsePart = this.buildFunctionResponsePart(
@@ -712,6 +729,16 @@ export class GeminiClient {
 
     const controller = new AbortController();
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    if (abortSignal) {
+      if (abortSignal.aborted) {
+        yield { type: "error", error: "Request stopped by user" };
+        return;
+      }
+      abortSignal.addEventListener("abort", () => controller.abort(), {
+        once: true,
+      });
+    }
 
     const resetStallTimeout = () => {
       if (timeoutId !== null) {
@@ -872,7 +899,12 @@ export class GeminiClient {
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
-        yield { type: "error", error: "Request timed out" };
+        yield {
+          type: "error",
+          error: abortSignal?.aborted
+            ? "Request stopped by user"
+            : "Request timed out",
+        };
       } else {
         yield {
           type: "error",

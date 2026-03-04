@@ -28,6 +28,7 @@ import history from "@stratakit/icons/history.svg";
 import key from "@stratakit/icons/key.svg";
 import lock from "@stratakit/icons/lock.svg";
 import send from "@stratakit/icons/send.svg";
+import stop from "@stratakit/icons/stop.svg";
 import chevronDown from "@stratakit/icons/chevron-down.svg";
 import chevronUp from "@stratakit/icons/chevron-up.svg";
 import error from "@stratakit/icons/error.svg";
@@ -68,6 +69,7 @@ export {
   key,
   lock,
   send,
+  stop,
   chevronDown,
   chevronUp,
   error,

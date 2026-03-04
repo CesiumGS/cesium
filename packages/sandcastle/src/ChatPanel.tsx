@@ -216,6 +216,8 @@ export function ChatPanel({
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const wasUserStoppedRef = useRef(false);
 
   // === Custom Hooks ===
   const {
@@ -260,6 +262,7 @@ export function ChatPanel({
   const {
     iterationState,
     iterationStatus,
+    cancelPendingIteration,
     incrementTotalRequests,
     resetIteration,
     checkPostResponseErrors,
@@ -355,6 +358,10 @@ export function ChatPanel({
       addMessage(userMessage);
       setIsLoading(true);
       setIsCurrentlyStreaming(true);
+
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+      wasUserStoppedRef.current = false;
 
       let accumulatedText = "";
       let reasoning = "";
@@ -475,6 +482,7 @@ export function ChatPanel({
           toolsToPass,
           conversationHistory,
           attachments,
+          abortController.signal,
         )) {
           switch (chunk.type) {
             case "reasoning":
@@ -601,6 +609,7 @@ export function ChatPanel({
                     messageContent,
                     accumulatedText,
                     toolsToPass,
+                    abortController.signal,
                   );
                 } catch (error) {
                   const errorContent =
@@ -626,6 +635,10 @@ export function ChatPanel({
               break;
 
             case "error":
+              if (chunk.error === "Request stopped by user") {
+                wasUserStoppedRef.current = true;
+                break;
+              }
               streamError = chunk.error;
               ensureAssistantMessage({
                 content: `Error: ${chunk.error}`,
@@ -660,7 +673,22 @@ export function ChatPanel({
         const finalContent =
           accumulatedText || (streamError ? `Error: ${streamError}` : "");
         if (!assistantMessageId) {
-          if (finalContent || reasoning || streamError) {
+          if (
+            wasUserStoppedRef.current &&
+            !finalContent &&
+            !reasoning &&
+            !streamError
+          ) {
+            const msg: ChatMessageType = {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: "(Response stopped by user)",
+              timestamp: Date.now(),
+              isStreaming: false,
+            };
+            assistantMessageId = msg.id;
+            addMessage(msg);
+          } else if (finalContent || reasoning || streamError) {
             const msg: ChatMessageType = {
               id: crypto.randomUUID(),
               role: "assistant",
@@ -689,33 +717,43 @@ export function ChatPanel({
         }
 
         // Post-response error checking for auto-iteration
-        const errorsBefore =
-          currentCode?.consoleMessages?.filter((msg) => msg.type === "error") ||
-          [];
-        const errorSignatureBefore = errorsBefore
-          .map((err) => err.message)
-          .join("|");
+        if (wasUserStoppedRef.current) {
+          // User stopped: finalize current assistant content only, skip auto-iteration
+        } else {
+          const errorsBefore =
+            currentCode?.consoleMessages?.filter(
+              (msg) => msg.type === "error",
+            ) || [];
+          const errorSignatureBefore = errorsBefore
+            .map((err) => err.message)
+            .join("|");
 
-        if (currentCode) {
-          setWaiting(true);
+          if (currentCode) {
+            setWaiting(true);
 
-          await new Promise((resolve) =>
-            setTimeout(resolve, autoIterationConfig.waitTimeMs),
-          );
+            await new Promise((resolve) =>
+              setTimeout(resolve, autoIterationConfig.waitTimeMs),
+            );
 
-          const runtimeErrors = getCurrentConsoleErrors
-            ? getCurrentConsoleErrors().filter((msg) => msg.type === "error")
-            : currentCode?.consoleMessages?.filter(
-                (msg) => msg.type === "error",
-              ) || [];
+            if (wasUserStoppedRef.current) {
+              setWaiting(false);
+              return;
+            }
 
-          const allErrors = runtimeErrors.map((err) => err.message);
+            const runtimeErrors = getCurrentConsoleErrors
+              ? getCurrentConsoleErrors().filter((msg) => msg.type === "error")
+              : currentCode?.consoleMessages?.filter(
+                  (msg) => msg.type === "error",
+                ) || [];
 
-          checkPostResponseErrors(
-            allErrors,
-            errorSignatureBefore,
-            iterationStatus.isIterating,
-          );
+            const allErrors = runtimeErrors.map((err) => err.message);
+
+            checkPostResponseErrors(
+              allErrors,
+              errorSignatureBefore,
+              iterationStatus.isIterating,
+            );
+          }
         }
       } catch (error) {
         const errorContent =
@@ -739,6 +777,8 @@ export function ChatPanel({
           });
         }
       } finally {
+        abortControllerRef.current = null;
+        wasUserStoppedRef.current = false;
         cancelPendingRaf();
         setIsLoading(false);
         setIsCurrentlyStreaming(false);
@@ -791,6 +831,13 @@ export function ChatPanel({
     setInput("");
     await sendMessageWithContent(trimmedInput);
   }, [input, setInput, sendMessageWithContent]);
+
+  const handleStop = useCallback(() => {
+    wasUserStoppedRef.current = true;
+    abortControllerRef.current?.abort();
+    cancelPendingIteration();
+    setWaiting(false);
+  }, [cancelPendingIteration, setWaiting]);
 
   const handleApiKeySuccess = useCallback(() => {
     setHasApiKey(ApiKeyManager.hasAnyCredentials());
@@ -1054,6 +1101,8 @@ export function ChatPanel({
             placeholder="Ask me anything about Cesium"
             disabled={!hasApiKey || isLoading}
             isLoading={isLoading}
+            isStreaming={isCurrentlyStreaming}
+            onStop={handleStop}
             ariaLabel="Chat message input"
           />
 

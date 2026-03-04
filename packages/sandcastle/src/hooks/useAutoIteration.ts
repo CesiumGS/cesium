@@ -538,6 +538,23 @@ export function useAutoIteration({
     ],
   );
 
+  const cancelPendingIteration = useCallback(() => {
+    if (iterationDelayTimeoutRef.current) {
+      clearTimeout(iterationDelayTimeoutRef.current);
+      iterationDelayTimeoutRef.current = null;
+    }
+    if (followUpIterationTimeoutRef.current) {
+      clearTimeout(followUpIterationTimeoutRef.current);
+      followUpIterationTimeoutRef.current = null;
+    }
+    if (errorDebounceTimeoutRef.current) {
+      clearTimeout(errorDebounceTimeoutRef.current);
+      errorDebounceTimeoutRef.current = null;
+    }
+    autoIterationScheduledRef.current = false;
+    setIterationStatus((prev) => ({ ...prev, isWaiting: false }));
+  }, []);
+
   const setWaiting = useCallback((isWaiting: boolean) => {
     setIterationStatus((prev) => ({ ...prev, isWaiting }));
   }, []);
@@ -549,6 +566,7 @@ export function useAutoIteration({
     handleSkipGuidance,
     incrementTotalRequests,
     resetIteration,
+    cancelPendingIteration,
     checkPostResponseErrors,
     setWaiting,
   };

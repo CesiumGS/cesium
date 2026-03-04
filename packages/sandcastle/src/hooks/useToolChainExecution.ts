@@ -145,6 +145,7 @@ export function useToolChainExecution({
           systemPrompt: string,
           history: ConversationHistory,
           tools?: ToolDefinition[],
+          abortSignal?: AbortSignal,
         ) => AsyncGenerator<StreamChunk>;
       },
       systemPrompt: string,
@@ -153,6 +154,7 @@ export function useToolChainExecution({
       _messageContent: string,
       _accumulatedText: string,
       tools?: ToolDefinition[],
+      abortSignal?: AbortSignal,
     ) => {
       const isGeminiModel = selectedModel.startsWith("gemini");
 
@@ -215,6 +217,7 @@ export function useToolChainExecution({
         let streamError = "";
         let contMsgId: string | null = null;
         let nextToolCall: ToolCall | null = null;
+        let wasUserStopped = false;
 
         const ensureContMsg = (initial: Partial<ChatMessageType>) => {
           if (contMsgId) {
@@ -243,6 +246,7 @@ export function useToolChainExecution({
             systemPrompt,
             historyBeforeToolResult as ConversationHistory,
             tools,
+            abortSignal,
           )) {
             if (rchunk.type === "reasoning") {
               contReasoning += rchunk.reasoning;
@@ -277,6 +281,10 @@ export function useToolChainExecution({
               }
             }
             if (rchunk.type === "error") {
+              if (rchunk.error === "Request stopped by user") {
+                wasUserStopped = true;
+                break;
+              }
               streamError = rchunk.error;
               ensureContMsg({
                 content: `Error: ${rchunk.error}`,
@@ -303,7 +311,7 @@ export function useToolChainExecution({
                 timestamp: Date.now(),
                 reasoning: contReasoning,
                 isStreaming: false,
-                error: !!streamError,
+                error: !!streamError && !wasUserStopped,
                 toolCalls: nextToolCall
                   ? [{ toolCall: nextToolCall }]
                   : undefined,
@@ -315,7 +323,7 @@ export function useToolChainExecution({
             updateMessage(contMsgId, {
               content: finalContent,
               isStreaming: false,
-              error: !!streamError,
+              error: !!streamError && !wasUserStopped,
             });
           }
         } catch (error) {
@@ -342,6 +350,19 @@ export function useToolChainExecution({
               content: errorContent,
               isStreaming: false,
               error: true,
+            });
+          }
+          return;
+        }
+
+        if (wasUserStopped) {
+          if (!contMsgId) {
+            addMessage({
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: "(Response stopped by user)",
+              timestamp: Date.now(),
+              isStreaming: false,
             });
           }
           return;
