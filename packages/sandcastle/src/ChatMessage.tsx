@@ -57,7 +57,9 @@ export const ChatMessage = memo(function ChatMessage({
     html: boolean;
   }>({ javascript: false, html: false });
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
-  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     return () => clearTimeout(copiedTimeoutRef.current);

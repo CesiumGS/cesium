@@ -141,7 +141,9 @@ function App() {
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
   const [inlineChanges, setInlineChanges] = useState<InlineChange[]>([]);
   const editorRef = useRef<SandcastleEditorRef>(null);
-  const autoRunTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const autoRunTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const activeWorkerRef = useRef<Worker | null>(null);
   const diffApplierRef = useRef<DiffApplier | null>(null);
   useEffect(

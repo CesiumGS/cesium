@@ -28,7 +28,9 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
   const [cesiumError, setCesiumError] = useState<string | null>(null);
   const [cesiumSuccess, setCesiumSuccess] = useState(false);
 
-  const cesiumSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const cesiumSuccessTimeoutRef = useRef<
+    ReturnType<typeof setTimeout> | undefined
+  >(undefined);
 
   useEffect(() => {
     return () => clearTimeout(cesiumSuccessTimeoutRef.current);

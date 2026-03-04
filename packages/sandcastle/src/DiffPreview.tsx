@@ -116,7 +116,9 @@ export function DiffPreview({
   );
   const editorRef = useRef<editor.IStandaloneDiffEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const successTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const disposableRef = useRef<{ dispose: () => void } | null>(null);
 
   // Keep diff expanded when applied (for audit trail)

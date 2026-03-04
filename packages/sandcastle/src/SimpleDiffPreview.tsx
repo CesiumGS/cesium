@@ -154,7 +154,9 @@ export function SimpleDiffPreview({
 }: SimpleDiffPreviewProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const [showSuccess, setShowSuccess] = useState(false);
-  const successTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     return () => clearTimeout(successTimeoutRef.current);
