@@ -147,6 +147,7 @@ Batch.prototype.update = function (time) {
             this.depthFailMaterial,
           );
         }
+        // eslint-disable-next-line new-cap
         depthFailAppearance = new this.depthFailAppearanceType({
           material: this.depthFailMaterial,
           translucent: this.translucent,
@@ -158,6 +159,7 @@ Batch.prototype.update = function (time) {
         show: false,
         asynchronous: true,
         geometryInstances: geometries.slice(),
+        // eslint-disable-next-line new-cap
         appearance: new this.appearanceType({
           translucent: this.translucent,
           closed: this.closed,

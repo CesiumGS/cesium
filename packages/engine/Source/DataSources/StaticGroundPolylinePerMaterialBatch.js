@@ -143,6 +143,7 @@ Batch.prototype.update = function (time) {
         show: false,
         asynchronous: this._asynchronous,
         geometryInstances: geometries.slice(),
+        // eslint-disable-next-line new-cap
         appearance: new this.appearanceType(),
         classificationType: this.classificationType,
       });

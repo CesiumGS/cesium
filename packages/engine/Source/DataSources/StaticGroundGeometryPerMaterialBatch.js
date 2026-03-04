@@ -161,6 +161,7 @@ Batch.prototype.update = function (time) {
         show: false,
         asynchronous: true,
         geometryInstances: geometries.slice(),
+        // eslint-disable-next-line new-cap
         appearance: new this.appearanceType({
           material: this.material,
           // translucent and closed properties overridden
