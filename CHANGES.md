@@ -8,6 +8,12 @@
 
 - Added experimental, performance-focused vector primitive APIs: `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13212](https://github.com/CesiumGS/cesium/pull/13212)
 
+### @cesium/sandcastle
+
+#### Fixes :wrench:
+
+- Fixed split screen labels and Cartesian3 factory function calls, and edited descriptions for various gallery examples. [#13250](https://github.com/CesiumGS/cesium/pull/13250)
+
 ## 1.139 - 2026-03-02
 
 ### @cesium/engine
