@@ -153,6 +153,27 @@ export function SettingsModal({
           </Select.HtmlSelect>
         </Select.Root>
       </div>
+      <div className="settings-row">
+        <div>
+          Semantic search
+          <Text variant="caption-lg" className="caption">
+            The semantic embedding model runs locally in your browser and does
+            not send data externally.
+          </Text>
+        </div>
+        <Field.Root>
+          <Field.Control
+            render={
+              <Switch
+                checked={settings.embeddingSearch}
+                onChange={(e) => {
+                  updateSettings({ embeddingSearch: e.target.checked });
+                }}
+              />
+            }
+          />
+        </Field.Root>
+      </div>
       <SandcastleDialogFooter>
         <DialogDismiss render={<Button>Done</Button>}></DialogDismiss>
       </SandcastleDialogFooter>

@@ -118,7 +118,8 @@ const attributeLocationsInstanced = {
  * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
  * @param {boolean} [options.show=true] Determines if the billboards in the collection will be shown.
- *
+ * @param {number} [options.coarseDepthTestDistance] The distance from the camera, beyond which, billboards are depth-tested against an approximation of the globe ellipsoid rather than against the full globe depth buffer. If unspecified, the default value is determined relative to the value of {@link Ellipsoid.default}.
+ * @param {number} [options.threePointDepthTestDistance] The distance from the camera, within which, billboards with a {@link Billboard#heightReference} value of {@link HeightReference.CLAMP_TO_GROUND} or {@link HeightReference.CLAMP_TO_TERRAIN} are depth tested against three key points. This ensures that if any key point of the billboard is visible, the whole billboard will be visible. If unspecified, the default value is determined relative to the value of {@link Ellipsoid.default}.
  * @performance For best performance, prefer a few collections, each with many billboards, to
  * many collections with only a few billboards each.  Organize collections so that billboards
  * with the same update frequency are in the same collection, i.e., billboards that do not
@@ -317,8 +318,11 @@ function BillboardCollection(options) {
   ];
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
-  this._coarseDepthTestDistance = Ellipsoid.default.minimumRadius / 100;
-  this._threePointDepthTestDistance = Ellipsoid.default.minimumRadius / 1000;
+  this._coarseDepthTestDistance =
+    options.coarseDepthTestDistance ?? Ellipsoid.default.minimumRadius / 10.0;
+  this._threePointDepthTestDistance =
+    options.threePointDepthTestDistance ??
+    Ellipsoid.default.minimumRadius / 1000.0;
 
   this._uniforms = {
     u_atlas: () => {
@@ -327,13 +331,9 @@ function BillboardCollection(options) {
     u_highlightColor: () => {
       return this._highlightColor;
     },
-    // An eye-space distance, beyond which, the billboard is simply tested against a camera-facing plane at the ellipsoid's center,
-    // rather than against a depth texture. Note: only if the disableDepthTestingDistance property permits.
     u_coarseDepthTestDistance: () => {
       return this._coarseDepthTestDistance;
     },
-    // Within this distance, if the billboard is clamped to the ground, we'll depth-test 3 key points.
-    // If any key point is visible, the whole billboard will be visible.
     u_threePointDepthTestDistance: () => {
       return this._threePointDepthTestDistance;
     },
@@ -464,6 +464,56 @@ Object.defineProperties(BillboardCollection.prototype, {
   billboardTextureCache: {
     get: function () {
       return this._billboardTextureCache;
+    },
+  },
+
+  /**
+   * The distance from the camera, beyond which, billboards are depth-tested against an approximation of
+   * the globe ellipsoid rather than against the full globe depth buffer. When set to <code>0</code>, the
+   * approximate depth test is always applied. When set to <code>Number.POSITIVE_INFINITY</code>, the
+   * approximate depth test is never applied.
+   * <br/><br/>
+   * This setting only applies when a billboard's {@link Billboard#disableDepthTestDistance} value would
+   * otherwise allow depth testing—i.e., distance from the camera to the billboard is less than a
+   * billboard's {@link Billboard#disableDepthTestDistance} value.
+   * @memberof BillboardCollection.prototype
+   * @type {number}
+   */
+  coarseDepthTestDistance: {
+    get: function () {
+      return this._coarseDepthTestDistance;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("coarseDepthTestDistance", value);
+      //>>includeEnd('debug');
+      this._coarseDepthTestDistance = value;
+    },
+  },
+
+  /**
+   * The distance from the camera, within which, billboards with a {@link Billboard#heightReference} value
+   * of {@link HeightReference.CLAMP_TO_GROUND} or {@link HeightReference.CLAMP_TO_TERRAIN} are depth tested
+   * against three key points. This ensures that if any key point of the billboard is visible, the whole
+   * billboard will be visible. When set to <code>0</code>, this feature is disabled and portions of a
+   * billboards behind terrain be clipped.
+   * <br/><br/>
+   * This setting only applies when a billboard's {@link Billboard#disableDepthTestDistance} value would
+   * otherwise allow depth testing—i.e., distance from the camera to the billboard is less than a
+   * billboard's {@link Billboard#disableDepthTestDistance} value.
+   * @see {@link https://cesium.com/blog/2018/07/30/billboards-on-terrain-improvements/|Billboards and Labels on Terrain Improvements}
+   * @memberof BillboardCollection.prototype
+   * @type {number}
+   */
+  threePointDepthTestDistance: {
+    get: function () {
+      return this._threePointDepthTestDistance;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("threePointDepthTestDistance", value);
+      //>>includeEnd('debug');
+      this._threePointDepthTestDistance = value;
     },
   },
 });

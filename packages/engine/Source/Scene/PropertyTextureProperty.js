@@ -2,9 +2,6 @@ import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
-import MetadataType from "./MetadataType.js";
-import MetadataComponentType from "./MetadataComponentType.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * A property in a property texture.
@@ -190,100 +187,6 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
     },
   },
 });
-
-PropertyTextureProperty.prototype.isGpuCompatible = function () {
-  const classProperty = this._classProperty;
-  const type = classProperty.type;
-  const componentType = classProperty.componentType;
-
-  if (classProperty.isArray) {
-    // only support arrays of 1-4 UINT8 scalars (normalized or unnormalized)
-    if (classProperty.isVariableLengthArray) {
-      oneTimeWarning(
-        `Property texture property ${classProperty.id} is a variable-length array, which is not supported`,
-      );
-      return false;
-    }
-    if (classProperty.arrayLength > 4) {
-      oneTimeWarning(
-        `Property texture property ${classProperty.id} is an array of length ${classProperty.arrayLength}, but may have at most a length of 4`,
-      );
-      return false;
-    }
-    if (type !== MetadataType.SCALAR) {
-      oneTimeWarning(
-        `Property texture property ${classProperty.id} is an array of type ${type}, but only SCALAR is supported`,
-      );
-      return false;
-    }
-    if (componentType !== MetadataComponentType.UINT8) {
-      oneTimeWarning(
-        `Property texture property ${classProperty.id} is an array with component type ${componentType}, but only UINT8 is supported`,
-      );
-      return false;
-    }
-    return true;
-  }
-
-  if (MetadataType.isVectorType(type) || type === MetadataType.SCALAR) {
-    if (componentType !== MetadataComponentType.UINT8) {
-      oneTimeWarning(
-        `Property texture property ${classProperty.id} has component type ${componentType}, but only UINT8 is supported`,
-      );
-      return false;
-    }
-    return true;
-  }
-
-  // For this initial implementation, only UINT8-based properties
-  // are supported.
-  oneTimeWarning(
-    `Property texture property ${classProperty.id} has an unsupported type`,
-  );
-  return false;
-};
-
-const floatTypesByComponentCount = [undefined, "float", "vec2", "vec3", "vec4"];
-const integerTypesByComponentCount = [
-  undefined,
-  "int",
-  "ivec2",
-  "ivec3",
-  "ivec4",
-];
-PropertyTextureProperty.prototype.getGlslType = function () {
-  const classProperty = this._classProperty;
-
-  let componentCount = MetadataType.getComponentCount(classProperty.type);
-  if (classProperty.isArray) {
-    // fixed-sized arrays of length 2-4 UINT8s are represented as vectors as the
-    // shader since those are more useful in GLSL.
-    componentCount = classProperty.arrayLength;
-  }
-
-  // Normalized UINT8 properties are float types in the shader
-  if (classProperty.normalized) {
-    return floatTypesByComponentCount[componentCount];
-  }
-
-  // other UINT8-based properties are represented as integer types.
-  return integerTypesByComponentCount[componentCount];
-};
-
-PropertyTextureProperty.prototype.unpackInShader = function (packedValueGlsl) {
-  const classProperty = this._classProperty;
-
-  // no unpacking needed if for normalized types
-  if (classProperty.normalized) {
-    return packedValueGlsl;
-  }
-
-  // integer types are read from the texture as normalized float values.
-  // these need to be rescaled to [0, 255] and cast to the appropriate integer
-  // type.
-  const glslType = this.getGlslType();
-  return `${glslType}(255.0 * ${packedValueGlsl})`;
-};
 
 /**
  * Reformat from an array of channel indices like <code>[0, 1]</code> to a

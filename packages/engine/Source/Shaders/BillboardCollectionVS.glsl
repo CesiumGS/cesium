@@ -26,11 +26,11 @@ out vec4 v_textureCoordinateBounds;
 out vec4 v_originTextureCoordinateAndTranslate;
 out mat2 v_rotationMatrix;
 #endif
-out vec4 v_compressed;                                 // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
+out vec4 v_compressed;             // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
 
 out vec4 v_pickColor;
 out vec4 v_color;
-out float v_splitDirection;
+flat out vec2 v_splitDirectionAndEllipsoidDepthEC;  // x: splitDirection, y: ellipsoid depth in eye coordinates
 #ifdef SDF
 out vec4 v_outlineColor;
 out float v_outlineWidth;
@@ -308,6 +308,18 @@ void main()
     }
 #endif
 
+    v_splitDirectionAndEllipsoidDepthEC.y = czm_infinity;
+    vec3 ellipsoidCenter = czm_view[3].xyz;
+    vec3 rayDirection = normalize(positionEC.xyz);
+    czm_ray ray = czm_ray(vec3(0.0), rayDirection);
+    vec3 ellipsoid_inverseRadii = czm_ellipsoidInverseRadii;
+    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoidCenter, ellipsoid_inverseRadii);
+
+    if (!czm_isEmpty(intersection))
+    {
+        v_splitDirectionAndEllipsoidDepthEC.y = intersection.start;
+    }
+
     v_compressed.y = enableDepthCheck;
 
 #ifdef VS_THREE_POINT_DEPTH_CHECK
@@ -420,5 +432,5 @@ if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &
 
     v_color = color;
     v_color.a *= translucency;
-    v_splitDirection = splitDirection;
+    v_splitDirectionAndEllipsoidDepthEC.x = splitDirection;
 }
