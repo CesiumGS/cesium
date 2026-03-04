@@ -12,12 +12,17 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 const scratchCartesian = new Cartesian3();
 
 /**
- * BufferPoint.
+ * View bound to the underlying buffer data of a {@link BufferPointCollection}.
+ *
+ * <p>BufferPoint instances are {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweights}:
+ * a single BufferPoint instance can be temporarily bound to any conceptual
+ * "point" in a BufferPointCollection, allowing very large collections to be
+ * iterated and updated with a minimal memory footprint.</p>
  *
  * Represented as one (1) position.
  *
- * See: https://datatracker.ietf.org/doc/html/rfc7946#section-3.1.2
- *
+ * @see BufferPointCollection
+ * @see BufferPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @extends BufferPrimitive
  */
@@ -35,10 +40,14 @@ class BufferPoint extends BufferPrimitive {
     /**
      * Offset in position array to current point vertex, number of VEC3 elements.
      * @type {number}
+     * @ignore
      */
     POSITION_OFFSET_U32: BufferPrimitive.Layout.__BYTE_LENGTH,
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 4,
   };
 
@@ -46,9 +55,12 @@ class BufferPoint extends BufferPrimitive {
   // LIFECYCLE
 
   /**
+   * Copies data from source point to result.
+   *
    * @param {BufferPoint} point
    * @param {BufferPoint} result
    * @return {BufferPoint}
+   * @override
    */
   static clone(point, result) {
     super.clone(point, result);
@@ -60,14 +72,20 @@ class BufferPoint extends BufferPrimitive {
   // GEOMETRY
 
   /**
+   * Offset in collection position array to position of this point, number
+   * of VEC3 elements.
+   *
    * @type {number}
    * @readonly
+   * @ignore
    */
   get vertexOffset() {
     return this._getUint32(BufferPoint.Layout.POSITION_OFFSET_U32);
   }
 
   /**
+   * Count of positions (vertices) in this primitive. Always 1.
+   *
    * @type {number}
    * @readonly
    */
@@ -76,6 +94,8 @@ class BufferPoint extends BufferPrimitive {
   }
 
   /**
+   * Gets the position of this point.
+   *
    * @param {Cartesian3} [result]
    * @returns {Cartesian3}
    */
@@ -84,7 +104,11 @@ class BufferPoint extends BufferPrimitive {
     return Cartesian3.fromArray(positionF64, this.vertexOffset * 3, result);
   }
 
-  /** @param {Cartesian3} position */
+  /**
+   * Sets the position of this point.
+   *
+   * @param {Cartesian3} position
+   */
   setPosition(position) {
     const collection = this._collection;
     const vertexOffset = this.vertexOffset;
@@ -103,7 +127,14 @@ class BufferPoint extends BufferPrimitive {
   /////////////////////////////////////////////////////////////////////////////
   // DEBUG
 
-  /** @override */
+  /**
+   * Returns a JSON-serializable object representing the point. This encoding
+   * is not memory-efficient, and should generally be used for debugging and
+   * testing.
+   *
+   * @returns {Object} JSON-serializable object.
+   * @override
+   */
   toJSON() {
     return {
       ...super.toJSON(),

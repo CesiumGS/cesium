@@ -16,7 +16,6 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @param {*} condition
  * @param {string} msg
- * @returns {asserts condition}
  * @ignore
  */
 function assert(condition, msg) {

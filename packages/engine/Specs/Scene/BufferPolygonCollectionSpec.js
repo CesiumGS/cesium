@@ -1,11 +1,9 @@
 import {
-  Math as CesiumMath,
+  Cartesian3,
   Color,
   BufferPolygon,
   BufferPolygonCollection,
 } from "../../index.js";
-
-const EPS = CesiumMath.EPSILON8;
 
 describe("BufferPolygonCollection", () => {
   const color = new Color();
@@ -28,8 +26,10 @@ describe("BufferPolygonCollection", () => {
     const polygon = new BufferPolygon();
 
     const positions1 = new Float64Array([10, 11, 12, 13, 14, 15, 16, 17, 18]);
-    const positions2 = new Float64Array([20, 21, 22, 23, 24, 25]);
-    const positions3 = new Float64Array([30, 31, 32, 33, 34, 35, 36, 37, 38]);
+    const positions2 = new Float64Array([20, 21, 22, 23, 24, 25, 26, 27, 28]);
+    const positions3 = new Float64Array([
+      30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
+    ]);
 
     collection.add({ positions: positions1 }, polygon);
     collection.add({ positions: positions2 }, polygon);
@@ -37,59 +37,71 @@ describe("BufferPolygonCollection", () => {
 
     collection.get(0, polygon);
     expect(polygon.vertexCount, 3);
-    expect(polygon.getPositions(new Float64Array(9))).toEqualEpsilon(
-      positions1,
-      EPS,
-    );
+    expect(polygon.getPositions()).toEqual(positions1);
 
     collection.get(1, polygon);
-    expect(polygon.vertexCount, 2);
-    expect(polygon.getPositions(new Float64Array(6))).toEqualEpsilon(
-      positions2,
-      EPS,
-    );
+    expect(polygon.vertexCount, 3);
+    expect(polygon.getPositions()).toEqual(positions2);
 
     collection.get(2, polygon);
-    expect(polygon.vertexCount, 3);
-    expect(polygon.getPositions(new Float64Array(9))).toEqualEpsilon(
-      positions3,
-      EPS,
-    );
+    expect(polygon.vertexCount, 4);
+    expect(polygon.getPositions()).toEqual(positions3);
+  });
+
+  it("outerPositions", () => {
+    const collection = new BufferPolygonCollection();
+    const polygon = new BufferPolygon();
+
+    const positions = new Float64Array([
+      ...createBoxPositions(2), // outer loop
+      ...createBoxPositions(1), // hole
+    ]);
+    const holes = new Uint32Array([3]);
+
+    collection.add({ positions, holes }, polygon);
+
+    expect(polygon.vertexCount, 6);
+    expect(polygon.holeCount, 1);
+    expect(polygon.outerVertexCount, 3);
+    expect(polygon.getPositions()).toEqual(positions);
+    expect(polygon.getOuterPositions()).toEqual(createBoxPositions(2));
   });
 
   it("holes", () => {
     const collection = new BufferPolygonCollection({
-      maxPositionCount: 8,
-      holeCountMax: 3,
+      vertexCountMax: 12,
+      holeCountMax: 1,
     });
     const polygon = new BufferPolygon();
 
-    const positions1 = new Float64Array([10, 11, 12, 13, 14, 15, 16, 17, 18]);
-    const positions2 = new Float64Array([20, 21, 22, 23, 24, 25]);
-    const positions3 = new Float64Array([30, 31, 32, 33, 34, 35, 36, 37, 38]);
+    const positions1 = createBoxPositions(1);
+    const positions2 = createBoxPositions(2);
+    const positions3 = new Float64Array([
+      ...createBoxPositions(2), // outer loop
+      ...createBoxPositions(1), // hole
+    ]);
 
-    const holes2 = new Uint32Array([12, 24]);
-    const holes3 = new Uint32Array([16]);
+    const holes3 = new Uint32Array([3]);
 
     collection.add({ positions: positions1 }, polygon);
-    collection.add({ positions: positions2, holes: holes2 }, polygon);
+    collection.add({ positions: positions2 }, polygon);
     collection.add({ positions: positions3, holes: holes3 }, polygon);
 
     collection.get(0, polygon);
     expect(polygon.holeCount, 0);
 
     collection.get(1, polygon);
-    expect(polygon.holeCount, 2);
-    expect(polygon.getHoles(new Uint32Array(2))).toEqualEpsilon(holes2, EPS);
+    expect(polygon.holeCount, 0);
 
     collection.get(2, polygon);
     expect(polygon.holeCount, 1);
-    expect(polygon.getHoles(new Uint32Array(1))).toEqualEpsilon(holes3, EPS);
+    expect(polygon.getHoles()).toEqual(holes3);
+    expect(polygon.getHolePositions(0)).toEqual(createBoxPositions(1));
   });
 
   it("triangles", () => {
     const collection = new BufferPolygonCollection({
-      maxPositionCount: (24 + 30 + 15) / 3,
+      vertexCountMax: (24 + 30 + 15) / 3,
       holeCountMax: 0,
       triangleCountMax: 4,
     });
@@ -109,24 +121,15 @@ describe("BufferPolygonCollection", () => {
 
     collection.get(0, polygon);
     expect(polygon.triangleCount, 2);
-    expect(polygon.getTriangles(new Uint32Array(6))).toEqualEpsilon(
-      triangles1,
-      EPS,
-    );
+    expect(polygon.getTriangles()).toEqual(triangles1);
 
     collection.get(1, polygon);
     expect(polygon.triangleCount, 1);
-    expect(polygon.getTriangles(new Uint32Array(3))).toEqualEpsilon(
-      triangles2,
-      EPS,
-    );
+    expect(polygon.getTriangles()).toEqual(triangles2);
 
     collection.get(2, polygon);
     expect(polygon.triangleCount, 1);
-    expect(polygon.getTriangles(new Uint32Array(3))).toEqualEpsilon(
-      triangles3,
-      EPS,
-    );
+    expect(polygon.getTriangles()).toEqual(triangles3);
   });
 
   it("show", () => {
@@ -149,14 +152,14 @@ describe("BufferPolygonCollection", () => {
     collection.add({ color: Color.BLUE }, polygon);
 
     collection.get(0, polygon);
-    expect(polygon.getColor(color)).toEqualEpsilon(Color.RED, EPS);
+    expect(polygon.getColor(color)).toEqual(Color.RED);
     collection.get(1, polygon);
-    expect(polygon.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
+    expect(polygon.getColor(color)).toEqual(Color.GREEN);
     collection.get(2, polygon);
-    expect(polygon.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
+    expect(polygon.getColor(color)).toEqual(Color.BLUE);
   });
 
-  it("sizeInBytes", () => {
+  it("byteLength", () => {
     let collection = new BufferPolygonCollection({
       primitiveCountMax: 1,
       vertexCountMax: 3,
@@ -164,7 +167,7 @@ describe("BufferPolygonCollection", () => {
       triangleCountMax: 1,
     });
 
-    expect(collection.sizeInBytes).toBe(36 + 72 + 12);
+    expect(collection.byteLength).toBe(36 + 72 + 12);
 
     collection = new BufferPolygonCollection({
       primitiveCountMax: 128,
@@ -173,7 +176,7 @@ describe("BufferPolygonCollection", () => {
       triangleCountMax: 1024,
     });
 
-    expect(collection.sizeInBytes).toBe(4608 + 24576 + 512 + 12288);
+    expect(collection.byteLength).toBe(4608 + 24576 + 512 + 12288);
   });
 
   it("clone", () => {
@@ -181,21 +184,23 @@ describe("BufferPolygonCollection", () => {
 
     const src = new BufferPolygonCollection({
       primitiveCountMax: 2,
-      vertexCountMax: 8,
-      holeCountMax: 2,
+      vertexCountMax: 6,
+      holeCountMax: 0,
       triangleCountMax: 4,
     });
 
-    const positions1 = new Float64Array([10, 11, 12, 13, 14, 15, 16, 17, 18]);
-    const positions2 = new Float64Array([20, 21, 22, 23, 24, 25]);
-    const positions3 = new Float64Array([30, 31, 32, 33, 34, 35, 36, 37, 38]);
+    const positions1 = createBoxPositions(3);
+    const positions2 = createBoxPositions(2.5);
+    const positions3 = new Float64Array([
+      ...createBoxPositions(3),
+      ...createBoxPositions(0.5),
+    ]);
 
-    const holes2 = new Uint32Array([12, 24]);
-    const holes3 = new Uint32Array([16]);
+    const holes3 = new Uint32Array([3]);
 
-    const triangles1 = new Uint32Array([0, 1, 2, 3, 4, 5, 6, 7, 8]);
-    const triangles2 = new Uint32Array([0, 1, 2]);
-    const triangles3 = new Uint32Array([6, 7, 8, 0, 1, 2, 3, 4, 5]);
+    const triangles1 = new Uint32Array([0, 1, 2, 2, 1, 3]);
+    const triangles2 = new Uint32Array([2, 1, 3, 0, 1, 2]);
+    const triangles3 = new Uint32Array([0, 1, 2, 2, 1, 3]); // hack: doesn't consider the hole.
 
     src.add(
       { positions: positions1, triangles: triangles1, color: Color.RED },
@@ -205,7 +210,6 @@ describe("BufferPolygonCollection", () => {
     src.add(
       {
         positions: positions2,
-        holes: holes2,
         triangles: triangles2,
         color: Color.GREEN,
       },
@@ -214,9 +218,9 @@ describe("BufferPolygonCollection", () => {
 
     const dst = new BufferPolygonCollection({
       primitiveCountMax: 3,
-      vertexCountMax: 11,
-      holeCountMax: 3,
-      triangleCountMax: 7,
+      vertexCountMax: 12,
+      holeCountMax: 1,
+      triangleCountMax: 6,
     });
 
     BufferPolygonCollection.clone(src, dst);
@@ -235,29 +239,26 @@ describe("BufferPolygonCollection", () => {
     );
 
     expect(dst.primitiveCount).toBe(3);
-    expect(dst.holeCount).toBe(3);
-    expect(dst.triangleCount).toBe(7);
+    expect(dst.holeCount).toBe(1);
+    expect(dst.triangleCount).toBe(6);
 
     dst.get(0, polygon);
-    expect(polygon.getColor(color)).toEqualEpsilon(Color.RED, EPS);
-    expect(
-      polygon.getPositions(new Float64Array(positions1.length)),
-    ).toEqualEpsilon(positions1, EPS);
+    expect(polygon.getColor(color)).toEqual(Color.RED);
+    expect(polygon.getPositions()).toEqual(positions1);
     expect(polygon.holeCount).toBe(0);
+    expect(polygon.triangleCount).toBe(2);
 
     dst.get(1, polygon);
-    expect(polygon.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
-    expect(
-      polygon.getPositions(new Float64Array(positions2.length)),
-    ).toEqualEpsilon(positions2, EPS);
-    expect(polygon.holeCount).toBe(2);
+    expect(polygon.getColor(color)).toEqual(Color.GREEN);
+    expect(polygon.getPositions()).toEqual(positions2);
+    expect(polygon.holeCount).toBe(0);
+    expect(polygon.triangleCount).toBe(2);
 
     dst.get(2, polygon);
-    expect(polygon.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
-    expect(
-      polygon.getPositions(new Float64Array(positions3.length)),
-    ).toEqualEpsilon(positions3, EPS);
+    expect(polygon.getColor(color)).toEqual(Color.BLUE);
+    expect(polygon.getPositions()).toEqual(positions3);
     expect(polygon.holeCount).toBe(1);
+    expect(polygon.triangleCount).toBe(2);
   });
 
   it("sort", () => {
@@ -309,4 +310,47 @@ describe("BufferPolygonCollection", () => {
       ].map(jasmine.objectContaining),
     );
   });
+
+  it("boundingVolume", () => {
+    const center = new Cartesian3(1000, 0, 0);
+
+    const positions = Cartesian3.packArray(
+      [
+        Cartesian3.add(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Z, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Z, new Cartesian3()),
+      ],
+      new Float64Array(6 * 3),
+    );
+
+    const collection = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+    });
+
+    const polygon = new BufferPolygon();
+
+    collection.add({ positions: positions.slice(0, 9) }, polygon);
+    collection.add({ positions: positions.slice(9, 18) }, polygon);
+    collection._updateBoundingVolume();
+
+    expect(collection.boundingVolume.center).toEqual(center);
+    expect(collection.boundingVolume.radius).toEqual(1);
+  });
 });
+
+/**
+ * @param {number} scale
+ * @returns {Float64Array}
+ */
+function createBoxPositions(scale) {
+  // prettier-ignore
+  return new Float64Array([
+    scale, -scale, 0,
+    -scale, -scale, 0,
+    -scale, scale, 0,
+  ]);
+}

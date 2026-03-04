@@ -1,12 +1,9 @@
 import {
-  Math as CesiumMath,
   Cartesian3,
   Color,
   BufferPoint,
   BufferPointCollection,
 } from "../../index.js";
-
-const EPS = CesiumMath.EPSILON8;
 
 describe("BufferPointCollection", () => {
   const position = new Cartesian3();
@@ -34,13 +31,13 @@ describe("BufferPointCollection", () => {
     collection.add({ position: Cartesian3.UNIT_Z }, point);
 
     collection.get(0, point);
-    expect(point.getPosition(position)).toEqualEpsilon(Cartesian3.UNIT_X, EPS);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_X);
 
     collection.get(1, point);
-    expect(point.getPosition(position)).toEqualEpsilon(Cartesian3.UNIT_Y, EPS);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_Y);
 
     collection.get(2, point);
-    expect(point.getPosition(position)).toEqualEpsilon(Cartesian3.UNIT_Z, EPS);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_Z);
   });
 
   it("show", () => {
@@ -63,43 +60,31 @@ describe("BufferPointCollection", () => {
     collection.add({ color: Color.BLUE }, point);
 
     collection.get(0, point);
-    expect(point.getColor(color)).toEqualEpsilon(Color.RED, EPS);
+    expect(point.getColor(color)).toEqual(Color.RED);
     collection.get(1, point);
-    expect(point.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
+    expect(point.getColor(color)).toEqual(Color.GREEN);
     collection.get(2, point);
-    expect(point.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
+    expect(point.getColor(color)).toEqual(Color.BLUE);
   });
 
-  it("sizeInBytes", () => {
-    let collection = new BufferPointCollection({
-      primitiveCountMax: 1,
-      vertexCountMax: 1,
-    });
+  it("byteLength", () => {
+    let collection = new BufferPointCollection({ primitiveCountMax: 1 });
 
-    expect(collection.sizeInBytes).toBe(16 + 24);
+    expect(collection.byteLength).toBe(16 + 24);
 
-    collection = new BufferPointCollection({
-      primitiveCountMax: 128,
-      vertexCountMax: 128,
-    });
+    collection = new BufferPointCollection({ primitiveCountMax: 128 });
 
-    expect(collection.sizeInBytes).toBe((16 + 24) * 128);
+    expect(collection.byteLength).toBe((16 + 24) * 128);
   });
 
   it("clone", () => {
-    const src = new BufferPointCollection({
-      primitiveCountMax: 2,
-      vertexCountMax: 2,
-    });
+    const src = new BufferPointCollection({ primitiveCountMax: 2 });
 
     const point = new BufferPoint();
     src.add({ position: Cartesian3.UNIT_X, color: Color.RED }, point);
     src.add({ position: Cartesian3.UNIT_Y, color: Color.GREEN }, point);
 
-    const dst = new BufferPointCollection({
-      primitiveCountMax: 3,
-      vertexCountMax: 3,
-    });
+    const dst = new BufferPointCollection({ primitiveCountMax: 3 });
 
     BufferPointCollection.clone(src, dst);
 
@@ -119,12 +104,9 @@ describe("BufferPointCollection", () => {
   });
 
   it("sort", () => {
-    const collection = new BufferPointCollection({
-      primitiveCountMax: 3,
-      vertexCountMax: 3,
-    });
-
+    const collection = new BufferPointCollection({ primitiveCountMax: 3 });
     const point = new BufferPoint();
+
     collection.add({ position: new Cartesian3(3, 0, 0) }, point);
     collection.add({ position: new Cartesian3(1, 0, 0) }, point);
     collection.add({ position: new Cartesian3(2, 0, 0) }, point);
@@ -146,5 +128,32 @@ describe("BufferPointCollection", () => {
         { featureId: 0, position: [3, 0, 0] },
       ].map(jasmine.objectContaining),
     );
+  });
+
+  it("boundingVolume", () => {
+    const center = new Cartesian3(1000, 0, 0);
+
+    const positions = [
+      Cartesian3.add(center, Cartesian3.UNIT_X, new Cartesian3()),
+      Cartesian3.add(center, Cartesian3.UNIT_Y, new Cartesian3()),
+      Cartesian3.add(center, Cartesian3.UNIT_Z, new Cartesian3()),
+      Cartesian3.subtract(center, Cartesian3.UNIT_X, new Cartesian3()),
+      Cartesian3.subtract(center, Cartesian3.UNIT_Y, new Cartesian3()),
+      Cartesian3.subtract(center, Cartesian3.UNIT_Z, new Cartesian3()),
+    ];
+
+    const collection = new BufferPointCollection({ primitiveCountMax: 6 });
+    const point = new BufferPoint();
+
+    collection.add({ position: positions[0] }, point);
+    collection.add({ position: positions[1] }, point);
+    collection.add({ position: positions[2] }, point);
+    collection.add({ position: positions[3] }, point);
+    collection.add({ position: positions[4] }, point);
+    collection.add({ position: positions[5] }, point);
+    collection._updateBoundingVolume();
+
+    expect(collection.boundingVolume.center).toEqual(center);
+    expect(collection.boundingVolume.radius).toEqual(1);
   });
 });

@@ -1,11 +1,9 @@
 import {
-  Math as CesiumMath,
+  Cartesian3,
   Color,
   BufferPolyline,
   BufferPolylineCollection,
 } from "../../index.js";
-
-const EPS = CesiumMath.EPSILON8;
 
 describe("BufferPolylineCollection", () => {
   const color = new Color();
@@ -40,22 +38,13 @@ describe("BufferPolylineCollection", () => {
     collection.add({ positions: positions3 }, polyline);
 
     collection.get(0, polyline);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions1,
-      EPS,
-    );
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions1);
 
     collection.get(1, polyline);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions2,
-      EPS,
-    );
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions2);
 
     collection.get(2, polyline);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions3,
-      EPS,
-    );
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions3);
   });
 
   it("show", () => {
@@ -78,27 +67,27 @@ describe("BufferPolylineCollection", () => {
     collection.add({ color: Color.BLUE }, polyline);
 
     collection.get(0, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.RED, EPS);
+    expect(polyline.getColor(color)).toEqual(Color.RED);
     collection.get(1, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
+    expect(polyline.getColor(color)).toEqual(Color.GREEN);
     collection.get(2, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
+    expect(polyline.getColor(color)).toEqual(Color.BLUE);
   });
 
-  it("sizeInBytes", () => {
+  it("byteLength", () => {
     let collection = new BufferPolylineCollection({
       primitiveCountMax: 1,
       vertexCountMax: 1,
     });
 
-    expect(collection.sizeInBytes).toBe(24 + 24);
+    expect(collection.byteLength).toBe(24 + 24);
 
     collection = new BufferPolylineCollection({
       primitiveCountMax: 128,
       vertexCountMax: 128,
     });
 
-    expect(collection.sizeInBytes).toBe((24 + 24) * 128);
+    expect(collection.byteLength).toBe((24 + 24) * 128);
   });
 
   it("clone", () => {
@@ -132,25 +121,16 @@ describe("BufferPolylineCollection", () => {
     expect(dst.primitiveCount).toBe(3);
 
     dst.get(0, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.RED, EPS);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions1,
-      EPS,
-    );
+    expect(polyline.getColor(color)).toEqual(Color.RED);
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions1);
 
     dst.get(1, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.GREEN, EPS);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions2,
-      EPS,
-    );
+    expect(polyline.getColor(color)).toEqual(Color.GREEN);
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions2);
 
     dst.get(2, polyline);
-    expect(polyline.getColor(color)).toEqualEpsilon(Color.BLUE, EPS);
-    expect(polyline.getPositions(positionsScratch)).toEqualEpsilon(
-      positions3,
-      EPS,
-    );
+    expect(polyline.getColor(color)).toEqual(Color.BLUE);
+    expect(polyline.getPositions(positionsScratch)).toEqual(positions3);
   });
 
   it("sort", () => {
@@ -180,5 +160,35 @@ describe("BufferPolylineCollection", () => {
         { featureId: 0, positions: [0, 0, 0, 0, 0, 1, 0, 0, 2] },
       ].map(jasmine.objectContaining),
     );
+  });
+
+  it("boundingVolume", () => {
+    const center = new Cartesian3(1000, 0, 0);
+
+    const positions = Cartesian3.packArray(
+      [
+        Cartesian3.add(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Z, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Z, new Cartesian3()),
+      ],
+      new Float64Array(6 * 3),
+    );
+
+    const collection = new BufferPolylineCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+    });
+
+    const polyline = new BufferPolyline();
+
+    collection.add({ positions: positions.slice(0, 9) }, polyline);
+    collection.add({ positions: positions.slice(9, 18) }, polyline);
+    collection._updateBoundingVolume();
+
+    expect(collection.boundingVolume.center).toEqual(center);
+    expect(collection.boundingVolume.radius).toEqual(1);
   });
 });
