@@ -11,21 +11,18 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias MetadataSchemaLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
- * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema.
- * @param {string} [options.cacheKey] The cache key of the resource.
- *
- * @exception {DeveloperError} One of options.schema and options.resource must be defined.
- *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class MetadataSchemaLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
+   * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   *
+   * @exception {DeveloperError} One of options.schema and options.resource must be defined.
+   */
   constructor(options) {
     super();
 

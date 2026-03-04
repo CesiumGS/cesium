@@ -37,16 +37,5 @@ const baseConfig = {
       return undefined;
     },
   },
-  experimental: {
-    renderBuiltUrl(filename, { hostId }) {
-      // the standalone.html file needs to stay at the root path
-      // for legacy reasons however the <base> tag makes it behave
-      // as if it's nested inside the `/templates/` directory.
-      // we need to adjust the vite built asset paths to "un-nest" this change
-      if (hostId.endsWith("standalone.html")) {
-        return `../${filename}`;
-      }
-    },
-  },
 };
 export default baseConfig;

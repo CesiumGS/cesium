@@ -10,20 +10,17 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias BufferLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents. Mutually exclusive with options.resource.
- * @param {Resource} [options.resource] The {@link Resource} pointing to the external buffer. Mutually exclusive with options.typedArray.
- * @param {string} [options.cacheKey] The cache key of the resource.
- *
- * @exception {DeveloperError} One of options.typedArray and options.resource must be defined.
- *
  * @private
  */
 class BufferLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents. Mutually exclusive with options.resource.
+   * @param {Resource} [options.resource] The {@link Resource} pointing to the external buffer. Mutually exclusive with options.typedArray.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   *
+   * @exception {DeveloperError} One of options.typedArray and options.resource must be defined.
+   */
   constructor(options) {
     super();
 

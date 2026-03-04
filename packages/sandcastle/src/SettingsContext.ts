@@ -42,6 +42,7 @@ export type Settings = {
   fontSize: number;
   fontLigatures: boolean;
   defaultPanel: LeftPanel;
+  embeddingSearch: boolean;
   autoIteration: AutoIterationConfig;
   extendedThinking: {
     enabled: boolean;
@@ -57,6 +58,7 @@ export const initialSettings: Settings = {
   fontSize: 14,
   fontLigatures: false,
   defaultPanel: "gallery",
+  embeddingSearch: true,
   autoIteration: {
     enabled: true,
     maxIterations: 3,
