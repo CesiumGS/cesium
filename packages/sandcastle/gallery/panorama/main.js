@@ -1,6 +1,15 @@
 import * as Cesium from "cesium";
 
-const viewer = new Cesium.Viewer("cesiumContainer");
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  animation: false,
+  baseLayer: false,
+  baseLayerPicker: false,
+  geocoder: false,
+  timeline: false,
+  sceneModePicker: false,
+  navigationHelpButton: false,
+  homeButton: false,
+});
 
 viewer.scene.globe.show = false;
 const controller = viewer.scene.screenSpaceCameraController;
