@@ -110,6 +110,7 @@ export function useToolChainExecution({
             workingCodeRef.current = {
               ...workingCodeRef.current,
               [file]: modifiedCode,
+              ...(onClearConsole ? { consoleMessages: [] } : {}),
             };
             if (file === "javascript") {
               onApplyCode(modifiedCode, undefined);

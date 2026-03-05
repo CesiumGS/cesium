@@ -277,7 +277,7 @@ export function initializeToolRegistry(
   const applyDiffDefinition: ToolDefinition = {
     name: "apply_diff",
     description:
-      "Apply a code change using search/replace diff format. This tool precisely locates and modifies code sections in the JavaScript or HTML file. Use this for targeted code modifications. CRITICAL: The search string must match the file EXACTLY - copy the exact text from the file shown in the user prompt, including ALL lines, imports, comments, and whitespace. Do not skip or omit any lines.",
+      "Apply a code change using search/replace diff format. This tool precisely locates and modifies code sections in the JavaScript or HTML file. Use this for targeted code modifications. Prefer the SMALLEST contiguous search block that uniquely identifies the intended edit. CRITICAL: The search string must match the file EXACTLY - copy the exact text from the file shown in the user prompt, including imports, comments, whitespace, and any unchanged anchor lines you keep. Do not include unrelated neighboring code unless it is required to disambiguate the match.",
     input_schema: {
       type: "object",
       properties: {
@@ -289,7 +289,7 @@ export function initializeToolRegistry(
         search: {
           type: "string",
           description:
-            "The EXACT code to search for. Must match the existing code character-for-character, including ALL imports, blank lines, comments, whitespace, and indentation. Copy directly from the file contents shown in the prompt - do not skip any lines or simplify. If you see \"import Sandcastle from 'Sandcastle';\" in the file, you MUST include it in your search string.",
+            "The EXACT code to search for. Prefer the smallest contiguous block that uniquely identifies the target edit. Must match the existing code character-for-character, including imports, blank lines, comments, whitespace, and indentation for any lines you include. Copy directly from the file contents shown in the prompt - do not simplify, and do not include unrelated neighboring lines unless they are needed as anchors. If you see \"import Sandcastle from 'Sandcastle';\" in the matched block, you MUST include it in your search string.",
         },
         replace: {
           type: "string",

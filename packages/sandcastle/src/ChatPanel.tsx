@@ -9,6 +9,7 @@ import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { ModelPicker } from "./components/controls/ModelPicker";
 import { ApiKeyManager } from "./AI/ApiKeyManager";
 import { AIClientFactory } from "./AI/AIClientFactory";
+import { buildDiffBasedPrompt } from "./AI/PromptBuilder";
 import type {
   ChatMessage as ChatMessageType,
   CodeContext,
@@ -296,6 +297,56 @@ export function ChatPanel({
           return blocks;
         };
 
+        const buildAnthropicPromptContent = (
+          promptText: string,
+          promptAttachments?: ImageAttachment[],
+        ): MessageContentBlock[] => {
+          const blocks: MessageContentBlock[] = [];
+          if (promptText.trim() !== "") {
+            blocks.push({ type: "text", text: promptText });
+          }
+          if (promptAttachments && promptAttachments.length > 0) {
+            for (const attachment of promptAttachments) {
+              blocks.push({
+                type: "image",
+                source: {
+                  type: "base64",
+                  media_type: attachment.mimeType,
+                  data: attachment.base64Data,
+                },
+              });
+            }
+          }
+          return blocks;
+        };
+
+        const buildGeminiPromptParts = (
+          promptText: string,
+          promptAttachments?: ImageAttachment[],
+        ): Array<{
+          text?: string;
+          inline_data?: { mime_type: string; data: string };
+        }> => {
+          const parts: Array<{
+            text?: string;
+            inline_data?: { mime_type: string; data: string };
+          }> = [];
+          if (promptText.trim() !== "") {
+            parts.push({ text: promptText });
+          }
+          if (promptAttachments && promptAttachments.length > 0) {
+            for (const attachment of promptAttachments) {
+              parts.push({
+                inline_data: {
+                  mime_type: attachment.mimeType,
+                  data: attachment.base64Data,
+                },
+              });
+            }
+          }
+          return parts;
+        };
+
         const isGemini = selectedModel.model.startsWith("gemini");
         const conversationHistory = isGemini
           ? previousMessages.map((msg) => ({
@@ -390,17 +441,27 @@ export function ChatPanel({
                     };
                   };
 
-                  const systemPrompt = `You are an AI assistant helping with CesiumJS code in Sandcastle.${
-                    settings.customPromptAddendum
-                      ? `\n\n# IMPORTANT USER INSTRUCTIONS\n\n${settings.customPromptAddendum}`
-                      : ""
-                  }`;
+                  const continuationContext = getWorkingCode();
+                  const { systemPrompt, userPrompt } = buildDiffBasedPrompt(
+                    messageContent,
+                    continuationContext,
+                    settings.customPromptAddendum,
+                  );
+
+                  const userPromptContent = buildAnthropicPromptContent(
+                    userPrompt,
+                    attachments,
+                  );
+                  const userPromptParts = buildGeminiPromptParts(
+                    userPrompt,
+                    attachments,
+                  );
 
                   const initialHistory: ConversationHistory = isGemini
                     ? [
                         {
                           role: "user" as const,
-                          parts: [{ text: messageContent }],
+                          parts: userPromptParts,
                         },
                         {
                           role: "model" as const,
@@ -415,7 +476,7 @@ export function ChatPanel({
                     : [
                         {
                           role: "user" as const,
-                          content: [{ type: "text", text: messageContent }],
+                          content: userPromptContent,
                         },
                         {
                           role: "assistant" as const,
