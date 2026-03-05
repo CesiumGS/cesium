@@ -5,11 +5,9 @@
   height: 100%;
   margin: 0 auto;
   background: var(--stratakit-color-bg-page-depth);
-  border-left: 1px solid var(--stratakit-color-border-neutral-muted);
-  border-right: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-left: 1px solid var(--stratakit-color-border-page-base);
   display: flex;
   flex-direction: column;
-  box-shadow: var(--stratakit-shadow-surface-overlay);
 }
 
 .chat-panel-header {
@@ -26,7 +24,6 @@
   );
   backdrop-filter: blur(10px);
   flex-shrink: 0;
-  box-shadow: var(--stratakit-shadow-surface-overlay);
   gap: var(--stratakit-space-x4);
 }
 

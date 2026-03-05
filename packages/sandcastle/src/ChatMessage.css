@@ -2,20 +2,15 @@
   display: flex;
   flex-direction: row;
   gap: var(--stratakit-space-x3);
-  padding: var(--stratakit-space-x3);
   margin: var(--stratakit-space-x2) 0;
-  border-radius: var(--stratakit-ext-radius-sm);
 }
 
 .user-message {
-  background: var(--stratakit-color-bg-depth-plus-1);
   margin-left: 0;
 }
 
 .ai-message {
-  background: var(--stratakit-color-bg-path-base);
   margin-right: 0;
-  border: 1px solid var(--stratakit-color-border-neutral-muted);
 }
 
 .message-header {
@@ -129,6 +124,17 @@
   width: 100%;
   min-width: 0; /* Allow flex items to shrink below content size */
   overflow: hidden; /* Prevent overflow from children */
+  padding: var(--stratakit-space-x3);
+  border-radius: var(--stratakit-ext-radius-sm);
+}
+
+.user-message .message-body {
+  background: var(--stratakit-color-bg-depth-plus-1);
+}
+
+.ai-message .message-body {
+  background: var(--stratakit-color-bg-path-base);
+  border-left: 2px solid var(--stratakit-color-border-accent-muted);
 }
 
 /* Diff preview container */
