@@ -151,8 +151,6 @@ export function useToolChainExecution({
       systemPrompt: string,
       initialHistory: ConversationHistory,
       selectedModel: string,
-      _messageContent: string,
-      _accumulatedText: string,
       tools?: ToolDefinition[],
       abortSignal?: AbortSignal,
     ) => {

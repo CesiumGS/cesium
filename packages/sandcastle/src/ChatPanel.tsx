@@ -87,6 +87,9 @@ export function ChatPanel({
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
+  const previousMessageCountRef = useRef(0);
+  const shouldStickToBottomRef = useRef(true);
+  const isAtBottomRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
   const wasUserStoppedRef = useRef(false);
 
@@ -130,6 +133,8 @@ export function ChatPanel({
     appendToolCallToMessage,
     updateToolCallResult,
   });
+
+  const isChatBusy = isLoading || isCurrentlyStreaming;
 
   // Monitor for API key changes from other tabs
   useEffect(() => {
@@ -190,6 +195,7 @@ export function ChatPanel({
       addMessage(userMessage);
       setIsLoading(true);
       setIsCurrentlyStreaming(true);
+      shouldStickToBottomRef.current = true;
 
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
@@ -439,8 +445,6 @@ export function ChatPanel({
                     systemPrompt,
                     initialHistory,
                     selectedModel.model,
-                    messageContent,
-                    accumulatedText,
                     toolsToPass,
                     abortController.signal,
                   );
@@ -629,8 +633,11 @@ export function ChatPanel({
   }, []);
 
   const handleNewChat = useCallback(() => {
+    if (isChatBusy) {
+      return;
+    }
     resetChat();
-  }, [resetChat]);
+  }, [isChatBusy, resetChat]);
 
   const stableOnApplyDiff = useCallback(
     async (diffs: DiffBlock[], language: "javascript" | "html") => {
@@ -651,28 +658,67 @@ export function ChatPanel({
     [onApplyDiff, onClearConsole],
   );
 
+  const scrollToBottom = useCallback(() => {
+    if (!virtuosoRef.current || messages.length === 0) {
+      return;
+    }
+    requestAnimationFrame(() => {
+      virtuosoRef.current?.autoscrollToBottom();
+    });
+  }, [messages.length]);
+
   const followOutputConfig = useCallback(
     (isAtBottom: boolean) => {
-      if (isCurrentlyStreaming) {
-        return "smooth";
+      if (isCurrentlyStreaming || isLoading) {
+        return "auto";
       }
       return isAtBottom ? "smooth" : false;
     },
-    [isCurrentlyStreaming],
+    [isCurrentlyStreaming, isLoading],
   );
+
+  // Ensure appending user/assistant messages always scrolls to the latest item.
+  useEffect(() => {
+    if (messages.length > previousMessageCountRef.current) {
+      scrollToBottom();
+    }
+    previousMessageCountRef.current = messages.length;
+  }, [messages.length, scrollToBottom]);
 
   // Virtuoso's followOutput only fires when new items are appended.
   // During streaming, we update the *content* of the last message (same array length),
   // so we need to manually scroll to bottom when the message grows.
   useEffect(() => {
-    if (isCurrentlyStreaming && virtuosoRef.current) {
-      virtuosoRef.current.scrollToIndex({
-        index: messages.length - 1,
-        align: "end",
-        behavior: "smooth",
-      });
+    if (isCurrentlyStreaming) {
+      scrollToBottom();
     }
-  }, [messages, isCurrentlyStreaming]);
+  }, [messages, isCurrentlyStreaming, scrollToBottom]);
+
+  const handleAtBottomStateChange = useCallback(
+    (atBottom: boolean) => {
+      isAtBottomRef.current = atBottom;
+      if (atBottom) {
+        shouldStickToBottomRef.current = true;
+        return;
+      }
+      // Let users opt out by scrolling up only when assistant is not actively responding.
+      if (!isCurrentlyStreaming && !isLoading) {
+        shouldStickToBottomRef.current = false;
+      }
+    },
+    [isCurrentlyStreaming, isLoading],
+  );
+
+  const handleTotalListHeightChanged = useCallback(() => {
+    if (
+      isCurrentlyStreaming ||
+      isLoading ||
+      isAtBottomRef.current ||
+      shouldStickToBottomRef.current
+    ) {
+      scrollToBottom();
+    }
+  }, [isCurrentlyStreaming, isLoading, scrollToBottom]);
 
   return (
     <>
@@ -690,7 +736,7 @@ export function ChatPanel({
               <Button
                 variant="ghost"
                 onClick={handleNewChat}
-                disabled={messages.length === 0}
+                disabled={messages.length === 0 || isChatBusy}
                 aria-label="Start a new chat"
               >
                 <Icon href={addIcon} />
@@ -819,6 +865,9 @@ export function ChatPanel({
               style={{ height: "100%" }}
               data={messages}
               followOutput={followOutputConfig}
+              atBottomThreshold={48}
+              atBottomStateChange={handleAtBottomStateChange}
+              totalListHeightChanged={handleTotalListHeightChanged}
               alignToBottom
               itemContent={(_index, message) => (
                 <ChatMessageComponent

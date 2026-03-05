@@ -72,7 +72,8 @@
 
 .chat-messages {
   flex: 1;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: hidden;
   padding: 0 var(--stratakit-space-x4);
   display: flex;
   flex-direction: column;
