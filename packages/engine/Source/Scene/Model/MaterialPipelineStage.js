@@ -1,4 +1,5 @@
 import defined from "../../Core/defined.js";
+import Cartesian2 from "../../Core/Cartesian2.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import Matrix3 from "../../Core/Matrix3.js";
@@ -142,6 +143,48 @@ MaterialPipelineStage.process = function (
   // Disable PointCloud normals if the user explicitly turned them off.
   const disablePointCloudNormals =
     defined(model.pointCloudShading) && !model.pointCloudShading.normalShading;
+
+  if (defined(material.planarFill)) {
+    const hasBehind = material.planarFill.behind;
+
+    // Use shader-based polygon offset for logarithmic depth buffer.
+    // This enables the POLYGON_OFFSET code path in writeLogDepth.glsl
+    shaderBuilder.addDefine(
+      "POLYGON_OFFSET",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+
+    // u_polygonOffset is a vec2(factor, units) used by writeLogDepth.glsl
+    // The actual depth offset is: factor * slope + czm_epsilon7 * units
+    // where czm_epsilon7 = 1e-7, so we need large unit values for meaningful offset.
+    // Positive units push fragments away from camera (behind), negative pull toward camera (in front)
+    let polygonOffset;
+    if (hasBehind) {
+      // Push behind fills away from the camera, ensuring they render behind
+      // coplanar geometry (edges, hatch patterns, text, etc.)
+      polygonOffset = new Cartesian2(0.0, 1000.0);
+      // Also set WebGL render state polygon offset for non-log-depth fallback
+      renderResources.renderStateOptions.polygonOffset = {
+        enabled: true,
+        factor: 1.0,
+        units: 1.0,
+      };
+    } else {
+      // Pull non-behind planar fills toward the camera, ensuring they render
+      // in front of non-planar geometry
+      polygonOffset = new Cartesian2(0.0, -1000.0);
+      // Also set WebGL render state polygon offset for non-log-depth fallback
+      renderResources.renderStateOptions.polygonOffset = {
+        enabled: true,
+        factor: -5.0,
+        units: -5.0,
+      };
+    }
+    uniformMap.u_polygonOffset = function () {
+      return polygonOffset;
+    };
+  }
 
   // When backgroundFill is true (BENTLEY_materials_planar_fill), the primitive
   // must be unlit so it matches the background color exactly.

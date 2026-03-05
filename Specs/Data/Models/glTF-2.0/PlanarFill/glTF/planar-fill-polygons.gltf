@@ -13,16 +13,8 @@
             "componentType": 5126,
             "count": 4,
             "type": "VEC3",
-            "max": [
-                5.0,
-                0.0,
-                5.0
-            ],
-            "min": [
-                -5.0,
-                0.0,
-                -5.0
-            ]
+            "max": [5.0, 0.0, 5.0],
+            "min": [-5.0, 0.0, -5.0]
         },
         {
             "bufferView": 1,
@@ -30,12 +22,8 @@
             "componentType": 5123,
             "count": 6,
             "type": "SCALAR",
-            "max": [
-                3
-            ],
-            "min": [
-                0
-            ]
+            "max": [3],
+            "min": [0]
         },
         {
             "bufferView": 2,
@@ -43,6 +31,15 @@
             "componentType": 5121,
             "count": 2,
             "type": "SCALAR"
+        },
+        {
+            "bufferView": 3,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 4,
+            "type": "VEC3",
+            "max": [3.0, 0.0, 3.0],
+            "min": [-3.0, 0.0, -3.0]
         }
     ],
     "buffers": [
@@ -53,6 +50,10 @@
         {
             "byteLength": 2,
             "uri": "data:application/octet-stream;base64,ogI="
+        },
+        {
+            "byteLength": 48,
+            "uri": "data:application/octet-stream;base64,AABAwAAAAAAAAEDAAABAQAAAAAAAAEDAAABAwAAAAAAAAEBAAABAQAAAAAAAAEBA"
         }
     ],
     "bufferViews": [
@@ -72,115 +73,194 @@
             "buffer": 1,
             "byteOffset": 0,
             "byteLength": 2
+        },
+        {
+            "buffer": 2,
+            "byteOffset": 0,
+            "byteLength": 48,
+            "target": 34962
         }
     ],
     "materials": [
         {
-            "name": "RedWireframeFillAlways",
+            "name": "WireNone_BgFalse_BehindFalse",
             "pbrMetallicRoughness": {
-                "baseColorFactor": [
-                    1.0,
-                    0.0,
-                    0.0,
-                    1.0
-                ],
+                "baseColorFactor": [1.0, 0.0, 0.0, 1.0],
                 "metallicFactor": 0.0
             },
             "extensions": {
                 "BENTLEY_materials_planar_fill": {
-                    "wireframeFill": 1
+                    "wireframeFill": 0,
+                    "backgroundFill": false,
+                    "behind": false
                 }
             }
         },
         {
-            "name": "GreenBackgroundFillMask",
+            "name": "WireNone_BgFalse_BehindTrue",
             "pbrMetallicRoughness": {
-                "baseColorFactor": [
-                    0.0,
-                    1.0,
-                    0.0,
-                    1.0
-                ],
+                "baseColorFactor": [0.0, 1.0, 0.0, 1.0],
                 "metallicFactor": 0.0
             },
             "extensions": {
                 "BENTLEY_materials_planar_fill": {
-                    "backgroundFill": true
-                }
-            }
-        },
-        {
-            "name": "BlueBehindCoplanar",
-            "pbrMetallicRoughness": {
-                "baseColorFactor": [
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0
-                ],
-                "metallicFactor": 0.0
-            },
-            "extensions": {
-                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 0,
+                    "backgroundFill": false,
                     "behind": true
                 }
             }
         },
         {
-            "name": "YellowWireframeFillNone",
+            "name": "WireNone_BgTrue_BehindFalse",
             "pbrMetallicRoughness": {
-                "baseColorFactor": [
-                    1.0,
-                    1.0,
-                    0.0,
-                    1.0
-                ],
+                "baseColorFactor": [0.0, 0.0, 1.0, 1.0],
                 "metallicFactor": 0.0
             },
             "extensions": {
                 "BENTLEY_materials_planar_fill": {
-                    "wireframeFill": 0
+                    "wireframeFill": 0,
+                    "backgroundFill": true,
+                    "behind": false
                 }
             }
         },
         {
-            "name": "CyanWireframeFillToggle",
+            "name": "WireNone_BgTrue_BehindTrue",
             "pbrMetallicRoughness": {
-                "baseColorFactor": [
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0
-                ],
+                "baseColorFactor": [1.0, 1.0, 0.0, 1.0],
                 "metallicFactor": 0.0
             },
             "extensions": {
                 "BENTLEY_materials_planar_fill": {
-                    "wireframeFill": 2
+                    "wireframeFill": 0,
+                    "backgroundFill": true,
+                    "behind": true
                 }
             }
         },
         {
-            "name": "MagentaNoExtension",
+            "name": "WireAlways_BgFalse_BehindFalse",
             "pbrMetallicRoughness": {
-                "baseColorFactor": [
-                    1.0,
-                    0.0,
-                    1.0,
-                    1.0
-                ],
+                "baseColorFactor": [0.0, 1.0, 1.0, 1.0],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 1,
+                    "backgroundFill": false,
+                    "behind": false
+                }
+            }
+        },
+        {
+            "name": "WireAlways_BgFalse_BehindTrue",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [1.0, 0.0, 1.0, 1.0],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 1,
+                    "backgroundFill": false,
+                    "behind": true
+                }
+            }
+        },
+        {
+            "name": "WireAlways_BgTrue_BehindFalse",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [1.0, 0.5, 0.0, 1.0],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 1,
+                    "backgroundFill": true,
+                    "behind": false
+                }
+            }
+        },
+        {
+            "name": "WireAlways_BgTrue_BehindTrue",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [0.5, 0.0, 1.0, 1.0],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 1,
+                    "backgroundFill": true,
+                    "behind": true
+                }
+            }
+        },
+        {
+            "name": "WireToggle_BgFalse_BehindFalse",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [0.5, 1.0, 0.0, 1.0],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 2,
+                    "backgroundFill": false,
+                    "behind": false
+                }
+            }
+        },
+        {
+            "name": "WireToggle_BgFalse_BehindTrue",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [0.0, 0.5, 1.0, 1.0],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 2,
+                    "backgroundFill": false,
+                    "behind": true
+                }
+            }
+        },
+        {
+            "name": "WireToggle_BgTrue_BehindFalse",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [1.0, 0.0, 0.5, 1.0],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 2,
+                    "backgroundFill": true,
+                    "behind": false
+                }
+            }
+        },
+        {
+            "name": "WireToggle_BgTrue_BehindTrue",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [0.5, 0.5, 0.5, 1.0],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "BENTLEY_materials_planar_fill": {
+                    "wireframeFill": 2,
+                    "backgroundFill": true,
+                    "behind": true
+                }
+            }
+        },
+        {
+            "name": "NoExtension",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [0.8, 0.8, 0.8, 1.0],
                 "metallicFactor": 0.0
             }
         },
         {
-            "name": "BlueBehindFalse",
+            "name": "Backdrop",
             "pbrMetallicRoughness": {
-                "baseColorFactor": [
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0
-                ],
+                "baseColorFactor": [0.0, 0.2, 0.0, 1.0],
                 "metallicFactor": 0.0
             },
             "extensions": {
@@ -188,209 +268,231 @@
                     "behind": false
                 }
             }
+        },
+        {
+            "name": "BackdropNoExtension",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [0.2, 0.0, 0.0, 1.0],
+                "metallicFactor": 0.0
+            }
         }
     ],
     "meshes": [
         {
-            "name": "RedPolygon",
+            "name": "Polygon0",
+            "primitives": [{
+                "mode": 4,
+                "material": 0,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon1",
+            "primitives": [{
+                "mode": 4,
+                "material": 1,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon2",
+            "primitives": [{
+                "mode": 4,
+                "material": 2,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon3",
+            "primitives": [{
+                "mode": 4,
+                "material": 3,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon4",
+            "primitives": [{
+                "mode": 4,
+                "material": 4,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon5",
+            "primitives": [{
+                "mode": 4,
+                "material": 5,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon6",
+            "primitives": [{
+                "mode": 4,
+                "material": 6,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon7",
+            "primitives": [{
+                "mode": 4,
+                "material": 7,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon8",
+            "primitives": [{
+                "mode": 4,
+                "material": 8,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon9",
+            "primitives": [{
+                "mode": 4,
+                "material": 9,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon10",
+            "primitives": [{
+                "mode": 4,
+                "material": 10,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon11",
+            "primitives": [{
+                "mode": 4,
+                "material": 11,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "Polygon12",
+            "primitives": [{
+                "mode": 4,
+                "material": 12,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "BackdropMesh",
+            "primitives": [{
+                "mode": 4,
+                "material": 13,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "BackdropNoExtMesh",
+            "primitives": [{
+                "mode": 4,
+                "material": 14,
+                "indices": 1,
+                "attributes": { "POSITION": 0 },
+                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+            }]
+        },
+        {
+            "name": "SameObjectMultiPrimitive",
             "primitives": [
                 {
                     "mode": 4,
                     "material": 0,
                     "indices": 1,
-                    "attributes": {
-                        "POSITION": 0
-                    },
-                    "extensions": {
-                        "EXT_mesh_primitive_edge_visibility": {
-                            "visibility": 2
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "GreenPolygon",
-            "primitives": [
+                    "attributes": { "POSITION": 0 },
+                    "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+                },
                 {
                     "mode": 4,
                     "material": 1,
                     "indices": 1,
-                    "attributes": {
-                        "POSITION": 0
-                    },
-                    "extensions": {
-                        "EXT_mesh_primitive_edge_visibility": {
-                            "visibility": 2
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "BluePolygon",
-            "primitives": [
-                {
-                    "mode": 4,
-                    "material": 2,
-                    "indices": 1,
-                    "attributes": {
-                        "POSITION": 0
-                    },
-                    "extensions": {
-                        "EXT_mesh_primitive_edge_visibility": {
-                            "visibility": 2
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "YellowPolygon",
-            "primitives": [
-                {
-                    "mode": 4,
-                    "material": 3,
-                    "indices": 1,
-                    "attributes": {
-                        "POSITION": 0
-                    },
-                    "extensions": {
-                        "EXT_mesh_primitive_edge_visibility": {
-                            "visibility": 2
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "CyanPolygon",
-            "primitives": [
-                {
-                    "mode": 4,
-                    "material": 4,
-                    "indices": 1,
-                    "attributes": {
-                        "POSITION": 0
-                    },
-                    "extensions": {
-                        "EXT_mesh_primitive_edge_visibility": {
-                            "visibility": 2
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "MagentaPolygon",
-            "primitives": [
-                {
-                    "mode": 4,
-                    "material": 5,
-                    "indices": 1,
-                    "attributes": {
-                        "POSITION": 0
-                    },
-                    "extensions": {
-                        "EXT_mesh_primitive_edge_visibility": {
-                            "visibility": 2
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "BluePolygon2",
-            "primitives": [
-                {
-                    "mode": 4,
-                    "material": 6,
-                    "indices": 1,
-                    "attributes": {
-                        "POSITION": 0
-                    },
-                    "extensions": {
-                        "EXT_mesh_primitive_edge_visibility": {
-                            "visibility": 2
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "MagentaPolygon2",
-            "primitives": [
-                {
-                    "mode": 4,
-                    "material": 5,
-                    "indices": 1,
-                    "attributes": {
-                        "POSITION": 0
-                    },
-                    "extensions": {
-                        "EXT_mesh_primitive_edge_visibility": {
-                            "visibility": 2
-                        }
-                    }
+                    "attributes": { "POSITION": 3 },
+                    "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
                 }
             ]
         }
     ],
     "nodes": [
-        {
-            "name": "RedPolygonNode",
-            "mesh": 0,
-            "translation": [-15.0, 0.0, 0.0]
-        },
-        {
-            "name": "GreenPolygonNode",
-            "mesh": 1
-        },
-        {
-            "name": "BluePolygonNode",
-            "mesh": 2,
-            "translation": [15.0, 0.0, 0.0]
-        },
-        {
-            "name": "YellowPolygonNode",
-            "mesh": 3,
-            "translation": [-15.0, 0.0, -15.0]
-        },
-        {
-            "name": "CyanPolygonNode",
-            "mesh": 4,
-            "translation": [-15.0, 0.0, -30.0]
-        },
-        {
-            "name": "MagentaPolygonNode",
-            "mesh": 5,
-            "translation": [20.0, 0.0, 0.0]
-        },
-        {
-            "name": "BluePolygonNode2",
-            "mesh": 6,
-            "translation": [15.0, 0.0, 15.0]
-        },
-        {
-            "name": "MagentaPolygonNode2",
-            "mesh": 7,
-            "translation": [20.0, 0.0, 15.0]
-        }
+        { "name": "Node0", "mesh": 0, "translation": [0.0, 0.0, 0.0] },
+        { "name": "Node1", "mesh": 1, "translation": [15.0, 0.0, 0.0] },
+        { "name": "Node2", "mesh": 2, "translation": [30.0, 0.0, 0.0] },
+        { "name": "Node3", "mesh": 3, "translation": [45.0, 0.0, 0.0] },
+        { "name": "Node4", "mesh": 4, "translation": [0.0, 0.0, 15.0] },
+        { "name": "Node5", "mesh": 5, "translation": [15.0, 0.0, 15.0] },
+        { "name": "Node6", "mesh": 6, "translation": [30.0, 0.0, 15.0] },
+        { "name": "Node7", "mesh": 7, "translation": [45.0, 0.0, 15.0] },
+        { "name": "Node8", "mesh": 8, "translation": [0.0, 0.0, 30.0] },
+        { "name": "Node9", "mesh": 9, "translation": [15.0, 0.0, 30.0] },
+        { "name": "Node10", "mesh": 10, "translation": [30.0, 0.0, 30.0] },
+        { "name": "Node11", "mesh": 11, "translation": [45.0, 0.0, 30.0] },
+        { "name": "Node12", "mesh": 12, "translation": [60.0, 0.0, 0.0] },
+        { "name": "Backdrop0", "mesh": 13, "translation": [0.0, 0.0, -3.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop1", "mesh": 13, "translation": [15.0, 0.0,-3.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop2", "mesh": 13, "translation": [30.0, 0.0,-3.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop3", "mesh": 13, "translation": [45.0, 0.0,-3.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop4", "mesh": 13, "translation": [0.0, 0.0, 12.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop5", "mesh": 13, "translation": [15.0, 0.0, 12.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop6", "mesh": 13, "translation": [30.0, 0.0, 12.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop7", "mesh": 13, "translation": [45.0, 0.0, 12.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop8", "mesh": 13, "translation": [0.0, 0.0, 27.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop9", "mesh": 13, "translation": [15.0, 0.0, 27.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop10", "mesh": 13, "translation": [30.0, 0.0, 27.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop11", "mesh": 13, "translation": [45.0, 0.0, 27.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "Backdrop12", "mesh": 13, "translation": [60.0, 0.0, -3.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt0", "mesh": 14, "translation": [0.0, 0.0, 3.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt1", "mesh": 14, "translation": [15.0, 0.0, 3.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt2", "mesh": 14, "translation": [30.0, 0.0, 3.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt3", "mesh": 14, "translation": [45.0, 0.0, 3.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt4", "mesh": 14, "translation": [0.0, 0.0, 18.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt5", "mesh": 14, "translation": [15.0, 0.0, 18.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt6", "mesh": 14, "translation": [30.0, 0.0, 18.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt7", "mesh": 14, "translation": [45.0, 0.0, 18.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt8", "mesh": 14, "translation": [0.0, 0.0, 33.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt9", "mesh": 14, "translation": [15.0, 0.0, 33.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt10", "mesh": 14, "translation": [30.0, 0.0, 33.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt11", "mesh": 14, "translation": [45.0, 0.0, 33.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt12", "mesh": 14, "translation": [60.0, 0.0, 3.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "SameObjectNode", "mesh": 15, "translation": [75.0, 0.0, 0.0] },
+        { "name": "Backdrop13", "mesh": 13, "translation": [75.0, 0.0, -3.0], "scale": [1.35, 1.0, 0.35] },
+        { "name": "BackdropNoExt13", "mesh": 14, "translation": [75.0, 0.0, 3.0], "scale": [1.35, 1.0, 0.35] }
     ],
-    "scenes": [
-        {
-            "nodes": [
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7
-            ]
-        }
-    ],
+    "scenes": [{ "nodes": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41] }],
     "scene": 0
 }
 
