@@ -88,7 +88,8 @@ export function ChatPanel({
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
-  const previousMessageCountRef = useRef(0);
+  const lastMeasuredMessageCountRef = useRef(0);
+  const lastMeasuredListHeightRef = useRef<number | null>(null);
   const shouldStickToBottomRef = useRef(true);
   const isAtBottomRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -719,41 +720,42 @@ export function ChatPanel({
     [onApplyDiff, onClearConsole],
   );
 
-  const scrollToBottom = useCallback(() => {
-    if (!virtuosoRef.current || messages.length === 0) {
-      return;
+  const scrollToLatest = useCallback(
+    (behavior: "auto" | "smooth" = "auto") => {
+      if (!virtuosoRef.current || messages.length === 0) {
+        return;
+      }
+      virtuosoRef.current.scrollToIndex({
+        index: "LAST",
+        align: "end",
+        behavior,
+      });
+    },
+    [messages.length],
+  );
+
+  // If the user tried to scroll away while a response was still active,
+  // treat their final position as authoritative once the stream settles.
+  useEffect(() => {
+    if (!isCurrentlyStreaming && !isLoading) {
+      shouldStickToBottomRef.current = isAtBottomRef.current;
     }
-    requestAnimationFrame(() => {
-      virtuosoRef.current?.autoscrollToBottom();
-    });
-  }, [messages.length]);
+  }, [isCurrentlyStreaming, isLoading]);
 
   const followOutputConfig = useCallback(
     (isAtBottom: boolean) => {
-      if (isCurrentlyStreaming || isLoading) {
-        return "auto";
+      const shouldFollow =
+        isCurrentlyStreaming ||
+        isLoading ||
+        shouldStickToBottomRef.current ||
+        isAtBottom;
+      if (!shouldFollow) {
+        return false;
       }
-      return isAtBottom ? "smooth" : false;
+      return isCurrentlyStreaming || isLoading ? "auto" : "smooth";
     },
     [isCurrentlyStreaming, isLoading],
   );
-
-  // Ensure appending user/assistant messages always scrolls to the latest item.
-  useEffect(() => {
-    if (messages.length > previousMessageCountRef.current) {
-      scrollToBottom();
-    }
-    previousMessageCountRef.current = messages.length;
-  }, [messages.length, scrollToBottom]);
-
-  // Virtuoso's followOutput only fires when new items are appended.
-  // During streaming, we update the *content* of the last message (same array length),
-  // so we need to manually scroll to bottom when the message grows.
-  useEffect(() => {
-    if (isCurrentlyStreaming) {
-      scrollToBottom();
-    }
-  }, [messages, isCurrentlyStreaming, scrollToBottom]);
 
   const handleAtBottomStateChange = useCallback(
     (atBottom: boolean) => {
@@ -770,16 +772,38 @@ export function ChatPanel({
     [isCurrentlyStreaming, isLoading],
   );
 
-  const handleTotalListHeightChanged = useCallback(() => {
-    if (
-      isCurrentlyStreaming ||
-      isLoading ||
-      isAtBottomRef.current ||
-      shouldStickToBottomRef.current
-    ) {
-      scrollToBottom();
-    }
-  }, [isCurrentlyStreaming, isLoading, scrollToBottom]);
+  const handleTotalListHeightChanged = useCallback(
+    (height: number) => {
+      if (messages.length === 0) {
+        lastMeasuredMessageCountRef.current = 0;
+        lastMeasuredListHeightRef.current = null;
+        return;
+      }
+
+      const messageCountChanged =
+        messages.length !== lastMeasuredMessageCountRef.current;
+      const heightChanged = lastMeasuredListHeightRef.current !== height;
+
+      lastMeasuredMessageCountRef.current = messages.length;
+      lastMeasuredListHeightRef.current = height;
+
+      // New items are handled by followOutput; this path is only for growth within
+      // existing items (streaming text, images loading, markdown/layout reflow).
+      if (!heightChanged || messageCountChanged) {
+        return;
+      }
+
+      if (
+        isCurrentlyStreaming ||
+        isLoading ||
+        isAtBottomRef.current ||
+        shouldStickToBottomRef.current
+      ) {
+        scrollToLatest("auto");
+      }
+    },
+    [messages.length, isCurrentlyStreaming, isLoading, scrollToLatest],
+  );
 
   return (
     <>
