@@ -21,14 +21,9 @@ function propertySelector(name) {
 
 /**
  * @callback NewValueFunction
- * @param {string} [existingValue] The existing value from the file. Useful for matching with existing remote keys
+ * @param {string} [existingValue] The existing value from the file
  * @returns {string | Promise<string | undefined>}
  */
-
-// TODO: swap out for real itwins
-// const featureSeriviceItwin = "04ba725f-f3c0-4f30-8014-a4488cbd612d";
-// const phillyItwin = "535a24a3-9b29-4e23-bb5d-9cedb524c743";
-const testItwin = "671839a6-f6a9-4eb6-8e91-801441e0e3f2";
 
 /**
  * Use https://astexplorer.net/ and the tester at https://estools.github.io/esquery/ to generate
@@ -68,6 +63,8 @@ export function getReplacements() {
   });
 
   // ITwin key replacements
+  const featureSeriviceItwin = "04ba725f-f3c0-4f30-8014-a4488cbd612d";
+  const phillyItwin = "535a24a3-9b29-4e23-bb5d-9cedb524c743";
   replacements.push(
     {
       filePath: join(
@@ -77,12 +74,9 @@ export function getReplacements() {
       selector: propertySelector("Cesium.ITwinPlatform.defaultShareKey"),
       // automatible with the Share key API https://developer.bentley.com/apis/access-control-v2/operations/get-itwin-share/
       // Need to get an auth token using the client id + secret first
-      newValue: async (existingValue) => {
+      newValue: async () => {
         try {
-          // const newToken = await getNewKeyForItwin(featureSeriviceItwin, {
-          const newToken = await getNewKeyForItwin(testItwin, {
-            neverDeleteKey: existingValue,
-          });
+          const newToken = await getNewKeyForItwin(featureSeriviceItwin);
           return newToken;
         } catch (error) {
           console.error(error);
@@ -97,12 +91,9 @@ export function getReplacements() {
         "../../../packages/sandcastle/gallery/imodel-mesh-export-service/main.js",
       ),
       selector: propertySelector("Cesium.ITwinPlatform.defaultShareKey"),
-      newValue: async (existingValue) => {
+      newValue: async () => {
         try {
-          // const newToken = await getNewKeyForItwin(phillyItwin, {
-          const newToken = await getNewKeyForItwin(testItwin, {
-            neverDeleteKey: existingValue,
-          });
+          const newToken = await getNewKeyForItwin(phillyItwin);
           return newToken;
         } catch (error) {
           console.error(error);
