@@ -106,10 +106,7 @@ function getFeatureId(featureIdSource, vertexIndex) {
 
   let featureId;
   if (defined(featureIdSource.values)) {
-    if (
-      vertexIndex < 0 ||
-      vertexIndex >= featureIdSource.values.length
-    ) {
+    if (vertexIndex < 0 || vertexIndex >= featureIdSource.values.length) {
       return undefined;
     }
     featureId = featureIdSource.values[vertexIndex];
@@ -279,7 +276,8 @@ function appendPolygonPrimitive(
 ) {
   let triangleIndices = indices;
   if (primitiveType === PrimitiveType.TRIANGLE_STRIP) {
-    triangleIndices = ModelReader.convertTriangleStripToTriangleIndices(indices);
+    triangleIndices =
+      ModelReader.convertTriangleStripToTriangleIndices(indices);
   } else if (primitiveType === PrimitiveType.TRIANGLE_FAN) {
     triangleIndices = ModelReader.convertTriangleFanToTriangleIndices(indices);
   }
@@ -430,14 +428,17 @@ function appendNodeToBuffers(
 }
 
 /**
+ * @typedef {object} VectorTileBuffers
+ * @property {BufferPointCollection|undefined} points
+ * @property {BufferPolylineCollection|undefined} polylines
+ * @property {BufferPolygonCollection|undefined} polygons
+ */
+
+/**
  * Creates vector buffers from model components.
  *
  * @param {ModelComponents.Components} components
- * @returns {{
- *   points: BufferPointCollection|undefined,
- *   polylines: BufferPolylineCollection|undefined,
- *   polygons: BufferPolygonCollection|undefined,
- * }|undefined}
+ * @returns {VectorTileBuffers|undefined}
  *
  * @private
  */

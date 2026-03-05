@@ -64,7 +64,10 @@ Object.defineProperties(VectorGltf3DTileContent.prototype, {
 
   pointsLength: {
     get: function () {
-      if (!defined(this._vectorBuffers) || !defined(this._vectorBuffers.points)) {
+      if (
+        !defined(this._vectorBuffers) ||
+        !defined(this._vectorBuffers.points)
+      ) {
         return 0;
       }
       return this._vectorBuffers.points.primitiveCount;
@@ -188,7 +191,10 @@ VectorGltf3DTileContent.prototype.hasProperty = function (featureId, name) {
   return false;
 };
 
-VectorGltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
+VectorGltf3DTileContent.prototype.applyDebugSettings = function (
+  enabled,
+  color,
+) {
   if (!defined(this._vectorBuffers)) {
     return;
   }
