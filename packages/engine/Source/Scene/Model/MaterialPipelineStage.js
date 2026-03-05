@@ -158,21 +158,31 @@ MaterialPipelineStage.process = function (
     // u_polygonOffset is a vec2(factor, units) used by writeLogDepth.glsl
     // The actual depth offset is: factor * slope + czm_epsilon7 * units
     // where czm_epsilon7 = 1e-7, so we need large unit values for meaningful offset.
-    // Positive units push fragments away from camera (behind), negative pull toward camera (in front)
+    // Negative units pull fragments toward the camera (in front).
+    //
+    // Per the BENTLEY_materials_planar_fill spec, ALL planar primitives must
+    // render in front of non-planar primitives (Depth Ordering rule). Both
+    // behind and non-behind fills use negative offsets to achieve this.
+    //
+    // The `behind` flag only controls ordering relative to other coplanar
+    // geometry from the same logical object — behind fills use a less
+    // aggressive negative offset so they appear behind non-behind fills
+    // and edges, while still appearing in front of non-planar geometry.
     let polygonOffset;
     if (hasBehind) {
-      // Push behind fills away from the camera, ensuring they render behind
-      // coplanar geometry (edges, hatch patterns, text, etc.)
-      polygonOffset = new Cartesian2(0.0, 1000.0);
+      // Use a moderate negative offset: still in front of non-planar geometry
+      // (Depth Ordering), but behind non-behind planar fills and edges at
+      // the same depth (behind property).
+      polygonOffset = new Cartesian2(0.0, -500.0);
       // Also set WebGL render state polygon offset for non-log-depth fallback
       renderResources.renderStateOptions.polygonOffset = {
         enabled: true,
-        factor: 1.0,
-        units: 1.0,
+        factor: -1.0,
+        units: -1.0,
       };
     } else {
-      // Pull non-behind planar fills toward the camera, ensuring they render
-      // in front of non-planar geometry
+      // Use a strong negative offset: pulls non-behind planar fills firmly
+      // in front of non-planar geometry and behind planar fills.
       polygonOffset = new Cartesian2(0.0, -1000.0);
       // Also set WebGL render state polygon offset for non-log-depth fallback
       renderResources.renderStateOptions.polygonOffset = {
