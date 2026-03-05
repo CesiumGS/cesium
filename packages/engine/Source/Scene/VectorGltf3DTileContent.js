@@ -6,7 +6,6 @@ import Pass from "../Renderer/Pass.js";
 import BufferPoint from "./BufferPoint.js";
 import BufferPolyline from "./BufferPolyline.js";
 import Model from "./Model/Model.js";
-import createVectorGpuLookup from "./Model/createVectorGpuLookup.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import BufferPolygon from "./BufferPolygon.js";
@@ -28,7 +27,6 @@ function VectorGltf3DTileContent(tileset, tile, resource) {
   this._decodeModel = undefined;
 
   this._vectorBuffers = undefined;
-  this._gpuLookup = undefined;
   this._pointCollection = undefined;
   this._polylineCollection = undefined;
   this._polygonCollection = undefined;
@@ -176,26 +174,6 @@ VectorGltf3DTileContent.prototype.getExtension = function (extensionName) {
   if (extensionName === "CESIUM_vector_tiles") {
     return this._vectorBuffers;
   }
-  if (extensionName === "CESIUM_vector_tiles_gpu_lookup") {
-    return this._gpuLookup;
-  }
-  if (extensionName === "CESIUM_vector_tiles_renderer") {
-    const hasGpuLookup = defined(this._gpuLookup);
-    return {
-      rendererPath: "VectorGltf3DTileContent",
-      ready: this._ready,
-      hasDecodeModel: defined(this._decodeModel),
-      hasPointCollection: defined(this._pointCollection),
-      hasPolylineCollection: defined(this._polylineCollection),
-      hasPolygonCollection: defined(this._polygonCollection),
-      hasGpuLookup: hasGpuLookup,
-      gpuLookupSegments: hasGpuLookup ? this._gpuLookup.segmentCount : 0,
-      gpuLookupGrid:
-        hasGpuLookup
-          ? [this._gpuLookup.gridSizeX, this._gpuLookup.gridSizeY]
-          : [0, 0],
-    };
-  }
   return undefined;
 };
 
@@ -298,7 +276,6 @@ VectorGltf3DTileContent.prototype.isDestroyed = function () {
 
 VectorGltf3DTileContent.prototype.destroy = function () {
   this._decodeModel = this._decodeModel && this._decodeModel.destroy();
-  this._gpuLookup = undefined;
   this._pointCollection = undefined;
   this._polylineCollection = undefined;
   this._polygonCollection = undefined;
@@ -347,20 +324,6 @@ function initializeVectorPrimitives(content) {
 
   const vectorBuffers = createVectorTileBuffersFromModelComponents(components);
   content._vectorBuffers = vectorBuffers;
-  if (defined(vectorBuffers)) {
-    try {
-      content._gpuLookup = createVectorGpuLookup(
-        vectorBuffers.polylines,
-        1000,
-        content._vectorBaseTransform,
-      );
-    } catch (error) {
-      void error;
-      content._gpuLookup = undefined;
-    }
-  } else {
-    content._gpuLookup = undefined;
-  }
 
   if (!defined(vectorBuffers)) {
     return;
