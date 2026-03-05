@@ -22,6 +22,8 @@ import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
+import Matrix4 from "../Core/Matrix4.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
@@ -54,7 +56,7 @@ const BufferPolylineAttributeLocations = {
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
- * @property {BoundingSphere} [boundingVolume]
+ * @property {DrawCommand} [command]
  * @ignore
  */
 
@@ -366,29 +368,25 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     });
   }
 
-  if (!defined(renderContext.boundingVolume)) {
-    renderContext.boundingVolume = new BoundingSphere();
+  if (
+    !defined(renderContext.command) ||
+    isCommandDirty(collection, renderContext.command)
+  ) {
+    renderContext.command = new DrawCommand({
+      vertexArray: renderContext.vertexArray,
+      renderState: renderContext.renderState,
+      shaderProgram: renderContext.shaderProgram,
+      primitiveType: PrimitiveType.TRIANGLES,
+      pass: Pass.OPAQUE,
+      owner: collection,
+      count: getDrawIndexCount(collection),
+      modelMatrix: collection.modelMatrix,
+      boundingVolume: collection.boundingVolumeWC,
+      debugShowBoundingVolume: collection.debugShowBoundingVolume,
+    });
   }
-  BoundingSphere.transform(
-    collection.boundingVolume,
-    collection.modelMatrix,
-    renderContext.boundingVolume,
-  );
 
-  const command = new DrawCommand({
-    vertexArray: renderContext.vertexArray,
-    renderState: renderContext.renderState,
-    shaderProgram: renderContext.shaderProgram,
-    primitiveType: PrimitiveType.TRIANGLES,
-    pass: Pass.OPAQUE,
-    owner: collection,
-    modelMatrix: collection.modelMatrix,
-    count: (collection.vertexCount - collection.primitiveCount) * 6,
-    boundingVolume: renderContext.boundingVolume,
-    debugShowBoundingVolume: collection.debugShowBoundingVolume,
-  });
-
-  frameState.commandList.push(command);
+  frameState.commandList.push(renderContext.command);
 
   collection._dirtyCount = 0;
   collection._dirtyOffset = 0;
@@ -397,8 +395,43 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 }
 
 /**
+ * Returns true if DrawCommand is out of date for given collection.
+ * @param {BufferPolylineCollection} collection
+ * @param {DrawCommand} command
+ * @ignore
+ */
+function isCommandDirty(collection, command) {
+  const isModelMatrixEqual = Matrix4.equals(
+    collection.modelMatrix,
+    command._modelMatrix,
+  );
+
+  const isBoundingVolumeEqual = BoundingSphere.equals(
+    collection.boundingVolumeWC,
+    command._boundingVolume,
+  );
+
+  return (
+    getDrawIndexCount(collection) !== command._count ||
+    collection.debugShowBoundingVolume !== command.debugShowBoundingVolume ||
+    !isModelMatrixEqual ||
+    !isBoundingVolumeEqual
+  );
+}
+
+/**
+ * Returns number of drawn (not allocated) indices for given collection.
+ * @param {BufferPolylineCollection} collection
+ * @ignore
+ */
+function getDrawIndexCount(collection) {
+  return (collection.vertexCount - collection.primitiveCount) * 6;
+}
+
+/**
  * Computes dirty ranges for attribute and index buffers in a collection.
  * @param {BufferPolylineCollection} collection
+ * @ignore
  */
 function getPolylineDirtyRanges(collection) {
   const { _dirtyOffset, _dirtyCount } = collection;

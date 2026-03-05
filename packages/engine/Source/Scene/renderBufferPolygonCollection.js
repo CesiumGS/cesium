@@ -21,6 +21,8 @@ import BufferPolygonCollectionFS from "../Shaders/BufferPolygonCollectionFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
+import Matrix4 from "../Core/Matrix4.js";
 
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -49,7 +51,7 @@ const BufferPolygonAttributeLocations = {
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
- * @property {BoundingSphere} [boundingVolume]
+ * @property {DrawCommand} [command]
  * @ignore
  */
 
@@ -237,29 +239,25 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     });
   }
 
-  if (!defined(renderContext.boundingVolume)) {
-    renderContext.boundingVolume = new BoundingSphere();
+  if (
+    !defined(renderContext.command) ||
+    isCommandDirty(collection, renderContext.command)
+  ) {
+    renderContext.command = new DrawCommand({
+      vertexArray: renderContext.vertexArray,
+      renderState: renderContext.renderState,
+      shaderProgram: renderContext.shaderProgram,
+      primitiveType: PrimitiveType.TRIANGLES,
+      pass: Pass.OPAQUE,
+      owner: collection,
+      count: collection.triangleCount * 3,
+      modelMatrix: collection.modelMatrix,
+      boundingVolume: collection.boundingVolumeWC,
+      debugShowBoundingVolume: collection.debugShowBoundingVolume,
+    });
   }
-  BoundingSphere.transform(
-    collection.boundingVolume,
-    collection.modelMatrix,
-    renderContext.boundingVolume,
-  );
 
-  const command = new DrawCommand({
-    vertexArray: renderContext.vertexArray,
-    renderState: renderContext.renderState,
-    shaderProgram: renderContext.shaderProgram,
-    primitiveType: PrimitiveType.TRIANGLES,
-    pass: Pass.OPAQUE,
-    owner: collection,
-    modelMatrix: collection.modelMatrix,
-    count: collection.triangleCount * 3,
-    boundingVolume: renderContext.boundingVolume,
-    debugShowBoundingVolume: collection.debugShowBoundingVolume,
-  });
-
-  frameState.commandList.push(command);
+  frameState.commandList.push(renderContext.command);
 
   collection._dirtyCount = 0;
   collection._dirtyOffset = 0;
@@ -268,8 +266,34 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 }
 
 /**
+ * Returns true if DrawCommand is out of date for the given collection.
+ * @param {BufferPolygonCollection} collection
+ * @param {DrawCommand} command
+ * @ignore
+ */
+function isCommandDirty(collection, command) {
+  const isModelMatrixEqual = Matrix4.equals(
+    collection.modelMatrix,
+    command._modelMatrix,
+  );
+
+  const isBoundingVolumeEqual = BoundingSphere.equals(
+    collection.boundingVolumeWC,
+    command._boundingVolume,
+  );
+
+  return (
+    collection.triangleCount * 3 !== command._count ||
+    collection.debugShowBoundingVolume !== command.debugShowBoundingVolume ||
+    !isModelMatrixEqual ||
+    !isBoundingVolumeEqual
+  );
+}
+
+/**
  * Computes dirty ranges for attribute and index buffers in a collection.
  * @param {BufferPolygonCollection} collection
+ * @ignore
  */
 function getPolygonDirtyRanges(collection) {
   const { _dirtyOffset, _dirtyCount } = collection;

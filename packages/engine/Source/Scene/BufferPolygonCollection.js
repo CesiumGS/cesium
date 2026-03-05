@@ -8,12 +8,14 @@ import assert from "../Core/assert.js";
 import renderPolygons from "./renderBufferPolygonCollection.js";
 
 /** @import Color from "../Core/Color.js"; */
+/** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
 
 const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 
 /**
  * @typedef {object} BufferPolygonOptions
+ * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
  * @property {Float64Array} [positions]

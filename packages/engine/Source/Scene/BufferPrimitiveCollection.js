@@ -70,6 +70,7 @@ class BufferPrimitiveCollection {
 
   /**
    * @param {object} options
+   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
@@ -84,17 +85,25 @@ class BufferPrimitiveCollection {
     this.show = options.show ?? true;
 
     /**
-     * Bounding volume for all primitives in the collection, including both
+     * Transforms geometry from model to world coordinates.
+     * @type {Matrix4}
+     * @default Matrix4.IDENTITY
+     */
+    this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
+
+    /**
+     * Local bounding volume for all primitives in the collection, including both
      * shown and hidden primitives.
      * @type {BoundingSphere}
      */
     this.boundingVolume = new BoundingSphere();
 
     /**
-     * A 4x4 transformation matrix that transforms the collection from model to world coordinates.
-     * @type {Matrix4}
+     * World bounding volume for all primitives in the collection, including both
+     * shown and hidden primitives.
+     * @type {BoundingSphere}
      */
-    this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+    this.boundingVolumeWC = new BoundingSphere();
 
     /**
      * This property is for debugging only; it is not for production use nor is it optimized.
@@ -404,7 +413,11 @@ class BufferPrimitiveCollection {
       3,
       this.boundingVolume,
     );
-
+    BoundingSphere.transform(
+      this.boundingVolume,
+      this.modelMatrix,
+      this.boundingVolumeWC,
+    );
     this._dirtyBoundingVolume = false;
   }
 
