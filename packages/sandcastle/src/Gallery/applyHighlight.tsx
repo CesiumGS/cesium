@@ -62,3 +62,12 @@ export function applyHighlightToItem(
 
   return { ...item, titleHtml, descriptionHtml, codeExerpts };
 }
+
+export function formatVectorSearch(item: GalleryItem) {
+  return {
+    ...item,
+    titleHtml: <>{item.title}</>,
+    descriptionHtml: <>{item.description}</>,
+    codeExerpts: [],
+  };
+}

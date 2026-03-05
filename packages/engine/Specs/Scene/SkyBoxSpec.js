@@ -372,10 +372,12 @@ describe(
       scene.skyBox = skyBox;
       skyBox.update(scene.frameState);
 
-      await pollToPromise(() => defined(skyBox._cubeMap) || skyBox._hasError);
+      await pollToPromise(
+        () => defined(skyBox._panorama._cubeMap) || skyBox._panorama._hasError,
+      );
 
-      expect(skyBox._hasError).toBeTrue();
-      expect(skyBox._error).toEqual(error);
+      expect(skyBox._panorama._hasError).toBeTrue();
+      expect(skyBox._panorama._error).toEqual(error);
       expect(() => skyBox.update(scene.frameState)).toThrow(error);
     });
   },

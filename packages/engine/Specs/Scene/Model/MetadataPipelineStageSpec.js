@@ -9,6 +9,8 @@ import {
   HeadingPitchRange,
   Cartesian3,
   Transforms,
+  CustomShader,
+  defined,
 } from "../../../index.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -81,9 +83,110 @@ describe(
         model: {
           statistics: new ModelStatistics(),
           structuralMetadata: components.structuralMetadata,
+          customShader: mockCustomShader(components.structuralMetadata),
         },
         uniformMap: {},
       };
+    }
+
+    // The MetadataPipelineStage only adds metadata properties to the shader that are
+    // in use (e.g. by a custom shader, or a point cloud style). This mock adds all
+    // properties in the structural metadata to a mock custom shader.
+    function mockCustomShader(structuralMetadata) {
+      if (!defined(structuralMetadata)) {
+        return undefined;
+      }
+
+      const vertexShaderLines = [];
+      const fragmentShaderLines = [];
+      const fragmentShaderLineTemplate = (propertyName, glslType, index) =>
+        `\t${glslType} value${index} = fsInput.metadata.${propertyName};`;
+      const vertexShaderLineTemplate = (propertyName, glslType, index) =>
+        `\t${glslType} value${index} = vsInput.metadata.${propertyName};`;
+
+      const propertyAttributes = structuralMetadata.propertyAttributes;
+      const propertyTextures = structuralMetadata.propertyTextures;
+      const propertyTables = structuralMetadata.propertyTables;
+      let propertyNum = 0;
+
+      for (let i = 0; i < propertyAttributes.length; i++) {
+        for (const [propertyName, property] of Object.entries(
+          propertyAttributes[i].properties,
+        )) {
+          const classProperty = property.classProperty;
+          vertexShaderLines.push(
+            vertexShaderLineTemplate(
+              propertyName,
+              classProperty.getGlslType(),
+              propertyNum,
+            ),
+          );
+          fragmentShaderLines.push(
+            fragmentShaderLineTemplate(
+              propertyName,
+              classProperty.getGlslType(),
+              propertyNum,
+            ),
+          );
+          propertyNum++;
+        }
+      }
+
+      // Property textures are only in the fragment shader
+      for (let i = 0; i < propertyTextures.length; i++) {
+        for (const [propertyName, property] of Object.entries(
+          propertyTextures[i].properties,
+        )) {
+          const classProperty = property.classProperty;
+          fragmentShaderLines.push(
+            fragmentShaderLineTemplate(
+              propertyName,
+              classProperty.getGlslType(),
+              propertyNum,
+            ),
+          );
+          propertyNum++;
+        }
+      }
+
+      for (let i = 0; i < propertyTables.length; i++) {
+        for (const [propertyName, property] of Object.entries(
+          propertyTables[i].properties,
+        )) {
+          const classProperty = property.classProperty;
+          vertexShaderLines.push(
+            vertexShaderLineTemplate(
+              propertyName,
+              classProperty.getGlslType(),
+              propertyNum,
+            ),
+          );
+          fragmentShaderLines.push(
+            fragmentShaderLineTemplate(
+              propertyName,
+              classProperty.getGlslType(),
+              propertyNum,
+            ),
+          );
+          propertyNum++;
+        }
+      }
+
+      const vertexShaderBody = vertexShaderLines.join("\n");
+      const fragmentShaderBody = fragmentShaderLines.join("\n");
+
+      return new CustomShader({
+        vertexShaderText: `
+          void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
+          ${vertexShaderBody}
+          }
+        `,
+        fragmentShaderText: `
+          void fragmentMain(FragmentInput fsInput, inout czm_modelFragmentOutput fsOutput) {
+          ${fragmentShaderBody}
+          }
+        `,
+      });
     }
 
     function checkMetadataClassStructs(shaderBuilder, metadataTypes) {
@@ -497,9 +600,9 @@ describe(
               "    vec2 vec2Property_unpackedValue;",
               "    uint vec2Property_rawBits;",
               "    vec2 vec2Property_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).gb;",
-              "    vec2Property_rawBits = czm_unpackTexture(vec2Property_rawChannels);",
+              "    vec2Property_rawBits = czm_unpackTexture(vec2Property_rawChannels.r);",
               "    vec2Property_unpackedValue[0] = float((vec2Property_rawBits)) * 0.00392156862745098;",
-              "    vec2Property_rawBits = czm_unpackTexture(vec2Property_rawChannels);",
+              "    vec2Property_rawBits = czm_unpackTexture(vec2Property_rawChannels.g);",
               "    vec2Property_unpackedValue[1] = float((vec2Property_rawBits)) * 0.00392156862745098;",
               "    metadata.vec2Property = vec2Property_unpackedValue;",
               "    uint uint8Property_unpackedValue;",
@@ -511,11 +614,11 @@ describe(
               "    uvec3 uint8vec3Property_unpackedValue;",
               "    uint uint8vec3Property_rawBits;",
               "    vec3 uint8vec3Property_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).rgb;",
-              "    uint8vec3Property_rawBits = czm_unpackTexture(uint8vec3Property_rawChannels);",
+              "    uint8vec3Property_rawBits = czm_unpackTexture(uint8vec3Property_rawChannels.r);",
               "    uint8vec3Property_unpackedValue[0] = ((uint8vec3Property_rawBits));",
-              "    uint8vec3Property_rawBits = czm_unpackTexture(uint8vec3Property_rawChannels);",
+              "    uint8vec3Property_rawBits = czm_unpackTexture(uint8vec3Property_rawChannels.g);",
               "    uint8vec3Property_unpackedValue[1] = ((uint8vec3Property_rawBits));",
-              "    uint8vec3Property_rawBits = czm_unpackTexture(uint8vec3Property_rawChannels);",
+              "    uint8vec3Property_rawBits = czm_unpackTexture(uint8vec3Property_rawChannels.b);",
               "    uint8vec3Property_unpackedValue[2] = ((uint8vec3Property_rawBits));",
               "    metadata.uint8vec3Property = uint8vec3Property_unpackedValue;",
               "    metadataClass.uint8vec3Property.noData = uvec3(19,13,50);",
@@ -525,19 +628,19 @@ describe(
               "    vec3 arrayProperty_unpackedValue;",
               "    uint arrayProperty_rawBits;",
               "    vec3 arrayProperty_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).rgb;",
-              "    arrayProperty_rawBits = czm_unpackTexture(arrayProperty_rawChannels);",
+              "    arrayProperty_rawBits = czm_unpackTexture(arrayProperty_rawChannels.r);",
               "    arrayProperty_unpackedValue[0] = float((arrayProperty_rawBits)) * 0.00392156862745098;",
-              "    arrayProperty_rawBits = czm_unpackTexture(arrayProperty_rawChannels);",
+              "    arrayProperty_rawBits = czm_unpackTexture(arrayProperty_rawChannels.g);",
               "    arrayProperty_unpackedValue[1] = float((arrayProperty_rawBits)) * 0.00392156862745098;",
-              "    arrayProperty_rawBits = czm_unpackTexture(arrayProperty_rawChannels);",
+              "    arrayProperty_rawBits = czm_unpackTexture(arrayProperty_rawChannels.b);",
               "    arrayProperty_unpackedValue[2] = float((arrayProperty_rawBits)) * 0.00392156862745098;",
               "    metadata.arrayProperty = arrayProperty_unpackedValue;",
               "    vec2 valueTransformProperty_unpackedValue;",
               "    uint valueTransformProperty_rawBits;",
               "    vec2 valueTransformProperty_rawChannels = texture(u_propertyTexture_1, attributes.texCoord_0).rg;",
-              "    valueTransformProperty_rawBits = czm_unpackTexture(valueTransformProperty_rawChannels);",
+              "    valueTransformProperty_rawBits = czm_unpackTexture(valueTransformProperty_rawChannels.r);",
               "    valueTransformProperty_unpackedValue[0] = float((valueTransformProperty_rawBits)) * 0.00392156862745098;",
-              "    valueTransformProperty_rawBits = czm_unpackTexture(valueTransformProperty_rawChannels);",
+              "    valueTransformProperty_rawBits = czm_unpackTexture(valueTransformProperty_rawChannels.g);",
               "    valueTransformProperty_unpackedValue[1] = float((valueTransformProperty_rawBits)) * 0.00392156862745098;",
               "    metadata.valueTransformProperty = czm_valueTransform(u_valueTransformProperty_offset, u_valueTransformProperty_scale, valueTransformProperty_unpackedValue);",
             ],
@@ -675,6 +778,7 @@ describe(
 
         const model = tileset.root.children[1].content._model;
         expect(model).toBeDefined();
+        model.customShader = mockCustomShader(model.structuralMetadata);
 
         const shaderBuilder = new ShaderBuilder();
         const renderResources = {
