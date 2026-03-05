@@ -397,6 +397,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
  * Returns true if DrawCommand is out of date for given collection.
  * @param {BufferPolylineCollection} collection
  * @param {DrawCommand} command
+ * @ignore
  */
 function isCommandDirty(collection, command) {
   const isModelMatrixEqual = Matrix4.equals(
@@ -420,6 +421,7 @@ function isCommandDirty(collection, command) {
 /**
  * Returns number of drawn (not allocated) indices for given collection.
  * @param {BufferPolylineCollection} collection
+ * @ignore
  */
 function getDrawIndexCount(collection) {
   return (collection.vertexCount - collection.primitiveCount) * 6;
@@ -428,6 +430,7 @@ function getDrawIndexCount(collection) {
 /**
  * Computes dirty ranges for attribute and index buffers in a collection.
  * @param {BufferPolylineCollection} collection
+ * @ignore
  */
 function getPolylineDirtyRanges(collection) {
   const { _dirtyOffset, _dirtyCount } = collection;

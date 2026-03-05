@@ -240,6 +240,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
  * Returns true if DrawCommand is out of date for the given collection.
  * @param {BufferPointCollection} collection
  * @param {DrawCommand} command
+ * @ignore
  */
 function isCommandDirty(collection, command) {
   const isModelMatrixEqual = Matrix4.equals(

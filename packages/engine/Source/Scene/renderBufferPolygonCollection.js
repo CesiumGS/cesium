@@ -268,6 +268,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
  * Returns true if DrawCommand is out of date for the given collection.
  * @param {BufferPolygonCollection} collection
  * @param {DrawCommand} command
+ * @ignore
  */
 function isCommandDirty(collection, command) {
   const isModelMatrixEqual = Matrix4.equals(
@@ -291,6 +292,7 @@ function isCommandDirty(collection, command) {
 /**
  * Computes dirty ranges for attribute and index buffers in a collection.
  * @param {BufferPolygonCollection} collection
+ * @ignore
  */
 function getPolygonDirtyRanges(collection) {
   const { _dirtyOffset, _dirtyCount } = collection;
