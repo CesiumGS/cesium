@@ -1,6 +1,6 @@
 legacyId: LensFlare.html
 title: LensFlare
-description: Lens Flare.
+description: Use post-processing to simulate the effect of a camera lens flare.
 labels:
   - Atmosphere
   - Post Processing
