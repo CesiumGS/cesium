@@ -50,4 +50,4 @@ jobs:
       - name: create PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr create --title "Update files" --body-file ./.github/actions/update-files/pr-template.md --repo $GITHUB_REPOSITORY --label "priority - next release"
+        run: gh pr create --title "Update files" --body-file ./.github/actions/update-tokens/pr-template.md --repo $GITHUB_REPOSITORY --label "priority - next release"
