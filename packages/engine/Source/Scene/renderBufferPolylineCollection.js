@@ -2,6 +2,7 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferPolyline from "./BufferPolyline.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -53,6 +54,7 @@ const BufferPolylineAttributeLocations = {
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
+ * @property {BoundingSphere} [boundingVolume]
  * @ignore
  */
 
@@ -364,6 +366,15 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     });
   }
 
+  if (!defined(renderContext.boundingVolume)) {
+    renderContext.boundingVolume = new BoundingSphere();
+  }
+  BoundingSphere.transform(
+    collection.boundingVolume,
+    collection.modelMatrix,
+    renderContext.boundingVolume,
+  );
+
   const command = new DrawCommand({
     vertexArray: renderContext.vertexArray,
     renderState: renderContext.renderState,
@@ -371,8 +382,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     primitiveType: PrimitiveType.TRIANGLES,
     pass: Pass.OPAQUE,
     owner: collection,
+    modelMatrix: collection.modelMatrix,
     count: (collection.vertexCount - collection.primitiveCount) * 6,
-    boundingVolume: collection.boundingVolume,
+    boundingVolume: renderContext.boundingVolume,
     debugShowBoundingVolume: collection.debugShowBoundingVolume,
   });
 

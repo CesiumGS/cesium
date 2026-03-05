@@ -201,7 +201,7 @@ class BufferPoint extends BufferPrimitive {
       position: Cartesian3.pack(this.getPosition(), []),
       pixelSize: this.pixelSize,
       outlineWidth: this.outlineWidth,
-      outlineColor: this.getColor(scratchColor).toCssHexString(),
+      outlineColor: this.getOutlineColor(scratchColor).toCssHexString(),
     };
   }
 }

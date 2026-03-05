@@ -2,6 +2,7 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferPoint from "./BufferPoint.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -47,6 +48,7 @@ const BufferPointAttributeLocations = {
  * @property {Record<BufferPointAttribute, TypedArray>} [attributeArrays]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
+ * @property {BoundingSphere} [boundingVolume]
  * @ignore
  */
 
@@ -102,7 +104,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       positionHighArray[i * 3] = encodedCartesian.high.x;
       positionHighArray[i * 3 + 1] = encodedCartesian.high.y;
       positionHighArray[i * 3 + 2] = encodedCartesian.high.z;
-      positionHighArray[i * 3 + 3] = point.show ? 1 : 0;
 
       positionLowArray[i * 3] = encodedCartesian.low.x;
       positionLowArray[i * 3 + 1] = encodedCartesian.low.y;
@@ -210,6 +211,15 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     });
   }
 
+  if (!defined(renderContext.boundingVolume)) {
+    renderContext.boundingVolume = new BoundingSphere();
+  }
+  BoundingSphere.transform(
+    collection.boundingVolume,
+    collection.modelMatrix,
+    renderContext.boundingVolume,
+  );
+
   const command = new DrawCommand({
     vertexArray: renderContext.vertexArray,
     renderState: renderContext.renderState,
@@ -217,8 +227,9 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     primitiveType: PrimitiveType.POINTS,
     pass: Pass.OPAQUE,
     owner: collection,
+    modelMatrix: collection.modelMatrix,
     count: collection.primitiveCount,
-    boundingVolume: collection.boundingVolume,
+    boundingVolume: renderContext.boundingVolume,
     debugShowBoundingVolume: collection.debugShowBoundingVolume,
   });
 

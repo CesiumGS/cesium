@@ -5,6 +5,7 @@ import Color from "../Core/Color.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
+import Matrix4 from "../Core/Matrix4.js";
 import assert from "../Core/assert.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
@@ -88,6 +89,12 @@ class BufferPrimitiveCollection {
      * @type {BoundingSphere}
      */
     this.boundingVolume = new BoundingSphere();
+
+    /**
+     * A 4x4 transformation matrix that transforms the collection from model to world coordinates.
+     * @type {Matrix4}
+     */
+    this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
     /**
      * This property is for debugging only; it is not for production use nor is it optimized.

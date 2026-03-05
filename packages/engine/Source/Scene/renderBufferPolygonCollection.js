@@ -2,6 +2,7 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferPolygon from "./BufferPolygon.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -48,6 +49,7 @@ const BufferPolygonAttributeLocations = {
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
+ * @property {BoundingSphere} [boundingVolume]
  * @ignore
  */
 
@@ -235,6 +237,15 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     });
   }
 
+  if (!defined(renderContext.boundingVolume)) {
+    renderContext.boundingVolume = new BoundingSphere();
+  }
+  BoundingSphere.transform(
+    collection.boundingVolume,
+    collection.modelMatrix,
+    renderContext.boundingVolume,
+  );
+
   const command = new DrawCommand({
     vertexArray: renderContext.vertexArray,
     renderState: renderContext.renderState,
@@ -242,8 +253,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     primitiveType: PrimitiveType.TRIANGLES,
     pass: Pass.OPAQUE,
     owner: collection,
+    modelMatrix: collection.modelMatrix,
     count: collection.triangleCount * 3,
-    boundingVolume: collection.boundingVolume,
+    boundingVolume: renderContext.boundingVolume,
     debugShowBoundingVolume: collection.debugShowBoundingVolume,
   });
 
