@@ -3,13 +3,13 @@ import { Button, Text } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import { DropdownMenu } from "@stratakit/structures";
 import { chevronDown } from "../../icons";
-import type { AIModel } from "../../AI/types";
+import type { ModelSelection } from "../../AI/types";
 import type { ModelInfo } from "../../contexts/ModelContext";
 
 interface ModelPickerProps {
   models: ModelInfo[];
-  currentModel: AIModel | null;
-  onModelChange: (modelId: AIModel) => void;
+  currentModel: ModelSelection | null;
+  onModelChange: (selection: ModelSelection) => void;
 }
 
 export function ModelPicker({
@@ -18,35 +18,51 @@ export function ModelPicker({
   onModelChange,
 }: ModelPickerProps) {
   const currentModelInfo = useMemo(
-    () => models.find((m) => m.id === currentModel),
+    () =>
+      models.find(
+        (m) =>
+          currentModel &&
+          m.id === currentModel.model &&
+          m.route === currentModel.route,
+      ),
     [models, currentModel],
   );
+
+  const displayLabel = currentModelInfo
+    ? currentModelInfo.displaySuffix
+      ? `${currentModelInfo.displayName} ${currentModelInfo.displaySuffix}`
+      : currentModelInfo.displayName
+    : "Select Model";
 
   return (
     <DropdownMenu.Provider>
       <DropdownMenu.Button
         render={
           <Button variant="ghost">
-            <Text variant="body-sm">
-              {currentModelInfo?.displayName || "Select Model"}
-            </Text>
+            <Text variant="body-sm">{displayLabel}</Text>
             <Icon href={chevronDown} />
           </Button>
         }
       />
       <DropdownMenu.Content>
-        {models.map((model) => (
-          <DropdownMenu.Item
-            key={model.id}
-            label={model.displayName}
-            disabled={!model.isAvailable}
-            onClick={() => {
-              if (model.isAvailable) {
-                onModelChange(model.id);
-              }
-            }}
-          />
-        ))}
+        {models.map((model) => {
+          const label = model.displaySuffix
+            ? `${model.displayName} ${model.displaySuffix}`
+            : model.displayName;
+
+          return (
+            <DropdownMenu.Item
+              key={`${model.id}-${model.route}`}
+              label={label}
+              disabled={!model.isAvailable}
+              onClick={() => {
+                if (model.isAvailable) {
+                  onModelChange({ model: model.id, route: model.route });
+                }
+              }}
+            />
+          );
+        })}
       </DropdownMenu.Content>
     </DropdownMenu.Provider>
   );

@@ -50,7 +50,7 @@ export class AnthropicClient {
 
   constructor(
     apiKey: string,
-    model: ClaudeModel = "claude-sonnet-4-5-20250929",
+    model: ClaudeModel = "claude-sonnet-4-6",
     options: AnthropicClientOptions = {},
   ) {
     this.apiKey = apiKey;

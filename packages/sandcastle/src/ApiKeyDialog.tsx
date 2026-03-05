@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button, Field, TextBox } from "@stratakit/bricks";
 import { Tabs, unstable_Banner as Banner } from "@stratakit/structures";
 import { SandcastleDialog } from "./SandcastleDialog";
@@ -14,6 +14,7 @@ interface ApiKeyDialogProps {
 
 export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
   const { refreshModels } = useModel();
+  const hasVertexCredentials = ApiKeyManager.hasVertexServiceAccount();
 
   // Anthropic state
   const [anthropicKey, setAnthropicKey] = useState("");
@@ -22,6 +23,13 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
   // Gemini state
   const [apiKey, setApiKey] = useState("");
   const [geminiError, setGeminiError] = useState<string | null>(null);
+
+  // Vertex AI state
+  const [vertexJson, setVertexJson] = useState("");
+  const [vertexRegion, setVertexRegion] = useState(
+    ApiKeyManager.getVertexRegion(),
+  );
+  const [vertexError, setVertexError] = useState<string | null>(null);
 
   // Cesium Ion state
   const [cesiumToken, setCesiumToken] = useState("");
@@ -35,6 +43,18 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
   useEffect(() => {
     return () => clearTimeout(cesiumSuccessTimeoutRef.current);
   }, []);
+
+  const vertexProjectId = useMemo(() => {
+    if (!vertexJson.trim()) {
+      return ApiKeyManager.getVertexProjectId();
+    }
+    try {
+      const parsed = JSON.parse(vertexJson) as Record<string, unknown>;
+      return typeof parsed.project_id === "string" ? parsed.project_id : null;
+    } catch {
+      return null;
+    }
+  }, [vertexJson]);
 
   const handleAnthropicSave = () => {
     if (!anthropicKey.trim()) {
@@ -78,6 +98,49 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
     }
   };
 
+  const handleVertexSave = () => {
+    const jsonTrimmed = vertexJson.trim();
+    const hasStoredCredentials = ApiKeyManager.hasVertexServiceAccount();
+
+    if (!jsonTrimmed && !hasStoredCredentials) {
+      setVertexError("Please paste your service account JSON key file");
+      return;
+    }
+    if (
+      jsonTrimmed &&
+      !ApiKeyManager.validateVertexServiceAccountFormat(jsonTrimmed)
+    ) {
+      setVertexError(
+        'Invalid service account JSON. Required: type "service_account", project_id, client_email, and a valid private_key.',
+      );
+      return;
+    }
+    const regionTrimmed = vertexRegion.trim().toLowerCase();
+    if (regionTrimmed && !/^[a-z]+[a-z0-9-]*[a-z0-9]$/.test(regionTrimmed)) {
+      setVertexError('Invalid region format. Example: "us-central1".');
+      return;
+    }
+    try {
+      if (jsonTrimmed) {
+        ApiKeyManager.saveVertexServiceAccount(jsonTrimmed);
+      }
+      ApiKeyManager.saveVertexRegion(regionTrimmed || "global");
+      refreshModels();
+      onSuccess();
+      onClose();
+    } catch (err) {
+      setVertexError(err instanceof Error ? err.message : "Failed to save");
+    }
+  };
+
+  const handleVertexClear = () => {
+    ApiKeyManager.clearVertexServiceAccount();
+    setVertexJson("");
+    setVertexRegion("global");
+    setVertexError(null);
+    refreshModels();
+  };
+
   const handleCesiumSave = () => {
     if (!cesiumToken.trim()) {
       setCesiumError("Please enter a Cesium Ion access token");
@@ -114,6 +177,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
           <Tabs.TabList>
             <Tabs.Tab id="anthropic">Anthropic</Tabs.Tab>
             <Tabs.Tab id="gemini">Gemini</Tabs.Tab>
+            <Tabs.Tab id="vertex">Vertex AI</Tabs.Tab>
             <Tabs.Tab id="cesium">Cesium Ion</Tabs.Tab>
           </Tabs.TabList>
 
@@ -219,6 +283,90 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                       setGeminiError(null);
                     }}
                   >
+                    Clear
+                  </Button>
+                )}
+                <Button variant="ghost" onClick={onClose}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </Tabs.TabPanel>
+
+          <Tabs.TabPanel tabId="vertex">
+            <div className="api-dialog-panel">
+              <div className="vertex-json-field">
+                <label
+                  className="vertex-json-label"
+                  htmlFor="vertex-service-account-json"
+                >
+                  Service Account JSON
+                </label>
+                <textarea
+                  id="vertex-service-account-json"
+                  className="vertex-json-textarea"
+                  value={vertexJson}
+                  onChange={(e) => {
+                    setVertexJson(e.target.value);
+                    setVertexError(null);
+                  }}
+                  placeholder={
+                    hasVertexCredentials
+                      ? "Credentials saved \u2022 paste new JSON to replace"
+                      : "Paste your GCP service account JSON key file here..."
+                  }
+                  rows={6}
+                  spellCheck={false}
+                  autoComplete="off"
+                />
+                {vertexError && (
+                  <div className="vertex-json-error">{vertexError}</div>
+                )}
+              </div>
+              {vertexProjectId && (
+                <Field.Root>
+                  <Field.Label>Project ID</Field.Label>
+                  <Field.Control
+                    render={
+                      <TextBox.Input
+                        type="text"
+                        value={vertexProjectId}
+                        readOnly
+                      />
+                    }
+                  />
+                </Field.Root>
+              )}
+              <Field.Root>
+                <Field.Label>Region</Field.Label>
+                <Field.Control
+                  render={
+                    <TextBox.Input
+                      type="text"
+                      value={vertexRegion}
+                      onChange={(e) => {
+                        setVertexRegion(e.target.value);
+                        setVertexError(null);
+                      }}
+                      placeholder="global"
+                    />
+                  }
+                />
+                <Field.Description>
+                  Vertex AI region (default: global). If needed, try us-east5 or
+                  europe-west1.
+                </Field.Description>
+              </Field.Root>
+              <div className="api-dialog-actions">
+                <Button
+                  tone="accent"
+                  onClick={handleVertexSave}
+                  disabled={!vertexJson.trim() && !hasVertexCredentials}
+                >
+                  Save
+                </Button>
+                {hasVertexCredentials && (
+                  <Button variant="outline" onClick={handleVertexClear}>
                     Clear
                   </Button>
                 )}

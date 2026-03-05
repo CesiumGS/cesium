@@ -32,7 +32,7 @@ export type ConversationHistory =
  */
 export type ClaudeModel =
   | "claude-opus-4-6"
-  | "claude-sonnet-4-5-20250929"
+  | "claude-sonnet-4-6"
   | "claude-haiku-4-5-20251001";
 
 /**
@@ -44,6 +44,49 @@ export type AIProvider = "gemini" | "anthropic";
  * Union type of all available AI models
  */
 export type AIModel = GeminiModel | ClaudeModel;
+
+/**
+ * Route through which a model is accessed
+ */
+export type AIRoute = "direct" | "vertex";
+
+/**
+ * Describes a selectable model entry with routing and display metadata
+ */
+export interface ModelEntry {
+  id: AIModel;
+  route: AIRoute;
+  displayName: string;
+  displaySuffix?: string;
+  provider: AIProvider;
+}
+
+/**
+ * A concrete model + route selection
+ */
+export interface ModelSelection {
+  model: AIModel;
+  route: AIRoute;
+}
+
+/**
+ * Canonical Vertex AI publisher model IDs.
+ * Maps from our AIModel identifiers to the IDs expected by Vertex AI endpoints.
+ */
+export const VERTEX_MODEL_IDS: Record<AIModel, string> = {
+  "claude-opus-4-6": "claude-opus-4-6",
+  "claude-sonnet-4-6": "claude-sonnet-4-6",
+  "claude-haiku-4-5-20251001": "claude-haiku-4-5@20251001",
+  "gemini-3-flash-preview": "gemini-3-flash-preview",
+  "gemini-3-pro-preview": "gemini-3-pro-preview",
+};
+
+/**
+ * Returns a unique string key for a ModelSelection (useful for Maps/Sets/React keys)
+ */
+export function modelSelectionKey(sel: ModelSelection): string {
+  return `${sel.model}::${sel.route}`;
+}
 
 /**
  * Represents an image attachment in a chat message

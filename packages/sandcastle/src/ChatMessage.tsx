@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Button, IconButton } from "@stratakit/bricks";
+import { IconButton } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import type { ChatMessage as ChatMessageType, DiffBlock } from "./AI/types";
 import { EditParser } from "./AI/EditParser";
@@ -29,7 +29,6 @@ export interface PartialDiff {
 
 interface ChatMessageProps {
   message: ChatMessageType;
-  onApplyCode?: (javascript?: string, html?: string) => void;
   onApplyDiff?: (diffs: DiffBlock[], language: "javascript" | "html") => void;
   currentCode?: { javascript: string; html: string };
   /** Map of diffIndex to partial streaming diffs */
@@ -42,7 +41,6 @@ interface ChatMessageProps {
  */
 export const ChatMessage = memo(function ChatMessage({
   message,
-  onApplyCode,
   onApplyDiff,
   currentCode,
   streamingDiffs,
@@ -79,7 +77,6 @@ export const ChatMessage = memo(function ChatMessage({
     return { cleanedMarkdown, parsedResponse: parsed };
   }, [message.content, isUser]);
 
-  const hasApplicableCode = parsedResponse.codeBlocks.length > 0;
   const hasDiffs = parsedResponse.diffEdits.length > 0;
 
   // Treat message as streaming if the flag is set or streaming diff content exists
@@ -149,27 +146,6 @@ export const ChatMessage = memo(function ChatMessage({
 
     return result;
   }, [currentCode, parsedResponse.diffEdits, rejectedDiffs]);
-
-  const handleApply = () => {
-    if (!onApplyCode) {
-      return;
-    }
-
-    let jsCode: string | undefined;
-    let htmlCode: string | undefined;
-
-    for (const block of parsedResponse.codeBlocks) {
-      if (block.language === "javascript") {
-        jsCode = block.code;
-      } else if (block.language === "html") {
-        htmlCode = block.code;
-      }
-    }
-
-    if (jsCode || htmlCode) {
-      onApplyCode(jsCode, htmlCode);
-    }
-  };
 
   const handleApplyDiff = useCallback(
     async (
@@ -369,13 +345,6 @@ export const ChatMessage = memo(function ChatMessage({
         )}
 
         {/* Raw diff accordions hidden - user sees beautiful diff preview instead */}
-
-        {/* Existing code blocks functionality */}
-        {hasApplicableCode && onApplyCode && (
-          <div className="message-actions">
-            <Button onClick={handleApply}>Apply Changes</Button>
-          </div>
-        )}
 
         {/* Show streaming diff previews while message is streaming */}
         {streamingDiffs && streamingDiffs.size > 0 && (

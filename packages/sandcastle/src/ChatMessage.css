@@ -117,14 +117,6 @@
   gap: var(--stratakit-space-x2);
 }
 
-.message-actions {
-  display: flex;
-  gap: var(--stratakit-space-x2);
-  margin-top: var(--stratakit-space-x2);
-  padding-top: var(--stratakit-space-x2);
-  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-
 .message-icon {
   flex-shrink: 0;
   opacity: 0.7;

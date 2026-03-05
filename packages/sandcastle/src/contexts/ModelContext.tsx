@@ -8,27 +8,30 @@ import {
   useEffect,
 } from "react";
 import { AIClientFactory } from "../AI/AIClientFactory";
-import type { AIModel } from "../AI/types";
+import type { AIModel, AIRoute, ModelSelection } from "../AI/types";
 
 /**
  * Model information for UI display
  */
 export interface ModelInfo {
   id: AIModel;
+  route: AIRoute;
   displayName: string;
+  displaySuffix?: string;
   provider: "gemini" | "anthropic";
   isAvailable: boolean;
 }
 
 export interface ModelContextType {
   models: ModelInfo[];
-  currentModel: AIModel | null;
+  currentModel: ModelSelection | null;
   pinnedModels: string[];
-  setCurrentModel: (modelId: AIModel) => void;
+  setCurrentModel: (selection: ModelSelection) => void;
   togglePin: (modelId: string) => void;
   refreshModels: () => void;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ModelContext = createContext<ModelContextType | undefined>(
   undefined,
 );
@@ -36,21 +39,18 @@ export const ModelContext = createContext<ModelContextType | undefined>(
 const STORAGE_KEY = "cesium-copilot-pinned-models";
 
 /**
- * Get all models with availability status
- * Claude models are listed first (preferred when available)
+ * Get all models with availability status and route info.
+ * Claude models are listed first (preferred when available).
  */
 function getAllModels(): ModelInfo[] {
-  return AIClientFactory.getAllModelIds().map((id) => {
-    const info = AIClientFactory.getModelInfo(id);
-    const isAvailable = AIClientFactory.canUseModel(id);
-
-    return {
-      id,
-      displayName: info.displayName,
-      provider: info.provider,
-      isAvailable,
-    };
-  });
+  return AIClientFactory.getAvailableModelEntries().map((entry) => ({
+    id: entry.id,
+    route: entry.route,
+    displayName: entry.displayName,
+    displaySuffix: entry.displaySuffix,
+    provider: entry.provider,
+    isAvailable: AIClientFactory.canUseModelRoute(entry.id, entry.route),
+  }));
 }
 
 /**
@@ -81,8 +81,8 @@ function savePinnedModels(pinnedModels: string[]): void {
 
 export function ModelProvider({ children }: { children: ReactNode }) {
   const [models, setModels] = useState<ModelInfo[]>(getAllModels);
-  const [currentModel, setCurrentModelState] = useState<AIModel | null>(
-    AIClientFactory.getDefaultModel(),
+  const [currentModel, setCurrentModelState] = useState<ModelSelection | null>(
+    AIClientFactory.getDefaultModelSelection(),
   );
   const [pinnedModels, setPinnedModels] = useState<string[]>(loadPinnedModels);
 
@@ -94,10 +94,22 @@ export function ModelProvider({ children }: { children: ReactNode }) {
 
   // Refresh models - exposed via context for same-tab updates
   const refreshModels = useCallback(() => {
-    setModels(getAllModels());
-    const defaultModel = AIClientFactory.getDefaultModel();
-    if (defaultModel && !currentModelRef.current) {
-      setCurrentModelState(defaultModel);
+    const updatedModels = getAllModels();
+    setModels(updatedModels);
+
+    const current = currentModelRef.current;
+    if (!current) {
+      // No model selected - pick default
+      const defaultSel = AIClientFactory.getDefaultModelSelection();
+      if (defaultSel) {
+        setCurrentModelState(defaultSel);
+      }
+    } else if (
+      !AIClientFactory.canUseModelRoute(current.model, current.route)
+    ) {
+      // Current route is no longer available - switch to default
+      const defaultSel = AIClientFactory.getDefaultModelSelection();
+      setCurrentModelState(defaultSel);
     }
   }, []);
 
@@ -110,8 +122,8 @@ export function ModelProvider({ children }: { children: ReactNode }) {
     };
   }, [refreshModels]);
 
-  const setCurrentModel = useCallback((modelId: AIModel) => {
-    setCurrentModelState(modelId);
+  const setCurrentModel = useCallback((selection: ModelSelection) => {
+    setCurrentModelState(selection);
   }, []);
 
   const togglePin = useCallback((modelId: string) => {

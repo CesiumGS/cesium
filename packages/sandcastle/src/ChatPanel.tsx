@@ -17,6 +17,7 @@ import type {
   ExecutionResult,
   ToolCall,
   ImageAttachment,
+  ModelSelection,
 } from "./AI/types";
 import { SettingsContext } from "./SettingsContext";
 import {
@@ -79,10 +80,6 @@ export function ChatPanel({
   const { settings, updateSettings } = useContext(SettingsContext);
 
   const { models, currentModel, setCurrentModel, refreshModels } = useModel();
-  const selectedModel =
-    currentModel ||
-    AIClientFactory.getDefaultModel() ||
-    "gemini-3-flash-preview";
 
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
@@ -165,7 +162,18 @@ export function ChatPanel({
       if (currentHasApiKey !== hasApiKey) {
         setHasApiKey(currentHasApiKey);
       }
-      if (!AIClientFactory.canUseModel(selectedModel)) {
+      const selectedModel: ModelSelection = currentModel ||
+        AIClientFactory.getDefaultModelSelection() || {
+          model: "gemini-3-flash-preview",
+          route: "direct",
+        };
+
+      if (
+        !AIClientFactory.canUseModelRoute(
+          selectedModel.model,
+          selectedModel.route,
+        )
+      ) {
         setShowApiKeyDialog(true);
         return;
       }
@@ -246,7 +254,7 @@ export function ChatPanel({
         const thinkingBudget = settings.extendedThinking.enabled
           ? settings.extendedThinking.budget
           : 0;
-        const client = AIClientFactory.createClient(selectedModel, {
+        const client = AIClientFactory.createClientForRoute(selectedModel, {
           geminiOptions: {
             temperature: 0,
             thinkingBudgetTokens: thinkingBudget,
@@ -282,9 +290,10 @@ export function ChatPanel({
           return blocks;
         };
 
-        const isGemini = selectedModel.startsWith("gemini");
+        const isGemini = selectedModel.model.startsWith("gemini");
         const conversationHistory = isGemini
           ? previousMessages.map((msg) => ({
+              role: msg.role === "assistant" ? "model" : "user",
               parts: [{ text: msg.content }],
             }))
           : previousMessages
@@ -429,7 +438,7 @@ export function ChatPanel({
                     client,
                     systemPrompt,
                     initialHistory,
-                    selectedModel,
+                    selectedModel.model,
                     messageContent,
                     accumulatedText,
                     toolsToPass,
@@ -572,9 +581,10 @@ export function ChatPanel({
       isLoading,
       isCurrentlyStreaming,
       hasApiKey,
-      selectedModel,
-      currentCode,
+      currentModel,
       settings.customPromptAddendum,
+      settings.extendedThinking.enabled,
+      settings.extendedThinking.budget,
       addMessage,
       updateMessage,
       appendToolCallToMessage,
@@ -621,14 +631,6 @@ export function ChatPanel({
   const handleNewChat = useCallback(() => {
     resetChat();
   }, [resetChat]);
-
-  const stableOnApplyCode = useCallback(
-    (javascript?: string, html?: string) => {
-      onApplyCode(javascript, html);
-      onClearConsole?.();
-    },
-    [onApplyCode, onClearConsole],
-  );
 
   const stableOnApplyDiff = useCallback(
     async (diffs: DiffBlock[], language: "javascript" | "html") => {
@@ -822,7 +824,6 @@ export function ChatPanel({
                 <ChatMessageComponent
                   key={message.id}
                   message={message}
-                  onApplyCode={stableOnApplyCode}
                   onApplyDiff={stableOnApplyDiff}
                   currentCode={currentCode}
                   streamingDiffs={undefined}
