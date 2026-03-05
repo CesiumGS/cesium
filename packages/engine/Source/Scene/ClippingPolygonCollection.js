@@ -775,7 +775,9 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
     for (let i = 0; i < length; ++i) {
       const polygon = polygons[i];
 
-      const polygonBoundingRectangle = polygon.computeRectangle(scratchRectanglePolygon);
+      const polygonBoundingRectangle = polygon.computeRectangle(
+        scratchRectanglePolygon,
+      );
 
       const result = Rectangle.simpleIntersection(
         tileBoundingRectangle,
