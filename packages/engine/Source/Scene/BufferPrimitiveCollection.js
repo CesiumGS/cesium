@@ -5,6 +5,7 @@ import Color from "../Core/Color.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
+import Matrix4 from "../Core/Matrix4.js";
 import assert from "../Core/assert.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
@@ -69,6 +70,7 @@ class BufferPrimitiveCollection {
 
   /**
    * @param {object} options
+   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
@@ -83,11 +85,25 @@ class BufferPrimitiveCollection {
     this.show = options.show ?? true;
 
     /**
-     * Bounding volume for all primitives in the collection, including both
+     * Transforms geometry from model to world coordinates.
+     * @type {Matrix4}
+     * @default Matrix4.IDENTITY
+     */
+    this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
+
+    /**
+     * Local bounding volume for all primitives in the collection, including both
      * shown and hidden primitives.
      * @type {BoundingSphere}
      */
     this.boundingVolume = new BoundingSphere();
+
+    /**
+     * World bounding volume for all primitives in the collection, including both
+     * shown and hidden primitives.
+     * @type {BoundingSphere}
+     */
+    this.boundingVolumeWC = new BoundingSphere();
 
     /**
      * This property is for debugging only; it is not for production use nor is it optimized.
@@ -397,7 +413,11 @@ class BufferPrimitiveCollection {
       3,
       this.boundingVolume,
     );
-
+    BoundingSphere.transform(
+      this.boundingVolume,
+      this.modelMatrix,
+      this.boundingVolumeWC,
+    );
     this._dirtyBoundingVolume = false;
   }
 

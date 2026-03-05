@@ -2,7 +2,6 @@
 
 import BufferPrimitive from "./BufferPrimitive.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
 import assert from "../Core/assert.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
@@ -11,7 +10,6 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 
 const scratchCartesian = new Cartesian3();
-const scratchColor = new Color();
 
 /**
  * View bound to the underlying buffer data of a {@link BufferPointCollection}.
@@ -50,25 +48,7 @@ class BufferPoint extends BufferPrimitive {
      * @type {number}
      * @ignore
      */
-    PIXEL_SIZE_U8: BufferPrimitive.Layout.__BYTE_LENGTH + 4,
-
-    /**
-     * @type {number}
-     * @ignore
-     */
-    OUTLINE_WIDTH_U8: BufferPrimitive.Layout.__BYTE_LENGTH + 5,
-
-    /**
-     * @type {number}
-     * @ignore
-     */
-    OUTLINE_COLOR_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 8,
-
-    /**
-     * @type {number}
-     * @ignore
-     */
-    __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 12,
+    __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 4,
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -145,46 +125,6 @@ class BufferPoint extends BufferPrimitive {
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // ACCESSORS
-
-  /** @type {number} */
-  get pixelSize() {
-    return this._getUint8(BufferPoint.Layout.PIXEL_SIZE_U8);
-  }
-
-  set pixelSize(pixelSize) {
-    this._setUint8(BufferPoint.Layout.PIXEL_SIZE_U8, pixelSize);
-  }
-
-  /** @type {number} */
-  get outlineWidth() {
-    return this._getUint8(BufferPoint.Layout.OUTLINE_WIDTH_U8);
-  }
-
-  set outlineWidth(outlineWidth) {
-    this._setUint8(BufferPoint.Layout.OUTLINE_WIDTH_U8, outlineWidth);
-  }
-
-  /**
-   * @param {Color} result
-   * @returns {Color}
-   */
-  getOutlineColor(result) {
-    return Color.fromRgba(
-      this._getUint32(BufferPoint.Layout.OUTLINE_COLOR_U32),
-      result,
-    );
-  }
-
-  /**
-   * Updates the color of primitive.
-   * @param {Color} color
-   */
-  setOutlineColor(color) {
-    this._setUint32(BufferPoint.Layout.OUTLINE_COLOR_U32, color.toRgba());
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
   // DEBUG
 
   /**
@@ -199,9 +139,6 @@ class BufferPoint extends BufferPrimitive {
     return {
       ...super.toJSON(),
       position: Cartesian3.pack(this.getPosition(), []),
-      pixelSize: this.pixelSize,
-      outlineWidth: this.outlineWidth,
-      outlineColor: this.getColor(scratchColor).toCssHexString(),
     };
   }
 }

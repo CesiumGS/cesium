@@ -6,10 +6,12 @@ import BufferPolyline from "./BufferPolyline.js";
 import renderPolylines from "./renderBufferPolylineCollection.js";
 
 /** @import Color from "../Core/Color.js"; */
+/** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
 
 /**
  * @typedef {object} BufferPolylineOptions
+ * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
  * @property {Float64Array} [positions]

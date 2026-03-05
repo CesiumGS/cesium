@@ -20,6 +20,8 @@ import BufferPolygonCollectionFS from "../Shaders/BufferPolygonCollectionFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
+import Matrix4 from "../Core/Matrix4.js";
 
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -48,6 +50,7 @@ const BufferPolygonAttributeLocations = {
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
+ * @property {DrawCommand} [command]
  * @ignore
  */
 
@@ -235,24 +238,54 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     });
   }
 
-  const command = new DrawCommand({
-    vertexArray: renderContext.vertexArray,
-    renderState: renderContext.renderState,
-    shaderProgram: renderContext.shaderProgram,
-    primitiveType: PrimitiveType.TRIANGLES,
-    pass: Pass.OPAQUE,
-    owner: collection,
-    count: collection.triangleCount * 3,
-    boundingVolume: collection.boundingVolume,
-    debugShowBoundingVolume: collection.debugShowBoundingVolume,
-  });
+  if (
+    !defined(renderContext.command) ||
+    isCommandDirty(collection, renderContext.command)
+  ) {
+    renderContext.command = new DrawCommand({
+      vertexArray: renderContext.vertexArray,
+      renderState: renderContext.renderState,
+      shaderProgram: renderContext.shaderProgram,
+      primitiveType: PrimitiveType.TRIANGLES,
+      pass: Pass.OPAQUE,
+      owner: collection,
+      count: collection.triangleCount * 3,
+      modelMatrix: collection.modelMatrix,
+      boundingVolume: collection.boundingVolumeWC,
+      debugShowBoundingVolume: collection.debugShowBoundingVolume,
+    });
+  }
 
-  frameState.commandList.push(command);
+  frameState.commandList.push(renderContext.command);
 
   collection._dirtyCount = 0;
   collection._dirtyOffset = 0;
 
   return renderContext;
+}
+
+/**
+ * Returns true if DrawCommand is out of date for the given collection.
+ * @param {BufferPolygonCollection} collection
+ * @param {DrawCommand} command
+ */
+function isCommandDirty(collection, command) {
+  const isModelMatrixEqual = Matrix4.equals(
+    collection.modelMatrix,
+    command._modelMatrix,
+  );
+
+  const isBoundingVolumeEqual = BoundingSphere.equals(
+    collection.boundingVolumeWC,
+    command._boundingVolume,
+  );
+
+  return (
+    collection.triangleCount * 3 !== command._count ||
+    collection.debugShowBoundingVolume !== command.debugShowBoundingVolume ||
+    !isModelMatrixEqual ||
+    !isBoundingVolumeEqual
+  );
 }
 
 /**

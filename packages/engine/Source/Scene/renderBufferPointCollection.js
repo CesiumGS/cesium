@@ -19,6 +19,8 @@ import BufferPointCollectionVS from "../Shaders/BufferPointCollectionVS.js";
 import BufferPointCollectionFS from "../Shaders/BufferPointCollectionFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
+import Matrix4 from "../Core/Matrix4.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
@@ -47,6 +49,7 @@ const BufferPointAttributeLocations = {
  * @property {Record<BufferPointAttribute, TypedArray>} [attributeArrays]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
+ * @property {DrawCommand} [command]
  * @ignore
  */
 
@@ -102,23 +105,20 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       positionHighArray[i * 3] = encodedCartesian.high.x;
       positionHighArray[i * 3 + 1] = encodedCartesian.high.y;
       positionHighArray[i * 3 + 2] = encodedCartesian.high.z;
-      positionHighArray[i * 3 + 3] = point.show ? 1 : 0;
 
       positionLowArray[i * 3] = encodedCartesian.low.x;
       positionLowArray[i * 3 + 1] = encodedCartesian.low.y;
       positionLowArray[i * 3 + 2] = encodedCartesian.low.z;
 
       showPixelSizeAndColorArray[i * 3] = point.show ? 1 : 0;
-      showPixelSizeAndColorArray[i * 3 + 1] = point.pixelSize;
+      showPixelSizeAndColorArray[i * 3 + 1] = 5; // TODO: Material API.
       showPixelSizeAndColorArray[i * 3 + 2] = AttributeCompression.encodeRGB8(
         point.getColor(color),
       );
 
-      outlineWidthAndOutlineColorArray[i * 2] = point.outlineWidth;
+      outlineWidthAndOutlineColorArray[i * 2] = 0; // TODO: Material API.
       outlineWidthAndOutlineColorArray[i * 2 + 1] =
-        AttributeCompression.encodeRGB8(
-          point.outlineWidth > 0 ? point.getOutlineColor(color) : color,
-        );
+        AttributeCompression.encodeRGB8(Color.WHITE); // TODO: Material API.
 
       point._dirty = false;
     }
@@ -210,24 +210,54 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     });
   }
 
-  const command = new DrawCommand({
-    vertexArray: renderContext.vertexArray,
-    renderState: renderContext.renderState,
-    shaderProgram: renderContext.shaderProgram,
-    primitiveType: PrimitiveType.POINTS,
-    pass: Pass.OPAQUE,
-    owner: collection,
-    count: collection.primitiveCount,
-    boundingVolume: collection.boundingVolume,
-    debugShowBoundingVolume: collection.debugShowBoundingVolume,
-  });
+  if (
+    !defined(renderContext.command) ||
+    isCommandDirty(collection, renderContext.command)
+  ) {
+    renderContext.command = new DrawCommand({
+      vertexArray: renderContext.vertexArray,
+      renderState: renderContext.renderState,
+      shaderProgram: renderContext.shaderProgram,
+      primitiveType: PrimitiveType.POINTS,
+      pass: Pass.OPAQUE,
+      owner: collection,
+      count: collection.primitiveCount,
+      modelMatrix: collection.modelMatrix,
+      boundingVolume: collection.boundingVolumeWC,
+      debugShowBoundingVolume: collection.debugShowBoundingVolume,
+    });
+  }
 
-  frameState.commandList.push(command);
+  frameState.commandList.push(renderContext.command);
 
   collection._dirtyCount = 0;
   collection._dirtyOffset = 0;
 
   return renderContext;
+}
+
+/**
+ * Returns true if DrawCommand is out of date for the given collection.
+ * @param {BufferPointCollection} collection
+ * @param {DrawCommand} command
+ */
+function isCommandDirty(collection, command) {
+  const isModelMatrixEqual = Matrix4.equals(
+    collection.modelMatrix,
+    command._modelMatrix,
+  );
+
+  const isBoundingVolumeEqual = BoundingSphere.equals(
+    collection.boundingVolumeWC,
+    command._boundingVolume,
+  );
+
+  return (
+    collection.primitiveCount !== command._count ||
+    collection.debugShowBoundingVolume !== command.debugShowBoundingVolume ||
+    !isModelMatrixEqual ||
+    !isBoundingVolumeEqual
+  );
 }
 
 export default renderBufferPointCollection;
