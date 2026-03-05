@@ -2,7 +2,6 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferPoint from "./BufferPoint.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
