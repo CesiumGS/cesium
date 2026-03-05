@@ -257,11 +257,20 @@ export async function getNewKeyForItwin(
 
   const existingShares = await getShares(itwinId, accessToken);
   const currentVersion = await getCurrentMinorVersion();
+  const nextVersion = currentVersion + 1;
   const sharePerVersion = mapSharesToVersion(existingShares, currentVersion);
 
-  if (sharePerVersion[currentVersion + 1]) {
+  console.log(
+    "  creating new key for version",
+    nextVersion,
+    "for itwin",
+    itwinId,
+  );
+
+  if (sharePerVersion[nextVersion]) {
+    console.log("  found existing key for version", nextVersion, "reusing it");
     // If a share key already exists for the target version then just reuse it
-    return sharePerVersion[currentVersion + 1].shareKey;
+    return sharePerVersion[nextVersion].shareKey;
   }
 
   console.log("Generating new key for itwin", itwinId);
@@ -295,5 +304,8 @@ export async function getNewKeyForItwin(
     expiration.toISOString(),
     accessToken,
   );
+
+  console.log("  new key generated");
+
   return newShare.shareKey;
 }

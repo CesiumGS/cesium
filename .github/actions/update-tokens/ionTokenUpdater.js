@@ -121,11 +121,13 @@ async function deleteOldTokens(olderThanDays) {
  * @returns {Promise<Token>}
  */
 export async function createNewToken(version) {
+  console.log("  creating new token for version", version);
   const existingTokens = await getKnownTokens();
   const tokenForVersion = existingTokens.find((token) =>
     token.name.includes(version),
   );
   if (tokenForVersion) {
+    console.log("  found existing token for version", version, "reusing it");
     // Protection just in case this gets run multiple times for a release
     return tokenForVersion;
   }
@@ -149,5 +151,6 @@ export async function createNewToken(version) {
   if (!resp.ok) {
     throw new Error(`Response status: ${resp.status}`);
   }
+  console.log("  created new token for version", version);
   return resp.json();
 }
