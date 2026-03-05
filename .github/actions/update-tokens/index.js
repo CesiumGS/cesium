@@ -61,6 +61,7 @@ async function replaceVariableValue(ast, selector, newValue) {
   }
 
   if (!argv.update) {
+    console.log("  using fake value for dry-run");
     foundNodes[0].value = "fake-new-value";
     return;
   }
@@ -117,8 +118,6 @@ async function processReplacement(replacement) {
 
   writeFileSync(filePath, await formatCode(output));
 }
-
-// TODO: Automate through PR creation in CI
 
 for (const replacement of getReplacements()) {
   await processReplacement(replacement);

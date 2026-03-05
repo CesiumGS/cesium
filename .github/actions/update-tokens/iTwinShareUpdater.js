@@ -18,7 +18,8 @@ const ITWIN_API_URL = "https://api.bentley.com";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, "../../../");
 const packageJsonPath = join(projectRoot, "package.json");
-export async function getCurrentMinorVersion() {
+
+async function getCurrentMinorVersion() {
   const data = await readFile(packageJsonPath, "utf8");
   const { version } = JSON.parse(data);
   const majorMinor = version.match(/^(.*)\.(.*)\./);
@@ -47,42 +48,11 @@ export async function getCurrentMinorVersion() {
  */
 
 /**
- * @param {string} accessToken
- */
-export async function getMyInfo(accessToken) {
-  // TODO: remove
-  const resp = await fetch(`${ITWIN_API_URL}/users/me`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: "application/vnd.bentley.itwin-platform.v1+json",
-    },
-  });
-  const result = await resp.json();
-  return result.user;
-}
-
-/**
- * @param {string} accessToken
- * @returns {Promise<Itwin[]>}
- */
-export async function getItwinsWithAccess(accessToken) {
-  // TODO: remove
-  const resp = await fetch(`${ITWIN_API_URL}/itwins`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: "application/vnd.bentley.itwin-platform.v1+json",
-    },
-  });
-  const result = await resp.json();
-  return result.iTwins;
-}
-
-/**
  * @param {string} clientId
  * @param {string} clientSecret
  * @returns {Promise<string>}
  */
-export async function getIMSToken(clientId, clientSecret) {
+async function getIMSToken(clientId, clientSecret) {
   const resp = await fetch(`${IMS_URL}/connect/token`, {
     method: "POST",
     body: new URLSearchParams({
@@ -109,7 +79,7 @@ export async function getIMSToken(clientId, clientSecret) {
  * @param {string} accessToken
  * @returns {Promise<Share[]>}
  */
-export async function getShares(itwinId, accessToken) {
+async function getShares(itwinId, accessToken) {
   const resp = await fetch(
     `${ITWIN_API_URL}/accesscontrol/itwins/${itwinId}/shares`,
     {
@@ -139,7 +109,7 @@ export async function getShares(itwinId, accessToken) {
  * @param {Share[]} shares
  * @param {number} currentMajorVersion
  */
-export function mapSharesToVersion(shares, currentMajorVersion) {
+function mapSharesToVersion(shares, currentMajorVersion) {
   // Tokens should last for 2 releases per our Release Guide/cycle
   // If current version is 1.139 and it's 2026-03-25
   // 1.138 should expire 2026-04-01   Current month + 1 === currentVersion - 1 (nextToExpire)
@@ -173,12 +143,7 @@ export function mapSharesToVersion(shares, currentMajorVersion) {
  * @param {string} accessToken
  * @returns {Promise<Share>}
  */
-export async function createShare(
-  itwinId,
-  contractName,
-  expiration,
-  accessToken,
-) {
+async function createShare(itwinId, contractName, expiration, accessToken) {
   const resp = await fetch(
     `${ITWIN_API_URL}/accesscontrol/itwins/${itwinId}/shares`,
     {
@@ -208,49 +173,15 @@ export async function createShare(
 }
 
 /**
- * @param {string} itwinId
- * @param {string} shareId
- * @param {string} accessToken
+ * Store a single access token to reuse for subsequent requests sisnce we have multiple itwins
+ * @type {string | undefined}
  */
-export async function deleteShare(itwinId, shareId, accessToken) {
-  const resp = await fetch(
-    `${ITWIN_API_URL}/accesscontrol/itwins/${itwinId}/shares/${shareId}`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/vnd.bentley.itwin-platform.v2+json",
-      },
-    },
-  );
-
-  if (!resp.ok) {
-    throw new Error(
-      `Error deleting iTwin share for ${itwinId} with id ${shareId}. Status: ${resp.status}`,
-    );
-  }
-}
-
-/** @type {string} */
 let accessToken;
 
 /**
  * @param {string} itwinId
- * @param {object} [options]
- * @param {boolean} [options.autoDelete=false] Whether to automatically delete keys to clear up space down to the limitNumber. Will start with the first to expire
- * @param {number} [options.limitNumber=10] The number of keys to allow per itwin. Will throw if over this value and autoDelete is false. Otherwise will delete down to this limit - 1 then create a new key
- * @param {string} [options.neverDeleteKey] Prevent deletion of a specific key even if over the limit
  */
-export async function getNewKeyForItwin(
-  itwinId,
-  { autoDelete = false, neverDeleteKey, limitNumber = 10 } = {},
-) {
-  if (limitNumber > 10) {
-    throw new Error(
-      "The SandCastle share contract does not allow more than 10 keys per itwin",
-    );
-  }
-
+export async function getNewKeyForItwin(itwinId) {
   if (accessToken === undefined) {
     accessToken = await getIMSToken(CLIENT_ID, CLIENT_SECRET);
   }
@@ -274,27 +205,9 @@ export async function getNewKeyForItwin(
   }
 
   console.log("Generating new key for itwin", itwinId);
-
-  if (existingShares.length >= limitNumber) {
-    if (!autoDelete) {
-      throw new Error(`This itwin has too many share keys: ${itwinId}`);
-    }
-
-    console.log(`  too many keys for itwin ${itwinId} deleting some`);
-    /** @type {Share[]} */
-    const sorted = existingShares.toSorted((a, b) =>
-      a.expiration.localeCompare(b.expiration),
-    );
-    while (sorted.length >= limitNumber) {
-      const last = sorted.pop();
-
-      if (last?.shareKey === neverDeleteKey) {
-        continue;
-      }
-
-      console.log("  delete shareId:", last.id);
-      await deleteShare(itwinId, last.id, accessToken);
-    }
+  const maxAllowedForContract = 10;
+  if (existingShares.length >= maxAllowedForContract - 1) {
+    throw new Error(`This itwin has too many share keys: ${itwinId}`);
   }
 
   const expiration = setDate(add(new Date(), { months: 3 }), 1);
