@@ -9,7 +9,7 @@ on:
     # Approx midnight EST (depending on daylight savings) on the 25th of every month
     - cron: "0 5 25 * *"
   # TODO: remove this trigger type
-  push:
+  # push:
 concurrency:
   group: token-update-${{ github.ref }}
   cancel-in-progress: true

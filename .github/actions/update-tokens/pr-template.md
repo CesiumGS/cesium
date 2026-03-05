@@ -13,8 +13,8 @@ Manual update will still be needed for the ArcGIS token
 
 - Check out this branch
 - Run `npm start`
-- Check that the globe loads in Sandcastle
-- Check that the itwin related Sandcastles still load
+- Check that the globe and default imagery loads in Sandcastle (ion token)
+- Check that the itwin related Sandcastles still load (itwin keys)
 
 ### CI Builds
 
