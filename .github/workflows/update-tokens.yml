@@ -34,7 +34,7 @@ jobs:
           ITWIN_SERVICE_APP_CLIENT_SECRET: ${{ secrets.ITWIN_SERVICE_APP_CLIENT_SECRET }}
           ION_TOKEN_CONTROLLER_TOKEN: ${{ secrets.ION_TOKEN_CONTROLLER_TOKEN }}
         working-directory: "./.github/actions/update-tokens"
-        run: node index.js
+        run: node index.js --update
       - name: git add and commit
         run: |
           # Recommended default bot user from github https://github.com/actions/checkout?tab=readme-ov-file#push-a-commit-using-the-built-in-token
@@ -42,7 +42,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b 'token-updater/auto-update-${{github.run_id}}'
           git add .
-          git commit -m 'update tokens'
+          git commit -m 'update access tokens'
           # This will fail if a job is rerun because the branch still exists.
           # Extreme caution should be taken when re-running to not
           # create extra tokens or delete ones that are still in use
