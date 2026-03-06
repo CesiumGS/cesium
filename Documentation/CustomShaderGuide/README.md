@@ -588,11 +588,14 @@ The following types of metadata are currently supported:
 - property textures from the `EXT_structural_metadata` glTF extension.
 - property tables from the `EXT_structural_metadata` glTF extension.
 
-Not all data types are supported. In WebGL 1, only `UINT8` is supported. In WebGL 2, most basic types are supported (e.g. `FLOAT16` and `FLOAT32`, signed and unsigned integers of various precisions), with the following limitations:
+Not all data types are currently supported. In WebGL 1, only `UINT8` is supported. In
+WebGL 2, most basic types are supported (e.g. `FLOAT32`, signed and unsigned integers
+of various precisions), with the following limitations:
 
-- No support for boolean type metadata.
+- No support for boolean-type metadata.
 - No support for strings or variable-length arrays.
-- No support for data types exceeding 4 bytes (e.g. 64-bit types, `MATN`, larger fixed-sized arrays, etc.).
+- No support for matrix-type metadata.
+- No support for data types exceeding 4 bytes (e.g. 64-bit types, larger fixed-size arrays, etc.).
 
 Regardless of the source of metadata, the properties are collected into a single
 struct by property ID. Consider the following metadata class:
