@@ -23,7 +23,6 @@ jobs:
       GITHUB_REPO: ${{ github.repository }}
       GITHUB_SHA: ${{ github.sha }}
       DEPLOYED_URL: https://ci-builds.cesium.com/cesium/${{ github.ref_name }}/
-      SANDCASTLE_ORIGIN: https://ci-builds.cesium.com
     steps:
       - uses: actions/checkout@v6
       - name: install node 22
@@ -41,7 +40,7 @@ jobs:
       - name: package workspace modules
         run: npm pack --workspaces &> /dev/null
       - name: build apps
-        run: npm run build-apps
+        run: npm run build-apps -- --outer-origin="https://ci-builds.cesium.com"
       - uses: ./.github/actions/verify-package
       - name: deploy to s3
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}

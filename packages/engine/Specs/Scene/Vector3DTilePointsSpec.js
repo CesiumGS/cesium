@@ -568,7 +568,7 @@ describe(
       });
     });
 
-    it("renders a point with an image", function () {
+    it("renders a point with an image", async function () {
       const minHeight = 0.0;
       const maxHeight = 100.0;
       const cartoPositions = [Cartographic.fromDegrees(0.0, 0.0, 10.0)];
@@ -599,33 +599,34 @@ describe(
       const style = new Cesium3DTileStyle({
         image: '"./Data/Images/Blue10x10.png"',
       });
-      return loadPoints(points).then(function () {
-        const features = [];
-        points.createFeatures(mockTileset, features);
-        points.applyStyle(style, features);
 
-        const collection = points._billboardCollection;
-        expect(collection.length).toEqual(1);
-        const billboard = collection.get(0);
-        expect(billboard).toBeDefined();
-        expect(billboard.ready).toEqual(false);
+      await loadPoints(points);
 
-        scene.camera.lookAt(
-          Cartesian3.fromDegrees(0.0, 0.0, 10.0),
-          new Cartesian3(0.0, 0.0, 50.0),
-        );
-        return pollToPromise(function () {
-          scene.renderForSpecs();
-          return billboard.ready;
-        }).then(function () {
-          expect(billboard.ready).toEqual(true);
-          expect(scene).toRender([0, 0, 255, 255]);
-          expect(billboard.heightReference).toEqual(heightReference);
-        });
+      const features = [];
+      points.createFeatures(mockTileset, features);
+      points.applyStyle(style, features);
+
+      const collection = points._billboardCollection;
+      expect(collection.length).toEqual(1);
+      const billboard = collection.get(0);
+      expect(billboard).toBeDefined();
+      expect(billboard.ready).toEqual(false);
+
+      scene.camera.lookAt(
+        Cartesian3.fromDegrees(0.0, 0.0, 10.0),
+        new Cartesian3(0.0, 0.0, 50.0),
+      );
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return billboard.ready;
       });
+
+      expect(scene).toRender([0, 0, 255, 255]);
+      expect(billboard.heightReference).toEqual(heightReference);
     });
 
-    it("renders a point with a label", function () {
+    it("renders a point with a label", async function () {
       const minHeight = 0.0;
       const maxHeight = 100.0;
       const cartoPositions = [Cartographic.fromDegrees(0.0, 0.0, 10.0)];
@@ -653,32 +654,42 @@ describe(
         }),
       );
 
+      // This Unicode square block will more reliably cover the center pixel than an 'x' or a 'w' char.
+      const solidBox = "\u25a0";
       const style = new Cesium3DTileStyle({
-        labelText: '"test"',
-        labelColor: "rgba(100, 255, 0, 255)",
-        labelHorizontalOrigin: HorizontalOrigin.LEFT,
+        color: "rgba(0, 0, 0, 0)",
+        labelText: `"${solidBox}"`,
+        labelColor: 'color("blue")',
+        labelHorizontalOrigin: HorizontalOrigin.CENTER,
+        labelVerticalOrigin: VerticalOrigin.CENTER,
       });
-      return loadPoints(points).then(function () {
-        const features = [];
-        points.createFeatures(mockTileset, features);
-        points.applyStyle(style, features);
 
-        const collection = points._labelCollection;
-        expect(collection.length).toEqual(1);
-        const label = collection.get(0);
-        expect(label).toBeDefined();
+      await loadPoints(points);
 
-        scene.camera.lookAt(
-          Cartesian3.fromDegrees(0.0, 0.0, 10.0),
-          new Cartesian3(0.0, 0.0, 50.0),
-        );
+      const features = [];
+      points.createFeatures(mockTileset, features);
+      points.applyStyle(style, features);
 
-        expect(scene).toRender([100, 255, 0, 255]);
-        expect(label.heightReference).toEqual(heightReference);
+      const collection = points._labelCollection;
+      expect(collection.length).toEqual(1);
+      const label = collection.get(0);
+      expect(label).toBeDefined();
+
+      scene.camera.lookAt(
+        Cartesian3.fromDegrees(0.0, 0.0, 10.0),
+        new Cartesian3(0.0, 0.0, 50.0),
+      );
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return label.ready;
       });
+
+      expect(scene).toRender([0, 0, 255, 255]);
+      expect(label.heightReference).toEqual(heightReference);
     });
 
-    it("renders multiple points with debug color", function () {
+    it("renders multiple points with debug color", async function () {
       const minHeight = 0.0;
       const maxHeight = 100.0;
       const cartoPositions = [
@@ -711,42 +722,40 @@ describe(
       const style = new Cesium3DTileStyle({
         verticalOrigin: VerticalOrigin.BOTTOM,
       });
-      let position;
-      return loadPoints(points)
-        .then(function () {
-          const features = [];
-          points.createFeatures(mockTileset, features);
-          points.applyStyle(style, features);
-          points.applyDebugSettings(true, Color.YELLOW);
 
-          position = ellipsoid.cartographicToCartesian(cartoPositions[0]);
-          scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
-          return allPrimitivesReady(points);
-        })
-        .then(function () {
-          for (let i = 0; i < cartoPositions.length; ++i) {
-            position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
-            scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
-            expect(scene).toRenderAndCall(function (rgba) {
-              expect(rgba[0]).toBeGreaterThan(0);
-              expect(rgba[1]).toBeGreaterThan(0);
-              expect(rgba[2]).toEqual(0);
-              expect(rgba[3]).toEqual(255);
-            });
-          }
+      await loadPoints(points);
 
-          points.applyDebugSettings(false);
-          for (let i = 0; i < cartoPositions.length; ++i) {
-            position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
-            scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
-            expect(scene).toRenderAndCall(function (rgba) {
-              expect(rgba[0]).toBeGreaterThan(0);
-              expect(rgba[0]).toEqual(rgba[1]);
-              expect(rgba[0]).toEqual(rgba[2]);
-              expect(rgba[3]).toEqual(255);
-            });
-          }
+      const features = [];
+      points.createFeatures(mockTileset, features);
+      points.applyStyle(style, features);
+      points.applyDebugSettings(true, Color.YELLOW);
+
+      let position = ellipsoid.cartographicToCartesian(cartoPositions[0]);
+      scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
+      await allPrimitivesReady(points);
+
+      for (let i = 0; i < cartoPositions.length; ++i) {
+        position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
+        scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(0);
+          expect(rgba[1]).toBeGreaterThan(0);
+          expect(rgba[2]).toEqual(0);
+          expect(rgba[3]).toEqual(255);
         });
+      }
+
+      points.applyDebugSettings(false);
+      for (let i = 0; i < cartoPositions.length; ++i) {
+        position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
+        scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(0);
+          expect(rgba[0]).toEqual(rgba[1]);
+          expect(rgba[0]).toEqual(rgba[2]);
+          expect(rgba[3]).toEqual(255);
+        });
+      }
     });
 
     it("isDestroyed", function () {
