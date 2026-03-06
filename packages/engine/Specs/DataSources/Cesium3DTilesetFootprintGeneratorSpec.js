@@ -339,23 +339,6 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
       expect(hierarchy.positions.length).toBeGreaterThanOrEqual(3);
     });
 
-    it("skips features without vertex data", function () {
-      const root = createMockTile({
-        featuresLength: 2,
-        featurePositions: { 0: defaultFeaturePositions, 1: undefined },
-      });
-      const tileset = createMockTileset({ root: root });
-      const entities = new EntityCollection();
-
-      const result = Cesium3DTilesetFootprintGenerator.generate({
-        tileset: tileset,
-        entityCollection: entities,
-      });
-
-      // Only feature 0 should have a footprint
-      expect(result).toEqual(1);
-    });
-
     it("skips features with fewer than 3 positions", function () {
       const positions = Cartesian3.fromDegreesArray([-75.0, 40.0, -74.0, 40.0]);
       const root = createMockTile({

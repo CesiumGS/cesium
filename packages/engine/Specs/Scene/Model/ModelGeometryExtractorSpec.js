@@ -18,7 +18,7 @@ describe(
         typedArray[i * 3 + 2] = positions[i].z;
       }
       return {
-        semantic: "_POSITION",
+        semantic: "POSITION",
         componentDatatype: ComponentDatatype.FLOAT,
         type: "VEC3",
         count: positions.length,
