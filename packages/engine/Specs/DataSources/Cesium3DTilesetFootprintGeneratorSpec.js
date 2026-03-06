@@ -3,7 +3,6 @@ import {
   Cartesian3,
   defined,
   EntityCollection,
-  Event,
 } from "../../index.js";
 
 describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
@@ -11,10 +10,7 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
 
   // Default quad positions for mock features (when none explicitly provided)
   const defaultFeaturePositions = Cartesian3.fromDegreesArray([
-    -75.0, 40.0,
-    -74.0, 40.0,
-    -74.0, 41.0,
-    -75.0, 41.0,
+    -75.0, 40.0, -74.0, 40.0, -74.0, 41.0, -75.0, 41.0,
   ]);
 
   function createMockContent(featuresLength, featurePositions) {
@@ -31,9 +27,7 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
         getProperty: function () {
           return undefined;
         },
-        getPositions: function () {
-          return positionsForFeature;
-        },
+        _positions: positionsForFeature,
       });
     }
     const content = {
@@ -42,12 +36,12 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
       getFeature: function (index) {
         return features[index];
       },
-      getPositions: function () {
+      getGeometry: function () {
         const map = new Map();
         for (let j = 0; j < features.length; j++) {
-          const pos = features[j].getPositions();
+          const pos = features[j]._positions;
           if (defined(pos)) {
-            map.set(j, pos);
+            map.set(j, { positions: pos });
           }
         }
         return map;
@@ -207,7 +201,7 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
       const tileset = createMockTileset();
       const entities = new EntityCollection();
 
-      const result = Cesium3DTilesetFootprintGenerator.generate({
+      Cesium3DTilesetFootprintGenerator.generate({
         tileset: tileset,
         entityCollection: entities,
         filterFeature: function (feature) {
@@ -246,8 +240,7 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
       const result = Cesium3DTilesetFootprintGenerator.generate({
         tileset: tileset,
         entityCollection: entities2,
-        createEntity: function (hierarchy, feature) {
-          const { Entity: E } = require("../../index.js");
+        createEntity: function (_hierarchy, feature) {
           return { id: `custom-${feature.featureId}` };
         },
       });
@@ -319,13 +312,10 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
     });
   });
 
-  describe("vertex extraction via getPositions", function () {
-    it("uses getPositions when vertex data is available", function () {
+  describe("vertex extraction via getGeometry", function () {
+    it("uses getGeometry when vertex data is available", function () {
       const positions = Cartesian3.fromDegreesArray([
-        -75.0, 40.0,
-        -74.0, 40.0,
-        -74.0, 41.0,
-        -75.0, 41.0,
+        -75.0, 40.0, -74.0, 40.0, -74.0, 41.0, -75.0, 41.0,
       ]);
       const root = createMockTile({
         featuresLength: 1,
@@ -367,10 +357,7 @@ describe("DataSources/Cesium3DTilesetFootprintGenerator", function () {
     });
 
     it("skips features with fewer than 3 positions", function () {
-      const positions = Cartesian3.fromDegreesArray([
-        -75.0, 40.0,
-        -74.0, 40.0,
-      ]);
+      const positions = Cartesian3.fromDegreesArray([-75.0, 40.0, -74.0, 40.0]);
       const root = createMockTile({
         featuresLength: 1,
         featurePositions: { 0: positions },
