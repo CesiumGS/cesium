@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import CesiumMath from "../Core/Math.js";
 import PolygonGeometry from "../Core/PolygonGeometry.js";
@@ -15,6 +16,7 @@ import Rectangle from "../Core/Rectangle.js";
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions A list of three or more Cartesian coordinates defining the outer ring of the clipping polygon.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default]
+ * @param {boolean} [options.immutable=false] Marks the ClippingPolygon as immutable which can enable internal optimizations.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
@@ -47,6 +49,13 @@ function ClippingPolygon(options) {
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._positions = copyArrayCartesian3(options.positions);
+  this._immutable = options.immutable ?? false;
+
+  // Freeze internal properties if immutable
+  if (this._immutable) {
+    this._positions = Object.freeze(this._positions);
+    this._ellipsoid = Object.freeze(this._ellipsoid);
+  }
 
   /**
    * A copy of the input positions.
@@ -169,6 +178,18 @@ Object.defineProperties(ClippingPolygon.prototype, {
       return this._ellipsoid;
     },
   },
+  /**
+   * Returns true if the polygon is set to immutable.
+   *
+   * @memberof ClippingPolygon.prototype
+   * @type {boolean}
+   * @readonly
+   */
+  immutable: {
+    get: function () {
+      return this._immutable;
+    },
+  },
 });
 
 /**
@@ -186,7 +207,12 @@ ClippingPolygon.clone = function (polygon, result) {
     return new ClippingPolygon({
       positions: polygon.positions,
       ellipsoid: polygon.ellipsoid,
+      immutable: polygon.immutable,
     });
+  }
+
+  if (result._immutable) {
+    throw new DeveloperError("Cannot clone into an immutable object");
   }
 
   result._ellipsoid = polygon.ellipsoid;
@@ -221,7 +247,10 @@ ClippingPolygon.equals = function (left, right) {
  * @returns {Rectangle} The result rectangle
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
-  if (equalsArrayCartesian3(this._positions, this._cachedPositions)) {
+  if (
+    (this._immutable && this._cachedPositions) ||
+    equalsArrayCartesian3(this._positions, this._cachedPositions)
+  ) {
     return Rectangle.clone(this._cachedRectangle, result);
   }
   const rectangle = PolygonGeometry.computeRectangleFromPositions(
