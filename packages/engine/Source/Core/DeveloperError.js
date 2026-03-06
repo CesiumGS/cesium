@@ -65,7 +65,8 @@ DeveloperError.prototype.toString = function () {
 };
 
 /**
- * @private
+ * @returns {never}
+ * @ignore
  */
 DeveloperError.throwInstantiationError = function () {
   throw new DeveloperError(
