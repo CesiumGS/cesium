@@ -229,10 +229,12 @@ Model3DTileContent.prototype.getFeature = function (featureId) {
   return featureTable.getFeature(featureId);
 };
 
-Model3DTileContent.prototype.getPositions = function (featureIdLabel) {
-  return ModelGeometryExtractor.getPositionsForModel({
+Model3DTileContent.prototype.getGeometry = function (options) {
+  return ModelGeometryExtractor.getGeometryForModel({
     model: this._model,
-    featureIdLabel: featureIdLabel,
+    featureIdLabel: defined(options) ? options.featureIdLabel : undefined,
+    extractPositions: defined(options) ? options.extractPositions : undefined,
+    extractColors: defined(options) ? options.extractColors : undefined,
   });
 };
 

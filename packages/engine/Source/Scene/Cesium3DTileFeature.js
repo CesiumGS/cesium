@@ -444,37 +444,43 @@ Cesium3DTileFeature.prototype.getExactClassName = function () {
 };
 
 /**
- * Returns an array of world-space (ECEF) {@link Cartesian3} positions for all
- * vertices belonging to this feature.
+ * Returns an object containing arrays of world-space positions and/or vertex
+ * colors for all vertices belonging to this feature, extracted in a single
+ * traversal of the model's scene graph.
+ * <p>
+ * This is more efficient than calling {@link Cesium3DTileFeature#getPositions}
+ * and {@link Cesium3DTileFeature#getColors} separately when both are needed,
+ * because it avoids duplicate scene graph traversal, feature ID resolution,
+ * and vertex grouping.
+ * </p>
  * <p>
  * This requires that the tileset was created with
  * <code>enableGeometryExtraction: true</code> to retain vertex data on the CPU.
- * If vertex data is not available, this method returns <code>undefined</code>.
- * </p>
- * <p>
- * This method is only supported for model-based tile content (B3DM, I3DM, glTF).
- * For other content types (e.g., point clouds, vector tiles), it returns <code>undefined</code>.
  * </p>
  *
- * @param {Cartesian3[]} [result] An array into which to store the results.
- * @returns {Cartesian3[]|undefined} An array of world-space positions, or <code>undefined</code>
- *   if geometry extraction is not available for this feature.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
+ * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
+ * @returns {{positions?: Cartesian3[], colors?: Color[]}|undefined} An object with the
+ *   requested attribute arrays, or <code>undefined</code> if geometry extraction is not
+ *   available for this feature.
  *
  * @example
  * const tileset = await Cesium.Cesium3DTileset.fromUrl(url, {
  *   enableGeometryExtraction: true,
  * });
  * // After picking a feature:
- * const positions = feature.getPositions();
- * if (Cesium.defined(positions)) {
- *   console.log(`Feature has ${positions.length} vertices`);
+ * const geometry = feature.getGeometry({
+ *   extractPositions: true,
+ *   extractColors: true,
+ * });
+ * if (Cesium.defined(geometry)) {
+ *   console.log(`Positions: ${geometry.positions.length}, Colors: ${geometry.colors.length}`);
  * }
  */
-Cesium3DTileFeature.prototype.getPositions = function (result) {
-
+Cesium3DTileFeature.prototype.getGeometry = function (options) {
   const content = this._content;
 
-  // Only model-based content (Model3DTileContent) has a _model property
   if (!defined(content._model)) {
     return undefined;
   }
@@ -485,28 +491,30 @@ Cesium3DTileFeature.prototype.getPositions = function (result) {
     ? tileset.featureIdLabel
     : "featureId_0";
 
-  const positionsMap = ModelGeometryExtractor.getPositionsForModel({
+  const extractPositions =
+    !defined(options) || (options.extractPositions ?? true);
+  const extractColors = defined(options) && (options.extractColors ?? false);
+
+  const geoMap = ModelGeometryExtractor.getGeometryForModel({
     model: model,
     featureIdLabel: featureIdLabel,
+    extractPositions: extractPositions,
+    extractColors: extractColors,
   });
 
-  const positions = positionsMap.get(this._batchId);
-  if (!defined(positions)) {
-    if (defined(result)) {
-      result.length = 0;
-      return result;
+  const entry = geoMap.get(this._batchId);
+  if (!defined(entry)) {
+    const result = {};
+    if (extractPositions) {
+      result.positions = [];
     }
-    return [];
-  }
-
-  if (defined(result)) {
-    result.length = positions.length;
-    for (let i = 0; i < positions.length; i++) {
-      result[i] = positions[i];
+    if (extractColors) {
+      result.colors = [];
     }
     return result;
   }
-  return positions;
+
+  return entry;
 };
 
 export default Cesium3DTileFeature;

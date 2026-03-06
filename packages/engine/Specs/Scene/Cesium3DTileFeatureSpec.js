@@ -583,7 +583,7 @@ describe(
       });
     });
 
-    describe("getPositions", function () {
+    describe("getGeometry", function () {
       const b3dmWithBatchIds =
         "Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
 
@@ -598,14 +598,8 @@ describe(
 
       beforeEach(function () {
         scene.primitives.removeAll();
-        const center = Cartesian3.fromRadians(
-          centerLongitude,
-          centerLatitude,
-        );
-        scene.camera.lookAt(
-          center,
-          new HeadingPitchRange(0.0, -1.57, 15.0),
-        );
+        const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
       });
 
       it("returns undefined for content without a model", function () {
@@ -613,7 +607,7 @@ describe(
           tileset: undefined,
         };
         const feature = new Cesium3DTileFeature(content, 0);
-        const result = feature.getPositions();
+        const result = feature.getGeometry();
         expect(result).toBeUndefined();
       });
 
@@ -626,14 +620,18 @@ describe(
           expect(featuresLength).toBeGreaterThan(0);
 
           const feature = content.getFeature(0);
-          const positions = feature.getPositions();
+          const geometry = feature.getGeometry({
+            extractPositions: true,
+            extractColors: false,
+          });
 
-          // When enableGeometryExtraction is true, positions should be available
-          if (defined(positions)) {
-            expect(positions.length).toBeGreaterThan(0);
+          // When enableGeometryExtraction is true, geometry should be available
+          if (defined(geometry)) {
+            expect(geometry.positions).toBeDefined();
+            expect(geometry.positions.length).toBeGreaterThan(0);
             // Each position should be a Cartesian3
-            for (let i = 0; i < positions.length; i++) {
-              expect(positions[i]).toBeInstanceOf(Cartesian3);
+            for (let i = 0; i < geometry.positions.length; i++) {
+              expect(geometry.positions[i]).toBeInstanceOf(Cartesian3);
             }
           }
         });
@@ -649,10 +647,16 @@ describe(
           if (featuresLength >= 2) {
             const feature0 = content.getFeature(0);
             const feature1 = content.getFeature(1);
-            const positions0 = feature0.getPositions();
-            const positions1 = feature1.getPositions();
+            const geometry0 = feature0.getGeometry({
+              extractPositions: true,
+            });
+            const geometry1 = feature1.getGeometry({
+              extractPositions: true,
+            });
 
-            if (defined(positions0) && defined(positions1)) {
+            if (defined(geometry0) && defined(geometry1)) {
+              const positions0 = geometry0.positions;
+              const positions1 = geometry1.positions;
               // Different features should have different positions
               // (unless they somehow share all vertices, which is unlikely)
               const allSame =
@@ -661,6 +665,27 @@ describe(
                   return Cartesian3.equals(p, positions1[i]);
                 });
               expect(allSame).toBe(false);
+            }
+          }
+        });
+      });
+
+      it("returns empty arrays when feature has no geometry data", function () {
+        return Cesium3DTilesTester.loadTileset(scene, b3dmWithBatchIds, {
+          enableGeometryExtraction: true,
+        }).then(function (tileset) {
+          const content = tileset.root.content;
+          const feature = content.getFeature(0);
+          const geometry = feature.getGeometry({
+            extractPositions: true,
+            extractColors: true,
+          });
+
+          if (defined(geometry)) {
+            expect(geometry.positions).toBeDefined();
+            // Colors may or may not exist depending on the model
+            if (defined(geometry.colors)) {
+              expect(Array.isArray(geometry.colors)).toBe(true);
             }
           }
         });

@@ -1,19 +1,53 @@
 import * as Cesium from "cesium";
 
-const viewer = new Cesium.Viewer("cesiumContainer");
+const useGoogle3d = false;
 
-viewer.scene.globe.depthTestAgainstTerrain = true;
+let viewer;
+
+if (useGoogle3d) {
+  viewer = new Cesium.Viewer("cesiumContainer", {
+    geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
+    globe: false,
+  });
+} else {
+  viewer = new Cesium.Viewer("cesiumContainer");
+}
+
+viewer.scene.debugShowFramesPerSecond = true;
+// viewer.scene.debugShowCommands = true;
+// viewer.scene.globe.depthTestAgainstTerrain = true;
+
+// viewer.extend(Cesium.viewerCesiumInspectorMixin);
+
+// Add Photorealistic 3D Tiles
+let google3d;
+if (useGoogle3d) {
+  google3d = await Cesium.createGooglePhotorealistic3DTileset(
+    {
+      onlyUsingWithGoogleGeocoder: true,
+    },
+    {
+      //maximumScreenSpaceError: 1024*32,
+    },
+  );
+  viewer.scene.primitives.add(google3d);
+}
 
 // Load a batched 3D Tiles tileset with enableGeometryExtraction.
-// const tileset = await Cesium.Cesium3DTileset.fromUrl(
-//   `../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json`,
-//   {
-//     enableGeometryExtraction: true,
-//   },
-// );
-const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
-  enableGeometryExtraction: true,
+
+// const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
+//   enableGeometryExtraction: true,
+// });
+
+Cesium.ITwinPlatform.defaultShareKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNTM1YTI0YTMtOWIyOS00ZTIzLWJiNWQtOWNlZGI1MjRjNzQzIiwiaWQiOiI2NTEwMzUzMi02MmU3LTRmZGQtOWNlNy1iODIxYmEyMmI5NjMiLCJleHAiOjE3NzcwNTU4MTh9.Q9MgsWWkc6bb1zHUJ7ahZjxPtaTWEjpNvRln7NS3faM";
+const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
+  iModelId: "669dde67-eb69-4e0b-bcf2-f722eee94746",
+  tilesetOptions: {
+    enableGeometryExtraction: true,
+  },
 });
+
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
@@ -36,10 +70,11 @@ function updateStatus() {
 
 function updateClippingPolygons() {
   // Apply clipping polygons to the globe
-  viewer.scene.globe.clippingPolygons = new Cesium.ClippingPolygonCollection({
-    polygons: clippingPolygons,
-    inverse: false, // false = cut holes where buildings are
-  });
+  (useGoogle3d ? google3d : viewer.scene.globe).clippingPolygons =
+    new Cesium.ClippingPolygonCollection({
+      polygons: clippingPolygons,
+      inverse: false, // false = cut holes where buildings are
+    });
 }
 
 function addClip(hierarchy, _feature, _tile, _entityCollection) {
@@ -125,7 +160,7 @@ btnClear.addEventListener("click", function () {
   viewer.entities.removeAll();
   footprintCount = 0;
   clippingPolygons.length = 0;
-  viewer.scene.globe.clippingPolygons = undefined;
+  (useGoogle3d ? google3d : viewer.scene.globe).clippingPolygons = undefined;
   updateStatus();
 });
 

@@ -105,20 +105,20 @@ describe(
 
     it("throws without options", function () {
       expect(function () {
-        ModelGeometryExtractor.getPositionsForModel();
+        ModelGeometryExtractor.getGeometryForModel();
       }).toThrowDeveloperError();
     });
 
     it("throws without model", function () {
       expect(function () {
-        ModelGeometryExtractor.getPositionsForModel({});
+        ModelGeometryExtractor.getGeometryForModel({});
       }).toThrowDeveloperError();
     });
 
     it("returns empty map for model that is not ready", function () {
       const model = { _ready: false };
 
-      const result = ModelGeometryExtractor.getPositionsForModel({
+      const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
       });
 
@@ -128,7 +128,7 @@ describe(
     it("returns empty map for model without sceneGraph", function () {
       const model = { _ready: true };
 
-      const result = ModelGeometryExtractor.getPositionsForModel({
+      const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
       });
 
@@ -153,17 +153,17 @@ describe(
         indices: createMockIndices([0, 1, 2]),
       });
 
-      const result = ModelGeometryExtractor.getPositionsForModel({
+      const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
       });
 
       expect(result.size).toBe(1);
       expect(result.has(0)).toBe(true);
-      const featurePositions = result.get(0);
-      expect(featurePositions.length).toBe(3);
-      expect(featurePositions[0]).toEqual(positions[0]);
-      expect(featurePositions[1]).toEqual(positions[1]);
-      expect(featurePositions[2]).toEqual(positions[2]);
+      const entry = result.get(0);
+      expect(entry.positions.length).toBe(3);
+      expect(entry.positions[0]).toEqual(positions[0]);
+      expect(entry.positions[1]).toEqual(positions[1]);
+      expect(entry.positions[2]).toEqual(positions[2]);
     });
 
     it("groups positions by feature ID", function () {
@@ -187,23 +187,23 @@ describe(
         indices: createMockIndices([0, 1, 2, 3, 4, 5]),
       });
 
-      const result = ModelGeometryExtractor.getPositionsForModel({
+      const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
       });
 
       expect(result.size).toBe(2);
 
-      const result0 = result.get(0);
-      expect(result0.length).toBe(3);
-      expect(result0[0]).toEqual(positions[0]);
-      expect(result0[1]).toEqual(positions[1]);
-      expect(result0[2]).toEqual(positions[2]);
+      const entry0 = result.get(0);
+      expect(entry0.positions.length).toBe(3);
+      expect(entry0.positions[0]).toEqual(positions[0]);
+      expect(entry0.positions[1]).toEqual(positions[1]);
+      expect(entry0.positions[2]).toEqual(positions[2]);
 
-      const result1 = result.get(1);
-      expect(result1.length).toBe(3);
-      expect(result1[0]).toEqual(positions[3]);
-      expect(result1[1]).toEqual(positions[4]);
-      expect(result1[2]).toEqual(positions[5]);
+      const entry1 = result.get(1);
+      expect(entry1.positions.length).toBe(3);
+      expect(entry1.positions[0]).toEqual(positions[3]);
+      expect(entry1.positions[1]).toEqual(positions[4]);
+      expect(entry1.positions[2]).toEqual(positions[5]);
     });
 
     it("deduplicates vertex indices when shared by multiple triangles", function () {
@@ -226,12 +226,12 @@ describe(
         indices: createMockIndices([0, 1, 2, 1, 2, 3]),
       });
 
-      const result = ModelGeometryExtractor.getPositionsForModel({
+      const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
       });
 
       // Should have 4 unique vertices, not 6
-      expect(result.get(0).length).toBe(4);
+      expect(result.get(0).positions.length).toBe(4);
     });
 
     it("applies node transform to extracted positions", function () {
@@ -256,11 +256,11 @@ describe(
         computedModelMatrix: transform,
       });
 
-      const result = ModelGeometryExtractor.getPositionsForModel({
+      const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
       });
 
-      const featurePositions = result.get(0);
+      const featurePositions = result.get(0).positions;
       expect(featurePositions.length).toBe(3);
       expect(featurePositions[0]).toEqual(
         new Cartesian3(
@@ -289,12 +289,12 @@ describe(
         // No indices
       });
 
-      const result = ModelGeometryExtractor.getPositionsForModel({
+      const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
       });
 
-      expect(result.get(0).length).toBe(3);
-      expect(result.get(0)[0]).toEqual(positions[0]);
+      expect(result.get(0).positions.length).toBe(3);
+      expect(result.get(0).positions[0]).toEqual(positions[0]);
     });
 
     it("works without feature ID mapping (all vertices treated as feature 0)", function () {
@@ -310,14 +310,14 @@ describe(
         indices: createMockIndices([0, 1, 2]),
       });
 
-      const result = ModelGeometryExtractor.getPositionsForModel({
+      const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
       });
 
-      expect(result.get(0).length).toBe(3);
+      expect(result.get(0).positions.length).toBe(3);
     });
 
-    it("uses the result parameter for output", function () {
+    it("does not include positions when extractPositions is false", function () {
       const positions = [
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
@@ -335,15 +335,14 @@ describe(
         indices: createMockIndices([0, 1, 2]),
       });
 
-      const existingResult = new Map();
-      const result = ModelGeometryExtractor.getPositionsForModel({
+      const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
-        result: existingResult,
+        extractPositions: false,
+        extractColors: false,
       });
 
-      expect(result).toBe(existingResult);
-      expect(result.size).toBe(1);
-      expect(result.get(0).length).toBe(3);
+      // Nothing requested, map should be empty since no attributes were found
+      expect(result.size).toBe(0);
     });
 
     it("matches feature ID by label", function () {
@@ -364,12 +363,12 @@ describe(
         indices: createMockIndices([0, 1, 2]),
       });
 
-      const result = ModelGeometryExtractor.getPositionsForModel({
+      const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
         featureIdLabel: "myCustomLabel",
       });
 
-      expect(result.get(0).length).toBe(3);
+      expect(result.get(0).positions.length).toBe(3);
     });
 
     it("matches feature ID by positionalLabel", function () {
@@ -390,12 +389,12 @@ describe(
         indices: createMockIndices([0, 1, 2]),
       });
 
-      const result = ModelGeometryExtractor.getPositionsForModel({
+      const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
         featureIdLabel: "featureId_0",
       });
 
-      expect(result.get(0).length).toBe(3);
+      expect(result.get(0).positions.length).toBe(3);
     });
   },
   "WebGL",

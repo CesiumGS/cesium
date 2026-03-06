@@ -1,5 +1,6 @@
 import AttributeCompression from "../../Core/AttributeCompression.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
+import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -13,7 +14,7 @@ const scratchModelMatrix = new Matrix4();
 const scratchComputedModelMatrix = new Matrix4();
 
 /**
- * Extracts vertex positions from a loaded Model.
+ * Extracts vertex geometry (positions, colors, etc.) from a loaded Model.
  * <p>
  * This requires that the model was loaded with <code>enableGeometryExtraction: true</code>
  * so that vertex data is retained on the CPU.
@@ -25,19 +26,25 @@ const scratchComputedModelMatrix = new Matrix4();
 const ModelGeometryExtractor = {};
 
 /**
- * Returns a Map keyed by feature ID, where each value is an array of
- * world-space (ECEF) {@link Cartesian3} positions for all vertices
+ * Returns a Map keyed by feature ID, where each value is an object
+ * containing arrays of positions and/or colors for all vertices
  * belonging to that feature within the model.
+ * <p>
+ * This combines extraction of multiple vertex attributes in a single
+ * scene graph traversal, avoiding duplicate work when both positions
+ * and colors are needed.
+ * </p>
  *
  * @param {object} options Object with the following properties:
- * @param {Model} options.model The model from which to extract positions.
+ * @param {Model} options.model The model from which to extract geometry.
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
- * @param {Map<number, Cartesian3[]>} [options.result] A Map to store the result.
- * @returns {Map<number, Cartesian3[]>} A Map from feature ID to an array of world-space Cartesian3 positions.
+ * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
+ * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
+ * @returns {Map<number, {positions?: Cartesian3[], colors?: Color[]}>} A Map from feature ID to an object with the requested attribute arrays.
  *
  * @private
  */
-ModelGeometryExtractor.getPositionsForModel = function (options) {
+ModelGeometryExtractor.getGeometryForModel = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options)) {
     throw new DeveloperError("options is required.");
@@ -49,8 +56,9 @@ ModelGeometryExtractor.getPositionsForModel = function (options) {
 
   const model = options.model;
   const featureIdLabel = options.featureIdLabel ?? "featureId_0";
-  const result = options.result ?? new Map();
-  result.clear();
+  const extractPositions = options.extractPositions ?? true;
+  const extractColors = options.extractColors ?? false;
+  const result = new Map();
 
   if (!model._ready) {
     return result;
@@ -112,10 +120,12 @@ ModelGeometryExtractor.getPositionsForModel = function (options) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[p];
       const primitive = runtimePrimitive.primitive;
 
-      extractAllPositionsFromPrimitive(
+      extractAttributesFromPrimitive(
         primitive,
         featureIdLabel,
         instanceTransforms,
+        extractPositions,
+        extractColors,
         result,
       );
     }
@@ -366,35 +376,124 @@ function decodeAndTransformVertex(
 }
 
 /**
- * Extracts positions from a single primitive grouped by feature ID.
- * Populates the result Map with feature ID keys and position arrays.
+ * Groups unique vertex indices by feature ID from indices or vertex count.
+ * This is shared across all attribute extraction to avoid duplicate work.
  * @private
  */
-function extractAllPositionsFromPrimitive(
+function buildFeatureVertexMap(indices, featureIdData, vertexCount) {
+  const map = new Map();
+  if (defined(indices)) {
+    const indicesLength = indices.length;
+    for (let i = 0; i < indicesLength; i++) {
+      const vertexIndex = indices[i];
+      const fid = defined(featureIdData)
+        ? getFeatureIdValue(featureIdData, vertexIndex)
+        : 0;
+      let vertexSet = map.get(fid);
+      if (!defined(vertexSet)) {
+        vertexSet = new Set();
+        map.set(fid, vertexSet);
+      }
+      vertexSet.add(vertexIndex);
+    }
+  } else {
+    for (let i = 0; i < vertexCount; i++) {
+      const fid = defined(featureIdData)
+        ? getFeatureIdValue(featureIdData, i)
+        : 0;
+      let vertexSet = map.get(fid);
+      if (!defined(vertexSet)) {
+        vertexSet = new Set();
+        map.set(fid, vertexSet);
+      }
+      vertexSet.add(i);
+    }
+  }
+  return map;
+}
+
+/**
+ * Reads a single vertex color from the typed array and returns a new {@link Color}.
+ * Handles both normalized integer (e.g. UNSIGNED_BYTE) and float data.
+ * @private
+ */
+function readVertexColor(typedArray, vertexIndex, numComponents, normalized) {
+  const i = vertexIndex * numComponents;
+  let r = typedArray[i];
+  let g = typedArray[i + 1];
+  let b = typedArray[i + 2];
+  let a = numComponents === 4 ? typedArray[i + 3] : 1.0;
+
+  if (normalized) {
+    const max = typedArray instanceof Uint16Array ? 65535.0 : 255.0;
+    r /= max;
+    g /= max;
+    b /= max;
+    if (numComponents === 4) {
+      a /= max;
+    }
+  }
+
+  return new Color(r, g, b, a);
+}
+
+/**
+ * Extracts requested attributes from a single primitive, grouped by feature ID.
+ * Performs feature ID resolution and vertex grouping once, then reads each
+ * requested attribute from the grouped vertices.
+ * @private
+ */
+function extractAttributesFromPrimitive(
   primitive,
   featureIdLabel,
   instanceTransforms,
+  extractPositions,
+  extractColors,
   result,
 ) {
-  const positionAttribute = ModelUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.POSITION,
-  );
-  if (!defined(positionAttribute)) {
+  // Look up requested attributes
+  let positionAttribute, posData;
+  if (extractPositions) {
+    positionAttribute = ModelUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.POSITION,
+    );
+    if (defined(positionAttribute)) {
+      posData = readPositionData(positionAttribute);
+      if (!defined(posData.vertices)) {
+        positionAttribute = undefined;
+      }
+    }
+  }
+
+  let colorAttribute, colorNumComponents;
+  if (extractColors) {
+    colorAttribute = ModelUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.COLOR,
+      0,
+    );
+    if (defined(colorAttribute) && defined(colorAttribute.typedArray)) {
+      colorNumComponents = AttributeType.getNumberOfComponents(
+        colorAttribute.type,
+      );
+    } else {
+      colorAttribute = undefined;
+    }
+  }
+
+  // Nothing to extract from this primitive
+  if (!defined(positionAttribute) && !defined(colorAttribute)) {
     return;
   }
 
-  const vertexCount = positionAttribute.count;
+  // Use whichever attribute is available to get vertex count
+  const vertexCount = defined(positionAttribute)
+    ? positionAttribute.count
+    : colorAttribute.count;
 
+  // Feature ID grouping (done once for all attributes)
   const featureIdMapping = findFeatureIdMapping(primitive, featureIdLabel);
-
-  const posData = readPositionData(positionAttribute);
-  if (!defined(posData.vertices)) {
-    return;
-  }
-
-  const indices = readIndices(primitive);
-
   let featureIdData;
   if (defined(featureIdMapping)) {
     featureIdData = getPerVertexFeatureIds(
@@ -404,59 +503,53 @@ function extractAllPositionsFromPrimitive(
     );
   }
 
-  // Group unique vertex indices by feature ID
-  const featureVerticesMap = new Map();
+  const indices = readIndices(primitive);
+  const featureVerticesMap = buildFeatureVertexMap(
+    indices,
+    featureIdData,
+    vertexCount,
+  );
 
-  if (defined(indices)) {
-    const indicesLength = indices.length;
-    for (let i = 0; i < indicesLength; i++) {
-      const vertexIndex = indices[i];
-      const fid = defined(featureIdData)
-        ? getFeatureIdValue(featureIdData, vertexIndex)
-        : 0;
-
-      let vertexSet = featureVerticesMap.get(fid);
-      if (!defined(vertexSet)) {
-        vertexSet = new Set();
-        featureVerticesMap.set(fid, vertexSet);
-      }
-      vertexSet.add(vertexIndex);
-    }
-  } else {
-    for (let i = 0; i < vertexCount; i++) {
-      const fid = defined(featureIdData)
-        ? getFeatureIdValue(featureIdData, i)
-        : 0;
-
-      let vertexSet = featureVerticesMap.get(fid);
-      if (!defined(vertexSet)) {
-        vertexSet = new Set();
-        featureVerticesMap.set(fid, vertexSet);
-      }
-      vertexSet.add(i);
-    }
-  }
-
-  // Transform each vertex and append to the result map
+  // Extract from grouped vertices
   for (const [featureId, vertexIndicesSet] of featureVerticesMap) {
-    let positions = result.get(featureId);
-    if (!defined(positions)) {
-      positions = [];
-      result.set(featureId, positions);
+    let entry = result.get(featureId);
+    if (!defined(entry)) {
+      entry = {};
+      if (extractPositions) {
+        entry.positions = [];
+      }
+      if (extractColors) {
+        entry.colors = [];
+      }
+      result.set(featureId, entry);
     }
 
     for (const vertexIndex of vertexIndicesSet) {
-      for (let t = 0; t < instanceTransforms.length; t++) {
-        const worldPos = decodeAndTransformVertex(
-          posData.vertices,
+      // Positions need per-instance-transform duplication
+      if (defined(positionAttribute)) {
+        for (let t = 0; t < instanceTransforms.length; t++) {
+          const worldPos = decodeAndTransformVertex(
+            posData.vertices,
+            vertexIndex,
+            posData.offset,
+            posData.elementStride,
+            posData.quantization,
+            instanceTransforms[t],
+            scratchPosition,
+          );
+          entry.positions.push(Cartesian3.clone(worldPos));
+        }
+      }
+
+      // Colors are instance-independent
+      if (defined(colorAttribute)) {
+        const color = readVertexColor(
+          colorAttribute.typedArray,
           vertexIndex,
-          posData.offset,
-          posData.elementStride,
-          posData.quantization,
-          instanceTransforms[t],
-          scratchPosition,
+          colorNumComponents,
+          colorAttribute.normalized,
         );
-        positions.push(Cartesian3.clone(worldPos));
+        entry.colors.push(color);
       }
     }
   }

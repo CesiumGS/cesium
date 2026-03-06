@@ -145,12 +145,15 @@ function extractFootprintsFromTile(tile, filterFeature) {
   const result = new Map();
 
   // Retrieve all positions grouped by feature ID in a single pass
-  const positionsMap = content.getPositions();
-  if (!defined(positionsMap) || positionsMap.size === 0) {
+  const geometryMap = content.getGeometry({
+    extractPositions: true,
+    extractColors: false,
+  });
+  if (!defined(geometryMap) || geometryMap.size === 0) {
     return undefined;
   }
 
-  for (const [featureId, positions] of positionsMap) {
+  for (const [featureId, geometry] of geometryMap) {
     if (featureId < 0 || featureId >= featuresLength) {
       continue;
     }
@@ -163,7 +166,8 @@ function extractFootprintsFromTile(tile, filterFeature) {
       }
     }
 
-    if (positions.length < 3) {
+    const positions = geometry.positions;
+    if (!defined(positions) || positions.length < 3) {
       continue;
     }
 
@@ -266,10 +270,7 @@ Cesium3DTilesetFootprintGenerator.generate = function (options) {
             count++;
           }
 
-          if (
-            typeof footprintsGenerated === "function" &&
-            tileCount > 0
-          ) {
+          if (typeof footprintsGenerated === "function" && tileCount > 0) {
             footprintsGenerated(tile, tileCount);
           }
         }
@@ -336,10 +337,7 @@ Cesium3DTilesetFootprintGenerator.generateForTile = function (options) {
     createdCount++;
   }
 
-  if (
-    typeof footprintsGenerated === "function" &&
-    createdCount > 0
-  ) {
+  if (typeof footprintsGenerated === "function" && createdCount > 0) {
     footprintsGenerated(tile, createdCount);
   }
 

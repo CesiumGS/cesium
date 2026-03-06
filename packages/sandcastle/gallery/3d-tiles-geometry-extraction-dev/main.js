@@ -6,18 +6,17 @@ const infoDiv = document.getElementById("info");
 
 // Load a batched 3D Tiles tileset with enableGeometryExtraction.
 // This retains vertex positions on the CPU so they can be read back per feature.
-/*
-const tileset = await Cesium.Cesium3DTileset.fromUrl(
-  `../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json`,
-  {
-    enableGeometryExtraction: true,
-  },
-);
-*/
+// const tileset = await Cesium.Cesium3DTileset.fromUrl(
+//   `../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json`, {
+//   enableGeometryExtraction: true,
+// });
 // const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2533124);
 const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
   enableGeometryExtraction: true,
 });
+// const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887123, {
+//   enableGeometryExtraction: true,
+// });
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
@@ -139,28 +138,46 @@ handler.setInputAction(function (movement) {
   selectedFeature = pickedFeature;
   selectedFeature.color = highlightColor;
 
-  // Extract world-space vertex positions for this feature
-  const positions = pickedFeature.getPositions();
+  // Extract world-space vertex positions and vertex colors for this feature
+  const geometry = pickedFeature.getGeometry({
+    extractPositions: true,
+    extractColors: true,
+  });
 
-  if (!Cesium.defined(positions) || positions.length === 0) {
+  if (!Cesium.defined(geometry)) {
+    infoDiv.textContent = "No geometry available for this feature.";
+    return;
+  }
+
+  const positions = geometry.positions ?? [];
+  const colors = geometry.colors ?? [];
+
+  if (positions.length === 0) {
     infoDiv.textContent = "No positions available for this feature.";
     return;
   }
 
-  infoDiv.textContent = `Extracted ${positions.length} vertices (feature id: ${pickedFeature.getProperty("id")})`;
+  const hasColors = colors.length > 0;
+  infoDiv.textContent =
+    `Extracted ${positions.length} vertices` +
+    `${hasColors ? `, ${colors.length} vertex colors` : ", no vertex colors"}` +
+    ` (feature id: ${pickedFeature.getProperty("id")})`;
 
   // Convert positions to Cartographic for clamped visualization
   const cartographics = positions.map((pos) =>
     Cesium.Cartographic.fromCartesian(pos),
   );
 
-  // Add point markers at each unique vertex position
+  // Add point markers at each unique vertex position, using the
+  // vertex color when available or falling back to red.
   for (let i = 0; i < positions.length; i++) {
+    const pointColor =
+      hasColors && i < colors.length ? colors[i] : Cesium.Color.RED;
     const entity = viewer.entities.add({
       position: positions[i],
       point: {
         pixelSize: 6,
-        color: Cesium.Color.RED,
+        color: pointColor,
         outlineColor: Cesium.Color.WHITE,
         outlineWidth: 1,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,

@@ -302,14 +302,17 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
 };
 
 /**
- * Returns a Map keyed by feature ID where each value is an array of
- * world-space {@link Cartesian3} positions for all vertices belonging
+ * Returns a Map keyed by feature ID where each value is an object
+ * containing arrays of positions and/or colors for all vertices belonging
  * to that feature within this content.
  *
- * @param {string} [featureIdLabel="featureId_0"] The label of the feature ID set to match against.
- * @returns {Map<number, Cartesian3[]>} A Map from feature ID to an array of world-space Cartesian3 positions.
+ * @param {object} [options] Object with the following properties:
+ * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
+ * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
+ * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
+ * @returns {Map<number, {positions?: Cartesian3[], colors?: Color[]}>} A Map from feature ID to an object with the requested attribute arrays.
  */
-Cesium3DTileContent.prototype.getPositions = function (featureIdLabel) {
+Cesium3DTileContent.prototype.getGeometry = function (options) {
   DeveloperError.throwInstantiationError();
 };
 
