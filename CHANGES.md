@@ -15,6 +15,12 @@
 - No longer disables custom shaders for primitives with missing metadata, as long as the metadata exists on the overall class definition. [#13258](https://github.com/CesiumGS/cesium/pull/13258)
 - Fix performance issue with multiple ClippingPolygon on Cesium3DTileset. [#13255](https://github.com/CesiumGS/cesium/pull/13255)
 
+### @cesium/sandcastle
+
+#### Fixes :wrench:
+
+- Fixed split screen labels and Cartesian3 factory function calls, and edited descriptions for various gallery examples. [#13250](https://github.com/CesiumGS/cesium/pull/13250)
+
 ## 1.139 - 2026-03-02
 
 ### @cesium/engine
