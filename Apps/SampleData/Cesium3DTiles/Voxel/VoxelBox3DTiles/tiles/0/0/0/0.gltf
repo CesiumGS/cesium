@@ -62,8 +62,8 @@
               "shape": 0,
               "dimensions": [
                 2,
-                2,
-                2
+                3,
+                4
               ]
             },
             "EXT_structural_metadata": {
@@ -79,7 +79,7 @@
       "bufferView": 0,
       "byteOffset": 0,
       "componentType": 5126,
-      "count": 8,
+      "count": 24,
       "max": [
         1.0, 1.0, 1.0, 1.0
       ],
@@ -93,13 +93,13 @@
     {
       "buffer": 0,
       "byteOffset": 0,
-      "byteLength": 128
+      "byteLength": 384
     }
   ],
   "buffers": [
     {
       "uri": "a.bin",
-      "byteLength": 128
+      "byteLength": 384
     }
   ]
 }

@@ -993,7 +993,7 @@ function computeRectangle(rectangle, granularity, rotation, ellipsoid, result) {
  *
  * @see RectangleGeometry#createGeometry
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=rectangle|Cesium Sandcastle Rectangle Demo}
  *
  * @example
  * // 1. create a rectangle

@@ -95,7 +95,7 @@ void main()
     Metadata metadata;
     MetadataClass metadataClass;
     MetadataStatistics metadataStatistics;
-    metadataStage(metadata, metadataClass, metadataStatistics, attributes);
+    metadataStage(featureIds, metadata, metadataClass, metadataStatistics, attributes);
 
     #ifdef HAS_VERTICAL_EXAGGERATION
     verticalExaggerationStage(attributes);
@@ -142,10 +142,12 @@ void main()
         gl_PointSize = vsOutput.pointSize;
         #elif defined(HAS_POINT_CLOUD_POINT_SIZE_STYLE) || defined(HAS_POINT_CLOUD_ATTENUATION)
         gl_PointSize = pointCloudPointSizeStylingStage(attributes, metadata);
+        #elif defined(HAS_POINT_DIAMETER)
+        gl_PointSize = u_pointDiameter;
         #else
         gl_PointSize = 1.0;
         #endif
-        
+
         gl_PointSize *= show;
     #endif
 

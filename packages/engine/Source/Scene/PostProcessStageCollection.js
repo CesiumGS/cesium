@@ -303,7 +303,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
 
   /**
    * Specifies the tonemapping algorithm used when rendering with high dynamic range.
-   * {@link https://sandcastle.cesium.com/?src=High%20Dynamic%20Range.html|Sandcastle Demo}
+   * {@link https://sandcastle.cesium.com/?id=high-dynamic-range|Sandcastle Demo}
    *
    * @example viewer.scene.postProcessStages.tonemapper = Cesium.Tonemapper.ACES;
    *

@@ -37,50 +37,45 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
 /**
  * Loads a .pnts point cloud and transcodes it into a {@link ModelComponents}
  *
- * @alias PntsLoader
- * @constructor
- * @augments ResourceLoader
  * @private
- *
- * @param {object} options An object containing the following properties
- * @param {ArrayBuffer} options.arrayBuffer The array buffer of the pnts contents
- * @param {number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
- * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
-function PntsLoader(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class PntsLoader extends ResourceLoader {
+  /**
+   * @param {object} options An object containing the following properties
+   * @param {ArrayBuffer} options.arrayBuffer The array buffer of the pnts contents
+   * @param {number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
+   * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+   */
+  constructor(options) {
+    super();
 
-  const arrayBuffer = options.arrayBuffer;
-  const byteOffset = options.byteOffset ?? 0;
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.arrayBuffer", arrayBuffer);
-  //>>includeEnd('debug');
+    const arrayBuffer = options.arrayBuffer;
+    const byteOffset = options.byteOffset ?? 0;
 
-  this._arrayBuffer = arrayBuffer;
-  this._byteOffset = byteOffset;
-  this._loadAttributesFor2D = options.loadAttributesFor2D ?? false;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options.arrayBuffer", arrayBuffer);
+    //>>includeEnd('debug');
 
-  this._parsedContent = undefined;
-  this._decodePromise = undefined;
-  this._decodedAttributes = undefined;
+    this._arrayBuffer = arrayBuffer;
+    this._byteOffset = byteOffset;
+    this._loadAttributesFor2D = options.loadAttributesFor2D ?? false;
 
-  this._promise = undefined;
-  this._error = undefined;
-  this._state = ResourceLoaderState.UNLOADED;
-  this._buffers = [];
+    this._parsedContent = undefined;
+    this._decodePromise = undefined;
+    this._decodedAttributes = undefined;
 
-  // The batch table object contains a json and a binary component access using keys of the same name.
-  this._components = undefined;
-  this._transform = Matrix4.IDENTITY;
-}
+    this._promise = undefined;
+    this._error = undefined;
+    this._state = ResourceLoaderState.UNLOADED;
+    this._buffers = [];
 
-if (defined(Object.create)) {
-  PntsLoader.prototype = Object.create(ResourceLoader.prototype);
-  PntsLoader.prototype.constructor = PntsLoader;
-}
+    // The batch table object contains a json and a binary component access using keys of the same name.
+    this._components = undefined;
+    this._transform = Matrix4.IDENTITY;
+  }
 
-Object.defineProperties(PntsLoader.prototype, {
   /**
    * The cache key of the resource
    *
@@ -90,11 +85,9 @@ Object.defineProperties(PntsLoader.prototype, {
    * @readonly
    * @private
    */
-  cacheKey: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get cacheKey() {
+    return undefined;
+  }
 
   /**
    * The loaded components.
@@ -105,11 +98,9 @@ Object.defineProperties(PntsLoader.prototype, {
    * @readonly
    * @private
    */
-  components: {
-    get: function () {
-      return this._components;
-    },
-  },
+  get components() {
+    return this._components;
+  }
 
   /**
    * A world-space transform to apply to the primitives.
@@ -121,50 +112,60 @@ Object.defineProperties(PntsLoader.prototype, {
    * @readonly
    * @private
    */
-  transform: {
-    get: function () {
-      return this._transform;
-    },
-  },
-});
-
-/**
- * Loads the resource.
- * @returns {Promise<PntsLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
- */
-PntsLoader.prototype.load = function () {
-  if (defined(this._promise)) {
-    return this._promise;
+  get transform() {
+    return this._transform;
   }
 
-  this._parsedContent = PntsParser.parse(this._arrayBuffer, this._byteOffset);
-  this._state = ResourceLoaderState.PROCESSING;
-
-  this._promise = Promise.resolve(this);
-};
-
-PntsLoader.prototype.process = function (frameState) {
-  if (defined(this._error)) {
-    const error = this._error;
-    this._error = undefined;
-    throw error;
-  }
-
-  if (this._state === ResourceLoaderState.READY) {
-    return true;
-  }
-
-  if (this._state === ResourceLoaderState.PROCESSING) {
-    if (defined(this._decodePromise)) {
-      return false;
+  /**
+   * Loads the resource.
+   * @returns {Promise<PntsLoader>} A promise which resolves to the loader when the resource loading is completed.
+   * @private
+   */
+  load() {
+    if (defined(this._promise)) {
+      return this._promise;
     }
 
-    this._decodePromise = decodeDraco(this, frameState.context);
+    this._parsedContent = PntsParser.parse(this._arrayBuffer, this._byteOffset);
+    this._state = ResourceLoaderState.PROCESSING;
+
+    this._promise = Promise.resolve(this);
   }
 
-  return false;
-};
+  process(frameState) {
+    if (defined(this._error)) {
+      const error = this._error;
+      this._error = undefined;
+      throw error;
+    }
+
+    if (this._state === ResourceLoaderState.READY) {
+      return true;
+    }
+
+    if (this._state === ResourceLoaderState.PROCESSING) {
+      if (defined(this._decodePromise)) {
+        return false;
+      }
+
+      this._decodePromise = decodeDraco(this, frameState.context);
+    }
+
+    return false;
+  }
+
+  unload() {
+    const buffers = this._buffers;
+    for (let i = 0; i < buffers.length; i++) {
+      buffers[i].destroy();
+    }
+    buffers.length = 0;
+
+    this._components = undefined;
+    this._parsedContent = undefined;
+    this._arrayBuffer = undefined;
+  }
+}
 
 function decodeDraco(loader, context) {
   const parsedContent = loader._parsedContent;
@@ -700,17 +701,5 @@ function addPropertyAttributesToPrimitive(
   // it will always be index 0
   primitive.propertyAttributeIds = [0];
 }
-
-PntsLoader.prototype.unload = function () {
-  const buffers = this._buffers;
-  for (let i = 0; i < buffers.length; i++) {
-    buffers[i].destroy();
-  }
-  buffers.length = 0;
-
-  this._components = undefined;
-  this._parsedContent = undefined;
-  this._arrayBuffer = undefined;
-};
 
 export default PntsLoader;
