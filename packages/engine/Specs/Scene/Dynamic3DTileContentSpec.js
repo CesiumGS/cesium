@@ -4,7 +4,7 @@ import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 // These are not written into the index.js. See "build.js".
-import { LRUCache, NDMap } from "../../Source/Scene/Dynamic3DTileContent.js";
+import { LRUCache } from "../../Source/Scene/Dynamic3DTileContent.js";
 
 /**
  * Move the camera to look at the spec tileset.
@@ -130,63 +130,48 @@ describe(
       expect(allActual).toEqual(allExpected);
     });
 
-    it("does not consider any content to be 'active' without a dynamicContentPropertyProvider", async function () {
+    it("does not consider any content to be 'active' without a dynamicContentUriCondition", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         dynamicContentTilesetUrl,
       );
 
-      // For spec: No dynamicContentPropertyProvider
-      tileset.dynamicContentPropertyProvider = undefined;
+      // For spec: No dynamicContentUriCondition
+      tileset.dynamicContentUriCondition = undefined;
 
       // Pretend this was a unit test
       fitCameraForSpec(scene.camera);
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       const content = tileset.root.content;
 
-      // There should be no active URIs without a dynamicContentPropertyProvider
+      // There should be no active URIs without a dynamicContentUriCondition
       const activeActual = content._activeContentUris;
       const activeExpected = [];
       expect(activeActual).toEqual(activeExpected);
     });
 
-    it("does not consider any content to be 'active' when dynamicContentPropertyProvider returns undefined", async function () {
+    it("considers contents to be active when the dynamicContentUriCondition returns true", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         dynamicContentTilesetUrl,
       );
 
-      // For spec: The dynamicContentPropertyProvider returns undefined
-      const dynamicContentsPropertyProvider = () => {
-        return undefined;
-      };
-      tileset.dynamicContentPropertyProvider = dynamicContentsPropertyProvider;
-
-      // Pretend this was a unit test
-      fitCameraForSpec(scene.camera);
-      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-      const content = tileset.root.content;
-
-      // There should be no active URIs for undefined content properties
-      const activeActual = content._activeContentUris;
-      const activeExpected = [];
-      expect(activeActual).toEqual(activeExpected);
-    });
-
-    it("considers contents to be active when their key properties match the ones from the dynamicContentPropertyProvider", async function () {
-      const tileset = await Cesium3DTilesTester.loadTileset(
-        scene,
-        dynamicContentTilesetUrl,
-      );
-
-      // Assign the dynamic content properties provider. The properties
+      // Assign the dynamic content URI condition. The properties
       // of this object will be changed, and the spec will check that
       // the corresponding content URIs become "active"
       const dynamicContentProperties = {};
-      const dynamicContentsPropertyProvider = () => {
-        return dynamicContentProperties;
+      const dynamicContentsUriCondition = (keys) => {
+        if (
+          keys.exampleTimeStamp !== dynamicContentProperties.exampleTimeStamp
+        ) {
+          return false;
+        }
+        if (keys.exampleRevision !== dynamicContentProperties.exampleRevision) {
+          return false;
+        }
+        return true;
       };
-      tileset.dynamicContentPropertyProvider = dynamicContentsPropertyProvider;
+      tileset.dynamicContentUriCondition = dynamicContentsUriCondition;
 
       // Pretend this was a unit test
       fitCameraForSpec(scene.camera);
@@ -221,14 +206,22 @@ describe(
         dynamicContentTilesetUrl,
       );
 
-      // Assign the dynamic content properties provider. The properties
+      // Assign the dynamic content URI condition. The properties
       // of this object will be changed, and the spec will check that
-      // the activation of the corresponding contents works
+      // the corresponding content URIs become "active"
       const dynamicContentProperties = {};
-      const dynamicContentsPropertyProvider = () => {
-        return dynamicContentProperties;
+      const dynamicContentsUriCondition = (keys) => {
+        if (
+          keys.exampleTimeStamp !== dynamicContentProperties.exampleTimeStamp
+        ) {
+          return false;
+        }
+        if (keys.exampleRevision !== dynamicContentProperties.exampleRevision) {
+          return false;
+        }
+        return true;
       };
-      tileset.dynamicContentPropertyProvider = dynamicContentsPropertyProvider;
+      tileset.dynamicContentUriCondition = dynamicContentsUriCondition;
 
       // Pretend this was a unit test
       fitCameraForSpec(scene.camera);
@@ -288,14 +281,22 @@ describe(
         invalidDynamicContentTilesetUrl,
       );
 
-      // Assign the dynamic content properties provider. The properties
+      // Assign the dynamic content URI condition. The properties
       // of this object will be changed, and the spec will check that
-      // the activation of the corresponding contents works
+      // the corresponding content URIs become "active"
       const dynamicContentProperties = {};
-      const dynamicContentsPropertyProvider = () => {
-        return dynamicContentProperties;
+      const dynamicContentsUriCondition = (keys) => {
+        if (
+          keys.exampleTimeStamp !== dynamicContentProperties.exampleTimeStamp
+        ) {
+          return false;
+        }
+        if (keys.exampleRevision !== dynamicContentProperties.exampleRevision) {
+          return false;
+        }
+        return true;
       };
-      tileset.dynamicContentPropertyProvider = dynamicContentsPropertyProvider;
+      tileset.dynamicContentUriCondition = dynamicContentsUriCondition;
 
       // Pretend this was a unit test
       fitCameraForSpec(scene.camera);
@@ -341,14 +342,22 @@ describe(
         dynamicContentTilesetUrl,
       );
 
-      // Assign the dynamic content properties provider. The properties
+      // Assign the dynamic content URI condition. The properties
       // of this object will be changed, and the spec will check that
-      // the activation of the corresponding contents works
+      // the corresponding content URIs become "active"
       const dynamicContentProperties = {};
-      const dynamicContentsPropertyProvider = () => {
-        return dynamicContentProperties;
+      const dynamicContentsUriCondition = (keys) => {
+        if (
+          keys.exampleTimeStamp !== dynamicContentProperties.exampleTimeStamp
+        ) {
+          return false;
+        }
+        if (keys.exampleRevision !== dynamicContentProperties.exampleRevision) {
+          return false;
+        }
+        return true;
       };
-      tileset.dynamicContentPropertyProvider = dynamicContentsPropertyProvider;
+      tileset.dynamicContentUriCondition = dynamicContentsUriCondition;
 
       // Pretend this was a unit test
       fitCameraForSpec(scene.camera);
@@ -390,474 +399,6 @@ describe(
   },
   "WebGL",
 );
-
-//============================================================================
-// NDMap
-
-describe("Scene/Dynamic3DTileContent/NDMap", function () {
-  it("constructor throws for empty dimensionNames array", async function () {
-    expect(function () {
-      /*eslint-disable no-unused-vars*/
-      const map = new NDMap([]);
-      /*eslint-enable no-unused-vars*/
-    }).toThrowDeveloperError();
-  });
-
-  it("constructor throws for duplicates in dimensionNames", async function () {
-    expect(function () {
-      /*eslint-disable no-unused-vars*/
-      const map = new NDMap(["dimA", "dimB", "dimB"]);
-      /*eslint-enable no-unused-vars*/
-    }).toThrowDeveloperError();
-  });
-
-  it("basic set and get works", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // The map is initially empty
-    expect(map.size).toBe(0);
-
-    // Add an entry
-    const key0a = {
-      dimA: 12,
-      dimB: 23,
-      unused: 34,
-    };
-    map.set(key0a, "value0");
-
-    // The size is now 1
-    expect(map.size).toBe(1);
-
-    // Fetch the first entry
-    const key0b = {
-      dimA: 12,
-      dimB: 23,
-      unused: 45,
-    };
-    const value0 = map.get(key0b);
-    expect(value0).toBe("value0");
-  });
-
-  it("properly sets values for existing keys", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // The map is initially empty
-    expect(map.size).toBe(0);
-
-    // Add an entry
-    const key0 = {
-      dimA: 12,
-      dimB: 23,
-      unused: 34,
-    };
-    map.set(key0, "value0a");
-
-    // The size is now 1
-    expect(map.size).toBe(1);
-
-    // Overwrite the entry with a new value
-    map.set(key0, "value0b");
-
-    // The size is now 1
-    expect(map.size).toBe(1);
-
-    // Fetch the the value of the entry
-    const key0b = {
-      dimA: 12,
-      dimB: 23,
-      unused: 45,
-    };
-    const value0 = map.get(key0b);
-    expect(value0).toBe("value0b");
-  });
-
-  it("properly reports key presence and handles deletion", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // The map is initially empty
-    expect(map.size).toBe(0);
-
-    // Add an entry
-    const key0a = {
-      dimA: 12,
-      dimB: 23,
-      unused: 34,
-    };
-    map.set(key0a, "value0");
-
-    // The size is now 1
-    expect(map.size).toBe(1);
-
-    // Define a key that is equivalent to the first one
-    const key0b = {
-      dimA: 12,
-      dimB: 23,
-      unused: 45,
-    };
-
-    // Ensure that the map has the key
-    const actualHasB = map.has(key0b);
-    expect(actualHasB).toBe(true);
-
-    // Delete the key
-    map.delete(key0b);
-
-    // The size is now 0
-    expect(map.size).toBe(0);
-
-    // Expect the key to no longer be present
-    const actualHasA = map.has(key0a);
-    expect(actualHasA).toBe(false);
-  });
-
-  it("ignores missing dimensions", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // Add an entry that is missing one dimension
-    const key0 = {
-      dimA: 12,
-    };
-    map.set(key0, "value0");
-
-    // Expect the value to be fetched nevertheless
-    const value0 = map.get(key0);
-    expect(value0).toBe("value0");
-  });
-
-  it("provides all keys", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // Add some entries
-    const key0 = {
-      dimA: 12,
-      dimB: 23,
-      unused: 34,
-    };
-    map.set(key0, "value0");
-
-    const key1 = {
-      dimA: 23,
-      dimB: 34,
-      unused: 45,
-    };
-    map.set(key1, "value1");
-
-    const key2 = {
-      dimA: 34,
-      dimB: 45,
-      unused: 56,
-    };
-    map.set(key2, "value2");
-
-    // The keys do not retain the unused properties
-    const expectedKeys = [
-      {
-        dimA: 12,
-        dimB: 23,
-      },
-      {
-        dimA: 23,
-        dimB: 34,
-      },
-      {
-        dimA: 34,
-        dimB: 45,
-      },
-    ];
-    const actualKeys = [...map.keys()];
-    expect(actualKeys).toEqual(expectedKeys);
-  });
-
-  it("provides all values", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // Add some entries
-    const key0 = {
-      dimA: 12,
-      dimB: 23,
-      unused: 34,
-    };
-    map.set(key0, "value0");
-
-    const key1 = {
-      dimA: 23,
-      dimB: 34,
-      unused: 45,
-    };
-    map.set(key1, "value1");
-
-    const key2 = {
-      dimA: 34,
-      dimB: 45,
-      unused: 56,
-    };
-    map.set(key2, "value2");
-
-    const expectedValues = ["value0", "value1", "value2"];
-    const actualValues = [...map.values()];
-    expect(actualValues).toEqual(expectedValues);
-  });
-
-  it("provides all entries", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // Add some entries
-    const key0 = {
-      dimA: 12,
-      dimB: 23,
-      unused: 34,
-    };
-    map.set(key0, "value0");
-
-    const key1 = {
-      dimA: 23,
-      dimB: 34,
-      unused: 45,
-    };
-    map.set(key1, "value1");
-
-    const key2 = {
-      dimA: 34,
-      dimB: 45,
-      unused: 56,
-    };
-    map.set(key2, "value2");
-
-    const expectedEntries = [
-      [
-        {
-          dimA: 12,
-          dimB: 23,
-        },
-        "value0",
-      ],
-      [
-        {
-          dimA: 23,
-          dimB: 34,
-        },
-        "value1",
-      ],
-      [
-        {
-          dimA: 34,
-          dimB: 45,
-        },
-        "value2",
-      ],
-    ];
-
-    const actualEntries = [...map.entries()];
-    expect(actualEntries).toEqual(expectedEntries);
-  });
-
-  it("clears all entries", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // The map is initially empty
-    expect(map.size).toBe(0);
-
-    // Add some entries
-    const key0 = {
-      dimA: 12,
-      dimB: 23,
-      unused: 34,
-    };
-    map.set(key0, "value0");
-
-    const key1 = {
-      dimA: 23,
-      dimB: 34,
-      unused: 45,
-    };
-    map.set(key1, "value1");
-
-    const key2 = {
-      dimA: 34,
-      dimB: 45,
-      unused: 56,
-    };
-    map.set(key2, "value2");
-
-    // The map now has a size of 3
-    expect(map.size).toBe(3);
-
-    // Clear the map
-    map.clear();
-
-    // The map now has a size of 0
-    expect(map.size).toBe(0);
-  });
-
-  it("is iterable over its entries", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // Add some entries
-    const key0 = {
-      dimA: 12,
-      dimB: 23,
-      unused: 34,
-    };
-    map.set(key0, "value0");
-
-    const key1 = {
-      dimA: 23,
-      dimB: 34,
-      unused: 45,
-    };
-    map.set(key1, "value1");
-
-    const key2 = {
-      dimA: 34,
-      dimB: 45,
-      unused: 56,
-    };
-    map.set(key2, "value2");
-
-    const expectedEntries = [
-      [
-        {
-          dimA: 12,
-          dimB: 23,
-        },
-        "value0",
-      ],
-      [
-        {
-          dimA: 23,
-          dimB: 34,
-        },
-        "value1",
-      ],
-      [
-        {
-          dimA: 34,
-          dimB: 45,
-        },
-        "value2",
-      ],
-    ];
-
-    const actualEntries = [...map];
-    expect(actualEntries).toEqual(expectedEntries);
-  });
-
-  it("iterates over entries in forEach", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // Add some entries
-    const key0 = {
-      dimA: 12,
-      dimB: 23,
-      unused: 34,
-    };
-    map.set(key0, "value0");
-
-    const key1 = {
-      dimA: 23,
-      dimB: 34,
-      unused: 45,
-    };
-    map.set(key1, "value1");
-
-    const key2 = {
-      dimA: 34,
-      dimB: 45,
-      unused: 56,
-    };
-    map.set(key2, "value2");
-
-    const expectedEntries = [
-      [
-        {
-          dimA: 12,
-          dimB: 23,
-        },
-        "value0",
-      ],
-      [
-        {
-          dimA: 23,
-          dimB: 34,
-        },
-        "value1",
-      ],
-      [
-        {
-          dimA: 34,
-          dimB: 45,
-        },
-        "value2",
-      ],
-    ];
-
-    const actualEntries = [];
-    map.forEach((e) => {
-      actualEntries.push(e);
-    });
-    expect(actualEntries).toEqual(expectedEntries);
-  });
-
-  it("gets an existing value instead of computing a default", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // The map is initially empty
-    expect(map.size).toBe(0);
-
-    // Add an entry
-    const key0a = {
-      dimA: 12,
-      dimB: 23,
-      unused: 34,
-    };
-    map.set(key0a, "value0a");
-
-    // Query the value for an equivalent key
-    // (not computing a default)
-    const key0b = {
-      dimA: 12,
-      dimB: 23,
-      unused: 99,
-    };
-    const value0 = map.getOrInsertComputed(key0b, () => "computedValue0");
-    expect(value0).toBe("value0a");
-  });
-
-  it("computes a default only once", async function () {
-    const map = new NDMap(["dimA", "dimB"]);
-
-    // The map is initially empty
-    expect(map.size).toBe(0);
-
-    // Query the value for a key that does not exist,
-    // computing the default
-    const key0a = {
-      dimA: 12,
-      dimB: 23,
-      unused: 34,
-    };
-    const value0a = map.getOrInsertComputed(key0a, () => "computedValue0a");
-    expect(value0a).toBe("computedValue0a");
-
-    // Query an equivalent key
-    const key0b = {
-      dimA: 12,
-      dimB: 23,
-      unused: 99,
-    };
-    const value0b = map.get(key0b);
-    expect(value0b).toBe("computedValue0a");
-
-    // Query an equivalent key, not computing the default
-    const value0b2 = map.getOrInsertComputed(key0b, () => "computedValue0b");
-    expect(value0b2).toBe("computedValue0a");
-
-    // Just verify the map size again...
-    expect(map.size).toBe(1);
-  });
-});
-
-//============================================================================
 
 //============================================================================
 // LRUCache

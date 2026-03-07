@@ -17,236 +17,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 const DYNAMIC_CONTENT_LOGGING = false;
 
 /**
- * A generic N-dimensional map, used internally for content lookups.
- *
- * <code>
- * // The "dimensions" (property names) are "x" and "y"
- * const ndMap = new NDMap(["x", "y"]);
- *
- * // The "x" and "y" properties of the key are used when
- * // storing the value under the given key. Any other
- * // properties are ignored.
- * const keyA = { x: 12, y: 34, otherProperty: "ignored" };
- * ndMap.set(keyA, "Example");
- *
- * // The "x" and "y" properties of the key are used when
- * // retrieving the value for the given key. Any other
- * // properties are ignored.
- * const keyB = { y: 34, x: 12, differentProperty: "alsoIgnored" };
- * const value = ndMap.get(keyB); // returns "Example"
- * </code>
- *
- * All functions that receive a "key" assume that the key contains properties
- * that have the dimension names that have been given in the constructor.
- */
-class NDMap {
-  /**
-   * Create a new instance where the dimensions have the given names.
-   *
-   * These are the names of the properties that will be looked up
-   * in the 'key' for set/get operations, to determine the coordinates
-   * within the N-dimensional space.
-   *
-   * The given array may not be modified after it was passed to
-   * this constructor.
-   *
-   * @param {string[]} dimensionNames
-   * @throws {DeveloperError} If the given array has length 0 or
-   * contains duplicate elements
-   */
-  constructor(dimensionNames) {
-    if (dimensionNames.length === 0) {
-      throw new DeveloperError(
-        "The dimensionNames array may not have length 0",
-      );
-    } else {
-      const s = new Set(dimensionNames);
-      if (s.size !== dimensionNames.length) {
-        throw new DeveloperError(
-          `The dimensionNames array may not contain duplicate elements, but is ${dimensionNames}`,
-        );
-      }
-    }
-    this._dimensionNames = dimensionNames;
-
-    /**
-     * The backing map.
-     *
-     * @type {Map}
-     */
-    this._lookup = new Map();
-  }
-
-  /**
-   * Returns the number of dimensions of this map
-   *
-   * @type {number}
-   */
-  get _dimensions() {
-    return this._dimensionNames.length;
-  }
-
-  /**
-   * Returns the current size of this map
-   *
-   * @returns {number} The size
-   */
-  get size() {
-    return this._lookup.size;
-  }
-
-  /**
-   * Create the key (string) that will be used for the internal
-   * lookup, based on the given key object.
-   *
-   * @param {object} key The key object
-   * @returns {string} The lookup key
-   */
-  _computeLookupKey(key) {
-    const k = {};
-    const dimensionNames = this._dimensionNames;
-    for (let d = 0; d < dimensionNames.length; d++) {
-      const dimensionName = dimensionNames[d];
-      k[dimensionName] = key[dimensionName];
-    }
-    return JSON.stringify(k);
-  }
-
-  /**
-   * Parse an object from the given lookup key.
-   *
-   * The object reflects the relevant dimensions from
-   * the 'dimensions' that this map refers to.
-   *
-   * @param {string} lookupKey The lookup string
-   * @returns {object} The key
-   */
-  _parseLookupKey(lookupKey) {
-    return JSON.parse(lookupKey);
-  }
-
-  /**
-   * Set the value for the given key.
-   *
-   * @param {object} key The key
-   * @param {any} value The value
-   */
-  set(key, value) {
-    const lookupKey = this._computeLookupKey(key);
-    this._lookup.set(lookupKey, value);
-  }
-
-  /**
-   * Get the value for the given key.
-   *
-   * Returns <code>undefined</code> if there is no entry for this key.
-   *
-   * @param {object} key The key
-   * @returns {any} The value
-   */
-  get(key) {
-    const lookupKey = this._computeLookupKey(key);
-    return this._lookup.get(lookupKey);
-  }
-
-  /**
-   * Returns whether an entry exists for the given key.
-   *
-   * @param {object} key The key
-   * @returns Whether the entry exists
-   */
-  has(key) {
-    const lookupKey = this._computeLookupKey(key);
-    return this._lookup.has(lookupKey);
-  }
-
-  /**
-   * Delete the entry from the given key, if it exists.
-   *
-   * @param {object} key The key
-   */
-  delete(key) {
-    const lookupKey = this._computeLookupKey(key);
-    this._lookup.delete(lookupKey);
-  }
-
-  /**
-   * Clear this map, removing all entries.
-   */
-  clear() {
-    this._lookup.clear();
-  }
-
-  /**
-   * Returns all keys that are stored in this map.
-   *
-   * Note that these objects are not identical to the keys that
-   * have been used in the 'set' calls. They are just objects
-   * that have the same relevant properties as these keys.
-   *
-   * @returns {Iterable} The keys
-   */
-  keys() {
-    return this._lookup.keys().map((k) => this._parseLookupKey(k));
-  }
-
-  /**
-   * Returns all values that are stored in this map.
-   *
-   * @returns {Iterable} The values
-   */
-  values() {
-    return this._lookup.values();
-  }
-
-  /**
-   * Returns the entries of this map
-   *
-   * @returns {Iterable} The entries
-   */
-  entries() {
-    return this._lookup.entries().map(([k, v]) => [this._parseLookupKey(k), v]);
-  }
-
-  /**
-   * Call the given function on each key/value pair
-   *
-   * @param {Function} callback The callback
-   * @param {any} thisArg A value to use as this when executing the callback
-   */
-  forEach(callback, thisArg) {
-    this.entries().forEach(callback, thisArg);
-  }
-
-  /**
-   * Returns an iterator over the entries of this map
-   *
-   * @returns {Iterator} The iterator
-   */
-  [Symbol.iterator]() {
-    return this.entries();
-  }
-
-  /**
-   * Returns the value corresponding to the specified key, creating and
-   * inserting it if it was not yet present, using the given function
-   * for its creation.
-   *
-   * @param {object} key The key
-   * @param {Function} defaultCreator The default creator
-   */
-  getOrInsertComputed(key, defaultCreator) {
-    const lookupKey = this._computeLookupKey(key);
-    if (this._lookup.has(lookupKey)) {
-      return this._lookup.get(lookupKey);
-    }
-    const value = defaultCreator();
-    this._lookup.set(lookupKey, value);
-    return value;
-  }
-}
-
-/**
  * Implementation of an LRU (least recently used) cache.
  *
  * Calling the 'get' or 'set' function constitutes "using" the
@@ -1383,13 +1153,12 @@ const DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES = false;
  * possible, with some caveats.
  *
  * Each time the "update" function of this content is called, the
- * 'tileset.dynamicContentPropertyProvider' of the tileset that this
- * content belongs to provides a set of properties. Based on these
- * properties, some of the inner/dynamic contents that are maintained
- * by this class will become "active", meaning that these contents
- * are supposed to be rendered, and available for picking. This class
- * will manage the process of loading and unloading the required
- * subsets of all possible contents.
+ * 'tileset.dynamicContentUriCondition' of the tileset that this
+ * content belongs to determines which inner contents will become
+ * "active", meaning that these contents are supposed to be
+ * rendered, and available for picking. This class will manage
+ * the process of loading and unloading the required subsets of
+ * all possible contents.
  *
  * @extends Cesium3DTileContent
  * @private
@@ -1433,10 +1202,19 @@ class Dynamic3DTileContent {
    * @private
    */
   constructor(tileset, tile, tilesetResource, contentJson) {
+    // Safeguard to verify that the extension is present
+    const extensions = tileset.extensions ?? {};
+    const topLevelExtensionObject = extensions["3DTILES_dynamic"];
+    if (!defined(topLevelExtensionObject)) {
+      throw new DeveloperError(
+        "Cannot create a Dynamic3DTileContent for a tileset that does not contain a top-level dynamic content extension object.",
+      );
+    }
+
     /**
      * The tileset that this content belongs to.
      *
-     * The 'dynamicContentPropertyProvider' of this tileset will be
+     * The 'dynamicContentUriCondition' of this tileset will be
      * used to determine which contents are currently "active" in
      * the "_activeContentUris" getter.
      *
@@ -1514,24 +1292,6 @@ class Dynamic3DTileContent {
      * @type {number}
      */
     this._loadedContentHandlesMaximumSize = 10;
-
-    /**
-     * The mapping from "keys" to arrays(!) of URIs for the dynamic content.
-     *
-     * The keys are the 'keys' from the 'dynamicContents' array. They
-     * are just plain structures like
-     * '{ time: "2025-09-13", revision: "revision0" }
-     * that are used for looking up the associated URLs.
-     *
-     * This lookup will be used for determining the 'activeContentUris':
-     * The 'dynamicContentPropertyProvider' of the tileset will return
-     * an object that serves as a key for this lookup. The corresponding
-     * values (URIs) are the URIs of the contents that are currently active.
-     *
-     * @type {NDMap}
-     * @readonly
-     */
-    this._dynamicContentUriLookup = this._createDynamicContentUriLookup();
 
     /**
      * The last style that was applied to this content.
@@ -1648,53 +1408,14 @@ class Dynamic3DTileContent {
   }
 
   /**
-   * Creates the mapping from the "keys" that are found in the
-   * 'dynamicContents' array, to the arrays of URLs that are
-   * associated with these keys.
-   *
-   * @returns {NDMap} The mapping
-   * @throws {DeveloperError} If the tileset does not contain the
-   * top-level dynamic content extension object.
-   */
-  _createDynamicContentUriLookup() {
-    const tileset = this.tileset;
-    const extensions = tileset.extensions ?? {};
-    const topLevelExtensionObject = extensions["3DTILES_dynamic"];
-    if (!defined(topLevelExtensionObject)) {
-      throw new DeveloperError(
-        "Cannot create a Dynamic3DTileContent for a tileset that does not contain a top-level dynamic content extension object.",
-      );
-    }
-    const dimensions = topLevelExtensionObject.dimensions;
-    const dimensionNames = dimensions.map((d) => d.name);
-
-    const dynamicContents = this._dynamicContents;
-    const dynamicContentUriLookup = new NDMap(dimensionNames);
-    for (let i = 0; i < dynamicContents.length; i++) {
-      const dynamicContent = dynamicContents[i];
-      const uri = dynamicContent.uri;
-      const key = dynamicContent.keys;
-      const entries = dynamicContentUriLookup.getOrInsertComputed(key, () =>
-        Array(),
-      );
-      entries.push(uri);
-    }
-    return dynamicContentUriLookup;
-  }
-
-  /**
    * Returns the array of URIs of contents that are currently 'active'.
    *
-   * This will query the 'dynamicContentPropertyProvider' of the tileset.
-   * This provider returns what serves as a 'key' for the
-   * '_dynamicContentUriLookup'. This method returns the array of
-   * URIs that are found in that lookup, for the respective key.
+   * This will query the 'dynamicContentUriCondition' of the tileset.
+   * This returns whether the 'uri' for its given 'key' is supposed
+   * to be currently active.
    *
-   * If there is no dynamicContentPropertyProvider, then an empty
+   * If there is no dynamicContentUriCondition, then an empty
    * array will be returned.
-   *
-   * If the dynamicContentPropertyProvider returns undefined, then
-   * an empty array will be returned.
    *
    * If there are no active contents, then an empty array will be
    * returned.
@@ -1705,18 +1426,21 @@ class Dynamic3DTileContent {
    */
   get _activeContentUris() {
     const tileset = this.tileset;
-    const dynamicContentPropertyProvider =
-      tileset.dynamicContentPropertyProvider;
-    if (!defined(dynamicContentPropertyProvider)) {
+    const dynamicContentUriCondition = tileset.dynamicContentUriCondition;
+    if (!defined(dynamicContentUriCondition)) {
       return [];
     }
-    const currentProperties = dynamicContentPropertyProvider();
-    if (!defined(currentProperties)) {
-      return [];
+    const activeContentUris = [];
+    const dynamicContents = this._dynamicContents;
+    for (let i = 0; i < dynamicContents.length; i++) {
+      const dynamicContent = dynamicContents[i];
+      const uri = dynamicContent.uri;
+      const key = dynamicContent.keys;
+      if (dynamicContentUriCondition(key)) {
+        activeContentUris.push(uri);
+      }
     }
-    const lookup = this._dynamicContentUriLookup;
-    const currentEntries = lookup.get(currentProperties) ?? [];
-    return currentEntries;
+    return activeContentUris;
   }
 
   /**
@@ -2272,7 +1996,6 @@ export default Dynamic3DTileContent;
 
 // Exposed for testing. They should be individual files, though...
 export {
-  NDMap,
   LRUCache,
   RequestHandle,
   ContentHandle,
