@@ -7,8 +7,9 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
 import assert from "../Core/assert.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 
-/** @import { TypedArray } from "../Core/globalTypes.js"; */
+/** @import { TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 
 /**
@@ -74,6 +75,7 @@ class BufferPrimitiveCollection {
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
+   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
@@ -132,13 +134,6 @@ class BufferPrimitiveCollection {
       options.primitiveCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
-     * @type {ArrayBuffer}
-     * @protected
-     * @ignore
-     */
-    this._primitiveBuffer = null;
-
-    /**
      * @type {DataView<ArrayBuffer>}
      * @ignore
      */
@@ -159,17 +154,10 @@ class BufferPrimitiveCollection {
       options.vertexCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
-     * @type {ArrayBuffer}
-     * @protected
+     * @type {TypedArray}
      * @ignore
      */
-    this._positionBuffer = null;
-
-    /**
-     * @type {Float64Array<ArrayBuffer>}
-     * @ignore
-     */
-    this._positionF64 = null;
+    this._positionView = null;
 
     // Potentially-dirty primitives are tracked as a contiguous range, with
     // 'clean' primitives potentially within the range. Individual primitive
@@ -194,7 +182,10 @@ class BufferPrimitiveCollection {
     this._dirtyBoundingVolume = false;
 
     this._allocatePrimitiveBuffer();
-    this._allocatePositionBuffer();
+    this._allocatePositionBuffer(
+      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+      options.positionDatatype ?? ComponentDatatype.DOUBLE,
+    );
   }
 
   /**
@@ -232,22 +223,22 @@ class BufferPrimitiveCollection {
     assert(layout.__BYTE_LENGTH % 4 === 0, ERR_MULTIPLE_OF_FOUR);
     //>>includeEnd('debug');
 
-    const primitiveBufferByteLength =
-      this._primitiveCountMax * layout.__BYTE_LENGTH;
-
-    this._primitiveBuffer = new ArrayBuffer(primitiveBufferByteLength);
-    this._primitiveView = new DataView(this._primitiveBuffer);
+    this._primitiveView = new DataView(
+      new ArrayBuffer(this._primitiveCountMax * layout.__BYTE_LENGTH),
+    );
   }
 
   /**
+   * @param {ComponentDatatype} datatype
    * @private
    * @ignore
    */
-  _allocatePositionBuffer() {
-    const positionBufferByteLength =
-      this._positionCountMax * 3 * Float64Array.BYTES_PER_ELEMENT;
-    this._positionBuffer = new ArrayBuffer(positionBufferByteLength);
-    this._positionF64 = new Float64Array(this._positionBuffer);
+  _allocatePositionBuffer(datatype) {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    this._positionView = ComponentDatatype.createTypedArray(
+      datatype,
+      this._positionCountMax * 3,
+    );
   }
 
   /**
@@ -343,8 +334,8 @@ class BufferPrimitiveCollection {
     );
 
     this._copySubArray(
-      collection._positionF64,
-      result._positionF64,
+      collection._positionView,
+      result._positionView,
       collection.vertexCount * 3,
     );
 
@@ -388,11 +379,8 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   static _replaceBuffers(src, dst) {
-    dst._primitiveBuffer = src._primitiveBuffer;
     dst._primitiveView = src._primitiveView;
-
-    dst._positionBuffer = src._positionBuffer;
-    dst._positionF64 = src._positionF64;
+    dst._positionView = src._positionView;
   }
 
   /**
@@ -401,12 +389,17 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   _updateBoundingVolume() {
+    const TypedArray = /** @type {TypedArrayConstructor} */ (
+      this._positionView.constructor
+    );
+
     // Exclude unused space in the position buffer.
-    const vertices = new Float64Array(
-      this._positionF64.buffer,
-      this._positionF64.byteOffset,
+    const vertices = new TypedArray(
+      /** @type {ArrayBuffer} */ (this._positionView.buffer),
+      this._positionView.byteOffset,
       this._positionCount * 3,
     );
+
     BoundingSphere.fromVertices(
       vertices,
       Cartesian3.ZERO,
@@ -545,7 +538,7 @@ class BufferPrimitiveCollection {
    * @readonly
    */
   get byteLength() {
-    return this._primitiveBuffer.byteLength + this._positionBuffer.byteLength;
+    return this._primitiveView.byteLength + this._positionView.byteLength;
   }
 
   /**
@@ -594,6 +587,7 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   static _copySubDataView(src, dst, byteLength) {
+    // No need to match the original array type, just copy in 4-byte chunks.
     this._copySubArray(
       new Uint32Array(src.buffer, src.byteOffset, src.byteLength / 4),
       new Uint32Array(dst.buffer, dst.byteOffset, dst.byteLength / 4),
