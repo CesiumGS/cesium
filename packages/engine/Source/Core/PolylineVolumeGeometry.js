@@ -185,7 +185,7 @@ function computeAttributes(
  *
  * @see PolylineVolumeGeometry#createGeometry
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=polyline-volume|Cesium Sandcastle Polyline Volume Demo}
  *
  * @example
  * function computeCircle(radius) {

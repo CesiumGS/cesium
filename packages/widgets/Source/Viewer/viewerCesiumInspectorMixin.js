@@ -11,7 +11,7 @@ import CesiumInspector from "../CesiumInspector/CesiumInspector.js";
  *
  * @exception {DeveloperError} viewer is required.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=cesium-inspector|Cesium Sandcastle Cesium Inspector Demo}
  *
  * @example
  * const viewer = new Cesium.Viewer('cesiumContainer');

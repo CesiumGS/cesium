@@ -48,89 +48,84 @@ const Instances = ModelComponents.Instances;
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias I3dmLoader
- * @constructor
- * @augments ResourceLoader
  * @private
- *
- * @param {object} options Object with the following properties:
- * @param {Resource} options.i3dmResource The {@link Resource} containing the i3dm.
- * @param {ArrayBuffer} options.arrayBuffer The array buffer of the i3dm contents.
- * @param {number} [options.byteOffset=0] The byte offset to the beginning of the i3dm contents in the array buffer.
- * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
- * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
- * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
- * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
- * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
- * @param {boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
- * @param {boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  */
-function I3dmLoader(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class I3dmLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {Resource} options.i3dmResource The {@link Resource} containing the i3dm.
+   * @param {ArrayBuffer} options.arrayBuffer The array buffer of the i3dm contents.
+   * @param {number} [options.byteOffset=0] The byte offset to the beginning of the i3dm contents in the array buffer.
+   * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
+   * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+   * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
+   * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
+   * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
+   * @param {boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
+   * @param {boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
+   */
+  constructor(options) {
+    super();
 
-  const i3dmResource = options.i3dmResource;
-  const arrayBuffer = options.arrayBuffer;
-  let baseResource = options.baseResource;
-  const byteOffset = options.byteOffset ?? 0;
-  const releaseGltfJson = options.releaseGltfJson ?? false;
-  const asynchronous = options.asynchronous ?? true;
-  const incrementallyLoadTextures = options.incrementallyLoadTextures ?? true;
-  const upAxis = options.upAxis ?? Axis.Y;
-  const forwardAxis = options.forwardAxis ?? Axis.X;
-  const loadAttributesAsTypedArray =
-    options.loadAttributesAsTypedArray ?? false;
-  const loadIndicesForWireframe = options.loadIndicesForWireframe ?? false;
-  const loadPrimitiveOutline = options.loadPrimitiveOutline ?? true;
-  const enablePick = options.enablePick ?? false;
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.i3dmResource", i3dmResource);
-  Check.typeOf.object("options.arrayBuffer", arrayBuffer);
-  //>>includeEnd('debug');
+    const i3dmResource = options.i3dmResource;
+    const arrayBuffer = options.arrayBuffer;
+    let baseResource = options.baseResource;
+    const byteOffset = options.byteOffset ?? 0;
+    const releaseGltfJson = options.releaseGltfJson ?? false;
+    const asynchronous = options.asynchronous ?? true;
+    const incrementallyLoadTextures = options.incrementallyLoadTextures ?? true;
+    const upAxis = options.upAxis ?? Axis.Y;
+    const forwardAxis = options.forwardAxis ?? Axis.X;
+    const loadAttributesAsTypedArray =
+      options.loadAttributesAsTypedArray ?? false;
+    const loadIndicesForWireframe = options.loadIndicesForWireframe ?? false;
+    const loadPrimitiveOutline = options.loadPrimitiveOutline ?? true;
+    const enablePick = options.enablePick ?? false;
 
-  baseResource = defined(baseResource) ? baseResource : i3dmResource.clone();
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options.i3dmResource", i3dmResource);
+    Check.typeOf.object("options.arrayBuffer", arrayBuffer);
+    //>>includeEnd('debug');
 
-  this._i3dmResource = i3dmResource;
-  this._baseResource = baseResource;
-  this._arrayBuffer = arrayBuffer;
-  this._byteOffset = byteOffset;
-  this._releaseGltfJson = releaseGltfJson;
-  this._asynchronous = asynchronous;
-  this._incrementallyLoadTextures = incrementallyLoadTextures;
-  this._upAxis = upAxis;
-  this._forwardAxis = forwardAxis;
-  this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
-  this._loadIndicesForWireframe = loadIndicesForWireframe;
-  this._loadPrimitiveOutline = loadPrimitiveOutline;
-  this._enablePick = enablePick;
+    baseResource = defined(baseResource) ? baseResource : i3dmResource.clone();
 
-  this._state = I3dmLoaderState.NOT_LOADED;
-  this._promise = undefined;
+    this._i3dmResource = i3dmResource;
+    this._baseResource = baseResource;
+    this._arrayBuffer = arrayBuffer;
+    this._byteOffset = byteOffset;
+    this._releaseGltfJson = releaseGltfJson;
+    this._asynchronous = asynchronous;
+    this._incrementallyLoadTextures = incrementallyLoadTextures;
+    this._upAxis = upAxis;
+    this._forwardAxis = forwardAxis;
+    this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
+    this._loadIndicesForWireframe = loadIndicesForWireframe;
+    this._loadPrimitiveOutline = loadPrimitiveOutline;
+    this._enablePick = enablePick;
 
-  this._gltfLoader = undefined;
+    this._state = I3dmLoaderState.NOT_LOADED;
+    this._promise = undefined;
 
-  // Instanced attributes are initially parsed as typed arrays, but if they
-  // do not need to be further processed (e.g. turned into transform matrices),
-  // it is more efficient to turn them into buffers. The I3dmLoader will own the
-  // resources and store them here.
-  this._buffers = [];
-  this._components = undefined;
+    this._gltfLoader = undefined;
 
-  this._transform = Matrix4.IDENTITY;
-  this._batchTable = undefined;
-  this._featureTable = undefined;
-  this._instancesLength = 0;
-}
+    // Instanced attributes are initially parsed as typed arrays, but if they
+    // do not need to be further processed (e.g. turned into transform matrices),
+    // it is more efficient to turn them into buffers. The I3dmLoader will own the
+    // resources and store them here.
+    this._buffers = [];
+    this._components = undefined;
 
-if (defined(Object.create)) {
-  I3dmLoader.prototype = Object.create(ResourceLoader.prototype);
-  I3dmLoader.prototype.constructor = I3dmLoader;
-}
+    this._transform = Matrix4.IDENTITY;
+    this._batchTable = undefined;
+    this._featureTable = undefined;
+    this._instancesLength = 0;
+  }
 
-Object.defineProperties(I3dmLoader.prototype, {
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
@@ -140,11 +135,10 @@ Object.defineProperties(I3dmLoader.prototype, {
    * @readonly
    * @private
    */
-  texturesLoaded: {
-    get: function () {
-      return this._gltfLoader?.texturesLoaded;
-    },
-  },
+  get texturesLoaded() {
+    return this._gltfLoader?.texturesLoaded;
+  }
+
   /**
    * The cache key of the resource
    *
@@ -154,11 +148,9 @@ Object.defineProperties(I3dmLoader.prototype, {
    * @readonly
    * @private
    */
-  cacheKey: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get cacheKey() {
+    return undefined;
+  }
 
   /**
    * The loaded components.
@@ -170,117 +162,174 @@ Object.defineProperties(I3dmLoader.prototype, {
    * @readonly
    * @private
    */
-  components: {
-    get: function () {
-      return this._components;
-    },
-  },
-});
+  get components() {
+    return this._components;
+  }
 
-/**
- * Loads the resource.
- * @returns {Promise<I3dmLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
- */
-I3dmLoader.prototype.load = function () {
-  if (defined(this._promise)) {
+  /**
+   * Loads the resource.
+   * @returns {Promise<I3dmLoader>} A promise which resolves to the loader when the resource loading is completed.
+   * @private
+   */
+  load() {
+    if (defined(this._promise)) {
+      return this._promise;
+    }
+
+    // Parse the i3dm into its various sections.
+    const i3dm = I3dmParser.parse(this._arrayBuffer, this._byteOffset);
+
+    const featureTableJson = i3dm.featureTableJson;
+    const featureTableBinary = i3dm.featureTableBinary;
+    const batchTableJson = i3dm.batchTableJson;
+    const batchTableBinary = i3dm.batchTableBinary;
+    const gltfFormat = i3dm.gltfFormat;
+
+    // Generate the feature table.
+    const featureTable = new Cesium3DTileFeatureTable(
+      featureTableJson,
+      featureTableBinary,
+    );
+    this._featureTable = featureTable;
+
+    // Get the number of instances in the i3dm.
+    const instancesLength = featureTable.getGlobalProperty("INSTANCES_LENGTH");
+    featureTable.featuresLength = instancesLength;
+    if (!defined(instancesLength)) {
+      throw new RuntimeError(
+        "Feature table global property: INSTANCES_LENGTH must be defined",
+      );
+    }
+    this._instancesLength = instancesLength;
+
+    // Get the RTC center, if available, and set the loader's transform.
+    const rtcCenter = featureTable.getGlobalProperty(
+      "RTC_CENTER",
+      ComponentDatatype.FLOAT,
+      3,
+    );
+    if (defined(rtcCenter)) {
+      this._transform = Matrix4.fromTranslation(
+        Cartesian3.fromArray(rtcCenter),
+      );
+    }
+
+    // Save the batch table section to use for StructuralMetadata generation.
+    this._batchTable = {
+      json: batchTableJson,
+      binary: batchTableBinary,
+    };
+
+    const loaderOptions = {
+      upAxis: this._upAxis,
+      forwardAxis: this._forwardAxis,
+      releaseGltfJson: this._releaseGltfJson,
+      incrementallyLoadTextures: this._incrementallyLoadTextures,
+      loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
+      enablePick: this._enablePick,
+      loadIndicesForWireframe: this._loadIndicesForWireframe,
+      loadPrimitiveOutline: this._loadPrimitiveOutline,
+    };
+
+    if (gltfFormat === 0) {
+      let gltfUrl = getStringFromTypedArray(i3dm.gltf);
+
+      // We need to remove padding from the end of the model URL in case this tile was part of a composite tile.
+      // This removes all white space and null characters from the end of the string.
+      gltfUrl = gltfUrl.replace(/[\s\0]+$/, "");
+      const gltfResource = this._baseResource.getDerivedResource({
+        url: gltfUrl,
+      });
+      loaderOptions.gltfResource = gltfResource;
+      loaderOptions.baseResource = gltfResource;
+    } else {
+      loaderOptions.gltfResource = this._i3dmResource;
+      loaderOptions.typedArray = i3dm.gltf;
+    }
+
+    // Create the GltfLoader, update the state and load the glTF.
+    const gltfLoader = new GltfLoader(loaderOptions);
+
+    this._gltfLoader = gltfLoader;
+    this._state = I3dmLoaderState.LOADING;
+
+    this._promise = gltfLoader
+      .load()
+      .then(() => {
+        if (this.isDestroyed()) {
+          return;
+        }
+
+        this._state = I3dmLoaderState.PROCESSING;
+        return this;
+      })
+      .catch((error) => {
+        if (this.isDestroyed()) {
+          return;
+        }
+        throw handleError(this, error);
+      });
+
     return this._promise;
   }
 
-  // Parse the i3dm into its various sections.
-  const i3dm = I3dmParser.parse(this._arrayBuffer, this._byteOffset);
+  process(frameState) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("frameState", frameState);
+    //>>includeEnd('debug');
 
-  const featureTableJson = i3dm.featureTableJson;
-  const featureTableBinary = i3dm.featureTableBinary;
-  const batchTableJson = i3dm.batchTableJson;
-  const batchTableBinary = i3dm.batchTableBinary;
-  const gltfFormat = i3dm.gltfFormat;
+    if (this._state === I3dmLoaderState.READY) {
+      return true;
+    }
 
-  // Generate the feature table.
-  const featureTable = new Cesium3DTileFeatureTable(
-    featureTableJson,
-    featureTableBinary,
-  );
-  this._featureTable = featureTable;
+    const gltfLoader = this._gltfLoader;
+    let ready = false;
+    if (this._state === I3dmLoaderState.PROCESSING) {
+      ready = gltfLoader.process(frameState);
+    }
 
-  // Get the number of instances in the i3dm.
-  const instancesLength = featureTable.getGlobalProperty("INSTANCES_LENGTH");
-  featureTable.featuresLength = instancesLength;
-  if (!defined(instancesLength)) {
-    throw new RuntimeError(
-      "Feature table global property: INSTANCES_LENGTH must be defined",
+    if (!ready) {
+      return false;
+    }
+
+    const components = gltfLoader.components;
+
+    // Combine the RTC_CENTER transform from the i3dm and the CESIUM_RTC
+    // transform from the glTF. In practice CESIUM_RTC is not set for
+    // instanced models but multiply the transforms just in case.
+    components.transform = Matrix4.multiplyTransformation(
+      this._transform,
+      components.transform,
+      components.transform,
     );
-  }
-  this._instancesLength = instancesLength;
 
-  // Get the RTC center, if available, and set the loader's transform.
-  const rtcCenter = featureTable.getGlobalProperty(
-    "RTC_CENTER",
-    ComponentDatatype.FLOAT,
-    3,
-  );
-  if (defined(rtcCenter)) {
-    this._transform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
-  }
+    createInstances(this, components, frameState);
+    createStructuralMetadata(this, components);
+    this._components = components;
 
-  // Save the batch table section to use for StructuralMetadata generation.
-  this._batchTable = {
-    json: batchTableJson,
-    binary: batchTableBinary,
-  };
+    // Now that we have the parsed components, we can release the array buffer
+    this._arrayBuffer = undefined;
 
-  const loaderOptions = {
-    upAxis: this._upAxis,
-    forwardAxis: this._forwardAxis,
-    releaseGltfJson: this._releaseGltfJson,
-    incrementallyLoadTextures: this._incrementallyLoadTextures,
-    loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
-    enablePick: this._enablePick,
-    loadIndicesForWireframe: this._loadIndicesForWireframe,
-    loadPrimitiveOutline: this._loadPrimitiveOutline,
-  };
-
-  if (gltfFormat === 0) {
-    let gltfUrl = getStringFromTypedArray(i3dm.gltf);
-
-    // We need to remove padding from the end of the model URL in case this tile was part of a composite tile.
-    // This removes all white space and null characters from the end of the string.
-    gltfUrl = gltfUrl.replace(/[\s\0]+$/, "");
-    const gltfResource = this._baseResource.getDerivedResource({
-      url: gltfUrl,
-    });
-    loaderOptions.gltfResource = gltfResource;
-    loaderOptions.baseResource = gltfResource;
-  } else {
-    loaderOptions.gltfResource = this._i3dmResource;
-    loaderOptions.typedArray = i3dm.gltf;
+    this._state = I3dmLoaderState.READY;
+    return true;
   }
 
-  // Create the GltfLoader, update the state and load the glTF.
-  const gltfLoader = new GltfLoader(loaderOptions);
+  isUnloaded() {
+    return this._state === I3dmLoaderState.UNLOADED;
+  }
 
-  this._gltfLoader = gltfLoader;
-  this._state = I3dmLoaderState.LOADING;
+  unload() {
+    if (defined(this._gltfLoader) && !this._gltfLoader.isDestroyed()) {
+      this._gltfLoader.unload();
+    }
 
-  this._promise = gltfLoader
-    .load()
-    .then(() => {
-      if (this.isDestroyed()) {
-        return;
-      }
+    unloadBuffers(this);
 
-      this._state = I3dmLoaderState.PROCESSING;
-      return this;
-    })
-    .catch((error) => {
-      if (this.isDestroyed()) {
-        return;
-      }
-      throw handleError(this, error);
-    });
-
-  return this._promise;
-};
+    this._components = undefined;
+    this._arrayBuffer = undefined;
+    this._state = I3dmLoaderState.UNLOADED;
+  }
+}
 
 function handleError(i3dmLoader, error) {
   i3dmLoader.unload();
@@ -288,47 +337,6 @@ function handleError(i3dmLoader, error) {
   const errorMessage = "Failed to load i3dm";
   return i3dmLoader.getError(errorMessage, error);
 }
-
-I3dmLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
-
-  if (this._state === I3dmLoaderState.READY) {
-    return true;
-  }
-
-  const gltfLoader = this._gltfLoader;
-  let ready = false;
-  if (this._state === I3dmLoaderState.PROCESSING) {
-    ready = gltfLoader.process(frameState);
-  }
-
-  if (!ready) {
-    return false;
-  }
-
-  const components = gltfLoader.components;
-
-  // Combine the RTC_CENTER transform from the i3dm and the CESIUM_RTC
-  // transform from the glTF. In practice CESIUM_RTC is not set for
-  // instanced models but multiply the transforms just in case.
-  components.transform = Matrix4.multiplyTransformation(
-    this._transform,
-    components.transform,
-    components.transform,
-  );
-
-  createInstances(this, components, frameState);
-  createStructuralMetadata(this, components);
-  this._components = components;
-
-  // Now that we have the parsed components, we can release the array buffer
-  this._arrayBuffer = undefined;
-
-  this._state = I3dmLoaderState.READY;
-  return true;
-};
 
 function createStructuralMetadata(loader, components) {
   const batchTable = loader._batchTable;
@@ -863,21 +871,5 @@ function unloadBuffers(loader) {
   }
   buffers.length = 0;
 }
-
-I3dmLoader.prototype.isUnloaded = function () {
-  return this._state === I3dmLoaderState.UNLOADED;
-};
-
-I3dmLoader.prototype.unload = function () {
-  if (defined(this._gltfLoader) && !this._gltfLoader.isDestroyed()) {
-    this._gltfLoader.unload();
-  }
-
-  unloadBuffers(this);
-
-  this._components = undefined;
-  this._arrayBuffer = undefined;
-  this._state = I3dmLoaderState.UNLOADED;
-};
 
 export default I3dmLoader;

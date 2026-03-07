@@ -398,7 +398,7 @@ function loadBufferSource(texture, source) {
  * @param {number} xOffset The texel x coordinate of the lower left corner of the subregion of the texture to be updated.
  * @param {number} yOffset The texel y coordinate of the lower left corner of the subregion of the texture to be updated.
  * @param {number} width The width of the source data, in pixels.
- * @param {number} width The height of the source data, in pixels.
+ * @param {number} height The height of the source data, in pixels.
  *
  * @private
  */
