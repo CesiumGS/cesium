@@ -906,6 +906,47 @@ describe(
         expect(spyUpdate.calls.argsFor(4)[2]).toEqual(0.0);
       });
     });
+
+    it("does not animate when model.show is false", function () {
+      return loadAndZoomToModelAsync(
+        {
+          gltf: animatedTriangleUrl,
+        },
+        scene,
+      ).then(function (model) {
+        const time = defaultDate;
+        const animationCollection = model.activeAnimations;
+        const animation = animationCollection.add({
+          index: 0,
+          startTime: time,
+        });
+
+        const spyUpdate = jasmine.createSpy("listener");
+        animation.update.addEventListener(spyUpdate);
+
+        // Render with model shown - animation should update
+        scene.renderForSpecs(time);
+        expect(spyUpdate.calls.count()).toEqual(1);
+
+        // Hide the model
+        model.show = false;
+
+        // Render with model hidden - animation should NOT update
+        scene.renderForSpecs(
+          JulianDate.addSeconds(time, 1.0, scratchJulianDate),
+        );
+        expect(spyUpdate.calls.count()).toEqual(1); // Still 1, no new updates
+
+        // Show the model again
+        model.show = true;
+
+        // Render with model shown again - animation should update
+        scene.renderForSpecs(
+          JulianDate.addSeconds(time, 2.0, scratchJulianDate),
+        );
+        expect(spyUpdate.calls.count()).toEqual(2); // Now 2, animation updated
+      });
+    });
   },
   "WebGL",
 );
