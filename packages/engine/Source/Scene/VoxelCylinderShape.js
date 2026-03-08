@@ -416,8 +416,8 @@ VoxelCylinderShape.prototype.update = function (
 
   if (shapeAngleRange <= epsilonAngle) {
     shaderUniforms.cylinderLocalToShapeUvAngle = Cartesian2.fromElements(
-      0.0,
       1.0,
+      0.0,
       shaderUniforms.cylinderLocalToShapeUvAngle,
     );
   } else {
