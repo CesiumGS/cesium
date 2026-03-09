@@ -30,14 +30,16 @@ const cartographicScratch = new Cartographic();
  * @param {Cartesian3[]} positions An array of vertex positions in ECEF (world) coordinates.
  * @param {object} [options] Options object.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid for geographic projection.
- * @returns {PolygonHierarchy|undefined} A {@link PolygonHierarchy} with the convex hull boundary,
+ * @returns {{hierarchy: PolygonHierarchy, minHeight: number, maxHeight: number}|undefined}
+ *   An object containing the convex hull boundary and cartographic height range,
  *   or `undefined` if fewer than 3 unique positions are provided.
  *
  * @exception {DeveloperError} positions is required.
  * @exception {DeveloperError} positions must contain at least 3 points.
  *
  * @example
- * const hierarchy = Cesium.PolygonBoundaryExtractor.convexHullFromPositions(positions);
+ * const result = Cesium.PolygonBoundaryExtractor.convexHullFromPositions(positions);
+ * // result.hierarchy, result.minHeight, result.maxHeight
  */
 PolygonBoundaryExtractor.convexHullFromPositions = function (
   positions,
@@ -45,7 +47,11 @@ PolygonBoundaryExtractor.convexHullFromPositions = function (
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("positions", positions);
-  Check.typeOf.number.greaterThanOrEquals("positions.length", positions.length, 3);
+  Check.typeOf.number.greaterThanOrEquals(
+    "positions.length",
+    positions.length,
+    3,
+  );
   //>>includeEnd('debug');
 
   options = defined(options) ? options : {};
@@ -53,8 +59,10 @@ PolygonBoundaryExtractor.convexHullFromPositions = function (
     ? options.ellipsoid
     : Ellipsoid.default;
 
-  // Project to 2D (lon, lat)
+  // Project to 2D (lon, lat) and track height range
   const points2D = new Array(positions.length);
+  let minHeight = Number.POSITIVE_INFINITY;
+  let maxHeight = Number.NEGATIVE_INFINITY;
   for (let i = 0; i < positions.length; i++) {
     const carto = Cartographic.fromCartesian(
       positions[i],
@@ -65,6 +73,12 @@ PolygonBoundaryExtractor.convexHullFromPositions = function (
       points2D[i] = new Cartesian2(0, 0);
     } else {
       points2D[i] = new Cartesian2(carto.longitude, carto.latitude);
+      if (carto.height < minHeight) {
+        minHeight = carto.height;
+      }
+      if (carto.height > maxHeight) {
+        maxHeight = carto.height;
+      }
     }
   }
 
@@ -86,7 +100,11 @@ PolygonBoundaryExtractor.convexHullFromPositions = function (
     );
   }
 
-  return new PolygonHierarchy(hullPositions);
+  return {
+    hierarchy: new PolygonHierarchy(hullPositions),
+    minHeight: minHeight,
+    maxHeight: maxHeight,
+  };
 };
 
 export default PolygonBoundaryExtractor;

@@ -95,6 +95,7 @@ function addPolygonGraphics(footprint, feature, _tile, entityCollection) {
           ? footprint.color.withAlpha(0.4)
           : Cesium.Color.CYAN.withAlpha(0.4),
         classificationType: Cesium.ClassificationType.TERRAIN,
+        zIndex: footprint.maxHeight,
       }),
       properties: { featureId: feature.featureId },
     }),

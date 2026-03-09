@@ -55,6 +55,8 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * @typedef {object} Cesium3DTilesetFootprintGenerator.Footprint
  * @property {PolygonHierarchy} hierarchy The polygon hierarchy for the footprint.
  * @property {Color|undefined} color The averaged color extracted from the feature geometry.
+ * @property {number} minHeight The minimum cartographic height of the feature vertices.
+ * @property {number} maxHeight The maximum cartographic height of the feature vertices.
  */
 
 /**
@@ -123,6 +125,7 @@ function createDefaultEntity(footprint, feature, tile, entityCollection) {
         outline: true,
         outlineColor: defined(footprint.color) ? footprint.color : Color.WHITE,
         classificationType: ClassificationType.TERRAIN,
+        zIndex: footprint.maxHeight,
       }),
       properties: { tilesetFeatureId: featureId },
     }),
@@ -202,11 +205,16 @@ function extractFootprintsFromTile(tile, filterFeature) {
       continue;
     }
 
-    const hierarchy =
+    const hullResult =
       PolygonBoundaryExtractor.convexHullFromPositions(positions);
-    if (defined(hierarchy)) {
+    if (defined(hullResult)) {
       const color = calculateColor(geometry.colors);
-      result.set(featureId, { hierarchy, color });
+      result.set(featureId, {
+        hierarchy: hullResult.hierarchy,
+        color,
+        minHeight: hullResult.minHeight,
+        maxHeight: hullResult.maxHeight,
+      });
     }
   }
 
