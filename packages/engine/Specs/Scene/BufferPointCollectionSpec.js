@@ -1,6 +1,7 @@
 import {
   Cartesian3,
   Color,
+  ComponentDatatype,
   BufferPoint,
   BufferPointCollection,
 } from "../../index.js";
@@ -153,6 +154,35 @@ describe("BufferPointCollection", () => {
     collection.add({ position: positions[5] }, point);
     collection._updateBoundingVolume();
 
+    expect(collection.boundingVolume.center).toEqual(center);
+    expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("positionDatatype", () => {
+    const center = new Cartesian3(1000, 0, 0);
+
+    const positions = [
+      Cartesian3.add(center, Cartesian3.UNIT_X, new Cartesian3()),
+      Cartesian3.subtract(center, Cartesian3.UNIT_X, new Cartesian3()),
+    ];
+
+    const collection = new BufferPointCollection({
+      primitiveCountMax: 3,
+      positionDatatype: ComponentDatatype.INT,
+    });
+
+    const point = new BufferPoint();
+
+    collection.add({ position: positions[0] }, point);
+    collection.add({ position: positions[1] }, point);
+
+    collection.get(0, point);
+    expect(point.getPosition()).toEqual(new Cartesian3(1001, 0, 0));
+
+    collection.get(1, point);
+    expect(point.getPosition()).toEqual(new Cartesian3(999, 0, 0));
+
+    collection._updateBoundingVolume();
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
   });

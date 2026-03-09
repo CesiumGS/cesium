@@ -100,7 +100,7 @@ class BufferPoint extends BufferPrimitive {
    * @returns {Cartesian3}
    */
   getPosition(result) {
-    const positionF64 = this._collection._positionF64;
+    const positionF64 = this._collection._positionView;
     return Cartesian3.fromArray(positionF64, this.vertexOffset * 3, result);
   }
 
@@ -117,9 +117,9 @@ class BufferPoint extends BufferPrimitive {
     assert(vertexOffset < collection.vertexCountMax, ERR_CAPACITY);
     //>>includeEnd('debug');
 
-    collection._positionF64[vertexOffset * 3] = position.x;
-    collection._positionF64[vertexOffset * 3 + 1] = position.y;
-    collection._positionF64[vertexOffset * 3 + 2] = position.z;
+    collection._positionView[vertexOffset * 3] = position.x;
+    collection._positionView[vertexOffset * 3 + 1] = position.y;
+    collection._positionView[vertexOffset * 3 + 2] = position.z;
 
     collection._makeDirtyBoundingVolume();
   }
