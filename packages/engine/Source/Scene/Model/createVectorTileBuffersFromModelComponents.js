@@ -2,6 +2,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import RuntimeError from "../../Core/RuntimeError.js";
 import BufferPoint from "../BufferPoint.js";
 import BufferPointCollection from "../BufferPointCollection.js";
 import BufferPolygon from "../BufferPolygon.js";
@@ -53,17 +54,6 @@ function readIndicesOrSequential(primitive, vertexCount) {
     return ModelReader.readIndicesAsTypedArray(indices);
   }
   return undefined;
-}
-
-function toUint32Array(values) {
-  if (values instanceof Uint32Array) {
-    return values;
-  }
-  const result = new Uint32Array(values.length);
-  for (let i = 0; i < values.length; i++) {
-    result[i] = values[i];
-  }
-  return result;
 }
 
 function getFeatureIdSource(primitive) {
@@ -274,13 +264,15 @@ function appendPolygonPrimitive(
   positions,
   indices,
 ) {
-  let triangleIndices = indices;
-  if (primitiveType === PrimitiveType.TRIANGLE_STRIP) {
-    triangleIndices =
-      ModelReader.convertTriangleStripToTriangleIndices(indices);
-  } else if (primitiveType === PrimitiveType.TRIANGLE_FAN) {
-    triangleIndices = ModelReader.convertTriangleFanToTriangleIndices(indices);
+  if (
+    primitiveType === PrimitiveType.TRIANGLE_STRIP ||
+    primitiveType === PrimitiveType.TRIANGLE_FAN
+  ) {
+    throw new RuntimeError(
+      "Vector polygons with TRIANGLE_STRIP or TRIANGLE_FAN topology are not supported.",
+    );
   }
+  const triangleIndices = indices;
 
   if (!defined(triangleIndices) || triangleIndices.length < 3) {
     return;
@@ -289,7 +281,7 @@ function appendPolygonPrimitive(
   polygonCollection.add(
     {
       positions: positions,
-      triangles: toUint32Array(triangleIndices),
+      triangles: triangleIndices,
     },
     polygonView,
   );
@@ -320,7 +312,11 @@ function appendPrimitiveToBuffers(
 
   const featureIdSource = getFeatureIdSource(primitive);
 
-  if (primitiveType === PrimitiveType.POINTS && defined(pointCollection)) {
+  if (primitiveType === PrimitiveType.POINTS) {
+    if (!defined(pointCollection)) {
+      return;
+    }
+
     for (let i = 0; i < indices.length; i++) {
       appendPointPrimitive(
         pointCollection,
@@ -333,7 +329,11 @@ function appendPrimitiveToBuffers(
     return;
   }
 
-  if (PrimitiveType.isLines(primitiveType) && defined(polylineCollection)) {
+  if (PrimitiveType.isLines(primitiveType)) {
+    if (!defined(polylineCollection)) {
+      return;
+    }
+
     if (primitiveType === PrimitiveType.LINES) {
       for (let i = 0; i + 1 < indices.length; i += 2) {
         appendPolylinePrimitive(
@@ -365,11 +365,28 @@ function appendPrimitiveToBuffers(
         positions,
         loopIndices,
       );
+    } else {
+      throw new RuntimeError(
+        `Vector polylines with primitive type ${primitiveType} are not supported.`,
+      );
     }
     return;
   }
 
-  if (PrimitiveType.isTriangles(primitiveType) && defined(polygonCollection)) {
+  if (
+    primitiveType === PrimitiveType.TRIANGLE_STRIP ||
+    primitiveType === PrimitiveType.TRIANGLE_FAN
+  ) {
+    throw new RuntimeError(
+      "Vector polygons with TRIANGLE_STRIP or TRIANGLE_FAN topology are not supported.",
+    );
+  }
+
+  if (PrimitiveType.isTriangles(primitiveType)) {
+    if (!defined(polygonCollection)) {
+      return;
+    }
+
     appendPolygonPrimitive(
       polygonCollection,
       polygonView,
@@ -378,7 +395,12 @@ function appendPrimitiveToBuffers(
       positions,
       indices,
     );
+    return;
   }
+
+  throw new RuntimeError(
+    `Vector primitives with primitive type ${primitiveType} are not supported.`,
+  );
 }
 
 function appendNodeToBuffers(
