@@ -209,7 +209,7 @@ describe("BufferPolylineCollection", () => {
     );
 
     const collection = new BufferPolylineCollection({
-      positionDatatype: ComponentDatatype.INT,
+      positionDatatype: ComponentDatatype.SHORT,
       primitiveCountMax: 2,
       vertexCountMax: 6,
     });
