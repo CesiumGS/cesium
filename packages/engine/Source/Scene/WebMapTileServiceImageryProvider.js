@@ -527,9 +527,10 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    * {@link WebMapTileServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
    * features) without communicating with the server.  Set this property to false if you know your data
    * source does not support picking features or if you don't want this provider's features to be pickable.
+   * Defaults to true for KVP encoding. For RESTful encoding, defaults to true only when
+   * {@link WebMapTileServiceImageryProvider.ConstructorOptions#getFeatureInfoUrl} is specified, and false otherwise.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {boolean}
-   * @default true
    */
   enablePickFeatures: {
     get: function () {
