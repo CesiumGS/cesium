@@ -230,6 +230,7 @@ function WebMapTileServiceImageryProvider(options) {
     pickFeatureResource.setQueryParameters({ format: format }, true);
     pickFeatureResource.setQueryParameters(parameters, true);
   } else {
+    parameters.Style = style;
     resource.setTemplateValues(parameters);
     resource.setTemplateValues({ format: format });
     pickFeatureResource.setTemplateValues(parameters);
