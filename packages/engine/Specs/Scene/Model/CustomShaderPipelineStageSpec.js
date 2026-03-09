@@ -66,6 +66,27 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
     ],
   };
 
+  const primitiveWithMetadataProperties = {
+    ...primitive,
+    propertyTextureIds: [0],
+    propertyAttributeIds: [],
+    featureIds: undefined,
+  };
+
+  const structuralMetadataWithTextureProperty = {
+    propertyTextures: [
+      {
+        class: {
+          properties: {
+            testProperty: {},
+          },
+        },
+      },
+    ],
+    propertyAttributes: [],
+    propertyTables: [],
+  };
+
   const emptyVertexShader =
     "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {}";
   const emptyFragmentShader =
@@ -933,5 +954,75 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
       ["    fsInput.attributes.positionWC = attributes.positionWC;"],
     );
+  });
+
+  it("custom shader is enabled when using metadata properties associated with the primitive", function () {
+    const customShader = new CustomShader({
+      vertexShaderText: `
+        void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
+            float myTestProperty = vsInput.metadata.testProperty;
+        }
+      `,
+      fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+            float myTestProperty = fsInput.metadata.testProperty;
+        }
+      `,
+    });
+
+    const renderResources = mockRenderResources(customShader);
+    renderResources.model.structuralMetadata =
+      structuralMetadataWithTextureProperty;
+    const shaderBuilder = renderResources.shaderBuilder;
+
+    spyOn(CustomShaderPipelineStage, "_oneTimeWarning");
+
+    CustomShaderPipelineStage.process(
+      renderResources,
+      primitiveWithMetadataProperties,
+    );
+
+    expect(CustomShaderPipelineStage._oneTimeWarning).not.toHaveBeenCalled();
+
+    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+      "HAS_CUSTOM_VERTEX_SHADER",
+    ]);
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+      "HAS_CUSTOM_FRAGMENT_SHADER",
+      "CUSTOM_SHADER_MODIFY_MATERIAL",
+    ]);
+  });
+
+  it("custom shader is disabled when using properties that do not exist on the primitive", function () {
+    const customShader = new CustomShader({
+      vertexShaderText: `
+        void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
+            float nonExistentProperty = vsInput.metadata.nonExistentProperty;
+        }
+      `,
+      fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+            float nonExistentProperty = fsInput.metadata.nonExistentProperty;
+        }
+      `,
+    });
+
+    const renderResources = mockRenderResources(customShader);
+    renderResources.model.structuralMetadata =
+      structuralMetadataWithTextureProperty;
+    const shaderBuilder = renderResources.shaderBuilder;
+
+    spyOn(CustomShaderPipelineStage, "_oneTimeWarning");
+
+    CustomShaderPipelineStage.process(
+      renderResources,
+      primitiveWithMetadataProperties,
+    );
+
+    expect(CustomShaderPipelineStage._oneTimeWarning).toHaveBeenCalled();
+    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
   });
 });

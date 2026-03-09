@@ -161,6 +161,7 @@ export async function buildStatic(config, logLevel = "warn") {
   console.log(
     `Building Sandcastle with Vite. App origin: ${__OUTER_ORIGIN__}, Viewer origin: ${__INNER_ORIGIN__}`,
   );
+  console.log("Outputting build to", config.build.outDir);
   await build({
     ...config,
     root: join(__dirname, "../"),
