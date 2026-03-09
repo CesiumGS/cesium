@@ -108,6 +108,53 @@ import GetFeatureInfoFormat from "./GetFeatureInfoFormat.js";
  * });
  * viewer.imageryLayers.addImageryProvider(weather);
  *
+ * @example
+ * // Example 4. Digital Earth AfricA waterbodies with GetFeatureInfo support (RESTful)
+ * const waterbodies = new Cesium.WebMapTileServiceImageryProvider({
+ *    url: "https://geoserver.digitalearth.africa/geoserver/gwc/service/wmts/rest/{layer}/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format={format}",
+ *    layer: "waterbodies:DEAfrica_Waterbodies",
+ *    style: "waterbodies:waterbodies_v0_0_4",
+ *    tileMatrixSetID: "EPSG:3857",
+ *    tileMatrixLabels: [
+ *      "EPSG:3857:0",
+ *      "EPSG:3857:1",
+ *      "EPSG:3857:2",
+ *      "EPSG:3857:3",
+ *      "EPSG:3857:4",
+ *      "EPSG:3857:5",
+ *      "EPSG:3857:6",
+ *      "EPSG:3857:7",
+ *      "EPSG:3857:8",
+ *      "EPSG:3857:9",
+ *      "EPSG:3857:10",
+ *      "EPSG:3857:11",
+ *      "EPSG:3857:12",
+ *      "EPSG:3857:13",
+ *      "EPSG:3857:14",
+ *      "EPSG:3857:15",
+ *      "EPSG:3857:16",
+ *      "EPSG:3857:17",
+ *      "EPSG:3857:18",
+ *      "EPSG:3857:19",
+ *      "EPSG:3857:20",
+ *      "EPSG:3857:21",
+ *      "EPSG:3857:22",
+ *      "EPSG:3857:23",
+ *      "EPSG:3857:24",
+ *      "EPSG:3857:25",
+ *      "EPSG:3857:26",
+ *      "EPSG:3857:27",
+ *      "EPSG:3857:28",
+ *      "EPSG:3857:29",
+ *      "EPSG:3857:30",
+ *    ],
+ *    format: "image/png",
+ *    enablePickFeatures: true,
+ *    getFeatureInfoUrl: "https://geoserver.digitalearth.africa/geoserver/gwc/service/wmts/rest/{layer}/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}/{j}/{i}?format={format}",
+ * });
+ *
+ * viewer.imageryLayers.addImageryProvider(waterbodies);
+ *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
