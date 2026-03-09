@@ -808,8 +808,8 @@ function generateGltfBuffer(
     componentType: 5126,
     count: meshPositions.length / 3,
     type: "VEC3",
-    max: [minX, minY, minZ],
-    min: [maxX, maxY, maxZ],
+    min: [minX, minY, minZ],
+    max: [maxX, maxY, maxZ],
   });
 
   // NORMALS
