@@ -14,6 +14,7 @@
 
 #### Fixes :wrench:
 
+- Fixed a crash when decoding large Gaussian splat SPZ files with high spherical harmonics degree. [#13287](https://github.com/CesiumGS/cesium/pull/13287)
 - Fixed Gaussian splat `modelMatrix` not being correctly applied to splat positions, rotations, and scales when the tileset transform changes. Fix spherical harmonic view direction being evaluated in the wrong coordinate frame in Gaussian splat rendering, causing subtle color errors for datasets without an embedded axis-compensation matrix.[#13245](https://github.com/CesiumGS/cesium/pull/13245)
 - Fixed a WebGL crash when rendering Gaussian splat tilesets with more than ~16 million splats. [#13235](https://github.com/CesiumGS/cesium/pull/13235)
 - Fixed memory leak when rendering Gaussian splat 3D tilesets. [#13229](https://github.com/CesiumGS/cesium/pull/13229/)
