@@ -19,21 +19,6 @@ import GetFeatureInfoFormat from "./GetFeatureInfoFormat.js";
  * @property {string} layer The layer name for WMTS requests.
  * @property {string} style The style name for WMTS requests.
  * @property {string} tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
- * @property {Array} [tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
- * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
- * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
- * @property {object} [dimensions] A object containing static dimensions and their values.
- * @property {number} [tileWidth=256] The tile width in pixels.
- * @property {number} [tileHeight=256] The tile height in pixels.
- * @property {TilingScheme} [tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
- * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
- * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
- * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
- * @property {string|string[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
- *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
- *                          an array, each element in the array is a subdomain.
  * @property {boolean} [enablePickFeatures] If true, {@link WebMapTileServiceImageryProvider#pickFeatures} will invoke
  *                          the GetFeatureInfo operation on the WMTS server and return the features included in the response.  If false,
  *                          {@link WebMapTileServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
@@ -41,10 +26,25 @@ import GetFeatureInfoFormat from "./GetFeatureInfoFormat.js";
  *                          GetFeatureInfo or if you don't want this provider's features to be pickable.
  *                          Defaults to true for KVP encoding. For RESTful encoding, defaults to true only when
  *                          {@link WebMapTileServiceImageryProvider.ConstructorOptions#getFeatureInfoUrl} is specified, and false otherwise.
+ * @property {object} [getFeatureInfoParameters] Additional parameters to include in GetFeatureInfo requests. Keys are lowercased internally.
+ * @property {Resource|string} [getFeatureInfoUrl] The GetFeatureInfo URL of the WMTS service. If not specified, the value of <code>url</code> is used.
  * @property {GetFeatureInfoFormat[]} [getFeatureInfoFormats=WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
  *                          in which to try WMTS GetFeatureInfo requests.
- * @property {Resource|string} [getFeatureInfoUrl] The GetFeatureInfo URL of the WMTS service. If not specified, the value of <code>url</code> is used.
- * @property {object} [getFeatureInfoParameters] Additional parameters to include in GetFeatureInfo requests. Keys are lowercased internally.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
+ * @property {TilingScheme} [tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {number} [tileWidth=256] The tile width in pixels.
+ * @property {number} [tileHeight=256] The tile height in pixels.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {Array} [tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {string|string[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+ *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
+ *                          an array, each element in the array is a subdomain.
+ * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
+ * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
+ * @property {object} [dimensions] A object containing static dimensions and their values.
  */
 
 /**
