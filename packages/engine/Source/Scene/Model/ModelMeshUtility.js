@@ -1,6 +1,10 @@
+import AttributeCompression from "../../Core/AttributeCompression.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import AttributeType from "../AttributeType.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * Shared utilities for traversing model scene graphs.
@@ -159,6 +163,98 @@ ModelMeshUtility.getInstanceTransforms = function (
   }
 
   return transforms;
+};
+
+/**
+ * Reads the position attribute data from a primitive, including
+ * quantization metadata and stride/offset info.
+ *
+ * @param {object} primitive The model primitive.
+ * @param {FrameState} [frameState] Frame state, needed for GPU readback of vertex buffers.
+ * @returns {object|undefined} An object with { vertices, elementStride, offset, quantization, vertexCount }, or undefined if data is unavailable.
+ *
+ * @private
+ */
+ModelMeshUtility.readPositionData = function (primitive, frameState) {
+  const positionAttribute = ModelUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.POSITION,
+  );
+
+  if (!defined(positionAttribute)) {
+    return undefined;
+  }
+
+  const byteOffset = positionAttribute.byteOffset;
+  const byteStride = positionAttribute.byteStride;
+  const vertexCount = positionAttribute.count;
+
+  let vertices = positionAttribute.typedArray;
+  let componentDatatype = positionAttribute.componentDatatype;
+  let attributeType = positionAttribute.type;
+
+  const quantization = positionAttribute.quantization;
+  if (defined(quantization)) {
+    componentDatatype = quantization.componentDatatype;
+    attributeType = quantization.type;
+  }
+
+  const numComponents = AttributeType.getNumberOfComponents(attributeType);
+  const bytes = ComponentDatatype.getSizeInBytes(componentDatatype);
+  const isInterleaved =
+    !defined(vertices) &&
+    defined(byteStride) &&
+    byteStride !== numComponents * bytes;
+
+  let elementStride = numComponents;
+  let offset = 0;
+  if (isInterleaved) {
+    elementStride = byteStride / bytes;
+    offset = byteOffset / bytes;
+  }
+  const elementCount = vertexCount * elementStride;
+
+  if (!defined(vertices)) {
+    const verticesBuffer = positionAttribute.buffer;
+
+    if (
+      defined(verticesBuffer) &&
+      defined(frameState) &&
+      frameState.context.webgl2
+    ) {
+      vertices = ComponentDatatype.createTypedArray(
+        componentDatatype,
+        elementCount,
+      );
+      verticesBuffer.getBufferData(
+        vertices,
+        isInterleaved ? 0 : byteOffset,
+        0,
+        elementCount,
+      );
+    }
+
+    if (quantization && positionAttribute.normalized) {
+      vertices = AttributeCompression.dequantize(
+        vertices,
+        componentDatatype,
+        attributeType,
+        vertexCount,
+      );
+    }
+  }
+
+  if (!defined(vertices)) {
+    return undefined;
+  }
+
+  return {
+    vertices: vertices,
+    elementStride: elementStride,
+    offset: offset,
+    quantization: quantization,
+    vertexCount: vertexCount,
+  };
 };
 
 export default ModelMeshUtility;

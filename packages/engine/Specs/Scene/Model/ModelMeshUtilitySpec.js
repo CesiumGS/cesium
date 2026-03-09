@@ -1,8 +1,10 @@
 import {
+  AttributeType,
   Cartesian3,
   ComponentDatatype,
   Matrix4,
   ModelMeshUtility,
+  VertexAttributeSemantic,
 } from "../../../index.js";
 
 describe("Scene/Model/ModelMeshUtility", function () {
@@ -416,6 +418,191 @@ describe("Scene/Model/ModelMeshUtility", function () {
 
       expect(mockBuffer.getBufferData).not.toHaveBeenCalled();
       expect(transforms.length).toBe(1);
+    });
+  });
+
+  describe("readPositionData", function () {
+    function createMockPrimitive(positionAttributeOptions) {
+      const attributes = [];
+      if (defined(positionAttributeOptions)) {
+        attributes.push(
+          Object.assign(
+            {
+              semantic: VertexAttributeSemantic.POSITION,
+              componentDatatype: ComponentDatatype.FLOAT,
+              type: AttributeType.VEC3,
+              count: 3,
+              byteOffset: 0,
+              byteStride: undefined,
+              typedArray: undefined,
+              quantization: undefined,
+              buffer: undefined,
+              normalized: false,
+            },
+            positionAttributeOptions,
+          ),
+        );
+      }
+      return { attributes: attributes };
+    }
+
+    function defined(value) {
+      return value !== undefined && value !== null;
+    }
+
+    it("returns undefined when primitive has no position attribute", function () {
+      const primitive = createMockPrimitive();
+      const result = ModelMeshUtility.readPositionData(primitive);
+      expect(result).toBeUndefined();
+    });
+
+    it("returns position data from a CPU typed array", function () {
+      const positions = new Float32Array([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+      const primitive = createMockPrimitive({
+        typedArray: positions,
+        count: 3,
+      });
+
+      const result = ModelMeshUtility.readPositionData(primitive);
+
+      expect(result).toBeDefined();
+      expect(result.vertices).toBe(positions);
+      expect(result.elementStride).toBe(3);
+      expect(result.offset).toBe(0);
+      expect(result.quantization).toBeUndefined();
+      expect(result.vertexCount).toBe(3);
+    });
+
+    it("uses quantization metadata when present", function () {
+      const positions = new Uint16Array([100, 200, 300, 400, 500, 600]);
+      const quantization = {
+        componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+        type: AttributeType.VEC3,
+      };
+      const primitive = createMockPrimitive({
+        typedArray: positions,
+        count: 2,
+        quantization: quantization,
+      });
+
+      const result = ModelMeshUtility.readPositionData(primitive);
+
+      expect(result).toBeDefined();
+      expect(result.vertices).toBe(positions);
+      expect(result.quantization).toBe(quantization);
+      expect(result.elementStride).toBe(3);
+      expect(result.vertexCount).toBe(2);
+    });
+
+    it("computes interleaved stride and offset", function () {
+      // VEC3 FLOAT = 3 components * 4 bytes = 12 bytes
+      // byteStride of 24 means interleaved with other data
+      const interleaved = new Float32Array([
+        1, 2, 3, 0, 0, 0, 4, 5, 6, 0, 0, 0,
+      ]);
+
+      const mockBuffer = {
+        getBufferData: function (outputArray) {
+          for (let i = 0; i < interleaved.length; i++) {
+            outputArray[i] = interleaved[i];
+          }
+        },
+      };
+
+      const primitive = createMockPrimitive({
+        count: 2,
+        byteStride: 24,
+        byteOffset: 0,
+        buffer: mockBuffer,
+      });
+
+      const frameState = {
+        context: { webgl2: true },
+      };
+
+      const result = ModelMeshUtility.readPositionData(primitive, frameState);
+
+      expect(result).toBeDefined();
+      expect(result.elementStride).toBe(6);
+      expect(result.offset).toBe(0);
+      expect(result.vertexCount).toBe(2);
+    });
+
+    it("falls back to GPU readback when typed array is missing", function () {
+      const gpuData = new Float32Array([10, 20, 30, 40, 50, 60]);
+
+      const mockBuffer = {
+        getBufferData: function (outputArray) {
+          for (let i = 0; i < gpuData.length; i++) {
+            outputArray[i] = gpuData[i];
+          }
+        },
+      };
+
+      const primitive = createMockPrimitive({
+        count: 2,
+        buffer: mockBuffer,
+      });
+
+      const frameState = {
+        context: { webgl2: true },
+      };
+
+      const result = ModelMeshUtility.readPositionData(primitive, frameState);
+
+      expect(result).toBeDefined();
+      expect(result.vertices.length).toBe(6);
+      expect(result.vertexCount).toBe(2);
+    });
+
+    it("returns undefined when no typed array and no frameState", function () {
+      const primitive = createMockPrimitive({
+        count: 2,
+        buffer: {},
+      });
+
+      const result = ModelMeshUtility.readPositionData(primitive);
+      expect(result).toBeUndefined();
+    });
+
+    it("returns undefined when no typed array and no buffer", function () {
+      const primitive = createMockPrimitive({
+        count: 2,
+      });
+
+      const result = ModelMeshUtility.readPositionData(primitive);
+      expect(result).toBeUndefined();
+    });
+
+    it("computes interleaved offset from byteOffset", function () {
+      // byteStride 32 with FLOAT VEC3 (12 bytes) = interleaved
+      // byteOffset 8 / 4 bytes = offset of 2
+      const data = new Float32Array(16);
+
+      const mockBuffer = {
+        getBufferData: function (outputArray) {
+          for (let i = 0; i < data.length; i++) {
+            outputArray[i] = data[i];
+          }
+        },
+      };
+
+      const primitive = createMockPrimitive({
+        count: 2,
+        byteStride: 32,
+        byteOffset: 8,
+        buffer: mockBuffer,
+      });
+
+      const frameState = {
+        context: { webgl2: true },
+      };
+
+      const result = ModelMeshUtility.readPositionData(primitive, frameState);
+
+      expect(result).toBeDefined();
+      expect(result.elementStride).toBe(8);
+      expect(result.offset).toBe(2);
     });
   });
 });

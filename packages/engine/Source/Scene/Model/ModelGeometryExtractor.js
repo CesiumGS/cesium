@@ -194,33 +194,6 @@ function getFeatureIdValue(featureIdData, vertexIndex) {
 }
 
 /**
- * Reads vertex positions from the position attribute.
- * Handles CPU typed arrays and GPU readback.
- * @private
- */
-function readPositionData(positionAttribute) {
-  const vertices = positionAttribute.typedArray;
-  let attributeType = positionAttribute.type;
-
-  const quantization = positionAttribute.quantization;
-  if (defined(quantization)) {
-    attributeType = quantization.type;
-  }
-
-  const numComponents = AttributeType.getNumberOfComponents(attributeType);
-
-  const elementStride = numComponents;
-  const offset = 0;
-
-  return {
-    vertices: vertices,
-    elementStride: elementStride,
-    offset: offset,
-    quantization: quantization,
-  };
-}
-
-/**
  * Reads indices from the primitive.
  * @private
  */
@@ -360,18 +333,9 @@ function extractAttributesFromPrimitive(
   result,
 ) {
   // Look up requested attributes
-  let positionAttribute, posData;
+  let posData;
   if (extractPositions) {
-    positionAttribute = ModelUtility.getAttributeBySemantic(
-      primitive,
-      VertexAttributeSemantic.POSITION,
-    );
-    if (defined(positionAttribute)) {
-      posData = readPositionData(positionAttribute);
-      if (!defined(posData.vertices)) {
-        positionAttribute = undefined;
-      }
-    }
+    posData = ModelMeshUtility.readPositionData(primitive);
   }
 
   let colorAttribute, colorNumComponents;
@@ -391,13 +355,13 @@ function extractAttributesFromPrimitive(
   }
 
   // Nothing to extract from this primitive
-  if (!defined(positionAttribute) && !defined(colorAttribute)) {
+  if (!defined(posData) && !defined(colorAttribute)) {
     return;
   }
 
   // Use whichever attribute is available to get vertex count
-  const vertexCount = defined(positionAttribute)
-    ? positionAttribute.count
+  const vertexCount = defined(posData)
+    ? posData.vertexCount
     : colorAttribute.count;
 
   // Feature ID grouping (done once for all attributes)
@@ -434,7 +398,7 @@ function extractAttributesFromPrimitive(
 
     for (const vertexIndex of vertexIndicesSet) {
       // Positions need per-instance-transform duplication
-      if (defined(positionAttribute)) {
+      if (defined(posData)) {
         for (let t = 0; t < instanceTransforms.length; t++) {
           const worldPos = decodeAndTransformVertex(
             posData.vertices,

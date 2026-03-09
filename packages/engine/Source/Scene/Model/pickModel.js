@@ -3,7 +3,6 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
@@ -12,11 +11,8 @@ import Ray from "../../Core/Ray.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Transforms from "../../Core/Transforms.js";
 import VerticalExaggeration from "../../Core/VerticalExaggeration.js";
-import AttributeType from "../AttributeType.js";
 import SceneMode from "../SceneMode.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelMeshUtility from "./ModelMeshUtility.js";
-import ModelUtility from "./ModelUtility.js";
 
 const scratchV0 = new Cartesian3();
 const scratchV1 = new Cartesian3();
@@ -116,18 +112,12 @@ export default function pickModel(
         }
       }
 
-      const positionAttribute = ModelUtility.getAttributeBySemantic(
-        primitive,
-        VertexAttributeSemantic.POSITION,
-      );
-      const byteOffset = positionAttribute.byteOffset;
-      const byteStride = positionAttribute.byteStride;
-      const vertexCount = positionAttribute.count;
-
       if (!defined(primitive.indices)) {
         // Point clouds
         continue;
       }
+
+      const posData = ModelMeshUtility.readPositionData(primitive, frameState);
 
       let indices = primitive.indices.typedArray;
       if (!defined(indices)) {
@@ -147,58 +137,7 @@ export default function pickModel(
         }
       }
 
-      let vertices = positionAttribute.typedArray;
-      let componentDatatype = positionAttribute.componentDatatype;
-      let attributeType = positionAttribute.type;
-
-      const quantization = positionAttribute.quantization;
-      if (defined(quantization)) {
-        componentDatatype = positionAttribute.quantization.componentDatatype;
-        attributeType = positionAttribute.quantization.type;
-      }
-
-      const numComponents = AttributeType.getNumberOfComponents(attributeType);
-      const bytes = ComponentDatatype.getSizeInBytes(componentDatatype);
-      const isInterleaved =
-        !defined(vertices) &&
-        defined(byteStride) &&
-        byteStride !== numComponents * bytes;
-
-      let elementStride = numComponents;
-      let offset = 0;
-      if (isInterleaved) {
-        elementStride = byteStride / bytes;
-        offset = byteOffset / bytes;
-      }
-      const elementCount = vertexCount * elementStride;
-
-      if (!defined(vertices)) {
-        const verticesBuffer = positionAttribute.buffer;
-
-        if (defined(verticesBuffer) && frameState.context.webgl2) {
-          vertices = ComponentDatatype.createTypedArray(
-            componentDatatype,
-            elementCount,
-          );
-          verticesBuffer.getBufferData(
-            vertices,
-            isInterleaved ? 0 : byteOffset,
-            0,
-            elementCount,
-          );
-        }
-
-        if (quantization && positionAttribute.normalized) {
-          vertices = AttributeCompression.dequantize(
-            vertices,
-            componentDatatype,
-            attributeType,
-            vertexCount,
-          );
-        }
-      }
-
-      if (!defined(indices) || !defined(vertices)) {
+      if (!defined(indices) || !defined(posData)) {
         return;
       }
 
@@ -214,11 +153,11 @@ export default function pickModel(
 
         for (const instanceTransform of transforms) {
           const v0 = getVertexPosition(
-            vertices,
+            posData.vertices,
             i0,
-            offset,
-            elementStride,
-            quantization,
+            posData.offset,
+            posData.elementStride,
+            posData.quantization,
             instanceTransform,
             verticalExaggeration,
             relativeHeight,
@@ -226,11 +165,11 @@ export default function pickModel(
             scratchV0,
           );
           const v1 = getVertexPosition(
-            vertices,
+            posData.vertices,
             i1,
-            offset,
-            elementStride,
-            quantization,
+            posData.offset,
+            posData.elementStride,
+            posData.quantization,
             instanceTransform,
             verticalExaggeration,
             relativeHeight,
@@ -238,11 +177,11 @@ export default function pickModel(
             scratchV1,
           );
           const v2 = getVertexPosition(
-            vertices,
+            posData.vertices,
             i2,
-            offset,
-            elementStride,
-            quantization,
+            posData.offset,
+            posData.elementStride,
+            posData.quantization,
             instanceTransform,
             verticalExaggeration,
             relativeHeight,
