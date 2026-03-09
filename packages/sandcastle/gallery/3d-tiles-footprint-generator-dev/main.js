@@ -35,18 +35,18 @@ if (useGoogle3d) {
 
 // Load a batched 3D Tiles tileset with enableGeometryExtraction.
 
-// const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
-//   enableGeometryExtraction: true,
-// });
-
-Cesium.ITwinPlatform.defaultShareKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNTM1YTI0YTMtOWIyOS00ZTIzLWJiNWQtOWNlZGI1MjRjNzQzIiwiaWQiOiI2NTEwMzUzMi02MmU3LTRmZGQtOWNlNy1iODIxYmEyMmI5NjMiLCJleHAiOjE3NzcwNTU4MTh9.Q9MgsWWkc6bb1zHUJ7ahZjxPtaTWEjpNvRln7NS3faM";
-const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
-  iModelId: "669dde67-eb69-4e0b-bcf2-f722eee94746",
-  tilesetOptions: {
-    enableGeometryExtraction: true,
-  },
+const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
+  enableGeometryExtraction: true,
 });
+
+// Cesium.ITwinPlatform.defaultShareKey =
+//   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNTM1YTI0YTMtOWIyOS00ZTIzLWJiNWQtOWNlZGI1MjRjNzQzIiwiaWQiOiI2NTEwMzUzMi02MmU3LTRmZGQtOWNlNy1iODIxYmEyMmI5NjMiLCJleHAiOjE3NzcwNTU4MTh9.Q9MgsWWkc6bb1zHUJ7ahZjxPtaTWEjpNvRln7NS3faM";
+// const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
+//   iModelId: "669dde67-eb69-4e0b-bcf2-f722eee94746",
+//   tilesetOptions: {
+//     enableGeometryExtraction: true,
+//   },
+// });
 
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
@@ -77,21 +77,23 @@ function updateClippingPolygons() {
     });
 }
 
-function addClip(hierarchy, _feature, _tile, _entityCollection) {
+function addClip(footprint, _feature, _tile, _entityCollection) {
   clippingPolygons.push(
     new Cesium.ClippingPolygon({
-      positions: hierarchy.positions,
+      positions: footprint.hierarchy.positions,
     }),
   );
 }
 
-function addPolygonGraphics(hierarchy, feature, _tile, entityCollection) {
+function addPolygonGraphics(footprint, feature, _tile, entityCollection) {
   entityCollection.add(
     new Cesium.Entity({
       polygon: new Cesium.PolygonGraphics({
-        hierarchy: hierarchy,
+        hierarchy: footprint.hierarchy,
         heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-        material: Cesium.Color.CYAN.withAlpha(0.4),
+        material: Cesium.defined(footprint.color)
+          ? footprint.color.withAlpha(0.4)
+          : Cesium.Color.CYAN.withAlpha(0.4),
         classificationType: Cesium.ClassificationType.TERRAIN,
       }),
       properties: { featureId: feature.featureId },

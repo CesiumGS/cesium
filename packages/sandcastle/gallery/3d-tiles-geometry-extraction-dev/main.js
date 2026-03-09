@@ -17,6 +17,15 @@ const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
 // const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887123, {
 //   enableGeometryExtraction: true,
 // });
+// Cesium.ITwinPlatform.defaultShareKey =
+//   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNTM1YTI0YTMtOWIyOS00ZTIzLWJiNWQtOWNlZGI1MjRjNzQzIiwiaWQiOiI2NTEwMzUzMi02MmU3LTRmZGQtOWNlNy1iODIxYmEyMmI5NjMiLCJleHAiOjE3NzcwNTU4MTh9.Q9MgsWWkc6bb1zHUJ7ahZjxPtaTWEjpNvRln7NS3faM";
+// const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
+//   iModelId: "669dde67-eb69-4e0b-bcf2-f722eee94746",
+//   tilesetOptions: {
+//     enableGeometryExtraction: true,
+//   },
+// });
+
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 

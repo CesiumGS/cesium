@@ -19,7 +19,7 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * @property {Cesium3DTilesetFootprintGenerator.CreateEntityCallback} [createEntity] Custom entity factory. When
  *   provided, this replaces the default entity creation, giving full
  *   control over the entity that is created for each feature footprint.
- *   Receives the polygon hierarchy, the source feature, the tile, and the entity collection.
+ *   Receives the footprint, the source feature, the tile, and the entity collection.
  * @property {Cesium3DTilesetFootprintGenerator.FootprintsGeneratedCallback} [footprintsGenerated] Optional callback
  *   invoked after footprints are created for each tile. Receives the tile and
  *   the array of entities created from it.
@@ -38,7 +38,7 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * creation.
  *
  * @callback Cesium3DTilesetFootprintGenerator.CreateEntityCallback
- * @param {PolygonHierarchy} hierarchy The polygon hierarchy for the footprint.
+ * @param {Cesium3DTilesetFootprintGenerator.Footprint} footprint The footprint containing the polygon hierarchy and color.
  * @param {Cesium3DTileFeature} feature The tile feature this footprint was extracted from.
  * @param {Cesium3DTile} tile The tile that contains the feature.
  * @param {EntityCollection} entityCollection The entity collection where entities are added.
@@ -49,6 +49,12 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * @callback Cesium3DTilesetFootprintGenerator.FootprintsGeneratedCallback
  * @param {Cesium3DTile} tile The tile that was processed.
  * @param {number} count The number of footprint entities created from this tile.
+ */
+
+/**
+ * @typedef {object} Cesium3DTilesetFootprintGenerator.Footprint
+ * @property {PolygonHierarchy} hierarchy The polygon hierarchy for the footprint.
+ * @property {Color|undefined} color The averaged color extracted from the feature geometry.
  */
 
 /**
@@ -98,24 +104,24 @@ function getFeatureKey(tileKey, featureId) {
 /**
  * Creates a default footprint entity with a terrain-clamped polygon.
  *
- * @param {PolygonHierarchy} hierarchy The polygon outer ring and holes.
+ * @param {Cesium3DTilesetFootprintGenerator.Footprint} footprint The footprint containing the polygon hierarchy and color.
  * @param {Cesium3DTileFeature} feature The tile feature.
  * @param {Cesium3DTile} tile The tile that contains the feature.
  * @param {EntityCollection} entityCollection The entity collection where entities are added.
  * @private
  */
-function createDefaultEntity(hierarchy, feature, tile, entityCollection) {
+function createDefaultEntity(footprint, feature, tile, entityCollection) {
   const tileKey = getTileKey(tile);
   const featureId = feature.featureId;
   entityCollection.add(
     new Entity({
       id: getFeatureKey(tileKey, featureId),
       polygon: new PolygonGraphics({
-        hierarchy: hierarchy,
+        hierarchy: footprint.hierarchy,
         heightReference: HeightReference.CLAMP_TO_GROUND,
         fill: false,
         outline: true,
-        outlineColor: Color.WHITE,
+        outlineColor: defined(footprint.color) ? footprint.color : Color.WHITE,
         classificationType: ClassificationType.TERRAIN,
       }),
       properties: { tilesetFeatureId: featureId },
@@ -124,11 +130,36 @@ function createDefaultEntity(hierarchy, feature, tile, entityCollection) {
 }
 
 /**
+ * Averages an array of vertex colors into a single representative color.
+ *
+ * @param {Color[]} colors The vertex colors.
+ * @returns {Color|undefined} The averaged color, or undefined if the array is empty.
+ * @private
+ */
+function calculateColor(colors) {
+  if (!defined(colors) || colors.length === 0) {
+    return undefined;
+  }
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let a = 0;
+  for (let i = 0; i < colors.length; i++) {
+    r += colors[i].red;
+    g += colors[i].green;
+    b += colors[i].blue;
+    a += colors[i].alpha;
+  }
+  const len = colors.length;
+  return new Color(r / len, g / len, b / len, a / len);
+}
+
+/**
  * Extracts per-feature footprint hierarchies from a single tile.
  *
  * @param {Cesium3DTile} tile
  * @param {Cesium3DTilesetFootprintGenerator.FilterCallback} [filterFeature]
- * @returns {Map<number, PolygonHierarchy>|undefined}
+ * @returns {Map<number, Cesium3DTilesetFootprintGenerator.Footprint>|undefined}
  * @private
  */
 function extractFootprintsFromTile(tile, filterFeature) {
@@ -147,7 +178,7 @@ function extractFootprintsFromTile(tile, filterFeature) {
   // Retrieve all positions grouped by feature ID in a single pass
   const geometryMap = content.getGeometry({
     extractPositions: true,
-    extractColors: false,
+    extractColors: true,
   });
   if (!defined(geometryMap) || geometryMap.size === 0) {
     return undefined;
@@ -174,7 +205,8 @@ function extractFootprintsFromTile(tile, filterFeature) {
     const hierarchy =
       PolygonBoundaryExtractor.convexHullFromPositions(positions);
     if (defined(hierarchy)) {
-      result.set(featureId, hierarchy);
+      const color = calculateColor(geometry.colors);
+      result.set(featureId, { hierarchy, color });
     }
   }
 
@@ -205,9 +237,9 @@ function extractFootprintsFromTile(tile, filterFeature) {
  *   filterFeature: function (feature) {
  *     return feature.getProperty('height') > 10;
  *   },
- *   createEntity: function (hierarchy, feature, tile, entityCollection) {
+ *   createEntity: function (footprint, feature, tile, entityCollection) {
  *     return new Cesium.Entity({
- *       polygon: new Cesium.PolygonGraphics({ hierarchy: hierarchy }),
+ *       polygon: new Cesium.PolygonGraphics({ hierarchy: footprint.hierarchy }),
  *     });
  *   },
  * });
@@ -249,7 +281,7 @@ Cesium3DTilesetFootprintGenerator.generate = function (options) {
           const content = tile.content;
           let tileCount = 0;
 
-          for (const [fid, hierarchy] of hierarchies) {
+          for (const [fid, footprint] of hierarchies) {
             const key = getFeatureKey(tileKey, fid);
 
             // Deduplication
@@ -261,9 +293,9 @@ Cesium3DTilesetFootprintGenerator.generate = function (options) {
             const feature = content.getFeature(fid);
 
             if (defined(createEntity)) {
-              createEntity(hierarchy, feature, tile, entityCollection);
+              createEntity(footprint, feature, tile, entityCollection);
             } else {
-              createDefaultEntity(hierarchy, feature, tile, entityCollection);
+              createDefaultEntity(footprint, feature, tile, entityCollection);
             }
 
             tileCount++;
@@ -325,13 +357,13 @@ Cesium3DTilesetFootprintGenerator.generateForTile = function (options) {
   let createdCount = 0;
   const content = tile.content;
 
-  for (const [fid, hierarchy] of hierarchies) {
+  for (const [fid, footprint] of hierarchies) {
     const feature = content.getFeature(fid);
 
     if (defined(createEntity)) {
-      createEntity(hierarchy, feature, tile, entityCollection);
+      createEntity(footprint, feature, tile, entityCollection);
     } else {
-      createDefaultEntity(hierarchy, feature, tile, entityCollection);
+      createDefaultEntity(footprint, feature, tile, entityCollection);
     }
 
     createdCount++;
