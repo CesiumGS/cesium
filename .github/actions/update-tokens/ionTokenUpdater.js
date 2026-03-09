@@ -2,7 +2,7 @@ import { exit } from "process";
 import { readFile } from "fs/promises";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import { add, differenceInCalendarDays, format, setDate } from "date-fns";
+import { add, format, setDate } from "date-fns";
 
 const ION_TOKEN_CONTROLLER_TOKEN = process.env.ION_TOKEN_CONTROLLER_TOKEN;
 
@@ -74,46 +74,6 @@ export async function getKnownTokens() {
     namePattern.test(token.name),
   );
   return knownTokens;
-}
-
-/**
- * @param {number} olderThanDays
- */
-// eslint-disable-next-line
-async function deleteOldTokens(olderThanDays) {
-  // TODO: figure out how we want to manage this
-  throw new Error("don't call");
-
-  // eslint-disable-next-line
-  const existingTokens = await getKnownTokens();
-  const today = new Date();
-  for (const token of existingTokens) {
-    const dateAdded = new Date(token.dateAdded);
-    // const msToDays = 1000 / 60 / 60 / 24;
-    // const daysDiff = Math.round(
-    //   (today.getTime() - dateAdded.getTime()) / msToDays,
-    // );
-    const daysDiff = differenceInCalendarDays(today, dateAdded);
-    console.log("Checking token", token.id, token.name);
-    console.log("  days old:", daysDiff);
-    if (daysDiff > olderThanDays) {
-      console.log("  deleting");
-      try {
-        const resp = await fetch(`${BASE_URL}/v2/tokens/${token.id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${ION_TOKEN_CONTROLLER_TOKEN}`,
-          },
-        });
-        if (!resp.ok) {
-          throw new Error(`Response status: ${resp.status}`);
-        }
-      } catch (error) {
-        console.error(error);
-        exit(1);
-      }
-    }
-  }
 }
 
 /**
