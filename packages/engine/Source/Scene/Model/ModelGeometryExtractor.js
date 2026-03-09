@@ -1,4 +1,3 @@
-import AttributeCompression from "../../Core/AttributeCompression.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
@@ -194,57 +193,6 @@ function getFeatureIdValue(featureIdData, vertexIndex) {
 }
 
 /**
- * Decodes a vertex position, applying quantization dequantization if necessary,
- * then transforms it by the instance transform to produce a world-space position.
- * @private
- */
-function decodeAndTransformVertex(
-  vertices,
-  index,
-  offset,
-  elementStride,
-  quantization,
-  instanceTransform,
-  result,
-) {
-  const i = offset + index * elementStride;
-  result.x = vertices[i];
-  result.y = vertices[i + 1];
-  result.z = vertices[i + 2];
-
-  if (defined(quantization)) {
-    if (quantization.octEncoded) {
-      result = AttributeCompression.octDecodeInRange(
-        result,
-        quantization.normalizationRange,
-        result,
-      );
-
-      if (quantization.octEncodedZXY) {
-        const x = result.x;
-        result.x = result.z;
-        result.z = result.y;
-        result.y = x;
-      }
-    } else {
-      result = Cartesian3.multiplyComponents(
-        result,
-        quantization.quantizedVolumeStepSize,
-        result,
-      );
-      result = Cartesian3.add(
-        result,
-        quantization.quantizedVolumeOffset,
-        result,
-      );
-    }
-  }
-
-  result = Matrix4.multiplyByPoint(instanceTransform, result, result);
-  return result;
-}
-
-/**
  * Groups unique vertex indices by feature ID from indices or vertex count.
  * This is shared across all attribute extraction to avoid duplicate work.
  * @private
@@ -388,7 +336,7 @@ function extractAttributesFromPrimitive(
       // Positions need per-instance-transform duplication
       if (defined(posData)) {
         for (let t = 0; t < instanceTransforms.length; t++) {
-          const worldPos = decodeAndTransformVertex(
+          const worldPos = ModelMeshUtility.decodeAndTransformPosition(
             posData.vertices,
             vertexIndex,
             posData.offset,

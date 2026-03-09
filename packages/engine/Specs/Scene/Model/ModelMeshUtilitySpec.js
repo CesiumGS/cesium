@@ -733,4 +733,159 @@ describe("Scene/Model/ModelMeshUtility", function () {
       expect(result).toBeUndefined();
     });
   });
+
+  describe("decodeAndTransformPosition", function () {
+    it("reads raw position and applies identity transform", function () {
+      const vertices = new Float32Array([10, 20, 30]);
+      const result = ModelMeshUtility.decodeAndTransformPosition(
+        vertices,
+        0,
+        0,
+        3,
+        undefined,
+        Matrix4.IDENTITY,
+        new Cartesian3(),
+      );
+
+      expect(result).toEqual(new Cartesian3(10, 20, 30));
+    });
+
+    it("reads position at correct index with stride and offset", function () {
+      // Interleaved: 6 elements per vertex, position starts at offset 2
+      const vertices = new Float32Array([0, 0, 1, 2, 3, 0, 0, 0, 4, 5, 6, 0]);
+      const result = ModelMeshUtility.decodeAndTransformPosition(
+        vertices,
+        1,
+        2,
+        6,
+        undefined,
+        Matrix4.IDENTITY,
+        new Cartesian3(),
+      );
+
+      expect(result).toEqual(new Cartesian3(4, 5, 6));
+    });
+
+    it("applies instance transform", function () {
+      const vertices = new Float32Array([1, 0, 0]);
+      const transform = Matrix4.fromTranslation(new Cartesian3(10, 20, 30));
+
+      const result = ModelMeshUtility.decodeAndTransformPosition(
+        vertices,
+        0,
+        0,
+        3,
+        undefined,
+        transform,
+        new Cartesian3(),
+      );
+
+      expect(result).toEqual(new Cartesian3(11, 20, 30));
+    });
+
+    it("applies volume dequantization before transform", function () {
+      const vertices = new Float32Array([2, 3, 4]);
+      const quantization = {
+        octEncoded: false,
+        quantizedVolumeStepSize: new Cartesian3(0.5, 0.5, 0.5),
+        quantizedVolumeOffset: new Cartesian3(10, 20, 30),
+      };
+
+      const result = ModelMeshUtility.decodeAndTransformPosition(
+        vertices,
+        0,
+        0,
+        3,
+        quantization,
+        Matrix4.IDENTITY,
+        new Cartesian3(),
+      );
+
+      // (2*0.5+10, 3*0.5+20, 4*0.5+30) = (11, 21.5, 32)
+      expect(result.x).toBeCloseTo(11, 5);
+      expect(result.y).toBeCloseTo(21.5, 5);
+      expect(result.z).toBeCloseTo(32, 5);
+    });
+
+    it("applies oct-encoded dequantization", function () {
+      // Use 0,0,0 as input — octDecodeInRange will decode it
+      // We just verify the oct path is taken (no volume math applied)
+      const vertices = new Float32Array([0, 0, 0]);
+      const quantization = {
+        octEncoded: true,
+        octEncodedZXY: false,
+        normalizationRange: 255,
+      };
+
+      const result = ModelMeshUtility.decodeAndTransformPosition(
+        vertices,
+        0,
+        0,
+        3,
+        quantization,
+        Matrix4.IDENTITY,
+        new Cartesian3(),
+      );
+
+      // Result should be a unit-ish vector from oct decoding, not the raw (0,0,0)
+      const length = Cartesian3.magnitude(result);
+      expect(length).toBeGreaterThan(0);
+    });
+
+    it("swizzles ZXY when octEncodedZXY is true", function () {
+      const vertices = new Float32Array([0, 0, 0]);
+      const quantizationNoSwizzle = {
+        octEncoded: true,
+        octEncodedZXY: false,
+        normalizationRange: 255,
+      };
+      const quantizationWithSwizzle = {
+        octEncoded: true,
+        octEncodedZXY: true,
+        normalizationRange: 255,
+      };
+
+      const noSwizzle = ModelMeshUtility.decodeAndTransformPosition(
+        vertices,
+        0,
+        0,
+        3,
+        quantizationNoSwizzle,
+        Matrix4.IDENTITY,
+        new Cartesian3(),
+      );
+
+      const withSwizzle = ModelMeshUtility.decodeAndTransformPosition(
+        vertices,
+        0,
+        0,
+        3,
+        quantizationWithSwizzle,
+        Matrix4.IDENTITY,
+        new Cartesian3(),
+      );
+
+      // After ZXY swizzle: result.x = old.z, result.z = old.y, result.y = old.x
+      expect(withSwizzle.x).toBeCloseTo(noSwizzle.z, 5);
+      expect(withSwizzle.y).toBeCloseTo(noSwizzle.x, 5);
+      expect(withSwizzle.z).toBeCloseTo(noSwizzle.y, 5);
+    });
+
+    it("returns the result parameter", function () {
+      const vertices = new Float32Array([1, 2, 3]);
+      const scratch = new Cartesian3();
+
+      const returned = ModelMeshUtility.decodeAndTransformPosition(
+        vertices,
+        0,
+        0,
+        3,
+        undefined,
+        Matrix4.IDENTITY,
+        scratch,
+      );
+
+      expect(returned).toBe(scratch);
+    });
+  });
 });

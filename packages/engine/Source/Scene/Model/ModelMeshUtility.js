@@ -1,4 +1,5 @@
 import AttributeCompression from "../../Core/AttributeCompression.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
@@ -297,6 +298,70 @@ ModelMeshUtility.readIndices = function (primitive, frameState) {
   }
 
   return indices;
+};
+
+/**
+ * Decodes a vertex position from the position data, applying quantization
+ * dequantization if necessary, then transforms it by the instance transform
+ * to produce a world-space position.
+ *
+ * @param {Float32Array|Uint16Array|Uint8Array} vertices The vertex data array.
+ * @param {number} index The vertex index.
+ * @param {number} offset Element offset within a stride for interleaved data.
+ * @param {number} elementStride Number of elements per vertex (may be larger than 3 for interleaved).
+ * @param {object} [quantization] Quantization metadata from the position attribute.
+ * @param {Matrix4} instanceTransform The instance transform matrix.
+ * @param {Cartesian3} result Scratch Cartesian3 to store the result.
+ * @returns {Cartesian3} The decoded and transformed position.
+ *
+ * @private
+ */
+ModelMeshUtility.decodeAndTransformPosition = function (
+  vertices,
+  index,
+  offset,
+  elementStride,
+  quantization,
+  instanceTransform,
+  result,
+) {
+  const i = offset + index * elementStride;
+  result.x = vertices[i];
+  result.y = vertices[i + 1];
+  result.z = vertices[i + 2];
+
+  if (defined(quantization)) {
+    if (quantization.octEncoded) {
+      result = AttributeCompression.octDecodeInRange(
+        result.x, // 260309 Fixes a bug from pickModel.js where parameter was mistakenly sent as a vector instead of expanded floats
+        result.y,
+        quantization.normalizationRange,
+        result,
+      );
+
+      if (quantization.octEncodedZXY) {
+        const x = result.x;
+        result.x = result.z;
+        result.z = result.y;
+        result.y = x;
+      }
+    } else {
+      result = Cartesian3.multiplyComponents(
+        result,
+        quantization.quantizedVolumeStepSize,
+        result,
+      );
+
+      result = Cartesian3.add(
+        result,
+        quantization.quantizedVolumeOffset,
+        result,
+      );
+    }
+  }
+
+  result = Matrix4.multiplyByPoint(instanceTransform, result, result);
+  return result;
 };
 
 export default ModelMeshUtility;

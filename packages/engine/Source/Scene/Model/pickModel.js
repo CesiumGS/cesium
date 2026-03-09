@@ -1,4 +1,3 @@
-import AttributeCompression from "../../Core/AttributeCompression.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
@@ -134,42 +133,57 @@ export default function pickModel(
         const i2 = indices[i + 2];
 
         for (const instanceTransform of transforms) {
-          const v0 = getVertexPosition(
+          const v0 = ModelMeshUtility.decodeAndTransformPosition(
             posData.vertices,
             i0,
             posData.offset,
             posData.elementStride,
             posData.quantization,
             instanceTransform,
-            verticalExaggeration,
-            relativeHeight,
-            ellipsoid,
             scratchV0,
           );
-          const v1 = getVertexPosition(
+          const v1 = ModelMeshUtility.decodeAndTransformPosition(
             posData.vertices,
             i1,
             posData.offset,
             posData.elementStride,
             posData.quantization,
             instanceTransform,
-            verticalExaggeration,
-            relativeHeight,
-            ellipsoid,
             scratchV1,
           );
-          const v2 = getVertexPosition(
+          const v2 = ModelMeshUtility.decodeAndTransformPosition(
             posData.vertices,
             i2,
             posData.offset,
             posData.elementStride,
             posData.quantization,
             instanceTransform,
-            verticalExaggeration,
-            relativeHeight,
-            ellipsoid,
             scratchV2,
           );
+
+          if (verticalExaggeration !== 1.0) {
+            VerticalExaggeration.getPosition(
+              v0,
+              ellipsoid,
+              verticalExaggeration,
+              relativeHeight,
+              v0,
+            );
+            VerticalExaggeration.getPosition(
+              v1,
+              ellipsoid,
+              verticalExaggeration,
+              relativeHeight,
+              v1,
+            );
+            VerticalExaggeration.getPosition(
+              v2,
+              ellipsoid,
+              verticalExaggeration,
+              relativeHeight,
+              v2,
+            );
+          }
 
           const t = IntersectionTests.rayTriangleParametric(
             ray,
@@ -202,67 +216,6 @@ export default function pickModel(
 
     const cartographic = projection.unproject(result, scratchPickCartographic);
     ellipsoid.cartographicToCartesian(cartographic, result);
-  }
-
-  return result;
-}
-
-function getVertexPosition(
-  vertices,
-  index,
-  offset,
-  numElements,
-  quantization,
-  instanceTransform,
-  verticalExaggeration,
-  relativeHeight,
-  ellipsoid,
-  result,
-) {
-  const i = offset + index * numElements;
-  result.x = vertices[i];
-  result.y = vertices[i + 1];
-  result.z = vertices[i + 2];
-
-  if (defined(quantization)) {
-    if (quantization.octEncoded) {
-      result = AttributeCompression.octDecodeInRange(
-        result,
-        quantization.normalizationRange,
-        result,
-      );
-
-      if (quantization.octEncodedZXY) {
-        const x = result.x;
-        result.x = result.z;
-        result.z = result.y;
-        result.y = x;
-      }
-    } else {
-      result = Cartesian3.multiplyComponents(
-        result,
-        quantization.quantizedVolumeStepSize,
-        result,
-      );
-
-      result = Cartesian3.add(
-        result,
-        quantization.quantizedVolumeOffset,
-        result,
-      );
-    }
-  }
-
-  result = Matrix4.multiplyByPoint(instanceTransform, result, result);
-
-  if (verticalExaggeration !== 1.0) {
-    VerticalExaggeration.getPosition(
-      result,
-      ellipsoid,
-      verticalExaggeration,
-      relativeHeight,
-      result,
-    );
   }
 
   return result;
