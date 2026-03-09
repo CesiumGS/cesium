@@ -474,7 +474,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
 
   /**
    * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link WebMapTileServiceImageryProvider#pickFeatures} will
-   * invoke the <code>GetFeatureInfo</code> service on the WMS server and attempt to interpret the features included in the response.  If false,
+   * invoke the <code>GetFeatureInfo</code> service on the WMTS server and attempt to interpret the features included in the response.  If false,
    * {@link WebMapTileServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
    * features) without communicating with the server.  Set this property to false if you know your data
    * source does not support picking features or if you don't want this provider's features to be pickable.
@@ -539,7 +539,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the getFeatureInfo URL of the WMS server.
+   * Gets the getFeatureInfo URL of the WMTS server.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {Resource|string}
    * @readonly
