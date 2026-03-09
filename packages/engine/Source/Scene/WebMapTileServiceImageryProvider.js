@@ -9,12 +9,6 @@ import TimeDynamicImagery from "./TimeDynamicImagery.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 import GetFeatureInfoFormat from "./GetFeatureInfoFormat.js";
 
-const defaultParameters = Object.freeze({
-  service: "WMTS",
-  version: "1.0.0",
-  request: "GetTile",
-});
-
 /**
  * @typedef {object} WebMapTileServiceImageryProvider.ConstructorOptions
  *
@@ -172,9 +166,16 @@ function WebMapTileServiceImageryProvider(options) {
     !defined(bracketMatch) ||
     (bracketMatch.length === 1 && /{s}/.test(url))
   ) {
-    resource.setQueryParameters(defaultParameters, true);
+    resource.setQueryParameters(
+      WebMapTileServiceImageryProvider.DefaultParameters,
+      true,
+    );
     this._useKvp = true;
   } else {
+    resource.setTemplateValues(
+      WebMapTileServiceImageryProvider.DefaultParameters,
+      true,
+    );
     this._useKvp = false;
   }
 
@@ -633,6 +634,21 @@ WebMapTileServiceImageryProvider.prototype.pickFeatures = function (
 
   return pickFeatures(this, x, y, level, longitude, latitude, currentInterval);
 };
+
+/**
+ * The default parameters to include in the WMTS URL to obtain images.  The values are as follows:
+ *    service=WMTS
+ *    version=1.0.0
+ *    request=GetTile
+ *
+ * @constant
+ * @type {object}
+ */
+WebMapTileServiceImageryProvider.DefaultParameters = Object.freeze({
+  service: "WMTS",
+  version: "1.0.0",
+  request: "GetTile",
+});
 
 /**
  * The default parameters to include in the WMTS URL to get feature information.  The values are as follows:
