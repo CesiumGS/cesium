@@ -81,27 +81,40 @@ const defaultParameters = Object.freeze({
  * viewer.imageryLayers.addImageryProvider(shadedRelief2);
  *
  * @example
- * // Example 3. NASA time dynamic weather data (RESTful)
+ * // Example 3: NASA time dynamic snowpack data (RESTful)
+ * // Define time intervals for the layer based on the capabilities XML
  * const times = Cesium.TimeIntervalCollection.fromIso8601({
- *     iso8601: '2015-07-30/2017-06-16/P1D',
- *     dataCallback: function dataCallback(interval, index) {
- *         return {
- *             Time: Cesium.JulianDate.toIso8601(interval.start)
- *         };
- *     }
+ *     iso8601: '2025-01-01/2025-09-01/P5D', // Use the valid interval(s) from the Dimension section
+ *     dataCallback: function(interval, index) {
+ *       // Return an object with the Time variable used in the URL template
+ *       return {
+ *           Time: Cesium.JulianDate.toIso8601(interval.start, 0)
+ *       };
+ *   }
  * });
- * const weather = new Cesium.WebMapTileServiceImageryProvider({
- *     url : 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/AMSR2_Snow_Water_Equivalent/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
- *     layer : 'AMSR2_Snow_Water_Equivalent',
- *     style : 'default',
- *     tileMatrixSetID : '2km',
- *     maximumLevel : 5,
- *     format : 'image/png',
+
+ * // Get the internal clock,  set desired start, stop, and multiplier
+ * const clock = viewer.clock;
+ * clock.startTime = Cesium.JulianDate.fromIso8601('2025-01-01');
+ * clock.currentTime = Cesium.JulianDate.fromIso8601('2025-01-01');
+ * clock.stopTime = Cesium.JulianDate.fromIso8601('2025-09-01');
+ * clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+ * clock.multiplier = 1; // 1 day per second
+ * clock.clockStep = Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+ *
+ * viewer.timeline.zoomTo(clock.startTime, clock.stopTime);
+ *
+ * const soilMoistureLayer = new Cesium.WebMapTileServiceImageryProvider({
+ *     url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/AMSRU2_Snow_Water_Equivalent_5Day/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
+ *     layer: 'AMSRU2_Snow_Water_Equivalent_5Day',
+ *     style: 'default',
+ *     tileMatrixSetID: 'GoogleMapsCompatible_Level6',
+ *     format: 'image/png',
  *     clock: clock,
  *     times: times,
- *     credit : new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
+ *     credit: new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
  * });
- * viewer.imageryLayers.addImageryProvider(weather);
+ * viewer.imageryLayers.addImageryProvider(soilMoistureLayer);
  *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
