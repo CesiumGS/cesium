@@ -194,18 +194,6 @@ function getFeatureIdValue(featureIdData, vertexIndex) {
 }
 
 /**
- * Reads indices from the primitive.
- * @private
- */
-function readIndices(primitive) {
-  if (!defined(primitive.indices)) {
-    return undefined;
-  }
-
-  return primitive.indices.typedArray;
-}
-
-/**
  * Decodes a vertex position, applying quantization dequantization if necessary,
  * then transforms it by the instance transform to produce a world-space position.
  * @private
@@ -375,7 +363,7 @@ function extractAttributesFromPrimitive(
     );
   }
 
-  const indices = readIndices(primitive);
+  const indices = ModelMeshUtility.readIndices(primitive);
   const featureVerticesMap = buildFeatureVertexMap(
     indices,
     featureIdData,

@@ -5,7 +5,6 @@ import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
 import IntersectionTests from "../../Core/IntersectionTests.js";
 import Ray from "../../Core/Ray.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -118,24 +117,7 @@ export default function pickModel(
       }
 
       const posData = ModelMeshUtility.readPositionData(primitive, frameState);
-
-      let indices = primitive.indices.typedArray;
-      if (!defined(indices)) {
-        const indicesBuffer = primitive.indices.buffer;
-        const indicesCount = primitive.indices.count;
-        const indexDatatype = primitive.indices.indexDatatype;
-        if (defined(indicesBuffer) && frameState.context.webgl2) {
-          if (indexDatatype === IndexDatatype.UNSIGNED_BYTE) {
-            indices = new Uint8Array(indicesCount);
-          } else if (indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
-            indices = new Uint16Array(indicesCount);
-          } else if (indexDatatype === IndexDatatype.UNSIGNED_INT) {
-            indices = new Uint32Array(indicesCount);
-          }
-
-          indicesBuffer.getBufferData(indices);
-        }
-      }
+      const indices = ModelMeshUtility.readIndices(primitive, frameState);
 
       if (!defined(indices) || !defined(posData)) {
         return;

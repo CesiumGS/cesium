@@ -2,6 +2,7 @@ import {
   AttributeType,
   Cartesian3,
   ComponentDatatype,
+  IndexDatatype,
   Matrix4,
   ModelMeshUtility,
   VertexAttributeSemantic,
@@ -603,6 +604,133 @@ describe("Scene/Model/ModelMeshUtility", function () {
       expect(result).toBeDefined();
       expect(result.elementStride).toBe(8);
       expect(result.offset).toBe(2);
+    });
+  });
+
+  describe("readIndices", function () {
+    it("returns undefined when primitive has no indices", function () {
+      const primitive = {};
+      const result = ModelMeshUtility.readIndices(primitive);
+      expect(result).toBeUndefined();
+    });
+
+    it("returns typed array when available", function () {
+      const typedArray = new Uint16Array([0, 1, 2, 3, 4, 5]);
+      const primitive = {
+        indices: {
+          typedArray: typedArray,
+        },
+      };
+
+      const result = ModelMeshUtility.readIndices(primitive);
+      expect(result).toBe(typedArray);
+    });
+
+    it("falls back to GPU readback for UNSIGNED_BYTE indices", function () {
+      const gpuData = new Uint8Array([0, 1, 2]);
+      const mockBuffer = {
+        getBufferData: function (outputArray) {
+          for (let i = 0; i < gpuData.length; i++) {
+            outputArray[i] = gpuData[i];
+          }
+        },
+      };
+
+      const primitive = {
+        indices: {
+          typedArray: undefined,
+          buffer: mockBuffer,
+          count: 3,
+          indexDatatype: IndexDatatype.UNSIGNED_BYTE,
+        },
+      };
+
+      const frameState = { context: { webgl2: true } };
+      const result = ModelMeshUtility.readIndices(primitive, frameState);
+
+      expect(result).toBeInstanceOf(Uint8Array);
+      expect(result.length).toBe(3);
+    });
+
+    it("falls back to GPU readback for UNSIGNED_SHORT indices", function () {
+      const gpuData = new Uint16Array([0, 1, 2]);
+      const mockBuffer = {
+        getBufferData: function (outputArray) {
+          for (let i = 0; i < gpuData.length; i++) {
+            outputArray[i] = gpuData[i];
+          }
+        },
+      };
+
+      const primitive = {
+        indices: {
+          typedArray: undefined,
+          buffer: mockBuffer,
+          count: 3,
+          indexDatatype: IndexDatatype.UNSIGNED_SHORT,
+        },
+      };
+
+      const frameState = { context: { webgl2: true } };
+      const result = ModelMeshUtility.readIndices(primitive, frameState);
+
+      expect(result).toBeInstanceOf(Uint16Array);
+      expect(result.length).toBe(3);
+    });
+
+    it("falls back to GPU readback for UNSIGNED_INT indices", function () {
+      const gpuData = new Uint32Array([0, 1, 2]);
+      const mockBuffer = {
+        getBufferData: function (outputArray) {
+          for (let i = 0; i < gpuData.length; i++) {
+            outputArray[i] = gpuData[i];
+          }
+        },
+      };
+
+      const primitive = {
+        indices: {
+          typedArray: undefined,
+          buffer: mockBuffer,
+          count: 3,
+          indexDatatype: IndexDatatype.UNSIGNED_INT,
+        },
+      };
+
+      const frameState = { context: { webgl2: true } };
+      const result = ModelMeshUtility.readIndices(primitive, frameState);
+
+      expect(result).toBeInstanceOf(Uint32Array);
+      expect(result.length).toBe(3);
+    });
+
+    it("returns undefined when no typed array and no frameState", function () {
+      const primitive = {
+        indices: {
+          typedArray: undefined,
+          buffer: {},
+          count: 3,
+          indexDatatype: IndexDatatype.UNSIGNED_SHORT,
+        },
+      };
+
+      const result = ModelMeshUtility.readIndices(primitive);
+      expect(result).toBeUndefined();
+    });
+
+    it("returns undefined when no typed array and no buffer", function () {
+      const primitive = {
+        indices: {
+          typedArray: undefined,
+          buffer: undefined,
+          count: 3,
+          indexDatatype: IndexDatatype.UNSIGNED_SHORT,
+        },
+      };
+
+      const frameState = { context: { webgl2: true } };
+      const result = ModelMeshUtility.readIndices(primitive, frameState);
+      expect(result).toBeUndefined();
     });
   });
 });

@@ -1,6 +1,7 @@
 import AttributeCompression from "../../Core/AttributeCompression.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
+import IndexDatatype from "../../Core/IndexDatatype.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -255,6 +256,47 @@ ModelMeshUtility.readPositionData = function (primitive, frameState) {
     quantization: quantization,
     vertexCount: vertexCount,
   };
+};
+
+/**
+ * Reads the index data from a primitive, falling back to GPU readback
+ * when the CPU typed array is not available.
+ *
+ * @param {object} primitive The model primitive.
+ * @param {FrameState} [frameState] Frame state, needed for GPU readback of index buffers.
+ * @returns {Uint8Array|Uint16Array|Uint32Array|undefined} The index array, or undefined if data is unavailable.
+ *
+ * @private
+ */
+ModelMeshUtility.readIndices = function (primitive, frameState) {
+  if (!defined(primitive.indices)) {
+    return undefined;
+  }
+
+  let indices = primitive.indices.typedArray;
+  if (!defined(indices)) {
+    const indicesBuffer = primitive.indices.buffer;
+    const indicesCount = primitive.indices.count;
+    const indexDatatype = primitive.indices.indexDatatype;
+
+    if (
+      defined(indicesBuffer) &&
+      defined(frameState) &&
+      frameState.context.webgl2
+    ) {
+      if (indexDatatype === IndexDatatype.UNSIGNED_BYTE) {
+        indices = new Uint8Array(indicesCount);
+      } else if (indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
+        indices = new Uint16Array(indicesCount);
+      } else if (indexDatatype === IndexDatatype.UNSIGNED_INT) {
+        indices = new Uint32Array(indicesCount);
+      }
+
+      indicesBuffer.getBufferData(indices);
+    }
+  }
+
+  return indices;
 };
 
 export default ModelMeshUtility;
