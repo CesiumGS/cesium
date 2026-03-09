@@ -1,9 +1,7 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
-import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelMeshUtility from "./ModelMeshUtility.js";
 import ModelUtility from "./ModelUtility.js";
@@ -230,31 +228,6 @@ function buildFeatureVertexMap(indices, featureIdData, vertexCount) {
 }
 
 /**
- * Reads a single vertex color from the typed array and returns a new {@link Color}.
- * Handles both normalized integer (e.g. UNSIGNED_BYTE) and float data.
- * @private
- */
-function readVertexColor(typedArray, vertexIndex, numComponents, normalized) {
-  const i = vertexIndex * numComponents;
-  let r = typedArray[i];
-  let g = typedArray[i + 1];
-  let b = typedArray[i + 2];
-  let a = numComponents === 4 ? typedArray[i + 3] : 1.0;
-
-  if (normalized) {
-    const max = typedArray instanceof Uint16Array ? 65535.0 : 255.0;
-    r /= max;
-    g /= max;
-    b /= max;
-    if (numComponents === 4) {
-      a /= max;
-    }
-  }
-
-  return new Color(r, g, b, a);
-}
-
-/**
  * Extracts requested attributes from a single primitive, grouped by feature ID.
  * Performs feature ID resolution and vertex grouping once, then reads each
  * requested attribute from the grouped vertices.
@@ -274,31 +247,18 @@ function extractAttributesFromPrimitive(
     posData = ModelMeshUtility.readPositionData(primitive);
   }
 
-  let colorAttribute, colorNumComponents;
+  let colorData;
   if (extractColors) {
-    colorAttribute = ModelUtility.getAttributeBySemantic(
-      primitive,
-      VertexAttributeSemantic.COLOR,
-      0,
-    );
-    if (defined(colorAttribute) && defined(colorAttribute.typedArray)) {
-      colorNumComponents = AttributeType.getNumberOfComponents(
-        colorAttribute.type,
-      );
-    } else {
-      colorAttribute = undefined;
-    }
+    colorData = ModelMeshUtility.readColorData(primitive);
   }
 
   // Nothing to extract from this primitive
-  if (!defined(posData) && !defined(colorAttribute)) {
+  if (!defined(posData) && !defined(colorData)) {
     return;
   }
 
   // Use whichever attribute is available to get vertex count
-  const vertexCount = defined(posData)
-    ? posData.vertexCount
-    : colorAttribute.count;
+  const vertexCount = defined(posData) ? posData.vertexCount : colorData.count;
 
   // Feature ID grouping (done once for all attributes)
   const featureIdMapping = findFeatureIdMapping(primitive, featureIdLabel);
@@ -350,12 +310,12 @@ function extractAttributesFromPrimitive(
       }
 
       // Colors are instance-independent
-      if (defined(colorAttribute)) {
-        const color = readVertexColor(
-          colorAttribute.typedArray,
+      if (defined(colorData)) {
+        const color = ModelMeshUtility.decodeColor(
+          colorData.typedArray,
           vertexIndex,
-          colorNumComponents,
-          colorAttribute.normalized,
+          colorData.numComponents,
+          colorData.normalized,
         );
         entry.colors.push(color);
       }

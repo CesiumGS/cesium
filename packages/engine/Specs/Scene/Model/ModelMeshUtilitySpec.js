@@ -1,6 +1,7 @@
 import {
   AttributeType,
   Cartesian3,
+  Color,
   ComponentDatatype,
   IndexDatatype,
   Matrix4,
@@ -886,6 +887,227 @@ describe("Scene/Model/ModelMeshUtility", function () {
       );
 
       expect(returned).toBe(scratch);
+    });
+  });
+
+  describe("readColorData", function () {
+    function createColorPrimitive(colorAttributeOptions) {
+      const attributes = [];
+      if (
+        colorAttributeOptions !== undefined &&
+        colorAttributeOptions !== null
+      ) {
+        attributes.push(
+          Object.assign(
+            {
+              semantic: VertexAttributeSemantic.COLOR,
+              setIndex: 0,
+              componentDatatype: ComponentDatatype.FLOAT,
+              type: AttributeType.VEC4,
+              count: 2,
+              byteOffset: 0,
+              byteStride: undefined,
+              typedArray: undefined,
+              buffer: undefined,
+              normalized: false,
+            },
+            colorAttributeOptions,
+          ),
+        );
+      }
+      return { attributes: attributes };
+    }
+
+    it("returns undefined when primitive has no color attribute", function () {
+      const primitive = createColorPrimitive();
+      const result = ModelMeshUtility.readColorData(primitive);
+      expect(result).toBeUndefined();
+    });
+
+    it("returns color data from a CPU typed array", function () {
+      const colors = new Float32Array([1, 0, 0, 1, 0, 1, 0, 1]);
+      const primitive = createColorPrimitive({
+        typedArray: colors,
+        count: 2,
+      });
+
+      const result = ModelMeshUtility.readColorData(primitive);
+
+      expect(result).toBeDefined();
+      expect(result.typedArray).toBe(colors);
+      expect(result.numComponents).toBe(4);
+      expect(result.elementStride).toBe(4);
+      expect(result.offset).toBe(0);
+      expect(result.normalized).toBe(false);
+      expect(result.count).toBe(2);
+    });
+
+    it("handles VEC3 color attribute", function () {
+      const colors = new Float32Array([1, 0, 0, 0, 1, 0]);
+      const primitive = createColorPrimitive({
+        typedArray: colors,
+        type: AttributeType.VEC3,
+        count: 2,
+      });
+
+      const result = ModelMeshUtility.readColorData(primitive);
+
+      expect(result).toBeDefined();
+      expect(result.numComponents).toBe(3);
+      expect(result.elementStride).toBe(3);
+    });
+
+    it("returns normalized flag", function () {
+      const colors = new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]);
+      const primitive = createColorPrimitive({
+        typedArray: colors,
+        componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+        normalized: true,
+        count: 2,
+      });
+
+      const result = ModelMeshUtility.readColorData(primitive);
+
+      expect(result).toBeDefined();
+      expect(result.normalized).toBe(true);
+    });
+
+    it("falls back to GPU readback when typed array is missing", function () {
+      const gpuData = new Float32Array([1, 0, 0, 1, 0, 1, 0, 1]);
+      const mockBuffer = {
+        getBufferData: function (outputArray) {
+          for (let i = 0; i < gpuData.length; i++) {
+            outputArray[i] = gpuData[i];
+          }
+        },
+      };
+
+      const primitive = createColorPrimitive({
+        buffer: mockBuffer,
+        count: 2,
+      });
+
+      const frameState = { context: { webgl2: true } };
+      const result = ModelMeshUtility.readColorData(primitive, frameState);
+
+      expect(result).toBeDefined();
+      expect(result.typedArray.length).toBe(8);
+      expect(result.count).toBe(2);
+    });
+
+    it("computes interleaved stride and offset", function () {
+      // VEC4 FLOAT = 4 components * 4 bytes = 16 bytes
+      // byteStride of 32 means interleaved, byteOffset 8 / 4 = offset 2
+      const data = new Float32Array(16);
+      const mockBuffer = {
+        getBufferData: function (outputArray) {
+          for (let i = 0; i < data.length; i++) {
+            outputArray[i] = data[i];
+          }
+        },
+      };
+
+      const primitive = createColorPrimitive({
+        count: 2,
+        byteStride: 32,
+        byteOffset: 8,
+        buffer: mockBuffer,
+      });
+
+      const frameState = { context: { webgl2: true } };
+      const result = ModelMeshUtility.readColorData(primitive, frameState);
+
+      expect(result).toBeDefined();
+      expect(result.elementStride).toBe(8);
+      expect(result.offset).toBe(2);
+    });
+
+    it("returns undefined when no typed array and no frameState", function () {
+      const primitive = createColorPrimitive({
+        buffer: {},
+        count: 2,
+      });
+
+      const result = ModelMeshUtility.readColorData(primitive);
+      expect(result).toBeUndefined();
+    });
+
+    it("returns undefined when no typed array and no buffer", function () {
+      const primitive = createColorPrimitive({
+        count: 2,
+      });
+
+      const result = ModelMeshUtility.readColorData(primitive);
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe("decodeColor", function () {
+    it("reads float RGBA color", function () {
+      const typedArray = new Float32Array([0.5, 0.25, 0.75, 1.0]);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 4, false);
+
+      expect(color.red).toBeCloseTo(0.5, 5);
+      expect(color.green).toBeCloseTo(0.25, 5);
+      expect(color.blue).toBeCloseTo(0.75, 5);
+      expect(color.alpha).toBeCloseTo(1.0, 5);
+    });
+
+    it("reads float RGB color with alpha defaulting to 1.0", function () {
+      const typedArray = new Float32Array([0.1, 0.2, 0.3]);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 3, false);
+
+      expect(color.red).toBeCloseTo(0.1, 5);
+      expect(color.green).toBeCloseTo(0.2, 5);
+      expect(color.blue).toBeCloseTo(0.3, 5);
+      expect(color.alpha).toBeCloseTo(1.0, 5);
+    });
+
+    it("reads at correct vertex index", function () {
+      const typedArray = new Float32Array([1, 0, 0, 1, 0, 1, 0, 0.5]);
+      const color = ModelMeshUtility.decodeColor(typedArray, 1, 4, false);
+
+      expect(color.red).toBeCloseTo(0, 5);
+      expect(color.green).toBeCloseTo(1, 5);
+      expect(color.blue).toBeCloseTo(0, 5);
+      expect(color.alpha).toBeCloseTo(0.5, 5);
+    });
+
+    it("normalizes UNSIGNED_BYTE RGBA values", function () {
+      const typedArray = new Uint8Array([255, 128, 0, 255]);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 4, true);
+
+      expect(color.red).toBeCloseTo(1.0, 5);
+      expect(color.green).toBeCloseTo(128 / 255, 5);
+      expect(color.blue).toBeCloseTo(0.0, 5);
+      expect(color.alpha).toBeCloseTo(1.0, 5);
+    });
+
+    it("normalizes UNSIGNED_BYTE RGB values with alpha 1.0", function () {
+      const typedArray = new Uint8Array([255, 0, 128]);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 3, true);
+
+      expect(color.red).toBeCloseTo(1.0, 5);
+      expect(color.green).toBeCloseTo(0.0, 5);
+      expect(color.blue).toBeCloseTo(128 / 255, 5);
+      expect(color.alpha).toBeCloseTo(1.0, 5);
+    });
+
+    it("normalizes UNSIGNED_SHORT values", function () {
+      const typedArray = new Uint16Array([65535, 32768, 0, 65535]);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 4, true);
+
+      expect(color.red).toBeCloseTo(1.0, 5);
+      expect(color.green).toBeCloseTo(32768 / 65535, 5);
+      expect(color.blue).toBeCloseTo(0.0, 5);
+      expect(color.alpha).toBeCloseTo(1.0, 5);
+    });
+
+    it("returns a Color instance", function () {
+      const typedArray = new Float32Array([0, 0, 0, 1]);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 4, false);
+
+      expect(color).toBeInstanceOf(Color);
     });
   });
 });

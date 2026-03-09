@@ -1,5 +1,6 @@
 import AttributeCompression from "../../Core/AttributeCompression.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
+import Color from "../../Core/Color.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
@@ -301,6 +302,84 @@ ModelMeshUtility.readIndices = function (primitive, frameState) {
 };
 
 /**
+ * Reads the color attribute data from a primitive, falling back to GPU
+ * readback when the CPU typed array is not available.
+ *
+ * @param {object} primitive The model primitive.
+ * @param {FrameState} [frameState] Frame state, needed for GPU readback of vertex buffers.
+ * @returns {object|undefined} An object with { typedArray, numComponents, elementStride, offset, normalized, count }, or undefined if unavailable.
+ *
+ * @private
+ */
+ModelMeshUtility.readColorData = function (primitive, frameState) {
+  const colorAttribute = ModelUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.COLOR,
+    0,
+  );
+
+  if (!defined(colorAttribute)) {
+    return undefined;
+  }
+
+  const numComponents = AttributeType.getNumberOfComponents(
+    colorAttribute.type,
+  );
+  const count = colorAttribute.count;
+
+  let typedArray = colorAttribute.typedArray;
+  let elementStride = numComponents;
+  let offset = 0;
+
+  if (!defined(typedArray)) {
+    const colorBuffer = colorAttribute.buffer;
+    const componentDatatype = colorAttribute.componentDatatype;
+    const bytes = ComponentDatatype.getSizeInBytes(componentDatatype);
+    const byteStride = colorAttribute.byteStride;
+    const byteOffset = colorAttribute.byteOffset;
+
+    const isInterleaved =
+      defined(byteStride) && byteStride !== numComponents * bytes;
+
+    if (isInterleaved) {
+      elementStride = byteStride / bytes;
+      offset = byteOffset / bytes;
+    }
+    const elementCount = count * elementStride;
+
+    if (
+      defined(colorBuffer) &&
+      defined(frameState) &&
+      frameState.context.webgl2
+    ) {
+      typedArray = ComponentDatatype.createTypedArray(
+        componentDatatype,
+        elementCount,
+      );
+      colorBuffer.getBufferData(
+        typedArray,
+        isInterleaved ? 0 : byteOffset,
+        0,
+        elementCount,
+      );
+    }
+  }
+
+  if (!defined(typedArray)) {
+    return undefined;
+  }
+
+  return {
+    typedArray: typedArray,
+    numComponents: numComponents,
+    elementStride: elementStride,
+    offset: offset,
+    normalized: colorAttribute.normalized,
+    count: count,
+  };
+};
+
+/**
  * Decodes a vertex position from the position data, applying quantization
  * dequantization if necessary, then transforms it by the instance transform
  * to produce a world-space position.
@@ -362,6 +441,43 @@ ModelMeshUtility.decodeAndTransformPosition = function (
 
   result = Matrix4.multiplyByPoint(instanceTransform, result, result);
   return result;
+};
+
+/**
+ * Reads a single vertex color from the typed array and returns a new {@link Color}.
+ * Handles both normalized integer (e.g. UNSIGNED_BYTE) and float data.
+ *
+ * @param {TypedArray} typedArray The color data array.
+ * @param {number} vertexIndex The vertex index.
+ * @param {number} numComponents Number of color components (3 or 4).
+ * @param {boolean} normalized Whether the data is normalized integer.
+ * @returns {Color} The decoded color.
+ *
+ * @private
+ */
+ModelMeshUtility.decodeColor = function (
+  typedArray,
+  vertexIndex,
+  numComponents,
+  normalized,
+) {
+  const i = vertexIndex * numComponents;
+  let r = typedArray[i];
+  let g = typedArray[i + 1];
+  let b = typedArray[i + 2];
+  let a = numComponents === 4 ? typedArray[i + 3] : 1.0;
+
+  if (normalized) {
+    const max = typedArray instanceof Uint16Array ? 65535.0 : 255.0;
+    r /= max;
+    g /= max;
+    b /= max;
+    if (numComponents === 4) {
+      a /= max;
+    }
+  }
+
+  return new Color(r, g, b, a);
 };
 
 export default ModelMeshUtility;
