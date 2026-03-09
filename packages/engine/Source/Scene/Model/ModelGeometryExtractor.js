@@ -6,12 +6,15 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelMeshUtility from "./ModelMeshUtility.js";
 import ModelUtility from "./ModelUtility.js";
 
 const scratchPosition = new Cartesian3();
-const scratchNodeComputedTransform = new Matrix4();
-const scratchModelMatrix = new Matrix4();
-const scratchComputedModelMatrix = new Matrix4();
+const scratchNodeTransforms = {
+  nodeComputedTransform: new Matrix4(),
+  modelMatrix: new Matrix4(),
+  computedModelMatrix: new Matrix4(),
+};
 
 /**
  * Extracts vertex geometry (positions, colors, etc.) from a loaded Model.
@@ -74,45 +77,19 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
 
   for (let n = 0; n < nodesLength; n++) {
     const runtimeNode = nodes[n];
-    const node = runtimeNode.node;
 
-    let nodeComputedTransform = Matrix4.clone(
-      runtimeNode.computedTransform,
-      scratchNodeComputedTransform,
-    );
-    let modelMatrix = Matrix4.clone(
-      sceneGraph.computedModelMatrix,
-      scratchModelMatrix,
-    );
-
-    const instances = node.instances;
-    if (defined(instances)) {
-      if (instances.transformInWorldSpace) {
-        modelMatrix = Matrix4.multiplyTransformation(
-          model.modelMatrix,
-          sceneGraph.components.transform,
-          modelMatrix,
-        );
-        nodeComputedTransform = Matrix4.multiplyTransformation(
-          sceneGraph.axisCorrectionMatrix,
-          runtimeNode.computedTransform,
-          nodeComputedTransform,
-        );
-      }
-    }
-
-    const computedModelMatrix = Matrix4.multiplyTransformation(
-      modelMatrix,
-      nodeComputedTransform,
-      scratchComputedModelMatrix,
-    );
-
-    const instanceTransforms = getInstanceTransforms(
+    const nodeTransforms = ModelMeshUtility.computeNodeTransforms(
       runtimeNode,
-      node,
-      computedModelMatrix,
-      nodeComputedTransform,
-      modelMatrix,
+      sceneGraph,
+      model,
+      scratchNodeTransforms,
+    );
+
+    const instanceTransforms = ModelMeshUtility.getInstanceTransforms(
+      runtimeNode,
+      nodeTransforms.computedModelMatrix,
+      nodeTransforms.nodeComputedTransform,
+      nodeTransforms.modelMatrix,
     );
 
     const primitivesLength = runtimeNode.runtimePrimitives.length;
@@ -133,75 +110,6 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
 
   return result;
 };
-
-/**
- * Builds instance transforms array, similar to pickModel.js pattern.
- * @private
- */
-function getInstanceTransforms(
-  runtimeNode,
-  node,
-  computedModelMatrix,
-  nodeComputedTransform,
-  modelMatrix,
-) {
-  const transforms = [];
-  const instances = node.instances;
-
-  if (defined(instances)) {
-    const transformsCount = instances.attributes[0].count;
-
-    const transformElements = 12;
-    const transformsTypedArray = runtimeNode.transformsTypedArray;
-
-    if (defined(transformsTypedArray)) {
-      for (let i = 0; i < transformsCount; i++) {
-        const index = i * transformElements;
-
-        const transform = new Matrix4(
-          transformsTypedArray[index],
-          transformsTypedArray[index + 1],
-          transformsTypedArray[index + 2],
-          transformsTypedArray[index + 3],
-          transformsTypedArray[index + 4],
-          transformsTypedArray[index + 5],
-          transformsTypedArray[index + 6],
-          transformsTypedArray[index + 7],
-          transformsTypedArray[index + 8],
-          transformsTypedArray[index + 9],
-          transformsTypedArray[index + 10],
-          transformsTypedArray[index + 11],
-          0,
-          0,
-          0,
-          1,
-        );
-
-        if (instances.transformInWorldSpace) {
-          Matrix4.multiplyTransformation(
-            transform,
-            nodeComputedTransform,
-            transform,
-          );
-          Matrix4.multiplyTransformation(modelMatrix, transform, transform);
-        } else {
-          Matrix4.multiplyTransformation(
-            transform,
-            computedModelMatrix,
-            transform,
-          );
-        }
-        transforms.push(transform);
-      }
-    }
-  }
-
-  if (transforms.length === 0) {
-    transforms.push(computedModelMatrix);
-  }
-
-  return transforms;
-}
 
 /**
  * Finds the feature ID attribute or implicit range matching the given label

@@ -15,16 +15,19 @@ import VerticalExaggeration from "../../Core/VerticalExaggeration.js";
 import AttributeType from "../AttributeType.js";
 import SceneMode from "../SceneMode.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelMeshUtility from "./ModelMeshUtility.js";
 import ModelUtility from "./ModelUtility.js";
 
 const scratchV0 = new Cartesian3();
 const scratchV1 = new Cartesian3();
 const scratchV2 = new Cartesian3();
-const scratchNodeComputedTransform = new Matrix4();
-const scratchModelMatrix = new Matrix4();
-const scratchcomputedModelMatrix = new Matrix4();
 const scratchPickCartographic = new Cartographic();
 const scratchBoundingSphere = new BoundingSphere();
+const scratchNodeTransforms = {
+  nodeComputedTransform: new Matrix4(),
+  modelMatrix: new Matrix4(),
+  computedModelMatrix: new Matrix4(),
+};
 
 /**
  * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
@@ -66,39 +69,16 @@ export default function pickModel(
   for (let i = 0; i < nodes.length; i++) {
     const runtimeNode = nodes[i];
     const node = runtimeNode.node;
-
-    let nodeComputedTransform = Matrix4.clone(
-      runtimeNode.computedTransform,
-      scratchNodeComputedTransform,
-    );
-    let modelMatrix = Matrix4.clone(
-      sceneGraph.computedModelMatrix,
-      scratchModelMatrix,
-    );
-
     const instances = node.instances;
-    if (defined(instances)) {
-      if (instances.transformInWorldSpace) {
-        // Replicate the multiplication order in LegacyInstancingStageVS.
-        modelMatrix = Matrix4.multiplyTransformation(
-          model.modelMatrix,
-          sceneGraph.components.transform,
-          modelMatrix,
-        );
 
-        nodeComputedTransform = Matrix4.multiplyTransformation(
-          sceneGraph.axisCorrectionMatrix,
-          runtimeNode.computedTransform,
-          nodeComputedTransform,
-        );
-      }
-    }
-
-    let computedModelMatrix = Matrix4.multiplyTransformation(
-      modelMatrix,
-      nodeComputedTransform,
-      scratchcomputedModelMatrix,
+    const nodeTransforms = ModelMeshUtility.computeNodeTransforms(
+      runtimeNode,
+      sceneGraph,
+      model,
+      scratchNodeTransforms,
     );
+
+    let computedModelMatrix = nodeTransforms.computedModelMatrix;
 
     if (frameState.mode !== SceneMode.SCENE3D) {
       computedModelMatrix = Transforms.basisTo2D(
@@ -108,70 +88,13 @@ export default function pickModel(
       );
     }
 
-    const transforms = [];
-    if (defined(instances)) {
-      const transformsCount = instances.attributes[0].count;
-      const instanceComponentDatatype =
-        instances.attributes[0].componentDatatype;
-
-      const transformElements = 12;
-      let transformsTypedArray = runtimeNode.transformsTypedArray;
-      if (!defined(transformsTypedArray)) {
-        const instanceTransformsBuffer = runtimeNode.instancingTransformsBuffer;
-        if (defined(instanceTransformsBuffer) && frameState.context.webgl2) {
-          transformsTypedArray = ComponentDatatype.createTypedArray(
-            instanceComponentDatatype,
-            transformsCount * transformElements,
-          );
-          instanceTransformsBuffer.getBufferData(transformsTypedArray);
-        }
-      }
-
-      if (defined(transformsTypedArray)) {
-        for (let i = 0; i < transformsCount; i++) {
-          const index = i * transformElements;
-
-          const transform = new Matrix4(
-            transformsTypedArray[index],
-            transformsTypedArray[index + 1],
-            transformsTypedArray[index + 2],
-            transformsTypedArray[index + 3],
-            transformsTypedArray[index + 4],
-            transformsTypedArray[index + 5],
-            transformsTypedArray[index + 6],
-            transformsTypedArray[index + 7],
-            transformsTypedArray[index + 8],
-            transformsTypedArray[index + 9],
-            transformsTypedArray[index + 10],
-            transformsTypedArray[index + 11],
-            0,
-            0,
-            0,
-            1,
-          );
-
-          if (instances.transformInWorldSpace) {
-            Matrix4.multiplyTransformation(
-              transform,
-              nodeComputedTransform,
-              transform,
-            );
-            Matrix4.multiplyTransformation(modelMatrix, transform, transform);
-          } else {
-            Matrix4.multiplyTransformation(
-              transform,
-              computedModelMatrix,
-              transform,
-            );
-          }
-          transforms.push(transform);
-        }
-      }
-    }
-
-    if (transforms.length === 0) {
-      transforms.push(computedModelMatrix);
-    }
+    const transforms = ModelMeshUtility.getInstanceTransforms(
+      runtimeNode,
+      computedModelMatrix,
+      nodeTransforms.nodeComputedTransform,
+      nodeTransforms.modelMatrix,
+      frameState,
+    );
 
     const primitivesLength = runtimeNode.runtimePrimitives.length;
     for (let j = 0; j < primitivesLength; j++) {
