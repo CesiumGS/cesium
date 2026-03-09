@@ -258,7 +258,7 @@ function extractAttributesFromPrimitive(
   }
 
   // Use whichever attribute is available to get vertex count
-  const vertexCount = defined(posData) ? posData.vertexCount : colorData.count;
+  const vertexCount = defined(posData) ? posData.count : colorData.count;
 
   // Feature ID grouping (done once for all attributes)
   const featureIdMapping = findFeatureIdMapping(primitive, featureIdLabel);
@@ -271,9 +271,9 @@ function extractAttributesFromPrimitive(
     );
   }
 
-  const indices = ModelMeshUtility.readIndices(primitive);
+  const indexData = ModelMeshUtility.readIndices(primitive);
   const featureVerticesMap = buildFeatureVertexMap(
-    indices,
+    defined(indexData) ? indexData.typedArray : undefined,
     featureIdData,
     vertexCount,
   );
@@ -297,7 +297,7 @@ function extractAttributesFromPrimitive(
       if (defined(posData)) {
         for (let t = 0; t < instanceTransforms.length; t++) {
           const worldPos = ModelMeshUtility.decodeAndTransformPosition(
-            posData.vertices,
+            posData.typedArray,
             vertexIndex,
             posData.offset,
             posData.elementStride,

@@ -116,9 +116,9 @@ export default function pickModel(
       }
 
       const posData = ModelMeshUtility.readPositionData(primitive, frameState);
-      const indices = ModelMeshUtility.readIndices(primitive, frameState);
+      const indexData = ModelMeshUtility.readIndices(primitive, frameState);
 
-      if (!defined(indices) || !defined(posData)) {
+      if (!defined(indexData) || !defined(posData)) {
         return;
       }
 
@@ -126,7 +126,8 @@ export default function pickModel(
       verticalExaggeration = verticalExaggeration ?? 1.0;
       relativeHeight = relativeHeight ?? 0.0;
 
-      const indicesLength = indices.length;
+      const indices = indexData.typedArray;
+      const indicesLength = indexData.count;
       for (let i = 0; i < indicesLength; i += 3) {
         const i0 = indices[i];
         const i1 = indices[i + 1];
@@ -134,7 +135,7 @@ export default function pickModel(
 
         for (const instanceTransform of transforms) {
           const v0 = ModelMeshUtility.decodeAndTransformPosition(
-            posData.vertices,
+            posData.typedArray,
             i0,
             posData.offset,
             posData.elementStride,
@@ -143,7 +144,7 @@ export default function pickModel(
             scratchV0,
           );
           const v1 = ModelMeshUtility.decodeAndTransformPosition(
-            posData.vertices,
+            posData.typedArray,
             i1,
             posData.offset,
             posData.elementStride,
@@ -152,7 +153,7 @@ export default function pickModel(
             scratchV1,
           );
           const v2 = ModelMeshUtility.decodeAndTransformPosition(
-            posData.vertices,
+            posData.typedArray,
             i2,
             posData.offset,
             posData.elementStride,

@@ -174,7 +174,7 @@ ModelMeshUtility.getInstanceTransforms = function (
  *
  * @param {object} primitive The model primitive.
  * @param {FrameState} [frameState] Frame state, needed for GPU readback of vertex buffers.
- * @returns {object|undefined} An object with { vertices, elementStride, offset, quantization, vertexCount }, or undefined if data is unavailable.
+ * @returns {object|undefined} An object with { typedArray, numComponents, elementStride, offset, quantization, count }, or undefined if data is unavailable.
  *
  * @private
  */
@@ -252,11 +252,12 @@ ModelMeshUtility.readPositionData = function (primitive, frameState) {
   }
 
   return {
-    vertices: vertices,
+    typedArray: vertices,
+    numComponents: numComponents,
     elementStride: elementStride,
     offset: offset,
     quantization: quantization,
-    vertexCount: vertexCount,
+    count: vertexCount,
   };
 };
 
@@ -266,7 +267,7 @@ ModelMeshUtility.readPositionData = function (primitive, frameState) {
  *
  * @param {object} primitive The model primitive.
  * @param {FrameState} [frameState] Frame state, needed for GPU readback of index buffers.
- * @returns {Uint8Array|Uint16Array|Uint32Array|undefined} The index array, or undefined if data is unavailable.
+ * @returns {object|undefined} An object with { typedArray, count }, or undefined if data is unavailable.
  *
  * @private
  */
@@ -275,10 +276,11 @@ ModelMeshUtility.readIndices = function (primitive, frameState) {
     return undefined;
   }
 
-  let indices = primitive.indices.typedArray;
-  if (!defined(indices)) {
+  let typedArray = primitive.indices.typedArray;
+  const count = primitive.indices.count;
+
+  if (!defined(typedArray)) {
     const indicesBuffer = primitive.indices.buffer;
-    const indicesCount = primitive.indices.count;
     const indexDatatype = primitive.indices.indexDatatype;
 
     if (
@@ -287,18 +289,25 @@ ModelMeshUtility.readIndices = function (primitive, frameState) {
       frameState.context.webgl2
     ) {
       if (indexDatatype === IndexDatatype.UNSIGNED_BYTE) {
-        indices = new Uint8Array(indicesCount);
+        typedArray = new Uint8Array(count);
       } else if (indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
-        indices = new Uint16Array(indicesCount);
+        typedArray = new Uint16Array(count);
       } else if (indexDatatype === IndexDatatype.UNSIGNED_INT) {
-        indices = new Uint32Array(indicesCount);
+        typedArray = new Uint32Array(count);
       }
 
-      indicesBuffer.getBufferData(indices);
+      indicesBuffer.getBufferData(typedArray);
     }
   }
 
-  return indices;
+  if (!defined(typedArray)) {
+    return undefined;
+  }
+
+  return {
+    typedArray: typedArray,
+    count: count,
+  };
 };
 
 /**

@@ -468,11 +468,11 @@ describe("Scene/Model/ModelMeshUtility", function () {
       const result = ModelMeshUtility.readPositionData(primitive);
 
       expect(result).toBeDefined();
-      expect(result.vertices).toBe(positions);
+      expect(result.typedArray).toBe(positions);
       expect(result.elementStride).toBe(3);
       expect(result.offset).toBe(0);
       expect(result.quantization).toBeUndefined();
-      expect(result.vertexCount).toBe(3);
+      expect(result.count).toBe(3);
     });
 
     it("uses quantization metadata when present", function () {
@@ -490,10 +490,10 @@ describe("Scene/Model/ModelMeshUtility", function () {
       const result = ModelMeshUtility.readPositionData(primitive);
 
       expect(result).toBeDefined();
-      expect(result.vertices).toBe(positions);
+      expect(result.typedArray).toBe(positions);
       expect(result.quantization).toBe(quantization);
       expect(result.elementStride).toBe(3);
-      expect(result.vertexCount).toBe(2);
+      expect(result.count).toBe(2);
     });
 
     it("computes interleaved stride and offset", function () {
@@ -527,7 +527,7 @@ describe("Scene/Model/ModelMeshUtility", function () {
       expect(result).toBeDefined();
       expect(result.elementStride).toBe(6);
       expect(result.offset).toBe(0);
-      expect(result.vertexCount).toBe(2);
+      expect(result.count).toBe(2);
     });
 
     it("falls back to GPU readback when typed array is missing", function () {
@@ -553,8 +553,8 @@ describe("Scene/Model/ModelMeshUtility", function () {
       const result = ModelMeshUtility.readPositionData(primitive, frameState);
 
       expect(result).toBeDefined();
-      expect(result.vertices.length).toBe(6);
-      expect(result.vertexCount).toBe(2);
+      expect(result.typedArray.length).toBe(6);
+      expect(result.count).toBe(2);
     });
 
     it("returns undefined when no typed array and no frameState", function () {
@@ -620,11 +620,14 @@ describe("Scene/Model/ModelMeshUtility", function () {
       const primitive = {
         indices: {
           typedArray: typedArray,
+          count: 6,
+          indexDatatype: IndexDatatype.UNSIGNED_SHORT,
         },
       };
 
       const result = ModelMeshUtility.readIndices(primitive);
-      expect(result).toBe(typedArray);
+      expect(result.typedArray).toBe(typedArray);
+      expect(result.count).toBe(6);
     });
 
     it("falls back to GPU readback for UNSIGNED_BYTE indices", function () {
@@ -649,8 +652,8 @@ describe("Scene/Model/ModelMeshUtility", function () {
       const frameState = { context: { webgl2: true } };
       const result = ModelMeshUtility.readIndices(primitive, frameState);
 
-      expect(result).toBeInstanceOf(Uint8Array);
-      expect(result.length).toBe(3);
+      expect(result.typedArray).toBeInstanceOf(Uint8Array);
+      expect(result.count).toBe(3);
     });
 
     it("falls back to GPU readback for UNSIGNED_SHORT indices", function () {
@@ -675,8 +678,8 @@ describe("Scene/Model/ModelMeshUtility", function () {
       const frameState = { context: { webgl2: true } };
       const result = ModelMeshUtility.readIndices(primitive, frameState);
 
-      expect(result).toBeInstanceOf(Uint16Array);
-      expect(result.length).toBe(3);
+      expect(result.typedArray).toBeInstanceOf(Uint16Array);
+      expect(result.count).toBe(3);
     });
 
     it("falls back to GPU readback for UNSIGNED_INT indices", function () {
@@ -701,8 +704,8 @@ describe("Scene/Model/ModelMeshUtility", function () {
       const frameState = { context: { webgl2: true } };
       const result = ModelMeshUtility.readIndices(primitive, frameState);
 
-      expect(result).toBeInstanceOf(Uint32Array);
-      expect(result.length).toBe(3);
+      expect(result.typedArray).toBeInstanceOf(Uint32Array);
+      expect(result.count).toBe(3);
     });
 
     it("returns undefined when no typed array and no frameState", function () {
