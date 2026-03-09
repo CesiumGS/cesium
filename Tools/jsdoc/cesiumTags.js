@@ -68,4 +68,11 @@ exports.defineTags = function (dictionary) {
     canHaveType: false,
     canHaveName: false,
   });
+
+  // https://devblogs.microsoft.com/typescript/announcing-typescript-5-0-beta/#overload-support-in-jsdoc
+  dictionary.defineTag("overload", {
+    canHaveValue: false,
+    canHaveType: false,
+    canHaveName: false,
+  });
 };

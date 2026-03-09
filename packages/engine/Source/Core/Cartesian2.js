@@ -56,11 +56,23 @@ class Cartesian2 {
   }
 
   /**
+   * @overload
+   * @param {undefined} cartesian
+   * @param {Cartesian2} [result]
+   * @returns {undefined}
+   */
+  /**
+   * @overload
+   * @param {Cartesian2} cartesian
+   * @param {Cartesian2} [result]
+   * @returns {Cartesian2}
+   */
+  /**
    * Duplicates a Cartesian2 instance.
    *
-   * @param {Cartesian2} cartesian The Cartesian to duplicate.
+   * @param {Cartesian2|undefined} cartesian The Cartesian to duplicate.
    * @param {Cartesian2} [result] The object onto which to store the result.
-   * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided. (Returns undefined if cartesian is undefined)
+   * @returns {Cartesian2|undefined} The modified result parameter or a new Cartesian2 instance if one was not provided. (Returns undefined if cartesian is undefined)
    */
   static clone(cartesian, result) {
     if (!defined(cartesian)) {
