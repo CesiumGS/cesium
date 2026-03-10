@@ -1113,4 +1113,105 @@ describe("Scene/Model/ModelMeshUtility", function () {
       expect(color).toBeInstanceOf(Color);
     });
   });
+
+  describe("readFeatureIdData", function () {
+    function createFeatureIdPrimitive(featureIdAttributeOptions) {
+      const attributes = [];
+      if (featureIdAttributeOptions !== undefined) {
+        attributes.push(
+          Object.assign(
+            {
+              semantic: VertexAttributeSemantic.FEATURE_ID,
+              setIndex: 0,
+              componentDatatype: ComponentDatatype.FLOAT,
+              count: 4,
+              typedArray: undefined,
+            },
+            featureIdAttributeOptions,
+          ),
+        );
+      }
+      return { attributes: attributes };
+    }
+
+    it("returns undefined when featureId is undefined", function () {
+      const primitive = createFeatureIdPrimitive({
+        typedArray: new Float32Array([0, 1, 2, 3]),
+      });
+      const result = ModelMeshUtility.readFeatureIdData(primitive, undefined);
+      expect(result).toBeUndefined();
+    });
+
+    it("returns undefined when featureId has no setIndex", function () {
+      const primitive = createFeatureIdPrimitive({
+        typedArray: new Float32Array([0, 1, 2, 3]),
+      });
+      const result = ModelMeshUtility.readFeatureIdData(primitive, {});
+      expect(result).toBeUndefined();
+    });
+
+    it("returns undefined when primitive has no matching attribute", function () {
+      const primitive = createFeatureIdPrimitive();
+      const result = ModelMeshUtility.readFeatureIdData(primitive, {
+        setIndex: 5,
+      });
+      expect(result).toBeUndefined();
+    });
+
+    it("returns undefined when attribute has no typedArray", function () {
+      const primitive = createFeatureIdPrimitive({
+        setIndex: 0,
+      });
+      const result = ModelMeshUtility.readFeatureIdData(primitive, {
+        setIndex: 0,
+      });
+      expect(result).toBeUndefined();
+    });
+
+    it("returns typedArray and count for a valid feature ID attribute", function () {
+      const featureIds = new Float32Array([0, 1, 2, 3]);
+      const primitive = createFeatureIdPrimitive({
+        typedArray: featureIds,
+        setIndex: 0,
+        count: 4,
+      });
+
+      const result = ModelMeshUtility.readFeatureIdData(primitive, {
+        setIndex: 0,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.typedArray).toBe(featureIds);
+      expect(result.count).toBe(4);
+    });
+
+    it("matches the correct setIndex when multiple feature ID attributes exist", function () {
+      const featureIds0 = new Float32Array([0, 0, 1, 1]);
+      const featureIds1 = new Float32Array([10, 11, 12, 13]);
+      const primitive = {
+        attributes: [
+          {
+            semantic: VertexAttributeSemantic.FEATURE_ID,
+            setIndex: 0,
+            typedArray: featureIds0,
+            count: 4,
+          },
+          {
+            semantic: VertexAttributeSemantic.FEATURE_ID,
+            setIndex: 1,
+            typedArray: featureIds1,
+            count: 4,
+          },
+        ],
+      };
+
+      const result = ModelMeshUtility.readFeatureIdData(primitive, {
+        setIndex: 1,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.typedArray).toBe(featureIds1);
+      expect(result.count).toBe(4);
+    });
+  });
 });

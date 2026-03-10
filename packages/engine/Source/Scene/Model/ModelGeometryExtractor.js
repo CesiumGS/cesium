@@ -2,9 +2,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelMeshUtility from "./ModelMeshUtility.js";
-import ModelUtility from "./ModelUtility.js";
 
 const scratchPosition = new Cartesian3();
 const scratchNodeTransforms = {
@@ -109,7 +107,7 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
 };
 
 /**
- * Finds the feature ID attribute or implicit range matching the given label
+ * Finds the feature ID definition matching the given label
  * on the primitive's featureIds array.
  * @private
  */
@@ -131,66 +129,6 @@ function findFeatureIdMapping(primitive, featureIdLabel) {
 }
 
 /**
- * Reads the per-vertex feature IDs for the given primitive.
- * Returns a typed array or function that maps vertex index to feature ID.
- * @private
- */
-function getPerVertexFeatureIds(primitive, featureIdMapping, vertexCount) {
-  // FeatureIdAttribute — stored as a vertex attribute with a setIndex
-  if (defined(featureIdMapping.setIndex)) {
-    const featureIdAttribute = ModelUtility.getAttributeBySemantic(
-      primitive,
-      VertexAttributeSemantic.FEATURE_ID,
-      featureIdMapping.setIndex,
-    );
-    if (defined(featureIdAttribute)) {
-      return featureIdAttribute.typedArray;
-    }
-    return undefined;
-  }
-
-  // FeatureIdImplicitRange — feature IDs are computed from vertex index
-  if (defined(featureIdMapping.repeat)) {
-    const offset = featureIdMapping.offset ?? 0;
-    const repeat = featureIdMapping.repeat;
-    // Return a proxy that computes feature IDs on the fly
-    return {
-      _offset: offset,
-      _repeat: repeat,
-      get: function (index) {
-        return this._offset + Math.floor(index / this._repeat);
-      },
-      length: vertexCount,
-    };
-  }
-
-  // Implicit range without repeat — vertex index equals feature ID
-  if (defined(featureIdMapping.offset) || featureIdMapping.offset === 0) {
-    const offset = featureIdMapping.offset ?? 0;
-    return {
-      _offset: offset,
-      get: function (index) {
-        return this._offset + index;
-      },
-      length: vertexCount,
-    };
-  }
-
-  return undefined;
-}
-
-/**
- * Helper to get a feature ID value from either a typed array or an implicit mapping.
- * @private
- */
-function getFeatureIdValue(featureIdData, vertexIndex) {
-  if (typeof featureIdData.get === "function") {
-    return featureIdData.get(vertexIndex);
-  }
-  return featureIdData[vertexIndex];
-}
-
-/**
  * Groups unique vertex indices by feature ID from indices or vertex count.
  * This is shared across all attribute extraction to avoid duplicate work.
  * @private
@@ -201,9 +139,7 @@ function buildFeatureVertexMap(indices, featureIdData, vertexCount) {
     const indicesLength = indices.length;
     for (let i = 0; i < indicesLength; i++) {
       const vertexIndex = indices[i];
-      const fid = defined(featureIdData)
-        ? getFeatureIdValue(featureIdData, vertexIndex)
-        : 0;
+      const fid = defined(featureIdData) ? featureIdData[vertexIndex] : 0;
       let vertexSet = map.get(fid);
       if (!defined(vertexSet)) {
         vertexSet = new Set();
@@ -213,9 +149,7 @@ function buildFeatureVertexMap(indices, featureIdData, vertexCount) {
     }
   } else {
     for (let i = 0; i < vertexCount; i++) {
-      const fid = defined(featureIdData)
-        ? getFeatureIdValue(featureIdData, i)
-        : 0;
+      const fid = defined(featureIdData) ? featureIdData[i] : 0;
       let vertexSet = map.get(fid);
       if (!defined(vertexSet)) {
         vertexSet = new Set();
@@ -262,14 +196,13 @@ function extractAttributesFromPrimitive(
 
   // Feature ID grouping (done once for all attributes)
   const featureIdMapping = findFeatureIdMapping(primitive, featureIdLabel);
-  let featureIdData;
-  if (defined(featureIdMapping)) {
-    featureIdData = getPerVertexFeatureIds(
-      primitive,
-      featureIdMapping,
-      vertexCount,
-    );
-  }
+  const featureIdResult = ModelMeshUtility.readFeatureIdData(
+    primitive,
+    featureIdMapping,
+  );
+  const featureIdData = defined(featureIdResult)
+    ? featureIdResult.typedArray
+    : undefined;
 
   const indexData = ModelMeshUtility.readIndices(primitive);
   const featureVerticesMap = buildFeatureVertexMap(

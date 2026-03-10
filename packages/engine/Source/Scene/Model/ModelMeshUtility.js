@@ -389,6 +389,37 @@ ModelMeshUtility.readColorData = function (primitive, frameState) {
 };
 
 /**
+ * Reads per-vertex feature ID data from a primitive for a given feature ID definition.
+ * Currently supports FeatureIdAttribute (vertex attributes with a setIndex).
+ *
+ * @param {object} primitive The model primitive.
+ * @param {object} featureId The feature ID definition (must have a setIndex property).
+ * @returns {object|undefined} An object with { typedArray, count }, or undefined if no matching feature ID attribute is found.
+ *
+ * @private
+ */
+ModelMeshUtility.readFeatureIdData = function (primitive, featureId) {
+  if (!defined(featureId) || !defined(featureId.setIndex)) {
+    return undefined;
+  }
+
+  const featureIdAttribute = ModelUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.FEATURE_ID,
+    featureId.setIndex,
+  );
+
+  if (!defined(featureIdAttribute) || !defined(featureIdAttribute.typedArray)) {
+    return undefined;
+  }
+
+  return {
+    typedArray: featureIdAttribute.typedArray,
+    count: featureIdAttribute.count,
+  };
+};
+
+/**
  * Decodes a vertex position from the position data, applying quantization
  * dequantization if necessary, then transforms it by the instance transform
  * to produce a world-space position.
