@@ -5,7 +5,10 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
 import Frozen from "../Core/Frozen.js";
 import assert from "../Core/assert.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
+import IndexDatatype from "../Core/IndexDatatype.js";
 
+/** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Color from "../Core/Color.js"; */
 /** @import FrameState from "./FrameState.js" */
 
@@ -15,9 +18,9 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  * @typedef {object} BufferPolygonOptions
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
- * @property {Float64Array} [positions]
- * @property {Uint32Array} [holes]
- * @property {Uint32Array} [triangles]
+ * @property {TypedArray} [positions]
+ * @property {TypedArray} [holes]
+ * @property {TypedArray} [triangles]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -69,6 +72,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
+   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {IndexDatatype} [options.indexDatatype=IndexDatatype.UNSIGNED_INT]
    * @param {boolean} [options.show=true]
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
@@ -90,17 +95,10 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
       options.holeCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
-     * @type {ArrayBuffer}
-     * @protected
+     * @type {TypedArray}
      * @ignore
      */
-    this._holeIndexBuffer = null;
-
-    /**
-     * @type {Uint32Array<ArrayBuffer>}
-     * @ignore
-     */
-    this._holeIndexU32 = null;
+    this._holeIndexView = null;
 
     /**
      * @type {number}
@@ -117,20 +115,20 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
       options.triangleCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
-     * @type {ArrayBuffer}
-     * @protected
+     * @type {TypedArray}
      * @ignore
      */
-    this._triangleIndexBuffer = null;
+    this._triangleIndexView = null;
 
-    /**
-     * @type {Uint32Array<ArrayBuffer>}
-     * @ignore
-     */
-    this._triangleIndexU32 = null;
+    this._allocateHoleIndexBuffer(
+      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+      options.indexDatatype ?? IndexDatatype.UNSIGNED_INT,
+    );
 
-    this._allocateHoleIndexBuffer();
-    this._allocateTriangleIndexBuffer();
+    this._allocateTriangleIndexBuffer(
+      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+      options.indexDatatype ?? IndexDatatype.UNSIGNED_INT,
+    );
   }
 
   _getCollectionClass() {
@@ -145,25 +143,29 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   // COLLECTION LIFECYCLE
 
   /**
+   * @param {IndexDatatype} datatype
    * @private
    * @ignore
    */
-  _allocateHoleIndexBuffer() {
-    const holeIndexBufferByteLength =
-      this._holeCountMax * Uint32Array.BYTES_PER_ELEMENT;
-    this._holeIndexBuffer = new ArrayBuffer(holeIndexBufferByteLength);
-    this._holeIndexU32 = new Uint32Array(this._holeIndexBuffer);
+  _allocateHoleIndexBuffer(datatype) {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    this._holeIndexView = ComponentDatatype.createTypedArray(
+      datatype,
+      this._holeCountMax,
+    );
   }
 
   /**
+   * @param {IndexDatatype} datatype
    * @private
    * @ignore
    */
-  _allocateTriangleIndexBuffer() {
-    const triangleIndexBufferByteLength =
-      this._triangleCountMax * 3 * Uint32Array.BYTES_PER_ELEMENT;
-    this._triangleIndexBuffer = new ArrayBuffer(triangleIndexBufferByteLength);
-    this._triangleIndexU32 = new Uint32Array(this._triangleIndexBuffer);
+  _allocateTriangleIndexBuffer(datatype) {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    this._triangleIndexView = ComponentDatatype.createTypedArray(
+      datatype,
+      this._triangleCountMax * 3,
+    );
   }
 
   /**
@@ -192,14 +194,14 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
     //>>includeEnd('debug');
 
     this._copySubArray(
-      collection._holeIndexU32,
-      result._holeIndexU32,
+      collection._holeIndexView,
+      result._holeIndexView,
       collection.holeCount,
     );
 
     this._copySubArray(
-      collection._triangleIndexU32,
-      result._triangleIndexU32,
+      collection._triangleIndexView,
+      result._triangleIndexView,
       collection._triangleCount * 3,
     );
 
@@ -232,12 +234,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    */
   static _replaceBuffers(src, dst) {
     super._replaceBuffers(src, dst);
-
-    dst._holeIndexBuffer = src._holeIndexBuffer;
-    dst._holeIndexU32 = src._holeIndexU32;
-
-    dst._triangleIndexBuffer = src._triangleIndexBuffer;
-    dst._triangleIndexU32 = src._triangleIndexU32;
+    dst._holeIndexView = src._holeIndexView;
+    dst._triangleIndexView = src._triangleIndexView;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -311,8 +309,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   get byteLength() {
     return (
       super.byteLength +
-      this._holeIndexBuffer.byteLength +
-      this._triangleIndexBuffer.byteLength
+      this._holeIndexView.byteLength +
+      this._triangleIndexView.byteLength
     );
   }
 
