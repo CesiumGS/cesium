@@ -78,7 +78,12 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   ) {
     const { vertexCountMax, triangleCountMax } = collection;
 
-    renderContext.indexArray = new Uint32Array(triangleCountMax * 3);
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    renderContext.indexArray = IndexDatatype.createTypedArray(
+      vertexCountMax,
+      triangleCountMax * 3,
+    );
+
     renderContext.attributeArrays = {
       positionHigh: new Float32Array(vertexCountMax * 3),
       positionLow: new Float32Array(vertexCountMax * 3),
@@ -157,7 +162,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
         usage: BufferUsage.STATIC_DRAW,
         // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-        indexDatatype: IndexDatatype.UNSIGNED_INT,
+        indexDatatype: IndexDatatype.fromTypedArray(renderContext.indexArray),
       }),
 
       attributes: [
