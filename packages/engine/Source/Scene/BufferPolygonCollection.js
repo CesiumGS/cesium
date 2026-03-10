@@ -5,7 +5,6 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
 import Frozen from "../Core/Frozen.js";
 import assert from "../Core/assert.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import renderPolygons from "./renderBufferPolygonCollection.js";
 
@@ -13,6 +12,7 @@ import renderPolygons from "./renderBufferPolygonCollection.js";
 /** @import Color from "../Core/Color.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
+/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
 
 const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 
@@ -76,7 +76,6 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @param {number} [options.holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
-   * @param {IndexDatatype} [options.indexDatatype=IndexDatatype.UNSIGNED_INT]
    * @param {boolean} [options.show=true]
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
@@ -123,15 +122,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
      */
     this._triangleIndexView = null;
 
-    this._allocateHoleIndexBuffer(
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      options.indexDatatype ?? IndexDatatype.UNSIGNED_INT,
-    );
-
-    this._allocateTriangleIndexBuffer(
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      options.indexDatatype ?? IndexDatatype.UNSIGNED_INT,
-    );
+    this._allocateHoleIndexBuffer();
+    this._allocateTriangleIndexBuffer();
   }
 
   _getCollectionClass() {
@@ -146,27 +138,25 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   // COLLECTION LIFECYCLE
 
   /**
-   * @param {IndexDatatype} datatype
    * @private
    * @ignore
    */
-  _allocateHoleIndexBuffer(datatype) {
+  _allocateHoleIndexBuffer() {
     // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-    this._holeIndexView = ComponentDatatype.createTypedArray(
-      datatype,
+    this._holeIndexView = IndexDatatype.createTypedArray(
+      this._positionCountMax,
       this._holeCountMax,
     );
   }
 
   /**
-   * @param {IndexDatatype} datatype
    * @private
    * @ignore
    */
-  _allocateTriangleIndexBuffer(datatype) {
+  _allocateTriangleIndexBuffer() {
     // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-    this._triangleIndexView = ComponentDatatype.createTypedArray(
-      datatype,
+    this._triangleIndexView = IndexDatatype.createTypedArray(
+      this._positionCountMax,
       this._triangleCountMax * 3,
     );
   }

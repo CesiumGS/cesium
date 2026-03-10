@@ -168,7 +168,7 @@ describe("Scene/BufferPolygonCollection", () => {
       triangleCountMax: 1,
     });
 
-    expect(collection.byteLength).toBe(36 + 72 + 12);
+    expect(collection.byteLength).toBe(36 + 72 + 6);
 
     collection = new BufferPolygonCollection({
       primitiveCountMax: 128,
@@ -177,7 +177,7 @@ describe("Scene/BufferPolygonCollection", () => {
       triangleCountMax: 1024,
     });
 
-    expect(collection.byteLength).toBe(4608 + 24576 + 512 + 12288);
+    expect(collection.byteLength).toBe(4608 + 24576 + 256 + 6144);
   });
 
   it("clone", () => {
