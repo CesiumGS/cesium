@@ -104,7 +104,7 @@ const defaultParameters = Object.freeze({
  *
  * viewer.timeline.zoomTo(clock.startTime, clock.stopTime);
  *
- * const soilMoistureLayer = new Cesium.WebMapTileServiceImageryProvider({
+ * const weather = new Cesium.WebMapTileServiceImageryProvider({
  *     url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/AMSRU2_Snow_Water_Equivalent_5Day/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
  *     layer: 'AMSRU2_Snow_Water_Equivalent_5Day',
  *     style: 'default',
@@ -114,7 +114,7 @@ const defaultParameters = Object.freeze({
  *     times: times,
  *     credit: new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
  * });
- * viewer.imageryLayers.addImageryProvider(soilMoistureLayer);
+ * viewer.imageryLayers.addImageryProvider(weather);
  *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
