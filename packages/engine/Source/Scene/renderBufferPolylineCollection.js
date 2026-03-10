@@ -56,7 +56,7 @@ const BufferPolylineAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {() => void} destroy
+ * @property {Function} destroy
  * @ignore
  */
 

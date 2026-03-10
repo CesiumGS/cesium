@@ -65,7 +65,7 @@ class BufferPrimitiveCollection {
    * implementations, so the collection should be ignorant of the renderer's implementation
    * and context data. A collection only has one renderer active at a time.
    *
-   * @type {{destroy: () => void}|null}
+   * @type {{destroy: Function}|null}
    * @ignore
    */
   _renderContext = null;
