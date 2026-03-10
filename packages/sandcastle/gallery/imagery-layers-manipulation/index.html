@@ -1,66 +1,49 @@
 <style>
   @import url(../templates/bucket.css);
-
-  #toolbar table tr {
-    transform: translateY(0);
-    transition: transform 0.4s ease-out;
+  #overlayLayers {
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* space between rows */
   }
 
-  #toolbar table tr.up {
-    transform: translateY(33px);
-    transition: none;
+  .overlay-row {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* space between elements in a row */
   }
 
-  #toolbar table tr.down {
-    transform: translateY(-33px);
-    transition: none;
+  .overlay-row span {
+    flex: 1; /* label takes remaining space */
+    min-width: 120px; /* optional: keep label width */
+  }
+
+  .overlay-row input[type="range"] {
+    width: 120px; /* consistent slider width */
+  }
+
+  .overlay-row button {
+    min-width: 30px;
   }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-  <table>
-    <tbody data-bind="foreach: layers">
-      <tr
-        data-bind="css: { up: $parent.upLayer === $data, down: $parent.downLayer === $data }"
-      >
-        <td><input type="checkbox" data-bind="checked: show" /></td>
-        <td>
-          <span
-            data-bind="text: name, visible: !$parent.isSelectableLayer($data)"
-          ></span>
-          <select
-            data-bind="visible: $parent.isSelectableLayer($data), options: $parent.baseLayers, optionsText: 'name', value: $parent.selectedLayer"
-          ></select>
-        </td>
-        <td>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            data-bind="value: alpha, valueUpdate: 'input'"
-          />
-        </td>
-        <td>
-          <button
-            type="button"
-            class="cesium-button"
-            data-bind="click: function() { $parent.raise($data, $index()); }, visible: $parent.canRaise($index())"
-          >
-            ▲
-          </button>
-        </td>
-        <td>
-          <button
-            type="button"
-            class="cesium-button"
-            data-bind="click: function() { $parent.lower($data, $index()); }, visible: $parent.canLower($index())"
-          >
-            ▼
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+<div
+  id="toolbar"
+  style="
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: grey;
+    padding: 10px;
+    border-radius: 6px;
+    font-family: sans-serif;
+    z-index: 1;
+  "
+>
+  <label>Base Layer:</label>
+  <select id="baseLayerSelect"></select>
+
+  <hr />
+
+  <div id="overlayLayers"></div>
 </div>

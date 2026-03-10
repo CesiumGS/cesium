@@ -4,88 +4,42 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   baseLayerPicker: false,
   geocoder: false,
 });
+
 const imageryLayers = viewer.imageryLayers;
 
-const viewModel = {
-  layers: [],
-  baseLayers: [],
-  upLayer: null,
-  downLayer: null,
-  selectedLayer: null,
-  isSelectableLayer: function (layer) {
-    return this.baseLayers.indexOf(layer) >= 0;
-  },
-  raise: function (layer, index) {
-    imageryLayers.raise(layer);
-    viewModel.upLayer = layer;
-    viewModel.downLayer = viewModel.layers[Math.max(0, index - 1)];
-    updateLayerList();
-    window.setTimeout(function () {
-      viewModel.upLayer = viewModel.downLayer = null;
-    }, 10);
-  },
-  lower: function (layer, index) {
-    imageryLayers.lower(layer);
-    viewModel.upLayer =
-      viewModel.layers[Math.min(viewModel.layers.length - 1, index + 1)];
-    viewModel.downLayer = layer;
-    updateLayerList();
-    window.setTimeout(function () {
-      viewModel.upLayer = viewModel.downLayer = null;
-    }, 10);
-  },
-  canRaise: function (layerIndex) {
-    return layerIndex > 0;
-  },
-  canLower: function (layerIndex) {
-    return layerIndex >= 0 && layerIndex < imageryLayers.length - 1;
-  },
-};
-const baseLayers = viewModel.baseLayers;
+const baseLayerSelect = document.getElementById("baseLayerSelect");
+const overlayContainer = document.getElementById("overlayLayers");
 
-Cesium.knockout.track(viewModel);
+const baseLayers = [];
+const overlayLayers = [];
 
-function setupLayers() {
-  // Create all the base layers that this example will support.
-  // These base layers aren't really special.  It's possible to have multiple of them
-  // enabled at once, just like the other layers, but it doesn't make much sense because
-  // all of these layers cover the entire globe and are opaque.
-  addBaseLayerOption("Bing Maps Aerial", Cesium.createWorldImageryAsync());
-  addBaseLayerOption(
+async function setupLayers() {
+  await addBaseLayerOption(
+    "Bing Maps Aerial",
+    Cesium.createWorldImageryAsync(),
+  );
+
+  await addBaseLayerOption(
     "Bing Maps Road",
     Cesium.createWorldImageryAsync({
       style: Cesium.IonWorldImageryStyle.ROAD,
     }),
   );
-  addBaseLayerOption(
+
+  await addBaseLayerOption(
     "ArcGIS World Street Maps",
     Cesium.ArcGisMapServerImageryProvider.fromUrl(
       "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
     ),
   );
-  addBaseLayerOption(
-    "OpenStreetMaps",
+
+  await addBaseLayerOption(
+    "OpenStreetMap",
     new Cesium.OpenStreetMapImageryProvider(),
   );
-  addBaseLayerOption(
-    "Stadia x Stamen Watercolor",
-    new Cesium.OpenStreetMapImageryProvider({
-      url: "https://tiles.stadiamaps.com/tiles/stamen_watercolor/",
-      fileExtension: "jpg",
-      credit: `&copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a>
-               &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
-               &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
-               &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
-    }),
-  );
-  addBaseLayerOption(
-    "Natural Earth II (local)",
-    Cesium.TileMapServiceImageryProvider.fromUrl(
-      Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
-    ),
-  );
-  addBaseLayerOption(
-    "USGS Shaded Relief (via WMTS)",
+
+  await addBaseLayerOption(
+    "USGS Shaded Relief (WMTS)",
     new Cesium.WebMapTileServiceImageryProvider({
       url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS",
       layer: "USGSShadedReliefOnly",
@@ -96,31 +50,48 @@ function setupLayers() {
       credit: "U. S. Geological Survey",
     }),
   );
+  await addBaseLayerOption(
+    "Stadia x Stamen Watercolor",
+    new Cesium.OpenStreetMapImageryProvider({
+      url: "https://tiles.stadiamaps.com/tiles/stamen_watercolor/",
+      fileExtension: "jpg",
+      credit: `&copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a>
+               &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
+               &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
+               &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
+    }),
+  );
+  await addBaseLayerOption(
+    "Natural Earth II (local)",
+    Cesium.TileMapServiceImageryProvider.fromUrl(
+      Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+    ),
+  );
 
-  // Create the additional layers
   addAdditionalLayerOption(
-    "United States GOES Infrared",
+    "GOES Infrared",
     new Cesium.WebMapServiceImageryProvider({
       url: "https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?",
       layers: "goes_conus_ir",
-      credit: "Infrared data courtesy Iowa Environmental Mesonet",
       parameters: {
         transparent: "true",
         format: "image/png",
       },
     }),
+    0.5,
   );
+
   addAdditionalLayerOption(
-    "United States Weather Radar",
+    "Weather Radar",
     new Cesium.WebMapServiceImageryProvider({
       url: "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?",
       layers: "nexrad-n0r",
-      credit: "Radar data courtesy Iowa Environmental Mesonet",
       parameters: {
         transparent: "true",
         format: "image/png",
       },
     }),
+    0.5,
   );
   addAdditionalLayerOption(
     "TileMapService Image",
@@ -154,70 +125,124 @@ function setupLayers() {
 }
 
 async function addBaseLayerOption(name, imageryProviderPromise) {
-  try {
-    const imageryProvider = await Promise.resolve(imageryProviderPromise);
+  const provider = await Promise.resolve(imageryProviderPromise);
 
-    const layer = new Cesium.ImageryLayer(imageryProvider);
-    layer.name = name;
-    baseLayers.push(layer);
-    updateLayerList();
-  } catch (error) {
-    console.error(`There was an error while creating ${name}. ${error}`);
+  const layer = new Cesium.ImageryLayer(provider);
+  layer.name = name;
+
+  baseLayers.push(layer);
+
+  // add to dropdown
+  const option = document.createElement("option");
+  option.textContent = name;
+  option.value = baseLayers.length - 1;
+  baseLayerSelect.appendChild(option);
+
+  // first layer becomes active
+  if (imageryLayers.length === 0) {
+    imageryLayers.add(layer);
   }
 }
 
 async function addAdditionalLayerOption(
   name,
   imageryProviderPromise,
-  alpha,
-  show,
+  alpha = 0.5,
+  show = true,
 ) {
-  try {
-    const imageryProvider = await Promise.resolve(imageryProviderPromise);
-    const layer = new Cesium.ImageryLayer(imageryProvider);
-    layer.alpha = alpha ?? 0.5;
-    layer.show = show ?? true;
-    layer.name = name;
-    imageryLayers.add(layer);
-    Cesium.knockout.track(layer, ["alpha", "show", "name"]);
-    updateLayerList();
-  } catch (error) {
-    console.error(`There was an error while creating ${name}. ${error}`);
+  const provider = await Promise.resolve(imageryProviderPromise);
+
+  const layer = new Cesium.ImageryLayer(provider);
+
+  layer.name = name;
+  layer.alpha = alpha;
+  layer.show = show;
+
+  imageryLayers.add(layer);
+  overlayLayers.push(layer);
+
+  createOverlayToggle(layer);
+}
+
+function createOverlayToggle(layer) {
+  const wrapper = document.createElement("div");
+  wrapper.classList.add("overlay-row");
+
+  // visibility checkbox
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = layer.show;
+  checkbox.addEventListener("change", () => {
+    layer.show = checkbox.checked;
+  });
+
+  // layer name
+  const label = document.createElement("span");
+  label.textContent = layer.name;
+
+  // move up button
+  const upBtn = document.createElement("button");
+  upBtn.textContent = "▲";
+  upBtn.onclick = () => moveLayer(layer, "up");
+
+  // move down button
+  const downBtn = document.createElement("button");
+  downBtn.textContent = "▼";
+  downBtn.onclick = () => moveLayer(layer, "down");
+
+  // opacity slider
+  const opacitySlider = document.createElement("input");
+  opacitySlider.type = "range";
+  opacitySlider.min = 0;
+  opacitySlider.max = 1;
+  opacitySlider.step = 0.01;
+  opacitySlider.value = layer.alpha;
+  opacitySlider.addEventListener("input", () => {
+    layer.alpha = parseFloat(opacitySlider.value);
+  });
+
+  wrapper.appendChild(checkbox);
+  wrapper.appendChild(label);
+  wrapper.appendChild(upBtn);
+  wrapper.appendChild(downBtn);
+  wrapper.appendChild(opacitySlider);
+
+  // reference for reordering
+  layer._uiElement = wrapper;
+
+  // insert at top to match top-to-top layer order
+  overlayContainer.insertBefore(wrapper, overlayContainer.firstChild);
+}
+
+function moveLayer(layer, direction) {
+  const index = imageryLayers.indexOf(layer);
+
+  if (direction === "up" && index < imageryLayers.length - 1) {
+    imageryLayers.raise(layer);
+
+    const prevSibling = layer._uiElement.previousElementSibling;
+    if (prevSibling) {
+      overlayContainer.insertBefore(layer._uiElement, prevSibling);
+    }
+  } else if (direction === "down" && index > 0) {
+    imageryLayers.lower(layer);
+
+    const nextSibling = layer._uiElement.nextElementSibling;
+    if (nextSibling) {
+      overlayContainer.insertBefore(nextSibling, layer._uiElement);
+    }
   }
 }
 
-function updateLayerList() {
-  const numLayers = imageryLayers.length;
-  viewModel.layers.splice(0, viewModel.layers.length);
-  for (let i = numLayers - 1; i >= 0; --i) {
-    viewModel.layers.push(imageryLayers.get(i));
-  }
-}
+baseLayerSelect.addEventListener("change", function () {
+  const index = parseInt(this.value);
+  const selected = baseLayers[index];
+
+  // remove current base layer (always index 0)
+  imageryLayers.remove(imageryLayers.get(0), false);
+
+  // add new base layer at bottom
+  imageryLayers.add(selected, 0);
+});
 
 setupLayers();
-
-//Bind the viewModel to the DOM elements of the UI that call for it.
-const toolbar = document.getElementById("toolbar");
-Cesium.knockout.applyBindings(viewModel, toolbar);
-
-Cesium.knockout
-  .getObservable(viewModel, "selectedLayer")
-  .subscribe(function (baseLayer) {
-    // Handle changes to the drop-down base layer selector.
-    let activeLayerIndex = 0;
-    const numLayers = viewModel.layers.length;
-    for (let i = 0; i < numLayers; ++i) {
-      if (viewModel.isSelectableLayer(viewModel.layers[i])) {
-        activeLayerIndex = i;
-        break;
-      }
-    }
-    const activeLayer = viewModel.layers[activeLayerIndex];
-    const show = activeLayer.show;
-    const alpha = activeLayer.alpha;
-    imageryLayers.remove(activeLayer, false);
-    imageryLayers.add(baseLayer, numLayers - activeLayerIndex - 1);
-    baseLayer.show = show;
-    baseLayer.alpha = alpha;
-    updateLayerList();
-  });
