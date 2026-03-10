@@ -391,14 +391,20 @@ ModelMeshUtility.readColorData = function (primitive, frameState) {
 /**
  * Reads per-vertex feature ID data from a primitive for a given feature ID definition.
  * Currently supports FeatureIdAttribute (vertex attributes with a setIndex).
+ * Falls back to GPU readback when the CPU typed array is not available.
  *
  * @param {object} primitive The model primitive.
  * @param {object} featureId The feature ID definition (must have a setIndex property).
+ * @param {FrameState} [frameState] Frame state, needed for GPU readback of vertex buffers.
  * @returns {object|undefined} An object with { typedArray, count }, or undefined if no matching feature ID attribute is found.
  *
  * @private
  */
-ModelMeshUtility.readFeatureIdData = function (primitive, featureId) {
+ModelMeshUtility.readFeatureIdData = function (
+  primitive,
+  featureId,
+  frameState,
+) {
   if (!defined(featureId) || !defined(featureId.setIndex)) {
     return undefined;
   }
@@ -409,13 +415,50 @@ ModelMeshUtility.readFeatureIdData = function (primitive, featureId) {
     featureId.setIndex,
   );
 
-  if (!defined(featureIdAttribute) || !defined(featureIdAttribute.typedArray)) {
+  if (!defined(featureIdAttribute)) {
+    return undefined;
+  }
+
+  const count = featureIdAttribute.count;
+  let typedArray = featureIdAttribute.typedArray;
+
+  if (!defined(typedArray)) {
+    const buffer = featureIdAttribute.buffer;
+    const componentDatatype = featureIdAttribute.componentDatatype;
+    const numComponents = AttributeType.getNumberOfComponents(
+      featureIdAttribute.type,
+    );
+    const bytes = ComponentDatatype.getSizeInBytes(componentDatatype);
+    const byteStride = featureIdAttribute.byteStride;
+    const byteOffset = featureIdAttribute.byteOffset;
+
+    const isInterleaved =
+      defined(byteStride) && byteStride !== numComponents * bytes;
+
+    const elementStride = isInterleaved ? byteStride / bytes : numComponents;
+    const elementCount = count * elementStride;
+
+    if (defined(buffer) && defined(frameState) && frameState.context.webgl2) {
+      typedArray = ComponentDatatype.createTypedArray(
+        componentDatatype,
+        elementCount,
+      );
+      buffer.getBufferData(
+        typedArray,
+        isInterleaved ? 0 : byteOffset,
+        0,
+        elementCount,
+      );
+    }
+  }
+
+  if (!defined(typedArray)) {
     return undefined;
   }
 
   return {
-    typedArray: featureIdAttribute.typedArray,
-    count: featureIdAttribute.count,
+    typedArray: typedArray,
+    count: count,
   };
 };
 

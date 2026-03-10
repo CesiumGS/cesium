@@ -1124,8 +1124,12 @@ describe("Scene/Model/ModelMeshUtility", function () {
               semantic: VertexAttributeSemantic.FEATURE_ID,
               setIndex: 0,
               componentDatatype: ComponentDatatype.FLOAT,
+              type: AttributeType.SCALAR,
               count: 4,
+              byteOffset: 0,
+              byteStride: undefined,
               typedArray: undefined,
+              buffer: undefined,
             },
             featureIdAttributeOptions,
           ),
@@ -1212,6 +1216,56 @@ describe("Scene/Model/ModelMeshUtility", function () {
       expect(result).toBeDefined();
       expect(result.typedArray).toBe(featureIds1);
       expect(result.count).toBe(4);
+    });
+
+    it("falls back to GPU readback when typed array is missing", function () {
+      const gpuData = new Float32Array([0, 1, 2, 3]);
+      const mockBuffer = {
+        getBufferData: function (outputArray) {
+          for (let i = 0; i < gpuData.length; i++) {
+            outputArray[i] = gpuData[i];
+          }
+        },
+      };
+
+      const primitive = createFeatureIdPrimitive({
+        buffer: mockBuffer,
+        count: 4,
+      });
+
+      const frameState = { context: { webgl2: true } };
+      const result = ModelMeshUtility.readFeatureIdData(
+        primitive,
+        { setIndex: 0 },
+        frameState,
+      );
+
+      expect(result).toBeDefined();
+      expect(result.typedArray.length).toBe(4);
+      expect(result.count).toBe(4);
+    });
+
+    it("returns undefined when no typed array and no frameState", function () {
+      const primitive = createFeatureIdPrimitive({
+        buffer: {},
+        count: 4,
+      });
+
+      const result = ModelMeshUtility.readFeatureIdData(primitive, {
+        setIndex: 0,
+      });
+      expect(result).toBeUndefined();
+    });
+
+    it("returns undefined when no typed array and no buffer", function () {
+      const primitive = createFeatureIdPrimitive({
+        count: 4,
+      });
+
+      const result = ModelMeshUtility.readFeatureIdData(primitive, {
+        setIndex: 0,
+      });
+      expect(result).toBeUndefined();
     });
   });
 });
