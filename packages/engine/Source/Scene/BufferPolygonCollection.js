@@ -296,7 +296,13 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    this._renderContext = renderPolygons(this, frameState, this._renderContext);
+    if (this.show) {
+      this._renderContext = renderPolygons(
+        this,
+        frameState,
+        this._renderContext,
+      );
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
