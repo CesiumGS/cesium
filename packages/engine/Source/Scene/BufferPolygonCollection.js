@@ -9,6 +9,9 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import renderPolygons from "./renderBufferPolygonCollection.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
+// @ts-expect-error Exposed for Sandcastle, types not needed.
+import earcut from "earcut";
+
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
@@ -71,6 +74,9 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class BufferPolygonCollection extends BufferPrimitiveCollection {
+  // TODO(donmccurdy): DO NOT SUBMIT
+  static earcut = earcut;
+
   /**
    * @param {object} options
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
