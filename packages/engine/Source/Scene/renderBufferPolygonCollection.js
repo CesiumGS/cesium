@@ -51,6 +51,7 @@ const BufferPolygonAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
+ * @property {() => void} destroy
  * @ignore
  */
 
@@ -69,7 +70,7 @@ const encodedCartesian = new EncodedCartesian3();
  */
 function renderBufferPolygonCollection(collection, frameState, renderContext) {
   const context = frameState.context;
-  renderContext = renderContext || {};
+  renderContext = renderContext || { destroy: destroyRenderContext };
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -307,6 +308,27 @@ function getPolygonDirtyRanges(collection) {
     (polygon.triangleOffset + polygon.triangleCount) * 3 - indexOffset;
 
   return { indexOffset, indexCount, vertexOffset, vertexCount };
+}
+
+/**
+ * Destroys render context resources. Deleting properties from the context
+ * object isn't necessary, as collection.destroy() will discard the object.
+ * @ignore
+ */
+function destroyRenderContext() {
+  const context = /** @type {BufferPolygonRenderContext} */ (this);
+
+  if (defined(context.vertexArray)) {
+    context.vertexArray.destroy();
+  }
+
+  if (defined(context.shaderProgram)) {
+    context.shaderProgram.destroy();
+  }
+
+  if (defined(context.renderState)) {
+    RenderState.removeFromCache(context.renderState);
+  }
 }
 
 export default renderBufferPolygonCollection;

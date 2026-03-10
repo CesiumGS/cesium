@@ -6,7 +6,7 @@ import {
   BufferPolygonCollection,
 } from "../../index.js";
 
-describe("BufferPolygonCollection", () => {
+describe("Scene/BufferPolygonCollection", () => {
   const color = new Color();
 
   it("featureId", () => {
