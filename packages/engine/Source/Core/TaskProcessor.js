@@ -83,7 +83,7 @@ function createWorker(url) {
   let workerPath;
   let crossOriginUrl;
 
-  // If we are provided a fully resolved URL, check it is cross-origin
+  // If we are provided a fully resolved URL, check if it is cross-origin
   // Or if provided a module ID, check the full absolute URL instead.
   if (isCrossOriginUrl(url)) {
     crossOriginUrl = url;
@@ -130,6 +130,10 @@ function createWorker(url) {
     );
   }
 
+  // TODO: this kicks the can down the road:
+  // SecurityError: Failed to execute 'texImage2D' on 'WebGL2RenderingContext': The image element contains cross-origin data, and may not be loaded.
+  // const script = `import "${workerPath}";`;
+  // workerPath = urlFromScript(script);
   options.type = "module";
 
   return new Worker(workerPath, options);

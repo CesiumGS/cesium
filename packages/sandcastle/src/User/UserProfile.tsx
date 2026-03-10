@@ -102,6 +102,38 @@ function UserPopover({
         </div>
       }
     >
+      <Button
+        onClick={async () => {
+          try {
+            const result = await fetch("https://api.cesium.com/v1/me", {
+              credentials: "include",
+            });
+            console.log("success", await result.json());
+          } catch (error) {
+            console.error("failed request");
+            console.error(error);
+          }
+        }}
+        tone="accent"
+      >
+        Test include
+      </Button>
+      <Button
+        onClick={async () => {
+          try {
+            const result = await fetch("https://api.cesium.com/v1/me", {
+              credentials: "same-origin",
+            });
+            console.log("success", await result.json());
+          } catch (error) {
+            console.error("failed request");
+            console.error(error);
+          }
+        }}
+        tone="accent"
+      >
+        Test same origin
+      </Button>
       <Button onClick={() => logOut()} tone="accent">
         Log out
       </Button>

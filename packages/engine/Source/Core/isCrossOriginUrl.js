@@ -24,7 +24,12 @@ function isCrossOriginUrl(url) {
   // IE only absolutizes href on get, not set
   // eslint-disable-next-line no-self-assign
   a.href = a.href;
-
-  return protocol !== a.protocol || host !== a.host;
+  // const inIframe = window.self !== window.top;
+  const itIs = protocol !== a.protocol || host !== a.host;
+  // console.log("isCrossOrigin", url, { itIs, inIframe });
+  // if (inIframe) {
+  //   return true;
+  // }
+  return itIs;
 }
 export default isCrossOriginUrl;

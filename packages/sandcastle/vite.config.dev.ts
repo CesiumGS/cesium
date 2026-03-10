@@ -76,6 +76,7 @@ export default defineConfig(({ command }) => {
     ...config,
     server: {
       ...config.server,
+      // port: 6006,
       cors: "*",
     },
   };

@@ -56,7 +56,8 @@ import { urlSpecifiesSandcastle } from "./Gallery/loadFromUrl.ts";
 
 const defaultJsCode = `import * as Cesium from "cesium";
 
-const viewer = new Cesium.Viewer("cesiumContainer");
+//const viewer = new Cesium.Viewer("cesiumContainer");
+document.body.style.background = "linear-gradient(to top, lightgreen, lightblue)";
 `;
 const defaultHtmlCode = `<style>
   @import url(../templates/bucket.css);

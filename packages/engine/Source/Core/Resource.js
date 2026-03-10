@@ -1945,6 +1945,7 @@ Resource._Implementations.loadImageElement = function (
     if (TrustedServers.contains(url)) {
       image.crossOrigin = "use-credentials";
     } else {
+      // image.crossOrigin = "anonymous";
       image.crossOrigin = "";
     }
   }

@@ -112,8 +112,10 @@ export class IonOAuthClient {
       ...init,
       headers: {
         ...init?.headers,
+        //
         authorization: `Bearer ${this.access_token}`,
       },
+      // credentials: "include",
     });
     const response = await fetch(request);
     if (!response.ok) {

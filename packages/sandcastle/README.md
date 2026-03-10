@@ -5,9 +5,25 @@ This package is the application for Sandcastle.
 ## Running/Building
 
 - `npm run dev`: run the development server
-- `npm run build-app`: build to static files in `/Apps/Sandcastle2` for hosting/access from the root cesium dev server
+- `npm run build-gallery`: build the gallery into this package's public directory
+- This package does not handle building itself. Instead it exposes build functions meant to be called from the project root or other locations. See the _Building Sandcastle_ section below
 
-Linting and style is managed under the project root's scripts.
+Linting and style is managed under the repo's root scripts.
+
+## Deploying Sandcastle
+
+When working on any Sandcastle features it's important to remember everywhere that we can use Sandcastle and make sure features will work everywhere. This is especially important with urls/paths and online/offline interactions.
+
+- `localhost:5173` - Locally developing Sandcastle itself, use `npm run dev` here
+- `localhost:8080/Apps/Sandcastle2` - Locally at the repository root, use `npm start` at the project root
+  - This only works after building to `Apps/Sandcastle2`. The local server should do this for you the first time or run `npm run build-sandcastle`
+  - This is also the method that anyone running Sandcastle from the [zip file download](https://cesium.com/downloads#cesiumjs) of CesiumJS would use
+- CI: `https://ci-builds.cesium.com/cesium/main/Apps/Sandcastle2/index.html` - Built and deployed in the CI workflows
+- CDN: `https://cesium.com/downloads/cesiumjs/releases/1.136/Apps/Sandcastle2/index.html` - a static hosted version of CesiumJS alongside every release
+- `dev-sandcastle.cesium.com` - "preview" version of Sandcastle up to date with `main`. Built and deployed through CI
+- `sandcastle.cesium.com` - The main sandcastle page. Deployed from the `cesium.com` branch through CI as part of our release process
+
+Historically Sandcastle has been completely serverless meaning it's trivial to deploy the static files to all of these locations. Going forward this is expected to remain the "baseline". Even as features get added that may require a user account or potentially even a server the core of Sandcastle should continue to operate without those features.
 
 ## Building Sandcastle
 
@@ -62,51 +78,3 @@ development: false
 ### Thumbnails
 
 Thumbnails should be any image that represents what the sandcastle does. Often this will just be the Viewer with or without any Sandcastle interaction buttons. Thumbnail files should be limited in size to help save on bandwidth. Currently most are around 225px in width.
-
-## Expanding the ESLint configuration
-
-<!-- TODO: this section was auto-generated, should figure out if we want these suggestions then remove this -->
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-});
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    "react-x": reactX,
-    "react-dom": reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs["recommended-typescript"].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-});
-```
