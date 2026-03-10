@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
 
+/** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Color from "../Core/Color.js"; */
 /** @import FrameState from "./FrameState.js" */
 
@@ -11,7 +12,7 @@ import BufferPolyline from "./BufferPolyline.js";
  * @typedef {object} BufferPolylineOptions
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
- * @property {Float64Array} [positions]
+ * @property {TypedArray} [positions]
  * @property {number} [width=1]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */

@@ -1,6 +1,7 @@
 import {
   Cartesian3,
   Color,
+  ComponentDatatype,
   BufferPolyline,
   BufferPolylineCollection,
 } from "../../index.js";
@@ -188,6 +189,43 @@ describe("BufferPolylineCollection", () => {
     collection.add({ positions: positions.slice(9, 18) }, polyline);
     collection._updateBoundingVolume();
 
+    expect(collection.boundingVolume.center).toEqual(center);
+    expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("positionDatatype", () => {
+    const center = new Cartesian3(1000, 0, 0);
+
+    const positions = Cartesian3.packArray(
+      [
+        Cartesian3.add(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Z, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Z, new Cartesian3()),
+      ],
+      new Int16Array(6 * 3),
+    );
+
+    const collection = new BufferPolylineCollection({
+      positionDatatype: ComponentDatatype.SHORT,
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+    });
+
+    const polyline = new BufferPolyline();
+
+    collection.add({ positions: positions.slice(0, 9) }, polyline);
+    collection.add({ positions: positions.slice(9, 18) }, polyline);
+
+    collection.get(0, polyline);
+    expect(polyline.getPositions()).toEqual(positions.slice(0, 9));
+
+    collection.get(1, polyline);
+    expect(polyline.getPositions()).toEqual(positions.slice(9, 18));
+
+    collection._updateBoundingVolume();
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
   });
