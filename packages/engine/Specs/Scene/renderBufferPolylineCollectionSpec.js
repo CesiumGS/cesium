@@ -1,16 +1,16 @@
 import {
-  BufferPoint,
-  BufferPointCollection,
+  BufferPolyline,
+  BufferPolylineCollection,
   Camera,
-  Cartesian3,
   Color,
+  ComponentDatatype,
   SceneMode,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
-  "Scene/renderBufferPointCollection",
+  "Scene/renderBufferPolylineCollection",
   () => {
     let scene;
     let collection;
@@ -25,7 +25,9 @@ describe(
     });
 
     beforeEach(function () {
-      collection = new BufferPointCollection();
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+      });
       scene.mode = SceneMode.SCENE3D;
       scene.camera = new Camera(scene);
     });
@@ -37,9 +39,10 @@ describe(
       }
     });
 
-    it("renders points", function () {
-      const point = new BufferPoint();
-      collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
+    it("renders polylines", function () {
+      const line = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      collection.add({ positions }, line);
 
       expect(scene).toRender([0, 0, 0, 255]);
 
@@ -47,37 +50,39 @@ describe(
       expect(scene).toRender([255, 255, 255, 255]);
     });
 
-    it("renders points with color", function () {
-      const point = new BufferPoint();
-      const color = Color.RED;
-      collection.add({ position: new Cartesian3(0, -1000, 0), color }, point);
+    it("renders polylines with color", function () {
+      const line = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      collection.add({ positions, color: Color.RED }, line);
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
 
-      point.setColor(Color.GREEN);
+      line.setColor(Color.GREEN);
       expect(scene).toRender([0, 128, 0, 255]);
     });
 
-    it("renders points with updated positions", function () {
-      const point = new BufferPoint();
-      collection.add({ position: new Cartesian3(0, 0, 0) }, point);
+    it("renders polylines with updated positions", function () {
+      const line = new BufferPolyline();
+      const positions = new Int32Array([0, +5000, 0, 0, +1000000, 0]);
+      collection.add({ positions }, line);
 
       scene.primitives.add(collection);
       expect(scene).toRender([0, 0, 0, 255]);
 
-      point.setPosition(new Cartesian3(0, -1000, 0));
+      line.setPositions(new Int32Array([0, -1000000, 0, 0, +1000000, 0]));
       expect(scene).toRender([255, 255, 255, 255]);
     });
 
-    it("renders points with sort order", function () {
-      const point = new BufferPoint();
+    it("renders polylines with sort order", function () {
+      const line = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
 
-      collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
-      point.setColor(Color.RED);
+      collection.add({ positions }, line);
+      line.setColor(Color.RED);
 
-      collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
-      point.setColor(Color.BLUE);
+      collection.add({ positions }, line);
+      line.setColor(Color.BLUE);
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
@@ -98,8 +103,9 @@ describe(
     });
 
     it("does not render if collection.show = false", function () {
-      const point = new BufferPoint();
-      collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
+      const line = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      collection.add({ positions }, line);
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 255, 255, 255]);
@@ -108,14 +114,15 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
-    it("does not render if point.show = false", function () {
-      const point = new BufferPoint();
-      collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
+    it("does not render if polyline.show = false", function () {
+      const line = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      collection.add({ positions }, line);
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 255, 255, 255]);
 
-      point.show = false;
+      line.show = false;
       expect(scene).toRender([0, 0, 0, 255]);
     });
   },
