@@ -9,42 +9,87 @@ const tileset = await Cesium.Cesium3DTileset.fromUrl(tilesetUrl);
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
-viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
+viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(movement) {
   const pickPosition = viewer.scene.pickPosition(movement.position);
   const pickFeature = viewer.scene.pick(movement.position);
   const element = pickFeature.getProperty("element");
+  const elementId = `0x${element.toString(16)}`;
 
-  console.log(pickPosition);
-  console.log(element);
+  const cartoRad = Cesium.Cartographic.fromCartesian(pickPosition);
+  const carto = {
+    longitude: Cesium.Math.toDegrees(cartoRad.longitude),
+    latitude: Cesium.Math.toDegrees(cartoRad.latitude),
+    height: cartoRad.height
+  }
+  console.log(carto);
+  console.log(elementId);
 
   if (pickPosition) {
-    doSnap(pickPosition);
+    const snapResult = await doSnap(elementId, carto.latitude, carto.longitude, carto.height);
+    console.log("snap result:", snapResult);
+
+    const snapPoint = snapResult.snapPoint;
+
+    // returned snap point
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(
+        snapPoint.longitude, snapPoint.latitude, snapPoint.height
+      ),
+      point: {
+        color: Cesium.Color.RED,
+        pixelSize: 10,
+        outlineColor: Cesium.Color.YELLOW,
+        outlineWidth: 3,
+      },
+    });
+
+    // returned hit point
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(
+        snapResult.hitPoint.longitude,
+        snapResult.hitPoint.latitude,
+        snapResult.hitPoint.height
+      ),
+      point: {
+        color: Cesium.Color.PINK,
+        pixelSize: 10,
+        outlineColor: Cesium.Color.FUCHSIA,
+        outlineWidth: 3,
+      },
+    });
+
+    // picked position
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(
+        carto.longitude, carto.latitude, carto.height
+      ),
+      point: {
+        color: Cesium.Color.LIME,
+        pixelSize: 10,
+        outlineColor: Cesium.Color.CYAN,
+        outlineWidth: 3,
+      },
+    });
   }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-async function doSnap(pickPosition) {
-  const point = { x: pickPosition.x, y: pickPosition.y, z: pickPosition.z };
+async function doSnap(elementId, latitude, longitude, height) {
   const response = await fetch(
     "http://localhost:3000/api/assets/844c3411-0a0c-4ed5-b608-34dae75d3982/template/request-snap",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id: "0x300000008b1",
-        testPoint: point,
-        closePoint: point,
-        worldToView: [
-          [1, 0, 0, 0],
-          [0, 1, 0, 0],
-          [0, 0, 1, 0],
-          [0, 0, 0, 1],
-        ],
-        snapModes: [1],
-        snapAperture: 1000,
+        id: elementId,
+        testPoint: {
+          latitude: latitude,
+          longitude: longitude,
+          height: height
+        },
+        worldToView: {},
       }),
     },
   );
   const data = await response.json();
-  console.log("snap result:", data);
   return data;
 }
