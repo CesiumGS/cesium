@@ -9,6 +9,11 @@ const tileset = await Cesium.Cesium3DTileset.fromUrl(tilesetUrl);
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
+const ecefCorners = getFrustumCornersECEF(viewer.camera);
+console.log("ecefCorners:", ecefCorners);
+const cornersLonLat = cornersECEFToLonLat(ecefCorners);
+console.log("cornersLonLat:", cornersLonLat);
+
 viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(movement) {
   const pickPosition = viewer.scene.pickPosition(movement.position);
   const pickFeature = viewer.scene.pick(movement.position);
@@ -86,10 +91,74 @@ async function doSnap(elementId, latitude, longitude, height) {
           longitude: longitude,
           height: height
         },
-        worldToView: {},
+        frustumCorners: cornersLonLat,
+        viewportSize: {
+          width: viewer.scene.context.drawingBufferWidth,
+          height: viewer.scene.context.drawingBufferHeight,
+        }
       }),
     },
   );
   const data = await response.json();
   return data;
+}
+
+function getFrustumCornersECEF(camera) {
+  const viewProjection = Cesium.Matrix4.multiply(
+    camera.frustum.projectionMatrix,
+    camera.viewMatrix,
+    new Cesium.Matrix4()
+  );
+  const inverseViewProjection = Cesium.Matrix4.inverse(viewProjection, new Cesium.Matrix4());
+
+  // 8 NDC corners: z=-1 is near plane, z=+1 is far plane
+  const ndcCorners = [
+    new Cesium.Cartesian4(-1, -1, -1, 1), // near bottom-left
+    new Cesium.Cartesian4( 1, -1, -1, 1), // near bottom-right
+    new Cesium.Cartesian4( 1,  1, -1, 1), // near top-right
+    new Cesium.Cartesian4(-1,  1, -1, 1), // near top-left
+    new Cesium.Cartesian4(-1, -1,  1, 1), // far bottom-left
+    new Cesium.Cartesian4( 1, -1,  1, 1), // far bottom-right
+    new Cesium.Cartesian4( 1,  1,  1, 1), // far top-right
+    new Cesium.Cartesian4(-1,  1,  1, 1), // far top-left
+  ];
+
+  const corners = ndcCorners.map(ndc => {
+    const worldPos = Cesium.Matrix4.multiplyByVector(inverseViewProjection, ndc, new Cesium.Cartesian4());
+    // Perspective divide
+    return new Cesium.Cartesian3(
+      worldPos.x / worldPos.w,
+      worldPos.y / worldPos.w,
+      worldPos.z / worldPos.w
+    );
+  });
+
+  return corners; // ECEF Cartesian3 coordinates
+}
+
+function cornersECEFToLonLat(corners) {
+  const lonLats = [];
+  corners.forEach((corner) => {
+    // console.log(corner);
+    const lonLat = Cesium.Cartographic.fromCartesian(corner);
+
+    lonLats.push({
+      longitude: Cesium.Math.toDegrees(lonLat.longitude),
+      latitude: Cesium.Math.toDegrees(lonLat.latitude),
+      elevation: lonLat.height
+    })
+  });
+
+  console.log(lonLats);
+
+  return {
+    "nearLowerLeft": lonLats[0],
+    "nearLowerRight": lonLats[1],
+    "nearUpperLeft": lonLats[2],
+    "nearUpperRight": lonLats[3],
+    "farLowerLeft": lonLats[4],
+    "farLowerRight": lonLats[5],
+    "farUpperLeft": lonLats[6],
+    "farUpperRight": lonLats[7]
+  }
 }
