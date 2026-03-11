@@ -1803,45 +1803,13 @@ describe("Scene/BillboardCollection", function () {
         expect(scene).notToRender([0, 0, 0, 255]);
       });
 
-      it("renders billboards when instancing is disabled", async function () {
-        // disable extension
-        const instancedArrays = context._instancedArrays;
-        context._instancedArrays = undefined;
-
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        const greenBillboard = billboards.add({
-          position: Cartesian3.ZERO,
-          image: greenImage,
-        });
-
-        await pollToPromise(() => {
-          scene.renderForSpecs();
-          return greenBillboard.ready;
-        });
-
-        expect(scene).toRender([0, 255, 0, 255]);
-
-        const blueBillboard = billboards.add({
-          position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-          image: largeBlueImage,
-        });
-        scene.renderForSpecs();
-
-        await pollToPromise(() => {
-          scene.renderForSpecs();
-          return blueBillboard.ready;
-        });
-
-        expect(scene).toRender([0, 0, 255, 255]);
-
-        billboards.remove(blueBillboard);
-        expect(scene).toRender([0, 255, 0, 255]);
-
-        billboards.remove(greenBillboard);
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        context._instancedArrays = instancedArrays;
+      it("throws developer error when instancing is unsupported", async function () {
+        expect(() =>
+          billboards.update({
+            ...scene.frameState,
+            context: { ...context, instancedArrays: undefined },
+          }),
+        ).toThrowDeveloperError(/ANGLE_instanced_arrays/);
       });
 
       it("renders with a different texture atlas", async function () {
