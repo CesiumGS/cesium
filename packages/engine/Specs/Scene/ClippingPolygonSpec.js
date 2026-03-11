@@ -336,7 +336,7 @@ describe("Scene/ClippingPolygon", function () {
     });
     expect(() => {
       ClippingPolygon.clone(polygon, scratchClippingPolygon); // We do not support cloning into a immutable object
-    }).toThrowError("Cannot clone into an immutable object");
+    }).toThrowError("Cannot clone into an immutable ClippingPolygon");
   });
 
   it("computeRectangle skips position comparison for immutable polygons on subsequent calls", function () {
