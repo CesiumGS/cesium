@@ -101,6 +101,8 @@ export default [
           "ts-nocheck": false,
         },
       ],
+      // Disallow e.g. `new Cartesian3.fromDegrees(...)`; invalid with ES6 classes.
+      "new-cap": ["error", { capIsNew: true }],
     },
   },
   {

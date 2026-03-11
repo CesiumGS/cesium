@@ -3,15 +3,19 @@
 import defined from "../Core/defined.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
+import renderPolylines from "./renderBufferPolylineCollection.js";
 
+/** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Color from "../Core/Color.js"; */
+/** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
 
 /**
  * @typedef {object} BufferPolylineOptions
+ * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
- * @property {Float64Array} [positions]
+ * @property {TypedArray} [positions]
  * @property {number} [width=1]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -114,6 +118,14 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    */
   update(frameState) {
     super.update(frameState);
+
+    if (this.show) {
+      this._renderContext = renderPolylines(
+        this,
+        frameState,
+        this._renderContext,
+      );
+    }
   }
 }
 
