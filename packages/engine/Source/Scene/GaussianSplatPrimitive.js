@@ -35,6 +35,7 @@ import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import Transforms from "../Core/Transforms.js";
+import WebGLConstants from "../Core/WebGLConstants.js";
 
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4C = new Matrix4();
@@ -70,7 +71,7 @@ const GaussianSplatSortingState = {
  * Snapshot lifecycle for rebuilding aggregated splat data.
  *
  * Transition order:
- * BUILDING -> TEXTURE_PENDING -> TEXTURE_READY -> SORTING -> READY
+ * BUILDING -> TEXTURE_PENDING -> UPLOAD_PENDING/UPLOADING -> TEXTURE_READY -> SORTING -> READY
  *
  * The transition points are split across two functions:
  * - {@link GaussianSplatPrimitive#update} drives BUILDING/SORTING/READY
@@ -86,6 +87,10 @@ const SnapshotState = {
   BUILDING: "BUILDING",
   // Async texture generation/upload is in flight for this snapshot.
   TEXTURE_PENDING: "TEXTURE_PENDING",
+  // Worker-side packing completed and GPU upload can begin on the next frame.
+  UPLOAD_PENDING: "UPLOAD_PENDING",
+  // Texture data is being staged to the GPU over multiple frames.
+  UPLOADING: "UPLOADING",
   // Attribute textures are ready; snapshot can now request index sorting.
   TEXTURE_READY: "TEXTURE_READY",
   // Sort request is in flight for this snapshot generation.
@@ -111,6 +116,8 @@ const SnapshotState = {
  * @property {Uint32Array|undefined} indexes Sorted index buffer when READY.
  * @property {Texture|undefined} gaussianSplatTexture Packed splat attribute texture.
  * @property {Texture|undefined} sphericalHarmonicsTexture Packed SH texture.
+ * @property {object|undefined} splatTextureUpload Staged upload state for the splat texture.
+ * @property {object|undefined} sphericalHarmonicsUpload Staged upload state for the SH texture.
  * @property {number} lastTextureWidth Last splat texture width.
  * @property {number} lastTextureHeight Last splat texture height.
  * @property {string} state Current snapshot lifecycle state from {@link SnapshotState}.
@@ -149,6 +156,246 @@ const DEFAULT_SORT_MIN_FRAME_INTERVAL = 3;
 const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.008726646259971648;
 // Minimum camera movement in world units before triggering steady re-sort.
 const DEFAULT_SORT_MIN_POSITION_DELTA = 1.0;
+// Upload budget for staged texture transfers. Kept intentionally conservative
+// to avoid blocking a frame with a single large texSubImage2D.
+const DEFAULT_TEXTURE_UPLOAD_BUDGET_BYTES = 8 * 1024 * 1024;
+// Keep a small ring of PBOs alive so uploads can overlap across frames.
+const DEFAULT_MAX_PENDING_UPLOAD_BUFFERS = 2;
+
+function destroyTextureUploadState(uploadState) {
+  if (!defined(uploadState)) {
+    return;
+  }
+
+  const gl = uploadState.gl;
+  if (defined(uploadState.pendingBuffers)) {
+    for (let i = 0; i < uploadState.pendingBuffers.length; i++) {
+      const entry = uploadState.pendingBuffers[i];
+      if (defined(entry.sync)) {
+        gl.deleteSync(entry.sync);
+      }
+      if (defined(entry.buffer)) {
+        gl.deleteBuffer(entry.buffer);
+      }
+    }
+  }
+
+  if (defined(uploadState.availableBuffers)) {
+    for (let i = 0; i < uploadState.availableBuffers.length; i++) {
+      gl.deleteBuffer(uploadState.availableBuffers[i]);
+    }
+  }
+
+  uploadState.pendingBuffers = [];
+  uploadState.availableBuffers = [];
+  uploadState.data = undefined;
+}
+
+function recycleUploadBuffers(uploadState) {
+  if (!uploadState.usePixelUnpackBuffers) {
+    return;
+  }
+
+  const gl = uploadState.gl;
+  const pending = uploadState.pendingBuffers;
+  for (let i = pending.length - 1; i >= 0; i--) {
+    const entry = pending[i];
+    const waitResult = gl.clientWaitSync(entry.sync, 0, 0);
+    if (
+      waitResult === WebGLConstants.CONDITION_SATISFIED ||
+      waitResult === WebGLConstants.ALREADY_SIGNALED
+    ) {
+      gl.deleteSync(entry.sync);
+      uploadState.availableBuffers.push(entry.buffer);
+      pending.splice(i, 1);
+    } else if (waitResult === WebGLConstants.WAIT_FAILED) {
+      gl.deleteSync(entry.sync);
+      gl.deleteBuffer(entry.buffer);
+      pending.splice(i, 1);
+    }
+  }
+}
+
+function createTextureUploadState(texture, data) {
+  if (!defined(texture) || !defined(data)) {
+    return undefined;
+  }
+
+  const context = texture._context;
+  const pixelFormat = texture.pixelFormat;
+  const pixelDatatype = texture.pixelDatatype;
+  const width = texture.width;
+  const height = texture.height;
+
+  return {
+    context: context,
+    gl: context._gl,
+    texture: texture,
+    data: data,
+    width: width,
+    height: height,
+    nextRow: 0,
+    elementsPerRow: width * PixelFormat.componentsLength(pixelFormat),
+    rowByteSize: PixelFormat.textureSizeInBytes(
+      pixelFormat,
+      pixelDatatype,
+      width,
+      1,
+    ),
+    unpackAlignment: PixelFormat.alignmentInBytes(
+      pixelFormat,
+      pixelDatatype,
+      width,
+    ),
+    usePixelUnpackBuffers: context.webgl2,
+    pendingBuffers: [],
+    availableBuffers: [],
+    complete: false,
+  };
+}
+
+function advanceTextureUploadState(uploadState, byteBudget) {
+  if (!defined(uploadState) || uploadState.complete) {
+    return 0;
+  }
+
+  const remainingRows = uploadState.height - uploadState.nextRow;
+  if (remainingRows <= 0) {
+    uploadState.complete = true;
+    uploadState.data = undefined;
+    return 0;
+  }
+
+  const rowByteSize = uploadState.rowByteSize;
+  const rowsPerChunk = Math.max(1, Math.floor(byteBudget / rowByteSize));
+  const rowsToUpload = Math.min(remainingRows, rowsPerChunk);
+  const startIndex = uploadState.nextRow * uploadState.elementsPerRow;
+  const endIndex = startIndex + rowsToUpload * uploadState.elementsPerRow;
+  const texture = uploadState.texture;
+
+  if (!uploadState.usePixelUnpackBuffers) {
+    texture.copyFrom({
+      xOffset: 0,
+      yOffset: uploadState.nextRow,
+      source: {
+        width: uploadState.width,
+        height: rowsToUpload,
+        arrayBufferView: uploadState.data.subarray(startIndex, endIndex),
+      },
+      skipColorSpaceConversion: true,
+    });
+    uploadState.nextRow += rowsToUpload;
+  } else {
+    recycleUploadBuffers(uploadState);
+    if (
+      uploadState.availableBuffers.length === 0 &&
+      uploadState.pendingBuffers.length >= DEFAULT_MAX_PENDING_UPLOAD_BUFFERS
+    ) {
+      return 0;
+    }
+
+    const gl = uploadState.gl;
+    const byteOffset = startIndex * uploadState.data.BYTES_PER_ELEMENT;
+    const byteLength = rowsToUpload * rowByteSize;
+    const pbo = uploadState.availableBuffers.pop() ?? gl.createBuffer();
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(texture._textureTarget, texture._texture);
+    gl.bindBuffer(WebGLConstants.PIXEL_UNPACK_BUFFER, pbo);
+    gl.bufferData(
+      WebGLConstants.PIXEL_UNPACK_BUFFER,
+      byteLength,
+      WebGLConstants.STREAM_DRAW,
+    );
+    gl.bufferSubData(
+      WebGLConstants.PIXEL_UNPACK_BUFFER,
+      0,
+      new Uint8Array(uploadState.data.buffer, byteOffset, byteLength),
+    );
+    gl.pixelStorei(
+      WebGLConstants.UNPACK_ALIGNMENT,
+      uploadState.unpackAlignment,
+    );
+    gl.pixelStorei(WebGLConstants.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.pixelStorei(WebGLConstants.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(
+      WebGLConstants.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+      WebGLConstants.NONE,
+    );
+    gl.texSubImage2D(
+      texture._textureTarget,
+      0,
+      0,
+      uploadState.nextRow,
+      uploadState.width,
+      rowsToUpload,
+      texture.pixelFormat,
+      PixelDatatype.toWebGLConstant(texture.pixelDatatype, uploadState.context),
+      0,
+    );
+    gl.bindBuffer(WebGLConstants.PIXEL_UNPACK_BUFFER, null);
+    gl.bindTexture(texture._textureTarget, null);
+
+    const sync = gl.fenceSync(WebGLConstants.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    uploadState.pendingBuffers.push({
+      buffer: pbo,
+      sync: sync,
+    });
+    gl.flush();
+
+    uploadState.nextRow += rowsToUpload;
+  }
+
+  if (uploadState.nextRow >= uploadState.height) {
+    uploadState.complete = true;
+    uploadState.data = undefined;
+  }
+
+  return rowsToUpload * rowByteSize;
+}
+
+function areSnapshotUploadsComplete(snapshot) {
+  const splatDone =
+    !defined(snapshot.splatTextureUpload) ||
+    snapshot.splatTextureUpload.complete;
+  const shDone =
+    !defined(snapshot.sphericalHarmonicsUpload) ||
+    snapshot.sphericalHarmonicsUpload.complete;
+  return splatDone && shDone;
+}
+
+function advanceSnapshotTextureUploads(snapshot) {
+  let remainingBudget = DEFAULT_TEXTURE_UPLOAD_BUDGET_BYTES;
+  let uploadedBytes = 0;
+
+  if (
+    defined(snapshot.splatTextureUpload) &&
+    !snapshot.splatTextureUpload.complete
+  ) {
+    const consumed = advanceTextureUploadState(
+      snapshot.splatTextureUpload,
+      remainingBudget,
+    );
+    uploadedBytes += consumed;
+    remainingBudget = Math.max(0, remainingBudget - consumed);
+  }
+
+  if (
+    remainingBudget > 0 &&
+    defined(snapshot.sphericalHarmonicsUpload) &&
+    !snapshot.sphericalHarmonicsUpload.complete
+  ) {
+    uploadedBytes += advanceTextureUploadState(
+      snapshot.sphericalHarmonicsUpload,
+      remainingBudget,
+    );
+  }
+
+  return {
+    complete: areSnapshotUploadsComplete(snapshot),
+    uploadedBytes: uploadedBytes,
+  };
+}
 
 /**
  * Determines whether the camera has moved or rotated enough since the last
@@ -281,6 +528,14 @@ function destroySnapshotTextures(snapshot) {
   if (!defined(snapshot)) {
     return;
   }
+  if (defined(snapshot.splatTextureUpload)) {
+    destroyTextureUploadState(snapshot.splatTextureUpload);
+    snapshot.splatTextureUpload = undefined;
+  }
+  if (defined(snapshot.sphericalHarmonicsUpload)) {
+    destroyTextureUploadState(snapshot.sphericalHarmonicsUpload);
+    snapshot.sphericalHarmonicsUpload = undefined;
+  }
   if (defined(snapshot.gaussianSplatTexture)) {
     snapshot.gaussianSplatTexture.destroy();
     snapshot.gaussianSplatTexture = undefined;
@@ -356,6 +611,15 @@ function releaseRetiredTextures(primitive, frameNumber) {
 function commitSnapshot(primitive, snapshot, frameState) {
   if (!defined(snapshot.indexes) || snapshot.state !== SnapshotState.READY) {
     throw new DeveloperError("Committing snapshot before it is READY.");
+  }
+
+  if (defined(snapshot.splatTextureUpload)) {
+    destroyTextureUploadState(snapshot.splatTextureUpload);
+    snapshot.splatTextureUpload = undefined;
+  }
+  if (defined(snapshot.sphericalHarmonicsUpload)) {
+    destroyTextureUploadState(snapshot.sphericalHarmonicsUpload);
+    snapshot.sphericalHarmonicsUpload = undefined;
   }
 
   const frameNumber = frameState.frameNumber;
@@ -497,38 +761,25 @@ async function processGeneratedSplatTextureData(
     snapshot.splatRowShift = splatRowShift;
 
     if (primitive._pendingSnapshot !== snapshot) {
-      snapshot.state = SnapshotState.BUILDING;
       return;
     }
-    if (!defined(snapshot.gaussianSplatTexture)) {
-      snapshot.gaussianSplatTexture = createGaussianSplatTexture(
-        frameState.context,
-        effectiveTextureData,
-      );
-    } else if (
-      snapshot.lastTextureHeight !== effectiveTextureData.height ||
-      snapshot.lastTextureWidth !== effectiveTextureData.width
-    ) {
-      const oldTex = snapshot.gaussianSplatTexture;
-      snapshot.gaussianSplatTexture = createGaussianSplatTexture(
-        frameState.context,
-        effectiveTextureData,
-      );
-      oldTex.destroy();
-    } else {
-      snapshot.gaussianSplatTexture.copyFrom({
-        source: {
-          width: effectiveTextureData.width,
-          height: effectiveTextureData.height,
-          arrayBufferView: effectiveTextureData.data,
-        },
-      });
-    }
+
+    snapshot.gaussianSplatTexture = createGaussianSplatTexture(
+      frameState.context,
+      {
+        width: effectiveTextureData.width,
+        height: effectiveTextureData.height,
+      },
+    );
     snapshot.lastTextureHeight = effectiveTextureData.height;
     snapshot.lastTextureWidth = effectiveTextureData.width;
+    snapshot.gaussianSplatTexture._initialized = true;
+    snapshot.splatTextureUpload = createTextureUploadState(
+      snapshot.gaussianSplatTexture,
+      effectiveTextureData.data,
+    );
 
     if (defined(snapshot.shData) && snapshot.sphericalHarmonicsDegree > 0) {
-      const oldTex = snapshot.sphericalHarmonicsTexture;
       const width = ContextLimits.maximumTextureSize;
       const dims = snapshot.shCoefficientCount / 3;
       const splatsPerRow = Math.floor(width / dims);
@@ -545,10 +796,8 @@ async function processGeneratedSplatTextureData(
             `Disabling spherical harmonics for this snapshot (color-only fallback).`,
         );
         snapshot.sphericalHarmonicsDegree = 0;
-        if (defined(oldTex)) {
-          oldTex.destroy();
-        }
         snapshot.sphericalHarmonicsTexture = undefined;
+        snapshot.sphericalHarmonicsUpload = undefined;
       } else {
         const texBuf = new Uint32Array(width * _shHeight * 2);
 
@@ -563,18 +812,19 @@ async function processGeneratedSplatTextureData(
         snapshot.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
           frameState.context,
           {
-            data: texBuf,
             width: width,
             height: _shHeight,
           },
         );
-        if (defined(oldTex)) {
-          oldTex.destroy();
-        }
+        snapshot.sphericalHarmonicsTexture._initialized = true;
+        snapshot.sphericalHarmonicsUpload = createTextureUploadState(
+          snapshot.sphericalHarmonicsTexture,
+          texBuf,
+        );
       }
     }
 
-    snapshot.state = SnapshotState.TEXTURE_READY;
+    snapshot.state = SnapshotState.UPLOAD_PENDING;
   } catch (error) {
     console.error("Error generating Gaussian splat texture:", error);
     snapshot.state = SnapshotState.BUILDING;
@@ -695,11 +945,15 @@ async function resolveSteadySort(primitive, activeSort, sortPromise) {
 function createSphericalHarmonicsTexture(context, shData) {
   const texture = new Texture({
     context: context,
-    source: {
-      width: shData.width,
-      height: shData.height,
-      arrayBufferView: shData.data,
-    },
+    source: defined(shData.data)
+      ? {
+          width: shData.width,
+          height: shData.height,
+          arrayBufferView: shData.data,
+        }
+      : undefined,
+    width: shData.width,
+    height: shData.height,
     preMultiplyAlpha: false,
     skipColorSpaceConversion: true,
     pixelFormat: PixelFormat.RG_INTEGER,
@@ -725,11 +979,15 @@ function createSphericalHarmonicsTexture(context, shData) {
 function createGaussianSplatTexture(context, splatTextureData) {
   return new Texture({
     context: context,
-    source: {
-      width: splatTextureData.width,
-      height: splatTextureData.height,
-      arrayBufferView: splatTextureData.data,
-    },
+    source: defined(splatTextureData.data)
+      ? {
+          width: splatTextureData.width,
+          height: splatTextureData.height,
+          arrayBufferView: splatTextureData.data,
+        }
+      : undefined,
+    width: splatTextureData.width,
+    height: splatTextureData.height,
     preMultiplyAlpha: false,
     skipColorSpaceConversion: true,
     pixelFormat: PixelFormat.RGBA_INTEGER,
@@ -1830,6 +2088,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         indexes: undefined,
         gaussianSplatTexture: undefined,
         sphericalHarmonicsTexture: undefined,
+        splatTextureUpload: undefined,
+        sphericalHarmonicsUpload: undefined,
         lastTextureWidth: 0,
         lastTextureHeight: 0,
         splatRowMask: 0, // set by processGeneratedSplatTextureData
@@ -1852,6 +2112,17 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       }
       if (pending.state === SnapshotState.TEXTURE_PENDING) {
         return;
+      }
+      if (
+        pending.state === SnapshotState.UPLOAD_PENDING ||
+        pending.state === SnapshotState.UPLOADING
+      ) {
+        pending.state = SnapshotState.UPLOADING;
+        const uploadProgress = advanceSnapshotTextureUploads(pending);
+        if (!uploadProgress.complete) {
+          return;
+        }
+        pending.state = SnapshotState.TEXTURE_READY;
       }
       if (
         pending.state === SnapshotState.TEXTURE_READY &&
