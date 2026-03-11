@@ -16,7 +16,7 @@ import Rectangle from "../Core/Rectangle.js";
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions A list of three or more Cartesian coordinates defining the outer ring of the clipping polygon.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default]
- * @param {boolean} [options.immutable=false] Marks the ClippingPolygon as immutable which can enable internal optimizations.
+ * @param {boolean} [options.immutable=false] Flags the ClippingPolygon as immutable which can enable internal optimizations.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
@@ -212,7 +212,7 @@ ClippingPolygon.clone = function (polygon, result) {
   }
 
   if (result._immutable) {
-    throw new DeveloperError("Cannot clone into an immutable object");
+    throw new DeveloperError("Cannot clone into an immutable ClippingPolygon");
   }
 
   result._ellipsoid = polygon.ellipsoid;
@@ -248,7 +248,7 @@ ClippingPolygon.equals = function (left, right) {
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
   if (
-    (this._immutable && this._cachedPositions) ||
+    (this._immutable && this._cachedPositions) || // if immutable we can skip the expencive vertex comparison
     equalsArrayCartesian3(this._positions, this._cachedPositions)
   ) {
     return Rectangle.clone(this._cachedRectangle, result);

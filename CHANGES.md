@@ -7,6 +7,7 @@
 #### Additions :tada:
 
 - Added experimental, performance-focused vector primitive APIs: `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13212](https://github.com/CesiumGS/cesium/pull/13212)
+- Added an immutable option to ClippingPolygon to enable internal optimizations. [#13273](https://github.com/CesiumGS/cesium/pull/13273)
 
 #### Fixes :wrench:
 
