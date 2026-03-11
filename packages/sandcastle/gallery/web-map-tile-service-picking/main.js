@@ -5,6 +5,33 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   shouldAnimate: true,
 });
 
+function geoJsonToFeatureInfo(json) {
+  return json.features.map((feature) => {
+    const featureInfo = new Cesium.ImageryLayerFeatureInfo();
+    featureInfo.data = feature;
+    featureInfo.properties = feature.properties;
+    featureInfo.configureNameFromProperties(feature.properties);
+    featureInfo.configureDescriptionFromProperties(feature.properties);
+
+    // If this is a point feature, use the coordinates of the point.
+    if (Cesium.defined(feature.geometry) && feature.geometry.type === "Point") {
+      const [latitude, longitude] = feature.geometry.coordinates;
+      featureInfo.position = Cesium.Cartographic.fromDegrees(
+        longitude,
+        latitude,
+      );
+    }
+
+    return featureInfo;
+  });
+}
+
+const getFeatureInfoJson = new Cesium.GetFeatureInfoFormat(
+  "json",
+  "application/json",
+  geoJsonToFeatureInfo,
+);
+
 const kvpProvider = new Cesium.WebMapTileServiceImageryProvider({
   url: "https://wmts.marine.copernicus.eu/teroWmts",
   layer:
@@ -13,6 +40,7 @@ const kvpProvider = new Cesium.WebMapTileServiceImageryProvider({
   tileMatrixSetID: "EPSG:3857",
   format: "image/png",
   enablePickFeatures: true,
+  getFeatureInfoFormats: [getFeatureInfoJson],
 });
 
 const restProvider = new Cesium.WebMapTileServiceImageryProvider({
