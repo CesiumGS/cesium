@@ -755,6 +755,7 @@ function createCustomTags(imageryProvider) {
     return defined(labels) ? labels[level] : level.toString();
   }
 
+  // We provide both uppercase and lowercase to make it more convenient for users when creating URL templates.
   return {
     TileMatrix: function (provider, x, y, level) {
       return getTileMatrix(level);
