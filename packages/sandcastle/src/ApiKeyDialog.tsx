@@ -320,7 +320,8 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                   autoComplete="off"
                 />
                 <div className="vertex-json-description">
-                  Download from GCP Console &gt; IAM &gt; Service Accounts &gt; Keys
+                  Download from GCP Console &gt; IAM &gt; Service Accounts &gt;
+                  Keys
                 </div>
                 {vertexError && (
                   <div className="vertex-json-error">{vertexError}</div>
