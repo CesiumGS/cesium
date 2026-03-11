@@ -17,6 +17,7 @@
 
 - Fixed memory leak when rendering Gaussian splat 3D tilesets. [#13229](https://github.com/CesiumGS/cesium/pull/13229/)
 - No longer disables custom shaders for primitives with missing metadata, as long as the metadata exists on the overall class definition. [#13258](https://github.com/CesiumGS/cesium/pull/13258)
+- Types for Cartesian2, Cartesian3, and Cartesian4 `.clone()` now reflect that they may return undefined. [#13265](https://github.com/CesiumGS/cesium/issues/13265)
 
 ## 1.139.1 - 2026-03-05
 
