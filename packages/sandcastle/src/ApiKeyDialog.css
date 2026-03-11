@@ -53,6 +53,12 @@
   color: var(--stratakit-color-text-placeholder, #888);
 }
 
+.vertex-json-description {
+  color: var(--stratakit-color-text-muted, #888);
+  font-size: var(--stratakit-text-caption-font-size, 12px);
+  line-height: 1.35;
+}
+
 .vertex-json-error {
   color: var(--stratakit-color-text-danger-strong, #d64b4b);
   font-size: var(--stratakit-text-caption-font-size, 12px);
