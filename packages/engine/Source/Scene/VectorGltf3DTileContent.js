@@ -174,7 +174,7 @@ Object.defineProperties(VectorGltf3DTileContent.prototype, {
 });
 
 VectorGltf3DTileContent.prototype.getExtension = function (extensionName) {
-  if (extensionName === "CESIUM_vector_tiles") {
+  if (extensionName === "CESIUM_mesh_vector") {
     return this._vectorBuffers;
   }
   return undefined;

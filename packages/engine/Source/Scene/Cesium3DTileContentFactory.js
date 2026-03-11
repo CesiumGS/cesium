@@ -104,7 +104,7 @@ const Cesium3DTileContentFactory = {
 
     if (
       defined(tileset.hasExtension) &&
-      tileset.hasExtension("CESIUM_vector_tiles")
+      tileset.hasExtension("CESIUM_mesh_vector")
     ) {
       return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
@@ -120,7 +120,7 @@ const Cesium3DTileContentFactory = {
 
     if (
       defined(tileset.hasExtension) &&
-      tileset.hasExtension("CESIUM_vector_tiles")
+      tileset.hasExtension("CESIUM_mesh_vector")
     ) {
       return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, json);
     }

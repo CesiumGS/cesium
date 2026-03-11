@@ -1,0 +1,12 @@
+{
+  "asset": { "version": "1.1" },
+  "extensionsUsed": [ "CESIUM_mesh_vector" ],
+  "extensionsRequired": [ "CESIUM_mesh_vector" ],
+  "geometricError": 20000.0,
+  "root": {
+    "boundingVolume": { "region": [ -3.141592653589793, -1.5707963267948966, 3.141592653589793, 1.5707963267948966, -1000, 1000 ] },
+    "geometricError": 10000.0,
+    "refine": "REPLACE",
+    "content": { "uri": "sample-cities-spain.glb" }
+  }
+}
