@@ -74,7 +74,7 @@ try {
       Cesium.JulianDate.now(),
     );
     clock.multiplier = 604800;
-    clock.currentTime = new Cesium.JulianDate.fromIso8601(roverAnimStartIso);
+    clock.currentTime = Cesium.JulianDate.fromIso8601(roverAnimStartIso);
     viewer.timeline.zoomTo(rover.availability.start, rover.availability.stop);
 
     const boundingSphere = new Cesium.BoundingSphere(
