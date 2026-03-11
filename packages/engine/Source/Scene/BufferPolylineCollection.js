@@ -119,11 +119,13 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    this._renderContext = renderPolylines(
-      this,
-      frameState,
-      this._renderContext,
-    );
+    if (this.show) {
+      this._renderContext = renderPolylines(
+        this,
+        frameState,
+        this._renderContext,
+      );
+    }
   }
 }
 

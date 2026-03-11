@@ -8,6 +8,7 @@ import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
 import assert from "../Core/assert.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
+import defined from "../Core/defined.js";
 
 /** @import { TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
@@ -64,7 +65,7 @@ class BufferPrimitiveCollection {
    * implementations, so the collection should be ignorant of the renderer's implementation
    * and context data. A collection only has one renderer active at a time.
    *
-   * @type {unknown}
+   * @type {{destroy: Function}|null}
    * @ignore
    */
   _renderContext = null;
@@ -248,6 +249,16 @@ class BufferPrimitiveCollection {
    */
   isDestroyed() {
     return false;
+  }
+
+  /** Destroys collection and its GPU resources. */
+  destroy() {
+    if (defined(this._renderContext)) {
+      this._renderContext.destroy();
+      this._renderContext = undefined;
+      this._dirtyOffset = 0;
+      this._dirtyCount = this.primitiveCount;
+    }
   }
 
   /**

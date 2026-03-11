@@ -120,7 +120,9 @@ class BufferPointCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    this._renderContext = renderPoints(this, frameState, this._renderContext);
+    if (this.show) {
+      this._renderContext = renderPoints(this, frameState, this._renderContext);
+    }
   }
 }
 

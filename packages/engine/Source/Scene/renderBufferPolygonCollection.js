@@ -51,6 +51,7 @@ const BufferPolygonAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
+ * @property {Function} destroy
  * @ignore
  */
 
@@ -69,7 +70,7 @@ const encodedCartesian = new EncodedCartesian3();
  */
 function renderBufferPolygonCollection(collection, frameState, renderContext) {
   const context = frameState.context;
-  renderContext = renderContext || {};
+  renderContext = renderContext || { destroy: destroyRenderContext };
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -77,7 +78,12 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   ) {
     const { vertexCountMax, triangleCountMax } = collection;
 
-    renderContext.indexArray = new Uint32Array(triangleCountMax * 3);
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    renderContext.indexArray = IndexDatatype.createTypedArray(
+      vertexCountMax,
+      triangleCountMax * 3,
+    );
+
     renderContext.attributeArrays = {
       positionHigh: new Float32Array(vertexCountMax * 3),
       positionLow: new Float32Array(vertexCountMax * 3),
@@ -156,7 +162,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
         usage: BufferUsage.STATIC_DRAW,
         // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-        indexDatatype: IndexDatatype.UNSIGNED_INT,
+        indexDatatype: IndexDatatype.fromTypedArray(renderContext.indexArray),
       }),
 
       attributes: [
@@ -307,6 +313,27 @@ function getPolygonDirtyRanges(collection) {
     (polygon.triangleOffset + polygon.triangleCount) * 3 - indexOffset;
 
   return { indexOffset, indexCount, vertexOffset, vertexCount };
+}
+
+/**
+ * Destroys render context resources. Deleting properties from the context
+ * object isn't necessary, as collection.destroy() will discard the object.
+ * @ignore
+ */
+function destroyRenderContext() {
+  const context = /** @type {BufferPolygonRenderContext} */ (this);
+
+  if (defined(context.vertexArray)) {
+    context.vertexArray.destroy();
+  }
+
+  if (defined(context.shaderProgram)) {
+    context.shaderProgram.destroy();
+  }
+
+  if (defined(context.renderState)) {
+    RenderState.removeFromCache(context.renderState);
+  }
 }
 
 export default renderBufferPolygonCollection;

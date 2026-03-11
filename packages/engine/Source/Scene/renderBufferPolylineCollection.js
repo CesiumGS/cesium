@@ -56,6 +56,7 @@ const BufferPolylineAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
+ * @property {Function} destroy
  * @ignore
  */
 
@@ -91,7 +92,7 @@ const nextCartesianEnc = new EncodedCartesian3();
  */
 function renderBufferPolylineCollection(collection, frameState, renderContext) {
   const context = frameState.context;
-  renderContext = renderContext || {};
+  renderContext = renderContext || { destroy: destroyRenderContext };
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -103,7 +104,12 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       collection.vertexCountMax - collection.primitiveCount;
     const vertexCountMax = collection.vertexCountMax * 2;
 
-    renderContext.indexArray = new Uint32Array(segmentCountMax * 6);
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    renderContext.indexArray = IndexDatatype.createTypedArray(
+      vertexCountMax,
+      segmentCountMax * 6,
+    );
+
     renderContext.attributeArrays = {
       positionHigh: new Float32Array(vertexCountMax * 3),
       positionLow: new Float32Array(vertexCountMax * 3),
@@ -238,7 +244,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
         usage: BufferUsage.STATIC_DRAW,
         // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-        indexDatatype: IndexDatatype.UNSIGNED_INT,
+        indexDatatype: IndexDatatype.fromTypedArray(renderContext.indexArray),
       }),
 
       attributes: [
@@ -447,6 +453,27 @@ function getPolylineDirtyRanges(collection) {
   const indexCount = segmentCount * 6;
 
   return { indexOffset, indexCount, vertexOffset, vertexCount };
+}
+
+/**
+ * Destroys render context resources. Deleting properties from the context
+ * object isn't necessary, as collection.destroy() will discard the object.
+ * @ignore
+ */
+function destroyRenderContext() {
+  const context = /** @type {BufferPolylineRenderContext} */ (this);
+
+  if (defined(context.vertexArray)) {
+    context.vertexArray.destroy();
+  }
+
+  if (defined(context.shaderProgram)) {
+    context.shaderProgram.destroy();
+  }
+
+  if (defined(context.renderState)) {
+    RenderState.removeFromCache(context.renderState);
+  }
 }
 
 export default renderBufferPolylineCollection;
