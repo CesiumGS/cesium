@@ -20,6 +20,12 @@ function propertySelector(name) {
 }
 
 /**
+ * Function to generate a new value. This should return the new value or undefined
+ * if the update should be skipped.
+ *
+ * If this function throws an error the value in code will replaced with a generic
+ * error message to help indicate something went wrong
+ *
  * @callback NewValueFunction
  * @param {string} [existingValue] The existing value from the file
  * @returns {string | Promise<string | undefined>}

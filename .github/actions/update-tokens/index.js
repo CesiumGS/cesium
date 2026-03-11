@@ -67,18 +67,25 @@ async function replaceVariableValue(ast, selector, newValue) {
   }
 
   const existingValue = foundNodes[0].value;
-  const actualNewValue =
-    typeof newValue === "function"
-      ? await newValue(`${existingValue}`)
-      : newValue;
+  try {
+    const actualNewValue =
+      typeof newValue === "function"
+        ? await newValue(`${existingValue}`)
+        : newValue;
 
-  if (actualNewValue === undefined) {
-    // Skip if there is no new value. This can be used in the new value function to indicate no update
-    console.log("  Skipping - no new value provided");
-    return;
+    if (actualNewValue === undefined) {
+      // Skip if there is no new value. This can be used in the new value function to indicate no update
+      console.log("  Skipping - no new value provided");
+      return;
+    }
+
+    foundNodes[0].value = actualNewValue;
+  } catch (error) {
+    console.error("Failed to generate new value:");
+    console.error(error);
+    foundNodes[0].value =
+      "Failed to get new value, check the logs for more info";
   }
-
-  foundNodes[0].value = actualNewValue;
 }
 
 /**
