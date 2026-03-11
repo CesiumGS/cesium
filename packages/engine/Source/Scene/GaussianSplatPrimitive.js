@@ -35,6 +35,7 @@ import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import Transforms from "../Core/Transforms.js";
+import WebGLConstants from "../Core/WebGLConstants.js";
 
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4C = new Matrix4();
@@ -70,7 +71,7 @@ const GaussianSplatSortingState = {
  * Snapshot lifecycle for rebuilding aggregated splat data.
  *
  * Transition order:
- * BUILDING -> TEXTURE_PENDING -> TEXTURE_READY -> SORTING -> READY
+ * BUILDING -> TEXTURE_PENDING -> UPLOAD_PENDING/UPLOADING -> TEXTURE_READY -> SORTING -> READY
  *
  * The transition points are split across two functions:
  * - {@link GaussianSplatPrimitive#update} drives BUILDING/SORTING/READY
@@ -86,6 +87,10 @@ const SnapshotState = {
   BUILDING: "BUILDING",
   // Async texture generation/upload is in flight for this snapshot.
   TEXTURE_PENDING: "TEXTURE_PENDING",
+  // Worker-side packing completed and GPU upload can begin on the next frame.
+  UPLOAD_PENDING: "UPLOAD_PENDING",
+  // Texture data is being staged to the GPU over multiple frames.
+  UPLOADING: "UPLOADING",
   // Attribute textures are ready; snapshot can now request index sorting.
   TEXTURE_READY: "TEXTURE_READY",
   // Sort request is in flight for this snapshot generation.
@@ -111,6 +116,8 @@ const SnapshotState = {
  * @property {Uint32Array|undefined} indexes Sorted index buffer when READY.
  * @property {Texture|undefined} gaussianSplatTexture Packed splat attribute texture.
  * @property {Texture|undefined} sphericalHarmonicsTexture Packed SH texture.
+ * @property {object|undefined} splatTextureUpload Staged upload state for the splat texture.
+ * @property {object|undefined} sphericalHarmonicsUpload Staged upload state for the SH texture.
  * @property {number} lastTextureWidth Last splat texture width.
  * @property {number} lastTextureHeight Last splat texture height.
  * @property {string} state Current snapshot lifecycle state from {@link SnapshotState}.
@@ -149,6 +156,259 @@ const DEFAULT_SORT_MIN_FRAME_INTERVAL = 3;
 const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.008726646259971648;
 // Minimum camera movement in world units before triggering steady re-sort.
 const DEFAULT_SORT_MIN_POSITION_DELTA = 1.0;
+// Upload budget for staged texture transfers. Kept intentionally conservative
+// to avoid blocking a frame with a single large texSubImage2D.
+const DEFAULT_TEXTURE_UPLOAD_BUDGET_BYTES = 8 * 1024 * 1024;
+// Keep a small ring of PBOs alive so uploads can overlap across frames.
+const DEFAULT_MAX_PENDING_UPLOAD_BUFFERS = 2;
+// Keep recently visible tiles resident for a short window so traversal jitter
+// does not immediately force a whole aggregated snapshot rebuild.
+const DEFAULT_TILE_RESIDENCY_COOLDOWN_FRAMES = 12;
+// Only a small fraction of selected splats may come from cooled tiles. This
+// preserves boundary continuity without letting underfill double the upload.
+const DEFAULT_MAX_COOLED_SPLAT_RATIO = 0.15;
+// Absolute cap for cooled splats so very large selections do not retain too
+// much stale data.
+const DEFAULT_MAX_COOLED_SPLATS = 250000;
+// Experimental fast path: cap the selected splat set before aggregation so we
+// can test a PlayCanvas-style budgeted streaming experience.
+const DEFAULT_FAST_APPROXIMATE_MAX_SPLATS = 800000;
+const DEFAULT_FAST_SELECTED_BUDGET_RATIO = 0.8;
+
+function destroyTextureUploadState(uploadState) {
+  if (!defined(uploadState)) {
+    return;
+  }
+
+  const gl = uploadState.gl;
+  if (defined(uploadState.pendingBuffers)) {
+    for (let i = 0; i < uploadState.pendingBuffers.length; i++) {
+      const entry = uploadState.pendingBuffers[i];
+      if (defined(entry.sync)) {
+        gl.deleteSync(entry.sync);
+      }
+      if (defined(entry.buffer)) {
+        gl.deleteBuffer(entry.buffer);
+      }
+    }
+  }
+
+  if (defined(uploadState.availableBuffers)) {
+    for (let i = 0; i < uploadState.availableBuffers.length; i++) {
+      gl.deleteBuffer(uploadState.availableBuffers[i]);
+    }
+  }
+
+  uploadState.pendingBuffers = [];
+  uploadState.availableBuffers = [];
+  uploadState.data = undefined;
+}
+
+function recycleUploadBuffers(uploadState) {
+  if (!uploadState.usePixelUnpackBuffers) {
+    return;
+  }
+
+  const gl = uploadState.gl;
+  const pending = uploadState.pendingBuffers;
+  for (let i = pending.length - 1; i >= 0; i--) {
+    const entry = pending[i];
+    const waitResult = gl.clientWaitSync(entry.sync, 0, 0);
+    if (
+      waitResult === WebGLConstants.CONDITION_SATISFIED ||
+      waitResult === WebGLConstants.ALREADY_SIGNALED
+    ) {
+      gl.deleteSync(entry.sync);
+      uploadState.availableBuffers.push(entry.buffer);
+      pending.splice(i, 1);
+    } else if (waitResult === WebGLConstants.WAIT_FAILED) {
+      gl.deleteSync(entry.sync);
+      gl.deleteBuffer(entry.buffer);
+      pending.splice(i, 1);
+    }
+  }
+}
+
+function createTextureUploadState(texture, data) {
+  if (!defined(texture) || !defined(data)) {
+    return undefined;
+  }
+
+  const context = texture._context;
+  const pixelFormat = texture.pixelFormat;
+  const pixelDatatype = texture.pixelDatatype;
+  const width = texture.width;
+  const height = texture.height;
+
+  return {
+    context: context,
+    gl: context._gl,
+    texture: texture,
+    data: data,
+    width: width,
+    height: height,
+    nextRow: 0,
+    elementsPerRow: width * PixelFormat.componentsLength(pixelFormat),
+    rowByteSize: PixelFormat.textureSizeInBytes(
+      pixelFormat,
+      pixelDatatype,
+      width,
+      1,
+    ),
+    unpackAlignment: PixelFormat.alignmentInBytes(
+      pixelFormat,
+      pixelDatatype,
+      width,
+    ),
+    usePixelUnpackBuffers: context.webgl2,
+    pendingBuffers: [],
+    availableBuffers: [],
+    complete: false,
+  };
+}
+
+function advanceTextureUploadState(uploadState, byteBudget) {
+  if (!defined(uploadState) || uploadState.complete) {
+    return 0;
+  }
+
+  const remainingRows = uploadState.height - uploadState.nextRow;
+  if (remainingRows <= 0) {
+    uploadState.complete = true;
+    uploadState.data = undefined;
+    return 0;
+  }
+
+  const rowByteSize = uploadState.rowByteSize;
+  const rowsPerChunk = Math.max(1, Math.floor(byteBudget / rowByteSize));
+  const rowsToUpload = Math.min(remainingRows, rowsPerChunk);
+  const startIndex = uploadState.nextRow * uploadState.elementsPerRow;
+  const endIndex = startIndex + rowsToUpload * uploadState.elementsPerRow;
+  const texture = uploadState.texture;
+
+  if (!uploadState.usePixelUnpackBuffers) {
+    texture.copyFrom({
+      xOffset: 0,
+      yOffset: uploadState.nextRow,
+      source: {
+        width: uploadState.width,
+        height: rowsToUpload,
+        arrayBufferView: uploadState.data.subarray(startIndex, endIndex),
+      },
+      skipColorSpaceConversion: true,
+    });
+    uploadState.nextRow += rowsToUpload;
+  } else {
+    recycleUploadBuffers(uploadState);
+    if (
+      uploadState.availableBuffers.length === 0 &&
+      uploadState.pendingBuffers.length >= DEFAULT_MAX_PENDING_UPLOAD_BUFFERS
+    ) {
+      return 0;
+    }
+
+    const gl = uploadState.gl;
+    const byteOffset = startIndex * uploadState.data.BYTES_PER_ELEMENT;
+    const byteLength = rowsToUpload * rowByteSize;
+    const pbo = uploadState.availableBuffers.pop() ?? gl.createBuffer();
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(texture._textureTarget, texture._texture);
+    gl.bindBuffer(WebGLConstants.PIXEL_UNPACK_BUFFER, pbo);
+    gl.bufferData(
+      WebGLConstants.PIXEL_UNPACK_BUFFER,
+      byteLength,
+      WebGLConstants.STREAM_DRAW,
+    );
+    gl.bufferSubData(
+      WebGLConstants.PIXEL_UNPACK_BUFFER,
+      0,
+      new Uint8Array(uploadState.data.buffer, byteOffset, byteLength),
+    );
+    gl.pixelStorei(
+      WebGLConstants.UNPACK_ALIGNMENT,
+      uploadState.unpackAlignment,
+    );
+    gl.pixelStorei(WebGLConstants.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.pixelStorei(WebGLConstants.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(
+      WebGLConstants.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+      WebGLConstants.NONE,
+    );
+    gl.texSubImage2D(
+      texture._textureTarget,
+      0,
+      0,
+      uploadState.nextRow,
+      uploadState.width,
+      rowsToUpload,
+      texture.pixelFormat,
+      PixelDatatype.toWebGLConstant(texture.pixelDatatype, uploadState.context),
+      0,
+    );
+    gl.bindBuffer(WebGLConstants.PIXEL_UNPACK_BUFFER, null);
+    gl.bindTexture(texture._textureTarget, null);
+
+    const sync = gl.fenceSync(WebGLConstants.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    uploadState.pendingBuffers.push({
+      buffer: pbo,
+      sync: sync,
+    });
+    gl.flush();
+
+    uploadState.nextRow += rowsToUpload;
+  }
+
+  if (uploadState.nextRow >= uploadState.height) {
+    uploadState.complete = true;
+    uploadState.data = undefined;
+  }
+
+  return rowsToUpload * rowByteSize;
+}
+
+function areSnapshotUploadsComplete(snapshot) {
+  const splatDone =
+    !defined(snapshot.splatTextureUpload) ||
+    snapshot.splatTextureUpload.complete;
+  const shDone =
+    !defined(snapshot.sphericalHarmonicsUpload) ||
+    snapshot.sphericalHarmonicsUpload.complete;
+  return splatDone && shDone;
+}
+
+function advanceSnapshotTextureUploads(snapshot) {
+  let remainingBudget = DEFAULT_TEXTURE_UPLOAD_BUDGET_BYTES;
+  let uploadedBytes = 0;
+
+  if (
+    defined(snapshot.splatTextureUpload) &&
+    !snapshot.splatTextureUpload.complete
+  ) {
+    const consumed = advanceTextureUploadState(
+      snapshot.splatTextureUpload,
+      remainingBudget,
+    );
+    uploadedBytes += consumed;
+    remainingBudget = Math.max(0, remainingBudget - consumed);
+  }
+
+  if (
+    remainingBudget > 0 &&
+    defined(snapshot.sphericalHarmonicsUpload) &&
+    !snapshot.sphericalHarmonicsUpload.complete
+  ) {
+    uploadedBytes += advanceTextureUploadState(
+      snapshot.sphericalHarmonicsUpload,
+      remainingBudget,
+    );
+  }
+
+  return {
+    complete: areSnapshotUploadsComplete(snapshot),
+    uploadedBytes: uploadedBytes,
+  };
+}
 
 /**
  * Determines whether the camera has moved or rotated enough since the last
@@ -253,6 +513,302 @@ function haveSelectedTilesChanged(primitive, selectedTiles) {
   return false;
 }
 
+function getTileResidencyEntry(primitive, tile) {
+  let entry = primitive._tileResidency.get(tile);
+  if (!defined(entry)) {
+    entry = {
+      lastLoadedFrame: -1,
+      lastSelectedFrame: -1,
+      lastVisibleFrame: -1,
+    };
+    primitive._tileResidency.set(tile, entry);
+  }
+  return entry;
+}
+
+function isTileReadyForResidency(tile) {
+  return (
+    defined(tile) &&
+    defined(tile.content) &&
+    tile.content.ready === true &&
+    defined(tile.content.gltfPrimitive) &&
+    defined(tile.content.worldTransform) &&
+    defined(tile.content.positions) &&
+    defined(tile.content.rotations) &&
+    defined(tile.content.scales) &&
+    defined(tile.content.pointsLength)
+  );
+}
+
+function getTilePointCount(tile) {
+  return isTileReadyForResidency(tile) ? tile.content.pointsLength : 0;
+}
+
+function isTileAncestorOrSame(ancestor, tile) {
+  if (!defined(ancestor) || !defined(tile)) {
+    return false;
+  }
+  let current = tile;
+  while (defined(current)) {
+    if (current === ancestor) {
+      return true;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
+function collectFastApproximateTiles(primitive, selectedTiles) {
+  const fastApproximateMaxSplats =
+    primitive._tileset.gaussianSplatFastMaxSplats ??
+    primitive._fastApproximateMaxSplats;
+  const fastSelectedBudgetRatio =
+    primitive._tileset.gaussianSplatFastSelectedBudgetRatio ??
+    primitive._fastSelectedBudgetRatio;
+  const fastMode =
+    primitive._fastApproximateMode ||
+    primitive._tileset.gaussianSplatFastMode === true;
+  let selectedSplatCount = 0;
+  for (let i = 0; i < selectedTiles.length; i++) {
+    selectedSplatCount += getTilePointCount(selectedTiles[i]);
+  }
+
+  if (!fastMode) {
+    return {
+      fastMode: false,
+      tiles: selectedTiles,
+      selectedSplatCount: selectedSplatCount,
+      keptSelectedSplatCount: selectedSplatCount,
+      underfillTileCount: 0,
+      underfillSplatCount: 0,
+      droppedTileCount: 0,
+      droppedSplatCount: 0,
+    };
+  }
+
+  const prioritizedTiles = selectedTiles.slice().sort(function (left, right) {
+    const distanceDelta =
+      (left._distanceToCamera ?? 0.0) - (right._distanceToCamera ?? 0.0);
+    if (distanceDelta !== 0.0) {
+      return distanceDelta;
+    }
+    const sseDelta =
+      (right._screenSpaceError ?? 0.0) - (left._screenSpaceError ?? 0.0);
+    if (sseDelta !== 0.0) {
+      return sseDelta;
+    }
+    return (left._depth ?? 0) - (right._depth ?? 0);
+  });
+
+  const underfillTiles = Array.from(primitive._selectedTileSet).filter(
+    function (tile) {
+      return isTileReadyForResidency(tile) && !prioritizedTiles.includes(tile);
+    },
+  );
+  underfillTiles.sort(function (left, right) {
+    const depthDelta = (left._depth ?? 0) - (right._depth ?? 0);
+    if (depthDelta !== 0) {
+      return depthDelta;
+    }
+    return (left._distanceToCamera ?? 0.0) - (right._distanceToCamera ?? 0.0);
+  });
+
+  const tileSet = new Set();
+  const underfillCandidateSet = new Set();
+  const tiles = [];
+  let keptSplatCount = 0;
+  let keptSelectedSplatCount = 0;
+  let underfillTileCount = 0;
+  let underfillSplatCount = 0;
+  let droppedTileCount = 0;
+  let droppedSplatCount = 0;
+  const droppedSelectedTiles = [];
+  const selectedBudget = Math.max(
+    1,
+    Math.floor(fastApproximateMaxSplats * fastSelectedBudgetRatio),
+  );
+
+  const appendTile = function (tile, budgetLimit) {
+    const pointCount = getTilePointCount(tile);
+    const nextKeptSplatCount = keptSplatCount + pointCount;
+    if (tiles.length > 0 && nextKeptSplatCount > budgetLimit) {
+      return false;
+    }
+
+    tileSet.add(tile);
+    tiles.push(tile);
+    keptSplatCount = nextKeptSplatCount;
+    return true;
+  };
+
+  for (let i = 0; i < prioritizedTiles.length; i++) {
+    const tile = prioritizedTiles[i];
+    const pointCount = getTilePointCount(tile);
+    if (tileSet.has(tile)) {
+      keptSelectedSplatCount += pointCount;
+      continue;
+    }
+    if (!appendTile(tile, selectedBudget)) {
+      droppedTileCount++;
+      droppedSplatCount += pointCount;
+      droppedSelectedTiles.push(tile);
+      continue;
+    }
+    keptSelectedSplatCount += pointCount;
+  }
+
+  const underfillCandidates = [];
+  const pushUnderfillCandidate = function (tile) {
+    if (
+      !isTileReadyForResidency(tile) ||
+      tileSet.has(tile) ||
+      underfillCandidateSet.has(tile)
+    ) {
+      return;
+    }
+    underfillCandidateSet.add(tile);
+    underfillCandidates.push(tile);
+  };
+
+  for (let i = 0; i < underfillTiles.length; i++) {
+    pushUnderfillCandidate(underfillTiles[i]);
+  }
+
+  for (let i = 0; i < droppedSelectedTiles.length; i++) {
+    let ancestor = droppedSelectedTiles[i].parent;
+    while (defined(ancestor)) {
+      if (isTileReadyForResidency(ancestor)) {
+        pushUnderfillCandidate(ancestor);
+      }
+      ancestor = ancestor.parent;
+    }
+  }
+
+  underfillCandidates.sort(function (left, right) {
+    const depthDelta = (left._depth ?? 0) - (right._depth ?? 0);
+    if (depthDelta !== 0) {
+      return depthDelta;
+    }
+    return (left._distanceToCamera ?? 0.0) - (right._distanceToCamera ?? 0.0);
+  });
+
+  const underfillBudget = Math.max(fastApproximateMaxSplats, keptSplatCount);
+  for (let i = 0; i < underfillCandidates.length; i++) {
+    const tile = underfillCandidates[i];
+    let shouldSkipCandidate = false;
+    for (let j = 0; j < prioritizedTiles.length; j++) {
+      const selectedTile = prioritizedTiles[j];
+      if (!tileSet.has(selectedTile)) {
+        continue;
+      }
+      // Skip only equal/finer underfill that would duplicate a kept selected
+      // region. Coarser ancestors remain allowed as coarse-to-fine fallback.
+      if (isTileAncestorOrSame(selectedTile, tile)) {
+        shouldSkipCandidate = true;
+        break;
+      }
+    }
+    if (shouldSkipCandidate) {
+      continue;
+    }
+    if (!appendTile(tile, underfillBudget)) {
+      continue;
+    }
+    underfillTileCount++;
+    underfillSplatCount += getTilePointCount(tile);
+  }
+
+  return {
+    fastMode: true,
+    tiles: tiles,
+    selectedSplatCount: selectedSplatCount,
+    keptSelectedSplatCount: keptSelectedSplatCount,
+    underfillTileCount: underfillTileCount,
+    underfillSplatCount: underfillSplatCount,
+    droppedTileCount: droppedTileCount,
+    droppedSplatCount: droppedSplatCount,
+  };
+}
+
+function collectResidentTiles(primitive, selectedTiles, frameNumber) {
+  const residentTiles = [];
+  const residentSet = new Set();
+  let cooledTileCount = 0;
+  let selectedSplatCount = 0;
+  const cooledCandidates = [];
+
+  for (let i = 0; i < selectedTiles.length; i++) {
+    const tile = selectedTiles[i];
+    const entry = getTileResidencyEntry(primitive, tile);
+    entry.lastSelectedFrame = frameNumber;
+    entry.lastVisibleFrame = frameNumber;
+
+    if (!isTileReadyForResidency(tile)) {
+      continue;
+    }
+
+    selectedSplatCount += getTilePointCount(tile);
+    residentTiles.push(tile);
+    residentSet.add(tile);
+  }
+
+  primitive._tileResidency.forEach(function (entry, tile) {
+    if (residentSet.has(tile)) {
+      return;
+    }
+
+    const lastTouchFrame = Math.max(
+      entry.lastVisibleFrame,
+      entry.lastSelectedFrame,
+      entry.lastLoadedFrame,
+    );
+    const framesSinceTouch = frameNumber - lastTouchFrame;
+    if (framesSinceTouch > primitive._tileResidencyCooldownFrames) {
+      primitive._tileResidency.delete(tile);
+      return;
+    }
+
+    if (!isTileReadyForResidency(tile)) {
+      return;
+    }
+
+    cooledCandidates.push({
+      tile: tile,
+      lastTouchFrame: lastTouchFrame,
+      pointCount: getTilePointCount(tile),
+    });
+  });
+
+  cooledCandidates.sort(function (left, right) {
+    return right.lastTouchFrame - left.lastTouchFrame;
+  });
+
+  const cooledSplatBudget = Math.min(
+    Math.floor(selectedSplatCount * primitive._maxCooledSplatRatio),
+    primitive._maxCooledSplats,
+  );
+  let cooledSplatCount = 0;
+  for (let i = 0; i < cooledCandidates.length; i++) {
+    const candidate = cooledCandidates[i];
+    const nextCooledSplatCount = cooledSplatCount + candidate.pointCount;
+    if (cooledTileCount > 0 && nextCooledSplatCount > cooledSplatBudget) {
+      continue;
+    }
+
+    residentTiles.push(candidate.tile);
+    residentSet.add(candidate.tile);
+    cooledTileCount++;
+    cooledSplatCount = nextCooledSplatCount;
+  }
+
+  return {
+    tiles: residentTiles,
+    cooledTileCount: cooledTileCount,
+    cooledSplatCount: cooledSplatCount,
+    selectedSplatCount: selectedSplatCount,
+  };
+}
+
 /**
  * Returns whether the given sort result still matches the primitive's current
  * sort request and data generation, i.e. it has not been superseded.
@@ -280,6 +836,14 @@ function isActiveSort(primitive, activeSort) {
 function destroySnapshotTextures(snapshot) {
   if (!defined(snapshot)) {
     return;
+  }
+  if (defined(snapshot.splatTextureUpload)) {
+    destroyTextureUploadState(snapshot.splatTextureUpload);
+    snapshot.splatTextureUpload = undefined;
+  }
+  if (defined(snapshot.sphericalHarmonicsUpload)) {
+    destroyTextureUploadState(snapshot.sphericalHarmonicsUpload);
+    snapshot.sphericalHarmonicsUpload = undefined;
   }
   if (defined(snapshot.gaussianSplatTexture)) {
     snapshot.gaussianSplatTexture.destroy();
@@ -356,6 +920,15 @@ function releaseRetiredTextures(primitive, frameNumber) {
 function commitSnapshot(primitive, snapshot, frameState) {
   if (!defined(snapshot.indexes) || snapshot.state !== SnapshotState.READY) {
     throw new DeveloperError("Committing snapshot before it is READY.");
+  }
+
+  if (defined(snapshot.splatTextureUpload)) {
+    destroyTextureUploadState(snapshot.splatTextureUpload);
+    snapshot.splatTextureUpload = undefined;
+  }
+  if (defined(snapshot.sphericalHarmonicsUpload)) {
+    destroyTextureUploadState(snapshot.sphericalHarmonicsUpload);
+    snapshot.sphericalHarmonicsUpload = undefined;
   }
 
   const frameNumber = frameState.frameNumber;
@@ -497,38 +1070,25 @@ async function processGeneratedSplatTextureData(
     snapshot.splatRowShift = splatRowShift;
 
     if (primitive._pendingSnapshot !== snapshot) {
-      snapshot.state = SnapshotState.BUILDING;
       return;
     }
-    if (!defined(snapshot.gaussianSplatTexture)) {
-      snapshot.gaussianSplatTexture = createGaussianSplatTexture(
-        frameState.context,
-        effectiveTextureData,
-      );
-    } else if (
-      snapshot.lastTextureHeight !== effectiveTextureData.height ||
-      snapshot.lastTextureWidth !== effectiveTextureData.width
-    ) {
-      const oldTex = snapshot.gaussianSplatTexture;
-      snapshot.gaussianSplatTexture = createGaussianSplatTexture(
-        frameState.context,
-        effectiveTextureData,
-      );
-      oldTex.destroy();
-    } else {
-      snapshot.gaussianSplatTexture.copyFrom({
-        source: {
-          width: effectiveTextureData.width,
-          height: effectiveTextureData.height,
-          arrayBufferView: effectiveTextureData.data,
-        },
-      });
-    }
+
+    snapshot.gaussianSplatTexture = createGaussianSplatTexture(
+      frameState.context,
+      {
+        width: effectiveTextureData.width,
+        height: effectiveTextureData.height,
+      },
+    );
     snapshot.lastTextureHeight = effectiveTextureData.height;
     snapshot.lastTextureWidth = effectiveTextureData.width;
+    snapshot.gaussianSplatTexture._initialized = true;
+    snapshot.splatTextureUpload = createTextureUploadState(
+      snapshot.gaussianSplatTexture,
+      effectiveTextureData.data,
+    );
 
     if (defined(snapshot.shData) && snapshot.sphericalHarmonicsDegree > 0) {
-      const oldTex = snapshot.sphericalHarmonicsTexture;
       const width = ContextLimits.maximumTextureSize;
       const dims = snapshot.shCoefficientCount / 3;
       const splatsPerRow = Math.floor(width / dims);
@@ -545,10 +1105,8 @@ async function processGeneratedSplatTextureData(
             `Disabling spherical harmonics for this snapshot (color-only fallback).`,
         );
         snapshot.sphericalHarmonicsDegree = 0;
-        if (defined(oldTex)) {
-          oldTex.destroy();
-        }
         snapshot.sphericalHarmonicsTexture = undefined;
+        snapshot.sphericalHarmonicsUpload = undefined;
       } else {
         const texBuf = new Uint32Array(width * _shHeight * 2);
 
@@ -563,18 +1121,19 @@ async function processGeneratedSplatTextureData(
         snapshot.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
           frameState.context,
           {
-            data: texBuf,
             width: width,
             height: _shHeight,
           },
         );
-        if (defined(oldTex)) {
-          oldTex.destroy();
-        }
+        snapshot.sphericalHarmonicsTexture._initialized = true;
+        snapshot.sphericalHarmonicsUpload = createTextureUploadState(
+          snapshot.sphericalHarmonicsTexture,
+          texBuf,
+        );
       }
     }
 
-    snapshot.state = SnapshotState.TEXTURE_READY;
+    snapshot.state = SnapshotState.UPLOAD_PENDING;
   } catch (error) {
     console.error("Error generating Gaussian splat texture:", error);
     snapshot.state = SnapshotState.BUILDING;
@@ -695,11 +1254,15 @@ async function resolveSteadySort(primitive, activeSort, sortPromise) {
 function createSphericalHarmonicsTexture(context, shData) {
   const texture = new Texture({
     context: context,
-    source: {
-      width: shData.width,
-      height: shData.height,
-      arrayBufferView: shData.data,
-    },
+    source: defined(shData.data)
+      ? {
+          width: shData.width,
+          height: shData.height,
+          arrayBufferView: shData.data,
+        }
+      : undefined,
+    width: shData.width,
+    height: shData.height,
     preMultiplyAlpha: false,
     skipColorSpaceConversion: true,
     pixelFormat: PixelFormat.RG_INTEGER,
@@ -725,11 +1288,15 @@ function createSphericalHarmonicsTexture(context, shData) {
 function createGaussianSplatTexture(context, splatTextureData) {
   return new Texture({
     context: context,
-    source: {
-      width: splatTextureData.width,
-      height: splatTextureData.height,
-      arrayBufferView: splatTextureData.data,
-    },
+    source: defined(splatTextureData.data)
+      ? {
+          width: splatTextureData.width,
+          height: splatTextureData.height,
+          arrayBufferView: splatTextureData.data,
+        }
+      : undefined,
+    width: splatTextureData.width,
+    height: splatTextureData.height,
     preMultiplyAlpha: false,
     skipColorSpaceConversion: true,
     pixelFormat: PixelFormat.RGBA_INTEGER,
@@ -803,6 +1370,19 @@ function GaussianSplatPrimitive(options) {
   this._snapshot = undefined;
   this._pendingSnapshot = undefined;
   this._retiredTextures = [];
+  this._tileResidency = new Map();
+  this._tileResidencyCooldownFrames =
+    options.tileResidencyCooldownFrames ??
+    DEFAULT_TILE_RESIDENCY_COOLDOWN_FRAMES;
+  this._maxCooledSplatRatio =
+    options.maxCooledSplatRatio ?? DEFAULT_MAX_COOLED_SPLAT_RATIO;
+  this._maxCooledSplats = options.maxCooledSplats ?? DEFAULT_MAX_COOLED_SPLATS;
+  this._fastApproximateMode = options.fastApproximateMode ?? false;
+  this._fastApproximateMaxSplats =
+    options.fastApproximateMaxSplats ?? DEFAULT_FAST_APPROXIMATE_MAX_SPLATS;
+  this._fastSelectedBudgetRatio =
+    options.fastSelectedBudgetRatio ?? DEFAULT_FAST_SELECTED_BUDGET_RATIO;
+  this._lastTraversalFrameNumber = -1;
 
   /**
    * Scratch buffer re-used across frames for aggregating packed spherical
@@ -893,6 +1473,9 @@ function GaussianSplatPrimitive(options) {
 
   this._tileset.tileLoad.addEventListener(this.onTileLoad, this);
   this._tileset.tileVisible.addEventListener(this.onTileVisible, this);
+  if (defined(this._tileset.tileUnload)) {
+    this._tileset.tileUnload.addEventListener(this.onTileUnload, this);
+  }
 
   /**
    * Tracks current count of selected tiles.
@@ -1075,6 +1658,7 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
  */
 GaussianSplatPrimitive.prototype._wrappedUpdate = function (frameState) {
   const tileset = this._tileset;
+  this._lastTraversalFrameNumber = frameState.frameNumber;
   if (this._splatBudgetSSEScale !== 1.0) {
     // Inflate SSE for this traversal only; the original value is restored
     // immediately so the user-visible tileset property is never permanently changed.
@@ -1106,6 +1690,7 @@ GaussianSplatPrimitive.prototype.destroy = function () {
     }
   }
   this._retiredTextures = [];
+  this._tileResidency.clear();
   this._pendingSnapshot = undefined;
   this._snapshot = undefined;
   this.gaussianSplatTexture = undefined;
@@ -1147,7 +1732,20 @@ GaussianSplatPrimitive.prototype.isDestroyed = function () {
  * @private
  */
 GaussianSplatPrimitive.prototype.onTileLoad = function (tile) {
+  const entry = getTileResidencyEntry(this, tile);
+  entry.lastLoadedFrame = this._lastTraversalFrameNumber;
   this._dirty = true;
+};
+
+/**
+ * Event callback for when a tile is unloaded.
+ * @param {Cesium3DTile} tile
+ * @private
+ */
+GaussianSplatPrimitive.prototype.onTileUnload = function (tile) {
+  if (this._tileResidency.delete(tile) && this._selectedTileSet.has(tile)) {
+    this._dirty = true;
+  }
 };
 
 /**
@@ -1155,7 +1753,10 @@ GaussianSplatPrimitive.prototype.onTileLoad = function (tile) {
  * @param {Cesium3DTile} tile
  * @private
  */
-GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {};
+GaussianSplatPrimitive.prototype.onTileVisible = function (tile) {
+  const entry = getTileResidencyEntry(this, tile);
+  entry.lastVisibleFrame = this._lastTraversalFrameNumber;
+};
 
 /**
  * Transforms the tile's splat primitive attributes into world space.
@@ -1598,10 +2199,32 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   }
 
   if (this._sorterState === GaussianSplatSortingState.IDLE) {
+    const fastSelectionInfo = collectFastApproximateTiles(
+      this,
+      tileset._selectedTiles,
+    );
+    const residencyInfo = fastSelectionInfo.fastMode
+      ? {
+          fastMode: true,
+          tiles: fastSelectionInfo.tiles,
+          cooledTileCount: 0,
+          cooledSplatCount: 0,
+          selectedSplatCount: fastSelectionInfo.selectedSplatCount,
+          keptSelectedSplatCount: fastSelectionInfo.keptSelectedSplatCount,
+          underfillTileCount: fastSelectionInfo.underfillTileCount,
+          underfillSplatCount: fastSelectionInfo.underfillSplatCount,
+          droppedTileCount: fastSelectionInfo.droppedTileCount,
+          droppedSplatCount: fastSelectionInfo.droppedSplatCount,
+        }
+      : collectResidentTiles(
+          this,
+          fastSelectionInfo.tiles,
+          frameState.frameNumber,
+        );
+    const activeTiles = residencyInfo.tiles;
     const selectedTilesChanged =
-      tileset._selectedTiles.length !== 0 &&
-      haveSelectedTilesChanged(this, tileset._selectedTiles);
-    if (tileset._selectedTiles.length === 0) {
+      activeTiles.length !== 0 && haveSelectedTilesChanged(this, activeTiles);
+    if (activeTiles.length === 0) {
       this._selectedTilesStableFrames = 0;
       this._needsSnapshotRebuild = false;
       this._snapshotRebuildStallFrames = 0;
@@ -1621,7 +2244,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     // This prevents an indefinite wait if selected tiles never settle completely.
     // In practice, this is the upper bound on "wait-for-stability" before forcing
     // a rebuild to avoid visible starvation.
-    if (this._needsSnapshotRebuild && tileset._selectedTiles.length !== 0) {
+    if (this._needsSnapshotRebuild && activeTiles.length !== 0) {
       this._snapshotRebuildStallFrames++;
     } else {
       this._snapshotRebuildStallFrames = 0;
@@ -1645,7 +2268,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     }
 
     if (
-      tileset._selectedTiles.length !== 0 &&
+      activeTiles.length !== 0 &&
       this._needsSnapshotRebuild &&
       allowRebuild
     ) {
@@ -1659,7 +2282,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         destroySnapshotTextures(this._pendingSnapshot);
       }
 
-      const tiles = tileset._selectedTiles;
+      const tiles = activeTiles;
 
       // Rebuild the ENU origin from the current tileset world center so that
       // baked splat positions remain in a numerically small (meter-scale) local
@@ -1830,6 +2453,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         indexes: undefined,
         gaussianSplatTexture: undefined,
         sphericalHarmonicsTexture: undefined,
+        splatTextureUpload: undefined,
+        sphericalHarmonicsUpload: undefined,
         lastTextureWidth: 0,
         lastTextureHeight: 0,
         splatRowMask: 0, // set by processGeneratedSplatTextureData
@@ -1837,8 +2462,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         state: SnapshotState.BUILDING,
       };
 
-      this.selectedTileLength = tileset._selectedTiles.length;
-      this._selectedTileSet = new Set(tileset._selectedTiles);
+      this.selectedTileLength = tiles.length;
+      this._selectedTileSet = new Set(tiles);
       this._dirty = false;
       this._needsSnapshotRebuild = false;
       this._snapshotRebuildStallFrames = 0;
@@ -1852,6 +2477,17 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       }
       if (pending.state === SnapshotState.TEXTURE_PENDING) {
         return;
+      }
+      if (
+        pending.state === SnapshotState.UPLOAD_PENDING ||
+        pending.state === SnapshotState.UPLOADING
+      ) {
+        pending.state = SnapshotState.UPLOADING;
+        const uploadProgress = advanceSnapshotTextureUploads(pending);
+        if (!uploadProgress.complete) {
+          return;
+        }
+        pending.state = SnapshotState.TEXTURE_READY;
       }
       if (
         pending.state === SnapshotState.TEXTURE_READY &&
