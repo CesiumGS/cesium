@@ -1216,14 +1216,9 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
         return Promise.resolve("<html><title>x</title></html>");
       });
 
-      return providerXml
-        .pickFeatures(0, 0, 0, 0.0, 0.0)
-        .then(function () {
-          return providerHtml.pickFeatures(0, 0, 0, 0.0, 0.0);
-        })
-        .then(function () {
-          expect(true).toBe(true);
-        });
+      return providerXml.pickFeatures(0, 0, 0, 0.0, 0.0).then(function () {
+        return providerHtml.pickFeatures(0, 0, 0, 0.0, 0.0);
+      });
     });
 
     it("falls back to the next format when the first request fails", function () {
