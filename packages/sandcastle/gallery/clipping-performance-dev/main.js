@@ -39,6 +39,7 @@ function createTestData(points) {
 
 const currentDataSources = [];
 let currentDataSourceShape;
+let debug = false;
 
 async function updateClippingPolygons(numPolygons, numPoints) {
   console.log(
@@ -80,6 +81,7 @@ async function updateClippingPolygons(numPolygons, numPoints) {
   }
   const clippingPolygons = new Cesium.ClippingPolygonCollection({
     polygons: clippingPolygonsArray,
+    debugShowDistanceTexture: debug,
   });
   viewer.scene.globe.clippingPolygons = clippingPolygons;
 }
@@ -109,3 +111,8 @@ const toolbar = document.getElementById("toolbar");
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
 Sandcastle.addToolbarButton("Update ClippingPolygons", updateModelFromView);
+
+Sandcastle.addToggleButton("Debug DistanceTexture", false, (checked) => {
+  debug = checked;
+  updateModelFromView();
+});

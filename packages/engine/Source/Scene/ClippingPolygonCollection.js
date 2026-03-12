@@ -20,6 +20,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import ClippingPolygon from "./ClippingPolygon.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
+import Pass from "../Renderer/Pass.js";
 
 /**
  * Specifies a set of clipping polygons. Clipping polygons selectively disable rendering in a region
@@ -62,6 +63,8 @@ function ClippingPolygonCollection(options) {
 
   this._polygons = [];
   this._totalPositions = 0;
+
+  this.debugShowDistanceTexture = options.debugShowDistanceTexture ?? false;
 
   /**
    * If true, clipping will be enabled.
@@ -536,6 +539,16 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
     );
   }
 
+  if (this.debugShowDistanceTexture && defined(this._signedDistanceTexture)) {
+    if (!defined(this.debugCommand)) {
+      this.debugCommand = createDebugCommand(
+        this._signedDistanceTexture,
+        frameState.context,
+      );
+    }
+    frameState.commandList.push(this.debugCommand);
+  }
+
   // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has had elements added or removed, which should be good enough for most cases.
   const totalPositions = this._polygons.reduce(
     (totalPositions, polygon) => totalPositions + polygon.length,
@@ -684,6 +697,33 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
 
   this._signedDistanceComputeCommand = createSignedDistanceTextureCommand(this);
 };
+
+function createDebugCommand(texture, context) {
+  const fs =
+    "uniform highp sampler2D billboard_texture; \n" +
+    "in vec2 v_textureCoordinates; \n" +
+    "float getSignedDistance(vec2 uv, highp sampler2D clippingDistance) { \n" +
+    "    float signedDistance = texture(clippingDistance, uv).r; \n" +
+    "    return (signedDistance - 0.5) * 2.0; \n" +
+    "} \n" +
+    "void main() \n" +
+    "{ \n" +
+    "    float signedDistance = getSignedDistance(v_textureCoordinates, billboard_texture); \n" +
+    "    if (signedDistance > 0.0)  { \n" +
+    "       out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
+    "    } \n" +
+    "} \n";
+
+  const drawCommand = context.createViewportQuadCommand(fs, {
+    uniformMap: {
+      billboard_texture: function () {
+        return texture;
+      },
+    },
+  });
+  drawCommand.pass = Pass.OVERLAY;
+  return drawCommand;
+}
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
