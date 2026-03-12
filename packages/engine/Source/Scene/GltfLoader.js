@@ -2264,9 +2264,9 @@ function loadMeshVectorExtension(loader, meshVectorExtension) {
     return loadAccessor(loader, accessor);
   }
 
-  result.polygonOffsets = loadVectorAccessor(
-    meshVectorExtension.polygonOffsets,
-    "polygonOffsets",
+  result.polygonAttributeOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonAttributeOffsets,
+    "polygonAttributeOffsets",
   );
   result.polygonHoleCounts = loadVectorAccessor(
     meshVectorExtension.polygonHoleCounts,
@@ -2276,13 +2276,9 @@ function loadMeshVectorExtension(loader, meshVectorExtension) {
     meshVectorExtension.polygonHoleOffsets,
     "polygonHoleOffsets",
   );
-  result.polygonTriangleCounts = loadVectorAccessor(
-    meshVectorExtension.polygonTriangleCounts,
-    "polygonTriangleCounts",
-  );
-  result.polygonTriangleOffsets = loadVectorAccessor(
-    meshVectorExtension.polygonTriangleOffsets,
-    "polygonTriangleOffsets",
+  result.polygonIndicesOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonIndicesOffsets,
+    "polygonIndicesOffsets",
   );
 
   return result;

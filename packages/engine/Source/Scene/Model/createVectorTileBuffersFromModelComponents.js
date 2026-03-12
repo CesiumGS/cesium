@@ -219,31 +219,28 @@ function gatherPrimitiveStats(primitive, stats) {
       );
     }
 
-    const polygonOffsets = meshVector.polygonOffsets;
+    const polygonAttributeOffsets = meshVector.polygonAttributeOffsets;
+    const polygonIndicesOffsets = meshVector.polygonIndicesOffsets;
     const polygonHoleCounts = meshVector.polygonHoleCounts;
-    const polygonTriangleCounts = meshVector.polygonTriangleCounts;
-    const polygonTriangleOffsets = meshVector.polygonTriangleOffsets;
-    const polygonHoleOffsets = meshVector.polygonHoleOffsets;
-    if (
-      !defined(polygonOffsets) ||
-      !defined(polygonHoleCounts) ||
-      !defined(polygonTriangleCounts) ||
-      !defined(polygonTriangleOffsets) ||
-      !defined(polygonHoleOffsets)
-    ) {
+    if (!defined(polygonAttributeOffsets) || !defined(polygonIndicesOffsets)) {
       throw new RuntimeError(
-        "Vector polygons require polygonOffsets, polygonHoleCounts, polygonHoleOffsets, polygonTriangleCounts, and polygonTriangleOffsets.",
+        "Vector polygons require polygonAttributeOffsets and polygonIndicesOffsets.",
       );
     }
 
-    const polygonCount = polygonOffsets.length;
+    const polygonCount = polygonAttributeOffsets.length;
     stats.polygonPrimitiveCount += polygonCount;
     for (let i = 0; i < polygonCount; i++) {
-      const start = polygonOffsets[i];
-      const end = i + 1 < polygonCount ? polygonOffsets[i + 1] : positionCount;
+      const start = polygonAttributeOffsets[i];
+      const end = i + 1 < polygonCount ? polygonAttributeOffsets[i + 1] : positionCount;
+      const polygonIndicesCount = i + 1 < polygonCount
+        ? polygonIndicesOffsets[i + 1] - polygonIndicesOffsets[i]
+        : indices.length - polygonIndicesOffsets[i]
       stats.polygonVertexCount += Math.max(end - start, 0);
-      stats.polygonHoleCount += polygonHoleCounts[i];
-      stats.polygonTriangleCount += polygonTriangleCounts[i];
+      stats.polygonTriangleCount += polygonIndicesCount / 3;
+      if (polygonHoleCounts) {
+        stats.polygonHoleCount += polygonHoleCounts[i];
+      }
     }
     return;
   }
@@ -450,29 +447,25 @@ function appendPrimitiveToBuffers(
       );
     }
 
-    const polygonOffsets = meshVector.polygonOffsets;
+    const polygonAttributeOffsets = meshVector.polygonAttributeOffsets;
+    const polygonIndicesOffsets = meshVector.polygonIndicesOffsets;
     const polygonHoleCounts = meshVector.polygonHoleCounts;
     const polygonHoleOffsets = meshVector.polygonHoleOffsets;
-    const polygonTriangleCounts = meshVector.polygonTriangleCounts;
-    const polygonTriangleOffsets = meshVector.polygonTriangleOffsets;
-    if (
-      !defined(polygonOffsets) ||
-      !defined(polygonHoleCounts) ||
-      !defined(polygonHoleOffsets) ||
-      !defined(polygonTriangleCounts) ||
-      !defined(polygonTriangleOffsets)
-    ) {
+    if (!defined(polygonAttributeOffsets) || !defined(polygonIndicesOffsets)) {
       throw new RuntimeError(
-        "Vector polygons require polygonOffsets, polygonHoleCounts, polygonHoleOffsets, polygonTriangleCounts, and polygonTriangleOffsets.",
+        "Vector polygons require polygonAttributeOffsets and polygonIndicesOffsets.",
       );
     }
 
+    const hasHoles = defined(polygonHoleCounts) && defined(polygonHoleOffsets);
+    let holes;
+
     let holeOffsetIndex = 0;
-    const polygonCount = polygonOffsets.length;
+    const polygonCount = polygonAttributeOffsets.length;
     for (let i = 0; i < polygonCount; i++) {
-      const polygonVertexOffset = polygonOffsets[i];
+      const polygonVertexOffset = polygonAttributeOffsets[i];
       const polygonVertexEnd =
-        i + 1 < polygonCount ? polygonOffsets[i + 1] : vertexCount;
+        i + 1 < polygonCount ? polygonAttributeOffsets[i + 1] : vertexCount;
       const polygonVertexCount = Math.max(
         polygonVertexEnd - polygonVertexOffset,
         0,
@@ -486,29 +479,33 @@ function appendPrimitiveToBuffers(
         polygonVertexEnd * 3,
       );
 
-      const holeCount = polygonHoleCounts[i];
-      let holes;
-      if (holeCount > 0) {
-        const HoleArray = /** @type {TypedArrayConstructor} */ (
-          polygonHoleOffsets.constructor
-        );
-        holes = new HoleArray(holeCount);
-        for (let h = 0; h < holeCount; h++) {
-          holes[h] =
-            polygonHoleOffsets[holeOffsetIndex + h] - polygonVertexOffset;
+      if (hasHoles) {
+        const holeCount = polygonHoleCounts[i];
+        if (holeCount > 0) {
+          const HoleArray = /** @type {TypedArrayConstructor} */ (
+            polygonHoleOffsets.constructor
+          );
+          holes = new HoleArray(holeCount);
+          for (let h = 0; h < holeCount; h++) {
+            holes[h] =
+              polygonHoleOffsets[holeOffsetIndex + h] - polygonVertexOffset;
+          }
         }
+        holeOffsetIndex += holeCount;
       }
-      holeOffsetIndex += holeCount;
 
-      const triangleCount = polygonTriangleCounts[i];
-      const triangleOffset = polygonTriangleOffsets[i];
-      const triangleIndexCount = triangleCount * 3;
+      // TODO(donmccurdy)
+
+      const triangleIndexOffset = polygonIndicesOffsets[i];
+      const triangleIndexCount = i + 1 < polygonCount
+        ? polygonIndicesOffsets[i + 1] - triangleIndexOffset
+        : indices.length - triangleIndexOffset;
       let triangleIndices;
       if (triangleIndexCount > 0) {
         if (polygonVertexOffset === 0) {
           triangleIndices = indices.subarray(
-            triangleOffset,
-            triangleOffset + triangleIndexCount,
+            triangleIndexOffset,
+            triangleIndexOffset + triangleIndexCount,
           );
         } else {
           const IndexArray = /** @type {TypedArrayConstructor} */ (
@@ -517,7 +514,7 @@ function appendPrimitiveToBuffers(
           triangleIndices = new IndexArray(triangleIndexCount);
           for (let t = 0; t < triangleIndexCount; t++) {
             triangleIndices[t] =
-              indices[triangleOffset + t] - polygonVertexOffset;
+              indices[triangleIndexOffset + t] - polygonVertexOffset;
           }
         }
       }
