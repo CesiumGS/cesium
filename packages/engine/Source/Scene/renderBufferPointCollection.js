@@ -24,11 +24,11 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
-/** @import {TypedArray} from "../Core/globalTypes.js"; */
+/** @import {Destroyable, TypedArray} from "../Core/globalTypes.js"; */
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'showPixelSizeAndColor' | 'outlineWidthAndOutlineColor'} BufferPointAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'pickColor' | 'showPixelSizeAndColor' | 'outlineWidthAndOutlineColor'} BufferPointAttribute
  * @ignore
  */
 
@@ -39,8 +39,9 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 const BufferPointAttributeLocations = {
   positionHigh: 0,
   positionLow: 1,
-  showPixelSizeAndColor: 2,
-  outlineWidthAndOutlineColor: 3,
+  pickColor: 2,
+  showPixelSizeAndColor: 3,
+  outlineWidthAndOutlineColor: 4,
 };
 
 /**
@@ -50,6 +51,7 @@ const BufferPointAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
+ * @property {Destroyable[]} [pickIds]
  * @property {Function} destroy
  * @ignore
  */
@@ -57,6 +59,7 @@ const BufferPointAttributeLocations = {
 // Scratch variables.
 const point = new BufferPoint();
 const color = new Color();
+const pickColor = new Color();
 const cartesian = new Cartesian3();
 const encodedCartesian = new EncodedCartesian3();
 
@@ -77,16 +80,22 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     renderContext.attributeArrays = {
       positionHigh: new Float32Array(featureCountMax * 3),
       positionLow: new Float32Array(featureCountMax * 3),
+      pickColor: new Uint8Array(featureCountMax * 4),
       showPixelSizeAndColor: new Float32Array(featureCountMax * 3),
       outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
     };
   }
 
+  if (!defined(renderContext.pickIds)) {
+    renderContext.pickIds = [];
+  }
+
   if (collection._dirtyCount > 0) {
-    const { attributeArrays } = renderContext;
+    const { attributeArrays, pickIds } = renderContext;
 
     const positionHighArray = attributeArrays.positionHigh;
     const positionLowArray = attributeArrays.positionLow;
+    const pickColorArray = attributeArrays.pickColor;
     const showPixelSizeAndColorArray = attributeArrays.showPixelSizeAndColor;
     const outlineWidthAndOutlineColorArray =
       attributeArrays.outlineWidthAndOutlineColor;
@@ -100,8 +109,15 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         continue;
       }
 
+      if (point._pickId === 0) {
+        pickIds[i] = context.createPickId({ collection, index: i });
+        // @ts-expect-error PickId types are not exported.
+        point._pickId = pickIds[i].key;
+      }
+
       point.getPosition(cartesian);
       EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
+      Color.fromRgba(point._pickId, pickColor);
 
       positionHighArray[i * 3] = encodedCartesian.high.x;
       positionHighArray[i * 3 + 1] = encodedCartesian.high.y;
@@ -110,6 +126,11 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       positionLowArray[i * 3] = encodedCartesian.low.x;
       positionLowArray[i * 3 + 1] = encodedCartesian.low.y;
       positionLowArray[i * 3 + 2] = encodedCartesian.low.z;
+
+      pickColorArray[i * 4] = Color.floatToByte(pickColor.red);
+      pickColorArray[i * 4 + 1] = Color.floatToByte(pickColor.green);
+      pickColorArray[i * 4 + 2] = Color.floatToByte(pickColor.blue);
+      pickColorArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
 
       showPixelSizeAndColorArray[i * 3] = point.show ? 1 : 0;
       showPixelSizeAndColorArray[i * 3 + 1] = 5; // TODO: Material API.
@@ -148,6 +169,17 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           componentsPerAttribute: 3,
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionLow,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
+        },
+        {
+          index: BufferPointAttributeLocations.pickColor,
+          componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+          componentsPerAttribute: 4,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.pickColor,
             context,
             // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
@@ -221,6 +253,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.POINTS,
       pass: Pass.OPAQUE,
+      pickId: "v_pickColor",
       owner: collection,
       count: collection.primitiveCount,
       modelMatrix: collection.modelMatrix,
@@ -280,6 +313,12 @@ function destroyRenderContext() {
 
   if (defined(context.renderState)) {
     RenderState.removeFromCache(context.renderState);
+  }
+
+  if (defined(context.pickIds)) {
+    for (const pickId of context.pickIds) {
+      pickId.destroy();
+    }
   }
 }
 

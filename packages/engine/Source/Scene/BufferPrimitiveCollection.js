@@ -9,8 +9,9 @@ import Matrix4 from "../Core/Matrix4.js";
 import assert from "../Core/assert.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
+import Check from "../Core/Check.js";
 
-/** @import { TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
+/** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 
 /**
@@ -65,7 +66,7 @@ class BufferPrimitiveCollection {
    * implementations, so the collection should be ignorant of the renderer's implementation
    * and context data. A collection only has one renderer active at a time.
    *
-   * @type {{destroy: Function}|null}
+   * @type {Destroyable|null}
    * @ignore
    */
   _renderContext = null;
@@ -449,6 +450,11 @@ class BufferPrimitiveCollection {
    * 'result' argument, now bound to the specified primitive index.
    */
   get(index, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("index", index, 0);
+    Check.typeOf.number.lessThan("index", index, this._primitiveCount);
+    //>>includeEnd('debug');
+
     result._collection = this;
     result._index = index;
     result._byteOffset = index * this._getPrimitiveClass().Layout.__BYTE_LENGTH;
@@ -476,6 +482,7 @@ class BufferPrimitiveCollection {
     result.featureId = this._primitiveCount - 1;
     result.show = options.show ?? true;
     result.setColor(options.color ?? Color.WHITE);
+    result._pickId = 0; // unset
     result._dirty = true;
     return result;
   }

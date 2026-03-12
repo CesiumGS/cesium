@@ -1,6 +1,7 @@
 import {
   BoundingSphere,
   BoundingSphereState,
+  BufferPrimitiveCollection,
   Cartesian3,
   CesiumWidget,
   Cesium3DTileFeature,
@@ -104,7 +105,7 @@ function getCesium3DTileFeatureName(feature) {
 function pickEntity(viewer, e) {
   const picked = viewer.scene.pick(e.position);
   if (defined(picked)) {
-    const id = picked.id ?? picked.primitive.id;
+    const id = picked.id ?? picked.primitive?.id;
     if (id instanceof Entity) {
       return id;
     }
@@ -115,6 +116,12 @@ function pickEntity(viewer, e) {
         description: getCesium3DTileFeatureDescription(picked),
         feature: picked,
       });
+    }
+
+    const collection = picked.collection;
+    if (collection instanceof BufferPrimitiveCollection) {
+      const PrimitiveClass = collection._getPrimitiveClass();
+      return collection.get(picked.index, new PrimitiveClass());
     }
   }
 
@@ -1852,7 +1859,8 @@ Viewer.prototype._onTick = function (clock) {
       this.trackedEntity === this.selectedEntity;
 
     if (showSelection) {
-      infoBoxViewModel.titleText = selectedEntity.name ?? selectedEntity.id;
+      infoBoxViewModel.titleText =
+        selectedEntity.name ?? selectedEntity.id ?? selectedEntity.featureId;
       infoBoxViewModel.description = Property.getValueOrDefault(
         selectedEntity.description,
         time,

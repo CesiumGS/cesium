@@ -26,11 +26,11 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
-/** @import {TypedArray} from "../Core/globalTypes.js"; */
+/** @import {Destroyable, TypedArray} from "../Core/globalTypes.js"; */
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPositionHigh' | 'nextPositionLow' | 'showColorWidthAndTexCoord'} BufferPolylineAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPositionHigh' | 'nextPositionLow' | 'pickColor' | 'showColorWidthAndTexCoord'} BufferPolylineAttribute
  * @ignore
  */
 
@@ -45,7 +45,8 @@ const BufferPolylineAttributeLocations = {
   prevPositionLow: 3,
   nextPositionHigh: 4,
   nextPositionLow: 5,
-  showColorWidthAndTexCoord: 6,
+  pickColor: 6,
+  showColorWidthAndTexCoord: 7,
 };
 
 /**
@@ -56,12 +57,14 @@ const BufferPolylineAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
+ * @property {Destroyable[]} [pickIds]
  * @property {Function} destroy
  * @ignore
  */
 
 // Scratch variables.
 const polyline = new BufferPolyline();
+const pickColor = new Color();
 const color = new Color();
 const cartesian = new Cartesian3();
 const prevCartesian = new Cartesian3();
@@ -117,13 +120,18 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       prevPositionLow: new Float32Array(vertexCountMax * 3),
       nextPositionHigh: new Float32Array(vertexCountMax * 3),
       nextPositionLow: new Float32Array(vertexCountMax * 3),
+      pickColor: new Uint8Array(vertexCountMax * 4),
       showColorWidthAndTexCoord: new Float32Array(vertexCountMax * 4),
     };
   }
 
+  if (!defined(renderContext.pickIds)) {
+    renderContext.pickIds = [];
+  }
+
   if (collection._dirtyCount > 0) {
     const { _dirtyOffset, _dirtyCount } = collection;
-    const { attributeArrays } = renderContext;
+    const { attributeArrays, pickIds } = renderContext;
 
     const indexArray = renderContext.indexArray;
     const positionHighArray = attributeArrays.positionHigh;
@@ -132,6 +140,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     const prevPositionLowArray = attributeArrays.prevPositionLow;
     const nextPositionHighArray = attributeArrays.nextPositionHigh;
     const nextPositionLowArray = attributeArrays.nextPositionLow;
+    const pickColorArray = attributeArrays.pickColor;
     const showColorWidthAndTexCoordArray =
       attributeArrays.showColorWidthAndTexCoord;
 
@@ -142,7 +151,14 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         continue;
       }
 
+      if (polyline._pickId === 0) {
+        pickIds[i] = context.createPickId({ collection, index: i });
+        // @ts-expect-error PickId types are not exported.
+        polyline._pickId = pickIds[i].key;
+      }
+
       const cartesianArray = polyline.getPositions();
+      Color.fromRgba(polyline._pickId, pickColor);
       polyline.getColor(color);
       const show = polyline.show;
       const width = polyline.width;
@@ -217,6 +233,12 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           nextPositionLowArray[vOffset * 3] = nextCartesianEnc.low.x;
           nextPositionLowArray[vOffset * 3 + 1] = nextCartesianEnc.low.y;
           nextPositionLowArray[vOffset * 3 + 2] = nextCartesianEnc.low.z;
+
+          // Pick ID.
+          pickColorArray[vOffset * 4] = Color.floatToByte(pickColor.red);
+          pickColorArray[vOffset * 4 + 1] = Color.floatToByte(pickColor.green);
+          pickColorArray[vOffset * 4 + 2] = Color.floatToByte(pickColor.blue);
+          pickColorArray[vOffset * 4 + 3] = Color.floatToByte(pickColor.alpha);
 
           // Properties.
           showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
@@ -316,7 +338,17 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
-
+        {
+          index: BufferPolylineAttributeLocations.pickColor,
+          componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+          componentsPerAttribute: 4,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.pickColor,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
+        },
         {
           index: BufferPolylineAttributeLocations.showColorWidthAndTexCoord,
           componentDatatype: ComponentDatatype.FLOAT,
@@ -383,6 +415,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.TRIANGLES,
       pass: Pass.OPAQUE,
+      pickId: "v_pickColor",
       owner: collection,
       count: getDrawIndexCount(collection),
       modelMatrix: collection.modelMatrix,
@@ -443,7 +476,7 @@ function getPolylineDirtyRanges(collection) {
 
   collection.get(_dirtyOffset, polyline);
   const vertexOffset = polyline.vertexOffset * 2;
-  const segmentOffset = vertexOffset - _dirtyOffset;
+  const segmentOffset = polyline.vertexOffset - _dirtyOffset;
   const indexOffset = segmentOffset * 6;
 
   collection.get(_dirtyOffset + _dirtyCount - 1, polyline);
@@ -473,6 +506,12 @@ function destroyRenderContext() {
 
   if (defined(context.renderState)) {
     RenderState.removeFromCache(context.renderState);
+  }
+
+  if (defined(context.pickIds)) {
+    for (const pickId of context.pickIds) {
+      pickId.destroy();
+    }
   }
 }
 

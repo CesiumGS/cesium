@@ -125,6 +125,75 @@ describe(
       line.show = false;
       expect(scene).toRender([0, 0, 0, 255]);
     });
+
+    it("picks polylines", () => {
+      const polyline = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      collection.add({ positions }, polyline);
+      collection.add({ positions }, polyline);
+
+      scene.primitives.add(collection);
+
+      // Polylines drawn and picked in collection order.
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(0);
+      });
+    });
+
+    it("does not pick if empty", () => {
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
+
+    it("does not pick if collection.show = false", () => {
+      const polyline = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      collection.add({ positions }, polyline);
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(0);
+      });
+
+      collection.show = false;
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
+
+    it("does not pick if polyline.show = false", () => {
+      const polyline = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      collection.add({ positions }, polyline);
+      collection.add({ positions }, polyline);
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(0);
+      });
+
+      collection.get(0, polyline).show = false;
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(1);
+      });
+
+      collection.get(1, polyline).show = false;
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
   },
   "WebGL",
 );
