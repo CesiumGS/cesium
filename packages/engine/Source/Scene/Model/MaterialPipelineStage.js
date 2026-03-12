@@ -1,5 +1,4 @@
 import defined from "../../Core/defined.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import Matrix3 from "../../Core/Matrix3.js";
@@ -150,39 +149,26 @@ MaterialPipelineStage.process = function (
     // Signal to Scene that the planar fill ID framebuffer is needed.
     frameState.planarFillRequested = true;
 
-    // Use shader-based polygon offset for logarithmic depth buffer.
-    // This enables the POLYGON_OFFSET code path in writeLogDepth.glsl
-    shaderBuilder.addDefine(
-      "POLYGON_OFFSET",
-      undefined,
-      ShaderDestination.FRAGMENT,
-    );
-
-    // u_polygonOffset is a vec2(factor, units) used by writeLogDepth.glsl.
     // Per the BENTLEY_materials_planar_fill spec:
     //  - ALL planar primitives must render in front of non-planar (Depth Ordering).
     //  - `behind` fills must render behind coplanar geometry from the SAME
     //    logical object only (same feature ID from EXT_mesh_features).
     //
-    // All planar fills get a negative polygon offset to pull them in front of
-    // non-planar geometry. Behind fills additionally sample the planar fill ID
-    // texture at the current fragment to test whether the pixel belongs to the
-    // same feature; if so, they apply a small positive depth nudge to sit behind
-    // the non-behind geometry of that same feature.
-    let polygonOffset;
+    // Instead of using fixed polygon offset units (which don't scale well with
+    // logarithmic depth), we use proportional depth scaling in the shader.
+    // This approach matches the edge visibility system and scales naturally
+    // at all viewing distances.
+    //
+    // All planar fills get a proportional depth pull toward camera. Behind fills
+    // additionally sample the planar fill ID texture to test same-feature; if so,
+    // they apply a small proportional push to sit behind non-behind geometry.
+    shaderBuilder.addDefine(
+      "HAS_PLANAR_FILL_DEPTH",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
 
     if (hasBehind) {
-      // Behind fills: same base offset as non-behind fills so they render
-      // at the same depth by default.  The shader will conditionally add a
-      // positive depth nudge ONLY when the pixel's feature ID matches,
-      // pushing the fill behind same-feature non-behind geometry.
-      polygonOffset = new Cartesian2(0.0, -1000.0);
-      renderResources.renderStateOptions.polygonOffset = {
-        enabled: true,
-        factor: -5.0,
-        units: -5.0,
-      };
-
       // Enable shader code that samples the planar fill ID texture.
       const hasFeatureIds =
         defined(primitive.featureIds) && primitive.featureIds.length > 0;
@@ -201,15 +187,6 @@ MaterialPipelineStage.process = function (
         );
       }
     } else {
-      // Non-behind planar fills: strong negative offset to pull firmly
-      // in front of non-planar geometry.
-      polygonOffset = new Cartesian2(0.0, -1000.0);
-      renderResources.renderStateOptions.polygonOffset = {
-        enabled: true,
-        factor: -5.0,
-        units: -5.0,
-      };
-
       // Non-behind planar fill geometry participates in the feature-ID
       // pre-pass so that behind fills can test same-object coplanarity.
       const hasFeatureIds =
@@ -245,10 +222,6 @@ MaterialPipelineStage.process = function (
         };
       }
     }
-
-    uniformMap.u_polygonOffset = function () {
-      return polygonOffset;
-    };
   }
 
   // When backgroundFill is true (BENTLEY_materials_planar_fill), the primitive

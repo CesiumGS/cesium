@@ -172,14 +172,30 @@ void main()
     #endif
 
     // ──────────────────────────────────────────────────────────────────────
+    // BENTLEY_materials_planar_fill: Proportional depth adjustment.
+    //
+    // Per the spec, planar primitives must render in front of non-planar
+    // geometry. We use proportional depth scaling (similar to edge visibility)
+    // which scales naturally with logarithmic depth at all viewing distances.
+    //
+    // The factor 0.9995 (0.05% pull toward camera) matches the magnitude used
+    // by edge visibility's depth comparison tolerance (0.0005).
+    // ──────────────────────────────────────────────────────────────────────
+    #ifdef HAS_PLANAR_FILL_DEPTH
+    gl_FragDepth *= 0.9995;
+    #endif
+
+    // ──────────────────────────────────────────────────────────────────────
     // BENTLEY_materials_planar_fill: Behind fill depth adjustment.
     //
-    // After the log depth (and polygon offset) have been written to
-    // gl_FragDepth, sample the planar fill ID texture.  If the pixel
-    // already belongs to the same feature, nudge gl_FragDepth toward the
-    // far plane so this "behind" fill sits behind its non-behind sibling.
-    // If the pixel has no stored feature, do nothing extra — the base
-    // polygon offset already pushes us in front of non-planar geometry.
+    // After the proportional depth pull has been applied, sample the planar
+    // fill ID texture. If the pixel already belongs to the same feature,
+    // apply a small proportional push so this "behind" fill sits behind its
+    // non-behind sibling. If the pixel has no stored feature, the base pull
+    // still keeps us in front of non-planar geometry.
+    //
+    // The factor 1.0002 (0.02% push away) is small enough to stay in front of
+    // non-planar geometry (which has no pull) but behind same-feature fills.
     // ──────────────────────────────────────────────────────────────────────
     #ifdef HAS_PLANAR_FILL_BEHIND
     {
@@ -190,11 +206,10 @@ void main()
 
         // storedFeatureId < 0 means "no planar fill at this pixel".
         if (storedFeatureId >= 0.0 && abs(storedFeatureId - myFeatureId) < 0.5) {
-            // Both behind and non-behind fills share the same base polygon
-            // offset (-1000 units toward camera).  Nudge gl_FragDepth by a
-            // positive amount so this behind fill sits just behind the
-            // non-behind fill of the same feature.
-            gl_FragDepth += czm_epsilon7 * 600.0;
+            // Proportional push: multiply by >1 to move away from camera.
+            // Net effect: 0.9995 * 1.0002 ≈ 0.9997, still in front of non-planar
+            // but behind same-feature non-behind fills (which are at 0.9995).
+            gl_FragDepth *= 1.0002;
         }
     }
     #endif
