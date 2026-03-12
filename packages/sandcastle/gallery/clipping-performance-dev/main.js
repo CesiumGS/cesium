@@ -41,9 +41,9 @@ const currentDataSources = [];
 let currentDataSourceShape;
 let debug = false;
 
-async function updateClippingPolygons(numPolygons, numPoints) {
+async function updateClippingPolygons(numPolygons, numPoints, spacing) {
   console.log(
-    `Update with numPolygons=${numPolygons} and numPoints=${numPoints}`,
+    `Update with numPolygons=${numPolygons} and numPoints=${numPoints} and spacing=${spacing}`,
   );
 
   for (let i = 0; i < currentDataSources.length; i++) {
@@ -57,8 +57,8 @@ async function updateClippingPolygons(numPolygons, numPoints) {
     const gx = Math.floor(i / gridSize);
     const gy = i % gridSize;
     const points = createCirclePoints(
-      -75.152408 + gx * 0.21,
-      39.946975 + gy * 0.21,
+      -75.152408 + gx * spacing,
+      39.946975 + gy * spacing,
       0.1,
       numPoints,
     );
@@ -86,7 +86,7 @@ async function updateClippingPolygons(numPolygons, numPoints) {
   viewer.scene.globe.clippingPolygons = clippingPolygons;
 }
 
-await updateClippingPolygons(2, 16);
+await updateClippingPolygons(2, 16, 0.21);
 
 const cameraOffset = new Cesium.HeadingPitchRange(
   Cesium.Math.toRadians(0.0),
@@ -98,12 +98,14 @@ viewer.zoomTo(currentDataSourceShape, cameraOffset);
 const viewModel = {
   numPolygons: 2.0,
   numPoints: 16.0,
+  spacing: 0.21,
 };
 
 async function updateModelFromView() {
   const numPolygons = Number(viewModel.numPolygons);
   const numPoints = Number(viewModel.numPoints);
-  await updateClippingPolygons(numPolygons, numPoints);
+  const spacing = Number(viewModel.spacing);
+  await updateClippingPolygons(numPolygons, numPoints, spacing);
 }
 
 Cesium.knockout.track(viewModel);
