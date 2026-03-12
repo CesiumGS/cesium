@@ -1,0 +1,2002 @@
+diff --git a/packages/engine/Source/Core/CesiumTerrainProvider.js b/packages/engine/Source/Core/CesiumTerrainProvider.js
+index bcad42c688..4065eab258 100644
+--- a/packages/engine/Source/Core/CesiumTerrainProvider.js
++++ b/packages/engine/Source/Core/CesiumTerrainProvider.js
+@@ -1,6 +1,7 @@
+ import AttributeCompression from "./AttributeCompression.js";
+ import BoundingSphere from "./BoundingSphere.js";
+ import Cartesian3 from "./Cartesian3.js";
++import CesiumMath from "./Math.js";
+ import Check from "./Check.js";
+ import Credit from "./Credit.js";
+ import Frozen from "./Frozen.js";
+@@ -22,6 +23,8 @@ import RuntimeError from "./RuntimeError.js";
+ import TerrainProvider from "./TerrainProvider.js";
+ import TileAvailability from "./TileAvailability.js";
+ import TileProviderError from "./TileProviderError.js";
++import SDF from "./sdf.js";
++import geoLookup from "./geoLookup.js";
+ 
+ function LayerInformation(layer) {
+   this.resource = layer.resource;
+@@ -175,7 +178,10 @@ async function parseMetadataSuccess(terrainProviderBuilder, data, provider) {
+ 
+   const tileUrlTemplates = data.tiles;
+ 
+-  const maxZoom = data.maxzoom;
++  let maxZoom = data.maxzoom;
++
++  maxZoom = window.maximumTerrainLevel;
++
+   terrainProviderBuilder.overallMaxZoom = Math.max(
+     terrainProviderBuilder.overallMaxZoom,
+     maxZoom,
+@@ -593,7 +599,16 @@ function createHeightmapTerrainData(provider, buffer, level, x, y) {
+   });
+ }
+ 
+-function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
++function createQuantizedMeshTerrainData(
++  provider,
++  buffer,
++  sdf,
++  gpuLookup,
++  level,
++  x,
++  y,
++  layer,
++) {
+   const littleEndianExtensionSize = layer.littleEndianExtensionSize;
+   let pos = 0;
+   const cartesian3Elements = 3;
+@@ -830,10 +845,14 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
+     northSkirtHeight: skirtHeight,
+     childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
+     waterMask: waterMaskBuffer,
++    sdf: sdf,
++    gpuLookup: gpuLookup,
+     credits: provider._tileCredits,
+   });
+ }
+ 
++const scratchPromises = new Array(2);
++
+ /**
+  * Requests the geometry for a given tile. The result must include terrain data and
+  * may optionally include a water mask and an indication of which child tiles are available.
+@@ -909,7 +928,108 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
+   return requestTileGeometry(this, x, y, level, layerToUse, request);
+ };
+ 
+-function requestTileGeometry(provider, x, y, level, layerToUse, request) {
++function checkIfGeoJsonHasPolygons(features) {
++  for (const feature of features) {
++    if (feature.geometry.type === "Polygon") {
++      console.log("Found polygon feature");
++      return true; // Exit the loop and return true
++    }
++  }
++  console.log("No polygon feature found");
++  return false;
++}
++
++/**
++ *
++ * @param {number} rootId The root tile ID (0 or 1).
++ * @param {number} level The level of the tile.
++ * @param {number} x The x coordinate of the tile.
++ * @param {number} y The y coordinate of the tile.
++ * @param {number} terrainY The y coordinate of the tile in terrain scheme.
++ * @returns {Promise<{width: number, height: number, sdfDistances: Float32Array, sdfFeatureIds: Uint32Array}>} A promise that resolves to the SDF data.
++ */
++function requestGeoJson(provider, rootId, level, x, y, terrainY) {
++  const url = window.geoJsonUrl;
++
++  return Resource.fetchJson({
++    url: url,
++    templateValues: {
++      rootId: rootId,
++      level: level,
++      x: x,
++      y: terrainY,
++    },
++  })
++    .then(function (geojson) {
++      const results = {};
++
++      const rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
++      const features = geojson.features;
++
++      if (window.sdf) {
++        const width = 256;
++        const height = 256;
++
++        const [sdfDistancesArray, sdfFeatureIdsArray] = SDF.generateSDFSweep(
++          rectangle,
++          features,
++          width,
++          height,
++        );
++
++        results.sdf = {
++          width: width,
++          height: height,
++          distances: sdfDistancesArray,
++          featureIds: sdfFeatureIdsArray,
++        };
++      }
++
++      if (window.gpuLookup) {
++        const minX = CesiumMath.toDegrees(rectangle.west);
++        const minY = CesiumMath.toDegrees(rectangle.south);
++        const maxX = CesiumMath.toDegrees(rectangle.east);
++        const maxY = CesiumMath.toDegrees(rectangle.north);
++
++        results.gpuLookup = geoLookup.geojsonToArrayInGrid(features, [
++          minX,
++          minY,
++          maxX,
++          maxY,
++        ]);
++
++        if (defined(results.gpuLookup)) {
++          results.gpuLookup.push(checkIfGeoJsonHasPolygons(features));
++        }
++      }
++
++      return results;
++    })
++    .catch(function (error) {
++      return undefined;
++    });
++}
++
++/**
++ * Gets the root ID from geographic tile coordinates.
++ * There are 2 root tiles in a geographic tiling scheme: one for each hemisphere.
++ * @private
++ * @param {number} level The level of the tile
++ * @param {number} x The x coordinate of the tile
++ * @returns {number} The root tile ID (0 or 1)
++ */
++function getRootIdFromGeographic(level, x) {
++  //>>includeStart('debug', pragmas.debug);
++  Check.typeOf.number("level", level);
++  Check.typeOf.number("x", x);
++  //>>includeEnd('debug');
++
++  const numberOfYTilesAtLevel = 1 << level;
++  const rootId = (x / numberOfYTilesAtLevel) | 0;
++  return rootId;
++}
++
++async function requestTileGeometry(provider, x, y, level, layerToUse, request) {
+   if (!defined(layerToUse)) {
+     return Promise.reject(new RuntimeError("Terrain tile doesn't exist"));
+   }
+@@ -981,7 +1101,18 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
+     return undefined;
+   }
+ 
+-  return promise.then(function (buffer) {
++  const rootId = getRootIdFromGeographic(level, x);
++
++  const promises = scratchPromises;
++  promises[0] = promise;
++  promises[1] = requestGeoJson(provider, rootId, level, x, y, terrainY);
++
++  try {
++    const results = await Promise.all(promises);
++    const buffer = results[0];
++    const sdf = results[1]?.sdf;
++    const gpuLookup = results[1]?.gpuLookup;
++
+     if (!defined(buffer)) {
+       return Promise.reject(new RuntimeError("Mesh buffer doesn't exist."));
+     }
+@@ -991,12 +1122,16 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
+     return createQuantizedMeshTerrainData(
+       provider,
+       buffer,
++      sdf,
++      gpuLookup,
+       level,
+       x,
+       y,
+       layerToUse,
+     );
+-  });
++  } catch (error) {
++    console.log(`Could not load tile: ${rootId} ${level} ${x} ${y}: ${error}`);
++  }
+ }
+ 
+ Object.defineProperties(CesiumTerrainProvider.prototype, {
+diff --git a/packages/engine/Source/Core/QuantizedMeshTerrainData.js b/packages/engine/Source/Core/QuantizedMeshTerrainData.js
+index e654efbfa7..48d2bc1ef7 100644
+--- a/packages/engine/Source/Core/QuantizedMeshTerrainData.js
++++ b/packages/engine/Source/Core/QuantizedMeshTerrainData.js
+@@ -58,6 +58,8 @@ import TerrainMesh from "./TerrainMesh.js";
+  *                  otherwise, false.
+  * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
+  * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
++ * @param {Object} [options.sdf] The object containing SDF values.
++ * @param {Object} [options.gpuLookup] The object containing GPU lookup values.
+  * @param {Credit[]} [options.credits] Array of credits for this tile.
+  *
+  *
+@@ -177,6 +179,8 @@ function QuantizedMeshTerrainData(options) {
+ 
+   this._createdByUpsampling = options.createdByUpsampling ?? false;
+   this._waterMask = options.waterMask;
++  this._sdf = options.sdf;
++  this._gpuLookup = options.gpuLookup;
+ 
+   this._mesh = undefined;
+ }
+@@ -205,6 +209,18 @@ Object.defineProperties(QuantizedMeshTerrainData.prototype, {
+     },
+   },
+ 
++  sdf: {
++    get: function () {
++      return this._sdf;
++    },
++  },
++
++  gpuLookup: {
++    get: function () {
++      return this._gpuLookup;
++    },
++  },
++
+   childTileMask: {
+     get: function () {
+       return this._childTileMask;
+diff --git a/packages/engine/Source/Core/geoLookup.js b/packages/engine/Source/Core/geoLookup.js
+new file mode 100644
+index 0000000000..4dca0b79ff
+--- /dev/null
++++ b/packages/engine/Source/Core/geoLookup.js
+@@ -0,0 +1,461 @@
++function getNumofLineSegments(features) {
++  let count = 0;
++  features.forEach((feature) => {
++    if (feature.geometry.type === "LineString") {
++      count += feature.geometry.coordinates.length - 1;
++    } else if (feature.geometry.type === "Polygon") {
++      // for polygon, take all rings
++      const lineCoords = feature.geometry.coordinates.flat();
++      count += lineCoords.length - 1;
++      // note: for geojson the last and first point are duplicated
++    }
++  });
++  return count;
++}
++
++/*function geojsonToArray(features, bbox, useTest = false) {
++  const numOfLineSegmentsGeoJSON = getNumofLineSegments(features);
++
++  // get texture size to the next power of 2
++  const textureWidth = Math.pow(
++    2,
++    Math.ceil(Math.log2(Math.ceil(Math.sqrt(numOfLineSegmentsGeoJSON)))),
++  );
++  const textureHeight = Math.pow(
++    2,
++    Math.ceil(Math.log2(Math.ceil(numOfLineSegmentsGeoJSON / textureWidth))),
++  );
++  const numOfLineSegments = textureWidth * textureHeight;
++
++  console.log("Number of line segments:", numOfLineSegments);
++  const coords = new Float32Array(numOfLineSegments * 4);
++  // loop through features and extract line segments
++  let index = 0;
++  for (let i = 0; i < features.length; i++) {
++    // do line string only for now
++    const geometry = features[i].geometry;
++    if (geometry.type === "LineString") {
++      const lineCoords = geometry.coordinates;
++      // normalize coordinates to [0,1] based on bbox
++      for (let j = 0; j < lineCoords.length - 1; j++) {
++        let x1, y1, x2, y2;
++        if (!useTest) {
++          x1 = (lineCoords[j][0] - bbox[0]) / (bbox[2] - bbox[0]);
++          y1 = (lineCoords[j][1] - bbox[1]) / (bbox[3] - bbox[1]);
++          x2 = (lineCoords[j + 1][0] - bbox[0]) / (bbox[2] - bbox[0]);
++          y2 = (lineCoords[j + 1][1] - bbox[1]) / (bbox[3] - bbox[1]);
++        } else {
++          // fill in all diagonal lines for testing
++          x1 = 0.0;
++          y1 = 0.0;
++          x2 = 1.0;
++          y2 = 1.0;
++        }
++        coords[index * 4] = x1; // x1
++        coords[index * 4 + 1] = y1; // y1
++        coords[index * 4 + 2] = x2; // x2
++        coords[index * 4 + 3] = y2; // y2
++        index++;
++      }
++    }
++  }
++
++  // fill in the rest with -1
++  for (; index < numOfLineSegments; index++) {
++    coords[index * 4] = -1.0;
++    coords[index * 4 + 1] = -1.0;
++    coords[index * 4 + 2] = -1.0;
++    coords[index * 4 + 3] = -1.0;
++  }
++
++  return [coords, textureWidth, textureHeight];
++}*/
++
++/**
++ * Clips a polygon ring to a bounding box and returns a new ring enclosing the areas within the bounding box.
++ *
++ * @param {Array} ring - The polygon ring as an array of points [[x1, y1], [x2, y2], ...].
++ * @param {number} x0 - The minimum x-coordinate of the bounding box.
++ * @param {number} x1 - The maximum x-coordinate of the bounding box.
++ * @param {number} y0 - The minimum y-coordinate of the bounding box.
++ * @param {number} y1 - The maximum y-coordinate of the bounding box.
++ * @returns {Array} The clipped polygon ring as an array of points.
++ */
++function clipPolygonToBoundingBox(ring, flags, x0, x1, y0, y1) {
++  // Helper function to check if a point is inside the boundary
++  function isInside(point, boundary, isVertical, isMin) {
++    const [x, y] = point;
++    if (isVertical) {
++      return isMin ? x >= boundary : x <= boundary;
++    }
++    return isMin ? y >= boundary : y <= boundary;
++  }
++
++  // Helper function to compute the intersection of a line segment with a boundary
++  function findIntersection(p1, p2, boundary, isVertical) {
++    const [x1, y1] = p1;
++    const [x2, y2] = p2;
++
++    if (isVertical) {
++      // Vertical boundary: x = boundary
++      const t = (boundary - x1) / (x2 - x1);
++      const y = y1 + t * (y2 - y1);
++      return [boundary, y];
++    }
++    // Horizontal boundary: y = boundary
++    const t = (boundary - y1) / (y2 - y1);
++    const x = x1 + t * (x2 - x1);
++    return [x, boundary];
++  }
++
++  // Clip the polygon against a single boundary
++  function clipAgainstBoundary(points, in_flags, boundary, isVertical, isMin) {
++    const newPoints = [];
++    const flags = [];
++    for (let i = 0; i < points.length; i++) {
++      const curr = points[i];
++      const prev = points[(i - 1 + points.length) % points.length];
++      const currInside = isInside(curr, boundary, isVertical, isMin);
++      const prevInside = isInside(prev, boundary, isVertical, isMin);
++
++      if (currInside && prevInside) {
++        // Both points are inside, add the current point
++        newPoints.push(curr);
++        flags.push(in_flags[i]);
++      } else if (currInside && !prevInside) {
++        // Current point is inside, previous point is outside
++        // Add the intersection point and the current point
++        newPoints.push(findIntersection(prev, curr, boundary, isVertical));
++        flags.push(true);
++        newPoints.push(curr);
++        flags.push(in_flags[i]);
++      } else if (!currInside && prevInside) {
++        // Current point is outside, previous point is inside
++        // Add the intersection point
++        newPoints.push(findIntersection(prev, curr, boundary, isVertical));
++        flags.push(true);
++      }
++      // If both points are outside, do nothing
++    }
++    return [newPoints, flags];
++  }
++
++  // Start with the original ring
++  let clippedRing = ring;
++  let clippingFlags = flags;
++
++  // Clip against each boundary of the bounding box
++  [clippedRing, clippingFlags] = clipAgainstBoundary(
++    clippedRing,
++    clippingFlags,
++    x0,
++    true,
++    true,
++  ); // Left boundary
++  [clippedRing, clippingFlags] = clipAgainstBoundary(
++    clippedRing,
++    clippingFlags,
++    x1,
++    true,
++    false,
++  ); // Right boundary
++  [clippedRing, clippingFlags] = clipAgainstBoundary(
++    clippedRing,
++    clippingFlags,
++    y0,
++    false,
++    true,
++  ); // Bottom boundary
++  [clippedRing, clippingFlags] = clipAgainstBoundary(
++    clippedRing,
++    clippingFlags,
++    y1,
++    false,
++    false,
++  ); // Top boundary
++
++  // Ensure the ring is closed (first and last points are the same)
++  if (
++    clippedRing.length > 0 &&
++    (clippedRing[0][0] !== clippedRing[clippedRing.length - 1][0] ||
++      clippedRing[0][1] !== clippedRing[clippedRing.length - 1][1])
++  ) {
++    clippedRing.push(clippedRing[0]);
++    clippingFlags.push(clippingFlags[0]);
++  }
++
++  return [clippedRing, clippingFlags];
++}
++
++function geojsonToArrayInGrid(
++  features,
++  bbox,
++  targetLinePerCell = 1000,
++  useTest = false,
++  inGridClip = false,
++) {
++  const lineSegmentsCount = getNumofLineSegments(features);
++
++  // decide grid size based on features length
++  // aim for 1k lines per grid cell
++  const gridSizeX = Math.ceil(Math.sqrt(lineSegmentsCount / targetLinePerCell));
++  const gridSizeY = Math.ceil(Math.sqrt(lineSegmentsCount / targetLinePerCell));
++  //console.log("Grid size (auto computed):", gridSizeX, gridSizeY);
++
++  // chop into grid cells
++  const cellWidth = (bbox[2] - bbox[0]) / gridSizeX;
++  const cellHeight = (bbox[3] - bbox[1]) / gridSizeY;
++  //console.log("Cell size:", cellWidth, cellHeight);
++
++  // get a 2D array to hold line segments in each cell
++  const grid = new Array(gridSizeX);
++  const gridCutFlags = new Array(gridSizeX);
++  for (let i = 0; i < gridSizeX; i++) {
++    grid[i] = new Array(gridSizeY);
++    gridCutFlags[i] = new Array(gridSizeY);
++    for (let j = 0; j < gridSizeY; j++) {
++      grid[i][j] = [];
++      gridCutFlags[i][j] = [];
++    }
++  }
++
++  //console.log("Original number of line segments:", lineSegmentsCount);
++  let numOfLineSegmentsGeoJSON = 0;
++
++  // assign line segments to grid cells
++  for (let i = 0; i < features.length; i++) {
++    const geometry = features[i].geometry;
++    if (geometry.type === "LineString" || geometry.type === "Polygon") {
++      const lineCoords = geometry.coordinates;
++      const ringCutFlags = geometry.cut_flags || null;
++      if (
++        ringCutFlags &&
++        ringCutFlags.length !== lineCoords.length &&
++        geometry.type === "Polygon"
++      ) {
++        console.warn("Polygon feature", i, "missing cutFlags property");
++      }
++
++      if (geometry.type === "Polygon") {
++        for (let j = 0; j < lineCoords.length; j++) {
++          const ring = lineCoords[j];
++
++          let minX = ring[0][0];
++          let maxX = ring[0][0];
++          let minY = ring[0][1];
++          let maxY = ring[0][1];
++          for (let k = 1; k < ring.length; k++) {
++            const x = ring[k][0];
++            const y = ring[k][1];
++            if (x < minX) {
++              minX = x;
++            }
++            if (x > maxX) {
++              maxX = x;
++            }
++            if (y < minY) {
++              minY = y;
++            }
++            if (y > maxY) {
++              maxY = y;
++            }
++          }
++          // determine which grid cells the polygon ring bbox overlaps
++          const startCellX = Math.max(
++            0,
++            Math.floor((minX - bbox[0]) / cellWidth),
++          );
++          const endCellX = Math.min(
++            gridSizeX - 1,
++            Math.floor((maxX - bbox[0]) / cellWidth),
++          );
++          const startCellY = Math.max(
++            0,
++            Math.floor((minY - bbox[1]) / cellHeight),
++          );
++          const endCellY = Math.min(
++            gridSizeY - 1,
++            Math.floor((maxY - bbox[1]) / cellHeight),
++          );
++
++          // iterate through grid cells
++          for (let c = startCellX; c <= endCellX; c++) {
++            for (let r = startCellY; r <= endCellY; r++) {
++              const cellMinX = bbox[0] + c * cellWidth;
++              const cellMaxX = bbox[0] + (c + 1) * cellWidth;
++              const cellMinY = bbox[1] + r * cellHeight;
++              const cellMaxY = bbox[1] + (r + 1) * cellHeight;
++              let p, flags;
++              if (inGridClip) {
++                const clipped = clipPolygonToBoundingBox(
++                  lineCoords[j],
++                  ringCutFlags[j],
++                  cellMinX,
++                  cellMaxX,
++                  cellMinY,
++                  cellMaxY,
++                );
++                p = clipped[0];
++                flags = clipped[1];
++              } else {
++                p = lineCoords[j];
++                flags = ringCutFlags
++                  ? ringCutFlags.slice(0, lineCoords[j].length)
++                  : new Array(lineCoords[j].length).fill(false);
++              }
++              if (p.length > 0) {
++                // convert to line segments
++                for (let k = 0; k < p.length - 1; k++) {
++                  const x1 = p[k][0];
++                  const y1 = p[k][1];
++                  const x2 = p[k + 1][0];
++                  const y2 = p[k + 1][1];
++                  const flag0 = flags[k];
++                  const flag1 = flags[k + 1];
++                  const flagLine = flag0 && flag1 ? 1 : 0;
++                  grid[c][r].push([x1, y1, x2, y2]);
++                  gridCutFlags[c][r].push(flagLine);
++                }
++                numOfLineSegmentsGeoJSON += p.length - 1; // account for the duplicated line segment
++              }
++            }
++          }
++        }
++      }
++
++      if (geometry.type === "LineString") {
++        // iterate through line segments
++        // duplicate line segments that cross cell boundaries
++        for (let j = 0; j < lineCoords.length - 1; j++) {
++          const x1 = lineCoords[j][0];
++          const y1 = lineCoords[j][1];
++          // get next point
++          const x2 = lineCoords[j + 1][0];
++          const y2 = lineCoords[j + 1][1];
++
++          // determine which cells the endpoints are in
++          const cellX1 = Math.max(
++            Math.min(Math.floor((x1 - bbox[0]) / cellWidth), gridSizeX - 1),
++            0,
++          );
++          const cellY1 = Math.max(
++            Math.min(Math.floor((y1 - bbox[1]) / cellHeight), gridSizeY - 1),
++            0,
++          );
++          const cellX2 = Math.max(
++            Math.min(Math.floor((x2 - bbox[0]) / cellWidth), gridSizeX - 1),
++            0,
++          );
++          const cellY2 = Math.max(
++            Math.min(Math.floor((y2 - bbox[1]) / cellHeight), gridSizeY - 1),
++            0,
++          );
++
++          // NOTE: this is assuming lines do not cross more than 2 cells
++          // which is not always true. This is for convenience here.
++          if (cellX1 === cellX2 && cellY1 === cellY2) {
++            // endpoints in the same cell
++            grid[cellX1][cellY1].push([x1, y1, x2, y2]);
++            numOfLineSegmentsGeoJSON += 1;
++          } else {
++            // endpoints in different cells
++            grid[cellX1][cellY1].push([x1, y1, x2, y2]);
++            grid[cellX2][cellY2].push([x1, y1, x2, y2]);
++            numOfLineSegmentsGeoJSON += 2; // account for the duplicated line segment
++          }
++        }
++      }
++    }
++  }
++
++  //console.log(
++  //  "Number of line segments after grid assignment:",
++  //  numOfLineSegmentsGeoJSON,
++  //);
++
++  console.log(
++    "Number of line segments after grid split:",
++    numOfLineSegmentsGeoJSON,
++  );
++
++  if (numOfLineSegmentsGeoJSON === 0) {
++    return undefined;
++  }
++
++  // get texture size to the next power of 2
++  const textureWidth = Math.pow(
++    2,
++    Math.ceil(Math.log2(Math.ceil(Math.sqrt(numOfLineSegmentsGeoJSON)))),
++  );
++  const textureHeight = Math.pow(
++    2,
++    Math.ceil(Math.log2(Math.ceil(numOfLineSegmentsGeoJSON / textureWidth))),
++  );
++  const numOfLineSegments = textureWidth * textureHeight;
++
++  console.log("Number of line segments in GPU texture:", numOfLineSegments);
++  const coords = new Float32Array(numOfLineSegments * 4);
++  const indices = new Uint32Array(gridSizeX * gridSizeY + 2); //squeeze in grid dimensions at the start
++  const cutFlags = new Uint8Array(numOfLineSegments);
++  indices[0] = gridSizeX;
++  indices[1] = gridSizeY;
++
++  // loop through grids and fill in coords
++  // record the index of each grid cell end position
++  let index = 0;
++  for (let j = 0; j < gridSizeY; j++) {
++    for (let i = 0; i < gridSizeX; i++) {
++      const cellLines = grid[i][j];
++      for (let k = 0; k < cellLines.length; k++) {
++        let x1, y1, x2, y2;
++        if (!useTest) {
++          x1 = (cellLines[k][0] - bbox[0]) / (bbox[2] - bbox[0]);
++          y1 = (cellLines[k][1] - bbox[1]) / (bbox[3] - bbox[1]);
++          x2 = (cellLines[k][2] - bbox[0]) / (bbox[2] - bbox[0]);
++          y2 = (cellLines[k][3] - bbox[1]) / (bbox[3] - bbox[1]);
++        } else {
++          // fill in all diagonal lines for testing
++          x1 = 0.0;
++          y1 = 0.0;
++          x2 = 1.0;
++          y2 = 1.0;
++        }
++        coords[index * 4] = x1; // x1
++        coords[index * 4 + 1] = y1; // y1
++        coords[index * 4 + 2] = x2; // x2
++        coords[index * 4 + 3] = y2; // y2
++
++        cutFlags[index] = gridCutFlags[i][j][k];
++
++        index++;
++      }
++      // record the end index of this cell
++      indices[2 + j * gridSizeX + i] = index;
++    }
++  }
++
++  // fill in the rest with -1
++  for (; index < numOfLineSegments; index++) {
++    // everything here is invalid
++    coords[index * 4] = -1.0;
++    coords[index * 4 + 1] = -1.0;
++    coords[index * 4 + 2] = -1.0;
++    coords[index * 4 + 3] = -1.0;
++    cutFlags[index] = 2;
++  }
++
++  return [
++    coords,
++    textureWidth,
++    textureHeight,
++    indices,
++    gridSizeX,
++    gridSizeY,
++    cutFlags,
++  ];
++}
++
++export default {
++  // geojsonToArray,
++  geojsonToArrayInGrid,
++};
+diff --git a/packages/engine/Source/Core/sdf.js b/packages/engine/Source/Core/sdf.js
+new file mode 100644
+index 0000000000..b8749a61fc
+--- /dev/null
++++ b/packages/engine/Source/Core/sdf.js
+@@ -0,0 +1,579 @@
++import CesiumMath from "./Math.js";
++
++/**
++ * Calculates the shortest distance from a point to a line.
++ * @param {Array} point - The point [x, y].
++ * @param {Array} line - The line as an array of coordinates [[x1, y1], [x2, y2], ...].
++ * @returns {number} - The shortest distance.
++ */
++/*function calculateDistanceToLine(point, line) {
++  let minDistance = Infinity;
++
++  for (let i = 0; i < line.length - 1; i++) {
++    const segmentStart = line[i];
++    const segmentEnd = line[i + 1];
++    const distance = pointToSegmentDistance(point, segmentStart, segmentEnd);
++    minDistance = Math.min(minDistance, distance);
++  }
++
++  return minDistance;
++}*/
++
++/**
++ * Calculates the distance from a point to a line segment.
++ * @param {Array} point - The point [x, y].
++ * @param {Array} segmentStart - The start of the segment [x, y].
++ * @param {Array} segmentEnd - The end of the segment [x, y].
++ * @returns {number} - The distance.
++ */
++/*function pointToSegmentDistance(point, segmentStart, segmentEnd) {
++  const [px, py] = point;
++  const [x1, y1] = segmentStart;
++  const [x2, y2] = segmentEnd;
++
++  const dx = x2 - x1;
++  const dy = y2 - y1;
++
++  if (dx === 0 && dy === 0) {
++    // Segment is a point
++    return Math.sqrt((px - x1) ** 2 + (py - y1) ** 2);
++  }
++
++  const t = ((px - x1) * dx + (py - y1) * dy) / (dx ** 2 + dy ** 2);
++  const clampedT = Math.max(0, Math.min(1, t));
++
++  const closestPoint = [x1 + clampedT * dx, y1 + clampedT * dy];
++  return Math.sqrt((px - closestPoint[0]) ** 2 + (py - closestPoint[1]) ** 2);
++}*/
++
++/**
++ * Generates a Float32Array signed distance field (SDF) for GeoJSON line features
++ * @param {Array} features - List of GeoJSON features.
++ * @param {number} resolution - Resolution of the SDF grid.
++ * @returns {Array} - 2D array representing the SDF grid.
++ */
++/*function generateSDF(rectangle, features, resolution) {
++  const minX = CesiumMath.toDegrees(rectangle.west);
++  const minY = CesiumMath.toDegrees(rectangle.south);
++  const maxX = CesiumMath.toDegrees(rectangle.east);
++  const maxY = CesiumMath.toDegrees(rectangle.north);
++
++  const width = resolution;
++  const height = resolution;
++
++  const sdf = new Float32Array(width * height).fill(Infinity);
++  const featureID = new Uint32Array(width * height).fill(-1);
++
++  features.forEach((feature) => {
++    if (
++      feature.geometry.type === "LineString" ||
++      feature.geometry.type === "Polygon"
++    ) {
++      let coordinates = feature.geometry.coordinates;
++      const grid_coordinates = [];
++
++      if (feature.geometry.type === "Polygon") {
++        // for polygon, only take the outer ring
++        coordinates = coordinates[0];
++      }
++
++      // convert each world coordinate to grid coordinate
++      for (let i = 0; i < coordinates.length; i++) {
++        const [worldX, worldY] = coordinates[i];
++        const gridX = Math.floor(((worldX - minX) / (maxX - minX)) * width);
++        const gridY = Math.floor(((worldY - minY) / (maxY - minY)) * height);
++        grid_coordinates.push([gridX, gridY]);
++      }
++
++      for (let y = 0; y < height; y++) {
++        for (let x = 0; x < width; x++) {
++          // convert grid point to world coordinates
++          const gridPoints = [x, y];
++
++          const distance = calculateDistanceToLine(
++            gridPoints,
++            grid_coordinates,
++          );
++
++          if (distance < sdf[y * width + x]) {
++            sdf[y * width + x] = distance;
++            featureID[y * width + x] = features.indexOf(feature);
++          }
++        }
++      }
++
++      // log progress bar at every 10%
++      const featureIndex = features.indexOf(feature);
++      const progress = Math.floor((featureIndex / features.length) * 10);
++      if (featureIndex % Math.floor(features.length / 10) === 0) {
++        console.log(`Processing features: ${progress * 10}%`);
++      }
++    }
++  });
++
++  return [sdf, featureID];
++}*/
++function toGlobalIndex(pix_x, pix_y, width, height, rowMajor = true) {
++  if (rowMajor) {
++    return pix_x + pix_y * width;
++  }
++  return pix_y + pix_x * height;
++}
++
++function getV(pix_x, pix_y, sdf, width, height) {
++  if (pix_x < 0 || pix_y < 0 || pix_x >= width || pix_y >= height) {
++    return Infinity;
++  }
++  return sdf[toGlobalIndex(pix_x, pix_y, width, height)];
++}
++
++function setV(pix_x, pix_y, value, sdf, width, height) {
++  if (pix_x < 0 || pix_y < 0 || pix_x >= width || pix_y >= height) {
++    return;
++  }
++  sdf[toGlobalIndex(pix_x, pix_y, width, height)] = value;
++}
++
++function isOnGeo(pix_x, pix_y, sdf, width, height) {
++  if (pix_x < 0 || pix_y < 0 || pix_x >= width || pix_y >= height) {
++    return false;
++  }
++  return getV(pix_x, pix_y, sdf, width, height) === 0;
++}
++
++function updateByNeighbors(
++  pix_x,
++  pix_y,
++  sdf,
++  featureIDs,
++  resolutionW,
++  resolutionH,
++) {
++  const isOn = isOnGeo(pix_x, pix_y, sdf, resolutionW, resolutionH);
++
++  if (isOn) {
++    // on geo, skip
++    return;
++  }
++
++  const minDistanceSigned = getV(pix_x, pix_y, sdf, resolutionW, resolutionH);
++  let minDistance = Math.abs(minDistanceSigned);
++  const minDistanceSign = minDistanceSigned >= 0 ? 1 : -1;
++  let minDistanceIndx = getV(
++    pix_x,
++    pix_y,
++    featureIDs,
++    resolutionW,
++    resolutionH,
++  );
++
++  // 3x3 neighborhood
++  const neighbors = [
++    [1, -1],
++    [1, 0],
++    [1, 1],
++    [0, -1],
++    [0, 1],
++    [-1, -1],
++    [-1, 0],
++    [-1, 1],
++  ];
++
++  for (let i = 0; i < neighbors.length; i++) {
++    const [dx, dy] = neighbors[i];
++    const n_x = pix_x + dx;
++    const n_y = pix_y + dy;
++    const n_featureID = getV(n_x, n_y, featureIDs, resolutionW, resolutionH);
++
++    if (isOnGeo(n_x, n_y, sdf, resolutionW, resolutionH)) {
++      // neighbor is on geo, make distance
++      const adjusted_distance = Math.sqrt(dx * dx + dy * dy);
++      if (adjusted_distance < minDistance) {
++        minDistance = adjusted_distance;
++        minDistanceIndx = n_featureID;
++      }
++    } else {
++      // neighbor is not on geo, compute adjusted distance
++      const n_v = Math.abs(getV(n_x, n_y, sdf, resolutionW, resolutionH));
++      const distance = Math.sqrt(dx * dx + dy * dy);
++
++      const adjusted_distance = n_v + distance;
++
++      if (adjusted_distance < minDistance) {
++        minDistance = adjusted_distance;
++        minDistanceIndx = n_featureID;
++      }
++    }
++  }
++
++  setV(
++    pix_x,
++    pix_y,
++    minDistance * minDistanceSign,
++    sdf,
++    resolutionW,
++    resolutionH,
++  );
++  setV(pix_x, pix_y, minDistanceIndx, featureIDs, resolutionW, resolutionH);
++}
++
++function generateSDFSweep(
++  rectangle,
++  features,
++  resolutionW,
++  resolutionH,
++  negPoly = false,
++) {
++  const minX = CesiumMath.toDegrees(rectangle.west);
++  const minY = CesiumMath.toDegrees(rectangle.south);
++  const maxX = CesiumMath.toDegrees(rectangle.east);
++  const maxY = CesiumMath.toDegrees(rectangle.north);
++
++  const width = resolutionW;
++  const height = resolutionH;
++
++  const sdf = new Float32Array(width * height).fill(Infinity);
++  const featureID = new Uint32Array(width * height).fill(-1);
++
++  // set on geo pixels
++  features.forEach((feature) => {
++    if (
++      feature.geometry.type === "LineString" ||
++      feature.geometry.type === "Polygon"
++    ) {
++      let coordinates = feature.geometry.coordinates;
++      //let grid_coordinates = [];
++
++      if (feature.geometry.type === "Polygon") {
++        // for polygon, only take the outer ring
++        coordinates = coordinates.flat();
++      }
++
++      // get all pair of consecutive coordinates
++      for (let i = 0; i < coordinates.length - 1; i++) {
++        const [worldX1, worldY1] = coordinates[i];
++        const [worldX2, worldY2] = coordinates[i + 1];
++        const gridX1 = Math.floor(((worldX1 - minX) / (maxX - minX)) * width);
++        const gridY1 = Math.floor(((worldY1 - minY) / (maxY - minY)) * height);
++        const gridX2 = Math.floor(((worldX2 - minX) / (maxX - minX)) * width);
++        const gridY2 = Math.floor(((worldY2 - minY) / (maxY - minY)) * height);
++
++        // Bresenham's line algorithm to get all pixels between two points
++        const dx = Math.abs(gridX2 - gridX1);
++        const dy = Math.abs(gridY2 - gridY1);
++        const sx = gridX1 < gridX2 ? 1 : -1;
++        const sy = gridY1 < gridY2 ? 1 : -1;
++        let err = dx - dy;
++
++        let x = gridX1;
++        let y = gridY1;
++
++        while (true) {
++          // set pixel as on geo
++          setV(x, y, 0, sdf, resolutionW, resolutionH);
++          setV(
++            x,
++            y,
++            features.indexOf(feature),
++            featureID,
++            resolutionW,
++            resolutionH,
++          );
++
++          if (x === gridX2 && y === gridY2) {
++            break;
++          }
++          const err2 = 2 * err;
++          if (err2 > -dy) {
++            err -= dy;
++            x += sx;
++          }
++          if (err2 < dx) {
++            err += dx;
++            y += sy;
++          }
++        }
++      }
++
++      if (negPoly) {
++        // Mark all pixel inside polygon as negative distance
++        if (feature.geometry.type === "Polygon") {
++          const grid_polygon = coordinates.map(([worldX, worldY]) => {
++            const gridX = Math.floor(((worldX - minX) / (maxX - minX)) * width);
++            const gridY = Math.floor(
++              ((worldY - minY) / (maxY - minY)) * height,
++            );
++            return [gridX, gridY];
++          });
++
++          // get bounding box of the polygon in grid space
++          let polyMinX = Infinity,
++            polyMinY = Infinity,
++            polyMaxX = -Infinity,
++            polyMaxY = -Infinity;
++          grid_polygon.forEach(([x, y]) => {
++            polyMinX = Math.min(polyMinX, x);
++            polyMinY = Math.min(polyMinY, y);
++            polyMaxX = Math.max(polyMaxX, x);
++            polyMaxY = Math.max(polyMaxY, y);
++          });
++
++          // scan through bounding box and use ray-casting to determine if inside polygon
++          for (let y = polyMinY; y <= polyMaxY; y++) {
++            for (let x = polyMinX; x <= polyMaxX; x++) {
++              // ray-casting algorithm
++              let inside = false;
++              for (
++                let i = 0, j = grid_polygon.length - 1;
++                i < grid_polygon.length;
++                j = i++
++              ) {
++                const xi = grid_polygon[i][0],
++                  yi = grid_polygon[i][1];
++                const xj = grid_polygon[j][0],
++                  yj = grid_polygon[j][1];
++
++                const intersect =
++                  yi > y !== yj > y &&
++                  x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
++                if (intersect) {
++                  inside = !inside;
++                }
++              }
++
++              const idxCurr = toGlobalIndex(x, y, width, height);
++              if (inside) {
++                if (sdf[idxCurr] !== 0) {
++                  sdf[idxCurr] = -Infinity;
++                }
++              }
++            }
++          }
++        }
++      }
++    }
++  });
++
++  // Sweep through the grid left to right, top to bottom
++  for (let y = 0; y < height; y++) {
++    for (let x = 0; x < width; x++) {
++      updateByNeighbors(x, y, sdf, featureID, resolutionW, resolutionH);
++    }
++  }
++
++  // Sweep through the grid left to right, bottom to top
++  for (let y = height - 1; y >= 0; y--) {
++    for (let x = 0; x < width; x++) {
++      updateByNeighbors(x, y, sdf, featureID, resolutionW, resolutionH);
++    }
++  }
++
++  // Sweep through the grid right to left, bottom to top
++  for (let y = height - 1; y >= 0; y--) {
++    for (let x = width - 1; x >= 0; x--) {
++      updateByNeighbors(x, y, sdf, featureID, resolutionW, resolutionH);
++    }
++  }
++
++  // Sweep through the grid right to left, top to bottom
++  for (let y = 0; y < height; y++) {
++    for (let x = width - 1; x >= 0; x--) {
++      updateByNeighbors(x, y, sdf, featureID, resolutionW, resolutionH);
++    }
++  }
++
++  return [sdf, featureID];
++}
++
++/*function updateGridByNeighbors(
++  pix_x,
++  pix_y,
++  sdf,
++  sdfX,
++  sdfY,
++  featureIDs,
++  resolution,
++) {
++  const isOn = isOnGeo(pix_x, pix_y, sdf, resolution);
++  const p_this_v = getV(pix_x, pix_y, sdf, resolution);
++  const p_this_featureID = getV(pix_x, pix_y, featureIDs, resolution);
++
++  if (isOn) {
++    // on geo, skip
++    return;
++  }
++
++  let minDistance = p_this_v;
++  let minDistanceX = -1;
++  let minDistanceY = -1;
++  let minDistanceIndx = p_this_featureID;
++
++  // 3x3 neighborhood
++  const neighbors = [
++    [-1, -1],
++    [-1, 0],
++    [-1, 1],
++    [0, -1],
++    [0, 1],
++    [1, -1],
++    [1, 0],
++    [1, 1],
++  ];
++
++  for (let i = 0; i < neighbors.length; i++) {
++    const [dx, dy] = neighbors[i];
++    const n_x = pix_x + dx;
++    const n_y = pix_y + dy;
++    const n_featureID = getV(n_x, n_y, featureIDs, resolution);
++
++    if (isOnGeo(n_x, n_y, sdf, resolution)) {
++      // neighbor is on geo, make distance
++      const this_dx = dx;
++      const this_dy = dy;
++      const adjusted_distance = Math.sqrt(
++        this_dx * this_dx + this_dy * this_dy,
++      );
++
++      if (adjusted_distance < minDistance) {
++        minDistance = adjusted_distance;
++        minDistanceX = n_x;
++        minDistanceY = n_y;
++        minDistanceIndx = n_featureID;
++      }
++    } else {
++      // neighbor is not on geo, compute distance from grids
++      const this_x = getV(n_x, n_y, sdfX, resolution);
++      const this_y = getV(n_x, n_y, sdfY, resolution);
++      if (this_x === -1 || this_y === -1) {
++        continue;
++      }
++
++      const this_dx = pix_x - this_x;
++      const this_dy = pix_y - this_y;
++
++      const adjusted_distance = Math.sqrt(
++        this_dx * this_dx + this_dy * this_dy,
++      );
++
++      if (adjusted_distance < minDistance) {
++        minDistance = adjusted_distance;
++        minDistanceX = this_x;
++        minDistanceY = this_y;
++        minDistanceIndx = n_featureID;
++      }
++    }
++  }
++
++  setV(pix_x, pix_y, minDistance, sdf, resolution);
++  setV(pix_x, pix_y, minDistanceX, sdfX, resolution);
++  setV(pix_x, pix_y, minDistanceY, sdfY, resolution);
++  setV(pix_x, pix_y, minDistanceIndx, featureIDs, resolution);
++}
++
++function generateSDFSweepGridSpace(rectangle, features, resolution) {
++  const minX = CesiumMath.toDegrees(rectangle.west);
++  const minY = CesiumMath.toDegrees(rectangle.south);
++  const maxX = CesiumMath.toDegrees(rectangle.east);
++  const maxY = CesiumMath.toDegrees(rectangle.north);
++
++  const width = resolution;
++  const height = resolution;
++
++  const sdf = new Float32Array(width * height).fill(Infinity);
++  // store the xy of the closest feature point
++  const sdfX = new Uint32Array(width * height).fill(-1);
++  const sdfY = new Uint32Array(width * height).fill(-1);
++
++  const featureID = new Uint32Array(width * height).fill(-1);
++
++  // set on geo pixels
++  features.forEach((feature) => {
++    if (
++      feature.geometry.type === "LineString" ||
++      feature.geometry.type === "Polygon"
++    ) {
++      let coordinates = feature.geometry.coordinates;
++      //let grid_coordinates = [];
++
++      if (feature.geometry.type === "Polygon") {
++        // for polygon, take both outer and inner rings
++        coordinates = coordinates.flat();
++      }
++
++      // get all pair of consecutive coordinates
++      for (let i = 0; i < coordinates.length - 1; i++) {
++        const [worldX1, worldY1] = coordinates[i];
++        const [worldX2, worldY2] = coordinates[i + 1];
++        const gridX1 = Math.floor(((worldX1 - minX) / (maxX - minX)) * width);
++        const gridY1 = Math.floor(((worldY1 - minY) / (maxY - minY)) * height);
++        const gridX2 = Math.floor(((worldX2 - minX) / (maxX - minX)) * width);
++        const gridY2 = Math.floor(((worldY2 - minY) / (maxY - minY)) * height);
++
++        // Bresenham's line algorithm to get all pixels between two points
++        const dx = Math.abs(gridX2 - gridX1);
++        const dy = Math.abs(gridY2 - gridY1);
++        const sx = gridX1 < gridX2 ? 1 : -1;
++        const sy = gridY1 < gridY2 ? 1 : -1;
++        let err = dx - dy;
++
++        let x = gridX1;
++        let y = gridY1;
++
++        while (true) {
++          // set pixel as on geo
++          setV(x, y, 0, sdf, resolution);
++          setV(x, y, features.indexOf(feature), featureID, resolution);
++
++          if (x === gridX2 && y === gridY2) {
++            break;
++          }
++          const err2 = 2 * err;
++          if (err2 > -dy) {
++            err -= dy;
++            x += sx;
++          }
++          if (err2 < dx) {
++            err += dx;
++            y += sy;
++          }
++        }
++      }
++    }
++  });
++
++  // Sweep through the grid left to right, top to bottom
++  for (let y = 0; y < height; y++) {
++    for (let x = 0; x < width; x++) {
++      updateGridByNeighbors(x, y, sdf, sdfX, sdfY, featureID, resolution);
++    }
++  }
++
++  // Sweep through the grid left to right, bottom to top
++  for (let y = height - 1; y >= 0; y--) {
++    for (let x = 0; x < width; x++) {
++      updateGridByNeighbors(x, y, sdf, sdfX, sdfY, featureID, resolution);
++    }
++  }
++
++  // Sweep through the grid right to left, bottom to top
++  for (let y = height - 1; y >= 0; y--) {
++    for (let x = width - 1; x >= 0; x--) {
++      updateGridByNeighbors(x, y, sdf, sdfX, sdfY, featureID, resolution);
++    }
++  }
++
++  // Sweep through the grid right to left, top to bottom
++  for (let y = 0; y < height; y++) {
++    for (let x = width - 1; x >= 0; x--) {
++      updateGridByNeighbors(x, y, sdf, sdfX, sdfY, featureID, resolution);
++    }
++  }
++
++  return [sdf, featureID];
++}*/
++
++export default {
++  //generateSDF,
++  generateSDFSweep,
++  //generateSDFSweepGridSpace,
++};
+diff --git a/packages/engine/Source/Scene/GlobeSurfaceShaderSet.js b/packages/engine/Source/Scene/GlobeSurfaceShaderSet.js
+index 041880a79d..300e76110c 100644
+--- a/packages/engine/Source/Scene/GlobeSurfaceShaderSet.js
++++ b/packages/engine/Source/Scene/GlobeSurfaceShaderSet.js
+@@ -110,6 +110,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
+   const applyDayNightAlpha = options.applyDayNightAlpha;
+   const applySplit = options.applySplit;
+   const hasWaterMask = options.hasWaterMask;
++  const hasSdf = options.hasSdf;
++  const hasGpuLookupPolylines = options.hasGpuLookupPolylines;
++  const hasGpuLookupPolygons = options.hasGpuLookupPolygons;
+   const showReflectiveOcean = options.showReflectiveOcean;
+   const showOceanWaves = options.showOceanWaves;
+   const enableLighting = options.enableLighting;
+@@ -190,10 +193,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
+     (highlightFillTile << 26) |
+     (colorToAlpha << 27) |
+     (hasGeodeticSurfaceNormals << 28) |
+-    (hasExaggeration << 29) |
+-    (showUndergroundColor << 30) |
+-    (translucent << 31) |
+-    (applyDayNightAlpha << 32);
++    (hasSdf << 29) |
++    (hasGpuLookupPolylines << 30) |
++    (hasGpuLookupPolygons << 31);
+ 
+   let currentClippingShaderState = 0;
+   if (defined(clippingPlanes) && clippingPlanes.length > 0) {
+@@ -284,6 +286,15 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
+     if (hasWaterMask) {
+       fs.defines.push("HAS_WATER_MASK");
+     }
++    if (hasSdf) {
++      fs.defines.push("HAS_SDF");
++    }
++    if (hasGpuLookupPolylines) {
++      fs.defines.push("HAS_GPU_LOOKUP_POLYLINES");
++    }
++    if (hasGpuLookupPolygons) {
++      fs.defines.push("HAS_GPU_LOOKUP_POLYGONS");
++    }
+     if (showReflectiveOcean) {
+       fs.defines.push("SHOW_REFLECTIVE_OCEAN");
+       vs.defines.push("SHOW_REFLECTIVE_OCEAN");
+diff --git a/packages/engine/Source/Scene/GlobeSurfaceTile.js b/packages/engine/Source/Scene/GlobeSurfaceTile.js
+index e777e117c6..e1d0bc506c 100644
+--- a/packages/engine/Source/Scene/GlobeSurfaceTile.js
++++ b/packages/engine/Source/Scene/GlobeSurfaceTile.js
+@@ -41,6 +41,11 @@ function GlobeSurfaceTile() {
+   this.waterMaskTexture = undefined;
+   this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+ 
++  this.sdfTexture = undefined;
++  this.lineTexture = undefined;
++  this.cutFlagsTexture = undefined;
++  this.gridCellIndicesTexture = undefined;
++
+   this.terrainData = undefined;
+   this.vertexArray = undefined;
+ 
+@@ -145,6 +150,26 @@ GlobeSurfaceTile.prototype.freeResources = function () {
+     this.waterMaskTexture = undefined;
+   }
+ 
++  if (defined(this.sdfTexture)) {
++    this.sdfTexture.destroy();
++    this.sdfTexture = undefined;
++  }
++
++  if (defined(this.lineTexture)) {
++    this.lineTexture.destroy();
++    this.lineTexture = undefined;
++  }
++
++  if (defined(this.cutFlagsTexture)) {
++    this.cutFlagsTexture.destroy();
++    this.cutFlagsTexture = undefined;
++  }
++
++  if (defined(this.gridCellIndicesTexture)) {
++    this.gridCellIndicesTexture.destroy();
++    this.gridCellIndicesTexture = undefined;
++  }
++
+   this.terrainData = undefined;
+ 
+   this.terrainState = TerrainState.UNLOADED;
+@@ -591,6 +616,26 @@ function processTerrainStateMachine(
+       }
+     }
+   }
++
++  if (
++    surfaceTile.terrainState >= TerrainState.RECEIVED &&
++    surfaceTile.sdfTexture === undefined
++  ) {
++    const terrainData = surfaceTile.terrainData;
++    if (terrainData.sdf !== undefined) {
++      createSdfTextureIfNeeded(frameState.context, surfaceTile);
++    }
++  }
++
++  if (
++    surfaceTile.terrainState >= TerrainState.RECEIVED &&
++    surfaceTile.lineTexture === undefined
++  ) {
++    const terrainData = surfaceTile.terrainData;
++    if (terrainData.gpuLookup !== undefined) {
++      createGpuLookupTexturesIfNeeded(frameState.context, surfaceTile);
++    }
++  }
+ }
+ 
+ function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
+@@ -928,6 +973,105 @@ function createWaterMaskTextureIfNeeded(context, surfaceTile) {
+   );
+ }
+ 
++function createSdfTextureIfNeeded(context, surfaceTile) {
++  const sdf = surfaceTile.terrainData.sdf;
++
++  if (!defined(sdf)) {
++    return;
++  }
++
++  const sampler = new Sampler({
++    wrapS: TextureWrap.CLAMP_TO_EDGE,
++    wrapT: TextureWrap.CLAMP_TO_EDGE,
++    minificationFilter: TextureMinificationFilter.NEAREST,
++    magnificationFilter: TextureMagnificationFilter.NEAREST,
++  });
++
++  const texture = Texture.create({
++    context: context,
++    pixelFormat: PixelFormat.RED,
++    pixelDatatype: PixelDatatype.FLOAT,
++    source: {
++      width: sdf.width,
++      height: sdf.height,
++      arrayBufferView: sdf.distances,
++    },
++    sampler: sampler,
++    flipY: false,
++  });
++
++  surfaceTile.sdfTexture = texture;
++}
++
++function createGpuLookupTexturesIfNeeded(context, surfaceTile) {
++  const gpuLookup = surfaceTile.terrainData.gpuLookup;
++
++  if (!defined(gpuLookup)) {
++    return;
++  }
++
++  const geoArray = gpuLookup[0];
++  const ltextWidth = gpuLookup[1];
++  const ltextureHeight = gpuLookup[2];
++  const gridCellIndices = gpuLookup[3];
++  const cutFlags = gpuLookup[6];
++  const hasPolygons = gpuLookup[7];
++
++  const sampler = new Sampler({
++    wrapS: TextureWrap.CLAMP_TO_EDGE,
++    wrapT: TextureWrap.CLAMP_TO_EDGE,
++    minificationFilter: TextureMinificationFilter.NEAREST,
++    magnificationFilter: TextureMagnificationFilter.NEAREST,
++  });
++
++  const lineTexture = Texture.create({
++    context: context,
++    pixelFormat: PixelFormat.RGBA,
++    pixelDatatype: PixelDatatype.FLOAT,
++    source: {
++      width: ltextWidth,
++      height: ltextureHeight,
++      arrayBufferView: geoArray,
++    },
++    sampler: sampler,
++    flipY: false,
++  });
++
++  const gridCellIndicesTexture = Texture.create({
++    context: context,
++    pixelFormat: PixelFormat.RED,
++    // TODO: could not get UNSIGNED_INT to work
++    pixelDatatype: PixelDatatype.FLOAT,
++    source: {
++      width: gridCellIndices.length,
++      height: 1,
++      arrayBufferView: new Float32Array(gridCellIndices),
++    },
++    sampler: sampler,
++    flipY: false,
++  });
++
++  surfaceTile.lineTexture = lineTexture;
++  surfaceTile.gridCellIndicesTexture = gridCellIndicesTexture;
++
++  if (hasPolygons) {
++    const cutFlagsTexture = Texture.create({
++      context: context,
++      pixelFormat: PixelFormat.RED,
++      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
++      source: {
++        width: ltextWidth,
++        height: ltextureHeight,
++        arrayBufferView: cutFlags,
++      },
++      sampler: sampler,
++      flipY: false,
++    });
++
++    surfaceTile.cutFlagsTexture = cutFlagsTexture;
++  }
++}
++
+ GlobeSurfaceTile.prototype._findAncestorTileWithTerrainData = function (tile) {
+   let sourceTile = tile.parent;
+ 
+diff --git a/packages/engine/Source/Scene/GlobeSurfaceTileProvider.js b/packages/engine/Source/Scene/GlobeSurfaceTileProvider.js
+index cb53223ec9..a6c210a401 100644
+--- a/packages/engine/Source/Scene/GlobeSurfaceTileProvider.js
++++ b/packages/engine/Source/Scene/GlobeSurfaceTileProvider.js
+@@ -82,6 +82,9 @@ function GlobeSurfaceTileProvider(options) {
+   this.lightingFadeOutDistance = 6500000.0;
+   this.lightingFadeInDistance = 9000000.0;
+   this.hasWaterMask = false;
++  this.hasSdf = false;
++  this.hasGpuLookupPolylines = false;
++  this.hasGpuLookupPolygons = false;
+   this.showWaterEffect = false;
+   this.oceanNormalMap = undefined;
+   this.zoomedOutOceanSpecularIntensity = 0.5;
+@@ -1771,6 +1774,18 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
+     u_waterMaskTranslationAndScale: function () {
+       return this.properties.waterMaskTranslationAndScale;
+     },
++    u_sdfTexture: function () {
++      return this.properties.sdfTexture;
++    },
++    u_lineTexture: function () {
++      return this.properties.lineTexture;
++    },
++    u_cutFlagsTexture: function () {
++      return this.properties.cutFlagsTexture;
++    },
++    u_gridCellIndicesTexture: function () {
++      return this.properties.gridCellIndicesTexture;
++    },
+     u_minMaxHeight: function () {
+       return this.properties.minMaxHeight;
+     },
+@@ -1907,6 +1922,11 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
+       waterMask: undefined,
+       waterMaskTranslationAndScale: new Cartesian4(),
+ 
++      sdfTexture: undefined,
++      lineTexture: undefined,
++      cutFlagsTexture: undefined,
++      gridCellIndicesTexture: undefined,
++
+       minMaxHeight: new Cartesian2(),
+       scaleAndBias: new Matrix4(),
+       clippingPlanesEdgeColor: Color.clone(Color.WHITE),
+@@ -2161,6 +2181,11 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
+       surfaceTile.fill.waterMaskTranslationAndScale;
+   }
+ 
++  const sdfTexture = surfaceTile.sdfTexture;
++  const lineTexture = surfaceTile.lineTexture;
++  const cutFlagsTexture = surfaceTile.cutFlagsTexture;
++  const gridCellIndicesTexture = surfaceTile.gridCellIndicesTexture;
++
+   const cameraUnderground = frameState.cameraUnderground;
+ 
+   const globeTranslucencyState = frameState.globeTranslucencyState;
+@@ -2187,6 +2212,11 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
+   const vertexShadowDarkness = tileProvider.vertexShadowDarkness;
+ 
+   const hasWaterMask = tileProvider.hasWaterMask && defined(waterMaskTexture);
++  const hasSdf = defined(sdfTexture);
++  const hasGpuLookupPolylines =
++    defined(lineTexture) && !defined(cutFlagsTexture);
++  const hasGpuLookupPolygons = defined(lineTexture) && defined(cutFlagsTexture);
++
+   const showReflectiveOcean = hasWaterMask && tileProvider.showWaterEffect;
+   const oceanNormalMap = tileProvider.oceanNormalMap;
+   const showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
+@@ -2225,6 +2255,17 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
+   if (showOceanWaves) {
+     --maxTextures;
+   }
++  if (hasSdf) {
++    --maxTextures;
++  }
++  if (hasGpuLookupPolylines) {
++    --maxTextures; // lineTexture
++    --maxTextures; // gridCellIndicesTexture
++  } else if (hasGpuLookupPolygons) {
++    --maxTextures; // lineTexture
++    --maxTextures; // gridCellIndicesTexture
++    --maxTextures; // cutFlagsTexture
++  }
+   if (
+     defined(frameState.shadowState) &&
+     frameState.shadowState.shadowsEnabled
+@@ -2334,6 +2375,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
+   surfaceShaderSetOptions.frameState = frameState;
+   surfaceShaderSetOptions.surfaceTile = surfaceTile;
+   surfaceShaderSetOptions.hasWaterMask = hasWaterMask;
++  surfaceShaderSetOptions.hasSdf = hasSdf;
++  surfaceShaderSetOptions.hasGpuLookupPolylines = hasGpuLookupPolylines;
++  surfaceShaderSetOptions.hasGpuLookupPolygons = hasGpuLookupPolygons;
+   surfaceShaderSetOptions.showReflectiveOcean = showReflectiveOcean;
+   surfaceShaderSetOptions.showOceanWaves = showOceanWaves;
+   surfaceShaderSetOptions.enableLighting = tileProvider.enableLighting;
+@@ -2790,6 +2834,11 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
+       uniformMapProperties.waterMaskTranslationAndScale,
+     );
+ 
++    uniformMapProperties.sdfTexture = sdfTexture;
++    uniformMapProperties.lineTexture = lineTexture;
++    uniformMapProperties.cutFlagsTexture = cutFlagsTexture;
++    uniformMapProperties.gridCellIndicesTexture = gridCellIndicesTexture;
++
+     uniformMapProperties.minMaxHeight.x = encoding.minimumHeight;
+     uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;
+     Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
+diff --git a/packages/engine/Source/Scene/GroundPolylinePrimitive.js b/packages/engine/Source/Scene/GroundPolylinePrimitive.js
+index 300c6cffbb..e11a770f28 100644
+--- a/packages/engine/Source/Scene/GroundPolylinePrimitive.js
++++ b/packages/engine/Source/Scene/GroundPolylinePrimitive.js
+@@ -375,7 +375,7 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
+   }
+ 
+   vsDefines.push(colorDefine);
+-  const fsDefines = groundPolylinePrimitive.debugShowShadowVolume
++  const fsDefines = window.debugShowShadowVolume
+     ? ["DEBUG_SHOW_VOLUME", colorDefine]
+     : [colorDefine];
+ 
+diff --git a/packages/engine/Source/Shaders/GlobeFS.glsl b/packages/engine/Source/Shaders/GlobeFS.glsl
+index 81b394de7a..8bf3615d56 100644
+--- a/packages/engine/Source/Shaders/GlobeFS.glsl
++++ b/packages/engine/Source/Shaders/GlobeFS.glsl
+@@ -88,7 +88,7 @@ uniform float u_minimumBrightness;
+ #endif
+ 
+ // Based on colorCorrect
+-// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift 
++// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift
+ // are nonzero AND when (applyFog || showGroundAtmosphere) in the tile provider
+ // - The tileProvider.hue/saturation/brightnessShift are just passed through
+ //   from the Globe hue/saturation/brightness, like atmosphereBrightnessShift
+@@ -116,8 +116,8 @@ uniform vec4 u_translucencyRectangle;
+ #endif
+ 
+ // Based on showUndergroundColor
+-// This is set when GlobeSurfaceTileProvider.isUndergroundVisible 
+-// returns true, AND the tileProvider.undergroundColor had a value with 
++// This is set when GlobeSurfaceTileProvider.isUndergroundVisible
++// returns true, AND the tileProvider.undergroundColor had a value with
+ // nonzero alpha, and the tileProvider.undergroundColorAlphaByDistance
+ // was in the right range
+ #ifdef UNDERGROUND_COLOR
+@@ -185,6 +185,161 @@ bool inTranslucencyRectangle()
+ }
+ #endif
+ 
++#ifdef HAS_SDF
++    uniform highp sampler2D u_sdfTexture;
++
++float sampleBilinear(sampler2D tex, vec2 uv) {
++    ivec2 size = textureSize(tex, 0); // LOD 0
++
++    vec2 texel = uv * vec2(size) - 0.5;
++    ivec2 i = ivec2(floor(texel));
++    vec2 f = fract(texel);
++
++    float a = texelFetch(tex, i, 0).r;
++    float b = texelFetch(tex, i + ivec2(1, 0), 0).r;
++    float c = texelFetch(tex, i + ivec2(0, 1), 0).r;
++    float d = texelFetch(tex, i + ivec2(1, 1), 0).r;
++
++    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
++}
++
++float sampleNearest(sampler2D tex, vec2 uv) {
++    return texelFetch(tex, ivec2(floor(uv * vec2(textureSize(tex, 0)))), 0).r;
++}
++
++#define inverseLerp(a,b,x) ((x-a)/(b-a))
++
++float filterSDF(float sdf, vec2 uvCoordinate, vec2 textureSize) {
++    // Calculate the texel area of this fragment
++    mat2 pixelFootprint = mat2(dFdx(uvCoordinate), dFdy(uvCoordinate));
++    float pixelFootprintDiameterSqr = abs(determinant(pixelFootprint));
++    pixelFootprintDiameterSqr *= textureSize.x * textureSize.y;
++    float pixelFootprintDiameter = sqrt(pixelFootprintDiameterSqr);
++
++    //pixelFootprintDiameter = clamp(pixelFootprintDiameter, 0.1, 2.0);
++
++    return sdf/pixelFootprintDiameter;
++}
++
++
++#endif
++#ifdef HAS_GPU_LOOKUP_POLYLINES
++    uniform highp sampler2D u_lineTexture;
++    uniform highp sampler2D u_gridCellIndicesTexture;
++#elif defined(HAS_GPU_LOOKUP_POLYGONS)
++    uniform highp sampler2D u_lineTexture;
++    uniform highp sampler2D u_cutFlagsTexture;
++    uniform highp sampler2D u_gridCellIndicesTexture;
++#endif
++
++#if defined(HAS_GPU_LOOKUP_POLYLINES) || defined(HAS_GPU_LOOKUP_POLYGONS)
++    // Calculate the distance between a point and a line segment
++    float distanceToLine(vec2 p, vec4 l) {
++        vec2 a = vec2(l.x, l.y); // Start point of the line
++        vec2 b = vec2(l.z, l.w); // End point of the line
++
++        // Vector from point `a` to point `b`
++        vec2 ab = b - a;
++
++        // Handle degenerate case: if the line segment is a point
++        float abLengthSquared = dot(ab, ab);
++        if (abLengthSquared < 1e-8) { // Small threshold to avoid division by zero
++            return length(p - a); // Distance to the single point
++        }
++
++        // Vector from point `a` to the test point `p`
++        vec2 ap = p - a;
++
++        // Project `ap` onto `ab` to find the closest point on the infinite line
++        float t = clamp(dot(ap, ab) / abLengthSquared, 0.0, 1.0);
++
++        // Closest point on the line segment
++        vec2 closestPoint = a + t * ab;
++
++        // Return the distance between the point and the closest point on the line
++        return length(p - closestPoint);
++    }
++
++
++    // Calculate the distance between a point and a line segment with projected point info
++    vec3 distanceToLineWithT(vec2 p, vec4 l) {
++        vec2 a = vec2(l.x, l.y); // Start point of the line
++        vec2 b = vec2(l.z, l.w); // End point of the line
++
++        // Vector from point `a` to point `b`
++        vec2 ab = b - a;
++
++        // Handle degenerate case: if the line segment is a point
++        float abLengthSquared = dot(ab, ab);
++        if (abLengthSquared < 1e-8) { // Small threshold to avoid division by zero
++            return vec3(length(p - a), 0.0, 0.0); // Distance to the single point
++        }
++
++        // Vector from point `a` to the test point `p`
++        vec2 ap = p - a;
++
++        // Project `ap` onto `ab` to find the closest point on the infinite line
++        float t = clamp(dot(ap, ab) / abLengthSquared, 0.0, 1.0);
++
++        // Closest point on the line segment
++        vec2 closestPoint = a + t * ab;
++
++        // Return the distance between the point and the closest point on the line
++        return vec3(length(p - closestPoint), t, length(ab));
++    }
++
++    // Convert a 1D index to a 2D index (x, y) in a width x height texture
++    ivec2 indexTo2D(int index, int width, int height) {
++        // Calculate the y-coordinate (row) by dividing the index by the width
++        int y = index / width;
++
++        // Calculate the x-coordinate (column) as the remainder of the division
++        int x = index - y * width;
++
++        // Normalize the coordinates to the range [0, 1] for texture sampling
++        return ivec2(x, y);
++    }
++
++    // Approximation of local derivative behaviors on texel coord in pixel space
++    // Ideally this should happen per distance check such that x and y are scaled respectively
++    float scaleDistFragToTex(float val, vec2 uvCoordinate) {
++
++        // Calculate the texel area of this fragment
++        mat2 pixelFootprint = mat2(dFdx(uvCoordinate), dFdy(uvCoordinate));
++        float pixelFootprintDiameterSqr = abs(determinant(pixelFootprint));
++
++        // Get pixel radii in texel space (approximated)
++        float pixelFootprintRadii = sqrt(pixelFootprintDiameterSqr);
++
++        return val*pixelFootprintRadii;
++    }
++
++    float scaleDistTexToFrag(float val, vec2 uvCoordinate) {
++
++        // Calculate the texel area of this fragment
++        mat2 pixelFootprint = mat2(dFdx(uvCoordinate), dFdy(uvCoordinate));
++        float pixelFootprintDiameterSqr = abs(determinant(pixelFootprint));
++
++        // Get pixel radii in texel space (approximated)
++        float pixelFootprintRadii = sqrt(pixelFootprintDiameterSqr);
++
++        return val/pixelFootprintRadii;
++    }
++
++    // Calculate the grid cell indices (i, j) for a grid
++    ivec2 getGridCell(vec2 coord, int gridWidth, int gridHeight) {
++        // Scale the texture coordinates to the grid dimensions
++        int i = int(coord.x * float(gridWidth));  // Column index
++        int j = int(coord.y * float(gridHeight)); // Row index
++
++        // Clamp the indices to ensure they are within bounds
++        i = clamp(i, 0, gridWidth - 1);
++        j = clamp(j, 0, gridHeight - 1);
++
++        return ivec2(i, j);
++    }
++#endif
++
+ vec4 sampleAndBlend(
+     vec4 previousColor,
+     sampler2D textureToSample,
+@@ -585,6 +740,166 @@ void main()
+ #endif
+ 
+     out_FragColor =  finalColor;
++
++#ifdef HAS_SDF
++    float dist = sampleNearest(u_sdfTexture, v_textureCoordinates.xy);
++    dist = filterSDF(dist, v_textureCoordinates.xy, vec2(textureSize(u_sdfTexture, 0)));
++    //float dist = sampleBilinear(u_sdfTexture, v_textureCoordinates.xy);
++
++    float lwidth = 2.0;
++    if (dist <= lwidth) {
++        float renormalized = clamp((lwidth - dist) / lwidth, 0.0, 1.0);
++
++        out_FragColor = vec4(renormalized, renormalized, 0.0, renormalized);
++    }
++#endif
++#ifdef HAS_GPU_LOOKUP_POLYLINES
++    // Get the width of the texture using textureSize
++    vec2 texSize = vec2(textureSize(u_lineTexture, 0));
++    float tsizeX = float(texSize.x);
++    float tsizeY = float(texSize.y);
++
++    // Define a threshold for coloring the fragment in screenspace
++    // Approximated 1 pixel length (0.5 dist each side with 0.3 padding for smoothness)
++    float threshold = 0.8;
++    threshold = scaleDistFragToTex(threshold, v_textureCoordinates.xy);
++
++    // Initialize the minimum distance to a large value
++    float minDist = 1.0; // Assume normalized coordinates (0 to 1)
++
++    int subGridSizeX = int(texelFetch(u_gridCellIndicesTexture, ivec2(0, 0), 0).r);
++    int subGridSizeY = int(texelFetch(u_gridCellIndicesTexture, ivec2(1, 0), 0).r);
++    ivec2 cell = getGridCell(v_textureCoordinates.xy, subGridSizeX, subGridSizeY);
++    int cellIndex = cell.x + cell.y * subGridSizeX;
++    int cellStart = 0;
++    int cellEnd = int(texelFetch(u_gridCellIndicesTexture, ivec2(cellIndex+2, 0), 0).r);
++    if (cellIndex > 0){
++        cellStart = int(texelFetch(u_gridCellIndicesTexture, ivec2(cellIndex+1, 0), 0).r);
++    }
++    //cellEnd = 20;
++
++    // Iterate over the texels of the line texture
++    for (int k = cellStart; k < cellEnd; k++) {
++        int j = k / int(tsizeX);
++        int i = k - j * int(tsizeX);
++
++        // Calculate the texture coordinate for the current texel
++        float texCoordX = (float(i) + 0.5) / tsizeX;
++        float texCoordY = (float(j) + 0.5) / tsizeY;
++
++        // Sample the current texel
++        vec4 texel = texture(u_lineTexture, vec2(texCoordX, texCoordY));
++        // skip if reaches end, marked by -1 as this should be normalized to [0, 1]
++        if (texel.r == -1.0){
++            break;
++        }
++
++        // Calculate the distance to the current line segment
++        // TODO: for better line rendering on steep slopes, scale by x and y derivatives respectively
++        float dist = distanceToLine(v_textureCoordinates.xy, texel);
++
++        // Update the minimum distance
++        minDist = min(minDist, dist);
++
++        if (minDist < threshold){
++            break;
++        }
++    }
++
++    // Color the fragment based on the minimum distance
++    if (minDist < threshold) {
++        out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red for close fragments
++    }
++#elif defined(HAS_GPU_LOOKUP_POLYGONS)
++    // Get the width of the texture using textureSize
++    vec2 texSize = vec2(textureSize(u_lineTexture, 0));
++    float tsizeX = float(texSize.x);
++    float tsizeY = float(texSize.y);
++
++    // Define a threshold for coloring the fragment in screenspace
++    // Approximated 1 pixel length (0.5 dist each side with 0.3 padding for smoothness)
++    float threshold = 0.8;
++    threshold = scaleDistFragToTex(threshold, v_textureCoordinates.xy);
++
++    // Initialize the minimum distance to a large value
++    float minDist = 1.0; // Assume normalized coordinates (0 to 1)
++    float minDistSign = 1.0; // init to inside
++    float minDistT = 0.0;
++    float minDistTLen = 0.0;
++    int cutFlag = 1;
++
++    int subGridSizeX = int(texelFetch(u_gridCellIndicesTexture, ivec2(0, 0), 0).r);
++    int subGridSizeY = int(texelFetch(u_gridCellIndicesTexture, ivec2(1, 0), 0).r);
++    ivec2 cell = getGridCell(v_textureCoordinates.xy, subGridSizeX, subGridSizeY);
++    int cellIndex = cell.x + cell.y * subGridSizeX;
++    int cellStart = 0;
++    int cellEnd = int(texelFetch(u_gridCellIndicesTexture, ivec2(cellIndex+2, 0), 0).r);
++    if (cellIndex > 0){
++        cellStart = int(texelFetch(u_gridCellIndicesTexture, ivec2(cellIndex+1, 0), 0).r);
++    }
++
++    // Iterate over the texels of the line texture
++    for (int k = cellStart; k < cellEnd; k++) {
++        int j = k / int(tsizeX);
++        int i = k - j * int(tsizeX);
++
++        // Calculate the texture coordinate for the current texel
++        float texCoordX = (float(i) + 0.5) / tsizeX;
++        float texCoordY = (float(j) + 0.5) / tsizeY;
++
++        // Sample the current texel
++        vec4 texel = texture(u_lineTexture, vec2(texCoordX, texCoordY));
++        // skip if reaches end, marked by -1 as this should be normalized to [0, 1]
++        if (texel.r == -1.0){
++            break;
++        }
++
++        // Calculate the distance to the current line segment
++        // TODO: for better line rendering on steep slopes, scale by x and y derivatives respectively
++        vec3 distV = distanceToLineWithT(v_textureCoordinates.xy, texel);
++        float dist = distV.x;
++
++        // Update the minimum distance
++        if (minDist > dist){
++            minDist = dist;
++            cutFlag = int(texture(u_cutFlagsTexture, vec2(texCoordX, texCoordY)).r*255.0);
++            minDistT = distV.y;
++            minDistTLen = distV.z;
++        }
++
++        if ((minDist < threshold) && (cutFlag == 0)){
++            break;
++        }
++
++        // Check if the ray intersects the current line segment
++        // Ray casting
++        // https://autogis-site.readthedocs.io/en/latest/lessons/lesson-3/point-in-polygon-queries.html
++        if ((v_textureCoordinates.y > texel.y && v_textureCoordinates.y <= texel.w) || (v_textureCoordinates.y > texel.w && v_textureCoordinates.y <= texel.y)) {
++            // Compute the x-coordinate of the intersection point
++            float t = (v_textureCoordinates.y - texel.y) / (texel.w - texel.y);
++            float intersectionX = texel.x + t * (texel.z - texel.x);
++
++            // Check if the intersection point is to the right of the ray's origin
++            if (intersectionX > v_textureCoordinates.x) {
++                minDistSign = minDistSign*-1.0;
++            }
++
++        }
++    }
++
++    // color all inside pixels
++    if (minDistSign < 0.0){
++        out_FragColor = vec4(0.0, 0.0, 1.0, 1.0); // Blue for close fragments
++    }
++    float dashedLine = scaleDistTexToFrag(minDistT*minDistTLen, v_textureCoordinates.xy);
++    float dashedSegLen = 10.0;
++    float dashedSegSolid = 5.0;
++    bool dashedSolid = mod(dashedLine, dashedSegLen) < dashedSegSolid; // set to true for solid lines
++    // Color the fragment based on the minimum distance
++    if ((minDist < threshold) && (cutFlag == 0) && dashedSolid) {
++        out_FragColor = vec4(1.0, 0.0, 1.0, 1.0); // Purple for close fragments
++    }
++#endif
+ }
+ 
+ 
