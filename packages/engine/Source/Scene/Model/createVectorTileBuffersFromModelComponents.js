@@ -232,10 +232,12 @@ function gatherPrimitiveStats(primitive, stats) {
     stats.polygonPrimitiveCount += polygonCount;
     for (let i = 0; i < polygonCount; i++) {
       const start = polygonAttributeOffsets[i];
-      const end = i + 1 < polygonCount ? polygonAttributeOffsets[i + 1] : positionCount;
-      const polygonIndicesCount = i + 1 < polygonCount
-        ? polygonIndicesOffsets[i + 1] - polygonIndicesOffsets[i]
-        : indices.length - polygonIndicesOffsets[i]
+      const end =
+        i + 1 < polygonCount ? polygonAttributeOffsets[i + 1] : positionCount;
+      const polygonIndicesCount =
+        i + 1 < polygonCount
+          ? polygonIndicesOffsets[i + 1] - polygonIndicesOffsets[i]
+          : indices.length - polygonIndicesOffsets[i];
       stats.polygonVertexCount += Math.max(end - start, 0);
       stats.polygonTriangleCount += polygonIndicesCount / 3;
       if (polygonHoleCounts) {
@@ -497,9 +499,10 @@ function appendPrimitiveToBuffers(
       // TODO(donmccurdy)
 
       const triangleIndexOffset = polygonIndicesOffsets[i];
-      const triangleIndexCount = i + 1 < polygonCount
-        ? polygonIndicesOffsets[i + 1] - triangleIndexOffset
-        : indices.length - triangleIndexOffset;
+      const triangleIndexCount =
+        i + 1 < polygonCount
+          ? polygonIndicesOffsets[i + 1] - triangleIndexOffset
+          : indices.length - triangleIndexOffset;
       let triangleIndices;
       if (triangleIndexCount > 0) {
         if (polygonVertexOffset === 0) {
