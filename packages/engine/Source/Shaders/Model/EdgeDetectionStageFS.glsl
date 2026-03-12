@@ -1,4 +1,4 @@
-void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
+void edgeDetectionStage(out bool isEdgeOut, inout vec4 color, inout FeatureIds featureIds) {
     if (u_isEdgePass) {
         return;
     }
@@ -29,6 +29,12 @@ void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
     float pixelStepLinear = fwidth(geomDepthLinear);
     float rel = geomDepthLinear * 0.0005;
     float eps = max(n * 1e-4, max(pixelStepLinear * 1.5, rel));
+
+    if (edgeId.r > 0.0) {
+        // TODO: should be checking d < eps but this doesn't work consistently
+        // in pick pass, maybe because of screen space derivatives?
+        isEdgeOut = true;
+    }
 
     // If Edge isn't behind any geometry and the pixel has edge data
     if (d < eps && edgeId.r > 0.0) {

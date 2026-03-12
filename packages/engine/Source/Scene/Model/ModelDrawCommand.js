@@ -823,7 +823,7 @@ function deriveEdgeCommand(command, renderResources) {
   // Set line width uniform for quad-based edge rendering
   const lineWidth = defined(edgeGeometry.lineWidth)
     ? edgeGeometry.lineWidth
-    : 1.0;
+    : 3.0; // hardcoded to make it easier to see lines
   uniformMap.u_lineWidth = function () {
     return lineWidth;
   };

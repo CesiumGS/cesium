@@ -27,6 +27,9 @@ vec4 handleAlpha(vec3 color, float alpha)
 
 SelectedFeature selectedFeature;
 
+// Used to set the pickId expression in PickingPipelineStage
+bool isEdge = false;
+
 void main()
 {
     #if defined(PRIMITIVE_TYPE_POINTS) && defined(HAS_POINT_DIAMETER)
@@ -139,7 +142,7 @@ void main()
 
     #ifdef HAS_EDGE_VISIBILITY
     edgeVisibilityStage(color, featureIds);
-    edgeDetectionStage(color, featureIds);
+    edgeDetectionStage(isEdge, color, featureIds);
     #endif
 
     #endif

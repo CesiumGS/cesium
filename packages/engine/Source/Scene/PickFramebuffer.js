@@ -1,5 +1,4 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
@@ -25,6 +24,8 @@ function PickFramebuffer(context) {
   this._context = context;
   this._fb = new FramebufferManager({
     depthStencil: true,
+    pixelDatatype: PixelDatatype.FLOAT,
+    pixelFormat: PixelFormat.RGBA,
   });
   this._passState = passState;
   this._width = 0;
@@ -58,7 +59,7 @@ function pickObjectsFromPixels(context, pixels, width, height, limit = 1) {
 
   // The region does not have to square and the dimensions do not have to be odd, but
   // loop iterations would be wasted. Prefer square regions where the size is odd.
-  const objects = new Set();
+  const results = [];
   for (let i = 0; i < length; ++i) {
     if (
       -halfWidth <= x &&
@@ -68,20 +69,20 @@ function pickObjectsFromPixels(context, pixels, width, height, limit = 1) {
     ) {
       const index = 4 * ((halfHeight - y) * width + x + halfWidth);
 
-      const pickColor = Color.bytesToRgba(
-        pixels[index],
-        pixels[index + 1],
-        pixels[index + 2],
-        pixels[index + 3],
-      );
+      const pickColor = pixels[index];
+      // TODO: for some reason need to negate isEdge, need to look into this later
+      const isEdge = !(pixels[index + 1] > 0.0 ? true : false);
+      const depth = pixels[index + 2];
 
       const object = context.getObjectByPickColor(pickColor);
-      if (defined(object)) {
-        objects.add(object);
-        if (objects.size >= limit) {
-          break;
-        }
-      }
+
+      results.push({
+        object: object,
+        isEdge: isEdge,
+        depth: depth,
+        x: x,
+        y: y,
+      });
     }
 
     // if (top right || bottom left corners) || (top left corner) || (bottom right corner + (1, 0))
@@ -95,7 +96,7 @@ function pickObjectsFromPixels(context, pixels, width, height, limit = 1) {
     x += dx;
     y += dy;
   }
-  return [...objects];
+  return results;
 }
 
 PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {

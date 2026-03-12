@@ -4518,6 +4518,11 @@ Scene.prototype.pick = function (windowPosition, width, height) {
   return this._picking.pick(this, windowPosition, width, height, 1)[0];
 };
 
+Scene.prototype.snap = function (windowPosition, width, height) {
+  return this._picking.snap(this, windowPosition, width, height);
+};
+
+
 /**
  * Performs the same operation as Scene.pick but asynchonosly without blocking the main render thread.
  * Requires WebGL2 else using fallback.

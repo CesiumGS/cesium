@@ -419,7 +419,51 @@ Picking.prototype.pick = function (
   pickBegin(scene, windowPosition, drawingBufferRectangle, width, height);
   const pickedObjects = pickFramebuffer.end(drawingBufferRectangle, limit); // Object[]
   pickEnd(scene);
-  return pickedObjects;
+  return pickedObjects
+    .filter(function (pickedObject) {
+      return defined(pickedObject.object);
+    })
+    .map(function (pickedObject) {
+      return pickedObject.object;
+    });
+};
+
+Picking.prototype.snap = function (
+  scene,
+  windowPosition,
+  width,
+  height,
+  objectsTo,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("windowPosition", windowPosition);
+  //>>includeEnd('debug');
+
+  const { defaultView } = scene;
+  const { pickFramebuffer } = defaultView;
+  const drawingBufferRectangle = scratchRectangle;
+  pickBegin(scene, windowPosition, drawingBufferRectangle, width, height);
+  const pickedObjects = pickFramebuffer.end(
+    drawingBufferRectangle,
+    Number.POSITIVE_INFINITY,
+  ); // Object[]
+  pickEnd(scene);
+
+  if (pickedObjects.length === 0) {
+    return undefined;
+  }
+
+  pickedObjects.sort(function (a, b) {
+    if (a.isEdge !== b.isEdge) {
+      // Edges are prioritized over non-edges
+      return a.isEdge ? -1 : 1;
+    }
+
+    // Sort by distance from cursor
+    return a.x * a.x + a.y * a.y - (b.x * b.x + b.y * b.y);
+  });
+
+  return pickedObjects[0];
 };
 
 /**

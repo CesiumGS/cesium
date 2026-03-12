@@ -66,6 +66,14 @@ PickingPipelineStage.process = function (
 
     renderResources.pickId = "czm_pickColor";
   }
+
+  shaderBuilder.addFragmentLines([
+    `uint rgba8UnormToUint32(vec4 c) {
+  uvec4 b = uvec4(c * 255.0 + 0.5); // convert to 0-255
+  return (b.r) | (b.g << 8u) | (b.b << 16u) | (b.a << 24u);
+}
+`,
+  ]);
 };
 
 /**
@@ -155,8 +163,14 @@ function processPickTexture(renderResources, primitive, instances) {
   };
 
   // The feature ID is ignored if it is greater than the number of features.
+  // Using RGBA32F texture for snapping
+  //
+  // R: feature ID
+  // G: is edge
+  // B: screen depth
+  // A: [unused]
   renderResources.pickId =
-    "((selectedFeature.id < int(model_featuresLength)) ? texture(model_pickTexture, selectedFeature.st) : vec4(0.0))";
+    "((selectedFeature.id < int(model_featuresLength)) ? vec4(rgba8UnormToUint32(texture(model_pickTexture, selectedFeature.st)), isEdge ? 1.0 : 0.0, gl_FragCoord.z, 0.0) : vec4(0.0))";
 }
 
 function processInstancedPickIds(renderResources, context) {
