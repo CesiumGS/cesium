@@ -13,6 +13,8 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelReader from "./ModelReader.js";
 import ModelUtility from "./ModelUtility.js";
 
+/** @import { TypedArrayConstructor } from "../../Core/globalTypes.js"; */
+
 function getPositionAttribute(primitive) {
   return ModelUtility.getAttributeBySemantic(
     primitive,
@@ -54,6 +56,63 @@ function readIndicesOrSequential(primitive, vertexCount) {
     return ModelReader.readIndicesAsTypedArray(indices);
   }
   return undefined;
+}
+
+function readIndices(primitive) {
+  const indices = primitive.indices;
+  if (!defined(indices)) {
+    return undefined;
+  }
+  if (defined(indices.typedArray)) {
+    return indices.typedArray;
+  }
+  if (defined(indices.buffer)) {
+    return ModelReader.readIndicesAsTypedArray(indices);
+  }
+  return undefined;
+}
+
+function getMeshVectorExtension(primitive) {
+  const meshVector = primitive.meshVector;
+  if (!defined(meshVector)) {
+    return undefined;
+  }
+  if (meshVector.vector === false) {
+    return undefined;
+  }
+  return meshVector;
+}
+
+function getPrimitiveRestartIndex(indices) {
+  const bits = indices.BYTES_PER_ELEMENT * 8;
+  return Math.pow(2, bits) - 1;
+}
+
+function forEachLineStripSegment(indices, callback) {
+  const restart = getPrimitiveRestartIndex(indices);
+  let segmentStart = 0;
+  for (let i = 0; i <= indices.length; i++) {
+    if (i === indices.length || indices[i] === restart) {
+      const segmentCount = i - segmentStart;
+      if (segmentCount > 0) {
+        callback(segmentStart, segmentCount);
+      }
+      segmentStart = i + 1;
+    }
+  }
+}
+
+function isSequentialIndices(indices, start, count) {
+  if (count <= 1) {
+    return true;
+  }
+  const first = indices[start];
+  for (let i = 1; i < count; i++) {
+    if (indices[start + i] !== first + i) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function getFeatureIdSource(primitive) {
@@ -115,63 +174,83 @@ function getFeatureId(featureIdSource, vertexIndex) {
   return featureId;
 }
 
-function getTriangleCount(primitiveType, indexCount) {
-  if (primitiveType === PrimitiveType.TRIANGLES) {
-    return Math.floor(indexCount / 3);
-  }
-  if (
-    primitiveType === PrimitiveType.TRIANGLE_STRIP ||
-    primitiveType === PrimitiveType.TRIANGLE_FAN
-  ) {
-    return Math.max(indexCount - 2, 0);
-  }
-  return 0;
-}
-
 function gatherPrimitiveStats(primitive, stats) {
+  const meshVector = getMeshVectorExtension(primitive);
+  if (!defined(meshVector)) {
+    return;
+  }
+
   const primitiveType = primitive.primitiveType;
   const positionCount = getPositionCount(primitive);
   if (positionCount === 0) {
     return;
   }
 
-  const indexCount = defined(primitive.indices)
-    ? primitive.indices.count
-    : positionCount;
-
   if (primitiveType === PrimitiveType.POINTS) {
+    const indexCount = defined(primitive.indices)
+      ? primitive.indices.count
+      : positionCount;
     stats.pointPrimitiveCount += indexCount;
     stats.pointVertexCount += indexCount;
     return;
   }
 
-  if (PrimitiveType.isLines(primitiveType)) {
-    if (primitiveType === PrimitiveType.LINES) {
-      const lineCount = Math.floor(indexCount / 2);
-      stats.polylinePrimitiveCount += lineCount;
-      stats.polylineVertexCount += lineCount * 2;
-    } else if (primitiveType === PrimitiveType.LINE_STRIP) {
-      if (indexCount >= 2) {
+  if (primitiveType === PrimitiveType.LINE_STRIP) {
+    const indices = readIndices(primitive);
+    if (!defined(indices)) {
+      throw new RuntimeError(
+        "Vector polylines with LINE_STRIP topology must be indexed.",
+      );
+    }
+    forEachLineStripSegment(indices, (segmentStart, segmentCount) => {
+      if (segmentCount >= 2) {
         stats.polylinePrimitiveCount += 1;
-        stats.polylineVertexCount += indexCount;
+        stats.polylineVertexCount += segmentCount;
       }
-    } else if (primitiveType === PrimitiveType.LINE_LOOP) {
-      if (indexCount >= 2) {
-        stats.polylinePrimitiveCount += 1;
-        stats.polylineVertexCount += indexCount + 1;
-      }
+    });
+    return;
+  }
+
+  if (primitiveType === PrimitiveType.TRIANGLES) {
+    const indices = readIndices(primitive);
+    if (!defined(indices)) {
+      throw new RuntimeError(
+        "Vector polygons with TRIANGLES topology must be indexed.",
+      );
+    }
+
+    const polygonOffsets = meshVector.polygonOffsets;
+    const polygonHoleCounts = meshVector.polygonHoleCounts;
+    const polygonTriangleCounts = meshVector.polygonTriangleCounts;
+    const polygonTriangleOffsets = meshVector.polygonTriangleOffsets;
+    const polygonHoleOffsets = meshVector.polygonHoleOffsets;
+    if (
+      !defined(polygonOffsets) ||
+      !defined(polygonHoleCounts) ||
+      !defined(polygonTriangleCounts) ||
+      !defined(polygonTriangleOffsets) ||
+      !defined(polygonHoleOffsets)
+    ) {
+      throw new RuntimeError(
+        "Vector polygons require polygonOffsets, polygonHoleCounts, polygonHoleOffsets, polygonTriangleCounts, and polygonTriangleOffsets.",
+      );
+    }
+
+    const polygonCount = polygonOffsets.length;
+    stats.polygonPrimitiveCount += polygonCount;
+    for (let i = 0; i < polygonCount; i++) {
+      const start = polygonOffsets[i];
+      const end = i + 1 < polygonCount ? polygonOffsets[i + 1] : positionCount;
+      stats.polygonVertexCount += Math.max(end - start, 0);
+      stats.polygonHoleCount += polygonHoleCounts[i];
+      stats.polygonTriangleCount += polygonTriangleCounts[i];
     }
     return;
   }
 
-  if (PrimitiveType.isTriangles(primitiveType)) {
-    const triangleCount = getTriangleCount(primitiveType, indexCount);
-    if (triangleCount > 0) {
-      stats.polygonPrimitiveCount += 1;
-      stats.polygonVertexCount += positionCount;
-      stats.polygonTriangleCount += triangleCount;
-    }
-  }
+  throw new RuntimeError(
+    `Vector primitives with primitive type ${primitiveType} are not supported.`,
+  );
 }
 
 function gatherNodeStats(node, stats) {
@@ -193,15 +272,9 @@ function readTransformedPositions(primitive, nodeTransform) {
     return undefined;
   }
 
-  const transformed = Matrix4.equals(nodeTransform, Matrix4.IDENTITY)
+  return Matrix4.equals(nodeTransform, Matrix4.IDENTITY)
     ? values
     : ModelReader.transform3D(values, nodeTransform);
-
-  const result = new Float64Array(transformed.length);
-  for (let i = 0; i < transformed.length; i++) {
-    result[i] = transformed[i];
-  }
-  return result;
 }
 
 function setPrimitiveFeatureId(primitiveView, featureIdSource, vertexIndex) {
@@ -243,13 +316,23 @@ function appendPolylinePrimitive(
     return;
   }
 
-  const values = new Float64Array(indices.length * 3);
-  for (let i = 0; i < indices.length; i++) {
-    const vertexIndex = indices[i];
-    const srcOffset = vertexIndex * 3;
-    values[i * 3] = positions[srcOffset];
-    values[i * 3 + 1] = positions[srcOffset + 1];
-    values[i * 3 + 2] = positions[srcOffset + 2];
+  let values;
+  if (isSequentialIndices(indices, 0, indices.length)) {
+    const startIndex = indices[0];
+    const endIndex = startIndex + indices.length;
+    values = positions.subarray(startIndex * 3, endIndex * 3);
+  } else {
+    const TypedArray = /** @type {TypedArrayConstructor} */ (
+      positions.constructor
+    );
+    values = new TypedArray(indices.length * 3);
+    for (let i = 0; i < indices.length; i++) {
+      const vertexIndex = indices[i];
+      const srcOffset = vertexIndex * 3;
+      values[i * 3] = positions[srcOffset];
+      values[i * 3 + 1] = positions[srcOffset + 1];
+      values[i * 3 + 2] = positions[srcOffset + 2];
+    }
   }
 
   polylineCollection.add({ positions: values }, polylineView);
@@ -260,32 +343,25 @@ function appendPolygonPrimitive(
   polygonCollection,
   polygonView,
   featureIdSource,
-  primitiveType,
   positions,
-  indices,
+  triangles,
+  holes,
+  featureIdVertexIndex,
 ) {
-  if (
-    primitiveType === PrimitiveType.TRIANGLE_STRIP ||
-    primitiveType === PrimitiveType.TRIANGLE_FAN
-  ) {
-    throw new RuntimeError(
-      "Vector polygons with TRIANGLE_STRIP or TRIANGLE_FAN topology are not supported.",
-    );
-  }
-  const triangleIndices = indices;
-
-  if (!defined(triangleIndices) || triangleIndices.length < 3) {
+  if (!defined(triangles) || triangles.length < 3) {
     return;
   }
 
-  polygonCollection.add(
-    {
-      positions: positions,
-      triangles: triangleIndices,
-    },
-    polygonView,
-  );
-  setPrimitiveFeatureId(polygonView, featureIdSource, triangleIndices[0]);
+  const options = {
+    positions: positions,
+    triangles: triangles,
+  };
+  if (defined(holes) && holes.length > 0) {
+    options.holes = holes;
+  }
+
+  polygonCollection.add(options, polygonView);
+  setPrimitiveFeatureId(polygonView, featureIdSource, featureIdVertexIndex);
 }
 
 function appendPrimitiveToBuffers(
@@ -298,6 +374,11 @@ function appendPrimitiveToBuffers(
   polygonCollection,
   polygonView,
 ) {
+  const meshVector = getMeshVectorExtension(primitive);
+  if (!defined(meshVector)) {
+    return;
+  }
+
   const primitiveType = primitive.primitiveType;
   const positions = readTransformedPositions(primitive, nodeTransform);
   if (!defined(positions)) {
@@ -305,15 +386,15 @@ function appendPrimitiveToBuffers(
   }
 
   const vertexCount = positions.length / 3;
-  const indices = readIndicesOrSequential(primitive, vertexCount);
-  if (!defined(indices)) {
-    return;
-  }
-
   const featureIdSource = getFeatureIdSource(primitive);
 
   if (primitiveType === PrimitiveType.POINTS) {
     if (!defined(pointCollection)) {
+      return;
+    }
+
+    const indices = readIndicesOrSequential(primitive, vertexCount);
+    if (!defined(indices)) {
       return;
     }
 
@@ -329,72 +410,131 @@ function appendPrimitiveToBuffers(
     return;
   }
 
-  if (PrimitiveType.isLines(primitiveType)) {
+  if (primitiveType === PrimitiveType.LINE_STRIP) {
     if (!defined(polylineCollection)) {
       return;
     }
 
-    if (primitiveType === PrimitiveType.LINES) {
-      for (let i = 0; i + 1 < indices.length; i += 2) {
-        appendPolylinePrimitive(
-          polylineCollection,
-          polylineView,
-          featureIdSource,
-          positions,
-          [indices[i], indices[i + 1]],
-        );
-      }
-    } else if (primitiveType === PrimitiveType.LINE_STRIP) {
-      appendPolylinePrimitive(
-        polylineCollection,
-        polylineView,
-        featureIdSource,
-        positions,
-        indices,
-      );
-    } else if (primitiveType === PrimitiveType.LINE_LOOP) {
-      const loopIndices = new Uint32Array(indices.length + 1);
-      for (let i = 0; i < indices.length; i++) {
-        loopIndices[i] = indices[i];
-      }
-      loopIndices[indices.length] = indices[0];
-      appendPolylinePrimitive(
-        polylineCollection,
-        polylineView,
-        featureIdSource,
-        positions,
-        loopIndices,
-      );
-    } else {
+    const indices = readIndices(primitive);
+    if (!defined(indices)) {
       throw new RuntimeError(
-        `Vector polylines with primitive type ${primitiveType} are not supported.`,
+        "Vector polylines with LINE_STRIP topology must be indexed.",
       );
     }
+
+    forEachLineStripSegment(indices, (segmentStart, segmentCount) => {
+      if (segmentCount < 2) {
+        return;
+      }
+      const segment = indices.subarray(
+        segmentStart,
+        segmentStart + segmentCount,
+      );
+      appendPolylinePrimitive(
+        polylineCollection,
+        polylineView,
+        featureIdSource,
+        positions,
+        segment,
+      );
+    });
     return;
   }
 
-  if (
-    primitiveType === PrimitiveType.TRIANGLE_STRIP ||
-    primitiveType === PrimitiveType.TRIANGLE_FAN
-  ) {
-    throw new RuntimeError(
-      "Vector polygons with TRIANGLE_STRIP or TRIANGLE_FAN topology are not supported.",
-    );
-  }
-
-  if (PrimitiveType.isTriangles(primitiveType)) {
+  if (primitiveType === PrimitiveType.TRIANGLES) {
     if (!defined(polygonCollection)) {
       return;
     }
 
-    appendPolygonPrimitive(
-      polygonCollection,
-      polygonView,
-      featureIdSource,
-      primitiveType,
-      positions,
-      indices,
-    );
+    const indices = readIndices(primitive);
+    if (!defined(indices)) {
+      throw new RuntimeError(
+        "Vector polygons with TRIANGLES topology must be indexed.",
+      );
+    }
+
+    const polygonOffsets = meshVector.polygonOffsets;
+    const polygonHoleCounts = meshVector.polygonHoleCounts;
+    const polygonHoleOffsets = meshVector.polygonHoleOffsets;
+    const polygonTriangleCounts = meshVector.polygonTriangleCounts;
+    const polygonTriangleOffsets = meshVector.polygonTriangleOffsets;
+    if (
+      !defined(polygonOffsets) ||
+      !defined(polygonHoleCounts) ||
+      !defined(polygonHoleOffsets) ||
+      !defined(polygonTriangleCounts) ||
+      !defined(polygonTriangleOffsets)
+    ) {
+      throw new RuntimeError(
+        "Vector polygons require polygonOffsets, polygonHoleCounts, polygonHoleOffsets, polygonTriangleCounts, and polygonTriangleOffsets.",
+      );
+    }
+
+    let holeOffsetIndex = 0;
+    const polygonCount = polygonOffsets.length;
+    for (let i = 0; i < polygonCount; i++) {
+      const polygonVertexOffset = polygonOffsets[i];
+      const polygonVertexEnd =
+        i + 1 < polygonCount ? polygonOffsets[i + 1] : vertexCount;
+      const polygonVertexCount = Math.max(
+        polygonVertexEnd - polygonVertexOffset,
+        0,
+      );
+      if (polygonVertexCount === 0) {
+        continue;
+      }
+
+      const polygonPositions = positions.subarray(
+        polygonVertexOffset * 3,
+        polygonVertexEnd * 3,
+      );
+
+      const holeCount = polygonHoleCounts[i];
+      let holes;
+      if (holeCount > 0) {
+        const HoleArray = /** @type {TypedArrayConstructor} */ (
+          polygonHoleOffsets.constructor
+        );
+        holes = new HoleArray(holeCount);
+        for (let h = 0; h < holeCount; h++) {
+          holes[h] =
+            polygonHoleOffsets[holeOffsetIndex + h] - polygonVertexOffset;
+        }
+      }
+      holeOffsetIndex += holeCount;
+
+      const triangleCount = polygonTriangleCounts[i];
+      const triangleOffset = polygonTriangleOffsets[i];
+      const triangleIndexCount = triangleCount * 3;
+      let triangleIndices;
+      if (triangleIndexCount > 0) {
+        if (polygonVertexOffset === 0) {
+          triangleIndices = indices.subarray(
+            triangleOffset,
+            triangleOffset + triangleIndexCount,
+          );
+        } else {
+          const IndexArray = /** @type {TypedArrayConstructor} */ (
+            indices.constructor
+          );
+          triangleIndices = new IndexArray(triangleIndexCount);
+          for (let t = 0; t < triangleIndexCount; t++) {
+            triangleIndices[t] =
+              indices[triangleOffset + t] - polygonVertexOffset;
+          }
+        }
+      }
+
+      appendPolygonPrimitive(
+        polygonCollection,
+        polygonView,
+        featureIdSource,
+        polygonPositions,
+        triangleIndices,
+        holes,
+        polygonVertexOffset,
+      );
+    }
     return;
   }
 
@@ -476,6 +616,7 @@ function createVectorTileBuffersFromModelComponents(components) {
     polylineVertexCount: 0,
     polygonPrimitiveCount: 0,
     polygonVertexCount: 0,
+    polygonHoleCount: 0,
     polygonTriangleCount: 0,
   };
 
@@ -503,7 +644,7 @@ function createVectorTileBuffersFromModelComponents(components) {
       ? new BufferPolygonCollection({
           primitiveCountMax: stats.polygonPrimitiveCount,
           vertexCountMax: stats.polygonVertexCount,
-          holeCountMax: 0,
+          holeCountMax: stats.polygonHoleCount,
           triangleCountMax: stats.polygonTriangleCount,
         })
       : undefined;
