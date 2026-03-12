@@ -253,28 +253,26 @@ function gatherPrimitiveStats(primitive, stats) {
   );
 }
 
-function gatherNodeStats(node, stats) {
-  const primitives = node.primitives;
-  for (let i = 0; i < primitives.length; i++) {
-    gatherPrimitiveStats(primitives[i], stats);
-  }
-
-  const children = node.children;
-  for (let i = 0; i < children.length; i++) {
-    gatherNodeStats(children[i], stats);
-  }
+function createStats() {
+  return {
+    pointPrimitiveCount: 0,
+    pointVertexCount: 0,
+    polylinePrimitiveCount: 0,
+    polylineVertexCount: 0,
+    polygonPrimitiveCount: 0,
+    polygonVertexCount: 0,
+    polygonHoleCount: 0,
+    polygonTriangleCount: 0,
+  };
 }
 
-function readTransformedPositions(primitive, nodeTransform) {
+function readPositions(primitive) {
   const positionAttribute = getPositionAttribute(primitive);
   const values = readAttributeTypedArray(positionAttribute);
   if (!defined(values) || values.length === 0) {
     return undefined;
   }
-
-  return Matrix4.equals(nodeTransform, Matrix4.IDENTITY)
-    ? values
-    : ModelReader.transform3D(values, nodeTransform);
+  return values;
 }
 
 function setPrimitiveFeatureId(primitiveView, featureIdSource, vertexIndex) {
@@ -366,7 +364,6 @@ function appendPolygonPrimitive(
 
 function appendPrimitiveToBuffers(
   primitive,
-  nodeTransform,
   pointCollection,
   pointView,
   polylineCollection,
@@ -380,7 +377,7 @@ function appendPrimitiveToBuffers(
   }
 
   const primitiveType = primitive.primitiveType;
-  const positions = readTransformedPositions(primitive, nodeTransform);
+  const positions = readPositions(primitive);
   if (!defined(positions)) {
     return;
   }
@@ -546,12 +543,9 @@ function appendPrimitiveToBuffers(
 function appendNodeToBuffers(
   node,
   parentTransform,
-  pointCollection,
-  pointView,
-  polylineCollection,
-  polylineView,
-  polygonCollection,
-  polygonView,
+  points,
+  polylines,
+  polygons,
 ) {
   const localTransform = ModelUtility.getNodeTransform(node);
   const nodeTransform = Matrix4.multiplyTransformation(
@@ -562,14 +556,52 @@ function appendNodeToBuffers(
 
   const primitives = node.primitives;
   for (let i = 0; i < primitives.length; i++) {
+    const primitive = primitives[i];
+    const stats = createStats();
+    gatherPrimitiveStats(primitive, stats);
+
+    let collection;
+    let pointView;
+    let polylineView;
+    let polygonView;
+
+    if (stats.pointPrimitiveCount > 0) {
+      collection = new BufferPointCollection({
+        primitiveCountMax: stats.pointPrimitiveCount,
+        vertexCountMax: stats.pointVertexCount,
+      });
+      pointView = new BufferPoint();
+      points.push(collection);
+    } else if (stats.polylinePrimitiveCount > 0) {
+      collection = new BufferPolylineCollection({
+        primitiveCountMax: stats.polylinePrimitiveCount,
+        vertexCountMax: stats.polylineVertexCount,
+      });
+      polylineView = new BufferPolyline();
+      polylines.push(collection);
+    } else if (stats.polygonPrimitiveCount > 0) {
+      collection = new BufferPolygonCollection({
+        primitiveCountMax: stats.polygonPrimitiveCount,
+        vertexCountMax: stats.polygonVertexCount,
+        holeCountMax: stats.polygonHoleCount,
+        triangleCountMax: stats.polygonTriangleCount,
+      });
+      polygonView = new BufferPolygon();
+      polygons.push(collection);
+    }
+
+    if (!defined(collection)) {
+      continue;
+    }
+
+    collection._vectorLocalModelMatrix = Matrix4.clone(nodeTransform);
     appendPrimitiveToBuffers(
-      primitives[i],
-      nodeTransform,
-      pointCollection,
+      primitive,
+      pointView ? collection : undefined,
       pointView,
-      polylineCollection,
+      polylineView ? collection : undefined,
       polylineView,
-      polygonCollection,
+      polygonView ? collection : undefined,
       polygonView,
     );
   }
@@ -579,21 +611,18 @@ function appendNodeToBuffers(
     appendNodeToBuffers(
       children[i],
       nodeTransform,
-      pointCollection,
-      pointView,
-      polylineCollection,
-      polylineView,
-      polygonCollection,
-      polygonView,
+      points,
+      polylines,
+      polygons,
     );
   }
 }
 
 /**
  * @typedef {object} VectorTileBuffers
- * @property {BufferPointCollection|undefined} points
- * @property {BufferPolylineCollection|undefined} polylines
- * @property {BufferPolygonCollection|undefined} polygons
+ * @property {BufferPointCollection[]|undefined} points
+ * @property {BufferPolylineCollection[]|undefined} polylines
+ * @property {BufferPolygonCollection[]|undefined} polygons
  */
 
 /**
@@ -609,71 +638,29 @@ function createVectorTileBuffersFromModelComponents(components) {
     return undefined;
   }
 
-  const stats = {
-    pointPrimitiveCount: 0,
-    pointVertexCount: 0,
-    polylinePrimitiveCount: 0,
-    polylineVertexCount: 0,
-    polygonPrimitiveCount: 0,
-    polygonVertexCount: 0,
-    polygonHoleCount: 0,
-    polygonTriangleCount: 0,
-  };
-
   const rootNodes = components.scene.nodes;
-  for (let i = 0; i < rootNodes.length; i++) {
-    gatherNodeStats(rootNodes[i], stats);
-  }
-
-  const points =
-    stats.pointPrimitiveCount > 0
-      ? new BufferPointCollection({
-          primitiveCountMax: stats.pointPrimitiveCount,
-          vertexCountMax: stats.pointVertexCount,
-        })
-      : undefined;
-  const polylines =
-    stats.polylinePrimitiveCount > 0
-      ? new BufferPolylineCollection({
-          primitiveCountMax: stats.polylinePrimitiveCount,
-          vertexCountMax: stats.polylineVertexCount,
-        })
-      : undefined;
-  const polygons =
-    stats.polygonPrimitiveCount > 0
-      ? new BufferPolygonCollection({
-          primitiveCountMax: stats.polygonPrimitiveCount,
-          vertexCountMax: stats.polygonVertexCount,
-          holeCountMax: stats.polygonHoleCount,
-          triangleCountMax: stats.polygonTriangleCount,
-        })
-      : undefined;
-
-  const pointView = defined(points) ? new BufferPoint() : undefined;
-  const polylineView = defined(polylines) ? new BufferPolyline() : undefined;
-  const polygonView = defined(polygons) ? new BufferPolygon() : undefined;
+  const points = [];
+  const polylines = [];
+  const polygons = [];
 
   for (let i = 0; i < rootNodes.length; i++) {
     appendNodeToBuffers(
       rootNodes[i],
       Matrix4.IDENTITY,
       points,
-      pointView,
       polylines,
-      polylineView,
       polygons,
-      polygonView,
     );
   }
 
-  if (!defined(points) && !defined(polylines) && !defined(polygons)) {
+  if (points.length === 0 && polylines.length === 0 && polygons.length === 0) {
     return undefined;
   }
 
   return {
-    points: points,
-    polylines: polylines,
-    polygons: polygons,
+    points: points.length > 0 ? points : undefined,
+    polylines: polylines.length > 0 ? polylines : undefined,
+    polygons: polygons.length > 0 ? polygons : undefined,
   };
 }
 

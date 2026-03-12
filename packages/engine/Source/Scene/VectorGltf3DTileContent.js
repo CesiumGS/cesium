@@ -27,9 +27,9 @@ function VectorGltf3DTileContent(tileset, tile, resource) {
   this._decodeModel = undefined;
 
   this._vectorBuffers = undefined;
-  this._pointCollection = undefined;
-  this._polylineCollection = undefined;
-  this._polygonCollection = undefined;
+  this._pointCollections = undefined;
+  this._polylineCollections = undefined;
+  this._polygonCollections = undefined;
 
   this._metadata = undefined;
   this._group = undefined;
@@ -41,6 +41,39 @@ function VectorGltf3DTileContent(tileset, tile, resource) {
   this._computedVectorModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 }
 
+function sumCollectionProperty(collections, propertyName) {
+  if (!defined(collections)) {
+    return 0;
+  }
+
+  let total = 0;
+  for (let i = 0; i < collections.length; i++) {
+    total += collections[i][propertyName];
+  }
+  return total;
+}
+
+function forEachCollection(collections, callback) {
+  if (!defined(collections)) {
+    return;
+  }
+
+  for (let i = 0; i < collections.length; i++) {
+    callback(collections[i], i);
+  }
+}
+
+function updateCollectionArray(collections, vectorModelMatrix, frameState) {
+  forEachCollection(collections, function (collection) {
+    Matrix4.multiplyTransformation(
+      vectorModelMatrix,
+      collection._vectorLocalModelMatrix,
+      collection.modelMatrix,
+    );
+    collection.update(frameState);
+  });
+}
+
 Object.defineProperties(VectorGltf3DTileContent.prototype, {
   featuresLength: {
     get: function () {
@@ -48,17 +81,11 @@ Object.defineProperties(VectorGltf3DTileContent.prototype, {
         return 0;
       }
 
-      let count = 0;
-      if (defined(this._vectorBuffers.points)) {
-        count += this._vectorBuffers.points.primitiveCount;
-      }
-      if (defined(this._vectorBuffers.polylines)) {
-        count += this._vectorBuffers.polylines.primitiveCount;
-      }
-      if (defined(this._vectorBuffers.polygons)) {
-        count += this._vectorBuffers.polygons.primitiveCount;
-      }
-      return count;
+      return (
+        sumCollectionProperty(this._vectorBuffers.points, "primitiveCount") +
+        sumCollectionProperty(this._vectorBuffers.polylines, "primitiveCount") +
+        sumCollectionProperty(this._vectorBuffers.polygons, "primitiveCount")
+      );
     },
   },
 
@@ -70,7 +97,10 @@ Object.defineProperties(VectorGltf3DTileContent.prototype, {
       ) {
         return 0;
       }
-      return this._vectorBuffers.points.primitiveCount;
+      return sumCollectionProperty(
+        this._vectorBuffers.points,
+        "primitiveCount",
+      );
     },
   },
 
@@ -82,7 +112,10 @@ Object.defineProperties(VectorGltf3DTileContent.prototype, {
       ) {
         return 0;
       }
-      return this._vectorBuffers.polygons.triangleCount;
+      return sumCollectionProperty(
+        this._vectorBuffers.polygons,
+        "triangleCount",
+      );
     },
   },
 
@@ -92,17 +125,11 @@ Object.defineProperties(VectorGltf3DTileContent.prototype, {
         return 0;
       }
 
-      let byteLength = 0;
-      if (defined(this._vectorBuffers.points)) {
-        byteLength += this._vectorBuffers.points.byteLength;
-      }
-      if (defined(this._vectorBuffers.polylines)) {
-        byteLength += this._vectorBuffers.polylines.byteLength;
-      }
-      if (defined(this._vectorBuffers.polygons)) {
-        byteLength += this._vectorBuffers.polygons.byteLength;
-      }
-      return byteLength;
+      return (
+        sumCollectionProperty(this._vectorBuffers.points, "byteLength") +
+        sumCollectionProperty(this._vectorBuffers.polylines, "byteLength") +
+        sumCollectionProperty(this._vectorBuffers.polygons, "byteLength")
+      );
     },
   },
 
@@ -199,32 +226,29 @@ VectorGltf3DTileContent.prototype.applyDebugSettings = function (
     return;
   }
 
-  if (defined(this._vectorBuffers.points)) {
-    const points = this._vectorBuffers.points;
+  forEachCollection(this._vectorBuffers.points, function (points) {
     const point = new BufferPoint();
     for (let i = 0; i < points.primitiveCount; i++) {
       points.get(i, point);
       point.setColor(enabled ? color : Color.WHITE);
     }
-  }
+  });
 
-  if (defined(this._vectorBuffers.polylines)) {
-    const polylines = this._vectorBuffers.polylines;
+  forEachCollection(this._vectorBuffers.polylines, function (polylines) {
     const polyline = new BufferPolyline();
     for (let i = 0; i < polylines.primitiveCount; i++) {
       polylines.get(i, polyline);
       polyline.setColor(enabled ? color : Color.WHITE);
     }
-  }
+  });
 
-  if (defined(this._vectorBuffers.polygons)) {
-    const polygons = this._vectorBuffers.polygons;
+  forEachCollection(this._vectorBuffers.polygons, function (polygons) {
     const polygon = new BufferPolygon();
     for (let i = 0; i < polygons.primitiveCount; i++) {
       polygons.get(i, polygon);
       polygon.setColor(enabled ? color : Color.WHITE);
     }
-  }
+  });
 };
 
 VectorGltf3DTileContent.prototype.applyStyle = function (style) {
@@ -253,20 +277,17 @@ VectorGltf3DTileContent.prototype.update = function (tileset, frameState) {
   );
   const vectorModelMatrix = this._computedVectorModelMatrix;
 
-  if (defined(this._pointCollection)) {
-    this._pointCollection.modelMatrix = vectorModelMatrix;
-    this._pointCollection.update(frameState);
-  }
-
-  if (defined(this._polylineCollection)) {
-    this._polylineCollection.modelMatrix = vectorModelMatrix;
-    this._polylineCollection.update(frameState);
-  }
-
-  if (defined(this._polygonCollection)) {
-    this._polygonCollection.modelMatrix = vectorModelMatrix;
-    this._polygonCollection.update(frameState);
-  }
+  updateCollectionArray(this._pointCollections, vectorModelMatrix, frameState);
+  updateCollectionArray(
+    this._polylineCollections,
+    vectorModelMatrix,
+    frameState,
+  );
+  updateCollectionArray(
+    this._polygonCollections,
+    vectorModelMatrix,
+    frameState,
+  );
 };
 
 VectorGltf3DTileContent.prototype.pick = function (ray, frameState, result) {
@@ -282,9 +303,9 @@ VectorGltf3DTileContent.prototype.isDestroyed = function () {
 
 VectorGltf3DTileContent.prototype.destroy = function () {
   this._decodeModel = this._decodeModel && this._decodeModel.destroy();
-  this._pointCollection = undefined;
-  this._polylineCollection = undefined;
-  this._polygonCollection = undefined;
+  this._pointCollections = undefined;
+  this._polylineCollections = undefined;
+  this._polygonCollections = undefined;
   this._vectorBuffers = undefined;
   return destroyObject(this);
 };
@@ -335,9 +356,9 @@ function initializeVectorPrimitives(content) {
     return;
   }
 
-  content._pointCollection = vectorBuffers.points;
-  content._polylineCollection = vectorBuffers.polylines;
-  content._polygonCollection = vectorBuffers.polygons;
+  content._pointCollections = vectorBuffers.points;
+  content._polylineCollections = vectorBuffers.polylines;
+  content._polygonCollections = vectorBuffers.polygons;
 }
 
 VectorGltf3DTileContent.fromGltf = async function (
